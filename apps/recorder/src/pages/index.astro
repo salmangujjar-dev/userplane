@@ -1,0 +1,27 @@
+---
+import '../styles/global.css';
+import { ButtonDemo } from '@/components/ButtonDemo';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Astro + shadcn/ui</title>
+  </head>
+
+  <body class="min-h-screen bg-background">
+    <main class="container mx-auto py-8">
+      <div class="flex flex-col items-center justify-center min-h-screen gap-8">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold mb-2">Astro + React + shadcn/ui</h1>
+          <p class="text-muted-foreground">A simple counter example</p>
+        </div>
+
+        <ButtonDemo client:load />
+      </div>
+    </main>
+  </body>
+</html>
