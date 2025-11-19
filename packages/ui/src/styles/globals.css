@@ -4,6 +4,7 @@
 @source "../**/*.{ts,tsx}";
 
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -117,6 +118,13 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@theme {
+  --font-family-dm-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-family-inter: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-family-geist: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-family-geist-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -124,4 +132,18 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Infinite scroll animation for logo carousel */
+@keyframes infinite-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-infinite-scroll {
+  animation: infinite-scroll 15s linear infinite;
 }
