@@ -1,0 +1,34 @@
+import BlogPostCard from './BlogPostCard';
+
+interface BlogPost {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  date: string;
+  author: string;
+}
+
+interface BlogPostListProps {
+  posts: BlogPost[];
+}
+
+export default function BlogPostList({ posts }: BlogPostListProps) {
+  if (posts.length === 0) {
+    return (
+      <div className="w-full max-w-4xl py-12 text-center">
+        <p className="text-muted-foreground text-lg">No blog posts yet. Check back soon!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-4xl">
+      <div className="grid gap-8 md:gap-12">
+        {posts.map((post) => (
+          <BlogPostCard key={post.slug} post={post} />
+        ))}
+      </div>
+    </div>
+  );
+}
