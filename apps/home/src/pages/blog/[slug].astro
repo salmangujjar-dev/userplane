@@ -1,0 +1,68 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+
+  return posts.map((post) => ({
+    params: { slug: post.id.replace('.md', '') },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BlogLayout title={`${post.data.title} | Subsignal`} description={post.data.excerpt}>
+  <article class="container mx-auto px-4 py-16 max-w-4xl">
+    <div class="flex justify-between items-center mb-8">
+      <a
+        href="/blog"
+        class="inline-flex items-center text-zinc-600 hover:opacity-80 transition-opacity"
+      >
+        <svg
+          class="w-4 h-4 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
+        Back to Blog
+      </a>
+    </div>
+    <header class="mb-12">
+      <h1 class="text-5xl font-bold mb-6 font-dm-sans">{post.data.title}</h1>
+      <div class="flex items-center text-zinc-600">
+        <time class="mr-6">
+          {
+            post.data.date.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })
+          }
+        </time>
+        <span>Posted by {post.data.author}</span>
+      </div>
+    </header>
+    <div
+      class="prose prose-lg prose-zinc max-w-none
+			prose-headings:font-dm-sans prose-headings:font-semibold
+			prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-12
+			prose-h2:text-3xl prose-h2:mb-4 prose-h2:mt-10
+			prose-h3:text-2xl prose-h3:mb-3 prose-h3:mt-8
+			prose-p:text-zinc-700 prose-p:leading-relaxed prose-p:mb-6
+			prose-li:text-zinc-700 prose-li:leading-relaxed
+			prose-strong:text-zinc-900 prose-strong:font-semibold
+			prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
+			prose-ul:my-6 prose-ol:my-6"
+    >
+      <Content />
+    </div>
+  </article>
+</BlogLayout>
