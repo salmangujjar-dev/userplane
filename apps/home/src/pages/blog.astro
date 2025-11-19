@@ -1,0 +1,34 @@
+---
+import HomepageLayout from '../layouts/HomepageLayout.astro';
+import { getCollection } from 'astro:content';
+import BlogHeader from '../components/blog/BlogHeader';
+import BlogPostList from '../components/blog/BlogPostList';
+
+// Get all blog posts from content collection
+const allPosts = await getCollection('blog');
+
+// Sort by date (newest first) and format for BlogPostList component
+const posts = allPosts
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .map((post) => ({
+    slug: post.id.replace('.md', ''),
+    title: post.data.title,
+    excerpt: post.data.excerpt,
+    category: post.data.category,
+    date: post.data.date.toISOString().split('T')[0],
+    author: post.data.author,
+  }));
+---
+
+<HomepageLayout
+  title="Blog | Subsignal - Never Miss a Market Move"
+  description="Be the investor founders turn to. Stay ahead with market intelligence, competitive insights, and sector analysis from the Subsignal team."
+  keywords="market intelligence, competitive intelligence, deal intelligence, relationship intelligence, market moves, portfolio monitoring, investment tracking, sector thesis, blog"
+>
+  <div
+    class="mx-auto flex w-full max-w-7xl flex-col items-center justify-start px-12 text-center py-12"
+  >
+    <BlogHeader />
+    <BlogPostList posts={posts} />
+  </div>
+</HomepageLayout>
