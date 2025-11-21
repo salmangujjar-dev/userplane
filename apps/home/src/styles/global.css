@@ -1,2 +1,15 @@
 /* Import shared UI styles from workspace */
 @import "@workspace/ui/globals.css";
+
+@keyframes infinite-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-25%);
+  }
+}
+
+.animate-infinite-scroll {
+  animation: infinite-scroll 60s linear infinite;
+}
