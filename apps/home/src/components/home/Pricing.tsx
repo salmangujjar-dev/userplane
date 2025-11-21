@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   PRICING_PLANS,
   PRICING_SUBTITLE,
@@ -6,11 +7,77 @@ import {
   type PricingPlan,
 } from '../../constants/pricing';
 
-function PricingFeature({ text, included }: PlanFeature) {
+interface PricingFeatureProps extends PlanFeature {
+  isExpanded: boolean;
+  onToggle: () => void;
+}
+
+function PricingFeature({
+  text,
+  included,
+  subFeatures,
+  isExpanded,
+  onToggle,
+}: PricingFeatureProps) {
+  if (subFeatures && subFeatures.length > 0) {
+    return (
+      <li className="flex flex-col">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-3 text-sm w-full text-left hover:opacity-80 transition-opacity"
+        >
+          <svg
+            className={`w-5 h-5 shrink-0 ${included ? 'text-green-500' : 'text-gray-300'}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="flex-1">{text}</span>
+          <svg
+            className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            isExpanded ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <ul className="ml-8 space-y-2">
+            {subFeatures.map((subFeature, index) => (
+              <li key={index} className="flex items-center gap-3 text-sm">
+                <svg
+                  className={`w-4 h-4 shrink-0 ${subFeature.included ? 'text-green-500' : 'text-gray-300'}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                {subFeature.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li className="flex items-center gap-3 text-sm">
       <svg
-        className={`w-5 h-5 ${included ? 'text-green-500' : 'text-gray-300'}`}
+        className={`w-5 h-5 shrink-0 ${included ? 'text-green-500' : 'text-gray-300'}`}
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -20,6 +87,11 @@ function PricingFeature({ text, included }: PlanFeature) {
       {text}
     </li>
   );
+}
+
+interface PricingPlanCardProps extends PricingPlan {
+  expandedIndex: number | null;
+  onToggle: (index: number) => void;
 }
 
 function PricingPlanCard({
@@ -32,7 +104,9 @@ function PricingPlanCard({
   ctaUrl,
   ctaIsExternal,
   isPopular,
-}: PricingPlan) {
+  expandedIndex,
+  onToggle,
+}: PricingPlanCardProps) {
   return (
     <div
       className={`flex flex-col ${
@@ -79,7 +153,12 @@ function PricingPlanCard({
       </div>
       <ul className="space-y-4 mb-8 flex-1">
         {features.map((feature, index) => (
-          <PricingFeature key={index} {...feature} />
+          <PricingFeature
+            key={index}
+            {...feature}
+            isExpanded={expandedIndex === index}
+            onToggle={() => onToggle(index)}
+          />
         ))}
       </ul>
       <a
@@ -99,6 +178,12 @@ function PricingPlanCard({
 }
 
 export default function Pricing() {
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  const handleToggle = (index: number) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 scroll-mt-20" id="pricing">
       <div className="max-w-4xl mx-auto text-center mb-16">
@@ -110,9 +195,14 @@ export default function Pricing() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {PRICING_PLANS.map((plan) => (
-          <PricingPlanCard key={plan.id} {...plan} />
+          <PricingPlanCard
+            key={plan.id}
+            {...plan}
+            expandedIndex={expandedIndex}
+            onToggle={handleToggle}
+          />
         ))}
       </div>
     </section>
