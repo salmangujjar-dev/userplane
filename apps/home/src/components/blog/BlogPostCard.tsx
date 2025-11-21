@@ -1,4 +1,5 @@
 import { Badge } from '@workspace/ui/components/badge';
+import { getBlogPostUrl } from '@/constants/navigation';
 
 interface BlogPost {
   slug: string;
@@ -14,6 +15,8 @@ interface BlogPostCardProps {
 }
 
 export default function BlogPostCard({ post }: BlogPostCardProps) {
+  const postUrl = getBlogPostUrl(post.slug);
+
   return (
     <article className="text-left border-b border-border/30 pb-8 last:border-b-0">
       <div className="flex flex-col gap-4">
@@ -33,13 +36,13 @@ export default function BlogPostCard({ post }: BlogPostCardProps) {
 
         <div className="flex flex-col gap-3">
           <h2 className="font-dm-sans font-semibold text-2xl md:text-3xl leading-tight hover:text-primary transition-colors">
-            <a href={`/blog/${post.slug}`}>{post.title}</a>
+            <a href={postUrl}>{post.title}</a>
           </h2>
 
           <p className="text-muted-foreground leading-relaxed md:text-lg">{post.excerpt}</p>
 
           <a
-            href={`/blog/${post.slug}`}
+            href={postUrl}
             className="text-sm font-medium text-primary hover:underline inline-flex w-fit"
           >
             Read more →

@@ -1,3 +1,6 @@
+import { TALLY_COMPLIANCE_FORM_URL, CONTACT_EMAIL_MAILTO } from './contact';
+import { getMarketingUrl } from './urls';
+
 /**
  * Navigation link configuration
  * Includes aria-labels for accessibility compliance
@@ -8,26 +11,45 @@
  * Used in Logo component when href is provided
  */
 export const LOGO_LINK = {
-  ariaLabel: 'Go to Subsignal homepage',
+  ariaLabel: 'Go to Userplane homepage',
 } as const;
+
+/**
+ * Main navigation links
+ */
+export const NAV_LINKS = {
+  home: getMarketingUrl('/'),
+  features: getMarketingUrl('/#features'),
+  pricing: getMarketingUrl('/#pricing'),
+  integrations: getMarketingUrl('/#integrations'),
+  roadmap: getMarketingUrl('/roadmap'),
+  blog: getMarketingUrl('/blog'),
+} as const;
+
+/**
+ * Helper to get blog post URL
+ */
+export const getBlogPostUrl = (slug: string): string => {
+  return getMarketingUrl(`/blog/${slug}`);
+};
 
 /**
  * Footer navigation links
  */
 export const FOOTER_LINKS = {
   product: [
-    { label: 'Features', href: '/#features' },
-    { label: 'Pricing', href: '/#pricing' },
-    { label: 'Integration', href: '/#integrations' },
+    { label: 'Features', href: NAV_LINKS.features },
+    { label: 'Pricing', href: NAV_LINKS.pricing },
+    { label: 'Integration', href: NAV_LINKS.integrations },
   ],
   company: [
-    { label: 'Blog', href: '/blog' },
-    { label: 'Roadmap', href: '/roadmap' },
-    { label: 'Support', href: 'mailto:nick@subsignal.vc' },
+    { label: 'Blog', href: NAV_LINKS.blog },
+    { label: 'Roadmap', href: NAV_LINKS.roadmap },
+    { label: 'Support', href: CONTACT_EMAIL_MAILTO },
   ],
   legal: [
-    { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Terms of Service', href: '/terms' },
-    { label: 'Compliance', href: '/' },
+    { label: 'Privacy Policy', href: getMarketingUrl('/privacy') },
+    { label: 'Terms of Service', href: getMarketingUrl('/terms') },
+    { label: 'Compliance Request', href: TALLY_COMPLIANCE_FORM_URL },
   ],
 } as const;

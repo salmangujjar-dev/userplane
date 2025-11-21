@@ -8,6 +8,8 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@workspace/ui/components/drawer';
+import { SIGNUP_URL } from '@/constants/onboarding';
+import { NAV_LINKS } from '@/constants/navigation';
 
 function DrawerNavLink({
   href,
@@ -53,8 +55,6 @@ function DrawerNavLink({
 }
 
 export default function Header() {
-  const baseUrl = import.meta.env.PUBLIC_BASE_URL || '';
-
   return (
     <nav className="mx-auto mt-12 flex w-full max-w-7xl flex-wrap items-center justify-between gap-8 p-4 font-inter text-sm">
       <div className="flex flex-1 shrink-0 items-center justify-start gap-2">
@@ -64,25 +64,25 @@ export default function Header() {
       <div className="hidden items-center gap-8 md:flex">
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href={`${baseUrl}/`}
+          href={NAV_LINKS.home}
         >
           Home
         </a>
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href={`${baseUrl}/#features`}
+          href={NAV_LINKS.features}
         >
           Features
         </a>
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href={`${baseUrl}/#pricing`}
+          href={NAV_LINKS.pricing}
         >
           Pricing
         </a>
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href={`${baseUrl}/roadmap`}
+          href={NAV_LINKS.roadmap}
         >
           Roadmap
         </a>
@@ -94,7 +94,7 @@ export default function Header() {
           className="rounded-full border-[0.5px] hover:brightness-99"
           variant="secondary"
         >
-          <a className="flex items-center gap-2 px-5 py-5 font-medium" href={`${baseUrl}/signup`}>
+          <a className="flex items-center gap-2 px-5 py-5 font-medium" href={SIGNUP_URL}>
             Get Started
           </a>
         </Button>
@@ -114,22 +114,18 @@ export default function Header() {
             </div>
             <div className="sr-only">
               <DrawerDescription>
-                Main navigation links and user actions for Subsignal.
+                Main navigation links and user actions for Userplane.
               </DrawerDescription>
             </div>
             <div className="flex w-full flex-col items-center gap-4">
               <nav className="flex w-full flex-col">
-                <DrawerNavLink href={`${baseUrl}/`}>Home</DrawerNavLink>
-                <DrawerNavLink href={`${baseUrl}/#features`}>Features</DrawerNavLink>
-                <DrawerNavLink href={`${baseUrl}/#pricing`}>Pricing</DrawerNavLink>
-                <DrawerNavLink href={`${baseUrl}/roadmap`}>Roadmap</DrawerNavLink>
+                <DrawerNavLink href={NAV_LINKS.home}>Home</DrawerNavLink>
+                <DrawerNavLink href={NAV_LINKS.features}>Features</DrawerNavLink>
+                <DrawerNavLink href={NAV_LINKS.pricing}>Pricing</DrawerNavLink>
+                <DrawerNavLink href={NAV_LINKS.roadmap}>Roadmap</DrawerNavLink>
               </nav>
               <div className="flex w-full flex-col">
-                <DrawerNavLink
-                  href={`${baseUrl}/signup`}
-                  icon={<LogIn className="h-4 w-4" />}
-                  isButton
-                >
+                <DrawerNavLink href={SIGNUP_URL} icon={<LogIn className="h-4 w-4" />} isButton>
                   Get Started
                 </DrawerNavLink>
               </div>

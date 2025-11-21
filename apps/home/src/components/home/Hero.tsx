@@ -2,7 +2,6 @@ import { ChevronRight } from 'lucide-react';
 import { AiFillExperiment } from 'react-icons/ai';
 import { Button } from '@workspace/ui/components/button';
 import { Badge } from '@workspace/ui/components/badge';
-import { CAL_URL } from '../../constants/contact';
 import {
   HERO_HEADING,
   HERO_HIGHLIGHTS,
@@ -51,7 +50,7 @@ export default function Hero() {
           <Badge className="rounded-full min-h-[48px] py-3" variant={'secondary'}>
             <a
               className="flex items-center justify-center gap-2"
-              href={CAL_URL}
+              href={HERO_BADGE.href}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -89,7 +88,7 @@ export default function Hero() {
             >
               <a
                 className="flex items-center gap-2 font-medium"
-                href={CAL_URL}
+                href={HERO_SECONDARY_BUTTON.href}
                 target="_blank"
                 rel="noopener noreferrer"
               >

@@ -1,4 +1,5 @@
 import { CAL_URL } from './contact';
+import { SIGNUP_URL } from './onboarding';
 
 /**
  * Plan feature
@@ -54,7 +55,7 @@ export const PRICING_PLANS: PricingPlan[] = [
           { text: 'Upto 45 days of retention', included: true },
           { text: 'Upto 3 minutes per recording', included: true },
           { text: 'Upto 90 minutes per month', included: true },
-          { text: 'Pay as you go usage-based pricing', included: true },
+          { text: 'Request additional recording minutes', included: true },
         ],
       },
       {
@@ -62,7 +63,7 @@ export const PRICING_PLANS: PricingPlan[] = [
         included: true,
         subFeatures: [
           { text: '5 seats included per month', included: true },
-          { text: 'Pay as you go usage-based pricing', included: true },
+          { text: 'Request additional seats', included: true },
         ],
       },
       {
@@ -107,9 +108,17 @@ export const PRICING_PLANS: PricingPlan[] = [
           { text: 'Upto 45 days of retention', included: true },
         ],
       },
+      {
+        text: 'Workspace Customization',
+        included: true,
+        subFeatures: [
+          { text: 'Embed Userplane within product', included: true },
+          { text: 'Customize Userplane appearance', included: false },
+        ],
+      },
     ],
     ctaText: 'Start Trial',
-    ctaUrl: '/get-started?step=1',
+    ctaUrl: SIGNUP_URL,
   },
   {
     id: 'scaleup_plan',
@@ -125,7 +134,7 @@ export const PRICING_PLANS: PricingPlan[] = [
           { text: 'Upto 180 days of retention', included: true },
           { text: 'Upto 5 minutes per recording', included: true },
           { text: 'Upto 360 minutes per month', included: true },
-          { text: 'Pay as you go usage-based pricing', included: true },
+          { text: 'Request additional recording minutes', included: true },
         ],
       },
       {
@@ -133,7 +142,7 @@ export const PRICING_PLANS: PricingPlan[] = [
         included: true,
         subFeatures: [
           { text: '15 seats included per month', included: true },
-          { text: 'Pay as you go usage-based pricing', included: true },
+          { text: 'Request additional seats', included: true },
         ],
       },
       {
@@ -178,10 +187,17 @@ export const PRICING_PLANS: PricingPlan[] = [
           { text: 'Upto 180 days of retention', included: true },
         ],
       },
+      {
+        text: 'Workspace Customization',
+        included: true,
+        subFeatures: [
+          { text: 'Embed Userplane within product', included: true },
+          { text: 'Customize Userplane appearance', included: true },
+        ],
+      },
     ],
     ctaText: 'Start Trial',
-    ctaUrl: CAL_URL,
-    ctaIsExternal: true,
+    ctaUrl: SIGNUP_URL,
     isPopular: true,
   },
   {
@@ -198,7 +214,7 @@ export const PRICING_PLANS: PricingPlan[] = [
           { text: 'Unlimited days of retention', included: true },
           { text: 'Upto 10 minutes per recording', included: true },
           { text: 'Unlimited minutes per month', included: true },
-          { text: 'Pay as you go usage-based pricing', included: true },
+          { text: 'Request additional recording minutes', included: true },
         ],
       },
       {
@@ -206,7 +222,7 @@ export const PRICING_PLANS: PricingPlan[] = [
         included: true,
         subFeatures: [
           { text: 'Custom members per workspace', included: true },
-          { text: 'Pay as you go usage-based pricing', included: true },
+          { text: 'Request additional seats', included: true },
         ],
       },
       {
@@ -249,6 +265,14 @@ export const PRICING_PLANS: PricingPlan[] = [
           { text: 'Bring your own storage (BYOS)', included: true },
           { text: 'Data Residency Controls (US/EU)', included: true },
           { text: 'Configurable Data Lifecycle Controls', included: true },
+        ],
+      },
+      {
+        text: 'Workspace Customization',
+        included: true,
+        subFeatures: [
+          { text: 'Embed Userplane within product', included: true },
+          { text: 'Customize Userplane appearance', included: true },
         ],
       },
     ],

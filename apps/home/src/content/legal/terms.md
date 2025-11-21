@@ -5,59 +5,59 @@ lastUpdated: 2025-01-01
 
 ## 1. Acceptance of Terms
 
-By accessing and using Subsignal's competitive intelligence and market monitoring platform, you agree to be bound by these terms of service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this service.
+By accessing and using Userplane's screen recording and customer support platform, you agree to be bound by these terms of service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this service.
 
-These terms constitute a legally binding contract between you and Subsignal Labs. By using our services, you represent that you have the legal authority to enter into this agreement on behalf of yourself or your organization.
+These terms constitute a legally binding contract between you and Userplane. By using our services, you represent that you have the legal authority to enter into this agreement on behalf of yourself or your organization.
 
 ## 2. Description of Service
 
-Subsignal is a competitive intelligence and market monitoring platform that provides:
+Userplane is a screen recording and customer support platform that provides:
 
-- Market intelligence and competitive analysis
-- Deal flow monitoring and tracking
-- Company and industry monitoring services
-- Business intelligence reports and insights
-- Automated data collection from publicly available sources
+- One-click screen recordings with console logs and network data
+- Customer issue tracking and debugging tools
+- User step capture and session replay
+- Error trace recording and analysis
+- Support team collaboration and customer issue resolution
 
 We reserve the right to modify, enhance, or discontinue any aspect of the service at any time with reasonable advance notice for material changes.
 
 ## 3. License and Access Rights
 
-Subject to your compliance with these terms and payment of applicable fees, we grant you a limited, non-exclusive, non-transferable license to access and use our competitive intelligence platform for your internal business purposes.
+Subject to your compliance with these terms and payment of applicable fees, we grant you a limited, non-exclusive, non-transferable license to access and use our screen recording platform for your internal business purposes.
 
-This license includes access to competitive intelligence reports, market analysis, and business monitoring data. All rights not expressly granted are reserved by Subsignal.
+This license includes access to screen recording tools, session replay features, console logs, and network data capture. All rights not expressly granted are reserved by Userplane.
 
 ## 4. User Responsibilities
 
-As a user of Subsignal, you agree to:
+As a user of Userplane, you agree to:
 
-- Use the service in compliance with all applicable laws and regulations, including data protection and competition laws
-- Use competitive intelligence data for legitimate business purposes only
-- Independently verify critical information before making business decisions
+- Use the service in compliance with all applicable laws and regulations, including data protection and privacy laws
+- Use screen recording features for legitimate customer support purposes only
+- Obtain proper consent from customers before recording their sessions
 - Maintain the security and confidentiality of your account credentials
 - Respect intellectual property rights and third-party rights
 - Ensure your use of our services complies with applicable legal requirements in your jurisdiction
 
 ## 5. Prohibited Uses
 
-You may not use Subsignal for:
+You may not use Userplane for:
 
 - Reverse engineering, decompiling, or attempting to derive our source code or algorithms
 - Gaining unauthorized access to our systems, networks, or other users' accounts
 - Introducing malware, viruses, or other harmful technological material
 - Using automated means to access our services without express written permission
 - Violating any applicable laws, regulations, or third-party rights
-- Harassing, threatening, or causing harm to individuals referenced in intelligence reports
+- Recording sessions without proper user consent or in violation of privacy laws
 - Circumventing rate limiting, access controls, or usage restrictions
 - Distributing non-public features or information to unauthorized third parties
 
 We reserve the right to suspend or terminate access for any suspected violation of these prohibited conduct provisions.
 
-## 6. Competitive Intelligence Services
+## 6. Screen Recording Services
 
-Our services include competitive intelligence, market monitoring, and business analysis capabilities that process information from publicly available sources and third-party data providers.
+Our services include screen recording, session replay, console log capture, and network data collection that help you understand and debug customer issues.
 
-> **Important:** Information provided through our platform is for business intelligence purposes and should be independently verified before making critical business decisions. We do not guarantee the accuracy, completeness, or currency of all third-party information.
+> **Important:** Screen recordings and captured data are provided for customer support and debugging purposes. You are responsible for obtaining proper user consent and complying with applicable privacy laws when using our recording features.
 
 ## 7. Subscription and Payment Terms
 
@@ -78,30 +78,30 @@ We implement commercially reasonable technical and organizational safeguards to 
 
 ## 9. Service Availability and Support
 
-While we strive to maintain high availability, Subsignal is provided on an "as is" and "as available" basis. We do not guarantee uninterrupted service and may perform maintenance that temporarily affects availability.
+While we strive to maintain high availability, Userplane is provided on an "as is" and "as available" basis. We do not guarantee uninterrupted service and may perform maintenance that temporarily affects availability.
 
 We will use commercially reasonable efforts to provide advance notice of material changes that may adversely affect your use of our services.
 
 ## 10. Intellectual Property
 
-All intellectual property rights in the Subsignal platform, including software, algorithms, reports, and analyses, are owned by Subsignal Labs or our licensors. You retain ownership of any data you provide to us, subject to our rights to process such data as described in our Privacy Policy.
+All intellectual property rights in the Userplane platform, including software, algorithms, recording tools, and analyses, are owned by Userplane or our licensors. You retain ownership of any data you provide to us, subject to our rights to process such data as described in our Privacy Policy.
 
 ## 11. Disclaimers and Warranties
 
 **IMPORTANT DISCLAIMERS:**
 
-- **Services "As Is":** Our services, including all competitive intelligence reports and market analysis, are provided "as is" without warranties of any kind.
-- **No Accuracy Guarantee:** We do not warrant the accuracy, reliability, or completeness of competitive intelligence data or third-party information.
-- **Third-Party Data:** Information from third-party sources and automated collection processes may contain inherent limitations and uncertainties.
-- **Business Decisions:** You acknowledge that competitive intelligence involves inherent limitations and should not be the sole basis for business decisions.
+- **Services "As Is":** Our services, including all screen recording and debugging tools, are provided "as is" without warranties of any kind.
+- **No Accuracy Guarantee:** We do not warrant the accuracy, reliability, or completeness of recorded data or captured information.
+- **Recording Quality:** Recording quality may vary based on browser, network conditions, and user device capabilities.
+- **Privacy Compliance:** You are responsible for ensuring your use of our recording features complies with applicable privacy laws and obtaining proper user consent.
 
 ## 12. Limitation of Liability
 
 **LIABILITY LIMITATIONS:**
 
-- We shall not be liable for indirect, incidental, consequential, special, or punitive damages, including lost profits, business interruption, or competitive disadvantage.
+- We shall not be liable for indirect, incidental, consequential, special, or punitive damages, including lost profits, business interruption, or customer satisfaction issues.
 - Our total liability shall not exceed the amount paid by you during the twelve (12) months immediately preceding the event giving rise to the claim.
-- We disclaim liability for business decisions made based on competitive intelligence data provided through our platform.
+- We disclaim liability for support decisions or actions taken based on recorded data provided through our platform.
 
 ## 13. Indemnification
 
@@ -139,8 +139,10 @@ We may modify these terms at any time. Material modifications will be effective 
 
 If you have any questions about these Terms of Service or need to provide legal notices, please contact us:
 
-**General Contact:** nick@subsignal.vc
-**Legal Notices:** nick@subsignal.vc
-**Website:** https://subsignal.app
+**General Contact:** support@userplane.io
+
+**Legal Notices:** support@userplane.io
+
+**Website:** https://userplane.io
 
 All notices must be in writing and sent to the email address associated with your account or the contact information provided above.
