@@ -11,13 +11,13 @@ function LogoCarousel() {
                 key={`${set}-${index}`}
                 className="w-[120px] flex items-center justify-center px-8 shrink-0"
               >
-                <div className="w-8 h-8 flex items-center justify-center">
+                <div className="w-16 h-16 flex items-center justify-center">
                   <img
                     src={logo.src}
                     alt={logo.alt}
-                    width={32}
-                    height={32}
-                    className="max-w-8 max-h-8 w-auto h-auto opacity-40 grayscale hover:opacity-60 hover:grayscale-0 transition-all duration-300 object-contain"
+                    width={64}
+                    height={64}
+                    className="max-w-16 max-h-16 w-auto h-auto opacity-40 grayscale hover:opacity-60 hover:grayscale-0 transition-all duration-300 object-contain"
                   />
                 </div>
               </div>
@@ -34,7 +34,7 @@ export default function Spotlight() {
     <section className="w-full pt-8 md:pt-12 pb-16 md:pb-24">
       <div className="flex flex-col items-center gap-12 md:gap-16">
         <div className="w-full px-6 md:px-12">
-          <div className="relative w-full aspect-video md:aspect-21/9 rounded-xl overflow-hidden">
+          <div className="relative w-full aspect-video rounded-xl overflow-hidden">
             <img
               src={SPOTLIGHT_IMAGE.src}
               alt={SPOTLIGHT_IMAGE.alt}
