@@ -1,21 +1,24 @@
 import type { HighlightConfig } from './types';
+import { CAL_URL } from './contact';
+import { SIGNUP_URL } from './onboarding';
 
-export const CTA_HEADING = 'Focus on the big picture let us handle the details';
+export const CTA_HEADING = 'See the bug not just a description of it';
 
 export const CTA_HIGHLIGHTS: HighlightConfig[] = [
-  { wordIndex: 3, color: 'blue' },
-  { wordIndex: 4, color: 'blue' },
-  { wordIndex: 9, color: 'yellow' },
+  { wordIndex: 2, color: 'blue' },
+  { wordIndex: 6, color: 'yellow' },
 ];
 
 export const CTA_DESCRIPTION =
-  'Join other marquee funds using Subsignal to turn comeback stories into portfolio wins';
+  'One-click screen recording that lets you capture and replay customer issues. Stop the endless back-and-forth.';
 
 export const CTA_PRIMARY_BUTTON = {
   text: 'Get Started',
-  href: '/get-started',
+  href: SIGNUP_URL,
 };
 
 export const CTA_SECONDARY_BUTTON = {
   text: 'Contact Sales',
+  href: CAL_URL,
+  isExternal: true,
 };

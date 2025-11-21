@@ -17,13 +17,13 @@ export default function Logo({ className, size = 'md', href }: LogoProps) {
     <span
       className={cn('font-dm-sans font-semibold tracking-tight', sizeVariants[size], className)}
     >
-      Subsignal
+      Userplane
     </span>
   );
 
   if (href) {
     return (
-      <a href={href} aria-label="Go to Subsignal homepage">
+      <a href={href} aria-label="Go to Userplane homepage">
         {logoText}
       </a>
     );

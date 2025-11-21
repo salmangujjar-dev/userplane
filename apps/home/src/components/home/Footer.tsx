@@ -16,7 +16,7 @@ export default function Footer() {
                 <div className="flex shrink-0 flex-col gap-4">
                   <Logo size="lg" />
                   <p className="max-w-sm text-muted-foreground text-sm">
-                    © {new Date().getFullYear()} Subsignal. All rights reserved.
+                    © {new Date().getFullYear()} Userplane. All rights reserved.
                   </p>
                 </div>
               </div>

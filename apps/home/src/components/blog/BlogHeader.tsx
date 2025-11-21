@@ -5,7 +5,7 @@ interface BlogHeaderProps {
 
 export default function BlogHeader({
   title = 'Blog',
-  description = 'Your frontrow seat to everything Subsignal',
+  description = 'Your frontrow seat to everything Userplane',
 }: BlogHeaderProps) {
   return (
     <div className="mb-8 flex flex-col items-center justify-center gap-6 text-center">

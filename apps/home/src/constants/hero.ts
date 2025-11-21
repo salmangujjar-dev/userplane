@@ -1,4 +1,6 @@
 import type { HighlightConfig } from './types';
+import { CAL_URL } from './contact';
+import { SIGNUP_URL } from './onboarding';
 
 export const HERO_HEADING = 'Stop asking customers to describe their issues';
 
@@ -12,13 +14,17 @@ export const HERO_DESCRIPTION =
 
 export const HERO_PRIMARY_BUTTON = {
   text: 'Get Started',
-  href: '/signup',
+  href: SIGNUP_URL,
 };
 
 export const HERO_SECONDARY_BUTTON = {
   text: 'Contact Sales',
+  href: CAL_URL,
+  isExternal: true,
 };
 
 export const HERO_BADGE = {
   text: 'Public Beta',
+  href: CAL_URL,
+  isExternal: true,
 };

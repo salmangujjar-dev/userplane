@@ -1,6 +1,5 @@
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
-import { CAL_URL } from '../../constants/contact';
 import {
   CTA_HEADING,
   CTA_HIGHLIGHTS,
@@ -82,7 +81,7 @@ export default function CTA() {
               >
                 <a
                   className="flex items-center gap-2 font-medium"
-                  href={CAL_URL}
+                  href={CTA_SECONDARY_BUTTON.href}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

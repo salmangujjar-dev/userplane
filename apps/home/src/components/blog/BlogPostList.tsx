@@ -15,11 +15,7 @@ interface BlogPostListProps {
 
 export default function BlogPostList({ posts }: BlogPostListProps) {
   if (posts.length === 0) {
-    return (
-      <div className="w-full max-w-4xl py-12 text-center">
-        <p className="text-muted-foreground text-lg">No blog posts yet. Check back soon!</p>
-      </div>
-    );
+    return <div className="w-full max-w-4xl py-12" />;
   }
 
   return (
