@@ -1,3 +1,5 @@
+import { CAL_URL } from './contact';
+
 /**
  * Plan feature
  */
@@ -17,61 +19,103 @@ export interface PricingPlan {
   description: string;
   features: PlanFeature[];
   ctaText: string;
+  ctaUrl: string;
+  ctaIsExternal?: boolean;
   isPopular?: boolean;
   isEnterprise?: boolean;
 }
+
+/**
+ * Pricing section title
+ */
+export const PRICING_TITLE = 'Pricing';
+
+/**
+ * Pricing section subtitle
+ */
+export const PRICING_SUBTITLE = 'Pricing that works for you';
 
 /**
  * Pricing plans
  */
 export const PRICING_PLANS: PricingPlan[] = [
   {
-    id: 'solo_plan',
-    name: 'Solo',
-    annualMonthlyRate: '$67',
-    monthlyPrice: '$79',
-    description: 'For individual VCs tracking their deal flow',
+    id: 'starter_plan',
+    name: 'Starter',
+    annualMonthlyRate: '$49',
+    monthlyPrice: '$64',
+    description: 'For early stage startups starting out',
     features: [
-      { text: 'Track up to 10 companies', included: true },
-      { text: 'Monitor up to 50 pages', included: true },
-      { text: 'Refresh every 3 days', included: true },
-      { text: 'Email integration', included: true },
-      { text: 'CRM integration (Affinity, AngelList)', included: false },
+      { text: 'Unlimited recordings per month', included: true },
+      { text: 'Upto 15 members per workspace', included: true },
+      { text: 'Upto 45 days of retention', included: true },
+      { text: 'Upto 3 minutes of recording length', included: true },
+      { text: 'Auto-blur sensitive data', included: true },
+      { text: 'Dedicated support', included: true },
+      { text: 'Helpdesk integrations (Zendesk, Freshdesk, etc.)', included: true },
+      { text: 'Issue tracker integrations (Jira, Linear, etc.)', included: true },
+      { text: 'Workflow integrations (Zapier, N8N, etc.)', included: true },
+      { text: 'CRM integrations (Hubspot, Salesforce, etc.)', included: true },
+      { text: 'Custom integrations and API access', included: false },
+      { text: 'Bring your own storage', included: false },
+      { text: 'Data residency and lifecycle controls', included: false },
+      { text: 'SAML SSO', included: false },
     ],
-    ctaText: 'Start Tracking',
+    ctaText: 'Start Trial',
+    ctaUrl: '/get-started?step=1',
   },
   {
-    id: 'team_plan',
-    name: 'Fund',
-    annualMonthlyRate: '$208',
+    id: 'scaleup_plan',
+    name: 'Scaleup',
+    annualMonthlyRate: '$199',
     monthlyPrice: '$249',
-    description: 'For investment teams and small funds',
+    description: 'For scaleups looking to grow',
     features: [
-      { text: 'Track up to 50 companies', included: true },
-      { text: 'Monitor up to 100 pages', included: true },
-      { text: 'Refresh every 3 days', included: true },
-      { text: 'Email integrations', included: true },
-      { text: 'Dedicated success manager', included: true },
-      { text: 'CRM integrations (Affinity, AngelList)', included: false },
+      { text: 'Unlimited recordings per month', included: true },
+      { text: 'Upto 45 members per workspace', included: true },
+      { text: 'Upto 180 days of retention', included: true },
+      { text: 'Upto 5 minutes of recording length', included: true },
+      { text: 'Auto-blur sensitive data', included: true },
+      { text: 'Dedicated support', included: true },
+      { text: 'Helpdesk integrations (Zendesk, Freshdesk, etc.)', included: true },
+      { text: 'Issue tracker integrations (Jira, Linear, etc.)', included: true },
+      { text: 'Workflow integrations (Zapier, N8N, etc.)', included: true },
+      { text: 'CRM integrations (Hubspot, Salesforce, etc.)', included: true },
+      { text: 'Custom integrations and API access', included: true },
+      { text: 'Bring your own storage', included: false },
+      { text: 'Data residency and lifecycle controls', included: false },
+      { text: 'SAML SSO', included: false },
     ],
-    ctaText: 'Contact Sales',
+    ctaText: 'Start Trial',
+    ctaUrl: CAL_URL,
+    ctaIsExternal: true,
     isPopular: true,
   },
   {
-    id: 'custom_plan',
+    id: 'enterprise_plan',
     name: 'Enterprise',
     annualMonthlyRate: 'Custom',
     monthlyPrice: 'Custom',
-    description: 'For large funds with extensive deal flow',
+    description: 'For enterprises looking to scale',
     features: [
-      { text: 'Unlimited company tracking', included: true },
-      { text: 'Unlimited page monitoring', included: true },
-      { text: 'Refresh every 1 day', included: true },
-      { text: 'Custom integrations', included: true },
-      { text: 'Dedicated success manager', included: true },
-      { text: 'Enterprise compliance (SOC2, GDPR)', included: true },
+      { text: 'Unlimited recordings per month', included: true },
+      { text: 'Unlimited members per workspace', included: true },
+      { text: 'Unlimited days of retention', included: true },
+      { text: '10 minutes of recording length', included: true },
+      { text: 'Auto-blur sensitive data', included: true },
+      { text: 'Dedicated support', included: true },
+      { text: 'Helpdesk integrations (Zendesk, Freshdesk, etc.)', included: true },
+      { text: 'Issue tracker integrations (Jira, Linear, etc.)', included: true },
+      { text: 'Workflow integrations (Zapier, N8N, etc.)', included: true },
+      { text: 'CRM integrations (Hubspot, Salesforce, etc.)', included: true },
+      { text: 'Custom integrations and API access', included: true },
+      { text: 'Bring your own storage', included: true },
+      { text: 'Data residency and lifecycle controls', included: true },
+      { text: 'SAML SSO', included: true },
     ],
     ctaText: 'Contact Sales',
+    ctaUrl: CAL_URL,
+    ctaIsExternal: true,
     isEnterprise: true,
   },
 ];

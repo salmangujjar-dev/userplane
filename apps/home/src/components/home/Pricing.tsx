@@ -1,5 +1,10 @@
-import { CAL_URL } from '../../constants/contact';
-import { PRICING_PLANS, type PlanFeature, type PricingPlan } from '../../constants/pricing';
+import {
+  PRICING_PLANS,
+  PRICING_SUBTITLE,
+  PRICING_TITLE,
+  type PlanFeature,
+  type PricingPlan,
+} from '../../constants/pricing';
 
 function PricingFeature({ text, included }: PlanFeature) {
   return (
@@ -24,9 +29,10 @@ function PricingPlanCard({
   description,
   features,
   ctaText,
+  ctaUrl,
+  ctaIsExternal,
   isPopular,
-  onCtaClick,
-}: PricingPlan & { onCtaClick: () => void }) {
+}: PricingPlan) {
   return (
     <div
       className={`flex flex-col ${
@@ -76,48 +82,37 @@ function PricingPlanCard({
           <PricingFeature key={index} {...feature} />
         ))}
       </ul>
-      <button
-        type="button"
-        onClick={onCtaClick}
-        className={`w-full cursor-pointer min-h-[48px] ${
+      <a
+        href={ctaUrl}
+        target={ctaIsExternal ? '_blank' : undefined}
+        rel={ctaIsExternal ? 'noopener noreferrer' : undefined}
+        className={`w-full cursor-pointer min-h-[48px] flex items-center justify-center ${
           isPopular
             ? 'bg-white text-black hover:bg-gray-100'
             : 'bg-white text-black border border-gray-300 hover:bg-gray-50'
         } px-6 py-3 rounded-md font-medium transition-colors`}
       >
         {ctaText}
-      </button>
+      </a>
     </div>
   );
 }
 
 export default function Pricing() {
-  const handleCtaClick = (ctaText: string) => {
-    if (ctaText === 'Start Tracking') {
-      window.location.href = '/get-started?step=1';
-    } else if (ctaText === 'Contact Sales') {
-      window.open(CAL_URL, '_blank');
-    }
-  };
-
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 scroll-mt-20" id="pricing">
       <div className="max-w-4xl mx-auto text-center mb-16">
         <div className="flex flex-col gap-8">
-          <p className="text-center text-base text-muted-foreground md:text-lg">Pricing</p>
+          <p className="text-center text-base text-muted-foreground md:text-lg">{PRICING_TITLE}</p>
           <h2 className="mx-auto max-w-2xl text-center font-dm-sans font-medium text-2xl text-foreground leading-normal tracking-tight md:text-3xl lg:text-4xl">
-            Pricing that works for you
+            {PRICING_SUBTITLE}
           </h2>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         {PRICING_PLANS.map((plan) => (
-          <PricingPlanCard
-            key={plan.id}
-            {...plan}
-            onCtaClick={() => handleCtaClick(plan.ctaText)}
-          />
+          <PricingPlanCard key={plan.id} {...plan} />
         ))}
       </div>
     </section>
