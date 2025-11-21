@@ -13,7 +13,7 @@ export interface Feature {
  */
 export const FEATURES_HEADING = {
   label: 'Features',
-  title: 'Never Miss a Market Move',
+  title: 'See the cause not the symptoms',
 };
 
 /**
@@ -21,31 +21,31 @@ export const FEATURES_HEADING = {
  */
 export const FEATURES: Feature[] = [
   {
-    image: '/images/features/market-intelligence.png',
-    imageAlt: 'Market Intelligence',
-    title: 'Market Intelligence',
+    image: '/images/features/one-click-recordings.png',
+    imageAlt: 'One Click Recordings',
+    title: 'One Click Recordings',
     description:
-      "Get a leg up with the sectors you're most interested in. Every change, no matter how small, gets flagged.",
+      'One-click recording links that works everywhere. No apps, installs, or browser extensions needed. A simple link that lets you capture and replay the issue.',
   },
   {
-    image: '/images/features/deal-intelligence.png',
-    imageAlt: 'Deal Intelligence',
-    title: 'Deal Intelligence',
+    image: '/images/features/complete-issue-context.png',
+    imageAlt: 'Complete Issue Context',
+    title: 'Complete Issue Context',
     description:
-      'Time your bets better. Track companies you passed on and re-engage when they hit key milestones. Turn comeback stories into portfolio wins.',
+      'Capture console errors, network activity, user steps, and error traces with every recording. Get complete visibility into customer issue.',
   },
   {
-    image: '/images/features/relationship-intelligence.png',
-    imageAlt: 'Relationship Intelligence',
-    title: 'Relationship Intelligence',
+    image: '/images/features/native-integrations.png',
+    imageAlt: 'Native Integrations',
+    title: 'Native Integrations',
     description:
-      'Stay connected through pivots and false starts. Monitor passed opportunities for breakthrough moments. Be the investor they turn to.',
+      'Best in class integrations with help desks, issue trackers, CRM, and support tools you already use. No context switching required.',
   },
   {
-    image: '/images/features/competitive-intelligence.png',
-    imageAlt: 'All Signal. No Noise.',
-    title: 'Competitive Intelligence',
+    image: '/images/features/enterprise-ready.png',
+    imageAlt: 'Enterprise Ready',
+    title: 'Enterprise Ready',
     description:
-      "Track competitive threats to your portfolio companies. Whether it's roadmap updates, pricing shifts, or positioning plays, be the first to know.",
+      'Auto-blur sensitive data. Bring your own storage. Enforce data-lifecycle and residency rules with enterprise-grade auditability, SAML SSO, and granular RBAC.',
   },
 ];

@@ -1,14 +1,14 @@
 import type { HighlightConfig } from './types';
 
-export const HERO_HEADING = "We monitor your companies so you don't have to";
+export const HERO_HEADING = 'Stop asking customers to describe their issues';
 
 export const HERO_HIGHLIGHTS: HighlightConfig[] = [
-  { wordIndex: 1, color: 'blue' },
-  { wordIndex: 3, color: 'yellow' },
+  { wordIndex: 2, color: 'blue' },
+  { wordIndex: 6, color: 'yellow' },
 ];
 
 export const HERO_DESCRIPTION =
-  'Keep tabs on companies and competitors that matter to you. Stay connected through pivots and false starts. Time your bets better.';
+  "Request screen recording with console logs, network data and user steps showing exactly what went wrong. See the issue through your customer's lens.";
 
 export const HERO_PRIMARY_BUTTON = {
   text: 'Get Started',
