@@ -9,7 +9,7 @@ import {
   DrawerTrigger,
 } from '@workspace/ui/components/drawer';
 import { SIGNUP_URL } from '@/constants/onboarding';
-import { NAV_LINKS } from '@/constants/navigation';
+import { NAV_LINKS, LOGO_LINK } from '@/constants/navigation';
 
 function DrawerNavLink({
   href,
@@ -58,16 +58,12 @@ export default function Header() {
   return (
     <nav className="mx-auto mt-12 flex w-full max-w-7xl flex-wrap items-center justify-between gap-8 p-4 font-inter text-sm">
       <div className="flex flex-1 shrink-0 items-center justify-start gap-2">
-        <Logo />
+        <a href={NAV_LINKS.home} aria-label={LOGO_LINK.ariaLabel}>
+          <Logo />
+        </a>
       </div>
 
       <div className="hidden items-center gap-8 md:flex">
-        <a
-          className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href={NAV_LINKS.home}
-        >
-          Home
-        </a>
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
           href={NAV_LINKS.features}
@@ -119,7 +115,6 @@ export default function Header() {
             </div>
             <div className="flex w-full flex-col items-center gap-4">
               <nav className="flex w-full flex-col">
-                <DrawerNavLink href={NAV_LINKS.home}>Home</DrawerNavLink>
                 <DrawerNavLink href={NAV_LINKS.features}>Features</DrawerNavLink>
                 <DrawerNavLink href={NAV_LINKS.pricing}>Pricing</DrawerNavLink>
                 <DrawerNavLink href={NAV_LINKS.roadmap}>Roadmap</DrawerNavLink>
