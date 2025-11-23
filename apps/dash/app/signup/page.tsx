@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { authClient } from '@/lib/client/auth';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,12 +11,16 @@ export default function SignupPage() {
   const handleGoogleSignUp = async () => {
     try {
       setIsLoading(true);
+      logger.info({ provider: 'google' }, 'Initiating Google sign up');
+
       await authClient.signIn.social({
         provider: 'google',
         callbackURL: `${window.location.origin}/dashboard`,
       });
+
+      logger.info({ provider: 'google' }, 'Google sign up successful');
     } catch (error) {
-      console.error('Sign up error:', error);
+      logger.error({ err: error, provider: 'google' }, 'Sign up failed');
       setIsLoading(false);
     }
   };

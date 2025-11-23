@@ -1,16 +1,19 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
+import { createAppLogger } from '@workspace/logger';
+
+const logger = createAppLogger('db-migrate');
 
 const runMigrations = async () => {
   const databaseUrl = process.env.DATABASE_URL;
 
   if (!databaseUrl) {
-    console.error('DATABASE_URL environment variable is not set');
+    logger.error('DATABASE_URL environment variable is not set');
     process.exit(1);
   }
 
-  console.log('Running migrations...');
+  logger.info('Running migrations...');
 
   const pool = new Pool({
     connectionString: databaseUrl,
@@ -21,9 +24,9 @@ const runMigrations = async () => {
 
   try {
     await migrate(db, { migrationsFolder: './drizzle' });
-    console.log('Migrations completed successfully!');
+    logger.info('Migrations completed successfully!');
   } catch (error) {
-    console.error('Migration failed:', error);
+    logger.error({ err: error }, 'Migration failed');
     process.exit(1);
   }
 

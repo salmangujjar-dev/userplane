@@ -2,6 +2,7 @@
  * Environment configuration and validation
  * Centralizes all environment variable access with type safety and validation
  */
+import { createAppLogger } from '@workspace/logger';
 
 interface EnvConfig {
   port: number;
@@ -96,21 +97,6 @@ export function loadEnvConfig(): EnvConfig {
     },
   };
 
-  // Validate critical configuration in production
-  if (config.nodeEnv === 'production') {
-    if (config.auth.secret === 'dev-auth-secret-change-in-production') {
-      throw new Error('BETTER_AUTH_SECRET must be set in production');
-    }
-    if (!config.database.url) {
-      throw new Error('DATABASE_URL must be set in production');
-    }
-    if (!config.google.clientId || !config.google.clientSecret) {
-      console.warn(
-        'Warning: Google OAuth credentials not set. Google authentication will not work.'
-      );
-    }
-  }
-
   return config;
 }
 
@@ -120,16 +106,38 @@ export function loadEnvConfig(): EnvConfig {
 export const env = loadEnvConfig();
 
 /**
+ * Logger instance for environment configuration
+ */
+const logger = createAppLogger('env');
+
+// Validate critical configuration in production
+if (env.nodeEnv === 'production') {
+  if (env.auth.secret === 'dev-auth-secret-change-in-production') {
+    throw new Error('BETTER_AUTH_SECRET must be set in production');
+  }
+  if (!env.database.url) {
+    throw new Error('DATABASE_URL must be set in production');
+  }
+  if (!env.google.clientId || !env.google.clientSecret) {
+    logger.warn('Google OAuth credentials not set. Google authentication will not work.');
+  }
+}
+
+/**
  * Log configuration on startup
  */
 export function logConfig(): void {
-  console.log('Environment Configuration:');
-  console.log(`  - Mode: ${env.nodeEnv}`);
-  console.log(`  - Port: ${env.port}`);
-  console.log(`  - Host: ${env.host}`);
-  console.log(`  - CORS Origins: ${env.cors.origins.join(', ')}`);
-  console.log(`  - CORS Credentials: ${env.cors.credentials}`);
-  console.log(`  - Auth URL: ${env.auth.url}`);
-  console.log(`  - Database: ${env.database.url ? 'Connected' : 'Not configured'}`);
-  console.log(`  - Google OAuth: ${env.google.clientId ? 'Configured' : 'Not configured'}`);
+  logger.info(
+    {
+      mode: env.nodeEnv,
+      port: env.port,
+      host: env.host,
+      corsOrigins: env.cors.origins,
+      corsCredentials: env.cors.credentials,
+      authUrl: env.auth.url,
+      database: env.database.url ? 'Connected' : 'Not configured',
+      googleOAuth: env.google.clientId ? 'Configured' : 'Not configured',
+    },
+    'Environment configuration loaded'
+  );
 }

@@ -5,6 +5,7 @@
 
 import { queryOptions } from '@tanstack/react-query';
 import { api } from '@/lib/client/api';
+import { logger } from '@/lib/logger';
 
 // Type definitions (matches API schemas)
 export interface Todo {
@@ -40,8 +41,11 @@ export const queryKeys = {
 export const todosQueryOptions = queryOptions({
   ...queryKeys.LIST_TODOS,
   queryFn: async () => {
+    logger.debug('Fetching todos list');
     const response = await api['api']['v1'].todos.$get();
-    return response.json();
+    const data = await response.json();
+    logger.info({ count: 'todos' in data ? data.todos.length : 0 }, 'Todos fetched successfully');
+    return data;
   },
 });
 
@@ -69,15 +73,18 @@ export const createTodoQueryOptions = (id: string) =>
  * Mutation function for creating a todo
  */
 export const createTodo = async (data: CreateTodoInput) => {
+  logger.info({ title: data.title }, 'Creating new todo');
   const response = await api['api']['v1'].todos.$post({
     json: data,
   });
   const json = await response.json();
 
   if ('message' in json && response.status >= 400) {
+    logger.error({ error: json.message }, 'Failed to create todo');
     throw new Error(json.message);
   }
 
+  logger.info({ todoId: 'todo' in json ? json.todo.id : 'unknown' }, 'Todo created successfully');
   return json;
 };
 
@@ -103,6 +110,7 @@ export const updateTodo = async ({ id, data }: { id: string; data: UpdateTodoInp
  * Mutation function for deleting a todo
  */
 export const deleteTodo = async (id: string) => {
+  logger.info({ todoId: id }, 'Deleting todo');
   const response = await api['api']['v1'].todos[':id'].$delete({
     param: { id },
   });
@@ -110,8 +118,11 @@ export const deleteTodo = async (id: string) => {
   if (response.status !== 200) {
     const json = await response.json();
     const message = 'message' in json ? json.message : 'Failed to delete todo';
+    logger.error({ todoId: id, error: message }, 'Failed to delete todo');
     throw new Error(message);
   }
+
+  logger.info({ todoId: id }, 'Todo deleted successfully');
 };
 
 /**

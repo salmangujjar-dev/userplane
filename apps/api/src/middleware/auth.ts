@@ -1,5 +1,8 @@
 import type { Context, Next } from 'hono';
 import { auth } from '../lib/auth';
+import { createAppLogger } from '@workspace/logger';
+
+const logger = createAppLogger('auth-middleware');
 
 export type AuthContext = {
   Variables: {
@@ -33,25 +36,30 @@ export async function requireAuth(c: Context<AuthContext>, next: Next) {
   const cookieHeader = c.req.header('cookie');
   const authHeader = c.req.header('authorization');
 
-  console.log('[Auth Middleware] Request:', {
-    path: c.req.path,
-    method: c.req.method,
-    hasCookie: !!cookieHeader,
-    hasAuth: !!authHeader,
-    cookies: cookieHeader,
-    origin: c.req.header('origin'),
-    referer: c.req.header('referer'),
-  });
+  logger.debug(
+    {
+      path: c.req.path,
+      method: c.req.method,
+      hasCookie: !!cookieHeader,
+      hasAuth: !!authHeader,
+      origin: c.req.header('origin'),
+      referer: c.req.header('referer'),
+    },
+    'Auth middleware request'
+  );
 
   const session = await auth.api.getSession({
     headers: c.req.raw.headers,
   });
 
-  console.log('[Auth Middleware] Session:', {
-    hasSession: !!session,
-    hasUser: !!session?.user,
-    userId: session?.user?.id,
-  });
+  logger.debug(
+    {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+    },
+    'Auth middleware session'
+  );
 
   if (!session?.user) {
     return c.json(

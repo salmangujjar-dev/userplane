@@ -1,19 +1,21 @@
 import { Hono } from 'hono';
-import { logger } from 'hono/logger';
+import { logger as honoLogger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import { prettyJSON } from 'hono/pretty-json';
 import createRouter from './lib/create-router';
 import { registerRoutes } from './routes';
 import { env, logConfig } from './lib/env';
 import { auth } from './lib/auth';
+import { createAppLogger } from '@workspace/logger';
 
 const app = new Hono();
+const logger = createAppLogger('api');
 
 // Log configuration on startup
 logConfig();
 
 // Middleware
-app.use('*', logger());
+app.use('*', honoLogger());
 app.use(
   '*',
   cors({
@@ -48,7 +50,7 @@ app.notFound((c) => {
 
 // Error handler
 app.onError((err, c) => {
-  console.error(`Error: ${err.message}`);
+  logger.error({ err, path: c.req.path }, 'Internal server error');
   return c.json(
     {
       error: 'Internal Server Error',
