@@ -1,5 +1,4 @@
 import pino, { type LoggerOptions } from 'pino';
-import pretty from 'pino-pretty';
 
 export interface CreateLoggerOptions {
   level?: pino.Level;
@@ -24,6 +23,9 @@ export function createLogger(context: string, options: CreateLoggerOptions = {})
   };
 
   if (usePretty) {
+    // Lazy load pino-pretty only when needed
+    // This prevents bundling it in browser/edge environments
+    const pretty = require('pino-pretty');
     const stream = pretty({
       colorize: true,
       translateTime: 'SYS:standard',
