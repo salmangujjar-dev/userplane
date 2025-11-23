@@ -3,17 +3,14 @@
  * Uses the shared @workspace/api-client package
  */
 
-import { createApi } from '@workspace/api-client';
+import apiClient from '@workspace/api-client';
 
 const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3001';
 
 /**
  * Create API client instance
  */
-export const api = createApi({
-  baseUrl: apiUrl,
-  credentials: false, // Recorder might not need auth
-});
+export const api = apiClient(apiUrl);
 
 /**
  * Helper to fetch users

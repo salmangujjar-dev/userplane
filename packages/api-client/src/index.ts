@@ -1,101 +1,21 @@
-/**
- * @workspace/api-client
- *
- * Shared Hono RPC client for all frontend applications
- * Provides type-safe API communication with the backend
- */
-
+import type { router } from '@workspace/api/routes';
 import { hc } from 'hono/client';
-import type { AppType } from '../../../apps/api/src/index.js';
 
-/**
- * Configuration options for the API client
- */
-export interface ApiClientConfig {
-  /**
-   * Base URL of the API server
-   * @example 'http://localhost:3001'
-   */
-  baseUrl: string;
+// Create instance to inline type in build
+// https://hono.dev/docs/guides/rpc#compile-your-code-before-using-it-recommended
+const client = hc<router>('');
+export type Client = typeof client;
 
-  /**
-   * Whether to include credentials (cookies) in requests
-   * @default true
-   */
-  credentials?: boolean;
+export default (...args: Parameters<typeof hc>): Client => hc<router>(...args);
 
-  /**
-   * Additional fetch options to apply to all requests
-   */
-  fetchOptions?: RequestInit;
-}
-
-/**
- * Pre-compiled client type for better IDE performance
- * This trick calculates the type at compile time instead of runtime
- */
-export type ApiClient = ReturnType<typeof hc<AppType>>;
-
-/**
- * Create a typed Hono RPC client
- *
- * @param config - Configuration options for the client
- * @returns Typed API client
- *
- * @example
- * ```typescript
- * import { createApiClient } from '@workspace/api-client';
- *
- * const client = createApiClient({
- *   baseUrl: 'http://localhost:3001',
- *   credentials: true,
- * });
- *
- * // Access API routes
- * const api = client['api']['v1'];
- * const res = await api.users.$get();
- * ```
- */
-export function createApiClient(config: ApiClientConfig): ApiClient {
-  const { baseUrl, credentials = true, fetchOptions = {} } = config;
-
-  return hc<AppType>(baseUrl, {
-    init: {
-      credentials: credentials ? 'include' : 'same-origin',
-      ...fetchOptions,
-    },
-  });
-}
-
-/**
- * Create a pre-configured API client
- *
- * @param config - Configuration options for the client
- * @returns API client with v1 routes exposed directly
- *
- * @example
- * ```typescript
- * import { createApi } from '@workspace/api-client';
- *
- * const api = createApi({
- *   baseUrl: 'http://localhost:3001',
- * });
- *
- * // Access API routes - routes are at the top level from AppType export
- * const res = await api.users.$get();
- * ```
- */
-export function createApi(config: ApiClientConfig) {
-  const client = createApiClient(config) as any;
-  return client.api.v1;
-}
-
-/**
- * Re-export Hono client types for convenience
- */
-export type { InferRequestType, InferResponseType } from 'hono/client';
-
-/**
- * Re-export AppType for type references
- */
-export type { AppType };
+export type ErrorSchema = {
+  error: {
+    issues: {
+      code: string;
+      path: (string | number)[];
+      message?: string | undefined;
+    }[];
+    name: string;
+  };
+  success: boolean;
+};
