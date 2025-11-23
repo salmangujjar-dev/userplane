@@ -59,3 +59,5 @@ coverage/
 *.pem
 *.key
 
+# Temporary files
+dump/

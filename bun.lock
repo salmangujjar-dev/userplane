@@ -37,11 +37,10 @@
       "name": "dash",
       "version": "0.0.1",
       "dependencies": {
-        "@workspace/api": "workspace:*",
+        "@tanstack/react-query": "^5.90.10",
         "@workspace/api-client": "workspace:*",
         "@workspace/auth": "workspace:*",
         "@workspace/ui": "workspace:*",
-        "hono": "^4.6.16",
         "lucide-react": "^0.475.0",
         "next": "^15.4.5",
         "next-themes": "^0.4.6",
@@ -69,12 +68,10 @@
         "@types/canvas-confetti": "^1.9.0",
         "@types/react": "^19.2.6",
         "@types/react-dom": "^19.2.3",
-        "@workspace/api": "workspace:*",
         "@workspace/api-client": "workspace:*",
         "@workspace/ui": "workspace:*",
         "astro": "^5.15.9",
         "canvas-confetti": "^1.9.3",
-        "hono": "^4.6.16",
         "lucide-react": "^0.554.0",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
@@ -98,12 +95,10 @@
         "@types/canvas-confetti": "^1.9.0",
         "@types/react": "^19.2.6",
         "@types/react-dom": "^19.2.3",
-        "@workspace/api": "workspace:*",
         "@workspace/api-client": "workspace:*",
         "@workspace/ui": "workspace:*",
         "astro": "^5.15.9",
         "canvas-confetti": "^1.9.3",
-        "hono": "^4.6.16",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
         "tailwindcss": "^4.1.16",
@@ -119,7 +114,7 @@
       "name": "@workspace/api-client",
       "version": "0.0.1",
       "dependencies": {
-        "@workspace/api": "workspace:*",
+        "@workspace/api": "workspace:^",
         "hono": "^4.6.16",
       },
       "devDependencies": {
@@ -626,6 +621,10 @@
     "@tailwindcss/typography": ["@tailwindcss/typography@0.5.19", "", { "dependencies": { "postcss-selector-parser": "6.0.10" }, "peerDependencies": { "tailwindcss": ">=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1" } }, "sha512-w31dd8HOx3k9vPtcQh5QHP9GwKcgbMp87j58qi6xgiBnFFtKEAgCWnDw4qUT8aHwkCp8bKvb/KGKWWHedP0AAg=="],
 
     "@tailwindcss/vite": ["@tailwindcss/vite@4.1.17", "", { "dependencies": { "@tailwindcss/node": "4.1.17", "@tailwindcss/oxide": "4.1.17", "tailwindcss": "4.1.17" }, "peerDependencies": { "vite": "^5.2.0 || ^6 || ^7" } }, "sha512-4+9w8ZHOiGnpcGI6z1TVVfWaX/koK7fKeSYF3qlYg2xpBtbteP2ddBxiarL+HVgfSJGeK5RIxRQmKm4rTJJAwA=="],
+
+    "@tanstack/query-core": ["@tanstack/query-core@5.90.10", "", {}, "sha512-EhZVFu9rl7GfRNuJLJ3Y7wtbTnENsvzp+YpcAV7kCYiXni1v8qZh++lpw4ch4rrwC0u/EZRnBHIehzCGzwXDSQ=="],
+
+    "@tanstack/react-query": ["@tanstack/react-query@5.90.10", "", { "dependencies": { "@tanstack/query-core": "5.90.10" }, "peerDependencies": { "react": "^18 || ^19" } }, "sha512-BKLss9Y8PQ9IUjPYQiv3/Zmlx92uxffUOX8ZZNoQlCIZBJPT5M+GOMQj7xislvVQ6l1BstBjcX0XB/aHfFYVNw=="],
 
     "@tootallnate/quickjs-emscripten": ["@tootallnate/quickjs-emscripten@0.23.0", "", {}, "sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA=="],
 
