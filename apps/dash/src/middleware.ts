@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createAppLogger } from '@workspace/logger';
+import { createBrowserLogger } from '@workspace/logger/browser';
 
-const logger = createAppLogger('middleware');
+const logger = createBrowserLogger('middleware');
 
 const protectedRoutes = ['/dashboard'];
 const authRoutes = ['/login', '/signup'];
