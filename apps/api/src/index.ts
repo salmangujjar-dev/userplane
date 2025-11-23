@@ -3,39 +3,62 @@ import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import { prettyJSON } from 'hono/pretty-json';
 import users from './routes/users';
+import authTest from './routes/auth-test';
+import { env, logConfig } from './lib/env';
+import { auth } from './lib/auth';
 
 const app = new Hono();
 
+// Log configuration on startup
+logConfig();
+
 // Middleware
 app.use('*', logger());
-app.use('*', cors());
+app.use(
+  '*',
+  cors({
+    origin: env.cors.origins,
+    credentials: env.cors.credentials,
+    maxAge: env.cors.maxAge,
+  })
+);
 app.use('*', prettyJSON());
 
 // Routes
 app.get('/', (c) => {
-  return c.json({
-    message: 'Welcome to Hono API',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      api: '/api/v1',
+  return c.json(
+    {
+      message: 'Welcome to Hono API',
+      version: '1.0.0',
+      endpoints: {
+        health: '/health',
+        api: '/api/v1',
+      },
     },
-  });
+    200
+  );
 });
 
 app.get('/health', (c) => {
-  return c.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-  });
+  return c.json(
+    {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    },
+    200
+  );
 });
 
-// API v1 routes
-const api = new Hono();
+// Better Auth routes
+app.on(['POST', 'GET'], '/api/auth/**', (c) => {
+  return auth.handler(c.req.raw);
+});
 
-api.route('/users', users);
+// API v1 routes - chain handlers for proper type inference
+const apiRoutes = new Hono().route('/users', users).route('/auth-test', authTest);
 
-app.route('/api/v1', api);
+// Mount API routes
+app.route('/api/v1', apiRoutes);
 
 // 404 handler
 app.notFound((c) => {
@@ -60,7 +83,11 @@ app.onError((err, c) => {
   );
 });
 
+// Export app type for RPC
+export type AppType = typeof apiRoutes;
+
 export default {
-  port: 3001,
+  port: env.port,
+  hostname: env.host,
   fetch: app.fetch,
 };

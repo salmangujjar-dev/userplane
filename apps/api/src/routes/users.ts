@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
 
 const users = new Hono();
 
@@ -9,17 +11,41 @@ const mockUsers = [
   { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'user' },
 ];
 
+// Schemas
+const UserSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email(),
+  role: z.enum(['admin', 'user']),
+});
+
+const CreateUserSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email'),
+  role: z.enum(['admin', 'user']).default('user'),
+});
+
+const UpdateUserSchema = CreateUserSchema.partial();
+
+const IdParamSchema = z.object({
+  id: z.string().regex(/^\d+$/, 'ID must be a number'),
+});
+
 // Get all users
 users.get('/', (c) => {
-  return c.json({
-    users: mockUsers,
-    total: mockUsers.length,
-  });
+  return c.json(
+    {
+      users: mockUsers,
+      total: mockUsers.length,
+    },
+    200
+  );
 });
 
 // Get user by ID
-users.get('/:id', (c) => {
-  const id = parseInt(c.req.param('id'));
+users.get('/:id', zValidator('param', IdParamSchema), (c) => {
+  const { id: idStr } = c.req.valid('param');
+  const id = parseInt(idStr);
   const user = mockUsers.find((u) => u.id === id);
 
   if (!user) {
@@ -31,38 +57,30 @@ users.get('/:id', (c) => {
     );
   }
 
-  return c.json({ user });
+  return c.json({ user }, 200);
 });
 
 // Create user
-users.post('/', async (c) => {
-  try {
-    const body = await c.req.json();
-    const newUser = {
-      id: mockUsers.length + 1,
-      ...body,
-    };
+users.post('/', zValidator('json', CreateUserSchema), (c) => {
+  const body = c.req.valid('json');
+  const newUser = {
+    id: mockUsers.length + 1,
+    ...body,
+  };
 
-    return c.json(
-      {
-        message: 'User created successfully',
-        user: newUser,
-      },
-      201
-    );
-  } catch (error) {
-    return c.json(
-      {
-        error: 'Invalid request body',
-      },
-      400
-    );
-  }
+  return c.json(
+    {
+      message: 'User created successfully',
+      user: newUser,
+    },
+    201
+  );
 });
 
 // Update user
-users.put('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+users.put('/:id', zValidator('param', IdParamSchema), zValidator('json', UpdateUserSchema), (c) => {
+  const { id: idStr } = c.req.valid('param');
+  const id = parseInt(idStr);
   const user = mockUsers.find((u) => u.id === id);
 
   if (!user) {
@@ -74,27 +92,22 @@ users.put('/:id', async (c) => {
     );
   }
 
-  try {
-    const body = await c.req.json();
-    const updatedUser = { ...user, ...body, id };
+  const body = c.req.valid('json');
+  const updatedUser = { ...user, ...body, id };
 
-    return c.json({
+  return c.json(
+    {
       message: 'User updated successfully',
       user: updatedUser,
-    });
-  } catch (error) {
-    return c.json(
-      {
-        error: 'Invalid request body',
-      },
-      400
-    );
-  }
+    },
+    200
+  );
 });
 
 // Delete user
-users.delete('/:id', (c) => {
-  const id = parseInt(c.req.param('id'));
+users.delete('/:id', zValidator('param', IdParamSchema), (c) => {
+  const { id: idStr } = c.req.valid('param');
+  const id = parseInt(idStr);
   const user = mockUsers.find((u) => u.id === id);
 
   if (!user) {
@@ -106,9 +119,12 @@ users.delete('/:id', (c) => {
     );
   }
 
-  return c.json({
-    message: 'User deleted successfully',
-  });
+  return c.json(
+    {
+      message: 'User deleted successfully',
+    },
+    200
+  );
 });
 
 export default users;
