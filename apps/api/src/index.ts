@@ -2,8 +2,8 @@ import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import { prettyJSON } from 'hono/pretty-json';
-import users from './routes/users';
-import authTest from './routes/auth-test';
+import createRouter from './lib/create-router';
+import { registerRoutes } from './routes';
 import { env, logConfig } from './lib/env';
 import { auth } from './lib/auth';
 
@@ -24,38 +24,13 @@ app.use(
 );
 app.use('*', prettyJSON());
 
-// Routes
-app.get('/', (c) => {
-  return c.json(
-    {
-      message: 'Welcome to Hono API',
-      version: '1.0.0',
-      endpoints: {
-        health: '/health',
-        api: '/api/v1',
-      },
-    },
-    200
-  );
-});
-
-app.get('/health', (c) => {
-  return c.json(
-    {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    },
-    200
-  );
-});
-
-// Better Auth routes
+// Better Auth routes - must come before API routes
 app.on(['POST', 'GET'], '/api/auth/**', (c) => {
   return auth.handler(c.req.raw);
 });
 
-// API v1 routes - chain handlers for proper type inference
-const apiRoutes = new Hono().route('/users', users).route('/auth-test', authTest);
+// API v1 routes - all routes are defined in routes/index.ts
+const apiRoutes = registerRoutes(createRouter());
 
 // Mount API routes
 app.route('/api/v1', apiRoutes);
@@ -82,9 +57,6 @@ app.onError((err, c) => {
     500
   );
 });
-
-// Export app type for RPC
-export type AppType = typeof apiRoutes;
 
 export default {
   port: env.port,

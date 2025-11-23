@@ -29,8 +29,28 @@ export async function authMiddleware(c: Context<AuthContext>, next: Next) {
 }
 
 export async function requireAuth(c: Context<AuthContext>, next: Next) {
+  // Log request details for debugging
+  const cookieHeader = c.req.header('cookie');
+  const authHeader = c.req.header('authorization');
+
+  console.log('[Auth Middleware] Request:', {
+    path: c.req.path,
+    method: c.req.method,
+    hasCookie: !!cookieHeader,
+    hasAuth: !!authHeader,
+    cookies: cookieHeader,
+    origin: c.req.header('origin'),
+    referer: c.req.header('referer'),
+  });
+
   const session = await auth.api.getSession({
     headers: c.req.raw.headers,
+  });
+
+  console.log('[Auth Middleware] Session:', {
+    hasSession: !!session,
+    hasUser: !!session?.user,
+    userId: session?.user?.id,
   });
 
   if (!session?.user) {

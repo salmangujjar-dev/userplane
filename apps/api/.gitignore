@@ -1,0 +1,23 @@
+# Build output
+dist/
+*.js
+*.d.ts
+*.d.ts.map
+
+# Compiled files in src (should not be committed)
+src/**/*.js
+src/**/*.d.ts
+src/**/*.d.ts.map
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# Turbo
+.turbo/
+
+# OS
+.DS_Store
