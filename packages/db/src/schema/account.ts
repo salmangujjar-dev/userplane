@@ -4,19 +4,30 @@ import { user } from './user';
 export const account = pgTable(
   'account',
   {
+    // Primary identifier
     id: text('id').primaryKey(),
-    accountId: text('account_id').notNull(),
-    providerId: text('provider_id').notNull(),
+
+    // User relationship
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+
+    // Provider configuration
+    providerId: text('provider_id').notNull(),
+    accountId: text('account_id').notNull(),
+
+    // OAuth tokens
     accessToken: text('access_token'),
     refreshToken: text('refresh_token'),
     idToken: text('id_token'),
     accessTokenExpiresAt: timestamp('access_token_expires_at'),
     refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
     scope: text('scope'),
+
+    // Email/password authentication
     password: text('password'),
+
+    // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
       .$onUpdate(() => new Date())
