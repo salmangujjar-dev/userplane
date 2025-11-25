@@ -204,8 +204,8 @@ update: ## Update dependencies
 env\:setup: ## Copy .env.example files to create .env files
 	@echo "$(BLUE)Setting up environment files...$(RESET)"
 	@if [ ! -f .env ]; then cp .env.example .env && echo "$(GREEN)✓$(RESET) Created .env"; else echo "$(YELLOW)⚠$(RESET) .env already exists"; fi
-	@if [ ! -f apps/api/.env.local ]; then cp apps/api/.env.example apps/api/.env.local && echo "$(GREEN)✓$(RESET) Created apps/api/.env.local"; else echo "$(YELLOW)⚠$(RESET) apps/api/.env.local already exists"; fi
-	@if [ ! -f apps/dash/.env.local ]; then cp apps/dash/.env.example apps/dash/.env.local && echo "$(GREEN)✓$(RESET) Created apps/dash/.env.local"; else echo "$(YELLOW)⚠$(RESET) apps/dash/.env.local already exists"; fi
+	@if [ ! -f apps/api/.env.development ]; then cp apps/api/.env.example apps/api/.env.development && echo "$(GREEN)✓$(RESET) Created apps/api/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/api/.env.development already exists"; fi
+	@if [ ! -f apps/dash/.env.development ]; then cp apps/dash/.env.example apps/dash/.env.development && echo "$(GREEN)✓$(RESET) Created apps/dash/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/dash/.env.development already exists"; fi
 	@if [ ! -f apps/home/.env ]; then cp apps/home/.env.example apps/home/.env && echo "$(GREEN)✓$(RESET) Created apps/home/.env"; else echo "$(YELLOW)⚠$(RESET) apps/home/.env already exists"; fi
 	@if [ ! -f apps/recorder/.env ]; then cp apps/recorder/.env.example apps/recorder/.env && echo "$(GREEN)✓$(RESET) Created apps/recorder/.env"; else echo "$(YELLOW)⚠$(RESET) apps/recorder/.env already exists"; fi
 	@echo "$(GREEN)Environment files setup complete!$(RESET)"
@@ -214,49 +214,49 @@ env\:setup: ## Copy .env.example files to create .env files
 env\:check: ## Check if .env files exist
 	@echo "$(BLUE)Checking environment files...$(RESET)"
 	@if [ -f .env ]; then echo "$(GREEN)✓$(RESET) .env exists"; else echo "$(RED)✗$(RESET) .env missing"; fi
-	@if [ -f apps/api/.env.local ]; then echo "$(GREEN)✓$(RESET) apps/api/.env.local exists"; else echo "$(RED)✗$(RESET) apps/api/.env.local missing"; fi
-	@if [ -f apps/dash/.env.local ]; then echo "$(GREEN)✓$(RESET) apps/dash/.env.local exists"; else echo "$(RED)✗$(RESET) apps/dash/.env.local missing"; fi
+	@if [ -f apps/api/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/api/.env.development exists"; else echo "$(RED)✗$(RESET) apps/api/.env.development missing"; fi
+	@if [ -f apps/dash/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/dash/.env.development exists"; else echo "$(RED)✗$(RESET) apps/dash/.env.development missing"; fi
 	@if [ -f apps/home/.env ]; then echo "$(GREEN)✓$(RESET) apps/home/.env exists"; else echo "$(RED)✗$(RESET) apps/home/.env missing"; fi
 	@if [ -f apps/recorder/.env ]; then echo "$(GREEN)✓$(RESET) apps/recorder/.env exists"; else echo "$(RED)✗$(RESET) apps/recorder/.env missing"; fi
 
 db\:generate: ## Generate Drizzle migrations from schema
 	@echo "$(BLUE)Generating Drizzle migrations...$(RESET)"
-	@if [ ! -f apps/api/.env.local ]; then \
-		echo "$(RED)Error: apps/api/.env.local not found$(RESET)"; \
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(cat ../../apps/api/.env.local | grep -v '^#' | xargs) && bun run db:generate
+	@cd packages/db && export $$(cat ../../apps/api/.env.development | grep -v '^#' | xargs) && bun run db:generate
 	@echo "$(GREEN)Migrations generated!$(RESET)"
 
 db\:migrate: ## Run database migrations
 	@echo "$(BLUE)Running database migrations...$(RESET)"
-	@if [ ! -f apps/api/.env.local ]; then \
-		echo "$(RED)Error: apps/api/.env.local not found$(RESET)"; \
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(cat ../../apps/api/.env.local | grep -v '^#' | xargs) && bun run db:migrate
+	@cd packages/db && export $$(cat ../../apps/api/.env.development | grep -v '^#' | xargs) && bun run db:migrate
 	@echo "$(GREEN)Migrations complete!$(RESET)"
 
 db\:push: ## Push schema directly to DB (dev only)
 	@echo "$(YELLOW)Pushing schema to database (dev only)...$(RESET)"
-	@if [ ! -f apps/api/.env.local ]; then \
-		echo "$(RED)Error: apps/api/.env.local not found$(RESET)"; \
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(cat ../../apps/api/.env.local | grep -v '^#' | xargs) && bun run db:push
+	@cd packages/db && export $$(cat ../../apps/api/.env.development | grep -v '^#' | xargs) && bun run db:push
 	@echo "$(GREEN)Schema pushed!$(RESET)"
 
 db\:studio: ## Open Drizzle Studio (DB GUI)
 	@echo "$(MAGENTA)Opening Drizzle Studio...$(RESET)"
-	@if [ ! -f apps/api/.env.local ]; then \
-		echo "$(RED)Error: apps/api/.env.local not found$(RESET)"; \
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(cat ../../apps/api/.env.local | grep -v '^#' | xargs) && bun run db:studio
+	@cd packages/db && export $$(cat ../../apps/api/.env.development | grep -v '^#' | xargs) && bun run db:studio
 
 i: install ## Shortcut for install
 d: dev ## Shortcut for dev
