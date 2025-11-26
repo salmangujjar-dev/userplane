@@ -10,6 +10,11 @@ import status from './status/status.index';
 import users from './users/users.index';
 import todos from './todos/todos.index';
 
+// Workspace provisioning routes
+import provisioner from './provisioner/provisioner.index';
+import invites from './invites/invites.index';
+import workspaces from './workspaces/workspaces.index';
+
 export function registerRoutes(app: AppOpenAPI) {
   return (
     app
@@ -20,6 +25,10 @@ export function registerRoutes(app: AppOpenAPI) {
       .route('/', users)
       .use('/todos/*', requireAuth)
       .route('/', todos)
+      // Workspace routes
+      .route('/', provisioner)
+      .route('/', invites)
+      .route('/', workspaces)
   );
 }
 
