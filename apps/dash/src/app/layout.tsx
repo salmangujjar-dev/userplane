@@ -1,7 +1,9 @@
 import { Geist, Geist_Mono } from 'next/font/google';
+import type { Metadata } from 'next';
 
 import '@workspace/ui/globals.css';
 import { Providers } from '@/components/providers';
+import { getAppMeta } from '@workspace/meta';
 
 const fontSans = Geist({
   subsets: ['latin'],
@@ -12,6 +14,25 @@ const fontMono = Geist_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
 });
+
+const meta = getAppMeta('dash');
+
+export const metadata: Metadata = {
+  title: meta.title,
+  description: meta.description,
+  keywords: meta.keywords,
+  openGraph: {
+    title: meta.title,
+    description: meta.description,
+    locale: meta.locale,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: meta.title,
+    description: meta.description,
+  },
+};
 
 export default function RootLayout({
   children,

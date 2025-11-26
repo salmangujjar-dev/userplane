@@ -16,6 +16,7 @@
     "@workspace/api-client": "workspace:*",
     "@workspace/auth": "workspace:*",
     "@workspace/logger": "workspace:*",
+    "@workspace/meta": "workspace:*",
     "@workspace/ui": "workspace:*",
     "lucide-react": "^0.475.0",
     "next": "^15.4.5",

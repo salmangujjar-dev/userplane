@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { logger as honoLogger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import { prettyJSON } from 'hono/pretty-json';
+import { serveStatic } from 'hono/bun';
 import createRouter from '@/api/lib/create-router';
 import { registerRoutes } from '@/api/routes';
 import { env, logConfig } from '@/api/env';
@@ -13,6 +14,10 @@ const logger = createAppLogger('api');
 
 // Log configuration on startup
 logConfig();
+
+// Serve favicon
+app.get('/favicon.ico', serveStatic({ path: './public/favicon.svg' }));
+app.get('/favicon.svg', serveStatic({ path: './public/favicon.svg' }));
 
 // Middleware
 app.use('*', honoLogger());

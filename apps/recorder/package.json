@@ -19,6 +19,7 @@
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "@workspace/api-client": "workspace:*",
+    "@workspace/meta": "workspace:*",
     "@workspace/ui": "workspace:*",
     "astro": "^5.15.9",
     "canvas-confetti": "^1.9.3",

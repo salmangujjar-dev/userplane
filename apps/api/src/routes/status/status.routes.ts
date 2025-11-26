@@ -13,6 +13,8 @@ const StatusSchema = z.object({
 const IndexSchema = z.object({
   message: z.string(),
   version: z.string(),
+  name: z.string().optional(),
+  description: z.string().optional(),
   endpoints: z.object({
     health: z.string(),
     api: z.string(),
