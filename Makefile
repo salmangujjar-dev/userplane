@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:astro dev\:api build build\:web build\:astro build\:api lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:migrate db\:push db\:studio i d b l f t c
+.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:migrate db\:push db\:studio i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -49,6 +49,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:web$(WHITE)                       ║$(RESET) Run web app only                                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:astro$(WHITE)                     ║$(RESET) Run astro app only                                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:api$(WHITE)                       ║$(RESET) Run API only                                                      $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:share$(WHITE)                     ║$(RESET) Run Share URL shortener only                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -56,6 +57,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)build:web$(WHITE)                     ║$(RESET) Build web app only                                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:astro$(WHITE)                   ║$(RESET) Build astro app only                                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:api$(WHITE)                     ║$(RESET) Build API only                                                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)build:share$(WHITE)                   ║$(RESET) Build Share URL shortener only                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)preview:astro$(WHITE)                 ║$(RESET) Preview astro production build                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)CODE QUALITY$(WHITE)                                                                                      ║$(RESET)"
@@ -105,6 +107,10 @@ dev\:api: ## Run API only
 	@echo "$(MAGENTA)Starting Hono API...$(RESET)"
 	@cd apps/api && bun dev
 
+dev\:share: ## Run Share URL shortener only
+	@echo "$(MAGENTA)Starting Share URL shortener...$(RESET)"
+	@cd apps/share && bun dev
+
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
 	@bun run build
@@ -124,6 +130,11 @@ build\:api: ## Build API only
 	@echo "$(BLUE)Building API...$(RESET)"
 	@cd apps/api && bun run build
 	@echo "$(GREEN)API built!$(RESET)"
+
+build\:share: ## Build Share URL shortener only
+	@echo "$(BLUE)Building Share URL shortener...$(RESET)"
+	@cd apps/share && bun run build
+	@echo "$(GREEN)Share URL shortener built!$(RESET)"
 
 lint: ## Run linter
 	@echo "$(YELLOW)Running linter...$(RESET)"
