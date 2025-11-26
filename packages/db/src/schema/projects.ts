@@ -18,6 +18,7 @@ export const projects = pgTable(
     // Project configuration
     projectTitle: text('project_title'),
     projectPath: text('project_path').notNull(),
+    isDefault: boolean('is_default').default(false).notNull(),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
