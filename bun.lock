@@ -117,6 +117,23 @@
         "tw-animate-css": "^1.3.6",
       },
     },
+    "apps/share": {
+      "name": "@workspace/share",
+      "version": "0.0.1",
+      "dependencies": {
+        "@hono/zod-openapi": "^1.1.5",
+        "@workspace/logger": "workspace:*",
+        "@workspace/meta": "workspace:*",
+        "hono": "^4.6.16",
+        "stoker": "^2.0.1",
+        "zod": "^3.24.1",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@workspace/eslint-config": "workspace:^",
+        "@workspace/typescript-config": "workspace:*",
+      },
+    },
     "packages/api-client": {
       "name": "@workspace/api-client",
       "version": "0.0.1",
@@ -776,6 +793,8 @@
     "@workspace/logger": ["@workspace/logger@workspace:packages/logger"],
 
     "@workspace/meta": ["@workspace/meta@workspace:packages/meta"],
+
+    "@workspace/share": ["@workspace/share@workspace:apps/share"],
 
     "@workspace/typescript-config": ["@workspace/typescript-config@workspace:packages/typescript-config"],
 
