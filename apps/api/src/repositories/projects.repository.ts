@@ -83,4 +83,14 @@ export class ProjectRepository {
 
     return updated;
   }
+
+  /**
+   * Find all projects in workspace
+   */
+  async findByWorkspace(workspaceId: string) {
+    return this.db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)));
+  }
 }

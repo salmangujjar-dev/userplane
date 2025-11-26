@@ -33,6 +33,14 @@ interface EnvConfig {
     windowMs: number;
     maxRequests: number;
   };
+  defaultStore: {
+    provider: 'r2' | 's3';
+    url: string;
+    region: string;
+    bucket: string;
+    accessId: string;
+    accessKey: string;
+  };
 }
 
 /**
@@ -103,6 +111,14 @@ export function loadEnvConfig(): EnvConfig {
       windowMs: parseInteger(process.env.RATE_LIMIT_WINDOW, 60000),
       maxRequests: parseInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
     },
+    defaultStore: {
+      provider: (process.env.DEFAULT_STORE_PROVIDER as 'r2' | 's3') || 'r2',
+      url: process.env.DEFAULT_STORE_URL || '',
+      region: process.env.DEFAULT_STORE_REGION || 'auto',
+      bucket: process.env.DEFAULT_STORE_BUCKET || '',
+      accessId: process.env.DEFAULT_STORE_ACCESS_ID || '',
+      accessKey: process.env.DEFAULT_STORE_ACCESS_KEY || '',
+    },
   };
 
   return config;
@@ -132,6 +148,17 @@ if (env.nodeEnv === 'production') {
   if (env.email.provider === 'resend' && !env.email.resendApiKey) {
     throw new Error('RESEND_API_KEY must be set when using resend email provider');
   }
+  if (
+    !env.defaultStore.url ||
+    !env.defaultStore.region ||
+    !env.defaultStore.bucket ||
+    !env.defaultStore.accessId ||
+    !env.defaultStore.accessKey
+  ) {
+    throw new Error(
+      'Default store configuration (URL, Region, Bucket, Access ID, Access Key) must be set in production'
+    );
+  }
 }
 
 /**
@@ -150,6 +177,13 @@ export function logConfig(): void {
       googleOAuth: env.google.clientId ? 'Configured' : 'Not configured',
       emailProvider: env.email.provider,
       resendConfigured: env.email.provider === 'resend' ? !!env.email.resendApiKey : 'N/A',
+      defaultStoreProvider: env.defaultStore.provider,
+      defaultStoreConfigured:
+        !!env.defaultStore.url &&
+        !!env.defaultStore.region &&
+        !!env.defaultStore.bucket &&
+        !!env.defaultStore.accessId &&
+        !!env.defaultStore.accessKey,
     },
     'Environment configuration loaded'
   );
