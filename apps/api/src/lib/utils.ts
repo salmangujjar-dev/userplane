@@ -67,18 +67,3 @@ export function deriveWorkspaceName(domain: string): string {
 export function getFaviconAPIURI(domain: string, size: number = 128): string {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
 }
-
-/**
- * Convert string to URL-safe slug
- *
- * @example
- * slugify("My Startup") → "my-startup"
- */
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}

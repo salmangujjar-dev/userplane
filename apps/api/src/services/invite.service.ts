@@ -30,6 +30,25 @@ export class InviteService {
   constructor(private deps: InviteServiceDeps) {}
 
   /**
+   * Get workspace invite URL
+   * Generates JWT token containing workspace and inviter context
+   */
+  async getInviteUrl(workspaceId: string, userId: string): Promise<string> {
+    const workspace = await this.deps.workspaceService.getById(workspaceId);
+    const inviter = await this.deps.userService.getById(userId);
+
+    const inviteUrl = this.deps.tokenService.generateInviteUrl({
+      wi: workspace.id,
+      wn: workspace.workspaceName,
+      wt: workspace.workspaceInviteToken,
+      in: inviter.name,
+      ie: inviter.email,
+    });
+
+    return inviteUrl;
+  }
+
+  /**
    * Send workspace invitations to multiple emails
    * Returns list of sent and failed invitations
    */
@@ -40,11 +59,11 @@ export class InviteService {
     const inviter = await this.deps.userService.getById(invitedBy);
 
     const inviteUrl = this.deps.tokenService.generateInviteUrl({
-      workspaceId: workspace.id,
-      workspaceName: workspace.workspaceName,
-      workspaceInviteToken: workspace.workspaceInviteToken || '',
-      inviterName: inviter.name,
-      inviterEmail: inviter.email,
+      wi: workspace.id,
+      wn: workspace.workspaceName,
+      wt: workspace.workspaceInviteToken,
+      in: inviter.name,
+      ie: inviter.email,
     });
 
     const results = await Promise.allSettled(
@@ -89,9 +108,9 @@ export class InviteService {
       throw new NotFoundError('Invalid or expired invite token');
     }
 
-    const workspace = await this.deps.workspaceService.getById(inviteData.workspaceId);
+    const workspace = await this.deps.workspaceService.getById(inviteData.wi);
 
-    if (workspace.workspaceInviteToken !== inviteData.workspaceInviteToken) {
+    if (workspace.workspaceInviteToken !== inviteData.wt) {
       throw new NotFoundError('Invite token has been invalidated');
     }
 
@@ -110,8 +129,8 @@ export class InviteService {
       workspace: {
         workspaceSlug: workspace.workspaceSlug,
         workspaceName: workspace.workspaceName,
-        workspaceInviteToken: workspace.workspaceInviteToken || '',
-        workspaceLogoUrl: workspace.workspaceLogoUrl || '',
+        workspaceInviteToken: workspace.workspaceInviteToken,
+        workspaceLogoUrl: workspace.workspaceLogoUrl,
       },
     };
   }

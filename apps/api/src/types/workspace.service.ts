@@ -12,6 +12,24 @@ export interface CreateWorkspaceParams {
   workspaceName: string;
   workspaceSlug: string;
   workspacePlan: WorkspacePlan;
-  workspaceLogoUrl?: string | null;
+  workspaceLogoUrl: string;
   userId: string;
+}
+
+/**
+ * Result after rotating workspace invite URL
+ */
+export interface RotateInviteUrlResult {
+  workspaceId: string;
+  workspaceSlug: string;
+  message: string;
+}
+
+/**
+ * Result containing workspace invite URL
+ */
+export interface GetInviteUrlResult {
+  inviteUrl: string;
+  workspaceId: string;
+  workspaceSlug: string;
 }
