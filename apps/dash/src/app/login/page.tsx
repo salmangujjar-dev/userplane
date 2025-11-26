@@ -1,22 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { authClient } from '@/lib/client/auth';
+import { useAuth } from '@/hooks';
 import Link from 'next/link';
-import { logger } from '@/lib/logger';
+import { logger } from '@/logger';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const { signInWithGoogle } = useAuth();
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
       logger.info({ provider: 'google' }, 'Initiating Google sign in');
 
-      await authClient.signIn.social({
-        provider: 'google',
-        callbackURL: `${window.location.origin}/dashboard`,
-      });
+      await signInWithGoogle();
 
       logger.info({ provider: 'google' }, 'Google sign in successful');
     } catch (error) {

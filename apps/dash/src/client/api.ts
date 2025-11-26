@@ -1,5 +1,5 @@
 import apiClient from '@workspace/api-client';
-import { env } from '../env';
+import { env } from '@/env';
 
 export const api = apiClient(env.api.url, {
   fetch: (input: RequestInfo | URL, init?: RequestInit) => {

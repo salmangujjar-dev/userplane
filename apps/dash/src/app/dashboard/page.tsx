@@ -1,103 +1,61 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  todosQueryOptions,
-  createTodo,
-  updateTodo,
-  deleteTodo,
-  toggleTodo,
-  queryKeys,
-  type Todo,
-} from '@/queries/todos';
+import { useTodos, useTodoForm, useAuth } from '@/hooks';
 import { Button } from '@workspace/ui/components/button';
-import { authClient } from '@/lib/client/auth';
 
 export default function DashboardPage() {
-  const queryClient = useQueryClient();
-  const [newTodoTitle, setNewTodoTitle] = useState('');
-  const [newTodoDescription, setNewTodoDescription] = useState('');
-  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-
-  // Fetch todos
-  const { data, isLoading, error } = useQuery(todosQueryOptions);
-
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: createTodo,
-    onSuccess: () => {
-      queryClient.invalidateQueries(queryKeys.LIST_TODOS);
-      setNewTodoTitle('');
-      setNewTodoDescription('');
-    },
-  });
-
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: updateTodo,
-    onSuccess: () => {
-      queryClient.invalidateQueries(queryKeys.LIST_TODOS);
-      setEditingTodo(null);
-    },
-  });
-
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: deleteTodo,
-    onSuccess: () => {
-      queryClient.invalidateQueries(queryKeys.LIST_TODOS);
-    },
-  });
-
-  // Toggle mutation
-  const toggleMutation = useMutation({
-    mutationFn: toggleTodo,
-    onSuccess: () => {
-      queryClient.invalidateQueries(queryKeys.LIST_TODOS);
-    },
-  });
+  const { todos, isLoading, error, createTodo, updateTodo, deleteTodo, toggleTodo } = useTodos();
+  const {
+    newTodoTitle,
+    setNewTodoTitle,
+    newTodoDescription,
+    setNewTodoDescription,
+    resetCreateForm,
+    editingTodo,
+    editTitle,
+    setEditTitle,
+    editDescription,
+    setEditDescription,
+    startEdit,
+    cancelEdit,
+  } = useTodoForm();
+  const { signOut } = useAuth();
 
   const handleCreateTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTodoTitle.trim()) return;
 
-    createMutation.mutate({
-      title: newTodoTitle,
-      description: newTodoDescription || undefined,
-    });
+    createTodo.mutate(
+      {
+        title: newTodoTitle,
+        description: newTodoDescription || undefined,
+      },
+      {
+        onSuccess: () => {
+          resetCreateForm();
+        },
+      }
+    );
   };
 
   const handleUpdateTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTodo || !editTitle.trim()) return;
 
-    updateMutation.mutate({
-      id: editingTodo.id,
-      data: {
-        title: editTitle,
-        description: editDescription || undefined,
+    updateTodo.mutate(
+      {
+        id: editingTodo.id,
+        data: {
+          title: editTitle,
+          description: editDescription || undefined,
+        },
       },
-    });
-  };
-
-  const startEdit = (todo: Todo) => {
-    setEditingTodo(todo);
-    setEditTitle(todo.title);
-    setEditDescription(todo.description || '');
-  };
-
-  const cancelEdit = () => {
-    setEditingTodo(null);
-    setEditTitle('');
-    setEditDescription('');
-  };
-
-  const handleSignOut = async () => {
-    await authClient.signOut();
-    window.location.href = '/login';
+      {
+        onSuccess: () => {
+          cancelEdit();
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -114,15 +72,13 @@ export default function DashboardPage() {
         <div className="text-center">
           <p className="text-lg text-red-600 mb-4">Error loading todos</p>
           <p className="text-sm text-gray-600">{error.message}</p>
-          <Button onClick={handleSignOut} variant="outline" className="mt-4">
+          <Button onClick={signOut} variant="outline" className="mt-4">
             Sign Out
           </Button>
         </div>
       </div>
     );
   }
-
-  const todos = data?.todos || [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -133,7 +89,7 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Dashboard</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your todos</p>
           </div>
-          <Button onClick={handleSignOut} variant="outline">
+          <Button onClick={signOut} variant="outline">
             Sign Out
           </Button>
         </div>
@@ -158,7 +114,7 @@ export default function DashboardPage() {
                 onChange={(e) => setNewTodoTitle(e.target.value)}
                 placeholder="What needs to be done?"
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                disabled={createMutation.isPending}
+                disabled={createTodo.isPending}
               />
             </div>
             <div>
@@ -175,11 +131,11 @@ export default function DashboardPage() {
                 placeholder="Add more details (optional)"
                 rows={3}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                disabled={createMutation.isPending}
+                disabled={createTodo.isPending}
               />
             </div>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Creating...' : 'Create Todo'}
+            <Button type="submit" disabled={createTodo.isPending}>
+              {createTodo.isPending ? 'Creating...' : 'Create Todo'}
             </Button>
           </form>
         </div>
@@ -218,7 +174,7 @@ export default function DashboardPage() {
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                       />
                       <div className="flex gap-2">
-                        <Button type="submit" size="sm" disabled={updateMutation.isPending}>
+                        <Button type="submit" size="sm" disabled={updateTodo.isPending}>
                           Save
                         </Button>
                         <Button type="button" variant="outline" size="sm" onClick={cancelEdit}>
@@ -232,9 +188,9 @@ export default function DashboardPage() {
                       <input
                         type="checkbox"
                         checked={todo.completed}
-                        onChange={() => toggleMutation.mutate(todo)}
+                        onChange={() => toggleTodo.mutate(todo)}
                         className="mt-1 h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        disabled={toggleMutation.isPending}
+                        disabled={toggleTodo.isPending}
                       />
                       <div className="flex-1">
                         <h3
@@ -268,8 +224,8 @@ export default function DashboardPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => deleteMutation.mutate(todo.id)}
-                          disabled={deleteMutation.isPending}
+                          onClick={() => deleteTodo.mutate(todo.id)}
+                          disabled={deleteTodo.isPending}
                         >
                           Delete
                         </Button>

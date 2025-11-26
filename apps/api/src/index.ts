@@ -2,10 +2,10 @@ import { Hono } from 'hono';
 import { logger as honoLogger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import { prettyJSON } from 'hono/pretty-json';
-import createRouter from './lib/create-router';
-import { registerRoutes } from './routes';
-import { env, logConfig } from './lib/env';
-import { auth } from './lib/auth';
+import createRouter from '@/api/lib/create-router';
+import { registerRoutes } from '@/api/routes';
+import { env, logConfig } from '@/api/env';
+import { auth } from '@/api/clients/auth';
 import { createAppLogger } from '@workspace/logger';
 
 const app = new Hono();

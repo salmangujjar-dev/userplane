@@ -1,5 +1,5 @@
-import createRouter from '../../lib/create-router';
-import * as handlers from './status.handlers';
+import createRouter from '@/api/lib/create-router';
+import * as handlers from '@/api/handlers/status.handlers';
 import * as routes from './status.routes';
 
 const router = createRouter()
