@@ -40,8 +40,6 @@ export class ProvisionerService {
     // Generate unique slug with UUID suffix
     const workspaceSlug = this.deps.workspaceService.generateUniqueSlug(workspaceName);
 
-    const managedStore = await this.deps.storeService.getManagedStore(workspaceSlug);
-
     const workspace = await this.deps.db.transaction(async (tx) => {
       const createdWorkspace = await this.deps.workspaceService.create(
         {
@@ -58,10 +56,23 @@ export class ProvisionerService {
         throw new Error('Failed to create workspace');
       }
 
+      // Create dedicated store for this workspace using default env credentials
+      const workspaceStore = await this.deps.storeService.createWorkspaceStore(
+        workspaceSlug,
+        createdWorkspace.id,
+        `${workspaceName} Storage`,
+        { tx }
+      );
+
+      if (!workspaceStore) {
+        throw new Error('Failed to create workspace store');
+      }
+
+      // Create first project (automatically becomes default)
       await this.deps.projectService.createProject(
         {
           workspaceId: createdWorkspace.id,
-          storeId: managedStore.id,
+          storeId: workspaceStore.id,
           projectTitle: workspaceName,
         },
         { tx }

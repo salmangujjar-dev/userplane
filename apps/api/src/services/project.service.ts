@@ -88,6 +88,7 @@ export class ProjectService {
 
   /**
    * Get default project for workspace
+   * Should never fail as workspace always has at least 1 project
    */
   async getDefaultProject(workspaceId: string) {
     const project = await this.deps.projectRepo.findDefaultByWorkspace(workspaceId);
@@ -95,5 +96,29 @@ export class ProjectService {
       throw new NotFoundError('No default project found for workspace');
     }
     return project;
+  }
+
+  /**
+   * Get all projects in workspace
+   */
+  async getProjectsByWorkspace(workspaceId: string) {
+    return this.deps.projectRepo.findByWorkspace(workspaceId);
+  }
+
+  /**
+   * Set project as default
+   * Unsets current default and sets new one
+   */
+  async setDefaultProject(projectId: string, options?: { tx?: Transaction }) {
+    const project = await this.getById(projectId);
+
+    // Unset current default
+    const currentDefault = await this.deps.projectRepo.findDefaultByWorkspace(project.workspaceId);
+    if (currentDefault && currentDefault.id !== projectId) {
+      await this.deps.projectRepo.update(currentDefault.id, { isDefault: false }, options);
+    }
+
+    // Set new default
+    await this.deps.projectRepo.update(projectId, { isDefault: true }, options);
   }
 }
