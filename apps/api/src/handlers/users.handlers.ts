@@ -1,34 +1,25 @@
-import type { AppRouteHandler } from '../../lib/types';
-import type * as routes from './users.routes';
+import type { AppRouteHandler } from '@/api/lib/types';
+import { userService } from '@/api/services/users.service';
+import type * as routes from '@/api/routes/users/users.routes';
 
-// Sample data
-const mockUsers = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'admin' as const },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'user' as const },
-  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'user' as const },
-];
+/**
+ * Handler layer for users
+ * Focuses solely on HTTP concerns: extracting request data, calling services, and formatting responses
+ */
 
 export const list: AppRouteHandler<routes.ListRoute> = (c) => {
-  return c.json(
-    {
-      users: mockUsers,
-      total: mockUsers.length,
-    },
-    200
-  );
+  const result = userService.listUsers();
+  return c.json(result, 200);
 };
 
 export const create: AppRouteHandler<routes.CreateRoute> = async (c) => {
   const body = c.req.valid('json');
-  const newUser = {
-    id: mockUsers.length + 1,
-    ...body,
-  };
+  const user = userService.createUser(body);
 
   return c.json(
     {
       message: 'User created successfully',
-      user: newUser,
+      user,
     },
     201
   );
@@ -36,7 +27,7 @@ export const create: AppRouteHandler<routes.CreateRoute> = async (c) => {
 
 export const getOne: AppRouteHandler<routes.GetOneRoute> = (c) => {
   const { id } = c.req.valid('param');
-  const user = mockUsers.find((u) => u.id === Number(id));
+  const user = userService.getUser(Number(id));
 
   if (!user) {
     return c.json({ message: 'User not found' }, 404);
@@ -47,14 +38,13 @@ export const getOne: AppRouteHandler<routes.GetOneRoute> = (c) => {
 
 export const update: AppRouteHandler<routes.UpdateRoute> = async (c) => {
   const { id } = c.req.valid('param');
-  const user = mockUsers.find((u) => u.id === Number(id));
+  const body = c.req.valid('json');
 
-  if (!user) {
+  const updatedUser = userService.updateUser(Number(id), body);
+
+  if (!updatedUser) {
     return c.json({ message: 'User not found' }, 404);
   }
-
-  const body = c.req.valid('json');
-  const updatedUser = { ...user, ...body, id: Number(id) };
 
   return c.json(
     {
@@ -67,9 +57,9 @@ export const update: AppRouteHandler<routes.UpdateRoute> = async (c) => {
 
 export const remove: AppRouteHandler<routes.RemoveRoute> = (c) => {
   const { id } = c.req.valid('param');
-  const user = mockUsers.find((u) => u.id === Number(id));
+  const deleted = userService.deleteUser(Number(id));
 
-  if (!user) {
+  if (!deleted) {
     return c.json({ message: 'User not found' }, 404);
   }
 

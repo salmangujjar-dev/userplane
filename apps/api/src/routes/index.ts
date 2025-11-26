@@ -1,7 +1,7 @@
-import createRouter from '../lib/create-router';
-import { BASE_PATH } from '../lib/constants';
-import type { AppOpenAPI } from '../lib/types';
-import { requireAuth } from '../middleware/auth';
+import createRouter from '@/api/lib/create-router';
+import { BASE_PATH } from '@/api/constants/api';
+import type { AppOpenAPI } from '@/api/lib/types';
+import { requireAuth } from '@/api/middleware/auth';
 
 // Public routes (no auth required)
 import status from './status/status.index';

@@ -1,5 +1,5 @@
-import createRouter from '../../lib/create-router';
-import * as handlers from './todos.handlers';
+import createRouter from '@/api/lib/create-router';
+import * as handlers from '@/api/handlers/todos.handlers';
 import * as routes from './todos.routes';
 
 const router = createRouter()

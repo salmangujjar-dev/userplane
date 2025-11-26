@@ -5,9 +5,9 @@
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": "./",
+    "baseUrl": "./src",
     "paths": {
-      "@/api/*": ["./src/*"]
+      "@/api/*": ["./*"]
     }
   },
   "include": ["src/**/*"],

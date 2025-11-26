@@ -1,5 +1,5 @@
 import type { Context, Next } from 'hono';
-import { auth } from '../lib/auth';
+import { auth } from '@/api/clients/auth';
 import { createAppLogger } from '@workspace/logger';
 
 const logger = createAppLogger('auth-middleware');

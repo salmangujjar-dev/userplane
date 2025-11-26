@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import * as HttpStatusCodes from 'stoker/http-status-codes';
 import { jsonContent, jsonContentRequired } from 'stoker/openapi/helpers';
-import { notFoundSchema, errorSchema } from '../../lib/constants';
+import { notFoundSchema, errorSchema } from '../../constants/api';
 
 // Custom ID params schema for string IDs
 const IdParamsSchema = z.object({

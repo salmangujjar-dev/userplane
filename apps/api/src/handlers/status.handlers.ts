@@ -1,5 +1,10 @@
-import type { AppRouteHandler } from '../../lib/types';
-import type * as routes from './status.routes';
+import type { AppRouteHandler } from '@/api/lib/types';
+import type * as routes from '@/api/routes/status/status.routes';
+
+/**
+ * Handler layer for status endpoints
+ * Focuses solely on HTTP concerns
+ */
 
 export const index: AppRouteHandler<routes.IndexRoute> = (c) => {
   return c.json(

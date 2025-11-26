@@ -4,8 +4,8 @@
  */
 
 import { queryOptions } from '@tanstack/react-query';
-import { api } from '@/lib/client/api';
-import { logger } from '@/lib/logger';
+import { api } from '@/client/api';
+import { logger } from '@/logger';
 
 // Type definitions (matches API schemas)
 export interface Todo {

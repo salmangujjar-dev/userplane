@@ -1,18 +1,13 @@
+import type { Todo, CreateTodoInput, UpdateTodoInput } from '@/api/models/todo';
+
 /**
  * In-memory storage for todos
  * This is a simple implementation for demonstration purposes
  * In production, this would be replaced with a database
  */
 
-export interface Todo {
-  id: string;
-  title: string;
-  description?: string;
-  completed: boolean;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Re-export types for convenience
+export type { Todo, CreateTodoInput, UpdateTodoInput };
 
 // In-memory store
 const todosStore = new Map<string, Todo>();
@@ -42,7 +37,7 @@ export const todoStorage = {
   /**
    * Create a new todo
    */
-  create: (data: { title: string; description?: string; userId: string }): Todo => {
+  create: (data: CreateTodoInput): Todo => {
     const id = `todo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date().toISOString();
 
@@ -63,14 +58,7 @@ export const todoStorage = {
   /**
    * Update an existing todo
    */
-  update: (
-    id: string,
-    updates: {
-      title?: string;
-      description?: string;
-      completed?: boolean;
-    }
-  ): Todo | null => {
+  update: (id: string, updates: UpdateTodoInput): Todo | null => {
     const todo = todosStore.get(id);
     if (!todo) return null;
 

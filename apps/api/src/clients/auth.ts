@@ -1,6 +1,6 @@
 import { createAuth } from '@workspace/auth';
-import { db } from './db';
-import { env } from './env';
+import { db } from '@/api/clients/db';
+import { env } from '@/api/env';
 
 export const auth = createAuth({
   database: db,
