@@ -36,6 +36,20 @@
       "when": 1732604200000,
       "tag": "0004_make_workspace_invite_token_required",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1732604300000,
+      "tag": "0005_refactor_stores_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1764181640123,
+      "tag": "0006_useful_dagger",
+      "breakpoints": true
     }
   ]
 }

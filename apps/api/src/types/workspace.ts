@@ -44,11 +44,15 @@ export interface CreateProjectInput {
  */
 export interface CreateStoreInput {
   id: string;
+  workspaceId: string;
+  storeTitle: string;
   provider: StoreProvider;
   providerUrl: string;
+  providerRegion: string;
+  providerBucket: string;
   providerAccessId: string;
   providerAccessKey: string;
-  providerMeta?: Record<string, unknown> | null;
+  storeIsManaged: boolean;
 }
 
 /**
