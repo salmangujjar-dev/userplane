@@ -19,7 +19,7 @@ import { UserService } from '@/api/services/user.service';
 
 import { InviteService } from '@/api/services/invite.service';
 
-import inviteRoutes from './invites.routes';
+import { createInviteRoutes } from './invites.routes';
 
 const workspaceRepo = new WorkspaceRepository(db);
 const workspaceMemberRepo = new WorkspaceMemberRepository(db);
@@ -46,6 +46,8 @@ export const inviteService = new InviteService({
   tokenService,
   db,
 });
+
+const inviteRoutes = createInviteRoutes(inviteService);
 
 const app = new Hono<AppEnv>();
 app.route('/invites', inviteRoutes);

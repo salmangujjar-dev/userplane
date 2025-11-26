@@ -25,7 +25,7 @@ import { UserService } from '@/api/services/user.service';
 
 import { ProvisionerService } from '@/api/services/provisioner.service';
 
-import provisionerRoutes from './provisioner.routes';
+import { createProvisionerRoutes } from './provisioner.routes';
 
 const workspaceRepo = new WorkspaceRepository(db);
 const workspaceMemberRepo = new WorkspaceMemberRepository(db);
@@ -67,6 +67,8 @@ export const provisionerService = new ProvisionerService({
   domainService,
   db,
 });
+
+const provisionerRoutes = createProvisionerRoutes(provisionerService);
 
 const app = new Hono<AppEnv>();
 app.route('/provisioner', provisionerRoutes);
