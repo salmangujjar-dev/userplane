@@ -1,11 +1,9 @@
-import { userRepository } from '@/api/repositories/users.repository';
-import type { User } from '@/api/models/user';
-
 /**
- * Service layer for users
- * Contains business logic, validation, and orchestration
- * Sits between handlers and repositories
+ * Legacy users service - kept for backward compatibility
+ * Will be replaced by new user.service.ts for workspace provisioning
  */
+
+import type { User } from '@/api/models/user';
 
 export interface UserListResult {
   users: User[];
@@ -24,45 +22,51 @@ export interface UserUpdateData {
   role?: 'admin' | 'user';
 }
 
+const mockUsers: User[] = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'admin' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'user' },
+  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'user' },
+];
+
 export class UserService {
-  /**
-   * Get all users
-   */
   listUsers(): UserListResult {
-    const users = userRepository.findAll();
     return {
-      users,
-      total: users.length,
+      users: mockUsers,
+      total: mockUsers.length,
     };
   }
 
-  /**
-   * Get a single user by ID
-   */
   getUser(userId: number): User | null {
-    const user = userRepository.findById(userId);
-    return user || null;
+    return mockUsers.find((u) => u.id === userId) || null;
   }
 
-  /**
-   * Create a new user
-   */
   createUser(data: UserCreateData): User {
-    return userRepository.create(data);
+    const newUser: User = {
+      id: mockUsers.length + 1,
+      ...data,
+    };
+    mockUsers.push(newUser);
+    return newUser;
   }
 
-  /**
-   * Update a user
-   */
   updateUser(userId: number, data: UserUpdateData): User | null {
-    return userRepository.update(userId, data);
+    const index = mockUsers.findIndex((u) => u.id === userId);
+    if (index === -1) return null;
+
+    mockUsers[index] = {
+      ...mockUsers[index],
+      ...data,
+    } as User;
+
+    return mockUsers[index] || null;
   }
 
-  /**
-   * Delete a user
-   */
   deleteUser(userId: number): boolean {
-    return userRepository.delete(userId);
+    const index = mockUsers.findIndex((u) => u.id === userId);
+    if (index === -1) return false;
+
+    mockUsers.splice(index, 1);
+    return true;
   }
 }
 

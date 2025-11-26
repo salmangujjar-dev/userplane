@@ -25,6 +25,10 @@ interface EnvConfig {
   database: {
     url: string;
   };
+  email: {
+    provider: 'localhost' | 'resend';
+    resendApiKey?: string;
+  };
   rateLimit: {
     windowMs: number;
     maxRequests: number;
@@ -91,6 +95,10 @@ export function loadEnvConfig(): EnvConfig {
     database: {
       url: process.env.DATABASE_URL || '',
     },
+    email: {
+      provider: (process.env.EMAIL_PROVIDER as 'localhost' | 'resend') || 'localhost',
+      resendApiKey: process.env.RESEND_API_KEY,
+    },
     rateLimit: {
       windowMs: parseInteger(process.env.RATE_LIMIT_WINDOW, 60000),
       maxRequests: parseInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
@@ -121,6 +129,9 @@ if (env.nodeEnv === 'production') {
   if (!env.google.clientId || !env.google.clientSecret) {
     logger.warn('Google OAuth credentials not set. Google authentication will not work.');
   }
+  if (env.email.provider === 'resend' && !env.email.resendApiKey) {
+    throw new Error('RESEND_API_KEY must be set when using resend email provider');
+  }
 }
 
 /**
@@ -137,6 +148,8 @@ export function logConfig(): void {
       authUrl: env.auth.url,
       database: env.database.url ? 'Connected' : 'Not configured',
       googleOAuth: env.google.clientId ? 'Configured' : 'Not configured',
+      emailProvider: env.email.provider,
+      resendConfigured: env.email.provider === 'resend' ? !!env.email.resendApiKey : 'N/A',
     },
     'Environment configuration loaded'
   );

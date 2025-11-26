@@ -8,7 +8,9 @@
     "baseUrl": "./src",
     "paths": {
       "@/api/*": ["./*"]
-    }
+    },
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
