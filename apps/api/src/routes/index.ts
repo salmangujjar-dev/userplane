@@ -8,7 +8,6 @@ import status from './status/status.index';
 
 // Protected routes (auth required)
 import users from './users/users.index';
-import todos from './todos/todos.index';
 
 // Workspace provisioning routes
 import provisioner from './provisioner/provisioner.index';
@@ -23,8 +22,6 @@ export function registerRoutes(app: AppOpenAPI) {
       // Protected routes - apply auth middleware
       .use('/users/*', requireAuth)
       .route('/', users)
-      .use('/todos/*', requireAuth)
-      .route('/', todos)
       // Workspace routes
       .route('/', provisioner)
       .route('/', invites)
