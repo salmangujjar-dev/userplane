@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "dev": "email dev",
+    "dev": "email dev -p 3003 --dir src/templates",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -18,6 +18,7 @@
     "resend": "^4.0.1"
   },
   "devDependencies": {
+    "@react-email/preview-server": "5.0.5",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@workspace/typescript-config": "workspace:*",

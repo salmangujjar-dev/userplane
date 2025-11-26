@@ -23,7 +23,7 @@ import { StoreService } from '@/api/services/store.service';
 
 import { InviteService } from '@/api/services/invite.service';
 
-import workspaceRoutes from './workspaces.routes';
+import { createWorkspaceRoutes } from './workspaces.routes';
 
 const workspaceRepo = new WorkspaceRepository(db);
 const workspaceMemberRepo = new WorkspaceMemberRepository(db);
@@ -60,6 +60,14 @@ export const inviteService = new InviteService({
   tokenService,
   db,
 });
+
+const workspaceRoutes = createWorkspaceRoutes(
+  inviteService,
+  workspaceMemberService,
+  workspaceService,
+  projectService,
+  storeService
+);
 
 const app = new Hono<AppEnv>();
 app.route('/workspaces', workspaceRoutes);
