@@ -15,6 +15,20 @@
       "when": 1764099266007,
       "tag": "0001_rainy_doctor_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1732604000000,
+      "tag": "0002_refactor_workspace_default_project",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1732604100000,
+      "tag": "0003_add_data_integrity_constraints",
+      "breakpoints": true
     }
   ]
 }

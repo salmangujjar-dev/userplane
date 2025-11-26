@@ -23,14 +23,13 @@ export const workspaces = pgTable(
     // Workspace identity and branding
     workspaceSlug: text('workspace_slug').notNull(),
     workspaceName: text('workspace_name').notNull(),
-    logoUrl: text('logo_url'),
+    workspaceLogoUrl: text('workspace_logo_url'),
 
     // Subscription and plan
     workspacePlan: workspacePlanEnum('workspace_plan').notNull().default('trial'),
 
     // Settings and configuration
     workspaceInviteToken: text('workspace_invite_token'),
-    defaultProjectId: text('default_project_id'),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -46,14 +45,10 @@ export const workspaces = pgTable(
   (table) => [uniqueIndex('workspaces_workspace_slug_idx').on(table.workspaceSlug)]
 );
 
-export const workspacesRelations = relations(workspaces, ({ many, one }) => ({
+export const workspacesRelations = relations(workspaces, ({ many }) => ({
   members: many(workspaceMembers),
   entitlements: many(entitlements),
   domains: many(domains),
   projects: many(projects),
   recordingLinks: many(recordingLinks),
-  defaultProject: one(projects, {
-    fields: [workspaces.defaultProjectId],
-    references: [projects.id],
-  }),
 }));
