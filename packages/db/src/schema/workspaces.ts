@@ -23,13 +23,14 @@ export const workspaces = pgTable(
     // Workspace identity and branding
     workspaceSlug: text('workspace_slug').notNull(),
     workspaceName: text('workspace_name').notNull(),
-    workspaceLogoUrl: text('workspace_logo_url'),
+    workspaceLogoUrl: text('workspace_logo_url').notNull(),
 
     // Subscription and plan
     workspacePlan: workspacePlanEnum('workspace_plan').notNull().default('trial'),
 
     // Settings and configuration
-    workspaceInviteToken: text('workspace_invite_token'),
+    // UUID token used for invite verification, must always be set
+    workspaceInviteToken: text('workspace_invite_token').notNull(),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),

@@ -45,3 +45,4 @@ CREATE INDEX IF NOT EXISTS "workspace_members_user_active_idx"
 ON "workspace_members"("user_id") 
 WHERE "is_deleted" = false;
 
+

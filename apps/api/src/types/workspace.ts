@@ -13,8 +13,8 @@ export interface CreateWorkspaceInput {
   workspaceName: string;
   workspaceSlug: string;
   workspacePlan: WorkspacePlan;
-  workspaceLogoUrl?: string | null;
-  workspaceInviteToken?: string | null;
+  workspaceLogoUrl: string;
+  workspaceInviteToken: string;
 }
 
 /**
@@ -67,6 +67,6 @@ export interface CreateDomainInput {
 export interface WorkspaceResponse {
   workspaceSlug: string;
   workspaceName: string;
-  workspaceInviteToken: string;
+  workspaceInviteToken: string; // Always present, never null
   workspaceLogoUrl: string;
 }

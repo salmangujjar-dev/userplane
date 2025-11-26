@@ -7,6 +7,7 @@ import type { AppEnv } from '@/api/lib/types';
 import { requireAuth } from '@/api/middleware/auth';
 import { requireWorkspaceMember } from '@/api/middleware/workspace';
 import { sendInvitesHandler } from '@/api/handlers/invites.handlers';
+import { rotateInviteUrlHandler, getInviteUrlHandler } from '@/api/handlers/workspaces.handlers';
 import {
   inviteService,
   workspaceMemberService,
@@ -20,6 +21,20 @@ workspaceRoutes.post(
   requireAuth,
   requireWorkspaceMember(workspaceMemberService, workspaceService),
   sendInvitesHandler(inviteService)
+);
+
+workspaceRoutes.get(
+  '/:workspaceSlug/invite-url',
+  requireAuth,
+  requireWorkspaceMember(workspaceMemberService, workspaceService),
+  getInviteUrlHandler(workspaceService, inviteService)
+);
+
+workspaceRoutes.post(
+  '/:workspaceSlug/invite-url',
+  requireAuth,
+  requireWorkspaceMember(workspaceMemberService, workspaceService),
+  rotateInviteUrlHandler(workspaceService)
 );
 
 export default workspaceRoutes;

@@ -9,7 +9,7 @@ import { ProjectService } from '@/api/services/project.service';
 import { StoreService } from '@/api/services/store.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { DomainService } from '@/api/services/domain.service';
-import { extractHostname, deriveWorkspaceName, getFaviconAPIURI, slugify } from '@/api/lib/utils';
+import { extractHostname, deriveWorkspaceName, getFaviconAPIURI } from '@/api/lib/utils';
 import type { ProvisionWorkspaceParams, ProvisionWorkspaceResult } from '@/api/types';
 
 export interface ProvisionerServiceDeps {
@@ -35,10 +35,10 @@ export class ProvisionerService {
     // Extract hostname for workspace naming and logo
     const hostname = extractHostname(url);
     const workspaceName = deriveWorkspaceName(hostname);
-    const baseSlug = slugify(workspaceName);
     const workspaceLogoUrl = getFaviconAPIURI(hostname);
 
-    const workspaceSlug = await this.deps.workspaceService.generateUniqueSlug(baseSlug);
+    // Generate unique slug with UUID suffix
+    const workspaceSlug = this.deps.workspaceService.generateUniqueSlug(workspaceName);
 
     const managedStore = await this.deps.storeService.getManagedStore(workspaceSlug);
 
@@ -95,8 +95,8 @@ export class ProvisionerService {
       workspace: {
         workspaceSlug: workspace.workspaceSlug,
         workspaceName: workspace.workspaceName,
-        workspaceInviteToken: workspace.workspaceInviteToken || '',
-        workspaceLogoUrl: workspace.workspaceLogoUrl || '',
+        workspaceInviteToken: workspace.workspaceInviteToken,
+        workspaceLogoUrl: workspace.workspaceLogoUrl,
       },
     };
   }

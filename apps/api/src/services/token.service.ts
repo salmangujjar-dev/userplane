@@ -5,7 +5,7 @@
 
 import jwt from 'jsonwebtoken';
 import { env } from '@/api/env';
-import type { InviteTokenPayload, WorkspaceInviteTokenPayload } from '@/api/types';
+import type { InviteTokenPayload } from '@/api/types';
 
 export class TokenService {
   private jwtSecret: string;
@@ -34,14 +34,6 @@ export class TokenService {
     } catch (error) {
       return null;
     }
-  }
-
-  /**
-   * Generate workspace invite token (stored in DB)
-   * Simpler token for workspace.workspaceInviteToken field
-   */
-  generateWorkspaceInviteToken(payload: WorkspaceInviteTokenPayload): string {
-    return jwt.sign(payload, this.jwtSecret, { expiresIn: '365d' });
   }
 }
 

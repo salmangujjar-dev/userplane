@@ -73,15 +73,17 @@ export class WorkspaceRepository {
   }
 
   /**
-   * Check if workspace exists by slug
+   * Update workspace invite token
    */
-  async existsBySlug(slug: string): Promise<boolean> {
-    const [result] = await this.db
-      .select({ id: workspaces.id })
-      .from(workspaces)
-      .where(and(eq(workspaces.workspaceSlug, slug), eq(workspaces.isDeleted, false)))
-      .limit(1);
+  async updateInviteToken(workspaceId: string, newToken: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
 
-    return !!result;
+    const [workspace] = await dbClient
+      .update(workspaces)
+      .set({ workspaceInviteToken: newToken })
+      .where(and(eq(workspaces.id, workspaceId), eq(workspaces.isDeleted, false)))
+      .returning();
+
+    return workspace || null;
   }
 }

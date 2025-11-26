@@ -29,3 +29,4 @@ CREATE INDEX IF NOT EXISTS "projects_workspace_id_is_default_idx"
 ON "projects"("workspace_id", "is_default") 
 WHERE "is_deleted" = false;
 
+
