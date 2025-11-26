@@ -1,5 +1,6 @@
 import type { OpenAPIHono, RouteConfig, RouteHandler } from '@hono/zod-openapi';
 import type { BASE_PATH } from '../constants/api';
+import type { WorkspaceRole } from '@/api/types';
 
 export type AppEnv = {
   Bindings: Record<string, never>;
@@ -15,6 +16,9 @@ export type AppEnv = {
       userId: string;
       expiresAt: Date;
     } | null;
+    // Workspace context (set by workspace middleware)
+    workspaceId?: string;
+    workspaceRole?: WorkspaceRole;
   };
 };
 
