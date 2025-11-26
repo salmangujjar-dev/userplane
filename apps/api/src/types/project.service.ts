@@ -9,7 +9,7 @@
 export interface CreateProjectParams {
   workspaceId: string;
   storeId: string;
-  projectTitle: string;
+  projectTitle: string | null;
 }
 
 /**
