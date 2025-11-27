@@ -2,26 +2,25 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks';
-import Link from 'next/link';
 import { logger } from '@/logger';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { toast } from '@workspace/ui/components/sonner';
+import Link from 'next/link';
 
-export default function SignupPage() {
+export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { signUpWithGoogle } = useAuth();
+  const { signInWithGoogle } = useAuth();
 
-  const handleGoogleSignUp = async () => {
+  const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      logger.info({ provider: 'google' }, 'Initiating Google sign up');
-      await signUpWithGoogle();
-      logger.info({ provider: 'google' }, 'Google sign up successful');
-      toast.success('Account created successfully');
+      logger.info({ provider: 'google' }, 'Initiating Google authentication');
+      await signInWithGoogle();
+      logger.info({ provider: 'google' }, 'Google authentication successful');
     } catch (error) {
-      logger.error({ err: error, provider: 'google' }, 'Sign up failed');
-      toast.error('Failed to create account. Please try again.');
+      logger.error({ err: error, provider: 'google' }, 'Authentication failed');
+      toast.error('Failed to authenticate. Please try again.');
       setIsLoading(false);
     }
   };
@@ -29,19 +28,14 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-svh items-center justify-center px-6 py-12 bg-background">
       <div className="w-full max-w-md space-y-10">
-        <div className="flex flex-col items-center gap-8">
-          <Link href="/">
-            <Logo />
-          </Link>
-          <div className="space-y-3 text-center">
-            <h1 className="font-dm-sans text-4xl font-medium tracking-tight">Get started</h1>
-            <p className="text-base text-muted-foreground">Create your account to start building</p>
-          </div>
+        <div className="flex flex-col items-center gap-3">
+          <Logo />
+          <p className="text-sm text-muted-foreground">Quick auth and you're in</p>
         </div>
 
         <div className="space-y-6">
           <Button
-            onClick={handleGoogleSignUp}
+            onClick={handleGoogleSignIn}
             disabled={isLoading}
             variant="secondary"
             size="lg"
@@ -65,15 +59,8 @@ export default function SignupPage() {
                 fill="#EA4335"
               />
             </svg>
-            {isLoading ? 'Creating account...' : 'Continue with Google'}
+            {isLoading ? 'Signing in...' : 'Continue with Google'}
           </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link href="/login" className="font-medium hover:text-foreground transition-colors">
-              Sign in
-            </Link>
-          </p>
         </div>
 
         <p className="text-center text-xs text-muted-foreground">

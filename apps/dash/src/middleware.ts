@@ -4,15 +4,12 @@ import { createBrowserLogger } from '@workspace/logger/browser';
 
 const logger = createBrowserLogger('middleware');
 
-const protectedRoutes = ['/dashboard'];
-const authRoutes = ['/login', '/signup'];
-const publicRoutes = ['/'];
+const authRoutes = ['/auth'];
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route));
   const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
-  const isPublicRoute = publicRoutes.includes(path);
+  const isProtectedRoute = !isAuthRoute;
 
   const sessionCookie = request.cookies.get('better-auth.session_token');
   const hasSession = !!sessionCookie;
@@ -30,36 +27,33 @@ export function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (isAuthRoute && hasSession) {
-    logger.info(
-      { path, redirectTo: '/dashboard' },
-      'Redirecting authenticated user from auth page'
-    );
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    logger.info({ path, redirectTo: '/' }, 'Redirecting authenticated user from auth page');
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // Redirect unauthenticated users away from protected routes
   if (isProtectedRoute && !hasSession) {
     logger.info(
-      { path, redirectTo: '/login' },
+      { path, redirectTo: '/auth' },
       'Redirecting unauthenticated user from protected route'
     );
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // Redirect home page based on auth status
-  if (isPublicRoute && path === '/') {
-    if (hasSession) {
-      logger.debug({ redirectTo: '/dashboard' }, 'Redirecting authenticated user to dashboard');
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    } else {
-      logger.debug({ redirectTo: '/login' }, 'Redirecting unauthenticated user to login');
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+    return NextResponse.redirect(new URL('/auth', request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public files (icons, images, etc.)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/',
+  ],
 };
