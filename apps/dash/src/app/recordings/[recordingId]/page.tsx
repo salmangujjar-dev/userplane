@@ -1,9 +1,9 @@
 'use client';
 
-import { RecordingDetailNav } from '@/components/recording-detail-nav';
-import { RecordingPlayer } from '@/components/recording-player';
-import { RecordingMetaPanel } from '@/components/recording-meta-panel';
-import { RecordingLogReplayPanel } from '@/components/recording-log-replay-panel';
+import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
+import { RecordingPlayer } from '@/components/recordings/recording-player';
+import { RecordingMetaPanel } from '@/components/recordings/recording-meta-panel';
+import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
 
 export default function RecordingDetailPage() {
   const handleCopyLink = () => {

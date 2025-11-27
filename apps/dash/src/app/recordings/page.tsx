@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { CreateLinkModal } from '@/components/create-link-modal';
-import { ShareLinkModal } from '@/components/share-link-modal';
-import { InviteModal } from '@/components/invite-modal';
-import { DashboardNav } from '@/components/dashboard-nav';
-import { DashboardHeader } from '@/components/dashboard-header';
-import { RecordingsPageTabs, type RecordingsTabType } from '@/components/recordings-page-tabs';
-import { PaginatedRecordingsTab } from '@/components/paginated-recordings-tab';
-import { PaginatedLinksTab } from '@/components/paginated-links-tab';
+import { CreateLinkModal } from '@/components/modals/create-link-modal';
+import { ShareLinkModal } from '@/components/modals/share-link-modal';
+import { InviteModal } from '@/components/modals/invite-modal';
+import { DashboardNav } from '@/components/navigation/dashboard-nav';
+import { DashboardHeader } from '@/components/shared/dashboard-header';
+import {
+  RecordingsPageTabs,
+  type RecordingsTabType,
+} from '@/components/recordings/recordings-page-tabs';
+import { PaginatedRecordingsTab } from '@/components/recordings/paginated-recordings-tab';
+import { PaginatedLinksTab } from '@/components/links/paginated-links-tab';
 
 export default function RecordingsPage() {
   const [activeTab, setActiveTab] = useState<RecordingsTabType>('recordings');

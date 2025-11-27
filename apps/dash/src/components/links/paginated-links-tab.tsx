@@ -1,7 +1,7 @@
 'use client';
 
 import { LinksList } from './links-list';
-import { PaginationControls } from './pagination-controls';
+import { PaginationControls } from '../shared/pagination-controls';
 
 interface PaginatedLinksTabProps {
   currentPage: number;
