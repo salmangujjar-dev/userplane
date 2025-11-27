@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Badge } from '@workspace/ui/components/badge';
 import Logo from '@workspace/ui/components/logo';
 import { WorkspaceMemberAvatars } from '../workspace/workspace-member-avatars';
@@ -28,7 +29,9 @@ export function DashboardNav({
     <nav>
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3">
-          <Logo />
+          <Link href="/">
+            <Logo />
+          </Link>
           <Badge variant="secondary" className="rounded-md">
             {planName}
           </Badge>

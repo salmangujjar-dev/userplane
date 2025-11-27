@@ -26,7 +26,7 @@ export function RecordingsSection({
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>
         {onSeeMore && (
-          <Button variant="secondary" size="sm" className="rounded-lg" onClick={onSeeMore}>
+          <Button variant="secondary" size="sm" className="rounded-full" onClick={onSeeMore}>
             See More
           </Button>
         )}

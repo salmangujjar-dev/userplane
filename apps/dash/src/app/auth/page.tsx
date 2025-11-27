@@ -29,7 +29,9 @@ export default function AuthPage() {
     <div className="flex min-h-svh items-center justify-center px-6 py-12 bg-background">
       <div className="w-full max-w-md space-y-10">
         <div className="flex flex-col items-center gap-3">
-          <Logo />
+          <Link href="/">
+            <Logo />
+          </Link>
           <p className="text-sm text-muted-foreground">Quick auth and you're in</p>
         </div>
 
@@ -39,8 +41,9 @@ export default function AuthPage() {
             disabled={isLoading}
             variant="secondary"
             size="lg"
-            className="w-full rounded-full px-7 py-6 gap-3"
+            className="w-full rounded-full px-7 py-6"
           >
+            {isLoading ? 'Signing in...' : 'Continue with Google'}
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -59,7 +62,6 @@ export default function AuthPage() {
                 fill="#EA4335"
               />
             </svg>
-            {isLoading ? 'Signing in...' : 'Continue with Google'}
           </Button>
         </div>
 
