@@ -1,7 +1,7 @@
 'use client';
 
 import { RecordingsGrid } from './recordings-grid';
-import { PaginationControls } from './pagination-controls';
+import { PaginationControls } from '../shared/pagination-controls';
 
 interface PaginatedRecordingsTabProps {
   currentPage: number;

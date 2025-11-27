@@ -2,7 +2,7 @@
 
 import { Badge } from '@workspace/ui/components/badge';
 import Logo from '@workspace/ui/components/logo';
-import { WorkspaceMemberAvatars } from './workspace-member-avatars';
+import { WorkspaceMemberAvatars } from '../workspace/workspace-member-avatars';
 
 interface WorkspaceMember {
   id: string;
