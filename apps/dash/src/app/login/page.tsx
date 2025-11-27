@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks';
 import Link from 'next/link';
 import { logger } from '@/logger';
+import { Button } from '@workspace/ui/components/button';
+import Logo from '@workspace/ui/components/logo';
+import { toast } from '@workspace/ui/components/sonner';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,38 +16,36 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       logger.info({ provider: 'google' }, 'Initiating Google sign in');
-
       await signInWithGoogle();
-
       logger.info({ provider: 'google' }, 'Google sign in successful');
+      toast.success('Successfully signed in');
     } catch (error) {
       logger.error({ err: error, provider: 'google' }, 'Sign in failed');
+      toast.error('Failed to sign in. Please try again.');
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Or{' '}
-            <Link
-              href="/signup"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
-            >
-              create a new account
-            </Link>
-          </p>
+    <div className="flex min-h-svh items-center justify-center px-6 py-12 bg-background">
+      <div className="w-full max-w-md space-y-10">
+        <div className="flex flex-col items-center gap-8">
+          <Link href="/">
+            <Logo />
+          </Link>
+          <div className="space-y-3 text-center">
+            <h1 className="font-dm-sans text-4xl font-medium tracking-tight">Welcome back</h1>
+            <p className="text-base text-muted-foreground">Sign in to your account to continue</p>
+          </div>
         </div>
-        <div className="mt-8 space-y-6">
-          <button
+
+        <div className="space-y-6">
+          <Button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="group relative flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            variant="secondary"
+            size="lg"
+            className="w-full rounded-full px-7 py-6 gap-3"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
               <path
@@ -65,8 +66,26 @@ export default function LoginPage() {
               />
             </svg>
             {isLoading ? 'Signing in...' : 'Continue with Google'}
-          </button>
+          </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="font-medium hover:text-foreground transition-colors">
+              Sign up
+            </Link>
+          </p>
         </div>
+
+        <p className="text-center text-xs text-muted-foreground">
+          By continuing, you agree to our{' '}
+          <Link href="/terms" className="hover:text-foreground transition-colors">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy" className="hover:text-foreground transition-colors">
+            Privacy Policy
+          </Link>
+        </p>
       </div>
     </div>
   );

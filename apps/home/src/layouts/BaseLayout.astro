@@ -18,11 +18,18 @@ const {
 ---
 
 <!doctype html>
-<html lang="en" class="font-geist">
+<html lang="en" class="font-geist" style="color-scheme: light only;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href={SITE_META.favicon} />
+    <meta name="color-scheme" content="light only" />
+    <style>
+      html,
+      body {
+        color-scheme: light only !important;
+      }
+    </style>
 
     <!-- Primary Meta Tags -->
     <title>{title}</title>
@@ -42,7 +49,7 @@ const {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
   </head>
-  <body>
+  <body class="bg-background text-foreground antialiased">
     <slot />
   </body>
 </html>

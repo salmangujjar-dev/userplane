@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks';
 import Link from 'next/link';
 import { logger } from '@/logger';
+import { Button } from '@workspace/ui/components/button';
+import Logo from '@workspace/ui/components/logo';
+import { toast } from '@workspace/ui/components/sonner';
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,38 +16,36 @@ export default function SignupPage() {
     try {
       setIsLoading(true);
       logger.info({ provider: 'google' }, 'Initiating Google sign up');
-
       await signUpWithGoogle();
-
       logger.info({ provider: 'google' }, 'Google sign up successful');
+      toast.success('Account created successfully');
     } catch (error) {
       logger.error({ err: error, provider: 'google' }, 'Sign up failed');
+      toast.error('Failed to create account. Please try again.');
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?{' '}
-            <Link
-              href="/login"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
-            >
-              Sign in
-            </Link>
-          </p>
+    <div className="flex min-h-svh items-center justify-center px-6 py-12 bg-background">
+      <div className="w-full max-w-md space-y-10">
+        <div className="flex flex-col items-center gap-8">
+          <Link href="/">
+            <Logo />
+          </Link>
+          <div className="space-y-3 text-center">
+            <h1 className="font-dm-sans text-4xl font-medium tracking-tight">Get started</h1>
+            <p className="text-base text-muted-foreground">Create your account to start building</p>
+          </div>
         </div>
-        <div className="mt-8 space-y-6">
-          <button
+
+        <div className="space-y-6">
+          <Button
             onClick={handleGoogleSignUp}
             disabled={isLoading}
-            className="group relative flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            variant="secondary"
+            size="lg"
+            className="w-full rounded-full px-7 py-6 gap-3"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
               <path
@@ -65,11 +66,26 @@ export default function SignupPage() {
               />
             </svg>
             {isLoading ? 'Creating account...' : 'Continue with Google'}
-          </button>
-          <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-            By continuing, you agree to our Terms of Service and Privacy Policy
+          </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link href="/login" className="font-medium hover:text-foreground transition-colors">
+              Sign in
+            </Link>
           </p>
         </div>
+
+        <p className="text-center text-xs text-muted-foreground">
+          By continuing, you agree to our{' '}
+          <Link href="/terms" className="hover:text-foreground transition-colors">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy" className="hover:text-foreground transition-colors">
+            Privacy Policy
+          </Link>
+        </p>
       </div>
     </div>
   );
