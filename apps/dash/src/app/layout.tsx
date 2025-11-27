@@ -40,8 +40,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}>
+    <html lang="en" style={{ colorScheme: 'light only' } as React.CSSProperties}>
+      <head>
+        <meta name="color-scheme" content="light only" />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: 'html, body { color-scheme: light only !important; }',
+          }}
+        />
+      </head>
+      <body
+        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased bg-background text-foreground`}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

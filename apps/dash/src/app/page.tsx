@@ -1,23 +1,29 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@workspace/ui/components/button';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks';
+import Logo from '@workspace/ui/components/logo';
 
 export default function Page() {
-  const [count, setCount] = useState(0);
+  const router = useRouter();
+  const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (user) {
+        router.push('/dashboard');
+      } else {
+        router.push('/login');
+      }
+    }
+  }, [user, isLoading, router]);
 
   return (
     <div className="flex items-center justify-center min-h-svh">
-      <div className="flex flex-col items-center justify-center gap-4">
-        <h1 className="text-2xl font-bold">Counter</h1>
-        <p className="text-4xl font-mono">{count}</p>
-        <div className="flex gap-2">
-          <Button onClick={() => setCount(count - 1)}>-</Button>
-          <Button onClick={() => setCount(0)} variant="outline">
-            Reset
-          </Button>
-          <Button onClick={() => setCount(count + 1)}>+</Button>
-        </div>
+      <div className="flex flex-col items-center gap-4">
+        <Logo />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     </div>
   );
