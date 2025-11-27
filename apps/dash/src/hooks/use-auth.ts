@@ -7,26 +7,18 @@ import { authClient } from '@/client/auth';
 export function useAuth() {
   const signOut = async () => {
     await authClient.signOut();
-    window.location.href = '/login';
+    window.location.href = '/auth';
   };
 
   const signInWithGoogle = async () => {
     await authClient.signIn.social({
       provider: 'google',
-      callbackURL: `${window.location.origin}/dashboard`,
-    });
-  };
-
-  const signUpWithGoogle = async () => {
-    await authClient.signIn.social({
-      provider: 'google',
-      callbackURL: `${window.location.origin}/dashboard`,
+      callbackURL: `${window.location.origin}/`,
     });
   };
 
   return {
     signOut,
     signInWithGoogle,
-    signUpWithGoogle,
   };
 }

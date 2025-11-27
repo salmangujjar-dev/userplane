@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   title: meta.title,
   description: meta.description,
   keywords: meta.keywords,
+  icons: {
+    icon: meta.favicon,
+  },
   openGraph: {
     title: meta.title,
     description: meta.description,
