@@ -15,7 +15,7 @@ export function RecordingDetailNav({ onCopyLink, onShare }: RecordingDetailNavPr
     <nav>
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
         <Link href="/">
-          <Logo />
+          <Logo size="sm" />
         </Link>
         <div className="flex items-center gap-3">
           <Button variant="secondary" size="default" className="rounded-full" onClick={onCopyLink}>

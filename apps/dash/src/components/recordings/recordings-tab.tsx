@@ -16,16 +16,16 @@ export function RecordingsTab({
   return (
     <div className="space-y-8">
       <RecordingsSection
-        title="Your recordings"
+        title="Your Recordings"
         description="View received recordings"
-        count={5}
+        count={8}
         onSeeMore={onSeeMore}
         recordingIds={yourRecordingIds}
       />
       <RecordingsSection
         title="Recent recordings"
         description="View recent recordings"
-        count={10}
+        count={8}
         onSeeMore={onSeeMore}
         recordingIds={recentRecordingIds}
       />
