@@ -50,11 +50,11 @@ export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
           <Button
             variant="secondary"
             onClick={onClose}
-            className="rounded-xl px-6 w-full sm:w-auto"
+            className="rounded-full px-6 w-full sm:w-auto"
           >
             Share link
           </Button>
-          <Button onClick={handleCopy} className="rounded-xl px-6 w-full sm:w-auto">
+          <Button onClick={handleCopy} className="rounded-full px-6 w-full sm:w-auto">
             Copy Link
           </Button>
         </DialogFooter>

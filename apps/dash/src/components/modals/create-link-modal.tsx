@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@workspace/ui/components/dialog';
+import { Plus } from 'lucide-react';
 
 interface CreateLinkModalProps {
   onLinkCreated: (link: string) => void;
@@ -30,8 +31,9 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default" size="default" className="rounded-lg">
+        <Button variant="default" size="default" className="rounded-full">
           Create Link
+          <Plus className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]" showCloseButton={false}>
@@ -56,12 +58,12 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
             <Button
               type="button"
               variant="secondary"
-              className="rounded-xl px-6"
+              className="rounded-full px-6"
               onClick={() => setOpen(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" className="rounded-xl px-6">
+            <Button type="submit" className="rounded-full px-6">
               Create Link
             </Button>
           </DialogFooter>

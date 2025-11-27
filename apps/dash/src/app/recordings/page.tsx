@@ -6,15 +6,9 @@ import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
 import { DashboardNav } from '@/components/navigation/dashboard-nav';
 import { DashboardHeader } from '@/components/shared/dashboard-header';
-import {
-  RecordingsPageTabs,
-  type RecordingsTabType,
-} from '@/components/recordings/recordings-page-tabs';
-import { PaginatedRecordingsTab } from '@/components/recordings/paginated-recordings-tab';
-import { PaginatedLinksTab } from '@/components/links/paginated-links-tab';
+import { RecordingsPageTabs } from '@/components/recordings/recordings-page-tabs';
 
 export default function RecordingsPage() {
-  const [activeTab, setActiveTab] = useState<RecordingsTabType>('recordings');
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = 10;
   const [shareLink, setShareLink] = useState<string | null>(null);
@@ -35,25 +29,13 @@ export default function RecordingsPage() {
       <main className="mx-auto max-w-7xl px-6 py-8">
         <DashboardHeader title="Recents" description="Recordings from your links" />
 
-        <RecordingsPageTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {activeTab === 'recordings' && (
-          <PaginatedRecordingsTab
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            recordingsPerPage={15}
-          />
-        )}
-
-        {activeTab === 'links' && (
-          <PaginatedLinksTab
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            linksPerPage={10}
-          />
-        )}
+        <RecordingsPageTabs
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          recordingsPerPage={15}
+          linksPerPage={10}
+        />
       </main>
 
       <ShareLinkModal

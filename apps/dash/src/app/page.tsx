@@ -7,14 +7,10 @@ import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
 import { DashboardNav } from '@/components/navigation/dashboard-nav';
 import { DashboardHeader } from '@/components/shared/dashboard-header';
-import { DashboardTabs, type TabType } from '@/components/shared/dashboard-tabs';
-import { RecordingsTab } from '@/components/recordings/recordings-tab';
-import { LinksTab } from '@/components/links/links-tab';
-import { SettingsTab } from '@/components/settings/settings-tab';
+import { DashboardTabs } from '@/components/shared/dashboard-tabs';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>('recordings');
   const [shareLink, setShareLink] = useState<string | null>(null);
 
   const handleLinkCreated = (link: string) => {
@@ -40,13 +36,7 @@ export default function DashboardPage() {
           description="Manage recording links for your workspace"
         />
 
-        <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {activeTab === 'recordings' && <RecordingsTab onSeeMore={handleSeeMoreRecordings} />}
-
-        {activeTab === 'links' && <LinksTab />}
-
-        {activeTab === 'settings' && <SettingsTab />}
+        <DashboardTabs onSeeMore={handleSeeMoreRecordings} />
       </main>
 
       <ShareLinkModal

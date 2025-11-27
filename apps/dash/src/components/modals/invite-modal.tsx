@@ -71,9 +71,9 @@ export function InviteModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default" size="default" className="rounded-lg">
-          <UserPlus className="h-4 w-4 mr-2" />
+        <Button variant="secondary" size="default" className="rounded-full">
           Invite
+          <UserPlus className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]" showCloseButton={false}>
@@ -100,7 +100,7 @@ export function InviteModal() {
                 <Button
                   type="button"
                   variant="secondary"
-                  className="rounded-lg px-4 py-2.5 h-auto"
+                  className="rounded-full px-4 py-2.5 h-auto"
                   onClick={handleCopyLink}
                 >
                   <Link className="h-4 w-4" />
@@ -156,12 +156,12 @@ export function InviteModal() {
             <Button
               type="button"
               variant="secondary"
-              className="rounded-xl px-6"
+              className="rounded-full px-6"
               onClick={() => setOpen(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" className="rounded-xl px-6">
+            <Button type="submit" className="rounded-full px-6">
               Send Invites
             </Button>
           </DialogFooter>
