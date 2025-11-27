@@ -3,6 +3,7 @@ import { UsageSection } from './usage-section';
 import { TeamSection } from './team-section';
 import { IntegrationSection } from './integration-section';
 import { DomainsSection } from './domains-section';
+import { ProjectsSection } from './projects-section';
 import { DataSection } from './data-section';
 import { NotificationsSection } from './notifications-section';
 
@@ -14,6 +15,7 @@ export function SettingsTab() {
       <TeamSection />
       <IntegrationSection />
       <DomainsSection />
+      <ProjectsSection />
       <DataSection />
       <NotificationsSection />
     </div>

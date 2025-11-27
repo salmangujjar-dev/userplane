@@ -32,7 +32,7 @@ export default function AuthPage() {
           <Link href="/">
             <Logo />
           </Link>
-          <p className="text-sm text-muted-foreground">Quick auth and you're in</p>
+          <p className="text-sm text-muted-foreground">Quick auth and you&apos;re in</p>
         </div>
 
         <div className="space-y-6">

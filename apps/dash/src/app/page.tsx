@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
-import { DashboardNav } from '@/components/navigation/dashboard-nav';
-import { DashboardHeader } from '@/components/shared/dashboard-header';
-import { DashboardTabs } from '@/components/shared/dashboard-tabs';
+import { Sidebar } from '@/components/navigation/sidebar';
+import { TopActions } from '@/components/navigation/top-actions';
+import { RecordingsTab } from '@/components/recordings/recordings-tab';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [shareLink, setShareLink] = useState<string | null>(null);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   const handleLinkCreated = (link: string) => {
     setShareLink(link);
@@ -22,22 +23,26 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-svh bg-background">
-      <DashboardNav
+    <div className="flex h-screen bg-background">
+      <Sidebar
         workspaceName="Lary's Workspace"
         planName="Starter"
-        inviteButton={<InviteModal />}
-        createLinkButton={<CreateLinkModal onLinkCreated={handleLinkCreated} />}
+        userName="Olivia Martin"
+        userEmail="olivia.martin@email.com"
       />
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
-        <DashboardHeader
-          title="Lary's Workspace"
-          description="Manage recording links for your workspace"
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <TopActions
+          onInviteClick={() => setInviteModalOpen(true)}
+          createLinkButton={<CreateLinkModal onLinkCreated={handleLinkCreated} />}
         />
 
-        <DashboardTabs onSeeMore={handleSeeMoreRecordings} />
-      </main>
+        <main className="flex-1 overflow-y-auto px-6 pb-8">
+          <RecordingsTab onSeeMore={handleSeeMoreRecordings} />
+        </main>
+      </div>
+
+      <InviteModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
 
       <ShareLinkModal
         link={shareLink || ''}

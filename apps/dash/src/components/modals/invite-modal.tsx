@@ -8,14 +8,17 @@ import {
   DialogDescription,
   DialogFooter,
   DialogTitle,
-  DialogTrigger,
 } from '@workspace/ui/components/dialog';
-import { UserPlus, Link, X } from 'lucide-react';
+import { Link, X } from 'lucide-react';
 import { toast } from '@workspace/ui/components/sonner';
 import Avatar from 'boring-avatars';
 
-export function InviteModal() {
-  const [open, setOpen] = useState(false);
+interface InviteModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState('');
   const [emails, setEmails] = useState<string[]>([]);
   const inviteLink = 'https://userplane.com/invite/workspace-abc123';
@@ -64,18 +67,12 @@ export function InviteModal() {
       toast.success(`Invites sent to ${emails.length} email${emails.length > 1 ? 's' : ''}`);
       setEmails([]);
       setEmailInput('');
-      setOpen(false);
+      onOpenChange(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="secondary" size="default" className="rounded-full">
-          Invite
-          <UserPlus className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]" showCloseButton={false}>
         <form onSubmit={handleSendInvites}>
           <div className="space-y-4">
@@ -157,7 +154,7 @@ export function InviteModal() {
               type="button"
               variant="secondary"
               className="rounded-full px-6"
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
