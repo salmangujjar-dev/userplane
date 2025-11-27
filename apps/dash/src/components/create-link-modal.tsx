@@ -36,26 +36,23 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]" showCloseButton={false}>
         <form onSubmit={handleSubmit}>
-          <div className="py-6">
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <DialogTitle className="text-base font-semibold">Reference</DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground">
-                  Could be a link, a ticket number, issue or any reference name
-                </DialogDescription>
-              </div>
-              <input
-                id="reference"
-                type="text"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                placeholder="e.g. https://github.com/issue/123, JIRA-456, Bug fix for login"
-                className="w-full rounded-2xl bg-muted px-6 py-4 text-base focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              />
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <DialogTitle className="text-base font-semibold">Create a Link</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Add a reference could be a link, ticket, issue or any customer reference
+              </DialogDescription>
             </div>
+            <input
+              id="reference"
+              type="text"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="e.g. https://github.com/issue/123, JIRA-456, Bug fix for login"
+              className="w-full rounded-lg bg-muted px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 mt-6">
             <Button
               type="button"
               variant="secondary"
