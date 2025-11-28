@@ -2,12 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import {
@@ -23,7 +21,6 @@ interface IntegrationPostConnectModalProps {
   onOpenChange: (open: boolean) => void;
   integrationName: string;
   integrationImage: string;
-  onDisconnect?: () => void;
 }
 
 export function IntegrationPostConnectModal({
@@ -31,9 +28,7 @@ export function IntegrationPostConnectModal({
   onOpenChange,
   integrationName,
   integrationImage,
-  onDisconnect,
 }: IntegrationPostConnectModalProps) {
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [openSection, setOpenSection] = useState<number | null>(null);
   const config = getIntegrationConfig(integrationName);
 
@@ -58,20 +53,6 @@ export function IntegrationPostConnectModal({
       isVideo: true,
     },
   ];
-
-  const handleDisconnect = async () => {
-    setIsDisconnecting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsDisconnecting(false);
-    if (onDisconnect) {
-      onDisconnect();
-    }
-    onOpenChange(false);
-  };
-
-  const handleHowItWorks = () => {
-    window.open('https://docs.userplane.com/integrations', '_blank');
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -152,31 +133,6 @@ export function IntegrationPostConnectModal({
             ))}
           </div>
         </div>
-
-        <DialogFooter className="mt-8">
-          <Button
-            type="button"
-            variant="secondary"
-            className="rounded-full px-6 mr-auto"
-            onClick={handleDisconnect}
-            disabled={isDisconnecting}
-          >
-            {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
-          </Button>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              className="rounded-full px-6"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="button" className="rounded-full px-6" onClick={handleHowItWorks}>
-              How it works
-            </Button>
-          </div>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
