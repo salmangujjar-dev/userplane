@@ -18,7 +18,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@workspace/ui/components/tooltip';
+import { Plus, ChevronDown, ChevronUp, ExternalLink, Check } from 'lucide-react';
 
 interface CreateLinkModalProps {
   onLinkCreated: (link: string) => void;
@@ -31,6 +37,14 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
   const [isReusable, setIsReusable] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  const domains = [
+    { id: '1', name: 'userplane.com', url: 'https://userplane.com', isLogEnabled: true },
+    { id: '2', name: 'app.userplane.com', url: 'https://app.userplane.com', isLogEnabled: true },
+    { id: '3', name: 'custom.domain.com', url: 'https://custom.domain.com', isLogEnabled: false },
+  ];
+
+  const [selectedDomain, setSelectedDomain] = useState<string | undefined>(domains[0]?.id);
+
   const projects = [
     { id: '1', name: 'Project 1' },
     { id: '2', name: 'Project 2' },
@@ -39,10 +53,13 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const generatedLink = `https://userplane.com/r/${Math.random().toString(36).substring(7)}`;
+    const selectedDomainUrl =
+      domains.find((d) => d.id === selectedDomain)?.url || 'https://userplane.com';
+    const generatedLink = `${selectedDomainUrl}/r/${Math.random().toString(36).substring(7)}`;
     onLinkCreated(generatedLink);
     setOpen(false);
     setReference('');
+    setSelectedDomain(domains[0]?.id);
     setSelectedProject('');
     setIsReusable(false);
     setShowAdvanced(false);
@@ -85,6 +102,76 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
               />
             </div>
 
+            {domains.length > 0 && selectedDomain && (
+              <div className="space-y-2.5">
+                <div className="space-y-0.5">
+                  <Label htmlFor="domain" className="text-sm font-medium">
+                    Domain
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Select the domain for your recording link
+                  </p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-between rounded-lg bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <span className="text-foreground">
+                        {domains.find((d) => d.id === selectedDomain)?.name || 'Select a domain'}
+                      </span>
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
+                    {domains.map((domain) => (
+                      <DropdownMenuItem
+                        key={domain.id}
+                        onClick={() => setSelectedDomain(domain.id)}
+                        className="cursor-pointer flex items-center justify-between"
+                      >
+                        <span>{domain.name}</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1.5 cursor-help">
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                  Log Capture
+                                </span>
+                                <div
+                                  className={`w-1.5 h-1.5 rounded-full ${
+                                    domain.isLogEnabled
+                                      ? 'bg-green-500 shadow-[0_0_4px_1px_rgba(34,197,94,0.5)]'
+                                      : 'bg-yellow-500 shadow-[0_0_4px_1px_rgba(234,179,8,0.5)]'
+                                  }`}
+                                />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="flex items-center gap-1.5">
+                                {domain.isLogEnabled ? (
+                                  <>
+                                    Log capture enabled
+                                    <Check className="h-3 w-3 inline-block" />
+                                  </>
+                                ) : (
+                                  <>
+                                    Enable log capture
+                                    <ExternalLink className="h-3 w-3 inline-block" />
+                                  </>
+                                )}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             {showAdvanced && (
               <div className="space-y-5 pt-5 border-t">
                 <div className="space-y-2.5">
@@ -112,7 +199,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                         <ChevronDown className="h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]">
+                    <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
                       {projects.map((project) => (
                         <DropdownMenuItem
                           key={project.id}
