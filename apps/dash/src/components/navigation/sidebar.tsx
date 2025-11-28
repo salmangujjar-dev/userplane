@@ -25,6 +25,7 @@ import {
   LogOut,
   Building2,
   Check,
+  Plus,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -158,6 +159,13 @@ export function Sidebar({ workspaceName, planName, userEmail, userName }: Sideba
                       {workspace.name}
                     </DropdownMenuItem>
                   ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/workspace/create" className="cursor-pointer">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create workspace
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuItem asChild>

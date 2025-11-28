@@ -160,6 +160,12 @@ format\:check: ## Check formatting
 	@echo "$(YELLOW)Checking code formatting...$(RESET)"
 	@bun run format:check
 
+fmt: format ## Shortcut for format
+
+fmt\:check: format\:check ## Shortcut for format:check
+
+fmt\:fix: format\:fix ## Shortcut for format:fix
+
 typecheck: ## Type check all packages
 	@echo "$(BLUE)Running type check...$(RESET)"
 	@bunx turbo typecheck
