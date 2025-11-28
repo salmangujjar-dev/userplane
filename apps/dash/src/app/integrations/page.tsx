@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
+import { IntegrationPreConnectModal } from '@/components/modals/integration-pre-connect-modal';
+import { IntegrationPostConnectModal } from '@/components/modals/integration-post-connect-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
@@ -20,7 +22,7 @@ interface Integration {
 const issueTrackers: Integration[] = [
   { name: 'Asana', image: '/integrations/asana.webp', connected: false },
   { name: 'ClickUp', image: '/integrations/clickup.webp', connected: false },
-  { name: 'Jira', image: '/integrations/jira.webp', connected: false },
+  { name: 'Jira', image: '/integrations/jira.webp', connected: true },
   { name: 'Jira Service Desk', image: '/integrations/jiraservicedesk.webp', connected: false },
   { name: 'Linear', image: '/integrations/linear.webp', connected: false },
   { name: 'Notion', image: '/integrations/notion.webp', connected: false },
@@ -35,11 +37,11 @@ const helpdesk: Integration[] = [
   { name: 'HappyFox', image: '/integrations/happyfox.webp', connected: false },
   { name: 'Help Scout', image: '/integrations/helpscout.webp', connected: false },
   { name: 'Hiver', image: '/integrations/hiver.webp', connected: false },
-  { name: 'Intercom', image: '/integrations/intercom.webp', connected: false },
+  { name: 'Intercom', image: '/integrations/intercom.webp', connected: true },
   { name: 'Plain', image: '/integrations/plain.webp', connected: false },
   { name: 'Pylon', image: '/integrations/pylon.webp', connected: false },
   { name: 'Talkdesk', image: '/integrations/talkdesk.webp', connected: false },
-  { name: 'Zendesk', image: '/integrations/zendesk.webp', connected: false },
+  { name: 'Zendesk', image: '/integrations/zendesk.webp', connected: true },
 ];
 
 const crm: Integration[] = [
@@ -59,43 +61,68 @@ const workflows: Integration[] = [
 export default function IntegrationsPage() {
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
+  const [connectedIntegrations, setConnectedIntegrations] = useState<Set<string>>(
+    new Set(['Intercom', 'Zendesk', 'Jira'])
+  );
 
   const handleLinkCreated = (link: string) => {
     setShareLink(link);
   };
 
-  const handleConnect = (integrationName: string) => {
-    console.log(`Connecting to ${integrationName}`);
+  const handleConnect = (integration: Integration) => {
+    setSelectedIntegration(integration);
   };
+
+  const handleConnectIntegration = (integrationName: string) => {
+    setConnectedIntegrations((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(integrationName);
+      return newSet;
+    });
+  };
+
+  const handleDisconnect = (integrationName: string) => {
+    setConnectedIntegrations((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(integrationName);
+      return newSet;
+    });
+  };
+
+  const isIntegrationConnected = (name: string) => connectedIntegrations.has(name);
 
   const renderIntegrationList = (integrations: Integration[]) => (
     <div className="space-y-3">
-      {integrations.map((integration) => (
-        <div
-          key={integration.name}
-          className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <Image
-              src={integration.image}
-              alt={integration.name}
-              width={32}
-              height={32}
-              className="object-contain"
-            />
-            <span className="font-medium">{integration.name}</span>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="rounded-full"
-            onClick={() => handleConnect(integration.name)}
+      {integrations.map((integration) => {
+        const connected = isIntegrationConnected(integration.name);
+        return (
+          <div
+            key={integration.name}
+            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
           >
-            Connect
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      ))}
+            <div className="flex items-center gap-3">
+              <Image
+                src={integration.image}
+                alt={integration.name}
+                width={32}
+                height={32}
+                className="object-contain"
+              />
+              <span className="font-medium">{integration.name}</span>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-full min-w-[120px]"
+              onClick={() => handleConnect(integration)}
+            >
+              {connected ? 'Connected' : 'Connect'}
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -148,6 +175,26 @@ export default function IntegrationsPage() {
         open={!!shareLink}
         onClose={() => setShareLink(null)}
       />
+
+      {selectedIntegration && !isIntegrationConnected(selectedIntegration.name) && (
+        <IntegrationPreConnectModal
+          open={!!selectedIntegration}
+          onOpenChange={(open) => !open && setSelectedIntegration(null)}
+          integrationName={selectedIntegration.name}
+          integrationImage={selectedIntegration.image}
+          onConnect={() => handleConnectIntegration(selectedIntegration.name)}
+        />
+      )}
+
+      {selectedIntegration && isIntegrationConnected(selectedIntegration.name) && (
+        <IntegrationPostConnectModal
+          open={!!selectedIntegration}
+          onOpenChange={(open) => !open && setSelectedIntegration(null)}
+          integrationName={selectedIntegration.name}
+          integrationImage={selectedIntegration.image}
+          onDisconnect={() => handleDisconnect(selectedIntegration.name)}
+        />
+      )}
     </div>
   );
 }
