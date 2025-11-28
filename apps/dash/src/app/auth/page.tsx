@@ -7,6 +7,7 @@ import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { toast } from '@workspace/ui/components/sonner';
 import Link from 'next/link';
+import { AuthIcons } from '@/components/auth/auth-icons';
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,8 +27,10 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-svh items-center justify-center px-6 py-12 bg-background">
-      <div className="w-full max-w-md space-y-10">
+    <div className="relative flex min-h-svh items-center justify-center px-6 py-12 bg-background overflow-hidden">
+      <AuthIcons />
+
+      <div className="w-full max-w-md space-y-10 relative z-10">
         <div className="flex flex-col items-center gap-3">
           <Link href="/">
             <Logo />
