@@ -192,7 +192,6 @@ export default function IntegrationsPage() {
           onOpenChange={(open) => !open && setSelectedIntegration(null)}
           integrationName={selectedIntegration.name}
           integrationImage={selectedIntegration.image}
-          onDisconnect={() => handleDisconnect(selectedIntegration.name)}
         />
       )}
     </div>
