@@ -30,3 +30,4 @@ ON "projects"("workspace_id", "is_default")
 WHERE "is_deleted" = false;
 
 
+
