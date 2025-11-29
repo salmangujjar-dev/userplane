@@ -5,8 +5,8 @@ import { TeamSection } from './team-section';
 import { IntegrationSection } from './integration-section';
 import { DomainsSection } from './domains-section';
 import { ProjectsSection } from './projects-section';
+import { StoreSection } from './store-section';
 import { DataSection } from './data-section';
-import { NotificationsSection } from './notifications-section';
 
 export function SettingsTab() {
   return (
@@ -17,8 +17,8 @@ export function SettingsTab() {
       <TeamSection />
       <DomainsSection />
       <ProjectsSection />
+      <StoreSection />
       <DataSection />
-      <NotificationsSection />
       <AppearanceSection />
     </div>
   );
