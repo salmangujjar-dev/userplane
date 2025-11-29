@@ -6,16 +6,21 @@ import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
 import { ArrowLeftRight } from 'lucide-react';
 import { AuthIcons } from '@/components/auth/auth-icons';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 export default function ConnectIntercomPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
+  const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
 
   const handleConnect = async () => {
     setIsConnecting(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsConnecting(false);
-    router.push('/');
+    // In a real application, this would connect to Intercom and return a workspaceId
+    const mockWorkspaceId = 'workspace-123';
+    setWorkspaceStore(mockWorkspaceId);
+    router.push(`/${mockWorkspaceId}`);
   };
 
   return (

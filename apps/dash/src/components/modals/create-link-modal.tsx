@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -25,12 +25,14 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { Plus, ChevronDown, ChevronUp, ExternalLink, Check } from 'lucide-react';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 interface CreateLinkModalProps {
   onLinkCreated: (link: string) => void;
 }
 
 export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const [open, setOpen] = useState(false);
   const [reference, setReference] = useState('');
   const [selectedProject, setSelectedProject] = useState<string>('');
@@ -45,11 +47,22 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
 
   const [selectedDomain, setSelectedDomain] = useState<string | undefined>(domains[0]?.id);
 
+  // TODO: Replace with actual API call to fetch projects for the workspace
+  // Example: const { data: projects } = useQuery(['projects', workspaceId], () => fetchProjects(workspaceId));
   const projects = [
     { id: '1', name: 'Project 1' },
     { id: '2', name: 'Project 2' },
     { id: '3', name: 'Project 3' },
   ];
+
+  // Effect to fetch projects when modal opens and workspaceId is available
+  useEffect(() => {
+    if (open && workspaceId) {
+      // TODO: Fetch projects for this workspace
+      // fetchProjects(workspaceId);
+      console.log('Fetching projects for workspace:', workspaceId);
+    }
+  }, [open, workspaceId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
