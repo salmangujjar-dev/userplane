@@ -11,9 +11,9 @@ export function SettingsTab() {
   return (
     <div className="space-y-8">
       <OverviewSection />
+      <IntegrationSection />
       <UsageSection />
       <TeamSection />
-      <IntegrationSection />
       <DomainsSection />
       <ProjectsSection />
       <DataSection />

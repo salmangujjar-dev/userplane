@@ -17,7 +17,7 @@ export default function CreateWorkspacePage() {
   };
 
   return (
-    <div className="relative flex min-h-svh items-center justify-center px-6 py-12 bg-background overflow-hidden">
+    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
       <AuthIcons />
 
       <div className="w-full max-w-md space-y-10 relative z-10">
@@ -49,6 +49,16 @@ export default function CreateWorkspacePage() {
           </Button>
         </div>
       </div>
+
+      <footer className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
+        <button
+          type="button"
+          onClick={() => router.push('/workspace/connect/intercom')}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Connect using Intercom
+        </button>
+      </footer>
     </div>
   );
 }

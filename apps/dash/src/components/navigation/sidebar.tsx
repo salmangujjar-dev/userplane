@@ -10,23 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
 } from '@workspace/ui/components/dropdown-menu';
 import Avatar from 'boring-avatars';
-import {
-  Video,
-  Link as LinkIcon,
-  Settings,
-  Plug,
-  FolderKanban,
-  KeyRound,
-  LogOut,
-  Building2,
-  Check,
-  Plus,
-} from 'lucide-react';
+import { Video, Link as LinkIcon, Settings, FolderKanban, KeyRound, LogOut } from 'lucide-react';
 
 interface SidebarProps {
   workspaceName: string;
@@ -49,25 +35,12 @@ interface NavSection {
 export function Sidebar({ workspaceName, planName, userEmail, userName }: SidebarProps) {
   const pathname = usePathname();
 
-  const workspaces = [
-    { id: '1', name: "Lary's Workspace" },
-    { id: '2', name: 'Dev Team' },
-    { id: '3', name: 'Marketing Team' },
-  ];
-
   const sections: NavSection[] = [
     {
       title: 'Overview',
       items: [
         { label: 'Recordings', href: '/', icon: Video },
         { label: 'Shared Links', href: '/links', icon: LinkIcon },
-      ],
-    },
-    {
-      title: 'Workspace',
-      items: [
-        { label: 'Settings', href: '/settings', icon: Settings },
-        { label: 'Integrations', href: '/integrations', icon: Plug },
       ],
     },
     {
@@ -143,31 +116,12 @@ export function Sidebar({ workspaceName, planName, userEmail, userName }: Sideba
                 <div className="text-xs text-muted-foreground">{userEmail}</div>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Building2 className="h-4 w-4 mr-2" />
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="flex items-center gap-2 cursor-pointer">
+                  <Settings className="h-4 w-4" />
                   Workspace
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {workspaces.map((workspace) => (
-                    <DropdownMenuItem key={workspace.id} className="cursor-pointer">
-                      <Check
-                        className={`h-4 w-4 mr-2 ${
-                          workspace.name === workspaceName ? 'opacity-100' : 'opacity-0'
-                        }`}
-                      />
-                      {workspace.name}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/workspace/create" className="cursor-pointer">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create workspace
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/accounts" className="flex items-center gap-2 cursor-pointer">
                   <KeyRound className="h-4 w-4" />
