@@ -32,5 +32,8 @@
     "*.{ts,tsx,js,jsx,astro,json,md,yml,yaml}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "prism-react-renderer": "^2.4.1"
   }
 }

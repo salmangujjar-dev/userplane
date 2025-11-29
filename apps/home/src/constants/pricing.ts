@@ -78,10 +78,10 @@ export const PRICING_PLANS: PricingPlan[] = [
       },
       {
         text: 'Customize Recording Links',
-        included: true,
+        included: false,
         subFeatures: [
-          { text: 'Customize with your logo', included: true },
-          { text: 'Customize sub-domain', included: true },
+          { text: 'Customize with your logo', included: false },
+          { text: 'Customize sub-domain', included: false },
           { text: 'Remove userplane branding', included: false },
           { text: 'Custom data retention policy', included: false },
         ],
@@ -139,10 +139,10 @@ export const PRICING_PLANS: PricingPlan[] = [
         text: 'Customize Recording Links',
         included: true,
         subFeatures: [
-          { text: 'Customize with your logo', included: true },
+          { text: 'Customize with your logo', included: false },
           { text: 'Customize sub-domain', included: true },
           { text: 'Remove userplane branding', included: false },
-          { text: 'Custom data retention policy', included: true },
+          { text: 'Custom data retention policy', included: false },
         ],
       },
       {

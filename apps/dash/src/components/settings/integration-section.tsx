@@ -25,7 +25,7 @@ export function IntegrationSection() {
         <h2 className="text-lg font-semibold">Integrations</h2>
         <p className="text-sm text-muted-foreground">Manage your workspace integrations</p>
       </div>
-      <div className="max-w-2xl">
+      <div className="max-w-md">
         <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
           <div className="flex items-center gap-3">
             <Image
