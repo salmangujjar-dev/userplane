@@ -1,4 +1,4 @@
-import { CAL_URL } from './contact';
+import { TALLY_SALES_FORM_URL } from './contact';
 import { SIGNUP_URL } from './onboarding';
 
 /**
@@ -277,7 +277,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       },
     ],
     ctaText: 'Contact Sales',
-    ctaUrl: CAL_URL,
+    ctaUrl: TALLY_SALES_FORM_URL,
     ctaIsExternal: true,
     isEnterprise: true,
   },

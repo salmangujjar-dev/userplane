@@ -1,12 +1,19 @@
 import type { HighlightConfig } from './types';
-import { CAL_URL } from './contact';
+import { TALLY_SALES_FORM_URL } from './contact';
 import { SIGNUP_URL } from './onboarding';
 
-export const HERO_HEADING = 'Stop asking customers to describe their issues';
+export const HERO_HEADING = 'One click screen recordings for Intercom';
+
+export const HERO_ICON = {
+  src: '/icons/intercom.webp',
+  alt: 'Intercom',
+  beforeWordIndex: 5,
+};
 
 export const HERO_HIGHLIGHTS: HighlightConfig[] = [
-  { wordIndex: 2, color: 'blue' },
-  { wordIndex: 6, color: 'yellow' },
+  { wordIndex: 2, color: 'yellow' },
+  { wordIndex: 3, color: 'yellow' },
+  { wordIndex: 5, color: 'blue' },
 ];
 
 export const HERO_DESCRIPTION =
@@ -19,12 +26,6 @@ export const HERO_PRIMARY_BUTTON = {
 
 export const HERO_SECONDARY_BUTTON = {
   text: 'Contact Sales',
-  href: CAL_URL,
-  isExternal: true,
-};
-
-export const HERO_BADGE = {
-  text: 'Public Beta',
-  href: CAL_URL,
+  href: TALLY_SALES_FORM_URL,
   isExternal: true,
 };

@@ -1,14 +1,12 @@
 import { ChevronRight } from 'lucide-react';
-import { AiFillExperiment } from 'react-icons/ai';
 import { Button } from '@workspace/ui/components/button';
-import { Badge } from '@workspace/ui/components/badge';
 import {
   HERO_HEADING,
   HERO_HIGHLIGHTS,
   HERO_DESCRIPTION,
   HERO_PRIMARY_BUTTON,
   HERO_SECONDARY_BUTTON,
-  HERO_BADGE,
+  HERO_ICON,
 } from '../../constants/hero';
 import type { HighlightColor } from '../../constants/types';
 import Highlight from './Highlight';
@@ -47,28 +45,41 @@ export default function Hero() {
     <section className="w-full pt-16 md:pt-24 pb-8 md:pb-12 px-6 md:px-12">
       <div className="mx-auto max-w-7xl flex flex-col gap-12">
         <div className="z-20 flex h-full grow flex-col items-center gap-12 text-center">
-          <Badge className="rounded-full min-h-[48px] py-3" variant={'secondary'}>
-            <a
-              className="flex items-center justify-center gap-2"
-              href={HERO_BADGE.href}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <AiFillExperiment className="h-4 w-4" />
-              {HERO_BADGE.text}
-            </a>
-          </Badge>
-
           <h1 className="text-center font-dm-sans font-medium text-4xl leading-tight tracking-[-2px] md:max-w-4xl md:text-6xl">
-            {segments.map((segment, index) => (
-              <span key={index}>
-                {segment.color ? (
-                  <Highlight color={segment.color}>{segment.text}</Highlight>
-                ) : (
-                  segment.text
-                )}{' '}
-              </span>
-            ))}
+            {segments.map((segment, index) => {
+              const firstWordIndex = words.slice(
+                0,
+                segments.slice(0, index).reduce((acc, s) => acc + s.text.split(' ').length, 0)
+              ).length;
+              const showIconBefore = firstWordIndex === HERO_ICON.beforeWordIndex;
+
+              return (
+                <span key={index}>
+                  {showIconBefore ? (
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                      <img
+                        src={HERO_ICON.src}
+                        alt={HERO_ICON.alt}
+                        className="inline-block w-8 h-8 md:w-12 md:h-12"
+                      />
+                      {segment.color ? (
+                        <Highlight color={segment.color}>{segment.text}</Highlight>
+                      ) : (
+                        segment.text
+                      )}
+                    </span>
+                  ) : (
+                    <>
+                      {segment.color ? (
+                        <Highlight color={segment.color}>{segment.text}</Highlight>
+                      ) : (
+                        segment.text
+                      )}
+                    </>
+                  )}{' '}
+                </span>
+              );
+            })}
           </h1>
 
           <p className="md:text-lg max-w-2xl">{HERO_DESCRIPTION}</p>
