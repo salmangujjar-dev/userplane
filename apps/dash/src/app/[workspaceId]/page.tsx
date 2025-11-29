@@ -1,23 +1,29 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
-import { RecordingPreview } from '@/components/recordings/recording-preview';
-import { PaginationControls } from '@/components/shared/pagination-controls';
+import { RecordingsTab } from '@/components/recordings/recordings-tab';
+import { useWorkspaceStore } from '@/stores/workspace';
 
-export default function RecordingsPage() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 10;
-  const recordingsPerPage = 16; // 4 columns x 4 rows
+export default function DashboardPage() {
+  const router = useRouter();
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   const handleLinkCreated = (link: string) => {
     setShareLink(link);
+  };
+
+  const handleSeeMoreRecordings = () => {
+    if (workspaceId) {
+      router.push(`/${workspaceId}/recordings`);
+    }
   };
 
   return (
@@ -36,27 +42,7 @@ export default function RecordingsPage() {
         />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-semibold">Your Recordings</h2>
-                <p className="text-sm text-muted-foreground">View received recordings</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[...Array(recordingsPerPage)].map((_, i) => {
-                const recordingIndex = (currentPage - 1) * recordingsPerPage + i;
-                return <RecordingPreview key={i} recordingId={`rec-${recordingIndex + 1}`} />;
-              })}
-            </div>
-
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
+          <RecordingsTab onSeeMore={handleSeeMoreRecordings} />
         </main>
       </div>
 

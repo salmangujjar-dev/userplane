@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 interface RecordingPreviewProps {
   recordingId?: string;
@@ -9,12 +10,13 @@ interface RecordingPreviewProps {
 
 export function RecordingPreview({ recordingId, onClick }: RecordingPreviewProps) {
   const router = useRouter();
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
   const handleClick = () => {
     if (onClick) {
       onClick();
-    } else if (recordingId) {
-      router.push(`/recordings/${recordingId}`);
+    } else if (recordingId && workspaceId) {
+      router.push(`/${workspaceId}/recordings/${recordingId}`);
     }
   };
 

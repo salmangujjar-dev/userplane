@@ -7,13 +7,18 @@ import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
 import { AuthIcons } from '@/components/auth/auth-icons';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 export default function CreateWorkspacePage() {
   const [workspace, setWorkspace] = useState('');
   const router = useRouter();
+  const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
 
   const handleCreateWorkspace = () => {
-    router.push('/');
+    // In a real application, this would create a workspace and return a workspaceId
+    const mockWorkspaceId = 'workspace-123';
+    setWorkspaceStore(mockWorkspaceId, workspace);
+    router.push(`/${mockWorkspaceId}`);
   };
 
   return (

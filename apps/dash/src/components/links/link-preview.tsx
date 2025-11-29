@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 interface LinkPreviewProps {
   linkId?: string;
@@ -9,12 +10,13 @@ interface LinkPreviewProps {
 
 export function LinkPreview({ linkId, onClick }: LinkPreviewProps) {
   const router = useRouter();
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
   const handleClick = () => {
     if (onClick) {
       onClick();
-    } else {
-      router.push('/recordings');
+    } else if (workspaceId) {
+      router.push(`/${workspaceId}/recordings`);
     }
   };
 

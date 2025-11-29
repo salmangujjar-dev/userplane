@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Link as LinkIcon, Share2 } from 'lucide-react';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 interface RecordingDetailNavProps {
   onCopyLink?: () => void;
@@ -11,10 +12,12 @@ interface RecordingDetailNavProps {
 }
 
 export function RecordingDetailNav({ onCopyLink, onShare }: RecordingDetailNavProps) {
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
+
   return (
     <nav>
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-        <Link href="/">
+        <Link href={`/${workspaceId}`}>
           <Logo size="sm" />
         </Link>
         <div className="flex items-center gap-3">

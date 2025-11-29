@@ -13,6 +13,7 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import Avatar from 'boring-avatars';
 import { Video, Link as LinkIcon, Settings, FolderKanban, KeyRound, LogOut } from 'lucide-react';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 interface SidebarProps {
   workspaceName: string;
@@ -34,21 +35,22 @@ interface NavSection {
 
 export function Sidebar({ workspaceName, planName, userEmail, userName }: SidebarProps) {
   const pathname = usePathname();
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
   const sections: NavSection[] = [
     {
       title: 'Overview',
       items: [
-        { label: 'Recordings', href: '/', icon: Video },
-        { label: 'Shared Links', href: '/links', icon: LinkIcon },
+        { label: 'Recordings', href: `/${workspaceId}`, icon: Video },
+        { label: 'Shared Links', href: `/${workspaceId}/links`, icon: LinkIcon },
       ],
     },
     {
       title: 'Projects',
       items: [
-        { label: 'Project 1', href: '/projects/1', icon: FolderKanban },
-        { label: 'Project 2', href: '/projects/2', icon: FolderKanban },
-        { label: 'Project 3', href: '/projects/3', icon: FolderKanban },
+        { label: 'Project 1', href: `/${workspaceId}/projects/1`, icon: FolderKanban },
+        { label: 'Project 2', href: `/${workspaceId}/projects/2`, icon: FolderKanban },
+        { label: 'Project 3', href: `/${workspaceId}/projects/3`, icon: FolderKanban },
       ],
     },
   ];
@@ -57,7 +59,7 @@ export function Sidebar({ workspaceName, planName, userEmail, userName }: Sideba
     <aside className="flex h-screen w-64 flex-col flex-shrink-0 bg-background">
       <div className="px-6 py-6 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <Link href="/">
+          <Link href={`/${workspaceId}`}>
             <Logo size="sm" />
           </Link>
           <Badge variant="secondary" className="rounded-md text-xs">
@@ -117,7 +119,10 @@ export function Sidebar({ workspaceName, planName, userEmail, userName }: Sideba
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/settings" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  href={`/${workspaceId}/settings`}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <Settings className="h-4 w-4" />
                   Workspace
                 </Link>

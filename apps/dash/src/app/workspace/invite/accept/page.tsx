@@ -5,17 +5,21 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { AuthIcons } from '@/components/auth/auth-icons';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 export default function WorkspaceInviteAcceptPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
 
   const handleJoinWorkspace = async () => {
     setIsLoading(true);
     // Handle workspace join logic here
-    // For now, redirect to home
+    // In a real application, this would accept the invite and return a workspaceId
     setTimeout(() => {
-      router.push('/');
+      const mockWorkspaceId = 'workspace-123';
+      setWorkspaceStore(mockWorkspaceId, "Lary's Workspace");
+      router.push(`/${mockWorkspaceId}`);
     }, 1000);
   };
 

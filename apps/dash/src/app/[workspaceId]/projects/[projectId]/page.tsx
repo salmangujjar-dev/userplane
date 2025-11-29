@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useQueryState } from 'nuqs';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
@@ -12,14 +13,17 @@ import { PaginationControls } from '@/components/shared/pagination-controls';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/components/tabs';
 import { LinkPreview } from '@/components/links/link-preview';
 import { Video, Link as LinkIcon } from 'lucide-react';
+import { usePagination } from '@/hooks/use-pagination';
+import { tabParser } from '@/lib/parsers';
 
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [recordingsPage, setRecordingsPage] = useState(1);
-  const [linksPage, setLinksPage] = useState(1);
+  const [activeTab, setActiveTab] = useQueryState('tab', tabParser.withDefault('recordings'));
+  const [recordingsPage, setRecordingsPage] = usePagination('recordingsPage');
+  const [linksPage, setLinksPage] = usePagination('linksPage');
   const recordingsTotalPages = 5;
   const linksTotalPages = 3;
   const recordingsPerPage = 16; // 4 columns x 4 rows
@@ -55,7 +59,7 @@ export default function ProjectPage() {
               </div>
             </div>
 
-            <Tabs defaultValue="recordings" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="mb-6">
                 <TabsTrigger value="recordings" className="gap-2">
                   <Video className="h-4 w-4" />
