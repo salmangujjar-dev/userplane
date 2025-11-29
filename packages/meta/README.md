@@ -1,6 +1,6 @@
 # @workspace/meta
 
-Shared metadata, branding assets, and SEO configuration for all Userplane apps.
+Shared metadata, branding assets, and SEO configuration for all Userplane apps optimized for Intercom integration.
 
 ## Purpose
 
