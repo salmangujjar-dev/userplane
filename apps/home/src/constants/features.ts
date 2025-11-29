@@ -36,10 +36,10 @@ export const FEATURES: Feature[] = [
   },
   {
     image: '/images/features/native-integrations.webp',
-    imageAlt: 'Native Integrations',
-    title: 'Native Integrations',
+    imageAlt: 'Intercom Native',
+    title: 'Intercom Native',
     description:
-      'Best in class integrations with help desks, issue trackers, CRM, and support tools you already use. No context switching required.',
+      'Best-in-class Intercom integration. Request and receive screen recordings without leaving Intercom. No context switching required.',
   },
   {
     image: '/images/features/enterprise-ready.webp',
