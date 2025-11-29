@@ -1,5 +1,5 @@
 import type { HighlightConfig } from './types';
-import { CAL_URL } from './contact';
+import { TALLY_SALES_FORM_URL } from './contact';
 import { SIGNUP_URL } from './onboarding';
 
 export const CTA_HEADING = 'See the bug not just a description of it';
@@ -19,6 +19,6 @@ export const CTA_PRIMARY_BUTTON = {
 
 export const CTA_SECONDARY_BUTTON = {
   text: 'Contact Sales',
-  href: CAL_URL,
+  href: TALLY_SALES_FORM_URL,
   isExternal: true,
 };

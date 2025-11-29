@@ -42,12 +42,3 @@ export const TALLY_COMPLIANCE_FORM_URL = 'https://tally.so/r/D44oPR';
  * Feature request form
  */
 export const TALLY_FEATURE_REQUEST_URL = 'https://tally.so/r/VLLaXJ';
-
-/**
- * Main contact form for all inquiries
- * Used for sales, support, onboarding and general inquiries
- */
-export const CAL_URL = TALLY_SALES_FORM_URL;
-export const CAL_SUPPORT_URL = TALLY_SALES_FORM_URL;
-export const CAL_BILLING_URL = TALLY_SALES_FORM_URL;
-export const CAL_DISCOVERY_URL = TALLY_SALES_FORM_URL;
