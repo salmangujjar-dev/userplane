@@ -1,4 +1,5 @@
 import { OverviewSection } from './overview-section';
+import { AppearanceSection } from './appearance-section';
 import { UsageSection } from './usage-section';
 import { TeamSection } from './team-section';
 import { IntegrationSection } from './integration-section';
@@ -18,6 +19,7 @@ export function SettingsTab() {
       <ProjectsSection />
       <DataSection />
       <NotificationsSection />
+      <AppearanceSection />
     </div>
   );
 }
