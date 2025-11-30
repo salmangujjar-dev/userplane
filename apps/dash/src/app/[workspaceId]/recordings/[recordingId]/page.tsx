@@ -41,7 +41,7 @@ export default function RecordingDetailPage() {
     <div className="min-h-svh bg-background">
       <RecordingDetailNav onCopyLink={handleCopyLink} onShare={handleShare} />
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="w-full px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <RecordingPlayer />
