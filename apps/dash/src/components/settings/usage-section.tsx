@@ -11,12 +11,12 @@ import {
 import { Info, ChevronDown, Minus, Plus, ArrowRight } from 'lucide-react';
 
 const ADDITIONAL_MINUTES_OPTIONS = [
-  { minutes: 90, price: 19 },
-  { minutes: 180, price: 39 },
-  { minutes: 360, price: 79 },
+  { minutes: 90, price: 149 },
+  { minutes: 180, price: 249 },
+  { minutes: 360, price: 599 },
 ];
 
-const ADDITIONAL_SEATS_OPTIONS = [{ users: 5, price: 29, label: '$29 / 5 user' }];
+const ADDITIONAL_SEATS_OPTIONS = [{ users: 5, price: 49, label: '$49 / 5 user' }];
 
 export function UsageSection() {
   const [expandedMinutes, setExpandedMinutes] = useState(false);
