@@ -21,9 +21,11 @@ export function IntegrationSection() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Integrations</h2>
-        <p className="text-sm text-muted-foreground">Manage your workspace integrations</p>
+      <div className="space-y-2 mb-4">
+        <h3 className="text-sm font-medium">Integrations</h3>
+        <p className="text-sm text-muted-foreground">
+          Connect third-party services to your workspace
+        </p>
       </div>
       <div className="max-w-md">
         <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">

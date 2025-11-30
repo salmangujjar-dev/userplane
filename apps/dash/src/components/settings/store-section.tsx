@@ -5,18 +5,13 @@ import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@workspace/ui/components/collapsible';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import { Database, ChevronDown, X, Cloud } from 'lucide-react';
+import { Database, X, Cloud } from 'lucide-react';
 
 type StoreProvider = 'Cloudflare' | 'AWS' | 'GCS' | 'Azure';
 
@@ -61,7 +56,6 @@ const PROVIDER_OPTIONS: StoreProvider[] = ['Cloudflare', 'AWS', 'GCS', 'Azure'];
 
 export function StoreSection() {
   const [stores, setStores] = useState<Store[]>(STORES);
-  const [expandedStore, setExpandedStore] = useState<number | null>(null);
   const [showAddStore, setShowAddStore] = useState(false);
   const [newStore, setNewStore] = useState({
     title: '',
@@ -72,26 +66,6 @@ export function StoreSection() {
     providerAccessId: '',
     providerAccessKey: '',
   });
-
-  const handleToggleStore = (storeId: number) => {
-    setExpandedStore(expandedStore === storeId ? null : storeId);
-  };
-
-  const handleUpdateStore = (
-    storeId: number,
-    field: keyof Store,
-    value: string | boolean | StoreProvider
-  ) => {
-    setStores((prev) =>
-      prev.map((store) =>
-        store.id === storeId
-          ? { ...store, [field]: value }
-          : field === 'isDefault' && value === true
-            ? { ...store, isDefault: false }
-            : store
-      )
-    );
-  };
 
   const handleAddStore = () => {
     const isValid =
@@ -143,9 +117,6 @@ export function StoreSection() {
 
   const handleDeleteStore = (storeId: number) => {
     setStores((prev) => prev.filter((store) => store.id !== storeId));
-    if (expandedStore === storeId) {
-      setExpandedStore(null);
-    }
   };
 
   return (
@@ -157,15 +128,14 @@ export function StoreSection() {
 
       <div className="max-w-2xl space-y-4">
         {stores.map((store) => (
-          <Collapsible
+          <div
             key={store.id}
-            open={expandedStore === store.id}
-            onOpenChange={() => handleToggleStore(store.id)}
+            className="flex items-center justify-between p-4 rounded-xl border bg-card"
           >
-            <div className="rounded-xl border bg-card">
-              <CollapsibleTrigger className="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors rounded-xl">
-                <div className="flex items-center gap-3">
-                  <Database className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center gap-3">
+              <Database className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{store.title}</span>
                   {store.isDefault && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
@@ -173,125 +143,15 @@ export function StoreSection() {
                     </span>
                   )}
                 </div>
-                <ChevronDown
-                  className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                    expandedStore === store.id ? 'rotate-180' : ''
-                  }`}
-                />
-              </CollapsibleTrigger>
-
-              <CollapsibleContent>
-                <div className="border-t p-4 space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`title-${store.id}`} className="text-sm">
-                      Store Title
-                    </Label>
-                    <Input
-                      id={`title-${store.id}`}
-                      value={store.title}
-                      onChange={(e) => handleUpdateStore(store.id, 'title', e.target.value)}
-                      placeholder="Enter store title"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor={`provider-${store.id}`} className="text-sm">
-                      Provider
-                    </Label>
-                    <Select
-                      value={store.provider}
-                      onValueChange={(value) =>
-                        handleUpdateStore(store.id, 'provider', value as StoreProvider)
-                      }
-                    >
-                      <SelectTrigger id={`provider-${store.id}`}>
-                        <SelectValue placeholder="Select provider" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PROVIDER_OPTIONS.map((provider) => (
-                          <SelectItem key={provider} value={provider}>
-                            <div className="flex items-center gap-2">
-                              <Cloud className="h-4 w-4" />
-                              {provider}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor={`url-${store.id}`} className="text-sm">
-                      Provider URL
-                    </Label>
-                    <Input
-                      id={`url-${store.id}`}
-                      value={store.providerUrl}
-                      onChange={(e) => handleUpdateStore(store.id, 'providerUrl', e.target.value)}
-                      placeholder="e.g., s3.amazonaws.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor={`region-${store.id}`} className="text-sm">
-                      Provider Region
-                    </Label>
-                    <Input
-                      id={`region-${store.id}`}
-                      value={store.providerRegion}
-                      onChange={(e) =>
-                        handleUpdateStore(store.id, 'providerRegion', e.target.value)
-                      }
-                      placeholder="e.g., us-east-1"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor={`bucket-${store.id}`} className="text-sm">
-                      Provider Bucket
-                    </Label>
-                    <Input
-                      id={`bucket-${store.id}`}
-                      value={store.providerBucket}
-                      onChange={(e) =>
-                        handleUpdateStore(store.id, 'providerBucket', e.target.value)
-                      }
-                      placeholder="e.g., my-bucket-name"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor={`access-id-${store.id}`} className="text-sm">
-                      Provider Access ID
-                    </Label>
-                    <Input
-                      id={`access-id-${store.id}`}
-                      value={store.providerAccessId}
-                      onChange={(e) =>
-                        handleUpdateStore(store.id, 'providerAccessId', e.target.value)
-                      }
-                      placeholder="Enter access ID"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor={`access-key-${store.id}`} className="text-sm">
-                      Provider Access Key
-                    </Label>
-                    <Input
-                      id={`access-key-${store.id}`}
-                      type="password"
-                      value={store.providerAccessKey}
-                      onChange={(e) =>
-                        handleUpdateStore(store.id, 'providerAccessKey', e.target.value)
-                      }
-                      placeholder="Enter access key"
-                    />
-                  </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                  <Cloud className="h-3.5 w-3.5" />
+                  <span>{store.provider}</span>
+                  <span>•</span>
+                  <span>{store.providerRegion}</span>
                 </div>
-              </CollapsibleContent>
+              </div>
             </div>
-          </Collapsible>
+          </div>
         ))}
 
         {showAddStore ? (

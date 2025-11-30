@@ -20,7 +20,6 @@ import {
 import { Folder, ChevronDown, X, Trash2, Cloud } from 'lucide-react';
 
 type ProjectLocation = 'US' | 'EU' | 'Global' | 'Custom';
-type ProjectStore = 'AWS' | 'Azure' | 'GCP' | 'DigitalOcean';
 
 interface Project {
   id: number;
@@ -28,8 +27,13 @@ interface Project {
   title: string;
   path: string;
   location: ProjectLocation;
-  store?: ProjectStore;
+  storeId?: number;
   isDefault: boolean;
+}
+
+interface StoreOption {
+  id: number;
+  title: string;
 }
 
 const PROJECTS: Project[] = [
@@ -39,7 +43,7 @@ const PROJECTS: Project[] = [
     title: 'Production App',
     path: '/var/www/production',
     location: 'US',
-    store: 'AWS',
+    storeId: 1,
     isDefault: true,
   },
   {
@@ -48,7 +52,7 @@ const PROJECTS: Project[] = [
     title: 'Dev Environment',
     path: '/var/www/development',
     location: 'EU',
-    store: 'Azure',
+    storeId: 2,
     isDefault: false,
   },
   {
@@ -57,13 +61,16 @@ const PROJECTS: Project[] = [
     title: 'Staging Server',
     path: '/var/www/staging',
     location: 'Global',
-    store: 'GCP',
+    storeId: 1,
     isDefault: false,
   },
 ];
 
 const LOCATION_OPTIONS: ProjectLocation[] = ['US', 'EU', 'Global', 'Custom'];
-const STORE_OPTIONS: ProjectStore[] = ['AWS', 'Azure', 'GCP', 'DigitalOcean'];
+const AVAILABLE_STORES: StoreOption[] = [
+  { id: 1, title: 'Production Storage' },
+  { id: 2, title: 'Development Storage' },
+];
 
 export function ProjectsSection() {
   const [projects, setProjects] = useState<Project[]>(PROJECTS);
@@ -74,7 +81,7 @@ export function ProjectsSection() {
     title: '',
     path: '',
     location: 'US' as ProjectLocation,
-    store: 'AWS' as ProjectStore,
+    storeId: 1,
   });
 
   const handleToggleProject = (projectId: number) => {
@@ -84,7 +91,7 @@ export function ProjectsSection() {
   const handleUpdateProject = (
     projectId: number,
     field: keyof Project,
-    value: string | boolean | ProjectLocation | ProjectStore
+    value: string | boolean | ProjectLocation | number
   ) => {
     setProjects((prev) =>
       prev.map((project) =>
@@ -110,17 +117,17 @@ export function ProjectsSection() {
         title: newProject.title,
         path: newProject.path,
         location: newProject.location,
-        store: newProject.store,
+        storeId: newProject.storeId,
         isDefault: false,
       };
       setProjects((prev) => [...prev, project]);
-      setNewProject({ name: '', title: '', path: '', location: 'US', store: 'AWS' });
+      setNewProject({ name: '', title: '', path: '', location: 'US', storeId: 1 });
       setShowAddProject(false);
     }
   };
 
   const handleCancelAdd = () => {
-    setNewProject({ name: '', title: '', path: '', location: 'US', store: 'AWS' });
+    setNewProject({ name: '', title: '', path: '', location: 'US', storeId: 1 });
     setShowAddProject(false);
   };
 
@@ -204,20 +211,20 @@ export function ProjectsSection() {
                           Store
                         </Label>
                         <Select
-                          value={project.store || 'AWS'}
+                          value={project.storeId?.toString() || '1'}
                           onValueChange={(value) =>
-                            handleUpdateProject(project.id, 'store', value as ProjectStore)
+                            handleUpdateProject(project.id, 'storeId', parseInt(value))
                           }
                         >
                           <SelectTrigger id={`store-${project.id}`}>
                             <SelectValue placeholder="Select a store" />
                           </SelectTrigger>
                           <SelectContent>
-                            {STORE_OPTIONS.map((store) => (
-                              <SelectItem key={store} value={store}>
+                            {AVAILABLE_STORES.map((store) => (
+                              <SelectItem key={store.id} value={store.id.toString()}>
                                 <div className="flex items-center gap-2">
                                   <Cloud className="h-4 w-4" />
-                                  {store}
+                                  {store.title}
                                 </div>
                               </SelectItem>
                             ))}
@@ -327,20 +334,20 @@ export function ProjectsSection() {
                     Store
                   </Label>
                   <Select
-                    value={newProject.store}
+                    value={newProject.storeId.toString()}
                     onValueChange={(value) =>
-                      setNewProject((prev) => ({ ...prev, store: value as ProjectStore }))
+                      setNewProject((prev) => ({ ...prev, storeId: parseInt(value) }))
                     }
                   >
                     <SelectTrigger id="new-project-store">
                       <SelectValue placeholder="Select a store" />
                     </SelectTrigger>
                     <SelectContent>
-                      {STORE_OPTIONS.map((store) => (
-                        <SelectItem key={store} value={store}>
+                      {AVAILABLE_STORES.map((store) => (
+                        <SelectItem key={store.id} value={store.id.toString()}>
                           <div className="flex items-center gap-2">
                             <Cloud className="h-4 w-4" />
-                            {store}
+                            {store.title}
                           </div>
                         </SelectItem>
                       ))}
