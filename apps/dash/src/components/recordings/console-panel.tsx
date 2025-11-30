@@ -117,7 +117,7 @@ export function ConsolePanel() {
     return matchesFilter && matchesSearch;
   });
 
-  const recordingStartTime = mockLogs.length > 0 ? mockLogs[0].event.timestamp : undefined;
+  const recordingStartTime = mockLogs.length > 0 ? mockLogs[0]?.event.timestamp : undefined;
 
   return (
     <div className="h-full flex flex-col">

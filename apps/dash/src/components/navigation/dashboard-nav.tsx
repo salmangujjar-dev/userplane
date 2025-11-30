@@ -19,7 +19,6 @@ interface DashboardNavProps {
 }
 
 export function DashboardNav({
-  workspaceName,
   planName,
   inviteButton,
   createLinkButton,

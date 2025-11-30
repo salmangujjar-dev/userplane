@@ -15,10 +15,6 @@ export function IntegrationSection() {
     setIsConnected(true);
   };
 
-  const handleDisconnect = () => {
-    setIsConnected(false);
-  };
-
   return (
     <div>
       <div className="space-y-2 mb-4">

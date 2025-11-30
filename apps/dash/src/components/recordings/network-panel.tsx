@@ -259,7 +259,7 @@ export function NetworkPanel() {
     return matchesSearch && requestFilterType === activeFilter;
   });
 
-  const recordingStartTime = mockRequests.length > 0 ? mockRequests[0].timestamp : undefined;
+  const recordingStartTime = mockRequests.length > 0 ? mockRequests[0]?.timestamp : undefined;
 
   return (
     <div className="h-full flex flex-col">

@@ -1,9 +1,4 @@
-interface RecordingPlayerProps {
-  recordingId?: string;
-  onPlay?: () => void;
-}
-
-export function RecordingPlayer({ recordingId, onPlay }: RecordingPlayerProps) {
+export function RecordingPlayer() {
   return (
     <div className="relative w-full h-[calc(100vh-8rem)] rounded-2xl bg-muted p-4 flex items-center justify-center">
       <div className="relative w-full aspect-video">

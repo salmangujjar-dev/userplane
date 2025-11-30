@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import Logo from '@workspace/ui/components/logo';
 import { Badge } from '@workspace/ui/components/badge';
 import {
@@ -33,8 +32,7 @@ interface NavSection {
   items: NavItem[];
 }
 
-export function Sidebar({ workspaceName, planName, userEmail, userName }: SidebarProps) {
-  const pathname = usePathname();
+export function Sidebar({ planName, userEmail, userName }: SidebarProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
   const sections: NavSection[] = [

@@ -8,7 +8,7 @@ interface LinkPreviewProps {
   onClick?: () => void;
 }
 
-export function LinkPreview({ linkId, onClick }: LinkPreviewProps) {
+export function LinkPreview({ onClick }: LinkPreviewProps) {
   const router = useRouter();
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 

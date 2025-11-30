@@ -87,6 +87,7 @@ export function CreateStoreModal({ open, onOpenChange, onCreateStore }: CreateSt
       providerBucket: '',
       providerAccessId: '',
       providerAccessKey: '',
+      recordingExpiry: '90 days',
     });
     onOpenChange(false);
   };

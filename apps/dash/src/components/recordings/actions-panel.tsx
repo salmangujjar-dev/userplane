@@ -108,7 +108,7 @@ export function ActionsPanel() {
     return searchText.includes(searchQuery.toLowerCase());
   });
 
-  const recordingStartTime = mockClicks.length > 0 ? mockClicks[0].timestamp : undefined;
+  const recordingStartTime = mockClicks.length > 0 ? mockClicks[0]?.timestamp : undefined;
 
   return (
     <div className="h-full flex flex-col">
