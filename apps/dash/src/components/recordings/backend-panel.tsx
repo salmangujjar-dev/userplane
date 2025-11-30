@@ -124,7 +124,7 @@ export function BackendPanel() {
     return matchesFilter && matchesSearch;
   });
 
-  const recordingStartTime = mockLogs.length > 0 ? mockLogs[0].timestamp : undefined;
+  const recordingStartTime = mockLogs.length > 0 ? mockLogs[0]?.timestamp : undefined;
 
   return (
     <div className="h-full flex flex-col">

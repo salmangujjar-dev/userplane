@@ -5,11 +5,7 @@ import { NetworkPanel } from './network-panel';
 import { ActionsPanel } from './actions-panel';
 import { BackendPanel } from './backend-panel';
 
-interface RecordingLogReplayPanelProps {
-  recordingId?: string;
-}
-
-export function RecordingLogReplayPanel({ recordingId }: RecordingLogReplayPanelProps) {
+export function RecordingLogReplayPanel() {
   return (
     <div className="w-full h-[calc(100vh-8rem)] rounded-2xl bg-card border sticky top-8 overflow-hidden flex flex-col">
       <Tabs defaultValue="info" className="flex flex-col h-full">

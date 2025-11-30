@@ -1,7 +1,3 @@
-interface RecordingMetaPanelProps {
-  recordingId?: string;
-}
-
-export function RecordingMetaPanel({ recordingId }: RecordingMetaPanelProps) {
+export function RecordingMetaPanel() {
   return null;
 }

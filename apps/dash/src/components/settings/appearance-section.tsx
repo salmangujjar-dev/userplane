@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Label } from '@workspace/ui/components/label';
 
 export function AppearanceSection() {
   const [workspaceSlug, setWorkspaceSlug] = useState('larys-workspace');
