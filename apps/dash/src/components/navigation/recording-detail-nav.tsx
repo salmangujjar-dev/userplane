@@ -16,7 +16,7 @@ export function RecordingDetailNav({ onCopyLink, onShare }: RecordingDetailNavPr
 
   return (
     <nav>
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
+      <div className="flex w-full items-center justify-between px-6 py-4">
         <Link href={`/${workspaceId}`}>
           <Logo size="sm" />
         </Link>
@@ -26,7 +26,7 @@ export function RecordingDetailNav({ onCopyLink, onShare }: RecordingDetailNavPr
             <LinkIcon className="h-4 w-4" />
           </Button>
           <Button variant="default" size="default" className="rounded-full" onClick={onShare}>
-            Share
+            Share at 00:00
             <Share2 className="h-4 w-4" />
           </Button>
         </div>
