@@ -21,8 +21,28 @@ export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
     try {
       await navigator.clipboard.writeText(link);
       toast.success('Link copied to clipboard');
-    } catch (err) {
+    } catch {
       toast.error('Failed to copy link');
+    }
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Share Your Screen',
+          text: 'Submit a Screen Capture',
+          url: link,
+        });
+      } catch (err) {
+        // User cancelled the share or an error occurred
+        if ((err as Error).name !== 'AbortError') {
+          toast.error('Failed to share link');
+        }
+      }
+    } else {
+      // Fallback to copy if Web Share API is not available
+      await handleCopy();
     }
   };
 
@@ -49,7 +69,7 @@ export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
         <DialogFooter className="gap-2">
           <Button
             variant="secondary"
-            onClick={onClose}
+            onClick={handleShare}
             className="rounded-full px-6 w-full sm:w-auto"
           >
             Share link

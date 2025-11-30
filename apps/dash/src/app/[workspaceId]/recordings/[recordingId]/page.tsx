@@ -4,14 +4,37 @@ import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav
 import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { RecordingMetaPanel } from '@/components/recordings/recording-meta-panel';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
+import { toast } from '@workspace/ui/components/sonner';
 
 export default function RecordingDetailPage() {
-  const handleCopyLink = () => {
-    console.log('Copy link to clipboard');
+  const handleCopyLink = async () => {
+    try {
+      const currentUrl = window.location.href;
+      await navigator.clipboard.writeText(currentUrl);
+      toast.success('Link copied to clipboard');
+    } catch {
+      toast.error('Failed to copy link');
+    }
   };
 
-  const handleShare = () => {
-    console.log('Open share modal');
+  const handleShare = async () => {
+    const currentUrl = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Share Your Screen',
+          text: 'Submit a Screen Capture',
+          url: currentUrl,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          toast.error('Failed to share link');
+        }
+      }
+    } else {
+      await handleCopyLink();
+    }
   };
 
   return (

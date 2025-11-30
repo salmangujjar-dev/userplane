@@ -4,6 +4,7 @@ import { AppearanceSection } from './appearance-section';
 import { UsageSection } from './usage-section';
 import { TeamSection } from './team-section';
 import { IntegrationSection } from './integration-section';
+import { WorkspacePlanSection } from './workspace-plan-section';
 import { DomainsSection } from './domains-section';
 import { ProjectsSection } from './projects-section';
 import { StoreSection } from './store-section';
@@ -23,6 +24,7 @@ export function SettingsTab() {
         <TabsContent value="general" className="space-y-8">
           <OverviewSection />
           <IntegrationSection />
+          <WorkspacePlanSection />
         </TabsContent>
 
         <TabsContent value="team" className="space-y-8">
