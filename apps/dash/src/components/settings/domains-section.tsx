@@ -11,7 +11,7 @@ import { DomainVerificationPostModal } from '@/components/modals/domain-verifica
 const DOMAINS = [
   { id: 1, url: 'localhost:5500/', status: 'Installed', verified: true },
   { id: 2, url: 'app.userplane.io', status: 'Pending', verified: false },
-  { id: 3, url: 'staging.userplane.io', status: 'Installed', verified: true },
+  { id: 3, url: 'staging.userplane.io/dashboard', status: 'Installed', verified: true },
 ];
 
 type VerificationStep = 'pre' | 'verifying' | 'post' | null;
@@ -77,7 +77,18 @@ export function DomainsSection() {
               <div
                 className={`h-2 w-2 rounded-full ${domain.verified ? 'bg-green-500' : 'bg-yellow-500'}`}
               />
-              <span className="text-sm">{domain.url}</span>
+              <span className="text-sm">
+                {domain.url.includes('/') ? (
+                  <>
+                    <span className="text-foreground">{domain.url.split('/')[0]}/</span>
+                    <span className="text-muted-foreground">
+                      {domain.url.split('/').slice(1).join('/')}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-foreground">{domain.url}</span>
+                )}
+              </span>
             </div>
             <div className="flex items-center gap-3">
               {domain.verified ? (
