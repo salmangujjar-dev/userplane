@@ -52,8 +52,7 @@ export const PRICING_PLANS: PricingPlan[] = [
         text: 'Unlimited recordings per month',
         included: true,
         subFeatures: [
-          { text: 'Upto 3 minutes per recording', included: true },
-          { text: 'Upto 90 minutes per month', included: true },
+          { text: 'Includes 30 minutes per month', included: true },
           { text: 'Request additional minutes', included: true },
         ],
       },
@@ -111,8 +110,7 @@ export const PRICING_PLANS: PricingPlan[] = [
         text: 'Unlimited recordings per month',
         included: true,
         subFeatures: [
-          { text: 'Upto 5 minutes per recording', included: true },
-          { text: 'Upto 360 minutes per month', included: true },
+          { text: 'Includes 150 minutes per month', included: true },
           { text: 'Request additional minutes', included: true },
         ],
       },
