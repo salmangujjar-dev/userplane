@@ -16,7 +16,7 @@ import { fetchWorkspaceProjects, type Project } from '@/lib/workspace-api';
  *     <select>
  *       {projects?.map(project => (
  *         <option key={project.id} value={project.id}>
- *           {project.name}
+ *           {project.title}
  *         </option>
  *       ))}
  *     </select>

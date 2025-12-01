@@ -219,7 +219,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                           className={selectedProject ? 'text-foreground' : 'text-muted-foreground'}
                         >
                           {selectedProject
-                            ? projects.find((p) => p.id === selectedProject)?.name
+                            ? projects.find((p) => p.id === selectedProject)?.title
                             : 'Select a project'}
                         </span>
                         <ChevronDown className="h-4 w-4" />
@@ -232,7 +232,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                           onClick={() => setSelectedProject(project.id)}
                           className="cursor-pointer"
                         >
-                          {project.name}
+                          {project.title}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>

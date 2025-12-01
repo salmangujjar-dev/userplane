@@ -18,31 +18,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import { Folder, Cloud, ArrowLeftRight } from 'lucide-react';
-
-type ProjectLocation = 'US' | 'EU' | 'Global' | 'Custom';
+import { Switch } from '@workspace/ui/components/switch';
+import { Folder, Cloud, ArrowLeftRight, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface StoreOption {
   id: number;
   title: string;
+  region: string;
+  expiry: string;
 }
 
-const LOCATION_OPTIONS: ProjectLocation[] = ['US', 'EU', 'Global', 'Custom'];
 const AVAILABLE_STORES: StoreOption[] = [
-  { id: 1, title: 'Production Storage' },
-  { id: 2, title: 'Development Storage' },
+  { id: 1, title: 'Production Storage', region: 'US East', expiry: '30 days' },
+  { id: 2, title: 'Development Storage', region: 'EU West', expiry: '7 days' },
+  { id: 3, title: 'Global Storage', region: 'Global', expiry: '90 days' },
+  { id: 4, title: 'Staging Storage', region: 'US West', expiry: '14 days' },
 ];
 
 interface CreateProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateProject: (project: {
-    name: string;
-    title: string;
-    path: string;
-    location: ProjectLocation;
-    storeId: number;
-  }) => void;
+  onCreateProject: (project: { title: string; storeId: number; isDefault: boolean }) => void;
 }
 
 export function CreateProjectModal({
@@ -51,35 +47,30 @@ export function CreateProjectModal({
   onCreateProject,
 }: CreateProjectModalProps) {
   const [newProject, setNewProject] = useState({
-    name: '',
     title: '',
-    path: '',
-    location: 'US' as ProjectLocation,
     storeId: 1,
+    isDefault: false,
   });
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleCreate = () => {
-    const isValid =
-      newProject.name.trim() &&
-      newProject.title.trim() &&
-      (newProject.location !== 'Custom' || newProject.path.trim());
+    const isValid = newProject.title.trim();
 
     if (isValid) {
       onCreateProject(newProject);
-      setNewProject({ name: '', title: '', path: '', location: 'US', storeId: 1 });
+      setNewProject({ title: '', storeId: 1, isDefault: false });
+      setShowAdvanced(false);
       onOpenChange(false);
     }
   };
 
   const handleCancel = () => {
-    setNewProject({ name: '', title: '', path: '', location: 'US', storeId: 1 });
+    setNewProject({ title: '', storeId: 1, isDefault: false });
+    setShowAdvanced(false);
     onOpenChange(false);
   };
 
-  const isFormValid =
-    newProject.name.trim() &&
-    newProject.title.trim() &&
-    (newProject.location !== 'Custom' || newProject.path.trim());
+  const isFormValid = newProject.title.trim();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -113,18 +104,6 @@ export function CreateProjectModal({
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="project-name" className="text-sm">
-                Project Name
-              </Label>
-              <Input
-                id="project-name"
-                value={newProject.name}
-                onChange={(e) => setNewProject((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Main Project"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="project-title" className="text-sm">
                 Project Title
               </Label>
@@ -136,32 +115,17 @@ export function CreateProjectModal({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm">Project Location</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {LOCATION_OPTIONS.map((location) => (
-                  <button
-                    key={location}
-                    type="button"
-                    onClick={() => setNewProject((prev) => ({ ...prev, location }))}
-                    className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                      newProject.location === location
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background hover:bg-muted border-input'
-                    }`}
-                  >
-                    {location}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {newProject.location === 'Custom' && (
-              <>
+            {showAdvanced && (
+              <div className="space-y-4 pt-4 border-t">
                 <div className="space-y-2">
-                  <Label htmlFor="project-store" className="text-sm">
-                    Store
-                  </Label>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="project-store" className="text-sm font-medium">
+                      Store
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Select a custom storage location for this project
+                    </p>
+                  </div>
                   <Select
                     value={newProject.storeId.toString()}
                     onValueChange={(value) =>
@@ -169,14 +133,25 @@ export function CreateProjectModal({
                     }
                   >
                     <SelectTrigger id="project-store">
-                      <SelectValue placeholder="Select a store" />
+                      <div className="flex items-center gap-2">
+                        <Cloud className="h-4 w-4" />
+                        <span>
+                          {AVAILABLE_STORES.find((s) => s.id === newProject.storeId)?.title ||
+                            'Select a store'}
+                        </span>
+                      </div>
                     </SelectTrigger>
                     <SelectContent>
                       {AVAILABLE_STORES.map((store) => (
                         <SelectItem key={store.id} value={store.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <Cloud className="h-4 w-4" />
-                            {store.title}
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <Cloud className="h-4 w-4" />
+                              <span className="font-medium">{store.title}</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground pl-6">
+                              {store.region} • Expiry: {store.expiry}
+                            </div>
                           </div>
                         </SelectItem>
                       ))}
@@ -184,24 +159,47 @@ export function CreateProjectModal({
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="project-path" className="text-sm">
-                    Project Path
-                  </Label>
-                  <Input
-                    id="project-path"
-                    value={newProject.path}
-                    onChange={(e) => setNewProject((prev) => ({ ...prev, path: e.target.value }))}
-                    placeholder="e.g., /var/www/production"
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="is-default" className="text-sm font-medium">
+                      Set as default
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Make this the default project for new recordings
+                    </p>
+                  </div>
+                  <Switch
+                    id="is-default"
+                    checked={newProject.isDefault}
+                    onCheckedChange={(checked) =>
+                      setNewProject((prev) => ({ ...prev, isDefault: checked }))
+                    }
                   />
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
 
         <DialogFooter className="mt-8">
-          <div className="flex gap-2 w-full justify-end">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+          >
+            {showAdvanced ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Show less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                Show more
+              </>
+            )}
+          </button>
+          <div className="flex gap-2">
             <Button
               type="button"
               variant="secondary"

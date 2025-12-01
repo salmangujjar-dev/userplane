@@ -8,59 +8,49 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { Folder, Trash2, Cloud, MoreVertical, CheckCircle2 } from 'lucide-react';
+import { Folder, Trash2, MoreVertical, CheckCircle2 } from 'lucide-react';
 import { CreateProjectModal } from '@/components/modals/create-project-modal';
-
-type ProjectLocation = 'US' | 'EU' | 'Global' | 'Custom';
 
 interface Project {
   id: number;
-  name: string;
   title: string;
-  path: string;
-  location: ProjectLocation;
-  storeId?: number;
+  storeId: number;
   isDefault: boolean;
 }
 
 interface StoreOption {
   id: number;
   title: string;
+  region: string;
+  expiry: string;
 }
 
 const PROJECTS: Project[] = [
   {
     id: 1,
-    name: 'Main Project',
     title: 'Production App',
-    path: '/var/www/production',
-    location: 'US',
     storeId: 1,
     isDefault: true,
   },
   {
     id: 2,
-    name: 'Development',
     title: 'Dev Environment',
-    path: '/var/www/development',
-    location: 'EU',
     storeId: 2,
     isDefault: false,
   },
   {
     id: 3,
-    name: 'Staging',
     title: 'Staging Server',
-    path: '/var/www/staging',
-    location: 'Global',
-    storeId: 1,
+    storeId: 3,
     isDefault: false,
   },
 ];
 
 const AVAILABLE_STORES: StoreOption[] = [
-  { id: 1, title: 'Production Storage' },
-  { id: 2, title: 'Development Storage' },
+  { id: 1, title: 'Production Storage', region: 'US East', expiry: '30 days' },
+  { id: 2, title: 'Development Storage', region: 'EU West', expiry: '7 days' },
+  { id: 3, title: 'Global Storage', region: 'Global', expiry: '90 days' },
+  { id: 4, title: 'Staging Storage', region: 'US West', expiry: '14 days' },
 ];
 
 export function ProjectsSection() {
@@ -77,31 +67,30 @@ export function ProjectsSection() {
   };
 
   const handleCreateProject = (newProject: {
-    name: string;
     title: string;
-    path: string;
-    location: ProjectLocation;
     storeId: number;
+    isDefault: boolean;
   }) => {
     const project: Project = {
       id: Math.max(...projects.map((p) => p.id), 0) + 1,
-      name: newProject.name,
       title: newProject.title,
-      path: newProject.path,
-      location: newProject.location,
       storeId: newProject.storeId,
-      isDefault: false,
+      isDefault: newProject.isDefault,
     };
-    setProjects((prev) => [...prev, project]);
+    setProjects((prev) =>
+      prev
+        .map((p) => ({ ...p, isDefault: newProject.isDefault ? false : p.isDefault }))
+        .concat(project)
+    );
   };
 
   const handleDeleteProject = (projectId: number) => {
     setProjects((prev) => prev.filter((project) => project.id !== projectId));
   };
 
-  const getStoreName = (storeId?: number) => {
+  const getStoreDetails = (storeId: number) => {
     const store = AVAILABLE_STORES.find((s) => s.id === storeId);
-    return store?.title || 'No store';
+    return store || { title: 'No store', region: '', expiry: '' };
   };
 
   return (
@@ -121,7 +110,7 @@ export function ProjectsSection() {
               <Folder className="h-5 w-5 text-muted-foreground" />
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{project.name}</span>
+                  <span className="text-sm font-medium">{project.title}</span>
                   {project.isDefault && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                       Default
@@ -129,10 +118,11 @@ export function ProjectsSection() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                  <Cloud className="h-3.5 w-3.5" />
-                  <span>{getStoreName(project.storeId)}</span>
+                  <span>{getStoreDetails(project.storeId).title}</span>
                   <span>•</span>
-                  <span>{project.location}</span>
+                  <span>{getStoreDetails(project.storeId).region}</span>
+                  <span>•</span>
+                  <span>Expiry: {getStoreDetails(project.storeId).expiry}</span>
                 </div>
               </div>
             </div>

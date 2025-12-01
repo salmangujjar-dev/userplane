@@ -8,7 +8,6 @@ import { WorkspacePlanSection } from './workspace-plan-section';
 import { DomainsSection } from './domains-section';
 import { ProjectsSection } from './projects-section';
 import { StoreSection } from './store-section';
-import { DataSection } from './data-section';
 
 export function SettingsTab() {
   return (
@@ -36,11 +35,10 @@ export function SettingsTab() {
         </TabsContent>
 
         <TabsContent value="recording-links" className="space-y-8">
-          <DomainsSection />
           <AppearanceSection />
+          <DomainsSection />
           <ProjectsSection />
           <StoreSection />
-          <DataSection />
         </TabsContent>
       </Tabs>
     </div>

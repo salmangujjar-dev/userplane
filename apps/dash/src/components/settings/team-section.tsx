@@ -79,7 +79,13 @@ export function TeamSection() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
                           <Shield className="h-4 w-4 mr-2" />
-                          Change role
+                          {member.role === 'Admin'
+                            ? 'Make Member'
+                            : member.role === 'Member'
+                              ? 'Make Admin'
+                              : member.role === 'Owner'
+                                ? 'Make Admin'
+                                : 'Change role'}
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-red-600">
                           <UserMinus className="h-4 w-4 mr-2" />
