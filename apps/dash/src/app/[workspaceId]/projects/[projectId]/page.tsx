@@ -95,8 +95,49 @@ export default function ProjectPage() {
                 <div className="grid grid-cols-1 gap-4">
                   {[...Array(linksPerPage)].map((_, i) => {
                     const linkIndex = (linksPage - 1) * linksPerPage + i;
+                    const sampleData = [
+                      {
+                        title: 'Customer Demo Recording',
+                        createdBy: 'Sarah Wilson',
+                        createdAt: new Date(Date.now() - 1 * 86400000),
+                        isReusable: true,
+                      },
+                      {
+                        title: 'Bug Report - Login Issue',
+                        createdBy: 'Michael Chen',
+                        createdAt: new Date(Date.now() - 3 * 86400000),
+                        isReusable: false,
+                      },
+                      {
+                        title: 'Onboarding Flow Testing',
+                        createdBy: 'Emma Rodriguez',
+                        createdAt: new Date(Date.now() - 5 * 86400000),
+                        isReusable: true,
+                      },
+                      {
+                        title: 'Feature Walkthrough - Dashboard',
+                        createdBy: 'James Park',
+                        createdAt: new Date(Date.now() - 7 * 86400000),
+                        isReusable: false,
+                      },
+                      {
+                        title: 'Team Standup Meeting',
+                        createdBy: 'Olivia Brown',
+                        createdAt: new Date(Date.now() - 14 * 86400000),
+                        isReusable: true,
+                      },
+                    ];
+                    const data = sampleData[i % sampleData.length];
                     return (
-                      <LinkPreview key={i} linkId={`proj-${projectId}-link-${linkIndex + 1}`} />
+                      <LinkPreview
+                        key={i}
+                        linkId={`proj-${projectId}-link-${linkIndex + 1}`}
+                        title={data.title}
+                        createdBy={data.createdBy}
+                        createdAt={data.createdAt}
+                        projectName={`Project ${projectId}`}
+                        isReusable={data.isReusable}
+                      />
                     );
                   })}
                 </div>
