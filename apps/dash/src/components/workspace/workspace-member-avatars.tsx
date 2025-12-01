@@ -1,4 +1,4 @@
-import Avatar from 'boring-avatars';
+import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { Plus } from 'lucide-react';
 
 interface WorkspaceMember {
@@ -30,12 +30,7 @@ export function WorkspaceMemberAvatars({
           title={member.name}
           onClick={onInviteClick}
         >
-          <Avatar
-            size={36}
-            name={member.name}
-            variant="beam"
-            colors={['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51']}
-          />
+          <BoringAvatar size={36} name={member.name} />
         </button>
       ))}
       <button
