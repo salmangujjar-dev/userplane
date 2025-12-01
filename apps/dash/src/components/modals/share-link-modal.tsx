@@ -1,14 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@workspace/ui/components/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from '@workspace/ui/components/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@workspace/ui/components/dialog';
 import { toast } from '@workspace/ui/components/sonner';
+import { Copy } from 'lucide-react';
 
 interface ShareLinkModalProps {
   link: string;
@@ -17,64 +13,59 @@ interface ShareLinkModalProps {
 }
 
 export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
+  const [copied, setCopied] = useState(false);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(link);
+      setCopied(true);
       toast.success('Link copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Failed to copy link');
-    }
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Share Your Screen',
-          text: 'Submit a Screen Capture',
-          url: link,
-        });
-      } catch (err) {
-        // User cancelled the share or an error occurred
-        if ((err as Error).name !== 'AbortError') {
-          toast.error('Failed to share link');
-        }
-      }
-    } else {
-      // Fallback to copy if Web Share API is not available
-      await handleCopy();
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]" showCloseButton={false}>
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <DialogTitle className="text-base font-semibold">Share link</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              Share recording link
-            </DialogDescription>
+        <div className="space-y-6 py-4">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
+              <svg
+                viewBox="0 0 512 512"
+                className="h-8 w-8 flex-shrink-0"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M210.09,0c10.56,0,19.12,8.56,19.12,19.12v63.74c0,10.56-8.56,19.12-19.12,19.12s-19.12-8.56-19.12-19.12V19.12C190.97,8.56,199.53,0,210.09,0z M88.22,50.22c7.47-7.47,19.57-7.47,27.04,0l44.62,44.61c7.47,7.47,7.47,19.57,0,27.04c-7.47,7.47-19.57,7.47-27.04,0L88.22,77.26C80.75,69.8,80.75,57.69,88.22,50.22z M331.97,50.22c7.47,7.47,7.47,19.57,0,27.04l-44.62,44.62c-7.47,7.47-19.57,7.47-27.04,0c-7.47-7.47-7.47-19.57,0-27.04l44.62-44.62C312.39,42.75,324.5,42.75,331.97,50.22z M38,172.09c0-10.56,8.56-19.12,19.12-19.12h63.74c10.56,0,19.12,8.56,19.12,19.12c0,10.56-8.56,19.12-19.12,19.12H57.12C46.56,191.21,38,182.65,38,172.09z M190.97,190.88c0-28.73,33.7-44.23,55.51-25.53l215.71,184.9c23.2,19.89,9.99,57.91-20.54,59.13l-97.9,3.92c-10.52,0.42-20.42,5.09-27.44,12.93l-66.66,74.5c-20.58,23-58.69,8.44-58.69-22.42V190.88z" />
+              </svg>
+            </div>
+
+            <div className="text-center space-y-1">
+              <DialogTitle className="text-xl font-semibold">
+                Link copied, ready to share
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground">
+                Share with anyone to capture their screen
+              </p>
+            </div>
           </div>
-          <div className="w-full rounded-lg bg-muted px-4 py-2.5">
-            <input
-              id="link"
-              type="text"
-              value={link}
-              readOnly
-              className="w-full bg-transparent text-sm focus:outline-none"
-            />
-          </div>
+
+          <input
+            type="text"
+            value={link}
+            readOnly
+            className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
         </div>
-        <DialogFooter className="gap-2">
-          <Button
-            variant="secondary"
-            onClick={handleShare}
-            className="rounded-full px-6 w-full sm:w-auto"
-          >
-            Share link
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} className="rounded-full px-6">
+            Cancel
           </Button>
-          <Button onClick={handleCopy} className="rounded-full px-6 w-full sm:w-auto">
+          <Button onClick={handleCopy} className="rounded-full px-6">
+            <Copy className="h-4 w-4 mr-2" />
             Copy Link
           </Button>
         </DialogFooter>

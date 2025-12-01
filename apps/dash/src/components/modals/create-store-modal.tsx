@@ -104,7 +104,7 @@ export function CreateStoreModal({ open, onOpenChange, onCreateStore }: CreateSt
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
         <div className="space-y-8">
-          <div className="flex flex-col items-center space-y-6">
+          <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
                 <svg
@@ -122,7 +122,7 @@ export function CreateStoreModal({ open, onOpenChange, onCreateStore }: CreateSt
               </div>
             </div>
 
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-1">
               <DialogTitle className="text-xl font-semibold">Create New Store</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
                 Configure a new storage provider for your workspace
@@ -143,99 +143,107 @@ export function CreateStoreModal({ open, onOpenChange, onCreateStore }: CreateSt
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="store-provider" className="text-sm">
-                Provider
-              </Label>
-              <Select
-                value={newStore.provider}
-                onValueChange={(value) =>
-                  setNewStore((prev) => ({ ...prev, provider: value as StoreProvider }))
-                }
-              >
-                <SelectTrigger id="store-provider">
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROVIDER_OPTIONS.map((provider) => (
-                    <SelectItem key={provider} value={provider}>
-                      <div className="flex items-center gap-2">
-                        <Cloud className="h-4 w-4" />
-                        {provider}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="store-provider" className="text-sm">
+                  Provider
+                </Label>
+                <Select
+                  value={newStore.provider}
+                  onValueChange={(value) =>
+                    setNewStore((prev) => ({ ...prev, provider: value as StoreProvider }))
+                  }
+                >
+                  <SelectTrigger id="store-provider">
+                    <SelectValue placeholder="Select provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROVIDER_OPTIONS.map((provider) => (
+                      <SelectItem key={provider} value={provider}>
+                        <div className="flex items-center gap-2">
+                          <Cloud className="h-4 w-4" />
+                          {provider}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="store-url" className="text-sm">
+                  Provider URL
+                </Label>
+                <Input
+                  id="store-url"
+                  value={newStore.providerUrl}
+                  onChange={(e) =>
+                    setNewStore((prev) => ({ ...prev, providerUrl: e.target.value }))
+                  }
+                  placeholder="e.g., s3.amazonaws.com"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="store-url" className="text-sm">
-                Provider URL
-              </Label>
-              <Input
-                id="store-url"
-                value={newStore.providerUrl}
-                onChange={(e) => setNewStore((prev) => ({ ...prev, providerUrl: e.target.value }))}
-                placeholder="e.g., s3.amazonaws.com"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="store-region" className="text-sm">
+                  Provider Region
+                </Label>
+                <Input
+                  id="store-region"
+                  value={newStore.providerRegion}
+                  onChange={(e) =>
+                    setNewStore((prev) => ({ ...prev, providerRegion: e.target.value }))
+                  }
+                  placeholder="e.g., us-east-1"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="store-bucket" className="text-sm">
+                  Provider Bucket
+                </Label>
+                <Input
+                  id="store-bucket"
+                  value={newStore.providerBucket}
+                  onChange={(e) =>
+                    setNewStore((prev) => ({ ...prev, providerBucket: e.target.value }))
+                  }
+                  placeholder="e.g., my-bucket-name"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="store-region" className="text-sm">
-                Provider Region
-              </Label>
-              <Input
-                id="store-region"
-                value={newStore.providerRegion}
-                onChange={(e) =>
-                  setNewStore((prev) => ({ ...prev, providerRegion: e.target.value }))
-                }
-                placeholder="e.g., us-east-1"
-              />
-            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="store-access-id" className="text-sm">
+                  Provider Access ID
+                </Label>
+                <Input
+                  id="store-access-id"
+                  value={newStore.providerAccessId}
+                  onChange={(e) =>
+                    setNewStore((prev) => ({ ...prev, providerAccessId: e.target.value }))
+                  }
+                  placeholder="Enter access ID"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="store-bucket" className="text-sm">
-                Provider Bucket
-              </Label>
-              <Input
-                id="store-bucket"
-                value={newStore.providerBucket}
-                onChange={(e) =>
-                  setNewStore((prev) => ({ ...prev, providerBucket: e.target.value }))
-                }
-                placeholder="e.g., my-bucket-name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="store-access-id" className="text-sm">
-                Provider Access ID
-              </Label>
-              <Input
-                id="store-access-id"
-                value={newStore.providerAccessId}
-                onChange={(e) =>
-                  setNewStore((prev) => ({ ...prev, providerAccessId: e.target.value }))
-                }
-                placeholder="Enter access ID"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="store-access-key" className="text-sm">
-                Provider Access Key
-              </Label>
-              <Input
-                id="store-access-key"
-                type="password"
-                value={newStore.providerAccessKey}
-                onChange={(e) =>
-                  setNewStore((prev) => ({ ...prev, providerAccessKey: e.target.value }))
-                }
-                placeholder="Enter access key"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="store-access-key" className="text-sm">
+                  Provider Access Key
+                </Label>
+                <Input
+                  id="store-access-key"
+                  type="password"
+                  value={newStore.providerAccessKey}
+                  onChange={(e) =>
+                    setNewStore((prev) => ({ ...prev, providerAccessKey: e.target.value }))
+                  }
+                  placeholder="Enter access key"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

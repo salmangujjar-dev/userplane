@@ -57,7 +57,7 @@ export function DomainVerificationPostModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[580px]" showCloseButton={false}>
         <div className="space-y-8">
-          <div className="flex flex-col items-center space-y-6">
+          <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
                 <svg
@@ -75,7 +75,7 @@ export function DomainVerificationPostModal({
               </div>
             </div>
 
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-1">
               <DialogTitle className="text-xl font-semibold">Your domain verified</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
                 Console and network logs capture enabled
