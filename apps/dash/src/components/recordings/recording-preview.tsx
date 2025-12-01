@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { Play } from 'lucide-react';
@@ -42,9 +43,11 @@ export function RecordingPreview({
   };
 
   const recordingIndex = recordingId ? getRecordingIndex(recordingId) : 0;
-  const displayCreator = createdBy || SAMPLE_CREATORS[recordingIndex % SAMPLE_CREATORS.length];
+  const displayCreator =
+    createdBy || SAMPLE_CREATORS[recordingIndex % SAMPLE_CREATORS.length] || 'Unknown Creator';
   const displayDate = createdAt || new Date(Date.now() - recordingIndex * 86400000 * 2);
-  const displayDuration = duration || SAMPLE_DURATIONS[recordingIndex % SAMPLE_DURATIONS.length];
+  const displayDuration =
+    duration || SAMPLE_DURATIONS[recordingIndex % SAMPLE_DURATIONS.length] || '0:00';
 
   const formatDate = (date: Date) => {
     const now = new Date();
@@ -78,10 +81,13 @@ export function RecordingPreview({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <img
+        <Image
           src={isHovered ? animatedGifUrl : staticImageUrl}
           alt="Recording preview"
           className="w-full h-full object-cover"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          unoptimized
         />
         <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-sm rounded-md px-2 py-1 flex items-center gap-1">
           <Play className="h-3 w-3 text-white fill-white" />

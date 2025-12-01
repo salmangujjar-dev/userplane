@@ -1,6 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@workspace/ui"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'jam.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn-jam-screenshots.jam.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: 'customer-9o3ovno0sscvd4n0.cloudflarestream.com',
+      },
+    ],
+  },
   // Webpack config for production builds (when not using Turbopack)
   webpack: (config, { isServer }) => {
     if (!isServer) {

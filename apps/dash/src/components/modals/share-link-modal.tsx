@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@workspace/ui/components/dialog';
 import { toast } from '@workspace/ui/components/sonner';
@@ -13,14 +12,10 @@ interface ShareLinkModalProps {
 }
 
 export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
-  const [copied, setCopied] = useState(false);
-
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(link);
-      setCopied(true);
       toast.success('Link copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Failed to copy link');
     }
