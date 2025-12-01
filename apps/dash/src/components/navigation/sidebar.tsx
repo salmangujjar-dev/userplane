@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import Avatar from 'boring-avatars';
+import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { Video, Link as LinkIcon, Settings, FolderKanban, KeyRound, LogOut } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -96,12 +96,7 @@ export function Sidebar({ planName, userEmail, userName }: SidebarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-3 hover:bg-accent rounded-lg transition-colors w-full p-2">
-                <Avatar
-                  size={32}
-                  name={userName}
-                  variant="beam"
-                  colors={['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51']}
-                />
+                <BoringAvatar size={32} name={userName} />
                 <div className="flex flex-col text-left flex-1 min-w-0">
                   <div className="text-sm font-semibold truncate">{userName}</div>
                   {userEmail && (
