@@ -58,7 +58,7 @@ export function IntegrationPostConnectModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
         <div className="space-y-8">
-          <div className="flex flex-col items-center space-y-6">
+          <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
                 <svg
@@ -82,7 +82,7 @@ export function IntegrationPostConnectModal({
               </div>
             </div>
 
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-1">
               <DialogTitle className="text-xl font-semibold">
                 Connected to {config.name}
               </DialogTitle>
