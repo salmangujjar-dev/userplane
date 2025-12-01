@@ -48,6 +48,7 @@ export function LinksList({ count = 5, linkIds }: LinksListProps) {
     <div className="grid grid-cols-1 gap-4">
       {[...Array(count)].map((_, i) => {
         const data = SAMPLE_DATA[i % SAMPLE_DATA.length];
+        if (!data) return null;
         return (
           <LinkPreview
             key={i}

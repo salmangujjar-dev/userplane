@@ -85,8 +85,10 @@ export function LinkPreview({
   };
 
   const linkIndex = linkId ? getLinkIndex(linkId) : 0;
-  const displayTitle = title || SAMPLE_TITLES[linkIndex % SAMPLE_TITLES.length];
-  const displayCreator = createdBy || SAMPLE_CREATORS[linkIndex % SAMPLE_CREATORS.length];
+  const displayTitle =
+    title || SAMPLE_TITLES[linkIndex % SAMPLE_TITLES.length] || 'Untitled Recording';
+  const displayCreator =
+    createdBy || SAMPLE_CREATORS[linkIndex % SAMPLE_CREATORS.length] || 'Unknown Creator';
   const displayDate = createdAt || new Date(Date.now() - linkIndex * 86400000 * 2);
 
   const handleView = (e: React.MouseEvent) => {

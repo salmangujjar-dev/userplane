@@ -128,6 +128,7 @@ export default function ProjectPage() {
                       },
                     ];
                     const data = sampleData[i % sampleData.length];
+                    if (!data) return null;
                     return (
                       <LinkPreview
                         key={i}
