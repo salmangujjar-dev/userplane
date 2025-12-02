@@ -45,7 +45,7 @@ export class ProvisionerService {
         {
           workspaceName,
           workspaceSlug,
-          workspacePlan: 'trial',
+          workspacePlan: 'starter_monthly',
           workspaceLogoUrl,
           userId,
         },

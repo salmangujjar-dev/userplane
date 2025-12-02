@@ -17,6 +17,7 @@
     "@workspace/auth": "workspace:*",
     "@workspace/logger": "workspace:*",
     "@workspace/meta": "workspace:*",
+    "@workspace/pricing": "workspace:*",
     "@workspace/ui": "workspace:*",
     "boring-avatars": "^2.0.4",
     "lucide-react": "^0.475.0",

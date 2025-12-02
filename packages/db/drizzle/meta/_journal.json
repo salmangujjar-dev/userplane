@@ -50,6 +50,13 @@
       "when": 1764181640123,
       "tag": "0006_useful_dagger",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1764711684009,
+      "tag": "0007_petite_jackpot",
+      "breakpoints": true
     }
   ]
 }
