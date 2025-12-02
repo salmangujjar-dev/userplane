@@ -9,19 +9,12 @@ import {
   CollapsibleTrigger,
 } from '@workspace/ui/components/collapsible';
 import { Info, ChevronDown, Minus, Plus, ArrowRight } from 'lucide-react';
-
-const ADDITIONAL_MINUTES_OPTIONS = [
-  { minutes: 90, price: 149 },
-  { minutes: 180, price: 249 },
-  { minutes: 360, price: 599 },
-];
-
-const ADDITIONAL_SEATS_OPTIONS = [{ users: 5, price: 49, label: '$49 / 5 user' }];
+import { ADDITIONAL_RECORDINGS_OPTIONS, ADDITIONAL_SEATS_OPTIONS } from '@/constants/pricing';
 
 export function UsageSection() {
   const [expandedMinutes, setExpandedMinutes] = useState(false);
   const [expandedSeats, setExpandedSeats] = useState(false);
-  const [selectedMinutes, setSelectedMinutes] = useState<number | null>(null);
+  const [selectedRecordings, setSelectedRecordings] = useState<number | null>(null);
   const [seatQuantities, setSeatQuantities] = useState<Record<number, number>>({
     5: 1,
   });
@@ -42,23 +35,23 @@ export function UsageSection() {
 
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-        <div className="rounded-xl border bg-card p-6">
-          <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start max-w-3xl">
+        <div className="rounded-xl border bg-card p-8">
+          <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="font-medium">Recording Minutes</span>
+              <span className="font-medium">Recordings</span>
               <Info className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">13</span>/90 minutes used this month
+              <span className="font-semibold text-foreground">13</span>/50 used this month
             </div>
-            <Progress value={(13 / 90) * 100} className="h-2" />
+            <Progress value={(13 / 50) * 100} className="h-2" />
           </div>
 
-          <div className="border-t mt-4 pt-4">
+          <div className="border-t mt-6 pt-6">
             <Collapsible open={expandedMinutes} onOpenChange={setExpandedMinutes}>
               <CollapsibleTrigger className="flex w-full items-center justify-between hover:opacity-70 transition-opacity">
-                <span className="text-sm font-medium">Request additional minutes</span>
+                <span className="text-sm font-medium">Request additional recordings</span>
                 <ChevronDown
                   className={`h-4 w-4 transition-transform duration-200 ${
                     expandedMinutes ? 'rotate-180' : ''
@@ -66,25 +59,25 @@ export function UsageSection() {
                 />
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="mt-3 space-y-2">
-                  {ADDITIONAL_MINUTES_OPTIONS.map((option) => (
+                <div className="mt-4 space-y-3">
+                  {ADDITIONAL_RECORDINGS_OPTIONS.map((option) => (
                     <button
-                      key={option.minutes}
+                      key={option.recordings}
                       type="button"
-                      onClick={() => setSelectedMinutes(option.minutes)}
+                      onClick={() => setSelectedRecordings(option.recordings)}
                       className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors text-sm ${
-                        selectedMinutes === option.minutes
+                        selectedRecordings === option.recordings
                           ? 'bg-primary/10 border-primary'
                           : 'bg-background hover:bg-muted'
                       }`}
                     >
-                      <span>~{option.minutes} min</span>
-                      <span className="font-medium">${option.price} per month</span>
+                      <span>{option.recordings} recordings</span>
+                      <span className="font-medium">${option.price}</span>
                     </button>
                   ))}
                 </div>
-                {selectedMinutes && (
-                  <Button className="w-full mt-3">
+                {selectedRecordings && (
+                  <Button className="w-full mt-4">
                     Request
                     <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
@@ -94,8 +87,8 @@ export function UsageSection() {
           </div>
         </div>
 
-        <div className="rounded-xl border bg-card p-6">
-          <div className="space-y-3">
+        <div className="rounded-xl border bg-card p-8">
+          <div className="space-y-4">
             <div className="flex items-center gap-2">
               <span className="font-medium">Seats</span>
               <Info className="h-4 w-4 text-muted-foreground" />
@@ -106,7 +99,7 @@ export function UsageSection() {
             <Progress value={0} className="h-2" />
           </div>
 
-          <div className="border-t mt-4 pt-4">
+          <div className="border-t mt-6 pt-6">
             <Collapsible open={expandedSeats} onOpenChange={setExpandedSeats}>
               <CollapsibleTrigger className="flex w-full items-center justify-between hover:opacity-70 transition-opacity">
                 <span className="text-sm font-medium">Request additional seats</span>
@@ -117,7 +110,7 @@ export function UsageSection() {
                 />
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="mt-3 space-y-3">
+                <div className="mt-4 space-y-3">
                   {ADDITIONAL_SEATS_OPTIONS.map((option) => {
                     const quantity = seatQuantities[option.users] ?? 1;
                     const totalPrice = option.price * quantity;
@@ -158,7 +151,7 @@ export function UsageSection() {
                     );
                   })}
                 </div>
-                <Button className="w-full mt-3">
+                <Button className="w-full mt-4">
                   Request
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>

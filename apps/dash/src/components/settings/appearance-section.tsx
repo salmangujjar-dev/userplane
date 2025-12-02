@@ -4,7 +4,16 @@ import { useState, useRef } from 'react';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { Input } from '@workspace/ui/components/input';
+import { Slider } from '@workspace/ui/components/slider';
 import { Upload, Pencil } from 'lucide-react';
+
+const DURATION_MARKS = [
+  { value: 1, label: '1 min' },
+  { value: 2, label: '2 min' },
+  { value: 3, label: '3 min' },
+  { value: 4, label: '4 min' },
+  { value: 5, label: '5 min' },
+];
 
 export function AppearanceSection() {
   const [workspaceSlug, setWorkspaceSlug] = useState('larys-workspace');
@@ -16,6 +25,7 @@ export function AppearanceSection() {
   const [workspaceName, setWorkspaceName] = useState("Lary's Workspace");
   const [headerText, setHeaderText] = useState('Get ready to record');
   const [footnoteText, setFootnoteText] = useState('');
+  const [recordingDuration, setRecordingDuration] = useState(3);
   const [primaryColor, setPrimaryColor] = useState('#000000');
   const [selectedOption, setSelectedOption] = useState<'screen-voice' | 'screen-only'>(
     'screen-voice'
@@ -268,7 +278,7 @@ export function AppearanceSection() {
                 <div className="p-4 rounded-xl border bg-card">
                   <div className="flex gap-6">
                     <div className="flex-shrink-0">
-                      <Label className="text-sm font-medium">Workspace Image</Label>
+                      <Label className="text-sm font-medium">Company Image</Label>
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
@@ -299,7 +309,7 @@ export function AppearanceSection() {
                     <div className="flex-1 space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="workspace-name" className="text-sm font-medium">
-                          Workspace Name
+                          Company Name
                         </Label>
                         <Input
                           id="workspace-name"
@@ -311,7 +321,7 @@ export function AppearanceSection() {
 
                       <div className="space-y-2">
                         <Label htmlFor="workspace-url" className="text-sm font-medium">
-                          Workspace URL
+                          Recording URL
                         </Label>
                         <div className="flex items-center gap-1 px-3 py-2 rounded-md border border-input bg-background">
                           <span className="text-sm text-muted-foreground">
@@ -329,7 +339,7 @@ export function AppearanceSection() {
 
                       <div className="space-y-2">
                         <Label htmlFor="header-text" className="text-sm font-medium">
-                          Header
+                          Recording Header
                         </Label>
                         <Input
                           id="header-text"
@@ -341,7 +351,7 @@ export function AppearanceSection() {
 
                       <div className="space-y-2">
                         <Label htmlFor="footnote-text" className="text-sm font-medium">
-                          Footnote
+                          Recording Footnote
                         </Label>
                         <Input
                           id="footnote-text"
@@ -349,6 +359,42 @@ export function AppearanceSection() {
                           onChange={(e) => setFootnoteText(e.target.value)}
                           placeholder="Enter footnote text (optional)"
                         />
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label htmlFor="recording-duration" className="text-sm font-medium">
+                          Recording Duration
+                        </Label>
+                        <div className="px-4 pt-2">
+                          <Slider
+                            id="recording-duration"
+                            value={[recordingDuration]}
+                            onValueChange={(value) => setRecordingDuration(value[0] ?? 1)}
+                            min={1}
+                            max={5}
+                            step={1}
+                            className="w-full"
+                          />
+                          <div className="relative w-full mt-2 h-5">
+                            {DURATION_MARKS.map((mark) => (
+                              <button
+                                key={mark.value}
+                                type="button"
+                                onClick={() => setRecordingDuration(mark.value)}
+                                style={{
+                                  left: `${((mark.value - 1) / 4) * 100}%`,
+                                }}
+                                className={`absolute -translate-x-1/2 text-xs transition-colors ${
+                                  recordingDuration === mark.value
+                                    ? 'text-foreground font-medium'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                              >
+                                {mark.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
 
                       <div className="space-y-2">

@@ -7,7 +7,6 @@ import { IntegrationSection } from './integration-section';
 import { WorkspacePlanSection } from './workspace-plan-section';
 import { DomainsSection } from './domains-section';
 import { ProjectsSection } from './projects-section';
-import { StoreSection } from './store-section';
 
 export function SettingsTab() {
   return (
@@ -16,7 +15,7 @@ export function SettingsTab() {
         <TabsList className="mb-6">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="team">Team</TabsTrigger>
-          <TabsTrigger value="plan-usage">Plan & Usage</TabsTrigger>
+          <TabsTrigger value="plan-usage">Usage</TabsTrigger>
           <TabsTrigger value="recording-links">Recording Links</TabsTrigger>
         </TabsList>
 
@@ -38,7 +37,6 @@ export function SettingsTab() {
           <AppearanceSection />
           <DomainsSection />
           <ProjectsSection />
-          <StoreSection />
         </TabsContent>
       </Tabs>
     </div>
