@@ -9,7 +9,7 @@ import {
   CollapsibleTrigger,
 } from '@workspace/ui/components/collapsible';
 import { Info, ChevronDown, Minus, Plus, ArrowRight } from 'lucide-react';
-import { ADDITIONAL_RECORDINGS_OPTIONS, ADDITIONAL_SEATS_OPTIONS } from '@/constants/pricing';
+import { ADDITIONAL_RECORDINGS_OPTIONS, ADDITIONAL_SEATS_OPTIONS } from '@workspace/pricing';
 
 export function UsageSection() {
   const [expandedMinutes, setExpandedMinutes] = useState(false);

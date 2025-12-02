@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { Input } from '@workspace/ui/components/input';
@@ -58,7 +59,7 @@ export function AppearanceSection() {
               Customize your recording link appearance
             </p>
           </div>
-          <div className="relative rounded-lg border border-zinc-200 bg-gradient-to-b from-zinc-100 to-zinc-50 px-3 py-2">
+          <div className="relative rounded-lg border border-zinc-200 bg-linear-to-b from-zinc-100 to-zinc-50 px-3 py-2">
             <div className="flex items-center gap-2 mb-1">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
@@ -68,7 +69,7 @@ export function AppearanceSection() {
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md border border-zinc-200 text-sm">
               <svg
-                className="h-4 w-4 text-zinc-500 flex-shrink-0"
+                className="h-4 w-4 text-zinc-500 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -81,7 +82,7 @@ export function AppearanceSection() {
                 />
               </svg>
               <div className="flex items-center flex-1 min-w-0">
-                <span className="text-zinc-500 flex-shrink-0">recorder.userplane.io/r/</span>
+                <span className="text-zinc-500 shrink-0">recorder.userplane.io/r/</span>
                 <input
                   id="workspace-slug"
                   value={workspaceSlug}
@@ -89,7 +90,7 @@ export function AppearanceSection() {
                   placeholder="your-slug"
                   className="flex-1 min-w-0 bg-transparent border-none outline-none focus:outline-none focus:ring-0 p-0 font-semibold text-zinc-900 placeholder:text-zinc-400"
                 />
-                <Pencil className="h-3.5 w-3.5 text-zinc-400 flex-shrink-0 ml-2" />
+                <Pencil className="h-3.5 w-3.5 text-zinc-400 shrink-0 ml-2" />
               </div>
             </div>
             <div className="mt-2 rounded-lg p-8 min-h-[400px] flex flex-col items-center justify-center bg-white">
@@ -225,7 +226,15 @@ export function AppearanceSection() {
                 {customizeRecordingLink ? (
                   <>
                     {workspaceImage && (
-                      <img src={workspaceImage} alt="Logo" className="h-8 w-8 object-contain" />
+                      // TODO: unoptimized for now - base64 data URLs cannot use Next.js optimization
+                      <Image
+                        src={workspaceImage}
+                        alt="Logo"
+                        width={32}
+                        height={32}
+                        className="h-8 w-8 object-contain"
+                        unoptimized
+                      />
                     )}
                     <span className="text-sm font-medium" style={{ color: '#000' }}>
                       {workspaceName}
@@ -235,7 +244,7 @@ export function AppearanceSection() {
                   <>
                     <svg
                       viewBox="0 0 512 512"
-                      className="h-6 w-6 flex-shrink-0"
+                      className="h-6 w-6 shrink-0"
                       fill="currentColor"
                       aria-hidden="true"
                     >
@@ -277,7 +286,7 @@ export function AppearanceSection() {
               <>
                 <div className="p-4 rounded-xl border bg-card">
                   <div className="flex gap-6">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <Label className="text-sm font-medium">Company Image</Label>
                       <button
                         type="button"
@@ -285,10 +294,14 @@ export function AppearanceSection() {
                         className="relative w-24 h-24 mt-2 rounded-lg border-2 border-dashed border-input hover:border-primary hover:bg-accent transition-colors flex flex-col items-center justify-center gap-1 overflow-hidden"
                       >
                         {workspaceImage ? (
-                          <img
+                          // TODO: unoptimized for now - base64 data URLs cannot use Next.js optimization
+                          <Image
                             src={workspaceImage}
                             alt="Workspace"
+                            width={96}
+                            height={96}
                             className="w-full h-full object-cover"
+                            unoptimized
                           />
                         ) : (
                           <>

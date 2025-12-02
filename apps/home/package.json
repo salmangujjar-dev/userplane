@@ -21,6 +21,7 @@
     "@workspace/api-client": "workspace:*",
     "@workspace/logger": "workspace:*",
     "@workspace/meta": "workspace:*",
+    "@workspace/pricing": "workspace:*",
     "@workspace/ui": "workspace:*",
     "astro": "^5.15.9",
     "canvas-confetti": "^1.9.3",

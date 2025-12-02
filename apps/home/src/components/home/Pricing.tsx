@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import {
-  PRICING_PLANS,
+  createPricingPlans,
+  filterPlansByCycle,
+  formatPlanRate,
   PRICING_SUBTITLE,
   PRICING_TITLE,
+  type PlanCycle,
   type PlanFeature,
   type PricingPlan,
-} from '../../constants/pricing';
+} from '@workspace/pricing';
+import { SIGNUP_URL } from '../../constants/onboarding';
+
+const ALL_PLANS = createPricingPlans({ signupUrl: SIGNUP_URL });
 
 interface PricingFeatureProps extends PlanFeature {
   isExpanded: boolean;
@@ -89,24 +95,54 @@ function PricingFeature({
   );
 }
 
-interface PricingPlanCardProps extends PricingPlan {
+interface BillingToggleProps {
+  cycle: PlanCycle;
+  onCycleChange: (cycle: PlanCycle) => void;
+}
+
+function BillingToggle({ cycle, onCycleChange }: BillingToggleProps) {
+  return (
+    <div className="flex items-center justify-center mb-12">
+      <div className="bg-gray-100 rounded-lg p-1 flex">
+        <button
+          onClick={() => onCycleChange('annual')}
+          className={`px-6 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+            cycle === 'annual'
+              ? 'bg-white text-black shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Annual
+          <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium">
+            3 months off
+          </span>
+        </button>
+        <button
+          onClick={() => onCycleChange('monthly')}
+          className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+            cycle === 'monthly'
+              ? 'bg-white text-black shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Monthly
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface PricingPlanCardProps {
+  plan: PricingPlan;
   expandedIndex: number | null;
   onToggle: (index: number) => void;
 }
 
-function PricingPlanCard({
-  name,
-  annualMonthlyRate,
-  monthlyPrice,
-  description,
-  features,
-  ctaText,
-  ctaUrl,
-  ctaIsExternal,
-  isPopular,
-  expandedIndex,
-  onToggle,
-}: PricingPlanCardProps) {
+function PricingPlanCard({ plan, expandedIndex, onToggle }: PricingPlanCardProps) {
+  const { name, description, details, features, ctaText, ctaUrl, ctaIsExternal, isPopular } = plan;
+  const displayRate = formatPlanRate(plan);
+  const isCustom = details.planRate === null;
+
   return (
     <div
       className={`flex flex-col ${
@@ -120,36 +156,17 @@ function PricingPlanCard({
       )}
       <div className="mb-8">
         <h3 className="text-xl font-semibold mb-2">{name}</h3>
-        <p className={`mb-4 text-sm ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
-          {description}
-        </p>
-        <div className="flex flex-col gap-3">
-          {annualMonthlyRate !== 'Custom' ? (
-            <>
-              <div className="flex items-start justify-between gap-4">
-                <span className="text-5xl font-bold leading-none">{annualMonthlyRate}</span>
-                <div
-                  className={`flex flex-col text-right text-sm leading-snug ${isPopular ? 'text-gray-400' : 'text-gray-500'}`}
-                >
-                  <span>per month</span>
-                  <span>billed annually</span>
-                </div>
-              </div>
-              <div className={`text-base ${isPopular ? 'text-gray-400' : 'text-gray-500'}`}>
-                {monthlyPrice} billed monthly
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold">{annualMonthlyRate}</span>
-              </div>
-              <div className={`text-base ${isPopular ? 'text-gray-400' : 'text-gray-500'}`}>
-                Request a Quote
-              </div>
-            </>
+        <div className="flex items-baseline gap-2">
+          <span className="text-4xl font-bold">{displayRate}</span>
+          {!isCustom && (
+            <span className={isPopular ? 'text-gray-400' : 'text-gray-500'}>
+              /{details.planCycle === 'annual' ? 'month' : 'month'}
+            </span>
           )}
         </div>
+        <p className={`mt-4 text-sm ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
+          {description}
+        </p>
       </div>
       <ul className="space-y-4 mb-8 flex-1">
         {features.map((feature, index) => (
@@ -179,6 +196,16 @@ function PricingPlanCard({
 
 export default function Pricing() {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [billingCycle, setBillingCycle] = useState<PlanCycle>('annual');
+
+  // Filter plans based on selected cycle and exclude enterprise
+  const filteredPlans = filterPlansByCycle(ALL_PLANS, billingCycle).filter(
+    (plan) => !plan.isEnterprise
+  );
+
+  // Always show enterprise plan regardless of cycle
+  const enterprisePlan = ALL_PLANS.find((plan) => plan.isEnterprise);
+  const plans = enterprisePlan ? [...filteredPlans, enterprisePlan] : filteredPlans;
 
   const handleToggle = (index: number) => {
     setExpandedIndex(expandedIndex === index ? null : index);
@@ -195,11 +222,13 @@ export default function Pricing() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {PRICING_PLANS.map((plan) => (
+      <BillingToggle cycle={billingCycle} onCycleChange={setBillingCycle} />
+
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        {plans.map((plan) => (
           <PricingPlanCard
             key={plan.id}
-            {...plan}
+            plan={plan}
             expandedIndex={expandedIndex}
             onToggle={handleToggle}
           />

@@ -1,18 +1,17 @@
 import { pgTable, text, timestamp, boolean, uniqueIndex, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { PLAN_IDS } from '@workspace/pricing';
 import { workspaceMembers } from './workspace-members';
 import { entitlements } from './entitlements';
 import { domains } from './domains';
 import { projects } from './projects';
 import { recordingLinks } from './recording-links';
 
-export const workspacePlanEnum = pgEnum('workspace_plan', [
-  'trial',
-  'starter',
-  'scale_up',
-  'enterprise',
-  'reverse_trial',
-]);
+/**
+ * Workspace plan enum
+ * Values derived from @workspace/pricing PLAN_IDS
+ */
+export const workspacePlanEnum = pgEnum('workspace_plan', PLAN_IDS);
 
 export const workspaces = pgTable(
   'workspaces',
@@ -26,7 +25,7 @@ export const workspaces = pgTable(
     workspaceLogoUrl: text('workspace_logo_url').notNull(),
 
     // Subscription and plan
-    workspacePlan: workspacePlanEnum('workspace_plan').notNull().default('trial'),
+    workspacePlan: workspacePlanEnum('workspace_plan').notNull().default('starter_monthly'),
 
     // Settings and configuration
     // UUID token used for invite verification, must always be set
