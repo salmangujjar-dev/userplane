@@ -14,43 +14,25 @@ import { CreateProjectModal } from '@/components/modals/create-project-modal';
 interface Project {
   id: number;
   title: string;
-  storeId: number;
   isDefault: boolean;
-}
-
-interface StoreOption {
-  id: number;
-  title: string;
-  region: string;
-  expiry: string;
 }
 
 const PROJECTS: Project[] = [
   {
     id: 1,
     title: 'Production App',
-    storeId: 1,
     isDefault: true,
   },
   {
     id: 2,
     title: 'Dev Environment',
-    storeId: 2,
     isDefault: false,
   },
   {
     id: 3,
     title: 'Staging Server',
-    storeId: 3,
     isDefault: false,
   },
-];
-
-const AVAILABLE_STORES: StoreOption[] = [
-  { id: 1, title: 'Production Storage', region: 'US East', expiry: '30 days' },
-  { id: 2, title: 'Development Storage', region: 'EU West', expiry: '7 days' },
-  { id: 3, title: 'Global Storage', region: 'Global', expiry: '90 days' },
-  { id: 4, title: 'Staging Storage', region: 'US West', expiry: '14 days' },
 ];
 
 export function ProjectsSection() {
@@ -66,15 +48,10 @@ export function ProjectsSection() {
     );
   };
 
-  const handleCreateProject = (newProject: {
-    title: string;
-    storeId: number;
-    isDefault: boolean;
-  }) => {
+  const handleCreateProject = (newProject: { title: string; isDefault: boolean }) => {
     const project: Project = {
       id: Math.max(...projects.map((p) => p.id), 0) + 1,
       title: newProject.title,
-      storeId: newProject.storeId,
       isDefault: newProject.isDefault,
     };
     setProjects((prev) =>
@@ -86,11 +63,6 @@ export function ProjectsSection() {
 
   const handleDeleteProject = (projectId: number) => {
     setProjects((prev) => prev.filter((project) => project.id !== projectId));
-  };
-
-  const getStoreDetails = (storeId: number) => {
-    const store = AVAILABLE_STORES.find((s) => s.id === storeId);
-    return store || { title: 'No store', region: '', expiry: '' };
   };
 
   return (
@@ -108,22 +80,13 @@ export function ProjectsSection() {
           >
             <div className="flex items-center gap-3">
               <Folder className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{project.title}</span>
-                  {project.isDefault && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                      Default
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                  <span>{getStoreDetails(project.storeId).title}</span>
-                  <span>•</span>
-                  <span>{getStoreDetails(project.storeId).region}</span>
-                  <span>•</span>
-                  <span>Expiry: {getStoreDetails(project.storeId).expiry}</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{project.title}</span>
+                {project.isDefault && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                    Default
+                  </span>
+                )}
               </div>
             </div>
             <DropdownMenu>

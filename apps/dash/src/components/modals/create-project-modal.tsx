@@ -11,34 +11,13 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@workspace/ui/components/select';
 import { Switch } from '@workspace/ui/components/switch';
-import { Folder, Cloud, ArrowLeftRight, ChevronDown, ChevronUp } from 'lucide-react';
-
-interface StoreOption {
-  id: number;
-  title: string;
-  region: string;
-  expiry: string;
-}
-
-const AVAILABLE_STORES: StoreOption[] = [
-  { id: 1, title: 'Production Storage', region: 'US East', expiry: '30 days' },
-  { id: 2, title: 'Development Storage', region: 'EU West', expiry: '7 days' },
-  { id: 3, title: 'Global Storage', region: 'Global', expiry: '90 days' },
-  { id: 4, title: 'Staging Storage', region: 'US West', expiry: '14 days' },
-];
+import { Folder, ArrowLeftRight, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CreateProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateProject: (project: { title: string; storeId: number; isDefault: boolean }) => void;
+  onCreateProject: (project: { title: string; isDefault: boolean }) => void;
 }
 
 export function CreateProjectModal({
@@ -48,7 +27,6 @@ export function CreateProjectModal({
 }: CreateProjectModalProps) {
   const [newProject, setNewProject] = useState({
     title: '',
-    storeId: 1,
     isDefault: false,
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -58,14 +36,14 @@ export function CreateProjectModal({
 
     if (isValid) {
       onCreateProject(newProject);
-      setNewProject({ title: '', storeId: 1, isDefault: false });
+      setNewProject({ title: '', isDefault: false });
       setShowAdvanced(false);
       onOpenChange(false);
     }
   };
 
   const handleCancel = () => {
-    setNewProject({ title: '', storeId: 1, isDefault: false });
+    setNewProject({ title: '', isDefault: false });
     setShowAdvanced(false);
     onOpenChange(false);
   };
@@ -117,48 +95,6 @@ export function CreateProjectModal({
 
             {showAdvanced && (
               <div className="space-y-4 pt-4 border-t">
-                <div className="space-y-2">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="project-store" className="text-sm font-medium">
-                      Store
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Select a custom storage location for this project
-                    </p>
-                  </div>
-                  <Select
-                    value={newProject.storeId.toString()}
-                    onValueChange={(value) =>
-                      setNewProject((prev) => ({ ...prev, storeId: parseInt(value) }))
-                    }
-                  >
-                    <SelectTrigger id="project-store">
-                      <div className="flex items-center gap-2">
-                        <Cloud className="h-4 w-4" />
-                        <span>
-                          {AVAILABLE_STORES.find((s) => s.id === newProject.storeId)?.title ||
-                            'Select a store'}
-                        </span>
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AVAILABLE_STORES.map((store) => (
-                        <SelectItem key={store.id} value={store.id.toString()}>
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-2">
-                              <Cloud className="h-4 w-4" />
-                              <span className="font-medium">{store.title}</span>
-                            </div>
-                            <div className="text-xs text-muted-foreground pl-6">
-                              {store.region} • Expiry: {store.expiry}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="is-default" className="text-sm font-medium">
