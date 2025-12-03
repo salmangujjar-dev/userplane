@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   createPricingPlans,
-  filterPlansByCycle,
   formatPlanRate,
   PRICING_SUBTITLE,
   PRICING_TITLE,
@@ -11,7 +10,7 @@ import {
 } from '@workspace/pricing';
 import { SIGNUP_URL } from '../../constants/onboarding';
 
-const ALL_PLANS = createPricingPlans({ signupUrl: SIGNUP_URL });
+const ALL_PLANS = createPricingPlans({ signupUrl: SIGNUP_URL, version: 'v1' });
 
 interface PricingFeatureProps extends PlanFeature {
   isExpanded: boolean;
@@ -198,18 +197,11 @@ export default function Pricing() {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [billingCycle, setBillingCycle] = useState<PlanCycle>('annual');
 
-  // Filter plans based on selected cycle and exclude enterprise
-  const filteredPlans = filterPlansByCycle(ALL_PLANS, billingCycle).filter(
-    (plan) => !plan.isEnterprise
-  );
-
-  // Always show enterprise plan regardless of cycle
-  const enterprisePlan = ALL_PLANS.find((plan) => plan.isEnterprise);
-  const plans = enterprisePlan ? [...filteredPlans, enterprisePlan] : filteredPlans;
-
   const handleToggle = (index: number) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
+
+  const filteredPlans = ALL_PLANS.filter((plan) => plan.details.planCycle === billingCycle);
 
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 scroll-mt-20" id="pricing">
@@ -225,7 +217,7 @@ export default function Pricing() {
       <BillingToggle cycle={billingCycle} onCycleChange={setBillingCycle} />
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        {plans.map((plan) => (
+        {filteredPlans.map((plan) => (
           <PricingPlanCard
             key={plan.id}
             plan={plan}
