@@ -4,8 +4,9 @@ import type { HighlightConfig } from '../types';
  * Pricing section heading
  */
 export const PRICING_HEADING = {
+  label: 'Pricing',
   title: 'Pricing that works for you',
-  subtitle: 'Month to month. No long-term contracts. No cancellation fees. Just a flat rate.',
+  subtitle: 'Month to month. Flat rate. No long-term contracts. No cancellation fees.',
 };
 
 /**

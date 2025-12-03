@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { ChevronRight, Play, BugPlay, SquareTerminal, Puzzle } from 'lucide-react';
 import {
   FEATURES,
   FEATURES_HEADING,
@@ -8,67 +6,40 @@ import {
 } from '@/constants/v2/features';
 import Highlight from '../Highlight';
 
-const iconMap = {
-  Play,
-  BugPlay,
-  SquareTerminal,
-  Puzzle,
-};
-
-interface FeatureItemProps extends Feature {
-  isActive: boolean;
-  onClick: () => void;
-}
-
-function FeatureItem({ title, description, icon, isActive, onClick }: FeatureItemProps) {
-  const IconComponent = iconMap[icon as keyof typeof iconMap];
-
+function FeatureCard({ image, imageAlt, title, description }: Feature) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full text-left py-8 px-6 rounded-xl transition-all cursor-pointer ${
-        isActive ? 'bg-zinc-100' : 'hover:bg-zinc-50'
-      }`}
-    >
-      <div className="flex items-center gap-3 mb-2">
-        {IconComponent && (
-          <IconComponent
-            className={`w-5 h-5 transition-colors ${isActive ? 'text-zinc-900' : 'text-zinc-500'}`}
+    <div className="relative flex flex-col bg-white rounded-xl border border-zinc-200 shadow-sm">
+      <div className="flex-none px-6 pt-6">
+        <div className="relative aspect-video">
+          <img
+            src={image}
+            alt={imageAlt}
+            className="w-full h-full object-cover object-top-left"
+            draggable={false}
           />
-        )}
-        <h3
-          className={`text-xl font-semibold transition-colors ${
-            isActive ? 'text-zinc-900' : 'text-zinc-600'
-          }`}
-        >
-          {title}
-        </h3>
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-white via-white/90 to-transparent"></div>
+        </div>
       </div>
-      {isActive && (
-        <>
-          <p className="text-sm leading-relaxed text-zinc-700 mb-4">{description}</p>
-          <div className="flex items-center gap-1 text-sm font-medium text-zinc-900">
-            Explore <ChevronRight className="w-4 h-4" />
-          </div>
-        </>
-      )}
-    </button>
+      <div className="flex-none px-6 pb-6">
+        <h3 className="text-base font-medium leading-6 text-zinc-900 mb-2">{title}</h3>
+        <p className="text-sm text-zinc-600 leading-5">{description}</p>
+      </div>
+    </div>
   );
 }
 
 export default function Features() {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const activeFeature = FEATURES[activeIndex];
-
   const words = FEATURES_HEADING.title.split(' ');
   const highlightMap = new Map(FEATURES_HIGHLIGHTS.map((h) => [h.wordIndex, h.color]));
 
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 scroll-mt-20" id="features">
+      {/* Header */}
       <div className="max-w-4xl mx-auto text-center mb-16">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-8">
+          <p className="text-center text-base text-muted-foreground md:text-lg">
+            {FEATURES_HEADING.label}
+          </p>
           <h2 className="font-dm-sans font-medium text-4xl text-foreground tracking-tighter md:text-5xl lg:text-6xl leading-tight">
             {words.map((word, index) => {
               const color = highlightMap.get(index);
@@ -83,30 +54,11 @@ export default function Features() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
-          {/* Left side - Clickable feature list */}
-          <div className="flex flex-col">
-            {FEATURES.map((feature, index) => (
-              <FeatureItem
-                key={index}
-                {...feature}
-                isActive={activeIndex === index}
-                onClick={() => setActiveIndex(index)}
-              />
-            ))}
-          </div>
-
-          {/* Right side - Single image that changes */}
-          <div className="sticky top-24">
-            <img
-              src={activeFeature?.image}
-              alt={activeFeature?.imageAlt}
-              className="w-full h-auto transition-opacity duration-300"
-              draggable={false}
-            />
-          </div>
-        </div>
+      {/* Feature cards grid */}
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        {FEATURES.map((feature, index) => (
+          <FeatureCard key={index} {...feature} />
+        ))}
       </div>
     </section>
   );

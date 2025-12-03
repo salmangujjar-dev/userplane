@@ -52,7 +52,10 @@ export default function PricingV2() {
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 scroll-mt-20" id="pricing">
       <div className="max-w-4xl mx-auto text-center mb-16">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-8">
+          <p className="text-center text-base text-muted-foreground md:text-lg">
+            {PRICING_HEADING.label}
+          </p>
           <h2 className="font-dm-sans font-medium text-4xl text-foreground tracking-tighter md:text-5xl lg:text-6xl leading-tight">
             {words.map((word, index) => {
               const color = highlightMap.get(index);
