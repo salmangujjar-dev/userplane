@@ -12,6 +12,7 @@ export interface FAQItem {
  * FAQ section heading
  */
 export const FAQ_HEADING = {
+  label: 'FAQ',
   title: 'Frequently Asked Questions',
   subtitle: 'Want to learn more about Userplane? Start here',
 };

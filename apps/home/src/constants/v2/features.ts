@@ -9,6 +9,7 @@ export interface Feature {
   title: string;
   description: string;
   icon: string;
+  url: string;
 }
 
 /**
@@ -17,7 +18,7 @@ export interface Feature {
 export const FEATURES_HEADING = {
   label: 'Features',
   title: 'Stop guessing what went wrong',
-  subtitle: 'See exactly what went wrong, without the back and forth',
+  subtitle: 'Resolve customer issues without the back and forth',
 };
 
 /**
@@ -33,35 +34,39 @@ export const FEATURES_HIGHLIGHTS: HighlightConfig[] = [
  */
 export const FEATURES: Feature[] = [
   {
-    image: '/images/features/one-click-recordings.webp',
+    image: 'https://placehold.co/800x500/f5f5f4/a8a29e?text=One+Click+Recordings',
     imageAlt: 'One click recordings',
     title: 'One click recordings',
     description:
       'One-click recording links that works everywhere. No apps, installs, or browser extensions needed. A simple link that lets you capture and replay the issue.',
     icon: 'Play',
+    url: 'app.userplane.io/record',
   },
   {
-    image: '/images/features/complete-issue-context.webp',
+    image: 'https://placehold.co/800x500/fef3c7/d97706?text=Capture+Logs+%26+Errors',
     imageAlt: 'Capture logs & errors',
     title: 'Capture logs & errors',
     description:
       'Get console errors, network activity, user steps, and error traces with every recording. Give engineering teams everything they need to fix the issue faster.',
     icon: 'SquareTerminal',
+    url: 'app.userplane.io/logs',
   },
   {
-    image: '/images/features/enterprise-ready.webp',
+    image: 'https://placehold.co/800x500/fce7f3/db2777?text=Replay+Customer+Issues',
     imageAlt: 'Replay customer issues',
     title: 'Replay customer issues',
     description:
       'Watch exactly what went wrong. Review and replay customer sessions without the back and forth. Get complete visibility into the customer issue.',
     icon: 'BugPlay',
+    url: 'app.userplane.io/replay',
   },
   {
-    image: '/images/features/native-integrations.webp',
+    image: 'https://placehold.co/800x500/d1fae5/059669?text=Native+Integrations',
     imageAlt: 'Native Intercom integration',
     title: 'Native Intercom integration',
     description:
       'Best-in-class Intercom integration. Request and receive screen recordings without leaving Intercom. Recordings live where your team works.',
     icon: 'Puzzle',
+    url: 'app.userplane.io/integrations',
   },
 ];
