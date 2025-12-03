@@ -1,18 +1,20 @@
 ---
 import HomepageLayout from '../layouts/HomepageLayout.astro';
-import Hero from '../components/home/Hero';
-import Spotlight from '../components/home/Spotlight';
-import Features from '../components/home/Features';
-import Pricing from '../components/home/Pricing';
-import CTA from '../components/home/CTA';
+import Hero from '../components/home/v2/Hero';
+import Spotlight from '../components/home/v2/Spotlight';
+import Pricing from '../components/home/v2/Pricing';
+import Features from '../components/home/v2/Features';
+import FAQ from '../components/home/v2/FAQ';
+import CTA from '../components/home/v2/CTA';
 ---
 
 <HomepageLayout>
   <main class="flex flex-col items-center">
     <Hero />
     <Spotlight />
-    <Features />
+    <Features client:load />
     <Pricing client:visible />
+    <FAQ client:load />
     <CTA />
   </main>
 </HomepageLayout>
