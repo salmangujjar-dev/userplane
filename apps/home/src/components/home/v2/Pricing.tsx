@@ -37,14 +37,14 @@ function PricingFeatureItem({ text, included, subFeatures }: PlanFeature) {
 }
 
 export default function PricingV2() {
-  // Get the one-time plan
-  const oneTimePlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'one_time_50');
+  // Get the early bird plan
+  const earlyBirdPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'early_bird_monthly');
 
-  if (!oneTimePlan) {
+  if (!earlyBirdPlan) {
     return null;
   }
 
-  const displayRate = formatPlanRate(oneTimePlan);
+  const displayRate = formatPlanRate(earlyBirdPlan);
 
   const words = PRICING_HEADING.title.split(' ');
   const highlightMap = new Map(PRICING_HIGHLIGHTS.map((h) => [h.wordIndex, h.color]));
@@ -148,7 +148,7 @@ export default function PricingV2() {
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-8">
             <div className="text-white">
               <div className="text-6xl md:text-7xl font-bold mb-3">{displayRate}</div>
-              <div className="text-base md:text-lg text-gray-400">one-time payment</div>
+              <div className="text-base md:text-lg text-gray-400">per month</div>
             </div>
 
             <Button asChild className="rounded-full px-7 py-6" size="lg" variant="secondary">
@@ -165,7 +165,7 @@ export default function PricingV2() {
             What's Included
           </h3>
           <div className="space-y-8">
-            {oneTimePlan.features.map((feature, index) => (
+            {earlyBirdPlan.features.map((feature, index) => (
               <PricingFeatureItem key={index} {...feature} />
             ))}
           </div>

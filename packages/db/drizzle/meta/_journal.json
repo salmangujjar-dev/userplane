@@ -57,6 +57,13 @@
       "when": 1764711684009,
       "tag": "0007_petite_jackpot",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1764774837125,
+      "tag": "0008_aberrant_union_jack",
+      "breakpoints": true
     }
   ]
 }

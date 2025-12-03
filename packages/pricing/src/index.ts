@@ -15,7 +15,7 @@ export const PLAN_IDS = [
   'scale_up_annual',
   'enterprise_monthly',
   'enterprise_annual',
-  'one_time_50',
+  'early_bird_monthly',
 ] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
@@ -226,9 +226,9 @@ const SCALEUP_FEATURES: PlanFeature[] = [
 ];
 
 /**
- * Shared features for One-Time plan
+ * Shared features for Early Bird plan
  */
-const ONE_TIME_FEATURES: PlanFeature[] = [
+const EARLY_BIRD_FEATURES: PlanFeature[] = [
   {
     text: 'Unlimited Screen Recordings',
     included: true,
@@ -385,19 +385,39 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
     features: ENTERPRISE_FEATURES,
     isEnterprise: true,
   },
-  // One-Time Purchase
+  // Early Bird Monthly
   {
-    id: 'one_time_50',
-    name: 'One-Time',
-    description: '50 recordings, 3 minutes each',
+    id: 'early_bird_monthly',
+    name: 'Early Bird',
+    description: 'For early Userplane customers',
     details: {
-      planType: 'one_time',
+      planType: 'subscription',
       planRate: 99,
-      planCycle: 'one_time',
+      planCycle: 'monthly',
     },
-    features: ONE_TIME_FEATURES,
+    features: EARLY_BIRD_FEATURES,
   },
 ];
+
+/**
+ * Pricing version
+ */
+export type PricingVersion = 'v1' | 'v2';
+
+/**
+ * Mapping of pricing versions to plan IDs
+ */
+export const PRICING_VERSION_PLANS: Record<PricingVersion, PlanId[]> = {
+  v1: [
+    'starter_monthly',
+    'starter_annual',
+    'scale_up_monthly',
+    'scale_up_annual',
+    'enterprise_monthly',
+    'enterprise_annual',
+  ],
+  v2: ['early_bird_monthly'],
+};
 
 /**
  * CTA configuration for pricing plans
@@ -405,38 +425,26 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
 export interface PricingCtaConfig {
   signupUrl: string;
   salesFormUrl?: string;
-  includeOneTimePlans?: boolean;
-  includeEnterprisePlans?: boolean;
+  version?: PricingVersion;
 }
 
 /**
  * Create pricing plans with custom CTA URLs
- * Use this to generate full pricing plans with app-specific URLs
+ * Returns plans based on the specified version
  */
 export function createPricingPlans(config: PricingCtaConfig): PricingPlan[] {
-  const {
-    signupUrl,
-    salesFormUrl = SALES_FORM_URL,
-    includeOneTimePlans = false,
-    includeEnterprisePlans = true,
-  } = config;
+  const { signupUrl, salesFormUrl = SALES_FORM_URL, version = 'v1' } = config;
 
-  return BASE_PRICING_PLANS.filter((plan) => {
-    // Filter out one-time plans unless explicitly included
-    if (plan.details.planType === 'one_time' && !includeOneTimePlans) {
-      return false;
-    }
-    // Filter out enterprise plans unless explicitly included
-    if (plan.isEnterprise && !includeEnterprisePlans) {
-      return false;
-    }
-    return true;
-  }).map((plan) => ({
-    ...plan,
-    ctaText: plan.isEnterprise ? 'Request Access' : 'Start Trial',
-    ctaUrl: plan.isEnterprise ? salesFormUrl : signupUrl,
-    ctaIsExternal: plan.isEnterprise,
-  }));
+  const allowedPlanIds = PRICING_VERSION_PLANS[version];
+
+  return BASE_PRICING_PLANS.filter((plan) => allowedPlanIds.includes(plan.id as PlanId)).map(
+    (plan) => ({
+      ...plan,
+      ctaText: plan.isEnterprise ? 'Request Access' : 'Start Trial',
+      ctaUrl: plan.isEnterprise ? salesFormUrl : signupUrl,
+      ctaIsExternal: plan.isEnterprise,
+    })
+  );
 }
 
 /**

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."workspace_plan" ADD VALUE 'early_bird_monthly';
