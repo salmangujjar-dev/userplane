@@ -13,24 +13,16 @@ import {
   getProjectsHandler,
   setDefaultProjectHandler,
 } from '@/api/handlers/projects.handlers';
-import {
-  getStoresHandler,
-  getStoreHandler,
-  createStoreHandler,
-  updateStoreTitleHandler,
-} from '@/api/handlers/stores.handlers';
 import type { InviteService } from '@/api/services/invite.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { ProjectService } from '@/api/services/project.service';
-import type { StoreService } from '@/api/services/store.service';
 
 export function createWorkspaceRoutes(
   inviteService: InviteService,
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService,
-  projectService: ProjectService,
-  storeService: StoreService
+  projectService: ProjectService
 ) {
   const workspaceRoutes = new Hono<AppEnv>();
 
@@ -67,7 +59,7 @@ export function createWorkspaceRoutes(
     '/:workspaceSlug/projects',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
-    createProjectHandler(projectService, storeService, workspaceService)
+    createProjectHandler(projectService, workspaceService)
   );
 
   workspaceRoutes.post(
@@ -75,35 +67,6 @@ export function createWorkspaceRoutes(
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     setDefaultProjectHandler(projectService)
-  );
-
-  // Store routes
-  workspaceRoutes.get(
-    '/:workspaceSlug/stores',
-    requireAuth,
-    requireWorkspaceMember(workspaceMemberService, workspaceService),
-    getStoresHandler(storeService)
-  );
-
-  workspaceRoutes.get(
-    '/:workspaceSlug/stores/:storeId',
-    requireAuth,
-    requireWorkspaceMember(workspaceMemberService, workspaceService),
-    getStoreHandler(storeService)
-  );
-
-  workspaceRoutes.post(
-    '/:workspaceSlug/stores',
-    requireAuth,
-    requireWorkspaceMember(workspaceMemberService, workspaceService),
-    createStoreHandler(storeService)
-  );
-
-  workspaceRoutes.patch(
-    '/:workspaceSlug/stores/:storeId',
-    requireAuth,
-    requireWorkspaceMember(workspaceMemberService, workspaceService),
-    updateStoreTitleHandler(storeService)
   );
 
   return workspaceRoutes;

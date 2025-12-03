@@ -4,12 +4,7 @@
  */
 
 import type { DbClient } from '@workspace/db';
-import {
-  workspacePlanEnum,
-  workspaceRoleEnum,
-  storeProviderEnum,
-  domainStatusEnum,
-} from '@workspace/db';
+import { workspacePlanEnum, workspaceRoleEnum, domainStatusEnum } from '@workspace/db';
 
 /**
  * Database transaction type
@@ -30,5 +25,4 @@ export interface TransactionOptions {
  */
 export type WorkspacePlan = (typeof workspacePlanEnum.enumValues)[number];
 export type WorkspaceRole = (typeof workspaceRoleEnum.enumValues)[number];
-export type StoreProvider = (typeof storeProviderEnum.enumValues)[number];
 export type DomainStatus = (typeof domainStatusEnum.enumValues)[number];

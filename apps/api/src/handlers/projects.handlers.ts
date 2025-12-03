@@ -6,19 +6,15 @@
 import type { Context } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
 import { ProjectService } from '@/api/services/project.service';
-import { StoreService } from '@/api/services/store.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { z } from 'zod';
-import { nonEmptyString } from '@/api/lib/validation';
 
 const createProjectSchema = z.object({
   projectTitle: z.string().optional().nullable(),
-  storeId: z.string().optional(),
 });
 
 export function createProjectHandler(
   projectService: ProjectService,
-  storeService: StoreService,
   workspaceService: WorkspaceService
 ) {
   return async (c: Context<AppEnv>) => {
@@ -48,52 +44,11 @@ export function createProjectHandler(
       }
 
       const body = await c.req.json();
-      const { projectTitle, storeId } = createProjectSchema.parse(body);
-
-      let finalStoreId: string;
-
-      // If storeId provided, use it; otherwise get or create managed store
-      if (storeId) {
-        // Verify store exists and belongs to workspace
-        const store = await storeService.getById(storeId);
-        if (store.workspaceId !== workspaceId) {
-          return c.json(
-            {
-              error: 'Forbidden',
-              message: 'Store does not belong to this workspace',
-            },
-            403
-          );
-        }
-        finalStoreId = storeId;
-      } else {
-        // Get workspace info for store title
-        const workspace = await workspaceService.getById(workspaceId);
-
-        // Get or create managed store
-        const store = await storeService.getOrCreateManagedStore(
-          workspaceId,
-          workspaceSlug,
-          `${workspace.workspaceName} Storage`
-        );
-
-        if (!store) {
-          return c.json(
-            {
-              error: 'Internal Server Error',
-              message: 'Failed to create or retrieve store',
-            },
-            500
-          );
-        }
-
-        finalStoreId = store.id;
-      }
+      const { projectTitle } = createProjectSchema.parse(body);
 
       // Create project
       const project = await projectService.createProject({
         workspaceId,
-        storeId: finalStoreId,
         projectTitle: projectTitle || null,
       });
 

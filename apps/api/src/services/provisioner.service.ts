@@ -6,7 +6,6 @@
 import type { DbClient } from '@workspace/db';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { ProjectService } from '@/api/services/project.service';
-import { StoreService } from '@/api/services/store.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { DomainService } from '@/api/services/domain.service';
 import { extractHostname, deriveWorkspaceName, getFaviconAPIURI } from '@/api/lib/utils';
@@ -15,7 +14,6 @@ import type { ProvisionWorkspaceParams, ProvisionWorkspaceResult } from '@/api/t
 export interface ProvisionerServiceDeps {
   workspaceService: WorkspaceService;
   projectService: ProjectService;
-  storeService: StoreService;
   workspaceMemberService: WorkspaceMemberService;
   domainService: DomainService;
   db: DbClient;
@@ -26,7 +24,7 @@ export class ProvisionerService {
 
   /**
    * Create workspace with all related resources
-   * Orchestrates workspace, project, store, member, and domain creation
+   * Orchestrates workspace, project, member, and domain creation
    * Accepts any valid URL format
    */
   async createWorkspace(params: ProvisionWorkspaceParams): Promise<ProvisionWorkspaceResult> {
@@ -38,13 +36,13 @@ export class ProvisionerService {
     const workspaceLogoUrl = getFaviconAPIURI(hostname);
 
     // Generate unique slug with UUID suffix
-    const workspaceSlug = this.deps.workspaceService.generateUniqueSlug(workspaceName);
+    const recordingSlug = this.deps.workspaceService.generateUniqueSlug(workspaceName);
 
     const workspace = await this.deps.db.transaction(async (tx) => {
       const createdWorkspace = await this.deps.workspaceService.create(
         {
           workspaceName,
-          workspaceSlug,
+          recordingSlug,
           workspacePlan: 'starter_monthly',
           workspaceLogoUrl,
           userId,
@@ -56,23 +54,10 @@ export class ProvisionerService {
         throw new Error('Failed to create workspace');
       }
 
-      // Create dedicated store for this workspace using default env credentials
-      const workspaceStore = await this.deps.storeService.createWorkspaceStore(
-        workspaceSlug,
-        createdWorkspace.id,
-        `${workspaceName} Storage`,
-        { tx }
-      );
-
-      if (!workspaceStore) {
-        throw new Error('Failed to create workspace store');
-      }
-
       // Create first project (automatically becomes default)
       await this.deps.projectService.createProject(
         {
           workspaceId: createdWorkspace.id,
-          storeId: workspaceStore.id,
           projectTitle: workspaceName,
         },
         { tx }
@@ -104,7 +89,7 @@ export class ProvisionerService {
 
     return {
       workspace: {
-        workspaceSlug: workspace.workspaceSlug,
+        recordingSlug: workspace.recordingSlug,
         workspaceName: workspace.workspaceName,
         workspaceInviteToken: workspace.workspaceInviteToken,
         workspaceLogoUrl: workspace.workspaceLogoUrl,

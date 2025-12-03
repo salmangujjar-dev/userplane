@@ -20,6 +20,13 @@ export const workspaceMembers = pgTable(
     // Access control
     workspaceRole: workspaceRoleEnum('workspace_role').notNull().default('member'),
 
+    // Notification preferences
+    notifyOnLinkUsage: boolean('notify_on_link_usage').default(true).notNull(),
+    notifyOnQuotaReset: boolean('notify_on_quota_reset').default(false).notNull(),
+    notifyOnQuotaLimit: boolean('notify_on_quota_limit').default(false).notNull(),
+    notifyOnInviteAccepted: boolean('notify_on_invite_accepted').default(true).notNull(),
+    notifyOnMemberJoin: boolean('notify_on_member_join').default(false).notNull(),
+
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')

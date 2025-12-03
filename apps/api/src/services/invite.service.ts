@@ -127,7 +127,7 @@ export class InviteService {
 
     return {
       workspace: {
-        workspaceSlug: workspace.workspaceSlug,
+        recordingSlug: workspace.recordingSlug,
         workspaceName: workspace.workspaceName,
         workspaceInviteToken: workspace.workspaceInviteToken,
         workspaceLogoUrl: workspace.workspaceLogoUrl,

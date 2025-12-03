@@ -42,8 +42,9 @@ export const recordings = pgTable(
     streamId: text('stream_id'),
 
     // Cold storage (permanent archival in object storage)
-    recordingMediaPath: text('recording_media_path'),
-    recordingLogsPath: text('recording_logs_path'),
+    recordingMediaRef: text('recording_media_ref'),
+    recordingLogsRef: text('recording_logs_ref'),
+    recordingThumbnailRef: text('recording_thumbnail_ref'),
 
     // Recording metadata
     recordingMeta: jsonb('recording_meta'),

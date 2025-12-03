@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, boolean, index, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { workspaces } from './workspaces';
+import { recordingLinks } from './recording-links';
 
 export const domainStatusEnum = pgEnum('domain_status', ['pending', 'verified', 'revoked']);
 
@@ -34,9 +35,10 @@ export const domains = pgTable(
   ]
 );
 
-export const domainsRelations = relations(domains, ({ one }) => ({
+export const domainsRelations = relations(domains, ({ one, many }) => ({
   workspace: one(workspaces, {
     fields: [domains.workspaceId],
     references: [workspaces.id],
   }),
+  recordingLinks: many(recordingLinks),
 }));
