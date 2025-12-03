@@ -8,16 +8,14 @@
  */
 export interface CreateProjectParams {
   workspaceId: string;
-  storeId: string;
   projectTitle: string | null;
 }
 
 /**
- * Parameters for creating a managed project with custom store
+ * Parameters for creating a managed project
  */
 export interface CreateManagedProjectParams {
   workspaceId: string;
-  storeId: string;
   projectTitle: string;
   isDefault?: boolean;
 }

@@ -39,7 +39,7 @@ export function rotateInviteUrlHandler(workspaceService: WorkspaceService) {
 
       const result: RotateInviteUrlResult = {
         workspaceId: updatedWorkspace.id,
-        workspaceSlug: updatedWorkspace.workspaceSlug,
+        recordingSlug: updatedWorkspace.recordingSlug,
         message:
           'Workspace invite URL rotated successfully. All previous invite links are now invalid.',
       };
@@ -104,7 +104,7 @@ export function getInviteUrlHandler(
       const result: GetInviteUrlResult = {
         inviteUrl,
         workspaceId: workspace.id,
-        workspaceSlug: workspace.workspaceSlug,
+        recordingSlug: workspace.recordingSlug,
       };
 
       return c.json(result, 200);

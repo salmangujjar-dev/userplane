@@ -10,7 +10,7 @@ import type { WorkspacePlan } from './database';
  */
 export interface CreateWorkspaceParams {
   workspaceName: string;
-  workspaceSlug: string;
+  recordingSlug: string;
   workspacePlan: WorkspacePlan;
   workspaceLogoUrl: string;
   userId: string;
@@ -21,7 +21,7 @@ export interface CreateWorkspaceParams {
  */
 export interface RotateInviteUrlResult {
   workspaceId: string;
-  workspaceSlug: string;
+  recordingSlug: string;
   message: string;
 }
 
@@ -31,5 +31,5 @@ export interface RotateInviteUrlResult {
 export interface GetInviteUrlResult {
   inviteUrl: string;
   workspaceId: string;
-  workspaceSlug: string;
+  recordingSlug: string;
 }

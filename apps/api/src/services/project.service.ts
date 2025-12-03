@@ -20,11 +20,10 @@ export class ProjectService {
    * Create project (auto-determines if default)
    * If first project in workspace → isDefault = true
    * Otherwise → isDefault = false
-   * Uses managed store
    */
   async createProject(params: CreateProjectParams, options?: { tx?: Transaction }) {
-    if (!params.workspaceId || !params.storeId) {
-      throw new ValidationError('Workspace ID and Store ID are required');
+    if (!params.workspaceId) {
+      throw new ValidationError('Workspace ID is required');
     }
 
     const existingDefault = await this.deps.projectRepo.findDefaultByWorkspace(params.workspaceId);
@@ -35,7 +34,6 @@ export class ProjectService {
       {
         id: nanoid(),
         workspaceId: params.workspaceId,
-        storeId: params.storeId,
         projectTitle: params.projectTitle,
         projectPath: uuidv4(),
         isDefault,
@@ -45,13 +43,12 @@ export class ProjectService {
   }
 
   /**
-   * Create managed project with custom store
-   * Allows user to specify their own store (BYOS)
-   * Used when user wants to use their own S3/R2
+   * Create managed project
+   * Allows user to create additional projects in a workspace
    */
   async createManagedProject(params: CreateManagedProjectParams, options?: { tx?: Transaction }) {
-    if (!params.workspaceId || !params.storeId) {
-      throw new ValidationError('Workspace ID and Store ID are required');
+    if (!params.workspaceId) {
+      throw new ValidationError('Workspace ID is required');
     }
 
     if (params.isDefault) {
@@ -66,7 +63,6 @@ export class ProjectService {
       {
         id: nanoid(),
         workspaceId: params.workspaceId,
-        storeId: params.storeId,
         projectTitle: params.projectTitle,
         projectPath: uuidv4(),
         isDefault: params.isDefault ?? false,

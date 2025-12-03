@@ -33,7 +33,7 @@ export interface AcceptInviteParams {
  */
 export interface AcceptInviteResult {
   workspace: {
-    workspaceSlug: string;
+    recordingSlug: string;
     workspaceName: string;
     workspaceInviteToken: string;
     workspaceLogoUrl: string;

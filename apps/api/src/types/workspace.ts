@@ -3,7 +3,7 @@
  * Types for workspace, members, projects, stores, and domains
  */
 
-import type { WorkspacePlan, WorkspaceRole, DomainStatus, StoreProvider } from './database';
+import type { WorkspacePlan, WorkspaceRole, DomainStatus } from './database';
 
 /**
  * Workspace creation input
@@ -11,7 +11,7 @@ import type { WorkspacePlan, WorkspaceRole, DomainStatus, StoreProvider } from '
 export interface CreateWorkspaceInput {
   id: string;
   workspaceName: string;
-  workspaceSlug: string;
+  recordingSlug: string;
   workspacePlan: WorkspacePlan;
   workspaceLogoUrl: string;
   workspaceInviteToken: string;
@@ -33,26 +33,9 @@ export interface CreateWorkspaceMemberInput {
 export interface CreateProjectInput {
   id: string;
   workspaceId: string;
-  storeId: string;
   projectTitle: string | null;
   projectPath: string;
   isDefault: boolean;
-}
-
-/**
- * Store creation input
- */
-export interface CreateStoreInput {
-  id: string;
-  workspaceId: string;
-  storeTitle: string;
-  provider: StoreProvider;
-  providerUrl: string;
-  providerRegion: string;
-  providerBucket: string;
-  providerAccessId: string;
-  providerAccessKey: string;
-  storeIsManaged: boolean;
 }
 
 /**
@@ -69,7 +52,7 @@ export interface CreateDomainInput {
  * Workspace response (simplified for API)
  */
 export interface WorkspaceResponse {
-  workspaceSlug: string;
+  recordingSlug: string;
   workspaceName: string;
   workspaceInviteToken: string; // Always present, never null
   workspaceLogoUrl: string;

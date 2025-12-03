@@ -4,7 +4,6 @@ export * from './account';
 export * from './verification';
 export * from './relations';
 export * from './workspaces';
-export * from './stores';
 export * from './projects';
 export * from './entitlements';
 export * from './workspace-members';
@@ -17,7 +16,6 @@ import { session } from './session';
 import { account } from './account';
 import { verification } from './verification';
 import { workspaces } from './workspaces';
-import { stores } from './stores';
 import { projects } from './projects';
 import { entitlements } from './entitlements';
 import { workspaceMembers } from './workspace-members';
@@ -39,9 +37,6 @@ export type NewVerification = typeof verification.$inferInsert;
 
 export type Workspace = typeof workspaces.$inferSelect;
 export type NewWorkspace = typeof workspaces.$inferInsert;
-
-export type Store = typeof stores.$inferSelect;
-export type NewStore = typeof stores.$inferInsert;
 
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;

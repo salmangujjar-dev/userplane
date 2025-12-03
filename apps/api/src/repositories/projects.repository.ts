@@ -22,7 +22,6 @@ export class ProjectRepository {
       .values({
         id: data.id,
         workspaceId: data.workspaceId,
-        storeId: data.storeId,
         projectTitle: data.projectTitle,
         projectPath: data.projectPath,
         isDefault: data.isDefault,

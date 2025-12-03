@@ -22,7 +22,7 @@ export class WorkspaceRepository {
       .values({
         id: data.id,
         workspaceName: data.workspaceName,
-        workspaceSlug: data.workspaceSlug,
+        recordingSlug: data.recordingSlug,
         workspacePlan: data.workspacePlan,
         workspaceLogoUrl: data.workspaceLogoUrl,
         workspaceInviteToken: data.workspaceInviteToken,
@@ -53,7 +53,7 @@ export class WorkspaceRepository {
     const [workspace] = await this.db
       .select()
       .from(workspaces)
-      .where(and(eq(workspaces.workspaceSlug, slug), eq(workspaces.isDeleted, false)))
+      .where(and(eq(workspaces.recordingSlug, slug), eq(workspaces.isDeleted, false)))
       .limit(1);
 
     return workspace || null;

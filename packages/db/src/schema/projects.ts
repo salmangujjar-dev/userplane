@@ -1,7 +1,6 @@
 import { pgTable, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { workspaces } from './workspaces';
-import { stores } from './stores';
 import { recordingLinks } from './recording-links';
 import { recordings } from './recordings';
 
@@ -13,7 +12,6 @@ export const projects = pgTable(
 
     // Relationships
     workspaceId: text('workspace_id').notNull(),
-    storeId: text('store_id').notNull(),
 
     // Project configuration
     projectTitle: text('project_title'),
@@ -38,10 +36,6 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   workspace: one(workspaces, {
     fields: [projects.workspaceId],
     references: [workspaces.id],
-  }),
-  store: one(stores, {
-    fields: [projects.storeId],
-    references: [stores.id],
   }),
   recordingLinks: many(recordingLinks),
   recordings: many(recordings),

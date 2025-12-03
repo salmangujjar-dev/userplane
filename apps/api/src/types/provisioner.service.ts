@@ -16,7 +16,7 @@ export interface ProvisionWorkspaceParams {
  */
 export interface ProvisionWorkspaceResult {
   workspace: {
-    workspaceSlug: string;
+    recordingSlug: string;
     workspaceName: string;
     workspaceInviteToken: string;
     workspaceLogoUrl: string;

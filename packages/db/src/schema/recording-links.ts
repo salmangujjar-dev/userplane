@@ -13,6 +13,7 @@ import { workspaces } from './workspaces';
 import { projects } from './projects';
 import { workspaceMembers } from './workspace-members';
 import { recordings } from './recordings';
+import { domains } from './domains';
 
 export const providerTypeEnum = pgEnum('provider_type', ['zendesk', 'intercom', 'plain']);
 
@@ -25,17 +26,18 @@ export const recordingLinks = pgTable(
     // Relationships
     workspaceId: text('workspace_id').notNull(),
     projectId: text('project_id').notNull(),
+    domainId: text('domain_id').notNull(),
     createdBy: text('created_by').notNull(),
 
     // Link configuration
-    linkPublicUri: text('link_public_uri').notNull(),
+    linkPublicRef: text('link_public_ref').notNull(),
     linkTitle: text('link_title'),
     linkReusable: boolean('link_reusable').default(false).notNull(),
 
     // External integration metadata
     providerType: providerTypeEnum('provider_type'),
     providerId: text('provider_id'),
-    providerUrl: text('provider_url'),
+    providerRef: text('provider_ref'),
     providerData: jsonb('provider_data'),
 
     // Timestamps
@@ -50,8 +52,9 @@ export const recordingLinks = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
-    uniqueIndex('recording_links_link_public_uri_idx').on(table.linkPublicUri),
+    uniqueIndex('recording_links_link_public_ref_idx').on(table.linkPublicRef),
     index('recording_links_workspace_id_idx').on(table.workspaceId),
+    index('recording_links_domain_id_idx').on(table.domainId),
     index('recording_links_created_by_idx').on(table.createdBy),
     index('recording_links_workspace_created_at_idx').on(table.workspaceId, table.createdAt),
     index('recording_links_provider_idx').on(table.providerType, table.providerId),
@@ -66,6 +69,10 @@ export const recordingLinksRelations = relations(recordingLinks, ({ one, many })
   project: one(projects, {
     fields: [recordingLinks.projectId],
     references: [projects.id],
+  }),
+  domain: one(domains, {
+    fields: [recordingLinks.domainId],
+    references: [domains.id],
   }),
   creator: one(workspaceMembers, {
     fields: [recordingLinks.createdBy],

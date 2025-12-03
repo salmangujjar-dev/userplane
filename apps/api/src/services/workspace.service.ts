@@ -26,8 +26,8 @@ export class WorkspaceService {
     if (!params.workspaceName) {
       throw new ValidationError('Workspace name is required');
     }
-    if (!params.workspaceSlug) {
-      throw new ValidationError('Workspace slug is required');
+    if (!params.recordingSlug) {
+      throw new ValidationError('Recording slug is required');
     }
 
     // Generate a simple UUID for the workspace invite token
@@ -38,7 +38,7 @@ export class WorkspaceService {
       {
         id: nanoid(),
         workspaceName: params.workspaceName,
-        workspaceSlug: params.workspaceSlug,
+        recordingSlug: params.recordingSlug,
         workspacePlan: params.workspacePlan,
         workspaceLogoUrl: params.workspaceLogoUrl,
         workspaceInviteToken: inviteToken,
