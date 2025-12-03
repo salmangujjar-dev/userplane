@@ -19,6 +19,5 @@ export interface ProvisionWorkspaceResult {
     recordingSlug: string;
     workspaceName: string;
     workspaceInviteToken: string;
-    workspaceLogoUrl: string;
   };
 }

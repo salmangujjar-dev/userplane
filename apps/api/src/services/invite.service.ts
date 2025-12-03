@@ -130,7 +130,6 @@ export class InviteService {
         recordingSlug: workspace.recordingSlug,
         workspaceName: workspace.workspaceName,
         workspaceInviteToken: workspace.workspaceInviteToken,
-        workspaceLogoUrl: workspace.workspaceLogoUrl,
       },
     };
   }

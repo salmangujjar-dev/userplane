@@ -24,7 +24,6 @@ export class WorkspaceRepository {
         workspaceName: data.workspaceName,
         recordingSlug: data.recordingSlug,
         workspacePlan: data.workspacePlan,
-        workspaceLogoUrl: data.workspaceLogoUrl,
         workspaceInviteToken: data.workspaceInviteToken,
         isDeleted: false,
       })

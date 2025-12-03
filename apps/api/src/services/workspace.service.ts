@@ -40,7 +40,6 @@ export class WorkspaceService {
         workspaceName: params.workspaceName,
         recordingSlug: params.recordingSlug,
         workspacePlan: params.workspacePlan,
-        workspaceLogoUrl: params.workspaceLogoUrl,
         workspaceInviteToken: inviteToken,
       },
       options
