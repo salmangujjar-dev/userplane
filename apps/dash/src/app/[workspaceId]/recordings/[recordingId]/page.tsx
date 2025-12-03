@@ -22,7 +22,7 @@ export default function RecordingDetailPage() {
     }
   };
 
-  const handleShare = async () => {
+  const handleShareLink = async () => {
     const currentUrl = window.location.href;
 
     if (navigator.share) {
@@ -42,9 +42,40 @@ export default function RecordingDetailPage() {
     }
   };
 
+  const handleShareAtTimestamp = async () => {
+    // TODO: Get current timestamp from video player
+    const currentUrl = window.location.href;
+    const urlWithTimestamp = `${currentUrl}?t=00:00`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Share Your Screen at 00:00',
+          text: 'Submit a Screen Capture at timestamp',
+          url: urlWithTimestamp,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          toast.error('Failed to share link');
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(urlWithTimestamp);
+        toast.success('Link with timestamp copied to clipboard');
+      } catch {
+        toast.error('Failed to copy link');
+      }
+    }
+  };
+
   return (
     <div className="min-h-svh bg-background">
-      <RecordingDetailNav onCopyLink={handleCopyLink} onShare={handleShare} />
+      <RecordingDetailNav
+        onCopyLink={handleCopyLink}
+        onShareLink={handleShareLink}
+        onShareAtTimestamp={handleShareAtTimestamp}
+      />
 
       <main className="w-full px-6 py-8">
         <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-8rem)] rounded-lg">

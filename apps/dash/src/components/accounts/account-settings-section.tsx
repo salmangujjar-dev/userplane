@@ -5,8 +5,8 @@ import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 
 export function AccountSettingsSection() {
-  const [name, setName] = useState('Olivia Martin');
-  const email = 'olivia.martin@email.com';
+  const [name, setName] = useState('Bob Smith');
+  const email = 'bob.smith@email.com';
 
   return (
     <div className="w-full max-w-2xl">

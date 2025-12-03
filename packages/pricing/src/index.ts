@@ -15,18 +15,19 @@ export const PLAN_IDS = [
   'scale_up_annual',
   'enterprise_monthly',
   'enterprise_annual',
+  'one_time_50',
 ] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
 /**
  * Billing cycle for plans
  */
-export type PlanCycle = 'monthly' | 'annual';
+export type PlanCycle = 'monthly' | 'annual' | 'one_time';
 
 /**
  * Plan type
  */
-export type PlanType = 'subscription' | 'custom';
+export type PlanType = 'subscription' | 'custom' | 'one_time';
 
 /**
  * Plan details containing billing information
@@ -225,6 +226,32 @@ const SCALEUP_FEATURES: PlanFeature[] = [
 ];
 
 /**
+ * Shared features for One-Time plan
+ */
+const ONE_TIME_FEATURES: PlanFeature[] = [
+  {
+    text: 'Unlimited Screen Recordings',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Get as many recordings as your team needs to understand and fix customer issues',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Capture Logs & Errors',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Automatically capture error logs, network activity, and user steps with every recording',
+        included: true,
+      },
+    ],
+  },
+];
+
+/**
  * Shared features for Enterprise plan
  */
 const ENTERPRISE_FEATURES: PlanFeature[] = [
@@ -358,6 +385,18 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
     features: ENTERPRISE_FEATURES,
     isEnterprise: true,
   },
+  // One-Time Purchase
+  {
+    id: 'one_time_50',
+    name: 'One-Time',
+    description: '50 recordings, 3 minutes each',
+    details: {
+      planType: 'one_time',
+      planRate: 99,
+      planCycle: 'one_time',
+    },
+    features: ONE_TIME_FEATURES,
+  },
 ];
 
 /**
@@ -366,6 +405,8 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
 export interface PricingCtaConfig {
   signupUrl: string;
   salesFormUrl?: string;
+  includeOneTimePlans?: boolean;
+  includeEnterprisePlans?: boolean;
 }
 
 /**
@@ -373,9 +414,24 @@ export interface PricingCtaConfig {
  * Use this to generate full pricing plans with app-specific URLs
  */
 export function createPricingPlans(config: PricingCtaConfig): PricingPlan[] {
-  const { signupUrl, salesFormUrl = SALES_FORM_URL } = config;
+  const {
+    signupUrl,
+    salesFormUrl = SALES_FORM_URL,
+    includeOneTimePlans = false,
+    includeEnterprisePlans = true,
+  } = config;
 
-  return BASE_PRICING_PLANS.map((plan) => ({
+  return BASE_PRICING_PLANS.filter((plan) => {
+    // Filter out one-time plans unless explicitly included
+    if (plan.details.planType === 'one_time' && !includeOneTimePlans) {
+      return false;
+    }
+    // Filter out enterprise plans unless explicitly included
+    if (plan.isEnterprise && !includeEnterprisePlans) {
+      return false;
+    }
+    return true;
+  }).map((plan) => ({
     ...plan,
     ctaText: plan.isEnterprise ? 'Request Access' : 'Start Trial',
     ctaUrl: plan.isEnterprise ? salesFormUrl : signupUrl,

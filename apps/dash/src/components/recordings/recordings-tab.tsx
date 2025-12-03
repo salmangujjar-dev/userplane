@@ -21,6 +21,7 @@ export function RecordingsTab({
         count={8}
         onSeeMore={onSeeMore}
         recordingIds={yourRecordingIds}
+        createdBy="Bob Smith"
       />
       <RecordingsSection
         title="Recent recordings"

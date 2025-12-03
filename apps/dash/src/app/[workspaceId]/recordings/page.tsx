@@ -26,8 +26,8 @@ export default function RecordingsPage() {
       <Sidebar
         workspaceName="Lary's Workspace"
         planName="Starter"
-        userName="Olivia Martin"
-        userEmail="olivia.martin@email.com"
+        userName="Bob Smith"
+        userEmail="bob.smith@email.com"
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -48,7 +48,13 @@ export default function RecordingsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(recordingsPerPage)].map((_, i) => {
                 const recordingIndex = (currentPage - 1) * recordingsPerPage + i;
-                return <RecordingPreview key={i} recordingId={`rec-${recordingIndex + 1}`} />;
+                return (
+                  <RecordingPreview
+                    key={i}
+                    recordingId={`rec-${recordingIndex + 1}`}
+                    createdBy="Bob Smith"
+                  />
+                );
               })}
             </div>
 

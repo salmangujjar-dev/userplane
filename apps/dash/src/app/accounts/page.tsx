@@ -15,8 +15,8 @@ export default function AccountsPage() {
       <Sidebar
         workspaceName="Lary's Workspace"
         planName="Starter"
-        userName="Olivia Martin"
-        userEmail="olivia.martin@email.com"
+        userName="Bob Smith"
+        userEmail="bob.smith@email.com"
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">

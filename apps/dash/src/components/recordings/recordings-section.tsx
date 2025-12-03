@@ -9,6 +9,7 @@ interface RecordingsSectionProps {
   count: number;
   onSeeMore?: () => void;
   recordingIds?: string[];
+  createdBy?: string;
 }
 
 export function RecordingsSection({
@@ -17,6 +18,7 @@ export function RecordingsSection({
   count,
   onSeeMore,
   recordingIds,
+  createdBy,
 }: RecordingsSectionProps) {
   return (
     <div>
@@ -28,7 +30,11 @@ export function RecordingsSection({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {[...Array(count - 1)].map((_, i) => (
-          <RecordingPreview key={i} recordingId={recordingIds?.[i] || `rec-${i + 1}`} />
+          <RecordingPreview
+            key={i}
+            recordingId={recordingIds?.[i] || `rec-${i + 1}`}
+            createdBy={createdBy}
+          />
         ))}
         {onSeeMore && (
           <button
