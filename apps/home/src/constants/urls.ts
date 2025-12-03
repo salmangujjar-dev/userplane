@@ -25,24 +25,24 @@ const getEnvVar = (key: string, defaultValue: string = ''): string => {
  * Marketing/Homepage base URL
  * Used for static content, blog, landing pages
  */
-export const BASE_URL = getEnvVar('PUBLIC_BASE_URL', '');
+export const HOME_URL = getEnvVar('PUBLIC_HOME_URL', 'http://localhost:4321');
 
 /**
- * App/Dashboard base URL
- * Used for signup, onboarding, dashboard, and app features
+ * Dashboard base URL
+ * Used for dashboard, authentication, and app pages
  */
-export const APP_URL = getEnvVar('PUBLIC_APP_URL', '');
+export const DASH_URL = getEnvVar('PUBLIC_DASH_URL', 'http://localhost:3000');
 
 /**
  * Helper to construct full URL for marketing pages
  */
 export const getMarketingUrl = (path: string): string => {
-  return `${BASE_URL}${path}`;
+  return `${HOME_URL}${path}`;
 };
 
 /**
- * Helper to construct full URL for app pages
+ * Helper to construct full URL for dashboard and app pages
  */
-export const getAppUrl = (path: string): string => {
-  return `${APP_URL}${path}`;
+export const getDashUrl = (path: string): string => {
+  return `${DASH_URL}${path}`;
 };

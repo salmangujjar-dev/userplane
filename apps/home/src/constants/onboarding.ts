@@ -1,12 +1,12 @@
-import { getAppUrl } from './urls';
+import { getDashUrl } from './urls';
 
 /**
  * Onboarding and signup flow URLs
- * All onboarding URLs point to the app domain
+ * All onboarding URLs point to the dashboard domain
  */
 
 /**
  * Main signup page
  * Used for all signup, onboarding, and get-started flows
  */
-export const SIGNUP_URL = getAppUrl('/signup');
+export const SIGNUP_URL = getDashUrl('/auth');
