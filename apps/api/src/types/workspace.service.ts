@@ -12,7 +12,6 @@ export interface CreateWorkspaceParams {
   workspaceName: string;
   recordingSlug: string;
   workspacePlan: WorkspacePlan;
-  workspaceLogoUrl: string;
   userId: string;
 }
 

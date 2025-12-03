@@ -1,0 +1,603 @@
+{
+  "info": {
+    "name": "Userplane API",
+    "description": "API collection for Userplane workspace and recording management platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "apiVersion",
+      "value": "v1",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workspaceSlug",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "projectId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "inviteToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Status",
+      "item": [
+        {
+          "name": "Get API Index",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", ""]
+            },
+            "description": "Get API index information including version, name, and available endpoints"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "health"]
+            },
+            "description": "Check API health status with timestamp and version"
+          },
+          "response": []
+        }
+      ],
+      "description": "Public status and health check endpoints"
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Google OAuth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "google"]
+            },
+            "description": "Initiate Google OAuth authentication flow"
+          },
+          "response": []
+        },
+        {
+          "name": "OAuth Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/callback/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "callback", "google"]
+            },
+            "description": "Google OAuth callback endpoint"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "session"]
+            },
+            "description": "Get current user session"
+          },
+          "response": []
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signout"]
+            },
+            "description": "Sign out current user"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints managed by Better Auth"
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users"]
+            },
+            "description": "Get list of all users. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users"]
+            },
+            "description": "Create a new user. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get a specific user by ID. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"email\": \"john.updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Update a user. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Delete a user. Requires authentication."
+          },
+          "response": []
+        }
+      ],
+      "description": "User management endpoints (protected)"
+    },
+    {
+      "name": "Workspaces",
+      "item": [
+        {
+          "name": "Create Workspace",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace"]
+            },
+            "description": "Create a new workspace with initial project, domain, and owner membership. Requires authentication.\n\nThe URL is used to derive the workspace name and create the first domain."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Invite URL",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/invite-url",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "invite-url"],
+              "variable": [
+                {
+                  "key": "workspaceSlug",
+                  "value": "{{workspaceSlug}}"
+                }
+              ]
+            },
+            "description": "Get the workspace invite URL. Requires authentication and workspace membership."
+          },
+          "response": []
+        },
+        {
+          "name": "Rotate Invite URL",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/invite-url",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "invite-url"],
+              "variable": [
+                {
+                  "key": "workspaceSlug",
+                  "value": "{{workspaceSlug}}"
+                }
+              ]
+            },
+            "description": "Rotate the workspace invite URL, invalidating all previous invite links. Requires authentication and workspace membership."
+          },
+          "response": []
+        },
+        {
+          "name": "Send Invites",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emails\": [\n    \"user1@example.com\",\n    \"user2@example.com\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/invites",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "invites"],
+              "variable": [
+                {
+                  "key": "workspaceSlug",
+                  "value": "{{workspaceSlug}}"
+                }
+              ]
+            },
+            "description": "Send workspace invitations to multiple email addresses. Requires authentication and workspace membership.\n\nReturns lists of successfully sent invites and failed invites with reasons."
+          },
+          "response": []
+        }
+      ],
+      "description": "Workspace management and invitation endpoints (protected)"
+    },
+    {
+      "name": "Invites",
+      "item": [
+        {
+          "name": "Accept Invite",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inviteToken\": \"{{inviteToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "accept"]
+            },
+            "description": "Accept a workspace invitation using a JWT invite token. Requires authentication.\n\nThe invite token is extracted from the invite URL sent via email."
+          },
+          "response": []
+        }
+      ],
+      "description": "Workspace invitation acceptance endpoints (protected)"
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "List Projects",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/projects",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "projects"],
+              "variable": [
+                {
+                  "key": "workspaceSlug",
+                  "value": "{{workspaceSlug}}"
+                }
+              ]
+            },
+            "description": "Get all projects for a workspace. Requires authentication and workspace membership."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectTitle\": \"My New Project\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/projects",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "projects"],
+              "variable": [
+                {
+                  "key": "workspaceSlug",
+                  "value": "{{workspaceSlug}}"
+                }
+              ]
+            },
+            "description": "Create a new project in the workspace. Requires authentication and workspace membership.\n\nThe projectTitle is optional. If the workspace has no projects yet, this will automatically become the default project."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Default Project",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/projects/:projectId/set-default",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                ":workspaceSlug",
+                "projects",
+                ":projectId",
+                "set-default"
+              ],
+              "variable": [
+                {
+                  "key": "workspaceSlug",
+                  "value": "{{workspaceSlug}}"
+                },
+                {
+                  "key": "projectId",
+                  "value": "{{projectId}}"
+                }
+              ]
+            },
+            "description": "Set a project as the default for the workspace. Requires authentication and workspace membership.\n\nThis will unset any other project that was previously default."
+          },
+          "response": []
+        }
+      ],
+      "description": "Project management endpoints within workspaces (protected)"
+    }
+  ]
+}

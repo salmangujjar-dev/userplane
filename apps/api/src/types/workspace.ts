@@ -13,7 +13,6 @@ export interface CreateWorkspaceInput {
   workspaceName: string;
   recordingSlug: string;
   workspacePlan: WorkspacePlan;
-  workspaceLogoUrl: string;
   workspaceInviteToken: string;
 }
 
@@ -55,5 +54,4 @@ export interface WorkspaceResponse {
   recordingSlug: string;
   workspaceName: string;
   workspaceInviteToken: string; // Always present, never null
-  workspaceLogoUrl: string;
 }

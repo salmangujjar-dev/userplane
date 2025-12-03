@@ -8,7 +8,7 @@ import { WorkspaceService } from '@/api/services/workspace.service';
 import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { DomainService } from '@/api/services/domain.service';
-import { extractHostname, deriveWorkspaceName, getFaviconAPIURI } from '@/api/lib/utils';
+import { extractHostname, deriveWorkspaceName } from '@/api/lib/utils';
 import type { ProvisionWorkspaceParams, ProvisionWorkspaceResult } from '@/api/types';
 
 export interface ProvisionerServiceDeps {
@@ -30,10 +30,9 @@ export class ProvisionerService {
   async createWorkspace(params: ProvisionWorkspaceParams): Promise<ProvisionWorkspaceResult> {
     const { url, userId } = params;
 
-    // Extract hostname for workspace naming and logo
+    // Extract hostname for workspace naming
     const hostname = extractHostname(url);
     const workspaceName = deriveWorkspaceName(hostname);
-    const workspaceLogoUrl = getFaviconAPIURI(hostname);
 
     // Generate unique slug with UUID suffix
     const recordingSlug = this.deps.workspaceService.generateUniqueSlug(workspaceName);
@@ -44,7 +43,6 @@ export class ProvisionerService {
           workspaceName,
           recordingSlug,
           workspacePlan: 'starter_monthly',
-          workspaceLogoUrl,
           userId,
         },
         { tx }
@@ -92,7 +90,6 @@ export class ProvisionerService {
         recordingSlug: workspace.recordingSlug,
         workspaceName: workspace.workspaceName,
         workspaceInviteToken: workspace.workspaceInviteToken,
-        workspaceLogoUrl: workspace.workspaceLogoUrl,
       },
     };
   }

@@ -36,6 +36,5 @@ export interface AcceptInviteResult {
     recordingSlug: string;
     workspaceName: string;
     workspaceInviteToken: string;
-    workspaceLogoUrl: string;
   };
 }
