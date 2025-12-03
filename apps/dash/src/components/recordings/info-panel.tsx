@@ -17,8 +17,10 @@ export function InfoPanel() {
     windowSize: '1920 × 1080',
   };
 
-  const integrationMetadata = {
-    intercomReference: 'conv_abc123456789',
+  const recordingLinkData = {
+    linkTitle: 'Customer Demo Recording',
+    link: 'https://userplane.com/r/a7b3k9m',
+    linkReference: 'https://github.com/userplane/dashboard/issues/42',
   };
 
   const customMetadata = {
@@ -60,11 +62,33 @@ export function InfoPanel() {
       </div>
 
       <div className="border-t pt-6">
-        <h3 className="text-sm font-semibold mb-4">Integration Metadata</h3>
+        <h3 className="text-sm font-semibold mb-4">Link Metadata</h3>
         <div className="space-y-3">
           <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Intercom Reference</span>
-            <span className="font-mono">{integrationMetadata.intercomReference}</span>
+            <span className="text-muted-foreground">Link Title</span>
+            <span className="font-mono">{recordingLinkData.linkTitle}</span>
+          </div>
+          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+            <span className="text-muted-foreground">Link Reference</span>
+            <a
+              href={recordingLinkData.linkReference}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-foreground hover:underline truncate block"
+            >
+              {recordingLinkData.linkReference}
+            </a>
+          </div>
+          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+            <span className="text-muted-foreground">Recording Link</span>
+            <a
+              href={recordingLinkData.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-foreground hover:underline truncate block"
+            >
+              {recordingLinkData.link}
+            </a>
           </div>
         </div>
       </div>

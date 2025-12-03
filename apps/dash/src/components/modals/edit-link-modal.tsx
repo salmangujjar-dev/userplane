@@ -12,34 +12,39 @@ import {
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
+import { UrlInputWithFavicon } from '@/components/url-input-with-favicon';
 
 interface EditLinkModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  reference?: string;
   isReusable: boolean;
-  onSave: (title: string, isReusable: boolean) => void;
+  onSave: (title: string, reference: string, isReusable: boolean) => void;
 }
 
 export function EditLinkModal({
   open,
   onOpenChange,
   title,
+  reference = '',
   isReusable,
   onSave,
 }: EditLinkModalProps) {
   const [editTitle, setEditTitle] = useState(title);
+  const [editReference, setEditReference] = useState(reference);
   const [editIsReusable, setEditIsReusable] = useState(isReusable);
 
   useEffect(() => {
     if (open) {
       setEditTitle(title);
+      setEditReference(reference);
       setEditIsReusable(isReusable);
     }
-  }, [open, title, isReusable]);
+  }, [open, title, reference, isReusable]);
 
   const handleSave = () => {
-    onSave(editTitle, editIsReusable);
+    onSave(editTitle, editReference, editIsReusable);
     onOpenChange(false);
   };
 
@@ -51,7 +56,7 @@ export function EditLinkModal({
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <svg
                 viewBox="0 0 512 512"
-                className="h-8 w-8 flex-shrink-0"
+                className="h-8 w-8 shrink-0"
                 fill="currentColor"
                 aria-hidden="true"
               >
@@ -75,6 +80,16 @@ export function EditLinkModal({
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Enter link title"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="link-reference">Link Reference</Label>
+              <UrlInputWithFavicon
+                id="link-reference"
+                value={editReference}
+                onChange={setEditReference}
+                placeholder="e.g. https://github.com/org/repo/issues/123, JIRA-456, Customer ABC"
               />
             </div>
 

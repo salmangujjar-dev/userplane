@@ -20,7 +20,7 @@ import { MoreVertical, UserMinus, Shield } from 'lucide-react';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 
 const TEAM_MEMBERS = [
-  { id: 1, name: 'Olivia Martin', email: 'olivia.martin@email.com', role: 'Owner' },
+  { id: 1, name: 'Bob Smith', email: 'bob.smith@email.com', role: 'Owner' },
   { id: 2, name: 'Jackson Lee', email: 'jackson.lee@email.com', role: 'Admin' },
   { id: 3, name: 'Isabella Nguyen', email: 'isabella.nguyen@email.com', role: 'Member' },
   { id: 4, name: 'William Kim', email: 'william.kim@email.com', role: 'Member' },

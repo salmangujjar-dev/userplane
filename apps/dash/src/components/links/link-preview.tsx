@@ -29,13 +29,14 @@ interface LinkPreviewProps {
   linkId?: string;
   onClick?: () => void;
   title?: string;
+  reference?: string;
   createdBy?: string;
   createdAt?: Date;
   projectName?: string;
   isReusable?: boolean;
   onShare?: () => void;
   onView?: () => void;
-  onEdit?: (title: string, isReusable: boolean) => void;
+  onEdit?: (title: string, reference: string, isReusable: boolean) => void;
   onDelete?: () => void;
 }
 
@@ -61,10 +62,22 @@ const SAMPLE_CREATORS = [
   'Henry Moore',
 ];
 
+const SAMPLE_REFERENCES = [
+  'https://github.com/userplane/dashboard/issues/42',
+  'https://linear.app/userplane/issue/USR-123',
+  'https://app.asana.com/0/1234567890/task',
+  'https://userplane.atlassian.net/browse/JIRA-456',
+  'https://github.com/vercel/next.js/issues/789',
+  'https://app.clickup.com/t/abc123',
+  'https://notion.so/userplane/Feature-Request',
+  'https://trello.com/c/xyz789/feature-update',
+];
+
 export function LinkPreview({
   linkId,
   onClick,
   title,
+  reference,
   createdBy,
   createdAt,
   projectName,
@@ -90,6 +103,8 @@ export function LinkPreview({
   const displayCreator =
     createdBy || SAMPLE_CREATORS[linkIndex % SAMPLE_CREATORS.length] || 'Unknown Creator';
   const displayDate = createdAt || new Date(Date.now() - linkIndex * 86400000 * 2);
+  const displayReference =
+    reference || SAMPLE_REFERENCES[linkIndex % SAMPLE_REFERENCES.length] || '';
 
   const handleView = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -123,9 +138,9 @@ export function LinkPreview({
     }
   };
 
-  const handleSaveEdit = (title: string, reusable: boolean) => {
+  const handleSaveEdit = (title: string, reference: string, reusable: boolean) => {
     if (onEdit) {
-      onEdit(title, reusable);
+      onEdit(title, reference, reusable);
     }
   };
 
@@ -231,6 +246,7 @@ export function LinkPreview({
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         title={displayTitle}
+        reference={displayReference}
         isReusable={isReusable}
         onSave={handleSaveEdit}
       />

@@ -16,12 +16,12 @@ interface RecordingPreviewProps {
 }
 
 const SAMPLE_CREATORS = [
-  'Lary Bird',
   'Alice Johnson',
-  'Bob Smith',
   'Carol Williams',
   'David Brown',
   'Emma Davis',
+  'Lary Bird',
+  'Frank Miller',
 ];
 
 const SAMPLE_DURATIONS = ['3:12', '5:47', '2:34', '8:15', '1:23', '4:56'];

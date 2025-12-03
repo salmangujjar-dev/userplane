@@ -26,10 +26,17 @@ import {
 } from '@workspace/ui/components/tooltip';
 import { Plus, ChevronDown, ChevronUp, ExternalLink, Check } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/workspace';
+import { UrlInputWithFavicon } from '@/components/url-input-with-favicon';
 
 interface CreateLinkModalProps {
   onLinkCreated: (link: string) => void;
 }
+
+const DOMAINS = [
+  { id: '1', name: 'userplane.com', url: 'https://userplane.com', isLogEnabled: true },
+  { id: '2', name: 'app.userplane.com', url: 'https://app.userplane.com', isLogEnabled: true },
+  { id: '3', name: 'custom.domain.com', url: 'https://custom.domain.com', isLogEnabled: false },
+];
 
 export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
@@ -38,14 +45,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [isReusable, setIsReusable] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-
-  const domains = [
-    { id: '1', name: 'userplane.com', url: 'https://userplane.com', isLogEnabled: true },
-    { id: '2', name: 'app.userplane.com', url: 'https://app.userplane.com', isLogEnabled: true },
-    { id: '3', name: 'custom.domain.com', url: 'https://custom.domain.com', isLogEnabled: false },
-  ];
-
-  const [selectedDomain, setSelectedDomain] = useState<string | undefined>(domains[0]?.id);
+  const [selectedDomain, setSelectedDomain] = useState<string | undefined>(DOMAINS[0]?.id);
 
   // TODO: Replace with actual API call to fetch projects for the workspace
   // Example: const { data: projects } = useQuery(['projects', workspaceId], () => fetchProjects(workspaceId));
@@ -64,15 +64,26 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
     }
   }, [open, workspaceId]);
 
+  // Effect to reset form state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setReference('');
+      setSelectedDomain(DOMAINS[0]?.id);
+      setSelectedProject('');
+      setIsReusable(false);
+      setShowAdvanced(false);
+    }
+  }, [open]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedDomainUrl =
-      domains.find((d) => d.id === selectedDomain)?.url || 'https://userplane.com';
+      DOMAINS.find((d) => d.id === selectedDomain)?.url || 'https://userplane.com';
     const generatedLink = `${selectedDomainUrl}/r/${Math.random().toString(36).substring(7)}`;
     onLinkCreated(generatedLink);
     setOpen(false);
     setReference('');
-    setSelectedDomain(domains[0]?.id);
+    setSelectedDomain(DOMAINS[0]?.id);
     setSelectedProject('');
     setIsReusable(false);
     setShowAdvanced(false);
@@ -93,7 +104,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
               <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
                 <svg
                   viewBox="0 0 512 512"
-                  className="h-8 w-8 flex-shrink-0"
+                  className="h-8 w-8 shrink-0"
                   fill="currentColor"
                   aria-hidden="true"
                 >
@@ -118,17 +129,15 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                   Add a link, ticket, issue number or customer reference
                 </p>
               </div>
-              <input
+              <UrlInputWithFavicon
                 id="reference"
-                type="text"
                 value={reference}
-                onChange={(e) => setReference(e.target.value)}
+                onChange={setReference}
                 placeholder="e.g. https://github.com/org/repo/issues/123, JIRA-456, Customer ABC"
-                className="w-full rounded-lg bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
-            {domains.length > 0 && selectedDomain && (
+            {DOMAINS.length > 0 && selectedDomain && (
               <div className="space-y-2.5">
                 <div className="space-y-0.5">
                   <Label htmlFor="domain" className="text-sm font-medium">
@@ -145,13 +154,13 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                       className="w-full flex items-center justify-between rounded-lg bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       <span className="text-foreground">
-                        {domains.find((d) => d.id === selectedDomain)?.name || 'Select a domain'}
+                        {DOMAINS.find((d) => d.id === selectedDomain)?.name || 'Select a domain'}
                       </span>
                       <ChevronDown className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
-                    {domains.map((domain) => (
+                    {DOMAINS.map((domain) => (
                       <DropdownMenuItem
                         key={domain.id}
                         onClick={() => setSelectedDomain(domain.id)}
