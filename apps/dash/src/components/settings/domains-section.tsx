@@ -2,11 +2,18 @@
 
 import { useState } from 'react';
 import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
-import { X, ChevronRight } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@workspace/ui/components/dropdown-menu';
+import { ChevronRight, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { DomainVerificationPreModal } from '@/components/modals/domain-verification-pre-modal';
 import { DomainVerificationVerifyingModal } from '@/components/modals/domain-verification-verifying-modal';
 import { DomainVerificationPostModal } from '@/components/modals/domain-verification-post-modal';
+import { EditDomainModal } from '@/components/modals/edit-domain-modal';
+import { CreateDomainModal } from '@/components/modals/create-domain-modal';
 
 const DOMAINS = [
   { id: 1, url: 'localhost:5500/', status: 'Installed', verified: true },
@@ -17,22 +24,14 @@ const DOMAINS = [
 type VerificationStep = 'pre' | 'verifying' | 'post' | null;
 
 export function DomainsSection() {
-  const [showAddDomain, setShowAddDomain] = useState(false);
-  const [newDomainUrl, setNewDomainUrl] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [verifyingDomain, setVerifyingDomain] = useState<string | null>(null);
   const [verificationStep, setVerificationStep] = useState<VerificationStep>(null);
+  const [editingDomain, setEditingDomain] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const handleAddDomain = () => {
-    if (newDomainUrl.trim()) {
-      console.log('Adding domain:', newDomainUrl);
-      setNewDomainUrl('');
-      setShowAddDomain(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setNewDomainUrl('');
-    setShowAddDomain(false);
+  const handleCreateDomain = (domainUrl: string) => {
+    console.log('Adding domain:', domainUrl);
   };
 
   const handleVerify = (domainUrl: string) => {
@@ -58,6 +57,19 @@ export function DomainsSection() {
 
   const handleReverify = () => {
     setVerificationStep('pre');
+  };
+
+  const handleEditDomain = (domainUrl: string) => {
+    setEditingDomain(domainUrl);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (newDomainUrl: string) => {
+    console.log('Editing domain from:', editingDomain, 'to:', newDomainUrl);
+  };
+
+  const handleDeleteDomain = (domainUrl: string) => {
+    console.log('Deleting domain:', domainUrl);
   };
 
   return (
@@ -112,45 +124,37 @@ export function DomainsSection() {
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleEditDomain(domain.url)}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit Domain
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleDeleteDomain(domain.url)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Domain
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         ))}
 
-        {showAddDomain ? (
-          <div className="p-4 rounded-xl border bg-card space-y-3">
-            <div className="flex items-center justify-between">
-              <label htmlFor="domain-url" className="text-sm font-medium">
-                Domain URL
-              </label>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={handleCancel}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <Input
-              id="domain-url"
-              value={newDomainUrl}
-              onChange={(e) => setNewDomainUrl(e.target.value)}
-              placeholder="example.com"
-              className="w-full"
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleAddDomain} disabled={!newDomainUrl.trim()}>
-                Add Domain
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleCancel}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button
-            variant="outline"
-            className="w-full max-w-2xl"
-            onClick={() => setShowAddDomain(true)}
-          >
-            Set up another domain
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          className="w-full max-w-2xl"
+          onClick={() => setShowCreateModal(true)}
+        >
+          Set up another domain
+        </Button>
       </div>
 
       <DomainVerificationPreModal
@@ -170,6 +174,19 @@ export function DomainsSection() {
         onOpenChange={handleCloseModals}
         domainUrl={verifyingDomain || ''}
         onReverify={handleReverify}
+      />
+
+      <CreateDomainModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onCreateDomain={handleCreateDomain}
+      />
+
+      <EditDomainModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        domainUrl={editingDomain || ''}
+        onSave={handleSaveEdit}
       />
     </div>
   );

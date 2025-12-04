@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useWorkspaceStore } from '@/stores/workspace';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -8,8 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { Folder, Trash2, MoreVertical, CheckCircle2 } from 'lucide-react';
+import { Folder, Trash2, MoreVertical, CheckCircle2, ChevronRight, Pencil } from 'lucide-react';
 import { CreateProjectModal } from '@/components/modals/create-project-modal';
+import { EditProjectModal } from '@/components/modals/edit-project-modal';
 
 interface Project {
   id: number;
@@ -36,8 +39,12 @@ const PROJECTS: Project[] = [
 ];
 
 export function ProjectsSection() {
+  const router = useRouter();
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const [projects, setProjects] = useState<Project[]>(PROJECTS);
   const [showModal, setShowModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const handleSetDefault = (projectId: number) => {
     setProjects((prev) =>
@@ -65,6 +72,33 @@ export function ProjectsSection() {
     setProjects((prev) => prev.filter((project) => project.id !== projectId));
   };
 
+  const handleViewProject = (projectId: number) => {
+    if (workspaceId) {
+      router.push(`/${workspaceId}/projects/${projectId}`);
+    }
+  };
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = (
+    projectId: number,
+    updatedProject: { title: string; isDefault: boolean }
+  ) => {
+    setProjects((prev) =>
+      prev.map((p) => ({
+        ...p,
+        id: p.id === projectId ? projectId : p.id,
+        title: p.id === projectId ? updatedProject.title : p.title,
+        isDefault: updatedProject.isDefault
+          ? p.id === projectId
+          : p.isDefault && p.id !== projectId,
+      }))
+    );
+  };
+
   return (
     <div>
       <div className="mb-4">
@@ -89,26 +123,41 @@ export function ProjectsSection() {
                 )}
               </div>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleSetDefault(project.id)}>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Set as default
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleDeleteProject(project.id)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete project
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
+                onClick={() => handleViewProject(project.id)}
+              >
+                View
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleSetDefault(project.id)}>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Set as default
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleEditProject(project)}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit project
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleDeleteProject(project.id)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete project
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         ))}
 
@@ -121,6 +170,13 @@ export function ProjectsSection() {
         open={showModal}
         onOpenChange={setShowModal}
         onCreateProject={handleCreateProject}
+      />
+
+      <EditProjectModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        project={editingProject}
+        onSave={handleSaveEdit}
       />
     </div>
   );
