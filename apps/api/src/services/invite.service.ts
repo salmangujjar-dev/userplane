@@ -9,12 +9,13 @@ import { WorkspaceService } from '@/api/services/workspace.service';
 import { UserService } from '@/api/services/user.service';
 import { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
-import { NotFoundError } from '@/api/lib/errors';
+import { NotFoundError, ConflictError } from '@/api/lib/errors';
 import type {
   SendInvitesParams,
   SendInvitesResult,
   AcceptInviteParams,
   AcceptInviteResult,
+  InviteActionResult,
 } from '@/api/types';
 
 export interface InviteServiceDeps {
@@ -35,12 +36,34 @@ export class InviteService {
    */
   async getInviteUrl(workspaceId: string, userId: string): Promise<string> {
     const workspace = await this.deps.workspaceService.getById(workspaceId);
+    const inviteToken = await this.deps.workspaceService.getInviteToken(workspaceId);
     const inviter = await this.deps.userService.getById(userId);
 
     const inviteUrl = this.deps.tokenService.generateInviteUrl({
       wi: workspace.id,
       wn: workspace.workspaceName,
-      wt: workspace.workspaceInviteToken,
+      wt: inviteToken,
+      in: inviter.name,
+      ie: inviter.email,
+    });
+
+    return inviteUrl;
+  }
+
+  /**
+   * Regenerate workspace invite URL
+   * Rotates the workspace invite token and returns new invite URL
+   */
+  async regenerateInviteUrl(workspaceId: string, userId: string): Promise<string> {
+    const inviter = await this.deps.userService.getById(userId);
+
+    // Rotate the invite token in the workspace - this returns the full workspace record
+    const updatedWorkspace = await this.deps.workspaceService.rotateInviteUrl(workspaceId);
+
+    const inviteUrl = this.deps.tokenService.generateInviteUrl({
+      wi: updatedWorkspace.id,
+      wn: updatedWorkspace.workspaceName,
+      wt: updatedWorkspace.workspaceInviteToken,
       in: inviter.name,
       ie: inviter.email,
     });
@@ -56,12 +79,13 @@ export class InviteService {
     const { workspaceId, emails, invitedBy } = params;
 
     const workspace = await this.deps.workspaceService.getById(workspaceId);
+    const inviteToken = await this.deps.workspaceService.getInviteToken(workspaceId);
     const inviter = await this.deps.userService.getById(invitedBy);
 
     const inviteUrl = this.deps.tokenService.generateInviteUrl({
       wi: workspace.id,
       wn: workspace.workspaceName,
-      wt: workspace.workspaceInviteToken,
+      wt: inviteToken,
       in: inviter.name,
       ie: inviter.email,
     });
@@ -96,6 +120,46 @@ export class InviteService {
   }
 
   /**
+   * Validate workspace invitation without accepting
+   * Verifies token and returns workspace and inviter information
+   */
+  async validateInvite(inviteToken: string): Promise<InviteActionResult> {
+    const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);
+
+    if (!inviteData) {
+      return {
+        status: 'invalid',
+        message: 'Invalid or expired invite token',
+      };
+    }
+
+    try {
+      const workspace = await this.deps.workspaceService.getById(inviteData.wi);
+      const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
+
+      if (currentInviteToken !== inviteData.wt) {
+        return {
+          status: 'expired',
+          message: 'Invite token has been invalidated',
+        };
+      }
+
+      return {
+        status: 'valid',
+        workspaceId: workspace.id,
+        workspaceName: inviteData.wn,
+        inviterName: inviteData.in,
+        inviterEmail: inviteData.ie,
+      };
+    } catch (error) {
+      return {
+        status: 'invalid',
+        message: 'Workspace not found or has been deleted',
+      };
+    }
+  }
+
+  /**
    * Accept workspace invitation
    * Verifies token and adds user as member
    */
@@ -109,8 +173,9 @@ export class InviteService {
     }
 
     const workspace = await this.deps.workspaceService.getById(inviteData.wi);
+    const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
 
-    if (workspace.workspaceInviteToken !== inviteData.wt) {
+    if (currentInviteToken !== inviteData.wt) {
       throw new NotFoundError('Invite token has been invalidated');
     }
 
@@ -127,10 +192,95 @@ export class InviteService {
 
     return {
       workspace: {
-        recordingSlug: workspace.recordingSlug,
         workspaceName: workspace.workspaceName,
-        workspaceInviteToken: workspace.workspaceInviteToken,
+        workspaceId: workspace.id,
       },
     };
+  }
+
+  /**
+   * Unified invite action handler
+   * Validates or accepts invite based on userId
+   */
+  async handleInviteAction(inviteToken: string, userId?: string): Promise<InviteActionResult> {
+    const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);
+
+    if (!inviteData) {
+      return {
+        status: 'invalid',
+        message: 'Invalid or expired invite token',
+      };
+    }
+
+    try {
+      const workspace = await this.deps.workspaceService.getById(inviteData.wi);
+      const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
+
+      if (currentInviteToken !== inviteData.wt) {
+        return {
+          status: 'expired',
+          message: 'Invite token has been invalidated',
+        };
+      }
+
+      // If userId provided, accept the invite
+      if (userId) {
+        try {
+          await this.deps.db.transaction(async (tx) => {
+            await this.deps.workspaceMemberService.addMember(
+              {
+                userId,
+                workspaceId: workspace.id,
+                role: 'member',
+              },
+              { tx }
+            );
+          });
+
+          return {
+            status: 'accepted',
+            workspaceId: workspace.id,
+            workspaceName: inviteData.wn,
+            inviterName: inviteData.in,
+            inviterEmail: inviteData.ie,
+          };
+        } catch (error) {
+          if (error instanceof ConflictError) {
+            return {
+              status: 'already_member',
+              workspaceId: workspace.id,
+              workspaceName: inviteData.wn,
+              inviterName: inviteData.in,
+              inviterEmail: inviteData.ie,
+              message: 'You are already a member of this workspace',
+            };
+          }
+          // Re-throw to be caught by outer catch
+          throw error;
+        }
+      }
+
+      // Otherwise just validate
+      return {
+        status: 'valid',
+        workspaceId: workspace.id,
+        workspaceName: inviteData.wn,
+        inviterName: inviteData.in,
+        inviterEmail: inviteData.ie,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return {
+          status: 'invalid',
+          message: 'Workspace not found or has been deleted',
+        };
+      }
+
+      // For any other unexpected error, return generic invalid status
+      return {
+        status: 'invalid',
+        message: 'An error occurred while processing the invite',
+      };
+    }
   }
 }

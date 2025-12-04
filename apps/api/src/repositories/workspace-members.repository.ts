@@ -3,9 +3,9 @@
  * Handles all database operations for workspace member entities
  */
 
-import { eq, and } from '@workspace/db';
-import type { DbClient } from '@workspace/db';
-import { workspaceMembers } from '@workspace/db';
+import { eq, and, count } from '@workspace/db';
+import type { DbClient, WorkspaceRole } from '@workspace/db';
+import { workspaceMembers, user } from '@workspace/db';
 import type { Transaction, CreateWorkspaceMemberInput } from '@/api/types';
 
 export class WorkspaceMemberRepository {
@@ -51,13 +51,24 @@ export class WorkspaceMemberRepository {
   }
 
   /**
+   * Find member by user ID and workspace ID, including soft-deleted ones
+   */
+  async findByUserAndWorkspaceIncludingDeleted(userId: string, workspaceId: string) {
+    const [member] = await this.db
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(eq(workspaceMembers.userId, userId), eq(workspaceMembers.workspaceId, workspaceId))
+      )
+      .limit(1);
+
+    return member || null;
+  }
+
+  /**
    * Update member role
    */
-  async updateRole(
-    memberId: string,
-    newRole: 'owner' | 'admin' | 'member',
-    options?: { tx?: Transaction }
-  ) {
+  async updateRole(memberId: string, newRole: WorkspaceRole, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [updated] = await dbClient
@@ -67,5 +78,127 @@ export class WorkspaceMemberRepository {
       .returning();
 
     return updated;
+  }
+
+  /**
+   * Find all members of a workspace with their user details (paginated)
+   */
+  async findByWorkspaceWithUsers(
+    workspaceId: string,
+    options?: { limit?: number; offset?: number }
+  ) {
+    let query = this.db
+      .select({
+        id: workspaceMembers.id,
+        role: workspaceMembers.workspaceRole,
+        userName: user.name,
+        userEmail: user.email,
+      })
+      .from(workspaceMembers)
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .where(
+        and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.isDeleted, false))
+      );
+
+    if (options?.limit !== undefined) {
+      query = query.limit(options.limit) as any;
+    }
+
+    if (options?.offset !== undefined) {
+      query = query.offset(options.offset) as any;
+    }
+
+    const members = await query;
+    return members;
+  }
+
+  /**
+   * Count total members in a workspace
+   */
+  async countByWorkspace(workspaceId: string) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(workspaceMembers)
+      .where(
+        and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.isDeleted, false))
+      );
+
+    return Number(result?.count || 0);
+  }
+
+  /**
+   * Find member by ID
+   */
+  async findById(memberId: string) {
+    const [member] = await this.db
+      .select()
+      .from(workspaceMembers)
+      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, false)))
+      .limit(1);
+
+    return member || null;
+  }
+
+  /**
+   * Soft delete a workspace member
+   */
+  async softDelete(memberId: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [deleted] = await dbClient
+      .update(workspaceMembers)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+      })
+      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, false)))
+      .returning();
+
+    return deleted || null;
+  }
+
+  /**
+   * Restore a soft-deleted workspace member
+   * Resets isDeleted to false and clears deletedAt
+   */
+  async restore(memberId: string, newRole: WorkspaceRole, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [restored] = await dbClient
+      .update(workspaceMembers)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+        workspaceRole: newRole,
+      })
+      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, true)))
+      .returning();
+
+    return restored || null;
+  }
+
+  /**
+   * Update notification preferences for a workspace member
+   */
+  async updateNotificationPreferences(
+    memberId: string,
+    preferences: Partial<{
+      notifyOnLinkUsage: boolean;
+      notifyOnQuotaReset: boolean;
+      notifyOnQuotaLimit: boolean;
+      notifyOnInviteAccepted: boolean;
+      notifyOnMemberJoin: boolean;
+    }>,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(workspaceMembers)
+      .set(preferences)
+      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, false)))
+      .returning();
+
+    return updated || null;
   }
 }

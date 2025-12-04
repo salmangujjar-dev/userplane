@@ -9,13 +9,40 @@
 export interface CreateProjectParams {
   workspaceId: string;
   projectTitle: string | null;
+  isDefault?: boolean;
 }
 
 /**
- * Parameters for creating a managed project
+ * Project item details
  */
-export interface CreateManagedProjectParams {
+export interface ProjectItem {
+  id: string;
+  projectTitle: string | null;
+  projectPath: string;
+  isDefault: boolean;
+  createdAt: Date;
+}
+
+/**
+ * Result containing workspace projects
+ */
+export interface GetProjectsResult {
   workspaceId: string;
-  projectTitle: string;
-  isDefault?: boolean;
+  projects: ProjectItem[];
+}
+
+/**
+ * Request body for creating a project
+ */
+export interface CreateProjectRequest {
+  projectTitle?: string | null;
+}
+
+/**
+ * Result after creating a project
+ */
+export interface CreateProjectResult {
+  workspaceId: string;
+  project: ProjectItem;
+  message: string;
 }

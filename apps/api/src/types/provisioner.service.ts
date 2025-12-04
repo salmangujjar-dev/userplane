@@ -9,15 +9,12 @@
 export interface ProvisionWorkspaceParams {
   url: string;
   userId: string;
+  userName?: string;
 }
 
 /**
  * Result of workspace provisioning
  */
 export interface ProvisionWorkspaceResult {
-  workspace: {
-    recordingSlug: string;
-    workspaceName: string;
-    workspaceInviteToken: string;
-  };
+  workspaceId: string;
 }

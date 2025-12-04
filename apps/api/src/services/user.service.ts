@@ -1,10 +1,10 @@
 /**
  * UserService - Domain service for user operations
- * Contains business logic for user management
+ * Contains business logic for user account management
  */
 
 import { UserRepository } from '@/api/repositories/users.repository';
-import { NotFoundError } from '@/api/lib/errors';
+import { ValidationError, NotFoundError } from '@/api/lib/errors';
 
 export interface UserServiceDeps {
   userRepo: UserRepository;
@@ -16,8 +16,8 @@ export class UserService {
   /**
    * Get user by ID
    */
-  async getById(id: string) {
-    const user = await this.deps.userRepo.findById(id);
+  async getById(userId: string) {
+    const user = await this.deps.userRepo.findById(userId);
     if (!user) {
       throw new NotFoundError('User not found');
     }
@@ -25,9 +25,18 @@ export class UserService {
   }
 
   /**
-   * Get user by email
+   * Update user name
    */
-  async getByEmail(email: string) {
-    return this.deps.userRepo.findByEmail(email);
+  async updateName(userId: string, name: string) {
+    if (!name || name.trim().length === 0) {
+      throw new ValidationError('Name cannot be empty');
+    }
+
+    const user = await this.deps.userRepo.updateName(userId, name.trim());
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    return user;
   }
 }
