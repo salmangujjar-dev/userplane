@@ -1,0 +1,1 @@
+ALTER TABLE "workspaces" ALTER COLUMN "workspace_plan" SET DEFAULT 'early_bird_monthly';

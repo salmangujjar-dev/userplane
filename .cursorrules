@@ -10,3 +10,4 @@
 - High level documentations should be terse and to the point. Use file and line references to tie it together with the codebase.
 - Use bounded, specific searches and queries to avoid resource exhaustion.
 - Do not have emojis in code, commits, scripts or documentation
+- We use bun as the package manager for the project

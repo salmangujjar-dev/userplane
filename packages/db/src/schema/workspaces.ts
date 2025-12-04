@@ -31,7 +31,7 @@ export const workspaces = pgTable(
     workspaceName: text('workspace_name').notNull(),
 
     // Subscription and plan
-    workspacePlan: workspacePlanEnum('workspace_plan').notNull().default('starter_monthly'),
+    workspacePlan: workspacePlanEnum('workspace_plan').notNull().default('early_bird_monthly'),
 
     // Settings and configuration
     // UUID token used for invite verification, must always be set

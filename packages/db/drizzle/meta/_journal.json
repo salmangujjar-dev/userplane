@@ -15,6 +15,20 @@
       "when": 1764794377152,
       "tag": "0001_fearless_starbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764872168768,
+      "tag": "0002_fat_jack_flag",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764878817974,
+      "tag": "0003_awesome_justice",
+      "breakpoints": true
     }
   ]
 }
