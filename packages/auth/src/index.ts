@@ -8,6 +8,7 @@ export interface AuthConfig {
   secret: string;
   baseURL: string;
   trustedOrigins: string[];
+  cookiePrefix?: string;
   google: {
     clientId: string;
     clientSecret: string;
@@ -42,11 +43,14 @@ export function createAuth(config: AuthConfig) {
       },
     },
     advanced: {
-      // For development with different ports (localhost:3000 and localhost:3001)
-      // we need to set sameSite to "none" but secure must be false for localhost HTTP
+      // Cookie prefix for all cookies
+      cookiePrefix: config.cookiePrefix || 'userplane',
+      // Cookie attributes based on environment
+      // Development: use lax for localhost with different ports
+      // Production: use lax with secure flag
       defaultCookieAttributes: isDevelopment
         ? {
-            sameSite: 'lax', // Use lax for localhost same-domain different ports
+            sameSite: 'lax',
             secure: false,
           }
         : {

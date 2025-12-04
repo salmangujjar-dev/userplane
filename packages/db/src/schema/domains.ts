@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, index, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, index, pgEnum, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { workspaces } from './workspaces';
 import { recordingLinks } from './recording-links';
@@ -32,6 +32,7 @@ export const domains = pgTable(
   (table) => [
     index('domains_workspace_status_idx').on(table.workspaceId, table.domainStatus),
     index('domains_domain_url_idx').on(table.domainUrl),
+    unique('domains_workspace_url_unique').on(table.workspaceId, table.domainUrl, table.isDeleted),
   ]
 );
 
