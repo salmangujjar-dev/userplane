@@ -4,10 +4,9 @@
  */
 
 import { nanoid } from 'nanoid';
-import { v4 as uuidv4 } from 'uuid';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { ValidationError, NotFoundError } from '@/api/lib/errors';
-import type { Transaction, CreateProjectParams, CreateManagedProjectParams } from '@/api/types';
+import type { Transaction, CreateProjectParams } from '@/api/types';
 
 export interface ProjectServiceDeps {
   projectRepo: ProjectRepository;
@@ -17,55 +16,44 @@ export class ProjectService {
   constructor(private deps: ProjectServiceDeps) {}
 
   /**
-   * Create project (auto-determines if default)
-   * If first project in workspace → isDefault = true
-   * Otherwise → isDefault = false
+   * Create project
+   * If isDefault not specified, auto-determines based on whether workspace has existing projects
+   * If isDefault is true, unsets any current default project
    */
   async createProject(params: CreateProjectParams, options?: { tx?: Transaction }) {
     if (!params.workspaceId) {
       throw new ValidationError('Workspace ID is required');
     }
 
-    const existingDefault = await this.deps.projectRepo.findDefaultByWorkspace(params.workspaceId);
+    let isDefault: boolean;
 
-    const isDefault = !existingDefault;
+    if (params.isDefault !== undefined) {
+      isDefault = params.isDefault;
 
-    return this.deps.projectRepo.create(
-      {
-        id: nanoid(),
-        workspaceId: params.workspaceId,
-        projectTitle: params.projectTitle,
-        projectPath: uuidv4(),
-        isDefault,
-      },
-      options
-    );
-  }
-
-  /**
-   * Create managed project
-   * Allows user to create additional projects in a workspace
-   */
-  async createManagedProject(params: CreateManagedProjectParams, options?: { tx?: Transaction }) {
-    if (!params.workspaceId) {
-      throw new ValidationError('Workspace ID is required');
-    }
-
-    if (params.isDefault) {
-      const currentDefault = await this.deps.projectRepo.findDefaultByWorkspace(params.workspaceId);
-
-      if (currentDefault) {
-        await this.deps.projectRepo.update(currentDefault.id, { isDefault: false }, options);
+      // If setting as default, unset current default
+      if (isDefault) {
+        const currentDefault = await this.deps.projectRepo.findDefaultByWorkspace(
+          params.workspaceId
+        );
+        if (currentDefault) {
+          await this.deps.projectRepo.update(currentDefault.id, { isDefault: false }, options);
+        }
       }
+    } else {
+      // Auto-determine: first project becomes default
+      const existingDefault = await this.deps.projectRepo.findDefaultByWorkspace(
+        params.workspaceId
+      );
+      isDefault = !existingDefault;
     }
 
     return this.deps.projectRepo.create(
       {
-        id: nanoid(),
+        id: `proj_${nanoid(16)}`,
         workspaceId: params.workspaceId,
         projectTitle: params.projectTitle,
-        projectPath: uuidv4(),
-        isDefault: params.isDefault ?? false,
+        projectPath: `path_${nanoid(16)}`,
+        isDefault,
       },
       options
     );
@@ -116,5 +104,18 @@ export class ProjectService {
 
     // Set new default
     await this.deps.projectRepo.update(projectId, { isDefault: true }, options);
+  }
+
+  /**
+   * Update project fields
+   * Updates project title or other attributes
+   */
+  async updateProject(
+    projectId: string,
+    updates: Partial<Pick<CreateProjectParams, 'projectTitle'>>,
+    options?: { tx?: Transaction }
+  ) {
+    const project = await this.getById(projectId);
+    return this.deps.projectRepo.update(projectId, updates, options);
   }
 }

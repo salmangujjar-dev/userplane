@@ -7,6 +7,7 @@ export const auth = createAuth({
   secret: env.auth.secret,
   baseURL: env.auth.url,
   trustedOrigins: env.cors.origins,
+  cookiePrefix: env.auth.cookiePrefix,
   google: {
     clientId: env.google.clientId,
     clientSecret: env.google.clientSecret,

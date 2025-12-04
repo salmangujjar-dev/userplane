@@ -34,10 +34,17 @@ export class WorkspaceRepository {
 
   /**
    * Find workspace by ID
+   * Returns only basic workspace info
    */
   async findById(id: string) {
     const [workspace] = await this.db
-      .select()
+      .select({
+        id: workspaces.id,
+        workspaceName: workspaces.workspaceName,
+        workspacePlan: workspaces.workspacePlan,
+        createdAt: workspaces.createdAt,
+        updatedAt: workspaces.updatedAt,
+      })
       .from(workspaces)
       .where(and(eq(workspaces.id, id), eq(workspaces.isDeleted, false)))
       .limit(1);
@@ -46,7 +53,35 @@ export class WorkspaceRepository {
   }
 
   /**
-   * Find workspace by slug
+   * Find workspace preferences by ID
+   * Returns recording-related settings
+   */
+  async findPreferencesById(id: string) {
+    const [preferences] = await this.db
+      .select({
+        recordingSlug: workspaces.recordingSlug,
+        recordingCustomizeLink: workspaces.recordingCustomizeLink,
+        recordingHideSensitive: workspaces.recordingHideSensitive,
+        recordingCaptureClientLog: workspaces.recordingCaptureClientLog,
+        recordingCaptureServerLog: workspaces.recordingCaptureServerLog,
+        recordingCompanyName: workspaces.recordingCompanyName,
+        recordingCompanyLogoPath: workspaces.recordingCompanyLogoPath,
+        recordingHeader: workspaces.recordingHeader,
+        recordingFootnote: workspaces.recordingFootnote,
+        recordingPrimaryColor: workspaces.recordingPrimaryColor,
+        recordingMaxDuration: workspaces.recordingMaxDuration,
+      })
+      .from(workspaces)
+      .where(and(eq(workspaces.id, id), eq(workspaces.isDeleted, false)))
+      .limit(1);
+
+    return preferences || null;
+  }
+
+  /**
+   * Find workspace by recording slug
+   * Note: API endpoints should use workspace ID instead
+   * This method is kept for recorder/share apps that resolve by slug
    */
   async findBySlug(slug: string) {
     const [workspace] = await this.db
@@ -72,6 +107,21 @@ export class WorkspaceRepository {
   }
 
   /**
+   * Get workspace invite token by ID
+   */
+  async findInviteTokenById(id: string) {
+    const [workspace] = await this.db
+      .select({
+        workspaceInviteToken: workspaces.workspaceInviteToken,
+      })
+      .from(workspaces)
+      .where(and(eq(workspaces.id, id), eq(workspaces.isDeleted, false)))
+      .limit(1);
+
+    return workspace || null;
+  }
+
+  /**
    * Update workspace invite token
    */
   async updateInviteToken(workspaceId: string, newToken: string, options?: { tx?: Transaction }) {
@@ -84,5 +134,93 @@ export class WorkspaceRepository {
       .returning();
 
     return workspace || null;
+  }
+
+  /**
+   * Find all workspaces for a user (via workspace membership)
+   * Returns only essential fields for listing
+   */
+  async findByUserId(userId: string, includeNotificationPreferences: boolean = false) {
+    const { workspaceMembers } = await import('@workspace/db');
+
+    if (includeNotificationPreferences) {
+      const result = await this.db
+        .select({
+          id: workspaces.id,
+          workspaceName: workspaces.workspaceName,
+          workspacePlan: workspaces.workspacePlan,
+          createdAt: workspaces.createdAt,
+          updatedAt: workspaces.updatedAt,
+          notificationPreferences: {
+            notifyOnLinkUsage: workspaceMembers.notifyOnLinkUsage,
+            notifyOnQuotaReset: workspaceMembers.notifyOnQuotaReset,
+            notifyOnQuotaLimit: workspaceMembers.notifyOnQuotaLimit,
+            notifyOnInviteAccepted: workspaceMembers.notifyOnInviteAccepted,
+            notifyOnMemberJoin: workspaceMembers.notifyOnMemberJoin,
+          },
+        })
+        .from(workspaces)
+        .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+        .where(
+          and(
+            eq(workspaceMembers.userId, userId),
+            eq(workspaces.isDeleted, false),
+            eq(workspaceMembers.isDeleted, false)
+          )
+        );
+
+      return result;
+    }
+
+    const result = await this.db
+      .select({
+        id: workspaces.id,
+        workspaceName: workspaces.workspaceName,
+        workspacePlan: workspaces.workspacePlan,
+        createdAt: workspaces.createdAt,
+        updatedAt: workspaces.updatedAt,
+      })
+      .from(workspaces)
+      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaces.isDeleted, false),
+          eq(workspaceMembers.isDeleted, false)
+        )
+      );
+
+    return result;
+  }
+
+  /**
+   * Update workspace preferences
+   * Updates recording-related settings
+   */
+  async updatePreferences(
+    workspaceId: string,
+    data: Partial<{
+      recordingCustomizeLink: boolean;
+      recordingHideSensitive: boolean;
+      recordingCaptureClientLog: boolean;
+      recordingCaptureServerLog: boolean;
+      recordingCompanyName: string | null;
+      recordingCompanyLogoPath: string | null;
+      recordingHeader: string | null;
+      recordingFootnote: string | null;
+      recordingPrimaryColor: string | null;
+      recordingMaxDuration: number | null;
+    }>,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(workspaces)
+      .set(data)
+      .where(and(eq(workspaces.id, workspaceId), eq(workspaces.isDeleted, false)))
+      .returning();
+
+    return updated || null;
   }
 }

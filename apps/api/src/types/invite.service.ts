@@ -33,8 +33,20 @@ export interface AcceptInviteParams {
  */
 export interface AcceptInviteResult {
   workspace: {
-    recordingSlug: string;
     workspaceName: string;
-    workspaceInviteToken: string;
+    workspaceId: string;
   };
+}
+
+/**
+ * Result of validating or accepting an invite
+ * Used for unified invite action endpoint
+ */
+export interface InviteActionResult {
+  status: 'valid' | 'accepted' | 'invalid' | 'expired' | 'already_member';
+  workspaceId?: string;
+  workspaceName?: string;
+  inviterName?: string;
+  inviterEmail?: string;
+  message?: string;
 }

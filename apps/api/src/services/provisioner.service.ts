@@ -8,7 +8,7 @@ import { WorkspaceService } from '@/api/services/workspace.service';
 import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { DomainService } from '@/api/services/domain.service';
-import { extractHostname, deriveWorkspaceName } from '@/api/lib/utils';
+import { deriveWorkspaceNameFromUser } from '@/api/lib/utils';
 import type { ProvisionWorkspaceParams, ProvisionWorkspaceResult } from '@/api/types';
 
 export interface ProvisionerServiceDeps {
@@ -28,21 +28,17 @@ export class ProvisionerService {
    * Accepts any valid URL format
    */
   async createWorkspace(params: ProvisionWorkspaceParams): Promise<ProvisionWorkspaceResult> {
-    const { url, userId } = params;
+    const { url, userId, userName } = params;
 
-    // Extract hostname for workspace naming
-    const hostname = extractHostname(url);
-    const workspaceName = deriveWorkspaceName(hostname);
-
-    // Generate unique slug with UUID suffix
-    const recordingSlug = this.deps.workspaceService.generateUniqueSlug(workspaceName);
+    // Derive workspace name from user's name
+    const workspaceName = deriveWorkspaceNameFromUser(userName);
 
     const workspace = await this.deps.db.transaction(async (tx) => {
+      // Create workspace - recording slug is generated internally
       const createdWorkspace = await this.deps.workspaceService.create(
         {
           workspaceName,
-          recordingSlug,
-          workspacePlan: 'starter_monthly',
+          workspacePlan: 'early_bird_monthly',
           userId,
         },
         { tx }
@@ -86,11 +82,7 @@ export class ProvisionerService {
     }
 
     return {
-      workspace: {
-        recordingSlug: workspace.recordingSlug,
-        workspaceName: workspace.workspaceName,
-        workspaceInviteToken: workspace.workspaceInviteToken,
-      },
+      workspaceId: workspace.id,
     };
   }
 }

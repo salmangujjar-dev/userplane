@@ -16,6 +16,7 @@ interface EnvConfig {
   auth: {
     secret: string;
     url: string;
+    cookiePrefix: string;
   };
   google: {
     clientId: string;
@@ -93,6 +94,7 @@ export function loadEnvConfig(): EnvConfig {
     auth: {
       secret: process.env.BETTER_AUTH_SECRET || 'dev-auth-secret-change-in-production',
       url: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
+      cookiePrefix: process.env.BETTER_AUTH_COOKIE_PREFIX || 'userplane',
     },
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -173,6 +175,7 @@ export function logConfig(): void {
       corsOrigins: env.cors.origins,
       corsCredentials: env.cors.credentials,
       authUrl: env.auth.url,
+      authCookiePrefix: env.auth.cookiePrefix,
       database: env.database.url ? 'Connected' : 'Not configured',
       googleOAuth: env.google.clientId ? 'Configured' : 'Not configured',
       emailProvider: env.email.provider,

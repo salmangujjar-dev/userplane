@@ -27,4 +27,17 @@ export class UserRepository {
 
     return foundUser || null;
   }
+
+  /**
+   * Update user name
+   */
+  async updateName(userId: string, name: string) {
+    const [updated] = await this.db
+      .update(user)
+      .set({ name })
+      .where(eq(user.id, userId))
+      .returning();
+
+    return updated || null;
+  }
 }

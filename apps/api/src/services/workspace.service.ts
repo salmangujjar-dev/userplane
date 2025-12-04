@@ -4,8 +4,6 @@
  */
 
 import { nanoid } from 'nanoid';
-import { v4 as uuidv4 } from 'uuid';
-import slugify from 'slugify';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { TokenService } from '@/api/services/token.service';
 import { ValidationError, NotFoundError } from '@/api/lib/errors';
@@ -21,24 +19,24 @@ export class WorkspaceService {
 
   /**
    * Create a new workspace
+   * Generates unique recording slug internally if not provided
    */
   async create(params: CreateWorkspaceParams, options?: { tx?: Transaction }) {
     if (!params.workspaceName) {
       throw new ValidationError('Workspace name is required');
     }
-    if (!params.recordingSlug) {
-      throw new ValidationError('Recording slug is required');
-    }
 
-    // Generate a simple UUID for the workspace invite token
-    // This UUID will be included in JWT tokens for invite links
-    const inviteToken = nanoid();
+    // Generate unique recording slug if not provided
+    const recordingSlug = params.recordingSlug || `rec_${nanoid(16)}`;
+
+    // Generate workspace invite token with prefix
+    const inviteToken = `inv_${nanoid(16)}`;
 
     return this.deps.workspaceRepo.create(
       {
-        id: nanoid(),
+        id: `ws_${nanoid(16)}`,
         workspaceName: params.workspaceName,
-        recordingSlug: params.recordingSlug,
+        recordingSlug,
         workspacePlan: params.workspacePlan,
         workspaceInviteToken: inviteToken,
       },
@@ -47,24 +45,16 @@ export class WorkspaceService {
   }
 
   /**
-   * Generate unique slug for workspace
-   * Uses slugify package and suffixes with UUID for guaranteed uniqueness
+   * Generate unique slug for workspace recording
+   * Uses nanoid with rec_ prefix for consistency
    */
   generateUniqueSlug(baseName: string): string {
-    const baseSlug = slugify(baseName, {
-      lower: true,
-      strict: true,
-      trim: true,
-    });
-
-    // Generate short UUID suffix (first 8 characters)
-    const uuidSuffix = uuidv4().split('-')[0];
-
-    return `${baseSlug}-${uuidSuffix}`;
+    return `rec_${nanoid(16)}`;
   }
 
   /**
    * Get workspace by ID
+   * Returns only basic workspace info
    */
   async getById(id: string) {
     const workspace = await this.deps.workspaceRepo.findById(id);
@@ -75,7 +65,21 @@ export class WorkspaceService {
   }
 
   /**
-   * Get workspace by slug
+   * Get workspace preferences by ID
+   * Returns recording-related settings
+   */
+  async getPreferencesById(id: string) {
+    const preferences = await this.deps.workspaceRepo.findPreferencesById(id);
+    if (!preferences) {
+      throw new NotFoundError('Workspace not found');
+    }
+    return preferences;
+  }
+
+  /**
+   * Get workspace by recording slug
+   * Note: API endpoints should use workspace ID instead
+   * This method is kept for recorder/share apps that resolve by slug
    */
   async getBySlug(slug: string) {
     return this.deps.workspaceRepo.findBySlug(slug);
@@ -90,14 +94,14 @@ export class WorkspaceService {
 
   /**
    * Rotate workspace invite URL
-   * Generates new UUID and updates workspace
+   * Generates new invite token and updates workspace
    * This invalidates all existing invite links
    */
   async rotateInviteUrl(workspaceId: string, options?: { tx?: Transaction }) {
     const workspace = await this.getById(workspaceId);
 
-    // Generate new invite token (internal UUID)
-    const newToken = nanoid();
+    // Generate new invite token with prefix
+    const newToken = `inv_${nanoid(16)}`;
 
     // Update workspace with new token
     const updatedWorkspace = await this.deps.workspaceRepo.updateInviteToken(
@@ -111,5 +115,61 @@ export class WorkspaceService {
     }
 
     return updatedWorkspace;
+  }
+
+  /**
+   * Get all workspaces for a user
+   * Returns workspaces where the user is a member
+   * Optionally includes notification preferences
+   */
+  async getByUserId(userId: string, includeNotificationPreferences: boolean = false) {
+    if (!userId) {
+      throw new ValidationError('User ID is required');
+    }
+    return this.deps.workspaceRepo.findByUserId(userId, includeNotificationPreferences);
+  }
+
+  /**
+   * Get workspace invite token by ID
+   */
+  async getInviteToken(id: string) {
+    const result = await this.deps.workspaceRepo.findInviteTokenById(id);
+    if (!result) {
+      throw new NotFoundError('Workspace not found');
+    }
+    return result.workspaceInviteToken;
+  }
+
+  /**
+   * Update workspace preferences
+   * Updates recording-related settings
+   */
+  async updatePreferences(
+    workspaceId: string,
+    updates: Partial<{
+      recordingCustomizeLink: boolean;
+      recordingHideSensitive: boolean;
+      recordingCaptureClientLog: boolean;
+      recordingCaptureServerLog: boolean;
+      recordingCompanyName: string | null;
+      recordingCompanyLogoPath: string | null;
+      recordingHeader: string | null;
+      recordingFootnote: string | null;
+      recordingPrimaryColor: string | null;
+      recordingMaxDuration: number | null;
+    }>,
+    options?: { tx?: Transaction }
+  ) {
+    const workspace = await this.getById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundError('Workspace not found');
+    }
+
+    const updated = await this.deps.workspaceRepo.updatePreferences(workspaceId, updates, options);
+    if (!updated) {
+      throw new NotFoundError('Failed to update workspace preferences');
+    }
+
+    return updated;
   }
 }
