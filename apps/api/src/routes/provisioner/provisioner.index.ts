@@ -1,5 +1,6 @@
 /**
- * Provisioner route initialization and dependency injection
+ * Workspace creation route initialization and dependency injection
+ * Uses ProvisionerService internally for workspace provisioning logic
  */
 
 import { Hono } from 'hono';
@@ -63,6 +64,6 @@ export const provisionerService = new ProvisionerService({
 const provisionerRoutes = createProvisionerRoutes(provisionerService);
 
 const app = new Hono<AppEnv>();
-app.route('/provisioner', provisionerRoutes);
+app.route('/', provisionerRoutes);
 
 export default app;

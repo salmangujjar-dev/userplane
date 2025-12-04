@@ -7,12 +7,13 @@ import { requireAuth } from '@/api/middleware/auth';
 import status from './status/status.index';
 
 // Protected routes (auth required)
-import users from './users/users.index';
+import user from './user/user.index';
+import account from './account/account.index';
 
-// Workspace provisioning routes
-import provisioner from './provisioner/provisioner.index';
-import invites from './invites/invites.index';
-import workspaces from './workspaces/workspaces.index';
+// Workspace routes
+import workspaceCreation from './provisioner/provisioner.index';
+import invite from './invite/invite.index';
+import workspace from './workspace/workspace.index';
 
 export function registerRoutes(app: AppOpenAPI) {
   return (
@@ -20,12 +21,13 @@ export function registerRoutes(app: AppOpenAPI) {
       // Public routes
       .route('/', status)
       // Protected routes - apply auth middleware
-      .use('/users/*', requireAuth)
-      .route('/', users)
+      .use('/user/*', requireAuth)
+      .route('/', user)
+      .route('/account', account)
       // Workspace routes
-      .route('/', provisioner)
-      .route('/', invites)
-      .route('/', workspaces)
+      .route('/', workspaceCreation)
+      .route('/', invite)
+      .route('/', workspace)
   );
 }
 

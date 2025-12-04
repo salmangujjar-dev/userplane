@@ -1,6 +1,6 @@
 import type { AppRouteHandler } from '@/api/lib/types';
 import { userService } from '@/api/services/users.service';
-import type * as routes from '@/api/routes/users/users.routes';
+import type * as routes from '@/api/routes/user/user.routes';
 
 /**
  * Handler layer for users

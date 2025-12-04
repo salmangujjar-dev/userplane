@@ -1,5 +1,6 @@
 /**
- * Provisioner routes - HTTP routes for workspace provisioning
+ * Workspace creation routes - HTTP routes for workspace provisioning
+ * Uses ProvisionerService as an internal implementation detail
  */
 
 import { Hono } from 'hono';
