@@ -1,55 +1,58 @@
 {
   "info": {
     "name": "Userplane API",
-    "description": "API collection for Userplane workspace and recording management platform",
+    "description": "API collection for Userplane workspace and recording management platform. Uses cookie-based authentication via Better Auth.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "1.0.0"
-  },
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{authToken}}",
-        "type": "string"
-      }
-    ]
+    "version": "1.2.0"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:3001",
-      "type": "string"
+      "type": "string",
+      "description": "Base URL for the API server"
     },
     {
       "key": "apiVersion",
       "value": "v1",
-      "type": "string"
+      "type": "string",
+      "description": "API version prefix"
     },
     {
-      "key": "authToken",
+      "key": "sessionToken",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Session token from Better Auth cookie (userplane.session_token)"
     },
     {
-      "key": "workspaceSlug",
+      "key": "workspaceId",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Current workspace ID"
     },
     {
       "key": "projectId",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Current project ID"
     },
     {
       "key": "inviteToken",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "JWT invite token from invite URL"
+    },
+    {
+      "key": "workspaceMemberId",
+      "value": "",
+      "type": "string",
+      "description": "Workspace member ID for team management"
     }
   ],
   "item": [
     {
       "name": "Status",
+      "description": "Public status and health check endpoints (no authentication required)",
       "item": [
         {
           "name": "Get API Index",
@@ -61,7 +64,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", ""]
             },
-            "description": "Get API index information including version, name, and available endpoints"
+            "description": "Get API index information including version, name, and available endpoints."
           },
           "response": []
         },
@@ -75,15 +78,15 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "health"]
             },
-            "description": "Check API health status with timestamp and version"
+            "description": "Check API health status with timestamp and version."
           },
           "response": []
         }
-      ],
-      "description": "Public status and health check endpoints"
+      ]
     },
     {
       "name": "Authentication",
+      "description": "Authentication endpoints managed by Better Auth. Uses cookie-based sessions with userplane.session_token cookie.",
       "item": [
         {
           "name": "Google OAuth",
@@ -95,7 +98,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "auth", "google"]
             },
-            "description": "Initiate Google OAuth authentication flow"
+            "description": "Initiate Google OAuth authentication flow. On success, sets userplane.session_token cookie."
           },
           "response": []
         },
@@ -109,7 +112,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "auth", "callback", "google"]
             },
-            "description": "Google OAuth callback endpoint"
+            "description": "Google OAuth callback endpoint. Handles OAuth response and sets userplane.session_token cookie."
           },
           "response": []
         },
@@ -117,13 +120,19 @@
           "name": "Get Session",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/session",
               "host": ["{{baseUrl}}"],
               "path": ["api", "auth", "session"]
             },
-            "description": "Get current user session"
+            "description": "Get current user session. Requires userplane.session_token cookie."
           },
           "response": []
         },
@@ -131,202 +140,159 @@
           "name": "Sign Out",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/signout",
               "host": ["{{baseUrl}}"],
               "path": ["api", "auth", "signout"]
             },
-            "description": "Sign out current user"
+            "description": "Sign out current user. Clears userplane.session_token cookie."
           },
           "response": []
         }
-      ],
-      "description": "Authentication endpoints managed by Better Auth"
+      ]
     },
     {
-      "name": "Users",
+      "name": "Account",
+      "description": "User account management endpoints for the authenticated user.",
       "item": [
         {
-          "name": "List Users",
+          "name": "Get Account",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/users",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/account",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "users"]
+              "path": ["api", "{{apiVersion}}", "account"]
             },
-            "description": "Get list of all users. Requires authentication."
+            "description": "Get authenticated user's account information (name, email)."
           },
           "response": []
         },
         {
-          "name": "Create User",
+          "name": "Update Account",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
+            "method": "PATCH",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"role\": \"user\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "users"]
-            },
-            "description": "Create a new user. Requires authentication."
-          },
-          "response": []
-        },
-        {
-          "name": "Get User by ID",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "users", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": ""
-                }
-              ]
-            },
-            "description": "Get a specific user by ID. Requires authentication."
-          },
-          "response": []
-        },
-        {
-          "name": "Update User",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [
+              },
               {
-                "key": "Content-Type",
-                "value": "application/json"
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"email\": \"john.updated@example.com\"\n}"
+              "raw": "{\n  \"name\": \"John Doe\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:id",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/account",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "users", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": ""
-                }
-              ]
+              "path": ["api", "{{apiVersion}}", "account"]
             },
-            "description": "Update a user. Requires authentication."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete User",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "users", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": ""
-                }
-              ]
-            },
-            "description": "Delete a user. Requires authentication."
+            "description": "Update authenticated user's account name."
           },
           "response": []
         }
-      ],
-      "description": "User management endpoints (protected)"
+      ]
     },
     {
-      "name": "Workspaces",
+      "name": "Invite",
+      "description": "Workspace invitation endpoints for validating and accepting invites.",
+      "item": [
+        {
+          "name": "Validate Invite",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/invite?token={{inviteToken}}&action=validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "invite"],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "{{inviteToken}}",
+                  "description": "JWT invite token from the invite URL"
+                },
+                {
+                  "key": "action",
+                  "value": "validate",
+                  "description": "Action: 'validate' (default) or 'accept'"
+                }
+              ]
+            },
+            "description": "Validate an invite token without accepting it. No authentication required. Returns workspace info if token is valid."
+          },
+          "response": []
+        },
+        {
+          "name": "Accept Invite",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/invite?token={{inviteToken}}&action=accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "invite"],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "{{inviteToken}}",
+                  "description": "JWT invite token from the invite URL"
+                },
+                {
+                  "key": "action",
+                  "value": "accept",
+                  "description": "Action: 'validate' (default) or 'accept'"
+                }
+              ]
+            },
+            "description": "Accept a workspace invitation using a JWT invite token. Requires authentication. Adds the user as a member of the workspace."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Workspace",
+      "description": "Workspace management endpoints.",
       "item": [
         {
           "name": "Create Workspace",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
               }
             ],
             "body": {
@@ -338,88 +304,321 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace"]
             },
-            "description": "Create a new workspace with initial project, domain, and owner membership. Requires authentication.\n\nThe URL is used to derive the workspace name and create the first domain."
+            "description": "Create a new workspace with initial project, domain, and owner membership. The URL derives the workspace name and creates the first domain."
           },
           "response": []
         },
         {
+          "name": "List Workspaces",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace?include_notification_preference=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace"],
+              "query": [
+                {
+                  "key": "include_notification_preference",
+                  "value": "false",
+                  "description": "Set to 'true' to include notification preferences for each workspace"
+                }
+              ]
+            },
+            "description": "Get all workspaces where the authenticated user is a member. Optionally include notification preferences."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Workspace by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}"]
+            },
+            "description": "Get a specific workspace by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Workspace Preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "preferences"]
+            },
+            "description": "Get workspace recording preferences including branding and capture settings."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Workspace Preferences",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recordingCustomizeLink\": true,\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true,\n  \"recordingCompanyName\": \"My Company\",\n  \"recordingCompanyLogoPath\": null,\n  \"recordingHeader\": \"Welcome to our recording\",\n  \"recordingFootnote\": null,\n  \"recordingPrimaryColor\": \"#0066CC\",\n  \"recordingMaxDuration\": 3600\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "preferences"]
+            },
+            "description": "Update workspace recording preferences. All fields are optional. Requires workspace membership."
+          },
+          "response": []
+        },
+        {
+          "name": "Leave Workspace",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/leave",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "leave"]
+            },
+            "description": "Leave a workspace (self-removal). Cannot leave if you are the last owner."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Notification Preferences",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notifyOnLinkUsage\": true,\n  \"notifyOnQuotaReset\": false,\n  \"notifyOnQuotaLimit\": true,\n  \"notifyOnInviteAccepted\": true,\n  \"notifyOnMemberJoin\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "notifications"]
+            },
+            "description": "Update notification preferences for the authenticated user in the workspace. All fields are optional booleans."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Workspace Team",
+      "description": "Team management endpoints within a workspace.",
+      "item": [
+        {
+          "name": "Get Team Members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/team?page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "team"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination (default: 1)"
+                }
+              ]
+            },
+            "description": "Get workspace team members with pagination. Returns members sorted by role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Team Member Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/team/{{workspaceMemberId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "team",
+                "{{workspaceMemberId}}"
+              ]
+            },
+            "description": "Update a team member's role. Valid roles: 'owner', 'admin', 'member'. Requires admin or owner role."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Team Member",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/team/{{workspaceMemberId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "team",
+                "{{workspaceMemberId}}"
+              ]
+            },
+            "description": "Remove a team member from the workspace (soft delete). Cannot remove the last owner. Requires admin or owner role."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Workspace Invite",
+      "description": "Workspace invitation management endpoints.",
+      "item": [
+        {
           "name": "Get Invite URL",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/invite-url",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/invite?action=get",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "invite-url"],
-              "variable": [
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "invite"],
+              "query": [
                 {
-                  "key": "workspaceSlug",
-                  "value": "{{workspaceSlug}}"
+                  "key": "action",
+                  "value": "get",
+                  "description": "Action: 'get' (default) or 'rotate'"
                 }
               ]
             },
-            "description": "Get the workspace invite URL. Requires authentication and workspace membership."
+            "description": "Get the workspace invite URL. Requires workspace membership."
           },
           "response": []
         },
         {
           "name": "Rotate Invite URL",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [],
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/invite-url",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/invite?action=rotate",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "invite-url"],
-              "variable": [
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "invite"],
+              "query": [
                 {
-                  "key": "workspaceSlug",
-                  "value": "{{workspaceSlug}}"
+                  "key": "action",
+                  "value": "rotate",
+                  "description": "Action: 'get' (default) or 'rotate'"
                 }
               ]
             },
-            "description": "Rotate the workspace invite URL, invalidating all previous invite links. Requires authentication and workspace membership."
+            "description": "Rotate the workspace invite URL, invalidating all previous invite links. Requires workspace membership."
           },
           "response": []
         },
         {
-          "name": "Send Invites",
+          "name": "Send Invites by Email",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
               }
             ],
             "body": {
@@ -427,113 +626,53 @@
               "raw": "{\n  \"emails\": [\n    \"user1@example.com\",\n    \"user2@example.com\"\n  ]\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/invites",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/invite",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "invites"],
-              "variable": [
-                {
-                  "key": "workspaceSlug",
-                  "value": "{{workspaceSlug}}"
-                }
-              ]
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "invite"]
             },
-            "description": "Send workspace invitations to multiple email addresses. Requires authentication and workspace membership.\n\nReturns lists of successfully sent invites and failed invites with reasons."
+            "description": "Send workspace invitations to multiple email addresses. Returns lists of successful and failed invites."
           },
           "response": []
         }
-      ],
-      "description": "Workspace management and invitation endpoints (protected)"
+      ]
     },
     {
-      "name": "Invites",
-      "item": [
-        {
-          "name": "Accept Invite",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"inviteToken\": \"{{inviteToken}}\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/accept",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "accept"]
-            },
-            "description": "Accept a workspace invitation using a JWT invite token. Requires authentication.\n\nThe invite token is extracted from the invite URL sent via email."
-          },
-          "response": []
-        }
-      ],
-      "description": "Workspace invitation acceptance endpoints (protected)"
-    },
-    {
-      "name": "Projects",
+      "name": "Project",
+      "description": "Project management endpoints within a workspace.",
       "item": [
         {
           "name": "List Projects",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/projects",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/projects",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "projects"],
-              "variable": [
-                {
-                  "key": "workspaceSlug",
-                  "value": "{{workspaceSlug}}"
-                }
-              ]
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "projects"]
             },
-            "description": "Get all projects for a workspace. Requires authentication and workspace membership."
+            "description": "Get all projects for a workspace."
           },
           "response": []
         },
         {
           "name": "Create Project",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
               }
             ],
             "body": {
@@ -541,63 +680,160 @@
               "raw": "{\n  \"projectTitle\": \"My New Project\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/projects",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/projects",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", ":workspaceSlug", "projects"],
-              "variable": [
-                {
-                  "key": "workspaceSlug",
-                  "value": "{{workspaceSlug}}"
-                }
-              ]
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "projects"]
             },
-            "description": "Create a new project in the workspace. Requires authentication and workspace membership.\n\nThe projectTitle is optional. If the workspace has no projects yet, this will automatically become the default project."
+            "description": "Create a new project in the workspace. The projectTitle is optional. First project becomes default automatically."
           },
           "response": []
         },
         {
-          "name": "Set Default Project",
+          "name": "Update Project (PATCH)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{authToken}}",
-                  "type": "string"
-                }
-              ]
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isDefault\": true,\n  \"projectTitle\": \"Updated Project Title\"\n}"
             },
-            "method": "POST",
-            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/:workspaceSlug/projects/:projectId/set-default",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/projects/{{projectId}}",
               "host": ["{{baseUrl}}"],
               "path": [
                 "api",
                 "{{apiVersion}}",
-                ":workspaceSlug",
+                "workspace",
+                "{{workspaceId}}",
                 "projects",
-                ":projectId",
-                "set-default"
-              ],
-              "variable": [
-                {
-                  "key": "workspaceSlug",
-                  "value": "{{workspaceSlug}}"
-                },
-                {
-                  "key": "projectId",
-                  "value": "{{projectId}}"
-                }
+                "{{projectId}}"
               ]
             },
-            "description": "Set a project as the default for the workspace. Requires authentication and workspace membership.\n\nThis will unset any other project that was previously default."
+            "description": "Partial update a project. Both isDefault and projectTitle are optional. Setting isDefault to true unsets other projects."
+          },
+          "response": []
+        },
+        {
+          "name": "Replace Project (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectTitle\": \"Complete Project Title\",\n  \"isDefault\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/project/{{projectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "project",
+                "{{projectId}}"
+              ]
+            },
+            "description": "Full update a project. Unlike PATCH, PUT requires all fields: projectTitle (string or null) and isDefault (boolean). Returns the updated project."
           },
           "response": []
         }
-      ],
-      "description": "Project management endpoints within workspaces (protected)"
+      ]
+    },
+    {
+      "name": "Domain",
+      "description": "Domain management endpoints within a workspace.",
+      "item": [
+        {
+          "name": "List Domains",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "domains"]
+            },
+            "description": "Get all domains for a workspace. Returns domain URL and verification status."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Domain",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://newdomain.example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "domains"]
+            },
+            "description": "Add a new domain to the workspace. Domain starts with 'pending' status."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          "// Pre-request script for cookie-based authentication",
+          "// Set sessionToken variable to the value from userplane.session_token cookie"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
     }
   ]
 }

@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
-import { Link, X } from 'lucide-react';
+import { Link, X, RotateCcw } from 'lucide-react';
 import { toast } from '@workspace/ui/components/sonner';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -41,6 +41,13 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     } catch {
       toast.error('Failed to copy link');
     }
+  };
+
+  const handleResetLink = () => {
+    // TODO: Replace with actual API call to regenerate invite token
+    // Example: await regenerateInviteToken(workspaceId);
+    console.log('Resetting invite link for workspace:', workspaceId);
+    toast.success('Invite link has been reset');
   };
 
   const addEmail = (email: string) => {
@@ -93,7 +100,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
               <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
                 <svg
                   viewBox="0 0 512 512"
-                  className="h-8 w-8 flex-shrink-0"
+                  className="h-8 w-8 shrink-0"
                   fill="currentColor"
                   aria-hidden="true"
                 >
@@ -170,18 +177,28 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
               </p>
             </div>
           </div>
-          <DialogFooter className="gap-2 mt-6">
-            <Button
+          <DialogFooter className="mt-6">
+            <button
               type="button"
-              variant="secondary"
-              className="rounded-full px-6"
-              onClick={() => onOpenChange(false)}
+              onClick={handleResetLink}
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
             >
-              Cancel
-            </Button>
-            <Button type="submit" className="rounded-full px-6">
-              Send Invites
-            </Button>
+              <RotateCcw className="h-4 w-4" />
+              Reset Link
+            </button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="rounded-full px-6"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="rounded-full px-6">
+                Send Invites
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

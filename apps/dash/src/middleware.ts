@@ -1,17 +1,18 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createBrowserLogger } from '@workspace/logger/browser';
+import { env } from '@/env';
 
 const logger = createBrowserLogger('middleware');
 
-const authRoutes = ['/auth', '/'];
+const authRoutes = ['/auth'];
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
   const isProtectedRoute = !isAuthRoute;
 
-  const sessionCookie = request.cookies.get('better-auth.session_token');
+  const sessionCookie = request.cookies.get(`${env.auth.cookiePrefix}.session_token`);
   const hasSession = !!sessionCookie;
 
   logger.debug(
