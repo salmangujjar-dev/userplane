@@ -8,7 +8,7 @@ const IdParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-const tags = ['Users'];
+const tags = ['User'];
 
 // Schemas
 const UserSchema = z.object({
@@ -27,7 +27,7 @@ const CreateUserSchema = z.object({
 const UpdateUserSchema = CreateUserSchema.partial();
 
 export const list = createRoute({
-  path: '/users',
+  path: '/user',
   method: 'get',
   tags,
   responses: {
@@ -42,7 +42,7 @@ export const list = createRoute({
 });
 
 export const create = createRoute({
-  path: '/users',
+  path: '/user',
   method: 'post',
   request: {
     body: jsonContentRequired(CreateUserSchema, 'The user to create'),
@@ -61,7 +61,7 @@ export const create = createRoute({
 });
 
 export const getOne = createRoute({
-  path: '/users/{id}',
+  path: '/user/{id}',
   method: 'get',
   request: {
     params: IdParamsSchema,
@@ -75,7 +75,7 @@ export const getOne = createRoute({
 });
 
 export const update = createRoute({
-  path: '/users/{id}',
+  path: '/user/{id}',
   method: 'put',
   request: {
     params: IdParamsSchema,
@@ -96,7 +96,7 @@ export const update = createRoute({
 });
 
 export const remove = createRoute({
-  path: '/users/{id}',
+  path: '/user/{id}',
   method: 'delete',
   request: {
     params: IdParamsSchema,

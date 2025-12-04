@@ -53,4 +53,24 @@ export class DomainRepository {
       .from(domains)
       .where(and(eq(domains.workspaceId, workspaceId), eq(domains.isDeleted, false)));
   }
+
+  /**
+   * Find domain by workspace ID and URL
+   * Used to check if a domain already exists for a workspace
+   */
+  async findByWorkspaceAndUrl(workspaceId: string, url: string) {
+    const [domain] = await this.db
+      .select()
+      .from(domains)
+      .where(
+        and(
+          eq(domains.workspaceId, workspaceId),
+          eq(domains.domainUrl, url),
+          eq(domains.isDeleted, false)
+        )
+      )
+      .limit(1);
+
+    return domain || null;
+  }
 }

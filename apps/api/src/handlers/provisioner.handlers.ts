@@ -34,6 +34,7 @@ export function createWorkspaceHandler(provisionerService: ProvisionerService) {
       const result = await provisionerService.createWorkspace({
         url,
         userId: user.id,
+        userName: user.name,
       });
 
       return c.json(result, 201);

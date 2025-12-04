@@ -8,6 +8,7 @@ import type { AppEnv } from '@/api/lib/types';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { createAppLogger } from '@workspace/logger';
+import type { WorkspaceRole } from '@workspace/db';
 
 const logger = createAppLogger('workspace-middleware');
 
@@ -32,19 +33,19 @@ export function requireWorkspaceMember(
       );
     }
 
-    const workspaceSlug = c.req.param('workspaceSlug');
+    const workspaceId = c.req.param('workspaceId');
 
-    if (!workspaceSlug) {
+    if (!workspaceId) {
       return c.json(
         {
           error: 'Bad Request',
-          message: 'Workspace slug is required',
+          message: 'Workspace ID is required',
         },
         400
       );
     }
 
-    const workspace = await workspaceService.getBySlug(workspaceSlug);
+    const workspace = await workspaceService.getById(workspaceId);
 
     if (!workspace) {
       return c.json(
@@ -90,7 +91,7 @@ export function requireWorkspaceMember(
 export function requireWorkspaceRole(
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService,
-  allowedRoles: Array<'owner' | 'admin' | 'member'>
+  allowedRoles: WorkspaceRole[]
 ) {
   return async (c: Context<AppEnv>, next: Next) => {
     const user = c.get('user');
@@ -105,19 +106,19 @@ export function requireWorkspaceRole(
       );
     }
 
-    const workspaceSlug = c.req.param('workspaceSlug');
+    const workspaceId = c.req.param('workspaceId');
 
-    if (!workspaceSlug) {
+    if (!workspaceId) {
       return c.json(
         {
           error: 'Bad Request',
-          message: 'Workspace slug is required',
+          message: 'Workspace ID is required',
         },
         400
       );
     }
 
-    const workspace = await workspaceService.getBySlug(workspaceSlug);
+    const workspace = await workspaceService.getById(workspaceId);
 
     if (!workspace) {
       return c.json(
