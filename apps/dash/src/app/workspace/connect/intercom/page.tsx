@@ -62,25 +62,25 @@ export default function ConnectIntercomPage() {
           </div>
         </div>
 
-        <Button
-          onClick={handleConnect}
-          disabled={isConnecting}
-          size="lg"
-          className="w-full rounded-full px-7 py-6"
-        >
-          {isConnecting ? 'Connecting...' : 'Connect to Intercom'}
-        </Button>
-      </div>
+        <div className="space-y-4">
+          <Button
+            onClick={handleConnect}
+            disabled={isConnecting}
+            size="lg"
+            className="w-full rounded-full px-7 py-6"
+          >
+            {isConnecting ? 'Connecting...' : 'Connect to Intercom'}
+          </Button>
 
-      <footer className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
-        <button
-          type="button"
-          onClick={() => router.push('/workspace/create')}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Configure userplane manually
-        </button>
-      </footer>
+          <button
+            type="button"
+            onClick={() => router.push('/workspace/create')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center"
+          >
+            Configure userplane manually
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
