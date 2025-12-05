@@ -92,4 +92,23 @@ export class ProjectRepository {
       .from(projects)
       .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)));
   }
+
+  /**
+   * Soft delete a project
+   * Sets isDeleted to true and updates deletedAt timestamp
+   */
+  async softDelete(id: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [deleted] = await dbClient
+      .update(projects)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+      })
+      .where(and(eq(projects.id, id), eq(projects.isDeleted, false)))
+      .returning();
+
+    return deleted || null;
+  }
 }

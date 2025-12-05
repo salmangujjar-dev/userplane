@@ -9,23 +9,29 @@ import { requireWorkspaceMember, requireWorkspaceRole } from '@/api/middleware/w
 import { sendInvitesHandler } from '@/api/handlers/invite.handlers';
 import {
   inviteActionHandler,
+  getInviteUrlHandler,
+  rotateInviteTokenHandler,
   getAllWorkspacesHandler,
   getWorkspaceByIdHandler,
   getWorkspacePreferencesHandler,
   updateWorkspacePreferencesHandler,
-  getWorkspaceTeamHandler,
+  getWorkspaceMembersHandler,
   updateMemberRoleHandler,
   removeMemberHandler,
   leaveWorkspaceHandler,
   updateNotificationPreferencesHandler,
   getWorkspaceDomainsHandler,
   addDomainHandler,
+  deleteDomainHandler,
+  uploadCompanyLogoHandler,
+  deleteWorkspaceHandler,
 } from '@/api/handlers/workspace.handlers';
 import {
   createProjectHandler,
   getProjectsHandler,
   updateProjectHandler,
   replaceProjectHandler,
+  deleteProjectHandler,
 } from '@/api/handlers/projects.handlers';
 import type { InviteService } from '@/api/services/invite.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
@@ -48,6 +54,14 @@ export function createWorkspaceRoutes(
   // Get specific workspace by ID - returns basic info only
   workspaceRoutes.get('/:id', requireAuth, getWorkspaceByIdHandler(workspaceService));
 
+  // Delete workspace - requires admin or owner role
+  workspaceRoutes.delete(
+    '/:workspaceId',
+    requireAuth,
+    requireWorkspaceRole(workspaceMemberService, workspaceService, ['admin', 'owner']),
+    deleteWorkspaceHandler(workspaceService)
+  );
+
   // Get workspace preferences - returns recording settings
   workspaceRoutes.get(
     '/:id/preferences',
@@ -63,24 +77,24 @@ export function createWorkspaceRoutes(
     updateWorkspacePreferencesHandler(workspaceService)
   );
 
-  // Get workspace team - returns team members and invite token
+  // Get workspace members - returns workspace members with pagination
   workspaceRoutes.get(
-    '/:id/team',
+    '/:id/members',
     requireAuth,
-    getWorkspaceTeamHandler(workspaceService, workspaceMemberService)
+    getWorkspaceMembersHandler(workspaceService, workspaceMemberService)
   );
 
-  // Update team member role - requires admin or owner
+  // Update member role - requires admin or owner
   workspaceRoutes.patch(
-    '/:workspaceId/team/:workspaceMemberId',
+    '/:workspaceId/members/:workspaceMemberId',
     requireAuth,
     requireWorkspaceRole(workspaceMemberService, workspaceService, ['admin', 'owner']),
     updateMemberRoleHandler(workspaceMemberService)
   );
 
-  // Remove team member - requires admin or owner
+  // Remove member - requires admin or owner
   workspaceRoutes.delete(
-    '/:workspaceId/team/:workspaceMemberId',
+    '/:workspaceId/members/:workspaceMemberId',
     requireAuth,
     requireWorkspaceRole(workspaceMemberService, workspaceService, ['admin', 'owner']),
     removeMemberHandler(workspaceMemberService)
@@ -102,17 +116,24 @@ export function createWorkspaceRoutes(
     updateNotificationPreferencesHandler(workspaceMemberService)
   );
 
-  // Invite routes - unified endpoint with action query parameter
-  // GET /workspace/:id/invite?action=get (default) - Get current invite URL
-  // GET /workspace/:id/invite?action=rotate - Rotate token and get new URL
+  // Invite routes
+  // GET /workspace/:workspaceId/invite - Get current invite URL (all members)
   workspaceRoutes.get(
     '/:workspaceId/invite',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
-    inviteActionHandler(workspaceService, inviteService)
+    getInviteUrlHandler(inviteService)
   );
 
-  // POST /workspace/:id/invite - Send invite emails
+  // POST /workspace/:workspaceId/invite/rotate - Rotate invite token (admin/owner only)
+  workspaceRoutes.post(
+    '/:workspaceId/invite/rotate',
+    requireAuth,
+    requireWorkspaceRole(workspaceMemberService, workspaceService, ['admin', 'owner']),
+    rotateInviteTokenHandler(inviteService)
+  );
+
+  // POST /workspace/:workspaceId/invite - Send invite emails (all members)
   workspaceRoutes.post(
     '/:workspaceId/invite',
     requireAuth,
@@ -149,6 +170,13 @@ export function createWorkspaceRoutes(
     replaceProjectHandler(projectService)
   );
 
+  workspaceRoutes.delete(
+    '/:workspaceId/projects/:projectId',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    deleteProjectHandler(projectService)
+  );
+
   // Domain routes
   workspaceRoutes.get(
     '/:workspaceId/domains',
@@ -162,6 +190,21 @@ export function createWorkspaceRoutes(
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     addDomainHandler(domainService)
+  );
+
+  workspaceRoutes.delete(
+    '/:workspaceId/domains/:domainId',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    deleteDomainHandler(domainService)
+  );
+
+  // Company logo upload route
+  workspaceRoutes.post(
+    '/:workspaceId/preferences/recordingCompanyLogo',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    uploadCompanyLogoHandler(workspaceService)
   );
 
   return workspaceRoutes;

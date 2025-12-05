@@ -102,21 +102,21 @@ export class InviteService {
       )
     );
 
-    const sent: string[] = [];
-    const failed: Array<{ email: string; reason: string }> = [];
+    const sentEmails: string[] = [];
+    const failedEmails: Array<{ email: string; reason: string }> = [];
 
     results.forEach((result, index) => {
       const email = emails[index];
       if (email) {
         if (result.status === 'fulfilled') {
-          sent.push(email);
+          sentEmails.push(email);
         } else {
-          failed.push({ email, reason: result.reason.message });
+          failedEmails.push({ email, reason: result.reason.message });
         }
       }
     });
 
-    return { sent, failed };
+    return { sentEmails, failedEmails };
   }
 
   /**

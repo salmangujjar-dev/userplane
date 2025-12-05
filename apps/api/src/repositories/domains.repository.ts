@@ -73,4 +73,23 @@ export class DomainRepository {
 
     return domain || null;
   }
+
+  /**
+   * Soft delete a domain
+   * Sets isDeleted to true and updates deletedAt timestamp
+   */
+  async softDelete(id: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [deleted] = await dbClient
+      .update(domains)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+      })
+      .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))
+      .returning();
+
+    return deleted || null;
+  }
 }

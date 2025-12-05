@@ -317,6 +317,15 @@ export function AppearanceSection() {
                         onChange={handleImageUpload}
                         className="hidden"
                       />
+                      {workspaceImage && (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="mt-2 w-24 px-3 py-1.5 text-xs font-medium rounded-md border border-input bg-background hover:bg-accent transition-colors"
+                        >
+                          Update
+                        </button>
+                      )}
                     </div>
 
                     <div className="flex-1 space-y-4">

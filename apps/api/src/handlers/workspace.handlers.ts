@@ -15,6 +15,7 @@ import type {
   GetWorkspaceDomainsResult,
   AddDomainResult,
   UpdateWorkspacePreferencesResult,
+  UploadCompanyLogoResult,
   TeamMember,
   DomainItem,
 } from '@/api/types';
@@ -41,12 +42,125 @@ const updateWorkspacePreferencesSchema = z.object({
   recordingCaptureClientLog: z.boolean().optional(),
   recordingCaptureServerLog: z.boolean().optional(),
   recordingCompanyName: z.string().nullable().optional(),
-  recordingCompanyLogoPath: z.string().nullable().optional(),
   recordingHeader: z.string().nullable().optional(),
   recordingFootnote: z.string().nullable().optional(),
   recordingPrimaryColor: z.string().nullable().optional(),
   recordingMaxDuration: z.number().int().positive().nullable().optional(),
 });
+
+export function getInviteUrlHandler(inviteService: InviteService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+
+      if (!user) {
+        return c.json(
+          {
+            error: 'Unauthorized',
+            message: 'You must be logged in to access invite URL',
+          },
+          401
+        );
+      }
+
+      if (!workspaceId) {
+        return c.json(
+          {
+            error: 'Forbidden',
+            message: 'You must be a workspace member to access invite URL',
+          },
+          403
+        );
+      }
+
+      const inviteUrl = await inviteService.getInviteUrl(workspaceId, user.id);
+
+      const result: GetInviteUrlResult = {
+        inviteUrl,
+        workspaceId,
+      };
+
+      return c.json(result, 200);
+    } catch (error) {
+      if (error instanceof Error) {
+        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
+        return c.json(
+          {
+            error: error.name,
+            message: error.message,
+          },
+          statusCode as 500
+        );
+      }
+
+      return c.json(
+        {
+          error: 'Internal Server Error',
+          message: 'An unexpected error occurred',
+        },
+        500
+      );
+    }
+  };
+}
+
+export function rotateInviteTokenHandler(inviteService: InviteService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+
+      if (!user) {
+        return c.json(
+          {
+            error: 'Unauthorized',
+            message: 'You must be logged in to rotate invite token',
+          },
+          401
+        );
+      }
+
+      if (!workspaceId) {
+        return c.json(
+          {
+            error: 'Forbidden',
+            message: 'You must be a workspace member to rotate invite token',
+          },
+          403
+        );
+      }
+
+      const inviteUrl = await inviteService.regenerateInviteUrl(workspaceId, user.id);
+
+      const result: GetInviteUrlResult = {
+        inviteUrl,
+        workspaceId,
+      };
+
+      return c.json(result, 200);
+    } catch (error) {
+      if (error instanceof Error) {
+        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
+        return c.json(
+          {
+            error: error.name,
+            message: error.message,
+          },
+          statusCode as 500
+        );
+      }
+
+      return c.json(
+        {
+          error: 'Internal Server Error',
+          message: 'An unexpected error occurred',
+        },
+        500
+      );
+    }
+  };
+}
 
 export function inviteActionHandler(
   workspaceService: WorkspaceService,
@@ -139,10 +253,14 @@ export function getAllWorkspacesHandler(workspaceService: WorkspaceService) {
         );
       }
 
-      // Check for include_notification_preference query parameter
+      // Check for query parameters
       const includeNotifications = c.req.query('include_notification_preference') === 'true';
+      const includeMembership = c.req.query('include_workspace_membership') === 'true';
 
-      const workspaces = await workspaceService.getByUserId(user.id, includeNotifications);
+      const workspaces = await workspaceService.getByUserId(user.id, {
+        includeNotificationPreferences: includeNotifications,
+        includeWorkspaceMembership: includeMembership,
+      });
 
       return c.json(
         {
@@ -284,7 +402,7 @@ export function getWorkspacePreferencesHandler(workspaceService: WorkspaceServic
   };
 }
 
-export function getWorkspaceTeamHandler(
+export function getWorkspaceMembersHandler(
   workspaceService: WorkspaceService,
   workspaceMemberService: WorkspaceMemberService
 ) {
@@ -296,7 +414,7 @@ export function getWorkspaceTeamHandler(
         return c.json(
           {
             error: 'Unauthorized',
-            message: 'You must be logged in to get workspace team',
+            message: 'You must be logged in to get workspace members',
           },
           401
         );
@@ -308,6 +426,9 @@ export function getWorkspaceTeamHandler(
       const queryParams = c.req.query();
       const { page } = paginationQuerySchema.parse(queryParams);
 
+      // Check for include_me query parameter
+      const includeMe = c.req.query('include_me') === 'true';
+
       const perPage = 5;
 
       // Get team members sorted by role with pagination
@@ -315,17 +436,33 @@ export function getWorkspaceTeamHandler(
 
       // Map to team member response format
       const teamMembers: TeamMember[] = members.map((member) => ({
-        id: member.id,
-        name: member.userName,
-        email: member.userEmail,
-        role: member.role,
+        workspaceMemberId: member.id,
+        memberName: member.userName,
+        memberEmail: member.userEmail,
+        workspaceRole: member.role,
       }));
 
-      const result: GetWorkspaceTeamResult = {
+      let result: GetWorkspaceTeamResult = {
         workspaceId: id,
-        members: teamMembers,
+        workspaceMembers: teamMembers,
         pagination: createPaginationMeta(page, perPage, total),
       };
+
+      // If include_me is true, add the requesting user's membership info
+      if (includeMe) {
+        const myMembership = await workspaceMemberService.getMember(user.id, id);
+        if (myMembership) {
+          result = {
+            workspaceId: id,
+            workspaceMembers: teamMembers,
+            workspaceMembership: {
+              workspaceMemberId: myMembership.id,
+              workspaceRole: myMembership.workspaceRole,
+            },
+            pagination: createPaginationMeta(page, perPage, total),
+          };
+        }
+      }
 
       return c.json(result, 200);
     } catch (error) {
@@ -362,6 +499,9 @@ export function getWorkspaceTeamHandler(
   };
 }
 
+// Keep old handler name for backward compatibility
+export const getWorkspaceTeamHandler = getWorkspaceMembersHandler;
+
 export function getWorkspaceDomainsHandler(domainService: DomainService) {
   return async (c: Context<AppEnv>) => {
     try {
@@ -391,8 +531,8 @@ export function getWorkspaceDomainsHandler(domainService: DomainService) {
       const domains = await domainService.getByWorkspaceId(workspaceId);
 
       const domainItems: DomainItem[] = domains.map((domain) => ({
-        url: domain.domainUrl,
-        status: domain.domainStatus,
+        domainUrl: domain.domainUrl,
+        domainStatus: domain.domainStatus,
       }));
 
       const result: GetWorkspaceDomainsResult = {
@@ -472,8 +612,8 @@ export function addDomainHandler(domainService: DomainService) {
       const result: AddDomainResult = {
         workspaceId,
         domain: {
-          url: domain.domainUrl,
-          status: domain.domainStatus,
+          domainUrl: domain.domainUrl,
+          domainStatus: domain.domainStatus,
         },
         message: 'Domain added successfully',
       };
@@ -491,6 +631,85 @@ export function addDomainHandler(domainService: DomainService) {
         );
       }
 
+      if (error instanceof ValidationError) {
+        return c.json(
+          {
+            error: 'Validation Error',
+            message: error.message,
+          },
+          400
+        );
+      }
+
+      if (error instanceof Error) {
+        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
+        return c.json(
+          {
+            error: error.name,
+            message: error.message,
+          },
+          statusCode as 500
+        );
+      }
+
+      return c.json(
+        {
+          error: 'Internal Server Error',
+          message: 'An unexpected error occurred',
+        },
+        500
+      );
+    }
+  };
+}
+
+export function deleteDomainHandler(domainService: DomainService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+      const domainId = c.req.param('domainId');
+
+      if (!user) {
+        return c.json(
+          {
+            error: 'Unauthorized',
+            message: 'You must be logged in to delete a domain',
+          },
+          401
+        );
+      }
+
+      if (!workspaceId) {
+        return c.json(
+          {
+            error: 'Forbidden',
+            message: 'You must be a workspace member to delete a domain',
+          },
+          403
+        );
+      }
+
+      if (!domainId) {
+        return c.json(
+          {
+            error: 'Bad Request',
+            message: 'Domain ID is required',
+          },
+          400
+        );
+      }
+
+      await domainService.deleteDomain(domainId, workspaceId);
+
+      return c.json(
+        {
+          message: 'Domain deleted successfully',
+          domainId,
+        },
+        200
+      );
+    } catch (error) {
       if (error instanceof ValidationError) {
         return c.json(
           {
@@ -643,7 +862,7 @@ export function updateMemberRoleHandler(workspaceMemberService: WorkspaceMemberS
       return c.json(
         {
           workspaceId,
-          memberId,
+          workspaceMemberId: memberId,
           message: 'Member role updated successfully',
         },
         200
@@ -734,7 +953,7 @@ export function removeMemberHandler(workspaceMemberService: WorkspaceMemberServi
       return c.json(
         {
           workspaceId,
-          memberId,
+          workspaceMemberId: memberId,
           message: 'Member removed successfully',
         },
         200
@@ -900,6 +1119,185 @@ export function updateNotificationPreferencesHandler(
         );
       }
 
+      if (error instanceof ValidationError) {
+        return c.json(
+          {
+            error: 'Validation Error',
+            message: error.message,
+          },
+          400
+        );
+      }
+
+      if (error instanceof Error) {
+        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
+        return c.json(
+          {
+            error: error.name,
+            message: error.message,
+          },
+          statusCode as 500
+        );
+      }
+
+      return c.json(
+        {
+          error: 'Internal Server Error',
+          message: 'An unexpected error occurred',
+        },
+        500
+      );
+    }
+  };
+}
+
+export function uploadCompanyLogoHandler(workspaceService: WorkspaceService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+
+      if (!user) {
+        return c.json(
+          {
+            error: 'Unauthorized',
+            message: 'You must be logged in to upload a company logo',
+          },
+          401
+        );
+      }
+
+      if (!workspaceId) {
+        return c.json(
+          {
+            error: 'Forbidden',
+            message: 'You must be a workspace member to upload a company logo',
+          },
+          403
+        );
+      }
+
+      const body = await c.req.parseBody();
+      const file = body['logo'];
+
+      if (!file || !(file instanceof File)) {
+        return c.json(
+          {
+            error: 'Bad Request',
+            message: 'Logo file is required',
+          },
+          400
+        );
+      }
+
+      // Validate file type - only PNG allowed
+      if (file.type !== 'image/png') {
+        return c.json(
+          {
+            error: 'Bad Request',
+            message: 'Only PNG files are allowed',
+          },
+          400
+        );
+      }
+
+      // Validate file size - 4MB limit
+      const maxSizeInBytes = 4 * 1024 * 1024; // 4MB
+      if (file.size > maxSizeInBytes) {
+        return c.json(
+          {
+            error: 'Bad Request',
+            message: 'File size must not exceed 4MB',
+          },
+          400
+        );
+      }
+
+      // TODO: Implement actual file storage logic
+      // For now, generate a mocked path
+      const mockedPath = `/uploads/workspaces/${workspaceId}/logos/${file.name}`;
+
+      // Update workspace preferences with the logo path
+      await workspaceService.updatePreferences(workspaceId, {
+        recordingCompanyLogoPath: mockedPath,
+      });
+
+      const result: UploadCompanyLogoResult = {
+        workspaceId,
+        path: mockedPath,
+        message: 'Company logo uploaded successfully',
+      };
+
+      return c.json(result, 200);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return c.json(
+          {
+            error: 'Validation Error',
+            message: error.message,
+          },
+          400
+        );
+      }
+
+      if (error instanceof Error) {
+        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
+        return c.json(
+          {
+            error: error.name,
+            message: error.message,
+          },
+          statusCode as 500
+        );
+      }
+
+      return c.json(
+        {
+          error: 'Internal Server Error',
+          message: 'An unexpected error occurred',
+        },
+        500
+      );
+    }
+  };
+}
+
+export function deleteWorkspaceHandler(workspaceService: WorkspaceService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.req.param('workspaceId');
+
+      if (!user) {
+        return c.json(
+          {
+            error: 'Unauthorized',
+            message: 'You must be logged in to delete a workspace',
+          },
+          401
+        );
+      }
+
+      if (!workspaceId) {
+        return c.json(
+          {
+            error: 'Bad Request',
+            message: 'Workspace ID is required',
+          },
+          400
+        );
+      }
+
+      await workspaceService.deleteWorkspace(workspaceId);
+
+      return c.json(
+        {
+          message: 'Workspace deleted successfully',
+          workspaceId,
+        },
+        200
+      );
+    } catch (error) {
       if (error instanceof ValidationError) {
         return c.json(
           {

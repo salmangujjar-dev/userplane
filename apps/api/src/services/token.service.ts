@@ -19,9 +19,10 @@ export class TokenService {
   /**
    * Generate JWT invite URL for email invitations
    * Contains all data needed to render invite page
+   * Token expires in 30 days
    */
   generateInviteUrl(payload: InviteTokenPayload): string {
-    const token = jwt.sign(payload, this.jwtSecret, { expiresIn: '7d' });
+    const token = jwt.sign(payload, this.jwtSecret, { expiresIn: '30d' });
     return `${this.appUrl}/invite?token=${token}`;
   }
 
@@ -38,6 +39,6 @@ export class TokenService {
 }
 
 export const tokenService = new TokenService({
-  jwtSecret: env.auth.secret,
-  appUrl: env.auth.url,
+  jwtSecret: env.invite.secret,
+  appUrl: env.invite.appUrl,
 });
