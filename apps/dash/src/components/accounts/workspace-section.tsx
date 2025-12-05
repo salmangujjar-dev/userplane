@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@workspace/ui/components/button';
 import { Switch } from '@workspace/ui/components/switch';
@@ -10,6 +10,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@workspace/ui/components/collapsible';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@workspace/ui/components/pagination';
 import { Building2, ArrowUpRight, ChevronDown } from 'lucide-react';
 
 interface WorkspaceNotifications {
@@ -68,12 +77,88 @@ const initialWorkspaces: Workspace[] = [
       inviteAccepted: true,
     },
   },
+  {
+    id: '4',
+    name: 'Tech Startup Inc',
+    joinedAt: 'Joined 3 months ago',
+    isCurrent: false,
+    notifications: {
+      recordingLinksUsed: true,
+      quotaReset: true,
+      quotaReached: false,
+      someoneJoins: true,
+      inviteAccepted: false,
+    },
+  },
+  {
+    id: '5',
+    name: 'Marketing Team',
+    joinedAt: 'Joined 8 months ago',
+    isCurrent: false,
+    notifications: {
+      recordingLinksUsed: false,
+      quotaReset: false,
+      quotaReached: true,
+      someoneJoins: false,
+      inviteAccepted: true,
+    },
+  },
+  {
+    id: '6',
+    name: 'Engineering Hub',
+    joinedAt: 'Joined 4 months ago',
+    isCurrent: false,
+    notifications: {
+      recordingLinksUsed: true,
+      quotaReset: true,
+      quotaReached: true,
+      someoneJoins: true,
+      inviteAccepted: true,
+    },
+  },
+  {
+    id: '7',
+    name: 'Product Team',
+    joinedAt: 'Joined 10 months ago',
+    isCurrent: false,
+    notifications: {
+      recordingLinksUsed: false,
+      quotaReset: true,
+      quotaReached: false,
+      someoneJoins: true,
+      inviteAccepted: false,
+    },
+  },
+  {
+    id: '8',
+    name: 'Freelance Projects',
+    joinedAt: 'Joined 5 months ago',
+    isCurrent: false,
+    notifications: {
+      recordingLinksUsed: true,
+      quotaReset: false,
+      quotaReached: true,
+      someoneJoins: false,
+      inviteAccepted: true,
+    },
+  },
 ];
+
+const ITEMS_PER_PAGE = 5;
 
 export function WorkspaceSection() {
   const router = useRouter();
   const [workspaces, setWorkspaces] = useState<Workspace[]>(initialWorkspaces);
   const [expandedWorkspace, setExpandedWorkspace] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(workspaces.length / ITEMS_PER_PAGE);
+
+  const paginatedWorkspaces = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return workspaces.slice(startIndex, endIndex);
+  }, [workspaces, currentPage]);
 
   const handleSwitch = (workspaceId: string) => {
     console.log('Switching to workspace:', workspaceId);
@@ -119,7 +204,7 @@ export function WorkspaceSection() {
       </div>
 
       <div className="max-w-2xl space-y-4">
-        {workspaces.map((workspace) => (
+        {paginatedWorkspaces.map((workspace) => (
           <Collapsible
             key={workspace.id}
             open={expandedWorkspace === workspace.id}
@@ -320,6 +405,52 @@ export function WorkspaceSection() {
           Create Workspace
           <ArrowUpRight className="h-4 w-4 ml-1" />
         </Button>
+
+        {totalPages > 1 && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(page)}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                } else if (page === currentPage - 2 || page === currentPage + 2) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                return null;
+              })}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     </div>
   );
