@@ -5,6 +5,7 @@
 
 import type { Context } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
+import type { ApiResponse, ApiErrorResponse, WorkspaceCreateData } from '@/api/types';
 import { ProvisionerService } from '@/api/services/provisioner.service';
 import { urlSchema } from '@/api/lib/validation';
 import { z } from 'zod';
@@ -20,13 +21,11 @@ export function createWorkspaceHandler(provisionerService: ProvisionerService) {
       const user = c.get('user');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to create a workspace',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to create a workspace',
+        };
+        return c.json(response, 401);
       }
 
       const body = await c.req.json();
@@ -38,36 +37,34 @@ export function createWorkspaceHandler(provisionerService: ProvisionerService) {
         userName: user.name,
       });
 
-      return c.json(result, 201);
+      const response: ApiResponse<WorkspaceCreateData> = {
+        message: 'Workspace created successfully',
+        data: result,
+      };
+      return c.json(response, 201);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }

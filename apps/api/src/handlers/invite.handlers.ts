@@ -5,6 +5,12 @@
 
 import type { Context } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
+import type {
+  ApiResponse,
+  ApiErrorResponse,
+  SendInvitesResult,
+  InviteActionResult,
+} from '@/api/types';
 import { InviteService } from '@/api/services/invite.service';
 import { emailArraySchema, nonEmptyString } from '@/api/lib/validation';
 import { z } from 'zod';
@@ -21,23 +27,19 @@ export function sendInvitesHandler(inviteService: InviteService) {
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to send invites',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to send invites',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to send invites',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to send invites',
+        };
+        return c.json(response, 403);
       }
 
       const body = await c.req.json();
@@ -49,36 +51,34 @@ export function sendInvitesHandler(inviteService: InviteService) {
         invitedBy: user.id,
       });
 
-      return c.json(result, 200);
+      const response: ApiResponse<SendInvitesResult> = {
+        message: 'Invites sent successfully',
+        data: result,
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -93,13 +93,11 @@ export function inviteActionHandler(inviteService: InviteService) {
       const action = c.req.query('action') || 'validate';
 
       if (action !== 'validate' && action !== 'accept') {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid action parameter. Must be "validate" or "accept"',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid action parameter. Must be "validate" or "accept"',
+        };
+        return c.json(response, 400);
       }
 
       const queryParams = c.req.query();
@@ -109,51 +107,51 @@ export function inviteActionHandler(inviteService: InviteService) {
       if (action === 'accept') {
         const user = c.get('user');
         if (!user) {
-          return c.json(
-            {
-              error: 'Unauthorized',
-              message: 'You must be logged in to accept an invite',
-            },
-            401
-          );
+          const response: ApiErrorResponse = {
+            error: 'Unauthorized',
+            message: 'You must be logged in to accept an invite',
+          };
+          return c.json(response, 401);
         }
 
         const result = await inviteService.handleInviteAction(token, user.id);
-        return c.json(result, 200);
+        const response: ApiResponse<InviteActionResult> = {
+          message: 'Invite accepted successfully',
+          data: result,
+        };
+        return c.json(response, 200);
       }
 
       // For validate action, no auth required
       const result = await inviteService.handleInviteAction(token);
-      return c.json(result, 200);
+      const response: ApiResponse<InviteActionResult> = {
+        message: 'Invite validated successfully',
+        data: result,
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid query parameters',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid query parameters',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }

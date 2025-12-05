@@ -9,19 +9,30 @@ import { WorkspaceService } from '@/api/services/workspace.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { InviteService } from '@/api/services/invite.service';
 import { DomainService } from '@/api/services/domain.service';
-import { getErrorStatusCode } from '@/api/lib/errors';
+import { getErrorStatusCode, ValidationError } from '@/api/lib/errors';
 import type {
-  GetInviteUrlResult,
-  GetWorkspaceTeamResult,
-  GetWorkspaceDomainsResult,
-  AddDomainResult,
-  UpdateWorkspacePreferencesResult,
+  ApiResponse,
+  ApiErrorResponse,
   TeamMember,
   DomainItem,
+  InviteUrlData,
+  WorkspacesListData,
+  WorkspaceTeamData,
+  WorkspaceDomainsData,
+  DomainAddData,
+  DomainUpdateData,
+  DomainDeleteData,
+  WorkspacePreferencesUpdateData,
+  WorkspacePreferencesGetData,
+  WorkspaceByIdData,
+  WorkspaceNameUpdateData,
+  WorkspaceDeleteData,
+  MemberRoleUpdateData,
+  MemberRemoveData,
+  RecordingLinkSettingsData,
 } from '@/api/types';
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
-import { ValidationError } from '@/api/lib/errors';
 import type { WorkspaceRole } from '@workspace/db';
 
 const workspaceIdParamSchema = z.object({
@@ -71,51 +82,45 @@ export function getInviteUrlHandler(inviteService: InviteService) {
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to access invite URL',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to access invite URL',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to access invite URL',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to access invite URL',
+        };
+        return c.json(response, 403);
       }
 
       const inviteUrl = await inviteService.getInviteUrl(workspaceId, user.id);
 
-      const result: GetInviteUrlResult = {
-        inviteUrl,
-        workspaceId,
+      const response: ApiResponse<InviteUrlData> = {
+        message: 'Invite URL retrieved successfully',
+        data: {
+          inviteUrl,
+          workspaceId,
+        },
       };
-
-      return c.json(result, 200);
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -127,57 +132,51 @@ export function rotateInviteTokenHandler(inviteService: InviteService) {
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to rotate invite token',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to rotate invite token',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to rotate invite token',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to rotate invite token',
+        };
+        return c.json(response, 403);
       }
 
       const inviteUrl = await inviteService.regenerateInviteUrl(workspaceId, user.id);
 
-      const result: GetInviteUrlResult = {
-        inviteUrl,
-        workspaceId,
+      const response: ApiResponse<InviteUrlData> = {
+        message: 'Invite token rotated successfully',
+        data: {
+          inviteUrl,
+          workspaceId,
+        },
       };
-
-      return c.json(result, 200);
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
 
 export function inviteActionHandler(
-  workspaceService: WorkspaceService,
+  _workspaceService: WorkspaceService,
   inviteService: InviteService
 ) {
   return async (c: Context<AppEnv>) => {
@@ -186,67 +185,62 @@ export function inviteActionHandler(
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to access invite URL',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to access invite URL',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to access invite URL',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to access invite URL',
+        };
+        return c.json(response, 403);
       }
 
       const action = c.req.query('action') || 'get';
 
       let inviteUrl: string;
+      let actionMessage: string;
 
       if (action === 'rotate') {
         inviteUrl = await inviteService.regenerateInviteUrl(workspaceId, user.id);
+        actionMessage = 'Invite token rotated successfully';
       } else if (action === 'get') {
         inviteUrl = await inviteService.getInviteUrl(workspaceId, user.id);
+        actionMessage = 'Invite URL retrieved successfully';
       } else {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid action parameter. Must be "get" or "rotate"',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid action parameter. Must be "get" or "rotate"',
+        };
+        return c.json(response, 400);
       }
 
-      const result: GetInviteUrlResult = {
-        inviteUrl,
-        workspaceId,
+      const response: ApiResponse<InviteUrlData> = {
+        message: actionMessage,
+        data: {
+          inviteUrl,
+          workspaceId,
+        },
       };
-
-      return c.json(result, 200);
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -257,13 +251,11 @@ export function getAllWorkspacesHandler(workspaceService: WorkspaceService) {
       const user = c.get('user');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to get workspaces',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to get workspaces',
+        };
+        return c.json(response, 401);
       }
 
       // Check for query parameters
@@ -285,32 +277,29 @@ export function getAllWorkspacesHandler(workspaceService: WorkspaceService) {
         }
       );
 
-      return c.json(
-        {
+      const response: ApiResponse<WorkspacesListData> = {
+        message: 'Workspaces retrieved successfully',
+        data: {
           workspaces,
           total,
           pagination: createPaginationMeta(page, perPage, total),
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -321,13 +310,11 @@ export function getWorkspaceByIdHandler(workspaceService: WorkspaceService) {
       const user = c.get('user');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to get workspace',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to get workspace',
+        };
+        return c.json(response, 401);
       }
 
       const params = c.req.param();
@@ -335,36 +322,34 @@ export function getWorkspaceByIdHandler(workspaceService: WorkspaceService) {
 
       const workspace = await workspaceService.getById(id);
 
-      return c.json({ workspace }, 200);
+      const response: ApiResponse<WorkspaceByIdData> = {
+        message: 'Workspace retrieved successfully',
+        data: { workspace },
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid workspace ID',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid workspace ID',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -375,13 +360,11 @@ export function getWorkspacePreferencesHandler(workspaceService: WorkspaceServic
       const user = c.get('user');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to get workspace preferences',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to get workspace preferences',
+        };
+        return c.json(response, 401);
       }
 
       const params = c.req.param();
@@ -389,42 +372,40 @@ export function getWorkspacePreferencesHandler(workspaceService: WorkspaceServic
 
       const preferences = await workspaceService.getPreferencesById(id);
 
-      return c.json({ preferences }, 200);
+      const response: ApiResponse<WorkspacePreferencesGetData> = {
+        message: 'Workspace preferences retrieved successfully',
+        data: { preferences },
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid workspace ID',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid workspace ID',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
 
 export function getWorkspaceMembersHandler(
-  workspaceService: WorkspaceService,
+  _workspaceService: WorkspaceService,
   workspaceMemberService: WorkspaceMemberService
 ) {
   return async (c: Context<AppEnv>) => {
@@ -432,13 +413,11 @@ export function getWorkspaceMembersHandler(
       const user = c.get('user');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to get workspace members',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to get workspace members',
+        };
+        return c.json(response, 401);
       }
 
       const params = c.req.param();
@@ -463,7 +442,7 @@ export function getWorkspaceMembersHandler(
         workspaceRole: member.role,
       }));
 
-      let result: GetWorkspaceTeamResult = {
+      let teamData: WorkspaceTeamData = {
         workspaceId: id,
         workspaceMembers: teamMembers,
         pagination: createPaginationMeta(page, perPage, total),
@@ -473,7 +452,7 @@ export function getWorkspaceMembersHandler(
       if (includeMe) {
         const myMembership = await workspaceMemberService.getMember(user.id, id);
         if (myMembership) {
-          result = {
+          teamData = {
             workspaceId: id,
             workspaceMembers: teamMembers,
             workspaceMembership: {
@@ -485,36 +464,34 @@ export function getWorkspaceMembersHandler(
         }
       }
 
-      return c.json(result, 200);
+      const response: ApiResponse<WorkspaceTeamData> = {
+        message: 'Workspace members retrieved successfully',
+        data: teamData,
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request parameters',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request parameters',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -529,23 +506,19 @@ export function getWorkspaceDomainsHandler(domainService: DomainService) {
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to get workspace domains',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to get workspace domains',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to get workspace domains',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to get workspace domains',
+        };
+        return c.json(response, 403);
       }
 
       // Parse pagination query params
@@ -565,31 +538,31 @@ export function getWorkspaceDomainsHandler(domainService: DomainService) {
         domainStatus: domain.domainStatus,
       }));
 
-      const result: GetWorkspaceDomainsResult = {
+      const domainsData: WorkspaceDomainsData = {
         workspaceId,
         domains: domainItems,
         pagination: createPaginationMeta(page, perPage, total),
       };
 
-      return c.json(result, 200);
+      const response: ApiResponse<WorkspaceDomainsData> = {
+        message: 'Workspace domains retrieved successfully',
+        data: domainsData,
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -601,23 +574,19 @@ export function addDomainHandler(domainService: DomainService) {
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to add a domain',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to add a domain',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to add a domain',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to add a domain',
+        };
+        return c.json(response, 403);
       }
 
       const body = await c.req.json();
@@ -630,65 +599,56 @@ export function addDomainHandler(domainService: DomainService) {
       });
 
       if (!domain) {
-        return c.json(
-          {
-            error: 'Internal Server Error',
-            message: 'Failed to create domain',
-          },
-          500
-        );
+        const response: ApiErrorResponse = {
+          error: 'Internal Server Error',
+          message: 'Failed to create domain',
+        };
+        return c.json(response, 500);
       }
 
-      const result: AddDomainResult = {
-        workspaceId,
-        domain: {
-          domainId: domain.id,
-          domainUrl: domain.domainUrl,
-          domainStatus: domain.domainStatus,
-        },
+      const response: ApiResponse<DomainAddData> = {
         message: 'Domain added successfully',
+        data: {
+          workspaceId,
+          domain: {
+            domainId: domain.id,
+            domainUrl: domain.domainUrl,
+            domainStatus: domain.domainStatus,
+          },
+        },
       };
-
-      return c.json(result, 201);
+      return c.json(response, 201);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -899,41 +859,34 @@ export function updateWorkspacePreferencesHandler(workspaceService: WorkspaceSer
 
       await workspaceService.updatePreferences(workspaceId, updates);
 
-      const result: UpdateWorkspacePreferencesResult = {
-        workspaceId,
+      const response: ApiResponse<WorkspacePreferencesUpdateData> = {
         message: 'Workspace preferences updated successfully',
+        data: { workspaceId },
       };
-
-      return c.json(result, 200);
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -1362,34 +1315,51 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
         updates.recordingCompanyLogoPath = logoPath;
       }
 
-      await workspaceService.updatePreferences(workspaceId, updates);
+      const updatedWorkspace = await workspaceService.updatePreferences(workspaceId, updates);
 
-      return c.json(
-        {
-          message: 'Recording link settings updated successfully',
-          workspaceId,
-          ...(logoPath && { logoPath }),
+      const response: ApiResponse<RecordingLinkSettingsData> = {
+        message: 'Recording link settings updated successfully',
+        data: {
+          workspaceId: updatedWorkspace.id,
+          recordingCompanyName: updatedWorkspace.recordingCompanyName,
+          recordingCompanyLogoPath: updatedWorkspace.recordingCompanyLogoPath,
+          recordingHeader: updatedWorkspace.recordingHeader,
+          recordingFootnote: updatedWorkspace.recordingFootnote,
+          recordingPrimaryColor: updatedWorkspace.recordingPrimaryColor,
+          recordingMaxDuration: updatedWorkspace.recordingMaxDuration,
+          recordingCustomizeLink: updatedWorkspace.recordingCustomizeLink,
+          recordingHideSensitive: updatedWorkspace.recordingHideSensitive,
+          recordingCaptureClientLog: updatedWorkspace.recordingCaptureClientLog,
+          recordingCaptureServerLog: updatedWorkspace.recordingCaptureServerLog,
+          recordingSlug: updatedWorkspace.recordingSlug,
         },
-        200
-      );
+      };
+
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.errors[0]?.message || 'Invalid input',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.errors[0]?.message || 'Invalid input',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof ValidationError) {
-        return c.json({ error: 'Validation Error', message: error.message }, 400);
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json({ error: error.name, message: error.message }, getErrorStatusCode(error));
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
       return c.json(

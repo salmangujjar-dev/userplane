@@ -5,9 +5,18 @@
 
 import type { Context } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
+import type {
+  ApiResponse,
+  ApiErrorResponse,
+  ProjectItem,
+  ProjectsListData,
+  ProjectData,
+  ProjectUpdateData,
+  ProjectDeleteData,
+} from '@/api/types';
+import { createPaginationMeta } from '@/api/types';
 import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
-import type { GetProjectsResult, CreateProjectResult, ProjectItem } from '@/api/types';
 import { z } from 'zod';
 import { getErrorStatusCode } from '@/api/lib/errors';
 
@@ -17,7 +26,7 @@ const createProjectSchema = z.object({
 
 export function createProjectHandler(
   projectService: ProjectService,
-  workspaceService: WorkspaceService
+  _workspaceService: WorkspaceService
 ) {
   return async (c: Context<AppEnv>) => {
     try {
@@ -25,23 +34,19 @@ export function createProjectHandler(
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to create a project',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to create a project',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to create a project',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to create a project',
+        };
+        return c.json(response, 403);
       }
 
       const body = await c.req.json();
@@ -54,57 +59,50 @@ export function createProjectHandler(
       });
 
       if (!project) {
-        return c.json(
-          {
-            error: 'Internal Server Error',
-            message: 'Failed to create project',
-          },
-          500
-        );
+        const response: ApiErrorResponse = {
+          error: 'Internal Server Error',
+          message: 'Failed to create project',
+        };
+        return c.json(response, 500);
       }
 
-      const result: CreateProjectResult = {
-        workspaceId,
-        project: {
-          projectId: project.id,
-          projectTitle: project.projectTitle,
-          projectPath: project.projectPath,
-          isDefault: project.isDefault,
-          createdAt: project.createdAt,
-        },
+      const response: ApiResponse<ProjectData> = {
         message: 'Project created successfully',
+        data: {
+          workspaceId,
+          project: {
+            projectId: project.id,
+            projectTitle: project.projectTitle,
+            projectPath: project.projectPath,
+            isDefault: project.isDefault,
+            createdAt: project.createdAt,
+          },
+        },
       };
-
-      return c.json(result, 201);
+      return c.json(response, 201);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -116,23 +114,19 @@ export function getProjectsHandler(projectService: ProjectService) {
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to view projects',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to view projects',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to view projects',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to view projects',
+        };
+        return c.json(response, 403);
       }
 
       // Parse pagination query params
@@ -154,37 +148,29 @@ export function getProjectsHandler(projectService: ProjectService) {
         createdAt: project.createdAt,
       }));
 
-      const result: GetProjectsResult = {
-        workspaceId,
-        projects: projectItems,
-        pagination: {
-          page,
-          perPage,
-          total,
-          totalPages: Math.ceil(total / perPage),
-          hasMore: page < Math.ceil(total / perPage),
+      const response: ApiResponse<ProjectsListData> = {
+        message: 'Projects retrieved successfully',
+        data: {
+          workspaceId,
+          projects: projectItems,
+          pagination: createPaginationMeta(page, perPage, total),
         },
       };
-
-      return c.json(result, 200);
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -202,33 +188,27 @@ export function updateProjectHandler(projectService: ProjectService) {
       const projectId = c.req.param('projectId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to update project',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to update project',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to update project',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to update project',
+        };
+        return c.json(response, 403);
       }
 
       if (!projectId) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Project ID is required',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Project ID is required',
+        };
+        return c.json(response, 400);
       }
 
       const body = await c.req.json();
@@ -244,42 +224,34 @@ export function updateProjectHandler(projectService: ProjectService) {
         await projectService.updateProject(projectId, { projectTitle: updates.projectTitle });
       }
 
-      return c.json(
-        {
-          message: 'Project updated successfully',
-          projectId,
-        },
-        200
-      );
+      const response: ApiResponse<ProjectUpdateData> = {
+        message: 'Project updated successfully',
+        data: { projectId },
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -295,62 +267,50 @@ export function deleteProjectHandler(projectService: ProjectService) {
       const projectId = c.req.param('projectId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to delete a project',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to delete a project',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to delete a project',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to delete a project',
+        };
+        return c.json(response, 403);
       }
 
       if (!projectId) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Project ID is required',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Project ID is required',
+        };
+        return c.json(response, 400);
       }
 
       await projectService.deleteProject(projectId, workspaceId);
 
-      return c.json(
-        {
-          message: 'Project deleted successfully',
-          projectId,
-        },
-        200
-      );
+      const response: ApiResponse<ProjectDeleteData> = {
+        message: 'Project deleted successfully',
+        data: { projectId },
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -368,33 +328,27 @@ export function replaceProjectHandler(projectService: ProjectService) {
       const projectId = c.req.param('projectId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to replace project',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to replace project',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to replace project',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to replace project',
+        };
+        return c.json(response, 403);
       }
 
       if (!projectId) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Project ID is required',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Project ID is required',
+        };
+        return c.json(response, 400);
       }
 
       const body = await c.req.json();
@@ -411,10 +365,10 @@ export function replaceProjectHandler(projectService: ProjectService) {
       // Get updated project to return
       const project = await projectService.getById(projectId);
 
-      return c.json(
-        {
-          message: 'Project replaced successfully',
-          projectId,
+      const response: ApiResponse<ProjectData> = {
+        message: 'Project replaced successfully',
+        data: {
+          workspaceId: workspaceId,
           project: {
             projectId: project.id,
             projectTitle: project.projectTitle,
@@ -423,37 +377,31 @@ export function replaceProjectHandler(projectService: ProjectService) {
             createdAt: project.createdAt,
           },
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }

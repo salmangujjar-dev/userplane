@@ -5,6 +5,7 @@
 
 import type { Context } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
+import type { ApiResponse, ApiErrorResponse, AccountData, AccountUpdateData } from '@/api/types';
 import { UserService } from '@/api/services/user.service';
 import { z } from 'zod';
 import { ValidationError, getErrorStatusCode } from '@/api/lib/errors';
@@ -19,42 +20,37 @@ export function getAccountHandler(userService: UserService) {
       const user = c.get('user');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to get account information',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to get account information',
+        };
+        return c.json(response, 401);
       }
 
       const userData = await userService.getById(user.id);
 
-      return c.json(
-        {
+      const response: ApiResponse<AccountData> = {
+        message: 'Account retrieved successfully',
+        data: {
           userName: userData.name,
           userEmail: userData.email,
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -65,13 +61,11 @@ export function updateAccountHandler(userService: UserService) {
       const user = c.get('user');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to update account',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to update account',
+        };
+        return c.json(response, 401);
       }
 
       const body = await c.req.json();
@@ -79,51 +73,44 @@ export function updateAccountHandler(userService: UserService) {
 
       const updatedUser = await userService.updateName(user.id, name);
 
-      return c.json(
-        {
+      const response: ApiResponse<AccountUpdateData> = {
+        message: 'Account updated successfully',
+        data: {
           userName: updatedUser.name,
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }

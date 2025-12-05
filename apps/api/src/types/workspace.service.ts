@@ -4,7 +4,6 @@
  */
 
 import type { WorkspacePlan, WorkspaceRole, DomainStatus } from './database';
-import type { PaginationMeta } from './common';
 
 /**
  * Token and authentication types
@@ -101,22 +100,6 @@ export interface CreateWorkspaceParams {
 }
 
 /**
- * Result after rotating workspace invite URL
- */
-export interface RotateInviteUrlResult {
-  workspaceId: string;
-  message: string;
-}
-
-/**
- * Result containing workspace invite URL
- */
-export interface GetInviteUrlResult {
-  inviteUrl: string;
-  workspaceId: string;
-}
-
-/**
  * Team member details
  */
 export interface TeamMember {
@@ -124,19 +107,6 @@ export interface TeamMember {
   memberName: string;
   memberEmail: string;
   workspaceRole: WorkspaceRole;
-}
-
-/**
- * Result containing workspace team members with pagination
- */
-export interface GetWorkspaceTeamResult {
-  workspaceId: string;
-  workspaceMembers: TeamMember[];
-  workspaceMembership?: {
-    workspaceMemberId: string;
-    workspaceRole: WorkspaceRole;
-  };
-  pagination: PaginationMeta;
 }
 
 /**
@@ -149,28 +119,10 @@ export interface DomainItem {
 }
 
 /**
- * Result containing workspace domains
- */
-export interface GetWorkspaceDomainsResult {
-  workspaceId: string;
-  domains: DomainItem[];
-  pagination?: PaginationMeta;
-}
-
-/**
  * Request body for adding a domain
  */
 export interface AddDomainRequest {
   url: string;
-}
-
-/**
- * Result after adding a domain
- */
-export interface AddDomainResult {
-  workspaceId: string;
-  domain: DomainItem;
-  message: string;
 }
 
 /**
@@ -190,18 +142,19 @@ export interface UpdateWorkspacePreferencesRequest {
 }
 
 /**
- * Result after updating workspace preferences
+ * Recording link settings data
  */
-export interface UpdateWorkspacePreferencesResult {
+export interface RecordingLinkSettings {
   workspaceId: string;
-  message: string;
-}
-
-/**
- * Result after uploading company logo
- */
-export interface UploadCompanyLogoResult {
-  workspaceId: string;
-  path: string;
-  message: string;
+  recordingCompanyName: string | null;
+  recordingCompanyLogoPath: string | null;
+  recordingHeader: string | null;
+  recordingFootnote: string | null;
+  recordingPrimaryColor: string | null;
+  recordingMaxDuration: number | null;
+  recordingCustomizeLink: boolean;
+  recordingHideSensitive: boolean;
+  recordingCaptureClientLog: boolean;
+  recordingCaptureServerLog: boolean;
+  recordingSlug: string;
 }
