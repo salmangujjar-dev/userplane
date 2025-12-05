@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -8,6 +8,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@workspace/ui/components/pagination';
 import { ChevronRight, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { DomainVerificationPreModal } from '@/components/modals/domain-verification-pre-modal';
 import { DomainVerificationVerifyingModal } from '@/components/modals/domain-verification-verifying-modal';
@@ -19,9 +28,16 @@ const DOMAINS = [
   { id: 1, url: 'localhost:5500/', status: 'Installed', verified: true },
   { id: 2, url: 'app.userplane.io', status: 'Pending', verified: false },
   { id: 3, url: 'staging.userplane.io/dashboard', status: 'Installed', verified: true },
+  { id: 4, url: 'dev.userplane.io', status: 'Installed', verified: true },
+  { id: 5, url: 'localhost:3000/app', status: 'Pending', verified: false },
+  { id: 6, url: 'beta.userplane.io/portal', status: 'Installed', verified: true },
+  { id: 7, url: 'testing.userplane.io', status: 'Pending', verified: false },
+  { id: 8, url: 'production.userplane.io', status: 'Installed', verified: true },
 ];
 
 type VerificationStep = 'pre' | 'verifying' | 'post' | null;
+
+const ITEMS_PER_PAGE = 5;
 
 export function DomainsSection() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -29,6 +45,15 @@ export function DomainsSection() {
   const [verificationStep, setVerificationStep] = useState<VerificationStep>(null);
   const [editingDomain, setEditingDomain] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(DOMAINS.length / ITEMS_PER_PAGE);
+
+  const paginatedDomains = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return DOMAINS.slice(startIndex, endIndex);
+  }, [currentPage]);
 
   const handleCreateDomain = (domainUrl: string) => {
     console.log('Adding domain:', domainUrl);
@@ -80,7 +105,7 @@ export function DomainsSection() {
       </div>
 
       <div className="max-w-2xl space-y-4">
-        {DOMAINS.map((domain) => (
+        {paginatedDomains.map((domain) => (
           <div
             key={domain.id}
             className="flex items-center justify-between p-4 rounded-xl border bg-card"
@@ -155,6 +180,52 @@ export function DomainsSection() {
         >
           Set up another domain
         </Button>
+
+        {totalPages > 1 && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(page)}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                } else if (page === currentPage - 2 || page === currentPage + 2) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                return null;
+              })}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
 
       <DomainVerificationPreModal

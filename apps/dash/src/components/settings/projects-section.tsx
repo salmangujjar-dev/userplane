@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { Button } from '@workspace/ui/components/button';
@@ -10,6 +10,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@workspace/ui/components/pagination';
 import { Folder, Trash2, MoreVertical, CheckCircle2, ChevronRight, Pencil } from 'lucide-react';
 import { CreateProjectModal } from '@/components/modals/create-project-modal';
 import { EditProjectModal } from '@/components/modals/edit-project-modal';
@@ -36,7 +45,34 @@ const PROJECTS: Project[] = [
     title: 'Staging Server',
     isDefault: false,
   },
+  {
+    id: 4,
+    title: 'Testing Suite',
+    isDefault: false,
+  },
+  {
+    id: 5,
+    title: 'Beta Release',
+    isDefault: false,
+  },
+  {
+    id: 6,
+    title: 'Mobile App',
+    isDefault: false,
+  },
+  {
+    id: 7,
+    title: 'Integration Tests',
+    isDefault: false,
+  },
+  {
+    id: 8,
+    title: 'QA Environment',
+    isDefault: false,
+  },
 ];
+
+const ITEMS_PER_PAGE = 5;
 
 export function ProjectsSection() {
   const router = useRouter();
@@ -45,6 +81,15 @@ export function ProjectsSection() {
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE);
+
+  const paginatedProjects = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return projects.slice(startIndex, endIndex);
+  }, [projects, currentPage]);
 
   const handleSetDefault = (projectId: number) => {
     setProjects((prev) =>
@@ -107,7 +152,7 @@ export function ProjectsSection() {
       </div>
 
       <div className="max-w-2xl space-y-4">
-        {projects.map((project) => (
+        {paginatedProjects.map((project) => (
           <div
             key={project.id}
             className="flex items-center justify-between p-4 rounded-xl border bg-card"
@@ -164,6 +209,52 @@ export function ProjectsSection() {
         <Button variant="outline" className="w-full max-w-2xl" onClick={() => setShowModal(true)}>
           Add New Project
         </Button>
+
+        {totalPages > 1 && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(page)}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                } else if (page === currentPage - 2 || page === currentPage + 2) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                return null;
+              })}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
 
       <CreateProjectModal
