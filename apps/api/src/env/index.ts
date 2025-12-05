@@ -23,24 +23,26 @@ interface EnvConfig {
     clientSecret: string;
     redirectUri: string;
   };
+  invite: {
+    secret: string;
+    appUrl: string;
+  };
   database: {
     url: string;
   };
   email: {
     provider: 'localhost' | 'resend';
-    resendApiKey?: string;
+    providerApiKey?: string;
+    inboxes: {
+      onboarding: string;
+      notification: string;
+      billing: string;
+      invite: string;
+    };
   };
   rateLimit: {
     windowMs: number;
     maxRequests: number;
-  };
-  defaultStore: {
-    provider: 'r2' | 's3';
-    url: string;
-    region: string;
-    bucket: string;
-    accessId: string;
-    accessKey: string;
   };
 }
 
@@ -102,24 +104,26 @@ export function loadEnvConfig(): EnvConfig {
       redirectUri:
         process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/callback/google',
     },
+    invite: {
+      secret: process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-in-production',
+      appUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',
+    },
     database: {
       url: process.env.DATABASE_URL || '',
     },
     email: {
       provider: (process.env.EMAIL_PROVIDER as 'localhost' | 'resend') || 'localhost',
-      resendApiKey: process.env.RESEND_API_KEY,
+      providerApiKey: process.env.EMAIL_PROVIDER_API_KEY,
+      inboxes: {
+        onboarding: process.env.EMAIL_ONBOARDING_INBOX || 'onboarding@userplane.io',
+        notification: process.env.EMAIL_NOTIFICATION_INBOX || 'notifications@userplane.io',
+        billing: process.env.EMAIL_BILLING_INBOX || 'billing@userplane.io',
+        invite: process.env.EMAIL_INVITE_INBOX || 'invites@userplane.io',
+      },
     },
     rateLimit: {
       windowMs: parseInteger(process.env.RATE_LIMIT_WINDOW, 60000),
       maxRequests: parseInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
-    },
-    defaultStore: {
-      provider: (process.env.DEFAULT_STORE_PROVIDER as 'r2' | 's3') || 'r2',
-      url: process.env.DEFAULT_STORE_URL || '',
-      region: process.env.DEFAULT_STORE_REGION || 'auto',
-      bucket: process.env.DEFAULT_STORE_BUCKET || '',
-      accessId: process.env.DEFAULT_STORE_ACCESS_ID || '',
-      accessKey: process.env.DEFAULT_STORE_ACCESS_KEY || '',
     },
   };
 
@@ -141,25 +145,25 @@ if (env.nodeEnv === 'production') {
   if (env.auth.secret === 'dev-auth-secret-change-in-production') {
     throw new Error('BETTER_AUTH_SECRET must be set in production');
   }
+  if (env.invite.secret === 'dev-invite-secret-change-in-production') {
+    throw new Error('INVITE_TOKEN_SECRET must be set in production');
+  }
   if (!env.database.url) {
     throw new Error('DATABASE_URL must be set in production');
   }
   if (!env.google.clientId || !env.google.clientSecret) {
     logger.warn('Google OAuth credentials not set. Google authentication will not work.');
   }
-  if (env.email.provider === 'resend' && !env.email.resendApiKey) {
-    throw new Error('RESEND_API_KEY must be set when using resend email provider');
+  if (env.email.provider !== 'localhost' && !env.email.providerApiKey) {
+    throw new Error('EMAIL_PROVIDER_API_KEY must be set when email provider is not localhost');
   }
   if (
-    !env.defaultStore.url ||
-    !env.defaultStore.region ||
-    !env.defaultStore.bucket ||
-    !env.defaultStore.accessId ||
-    !env.defaultStore.accessKey
+    !env.email.inboxes.onboarding ||
+    !env.email.inboxes.notification ||
+    !env.email.inboxes.billing ||
+    !env.email.inboxes.invite
   ) {
-    throw new Error(
-      'Default store configuration (URL, Region, Bucket, Access ID, Access Key) must be set in production'
-    );
+    throw new Error('All email inbox addresses must be configured in production');
   }
 }
 
@@ -176,17 +180,17 @@ export function logConfig(): void {
       corsCredentials: env.cors.credentials,
       authUrl: env.auth.url,
       authCookiePrefix: env.auth.cookiePrefix,
+      inviteAppUrl: env.invite.appUrl,
       database: env.database.url ? 'Connected' : 'Not configured',
       googleOAuth: env.google.clientId ? 'Configured' : 'Not configured',
       emailProvider: env.email.provider,
-      resendConfigured: env.email.provider === 'resend' ? !!env.email.resendApiKey : 'N/A',
-      defaultStoreProvider: env.defaultStore.provider,
-      defaultStoreConfigured:
-        !!env.defaultStore.url &&
-        !!env.defaultStore.region &&
-        !!env.defaultStore.bucket &&
-        !!env.defaultStore.accessId &&
-        !!env.defaultStore.accessKey,
+      emailProviderApiKey: env.email.provider !== 'localhost' ? !!env.email.providerApiKey : 'N/A',
+      emailInboxes: {
+        onboarding: env.email.inboxes.onboarding,
+        notification: env.email.inboxes.notification,
+        billing: env.email.inboxes.billing,
+        invite: env.email.inboxes.invite,
+      },
     },
     'Environment configuration loaded'
   );
