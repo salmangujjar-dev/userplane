@@ -3,7 +3,7 @@
  * Handles all database operations for workspace entities
  */
 
-import { eq, and } from '@workspace/db';
+import { eq, and, count } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { workspaces } from '@workspace/db';
 import type { Transaction, CreateWorkspaceInput } from '@/api/types';
@@ -205,6 +205,86 @@ export class WorkspaceRepository {
           eq(workspaceMembers.isDeleted, false)
         )
       );
+
+    return result;
+  }
+
+  /**
+   * Count total workspaces for a user
+   */
+  async countByUserId(userId: string) {
+    const { workspaceMembers } = await import('@workspace/db');
+
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(workspaces)
+      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaces.isDeleted, false),
+          eq(workspaceMembers.isDeleted, false)
+        )
+      );
+
+    return Number(result?.count || 0);
+  }
+
+  /**
+   * Find workspaces for a user with pagination
+   */
+  async findByUserIdPaginated(
+    userId: string,
+    limit: number,
+    offset: number,
+    options?: {
+      includeNotificationPreferences?: boolean;
+      includeWorkspaceMembership?: boolean;
+    }
+  ) {
+    const { workspaceMembers } = await import('@workspace/db');
+    const includeNotifications = options?.includeNotificationPreferences || false;
+    const includeMembership = options?.includeWorkspaceMembership || false;
+
+    // Build the select object dynamically based on options
+    const selectFields: any = {
+      id: workspaces.id,
+      workspaceName: workspaces.workspaceName,
+      workspacePlan: workspaces.workspacePlan,
+      createdAt: workspaces.createdAt,
+      updatedAt: workspaces.updatedAt,
+    };
+
+    if (includeNotifications) {
+      selectFields.notificationPreferences = {
+        notifyOnLinkUsage: workspaceMembers.notifyOnLinkUsage,
+        notifyOnQuotaReset: workspaceMembers.notifyOnQuotaReset,
+        notifyOnQuotaLimit: workspaceMembers.notifyOnQuotaLimit,
+        notifyOnInviteAccepted: workspaceMembers.notifyOnInviteAccepted,
+        notifyOnMemberJoin: workspaceMembers.notifyOnMemberJoin,
+      };
+    }
+
+    if (includeMembership) {
+      selectFields.workspaceMembership = {
+        workspaceMemberId: workspaceMembers.id,
+        workspaceRole: workspaceMembers.workspaceRole,
+      };
+    }
+
+    const result = await this.db
+      .select(selectFields)
+      .from(workspaces)
+      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaces.isDeleted, false),
+          eq(workspaceMembers.isDeleted, false)
+        )
+      )
+      .limit(limit)
+      .offset(offset);
 
     return result;
   }

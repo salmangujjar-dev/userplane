@@ -154,6 +154,7 @@ export interface DomainItem {
 export interface GetWorkspaceDomainsResult {
   workspaceId: string;
   domains: DomainItem[];
+  pagination?: PaginationMeta;
 }
 
 /**

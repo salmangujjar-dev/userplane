@@ -7,7 +7,7 @@ import type { Context } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
 import { UserService } from '@/api/services/user.service';
 import { z } from 'zod';
-import { ValidationError } from '@/api/lib/errors';
+import { ValidationError, getErrorStatusCode } from '@/api/lib/errors';
 
 const updateAccountSchema = z.object({
   name: z.string().min(1, 'Name is required').trim(),
@@ -39,13 +39,12 @@ export function getAccountHandler(userService: UserService) {
       );
     } catch (error) {
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -109,13 +108,12 @@ export function updateAccountHandler(userService: UserService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 

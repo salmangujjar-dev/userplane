@@ -8,6 +8,7 @@ import type { AppEnv } from '@/api/lib/types';
 import { ProvisionerService } from '@/api/services/provisioner.service';
 import { urlSchema } from '@/api/lib/validation';
 import { z } from 'zod';
+import { getErrorStatusCode } from '@/api/lib/errors';
 
 export const createWorkspaceSchema = z.object({
   url: urlSchema,
@@ -51,13 +52,12 @@ export function createWorkspaceHandler(provisionerService: ProvisionerService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 

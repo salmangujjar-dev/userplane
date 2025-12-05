@@ -3,7 +3,7 @@
  * Handles all database operations for workspace member entities
  */
 
-import { eq, and, count } from '@workspace/db';
+import { eq, and, count, sql, asc } from '@workspace/db';
 import type { DbClient, WorkspaceRole } from '@workspace/db';
 import { workspaceMembers, user } from '@workspace/db';
 import type { Transaction, CreateWorkspaceMemberInput } from '@/api/types';
@@ -81,13 +81,18 @@ export class WorkspaceMemberRepository {
   }
 
   /**
-   * Find all members of a workspace with their user details (paginated)
+   * Find members of a workspace with user details, sorted by role and paginated
+   * Sorting: owner (0) > admin (1) > member (2)
    */
-  async findByWorkspaceWithUsers(
-    workspaceId: string,
-    options?: { limit?: number; offset?: number }
-  ) {
-    let query = this.db
+  async findByWorkspaceWithUsersPaginated(workspaceId: string, limit: number, offset: number) {
+    // Use CASE expression to order by role priority: owner=0, admin=1, member=2
+    const roleOrderSql = sql`CASE 
+      WHEN ${workspaceMembers.workspaceRole} = 'owner' THEN 0 
+      WHEN ${workspaceMembers.workspaceRole} = 'admin' THEN 1 
+      ELSE 2 
+    END`;
+
+    const members = await this.db
       .select({
         id: workspaceMembers.id,
         role: workspaceMembers.workspaceRole,
@@ -98,17 +103,11 @@ export class WorkspaceMemberRepository {
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
       .where(
         and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.isDeleted, false))
-      );
+      )
+      .orderBy(asc(roleOrderSql))
+      .limit(limit)
+      .offset(offset);
 
-    if (options?.limit !== undefined) {
-      query = query.limit(options.limit) as any;
-    }
-
-    if (options?.offset !== undefined) {
-      query = query.offset(options.offset) as any;
-    }
-
-    const members = await query;
     return members;
   }
 
@@ -121,6 +120,25 @@ export class WorkspaceMemberRepository {
       .from(workspaceMembers)
       .where(
         and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.isDeleted, false))
+      );
+
+    return Number(result?.count || 0);
+  }
+
+  /**
+   * Count owners in a workspace
+   * Used to ensure at least one owner remains
+   */
+  async countOwnersByWorkspace(workspaceId: string) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.workspaceRole, 'owner'),
+          eq(workspaceMembers.isDeleted, false)
+        )
       );
 
     return Number(result?.count || 0);

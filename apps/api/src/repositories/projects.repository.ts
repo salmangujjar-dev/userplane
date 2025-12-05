@@ -3,7 +3,7 @@
  * Handles all database operations for project entities
  */
 
-import { eq, and } from '@workspace/db';
+import { eq, and, ne, count } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { projects } from '@workspace/db';
 import type { Transaction, CreateProjectInput } from '@/api/types';
@@ -108,6 +108,50 @@ export class ProjectRepository {
       .select()
       .from(projects)
       .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)));
+  }
+
+  /**
+   * Find projects in workspace with pagination
+   */
+  async findByWorkspacePaginated(workspaceId: string, limit: number, offset: number) {
+    return this.db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /**
+   * Count projects in a workspace
+   */
+  async countByWorkspace(workspaceId: string) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(projects)
+      .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)));
+
+    return Number(result?.count || 0);
+  }
+
+  /**
+   * Find one project in workspace that is not the given project
+   * Used when deleting a default project to find a replacement
+   */
+  async findOtherProject(workspaceId: string, excludeProjectId: string) {
+    const [project] = await this.db
+      .select()
+      .from(projects)
+      .where(
+        and(
+          eq(projects.workspaceId, workspaceId),
+          ne(projects.id, excludeProjectId),
+          eq(projects.isDeleted, false)
+        )
+      )
+      .limit(1);
+
+    return project || null;
   }
 
   /**

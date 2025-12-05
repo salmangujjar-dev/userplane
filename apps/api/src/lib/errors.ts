@@ -56,3 +56,19 @@ export class ConfigurationError extends AppError {
     super(message, 500, 'CONFIGURATION_ERROR');
   }
 }
+
+/**
+ * Get HTTP status code from error
+ * Returns specific status codes for known error types
+ * Falls back to 500 for unknown errors
+ */
+export function getErrorStatusCode(error: unknown): 400 | 401 | 403 | 404 | 409 | 410 | 500 {
+  if (error instanceof ValidationError) return 400;
+  if (error instanceof UnauthorizedError) return 401;
+  if (error instanceof ForbiddenError) return 403;
+  if (error instanceof NotFoundError) return 404;
+  if (error instanceof ConflictError) return 409;
+  if (error instanceof GoneError) return 410;
+  if (error instanceof AppError) return 500;
+  return 500;
+}

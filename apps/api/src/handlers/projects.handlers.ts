@@ -9,6 +9,7 @@ import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import type { GetProjectsResult, CreateProjectResult, ProjectItem } from '@/api/types';
 import { z } from 'zod';
+import { getErrorStatusCode } from '@/api/lib/errors';
 
 const createProjectSchema = z.object({
   projectTitle: z.string().optional().nullable(),
@@ -88,13 +89,12 @@ export function createProjectHandler(
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -135,7 +135,16 @@ export function getProjectsHandler(projectService: ProjectService) {
         );
       }
 
-      const projects = await projectService.getProjectsByWorkspace(workspaceId);
+      // Parse pagination query params
+      const pageParam = c.req.query('page');
+      const page = pageParam ? parseInt(pageParam, 10) : 1;
+      const perPage = 5;
+
+      const { projects, total } = await projectService.getProjectsByWorkspacePaginated(
+        workspaceId,
+        page,
+        perPage
+      );
 
       const projectItems: ProjectItem[] = projects.map((project) => ({
         projectId: project.id,
@@ -148,18 +157,24 @@ export function getProjectsHandler(projectService: ProjectService) {
       const result: GetProjectsResult = {
         workspaceId,
         projects: projectItems,
+        pagination: {
+          page,
+          perPage,
+          total,
+          totalPages: Math.ceil(total / perPage),
+          hasMore: page < Math.ceil(total / perPage),
+        },
       };
 
       return c.json(result, 200);
     } catch (error) {
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -249,13 +264,12 @@ export function updateProjectHandler(projectService: ProjectService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -321,13 +335,12 @@ export function deleteProjectHandler(projectService: ProjectService) {
       );
     } catch (error) {
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -425,13 +438,12 @@ export function replaceProjectHandler(projectService: ProjectService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 

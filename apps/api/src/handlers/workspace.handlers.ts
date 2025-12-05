@@ -9,6 +9,7 @@ import { WorkspaceService } from '@/api/services/workspace.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { InviteService } from '@/api/services/invite.service';
 import { DomainService } from '@/api/services/domain.service';
+import { getErrorStatusCode } from '@/api/lib/errors';
 import type {
   GetInviteUrlResult,
   GetWorkspaceTeamResult,
@@ -99,13 +100,12 @@ export function getInviteUrlHandler(inviteService: InviteService) {
       return c.json(result, 200);
     } catch (error) {
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -156,13 +156,12 @@ export function rotateInviteTokenHandler(inviteService: InviteService) {
       return c.json(result, 200);
     } catch (error) {
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -232,13 +231,12 @@ export function inviteActionHandler(
       return c.json(result, 200);
     } catch (error) {
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -272,27 +270,37 @@ export function getAllWorkspacesHandler(workspaceService: WorkspaceService) {
       const includeNotifications = c.req.query('include_notification_preference') === 'true';
       const includeMembership = c.req.query('include_workspace_membership') === 'true';
 
-      const workspaces = await workspaceService.getByUserId(user.id, {
-        includeNotificationPreferences: includeNotifications,
-        includeWorkspaceMembership: includeMembership,
-      });
+      // Parse pagination query params
+      const pageParam = c.req.query('page');
+      const page = pageParam ? parseInt(pageParam, 10) : 1;
+      const perPage = 5;
+
+      const { workspaces, total } = await workspaceService.getByUserIdPaginated(
+        user.id,
+        page,
+        perPage,
+        {
+          includeNotificationPreferences: includeNotifications,
+          includeWorkspaceMembership: includeMembership,
+        }
+      );
 
       return c.json(
         {
           workspaces,
-          total: workspaces.length,
+          total,
+          pagination: createPaginationMeta(page, perPage, total),
         },
         200
       );
     } catch (error) {
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -341,13 +349,12 @@ export function getWorkspaceByIdHandler(workspaceService: WorkspaceService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -396,13 +403,12 @@ export function getWorkspacePreferencesHandler(workspaceService: WorkspaceServic
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -493,13 +499,12 @@ export function getWorkspaceMembersHandler(
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -543,7 +548,16 @@ export function getWorkspaceDomainsHandler(domainService: DomainService) {
         );
       }
 
-      const domains = await domainService.getByWorkspaceId(workspaceId);
+      // Parse pagination query params
+      const pageParam = c.req.query('page');
+      const page = pageParam ? parseInt(pageParam, 10) : 1;
+      const perPage = 5;
+
+      const { domains, total } = await domainService.getByWorkspaceIdPaginated(
+        workspaceId,
+        page,
+        perPage
+      );
 
       const domainItems: DomainItem[] = domains.map((domain) => ({
         domainId: domain.id,
@@ -554,18 +568,18 @@ export function getWorkspaceDomainsHandler(domainService: DomainService) {
       const result: GetWorkspaceDomainsResult = {
         workspaceId,
         domains: domainItems,
+        pagination: createPaginationMeta(page, perPage, total),
       };
 
       return c.json(result, 200);
     } catch (error) {
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -659,13 +673,12 @@ export function addDomainHandler(domainService: DomainService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -757,13 +770,12 @@ export function updateDomainHandler(domainService: DomainService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -836,13 +848,12 @@ export function deleteDomainHandler(domainService: DomainService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -907,13 +918,12 @@ export function updateWorkspacePreferencesHandler(workspaceService: WorkspaceSer
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -972,7 +982,12 @@ export function updateMemberRoleHandler(workspaceMemberService: WorkspaceMemberS
       const body = await c.req.json();
       const { role } = updateMemberRoleSchema.parse(body);
 
-      await workspaceMemberService.updateMemberRole(memberId, role);
+      await workspaceMemberService.updateMemberRole({
+        memberId,
+        newRole: role,
+        userId: user.id,
+        workspaceId,
+      });
 
       return c.json(
         {
@@ -1005,13 +1020,12 @@ export function updateMemberRoleHandler(workspaceMemberService: WorkspaceMemberS
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -1063,7 +1077,11 @@ export function removeMemberHandler(workspaceMemberService: WorkspaceMemberServi
         );
       }
 
-      await workspaceMemberService.removeMember(memberId, workspaceId);
+      await workspaceMemberService.removeMember({
+        memberId,
+        workspaceId,
+        userId: user.id,
+      });
 
       return c.json(
         {
@@ -1085,13 +1103,12 @@ export function removeMemberHandler(workspaceMemberService: WorkspaceMemberServi
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -1153,13 +1170,12 @@ export function leaveWorkspaceHandler(workspaceMemberService: WorkspaceMemberSer
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -1245,13 +1261,12 @@ export function updateNotificationPreferencesHandler(
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -1374,8 +1389,7 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
-        return c.json({ error: error.name, message: error.message }, statusCode as 500);
+        return c.json({ error: error.name, message: error.message }, getErrorStatusCode(error));
       }
 
       return c.json(
@@ -1447,13 +1461,12 @@ export function updateWorkspaceNameHandler(workspaceService: WorkspaceService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -1515,13 +1528,12 @@ export function deleteWorkspaceHandler(workspaceService: WorkspaceService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
