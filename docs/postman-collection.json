@@ -1,9 +1,9 @@
 {
   "info": {
     "name": "Userplane API",
-    "description": "API collection for Userplane workspace and recording management platform. Uses cookie-based authentication via Better Auth.",
+    "description": "API collection for Userplane workspace and recording management platform. Uses cookie-based authentication via Better Auth.\n\nAll success responses follow a consistent structure:\n```json\n{\n  \"message\": \"Description of what happened\",\n  \"data\": { ... actual response data ... }\n}\n```\n\nError responses follow:\n```json\n{\n  \"message\": \"Description of what went wrong\",\n  \"error\": \"ErrorType\",\n  \"details\": { ... optional additional error details ... }\n}\n```",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "1.5.0"
+    "version": "2.0.0"
   },
   "variable": [
     {
@@ -70,7 +70,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", ""]
             },
-            "description": "Get API index information including version, name, and available endpoints."
+            "description": "Get API index information including version, name, and available endpoints.\n\nResponse data: ApiInfoData"
           },
           "response": []
         },
@@ -84,7 +84,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "health"]
             },
-            "description": "Check API health status with timestamp and version."
+            "description": "Check API health status with timestamp and version.\n\nResponse data: HealthData"
           },
           "response": []
         }
@@ -184,17 +184,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "account"]
             },
-            "description": "Get authenticated user's account information. Returns userName and userEmail."
+            "description": "Get authenticated user's account information.\n\nResponse data: AccountData (userName, userEmail)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"userName\": \"John Doe\",\n  \"userEmail\": \"john@example.com\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update Account",
@@ -220,17 +212,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "account"]
             },
-            "description": "Update authenticated user's account name. Returns updated userName."
+            "description": "Update authenticated user's account name.\n\nResponse data: AccountUpdateData (userName)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"userName\": \"John Doe\"\n}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -260,17 +244,9 @@
                 }
               ]
             },
-            "description": "Validate an invite token without accepting it. No authentication required. Returns workspace info if token is valid."
+            "description": "Validate an invite token without accepting it. No authentication required.\n\nResponse data: InviteActionResult (status, workspaceId, workspaceName, inviterName, inviterEmail)"
           },
-          "response": [
-            {
-              "name": "Valid Invite",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"status\": \"valid\",\n  \"workspaceId\": \"ws_123\",\n  \"workspaceName\": \"My Workspace\",\n  \"inviterName\": \"John Doe\",\n  \"inviterEmail\": \"john@example.com\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Accept Invite",
@@ -300,17 +276,9 @@
                 }
               ]
             },
-            "description": "Accept a workspace invitation using a JWT invite token. Requires authentication. Adds the user as a member of the workspace."
+            "description": "Accept a workspace invitation using a JWT invite token. Requires authentication.\n\nResponse data: InviteActionResult (status, workspaceId, workspaceName)"
           },
-          "response": [
-            {
-              "name": "Accepted",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"status\": \"accepted\",\n  \"workspaceId\": \"ws_123\",\n  \"workspaceName\": \"My Workspace\",\n  \"inviterName\": \"John Doe\",\n  \"inviterEmail\": \"john@example.com\"\n}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -342,7 +310,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace"]
             },
-            "description": "Create a new workspace with initial project, domain, and owner membership. The URL derives the workspace name and creates the first domain."
+            "description": "Create a new workspace with initial project, domain, and owner membership.\n\nResponse data: WorkspaceCreateData (workspaceId)"
           },
           "response": []
         },
@@ -374,7 +342,7 @@
                 }
               ]
             },
-            "description": "Get all workspaces where the authenticated user is a member. Optionally include notification preferences and membership details."
+            "description": "Get all workspaces where the authenticated user is a member.\n\nResponse data: WorkspacesListData (workspaces, total, pagination)"
           },
           "response": []
         },
@@ -394,7 +362,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}"]
             },
-            "description": "Get a specific workspace by ID."
+            "description": "Get a specific workspace by ID.\n\nResponse data: WorkspaceByIdData (workspace)"
           },
           "response": []
         },
@@ -422,17 +390,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}"]
             },
-            "description": "Update the workspace name. Requires admin or owner role."
+            "description": "Update the workspace name. Requires admin or owner role.\n\nResponse data: WorkspaceNameUpdateData (workspaceId, workspaceName)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"message\": \"Workspace name updated successfully\",\n  \"workspace\": {\n    \"id\": \"ws_123\",\n    \"workspaceName\": \"New Workspace Name\",\n    \"workspacePlan\": \"early_bird_monthly\",\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\",\n    \"updatedAt\": \"2024-01-20T15:45:00.000Z\"\n  }\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Delete Workspace",
@@ -450,17 +410,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}"]
             },
-            "description": "Delete a workspace. Requires admin or owner role."
+            "description": "Delete a workspace. Requires admin or owner role.\n\nResponse data: WorkspaceDeleteData (workspaceId)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"message\": \"Workspace deleted successfully\",\n  \"workspaceId\": \"ws_123\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Get Workspace Preferences",
@@ -478,17 +430,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "preferences"]
             },
-            "description": "Get workspace recording preferences including behavior toggles and branding settings."
+            "description": "Get workspace recording preferences including behavior toggles and branding settings.\n\nResponse data: WorkspacePreferencesGetData (preferences)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"recordingSlug\": \"rec_abc123\",\n  \"recordingCustomizeLink\": true,\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true,\n  \"recordingCompanyName\": \"Acme Corp\",\n  \"recordingCompanyLogoPath\": \"/uploads/workspaces/ws_123/logos/logo.png\",\n  \"recordingHeader\": \"Welcome to our recording\",\n  \"recordingFootnote\": null,\n  \"recordingPrimaryColor\": \"#0066CC\",\n  \"recordingMaxDuration\": 3600\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update Workspace Preferences (Toggles)",
@@ -514,17 +458,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "preferences"]
             },
-            "description": "Update workspace recording behavior toggles. All fields are optional booleans. Use PUT /preferences/recording-link for branding settings."
+            "description": "Update workspace recording behavior toggles. All fields are optional booleans.\n\nResponse data: WorkspacePreferencesUpdateData (workspaceId)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"message\": \"Workspace preferences updated successfully\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update Recording Link Settings",
@@ -589,24 +525,9 @@
                 "recording-link"
               ]
             },
-            "description": "Update recording link branding and customization settings. Accepts multipart form data with optional logo file upload. All fields are optional. Send empty string or 'null' to clear a field."
+            "description": "Update recording link branding and customization settings. Accepts multipart form data with optional logo file upload.\n\nResponse data: RecordingLinkSettingsData (workspaceId, recordingCompanyName, recordingCompanyLogoPath, recordingHeader, recordingFootnote, recordingPrimaryColor, recordingMaxDuration, recordingCustomizeLink, recordingHideSensitive, recordingCaptureClientLog, recordingCaptureServerLog, recordingSlug)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"message\": \"Recording link settings updated successfully\",\n  \"workspaceId\": \"ws_123\",\n  \"logoPath\": \"/uploads/workspaces/ws_123/logos/logo.png\"\n}"
-            },
-            {
-              "name": "Success (without logo)",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"message\": \"Recording link settings updated successfully\",\n  \"workspaceId\": \"ws_123\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Leave Workspace",
@@ -624,17 +545,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "leave"]
             },
-            "description": "Leave a workspace (self-removal). Cannot leave if you are the last owner."
+            "description": "Leave a workspace (self-removal). Cannot leave if you are the last owner.\n\nResponse data: { workspaceId }"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"message\": \"Successfully left workspace\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update Notification Preferences",
@@ -660,17 +573,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "notifications"]
             },
-            "description": "Update notification preferences for the authenticated user in the workspace. All fields are optional booleans."
+            "description": "Update notification preferences for the authenticated user in the workspace.\n\nResponse data: { workspaceId }"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"message\": \"Notification preferences updated successfully\"\n}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -706,24 +611,9 @@
                 }
               ]
             },
-            "description": "Get workspace members with pagination. Returns members sorted by role."
+            "description": "Get workspace members with pagination. Returns members sorted by role.\n\nResponse data: WorkspaceTeamData (workspaceId, workspaceMembers, workspaceMembership?, pagination)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"workspaceMembers\": [\n    {\n      \"workspaceMemberId\": \"wm_123\",\n      \"memberName\": \"John Doe\",\n      \"memberEmail\": \"john@example.com\",\n      \"workspaceRole\": \"owner\"\n    },\n    {\n      \"workspaceMemberId\": \"wm_456\",\n      \"memberName\": \"Jane Smith\",\n      \"memberEmail\": \"jane@example.com\",\n      \"workspaceRole\": \"member\"\n    }\n  ],\n  \"pagination\": {\n    \"page\": 1,\n    \"perPage\": 5,\n    \"total\": 2,\n    \"totalPages\": 1\n  }\n}"
-            },
-            {
-              "name": "With include_me",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"workspaceMembers\": [...],\n  \"workspaceMembership\": {\n    \"workspaceMemberId\": \"wm_123\",\n    \"workspaceRole\": \"owner\"\n  },\n  \"pagination\": {\n    \"page\": 1,\n    \"perPage\": 5,\n    \"total\": 2,\n    \"totalPages\": 1\n  }\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update Member Role",
@@ -756,17 +646,9 @@
                 "{{workspaceMemberId}}"
               ]
             },
-            "description": "Update a member's role. Valid roles: 'owner', 'admin', 'member'. Requires admin or owner role."
+            "description": "Update a member's role. Valid roles: 'owner', 'admin', 'member'. Requires admin or owner role.\n\nResponse data: MemberRoleUpdateData (workspaceMemberId, workspaceRole)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"workspaceMemberId\": \"wm_456\",\n  \"message\": \"Member role updated successfully\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Remove Member",
@@ -791,17 +673,9 @@
                 "{{workspaceMemberId}}"
               ]
             },
-            "description": "Remove a member from the workspace (soft delete). Cannot remove the last owner. Requires admin or owner role."
+            "description": "Remove a member from the workspace (soft delete). Cannot remove the last owner. Requires admin or owner role.\n\nResponse data: MemberRemoveData (workspaceMemberId)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"workspaceMemberId\": \"wm_456\",\n  \"message\": \"Member removed successfully\"\n}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -825,17 +699,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "invite"]
             },
-            "description": "Get the current workspace invite URL with JWT token (valid for 30 days). Available to all workspace members."
+            "description": "Get the current workspace invite URL with JWT token (valid for 30 days).\n\nResponse data: InviteUrlData (inviteUrl, workspaceId)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"inviteUrl\": \"https://app.userplane.io/invite?token=eyJ...\",\n  \"workspaceId\": \"ws_123\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Rotate Invite Token",
@@ -853,17 +719,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "invite", "rotate"]
             },
-            "description": "Rotate the workspace invite token, generating a new JWT and invalidating all previous invite links. Returns new invite URL valid for 30 days. Requires admin or owner role."
+            "description": "Rotate the workspace invite token, generating a new JWT and invalidating all previous invite links. Requires admin or owner role.\n\nResponse data: InviteUrlData (inviteUrl, workspaceId)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"inviteUrl\": \"https://app.userplane.io/invite?token=eyJ...\",\n  \"workspaceId\": \"ws_123\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Send Invites by Email",
@@ -889,24 +747,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "invite"]
             },
-            "description": "Send workspace invitations to multiple email addresses. Returns lists of successful and failed invites. Available to all workspace members."
+            "description": "Send workspace invitations to multiple email addresses.\n\nResponse data: SendInvitesResult (sentEmails, failedEmails)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"sentEmails\": [\"user1@example.com\", \"user2@example.com\"],\n  \"failedEmails\": []\n}"
-            },
-            {
-              "name": "Partial Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"sentEmails\": [\"user1@example.com\"],\n  \"failedEmails\": [\n    {\n      \"email\": \"user2@example.com\",\n      \"reason\": \"Invalid email address\"\n    }\n  ]\n}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -930,17 +773,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "projects"]
             },
-            "description": "Get all projects for a workspace."
+            "description": "Get all projects for a workspace.\n\nResponse data: ProjectsListData (workspaceId, projects, pagination)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"projects\": [\n    {\n      \"projectId\": \"proj_123\",\n      \"projectTitle\": \"My Project\",\n      \"projectPath\": \"my-project\",\n      \"isDefault\": true,\n      \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n    }\n  ]\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Create Project",
@@ -966,17 +801,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "projects"]
             },
-            "description": "Create a new project in the workspace. The projectTitle is optional. First project becomes default automatically."
+            "description": "Create a new project in the workspace. The projectTitle is optional.\n\nResponse data: ProjectData (workspaceId, project)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "Created",
-              "code": 201,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"project\": {\n    \"projectId\": \"proj_456\",\n    \"projectTitle\": \"My New Project\",\n    \"projectPath\": \"my-new-project\",\n    \"isDefault\": false,\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n  },\n  \"message\": \"Project created successfully\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update Project (PATCH)",
@@ -1009,17 +836,9 @@
                 "{{projectId}}"
               ]
             },
-            "description": "Partial update a project. Both isDefault and projectTitle are optional. Setting isDefault to true unsets other projects."
+            "description": "Partial update a project. Both isDefault and projectTitle are optional.\n\nResponse data: ProjectUpdateData (projectId)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"message\": \"Project updated successfully\",\n  \"projectId\": \"proj_123\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Replace Project (PUT)",
@@ -1052,17 +871,9 @@
                 "{{projectId}}"
               ]
             },
-            "description": "Full update a project. Unlike PATCH, PUT requires all fields: projectTitle (string or null) and isDefault (boolean). Returns the updated project."
+            "description": "Full update a project. Requires all fields: projectTitle (string or null) and isDefault (boolean).\n\nResponse data: ProjectData (workspaceId, project)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"message\": \"Project replaced successfully\",\n  \"projectId\": \"proj_123\",\n  \"project\": {\n    \"projectId\": \"proj_123\",\n    \"projectTitle\": \"Complete Project Title\",\n    \"projectPath\": \"complete-project-title\",\n    \"isDefault\": false,\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Delete Project",
@@ -1087,17 +898,9 @@
                 "{{projectId}}"
               ]
             },
-            "description": "Delete a project from the workspace."
+            "description": "Delete a project from the workspace.\n\nResponse data: ProjectDeleteData (projectId)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"message\": \"Project deleted successfully\",\n  \"projectId\": \"proj_123\"\n}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -1121,17 +924,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "domains"]
             },
-            "description": "Get all domains for a workspace. Returns domain URL and verification status."
+            "description": "Get all domains for a workspace.\n\nResponse data: WorkspaceDomainsData (workspaceId, domains, pagination)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"domains\": [\n    {\n      \"domainUrl\": \"https://example.com\",\n      \"domainStatus\": \"verified\"\n    },\n    {\n      \"domainUrl\": \"https://staging.example.com\",\n      \"domainStatus\": \"pending\"\n    }\n  ]\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Add Domain",
@@ -1157,17 +952,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "domains"]
             },
-            "description": "Add a new domain to the workspace. Domain starts with 'pending' status."
+            "description": "Add a new domain to the workspace. Domain starts with 'pending' status.\n\nResponse data: DomainAddData (workspaceId, domain)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "Created",
-              "code": 201,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"domain\": {\n    \"domainUrl\": \"https://newdomain.example.com\",\n    \"domainStatus\": \"pending\"\n  },\n  \"message\": \"Domain added successfully\"\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Delete Domain",
@@ -1192,17 +979,9 @@
                 "{{domainId}}"
               ]
             },
-            "description": "Delete a domain from the workspace."
+            "description": "Delete a domain from the workspace.\n\nResponse data: DomainDeleteData (workspaceId, domainId)"
           },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"message\": \"Domain deleted successfully\",\n  \"domainId\": \"dom_123\"\n}"
-            }
-          ]
+          "response": []
         }
       ]
     }
