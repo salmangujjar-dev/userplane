@@ -45,6 +45,12 @@ export class ForbiddenError extends AppError {
   }
 }
 
+export class GoneError extends AppError {
+  constructor(message: string) {
+    super(message, 410, 'GONE');
+  }
+}
+
 export class ConfigurationError extends AppError {
   constructor(message: string) {
     super(message, 500, 'CONFIGURATION_ERROR');

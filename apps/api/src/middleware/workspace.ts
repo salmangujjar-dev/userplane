@@ -7,6 +7,7 @@ import type { Context, Next } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
+import { NotFoundError, GoneError } from '@/api/lib/errors';
 import { createAppLogger } from '@workspace/logger';
 import type { WorkspaceRole } from '@workspace/db';
 
@@ -45,43 +46,57 @@ export function requireWorkspaceMember(
       );
     }
 
-    const workspace = await workspaceService.getById(workspaceId);
+    try {
+      const workspace = await workspaceService.getById(workspaceId);
 
-    if (!workspace) {
-      return c.json(
+      const member = await workspaceMemberService.getMember(user.id, workspace.id);
+
+      if (!member) {
+        return c.json(
+          {
+            error: 'Forbidden',
+            message: 'You are not a member of this workspace',
+          },
+          403
+        );
+      }
+
+      c.set('workspaceId', workspace.id);
+      c.set('workspaceRole', member.workspaceRole);
+
+      logger.debug(
         {
-          error: 'Not Found',
-          message: 'Workspace not found',
+          userId: user.id,
+          workspaceId: workspace.id,
+          role: member.workspaceRole,
         },
-        404
+        'Workspace member verified'
       );
+
+      await next();
+    } catch (error) {
+      if (error instanceof GoneError) {
+        return c.json(
+          {
+            error: 'Gone',
+            message: error.message,
+          },
+          410
+        );
+      }
+
+      if (error instanceof NotFoundError) {
+        return c.json(
+          {
+            error: 'Not Found',
+            message: error.message,
+          },
+          404
+        );
+      }
+
+      throw error;
     }
-
-    const member = await workspaceMemberService.getMember(user.id, workspace.id);
-
-    if (!member) {
-      return c.json(
-        {
-          error: 'Forbidden',
-          message: 'You are not a member of this workspace',
-        },
-        403
-      );
-    }
-
-    c.set('workspaceId', workspace.id);
-    c.set('workspaceRole', member.workspaceRole);
-
-    logger.debug(
-      {
-        userId: user.id,
-        workspaceId: workspace.id,
-        role: member.workspaceRole,
-      },
-      'Workspace member verified'
-    );
-
-    await next();
   };
 }
 
@@ -118,43 +133,57 @@ export function requireWorkspaceRole(
       );
     }
 
-    const workspace = await workspaceService.getById(workspaceId);
+    try {
+      const workspace = await workspaceService.getById(workspaceId);
 
-    if (!workspace) {
-      return c.json(
-        {
-          error: 'Not Found',
-          message: 'Workspace not found',
-        },
-        404
-      );
+      const member = await workspaceMemberService.getMember(user.id, workspace.id);
+
+      if (!member) {
+        return c.json(
+          {
+            error: 'Forbidden',
+            message: 'You are not a member of this workspace',
+          },
+          403
+        );
+      }
+
+      if (!allowedRoles.includes(member.workspaceRole)) {
+        return c.json(
+          {
+            error: 'Forbidden',
+            message: 'You do not have permission to perform this action',
+          },
+          403
+        );
+      }
+
+      c.set('workspaceId', workspace.id);
+      c.set('workspaceRole', member.workspaceRole);
+
+      await next();
+    } catch (error) {
+      if (error instanceof GoneError) {
+        return c.json(
+          {
+            error: 'Gone',
+            message: error.message,
+          },
+          410
+        );
+      }
+
+      if (error instanceof NotFoundError) {
+        return c.json(
+          {
+            error: 'Not Found',
+            message: error.message,
+          },
+          404
+        );
+      }
+
+      throw error;
     }
-
-    const member = await workspaceMemberService.getMember(user.id, workspace.id);
-
-    if (!member) {
-      return c.json(
-        {
-          error: 'Forbidden',
-          message: 'You are not a member of this workspace',
-        },
-        403
-      );
-    }
-
-    if (!allowedRoles.includes(member.workspaceRole)) {
-      return c.json(
-        {
-          error: 'Forbidden',
-          message: 'You do not have permission to perform this action',
-        },
-        403
-      );
-    }
-
-    c.set('workspaceId', workspace.id);
-    c.set('workspaceRole', member.workspaceRole);
-
-    await next();
   };
 }

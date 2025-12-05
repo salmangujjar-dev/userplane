@@ -5,7 +5,7 @@
 
 import { nanoid } from 'nanoid';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
-import { ValidationError, NotFoundError } from '@/api/lib/errors';
+import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type { Transaction, CreateProjectParams } from '@/api/types';
 
 export interface ProjectServiceDeps {
@@ -61,10 +61,15 @@ export class ProjectService {
 
   /**
    * Get project by ID
+   * Throws GoneError if soft-deleted, NotFoundError if not found
    */
   async getById(id: string) {
     const project = await this.deps.projectRepo.findById(id);
     if (!project) {
+      const isSoftDeleted = await this.deps.projectRepo.isSoftDeleted(id);
+      if (isSoftDeleted === true) {
+        throw new GoneError('Project has been deleted');
+      }
       throw new NotFoundError('Project not found');
     }
     return project;

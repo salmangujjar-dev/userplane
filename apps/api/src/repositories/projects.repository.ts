@@ -46,6 +46,23 @@ export class ProjectRepository {
   }
 
   /**
+   * Check if project is soft-deleted
+   * Returns true if project exists but is marked as deleted
+   */
+  async isSoftDeleted(id: string) {
+    const [project] = await this.db
+      .select({
+        id: projects.id,
+        isDeleted: projects.isDeleted,
+      })
+      .from(projects)
+      .where(eq(projects.id, id))
+      .limit(1);
+
+    return project ? project.isDeleted : null;
+  }
+
+  /**
    * Find default project by workspace ID
    */
   async findDefaultByWorkspace(workspaceId: string) {

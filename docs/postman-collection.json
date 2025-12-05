@@ -3,7 +3,7 @@
     "name": "Userplane API",
     "description": "API collection for Userplane workspace and recording management platform. Uses cookie-based authentication via Better Auth.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "1.4.0"
+    "version": "1.5.0"
   },
   "variable": [
     {
@@ -399,6 +399,42 @@
           "response": []
         },
         {
+          "name": "Update Workspace Name",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Workspace Name\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}"]
+            },
+            "description": "Update the workspace name. Requires admin or owner role."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Workspace name updated successfully\",\n  \"workspace\": {\n    \"id\": \"ws_123\",\n    \"workspaceName\": \"New Workspace Name\",\n    \"workspacePlan\": \"early_bird_monthly\",\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\",\n    \"updatedAt\": \"2024-01-20T15:45:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Delete Workspace",
           "request": {
             "method": "DELETE",
@@ -442,12 +478,20 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "preferences"]
             },
-            "description": "Get workspace recording preferences including branding and capture settings."
+            "description": "Get workspace recording preferences including behavior toggles and branding settings."
           },
-          "response": []
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"recordingSlug\": \"rec_abc123\",\n  \"recordingCustomizeLink\": true,\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true,\n  \"recordingCompanyName\": \"Acme Corp\",\n  \"recordingCompanyLogoPath\": \"/uploads/workspaces/ws_123/logos/logo.png\",\n  \"recordingHeader\": \"Welcome to our recording\",\n  \"recordingFootnote\": null,\n  \"recordingPrimaryColor\": \"#0066CC\",\n  \"recordingMaxDuration\": 3600\n}"
+            }
+          ]
         },
         {
-          "name": "Update Workspace Preferences",
+          "name": "Update Workspace Preferences (Toggles)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -463,14 +507,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recordingCustomizeLink\": true,\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true,\n  \"recordingCompanyName\": \"My Company\",\n  \"recordingHeader\": \"Welcome to our recording\",\n  \"recordingFootnote\": null,\n  \"recordingPrimaryColor\": \"#0066CC\",\n  \"recordingMaxDuration\": 3600\n}"
+              "raw": "{\n  \"recordingCustomizeLink\": true,\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/preferences",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "preferences"]
             },
-            "description": "Update workspace recording preferences. All fields are optional. Requires workspace membership."
+            "description": "Update workspace recording behavior toggles. All fields are optional booleans. Use PUT /preferences/recording-link for branding settings."
           },
           "response": [
             {
@@ -483,9 +527,9 @@
           ]
         },
         {
-          "name": "Upload Company Logo",
+          "name": "Update Recording Link Settings",
           "request": {
-            "method": "POST",
+            "method": "PUT",
             "header": [
               {
                 "key": "Cookie",
@@ -497,14 +541,44 @@
               "mode": "formdata",
               "formdata": [
                 {
+                  "key": "recordingCompanyName",
+                  "value": "Acme Corp",
+                  "type": "text",
+                  "description": "Company name displayed on recording link (optional, send empty or 'null' to clear)"
+                },
+                {
+                  "key": "recordingHeader",
+                  "value": "Welcome to our recording",
+                  "type": "text",
+                  "description": "Header text for recording page (optional)"
+                },
+                {
+                  "key": "recordingFootnote",
+                  "value": "",
+                  "type": "text",
+                  "description": "Footnote text for recording page (optional)"
+                },
+                {
+                  "key": "recordingPrimaryColor",
+                  "value": "#0066CC",
+                  "type": "text",
+                  "description": "Primary brand color as hex (optional)"
+                },
+                {
+                  "key": "recordingMaxDuration",
+                  "value": "3600",
+                  "type": "text",
+                  "description": "Max recording duration in seconds (optional, positive integer)"
+                },
+                {
                   "key": "logo",
                   "type": "file",
-                  "description": "PNG file (max 4MB)"
+                  "description": "Company logo file (optional, PNG only, max 4MB)"
                 }
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/preferences/recordingCompanyLogo",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/preferences/recording-link",
               "host": ["{{baseUrl}}"],
               "path": [
                 "api",
@@ -512,10 +586,10 @@
                 "workspace",
                 "{{workspaceId}}",
                 "preferences",
-                "recordingCompanyLogo"
+                "recording-link"
               ]
             },
-            "description": "Upload a company logo for the workspace. Only PNG files up to 4MB are allowed."
+            "description": "Update recording link branding and customization settings. Accepts multipart form data with optional logo file upload. All fields are optional. Send empty string or 'null' to clear a field."
           },
           "response": [
             {
@@ -523,7 +597,14 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"workspaceId\": \"ws_123\",\n  \"path\": \"/uploads/workspaces/ws_123/logos/logo.png\",\n  \"message\": \"Company logo uploaded successfully\"\n}"
+              "body": "{\n  \"message\": \"Recording link settings updated successfully\",\n  \"workspaceId\": \"ws_123\",\n  \"logoPath\": \"/uploads/workspaces/ws_123/logos/logo.png\"\n}"
+            },
+            {
+              "name": "Success (without logo)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Recording link settings updated successfully\",\n  \"workspaceId\": \"ws_123\"\n}"
             }
           ]
         },
