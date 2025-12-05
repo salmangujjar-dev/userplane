@@ -1,11 +1,13 @@
 /**
  * EmailService - Infrastructure service for sending emails
  * Uses @workspace/email package and React Email templates
+ * Emails are sent from configured inboxes with sender context in content
  */
 
 import { createAppLogger } from '@workspace/logger';
 import { emailClient } from '@/api/clients/email';
 import { renderWorkspaceInvite } from '@workspace/email';
+import { env } from '@/api/env';
 import type { WorkspaceInviteEmailParams } from '@/api/types';
 
 const logger = createAppLogger('email-service');
@@ -14,11 +16,13 @@ export class EmailService {
   /**
    * Send workspace invitation email
    * Uses React Email template and idempotency key to prevent duplicate invites
+   * Email is sent from configured invite inbox with inviter details in content
    */
   async sendWorkspaceInvite(params: WorkspaceInviteEmailParams): Promise<void> {
     const idempotencyKey = `workspace-invite/${params.workspaceName}/${params.to}`;
 
     // Render React Email template to HTML
+    // Template includes inviter name and details in the email body
     const html = await renderWorkspaceInvite({
       workspaceName: params.workspaceName,
       inviterName: params.inviterName,
@@ -27,7 +31,7 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `${params.inviterName} <${params.inviterEmail}>`,
+        from: `${params.workspaceName} (via Userplane) <${env.email.inboxes.invite}>`,
         to: params.to,
         subject: `${params.inviterName} invited you to ${params.workspaceName}`,
         html,
@@ -41,6 +45,9 @@ export class EmailService {
       {
         to: params.to,
         workspace: params.workspaceName,
+        inviterName: params.inviterName,
+        inviterEmail: params.inviterEmail,
+        fromInbox: env.email.inboxes.invite,
         provider: emailClient.getProvider(),
       },
       'Workspace invitation sent'

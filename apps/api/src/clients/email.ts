@@ -8,7 +8,7 @@ import { env } from '@/api/env';
 
 export const emailClient: EmailClient = createEmailClient({
   provider: env.email.provider,
-  apiKey: env.email.resendApiKey,
+  apiKey: env.email.providerApiKey,
   workingDirectory: process.cwd(),
 });
 
