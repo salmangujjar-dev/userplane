@@ -15,3 +15,13 @@ export * from './project.service';
 export * from './domain.service';
 export * from './provisioner.service';
 export * from './invite.service';
+
+// API response data types
+export * from './account.data';
+export * from './workspace.data';
+export * from './invite.data';
+export * from './member.data';
+export * from './domain.data';
+export * from './project.data';
+export * from './provisioner.data';
+export * from './status.data';

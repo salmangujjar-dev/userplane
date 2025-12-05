@@ -1,5 +1,6 @@
 import type { AppRouteHandler } from '@/api/lib/types';
 import type * as routes from '@/api/routes/status/status.routes';
+import type { ApiSuccessResponse, ApiInfoData, HealthData } from '@/api/types';
 import { SITE_META } from '@workspace/meta';
 
 /**
@@ -11,9 +12,9 @@ import { SITE_META } from '@workspace/meta';
 const API_VERSION = '1.0.0';
 
 export const index: AppRouteHandler<routes.IndexRoute> = (c) => {
-  return c.json(
-    {
-      message: 'Welcome to Hono API',
+  const response: ApiSuccessResponse<ApiInfoData> = {
+    message: 'Userplane Management API',
+    data: {
       version: API_VERSION,
       name: SITE_META.title,
       description: SITE_META.description,
@@ -22,17 +23,18 @@ export const index: AppRouteHandler<routes.IndexRoute> = (c) => {
         api: '/api/v1',
       },
     },
-    200
-  );
+  };
+  return c.json(response, 200);
 };
 
 export const health: AppRouteHandler<routes.HealthRoute> = (c) => {
-  return c.json(
-    {
+  const response: ApiSuccessResponse<HealthData> = {
+    message: 'Service is healthy',
+    data: {
       status: 'ok',
       timestamp: new Date().toISOString(),
       version: API_VERSION,
     },
-    200
-  );
+  };
+  return c.json(response, 200);
 };

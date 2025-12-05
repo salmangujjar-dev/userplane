@@ -4,21 +4,42 @@ import { jsonContent } from 'stoker/openapi/helpers';
 
 const tags = ['Status'];
 
-const StatusSchema = z.object({
+/**
+ * Health data schema
+ */
+const HealthDataSchema = z.object({
   status: z.string(),
   timestamp: z.string(),
-  version: z.string().optional(),
+  version: z.string(),
 });
 
-const IndexSchema = z.object({
-  message: z.string(),
+/**
+ * API info data schema
+ */
+const ApiInfoDataSchema = z.object({
   version: z.string(),
-  name: z.string().optional(),
-  description: z.string().optional(),
+  name: z.string(),
+  description: z.string(),
   endpoints: z.object({
     health: z.string(),
     api: z.string(),
   }),
+});
+
+/**
+ * Standard API response wrapper for index endpoint
+ */
+const IndexResponseSchema = z.object({
+  message: z.string(),
+  data: ApiInfoDataSchema,
+});
+
+/**
+ * Standard API response wrapper for health endpoint
+ */
+const HealthResponseSchema = z.object({
+  message: z.string(),
+  data: HealthDataSchema,
 });
 
 export const index = createRoute({
@@ -26,7 +47,7 @@ export const index = createRoute({
   method: 'get',
   tags,
   responses: {
-    [HttpStatusCodes.OK]: jsonContent(IndexSchema, 'API index information'),
+    [HttpStatusCodes.OK]: jsonContent(IndexResponseSchema, 'API index information'),
   },
 });
 
@@ -35,7 +56,7 @@ export const health = createRoute({
   method: 'get',
   tags,
   responses: {
-    [HttpStatusCodes.OK]: jsonContent(StatusSchema, 'API health status'),
+    [HttpStatusCodes.OK]: jsonContent(HealthResponseSchema, 'API health status'),
   },
 });
 
