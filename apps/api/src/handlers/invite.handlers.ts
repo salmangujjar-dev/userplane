@@ -8,6 +8,7 @@ import type { AppEnv } from '@/api/lib/types';
 import { InviteService } from '@/api/services/invite.service';
 import { emailArraySchema, nonEmptyString } from '@/api/lib/validation';
 import { z } from 'zod';
+import { getErrorStatusCode } from '@/api/lib/errors';
 
 export const sendInvitesSchema = z.object({
   emails: emailArraySchema,
@@ -62,13 +63,12 @@ export function sendInvitesHandler(inviteService: InviteService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 
@@ -138,13 +138,12 @@ export function inviteActionHandler(inviteService: InviteService) {
       }
 
       if (error instanceof Error) {
-        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
         return c.json(
           {
             error: error.name,
             message: error.message,
           },
-          statusCode as 500
+          getErrorStatusCode(error)
         );
       }
 

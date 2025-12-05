@@ -95,6 +95,36 @@ export class ProjectService {
   }
 
   /**
+   * Get projects in workspace with pagination
+   */
+  async getProjectsByWorkspacePaginated(
+    workspaceId: string,
+    page: number = 1,
+    perPage: number = 5
+  ) {
+    if (page < 1) {
+      throw new ValidationError('Page must be greater than 0');
+    }
+
+    if (perPage < 1 || perPage > 10) {
+      throw new ValidationError('Per page must be between 1 and 10');
+    }
+
+    const total = await this.deps.projectRepo.countByWorkspace(workspaceId);
+    const offset = (page - 1) * perPage;
+    const projects = await this.deps.projectRepo.findByWorkspacePaginated(
+      workspaceId,
+      perPage,
+      offset
+    );
+
+    return {
+      projects,
+      total,
+    };
+  }
+
+  /**
    * Set project as default
    * Unsets current default and sets new one
    */
@@ -138,15 +168,15 @@ export class ProjectService {
     }
 
     // Check if this is the last project in the workspace
-    const allProjects = await this.deps.projectRepo.findByWorkspace(workspaceId);
+    const projectCount = await this.deps.projectRepo.countByWorkspace(workspaceId);
 
-    if (allProjects.length === 1) {
+    if (projectCount === 1) {
       throw new ValidationError('Cannot delete the only project in a workspace');
     }
 
     // If deleting a default project, set another one as default before deletion
     if (project.isDefault) {
-      const otherProject = allProjects.find((p) => p.id !== projectId);
+      const otherProject = await this.deps.projectRepo.findOtherProject(workspaceId, projectId);
       if (otherProject) {
         await this.deps.projectRepo.update(otherProject.id, { isDefault: true }, options);
       }

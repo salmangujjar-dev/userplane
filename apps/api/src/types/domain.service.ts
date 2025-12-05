@@ -4,6 +4,7 @@
  */
 
 import type { DomainStatus } from './database';
+import type { PaginationMeta } from './common';
 
 /**
  * Parameters for creating a domain

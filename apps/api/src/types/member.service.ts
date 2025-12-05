@@ -28,4 +28,15 @@ export interface AddMemberParams {
 export interface UpdateRoleParams {
   memberId: string;
   newRole: WorkspaceRole;
+  userId: string;
+  workspaceId: string;
+}
+
+/**
+ * Parameters for removing a member from workspace
+ */
+export interface RemoveMemberParams {
+  memberId: string;
+  workspaceId: string;
+  userId: string;
 }

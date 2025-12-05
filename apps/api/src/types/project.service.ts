@@ -3,6 +3,8 @@
  * Types for project creation and management operations
  */
 
+import type { PaginationMeta } from './common';
+
 /**
  * Parameters for creating a project
  */
@@ -29,6 +31,7 @@ export interface ProjectItem {
 export interface GetProjectsResult {
   workspaceId: string;
   projects: ProjectItem[];
+  pagination?: PaginationMeta;
 }
 
 /**

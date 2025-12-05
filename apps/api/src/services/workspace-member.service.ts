@@ -6,7 +6,13 @@
 import { nanoid } from 'nanoid';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ValidationError, ConflictError } from '@/api/lib/errors';
-import type { Transaction, AddOwnerParams, AddMemberParams, UpdateRoleParams } from '@/api/types';
+import type {
+  Transaction,
+  AddOwnerParams,
+  AddMemberParams,
+  UpdateRoleParams,
+  RemoveMemberParams,
+} from '@/api/types';
 
 export interface WorkspaceMemberServiceDeps {
   memberRepo: WorkspaceMemberRepository;
@@ -103,69 +109,77 @@ export class WorkspaceMemberService {
   }
 
   /**
-   * Update member role
-   * Requires owner/admin authorization (handled in middleware)
-   */
-  async updateRole(params: UpdateRoleParams, options?: { tx?: Transaction }) {
-    return this.deps.memberRepo.updateRole(params.memberId, params.newRole, options);
-  }
-
-  /**
    * Update workspace member role by member ID
    * Validates that member exists and role is valid
    * Requires owner/admin authorization (handled in middleware)
+   * Prevents self-role changes and ensures at least one owner remains
    */
-  async updateMemberRole(
-    memberId: string,
-    newRole: 'owner' | 'admin' | 'member',
-    options?: { tx?: Transaction }
-  ) {
-    if (!memberId) {
+  async updateMemberRole(params: UpdateRoleParams, options?: { tx?: Transaction }) {
+    if (!params.memberId) {
       throw new ValidationError('Member ID is required');
     }
 
-    if (!['owner', 'admin', 'member'].includes(newRole)) {
-      throw new ValidationError('Invalid role. Must be one of: owner, admin, member');
-    }
-
-    const member = await this.deps.memberRepo.findById(memberId);
+    const member = await this.deps.memberRepo.findById(params.memberId);
     if (!member) {
       throw new ValidationError('Workspace member not found');
     }
 
-    return this.deps.memberRepo.updateRole(memberId, newRole, options);
+    // Prevent users from changing their own role
+    if (member.userId === params.userId) {
+      throw new ValidationError('You cannot change your own role');
+    }
+
+    // If downgrading from owner, ensure at least one owner remains
+    if (member.workspaceRole === 'owner' && params.newRole !== 'owner') {
+      const ownerCount = await this.deps.memberRepo.countOwnersByWorkspace(params.workspaceId);
+
+      if (ownerCount <= 1) {
+        throw new ValidationError(
+          'Cannot change role of the last owner. Promote another member to owner first.'
+        );
+      }
+    }
+
+    return this.deps.memberRepo.updateRole(params.memberId, params.newRole, options);
   }
 
   /**
    * Remove member from workspace (soft delete)
    * Requires owner/admin authorization (handled in middleware)
+   * Cannot remove yourself (use leaveWorkspace instead)
    * Cannot remove the last owner
    */
-  async removeMember(memberId: string, workspaceId: string, options?: { tx?: Transaction }) {
-    if (!memberId) {
+  async removeMember(params: RemoveMemberParams, options?: { tx?: Transaction }) {
+    if (!params.memberId) {
       throw new ValidationError('Member ID is required');
     }
 
-    const member = await this.deps.memberRepo.findById(memberId);
+    const member = await this.deps.memberRepo.findById(params.memberId);
     if (!member) {
       throw new ValidationError('Workspace member not found');
     }
 
-    if (member.workspaceId !== workspaceId) {
+    if (member.workspaceId !== params.workspaceId) {
       throw new ValidationError('Member does not belong to this workspace');
+    }
+
+    // Prevent users from removing themselves (they should use leave endpoint)
+    if (member.userId === params.userId) {
+      throw new ValidationError(
+        'You cannot remove yourself. Use the leave workspace endpoint instead.'
+      );
     }
 
     // Check if this is the last owner
     if (member.workspaceRole === 'owner') {
-      const allMembers = await this.deps.memberRepo.findByWorkspaceWithUsers(workspaceId);
-      const ownerCount = allMembers.filter((m) => m.role === 'owner').length;
+      const ownerCount = await this.deps.memberRepo.countOwnersByWorkspace(params.workspaceId);
 
       if (ownerCount <= 1) {
         throw new ValidationError('Cannot remove the last owner from workspace');
       }
     }
 
-    return this.deps.memberRepo.softDelete(memberId, options);
+    return this.deps.memberRepo.softDelete(params.memberId, options);
   }
 
   /**
@@ -176,8 +190,8 @@ export class WorkspaceMemberService {
   }
 
   /**
-   * Get all team members of a workspace with user details (paginated)
-   * Returns members sorted by role (owner, admin, member)
+   * Get team members of a workspace with user details (paginated)
+   * Returns members sorted by role (owner > admin > member)
    */
   async getTeamMembers(workspaceId: string, page: number = 1, perPage: number = 5) {
     if (!workspaceId) {
@@ -188,28 +202,20 @@ export class WorkspaceMemberService {
       throw new ValidationError('Page must be greater than 0');
     }
 
-    if (perPage < 1 || perPage > 100) {
-      throw new ValidationError('Per page must be between 1 and 100');
+    if (perPage < 1 || perPage > 10) {
+      throw new ValidationError('Per page must be between 1 and 10');
     }
 
-    // Get total count
     const total = await this.deps.memberRepo.countByWorkspace(workspaceId);
-
-    // Get all members (we need to sort them before pagination)
-    const allMembers = await this.deps.memberRepo.findByWorkspaceWithUsers(workspaceId);
-
-    // Role priority for sorting
-    const roleOrder = { owner: 0, admin: 1, member: 2 };
-
-    // Sort members by role (owner > admin > member)
-    const sortedMembers = allMembers.sort((a, b) => roleOrder[a.role] - roleOrder[b.role]);
-
-    // Apply pagination
     const offset = (page - 1) * perPage;
-    const paginatedMembers = sortedMembers.slice(offset, offset + perPage);
+    const members = await this.deps.memberRepo.findByWorkspaceWithUsersPaginated(
+      workspaceId,
+      perPage,
+      offset
+    );
 
     return {
-      members: paginatedMembers,
+      members,
       total,
     };
   }
@@ -231,8 +237,7 @@ export class WorkspaceMemberService {
 
     // Check if this is the last owner
     if (member.workspaceRole === 'owner') {
-      const allMembers = await this.deps.memberRepo.findByWorkspaceWithUsers(workspaceId);
-      const ownerCount = allMembers.filter((m) => m.role === 'owner').length;
+      const ownerCount = await this.deps.memberRepo.countOwnersByWorkspace(workspaceId);
 
       if (ownerCount <= 1) {
         throw new ValidationError(

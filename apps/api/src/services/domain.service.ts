@@ -60,6 +60,32 @@ export class DomainService {
   }
 
   /**
+   * Get domains for a workspace with pagination
+   */
+  async getByWorkspaceIdPaginated(workspaceId: string, page: number = 1, perPage: number = 5) {
+    if (page < 1) {
+      throw new ValidationError('Page must be greater than 0');
+    }
+
+    if (perPage < 1 || perPage > 10) {
+      throw new ValidationError('Per page must be between 1 and 10');
+    }
+
+    const total = await this.deps.domainRepo.countByWorkspace(workspaceId);
+    const offset = (page - 1) * perPage;
+    const domains = await this.deps.domainRepo.findByWorkspaceIdPaginated(
+      workspaceId,
+      perPage,
+      offset
+    );
+
+    return {
+      domains,
+      total,
+    };
+  }
+
+  /**
    * Update domain URL
    * Cleans and validates new URL
    * Checks for uniqueness within the workspace (excluding current domain)
@@ -143,9 +169,9 @@ export class DomainService {
     }
 
     // Check if this is the last domain in the workspace
-    const allDomains = await this.deps.domainRepo.findByWorkspaceId(workspaceId);
+    const domainCount = await this.deps.domainRepo.countByWorkspace(workspaceId);
 
-    if (allDomains.length === 1) {
+    if (domainCount === 1) {
       throw new ValidationError('Cannot delete the only domain in a workspace');
     }
 

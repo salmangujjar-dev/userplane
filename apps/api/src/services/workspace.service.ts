@@ -146,6 +146,47 @@ export class WorkspaceService {
   }
 
   /**
+   * Get workspaces for a user with pagination
+   * Returns workspaces where the user is a member
+   * Optionally includes notification preferences and workspace membership info
+   */
+  async getByUserIdPaginated(
+    userId: string,
+    page: number = 1,
+    perPage: number = 5,
+    options?: {
+      includeNotificationPreferences?: boolean;
+      includeWorkspaceMembership?: boolean;
+    }
+  ) {
+    if (!userId) {
+      throw new ValidationError('User ID is required');
+    }
+
+    if (page < 1) {
+      throw new ValidationError('Page must be greater than 0');
+    }
+
+    if (perPage < 1 || perPage > 50) {
+      throw new ValidationError('Per page must be between 1 and 50');
+    }
+
+    const total = await this.deps.workspaceRepo.countByUserId(userId);
+    const offset = (page - 1) * perPage;
+    const workspaces = await this.deps.workspaceRepo.findByUserIdPaginated(
+      userId,
+      perPage,
+      offset,
+      options
+    );
+
+    return {
+      workspaces,
+      total,
+    };
+  }
+
+  /**
    * Get workspace invite token by ID
    */
   async getInviteToken(id: string) {

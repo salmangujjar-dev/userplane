@@ -3,7 +3,7 @@
  * Handles all database operations for domain entities
  */
 
-import { eq, and, ne } from '@workspace/db';
+import { eq, and, ne, count } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { domains } from '@workspace/db';
 import type { Transaction, CreateDomainInput } from '@/api/types';
@@ -69,6 +69,30 @@ export class DomainRepository {
       .select()
       .from(domains)
       .where(and(eq(domains.workspaceId, workspaceId), eq(domains.isDeleted, false)));
+  }
+
+  /**
+   * Find domains by workspace ID with pagination
+   */
+  async findByWorkspaceIdPaginated(workspaceId: string, limit: number, offset: number) {
+    return this.db
+      .select()
+      .from(domains)
+      .where(and(eq(domains.workspaceId, workspaceId), eq(domains.isDeleted, false)))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /**
+   * Count domains in a workspace
+   */
+  async countByWorkspace(workspaceId: string) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(domains)
+      .where(and(eq(domains.workspaceId, workspaceId), eq(domains.isDeleted, false)));
+
+    return Number(result?.count || 0);
   }
 
   /**
