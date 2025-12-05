@@ -65,7 +65,7 @@ export function createProjectHandler(
       const result: CreateProjectResult = {
         workspaceId,
         project: {
-          id: project.id,
+          projectId: project.id,
           projectTitle: project.projectTitle,
           projectPath: project.projectPath,
           isDefault: project.isDefault,
@@ -138,7 +138,7 @@ export function getProjectsHandler(projectService: ProjectService) {
       const projects = await projectService.getProjectsByWorkspace(workspaceId);
 
       const projectItems: ProjectItem[] = projects.map((project) => ({
-        id: project.id,
+        projectId: project.id,
         projectTitle: project.projectTitle,
         projectPath: project.projectPath,
         isDefault: project.isDefault,
@@ -273,6 +273,75 @@ export function updateProjectHandler(projectService: ProjectService) {
 // Keep the old function name for backward compatibility, but it just calls the new one
 export const setDefaultProjectHandler = updateProjectHandler;
 
+export function deleteProjectHandler(projectService: ProjectService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+      const projectId = c.req.param('projectId');
+
+      if (!user) {
+        return c.json(
+          {
+            error: 'Unauthorized',
+            message: 'You must be logged in to delete a project',
+          },
+          401
+        );
+      }
+
+      if (!workspaceId) {
+        return c.json(
+          {
+            error: 'Forbidden',
+            message: 'You must be a workspace member to delete a project',
+          },
+          403
+        );
+      }
+
+      if (!projectId) {
+        return c.json(
+          {
+            error: 'Bad Request',
+            message: 'Project ID is required',
+          },
+          400
+        );
+      }
+
+      await projectService.deleteProject(projectId, workspaceId);
+
+      return c.json(
+        {
+          message: 'Project deleted successfully',
+          projectId,
+        },
+        200
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
+        return c.json(
+          {
+            error: error.name,
+            message: error.message,
+          },
+          statusCode as 500
+        );
+      }
+
+      return c.json(
+        {
+          error: 'Internal Server Error',
+          message: 'An unexpected error occurred',
+        },
+        500
+      );
+    }
+  };
+}
+
 const replaceProjectSchema = z.object({
   projectTitle: z.string().nullable(),
   isDefault: z.boolean(),
@@ -334,7 +403,7 @@ export function replaceProjectHandler(projectService: ProjectService) {
           message: 'Project replaced successfully',
           projectId,
           project: {
-            id: project.id,
+            projectId: project.id,
             projectTitle: project.projectTitle,
             projectPath: project.projectPath,
             isDefault: project.isDefault,

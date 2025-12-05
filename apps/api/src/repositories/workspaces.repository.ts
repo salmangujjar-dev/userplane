@@ -140,46 +140,45 @@ export class WorkspaceRepository {
    * Find all workspaces for a user (via workspace membership)
    * Returns only essential fields for listing
    */
-  async findByUserId(userId: string, includeNotificationPreferences: boolean = false) {
+  async findByUserId(
+    userId: string,
+    options?: {
+      includeNotificationPreferences?: boolean;
+      includeWorkspaceMembership?: boolean;
+    }
+  ) {
     const { workspaceMembers } = await import('@workspace/db');
+    const includeNotifications = options?.includeNotificationPreferences || false;
+    const includeMembership = options?.includeWorkspaceMembership || false;
 
-    if (includeNotificationPreferences) {
-      const result = await this.db
-        .select({
-          id: workspaces.id,
-          workspaceName: workspaces.workspaceName,
-          workspacePlan: workspaces.workspacePlan,
-          createdAt: workspaces.createdAt,
-          updatedAt: workspaces.updatedAt,
-          notificationPreferences: {
-            notifyOnLinkUsage: workspaceMembers.notifyOnLinkUsage,
-            notifyOnQuotaReset: workspaceMembers.notifyOnQuotaReset,
-            notifyOnQuotaLimit: workspaceMembers.notifyOnQuotaLimit,
-            notifyOnInviteAccepted: workspaceMembers.notifyOnInviteAccepted,
-            notifyOnMemberJoin: workspaceMembers.notifyOnMemberJoin,
-          },
-        })
-        .from(workspaces)
-        .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
-        .where(
-          and(
-            eq(workspaceMembers.userId, userId),
-            eq(workspaces.isDeleted, false),
-            eq(workspaceMembers.isDeleted, false)
-          )
-        );
+    // Build the select object dynamically based on options
+    const selectFields: any = {
+      id: workspaces.id,
+      workspaceName: workspaces.workspaceName,
+      workspacePlan: workspaces.workspacePlan,
+      createdAt: workspaces.createdAt,
+      updatedAt: workspaces.updatedAt,
+    };
 
-      return result;
+    if (includeNotifications) {
+      selectFields.notificationPreferences = {
+        notifyOnLinkUsage: workspaceMembers.notifyOnLinkUsage,
+        notifyOnQuotaReset: workspaceMembers.notifyOnQuotaReset,
+        notifyOnQuotaLimit: workspaceMembers.notifyOnQuotaLimit,
+        notifyOnInviteAccepted: workspaceMembers.notifyOnInviteAccepted,
+        notifyOnMemberJoin: workspaceMembers.notifyOnMemberJoin,
+      };
+    }
+
+    if (includeMembership) {
+      selectFields.workspaceMembership = {
+        workspaceMemberId: workspaceMembers.id,
+        workspaceRole: workspaceMembers.workspaceRole,
+      };
     }
 
     const result = await this.db
-      .select({
-        id: workspaces.id,
-        workspaceName: workspaces.workspaceName,
-        workspacePlan: workspaces.workspacePlan,
-        createdAt: workspaces.createdAt,
-        updatedAt: workspaces.updatedAt,
-      })
+      .select(selectFields)
       .from(workspaces)
       .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
       .where(
@@ -222,5 +221,24 @@ export class WorkspaceRepository {
       .returning();
 
     return updated || null;
+  }
+
+  /**
+   * Soft delete a workspace
+   * Sets isDeleted to true and updates deletedAt timestamp
+   */
+  async softDelete(id: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [deleted] = await dbClient
+      .update(workspaces)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+      })
+      .where(and(eq(workspaces.id, id), eq(workspaces.isDeleted, false)))
+      .returning();
+
+    return deleted || null;
   }
 }

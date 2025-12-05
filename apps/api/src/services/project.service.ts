@@ -118,4 +118,41 @@ export class ProjectService {
     const project = await this.getById(projectId);
     return this.deps.projectRepo.update(projectId, updates, options);
   }
+
+  /**
+   * Soft delete a project
+   * Marks project as deleted without removing from database
+   * Prevents deletion of the last project in a workspace
+   * If deleting a default project, automatically sets another project as default
+   */
+  async deleteProject(projectId: string, workspaceId: string, options?: { tx?: Transaction }) {
+    const project = await this.getById(projectId);
+
+    if (project.workspaceId !== workspaceId) {
+      throw new ValidationError('Project does not belong to this workspace');
+    }
+
+    // Check if this is the last project in the workspace
+    const allProjects = await this.deps.projectRepo.findByWorkspace(workspaceId);
+
+    if (allProjects.length === 1) {
+      throw new ValidationError('Cannot delete the only project in a workspace');
+    }
+
+    // If deleting a default project, set another one as default before deletion
+    if (project.isDefault) {
+      const otherProject = allProjects.find((p) => p.id !== projectId);
+      if (otherProject) {
+        await this.deps.projectRepo.update(otherProject.id, { isDefault: true }, options);
+      }
+    }
+
+    const deleted = await this.deps.projectRepo.softDelete(projectId, options);
+
+    if (!deleted) {
+      throw new ValidationError('Failed to delete project');
+    }
+
+    return deleted;
+  }
 }

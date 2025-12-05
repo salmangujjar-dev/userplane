@@ -32,8 +32,8 @@ export function getAccountHandler(userService: UserService) {
 
       return c.json(
         {
-          name: userData.name,
-          email: userData.email,
+          userName: userData.name,
+          userEmail: userData.email,
         },
         200
       );
@@ -78,11 +78,11 @@ export function updateAccountHandler(userService: UserService) {
       const body = await c.req.json();
       const { name } = updateAccountSchema.parse(body);
 
-      await userService.updateName(user.id, name);
+      const updatedUser = await userService.updateName(user.id, name);
 
       return c.json(
         {
-          message: 'Account updated successfully',
+          userName: updatedUser.name,
         },
         200
       );

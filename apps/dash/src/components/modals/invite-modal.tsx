@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
-import { Link, X, RotateCcw } from 'lucide-react';
+import { Link, X } from 'lucide-react';
 import { toast } from '@workspace/ui/components/sonner';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -41,13 +41,6 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     } catch {
       toast.error('Failed to copy link');
     }
-  };
-
-  const handleResetLink = () => {
-    // TODO: Replace with actual API call to regenerate invite token
-    // Example: await regenerateInviteToken(workspaceId);
-    console.log('Resetting invite link for workspace:', workspaceId);
-    toast.success('Invite link has been reset');
   };
 
   const addEmail = (email: string) => {
@@ -178,15 +171,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <button
-              type="button"
-              onClick={handleResetLink}
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reset Link
-            </button>
-            <div className="flex gap-2">
+            <div className="flex gap-2 ml-auto">
               <Button
                 type="button"
                 variant="secondary"

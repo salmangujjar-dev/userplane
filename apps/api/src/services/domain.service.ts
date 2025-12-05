@@ -58,4 +58,36 @@ export class DomainService {
   async getByWorkspaceId(workspaceId: string) {
     return this.deps.domainRepo.findByWorkspaceId(workspaceId);
   }
+
+  /**
+   * Soft delete a domain
+   * Marks domain as deleted without removing from database
+   * Prevents deletion of the last domain in a workspace
+   */
+  async deleteDomain(domainId: string, workspaceId: string, options?: { tx?: Transaction }) {
+    const domain = await this.deps.domainRepo.findById(domainId);
+
+    if (!domain) {
+      throw new ValidationError('Domain not found');
+    }
+
+    if (domain.workspaceId !== workspaceId) {
+      throw new ValidationError('Domain does not belong to this workspace');
+    }
+
+    // Check if this is the last domain in the workspace
+    const allDomains = await this.deps.domainRepo.findByWorkspaceId(workspaceId);
+
+    if (allDomains.length === 1) {
+      throw new ValidationError('Cannot delete the only domain in a workspace');
+    }
+
+    const deleted = await this.deps.domainRepo.softDelete(domainId, options);
+
+    if (!deleted) {
+      throw new ValidationError('Failed to delete domain');
+    }
+
+    return deleted;
+  }
 }

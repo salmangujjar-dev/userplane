@@ -16,8 +16,8 @@ export interface SendInvitesParams {
  * Result of sending workspace invitations
  */
 export interface SendInvitesResult {
-  sent: string[];
-  failed: Array<{ email: string; reason: string }>;
+  sentEmails: string[];
+  failedEmails: Array<{ email: string; reason: string }>;
 }
 
 /**

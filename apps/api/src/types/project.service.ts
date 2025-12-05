@@ -16,7 +16,7 @@ export interface CreateProjectParams {
  * Project item details
  */
 export interface ProjectItem {
-  id: string;
+  projectId: string;
   projectTitle: string | null;
   projectPath: string;
   isDefault: boolean;

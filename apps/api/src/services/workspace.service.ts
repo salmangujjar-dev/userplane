@@ -120,13 +120,19 @@ export class WorkspaceService {
   /**
    * Get all workspaces for a user
    * Returns workspaces where the user is a member
-   * Optionally includes notification preferences
+   * Optionally includes notification preferences and workspace membership info
    */
-  async getByUserId(userId: string, includeNotificationPreferences: boolean = false) {
+  async getByUserId(
+    userId: string,
+    options?: {
+      includeNotificationPreferences?: boolean;
+      includeWorkspaceMembership?: boolean;
+    }
+  ) {
     if (!userId) {
       throw new ValidationError('User ID is required');
     }
-    return this.deps.workspaceRepo.findByUserId(userId, includeNotificationPreferences);
+    return this.deps.workspaceRepo.findByUserId(userId, options);
   }
 
   /**
@@ -171,5 +177,25 @@ export class WorkspaceService {
     }
 
     return updated;
+  }
+
+  /**
+   * Soft delete a workspace
+   * Marks workspace as deleted without removing from database
+   */
+  async deleteWorkspace(workspaceId: string, options?: { tx?: Transaction }) {
+    const workspace = await this.getById(workspaceId);
+
+    if (!workspace) {
+      throw new NotFoundError('Workspace not found');
+    }
+
+    const deleted = await this.deps.workspaceRepo.softDelete(workspaceId, options);
+
+    if (!deleted) {
+      throw new ValidationError('Failed to delete workspace');
+    }
+
+    return deleted;
   }
 }

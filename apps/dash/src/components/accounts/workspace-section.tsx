@@ -15,6 +15,7 @@ import { Building2, ArrowUpRight, ChevronDown } from 'lucide-react';
 interface WorkspaceNotifications {
   recordingLinksUsed: boolean;
   quotaReset: boolean;
+  quotaReached: boolean;
   someoneJoins: boolean;
   inviteAccepted: boolean;
 }
@@ -36,6 +37,7 @@ const initialWorkspaces: Workspace[] = [
     notifications: {
       recordingLinksUsed: true,
       quotaReset: true,
+      quotaReached: true,
       someoneJoins: true,
       inviteAccepted: true,
     },
@@ -48,6 +50,7 @@ const initialWorkspaces: Workspace[] = [
     notifications: {
       recordingLinksUsed: false,
       quotaReset: true,
+      quotaReached: false,
       someoneJoins: false,
       inviteAccepted: false,
     },
@@ -60,6 +63,7 @@ const initialWorkspaces: Workspace[] = [
     notifications: {
       recordingLinksUsed: true,
       quotaReset: false,
+      quotaReached: true,
       someoneJoins: true,
       inviteAccepted: true,
     },
@@ -99,6 +103,14 @@ export function WorkspaceSection() {
     );
   };
 
+  const handleResetInviteToken = (workspaceId: string) => {
+    console.log('Resetting invite token for workspace:', workspaceId);
+  };
+
+  const handleDeleteWorkspace = (workspaceId: string) => {
+    console.log('Deleting workspace:', workspaceId);
+  };
+
   return (
     <div>
       <div className="mb-4">
@@ -136,14 +148,16 @@ export function WorkspaceSection() {
                     <p className="text-sm text-muted-foreground mt-1">{workspace.joinedAt}</p>
                   </div>
                 </CollapsibleTrigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSwitch(workspace.id)}
-                  className="ml-2"
-                >
-                  {workspace.isCurrent ? 'Leave' : 'Switch'}
-                </Button>
+                {expandedWorkspace !== workspace.id && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSwitch(workspace.id)}
+                    className="ml-2"
+                  >
+                    {workspace.isCurrent ? 'Leave' : 'Switch'}
+                  </Button>
+                )}
               </div>
 
               <CollapsibleContent>
@@ -185,6 +199,22 @@ export function WorkspaceSection() {
 
                     <div className="flex items-center justify-between">
                       <Label
+                        htmlFor={`quota-reached-${workspace.id}`}
+                        className="text-sm font-normal cursor-pointer flex-1"
+                      >
+                        When workspace quota is reached
+                      </Label>
+                      <Switch
+                        id={`quota-reached-${workspace.id}`}
+                        checked={workspace.notifications.quotaReached}
+                        onCheckedChange={(checked) =>
+                          handleNotificationToggle(workspace.id, 'quotaReached', checked)
+                        }
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Label
                         htmlFor={`someone-joins-${workspace.id}`}
                         className="text-sm font-normal cursor-pointer flex-1"
                       >
@@ -213,6 +243,65 @@ export function WorkspaceSection() {
                           handleNotificationToggle(workspace.id, 'inviteAccepted', checked)
                         }
                       />
+                    </div>
+                  </div>
+
+                  <div className="text-sm font-medium pt-4">Workspace Settings</div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="text-sm font-normal">Reset invite token for workspace</div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Generate a new invite token and invalidate the old one
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleResetInviteToken(workspace.id)}
+                        className="ml-2 min-w-[70px]"
+                      >
+                        Reset
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="text-sm font-normal">Delete workspace</div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Permanently delete this workspace and all its data
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteWorkspace(workspace.id)}
+                        className="ml-2 min-w-[70px]"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="text-sm font-normal">
+                          {workspace.isCurrent ? 'Leave workspace' : 'Switch to workspace'}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {workspace.isCurrent
+                            ? 'Leave this workspace and switch to another'
+                            : 'Switch to this workspace'}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSwitch(workspace.id)}
+                        className="ml-2 min-w-[70px]"
+                      >
+                        {workspace.isCurrent ? 'Leave' : 'Switch'}
+                      </Button>
                     </div>
                   </div>
                 </div>
