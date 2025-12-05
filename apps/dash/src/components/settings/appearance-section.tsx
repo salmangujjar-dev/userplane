@@ -6,6 +6,7 @@ import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { Input } from '@workspace/ui/components/input';
 import { Slider } from '@workspace/ui/components/slider';
+import { Button } from '@workspace/ui/components/button';
 import { Upload, Pencil } from 'lucide-react';
 
 const DURATION_MARKS = [
@@ -47,6 +48,16 @@ export function AppearanceSection() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleUpdate = () => {
+    // TODO: Implement update logic to save preferences
+    console.log('Update appearance settings');
+  };
+
+  const handleCancel = () => {
+    // TODO: Implement cancel logic to reset form or navigate away
+    console.log('Cancel changes');
   };
 
   return (
@@ -317,15 +328,6 @@ export function AppearanceSection() {
                         onChange={handleImageUpload}
                         className="hidden"
                       />
-                      {workspaceImage && (
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="mt-2 w-24 px-3 py-1.5 text-xs font-medium rounded-md border border-input bg-background hover:bg-accent transition-colors"
-                        >
-                          Update
-                        </button>
-                      )}
                     </div>
 
                     <div className="flex-1 space-y-4">
@@ -440,6 +442,13 @@ export function AppearanceSection() {
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="flex gap-3 justify-end pt-4 mt-6">
+                    <Button variant="outline" onClick={handleCancel}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleUpdate}>Update</Button>
                   </div>
                 </div>
               </>

@@ -161,147 +161,153 @@ export function WorkspaceSection() {
               </div>
 
               <CollapsibleContent>
-                <div className="px-4 pb-4 pt-2 space-y-4 border-t">
-                  <div className="text-sm font-medium">Notification Settings</div>
+                <div className="px-4 pb-4 pt-4 space-y-6 border-t">
+                  <div className="space-y-4">
+                    <div className="text-sm font-medium">Workspace Settings</div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label
-                        htmlFor={`recording-links-${workspace.id}`}
-                        className="text-sm font-normal cursor-pointer flex-1"
-                      >
-                        When recording links gets used
-                      </Label>
-                      <Switch
-                        id={`recording-links-${workspace.id}`}
-                        checked={workspace.notifications.recordingLinksUsed}
-                        onCheckedChange={(checked) =>
-                          handleNotificationToggle(workspace.id, 'recordingLinksUsed', checked)
-                        }
-                      />
-                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="text-sm font-normal">
+                            Reset invite token for workspace
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Generate a new invite token and invalidate the old one
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleResetInviteToken(workspace.id)}
+                          className="ml-2 min-w-[70px]"
+                        >
+                          Reset
+                        </Button>
+                      </div>
 
-                    <div className="flex items-center justify-between">
-                      <Label
-                        htmlFor={`quota-reset-${workspace.id}`}
-                        className="text-sm font-normal cursor-pointer flex-1"
-                      >
-                        When workspace quota is reset
-                      </Label>
-                      <Switch
-                        id={`quota-reset-${workspace.id}`}
-                        checked={workspace.notifications.quotaReset}
-                        onCheckedChange={(checked) =>
-                          handleNotificationToggle(workspace.id, 'quotaReset', checked)
-                        }
-                      />
-                    </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="text-sm font-normal">Delete workspace</div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Permanently delete this workspace and all its data
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteWorkspace(workspace.id)}
+                          className="ml-2 min-w-[70px]"
+                        >
+                          Delete
+                        </Button>
+                      </div>
 
-                    <div className="flex items-center justify-between">
-                      <Label
-                        htmlFor={`quota-reached-${workspace.id}`}
-                        className="text-sm font-normal cursor-pointer flex-1"
-                      >
-                        When workspace quota is reached
-                      </Label>
-                      <Switch
-                        id={`quota-reached-${workspace.id}`}
-                        checked={workspace.notifications.quotaReached}
-                        onCheckedChange={(checked) =>
-                          handleNotificationToggle(workspace.id, 'quotaReached', checked)
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label
-                        htmlFor={`someone-joins-${workspace.id}`}
-                        className="text-sm font-normal cursor-pointer flex-1"
-                      >
-                        When someone joins my workspace
-                      </Label>
-                      <Switch
-                        id={`someone-joins-${workspace.id}`}
-                        checked={workspace.notifications.someoneJoins}
-                        onCheckedChange={(checked) =>
-                          handleNotificationToggle(workspace.id, 'someoneJoins', checked)
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label
-                        htmlFor={`invite-accepted-${workspace.id}`}
-                        className="text-sm font-normal cursor-pointer flex-1"
-                      >
-                        When someone accepts my invite
-                      </Label>
-                      <Switch
-                        id={`invite-accepted-${workspace.id}`}
-                        checked={workspace.notifications.inviteAccepted}
-                        onCheckedChange={(checked) =>
-                          handleNotificationToggle(workspace.id, 'inviteAccepted', checked)
-                        }
-                      />
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="text-sm font-normal">
+                            {workspace.isCurrent ? 'Leave workspace' : 'Switch to workspace'}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {workspace.isCurrent
+                              ? 'Leave this workspace and switch to another'
+                              : 'Switch to this workspace'}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSwitch(workspace.id)}
+                          className="ml-2 min-w-[70px]"
+                        >
+                          {workspace.isCurrent ? 'Leave' : 'Switch'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="text-sm font-medium pt-4">Workspace Settings</div>
+                  <div className="space-y-4">
+                    <div className="text-sm font-medium">Notification Settings</div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="text-sm font-normal">Reset invite token for workspace</div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Generate a new invite token and invalidate the old one
-                        </p>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label
+                          htmlFor={`recording-links-${workspace.id}`}
+                          className="text-sm font-normal cursor-pointer flex-1"
+                        >
+                          When recording links gets used
+                        </Label>
+                        <Switch
+                          id={`recording-links-${workspace.id}`}
+                          checked={workspace.notifications.recordingLinksUsed}
+                          onCheckedChange={(checked) =>
+                            handleNotificationToggle(workspace.id, 'recordingLinksUsed', checked)
+                          }
+                        />
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleResetInviteToken(workspace.id)}
-                        className="ml-2 min-w-[70px]"
-                      >
-                        Reset
-                      </Button>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="text-sm font-normal">Delete workspace</div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Permanently delete this workspace and all its data
-                        </p>
+                      <div className="flex items-center justify-between">
+                        <Label
+                          htmlFor={`quota-reset-${workspace.id}`}
+                          className="text-sm font-normal cursor-pointer flex-1"
+                        >
+                          When workspace quota is reset
+                        </Label>
+                        <Switch
+                          id={`quota-reset-${workspace.id}`}
+                          checked={workspace.notifications.quotaReset}
+                          onCheckedChange={(checked) =>
+                            handleNotificationToggle(workspace.id, 'quotaReset', checked)
+                          }
+                        />
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteWorkspace(workspace.id)}
-                        className="ml-2 min-w-[70px]"
-                      >
-                        Delete
-                      </Button>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="text-sm font-normal">
-                          {workspace.isCurrent ? 'Leave workspace' : 'Switch to workspace'}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {workspace.isCurrent
-                            ? 'Leave this workspace and switch to another'
-                            : 'Switch to this workspace'}
-                        </p>
+                      <div className="flex items-center justify-between">
+                        <Label
+                          htmlFor={`quota-reached-${workspace.id}`}
+                          className="text-sm font-normal cursor-pointer flex-1"
+                        >
+                          When workspace quota is reached
+                        </Label>
+                        <Switch
+                          id={`quota-reached-${workspace.id}`}
+                          checked={workspace.notifications.quotaReached}
+                          onCheckedChange={(checked) =>
+                            handleNotificationToggle(workspace.id, 'quotaReached', checked)
+                          }
+                        />
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSwitch(workspace.id)}
-                        className="ml-2 min-w-[70px]"
-                      >
-                        {workspace.isCurrent ? 'Leave' : 'Switch'}
-                      </Button>
+
+                      <div className="flex items-center justify-between">
+                        <Label
+                          htmlFor={`someone-joins-${workspace.id}`}
+                          className="text-sm font-normal cursor-pointer flex-1"
+                        >
+                          When someone joins my workspace
+                        </Label>
+                        <Switch
+                          id={`someone-joins-${workspace.id}`}
+                          checked={workspace.notifications.someoneJoins}
+                          onCheckedChange={(checked) =>
+                            handleNotificationToggle(workspace.id, 'someoneJoins', checked)
+                          }
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label
+                          htmlFor={`invite-accepted-${workspace.id}`}
+                          className="text-sm font-normal cursor-pointer flex-1"
+                        >
+                          When someone accepts my invite
+                        </Label>
+                        <Switch
+                          id={`invite-accepted-${workspace.id}`}
+                          checked={workspace.notifications.inviteAccepted}
+                          onCheckedChange={(checked) =>
+                            handleNotificationToggle(workspace.id, 'inviteAccepted', checked)
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

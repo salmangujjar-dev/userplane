@@ -15,7 +15,6 @@ import type {
   GetWorkspaceDomainsResult,
   AddDomainResult,
   UpdateWorkspacePreferencesResult,
-  UploadCompanyLogoResult,
   TeamMember,
   DomainItem,
 } from '@/api/types';
@@ -36,16 +35,32 @@ const addDomainSchema = z.object({
   url: z.string().url('Invalid URL format').min(1, 'URL is required'),
 });
 
+const updateDomainSchema = z.object({
+  url: z.string().url('Invalid URL format').min(1, 'URL is required'),
+});
+
+// Schema for toggling recording behavior preferences
 const updateWorkspacePreferencesSchema = z.object({
   recordingCustomizeLink: z.boolean().optional(),
   recordingHideSensitive: z.boolean().optional(),
   recordingCaptureClientLog: z.boolean().optional(),
   recordingCaptureServerLog: z.boolean().optional(),
+});
+
+// Schema for recording link branding and customization settings
+const updateRecordingLinkSettingsSchema = z.object({
   recordingCompanyName: z.string().nullable().optional(),
   recordingHeader: z.string().nullable().optional(),
   recordingFootnote: z.string().nullable().optional(),
   recordingPrimaryColor: z.string().nullable().optional(),
   recordingMaxDuration: z.number().int().positive().nullable().optional(),
+});
+
+const updateWorkspaceNameSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Workspace name is required')
+    .max(255, 'Workspace name must be less than 255 characters'),
 });
 
 export function getInviteUrlHandler(inviteService: InviteService) {
@@ -531,6 +546,7 @@ export function getWorkspaceDomainsHandler(domainService: DomainService) {
       const domains = await domainService.getByWorkspaceId(workspaceId);
 
       const domainItems: DomainItem[] = domains.map((domain) => ({
+        domainId: domain.id,
         domainUrl: domain.domainUrl,
         domainStatus: domain.domainStatus,
       }));
@@ -612,6 +628,7 @@ export function addDomainHandler(domainService: DomainService) {
       const result: AddDomainResult = {
         workspaceId,
         domain: {
+          domainId: domain.id,
           domainUrl: domain.domainUrl,
           domainStatus: domain.domainStatus,
         },
@@ -619,6 +636,104 @@ export function addDomainHandler(domainService: DomainService) {
       };
 
       return c.json(result, 201);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return c.json(
+          {
+            error: 'Bad Request',
+            message: 'Invalid request body',
+            details: error.errors,
+          },
+          400
+        );
+      }
+
+      if (error instanceof ValidationError) {
+        return c.json(
+          {
+            error: 'Validation Error',
+            message: error.message,
+          },
+          400
+        );
+      }
+
+      if (error instanceof Error) {
+        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
+        return c.json(
+          {
+            error: error.name,
+            message: error.message,
+          },
+          statusCode as 500
+        );
+      }
+
+      return c.json(
+        {
+          error: 'Internal Server Error',
+          message: 'An unexpected error occurred',
+        },
+        500
+      );
+    }
+  };
+}
+
+export function updateDomainHandler(domainService: DomainService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+      const domainId = c.req.param('domainId');
+
+      if (!user) {
+        return c.json(
+          {
+            error: 'Unauthorized',
+            message: 'You must be logged in to update a domain',
+          },
+          401
+        );
+      }
+
+      if (!workspaceId) {
+        return c.json(
+          {
+            error: 'Forbidden',
+            message: 'You must be a workspace member to update a domain',
+          },
+          403
+        );
+      }
+
+      if (!domainId) {
+        return c.json(
+          {
+            error: 'Bad Request',
+            message: 'Domain ID is required',
+          },
+          400
+        );
+      }
+
+      const body = await c.req.json();
+      const { url } = updateDomainSchema.parse(body);
+
+      const updated = await domainService.updateDomainUrl(domainId, workspaceId, url);
+
+      return c.json(
+        {
+          message: 'Domain updated successfully',
+          domainId: updated.id,
+          domain: {
+            domainId: updated.id,
+            domainUrl: updated.domainUrl,
+            domainStatus: updated.domainStatus,
+          },
+        },
+        200
+      );
     } catch (error) {
       if (error instanceof z.ZodError) {
         return c.json(
@@ -1151,7 +1266,36 @@ export function updateNotificationPreferencesHandler(
   };
 }
 
-export function uploadCompanyLogoHandler(workspaceService: WorkspaceService) {
+// Helper to parse nullable form field - converts empty string or 'null' to null
+function parseNullableField(value: unknown): string | null {
+  if (value === undefined || value === '' || value === 'null') return null;
+  return String(value);
+}
+
+// Helper to parse nullable integer from form field
+function parseNullableInt(value: unknown): number | null {
+  if (value === undefined || value === '' || value === 'null') return null;
+  const parsed = parseInt(String(value), 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+// Helper to validate logo file, returns error response or null if valid
+function validateLogoFile(file: File): { error: string; message: string } | null {
+  if (file.type !== 'image/png') {
+    return { error: 'Bad Request', message: 'Only PNG files are allowed for logo' };
+  }
+  const maxSizeInBytes = 4 * 1024 * 1024; // 4MB
+  if (file.size > maxSizeInBytes) {
+    return { error: 'Bad Request', message: 'Logo file size must not exceed 4MB' };
+  }
+  return null;
+}
+
+/**
+ * Handler for updating recording link branding and customization settings
+ * Accepts multipart form data with optional logo file
+ */
+export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceService) {
   return async (c: Context<AppEnv>) => {
     try {
       const user = c.get('user');
@@ -1161,7 +1305,7 @@ export function uploadCompanyLogoHandler(workspaceService: WorkspaceService) {
         return c.json(
           {
             error: 'Unauthorized',
-            message: 'You must be logged in to upload a company logo',
+            message: 'You must be logged in to update recording link settings',
           },
           401
         );
@@ -1171,7 +1315,7 @@ export function uploadCompanyLogoHandler(workspaceService: WorkspaceService) {
         return c.json(
           {
             error: 'Forbidden',
-            message: 'You must be a workspace member to upload a company logo',
+            message: 'You must be a workspace member to update recording link settings',
           },
           403
         );
@@ -1180,56 +1324,118 @@ export function uploadCompanyLogoHandler(workspaceService: WorkspaceService) {
       const body = await c.req.parseBody();
       const file = body['logo'];
 
-      if (!file || !(file instanceof File)) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Logo file is required',
-          },
-          400
-        );
-      }
-
-      // Validate file type - only PNG allowed
-      if (file.type !== 'image/png') {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Only PNG files are allowed',
-          },
-          400
-        );
-      }
-
-      // Validate file size - 4MB limit
-      const maxSizeInBytes = 4 * 1024 * 1024; // 4MB
-      if (file.size > maxSizeInBytes) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'File size must not exceed 4MB',
-          },
-          400
-        );
-      }
-
-      // TODO: Implement actual file storage logic
-      // For now, generate a mocked path
-      const mockedPath = `/uploads/workspaces/${workspaceId}/logos/${file.name}`;
-
-      // Update workspace preferences with the logo path
-      await workspaceService.updatePreferences(workspaceId, {
-        recordingCompanyLogoPath: mockedPath,
+      // Parse form fields into settings object
+      const settings = updateRecordingLinkSettingsSchema.parse({
+        recordingCompanyName: parseNullableField(body['recordingCompanyName']),
+        recordingHeader: parseNullableField(body['recordingHeader']),
+        recordingFootnote: parseNullableField(body['recordingFootnote']),
+        recordingPrimaryColor: parseNullableField(body['recordingPrimaryColor']),
+        recordingMaxDuration: parseNullableInt(body['recordingMaxDuration']),
       });
 
-      const result: UploadCompanyLogoResult = {
-        workspaceId,
-        path: mockedPath,
-        message: 'Company logo uploaded successfully',
-      };
+      const updates: Record<string, unknown> = { ...settings };
+      let logoPath: string | null = null;
 
-      return c.json(result, 200);
+      // Handle optional logo upload
+      if (file && file instanceof File) {
+        const fileError = validateLogoFile(file);
+        if (fileError) {
+          return c.json(fileError, 400);
+        }
+        // TODO: Implement actual file storage logic
+        logoPath = `/uploads/workspaces/${workspaceId}/logos/${file.name}`;
+        updates.recordingCompanyLogoPath = logoPath;
+      }
+
+      await workspaceService.updatePreferences(workspaceId, updates);
+
+      return c.json(
+        {
+          message: 'Recording link settings updated successfully',
+          workspaceId,
+          ...(logoPath && { logoPath }),
+        },
+        200
+      );
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return c.json(
+          {
+            error: 'Validation Error',
+            message: error.errors[0]?.message || 'Invalid input',
+            details: error.errors,
+          },
+          400
+        );
+      }
+
+      if (error instanceof ValidationError) {
+        return c.json({ error: 'Validation Error', message: error.message }, 400);
+      }
+
+      if (error instanceof Error) {
+        const statusCode = 'statusCode' in error ? (error.statusCode as number) : 500;
+        return c.json({ error: error.name, message: error.message }, statusCode as 500);
+      }
+
+      return c.json(
+        { error: 'Internal Server Error', message: 'An unexpected error occurred' },
+        500
+      );
+    }
+  };
+}
+
+export function updateWorkspaceNameHandler(workspaceService: WorkspaceService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.req.param('workspaceId');
+
+      if (!user) {
+        return c.json(
+          {
+            error: 'Unauthorized',
+            message: 'You must be logged in to update workspace name',
+          },
+          401
+        );
+      }
+
+      if (!workspaceId) {
+        return c.json(
+          {
+            error: 'Bad Request',
+            message: 'Workspace ID is required',
+          },
+          400
+        );
+      }
+
+      const body = await c.req.json();
+      const { name } = updateWorkspaceNameSchema.parse(body);
+
+      const updated = await workspaceService.updateName(workspaceId, name);
+
+      return c.json(
+        {
+          message: 'Workspace name updated successfully',
+          workspace: updated,
+        },
+        200
+      );
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return c.json(
+          {
+            error: 'Validation Error',
+            message: error.errors[0]?.message || 'Invalid input',
+            details: error.errors,
+          },
+          400
+        );
+      }
+
       if (error instanceof ValidationError) {
         return c.json(
           {

@@ -143,6 +143,7 @@ export interface GetWorkspaceTeamResult {
  * Domain details for workspace
  */
 export interface DomainItem {
+  domainId: string;
   domainUrl: string;
   domainStatus: DomainStatus;
 }

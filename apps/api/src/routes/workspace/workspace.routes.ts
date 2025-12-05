@@ -15,6 +15,7 @@ import {
   getWorkspaceByIdHandler,
   getWorkspacePreferencesHandler,
   updateWorkspacePreferencesHandler,
+  updateRecordingLinkSettingsHandler,
   getWorkspaceMembersHandler,
   updateMemberRoleHandler,
   removeMemberHandler,
@@ -22,8 +23,9 @@ import {
   updateNotificationPreferencesHandler,
   getWorkspaceDomainsHandler,
   addDomainHandler,
+  updateDomainHandler,
   deleteDomainHandler,
-  uploadCompanyLogoHandler,
+  updateWorkspaceNameHandler,
   deleteWorkspaceHandler,
 } from '@/api/handlers/workspace.handlers';
 import {
@@ -54,6 +56,14 @@ export function createWorkspaceRoutes(
   // Get specific workspace by ID - returns basic info only
   workspaceRoutes.get('/:id', requireAuth, getWorkspaceByIdHandler(workspaceService));
 
+  // Update workspace name - requires admin or owner role
+  workspaceRoutes.patch(
+    '/:workspaceId',
+    requireAuth,
+    requireWorkspaceRole(workspaceMemberService, workspaceService, ['admin', 'owner']),
+    updateWorkspaceNameHandler(workspaceService)
+  );
+
   // Delete workspace - requires admin or owner role
   workspaceRoutes.delete(
     '/:workspaceId',
@@ -69,12 +79,20 @@ export function createWorkspaceRoutes(
     getWorkspacePreferencesHandler(workspaceService)
   );
 
-  // Update workspace preferences - updates recording settings
+  // Update workspace preferences - toggles recording behavior flags
   workspaceRoutes.patch(
     '/:workspaceId/preferences',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     updateWorkspacePreferencesHandler(workspaceService)
+  );
+
+  // Update recording link settings - branding, customization, and logo upload
+  workspaceRoutes.put(
+    '/:workspaceId/preferences/recording-link',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    updateRecordingLinkSettingsHandler(workspaceService)
   );
 
   // Get workspace members - returns workspace members with pagination
@@ -164,7 +182,7 @@ export function createWorkspaceRoutes(
   );
 
   workspaceRoutes.put(
-    '/:id/project/:projectId',
+    '/:workspaceId/project/:projectId',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     replaceProjectHandler(projectService)
@@ -192,19 +210,18 @@ export function createWorkspaceRoutes(
     addDomainHandler(domainService)
   );
 
+  workspaceRoutes.patch(
+    '/:workspaceId/domains/:domainId',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    updateDomainHandler(domainService)
+  );
+
   workspaceRoutes.delete(
     '/:workspaceId/domains/:domainId',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     deleteDomainHandler(domainService)
-  );
-
-  // Company logo upload route
-  workspaceRoutes.post(
-    '/:workspaceId/preferences/recordingCompanyLogo',
-    requireAuth,
-    requireWorkspaceMember(workspaceMemberService, workspaceService),
-    uploadCompanyLogoHandler(workspaceService)
   );
 
   return workspaceRoutes;

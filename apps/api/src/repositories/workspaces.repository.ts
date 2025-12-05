@@ -53,6 +53,23 @@ export class WorkspaceRepository {
   }
 
   /**
+   * Check if workspace is soft-deleted
+   * Returns true if workspace exists but is marked as deleted
+   */
+  async isSoftDeleted(id: string) {
+    const [workspace] = await this.db
+      .select({
+        id: workspaces.id,
+        isDeleted: workspaces.isDeleted,
+      })
+      .from(workspaces)
+      .where(eq(workspaces.id, id))
+      .limit(1);
+
+    return workspace ? workspace.isDeleted : null;
+  }
+
+  /**
    * Find workspace preferences by ID
    * Returns recording-related settings
    */
@@ -219,6 +236,28 @@ export class WorkspaceRepository {
       .set(data)
       .where(and(eq(workspaces.id, workspaceId), eq(workspaces.isDeleted, false)))
       .returning();
+
+    return updated || null;
+  }
+
+  /**
+   * Update workspace name
+   * Updates the workspace name field
+   */
+  async updateName(workspaceId: string, newName: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(workspaces)
+      .set({ workspaceName: newName })
+      .where(and(eq(workspaces.id, workspaceId), eq(workspaces.isDeleted, false)))
+      .returning({
+        id: workspaces.id,
+        workspaceName: workspaces.workspaceName,
+        workspacePlan: workspaces.workspacePlan,
+        createdAt: workspaces.createdAt,
+        updatedAt: workspaces.updatedAt,
+      });
 
     return updated || null;
   }

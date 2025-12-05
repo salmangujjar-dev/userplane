@@ -3,7 +3,7 @@
  * Handles all database operations for domain entities
  */
 
-import { eq, and } from '@workspace/db';
+import { eq, and, ne } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { domains } from '@workspace/db';
 import type { Transaction, CreateDomainInput } from '@/api/types';
@@ -45,6 +45,23 @@ export class DomainRepository {
   }
 
   /**
+   * Check if domain is soft-deleted
+   * Returns true if domain exists but is marked as deleted
+   */
+  async isSoftDeleted(id: string) {
+    const [domain] = await this.db
+      .select({
+        id: domains.id,
+        isDeleted: domains.isDeleted,
+      })
+      .from(domains)
+      .where(eq(domains.id, id))
+      .limit(1);
+
+    return domain ? domain.isDeleted : null;
+  }
+
+  /**
    * Find domains by workspace ID
    */
   async findByWorkspaceId(workspaceId: string) {
@@ -72,6 +89,47 @@ export class DomainRepository {
       .limit(1);
 
     return domain || null;
+  }
+
+  /**
+   * Find domain by workspace ID and URL, excluding a specific domain ID
+   * Used to check uniqueness when updating a domain
+   */
+  async findByWorkspaceAndUrlExcluding(workspaceId: string, url: string, excludeDomainId: string) {
+    const [domain] = await this.db
+      .select()
+      .from(domains)
+      .where(
+        and(
+          eq(domains.workspaceId, workspaceId),
+          eq(domains.domainUrl, url),
+          ne(domains.id, excludeDomainId),
+          eq(domains.isDeleted, false)
+        )
+      )
+      .limit(1);
+
+    return domain || null;
+  }
+
+  /**
+   * Update domain URL
+   * Updates the domain URL and resets status to pending
+   */
+  async updateUrl(id: string, url: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(domains)
+      .set({
+        domainUrl: url,
+        domainStatus: 'pending',
+        updatedAt: new Date(),
+      })
+      .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))
+      .returning();
+
+    return updated || null;
   }
 
   /**

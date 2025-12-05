@@ -6,7 +6,7 @@
 import { nanoid } from 'nanoid';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { TokenService } from '@/api/services/token.service';
-import { ValidationError, NotFoundError } from '@/api/lib/errors';
+import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type { Transaction, CreateWorkspaceParams } from '@/api/types';
 
 export interface WorkspaceServiceDeps {
@@ -55,10 +55,15 @@ export class WorkspaceService {
   /**
    * Get workspace by ID
    * Returns only basic workspace info
+   * Throws GoneError if soft-deleted, NotFoundError if not found
    */
   async getById(id: string) {
     const workspace = await this.deps.workspaceRepo.findById(id);
     if (!workspace) {
+      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(id);
+      if (isSoftDeleted === true) {
+        throw new GoneError('Workspace has been deleted');
+      }
       throw new NotFoundError('Workspace not found');
     }
     return workspace;
@@ -67,10 +72,15 @@ export class WorkspaceService {
   /**
    * Get workspace preferences by ID
    * Returns recording-related settings
+   * Throws GoneError if soft-deleted, NotFoundError if not found
    */
   async getPreferencesById(id: string) {
     const preferences = await this.deps.workspaceRepo.findPreferencesById(id);
     if (!preferences) {
+      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(id);
+      if (isSoftDeleted === true) {
+        throw new GoneError('Workspace has been deleted');
+      }
       throw new NotFoundError('Workspace not found');
     }
     return preferences;
@@ -174,6 +184,33 @@ export class WorkspaceService {
     const updated = await this.deps.workspaceRepo.updatePreferences(workspaceId, updates, options);
     if (!updated) {
       throw new NotFoundError('Failed to update workspace preferences');
+    }
+
+    return updated;
+  }
+
+  /**
+   * Update workspace name
+   * Requires admin or owner role
+   */
+  async updateName(workspaceId: string, newName: string, options?: { tx?: Transaction }) {
+    if (!newName || newName.trim().length === 0) {
+      throw new ValidationError('Workspace name is required');
+    }
+
+    if (newName.length > 255) {
+      throw new ValidationError('Workspace name must be less than 255 characters');
+    }
+
+    const workspace = await this.getById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundError('Workspace not found');
+    }
+
+    const updated = await this.deps.workspaceRepo.updateName(workspaceId, newName.trim(), options);
+
+    if (!updated) {
+      throw new NotFoundError('Failed to update workspace name');
     }
 
     return updated;
