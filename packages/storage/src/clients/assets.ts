@@ -1,0 +1,84 @@
+import { BaseStorageClient } from '../base';
+import type { BucketType, StorageConfig, AssetsClientOptions } from '../types';
+import { CacheControl } from '../types';
+
+const ALLOWED_CONTENT_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+  'image/svg+xml',
+  'image/avif',
+] as const;
+
+const EXTENSION_MAP: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/svg+xml': 'svg',
+  'image/avif': 'avif',
+};
+
+export class AssetsStorageClient extends BaseStorageClient {
+  protected readonly bucketType: BucketType = 'assets';
+  protected readonly allowedContentTypes = ALLOWED_CONTENT_TYPES;
+  protected readonly cacheControl = CacheControl.STANDARD;
+
+  private domain?: string;
+  private maxSizeBytes?: number;
+
+  constructor(config: StorageConfig, options?: AssetsClientOptions) {
+    super(config);
+    this.domain = options?.domain;
+    this.maxSizeBytes = options?.maxSizeBytes;
+  }
+
+  private validateSize(body: Buffer | Uint8Array | string): void {
+    if (!this.maxSizeBytes) return;
+
+    const size = typeof body === 'string' ? Buffer.byteLength(body) : body.byteLength;
+    if (size > this.maxSizeBytes) {
+      throw new Error(`File size ${size} bytes exceeds maximum allowed ${this.maxSizeBytes} bytes`);
+    }
+  }
+
+  async put(
+    path: string,
+    body: Buffer | Uint8Array | string,
+    contentType: string
+  ): Promise<{ key: string }> {
+    this.validateSize(body);
+    return super.put(path, body, contentType);
+  }
+
+  async putWorkspaceLogo(workspaceId: string, body: Buffer | Uint8Array, contentType: string) {
+    const ext = this.getExtension(contentType);
+    return this.put(`workspaces/${workspaceId}/logo.${ext}`, body, contentType);
+  }
+
+  async putAvatar(userId: string, body: Buffer | Uint8Array, contentType: string) {
+    const ext = this.getExtension(contentType);
+    return this.put(`avatars/${userId}.${ext}`, body, contentType);
+  }
+
+  getAssetUrl(path: string): string {
+    if (!this.domain) {
+      throw new Error('Domain required for public asset URLs');
+    }
+    const key = this.resolveKey(path);
+    return `https://${this.domain}/${key}`;
+  }
+
+  getWorkspaceLogoUrl(workspaceId: string, ext: string = 'png'): string {
+    return this.getAssetUrl(`workspaces/${workspaceId}/logo.${ext}`);
+  }
+
+  getAvatarUrl(userId: string, ext: string = 'png'): string {
+    return this.getAssetUrl(`avatars/${userId}.${ext}`);
+  }
+
+  private getExtension(contentType: string): string {
+    return EXTENSION_MAP[contentType] ?? 'png';
+  }
+}
