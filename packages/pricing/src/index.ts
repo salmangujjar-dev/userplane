@@ -16,6 +16,7 @@ export const PLAN_IDS = [
   'enterprise_monthly',
   'enterprise_annual',
   'early_bird_monthly',
+  'tiny_bird_monthly',
 ] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
@@ -252,6 +253,33 @@ const EARLY_BIRD_FEATURES: PlanFeature[] = [
 ];
 
 /**
+ * Shared features for Tiny Bird plan
+ * Focused on screen recording only, without console logs or error capture
+ */
+const TINY_BIRD_FEATURES: PlanFeature[] = [
+  {
+    text: 'Unlimited Screen Recordings',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Request unlimited recordings to spot and solve issues',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Replay Customer Issues',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Know exactly what happened, without the back and forth',
+        included: true,
+      },
+    ],
+  },
+];
+
+/**
  * Shared features for Enterprise plan
  */
 const ENTERPRISE_FEATURES: PlanFeature[] = [
@@ -397,12 +425,24 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
     },
     features: EARLY_BIRD_FEATURES,
   },
+  // Tiny Bird Monthly
+  {
+    id: 'tiny_bird_monthly',
+    name: 'Tiny Bird',
+    description: 'Simple screen recording for teams',
+    details: {
+      planType: 'subscription',
+      planRate: 99,
+      planCycle: 'monthly',
+    },
+    features: TINY_BIRD_FEATURES,
+  },
 ];
 
 /**
  * Pricing version
  */
-export type PricingVersion = 'v1' | 'v2';
+export type PricingVersion = 'v1' | 'v2' | 'v3';
 
 /**
  * Mapping of pricing versions to plan IDs
@@ -417,6 +457,7 @@ export const PRICING_VERSION_PLANS: Record<PricingVersion, PlanId[]> = {
     'enterprise_annual',
   ],
   v2: ['early_bird_monthly'],
+  v3: ['tiny_bird_monthly'],
 };
 
 /**
