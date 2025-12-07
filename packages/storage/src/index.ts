@@ -12,7 +12,12 @@ export { LogsStorageClient } from './clients/logs';
 export { RecordingsStorageClient } from './clients/recordings';
 export { ScreenshotsStorageClient } from './clients/screenshots';
 export { ThumbnailsStorageClient } from './clients/thumbnails';
-export { AssetsStorageClient } from './clients/assets';
+export {
+  AssetsStorageClient,
+  ASSETS_ALLOWED_CONTENT_TYPES,
+  ASSETS_EXTENSION_MAP,
+  type AssetsContentType,
+} from './clients/assets';
 
 // Types
 export { CacheControl } from './types';
