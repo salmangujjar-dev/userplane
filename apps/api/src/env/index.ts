@@ -4,6 +4,22 @@
  */
 import { createAppLogger } from '@workspace/logger';
 
+interface BucketCredentials {
+  accountId: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucketName: string;
+}
+
+interface StorageConfig {
+  profile: 'development' | 'staging' | 'production';
+  assetsDomain?: string;
+  dev?: BucketCredentials;
+  cdn?: BucketCredentials;
+  assets?: BucketCredentials;
+  reports?: BucketCredentials;
+}
+
 interface EnvConfig {
   port: number;
   host: string;
@@ -44,6 +60,7 @@ interface EnvConfig {
     windowMs: number;
     maxRequests: number;
   };
+  storage: StorageConfig;
 }
 
 /**
@@ -125,6 +142,42 @@ export function loadEnvConfig(): EnvConfig {
       windowMs: parseInteger(process.env.RATE_LIMIT_WINDOW, 60000),
       maxRequests: parseInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
     },
+    storage: {
+      profile: (process.env.STORAGE_PROFILE || 'development') as StorageConfig['profile'],
+      assetsDomain: process.env.ASSETS_DOMAIN,
+      dev: process.env.R2_DEV_ACCOUNT_ID
+        ? {
+            accountId: process.env.R2_DEV_ACCOUNT_ID,
+            accessKeyId: process.env.R2_DEV_ACCESS_KEY_ID || '',
+            secretAccessKey: process.env.R2_DEV_SECRET_ACCESS_KEY || '',
+            bucketName: process.env.R2_DEV_BUCKET_NAME || '',
+          }
+        : undefined,
+      cdn: process.env.R2_CDN_ACCOUNT_ID
+        ? {
+            accountId: process.env.R2_CDN_ACCOUNT_ID,
+            accessKeyId: process.env.R2_CDN_ACCESS_KEY_ID || '',
+            secretAccessKey: process.env.R2_CDN_SECRET_ACCESS_KEY || '',
+            bucketName: process.env.R2_CDN_BUCKET_NAME || '',
+          }
+        : undefined,
+      assets: process.env.R2_ASSETS_ACCOUNT_ID
+        ? {
+            accountId: process.env.R2_ASSETS_ACCOUNT_ID,
+            accessKeyId: process.env.R2_ASSETS_ACCESS_KEY_ID || '',
+            secretAccessKey: process.env.R2_ASSETS_SECRET_ACCESS_KEY || '',
+            bucketName: process.env.R2_ASSETS_BUCKET_NAME || '',
+          }
+        : undefined,
+      reports: process.env.R2_REPORTS_ACCOUNT_ID
+        ? {
+            accountId: process.env.R2_REPORTS_ACCOUNT_ID,
+            accessKeyId: process.env.R2_REPORTS_ACCESS_KEY_ID || '',
+            secretAccessKey: process.env.R2_REPORTS_SECRET_ACCESS_KEY || '',
+            bucketName: process.env.R2_REPORTS_BUCKET_NAME || '',
+          }
+        : undefined,
+    },
   };
 
   return config;
@@ -190,6 +243,14 @@ export function logConfig(): void {
         notification: env.email.inboxes.notification,
         billing: env.email.inboxes.billing,
         invite: env.email.inboxes.invite,
+      },
+      storage: {
+        profile: env.storage.profile,
+        assetsDomain: env.storage.assetsDomain || 'Not configured',
+        dev: env.storage.dev ? 'Configured' : 'Not configured',
+        cdn: env.storage.cdn ? 'Configured' : 'Not configured',
+        assets: env.storage.assets ? 'Configured' : 'Not configured',
+        reports: env.storage.reports ? 'Configured' : 'Not configured',
       },
     },
     'Environment configuration loaded'
