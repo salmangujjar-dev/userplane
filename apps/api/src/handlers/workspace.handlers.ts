@@ -30,6 +30,8 @@ import type {
   MemberRoleUpdateData,
   MemberRemoveData,
   RecordingLinkSettingsData,
+  LeaveWorkspaceData,
+  NotificationPreferencesUpdateData,
 } from '@/api/types';
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
@@ -668,33 +670,27 @@ export function updateDomainHandler(domainService: DomainService) {
       const domainId = c.req.param('domainId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to update a domain',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to update a domain',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to update a domain',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to update a domain',
+        };
+        return c.json(response, 403);
       }
 
       if (!domainId) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Domain ID is required',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Domain ID is required',
+        };
+        return c.json(response, 400);
       }
 
       const body = await c.req.json();
@@ -702,57 +698,49 @@ export function updateDomainHandler(domainService: DomainService) {
 
       const updated = await domainService.updateDomainUrl(domainId, workspaceId, url);
 
-      return c.json(
-        {
-          message: 'Domain updated successfully',
-          domainId: updated.id,
+      const response: ApiResponse<DomainUpdateData> = {
+        message: 'Domain updated successfully',
+        data: {
+          workspaceId,
           domain: {
             domainId: updated.id,
             domainUrl: updated.domainUrl,
             domainStatus: updated.domainStatus,
           },
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -765,72 +753,61 @@ export function deleteDomainHandler(domainService: DomainService) {
       const domainId = c.req.param('domainId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to delete a domain',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to delete a domain',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to delete a domain',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to delete a domain',
+        };
+        return c.json(response, 403);
       }
 
       if (!domainId) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Domain ID is required',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Domain ID is required',
+        };
+        return c.json(response, 400);
       }
 
       await domainService.deleteDomain(domainId, workspaceId);
 
-      return c.json(
-        {
-          message: 'Domain deleted successfully',
+      const response: ApiResponse<DomainDeleteData> = {
+        message: 'Domain deleted successfully',
+        data: {
+          workspaceId,
           domainId,
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -842,23 +819,19 @@ export function updateWorkspacePreferencesHandler(workspaceService: WorkspaceSer
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to update workspace preferences',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to update workspace preferences',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to update workspace preferences',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to update workspace preferences',
+        };
+        return c.json(response, 403);
       }
 
       const body = await c.req.json();
@@ -910,33 +883,27 @@ export function updateMemberRoleHandler(workspaceMemberService: WorkspaceMemberS
       const memberId = c.req.param('workspaceMemberId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to update member role',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to update member role',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to update member role',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to update member role',
+        };
+        return c.json(response, 403);
       }
 
       if (!memberId) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Member ID is required',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Member ID is required',
+        };
+        return c.json(response, 400);
       }
 
       const body = await c.req.json();
@@ -949,53 +916,46 @@ export function updateMemberRoleHandler(workspaceMemberService: WorkspaceMemberS
         workspaceId,
       });
 
-      return c.json(
-        {
+      const response: ApiResponse<MemberRoleUpdateData> = {
+        message: 'Member role updated successfully',
+        data: {
           workspaceId,
           workspaceMemberId: memberId,
-          message: 'Member role updated successfully',
+          workspaceRole: role,
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -1008,33 +968,27 @@ export function removeMemberHandler(workspaceMemberService: WorkspaceMemberServi
       const memberId = c.req.param('workspaceMemberId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to remove a member',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to remove a member',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to remove a member',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to remove a member',
+        };
+        return c.json(response, 403);
       }
 
       if (!memberId) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Member ID is required',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Member ID is required',
+        };
+        return c.json(response, 400);
       }
 
       await workspaceMemberService.removeMember({
@@ -1043,42 +997,36 @@ export function removeMemberHandler(workspaceMemberService: WorkspaceMemberServi
         userId: user.id,
       });
 
-      return c.json(
-        {
+      const response: ApiResponse<MemberRemoveData> = {
+        message: 'Member removed successfully',
+        data: {
           workspaceId,
           workspaceMemberId: memberId,
-          message: 'Member removed successfully',
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -1090,62 +1038,52 @@ export function leaveWorkspaceHandler(workspaceMemberService: WorkspaceMemberSer
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to leave a workspace',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to leave a workspace',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to leave a workspace',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to leave a workspace',
+        };
+        return c.json(response, 403);
       }
 
       await workspaceMemberService.leaveWorkspace(user.id, workspaceId);
 
-      return c.json(
-        {
+      const response: ApiResponse<LeaveWorkspaceData> = {
+        message: 'Successfully left workspace',
+        data: {
           workspaceId,
-          message: 'Successfully left workspace',
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -1167,23 +1105,19 @@ export function updateNotificationPreferencesHandler(
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to update notification preferences',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to update notification preferences',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to update notification preferences',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to update notification preferences',
+        };
+        return c.json(response, 403);
       }
 
       const body = await c.req.json();
@@ -1191,52 +1125,44 @@ export function updateNotificationPreferencesHandler(
 
       await workspaceMemberService.updateNotificationPreferences(user.id, workspaceId, preferences);
 
-      return c.json(
-        {
+      const response: ApiResponse<NotificationPreferencesUpdateData> = {
+        message: 'Notification preferences updated successfully',
+        data: {
           workspaceId,
-          message: 'Notification preferences updated successfully',
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Invalid request body',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -1279,23 +1205,19 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
       const workspaceId = c.get('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to update recording link settings',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to update recording link settings',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Forbidden',
-            message: 'You must be a workspace member to update recording link settings',
-          },
-          403
-        );
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to update recording link settings',
+        };
+        return c.json(response, 403);
       }
 
       const body = await c.req.parseBody();
@@ -1316,7 +1238,11 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
       if (file && file instanceof File) {
         const fileError = validateLogoFile(file);
         if (fileError) {
-          return c.json(fileError, 400);
+          const response: ApiErrorResponse = {
+            error: fileError.error,
+            message: fileError.message,
+          };
+          return c.json(response, 400);
         }
 
         try {
@@ -1328,13 +1254,11 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
           const logoUrl = assetsStorage.getWorkspaceLogoUrl(workspaceId, ext);
           updates.recordingCompanyLogoPath = logoUrl;
         } catch (uploadError) {
-          return c.json(
-            {
-              error: 'Upload Failed',
-              message: uploadError instanceof Error ? uploadError.message : 'Failed to upload logo',
-            },
-            500
-          );
+          const response: ApiErrorResponse = {
+            error: 'Upload Failed',
+            message: uploadError instanceof Error ? uploadError.message : 'Failed to upload logo',
+          };
+          return c.json(response, 500);
         }
       }
 
@@ -1385,10 +1309,11 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
         return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        { error: 'Internal Server Error', message: 'An unexpected error occurred' },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -1400,23 +1325,19 @@ export function updateWorkspaceNameHandler(workspaceService: WorkspaceService) {
       const workspaceId = c.req.param('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to update workspace name',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to update workspace name',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Workspace ID is required',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Workspace ID is required',
+        };
+        return c.json(response, 400);
       }
 
       const body = await c.req.json();
@@ -1424,52 +1345,45 @@ export function updateWorkspaceNameHandler(workspaceService: WorkspaceService) {
 
       const updated = await workspaceService.updateName(workspaceId, name);
 
-      return c.json(
-        {
-          message: 'Workspace name updated successfully',
-          workspace: updated,
+      const response: ApiResponse<WorkspaceNameUpdateData> = {
+        message: 'Workspace name updated successfully',
+        data: {
+          workspaceId: updated.id,
+          workspaceName: updated.workspaceName,
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.errors[0]?.message || 'Invalid input',
-            details: error.errors,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.errors[0]?.message || 'Invalid input',
+          details: error.errors,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }
@@ -1481,62 +1395,52 @@ export function deleteWorkspaceHandler(workspaceService: WorkspaceService) {
       const workspaceId = c.req.param('workspaceId');
 
       if (!user) {
-        return c.json(
-          {
-            error: 'Unauthorized',
-            message: 'You must be logged in to delete a workspace',
-          },
-          401
-        );
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to delete a workspace',
+        };
+        return c.json(response, 401);
       }
 
       if (!workspaceId) {
-        return c.json(
-          {
-            error: 'Bad Request',
-            message: 'Workspace ID is required',
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Workspace ID is required',
+        };
+        return c.json(response, 400);
       }
 
       await workspaceService.deleteWorkspace(workspaceId);
 
-      return c.json(
-        {
-          message: 'Workspace deleted successfully',
+      const response: ApiResponse<WorkspaceDeleteData> = {
+        message: 'Workspace deleted successfully',
+        data: {
           workspaceId,
         },
-        200
-      );
+      };
+      return c.json(response, 200);
     } catch (error) {
       if (error instanceof ValidationError) {
-        return c.json(
-          {
-            error: 'Validation Error',
-            message: error.message,
-          },
-          400
-        );
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
       }
 
       if (error instanceof Error) {
-        return c.json(
-          {
-            error: error.name,
-            message: error.message,
-          },
-          getErrorStatusCode(error)
-        );
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
       }
 
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: 'An unexpected error occurred',
-        },
-        500
-      );
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
     }
   };
 }

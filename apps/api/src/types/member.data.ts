@@ -20,10 +20,20 @@ export interface WorkspaceMembershipData {
 }
 
 export interface MemberRoleUpdateData {
+  workspaceId: string;
   workspaceMemberId: string;
   workspaceRole: WorkspaceRole;
 }
 
 export interface MemberRemoveData {
+  workspaceId: string;
   workspaceMemberId: string;
+}
+
+export interface LeaveWorkspaceData {
+  workspaceId: string;
+}
+
+export interface NotificationPreferencesUpdateData {
+  workspaceId: string;
 }
