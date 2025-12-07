@@ -2,7 +2,7 @@ import { BaseStorageClient } from '../base';
 import type { BucketType, StorageConfig, AssetsClientOptions } from '../types';
 import { CacheControl } from '../types';
 
-const ALLOWED_CONTENT_TYPES = [
+export const ASSETS_ALLOWED_CONTENT_TYPES = [
   'image/png',
   'image/jpeg',
   'image/webp',
@@ -11,7 +11,9 @@ const ALLOWED_CONTENT_TYPES = [
   'image/avif',
 ] as const;
 
-const EXTENSION_MAP: Record<string, string> = {
+export type AssetsContentType = (typeof ASSETS_ALLOWED_CONTENT_TYPES)[number];
+
+export const ASSETS_EXTENSION_MAP: Record<AssetsContentType, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
@@ -19,6 +21,10 @@ const EXTENSION_MAP: Record<string, string> = {
   'image/svg+xml': 'svg',
   'image/avif': 'avif',
 };
+
+// Internal aliases for backward compatibility
+const ALLOWED_CONTENT_TYPES = ASSETS_ALLOWED_CONTENT_TYPES;
+const EXTENSION_MAP = ASSETS_EXTENSION_MAP;
 
 export class AssetsStorageClient extends BaseStorageClient {
   protected readonly bucketType: BucketType = 'assets';
@@ -79,6 +85,6 @@ export class AssetsStorageClient extends BaseStorageClient {
   }
 
   private getExtension(contentType: string): string {
-    return EXTENSION_MAP[contentType] ?? 'png';
+    return EXTENSION_MAP[contentType as AssetsContentType] ?? 'png';
   }
 }

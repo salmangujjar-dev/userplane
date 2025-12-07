@@ -34,6 +34,13 @@ import type {
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
 import type { WorkspaceRole } from '@workspace/db';
+import { getAssetsStorage } from '@/api/clients/storage';
+import {
+  ASSETS_ALLOWED_CONTENT_TYPES,
+  ASSETS_EXTENSION_MAP,
+  type AssetsContentType,
+} from '@workspace/storage';
+import { MAX_LOGO_SIZE_BYTES } from '@/api/constants/limits';
 
 const workspaceIdParamSchema = z.object({
   id: z.string().min(1),
@@ -1249,11 +1256,13 @@ function parseNullableInt(value: unknown): number | null {
 
 // Helper to validate logo file, returns error response or null if valid
 function validateLogoFile(file: File): { error: string; message: string } | null {
-  if (file.type !== 'image/png') {
-    return { error: 'Bad Request', message: 'Only PNG files are allowed for logo' };
+  if (!ASSETS_ALLOWED_CONTENT_TYPES.includes(file.type as AssetsContentType)) {
+    return {
+      error: 'Bad Request',
+      message: `Invalid file type. Allowed: ${ASSETS_ALLOWED_CONTENT_TYPES.join(', ')}`,
+    };
   }
-  const maxSizeInBytes = 4 * 1024 * 1024; // 4MB
-  if (file.size > maxSizeInBytes) {
+  if (file.size > MAX_LOGO_SIZE_BYTES) {
     return { error: 'Bad Request', message: 'Logo file size must not exceed 4MB' };
   }
   return null;
@@ -1302,7 +1311,6 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
       });
 
       const updates: Record<string, unknown> = { ...settings };
-      let logoPath: string | null = null;
 
       // Handle optional logo upload
       if (file && file instanceof File) {
@@ -1310,9 +1318,24 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
         if (fileError) {
           return c.json(fileError, 400);
         }
-        // TODO: Implement actual file storage logic
-        logoPath = `/uploads/workspaces/${workspaceId}/logos/${file.name}`;
-        updates.recordingCompanyLogoPath = logoPath;
+
+        try {
+          const assetsStorage = getAssetsStorage();
+          const fileBuffer = Buffer.from(await file.arrayBuffer());
+          await assetsStorage.putWorkspaceLogo(workspaceId, fileBuffer, file.type);
+
+          const ext = ASSETS_EXTENSION_MAP[file.type as AssetsContentType] ?? 'png';
+          const logoUrl = assetsStorage.getWorkspaceLogoUrl(workspaceId, ext);
+          updates.recordingCompanyLogoPath = logoUrl;
+        } catch (uploadError) {
+          return c.json(
+            {
+              error: 'Upload Failed',
+              message: uploadError instanceof Error ? uploadError.message : 'Failed to upload logo',
+            },
+            500
+          );
+        }
       }
 
       const updatedWorkspace = await workspaceService.updatePreferences(workspaceId, updates);
