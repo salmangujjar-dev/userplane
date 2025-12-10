@@ -21,6 +21,13 @@ export const recordingStatusEnum = pgEnum('recording_status', [
   'completed',
 ]);
 export const streamProviderEnum = pgEnum('stream_provider', ['cloudflare', 'mux']);
+export const streamingStatusEnum = pgEnum('streaming_status', [
+  'pending',
+  'ready',
+  'failed',
+  'completed',
+  'expired',
+]);
 
 export const recordings = pgTable(
   'recordings',
@@ -40,6 +47,7 @@ export const recordings = pgTable(
     // Hot storage (14-day retention in stream provider)
     streamProvider: streamProviderEnum('stream_provider'),
     streamId: text('stream_id'),
+    streamingStatus: streamingStatusEnum('streaming_status'),
 
     // Cold storage (permanent archival in object storage)
     recordingMediaRef: text('recording_media_ref'),

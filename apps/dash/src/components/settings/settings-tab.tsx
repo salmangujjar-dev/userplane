@@ -20,9 +20,9 @@ export function SettingsTab() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-8">
+          <WorkspacePlanSection />
           <OverviewSection />
           <IntegrationSection />
-          <WorkspacePlanSection />
         </TabsContent>
 
         <TabsContent value="team" className="space-y-8">
