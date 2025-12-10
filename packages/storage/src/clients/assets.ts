@@ -50,12 +50,12 @@ export class AssetsStorageClient extends BaseStorageClient {
   }
 
   async put(
-    path: string,
+    key: string,
     body: Buffer | Uint8Array | string,
     contentType: string
-  ): Promise<{ key: string }> {
+  ): Promise<{ path: string }> {
     this.validateSize(body);
-    return super.put(path, body, contentType);
+    return super.put(key, body, contentType);
   }
 
   async putWorkspaceLogo(workspaceId: string, body: Buffer | Uint8Array, contentType: string) {
@@ -68,20 +68,21 @@ export class AssetsStorageClient extends BaseStorageClient {
     return this.put(`avatars/${userId}.${ext}`, body, contentType);
   }
 
+  // Public CDN URL - takes stored path from DB, prefixes with domain
+
   getAssetUrl(path: string): string {
     if (!this.domain) {
       throw new Error('Domain required for public asset URLs');
     }
-    const key = this.resolveKey(path);
-    return `https://${this.domain}/${key}`;
+    return `https://${this.domain}/${path}`;
   }
 
-  getWorkspaceLogoUrl(workspaceId: string, ext: string = 'png'): string {
-    return this.getAssetUrl(`workspaces/${workspaceId}/logo.${ext}`);
+  getWorkspaceLogoUrl(path: string): string {
+    return this.getAssetUrl(path);
   }
 
-  getAvatarUrl(userId: string, ext: string = 'png'): string {
-    return this.getAssetUrl(`avatars/${userId}.${ext}`);
+  getAvatarUrl(path: string): string {
+    return this.getAssetUrl(path);
   }
 
   private getExtension(contentType: string): string {

@@ -13,10 +13,12 @@ export class ScreenshotsStorageClient extends BaseStorageClient {
     super(config);
   }
 
-  protected resolveKey(path: string): string {
-    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
-    return `${this.basePrefix}screenshots/${normalizedPath}`;
+  protected resolvePath(key: string): string {
+    const normalizedKey = key.startsWith('/') ? key.slice(1) : key;
+    return `${this.basePrefix}screenshots/${normalizedKey}`;
   }
+
+  // Upload method - returns { url, path } where path is stored in DB
 
   async getScreenshotUploadUrl(
     reportId: string,
@@ -30,7 +32,9 @@ export class ScreenshotsStorageClient extends BaseStorageClient {
     });
   }
 
-  async getScreenshotUrl(reportId: string, filename: string, options?: PresignedUrlOptions) {
-    return this.getDownloadUrl(`${reportId}/${filename}`, options);
+  // Download method - takes stored path from DB
+
+  async getScreenshotDownloadUrl(path: string, options?: PresignedUrlOptions) {
+    return this.getDownloadUrl(path, options);
   }
 }

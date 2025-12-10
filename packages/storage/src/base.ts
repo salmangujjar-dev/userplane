@@ -71,9 +71,14 @@ export abstract class BaseStorageClient {
     });
   }
 
-  protected resolveKey(path: string): string {
-    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
-    return `${this.basePrefix}${normalizedPath}`;
+  /**
+   * Resolve a key to its full storage path
+   * key = input identifier (e.g., "abc123.webm")
+   * path = full storage path (stored in DB, used for download)
+   */
+  protected resolvePath(key: string): string {
+    const normalizedKey = key.startsWith('/') ? key.slice(1) : key;
+    return `${this.basePrefix}${normalizedKey}`;
   }
 
   protected validateContentType(contentType: string): void {
@@ -85,16 +90,20 @@ export abstract class BaseStorageClient {
     }
   }
 
+  /**
+   * Get presigned upload URL
+   * Returns { url, path } where path should be stored in database
+   */
   async getUploadUrl(
-    path: string,
+    key: string,
     options: UploadPresignOptions
-  ): Promise<{ url: string; key: string }> {
+  ): Promise<{ url: string; path: string }> {
     this.validateContentType(options.contentType);
-    const key = this.resolveKey(path);
+    const path = this.resolvePath(key);
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
-      Key: key,
+      Key: path,
       ContentType: options.contentType,
       ContentLength: options.contentLength,
       CacheControl: this.cacheControl,
@@ -105,15 +114,18 @@ export abstract class BaseStorageClient {
       signableHeaders: new Set(['content-type', 'content-length']),
     });
 
-    return { url, key };
+    return { url, path };
   }
 
-  async getDownloadUrl(path: string, options: PresignedUrlOptions = {}): Promise<string> {
-    const key = this.resolveKey(path);
-
+  /**
+   * Get presigned download URL for a stored object
+   * Takes the path as stored in the database (returned from getUploadUrl)
+   * Subclasses should expose their own getXDownloadUrl methods that wrap this
+   */
+  protected async getDownloadUrl(path: string, options: PresignedUrlOptions = {}): Promise<string> {
     const command = new GetObjectCommand({
       Bucket: this.bucket,
-      Key: key,
+      Key: path,
     });
 
     return getSignedUrl(this.client, command, {
@@ -121,32 +133,37 @@ export abstract class BaseStorageClient {
     });
   }
 
+  /**
+   * Put object directly (without presigned URL)
+   * Returns { path } where path should be stored in database
+   */
   async put(
-    path: string,
+    key: string,
     body: Buffer | Uint8Array | string,
     contentType: string
-  ): Promise<{ key: string }> {
+  ): Promise<{ path: string }> {
     this.validateContentType(contentType);
-    const key = this.resolveKey(path);
+    const path = this.resolvePath(key);
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
-      Key: key,
+      Key: path,
       Body: body,
       ContentType: contentType,
       CacheControl: this.cacheControl,
     });
 
     await this.client.send(command);
-    return { key };
+    return { path };
   }
 
+  /**
+   * Delete object by its stored path
+   */
   async delete(path: string): Promise<void> {
-    const key = this.resolveKey(path);
-
     const command = new DeleteObjectCommand({
       Bucket: this.bucket,
-      Key: key,
+      Key: path,
     });
 
     await this.client.send(command);

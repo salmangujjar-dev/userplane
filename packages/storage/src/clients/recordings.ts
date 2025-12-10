@@ -20,10 +20,12 @@ export class RecordingsStorageClient extends BaseStorageClient {
     super(config);
   }
 
-  protected resolveKey(path: string): string {
-    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
-    return `${this.basePrefix}recordings/${normalizedPath}`;
+  protected resolvePath(key: string): string {
+    const normalizedKey = key.startsWith('/') ? key.slice(1) : key;
+    return `${this.basePrefix}recordings/${normalizedKey}`;
   }
+
+  // Upload method - returns { url, path } where path is stored in DB
 
   async getRecordingUploadUrl(
     recordingId: string,
@@ -37,14 +39,10 @@ export class RecordingsStorageClient extends BaseStorageClient {
     });
   }
 
-  async getRecordingUrl(recordingId: string, ext: string, options?: PresignedUrlOptions) {
-    return this.getDownloadUrl(`${recordingId}.${ext}`, options);
-  }
+  // Download method - takes stored path from DB
 
-  async getPublicRecordingUrl(recordingId: string, ext: string, options?: PresignedUrlOptions) {
-    return this.getDownloadUrl(`${recordingId}.${ext}`, {
-      expiresIn: options?.expiresIn ?? 86400,
-    });
+  async getRecordingDownloadUrl(path: string, options?: PresignedUrlOptions) {
+    return this.getDownloadUrl(path, options);
   }
 
   private getExtension(contentType: string): string {

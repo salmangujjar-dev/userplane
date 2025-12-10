@@ -1,5 +1,10 @@
 import { BaseStorageClient } from '../base';
-import type { BucketType, StorageConfig, ThumbnailsClientOptions } from '../types';
+import type {
+  BucketType,
+  StorageConfig,
+  ThumbnailsClientOptions,
+  PresignedUrlOptions,
+} from '../types';
 import { CacheControl } from '../types';
 
 const ALLOWED_CONTENT_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
@@ -22,10 +27,12 @@ export class ThumbnailsStorageClient extends BaseStorageClient {
     this.domain = options?.domain;
   }
 
-  protected resolveKey(path: string): string {
-    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
-    return `${this.basePrefix}thumbnails/${normalizedPath}`;
+  protected resolvePath(key: string): string {
+    const normalizedKey = key.startsWith('/') ? key.slice(1) : key;
+    return `${this.basePrefix}thumbnails/${normalizedKey}`;
   }
+
+  // Upload method - returns { url, path } where path is stored in DB
 
   async getThumbnailUploadUrl(
     recordingId: string,
@@ -39,12 +46,19 @@ export class ThumbnailsStorageClient extends BaseStorageClient {
     });
   }
 
-  getThumbnailUrl(recordingId: string, ext: string = 'webp'): string {
+  // Download method - takes stored path from DB
+
+  async getThumbnailDownloadUrl(path: string, options?: PresignedUrlOptions) {
+    return this.getDownloadUrl(path, options);
+  }
+
+  // Public CDN URL - takes stored path from DB, prefixes with domain
+
+  getThumbnailUrl(path: string): string {
     if (!this.domain) {
       throw new Error('Domain required for public thumbnail URLs');
     }
-    const key = this.resolveKey(`${recordingId}.${ext}`);
-    return `https://${this.domain}/${key}`;
+    return `https://${this.domain}/${path}`;
   }
 
   private getExtension(contentType: string): string {
