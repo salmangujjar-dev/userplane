@@ -16,6 +16,7 @@ export * from './domain.service';
 export * from './provisioner.service';
 export * from './invite.service';
 export * from './recording-link.service';
+export * from './recording.service';
 
 // API response data types
 export * from './account.data';
@@ -27,3 +28,4 @@ export * from './project.data';
 export * from './provisioner.data';
 export * from './status.data';
 export * from './recording-link.data';
+export * from './recording.data';
