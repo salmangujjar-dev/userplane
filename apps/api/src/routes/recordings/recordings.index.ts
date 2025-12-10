@@ -5,7 +5,12 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
 import { db } from '@/api/clients/db';
-import { getThumbnailsStorage } from '@/api/clients/storage';
+import {
+  getThumbnailsStorage,
+  getRecordingsStorage,
+  getConsoleLogsStorage,
+  getNetworkLogsStorage,
+} from '@/api/clients/storage';
 
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { RecordingService } from '@/api/services/recording.service';
@@ -19,6 +24,9 @@ const recordingRepo = new RecordingRepository(db);
 export const recordingService = new RecordingService({
   recordingRepo,
   thumbnailsStorage: getThumbnailsStorage(),
+  recordingsStorage: getRecordingsStorage(),
+  consoleLogsStorage: getConsoleLogsStorage(),
+  networkLogsStorage: getNetworkLogsStorage(),
 });
 
 // Create routes with injected dependencies

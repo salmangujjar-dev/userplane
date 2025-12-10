@@ -14,6 +14,8 @@ import type {
   RecordingFilters,
   RecordingSortOptions,
   RecordingSortField,
+  RecordingDetailData,
+  RecordingResourceData,
 } from '@/api/types';
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
@@ -153,6 +155,79 @@ export function getRecordingsHandler(recordingService: RecordingService) {
 }
 
 /**
+ * Handler factory for getting a recording by ID
+ * Returns full recording details with presigned URLs
+ */
+export function getRecordingByIdHandler(recordingService: RecordingService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+      const recordingId = c.req.param('recordingId');
+
+      if (!user) {
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to access recordings',
+        };
+        return c.json(response, 401);
+      }
+
+      if (!workspaceId) {
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to access recordings',
+        };
+        return c.json(response, 403);
+      }
+
+      if (!recordingId) {
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Recording ID is required',
+        };
+        return c.json(response, 400);
+      }
+
+      // Get recording details
+      const recording = await recordingService.getById(recordingId, workspaceId);
+
+      const response: ApiResponse<RecordingDetailData> = {
+        message: 'Recording retrieved successfully',
+        data: {
+          workspaceId,
+          recording,
+        },
+      };
+
+      return c.json(response, 200);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
+      }
+
+      if (error instanceof Error) {
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
+      }
+
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
+    }
+  };
+}
+
+/**
  * Handler factory for deleting a recording
  * Performs soft delete on the recording
  */
@@ -223,4 +298,119 @@ export function deleteRecordingHandler(recordingService: RecordingService) {
       return c.json(response, 500);
     }
   };
+}
+
+/**
+ * Generic handler for recording resource endpoints
+ */
+function createResourceHandler(
+  recordingService: RecordingService,
+  resourceFetcher: (
+    service: RecordingService,
+    recordingId: string,
+    workspaceId: string
+  ) => Promise<{ url: string | null; message: string }>,
+  resourceName: string
+) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+      const recordingId = c.req.param('recordingId');
+
+      if (!user) {
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: `You must be logged in to access recording ${resourceName}`,
+        };
+        return c.json(response, 401);
+      }
+
+      if (!workspaceId) {
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: `You must be a workspace member to access recording ${resourceName}`,
+        };
+        return c.json(response, 403);
+      }
+
+      if (!recordingId) {
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Recording ID is required',
+        };
+        return c.json(response, 400);
+      }
+
+      const resource = await resourceFetcher(recordingService, recordingId, workspaceId);
+
+      const response: ApiResponse<RecordingResourceData> = {
+        message: resource.message,
+        data: {
+          recordingId,
+          resource,
+        },
+      };
+
+      return c.json(response, 200);
+    } catch (error) {
+      if (error instanceof Error) {
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
+      }
+
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
+    }
+  };
+}
+
+/**
+ * Handler factory for getting recording media
+ */
+export function getRecordingMediaHandler(recordingService: RecordingService) {
+  return createResourceHandler(
+    recordingService,
+    (service, recordingId, workspaceId) => service.getMediaResource(recordingId, workspaceId),
+    'media'
+  );
+}
+
+/**
+ * Handler factory for getting recording thumbnail
+ */
+export function getRecordingThumbnailHandler(recordingService: RecordingService) {
+  return createResourceHandler(
+    recordingService,
+    (service, recordingId, workspaceId) => service.getThumbnailResource(recordingId, workspaceId),
+    'thumbnail'
+  );
+}
+
+/**
+ * Handler factory for getting recording console logs
+ */
+export function getRecordingConsoleLogHandler(recordingService: RecordingService) {
+  return createResourceHandler(
+    recordingService,
+    (service, recordingId, workspaceId) => service.getConsoleLogResource(recordingId, workspaceId),
+    'console log'
+  );
+}
+
+/**
+ * Handler factory for getting recording network logs
+ */
+export function getRecordingNetworkLogHandler(recordingService: RecordingService) {
+  return createResourceHandler(
+    recordingService,
+    (service, recordingId, workspaceId) => service.getNetworkLogResource(recordingId, workspaceId),
+    'network log'
+  );
 }

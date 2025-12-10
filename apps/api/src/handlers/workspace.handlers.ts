@@ -37,11 +37,7 @@ import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
 import type { WorkspaceRole } from '@workspace/db';
 import { getAssetsStorage } from '@/api/clients/storage';
-import {
-  ASSETS_ALLOWED_CONTENT_TYPES,
-  ASSETS_EXTENSION_MAP,
-  type AssetsContentType,
-} from '@workspace/storage';
+import { ASSETS_ALLOWED_CONTENT_TYPES, type AssetsContentType } from '@workspace/storage';
 import { MAX_LOGO_SIZE_BYTES } from '@/api/constants/limits';
 
 const workspaceIdParamSchema = z.object({
@@ -1248,10 +1244,9 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
         try {
           const assetsStorage = getAssetsStorage();
           const fileBuffer = Buffer.from(await file.arrayBuffer());
-          await assetsStorage.putWorkspaceLogo(workspaceId, fileBuffer, file.type);
+          const { path } = await assetsStorage.putWorkspaceLogo(workspaceId, fileBuffer, file.type);
 
-          const ext = ASSETS_EXTENSION_MAP[file.type as AssetsContentType] ?? 'png';
-          const logoUrl = assetsStorage.getWorkspaceLogoUrl(workspaceId, ext);
+          const logoUrl = assetsStorage.getWorkspaceLogoUrl(path);
           updates.recordingCompanyLogoPath = logoUrl;
         } catch (uploadError) {
           const response: ApiErrorResponse = {

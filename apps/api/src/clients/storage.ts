@@ -6,7 +6,8 @@
 import {
   getStorage,
   type StorageConfig,
-  type LogsStorageClient,
+  type ConsoleLogsStorageClient,
+  type NetworkLogsStorageClient,
   type RecordingsStorageClient,
   type ScreenshotsStorageClient,
   type ThumbnailsStorageClient,
@@ -15,7 +16,8 @@ import {
 import { env } from '@/api/env';
 
 // Singleton instances
-let logsClient: LogsStorageClient | null = null;
+let consoleLogsClient: ConsoleLogsStorageClient | null = null;
+let networkLogsClient: NetworkLogsStorageClient | null = null;
 let recordingsClient: RecordingsStorageClient | null = null;
 let screenshotsClient: ScreenshotsStorageClient | null = null;
 let thumbnailsClient: ThumbnailsStorageClient | null = null;
@@ -31,11 +33,18 @@ function getConfig(): StorageConfig {
   };
 }
 
-export function getLogsStorage(): LogsStorageClient {
-  if (!logsClient) {
-    logsClient = getStorage({ kind: 'logs', config: getConfig() });
+export function getConsoleLogsStorage(): ConsoleLogsStorageClient {
+  if (!consoleLogsClient) {
+    consoleLogsClient = getStorage({ kind: 'consoleLogs', config: getConfig() });
   }
-  return logsClient;
+  return consoleLogsClient;
+}
+
+export function getNetworkLogsStorage(): NetworkLogsStorageClient {
+  if (!networkLogsClient) {
+    networkLogsClient = getStorage({ kind: 'networkLogs', config: getConfig() });
+  }
+  return networkLogsClient;
 }
 
 export function getRecordingsStorage(): RecordingsStorageClient {
@@ -78,7 +87,8 @@ export function getAssetsStorage(): AssetsStorageClient {
  * Reset all storage clients (useful for testing)
  */
 export function resetStorage(): void {
-  logsClient = null;
+  consoleLogsClient = null;
+  networkLogsClient = null;
   recordingsClient = null;
   screenshotsClient = null;
   thumbnailsClient = null;
