@@ -1,5 +1,5 @@
 {
-  "id": "e0782129-1c10-46e2-b8ec-68f817a421cf",
+  "id": "32b9de98-93e7-4dfe-81bc-65d71914a7d7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -983,8 +983,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "link_public_ref": {
-          "name": "link_public_ref",
+        "link_guid": {
+          "name": "link_guid",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -1002,27 +1002,27 @@
           "notNull": true,
           "default": false
         },
-        "provider_type": {
-          "name": "provider_type",
-          "type": "provider_type",
+        "link_provider_type": {
+          "name": "link_provider_type",
+          "type": "link_provider_type",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
         },
-        "provider_id": {
-          "name": "provider_id",
+        "link_provider_id": {
+          "name": "link_provider_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "provider_ref": {
-          "name": "provider_ref",
+        "link_provider_ref": {
+          "name": "link_provider_ref",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "provider_data": {
-          "name": "provider_data",
+        "link_provider_data": {
+          "name": "link_provider_data",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false
@@ -1056,11 +1056,11 @@
         }
       },
       "indexes": {
-        "recording_links_link_public_ref_idx": {
-          "name": "recording_links_link_public_ref_idx",
+        "recording_links_link_guid_idx": {
+          "name": "recording_links_link_guid_idx",
           "columns": [
             {
-              "expression": "link_public_ref",
+              "expression": "link_guid",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1141,13 +1141,13 @@
           "name": "recording_links_provider_idx",
           "columns": [
             {
-              "expression": "provider_type",
+              "expression": "link_provider_type",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "provider_id",
+              "expression": "link_provider_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1240,6 +1240,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "recording_network_logs_ref": {
+          "name": "recording_network_logs_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "recording_thumbnail_ref": {
           "name": "recording_thumbnail_ref",
           "type": "text",
@@ -1264,8 +1270,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "recording_log_size": {
-          "name": "recording_log_size",
+        "recording_console_log_size": {
+          "name": "recording_console_log_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recording_network_log_size": {
+          "name": "recording_network_log_size",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -1449,10 +1461,39 @@
       "schema": "public",
       "values": ["pending", "verified", "revoked"]
     },
-    "public.provider_type": {
-      "name": "provider_type",
+    "public.link_provider_type": {
+      "name": "link_provider_type",
       "schema": "public",
-      "values": ["zendesk", "intercom", "plain"]
+      "values": [
+        "intercom",
+        "zendesk",
+        "hubspot",
+        "freshdesk",
+        "freshchat",
+        "jira_service_management",
+        "helpscout",
+        "happyfox",
+        "ada",
+        "forethought",
+        "servicenow",
+        "front",
+        "zoho_desk",
+        "crisp",
+        "pylon",
+        "plain",
+        "asana",
+        "azure_devops",
+        "clickup",
+        "github",
+        "gitlab",
+        "jira",
+        "linear",
+        "notion",
+        "sentry",
+        "slack",
+        "web",
+        "others"
+      ]
     },
     "public.recording_status": {
       "name": "recording_status",
