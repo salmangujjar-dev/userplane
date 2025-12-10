@@ -159,7 +159,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                       <ChevronDown className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
+                  <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) max-h-[280px] overflow-y-auto">
                     {DOMAINS.map((domain) => (
                       <DropdownMenuItem
                         key={domain.id}
@@ -234,7 +234,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                         <ChevronDown className="h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
+                    <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) max-h-[280px] overflow-y-auto">
                       {projects.map((project) => (
                         <DropdownMenuItem
                           key={project.id}
