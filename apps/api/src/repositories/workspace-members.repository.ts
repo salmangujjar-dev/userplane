@@ -158,6 +158,27 @@ export class WorkspaceMemberRepository {
   }
 
   /**
+   * Find member by ID with user details
+   */
+  async findByIdWithUser(memberId: string) {
+    const [member] = await this.db
+      .select({
+        id: workspaceMembers.id,
+        userId: workspaceMembers.userId,
+        workspaceId: workspaceMembers.workspaceId,
+        role: workspaceMembers.workspaceRole,
+        userName: user.name,
+        userEmail: user.email,
+      })
+      .from(workspaceMembers)
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, false)))
+      .limit(1);
+
+    return member || null;
+  }
+
+  /**
    * Soft delete a workspace member
    */
   async softDelete(memberId: string, options?: { tx?: Transaction }) {

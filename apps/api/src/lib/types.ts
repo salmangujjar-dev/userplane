@@ -18,6 +18,7 @@ export type AppEnv = {
     } | null;
     // Workspace context (set by workspace middleware)
     workspaceId?: string;
+    workspaceMemberId?: string;
     workspaceRole?: WorkspaceRole;
   };
 };
