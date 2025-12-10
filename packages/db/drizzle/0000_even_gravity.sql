@@ -2,7 +2,7 @@ CREATE TYPE "public"."workspace_plan" AS ENUM('starter_monthly', 'starter_annual
 CREATE TYPE "public"."resource_type" AS ENUM('seats', 'links', 'recordings', 'recording_links', 'logs', 'screenshots');--> statement-breakpoint
 CREATE TYPE "public"."workspace_role" AS ENUM('owner', 'admin', 'member');--> statement-breakpoint
 CREATE TYPE "public"."domain_status" AS ENUM('pending', 'verified', 'revoked');--> statement-breakpoint
-CREATE TYPE "public"."provider_type" AS ENUM('zendesk', 'intercom', 'plain');--> statement-breakpoint
+CREATE TYPE "public"."link_provider_type" AS ENUM('intercom', 'zendesk', 'hubspot', 'freshdesk', 'freshchat', 'jira_service_management', 'helpscout', 'happyfox', 'ada', 'forethought', 'servicenow', 'front', 'zoho_desk', 'crisp', 'pylon', 'plain', 'asana', 'azure_devops', 'clickup', 'github', 'gitlab', 'jira', 'linear', 'notion', 'sentry', 'slack', 'web', 'others');--> statement-breakpoint
 CREATE TYPE "public"."recording_status" AS ENUM('pending', 'failed', 'expired', 'completed');--> statement-breakpoint
 CREATE TYPE "public"."stream_provider" AS ENUM('cloudflare', 'mux');--> statement-breakpoint
 CREATE TYPE "public"."streaming_status" AS ENUM('pending', 'ready', 'failed', 'completed', 'expired');--> statement-breakpoint
@@ -135,13 +135,13 @@ CREATE TABLE IF NOT EXISTS "recording_links" (
 	"project_id" text NOT NULL,
 	"domain_id" text NOT NULL,
 	"created_by" text NOT NULL,
-	"link_public_ref" text NOT NULL,
+	"link_guid" text NOT NULL,
 	"link_title" text,
 	"link_reusable" boolean DEFAULT false NOT NULL,
-	"provider_type" "provider_type",
-	"provider_id" text,
-	"provider_ref" text,
-	"provider_data" jsonb,
+	"link_provider_type" "link_provider_type",
+	"link_provider_id" text,
+	"link_provider_ref" text,
+	"link_provider_data" jsonb,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"is_deleted" boolean DEFAULT false NOT NULL,
@@ -160,11 +160,13 @@ CREATE TABLE IF NOT EXISTS "recordings" (
 	"streaming_status" "streaming_status",
 	"recording_media_ref" text,
 	"recording_logs_ref" text,
+	"recording_network_logs_ref" text,
 	"recording_thumbnail_ref" text,
 	"recording_meta" jsonb,
 	"recording_duration" integer,
 	"recording_size" integer,
-	"recording_log_size" integer,
+	"recording_console_log_size" integer,
+	"recording_network_log_size" integer,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"is_deleted" boolean DEFAULT false NOT NULL,
@@ -194,12 +196,12 @@ CREATE INDEX IF NOT EXISTS "workspace_members_workspace_id_idx" ON "workspace_me
 CREATE UNIQUE INDEX IF NOT EXISTS "workspace_members_user_workspace_idx" ON "workspace_members" USING btree ("user_id","workspace_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "domains_workspace_status_idx" ON "domains" USING btree ("workspace_id","domain_status");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "domains_domain_url_idx" ON "domains" USING btree ("domain_url");--> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "recording_links_link_public_ref_idx" ON "recording_links" USING btree ("link_public_ref");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "recording_links_link_guid_idx" ON "recording_links" USING btree ("link_guid");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "recording_links_workspace_id_idx" ON "recording_links" USING btree ("workspace_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "recording_links_domain_id_idx" ON "recording_links" USING btree ("domain_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "recording_links_created_by_idx" ON "recording_links" USING btree ("created_by");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "recording_links_workspace_created_at_idx" ON "recording_links" USING btree ("workspace_id","created_at");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "recording_links_provider_idx" ON "recording_links" USING btree ("provider_type","provider_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "recording_links_provider_idx" ON "recording_links" USING btree ("link_provider_type","link_provider_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "recordings_recording_link_id_idx" ON "recordings" USING btree ("recording_link_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "recordings_recording_status_idx" ON "recordings" USING btree ("recording_status");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "recordings_workspace_id_idx" ON "recordings" USING btree ("workspace_id");--> statement-breakpoint

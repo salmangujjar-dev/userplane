@@ -52,6 +52,7 @@ export const recordings = pgTable(
     // Cold storage (permanent archival in object storage)
     recordingMediaRef: text('recording_media_ref'),
     recordingLogsRef: text('recording_logs_ref'),
+    recordingNetworkLogsRef: text('recording_network_logs_ref'),
     recordingThumbnailRef: text('recording_thumbnail_ref'),
 
     // Recording metadata
@@ -60,7 +61,8 @@ export const recordings = pgTable(
     // Recording metrics
     recordingDuration: integer('recording_duration'),
     recordingSize: integer('recording_size'),
-    recordingLogSize: integer('recording_log_size'),
+    recordingConsoleLogSize: integer('recording_console_log_size'),
+    recordingNetworkLogSize: integer('recording_network_log_size'),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
