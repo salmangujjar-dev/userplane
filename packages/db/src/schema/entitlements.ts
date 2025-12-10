@@ -11,11 +11,12 @@ import { relations } from 'drizzle-orm';
 import { workspaces } from './workspaces';
 
 export const resourceTypeEnum = pgEnum('resource_type', [
-  'seat',
-  'link',
-  'recording',
-  'media',
-  'log',
+  'seats',
+  'links',
+  'recordings',
+  'recording_links',
+  'logs',
+  'screenshots',
 ]);
 
 export const entitlements = pgTable(

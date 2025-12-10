@@ -1,1 +1,0 @@
-ALTER TABLE "workspaces" DROP COLUMN IF EXISTS "workspace_logo_url";

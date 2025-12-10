@@ -1,10 +1,11 @@
-CREATE TYPE "public"."workspace_plan" AS ENUM('starter_monthly', 'starter_annual', 'scale_up_monthly', 'scale_up_annual', 'enterprise_monthly', 'enterprise_annual', 'early_bird_monthly');--> statement-breakpoint
-CREATE TYPE "public"."resource_type" AS ENUM('seat', 'link', 'recording', 'media', 'log');--> statement-breakpoint
+CREATE TYPE "public"."workspace_plan" AS ENUM('starter_monthly', 'starter_annual', 'scale_up_monthly', 'scale_up_annual', 'enterprise_monthly', 'enterprise_annual', 'early_bird_monthly', 'tiny_bird_monthly');--> statement-breakpoint
+CREATE TYPE "public"."resource_type" AS ENUM('seats', 'links', 'recordings', 'recording_links', 'logs', 'screenshots');--> statement-breakpoint
 CREATE TYPE "public"."workspace_role" AS ENUM('owner', 'admin', 'member');--> statement-breakpoint
 CREATE TYPE "public"."domain_status" AS ENUM('pending', 'verified', 'revoked');--> statement-breakpoint
 CREATE TYPE "public"."provider_type" AS ENUM('zendesk', 'intercom', 'plain');--> statement-breakpoint
 CREATE TYPE "public"."recording_status" AS ENUM('pending', 'failed', 'expired', 'completed');--> statement-breakpoint
 CREATE TYPE "public"."stream_provider" AS ENUM('cloudflare', 'mux');--> statement-breakpoint
+CREATE TYPE "public"."streaming_status" AS ENUM('pending', 'ready', 'failed', 'completed', 'expired');--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user" (
 	"id" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
@@ -56,8 +57,7 @@ CREATE TABLE IF NOT EXISTS "verification" (
 CREATE TABLE IF NOT EXISTS "workspaces" (
 	"id" text PRIMARY KEY NOT NULL,
 	"workspace_name" text NOT NULL,
-	"workspace_logo_url" text NOT NULL,
-	"workspace_plan" "workspace_plan" DEFAULT 'starter_monthly' NOT NULL,
+	"workspace_plan" "workspace_plan" DEFAULT 'early_bird_monthly' NOT NULL,
 	"workspace_invite_token" text NOT NULL,
 	"recording_slug" text NOT NULL,
 	"recording_customize_link" boolean DEFAULT false NOT NULL,
@@ -125,7 +125,8 @@ CREATE TABLE IF NOT EXISTS "domains" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"is_deleted" boolean DEFAULT false NOT NULL,
-	"deleted_at" timestamp
+	"deleted_at" timestamp,
+	CONSTRAINT "domains_workspace_url_unique" UNIQUE("workspace_id","domain_url","is_deleted")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "recording_links" (
@@ -156,6 +157,7 @@ CREATE TABLE IF NOT EXISTS "recordings" (
 	"recording_status" "recording_status" DEFAULT 'pending' NOT NULL,
 	"stream_provider" "stream_provider",
 	"stream_id" text,
+	"streaming_status" "streaming_status",
 	"recording_media_ref" text,
 	"recording_logs_ref" text,
 	"recording_thumbnail_ref" text,

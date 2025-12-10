@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:migrate db\:push db\:studio i d b l f t c
+.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -38,10 +38,18 @@ help: ## Show this help message
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)DATABASE$(WHITE)                                                                                          ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)db:generate$(WHITE)                   ║$(RESET) Generate Drizzle migrations from schema                           $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)db:migrate$(WHITE)                    ║$(RESET) Run database migrations                                           $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)db:push$(WHITE)                       ║$(RESET) Push schema directly to DB (dev only)                             $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)db:studio$(WHITE)                     ║$(RESET) Open Drizzle Studio (DB GUI)                                      $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:generate$(WHITE)                   ║$(RESET) Generate migrations (dev)                                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:generate:staging$(WHITE)           ║$(RESET) Generate migrations (staging)                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:generate:production$(WHITE)        ║$(RESET) Generate migrations (production)                                  $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:migrate$(WHITE)                    ║$(RESET) Run migrations (dev)                                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:migrate:staging$(WHITE)            ║$(RESET) Run migrations (staging)                                          $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:migrate:production$(WHITE)         ║$(RESET) Run migrations (production)                                       $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:push$(WHITE)                       ║$(RESET) Push schema directly (dev)                                        $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:push:staging$(WHITE)               ║$(RESET) Push schema directly (staging)                                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:push:production$(WHITE)            ║$(RESET) Push schema directly (production)                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:studio$(WHITE)                     ║$(RESET) Open Drizzle Studio (dev)                                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:studio:staging$(WHITE)             ║$(RESET) Open Drizzle Studio (staging)                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:studio:production$(WHITE)          ║$(RESET) Open Drizzle Studio (production)                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)DEVELOPMENT$(WHITE)                                                                                       ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -241,44 +249,119 @@ env\:check: ## Check if .env files exist
 	@if [ -f apps/home/.env ]; then echo "$(GREEN)✓$(RESET) apps/home/.env exists"; else echo "$(RED)✗$(RESET) apps/home/.env missing"; fi
 	@if [ -f apps/recorder/.env ]; then echo "$(GREEN)✓$(RESET) apps/recorder/.env exists"; else echo "$(RED)✗$(RESET) apps/recorder/.env missing"; fi
 
-db\:generate: ## Generate Drizzle migrations from schema
-	@echo "$(BLUE)Generating Drizzle migrations...$(RESET)"
+# Database commands - Development
+db\:generate: ## Generate Drizzle migrations (dev)
+	@echo "$(BLUE)Generating Drizzle migrations (development)...$(RESET)"
 	@if [ ! -f apps/api/.env.development ]; then \
 		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(cat ../../apps/api/.env.development | grep -v '^#' | xargs) && bun run db:generate
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:generate
 	@echo "$(GREEN)Migrations generated!$(RESET)"
 
-db\:migrate: ## Run database migrations
-	@echo "$(BLUE)Running database migrations...$(RESET)"
+db\:migrate: ## Run database migrations (dev)
+	@echo "$(BLUE)Running database migrations (development)...$(RESET)"
 	@if [ ! -f apps/api/.env.development ]; then \
 		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(cat ../../apps/api/.env.development | grep -v '^#' | xargs) && bun run db:migrate
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:migrate
 	@echo "$(GREEN)Migrations complete!$(RESET)"
 
-db\:push: ## Push schema directly to DB (dev only)
-	@echo "$(YELLOW)Pushing schema to database (dev only)...$(RESET)"
+db\:push: ## Push schema directly to DB (dev)
+	@echo "$(YELLOW)Pushing schema to database (development)...$(RESET)"
 	@if [ ! -f apps/api/.env.development ]; then \
 		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(cat ../../apps/api/.env.development | grep -v '^#' | xargs) && bun run db:push
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:push
 	@echo "$(GREEN)Schema pushed!$(RESET)"
 
-db\:studio: ## Open Drizzle Studio (DB GUI)
-	@echo "$(MAGENTA)Opening Drizzle Studio...$(RESET)"
+db\:studio: ## Open Drizzle Studio (dev)
+	@echo "$(MAGENTA)Opening Drizzle Studio (development)...$(RESET)"
 	@if [ ! -f apps/api/.env.development ]; then \
 		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(cat ../../apps/api/.env.development | grep -v '^#' | xargs) && bun run db:studio
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:studio
+
+# Database commands - Staging
+db\:generate\:staging: ## Generate Drizzle migrations (staging)
+	@echo "$(BLUE)Generating Drizzle migrations (staging)...$(RESET)"
+	@if [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:generate
+	@echo "$(GREEN)Migrations generated!$(RESET)"
+
+db\:migrate\:staging: ## Run database migrations (staging)
+	@echo "$(BLUE)Running database migrations (staging)...$(RESET)"
+	@if [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:migrate
+	@echo "$(GREEN)Migrations complete!$(RESET)"
+
+db\:push\:staging: ## Push schema directly to DB (staging)
+	@echo "$(YELLOW)Pushing schema to database (staging)...$(RESET)"
+	@if [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:push
+	@echo "$(GREEN)Schema pushed!$(RESET)"
+
+db\:studio\:staging: ## Open Drizzle Studio (staging)
+	@echo "$(MAGENTA)Opening Drizzle Studio (staging)...$(RESET)"
+	@if [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:studio
+
+# Database commands - Production
+db\:generate\:production: ## Generate Drizzle migrations (production)
+	@echo "$(BLUE)Generating Drizzle migrations (production)...$(RESET)"
+	@if [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:generate
+	@echo "$(GREEN)Migrations generated!$(RESET)"
+
+db\:migrate\:production: ## Run database migrations (production)
+	@echo "$(BLUE)Running database migrations (production)...$(RESET)"
+	@if [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:migrate
+	@echo "$(GREEN)Migrations complete!$(RESET)"
+
+db\:push\:production: ## Push schema directly to DB (production)
+	@echo "$(RED)Pushing schema to database (production)...$(RESET)"
+	@echo "$(RED)WARNING: This will push schema directly to PRODUCTION database!$(RESET)"
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
+	@if [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:push
+	@echo "$(GREEN)Schema pushed!$(RESET)"
+
+db\:studio\:production: ## Open Drizzle Studio (production)
+	@echo "$(MAGENTA)Opening Drizzle Studio (production)...$(RESET)"
+	@if [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:studio
 
 i: install ## Shortcut for install
 d: dev ## Shortcut for dev

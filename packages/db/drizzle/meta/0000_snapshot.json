@@ -1,5 +1,5 @@
 {
-  "id": "17341b00-1f1a-4e06-abc0-7bb9633b7386",
+  "id": "e0782129-1c10-46e2-b8ec-68f817a421cf",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -363,19 +363,13 @@
           "primaryKey": false,
           "notNull": true
         },
-        "workspace_logo_url": {
-          "name": "workspace_logo_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "workspace_plan": {
           "name": "workspace_plan",
           "type": "workspace_plan",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'starter_monthly'"
+          "default": "'early_bird_monthly'"
         },
         "workspace_invite_token": {
           "name": "workspace_invite_token",
@@ -944,7 +938,13 @@
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "domains_workspace_url_unique": {
+          "name": "domains_workspace_url_unique",
+          "nullsNotDistinct": false,
+          "columns": ["workspace_id", "domain_url", "is_deleted"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1221,6 +1221,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "streaming_status": {
+          "name": "streaming_status",
+          "type": "streaming_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
         "recording_media_ref": {
           "name": "recording_media_ref",
           "type": "text",
@@ -1423,13 +1430,14 @@
         "scale_up_annual",
         "enterprise_monthly",
         "enterprise_annual",
-        "early_bird_monthly"
+        "early_bird_monthly",
+        "tiny_bird_monthly"
       ]
     },
     "public.resource_type": {
       "name": "resource_type",
       "schema": "public",
-      "values": ["seat", "link", "recording", "media", "log"]
+      "values": ["seats", "links", "recordings", "recording_links", "logs", "screenshots"]
     },
     "public.workspace_role": {
       "name": "workspace_role",
@@ -1455,6 +1463,11 @@
       "name": "stream_provider",
       "schema": "public",
       "values": ["cloudflare", "mux"]
+    },
+    "public.streaming_status": {
+      "name": "streaming_status",
+      "schema": "public",
+      "values": ["pending", "ready", "failed", "completed", "expired"]
     }
   },
   "schemas": {},
