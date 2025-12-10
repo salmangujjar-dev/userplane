@@ -3,7 +3,7 @@
     "name": "Userplane API",
     "description": "API collection for Userplane workspace and recording management platform. Uses cookie-based authentication via Better Auth.\n\nAll success responses follow a consistent structure:\n```json\n{\n  \"message\": \"Description of what happened\",\n  \"data\": { ... actual response data ... }\n}\n```\n\nError responses follow:\n```json\n{\n  \"message\": \"Description of what went wrong\",\n  \"error\": \"ErrorType\",\n  \"details\": { ... optional additional error details ... }\n}\n```",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "variable": [
     {
@@ -969,6 +969,41 @@
           "response": []
         },
         {
+          "name": "Update Domain",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://updated-domain.example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "domains",
+                "{{domainId}}"
+              ]
+            },
+            "description": "Update a domain in the workspace.\n\nResponse data: DomainUpdateData (workspaceId, domain)"
+          },
+          "response": []
+        },
+        {
           "name": "Delete Domain",
           "request": {
             "method": "DELETE",
@@ -1214,6 +1249,145 @@
               ]
             },
             "description": "Get paginated recordings for a workspace with optional filters and sorting.\n\nResponse data: RecordingsListData (workspaceId, recordings, pagination)\n\nEach recording contains:\n- id: Recording ID\n- recordingThumbnail: R2 thumbnail URL or null\n- recordingDuration: Duration in seconds or null\n- createdAt: Timestamp\n- creator: { id, name }"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recording by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/recordings/{{recordingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "recordings",
+                "{{recordingId}}"
+              ]
+            },
+            "description": "Get detailed metadata for a specific recording.\n\nResponse data: RecordingByIdData (workspaceId, recording)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recording Media URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/recordings/{{recordingId}}/media",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "recordings",
+                "{{recordingId}}",
+                "media"
+              ]
+            },
+            "description": "Get presigned URL for the recording media file from R2 storage.\n\nResponse data: RecordingMediaData (workspaceId, recordingId, mediaUrl)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recording Thumbnail URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/recordings/{{recordingId}}/thumbnail",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "recordings",
+                "{{recordingId}}",
+                "thumbnail"
+              ]
+            },
+            "description": "Get presigned URL for the recording thumbnail from R2 storage.\n\nResponse data: RecordingThumbnailData (workspaceId, recordingId, thumbnailUrl)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recording Console Log URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/recordings/{{recordingId}}/console-log",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "recordings",
+                "{{recordingId}}",
+                "console-log"
+              ]
+            },
+            "description": "Get presigned URL for the recording console log file from R2 storage.\n\nResponse data: RecordingConsoleLogData (workspaceId, recordingId, consoleLogUrl)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recording Network Log URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/recordings/{{recordingId}}/network-log",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "recordings",
+                "{{recordingId}}",
+                "network-log"
+              ]
+            },
+            "description": "Get presigned URL for the recording network log file from R2 storage.\n\nResponse data: RecordingNetworkLogData (workspaceId, recordingId, networkLogUrl)"
           },
           "response": []
         },
