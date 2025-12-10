@@ -1,14 +1,15 @@
 import { BaseStorageClient } from '../base';
-import type { BucketType, StorageConfig, UploadPresignOptions } from '../types';
+import type {
+  BucketType,
+  StorageConfig,
+  UploadPresignOptions,
+  PresignedUrlOptions,
+} from '../types';
 import { CacheControl } from '../types';
 
-const ALLOWED_CONTENT_TYPES = [
-  'application/json',
-  'application/x-ndjson',
-  'application/ndjson',
-] as const;
+const ALLOWED_CONTENT_TYPES = ['application/x-ndjson', 'application/ndjson'] as const;
 
-export class LogsStorageClient extends BaseStorageClient {
+export class ConsoleLogsStorageClient extends BaseStorageClient {
   protected readonly bucketType: BucketType = 'reports';
   protected readonly allowedContentTypes = ALLOWED_CONTENT_TYPES;
   protected readonly cacheControl = CacheControl.PRIVATE;
@@ -17,28 +18,23 @@ export class LogsStorageClient extends BaseStorageClient {
     super(config);
   }
 
-  protected resolveKey(path: string): string {
-    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
-    return `${this.basePrefix}logs/${normalizedPath}`;
+  protected resolvePath(key: string): string {
+    const normalizedKey = key.startsWith('/') ? key.slice(1) : key;
+    return `${this.basePrefix}logs/console/${normalizedKey}`;
   }
 
-  async getConsoleLogUploadUrl(
-    sessionId: string,
-    options: Omit<UploadPresignOptions, 'contentType'>
-  ) {
-    return this.getUploadUrl(`console/${sessionId}.ndjson`, {
+  // Upload - returns { url, path } where path is stored in DB
+
+  async getUploadUrl(sessionId: string, options: Omit<UploadPresignOptions, 'contentType'>) {
+    return super.getUploadUrl(`${sessionId}.ndjson`, {
       ...options,
       contentType: 'application/x-ndjson',
     });
   }
 
-  async getNetworkLogUploadUrl(
-    sessionId: string,
-    options: Omit<UploadPresignOptions, 'contentType'>
-  ) {
-    return this.getUploadUrl(`network/${sessionId}.json`, {
-      ...options,
-      contentType: 'application/json',
-    });
+  // Download - takes stored path from DB
+
+  async getDownloadUrl(path: string, options?: PresignedUrlOptions) {
+    return super.getDownloadUrl(path, options);
   }
 }

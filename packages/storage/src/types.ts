@@ -2,7 +2,13 @@ export type StorageProfile = 'development' | 'staging' | 'production';
 
 export type BucketType = 'cdn' | 'assets' | 'reports';
 
-export type StorageKind = 'logs' | 'recordings' | 'screenshots' | 'thumbnails' | 'assets';
+export type StorageKind =
+  | 'consoleLogs'
+  | 'networkLogs'
+  | 'recordings'
+  | 'screenshots'
+  | 'thumbnails'
+  | 'assets';
 
 export interface PresignedUrlOptions {
   expiresIn?: number;
@@ -50,7 +56,8 @@ interface BaseStorageOptions {
 
 // Discriminated union for getStorage options
 export type GetStorageOptions =
-  | (BaseStorageOptions & { kind: 'logs' })
+  | (BaseStorageOptions & { kind: 'consoleLogs' })
+  | (BaseStorageOptions & { kind: 'networkLogs' })
   | (BaseStorageOptions & { kind: 'recordings' })
   | (BaseStorageOptions & { kind: 'screenshots' })
   | (BaseStorageOptions & { kind: 'thumbnails'; domain?: string })
@@ -58,7 +65,8 @@ export type GetStorageOptions =
 
 // Return type mapping for getStorage
 export interface StorageClientMap {
-  logs: import('./clients/logs').LogsStorageClient;
+  consoleLogs: import('./clients/logs').ConsoleLogsStorageClient;
+  networkLogs: import('./clients/network-logs').NetworkLogsStorageClient;
   recordings: import('./clients/recordings').RecordingsStorageClient;
   screenshots: import('./clients/screenshots').ScreenshotsStorageClient;
   thumbnails: import('./clients/thumbnails').ThumbnailsStorageClient;

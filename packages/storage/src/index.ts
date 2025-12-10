@@ -8,7 +8,8 @@
 export { getStorage } from './factory';
 
 // Client classes (for advanced use cases)
-export { LogsStorageClient } from './clients/logs';
+export { ConsoleLogsStorageClient } from './clients/logs';
+export { NetworkLogsStorageClient } from './clients/network-logs';
 export { RecordingsStorageClient } from './clients/recordings';
 export { ScreenshotsStorageClient } from './clients/screenshots';
 export { ThumbnailsStorageClient } from './clients/thumbnails';

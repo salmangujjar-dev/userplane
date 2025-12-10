@@ -3,7 +3,8 @@
  * Creates storage clients based on configuration and kind
  */
 
-import { LogsStorageClient } from './clients/logs';
+import { ConsoleLogsStorageClient } from './clients/logs';
+import { NetworkLogsStorageClient } from './clients/network-logs';
 import { RecordingsStorageClient } from './clients/recordings';
 import { ScreenshotsStorageClient } from './clients/screenshots';
 import { ThumbnailsStorageClient } from './clients/thumbnails';
@@ -14,9 +15,14 @@ import type { GetStorageOptions, StorageClientMap, StorageKind } from './types';
  * Get a storage client by kind
  *
  * @example
- * // Logs client
- * const logs = getStorage({ kind: 'logs', config });
- * await logs.getConsoleLogUploadUrl(sessionId, { contentLength: 1024 });
+ * // Console logs client
+ * const consoleLogs = getStorage({ kind: 'consoleLogs', config });
+ * await consoleLogs.getUploadUrl(sessionId, { contentLength: 1024 });
+ *
+ * @example
+ * // Network logs client
+ * const networkLogs = getStorage({ kind: 'networkLogs', config });
+ * await networkLogs.getUploadUrl(sessionId, { contentLength: 1024 });
  *
  * @example
  * // Recordings client
@@ -24,14 +30,14 @@ import type { GetStorageOptions, StorageClientMap, StorageKind } from './types';
  * await recordings.getRecordingUploadUrl(recordingId, 'video/webm', { contentLength: 1024000 });
  *
  * @example
- * // Assets client with domain
+ * // Assets client with domain - path comes from write operation (putWorkspaceLogo returns { path })
  * const assets = getStorage({ kind: 'assets', config, domain: 'cdn.example.com' });
- * const url = assets.getWorkspaceLogoUrl(workspaceId);
+ * const url = assets.getWorkspaceLogoUrl(storedPath);
  *
  * @example
- * // Thumbnails client with domain
+ * // Thumbnails client with domain - path comes from DB (stored during upload)
  * const thumbnails = getStorage({ kind: 'thumbnails', config, domain: 'cdn.example.com' });
- * const url = thumbnails.getThumbnailUrl(recordingId);
+ * const url = thumbnails.getThumbnailUrl(storedPath);
  */
 export function getStorage<K extends StorageKind>(
   options: Extract<GetStorageOptions, { kind: K }>
@@ -39,8 +45,11 @@ export function getStorage<K extends StorageKind>(
   const { kind, config } = options;
 
   switch (kind) {
-    case 'logs':
-      return new LogsStorageClient(config) as StorageClientMap[K];
+    case 'consoleLogs':
+      return new ConsoleLogsStorageClient(config) as StorageClientMap[K];
+
+    case 'networkLogs':
+      return new NetworkLogsStorageClient(config) as StorageClientMap[K];
 
     case 'recordings':
       return new RecordingsStorageClient(config) as StorageClientMap[K];
