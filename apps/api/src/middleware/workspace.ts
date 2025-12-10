@@ -62,12 +62,14 @@ export function requireWorkspaceMember(
       }
 
       c.set('workspaceId', workspace.id);
+      c.set('workspaceMemberId', member.id);
       c.set('workspaceRole', member.workspaceRole);
 
       logger.debug(
         {
           userId: user.id,
           workspaceId: workspace.id,
+          workspaceMemberId: member.id,
           role: member.workspaceRole,
         },
         'Workspace member verified'
@@ -159,6 +161,7 @@ export function requireWorkspaceRole(
       }
 
       c.set('workspaceId', workspace.id);
+      c.set('workspaceMemberId', member.id);
       c.set('workspaceRole', member.workspaceRole);
 
       await next();

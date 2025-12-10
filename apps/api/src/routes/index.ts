@@ -12,6 +12,7 @@ import account from './account/account.index';
 import workspaceCreation from './provisioner/provisioner.index';
 import invite from './invite/invite.index';
 import workspace from './workspace/workspace.index';
+import recordingLinks from './recording-links/recording-links.index';
 
 export function registerRoutes(app: AppOpenAPI) {
   return (
@@ -24,6 +25,7 @@ export function registerRoutes(app: AppOpenAPI) {
       .route('/', workspaceCreation)
       .route('/', invite)
       .route('/', workspace)
+      .route('/', recordingLinks)
   );
 }
 
