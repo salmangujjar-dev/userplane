@@ -5,8 +5,44 @@
 
 import { eq, and, count, desc, asc } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
-import { recordings, workspaceMembers, user } from '@workspace/db';
+import {
+  recordings,
+  workspaceMembers,
+  user,
+  recordingLinks,
+  projects,
+  domains,
+} from '@workspace/db';
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
+
+/**
+ * System metadata captured during recording
+ */
+export interface RecordingSystemMetadata {
+  date: string;
+  time: string;
+  browser: string;
+  os: string;
+  windowSize: {
+    width: number;
+    height: number;
+  };
+}
+
+/**
+ * Custom metadata - arbitrary key-value pairs
+ */
+export type RecordingCustomMetadata = Record<string, unknown>;
+
+/**
+ * Recording metadata structure
+ * Versioned for backward compatibility
+ */
+export interface RecordingMeta {
+  version: number;
+  systemMetadata: RecordingSystemMetadata;
+  customMetadata: RecordingCustomMetadata;
+}
 
 /**
  * Shape of recording list item with joined data
@@ -18,6 +54,45 @@ export interface RecordingListRow {
   createdAt: Date;
   creatorId: string;
   creatorName: string;
+}
+
+/**
+ * Shape of recording detail with all joined data
+ */
+export interface RecordingDetailRow {
+  id: string;
+  workspaceId: string;
+  projectId: string;
+  recordingLinkId: string;
+  recordingStatus: 'pending' | 'failed' | 'expired' | 'completed';
+  recordingMediaRef: string | null;
+  recordingLogsRef: string | null;
+  recordingNetworkLogsRef: string | null;
+  recordingThumbnailRef: string | null;
+  recordingMeta: RecordingMeta | null;
+  recordingDuration: number | null;
+  recordingSize: number | null;
+  recordingConsoleLogSize: number | null;
+  recordingNetworkLogSize: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+  // Creator info
+  creatorId: string;
+  creatorName: string;
+  // Recording link info
+  linkGUID: string;
+  linkTitle: string | null;
+  linkProviderType: string | null;
+  linkProviderId: string | null;
+  linkProviderRef: string | null;
+  linkProviderData: unknown;
+  linkCreatedAt: Date;
+  // Project info
+  projectTitle: string | null;
+  projectPath: string;
+  // Domain info
+  domainId: string;
+  domainUrl: string;
 }
 
 /**
@@ -123,6 +198,68 @@ export class RecordingRepository {
       .limit(1);
 
     return recording || null;
+  }
+
+  /**
+   * Find recording by ID with all related data joined
+   * Returns full recording details including recording link, creator, project, and domain
+   */
+  async findByIdWithDetails(id: string): Promise<RecordingDetailRow | null> {
+    const [result] = await this.db
+      .select({
+        // Recording fields
+        id: recordings.id,
+        workspaceId: recordings.workspaceId,
+        projectId: recordings.projectId,
+        recordingLinkId: recordings.recordingLinkId,
+        recordingStatus: recordings.recordingStatus,
+        recordingMediaRef: recordings.recordingMediaRef,
+        recordingLogsRef: recordings.recordingLogsRef,
+        recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingThumbnailRef: recordings.recordingThumbnailRef,
+        recordingMeta: recordings.recordingMeta,
+        recordingDuration: recordings.recordingDuration,
+        recordingSize: recordings.recordingSize,
+        recordingConsoleLogSize: recordings.recordingConsoleLogSize,
+        recordingNetworkLogSize: recordings.recordingNetworkLogSize,
+        createdAt: recordings.createdAt,
+        updatedAt: recordings.updatedAt,
+        // Creator info
+        creatorId: workspaceMembers.id,
+        creatorName: user.name,
+        // Recording link info
+        linkGUID: recordingLinks.linkGUID,
+        linkTitle: recordingLinks.linkTitle,
+        linkProviderType: recordingLinks.linkProviderType,
+        linkProviderId: recordingLinks.linkProviderId,
+        linkProviderRef: recordingLinks.linkProviderRef,
+        linkProviderData: recordingLinks.linkProviderData,
+        linkCreatedAt: recordingLinks.createdAt,
+        // Project info
+        projectTitle: projects.projectTitle,
+        projectPath: projects.projectPath,
+        // Domain info
+        domainId: domains.id,
+        domainUrl: domains.domainUrl,
+      })
+      .from(recordings)
+      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.id))
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .innerJoin(recordingLinks, eq(recordings.recordingLinkId, recordingLinks.id))
+      .innerJoin(projects, eq(recordings.projectId, projects.id))
+      .innerJoin(domains, eq(recordingLinks.domainId, domains.id))
+      .where(and(eq(recordings.id, id), eq(recordings.isDeleted, false)))
+      .limit(1);
+
+    if (!result) {
+      return null;
+    }
+
+    // Cast jsonb fields to their typed equivalents
+    return {
+      ...result,
+      recordingMeta: result.recordingMeta as RecordingMeta | null,
+    };
   }
 
   /**
