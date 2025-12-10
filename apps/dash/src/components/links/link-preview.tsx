@@ -138,10 +138,18 @@ export function LinkPreview({
     }
   };
 
-  const handleSaveEdit = (title: string, reference: string, reusable: boolean) => {
+  const handleSaveEdit = (
+    title: string,
+    reference: string,
+    reusable: boolean,
+    linkProvider?: string,
+    linkProviderId?: string
+  ) => {
     if (onEdit) {
       onEdit(title, reference, reusable);
     }
+    console.log('Link provider:', linkProvider);
+    console.log('Link provider ID:', linkProviderId);
   };
 
   const handleCardClick = () => {

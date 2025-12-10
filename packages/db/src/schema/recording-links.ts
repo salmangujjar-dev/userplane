@@ -15,7 +15,39 @@ import { workspaceMembers } from './workspace-members';
 import { recordings } from './recordings';
 import { domains } from './domains';
 
-export const providerTypeEnum = pgEnum('provider_type', ['zendesk', 'intercom', 'plain']);
+export const linkProviderTypeEnum = pgEnum('link_provider_type', [
+  // Support/Helpdesk
+  'intercom',
+  'zendesk',
+  'hubspot',
+  'freshdesk',
+  'freshchat',
+  'jira_service_management',
+  'helpscout',
+  'happyfox',
+  'ada',
+  'forethought',
+  'servicenow',
+  'front',
+  'zoho_desk',
+  'crisp',
+  'pylon',
+  'plain',
+  // Project Management / Dev Tools
+  'asana',
+  'azure_devops',
+  'clickup',
+  'github',
+  'gitlab',
+  'jira',
+  'linear',
+  'notion',
+  'sentry',
+  'slack',
+  // Fallback
+  'web', // Valid URL but unknown provider
+  'others', // Not a URL (plain text)
+]);
 
 export const recordingLinks = pgTable(
   'recording_links',
@@ -30,15 +62,16 @@ export const recordingLinks = pgTable(
     createdBy: text('created_by').notNull(),
 
     // Link configuration
-    linkPublicRef: text('link_public_ref').notNull(),
+    // linkGUID is immutable - set once at creation
+    linkGUID: text('link_guid').notNull(),
     linkTitle: text('link_title'),
     linkReusable: boolean('link_reusable').default(false).notNull(),
 
     // External integration metadata
-    providerType: providerTypeEnum('provider_type'),
-    providerId: text('provider_id'),
-    providerRef: text('provider_ref'),
-    providerData: jsonb('provider_data'),
+    linkProviderType: linkProviderTypeEnum('link_provider_type'),
+    linkProviderId: text('link_provider_id'),
+    linkProviderRef: text('link_provider_ref'),
+    linkProviderData: jsonb('link_provider_data'),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -52,12 +85,12 @@ export const recordingLinks = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
-    uniqueIndex('recording_links_link_public_ref_idx').on(table.linkPublicRef),
+    uniqueIndex('recording_links_link_guid_idx').on(table.linkGUID),
     index('recording_links_workspace_id_idx').on(table.workspaceId),
     index('recording_links_domain_id_idx').on(table.domainId),
     index('recording_links_created_by_idx').on(table.createdBy),
     index('recording_links_workspace_created_at_idx').on(table.workspaceId, table.createdAt),
-    index('recording_links_provider_idx').on(table.providerType, table.providerId),
+    index('recording_links_provider_idx').on(table.linkProviderType, table.linkProviderId),
   ]
 );
 
