@@ -20,7 +20,7 @@ export interface ParsedLinkReference {
  * Each pattern includes regex to match URL and extract canonical ID
  */
 interface ProviderPattern {
-  type: LinkProviderType;
+  type: NonNullable<LinkProviderType>;
   // Hostname patterns to match
   hostPatterns: RegExp[];
   // Path pattern to extract canonical ID (first capture group is the ID)

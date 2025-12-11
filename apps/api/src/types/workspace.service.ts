@@ -142,9 +142,9 @@ export interface UpdateWorkspacePreferencesRequest {
 }
 
 /**
- * Recording link settings data
+ * Link settings data
  */
-export interface RecordingLinkSettings {
+export interface LinkSettings {
   workspaceId: string;
   recordingCompanyName: string | null;
   recordingCompanyLogoPath: string | null;

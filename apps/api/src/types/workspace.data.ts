@@ -4,7 +4,7 @@
  */
 
 import type { PaginationMeta } from './common';
-import type { RecordingLinkSettings } from './workspace.service';
+import type { LinkSettings } from './workspace.service';
 
 export interface WorkspaceData {
   workspaceId: string;
@@ -77,6 +77,6 @@ export interface WorkspaceDeleteData {
 }
 
 /**
- * Recording Link Settings API Data Types
+ * Link Settings API Data Types
  */
-export interface RecordingLinkSettingsData extends RecordingLinkSettings {}
+export interface LinkSettingsData extends LinkSettings {}

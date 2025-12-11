@@ -171,7 +171,7 @@ export class RecordingService {
     return {
       id: row.id,
       meta: {
-        recordingLink: {
+        link: {
           id: row.recordingLinkId,
           guid: row.linkGUID,
           title: row.linkTitle,

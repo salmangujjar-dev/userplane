@@ -1,24 +1,24 @@
 /**
- * RecordingLinkService - Business logic for recording link operations
- * Contains validation and business rules for recording link management
+ * LinkService - Business logic for link operations
+ * Contains validation and business rules for link management
  */
 
 import { nanoid } from 'nanoid';
-import { RecordingLinkRepository } from '@/api/repositories/recording-links.repository';
+import { LinkRepository } from '@/api/repositories/links.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { parseLinkReference } from '@/api/lib/link-reference-parser';
 import type {
-  RecordingLinkFilters,
-  RecordingLinkItem,
-  RecordingLinkSortOptions,
+  LinkFilters,
+  LinkItem,
+  LinkSortOptions,
   Transaction,
   LinkProviderType,
 } from '@/api/types';
 
-export interface RecordingLinkServiceDeps {
-  recordingLinkRepo: RecordingLinkRepository;
+export interface LinkServiceDeps {
+  linkRepo: LinkRepository;
   workspaceMemberRepo: WorkspaceMemberRepository;
   projectRepo: ProjectRepository;
 }
@@ -44,9 +44,9 @@ const LINK_GUID_LENGTH = 6;
 const MAX_GUID_RETRIES = 5;
 
 /**
- * Parameters for creating a recording link
+ * Parameters for creating a link
  */
-export interface CreateRecordingLinkParams {
+export interface CreateLinkParams {
   workspaceId: string;
   projectId?: string;
   domainId: string;
@@ -56,10 +56,10 @@ export interface CreateRecordingLinkParams {
 }
 
 /**
- * Parameters for updating a recording link
+ * Parameters for updating a link
  * Note: linkGUID is immutable and cannot be updated
  */
-export interface UpdateRecordingLinkParams {
+export interface UpdateLinkParams {
   linkTitle?: string | null;
   linkReusable?: boolean;
   linkProviderType?: LinkProviderType | null;
@@ -67,8 +67,8 @@ export interface UpdateRecordingLinkParams {
   linkProviderRef?: string | null;
 }
 
-export class RecordingLinkService {
-  constructor(private deps: RecordingLinkServiceDeps) {}
+export class LinkService {
+  constructor(private deps: LinkServiceDeps) {}
 
   /**
    * Generate a unique 6-character alphanumeric linkGUID
@@ -77,7 +77,7 @@ export class RecordingLinkService {
   private async generateUniqueLinkGUID(): Promise<string> {
     for (let i = 0; i < MAX_GUID_RETRIES; i++) {
       const guid = nanoid(LINK_GUID_LENGTH);
-      const existing = await this.deps.recordingLinkRepo.findByLinkGUID(guid);
+      const existing = await this.deps.linkRepo.findByLinkGUID(guid);
       if (!existing) {
         return guid;
       }
@@ -96,12 +96,12 @@ export class RecordingLinkService {
   }
 
   /**
-   * Create a new recording link
+   * Create a new link
    * Parses the linkReference to infer provider info and generate title
    * If linkReference is empty, uses user's first name as default
    * If projectId is not provided, uses the default project for the workspace
    */
-  async create(params: CreateRecordingLinkParams, options?: { tx?: Transaction }) {
+  async create(params: CreateLinkParams, options?: { tx?: Transaction }) {
     // Get the workspace member with user info
     const memberWithUser = await this.deps.workspaceMemberRepo.findByIdWithUser(params.createdBy);
     if (!memberWithUser) {
@@ -136,11 +136,12 @@ export class RecordingLinkService {
     // Generate unique linkGUID
     const linkGUID = await this.generateUniqueLinkGUID();
 
-    // Generate unique ID for the recording link
+    // Generate unique ID for the link
     const id = `rl_${nanoid(16)}`;
 
-    // Create the recording link
-    const link = await this.deps.recordingLinkRepo.create(
+    // Create the link
+    // Currently only 'recording' type is supported
+    const link = await this.deps.linkRepo.create(
       {
         id,
         workspaceId: params.workspaceId,
@@ -149,6 +150,7 @@ export class RecordingLinkService {
         createdBy: params.createdBy,
         linkGUID,
         linkTitle: parsed.linkTitle,
+        linkType: 'recording',
         linkReusable: params.linkReusable ?? false,
         linkProviderType: parsed.linkProviderType,
         linkProviderId: parsed.linkProviderId,
@@ -161,7 +163,7 @@ export class RecordingLinkService {
   }
 
   /**
-   * Get recording links for a workspace with pagination, filters, and sorting
+   * Get links for a workspace with pagination, filters, and sorting
    * All filtering and sorting is performed at the database level
    * Default sort: created_at descending (latest first)
    */
@@ -169,9 +171,9 @@ export class RecordingLinkService {
     workspaceId: string,
     page: number = 1,
     perPage: number = DEFAULT_PER_PAGE,
-    filters?: RecordingLinkFilters,
-    sort?: RecordingLinkSortOptions
-  ): Promise<{ recordingLinks: RecordingLinkItem[]; total: number }> {
+    filters?: LinkFilters,
+    sort?: LinkSortOptions
+  ): Promise<{ links: LinkItem[]; total: number }> {
     // Validate pagination params
     if (page < 1) {
       throw new ValidationError('Page must be greater than 0');
@@ -182,14 +184,14 @@ export class RecordingLinkService {
     }
 
     // Get total count with filters applied at DB level
-    const total = await this.deps.recordingLinkRepo.countByWorkspace(workspaceId, filters);
+    const total = await this.deps.linkRepo.countByWorkspace(workspaceId, filters);
 
     // Calculate offset for pagination
     const offset = (page - 1) * perPage;
 
     // Get paginated results with all data joined at DB level
     // Default sort: created_at desc (latest first)
-    const rows = await this.deps.recordingLinkRepo.findByWorkspaceIdPaginated(
+    const rows = await this.deps.linkRepo.findByWorkspaceIdPaginated(
       workspaceId,
       perPage,
       offset,
@@ -198,10 +200,11 @@ export class RecordingLinkService {
     );
 
     // Map database rows to response shape with nested linkProvider
-    const recordingLinks: RecordingLinkItem[] = rows.map((row) => ({
+    const links: LinkItem[] = rows.map((row) => ({
       id: row.id,
       linkGUID: row.linkGUID,
       linkTitle: row.linkTitle,
+      linkType: row.linkType,
       linkReusable: row.linkReusable,
       linkProvider: {
         type: row.linkProviderType,
@@ -220,75 +223,75 @@ export class RecordingLinkService {
     }));
 
     return {
-      recordingLinks,
+      links,
       total,
     };
   }
 
   /**
-   * Update a recording link
+   * Update a link
    * Validates ownership before updating
    * Note: linkGUID is immutable and cannot be updated
    */
   async update(
-    recordingLinkId: string,
+    linkId: string,
     workspaceId: string,
-    params: UpdateRecordingLinkParams,
+    params: UpdateLinkParams,
     options?: { tx?: Transaction }
   ) {
-    // Get existing recording link
-    const existingLink = await this.deps.recordingLinkRepo.findById(recordingLinkId);
+    // Get existing link
+    const existingLink = await this.deps.linkRepo.findById(linkId);
 
     if (!existingLink) {
-      const isSoftDeleted = await this.deps.recordingLinkRepo.isSoftDeleted(recordingLinkId);
+      const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Recording link has been deleted');
+        throw new GoneError('Link has been deleted');
       }
-      throw new NotFoundError('Recording link not found');
+      throw new NotFoundError('Link not found');
     }
 
     // Verify link belongs to the workspace
     if (existingLink.workspaceId !== workspaceId) {
-      throw new ValidationError('Recording link does not belong to this workspace');
+      throw new ValidationError('Link does not belong to this workspace');
     }
 
     // Perform update
-    const updated = await this.deps.recordingLinkRepo.update(recordingLinkId, params, options);
+    const updated = await this.deps.linkRepo.update(linkId, params, options);
 
     if (!updated) {
-      throw new ValidationError('Failed to update recording link');
+      throw new ValidationError('Failed to update link');
     }
 
     return updated;
   }
 
   /**
-   * Delete a recording link
+   * Delete a link
    * Validates ownership before soft deleting
    * Performs soft delete by marking isDeleted as true
    */
-  async delete(recordingLinkId: string, workspaceId: string, options?: { tx?: Transaction }) {
-    // Get existing recording link
-    const existingLink = await this.deps.recordingLinkRepo.findById(recordingLinkId);
+  async delete(linkId: string, workspaceId: string, options?: { tx?: Transaction }) {
+    // Get existing link
+    const existingLink = await this.deps.linkRepo.findById(linkId);
 
     if (!existingLink) {
-      const isSoftDeleted = await this.deps.recordingLinkRepo.isSoftDeleted(recordingLinkId);
+      const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Recording link has already been deleted');
+        throw new GoneError('Link has already been deleted');
       }
-      throw new NotFoundError('Recording link not found');
+      throw new NotFoundError('Link not found');
     }
 
     // Verify link belongs to the workspace
     if (existingLink.workspaceId !== workspaceId) {
-      throw new ValidationError('Recording link does not belong to this workspace');
+      throw new ValidationError('Link does not belong to this workspace');
     }
 
     // Perform soft delete
-    const deleted = await this.deps.recordingLinkRepo.softDelete(recordingLinkId, options);
+    const deleted = await this.deps.linkRepo.softDelete(linkId, options);
 
     if (!deleted) {
-      throw new ValidationError('Failed to delete recording link');
+      throw new ValidationError('Failed to delete link');
     }
 
     return deleted;

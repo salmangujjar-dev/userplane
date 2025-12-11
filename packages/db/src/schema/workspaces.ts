@@ -13,7 +13,7 @@ import { workspaceMembers } from './workspace-members';
 import { entitlements } from './entitlements';
 import { domains } from './domains';
 import { projects } from './projects';
-import { recordingLinks } from './recording-links';
+import { links } from './links';
 
 /**
  * Workspace plan enum
@@ -69,5 +69,5 @@ export const workspacesRelations = relations(workspaces, ({ many }) => ({
   entitlements: many(entitlements),
   domains: many(domains),
   projects: many(projects),
-  recordingLinks: many(recordingLinks),
+  links: many(links),
 }));

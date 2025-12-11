@@ -15,6 +15,10 @@ import { workspaceMembers } from './workspace-members';
 import { recordings } from './recordings';
 import { domains } from './domains';
 
+// Link types - currently only 'recording' is supported in the API
+// Other types (file, session, screenshot) are reserved for future use
+export const linkTypeEnum = pgEnum('link_type', ['file', 'recording', 'session', 'screenshot']);
+
 export const linkProviderTypeEnum = pgEnum('link_provider_type', [
   // Support/Helpdesk
   'intercom',
@@ -49,7 +53,7 @@ export const linkProviderTypeEnum = pgEnum('link_provider_type', [
   'others', // Not a URL (plain text)
 ]);
 
-export const recordingLinks = pgTable(
+export const links = pgTable(
   'recording_links',
   {
     // Primary identifier
@@ -66,6 +70,7 @@ export const recordingLinks = pgTable(
     linkGUID: text('link_guid').notNull(),
     linkTitle: text('link_title'),
     linkReusable: boolean('link_reusable').default(false).notNull(),
+    linkType: linkTypeEnum('link_type').default('recording').notNull(),
 
     // External integration metadata
     linkProviderType: linkProviderTypeEnum('link_provider_type'),
@@ -91,24 +96,25 @@ export const recordingLinks = pgTable(
     index('recording_links_created_by_idx').on(table.createdBy),
     index('recording_links_workspace_created_at_idx').on(table.workspaceId, table.createdAt),
     index('recording_links_provider_idx').on(table.linkProviderType, table.linkProviderId),
+    index('recording_links_link_type_idx').on(table.linkType),
   ]
 );
 
-export const recordingLinksRelations = relations(recordingLinks, ({ one, many }) => ({
+export const linksRelations = relations(links, ({ one, many }) => ({
   workspace: one(workspaces, {
-    fields: [recordingLinks.workspaceId],
+    fields: [links.workspaceId],
     references: [workspaces.id],
   }),
   project: one(projects, {
-    fields: [recordingLinks.projectId],
+    fields: [links.projectId],
     references: [projects.id],
   }),
   domain: one(domains, {
-    fields: [recordingLinks.domainId],
+    fields: [links.domainId],
     references: [domains.id],
   }),
   creator: one(workspaceMembers, {
-    fields: [recordingLinks.createdBy],
+    fields: [links.createdBy],
     references: [workspaceMembers.id],
   }),
   recordings: many(recordings),

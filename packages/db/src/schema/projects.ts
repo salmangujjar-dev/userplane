@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { workspaces } from './workspaces';
-import { recordingLinks } from './recording-links';
+import { links } from './links';
 import { recordings } from './recordings';
 
 export const projects = pgTable(
@@ -37,6 +37,6 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     fields: [projects.workspaceId],
     references: [workspaces.id],
   }),
-  recordingLinks: many(recordingLinks),
+  links: many(links),
   recordings: many(recordings),
 }));
