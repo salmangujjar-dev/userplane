@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type {
@@ -167,5 +168,30 @@ export abstract class BaseStorageClient {
     });
 
     await this.client.send(command);
+  }
+
+  /**
+   * Check if object exists and get its metadata
+   * Returns null if object does not exist
+   */
+  async head(path: string): Promise<{ contentLength: number; contentType?: string } | null> {
+    try {
+      const command = new HeadObjectCommand({
+        Bucket: this.bucket,
+        Key: path,
+      });
+
+      const response = await this.client.send(command);
+      return {
+        contentLength: response.ContentLength ?? 0,
+        contentType: response.ContentType,
+      };
+    } catch (error: unknown) {
+      // NotFound error means object doesn't exist
+      if (error instanceof Error && error.name === 'NotFound') {
+        return null;
+      }
+      throw error;
+    }
   }
 }
