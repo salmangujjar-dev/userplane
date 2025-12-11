@@ -16,6 +16,7 @@ import { workspaceMembers } from './workspace-members';
 
 export const uploadStatusEnum = pgEnum('upload_status', [
   'pending',
+  'partial',
   'available',
   'failed',
   'expired',
@@ -51,10 +52,10 @@ export const recordings = pgTable(
     streamingStatus: streamingStatusEnum('streaming_status'),
 
     // Cold storage (permanent archival in object storage)
-    recordingMediaRef: text('recording_media_ref'),
+    recordingVideoRef: text('recording_video_ref'),
+    recordingThumbnailRef: text('recording_thumbnail_ref'),
     recordingConsoleLogRef: text('recording_console_log_ref'),
     recordingNetworkLogsRef: text('recording_network_logs_ref'),
-    recordingThumbnailRef: text('recording_thumbnail_ref'),
 
     // Recording metadata
     recordingMeta: jsonb('recording_meta'),
