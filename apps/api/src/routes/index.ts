@@ -15,11 +15,15 @@ import workspace from './workspace/workspace.index';
 import links from './links/links.index';
 import recordings from './recordings/recordings.index';
 
+// Public routes (token-based auth)
+import session from './session/session.index';
+
 export function registerRoutes(app: AppOpenAPI) {
   return (
     app
       // Public routes
       .route('/', status)
+      .route('/', session)
       // Protected routes
       .route('/account', account)
       // Workspace routes

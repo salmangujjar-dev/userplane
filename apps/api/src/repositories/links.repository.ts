@@ -5,7 +5,7 @@
 
 import { eq, and, count, desc, asc } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
-import { links, projects, workspaceMembers, user } from '@workspace/db';
+import { links, projects, workspaceMembers, user, workspaces } from '@workspace/db';
 import type {
   LinkFilters,
   Transaction,
@@ -58,6 +58,29 @@ export interface UpdateLinkInput {
   linkProviderType?: LinkProviderType | null;
   linkProviderId?: string | null;
   linkProviderRef?: string | null;
+}
+
+/**
+ * Link with workspace preferences for session initialization
+ */
+export interface LinkWithWorkspacePrefsRow {
+  linkId: string;
+  linkType: LinkType;
+  linkReusable: boolean;
+  workspaceId: string;
+  projectId: string;
+  domainId: string;
+  createdBy: string;
+  recordingCustomizeLink: boolean;
+  recordingHideSensitive: boolean;
+  recordingCaptureClientLog: boolean;
+  recordingCaptureServerLog: boolean;
+  recordingCompanyName: string | null;
+  recordingCompanyLogoPath: string | null;
+  recordingHeader: string | null;
+  recordingFootnote: string | null;
+  recordingPrimaryColor: string | null;
+  recordingMaxDuration: number | null;
 }
 
 export class LinkRepository {
@@ -277,5 +300,53 @@ export class LinkRepository {
       .returning();
 
     return deleted || null;
+  }
+
+  /**
+   * Find link by ID with workspace preferences
+   * Used for session initialization to get link context and recording settings
+   */
+  async findByIdWithWorkspacePrefs(id: string): Promise<LinkWithWorkspacePrefsRow | null> {
+    const [result] = await this.db
+      .select({
+        linkId: links.id,
+        linkType: links.linkType,
+        linkReusable: links.linkReusable,
+        workspaceId: links.workspaceId,
+        projectId: links.projectId,
+        domainId: links.domainId,
+        createdBy: links.createdBy,
+        recordingCustomizeLink: workspaces.recordingCustomizeLink,
+        recordingHideSensitive: workspaces.recordingHideSensitive,
+        recordingCaptureClientLog: workspaces.recordingCaptureClientLog,
+        recordingCaptureServerLog: workspaces.recordingCaptureServerLog,
+        recordingCompanyName: workspaces.recordingCompanyName,
+        recordingCompanyLogoPath: workspaces.recordingCompanyLogoPath,
+        recordingHeader: workspaces.recordingHeader,
+        recordingFootnote: workspaces.recordingFootnote,
+        recordingPrimaryColor: workspaces.recordingPrimaryColor,
+        recordingMaxDuration: workspaces.recordingMaxDuration,
+      })
+      .from(links)
+      .innerJoin(workspaces, eq(links.workspaceId, workspaces.id))
+      .where(and(eq(links.id, id), eq(links.isDeleted, false), eq(workspaces.isDeleted, false)))
+      .limit(1);
+
+    return result || null;
+  }
+
+  /**
+   * Count recordings for a link (non-deleted, non-failed)
+   * Used to check single-use link restrictions
+   */
+  async countRecordingsForLink(linkId: string): Promise<number> {
+    const { recordings } = await import('@workspace/db');
+
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(recordings)
+      .where(and(eq(recordings.recordingLinkId, linkId), eq(recordings.isDeleted, false)));
+
+    return Number(result?.count || 0);
   }
 }
