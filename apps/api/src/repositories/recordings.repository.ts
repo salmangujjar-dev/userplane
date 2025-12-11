@@ -4,7 +4,7 @@
  */
 
 import { eq, and, count, desc, asc } from '@workspace/db';
-import type { DbClient } from '@workspace/db';
+import type { DbClient, Recording } from '@workspace/db';
 import {
   recordings,
   workspaceMembers,
@@ -58,22 +58,20 @@ export interface RecordingListRow {
 
 /**
  * Shape of recording detail with all joined data
+ * Uses inferred types from database schema to avoid duplication
  */
 export interface RecordingDetailRow {
   id: string;
   workspaceId: string;
   projectId: string;
   recordingLinkId: string;
-  recordingStatus: 'pending' | 'failed' | 'expired' | 'completed';
+  uploadStatus: Recording['uploadStatus'];
   recordingMediaRef: string | null;
-  recordingLogsRef: string | null;
+  recordingConsoleLogRef: string | null;
   recordingNetworkLogsRef: string | null;
   recordingThumbnailRef: string | null;
   recordingMeta: RecordingMeta | null;
   recordingDuration: number | null;
-  recordingSize: number | null;
-  recordingConsoleLogSize: number | null;
-  recordingNetworkLogSize: number | null;
   createdAt: Date;
   updatedAt: Date;
   // Creator info
@@ -212,16 +210,13 @@ export class RecordingRepository {
         workspaceId: recordings.workspaceId,
         projectId: recordings.projectId,
         recordingLinkId: recordings.recordingLinkId,
-        recordingStatus: recordings.recordingStatus,
+        uploadStatus: recordings.uploadStatus,
         recordingMediaRef: recordings.recordingMediaRef,
-        recordingLogsRef: recordings.recordingLogsRef,
+        recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingMeta: recordings.recordingMeta,
         recordingDuration: recordings.recordingDuration,
-        recordingSize: recordings.recordingSize,
-        recordingConsoleLogSize: recordings.recordingConsoleLogSize,
-        recordingNetworkLogSize: recordings.recordingNetworkLogSize,
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
         // Creator info

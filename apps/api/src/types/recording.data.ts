@@ -4,7 +4,7 @@
  */
 
 import type { PaginationMeta } from './common';
-import type { RecordingMeta } from '@/api/repositories/recordings.repository';
+import type { RecordingMeta, RecordingDetailRow } from '@/api/repositories/recordings.repository';
 
 /**
  * Creator information for recording
@@ -68,6 +68,7 @@ export interface RecordingDomainRef {
 /**
  * Recording meta information
  * Combines recording link info, creator, project, domain, and recording metadata
+ * Uses inferred types from database schema via repository layer
  */
 export interface RecordingDetailMeta {
   recordingLink: RecordingLinkRef;
@@ -75,7 +76,7 @@ export interface RecordingDetailMeta {
   project: RecordingProjectRef;
   domain: RecordingDomainRef;
   workspaceId: string;
-  status: 'pending' | 'failed' | 'expired' | 'completed';
+  status: RecordingDetailRow['uploadStatus'];
   recordingMeta: RecordingMeta | null;
   createdAt: Date;
   updatedAt: Date;

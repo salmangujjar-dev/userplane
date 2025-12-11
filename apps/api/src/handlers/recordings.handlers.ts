@@ -19,39 +19,7 @@ import type {
 } from '@/api/types';
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
-
-/**
- * Sortable fields for recordings
- */
-const SORT_FIELDS = ['created_at', 'recording_duration'] as const;
-
-/**
- * Sort directions
- */
-const SORT_DIRECTIONS = ['asc', 'desc'] as const;
-
-/**
- * Schema for recordings list query params
- * Validates pagination, filter, and sort parameters
- */
-const listRecordingsQuerySchema = z.object({
-  page: z
-    .string()
-    .optional()
-    .default('1')
-    .transform((val) => parseInt(val, 10))
-    .refine((val) => val >= 1, { message: 'Page must be at least 1' }),
-  per_page: z
-    .string()
-    .optional()
-    .default('10')
-    .transform((val) => parseInt(val, 10))
-    .refine((val) => val >= 1 && val <= 20, { message: 'Per page must be between 1 and 20' }),
-  created_by: z.string().optional(),
-  project_id: z.string().optional(),
-  sort_by: z.enum(SORT_FIELDS).optional().default('created_at'),
-  sort_direction: z.enum(SORT_DIRECTIONS).optional().default('desc'),
-});
+import { listRecordingsQuerySchema, RECORDING_SORT_FIELDS } from '@/api/schema';
 
 /**
  * Handler factory for listing recordings

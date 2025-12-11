@@ -9,10 +9,7 @@ import type { ApiResponse, ApiErrorResponse, AccountData, AccountUpdateData } fr
 import { UserService } from '@/api/services/user.service';
 import { z } from 'zod';
 import { ValidationError, getErrorStatusCode } from '@/api/lib/errors';
-
-const updateAccountSchema = z.object({
-  name: z.string().min(1, 'Name is required').trim(),
-});
+import { updateAccountSchema } from '@/api/schema';
 
 export function getAccountHandler(userService: UserService) {
   return async (c: Context<AppEnv>) => {

@@ -14,19 +14,20 @@ import { workspaces } from './workspaces';
 import { projects } from './projects';
 import { workspaceMembers } from './workspace-members';
 
-export const recordingStatusEnum = pgEnum('recording_status', [
+export const uploadStatusEnum = pgEnum('upload_status', [
   'pending',
+  'available',
   'failed',
   'expired',
-  'completed',
+  'purged',
 ]);
 export const streamProviderEnum = pgEnum('stream_provider', ['cloudflare', 'mux']);
 export const streamingStatusEnum = pgEnum('streaming_status', [
   'pending',
-  'ready',
+  'available',
   'failed',
-  'completed',
   'expired',
+  'purged',
 ]);
 
 export const recordings = pgTable(
@@ -41,8 +42,8 @@ export const recordings = pgTable(
     projectId: text('project_id').notNull(),
     createdBy: text('created_by').notNull(),
 
-    // Recording status
-    recordingStatus: recordingStatusEnum('recording_status').notNull().default('pending'),
+    // Upload status
+    uploadStatus: uploadStatusEnum('upload_status').notNull().default('pending'),
 
     // Hot storage (14-day retention in stream provider)
     streamProvider: streamProviderEnum('stream_provider'),
@@ -51,7 +52,7 @@ export const recordings = pgTable(
 
     // Cold storage (permanent archival in object storage)
     recordingMediaRef: text('recording_media_ref'),
-    recordingLogsRef: text('recording_logs_ref'),
+    recordingConsoleLogRef: text('recording_console_log_ref'),
     recordingNetworkLogsRef: text('recording_network_logs_ref'),
     recordingThumbnailRef: text('recording_thumbnail_ref'),
 
@@ -60,9 +61,6 @@ export const recordings = pgTable(
 
     // Recording metrics
     recordingDuration: integer('recording_duration'),
-    recordingSize: integer('recording_size'),
-    recordingConsoleLogSize: integer('recording_console_log_size'),
-    recordingNetworkLogSize: integer('recording_network_log_size'),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -77,7 +75,7 @@ export const recordings = pgTable(
   },
   (table) => [
     index('recordings_recording_link_id_idx').on(table.recordingLinkId),
-    index('recordings_recording_status_idx').on(table.recordingStatus),
+    index('recordings_upload_status_idx').on(table.uploadStatus),
     index('recordings_workspace_id_idx').on(table.workspaceId),
     index('recordings_created_by_idx').on(table.createdBy),
     index('recordings_project_id_idx').on(table.projectId),

@@ -3,12 +3,13 @@
  * Input types for recording link service operations
  */
 
-import type { linkProviderTypeEnum } from '@workspace/db';
+import type { RecordingLink } from '@workspace/db';
 
 /**
- * Link provider type extracted from database enum
+ * Link provider type inferred from database schema
+ * Single source of truth: changes to DB schema automatically propagate here
  */
-export type LinkProviderType = (typeof linkProviderTypeEnum.enumValues)[number];
+export type LinkProviderType = RecordingLink['linkProviderType'];
 
 /**
  * Sortable fields for recording links
