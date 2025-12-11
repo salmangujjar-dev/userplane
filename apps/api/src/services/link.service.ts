@@ -3,7 +3,7 @@
  * Contains validation and business rules for link management
  */
 
-import { nanoid } from 'nanoid';
+import { generateLinkId } from '@/api/lib/id-generator';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
@@ -34,16 +34,6 @@ const MAX_PER_PAGE = 20;
 const DEFAULT_PER_PAGE = 10;
 
 /**
- * Length of linkGUID (6-character alphanumeric)
- */
-const LINK_GUID_LENGTH = 6;
-
-/**
- * Max retries for generating unique linkGUID
- */
-const MAX_GUID_RETRIES = 5;
-
-/**
  * Parameters for creating a link
  */
 export interface CreateLinkParams {
@@ -57,7 +47,6 @@ export interface CreateLinkParams {
 
 /**
  * Parameters for updating a link
- * Note: linkGUID is immutable and cannot be updated
  */
 export interface UpdateLinkParams {
   linkTitle?: string | null;
@@ -69,21 +58,6 @@ export interface UpdateLinkParams {
 
 export class LinkService {
   constructor(private deps: LinkServiceDeps) {}
-
-  /**
-   * Generate a unique 6-character alphanumeric linkGUID
-   * Retries if collision detected
-   */
-  private async generateUniqueLinkGUID(): Promise<string> {
-    for (let i = 0; i < MAX_GUID_RETRIES; i++) {
-      const guid = nanoid(LINK_GUID_LENGTH);
-      const existing = await this.deps.linkRepo.findByLinkGUID(guid);
-      if (!existing) {
-        return guid;
-      }
-    }
-    throw new ValidationError('Failed to generate unique link GUID after multiple attempts');
-  }
 
   /**
    * Extract first name from full name
@@ -133,11 +107,8 @@ export class LinkService {
     // Parse link reference to extract provider info
     const parsed = parseLinkReference(linkReference);
 
-    // Generate unique linkGUID
-    const linkGUID = await this.generateUniqueLinkGUID();
-
-    // Generate unique ID for the link
-    const id = `rl_${nanoid(16)}`;
+    // Generate unique ID for the link (12-character alphanumeric)
+    const id = generateLinkId();
 
     // Create the link
     // Currently only 'recording' type is supported
@@ -148,7 +119,6 @@ export class LinkService {
         projectId,
         domainId: params.domainId,
         createdBy: params.createdBy,
-        linkGUID,
         linkTitle: parsed.linkTitle,
         linkType: 'recording',
         linkReusable: params.linkReusable ?? false,
@@ -202,7 +172,6 @@ export class LinkService {
     // Map database rows to response shape with nested linkProvider
     const links: LinkItem[] = rows.map((row) => ({
       id: row.id,
-      linkGUID: row.linkGUID,
       linkTitle: row.linkTitle,
       linkType: row.linkType,
       linkReusable: row.linkReusable,
@@ -231,7 +200,6 @@ export class LinkService {
   /**
    * Update a link
    * Validates ownership before updating
-   * Note: linkGUID is immutable and cannot be updated
    */
   async update(
     linkId: string,

@@ -173,7 +173,6 @@ export class RecordingService {
       meta: {
         link: {
           id: row.recordingLinkId,
-          guid: row.linkGUID,
           title: row.linkTitle,
           providerType: row.linkProviderType,
           providerId: row.linkProviderId,
@@ -188,7 +187,6 @@ export class RecordingService {
         project: {
           id: row.projectId,
           title: row.projectTitle,
-          path: row.projectPath,
         },
         domain: {
           id: row.domainId,

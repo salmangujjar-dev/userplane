@@ -66,7 +66,6 @@ export interface CreateProjectInput {
   id: string;
   workspaceId: string;
   projectTitle: string | null;
-  projectPath: string;
   isDefault: boolean;
 }
 

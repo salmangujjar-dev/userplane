@@ -70,7 +70,6 @@ export const createLinkSchema = z.object({
 /**
  * Update link schema
  * All fields are optional - only provided fields will be updated
- * Note: linkGUID is immutable and cannot be updated
  */
 export const updateLinkSchema = z.object({
   linkTitle: z.string().max(255, 'Title must be less than 255 characters').nullable().optional(),

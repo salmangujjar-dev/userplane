@@ -198,7 +198,6 @@ export function createLinkHandler(linkService: LinkService) {
           workspaceId,
           link: {
             id: created.id,
-            linkGUID: created.linkGUID,
             linkTitle: created.linkTitle,
             linkType: created.linkType,
             linkReusable: created.linkReusable,
@@ -251,7 +250,6 @@ export function createLinkHandler(linkService: LinkService) {
 /**
  * Handler factory for updating a link
  * Updates title, reusable flag, and provider info
- * Note: linkGUID is immutable and cannot be updated
  */
 export function updateLinkHandler(linkService: LinkService) {
   return async (c: Context<AppEnv>) => {

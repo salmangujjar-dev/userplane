@@ -39,7 +39,6 @@ export interface RecordingsListData {
  */
 export interface LinkRef {
   id: string;
-  guid: string;
   title: string | null;
   providerType: string | null;
   providerId: string | null;
@@ -54,7 +53,6 @@ export interface LinkRef {
 export interface RecordingProjectRef {
   id: string;
   title: string | null;
-  path: string;
 }
 
 /**

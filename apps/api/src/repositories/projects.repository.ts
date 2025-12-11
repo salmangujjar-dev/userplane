@@ -23,7 +23,6 @@ export class ProjectRepository {
         id: data.id,
         workspaceId: data.workspaceId,
         projectTitle: data.projectTitle,
-        projectPath: data.projectPath,
         isDefault: data.isDefault,
         isDeleted: false,
       })

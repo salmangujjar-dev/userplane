@@ -20,7 +20,6 @@ export interface CreateProjectParams {
 export interface ProjectItem {
   projectId: string;
   projectTitle: string | null;
-  projectPath: string;
   isDefault: boolean;
   createdAt: Date;
 }

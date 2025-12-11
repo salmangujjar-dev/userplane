@@ -3,7 +3,7 @@
  * Contains business logic for workspace membership management
  */
 
-import { nanoid } from 'nanoid';
+import { generateWorkspaceMemberId } from '@/api/lib/id-generator';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ValidationError, ConflictError } from '@/api/lib/errors';
 import type {
@@ -55,7 +55,7 @@ export class WorkspaceMemberService {
     // Otherwise, create new member as owner
     return this.deps.memberRepo.create(
       {
-        id: `wm_${nanoid(16)}`,
+        id: generateWorkspaceMemberId(),
         userId: params.userId,
         workspaceId: params.workspaceId,
         workspaceRole: 'owner',
@@ -99,7 +99,7 @@ export class WorkspaceMemberService {
     // Otherwise, create new member
     return this.deps.memberRepo.create(
       {
-        id: `wm_${nanoid(16)}`,
+        id: generateWorkspaceMemberId(),
         userId: params.userId,
         workspaceId: params.workspaceId,
         workspaceRole: params.role,
