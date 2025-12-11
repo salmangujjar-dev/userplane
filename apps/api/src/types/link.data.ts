@@ -20,7 +20,6 @@ export interface LinkProvider {
  */
 export interface LinkItem {
   id: string;
-  linkGUID: string;
   linkTitle: string | null;
   linkType: LinkType;
   linkReusable: boolean;
@@ -65,7 +64,6 @@ export interface LinkCreateData {
   workspaceId: string;
   link: {
     id: string;
-    linkGUID: string;
     linkTitle: string | null;
     linkType: LinkType;
     linkReusable: boolean;

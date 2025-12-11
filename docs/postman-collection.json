@@ -1167,7 +1167,7 @@
                 "{{linkId}}"
               ]
             },
-            "description": "Update a link. At least one field must be provided. Note: linkGUID is immutable.\n\nBody (all optional):\n- linkTitle: Title for the link (max 255 chars)\n- linkReusable: Whether link can be reused\n- linkProviderType: Provider type (linear, notion, jira, etc.)\n- linkProviderId: Provider-specific ID\n- linkProviderRef: Provider-specific reference\n\nResponse data: LinkUpdateData (workspaceId, link)"
+            "description": "Update a link. At least one field must be provided.\n\nBody (all optional):\n- linkTitle: Title for the link (max 255 chars)\n- linkReusable: Whether link can be reused\n- linkProviderType: Provider type (linear, notion, jira, etc.)\n- linkProviderId: Provider-specific ID\n- linkProviderRef: Provider-specific reference\n\nResponse data: LinkUpdateData (workspaceId, link)"
           },
           "response": []
         },

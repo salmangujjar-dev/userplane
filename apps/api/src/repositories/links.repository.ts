@@ -19,7 +19,6 @@ import type {
  */
 export interface LinkListRow {
   id: string;
-  linkGUID: string;
   linkTitle: string | null;
   linkType: LinkType;
   linkReusable: boolean;
@@ -42,7 +41,6 @@ export interface CreateLinkInput {
   projectId: string;
   domainId: string;
   createdBy: string;
-  linkGUID: string;
   linkTitle: string | null;
   linkType: LinkType;
   linkReusable: boolean;
@@ -53,7 +51,6 @@ export interface CreateLinkInput {
 
 /**
  * Input for updating a link
- * Note: linkGUID is immutable and cannot be updated
  */
 export interface UpdateLinkInput {
   linkTitle?: string | null;
@@ -80,7 +77,6 @@ export class LinkRepository {
         projectId: data.projectId,
         domainId: data.domainId,
         createdBy: data.createdBy,
-        linkGUID: data.linkGUID,
         linkTitle: data.linkTitle,
         linkType: data.linkType,
         linkReusable: data.linkReusable,
@@ -92,20 +88,6 @@ export class LinkRepository {
       .returning();
 
     return link;
-  }
-
-  /**
-   * Check if a linkGUID already exists
-   * Used to ensure uniqueness when creating new links
-   */
-  async findByLinkGUID(linkGUID: string) {
-    const [link] = await this.db
-      .select({ id: links.id })
-      .from(links)
-      .where(eq(links.linkGUID, linkGUID))
-      .limit(1);
-
-    return link || null;
   }
 
   /**
@@ -172,7 +154,6 @@ export class LinkRepository {
     const results = await this.db
       .select({
         id: links.id,
-        linkGUID: links.linkGUID,
         linkTitle: links.linkTitle,
         linkType: links.linkType,
         linkReusable: links.linkReusable,
@@ -241,7 +222,6 @@ export class LinkRepository {
 
   /**
    * Update link fields
-   * Note: linkGUID is immutable and cannot be updated
    * Returns the updated link or null if not found
    */
   async update(id: string, data: UpdateLinkInput, options?: { tx?: Transaction }) {

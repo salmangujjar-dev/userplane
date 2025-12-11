@@ -67,7 +67,6 @@ export function createProjectHandler(projectService: ProjectService) {
           project: {
             projectId: project.id,
             projectTitle: project.projectTitle,
-            projectPath: project.projectPath,
             isDefault: project.isDefault,
             createdAt: project.createdAt,
           },
@@ -137,7 +136,6 @@ export function getProjectsHandler(projectService: ProjectService) {
       const projectItems: ProjectItem[] = projects.map((project) => ({
         projectId: project.id,
         projectTitle: project.projectTitle,
-        projectPath: project.projectPath,
         isDefault: project.isDefault,
         createdAt: project.createdAt,
       }));
@@ -355,7 +353,6 @@ export function replaceProjectHandler(projectService: ProjectService) {
           project: {
             projectId: project.id,
             projectTitle: project.projectTitle,
-            projectPath: project.projectPath,
             isDefault: project.isDefault,
             createdAt: project.createdAt,
           },

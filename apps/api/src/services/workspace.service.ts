@@ -3,7 +3,11 @@
  * Contains business logic for workspace management
  */
 
-import { nanoid } from 'nanoid';
+import {
+  generateWorkspaceId,
+  generateRecordingId,
+  generateInviteToken,
+} from '@/api/lib/id-generator';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { TokenService } from '@/api/services/token.service';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
@@ -27,14 +31,14 @@ export class WorkspaceService {
     }
 
     // Generate unique recording slug if not provided
-    const recordingSlug = params.recordingSlug || `rec_${nanoid(16)}`;
+    const recordingSlug = params.recordingSlug || generateRecordingId();
 
-    // Generate workspace invite token with prefix
-    const inviteToken = `inv_${nanoid(16)}`;
+    // Generate workspace invite token
+    const inviteToken = generateInviteToken();
 
     return this.deps.workspaceRepo.create(
       {
-        id: `ws_${nanoid(16)}`,
+        id: generateWorkspaceId(),
         workspaceName: params.workspaceName,
         recordingSlug,
         workspacePlan: params.workspacePlan,
@@ -46,10 +50,10 @@ export class WorkspaceService {
 
   /**
    * Generate unique slug for workspace recording
-   * Uses nanoid with rec_ prefix for consistency
+   * Uses centralized ID generator with rec_ prefix for consistency
    */
   generateUniqueSlug(baseName: string): string {
-    return `rec_${nanoid(16)}`;
+    return generateRecordingId();
   }
 
   /**
@@ -110,8 +114,8 @@ export class WorkspaceService {
   async rotateInviteUrl(workspaceId: string, options?: { tx?: Transaction }) {
     const workspace = await this.getById(workspaceId);
 
-    // Generate new invite token with prefix
-    const newToken = `inv_${nanoid(16)}`;
+    // Generate new invite token
+    const newToken = generateInviteToken();
 
     // Update workspace with new token
     const updatedWorkspace = await this.deps.workspaceRepo.updateInviteToken(

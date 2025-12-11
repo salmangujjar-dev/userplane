@@ -3,7 +3,7 @@
  * Contains business logic for project management
  */
 
-import { nanoid } from 'nanoid';
+import { generateProjectId } from '@/api/lib/id-generator';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type { Transaction, CreateProjectParams } from '@/api/types';
@@ -49,10 +49,9 @@ export class ProjectService {
 
     return this.deps.projectRepo.create(
       {
-        id: `proj_${nanoid(16)}`,
+        id: generateProjectId(),
         workspaceId: params.workspaceId,
         projectTitle: params.projectTitle,
-        projectPath: `path_${nanoid(16)}`,
         isDefault,
       },
       options

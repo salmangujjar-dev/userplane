@@ -71,7 +71,6 @@ export interface RecordingDetailRow {
   creatorId: string;
   creatorName: string;
   // Recording link info
-  linkGUID: string;
   linkTitle: string | null;
   linkProviderType: string | null;
   linkProviderId: string | null;
@@ -80,7 +79,6 @@ export interface RecordingDetailRow {
   linkCreatedAt: Date;
   // Project info
   projectTitle: string | null;
-  projectPath: string;
   // Domain info
   domainId: string;
   domainUrl: string;
@@ -216,7 +214,6 @@ export class RecordingRepository {
         creatorId: workspaceMembers.id,
         creatorName: user.name,
         // Link info
-        linkGUID: links.linkGUID,
         linkTitle: links.linkTitle,
         linkProviderType: links.linkProviderType,
         linkProviderId: links.linkProviderId,
@@ -225,7 +222,6 @@ export class RecordingRepository {
         linkCreatedAt: links.createdAt,
         // Project info
         projectTitle: projects.projectTitle,
-        projectPath: projects.projectPath,
         // Domain info
         domainId: domains.id,
         domainUrl: domains.domainUrl,

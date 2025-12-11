@@ -3,7 +3,7 @@
  * Contains business logic for domain management
  */
 
-import { nanoid } from 'nanoid';
+import { generateDomainId } from '@/api/lib/id-generator';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { cleanUrl } from '@/api/lib/utils';
@@ -42,7 +42,7 @@ export class DomainService {
 
     return this.deps.domainRepo.create(
       {
-        id: `dom_${nanoid(16)}`,
+        id: generateDomainId(),
         workspaceId: params.workspaceId,
         url: normalized,
         domainStatus: params.status,

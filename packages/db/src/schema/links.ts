@@ -1,13 +1,4 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  boolean,
-  jsonb,
-  uniqueIndex,
-  index,
-  pgEnum,
-} from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, jsonb, index, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { workspaces } from './workspaces';
 import { projects } from './projects';
@@ -66,8 +57,6 @@ export const links = pgTable(
     createdBy: text('created_by').notNull(),
 
     // Link configuration
-    // linkGUID is immutable - set once at creation
-    linkGUID: text('link_guid').notNull(),
     linkTitle: text('link_title'),
     linkReusable: boolean('link_reusable').default(false).notNull(),
     linkType: linkTypeEnum('link_type').default('recording').notNull(),
@@ -90,7 +79,6 @@ export const links = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
-    uniqueIndex('recording_links_link_guid_idx').on(table.linkGUID),
     index('recording_links_workspace_id_idx').on(table.workspaceId),
     index('recording_links_domain_id_idx').on(table.domainId),
     index('recording_links_created_by_idx').on(table.createdBy),
