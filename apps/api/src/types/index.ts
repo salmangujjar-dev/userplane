@@ -29,3 +29,4 @@ export * from './provisioner.data';
 export * from './status.data';
 export * from './link.data';
 export * from './recording.data';
+export * from './session.data';

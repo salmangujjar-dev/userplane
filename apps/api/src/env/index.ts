@@ -43,6 +43,10 @@ interface EnvConfig {
     secret: string;
     appUrl: string;
   };
+  session: {
+    tokenSecret: string;
+    uploadTokenSecret: string;
+  };
   database: {
     url: string;
   };
@@ -125,6 +129,11 @@ export function loadEnvConfig(): EnvConfig {
       secret: process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-in-production',
       appUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',
     },
+    session: {
+      tokenSecret: process.env.SESSION_TOKEN_SECRET || 'dev-session-secret-change-in-production',
+      uploadTokenSecret:
+        process.env.UPLOAD_TOKEN_SECRET || 'dev-upload-secret-change-in-production',
+    },
     database: {
       url: process.env.DATABASE_URL || '',
     },
@@ -200,6 +209,12 @@ if (env.nodeEnv === 'production') {
   }
   if (env.invite.secret === 'dev-invite-secret-change-in-production') {
     throw new Error('INVITE_TOKEN_SECRET must be set in production');
+  }
+  if (env.session.tokenSecret === 'dev-session-secret-change-in-production') {
+    throw new Error('SESSION_TOKEN_SECRET must be set in production');
+  }
+  if (env.session.uploadTokenSecret === 'dev-upload-secret-change-in-production') {
+    throw new Error('UPLOAD_TOKEN_SECRET must be set in production');
   }
   if (!env.database.url) {
     throw new Error('DATABASE_URL must be set in production');

@@ -202,33 +202,33 @@ export class RecordingService {
   }
 
   /**
-   * Get media resource for a recording
+   * Get video resource for a recording
    */
   async getMediaResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
     const recording = await this.validateRecordingAccess(recordingId, workspaceId);
 
-    if (!recording.recordingMediaRef) {
+    if (!recording.recordingVideoRef) {
       return {
         url: null,
-        message: 'Media not available for this recording',
+        message: 'Video not available for this recording',
         duration: null,
       };
     }
 
     try {
       const url = await this.deps.recordingsStorage.getRecordingDownloadUrl(
-        recording.recordingMediaRef,
+        recording.recordingVideoRef,
         { expiresIn: PRESIGNED_URL_EXPIRY }
       );
       return {
         url,
-        message: 'Media URL generated successfully',
+        message: 'Video URL generated successfully',
         duration: recording.recordingDuration,
       };
     } catch {
       return {
         url: null,
-        message: 'Failed to generate media URL',
+        message: 'Failed to generate video URL',
         duration: recording.recordingDuration,
       };
     }

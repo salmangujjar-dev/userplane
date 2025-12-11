@@ -11,3 +11,4 @@ export * from './project.schema';
 export * from './invite.schema';
 export * from './provisioner.schema';
 export * from './account.schema';
+export * from './session.schema';

@@ -3,7 +3,7 @@
  * Handles all database operations for recording entities
  */
 
-import { eq, and, count, desc, asc } from '@workspace/db';
+import { eq, and, count, desc, asc, or } from '@workspace/db';
 import type { DbClient, Recording } from '@workspace/db';
 import { recordings, workspaceMembers, user, links, projects, domains } from '@workspace/db';
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
@@ -59,10 +59,10 @@ export interface RecordingDetailRow {
   projectId: string;
   recordingLinkId: string;
   uploadStatus: Recording['uploadStatus'];
-  recordingMediaRef: string | null;
+  recordingVideoRef: string | null;
+  recordingThumbnailRef: string | null;
   recordingConsoleLogRef: string | null;
   recordingNetworkLogsRef: string | null;
-  recordingThumbnailRef: string | null;
   recordingMeta: RecordingMeta | null;
   recordingDuration: number | null;
   createdAt: Date;
@@ -88,6 +88,33 @@ export interface RecordingDetailRow {
  * Transaction type for repository operations
  */
 export type Transaction = Parameters<Parameters<DbClient['transaction']>[0]>[0];
+
+/**
+ * Input for creating a recording
+ */
+export interface CreateRecordingInput {
+  id: string;
+  recordingLinkId: string;
+  workspaceId: string;
+  projectId: string;
+  createdBy: string;
+  recordingDuration: number;
+  recordingVideoRef: string | null;
+  recordingThumbnailRef: string | null;
+  recordingConsoleLogRef: string | null;
+  recordingNetworkLogsRef: string | null;
+  recordingMeta?: RecordingMeta | null;
+}
+
+/**
+ * Recording file info stored in metadata
+ */
+export interface RecordingFileInfo {
+  videoSize: number | null;
+  thumbnailSize: number | null;
+  consoleLogSize: number | null;
+  networkLogSize: number | null;
+}
 
 export class RecordingRepository {
   constructor(private db: DbClient) {}
@@ -202,10 +229,10 @@ export class RecordingRepository {
         projectId: recordings.projectId,
         recordingLinkId: recordings.recordingLinkId,
         uploadStatus: recordings.uploadStatus,
-        recordingMediaRef: recordings.recordingMediaRef,
+        recordingVideoRef: recordings.recordingVideoRef,
+        recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
-        recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingMeta: recordings.recordingMeta,
         recordingDuration: recordings.recordingDuration,
         createdAt: recordings.createdAt,
@@ -280,5 +307,145 @@ export class RecordingRepository {
       .returning();
 
     return deleted || null;
+  }
+
+  /**
+   * Create a new recording with pending status
+   */
+  async create(data: CreateRecordingInput, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [recording] = await dbClient
+      .insert(recordings)
+      .values({
+        id: data.id,
+        recordingLinkId: data.recordingLinkId,
+        workspaceId: data.workspaceId,
+        projectId: data.projectId,
+        createdBy: data.createdBy,
+        recordingDuration: data.recordingDuration,
+        recordingVideoRef: data.recordingVideoRef,
+        recordingThumbnailRef: data.recordingThumbnailRef,
+        recordingConsoleLogRef: data.recordingConsoleLogRef,
+        recordingNetworkLogsRef: data.recordingNetworkLogsRef,
+        recordingMeta: data.recordingMeta,
+        uploadStatus: 'pending',
+        isDeleted: false,
+      })
+      .returning();
+
+    return recording;
+  }
+
+  /**
+   * Update recording upload status to available
+   * Can transition from pending or partial
+   */
+  async markAsAvailable(id: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(recordings)
+      .set({
+        uploadStatus: 'available',
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(recordings.id, id),
+          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial')),
+          eq(recordings.isDeleted, false)
+        )
+      )
+      .returning();
+
+    return updated || null;
+  }
+
+  /**
+   * Update recording upload status to partial
+   * Video uploaded, some secondary files missing
+   */
+  async markAsPartial(
+    id: string,
+    uploadedFiles: {
+      video: boolean;
+      thumbnail: boolean;
+      consoleLog?: boolean;
+      networkLog?: boolean;
+    },
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(recordings)
+      .set({
+        uploadStatus: 'partial',
+        recordingMeta: { uploadedFiles },
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(recordings.id, id),
+          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial')),
+          eq(recordings.isDeleted, false)
+        )
+      )
+      .returning();
+
+    return updated || null;
+  }
+
+  /**
+   * Update recording upload status to failed
+   * Can transition from pending or partial
+   */
+  async markAsFailed(id: string, reason?: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    // Store failure reason in metadata
+    const meta = reason ? { failureReason: reason } : undefined;
+
+    const [updated] = await dbClient
+      .update(recordings)
+      .set({
+        uploadStatus: 'failed',
+        recordingMeta: meta,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(recordings.id, id),
+          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial')),
+          eq(recordings.isDeleted, false)
+        )
+      )
+      .returning();
+
+    return updated || null;
+  }
+
+  /**
+   * Get recording with file paths for verification
+   */
+  async findByIdWithFilePaths(id: string) {
+    const [recording] = await this.db
+      .select({
+        id: recordings.id,
+        recordingLinkId: recordings.recordingLinkId,
+        workspaceId: recordings.workspaceId,
+        uploadStatus: recordings.uploadStatus,
+        recordingVideoRef: recordings.recordingVideoRef,
+        recordingThumbnailRef: recordings.recordingThumbnailRef,
+        recordingConsoleLogRef: recordings.recordingConsoleLogRef,
+        recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingMeta: recordings.recordingMeta,
+      })
+      .from(recordings)
+      .where(and(eq(recordings.id, id), eq(recordings.isDeleted, false)))
+      .limit(1);
+
+    return recording || null;
   }
 }

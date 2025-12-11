@@ -81,6 +81,14 @@ export function generateInviteToken(): string {
 }
 
 /**
+ * Generate a unique session ID for recording sessions
+ * @returns ID with 'ses_' prefix + 12-character alphanumeric ID
+ */
+export function generateSessionId(): string {
+  return `ses_${nanoid()}`;
+}
+
+/**
  * Export the raw nanoid generator for cases where custom prefixes are needed
  */
 export { nanoid };
