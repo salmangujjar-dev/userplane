@@ -36,49 +36,20 @@ import type {
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
 import type { WorkspaceRole } from '@workspace/db';
+import {
+  idParamSchema as workspaceIdParamSchema,
+  paginationQuerySchema,
+  addDomainSchema,
+  updateDomainSchema,
+  updateWorkspacePreferencesSchema,
+  updateRecordingLinkSettingsSchema,
+  updateWorkspaceNameSchema,
+  updateMemberRoleSchema,
+  updateNotificationPreferencesSchema,
+} from '@/api/schema';
 import { getAssetsStorage } from '@/api/clients/storage';
 import { ASSETS_ALLOWED_CONTENT_TYPES, type AssetsContentType } from '@workspace/storage';
 import { MAX_LOGO_SIZE_BYTES } from '@/api/constants/limits';
-
-const workspaceIdParamSchema = z.object({
-  id: z.string().min(1),
-});
-
-const paginationQuerySchema = z.object({
-  page: z.string().optional().default('1').transform(Number),
-});
-
-const addDomainSchema = z.object({
-  url: z.string().url('Invalid URL format').min(1, 'URL is required'),
-});
-
-const updateDomainSchema = z.object({
-  url: z.string().url('Invalid URL format').min(1, 'URL is required'),
-});
-
-// Schema for toggling recording behavior preferences
-const updateWorkspacePreferencesSchema = z.object({
-  recordingCustomizeLink: z.boolean().optional(),
-  recordingHideSensitive: z.boolean().optional(),
-  recordingCaptureClientLog: z.boolean().optional(),
-  recordingCaptureServerLog: z.boolean().optional(),
-});
-
-// Schema for recording link branding and customization settings
-const updateRecordingLinkSettingsSchema = z.object({
-  recordingCompanyName: z.string().nullable().optional(),
-  recordingHeader: z.string().nullable().optional(),
-  recordingFootnote: z.string().nullable().optional(),
-  recordingPrimaryColor: z.string().nullable().optional(),
-  recordingMaxDuration: z.number().int().positive().nullable().optional(),
-});
-
-const updateWorkspaceNameSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Workspace name is required')
-    .max(255, 'Workspace name must be less than 255 characters'),
-});
 
 export function getInviteUrlHandler(inviteService: InviteService) {
   return async (c: Context<AppEnv>) => {
@@ -180,10 +151,7 @@ export function rotateInviteTokenHandler(inviteService: InviteService) {
   };
 }
 
-export function inviteActionHandler(
-  _workspaceService: WorkspaceService,
-  inviteService: InviteService
-) {
+export function inviteActionHandler(inviteService: InviteService) {
   return async (c: Context<AppEnv>) => {
     try {
       const user = c.get('user');
@@ -409,10 +377,7 @@ export function getWorkspacePreferencesHandler(workspaceService: WorkspaceServic
   };
 }
 
-export function getWorkspaceMembersHandler(
-  _workspaceService: WorkspaceService,
-  workspaceMemberService: WorkspaceMemberService
-) {
+export function getWorkspaceMembersHandler(workspaceMemberService: WorkspaceMemberService) {
   return async (c: Context<AppEnv>) => {
     try {
       const user = c.get('user');
@@ -867,10 +832,6 @@ export function updateWorkspacePreferencesHandler(workspaceService: WorkspaceSer
   };
 }
 
-const updateMemberRoleSchema = z.object({
-  role: z.enum(['owner', 'admin', 'member']),
-});
-
 export function updateMemberRoleHandler(workspaceMemberService: WorkspaceMemberService) {
   return async (c: Context<AppEnv>) => {
     try {
@@ -1083,14 +1044,6 @@ export function leaveWorkspaceHandler(workspaceMemberService: WorkspaceMemberSer
     }
   };
 }
-
-const updateNotificationPreferencesSchema = z.object({
-  notifyOnLinkUsage: z.boolean().optional(),
-  notifyOnQuotaReset: z.boolean().optional(),
-  notifyOnQuotaLimit: z.boolean().optional(),
-  notifyOnInviteAccepted: z.boolean().optional(),
-  notifyOnMemberJoin: z.boolean().optional(),
-});
 
 export function updateNotificationPreferencesHandler(
   workspaceMemberService: WorkspaceMemberService

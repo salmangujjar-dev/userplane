@@ -1,10 +1,9 @@
 /**
  * Database-related types
- * Transaction types and database operation types
+ * Transaction types and re-exports of database types for convenient importing
  */
 
-import type { DbClient } from '@workspace/db';
-import { workspacePlanEnum, workspaceRoleEnum, domainStatusEnum } from '@workspace/db';
+import type { DbClient, WorkspaceRole, Domain, Workspace } from '@workspace/db';
 
 /**
  * Database transaction type
@@ -20,9 +19,10 @@ export interface TransactionOptions {
 }
 
 /**
- * Extract enum values from database schema
- * Provides TypeScript types derived directly from database enums
+ * Re-export types from database schema
+ * These types are inferred from the database schema to ensure consistency
+ * Single source of truth: changes to DB schema automatically propagate here
  */
-export type WorkspacePlan = (typeof workspacePlanEnum.enumValues)[number];
-export type WorkspaceRole = (typeof workspaceRoleEnum.enumValues)[number];
-export type DomainStatus = (typeof domainStatusEnum.enumValues)[number];
+export type { WorkspaceRole };
+export type WorkspacePlan = Workspace['workspacePlan'];
+export type DomainStatus = Domain['domainStatus'];

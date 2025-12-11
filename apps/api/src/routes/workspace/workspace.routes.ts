@@ -99,7 +99,7 @@ export function createWorkspaceRoutes(
   workspaceRoutes.get(
     '/:id/members',
     requireAuth,
-    getWorkspaceMembersHandler(workspaceService, workspaceMemberService)
+    getWorkspaceMembersHandler(workspaceMemberService)
   );
 
   // Update member role - requires admin or owner
@@ -171,7 +171,7 @@ export function createWorkspaceRoutes(
     '/:workspaceId/projects',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
-    createProjectHandler(projectService, workspaceService)
+    createProjectHandler(projectService)
   );
 
   workspaceRoutes.patch(

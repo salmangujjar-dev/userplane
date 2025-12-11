@@ -195,7 +195,7 @@ export class RecordingService {
           url: row.domainUrl,
         },
         workspaceId: row.workspaceId,
-        status: row.recordingStatus,
+        status: row.uploadStatus,
         recordingMeta: row.recordingMeta,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
@@ -213,7 +213,6 @@ export class RecordingService {
       return {
         url: null,
         message: 'Media not available for this recording',
-        size: null,
         duration: null,
       };
     }
@@ -226,14 +225,12 @@ export class RecordingService {
       return {
         url,
         message: 'Media URL generated successfully',
-        size: recording.recordingSize,
         duration: recording.recordingDuration,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate media URL',
-        size: recording.recordingSize,
         duration: recording.recordingDuration,
       };
     }
@@ -266,24 +263,25 @@ export class RecordingService {
   async getConsoleLogResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
     const recording = await this.validateRecordingAccess(recordingId, workspaceId);
 
-    if (!recording.recordingLogsRef) {
-      return { url: null, message: 'Console logs not available for this recording', size: null };
+    if (!recording.recordingConsoleLogRef) {
+      return { url: null, message: 'Console logs not available for this recording' };
     }
 
     try {
-      const url = await this.deps.consoleLogsStorage.getDownloadUrl(recording.recordingLogsRef, {
-        expiresIn: PRESIGNED_URL_EXPIRY,
-      });
+      const url = await this.deps.consoleLogsStorage.getDownloadUrl(
+        recording.recordingConsoleLogRef,
+        {
+          expiresIn: PRESIGNED_URL_EXPIRY,
+        }
+      );
       return {
         url,
         message: 'Console log URL generated successfully',
-        size: recording.recordingConsoleLogSize,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate console log URL',
-        size: recording.recordingConsoleLogSize,
       };
     }
   }
@@ -295,7 +293,7 @@ export class RecordingService {
     const recording = await this.validateRecordingAccess(recordingId, workspaceId);
 
     if (!recording.recordingNetworkLogsRef) {
-      return { url: null, message: 'Network logs not available for this recording', size: null };
+      return { url: null, message: 'Network logs not available for this recording' };
     }
 
     try {
@@ -306,13 +304,11 @@ export class RecordingService {
       return {
         url,
         message: 'Network log URL generated successfully',
-        size: recording.recordingNetworkLogSize,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate network log URL',
-        size: recording.recordingNetworkLogSize,
       };
     }
   }

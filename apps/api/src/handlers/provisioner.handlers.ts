@@ -7,13 +7,9 @@ import type { Context } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
 import type { ApiResponse, ApiErrorResponse, WorkspaceCreateData } from '@/api/types';
 import { ProvisionerService } from '@/api/services/provisioner.service';
-import { urlSchema } from '@/api/lib/validation';
 import { z } from 'zod';
 import { getErrorStatusCode } from '@/api/lib/errors';
-
-export const createWorkspaceSchema = z.object({
-  url: urlSchema,
-});
+import { createWorkspaceSchema } from '@/api/schema';
 
 export function createWorkspaceHandler(provisionerService: ProvisionerService) {
   return async (c: Context<AppEnv>) => {

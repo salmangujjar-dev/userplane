@@ -12,13 +12,9 @@ import type {
   InviteActionResult,
 } from '@/api/types';
 import { InviteService } from '@/api/services/invite.service';
-import { emailArraySchema, nonEmptyString } from '@/api/lib/validation';
 import { z } from 'zod';
 import { getErrorStatusCode } from '@/api/lib/errors';
-
-export const sendInvitesSchema = z.object({
-  emails: emailArraySchema,
-});
+import { sendInvitesSchema, tokenQuerySchema } from '@/api/schema';
 
 export function sendInvitesHandler(inviteService: InviteService) {
   return async (c: Context<AppEnv>) => {
@@ -82,10 +78,6 @@ export function sendInvitesHandler(inviteService: InviteService) {
     }
   };
 }
-
-const tokenQuerySchema = z.object({
-  token: nonEmptyString,
-});
 
 export function inviteActionHandler(inviteService: InviteService) {
   return async (c: Context<AppEnv>) => {

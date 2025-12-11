@@ -19,15 +19,9 @@ import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { z } from 'zod';
 import { getErrorStatusCode } from '@/api/lib/errors';
+import { createProjectSchema, updateProjectSchema, replaceProjectSchema } from '@/api/schema';
 
-const createProjectSchema = z.object({
-  projectTitle: z.string().optional().nullable(),
-});
-
-export function createProjectHandler(
-  projectService: ProjectService,
-  _workspaceService: WorkspaceService
-) {
+export function createProjectHandler(projectService: ProjectService) {
   return async (c: Context<AppEnv>) => {
     try {
       const user = c.get('user');
@@ -175,11 +169,6 @@ export function getProjectsHandler(projectService: ProjectService) {
   };
 }
 
-const updateProjectSchema = z.object({
-  isDefault: z.boolean().optional(),
-  projectTitle: z.string().optional().nullable(),
-});
-
 export function updateProjectHandler(projectService: ProjectService) {
   return async (c: Context<AppEnv>) => {
     try {
@@ -257,7 +246,6 @@ export function updateProjectHandler(projectService: ProjectService) {
 }
 
 // Keep the old function name for backward compatibility, but it just calls the new one
-export const setDefaultProjectHandler = updateProjectHandler;
 
 export function deleteProjectHandler(projectService: ProjectService) {
   return async (c: Context<AppEnv>) => {
@@ -314,11 +302,6 @@ export function deleteProjectHandler(projectService: ProjectService) {
     }
   };
 }
-
-const replaceProjectSchema = z.object({
-  projectTitle: z.string().nullable(),
-  isDefault: z.boolean(),
-});
 
 export function replaceProjectHandler(projectService: ProjectService) {
   return async (c: Context<AppEnv>) => {

@@ -20,79 +20,13 @@ import type {
   LinkProviderType,
 } from '@/api/types';
 import { createPaginationMeta } from '@/api/types';
-import { linkProviderTypeEnum } from '@workspace/db';
 import { z } from 'zod';
-
-/**
- * All supported link provider types (from database enum)
- */
-const LINK_PROVIDER_TYPES = linkProviderTypeEnum.enumValues;
-
-/**
- * Sortable fields for recording links
- */
-const SORT_FIELDS = ['created_at', 'link_title'] as const;
-
-/**
- * Sort directions
- */
-const SORT_DIRECTIONS = ['asc', 'desc'] as const;
-
-/**
- * Schema for recording links list query params
- * Validates pagination, filter, and sort parameters
- */
-const listRecordingLinksQuerySchema = z.object({
-  page: z
-    .string()
-    .optional()
-    .default('1')
-    .transform((val) => parseInt(val, 10))
-    .refine((val) => val >= 1, { message: 'Page must be at least 1' }),
-  per_page: z
-    .string()
-    .optional()
-    .default('10')
-    .transform((val) => parseInt(val, 10))
-    .refine((val) => val >= 1 && val <= 20, { message: 'Per page must be between 1 and 20' }),
-  created_by: z.string().optional(),
-  project_id: z.string().optional(),
-  domain_id: z.string().optional(),
-  link_provider_type: z.enum(LINK_PROVIDER_TYPES).optional(),
-  sort_by: z.enum(SORT_FIELDS).optional().default('created_at'),
-  sort_direction: z.enum(SORT_DIRECTIONS).optional().default('desc'),
-});
-
-/**
- * Schema for creating a recording link
- */
-const createRecordingLinkSchema = z.object({
-  projectId: z.string().min(1, 'Project ID is required').optional(),
-  domainId: z.string().min(1, 'Domain ID is required'),
-  linkReference: z.string().max(2048, 'Link reference is too long').optional(),
-  linkReusable: z.boolean().optional().default(false),
-});
-
-/**
- * Schema for updating a recording link
- * All fields are optional - only provided fields will be updated
- * Note: linkGUID is immutable and cannot be updated
- */
-const updateRecordingLinkSchema = z.object({
-  linkTitle: z.string().max(255, 'Title must be less than 255 characters').nullable().optional(),
-  linkReusable: z.boolean().optional(),
-  linkProviderType: z.enum(LINK_PROVIDER_TYPES).nullable().optional(),
-  linkProviderId: z
-    .string()
-    .max(255, 'Provider ID must be less than 255 characters')
-    .nullable()
-    .optional(),
-  linkProviderRef: z
-    .string()
-    .max(255, 'Provider reference must be less than 255 characters')
-    .nullable()
-    .optional(),
-});
+import {
+  listRecordingLinksQuerySchema,
+  createRecordingLinkSchema,
+  updateRecordingLinkSchema,
+  RECORDING_LINK_SORT_FIELDS,
+} from '@/api/schema';
 
 /**
  * Handler factory for listing recording links
