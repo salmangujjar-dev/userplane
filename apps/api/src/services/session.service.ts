@@ -37,7 +37,7 @@ import type {
   FileUploadStatus,
 } from '@/api/types';
 import type {
-  RecordingsStorageClient,
+  VideoStorageClient,
   ThumbnailsStorageClient,
   ConsoleLogsStorageClient,
   NetworkLogsStorageClient,
@@ -46,7 +46,7 @@ import type {
 export interface SessionServiceDeps {
   linkRepo: LinkRepository;
   recordingRepo: RecordingRepository;
-  recordingsStorage: RecordingsStorageClient;
+  videoStorage: VideoStorageClient;
   thumbnailsStorage: ThumbnailsStorageClient;
   consoleLogsStorage: ConsoleLogsStorageClient;
   networkLogsStorage: NetworkLogsStorageClient;
@@ -605,7 +605,7 @@ export class SessionService {
 
     switch (file.type) {
       case 'video':
-        return this.deps.recordingsStorage.getRecordingUploadUrl(recordingId, file.mime_type, {
+        return this.deps.videoStorage.getRecordingUploadUrl(recordingId, file.mime_type, {
           contentLength: file.size,
           expiresIn,
         });
@@ -703,7 +703,7 @@ export class SessionService {
 
     // Verify video file
     if (recording.recordingVideoRef) {
-      const videoInfo = await this.deps.recordingsStorage.head(recording.recordingVideoRef);
+      const videoInfo = await this.deps.videoStorage.head(recording.recordingVideoRef);
       if (!videoInfo) {
         errors.push('Video file not found in storage');
       } else if (
@@ -806,7 +806,7 @@ export class SessionService {
 
     // Video is always required for partial
     if (uploadedFiles.video && recording.recordingVideoRef) {
-      const videoInfo = await this.deps.recordingsStorage.head(recording.recordingVideoRef);
+      const videoInfo = await this.deps.videoStorage.head(recording.recordingVideoRef);
       if (!videoInfo) {
         errors.push('Video file not found in storage');
       } else if (

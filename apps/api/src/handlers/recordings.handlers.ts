@@ -340,13 +340,13 @@ function createResourceHandler(
 }
 
 /**
- * Handler factory for getting recording media
+ * Handler factory for getting recording video
  */
-export function getRecordingMediaHandler(recordingService: RecordingService) {
+export function getRecordingVideoHandler(recordingService: RecordingService) {
   return createResourceHandler(
     recordingService,
-    (service, recordingId, workspaceId) => service.getMediaResource(recordingId, workspaceId),
-    'media'
+    (service, recordingId, workspaceId) => service.getVideoResource(recordingId, workspaceId),
+    'video'
   );
 }
 

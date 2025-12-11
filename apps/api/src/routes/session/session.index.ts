@@ -10,7 +10,7 @@ import { LinkRepository } from '@/api/repositories/links.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { db } from '@/api/clients/db';
 import {
-  getRecordingsStorage,
+  getVideoStorage,
   getThumbnailsStorage,
   getConsoleLogsStorage,
   getNetworkLogsStorage,
@@ -21,7 +21,7 @@ const linkRepo = new LinkRepository(db);
 const recordingRepo = new RecordingRepository(db);
 
 // Initialize storage clients
-const recordingsStorage = getRecordingsStorage();
+const videoStorage = getVideoStorage();
 const thumbnailsStorage = getThumbnailsStorage();
 const consoleLogsStorage = getConsoleLogsStorage();
 const networkLogsStorage = getNetworkLogsStorage();
@@ -30,7 +30,7 @@ const networkLogsStorage = getNetworkLogsStorage();
 const sessionService = new SessionService({
   linkRepo,
   recordingRepo,
-  recordingsStorage,
+  videoStorage,
   thumbnailsStorage,
   consoleLogsStorage,
   networkLogsStorage,

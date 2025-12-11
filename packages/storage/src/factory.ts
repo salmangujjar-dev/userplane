@@ -5,7 +5,7 @@
 
 import { ConsoleLogsStorageClient } from './clients/logs';
 import { NetworkLogsStorageClient } from './clients/network-logs';
-import { RecordingsStorageClient } from './clients/recordings';
+import { VideoStorageClient } from './clients/recordings';
 import { ScreenshotsStorageClient } from './clients/screenshots';
 import { ThumbnailsStorageClient } from './clients/thumbnails';
 import { AssetsStorageClient } from './clients/assets';
@@ -25,9 +25,9 @@ import type { GetStorageOptions, StorageClientMap, StorageKind } from './types';
  * await networkLogs.getUploadUrl(sessionId, { contentLength: 1024 });
  *
  * @example
- * // Recordings client
- * const recordings = getStorage({ kind: 'recordings', config });
- * await recordings.getRecordingUploadUrl(recordingId, 'video/webm', { contentLength: 1024000 });
+ * // Video client
+ * const video = getStorage({ kind: 'video', config });
+ * await video.getRecordingUploadUrl(recordingId, 'video/webm', { contentLength: 1024000 });
  *
  * @example
  * // Assets client with domain - path comes from write operation (putWorkspaceLogo returns { path })
@@ -51,8 +51,8 @@ export function getStorage<K extends StorageKind>(
     case 'networkLogs':
       return new NetworkLogsStorageClient(config) as StorageClientMap[K];
 
-    case 'recordings':
-      return new RecordingsStorageClient(config) as StorageClientMap[K];
+    case 'video':
+      return new VideoStorageClient(config) as StorageClientMap[K];
 
     case 'screenshots':
       return new ScreenshotsStorageClient(config) as StorageClientMap[K];

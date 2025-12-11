@@ -7,7 +7,7 @@ import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type {
   ThumbnailsStorageClient,
-  RecordingsStorageClient,
+  VideoStorageClient,
   ConsoleLogsStorageClient,
   NetworkLogsStorageClient,
 } from '@workspace/storage';
@@ -23,7 +23,7 @@ import type { Transaction } from '@/api/repositories/recordings.repository';
 export interface RecordingServiceDeps {
   recordingRepo: RecordingRepository;
   thumbnailsStorage: ThumbnailsStorageClient;
-  recordingsStorage: RecordingsStorageClient;
+  videoStorage: VideoStorageClient;
   consoleLogsStorage: ConsoleLogsStorageClient;
   networkLogsStorage: NetworkLogsStorageClient;
 }
@@ -204,7 +204,7 @@ export class RecordingService {
   /**
    * Get video resource for a recording
    */
-  async getMediaResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
+  async getVideoResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
     const recording = await this.validateRecordingAccess(recordingId, workspaceId);
 
     if (!recording.recordingVideoRef) {
@@ -216,7 +216,7 @@ export class RecordingService {
     }
 
     try {
-      const url = await this.deps.recordingsStorage.getRecordingDownloadUrl(
+      const url = await this.deps.videoStorage.getRecordingDownloadUrl(
         recording.recordingVideoRef,
         { expiresIn: PRESIGNED_URL_EXPIRY }
       );
