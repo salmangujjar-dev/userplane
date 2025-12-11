@@ -7,7 +7,7 @@ import type { AppEnv } from '@/api/lib/types';
 import { db } from '@/api/clients/db';
 import {
   getThumbnailsStorage,
-  getRecordingsStorage,
+  getVideoStorage,
   getConsoleLogsStorage,
   getNetworkLogsStorage,
 } from '@/api/clients/storage';
@@ -24,7 +24,7 @@ const recordingRepo = new RecordingRepository(db);
 export const recordingService = new RecordingService({
   recordingRepo,
   thumbnailsStorage: getThumbnailsStorage(),
-  recordingsStorage: getRecordingsStorage(),
+  videoStorage: getVideoStorage(),
   consoleLogsStorage: getConsoleLogsStorage(),
   networkLogsStorage: getNetworkLogsStorage(),
 });

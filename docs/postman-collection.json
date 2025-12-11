@@ -65,6 +65,18 @@
       "value": "",
       "type": "string",
       "description": "Recording ID for recording management"
+    },
+    {
+      "key": "recordingSessionToken",
+      "value": "",
+      "type": "string",
+      "description": "Session token for recording upload workflow"
+    },
+    {
+      "key": "uploadToken",
+      "value": "",
+      "type": "string",
+      "description": "Upload token for completing recording uploads"
     }
   ],
   "item": [
@@ -1286,7 +1298,7 @@
           "response": []
         },
         {
-          "name": "Get Recording Media URL",
+          "name": "Get Recording Video URL",
           "request": {
             "method": "GET",
             "header": [
@@ -1297,7 +1309,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/recordings/{{recordingId}}/media",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/recordings/{{recordingId}}/video",
               "host": ["{{baseUrl}}"],
               "path": [
                 "api",
@@ -1306,10 +1318,10 @@
                 "{{workspaceId}}",
                 "recordings",
                 "{{recordingId}}",
-                "media"
+                "video"
               ]
             },
-            "description": "Get presigned URL for the recording media file from R2 storage.\n\nResponse data: RecordingMediaData (workspaceId, recordingId, mediaUrl)"
+            "description": "Get presigned URL for the recording video file from R2 storage.\n\nResponse data: RecordingVideoData (workspaceId, recordingId, videoUrl)"
           },
           "response": []
         },
@@ -1421,6 +1433,145 @@
               ]
             },
             "description": "Soft delete a recording.\n\nResponse data: { workspaceId, recordingId }"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Session (Upload)",
+      "description": "Recording session and upload endpoints. Public endpoints using token-based authentication (no cookie auth required).\n\nWorkflow:\n1. GET /session - Initialize session with link_id, receive session_token\n2. POST /session - Initialize upload with session_token, receive upload_token and presigned URLs\n3. Upload files directly to presigned URLs\n4. PATCH /session - Complete or mark upload as partial/failed\n\nToken Lifetimes:\n- Session Token: 180 minutes\n- Upload Token: 120 minutes\n- Presigned URLs: 90 minutes",
+      "item": [
+        {
+          "name": "Initialize Session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/session?link_id={{linkId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "session"],
+              "query": [
+                {
+                  "key": "link_id",
+                  "value": "{{linkId}}",
+                  "description": "Link ID for the recording session"
+                }
+              ]
+            },
+            "description": "Initialize a recording session for a link. Returns a session token with embedded workspace preferences.\n\nValidations:\n- Link must exist and not be deleted\n- Link type must be 'recording'\n- If link is not reusable, no existing recordings allowed\n\nResponse Headers:\n- X-Session-Token-Expires-In: Token lifetime in seconds\n- X-Session-Token-Expires-At: Token expiry timestamp (ISO 8601)\n\nResponse data: SessionInitData (sessionToken, expiresIn)"
+          },
+          "response": []
+        },
+        {
+          "name": "Initialize Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Session-Token",
+                "value": "{{recordingSessionToken}}",
+                "description": "Session token from Initialize Session"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recording_duration\": 300,\n  \"files\": [\n    {\n      \"type\": \"video\",\n      \"name\": \"recording.webm\",\n      \"size\": 52428800,\n      \"mime_type\": \"video/webm\"\n    },\n    {\n      \"type\": \"thumbnail\",\n      \"name\": \"thumbnail.png\",\n      \"size\": 204800,\n      \"mime_type\": \"image/png\"\n    },\n    {\n      \"type\": \"console_log\",\n      \"name\": \"console.ndjson\",\n      \"size\": 10240,\n      \"mime_type\": \"application/x-ndjson\"\n    },\n    {\n      \"type\": \"network_log\",\n      \"name\": \"network.json\",\n      \"size\": 15360,\n      \"mime_type\": \"application/json\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "session"]
+            },
+            "description": "Initialize upload and receive presigned URLs for file uploads.\n\nValidations:\n- Session token must be valid and not expired\n- Link must still exist and not be deleted\n- Recording duration must be within workspace limit\n- Video and thumbnail files are required\n- Console/network logs only if workspace preferences allow\n- File sizes must be within limits (500MB video, 10MB thumbnail, 50MB logs)\n\nFile Types:\n- video: Required. Allowed: video/webm, video/mp4, video/x-matroska, video/ogg\n- thumbnail: Required. Allowed: image/png, image/jpeg, image/webp\n- console_log: Optional (if rccl enabled). Allowed: application/x-ndjson, application/ndjson\n- network_log: Optional (if rcsl enabled). Allowed: application/json\n\nResponse Headers:\n- X-Upload-Token-Expires-In: Upload token lifetime in seconds\n- X-Upload-Token-Expires-At: Upload token expiry timestamp (ISO 8601)\n- X-Presigned-Url-Expires-In: Presigned URL lifetime in seconds\n\nResponse data: UploadInitData (recordingId, uploadToken, presignedUrls)"
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Upload",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Upload-Token",
+                "value": "{{uploadToken}}",
+                "description": "Upload token from Initialize Upload"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"complete\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "session"]
+            },
+            "description": "Mark upload as complete after all files uploaded successfully.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- All expected files must exist in storage with correct sizes\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'available')"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Upload Partial",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Upload-Token",
+                "value": "{{uploadToken}}",
+                "description": "Upload token from Initialize Upload"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"partial\",\n  \"uploaded_files\": {\n    \"video\": true,\n    \"thumbnail\": true,\n    \"console_log\": false,\n    \"network_log\": false\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "session"]
+            },
+            "description": "Mark upload as partial when video uploaded but some secondary files failed.\n\nUse case: Video and thumbnail uploaded, but console_log failed after retries. User can still access the recording.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- uploaded_files required with video=true\n- Files marked as uploaded are verified in storage\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'partial', uploadedFiles, missingFiles)"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Upload Failed",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Upload-Token",
+                "value": "{{uploadToken}}",
+                "description": "Upload token from Initialize Upload"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"failed\",\n  \"reason\": \"Video upload failed after 3 retries\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "session"]
+            },
+            "description": "Mark upload as failed when video upload fails or user cancels.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'failed')"
           },
           "response": []
         }

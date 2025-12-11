@@ -10,7 +10,7 @@ import {
   getRecordingsHandler,
   getRecordingByIdHandler,
   deleteRecordingHandler,
-  getRecordingMediaHandler,
+  getRecordingVideoHandler,
   getRecordingThumbnailHandler,
   getRecordingConsoleLogHandler,
   getRecordingNetworkLogHandler,
@@ -43,12 +43,12 @@ export function createRecordingsRoutes(
     getRecordingByIdHandler(recordingService)
   );
 
-  // GET /workspace/:workspaceId/recordings/:recordingId/media - Get media presigned URL
+  // GET /workspace/:workspaceId/recordings/:recordingId/video - Get video presigned URL
   recordingsRoutes.get(
-    '/:recordingId/media',
+    '/:recordingId/video',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
-    getRecordingMediaHandler(recordingService)
+    getRecordingVideoHandler(recordingService)
   );
 
   // GET /workspace/:workspaceId/recordings/:recordingId/thumbnail - Get thumbnail presigned URL
