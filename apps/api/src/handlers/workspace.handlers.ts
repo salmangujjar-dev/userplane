@@ -29,7 +29,7 @@ import type {
   WorkspaceDeleteData,
   MemberRoleUpdateData,
   MemberRemoveData,
-  RecordingLinkSettingsData,
+  LinkSettingsData,
   LeaveWorkspaceData,
   NotificationPreferencesUpdateData,
 } from '@/api/types';
@@ -42,7 +42,7 @@ import {
   addDomainSchema,
   updateDomainSchema,
   updateWorkspacePreferencesSchema,
-  updateRecordingLinkSettingsSchema,
+  updateLinkSettingsSchema,
   updateWorkspaceNameSchema,
   updateMemberRoleSchema,
   updateNotificationPreferencesSchema,
@@ -1147,7 +1147,7 @@ function validateLogoFile(file: File): { error: string; message: string } | null
  * Handler for updating recording link branding and customization settings
  * Accepts multipart form data with optional logo file
  */
-export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceService) {
+export function updateLinkSettingsHandler(workspaceService: WorkspaceService) {
   return async (c: Context<AppEnv>) => {
     try {
       const user = c.get('user');
@@ -1173,7 +1173,7 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
       const file = body['logo'];
 
       // Parse form fields into settings object
-      const settings = updateRecordingLinkSettingsSchema.parse({
+      const settings = updateLinkSettingsSchema.parse({
         recordingCompanyName: parseNullableField(body['recordingCompanyName']),
         recordingHeader: parseNullableField(body['recordingHeader']),
         recordingFootnote: parseNullableField(body['recordingFootnote']),
@@ -1212,8 +1212,8 @@ export function updateRecordingLinkSettingsHandler(workspaceService: WorkspaceSe
 
       const updatedWorkspace = await workspaceService.updatePreferences(workspaceId, updates);
 
-      const response: ApiResponse<RecordingLinkSettingsData> = {
-        message: 'Recording link settings updated successfully',
+      const response: ApiResponse<LinkSettingsData> = {
+        message: 'Link settings updated successfully',
         data: {
           workspaceId: updatedWorkspace.id,
           recordingCompanyName: updatedWorkspace.recordingCompanyName,

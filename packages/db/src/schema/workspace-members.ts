@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, boolean, index, uniqueIndex, pgEnum } from 'd
 import { relations } from 'drizzle-orm';
 import { user } from './user';
 import { workspaces } from './workspaces';
-import { recordingLinks } from './recording-links';
+import { links } from './links';
 import { recordings } from './recordings';
 
 export const workspaceRoleEnum = pgEnum('workspace_role', ['owner', 'admin', 'member']);
@@ -54,6 +54,6 @@ export const workspaceMembersRelations = relations(workspaceMembers, ({ one, man
     fields: [workspaceMembers.workspaceId],
     references: [workspaces.id],
   }),
-  createdRecordingLinks: many(recordingLinks),
+  createdLinks: many(links),
   createdRecordings: many(recordings),
 }));

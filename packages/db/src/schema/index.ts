@@ -8,7 +8,7 @@ export * from './projects';
 export * from './entitlements';
 export * from './workspace-members';
 export * from './domains';
-export * from './recording-links';
+export * from './links';
 export * from './recordings';
 
 import { user } from './user';
@@ -20,7 +20,7 @@ import { projects } from './projects';
 import { entitlements } from './entitlements';
 import { workspaceMembers } from './workspace-members';
 import { domains } from './domains';
-import { recordingLinks } from './recording-links';
+import { links } from './links';
 import { recordings } from './recordings';
 
 export type User = typeof user.$inferSelect;
@@ -51,8 +51,8 @@ export type WorkspaceRole = WorkspaceMember['workspaceRole'];
 export type Domain = typeof domains.$inferSelect;
 export type NewDomain = typeof domains.$inferInsert;
 
-export type RecordingLink = typeof recordingLinks.$inferSelect;
-export type NewRecordingLink = typeof recordingLinks.$inferInsert;
+export type Link = typeof links.$inferSelect;
+export type NewLink = typeof links.$inferInsert;
 
 export type Recording = typeof recordings.$inferSelect;
 export type NewRecording = typeof recordings.$inferInsert;

@@ -35,9 +35,9 @@ export interface RecordingsListData {
 }
 
 /**
- * Recording link reference in recording detail
+ * Link reference in recording detail
  */
-export interface RecordingLinkRef {
+export interface LinkRef {
   id: string;
   guid: string;
   title: string | null;
@@ -67,11 +67,11 @@ export interface RecordingDomainRef {
 
 /**
  * Recording meta information
- * Combines recording link info, creator, project, domain, and recording metadata
+ * Combines link info, creator, project, domain, and recording metadata
  * Uses inferred types from database schema via repository layer
  */
 export interface RecordingDetailMeta {
-  recordingLink: RecordingLinkRef;
+  link: LinkRef;
   creator: RecordingCreator;
   project: RecordingProjectRef;
   domain: RecordingDomainRef;

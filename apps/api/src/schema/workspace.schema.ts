@@ -37,10 +37,10 @@ export const updateWorkspacePreferencesSchema = z.object({
 });
 
 /**
- * Update recording link settings schema
- * Schema for recording link branding and customization settings
+ * Update link settings schema
+ * Schema for link branding and customization settings
  */
-export const updateRecordingLinkSettingsSchema = z.object({
+export const updateLinkSettingsSchema = z.object({
   recordingCompanyName: z.string().nullable().optional(),
   recordingHeader: z.string().nullable().optional(),
   recordingFootnote: z.string().nullable().optional(),

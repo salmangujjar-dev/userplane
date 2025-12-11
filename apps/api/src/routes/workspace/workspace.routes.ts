@@ -15,7 +15,7 @@ import {
   getWorkspaceByIdHandler,
   getWorkspacePreferencesHandler,
   updateWorkspacePreferencesHandler,
-  updateRecordingLinkSettingsHandler,
+  updateLinkSettingsHandler,
   getWorkspaceMembersHandler,
   updateMemberRoleHandler,
   removeMemberHandler,
@@ -87,12 +87,12 @@ export function createWorkspaceRoutes(
     updateWorkspacePreferencesHandler(workspaceService)
   );
 
-  // Update recording link settings - branding, customization, and logo upload
+  // Update link settings - branding, customization, and logo upload
   workspaceRoutes.put(
-    '/:workspaceId/preferences/recording-link',
+    '/:workspaceId/preferences/link',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
-    updateRecordingLinkSettingsHandler(workspaceService)
+    updateLinkSettingsHandler(workspaceService)
   );
 
   // Get workspace members - returns workspace members with pagination

@@ -9,7 +9,7 @@ import {
   pgEnum,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { recordingLinks } from './recording-links';
+import { links } from './links';
 import { workspaces } from './workspaces';
 import { projects } from './projects';
 import { workspaceMembers } from './workspace-members';
@@ -85,9 +85,9 @@ export const recordings = pgTable(
 );
 
 export const recordingsRelations = relations(recordings, ({ one }) => ({
-  recordingLink: one(recordingLinks, {
+  link: one(links, {
     fields: [recordings.recordingLinkId],
-    references: [recordingLinks.id],
+    references: [links.id],
   }),
   workspace: one(workspaces, {
     fields: [recordings.workspaceId],

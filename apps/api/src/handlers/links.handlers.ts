@@ -1,38 +1,39 @@
 /**
- * Recording link handlers - HTTP request handlers for recording link operations
- * Handles listing, creating, and updating recording links
+ * Link handlers - HTTP request handlers for link operations
+ * Handles listing, creating, and updating links
  */
 
 import type { Context } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
-import { RecordingLinkService } from '@/api/services/recording-link.service';
+import { LinkService } from '@/api/services/link.service';
 import { getErrorStatusCode, ValidationError } from '@/api/lib/errors';
 import type {
   ApiResponse,
   ApiErrorResponse,
-  RecordingLinksListData,
-  RecordingLinkCreateData,
-  RecordingLinkUpdateData,
-  RecordingLinkFilters,
-  RecordingLinkSortOptions,
-  RecordingLinkSortField,
+  LinksListData,
+  LinkCreateData,
+  LinkUpdateData,
+  LinkFilters,
+  LinkSortOptions,
+  LinkSortField,
   SortDirection,
   LinkProviderType,
+  LinkType,
 } from '@/api/types';
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
 import {
-  listRecordingLinksQuerySchema,
-  createRecordingLinkSchema,
-  updateRecordingLinkSchema,
-  RECORDING_LINK_SORT_FIELDS,
+  listLinksQuerySchema,
+  createLinkSchema,
+  updateLinkSchema,
+  LINK_SORT_FIELDS,
 } from '@/api/schema';
 
 /**
- * Handler factory for listing recording links
- * Returns paginated recording links with optional filters
+ * Handler factory for listing links
+ * Returns paginated links with optional filters
  */
-export function getRecordingLinksHandler(recordingLinkService: RecordingLinkService) {
+export function getLinksHandler(linkService: LinkService) {
   return async (c: Context<AppEnv>) => {
     try {
       const user = c.get('user');
@@ -41,7 +42,7 @@ export function getRecordingLinksHandler(recordingLinkService: RecordingLinkServ
       if (!user) {
         const response: ApiErrorResponse = {
           error: 'Unauthorized',
-          message: 'You must be logged in to access recording links',
+          message: 'You must be logged in to access links',
         };
         return c.json(response, 401);
       }
@@ -49,17 +50,17 @@ export function getRecordingLinksHandler(recordingLinkService: RecordingLinkServ
       if (!workspaceId) {
         const response: ApiErrorResponse = {
           error: 'Forbidden',
-          message: 'You must be a workspace member to access recording links',
+          message: 'You must be a workspace member to access links',
         };
         return c.json(response, 403);
       }
 
       // Parse and validate query params
       const queryParams = c.req.query();
-      const parsed = listRecordingLinksQuerySchema.parse(queryParams);
+      const parsed = listLinksQuerySchema.parse(queryParams);
 
       // Build filters object from query params
-      const filters: RecordingLinkFilters = {};
+      const filters: LinkFilters = {};
 
       if (parsed.created_by) {
         filters.createdBy = parsed.created_by;
@@ -77,14 +78,19 @@ export function getRecordingLinksHandler(recordingLinkService: RecordingLinkServ
         filters.linkProviderType = parsed.link_provider_type as LinkProviderType;
       }
 
+      // NOT DOCUMENTED - Reserved for future use. Only 'recording' is currently supported
+      if (parsed.link_type) {
+        filters.linkType = parsed.link_type as LinkType;
+      }
+
       // Build sort options from query params
-      const sort: RecordingLinkSortOptions = {
-        field: parsed.sort_by as RecordingLinkSortField,
+      const sort: LinkSortOptions = {
+        field: parsed.sort_by as LinkSortField,
         direction: parsed.sort_direction as SortDirection,
       };
 
-      // Get paginated recording links with filters and sorting applied at DB level
-      const { recordingLinks, total } = await recordingLinkService.getByWorkspaceIdPaginated(
+      // Get paginated links with filters and sorting applied at DB level
+      const { links, total } = await linkService.getByWorkspaceIdPaginated(
         workspaceId,
         parsed.page,
         parsed.per_page,
@@ -92,11 +98,11 @@ export function getRecordingLinksHandler(recordingLinkService: RecordingLinkServ
         sort
       );
 
-      const response: ApiResponse<RecordingLinksListData> = {
-        message: 'Recording links retrieved successfully',
+      const response: ApiResponse<LinksListData> = {
+        message: 'Links retrieved successfully',
         data: {
           workspaceId,
-          recordingLinks,
+          links,
           pagination: createPaginationMeta(parsed.page, parsed.per_page, total),
         },
       };
@@ -138,10 +144,10 @@ export function getRecordingLinksHandler(recordingLinkService: RecordingLinkServ
 }
 
 /**
- * Handler factory for creating a recording link
+ * Handler factory for creating a link
  * Parses linkReference to infer provider type, ID, and generate title
  */
-export function createRecordingLinkHandler(recordingLinkService: RecordingLinkService) {
+export function createLinkHandler(linkService: LinkService) {
   return async (c: Context<AppEnv>) => {
     try {
       const user = c.get('user');
@@ -151,7 +157,7 @@ export function createRecordingLinkHandler(recordingLinkService: RecordingLinkSe
       if (!user) {
         const response: ApiErrorResponse = {
           error: 'Unauthorized',
-          message: 'You must be logged in to create recording links',
+          message: 'You must be logged in to create links',
         };
         return c.json(response, 401);
       }
@@ -159,17 +165,17 @@ export function createRecordingLinkHandler(recordingLinkService: RecordingLinkSe
       if (!workspaceId || !workspaceMemberId) {
         const response: ApiErrorResponse = {
           error: 'Forbidden',
-          message: 'You must be a workspace member to create recording links',
+          message: 'You must be a workspace member to create links',
         };
         return c.json(response, 403);
       }
 
       // Parse and validate request body
       const body = await c.req.json();
-      const parsed = createRecordingLinkSchema.parse(body);
+      const parsed = createLinkSchema.parse(body);
 
-      // Create the recording link
-      const created = await recordingLinkService.create({
+      // Create the link
+      const created = await linkService.create({
         workspaceId,
         projectId: parsed.projectId,
         domainId: parsed.domainId,
@@ -181,19 +187,20 @@ export function createRecordingLinkHandler(recordingLinkService: RecordingLinkSe
       if (!created) {
         const response: ApiErrorResponse = {
           error: 'Internal Server Error',
-          message: 'Failed to create recording link',
+          message: 'Failed to create link',
         };
         return c.json(response, 500);
       }
 
-      const response: ApiResponse<RecordingLinkCreateData> = {
-        message: 'Recording link created successfully',
+      const response: ApiResponse<LinkCreateData> = {
+        message: 'Link created successfully',
         data: {
           workspaceId,
-          recordingLink: {
+          link: {
             id: created.id,
             linkGUID: created.linkGUID,
             linkTitle: created.linkTitle,
+            linkType: created.linkType,
             linkReusable: created.linkReusable,
             linkProvider: {
               type: created.linkProviderType,
@@ -242,21 +249,21 @@ export function createRecordingLinkHandler(recordingLinkService: RecordingLinkSe
 }
 
 /**
- * Handler factory for updating a recording link
+ * Handler factory for updating a link
  * Updates title, reusable flag, and provider info
  * Note: linkGUID is immutable and cannot be updated
  */
-export function updateRecordingLinkHandler(recordingLinkService: RecordingLinkService) {
+export function updateLinkHandler(linkService: LinkService) {
   return async (c: Context<AppEnv>) => {
     try {
       const user = c.get('user');
       const workspaceId = c.get('workspaceId');
-      const recordingLinkId = c.req.param('recordingLinkId');
+      const linkId = c.req.param('linkId');
 
       if (!user) {
         const response: ApiErrorResponse = {
           error: 'Unauthorized',
-          message: 'You must be logged in to update recording links',
+          message: 'You must be logged in to update links',
         };
         return c.json(response, 401);
       }
@@ -264,22 +271,22 @@ export function updateRecordingLinkHandler(recordingLinkService: RecordingLinkSe
       if (!workspaceId) {
         const response: ApiErrorResponse = {
           error: 'Forbidden',
-          message: 'You must be a workspace member to update recording links',
+          message: 'You must be a workspace member to update links',
         };
         return c.json(response, 403);
       }
 
-      if (!recordingLinkId) {
+      if (!linkId) {
         const response: ApiErrorResponse = {
           error: 'Bad Request',
-          message: 'Recording link ID is required',
+          message: 'Link ID is required',
         };
         return c.json(response, 400);
       }
 
       // Parse and validate request body
       const body = await c.req.json();
-      const parsed = updateRecordingLinkSchema.parse(body);
+      const parsed = updateLinkSchema.parse(body);
 
       // Check if at least one field is being updated
       if (
@@ -297,7 +304,7 @@ export function updateRecordingLinkHandler(recordingLinkService: RecordingLinkSe
       }
 
       // Perform update
-      const updated = await recordingLinkService.update(recordingLinkId, workspaceId, {
+      const updated = await linkService.update(linkId, workspaceId, {
         linkTitle: parsed.linkTitle,
         linkReusable: parsed.linkReusable,
         linkProviderType: parsed.linkProviderType,
@@ -305,11 +312,11 @@ export function updateRecordingLinkHandler(recordingLinkService: RecordingLinkSe
         linkProviderRef: parsed.linkProviderRef,
       });
 
-      const response: ApiResponse<RecordingLinkUpdateData> = {
-        message: 'Recording link updated successfully',
+      const response: ApiResponse<LinkUpdateData> = {
+        message: 'Link updated successfully',
         data: {
           workspaceId,
-          recordingLink: {
+          link: {
             id: updated.id,
             linkTitle: updated.linkTitle,
             linkReusable: updated.linkReusable,
@@ -359,20 +366,20 @@ export function updateRecordingLinkHandler(recordingLinkService: RecordingLinkSe
 }
 
 /**
- * Handler factory for deleting a recording link
- * Performs soft delete on the recording link
+ * Handler factory for deleting a link
+ * Performs soft delete on the link
  */
-export function deleteRecordingLinkHandler(recordingLinkService: RecordingLinkService) {
+export function deleteLinkHandler(linkService: LinkService) {
   return async (c: Context<AppEnv>) => {
     try {
       const user = c.get('user');
       const workspaceId = c.get('workspaceId');
-      const recordingLinkId = c.req.param('recordingLinkId');
+      const linkId = c.req.param('linkId');
 
       if (!user) {
         const response: ApiErrorResponse = {
           error: 'Unauthorized',
-          message: 'You must be logged in to delete recording links',
+          message: 'You must be logged in to delete links',
         };
         return c.json(response, 401);
       }
@@ -380,27 +387,27 @@ export function deleteRecordingLinkHandler(recordingLinkService: RecordingLinkSe
       if (!workspaceId) {
         const response: ApiErrorResponse = {
           error: 'Forbidden',
-          message: 'You must be a workspace member to delete recording links',
+          message: 'You must be a workspace member to delete links',
         };
         return c.json(response, 403);
       }
 
-      if (!recordingLinkId) {
+      if (!linkId) {
         const response: ApiErrorResponse = {
           error: 'Bad Request',
-          message: 'Recording link ID is required',
+          message: 'Link ID is required',
         };
         return c.json(response, 400);
       }
 
       // Perform soft delete
-      await recordingLinkService.delete(recordingLinkId, workspaceId);
+      await linkService.delete(linkId, workspaceId);
 
-      const response: ApiResponse<{ workspaceId: string; recordingLinkId: string }> = {
-        message: 'Recording link deleted successfully',
+      const response: ApiResponse<{ workspaceId: string; linkId: string }> = {
+        message: 'Link deleted successfully',
         data: {
           workspaceId,
-          recordingLinkId,
+          linkId,
         },
       };
 

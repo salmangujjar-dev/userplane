@@ -1,5 +1,5 @@
 /**
- * Recording links routes - HTTP routes for recording link operations
+ * Links routes - HTTP routes for link operations
  */
 
 import { Hono } from 'hono';
@@ -7,59 +7,59 @@ import type { AppEnv } from '@/api/lib/types';
 import { requireAuth } from '@/api/middleware/auth';
 import { requireWorkspaceMember } from '@/api/middleware/workspace';
 import {
-  getRecordingLinksHandler,
-  createRecordingLinkHandler,
-  updateRecordingLinkHandler,
-  deleteRecordingLinkHandler,
-} from '@/api/handlers/recording-links.handlers';
-import type { RecordingLinkService } from '@/api/services/recording-link.service';
+  getLinksHandler,
+  createLinkHandler,
+  updateLinkHandler,
+  deleteLinkHandler,
+} from '@/api/handlers/links.handlers';
+import type { LinkService } from '@/api/services/link.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 
-export function createRecordingLinksRoutes(
-  recordingLinkService: RecordingLinkService,
+export function createLinksRoutes(
+  linkService: LinkService,
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService
 ) {
-  const recordingLinksRoutes = new Hono<AppEnv>();
+  const linksRoutes = new Hono<AppEnv>();
 
-  // GET /workspace/:workspaceId/recording-links - List recording links with pagination and filters
+  // GET /workspace/:workspaceId/links - List links with pagination and filters
   // Query params: page, per_page, created_by, project_id, domain_id, link_provider_type
-  recordingLinksRoutes.get(
+  linksRoutes.get(
     '/',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
-    getRecordingLinksHandler(recordingLinkService)
+    getLinksHandler(linkService)
   );
 
-  // POST /workspace/:workspaceId/recording-links - Create a recording link
+  // POST /workspace/:workspaceId/links - Create a link
   // Body: { projectId?, domainId, linkReference?, linkReusable? }
   // If projectId is not provided, uses workspace's default project
   // If linkReference is not provided, uses "{firstName}'s Recording Link"
-  recordingLinksRoutes.post(
+  linksRoutes.post(
     '/',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
-    createRecordingLinkHandler(recordingLinkService)
+    createLinkHandler(linkService)
   );
 
-  // PUT /workspace/:workspaceId/recording-links/:recordingLinkId - Update a recording link
+  // PUT /workspace/:workspaceId/links/:linkId - Update a link
   // Body: { linkTitle?, linkReusable?, linkProviderType?, linkProviderId?, linkProviderRef? }
-  recordingLinksRoutes.put(
-    '/:recordingLinkId',
+  linksRoutes.put(
+    '/:linkId',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
-    updateRecordingLinkHandler(recordingLinkService)
+    updateLinkHandler(linkService)
   );
 
-  // DELETE /workspace/:workspaceId/recording-links/:recordingLinkId - Delete a recording link
+  // DELETE /workspace/:workspaceId/links/:linkId - Delete a link
   // Performs soft delete
-  recordingLinksRoutes.delete(
-    '/:recordingLinkId',
+  linksRoutes.delete(
+    '/:linkId',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
-    deleteRecordingLinkHandler(recordingLinkService)
+    deleteLinkHandler(linkService)
   );
 
-  return recordingLinksRoutes;
+  return linksRoutes;
 }

@@ -1,39 +1,35 @@
 /**
- * Recording links route initialization and dependency injection
+ * Links route initialization and dependency injection
  */
 
 import { Hono } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
 import { db } from '@/api/clients/db';
 
-import { RecordingLinkRepository } from '@/api/repositories/recording-links.repository';
+import { LinkRepository } from '@/api/repositories/links.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
-import { RecordingLinkService } from '@/api/services/recording-link.service';
+import { LinkService } from '@/api/services/link.service';
 
 import { workspaceMemberService, workspaceService } from '../workspace/workspace.index';
-import { createRecordingLinksRoutes } from './recording-links.routes';
+import { createLinksRoutes } from './links.routes';
 
 // Initialize repositories and service
-const recordingLinkRepo = new RecordingLinkRepository(db);
+const linkRepo = new LinkRepository(db);
 const workspaceMemberRepo = new WorkspaceMemberRepository(db);
 const projectRepo = new ProjectRepository(db);
 
-export const recordingLinkService = new RecordingLinkService({
-  recordingLinkRepo,
+export const linkService = new LinkService({
+  linkRepo,
   workspaceMemberRepo,
   projectRepo,
 });
 
 // Create routes with injected dependencies
-const recordingLinksRoutes = createRecordingLinksRoutes(
-  recordingLinkService,
-  workspaceMemberService,
-  workspaceService
-);
+const linksRoutes = createLinksRoutes(linkService, workspaceMemberService, workspaceService);
 
 // Mount routes under workspace path
 const app = new Hono<AppEnv>();
-app.route('/workspace/:workspaceId/recording-links', recordingLinksRoutes);
+app.route('/workspace/:workspaceId/links', linksRoutes);
 
 export default app;

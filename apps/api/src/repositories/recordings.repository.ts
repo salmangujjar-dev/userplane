@@ -5,14 +5,7 @@
 
 import { eq, and, count, desc, asc } from '@workspace/db';
 import type { DbClient, Recording } from '@workspace/db';
-import {
-  recordings,
-  workspaceMembers,
-  user,
-  recordingLinks,
-  projects,
-  domains,
-} from '@workspace/db';
+import { recordings, workspaceMembers, user, links, projects, domains } from '@workspace/db';
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
 
 /**
@@ -222,14 +215,14 @@ export class RecordingRepository {
         // Creator info
         creatorId: workspaceMembers.id,
         creatorName: user.name,
-        // Recording link info
-        linkGUID: recordingLinks.linkGUID,
-        linkTitle: recordingLinks.linkTitle,
-        linkProviderType: recordingLinks.linkProviderType,
-        linkProviderId: recordingLinks.linkProviderId,
-        linkProviderRef: recordingLinks.linkProviderRef,
-        linkProviderData: recordingLinks.linkProviderData,
-        linkCreatedAt: recordingLinks.createdAt,
+        // Link info
+        linkGUID: links.linkGUID,
+        linkTitle: links.linkTitle,
+        linkProviderType: links.linkProviderType,
+        linkProviderId: links.linkProviderId,
+        linkProviderRef: links.linkProviderRef,
+        linkProviderData: links.linkProviderData,
+        linkCreatedAt: links.createdAt,
         // Project info
         projectTitle: projects.projectTitle,
         projectPath: projects.projectPath,
@@ -240,9 +233,9 @@ export class RecordingRepository {
       .from(recordings)
       .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.id))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
-      .innerJoin(recordingLinks, eq(recordings.recordingLinkId, recordingLinks.id))
+      .innerJoin(links, eq(recordings.recordingLinkId, links.id))
       .innerJoin(projects, eq(recordings.projectId, projects.id))
-      .innerJoin(domains, eq(recordingLinks.domainId, domains.id))
+      .innerJoin(domains, eq(links.domainId, domains.id))
       .where(and(eq(recordings.id, id), eq(recordings.isDeleted, false)))
       .limit(1);
 
