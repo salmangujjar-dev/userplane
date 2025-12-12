@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import NextImage from 'next/image';
 
 // Map of domain patterns to local preview icons
 const DOMAIN_TO_ICON_MAP: Record<string, string> = {
@@ -152,11 +153,14 @@ export function UrlInputWithFavicon({
     <div className="relative">
       {faviconUrl && (
         <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded bg-background border shadow-sm">
-          <img
+          <NextImage
             src={faviconUrl}
             alt="Site favicon"
+            width={16}
+            height={16}
             className="w-4 h-4 object-contain"
             onError={handleFaviconError}
+            unoptimized
           />
         </div>
       )}

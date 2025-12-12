@@ -5,6 +5,7 @@ interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   href?: string;
   showText?: boolean;
+  theme?: 'dark' | 'light';
 }
 
 const sizeVariants = {
@@ -13,17 +14,20 @@ const sizeVariants = {
   lg: { text: 'text-3xl', icon: 'h-9 w-9' },
 };
 
-export default function Logo({ className, size = 'md', href, showText = true }: LogoProps) {
+export default function Logo({
+  className,
+  size = 'md',
+  href,
+  showText = true,
+  theme = 'dark',
+}: LogoProps) {
   const logoContent = (
     <div className={cn('flex items-center gap-2', className)}>
-      <svg
-        viewBox="0 0 512 512"
-        className={cn(sizeVariants[size].icon, 'flex-shrink-0')}
-        fill="currentColor"
-        aria-hidden="true"
-      >
-        <path d="M210.09,0c10.56,0,19.12,8.56,19.12,19.12v63.74c0,10.56-8.56,19.12-19.12,19.12s-19.12-8.56-19.12-19.12V19.12C190.97,8.56,199.53,0,210.09,0z M88.22,50.22c7.47-7.47,19.57-7.47,27.04,0l44.62,44.61c7.47,7.47,7.47,19.57,0,27.04c-7.47,7.47-19.57,7.47-27.04,0L88.22,77.26C80.75,69.8,80.75,57.69,88.22,50.22z M331.97,50.22c7.47,7.47,7.47,19.57,0,27.04l-44.62,44.62c-7.47,7.47-19.57,7.47-27.04,0c-7.47-7.47-7.47-19.57,0-27.04l44.62-44.62C312.39,42.75,324.5,42.75,331.97,50.22z M38,172.09c0-10.56,8.56-19.12,19.12-19.12h63.74c10.56,0,19.12,8.56,19.12,19.12c0,10.56-8.56,19.12-19.12,19.12H57.12C46.56,191.21,38,182.65,38,172.09z M190.97,190.88c0-28.73,33.7-44.23,55.51-25.53l215.71,184.9c23.2,19.89,9.99,57.91-20.54,59.13l-97.9,3.92c-10.52,0.42-20.42,5.09-27.44,12.93l-66.66,74.5c-20.58,23-58.69,8.44-58.69-22.42V190.88z" />
-      </svg>
+      <img
+        src={`/logo-${theme}.svg`}
+        alt="Userplane"
+        className={cn(sizeVariants[size].icon, 'shrink-0')}
+      />
       {showText && (
         <span className={cn('font-dm-sans font-semibold tracking-tight', sizeVariants[size].text)}>
           Userplane
