@@ -12,12 +12,11 @@ const EXTENSION_MAP: Record<string, string> = {
 };
 
 export class VideoStorageClient extends BaseStorageClient {
-  protected readonly bucketType: BucketType = 'reports';
   protected readonly allowedContentTypes = ALLOWED_CONTENT_TYPES;
   protected readonly cacheControl = CacheControl.PRIVATE;
 
   constructor(config: StorageConfig) {
-    super(config);
+    super(config, 'reports');
   }
 
   protected resolvePath(key: string): string {

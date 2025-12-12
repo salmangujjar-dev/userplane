@@ -27,7 +27,6 @@ const ALLOWED_CONTENT_TYPES = ASSETS_ALLOWED_CONTENT_TYPES;
 const EXTENSION_MAP = ASSETS_EXTENSION_MAP;
 
 export class AssetsStorageClient extends BaseStorageClient {
-  protected readonly bucketType: BucketType = 'assets';
   protected readonly allowedContentTypes = ALLOWED_CONTENT_TYPES;
   protected readonly cacheControl = CacheControl.STANDARD;
 
@@ -35,7 +34,7 @@ export class AssetsStorageClient extends BaseStorageClient {
   private maxSizeBytes?: number;
 
   constructor(config: StorageConfig, options?: AssetsClientOptions) {
-    super(config);
+    super(config, 'assets');
     this.domain = options?.domain;
     this.maxSizeBytes = options?.maxSizeBytes;
   }

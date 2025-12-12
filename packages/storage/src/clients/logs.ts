@@ -10,12 +10,11 @@ import { CacheControl } from '../types';
 const ALLOWED_CONTENT_TYPES = ['application/x-ndjson', 'application/ndjson'] as const;
 
 export class ConsoleLogsStorageClient extends BaseStorageClient {
-  protected readonly bucketType: BucketType = 'reports';
   protected readonly allowedContentTypes = ALLOWED_CONTENT_TYPES;
   protected readonly cacheControl = CacheControl.PRIVATE;
 
   constructor(config: StorageConfig) {
-    super(config);
+    super(config, 'reports');
   }
 
   protected resolvePath(key: string): string {

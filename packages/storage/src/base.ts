@@ -21,11 +21,12 @@ export abstract class BaseStorageClient {
   protected bucket: string;
   protected basePrefix: string;
 
-  protected abstract readonly bucketType: BucketType;
+  protected readonly bucketType: BucketType;
   protected abstract readonly allowedContentTypes: readonly string[];
   protected abstract readonly cacheControl: string;
 
-  constructor(config: StorageConfig) {
+  constructor(config: StorageConfig, bucketType: BucketType) {
+    this.bucketType = bucketType;
     this.profile = config.profile;
     const resolved = this.resolveCredentials(config);
     this.client = this.createClient(resolved.credentials);
