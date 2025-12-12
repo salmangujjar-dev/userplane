@@ -7,6 +7,7 @@ import { eq, and, count, desc, asc, or, inArray } from '@workspace/db';
 import type { DbClient, Recording } from '@workspace/db';
 import { recordings, workspaceMembers, user, links, projects, domains } from '@workspace/db';
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
+import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
 
 /**
  * System metadata captured during recording
@@ -123,9 +124,15 @@ export class RecordingRepository {
    * Build WHERE conditions for recording queries
    * Handles workspaceId and optional filters at the SQL level
    * Filters support multiple values using inArray for OR conditions
+   * statusGroup defaults to 'AVAILABLE' if not specified
    */
   private buildWhereConditions(workspaceId: string, filters?: RecordingFilters) {
     const conditions = [eq(recordings.workspaceId, workspaceId), eq(recordings.isDeleted, false)];
+
+    // Apply status group filter (defaults to AVAILABLE)
+    const statusGroup = filters?.statusGroup ?? 'AVAILABLE';
+    const statuses = [...getUploadStatusesForGroup(statusGroup)];
+    conditions.push(inArray(recordings.uploadStatus, statuses));
 
     if (filters?.createdBy && filters.createdBy.length > 0) {
       conditions.push(inArray(recordings.createdBy, filters.createdBy));
@@ -219,6 +226,100 @@ export class RecordingRepository {
       .limit(1);
 
     return recording || null;
+  }
+
+  /**
+   * Find recording by ID with status group filter
+   * Defaults to 'AVAILABLE' status group if not specified
+   */
+  async findByIdWithStatusGroup(
+    id: string,
+    statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
+  ) {
+    const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
+
+    const [recording] = await this.db
+      .select()
+      .from(recordings)
+      .where(
+        and(
+          eq(recordings.id, id),
+          eq(recordings.isDeleted, false),
+          inArray(recordings.uploadStatus, statuses)
+        )
+      )
+      .limit(1);
+
+    return recording || null;
+  }
+
+  /**
+   * Find recording by ID with all related data joined and status group filter
+   * Defaults to 'AVAILABLE' status group if not specified
+   * Returns full recording details including recording link, creator, project, and domain
+   */
+  async findByIdWithDetailsAndStatusGroup(
+    id: string,
+    statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
+  ): Promise<RecordingDetailRow | null> {
+    const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
+
+    const [result] = await this.db
+      .select({
+        // Recording fields
+        id: recordings.id,
+        workspaceId: recordings.workspaceId,
+        projectId: recordings.projectId,
+        recordingLinkId: recordings.recordingLinkId,
+        uploadStatus: recordings.uploadStatus,
+        recordingVideoRef: recordings.recordingVideoRef,
+        recordingThumbnailRef: recordings.recordingThumbnailRef,
+        recordingConsoleLogRef: recordings.recordingConsoleLogRef,
+        recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingMeta: recordings.recordingMeta,
+        recordingDuration: recordings.recordingDuration,
+        createdAt: recordings.createdAt,
+        updatedAt: recordings.updatedAt,
+        // Creator info
+        creatorId: workspaceMembers.id,
+        creatorName: user.name,
+        // Link info
+        linkTitle: links.linkTitle,
+        linkProviderType: links.linkProviderType,
+        linkProviderId: links.linkProviderId,
+        linkProviderRef: links.linkProviderRef,
+        linkProviderData: links.linkProviderData,
+        linkCreatedAt: links.createdAt,
+        // Project info
+        projectTitle: projects.projectTitle,
+        // Domain info
+        domainId: domains.id,
+        domainUrl: domains.domainUrl,
+      })
+      .from(recordings)
+      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.id))
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .innerJoin(links, eq(recordings.recordingLinkId, links.id))
+      .innerJoin(projects, eq(recordings.projectId, projects.id))
+      .innerJoin(domains, eq(links.domainId, domains.id))
+      .where(
+        and(
+          eq(recordings.id, id),
+          eq(recordings.isDeleted, false),
+          inArray(recordings.uploadStatus, statuses)
+        )
+      )
+      .limit(1);
+
+    if (!result) {
+      return null;
+    }
+
+    // Cast jsonb fields to their typed equivalents
+    return {
+      ...result,
+      recordingMeta: result.recordingMeta as RecordingMeta | null,
+    };
   }
 
   /**

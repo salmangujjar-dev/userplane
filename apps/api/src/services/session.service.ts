@@ -133,10 +133,11 @@ export class SessionService {
       );
     }
 
-    // Check reusability - if not reusable, ensure no existing recordings
+    // Check reusability - if not reusable, ensure no terminal state recordings
+    // Non-terminal states (pending, partial) are allowed to retry
     if (!linkData.linkReusable) {
-      const existingCount = await this.deps.linkRepo.countRecordingsForLink(linkId);
-      if (existingCount > 0) {
+      const terminalCount = await this.deps.linkRepo.countTerminalRecordingsForLink(linkId);
+      if (terminalCount > 0) {
         throw new ConflictError('This link has already been used for a recording');
       }
     }
@@ -204,10 +205,13 @@ export class SessionService {
       );
     }
 
-    // Check reusability again
+    // Check reusability again - only block if terminal state recordings exist
+    // Allows users to retry if previous upload was in non-terminal state (pending, partial)
     if (!linkData.linkReusable) {
-      const existingCount = await this.deps.linkRepo.countRecordingsForLink(sessionPayload.lid);
-      if (existingCount > 0) {
+      const terminalCount = await this.deps.linkRepo.countTerminalRecordingsForLink(
+        sessionPayload.lid
+      );
+      if (terminalCount > 0) {
         throw new ConflictError('This link has already been used for a recording');
       }
     }

@@ -52,6 +52,7 @@ export function getRecordingsHandler(recordingService: RecordingService) {
       const parsed = listRecordingsQuerySchema.parse(queryParams);
 
       // Build filters object from query params
+      // Note: statusGroup is not exposed at API level - defaults to AVAILABLE internally
       const filters: RecordingFilters = {};
 
       if (parsed.created_by && parsed.created_by.length > 0) {

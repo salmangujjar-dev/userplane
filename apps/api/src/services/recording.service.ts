@@ -64,6 +64,8 @@ export class RecordingService {
 
   /**
    * Get recordings for a workspace with pagination, filters, and sorting
+   * Defaults to AVAILABLE status group (available, partial)
+   * Supports filtering by status groups: AVAILABLE, STALE, UNAVAILABLE, PENDING
    * All filtering and sorting is performed at the database level
    * Default sort: created_at descending (latest first)
    */
@@ -83,13 +85,13 @@ export class RecordingService {
       throw new ValidationError(`Per page must be between 1 and ${MAX_PER_PAGE}`);
     }
 
-    // Get total count with filters applied at DB level
+    // Get total count with filters applied at DB level (defaults to AVAILABLE)
     const total = await this.deps.recordingRepo.countByWorkspace(workspaceId, filters);
 
     // Calculate offset for pagination
     const offset = (page - 1) * perPage;
 
-    // Get paginated results with all data joined at DB level
+    // Get paginated results with all data joined at DB level (defaults to AVAILABLE)
     // Default sort: created_at desc (latest first)
     const rows = await this.deps.recordingRepo.findByWorkspaceIdPaginated(
       workspaceId,
@@ -151,10 +153,11 @@ export class RecordingService {
 
   /**
    * Get recording by ID with full details
+   * Defaults to AVAILABLE status group (available, partial)
    * Returns recording metadata and metrics (resources fetched via separate endpoints)
    */
   async getById(recordingId: string, workspaceId: string): Promise<RecordingDetail> {
-    const row = await this.deps.recordingRepo.findByIdWithDetails(recordingId);
+    const row = await this.deps.recordingRepo.findByIdWithDetailsAndStatusGroup(recordingId);
 
     if (!row) {
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
@@ -202,10 +205,11 @@ export class RecordingService {
   }
 
   /**
-   * Get video resource for a recording
+   * Get video resource for an available recording
+   * Only works with recordings that have uploadStatus = 'available'
    */
   async getVideoResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
-    const recording = await this.validateRecordingAccess(recordingId, workspaceId);
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
 
     if (!recording.recordingVideoRef) {
       return {
@@ -235,10 +239,11 @@ export class RecordingService {
   }
 
   /**
-   * Get thumbnail resource for a recording
+   * Get thumbnail resource for an available recording
+   * Only works with recordings that have uploadStatus = 'available'
    */
   async getThumbnailResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
-    const recording = await this.validateRecordingAccess(recordingId, workspaceId);
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
 
     if (!recording.recordingThumbnailRef) {
       return { url: null, message: 'Thumbnail not available for this recording' };
@@ -256,10 +261,11 @@ export class RecordingService {
   }
 
   /**
-   * Get console log resource for a recording
+   * Get console log resource for an available recording
+   * Only works with recordings that have uploadStatus = 'available'
    */
   async getConsoleLogResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
-    const recording = await this.validateRecordingAccess(recordingId, workspaceId);
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
 
     if (!recording.recordingConsoleLogRef) {
       return { url: null, message: 'Console logs not available for this recording' };
@@ -285,10 +291,11 @@ export class RecordingService {
   }
 
   /**
-   * Get network log resource for a recording
+   * Get network log resource for an available recording
+   * Only works with recordings that have uploadStatus = 'available'
    */
   async getNetworkLogResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
-    const recording = await this.validateRecordingAccess(recordingId, workspaceId);
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
 
     if (!recording.recordingNetworkLogsRef) {
       return { url: null, message: 'Network logs not available for this recording' };
@@ -312,8 +319,32 @@ export class RecordingService {
   }
 
   /**
+   * Validate available recording exists and belongs to workspace
+   * Defaults to AVAILABLE status group (available, partial)
+   * Returns the recording if valid, throws otherwise
+   */
+  private async validateAvailableRecordingAccess(recordingId: string, workspaceId: string) {
+    const recording = await this.deps.recordingRepo.findByIdWithStatusGroup(recordingId);
+
+    if (!recording) {
+      const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
+      if (isSoftDeleted === true) {
+        throw new GoneError('Recording has already been deleted');
+      }
+      throw new NotFoundError('Recording not found');
+    }
+
+    if (recording.workspaceId !== workspaceId) {
+      throw new NotFoundError('Recording not found');
+    }
+
+    return recording;
+  }
+
+  /**
    * Validate recording exists and belongs to workspace
    * Returns the recording if valid, throws otherwise
+   * Used for operations that work on any status (like delete)
    */
   private async validateRecordingAccess(recordingId: string, workspaceId: string) {
     const recording = await this.deps.recordingRepo.findById(recordingId);

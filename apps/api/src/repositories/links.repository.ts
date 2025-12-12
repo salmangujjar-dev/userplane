@@ -5,7 +5,7 @@
 
 import { eq, and, count, desc, asc, inArray, sql } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
-import { links, projects, workspaceMembers, user, workspaces } from '@workspace/db';
+import { links, projects, workspaceMembers, user, workspaces, recordings } from '@workspace/db';
 import type {
   LinkFilters,
   Transaction,
@@ -13,6 +13,7 @@ import type {
   LinkType,
   LinkSortOptions,
 } from '@/api/types';
+import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
 
 /**
  * Shape of link list item with joined data
@@ -342,16 +343,38 @@ export class LinkRepository {
   }
 
   /**
-   * Count recordings for a link (non-deleted, non-failed)
+   * Count all recordings for a link regardless of status
+   * Includes both deleted and non-deleted recordings
    * Used to check single-use link restrictions
    */
   async countRecordingsForLink(linkId: string): Promise<number> {
-    const { recordings } = await import('@workspace/db');
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(recordings)
+      .where(eq(recordings.recordingLinkId, linkId));
+
+    return Number(result?.count || 0);
+  }
+
+  /**
+   * Count recordings in terminal states for a link
+   * Terminal states: available, failed, expired, purged
+   * Includes both deleted and non-deleted recordings to prevent link reuse
+   * Used to check single-use link restrictions for session creation
+   * Non-terminal states (pending, partial) allow retry with new session tokens
+   */
+  async countTerminalRecordingsForLink(linkId: string): Promise<number> {
+    const terminalStatuses = [...getUploadStatusesForGroup('TERMINAL')];
 
     const [result] = await this.db
       .select({ count: count() })
       .from(recordings)
-      .where(and(eq(recordings.recordingLinkId, linkId), eq(recordings.isDeleted, false)));
+      .where(
+        and(
+          eq(recordings.recordingLinkId, linkId),
+          inArray(recordings.uploadStatus, terminalStatuses)
+        )
+      );
 
     return Number(result?.count || 0);
   }

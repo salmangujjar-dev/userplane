@@ -143,15 +143,25 @@ export type ClientInfo = z.infer<typeof clientInfoSchema>;
 export const TERMINAL_UPLOAD_STATES = ['available', 'failed', 'expired', 'purged'] as const;
 
 /**
+ * Terminal upload state type derived from constant
+ */
+export type TerminalUploadState = (typeof TERMINAL_UPLOAD_STATES)[number];
+
+/**
  * Non-terminal states that allow transitions
  */
 export const ACTIVE_UPLOAD_STATES = ['pending', 'partial'] as const;
 
 /**
+ * Active upload state type derived from constant
+ */
+export type ActiveUploadState = (typeof ACTIVE_UPLOAD_STATES)[number];
+
+/**
  * Check if upload status is terminal
  */
 export function isTerminalState(status: string): boolean {
-  return TERMINAL_UPLOAD_STATES.includes(status as (typeof TERMINAL_UPLOAD_STATES)[number]);
+  return TERMINAL_UPLOAD_STATES.includes(status as TerminalUploadState);
 }
 
 /**

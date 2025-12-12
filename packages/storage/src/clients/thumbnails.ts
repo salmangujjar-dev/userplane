@@ -16,14 +16,13 @@ const EXTENSION_MAP: Record<string, string> = {
 };
 
 export class ThumbnailsStorageClient extends BaseStorageClient {
-  protected readonly bucketType: BucketType = 'assets';
   protected readonly allowedContentTypes = ALLOWED_CONTENT_TYPES;
   protected readonly cacheControl = CacheControl.IMMUTABLE;
 
   private domain?: string;
 
   constructor(config: StorageConfig, options?: ThumbnailsClientOptions) {
-    super(config);
+    super(config, 'assets');
     this.domain = options?.domain;
   }
 
