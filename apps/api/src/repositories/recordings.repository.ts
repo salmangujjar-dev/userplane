@@ -3,7 +3,7 @@
  * Handles all database operations for recording entities
  */
 
-import { eq, and, count, desc, asc, or } from '@workspace/db';
+import { eq, and, count, desc, asc, or, inArray } from '@workspace/db';
 import type { DbClient, Recording } from '@workspace/db';
 import { recordings, workspaceMembers, user, links, projects, domains } from '@workspace/db';
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
@@ -122,16 +122,21 @@ export class RecordingRepository {
   /**
    * Build WHERE conditions for recording queries
    * Handles workspaceId and optional filters at the SQL level
+   * Filters support multiple values using inArray for OR conditions
    */
   private buildWhereConditions(workspaceId: string, filters?: RecordingFilters) {
     const conditions = [eq(recordings.workspaceId, workspaceId), eq(recordings.isDeleted, false)];
 
-    if (filters?.createdBy) {
-      conditions.push(eq(recordings.createdBy, filters.createdBy));
+    if (filters?.createdBy && filters.createdBy.length > 0) {
+      conditions.push(inArray(recordings.createdBy, filters.createdBy));
     }
 
-    if (filters?.projectId) {
-      conditions.push(eq(recordings.projectId, filters.projectId));
+    if (filters?.projectId && filters.projectId.length > 0) {
+      conditions.push(inArray(recordings.projectId, filters.projectId));
+    }
+
+    if (filters?.linkId && filters.linkId.length > 0) {
+      conditions.push(inArray(recordings.recordingLinkId, filters.linkId));
     }
 
     return and(...conditions);

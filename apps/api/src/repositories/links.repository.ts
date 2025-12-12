@@ -3,7 +3,7 @@
  * Handles all database operations for link entities
  */
 
-import { eq, and, count, desc, asc } from '@workspace/db';
+import { eq, and, count, desc, asc, inArray } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { links, projects, workspaceMembers, user, workspaces } from '@workspace/db';
 import type {
@@ -116,24 +116,30 @@ export class LinkRepository {
   /**
    * Build WHERE conditions for link queries
    * Handles workspaceId and optional filters at the SQL level
+   * Filters support multiple values using inArray for OR conditions
    */
   private buildWhereConditions(workspaceId: string, filters?: LinkFilters) {
     const conditions = [eq(links.workspaceId, workspaceId), eq(links.isDeleted, false)];
 
-    if (filters?.createdBy) {
-      conditions.push(eq(links.createdBy, filters.createdBy));
+    if (filters?.createdBy && filters.createdBy.length > 0) {
+      conditions.push(inArray(links.createdBy, filters.createdBy));
     }
 
     if (filters?.projectId) {
       conditions.push(eq(links.projectId, filters.projectId));
     }
 
-    if (filters?.domainId) {
-      conditions.push(eq(links.domainId, filters.domainId));
+    if (filters?.domainId && filters.domainId.length > 0) {
+      conditions.push(inArray(links.domainId, filters.domainId));
     }
 
-    if (filters?.linkProviderType) {
-      conditions.push(eq(links.linkProviderType, filters.linkProviderType));
+    if (filters?.linkProviderType && filters.linkProviderType.length > 0) {
+      const nonNullProviderTypes = filters.linkProviderType.filter(
+        (type): type is NonNullable<typeof type> => type !== null
+      );
+      if (nonNullProviderTypes.length > 0) {
+        conditions.push(inArray(links.linkProviderType, nonNullProviderTypes));
+      }
     }
 
     if (filters?.linkType) {

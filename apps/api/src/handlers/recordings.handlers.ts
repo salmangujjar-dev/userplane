@@ -54,12 +54,16 @@ export function getRecordingsHandler(recordingService: RecordingService) {
       // Build filters object from query params
       const filters: RecordingFilters = {};
 
-      if (parsed.created_by) {
+      if (parsed.created_by && parsed.created_by.length > 0) {
         filters.createdBy = parsed.created_by;
       }
 
-      if (parsed.project_id) {
+      if (parsed.project_id && parsed.project_id.length > 0) {
         filters.projectId = parsed.project_id;
+      }
+
+      if (parsed.link_id && parsed.link_id.length > 0) {
+        filters.linkId = parsed.link_id;
       }
 
       // Build sort options from query params

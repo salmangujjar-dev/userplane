@@ -19,10 +19,12 @@ export interface RecordingSortOptions {
 /**
  * Filters for listing recordings
  * All filters are optional and applied at database level
+ * Each filter accepts an array to support filtering by multiple values
  */
 export interface RecordingFilters {
-  createdBy?: string;
-  projectId?: string;
+  createdBy?: string[];
+  projectId?: string[];
+  linkId?: string[];
 }
 
 /**

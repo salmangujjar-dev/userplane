@@ -33,6 +33,7 @@ export const LINK_SORT_FIELDS = ['created_at', 'link_title'] as const;
 /**
  * List links query schema
  * Validates pagination, filter, and sort parameters
+ * created_by, domain_id, and link_provider_type accept comma-separated values for multiple selections
  */
 export const listLinksQuerySchema = z.object({
   page: z
@@ -47,10 +48,39 @@ export const listLinksQuerySchema = z.object({
     .default('10')
     .transform((val) => parseInt(val, 10))
     .refine((val) => val >= 1 && val <= 20, { message: 'Per page must be between 1 and 20' }),
-  created_by: z.string().optional(),
+  created_by: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val.trim() === '') return undefined;
+      return val
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id !== '');
+    }),
   project_id: z.string().optional(),
-  domain_id: z.string().optional(),
-  link_provider_type: z.enum(LINK_PROVIDER_TYPES).optional(),
+  domain_id: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val.trim() === '') return undefined;
+      return val
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id !== '');
+    }),
+  link_provider_type: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val.trim() === '') return undefined;
+      const types = val
+        .split(',')
+        .map((type) => type.trim())
+        .filter((type) => type !== '');
+      const validTypes = types.filter((type) => LINK_PROVIDER_TYPES.includes(type as any));
+      return validTypes.length > 0 ? validTypes : undefined;
+    }),
   // NOT DOCUMENTED - Reserved for future use. Only 'recording' is currently supported
   link_type: z.enum(SUPPORTED_LINK_TYPES).optional(),
   sort_by: z.enum(LINK_SORT_FIELDS).optional().default('created_at'),

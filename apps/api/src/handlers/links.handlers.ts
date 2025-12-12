@@ -62,7 +62,7 @@ export function getLinksHandler(linkService: LinkService) {
       // Build filters object from query params
       const filters: LinkFilters = {};
 
-      if (parsed.created_by) {
+      if (parsed.created_by && parsed.created_by.length > 0) {
         filters.createdBy = parsed.created_by;
       }
 
@@ -70,12 +70,12 @@ export function getLinksHandler(linkService: LinkService) {
         filters.projectId = parsed.project_id;
       }
 
-      if (parsed.domain_id) {
+      if (parsed.domain_id && parsed.domain_id.length > 0) {
         filters.domainId = parsed.domain_id;
       }
 
-      if (parsed.link_provider_type) {
-        filters.linkProviderType = parsed.link_provider_type as LinkProviderType;
+      if (parsed.link_provider_type && parsed.link_provider_type.length > 0) {
+        filters.linkProviderType = parsed.link_provider_type as LinkProviderType[];
       }
 
       // NOT DOCUMENTED - Reserved for future use. Only 'recording' is currently supported

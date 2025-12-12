@@ -27,7 +27,7 @@ export function createRecordingsRoutes(
   const recordingsRoutes = new Hono<AppEnv>();
 
   // GET /workspace/:workspaceId/recordings - List recordings with pagination and filters
-  // Query params: page, per_page, created_by, project_id, sort_by, sort_direction
+  // Query params: page, per_page, created_by (comma-separated), project_id (comma-separated), link_id (comma-separated), sort_by, sort_direction
   recordingsRoutes.get(
     '/',
     requireAuth,
