@@ -38,12 +38,13 @@ export interface LinkSortOptions {
 /**
  * Filters for listing links
  * All filters are optional and applied at database level
+ * createdBy, domainId, and linkProviderType accept arrays to support filtering by multiple values
  */
 export interface LinkFilters {
-  createdBy?: string;
+  createdBy?: string[];
   projectId?: string;
-  domainId?: string;
-  linkProviderType?: LinkProviderType;
+  domainId?: string[];
+  linkProviderType?: LinkProviderType[];
   linkType?: LinkType;
 }
 

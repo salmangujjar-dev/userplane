@@ -1104,7 +1104,7 @@
                 {
                   "key": "created_by",
                   "value": "",
-                  "description": "Filter by workspace member ID",
+                  "description": "Filter by workspace member ID(s) - comma-separated for multiple: member1,member2,member3",
                   "disabled": true
                 },
                 {
@@ -1116,13 +1116,13 @@
                 {
                   "key": "domain_id",
                   "value": "",
-                  "description": "Filter by domain ID",
+                  "description": "Filter by domain ID(s) - comma-separated for multiple: domain1,domain2,domain3",
                   "disabled": true
                 },
                 {
                   "key": "link_provider_type",
                   "value": "",
-                  "description": "Filter by provider type: linear, notion, jira, github, shortcut, asana, clickup, height, plane",
+                  "description": "Filter by provider type(s) - comma-separated for multiple: linear,jira,github (valid: linear, notion, jira, github, shortcut, asana, clickup, height, plane)",
                   "disabled": true
                 },
                 {
@@ -1143,7 +1143,7 @@
                 }
               ]
             },
-            "description": "Get paginated links for a workspace with optional filters and sorting.\n\nResponse data: LinksListData (workspaceId, links, pagination)"
+            "description": "Get paginated links for a workspace with optional filters and sorting.\n\nFilters support comma-separated values for multiple selections:\n- created_by: Filter by multiple workspace members (e.g., ?created_by=member1,member2)\n- domain_id: Filter by multiple domains (e.g., ?domain_id=dom1,dom2)\n- link_provider_type: Filter by multiple provider types (e.g., ?link_provider_type=github,linear,jira)\n\nMultiple filters combine with AND logic (must match all specified filters).\nWithin each filter, values combine with OR logic (match any of the specified values).\n\nResponse data: LinksListData (workspaceId, links, pagination)"
           },
           "response": []
         },
@@ -1272,13 +1272,19 @@
                 {
                   "key": "created_by",
                   "value": "",
-                  "description": "Filter by workspace member ID",
+                  "description": "Filter by workspace member ID(s) - comma-separated for multiple: member1,member2,member3",
                   "disabled": true
                 },
                 {
                   "key": "project_id",
                   "value": "",
-                  "description": "Filter by project ID",
+                  "description": "Filter by project ID(s) - comma-separated for multiple: proj1,proj2,proj3",
+                  "disabled": true
+                },
+                {
+                  "key": "link_id",
+                  "value": "",
+                  "description": "Filter by recording link ID(s) - comma-separated for multiple: link1,link2,link3",
                   "disabled": true
                 },
                 {
@@ -1293,7 +1299,7 @@
                 }
               ]
             },
-            "description": "Get paginated recordings for a workspace with optional filters and sorting.\n\nResponse data: RecordingsListData (workspaceId, recordings, pagination)\n\nEach recording contains:\n- id: Recording ID\n- recordingThumbnail: R2 thumbnail URL or null\n- recordingDuration: Duration in seconds or null\n- createdAt: Timestamp\n- creator: { id, name }"
+            "description": "Get paginated recordings for a workspace with optional filters and sorting.\n\nFilters support comma-separated values for multiple selections:\n- created_by: Filter by multiple workspace members (e.g., ?created_by=member1,member2)\n- project_id: Filter by multiple projects (e.g., ?project_id=proj1,proj2)\n- link_id: Filter by multiple recording links (e.g., ?link_id=link1,link2)\n\nMultiple filters combine with AND logic (must match all specified filters).\nWithin each filter, values combine with OR logic (match any of the specified values).\n\nResponse data: RecordingsListData (workspaceId, recordings, pagination)\n\nEach recording contains:\n- id: Recording ID\n- recordingThumbnail: R2 thumbnail URL or null\n- recordingDuration: Duration in seconds or null\n- createdAt: Timestamp\n- creator: { id, name }"
           },
           "response": []
         },

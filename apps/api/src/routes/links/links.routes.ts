@@ -24,7 +24,7 @@ export function createLinksRoutes(
   const linksRoutes = new Hono<AppEnv>();
 
   // GET /workspace/:workspaceId/links - List links with pagination and filters
-  // Query params: page, per_page, created_by, project_id, domain_id, link_provider_type
+  // Query params: page, per_page, created_by (comma-separated), project_id, domain_id (comma-separated), link_provider_type (comma-separated)
   linksRoutes.get(
     '/',
     requireAuth,
