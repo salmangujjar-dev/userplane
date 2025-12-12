@@ -5,6 +5,7 @@
 
 import { z } from 'zod';
 import { workspaceRoleEnum } from '@workspace/db';
+import type { WorkspaceRole } from '@workspace/db';
 
 /**
  * Workspace roles (from database enum)
@@ -74,4 +75,24 @@ export const updateNotificationPreferencesSchema = z.object({
   notifyOnQuotaLimit: z.boolean().optional(),
   notifyOnInviteAccepted: z.boolean().optional(),
   notifyOnMemberJoin: z.boolean().optional(),
+});
+
+/**
+ * Count workspaces query schema
+ * Schema for filtering workspace count by role
+ * Accepts comma-separated role values: admin,member,owner
+ * Empty or undefined defaults to all roles
+ */
+export const countWorkspacesQuerySchema = z.object({
+  roles: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val.trim() === '') {
+        return ['member', 'admin', 'owner'] as WorkspaceRole[];
+      }
+      const roles = val.split(',').map((r) => r.trim().toLowerCase());
+      const validRoles = roles.filter((r) => WORKSPACE_ROLES.includes(r as WorkspaceRole));
+      return validRoles as WorkspaceRole[];
+    }),
 });

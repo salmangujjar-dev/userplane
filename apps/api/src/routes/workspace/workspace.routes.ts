@@ -12,6 +12,7 @@ import {
   getInviteUrlHandler,
   rotateInviteTokenHandler,
   getAllWorkspacesHandler,
+  countWorkspacesHandler,
   getWorkspaceByIdHandler,
   getWorkspacePreferencesHandler,
   updateWorkspacePreferencesHandler,
@@ -52,6 +53,10 @@ export function createWorkspaceRoutes(
 
   // Get all workspaces for authenticated user
   workspaceRoutes.get('/', requireAuth, getAllWorkspacesHandler(workspaceService));
+
+  // Count workspaces for authenticated user with optional role filtering
+  // Note: This must come before /:id route to avoid /count being interpreted as an id
+  workspaceRoutes.get('/count', requireAuth, countWorkspacesHandler(workspaceService));
 
   // Get specific workspace by ID - returns basic info only
   workspaceRoutes.get('/:id', requireAuth, getWorkspaceByIdHandler(workspaceService));

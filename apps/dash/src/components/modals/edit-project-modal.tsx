@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
+import Logo from '@workspace/ui/components/logo';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import {
@@ -69,13 +69,7 @@ export function EditProjectModal({ open, onOpenChange, project, onSave }: EditPr
       <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
         <div className="space-y-8">
           <div className="flex items-start gap-4">
-            <Image
-              src="/logo-dark.svg"
-              alt="Userplane"
-              width={56}
-              height={56}
-              className="h-14 w-14 shrink-0"
-            />
+            <Logo variant="tiled" size="md" showText={false} />
             <div className="flex flex-col space-y-1">
               <DialogTitle className="text-xl font-semibold">Edit Project</DialogTitle>
               <div className="flex items-center gap-1.5">

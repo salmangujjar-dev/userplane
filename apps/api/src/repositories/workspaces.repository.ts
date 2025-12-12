@@ -3,8 +3,8 @@
  * Handles all database operations for workspace entities
  */
 
-import { eq, and, count } from '@workspace/db';
-import type { DbClient } from '@workspace/db';
+import { eq, and, count, or } from '@workspace/db';
+import type { DbClient, WorkspaceRole } from '@workspace/db';
 import { workspaces } from '@workspace/db';
 import type { Transaction, CreateWorkspaceInput } from '@/api/types';
 
@@ -226,6 +226,41 @@ export class WorkspaceRepository {
           eq(workspaceMembers.isDeleted, false)
         )
       );
+
+    return Number(result?.count || 0);
+  }
+
+  /**
+   * Count total workspaces for a user with role-based filtering
+   * Filters by workspace role(s) when provided
+   */
+  async countByUserIdWithRoleFilter(userId: string, roles?: WorkspaceRole[]) {
+    const { workspaceMembers } = await import('@workspace/db');
+
+    const conditions = [
+      eq(workspaceMembers.userId, userId),
+      eq(workspaces.isDeleted, false),
+      eq(workspaceMembers.isDeleted, false),
+    ];
+
+    // Add role filtering if roles array is provided and not empty
+    if (roles && roles.length > 0) {
+      if (roles.length === 1) {
+        const role = roles[0];
+        if (role) {
+          conditions.push(eq(workspaceMembers.workspaceRole, role));
+        }
+      } else {
+        const roleConditions = roles.map((role) => eq(workspaceMembers.workspaceRole, role));
+        conditions.push(or(...roleConditions)!);
+      }
+    }
+
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(workspaces)
+      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .where(and(...conditions));
 
     return Number(result?.count || 0);
   }

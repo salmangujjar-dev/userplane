@@ -169,17 +169,15 @@ export class LinkService {
       sort ?? { field: 'created_at', direction: 'desc' }
     );
 
-    // Map database rows to response shape with nested linkProvider
+    // Map database rows to response shape with flattened linkProvider fields
     const links: LinkItem[] = rows.map((row) => ({
       id: row.id,
       linkTitle: row.linkTitle,
       linkType: row.linkType,
       linkReusable: row.linkReusable,
-      linkProvider: {
-        type: row.linkProviderType,
-        id: row.linkProviderId,
-        reference: row.linkProviderRef,
-      },
+      linkProviderType: row.linkProviderType,
+      linkProviderId: row.linkProviderId,
+      linkProviderReference: row.linkProviderRef,
       createdAt: row.createdAt,
       project: {
         id: row.projectId,

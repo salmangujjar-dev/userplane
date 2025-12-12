@@ -371,6 +371,33 @@
           "response": []
         },
         {
+          "name": "Count Workspaces",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/count?roles=member,admin,owner",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "count"],
+              "query": [
+                {
+                  "key": "roles",
+                  "value": "member,admin,owner",
+                  "description": "Comma-separated list of roles to filter by (member, admin, owner). Empty or not provided defaults to all roles."
+                }
+              ]
+            },
+            "description": "Count workspaces where the authenticated user is a member, with optional role-based filtering using comma-separated values.\n\nExamples:\n- ?roles=owner (only owner workspaces)\n- ?roles=admin,owner (admin or owner workspaces)\n- No query param (all workspaces)\n\nResponse data: WorkspaceCountData (count)"
+          },
+          "response": []
+        },
+        {
           "name": "Get Workspace by ID",
           "request": {
             "method": "GET",

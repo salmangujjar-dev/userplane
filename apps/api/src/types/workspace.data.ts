@@ -80,3 +80,10 @@ export interface WorkspaceDeleteData {
  * Link Settings API Data Types
  */
 export interface LinkSettingsData extends LinkSettings {}
+
+/**
+ * Workspace count data
+ */
+export interface WorkspaceCountData {
+  count: number;
+}

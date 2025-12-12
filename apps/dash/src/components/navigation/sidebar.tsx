@@ -39,7 +39,7 @@ export function Sidebar({ planName, userEmail, userName }: SidebarProps) {
     {
       title: 'Overview',
       items: [
-        { label: 'Recordings', href: `/${workspaceId}`, icon: Video },
+        { label: 'Recordings', href: `/${workspaceId}/recordings`, icon: Video },
         { label: 'Shared Links', href: `/${workspaceId}/links`, icon: LinkIcon },
       ],
     },
@@ -57,7 +57,7 @@ export function Sidebar({ planName, userEmail, userName }: SidebarProps) {
     <aside className="flex h-screen w-64 flex-col shrink-0 bg-background">
       <div className="px-6 py-6 shrink-0">
         <div className="flex items-center gap-3">
-          <Link href={`/${workspaceId}`}>
+          <Link href={`/${workspaceId}/recordings`}>
             <Logo size="sm" />
           </Link>
           <Badge variant="secondary" className="rounded-md text-xs">

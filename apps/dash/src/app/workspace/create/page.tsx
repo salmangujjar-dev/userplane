@@ -52,18 +52,18 @@ export default function CreateWorkspacePage() {
           >
             Create Workspace
           </Button>
+
+          <div className="flex justify-center pt-2">
+            <button
+              type="button"
+              onClick={() => router.push('/workspace/connect/intercom')}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Connect using Intercom
+            </button>
+          </div>
         </div>
       </div>
-
-      <footer className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
-        <button
-          type="button"
-          onClick={() => router.push('/workspace/connect/intercom')}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Connect using Intercom
-        </button>
-      </footer>
     </div>
   );
 }

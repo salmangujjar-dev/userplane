@@ -7,15 +7,6 @@ import type { PaginationMeta } from './common';
 import type { LinkProviderType, LinkType } from './link.service';
 
 /**
- * Provider information for link
- */
-export interface LinkProvider {
-  type: LinkProviderType | null;
-  id: string | null;
-  reference: string | null;
-}
-
-/**
  * Link item in list response
  */
 export interface LinkItem {
@@ -23,7 +14,9 @@ export interface LinkItem {
   linkTitle: string | null;
   linkType: LinkType;
   linkReusable: boolean;
-  linkProvider: LinkProvider;
+  linkProviderType: LinkProviderType | null;
+  linkProviderId: string | null;
+  linkProviderReference: string | null;
   createdAt: Date;
   project: {
     id: string;
@@ -53,7 +46,9 @@ export interface LinkUpdateData {
     id: string;
     linkTitle: string | null;
     linkReusable: boolean;
-    linkProvider: LinkProvider;
+    linkProviderType: LinkProviderType | null;
+    linkProviderId: string | null;
+    linkProviderReference: string | null;
   };
 }
 
@@ -67,7 +62,9 @@ export interface LinkCreateData {
     linkTitle: string | null;
     linkType: LinkType;
     linkReusable: boolean;
-    linkProvider: LinkProvider;
+    linkProviderType: LinkProviderType | null;
+    linkProviderId: string | null;
+    linkProviderReference: string | null;
     createdAt: Date;
   };
 }

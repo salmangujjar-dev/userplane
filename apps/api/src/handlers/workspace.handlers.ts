@@ -32,6 +32,7 @@ import type {
   LinkSettingsData,
   LeaveWorkspaceData,
   NotificationPreferencesUpdateData,
+  WorkspaceCountData,
 } from '@/api/types';
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
@@ -46,6 +47,7 @@ import {
   updateWorkspaceNameSchema,
   updateMemberRoleSchema,
   updateNotificationPreferencesSchema,
+  countWorkspacesQuerySchema,
 } from '@/api/schema';
 import { getAssetsStorage } from '@/api/clients/storage';
 import { ASSETS_ALLOWED_CONTENT_TYPES, type AssetsContentType } from '@workspace/storage';
@@ -260,6 +262,59 @@ export function getAllWorkspacesHandler(workspaceService: WorkspaceService) {
       };
       return c.json(response, 200);
     } catch (error) {
+      if (error instanceof Error) {
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
+      }
+
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
+    }
+  };
+}
+
+export function countWorkspacesHandler(workspaceService: WorkspaceService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+
+      if (!user) {
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to count workspaces',
+        };
+        return c.json(response, 401);
+      }
+
+      // Parse and validate query parameters
+      const queryParams = c.req.query();
+      const { roles } = countWorkspacesQuerySchema.parse(queryParams);
+
+      const count = await workspaceService.countByUserWithRoles(user.id, roles);
+
+      const response: ApiResponse<WorkspaceCountData> = {
+        message: 'Workspace count retrieved successfully',
+        data: {
+          count,
+        },
+      };
+      return c.json(response, 200);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Invalid query parameters',
+          details: error.errors,
+        };
+        return c.json(response, 400);
+      }
+
       if (error instanceof Error) {
         const response: ApiErrorResponse = {
           error: error.name,
