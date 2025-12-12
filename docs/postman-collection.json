@@ -350,10 +350,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace?include_notification_preference=false&include_workspace_membership=false",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace?page=1&include_notification_preference=false&include_workspace_membership=false",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace"],
               "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination (default: 1). Returns 5 workspaces per page"
+                },
                 {
                   "key": "include_notification_preference",
                   "value": "false",
@@ -366,7 +371,7 @@
                 }
               ]
             },
-            "description": "Get all workspaces where the authenticated user is a member.\n\nResponse data: WorkspacesListData (workspaces, total, pagination)"
+            "description": "Get all workspaces where the authenticated user is a member. Returns paginated results with 5 workspaces per page.\n\nResponse data: WorkspacesListData (workspaces, total, pagination)"
           },
           "response": []
         },
@@ -699,7 +704,7 @@
                 }
               ]
             },
-            "description": "Get workspace members with pagination. Returns members sorted by role.\n\nResponse data: WorkspaceTeamData (workspaceId, workspaceMembers, workspaceMembership?, pagination)"
+            "description": "Get workspace members with pagination. Returns members sorted by role. Returns 5 members per page.\n\nQuery Parameters:\n- page (optional): Page number (default: 1)\n- include_me (optional): Set to 'true' to include requesting user's membership info\n\nResponse data: WorkspaceTeamData (workspaceId, workspaceMembers, workspaceMembership?, pagination)"
           },
           "response": []
         },
@@ -857,11 +862,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/projects",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/projects?page=1",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "projects"]
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "projects"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination (default: 1). Returns 5 projects per page"
+                }
+              ]
             },
-            "description": "Get all projects for a workspace.\n\nResponse data: ProjectsListData (workspaceId, projects, pagination)"
+            "description": "Get all projects for a workspace with pagination. Returns 5 projects per page.\n\nResponse data: ProjectsListData (workspaceId, projects, pagination)"
           },
           "response": []
         },
@@ -1008,11 +1020,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains?page=1",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "domains"]
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "domains"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination (default: 1). Returns 5 domains per page"
+                }
+              ]
             },
-            "description": "Get all domains for a workspace.\n\nResponse data: WorkspaceDomainsData (workspaceId, domains, pagination)"
+            "description": "Get all domains for a workspace with pagination. Returns 5 domains per page.\n\nResponse data: WorkspaceDomainsData (workspaceId, domains, pagination)"
           },
           "response": []
         },
@@ -1208,7 +1227,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "links"]
             },
-            "description": "Create a new link. If projectId is not provided, uses workspace's default project. If linkReference is not provided, uses \"{firstName}'s Recording Link\".\n\nBody:\n- domainId (required): Domain ID for the recording\n- projectId (optional): Project ID, defaults to workspace default\n- linkReference (optional): URL or title to parse for provider info\n- linkReusable (optional): Whether link can be used multiple times (default: false)\n\nResponse data: LinkCreateData (workspaceId, link)"
+            "description": "Create a new link. \n\nBody:\n- domainId (required): Domain ID for the recording\n- projectId (optional): Project ID. If not provided, uses workspace's default project\n- linkReference (optional): URL or title to parse for provider info. If not provided, uses \"{firstName}'s Recording Link\"\n- linkReusable (optional): Whether link can be used multiple times. Default: false\n\nThe linkReference field is parsed to extract provider information (e.g., Linear, Jira, GitHub, etc.). Supported providers: linear, notion, jira, github, shortcut, asana, clickup, height, plane.\n\nResponse data: LinkCreateData (workspaceId, link)"
           },
           "response": []
         },
@@ -1550,14 +1569,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recording_duration\": 300,\n  \"files\": [\n    {\n      \"type\": \"video\",\n      \"name\": \"recording.webm\",\n      \"size\": 52428800,\n      \"mime_type\": \"video/webm\"\n    },\n    {\n      \"type\": \"thumbnail\",\n      \"name\": \"thumbnail.png\",\n      \"size\": 204800,\n      \"mime_type\": \"image/png\"\n    },\n    {\n      \"type\": \"console_log\",\n      \"name\": \"console.ndjson\",\n      \"size\": 10240,\n      \"mime_type\": \"application/x-ndjson\"\n    },\n    {\n      \"type\": \"network_log\",\n      \"name\": \"network.json\",\n      \"size\": 15360,\n      \"mime_type\": \"application/json\"\n    }\n  ]\n}"
+              "raw": "{\n  \"recording_duration\": 300,\n  \"files\": [\n    {\n      \"type\": \"video\",\n      \"name\": \"recording.webm\",\n      \"size\": 52428800,\n      \"mime_type\": \"video/webm\"\n    },\n    {\n      \"type\": \"thumbnail\",\n      \"name\": \"thumbnail.png\",\n      \"size\": 204800,\n      \"mime_type\": \"image/png\"\n    },\n    {\n      \"type\": \"console_log\",\n      \"name\": \"console.ndjson\",\n      \"size\": 10240,\n      \"mime_type\": \"application/x-ndjson\"\n    },\n    {\n      \"type\": \"network_log\",\n      \"name\": \"network.json\",\n      \"size\": 15360,\n      \"mime_type\": \"application/json\"\n    }\n  ],\n  \"metadata\": {\n    \"systemMetadata\": {\n      \"date\": \"2024-01-15\",\n      \"time\": \"14:30:00\",\n      \"browser\": \"Chrome 120.0.0\",\n      \"os\": \"macOS 14.0\",\n      \"windowSize\": {\n        \"width\": 1920,\n        \"height\": 1080\n      }\n    },\n    \"customMetadata\": {\n      \"userId\": \"user123\",\n      \"sessionId\": \"session456\"\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "session"]
             },
-            "description": "Initialize upload and receive presigned URLs for file uploads.\n\nValidations:\n- Session token must be valid and not expired\n- Link must still exist and not be deleted\n- Recording duration must be within workspace limit\n- Video and thumbnail files are required\n- Console/network logs only if workspace preferences allow\n- File sizes must be within limits (500MB video, 10MB thumbnail, 50MB logs)\n\nFile Types:\n- video: Required. Allowed: video/webm, video/mp4, video/x-matroska, video/ogg\n- thumbnail: Required. Allowed: image/png, image/jpeg, image/webp\n- console_log: Optional (if rccl enabled). Allowed: application/x-ndjson, application/ndjson\n- network_log: Optional (if rcsl enabled). Allowed: application/json\n\nResponse Headers:\n- X-Upload-Token-Expires-In: Upload token lifetime in seconds\n- X-Upload-Token-Expires-At: Upload token expiry timestamp (ISO 8601)\n- X-Presigned-Url-Expires-In: Presigned URL lifetime in seconds\n\nResponse data: UploadInitData (recordingId, uploadToken, presignedUrls)"
+            "description": "Initialize upload and receive presigned URLs for file uploads.\n\nValidations:\n- Session token must be valid and not expired\n- Link must still exist and not be deleted\n- Recording duration must be within workspace limit\n- Video and thumbnail files are required\n- Console/network logs only if workspace preferences allow\n- File sizes must be within limits (500MB video, 10MB thumbnail, 50MB logs)\n\nFile Types:\n- video: Required. Allowed: video/webm, video/mp4, video/x-matroska, video/ogg\n- thumbnail: Required. Allowed: image/png, image/jpeg, image/webp\n- console_log: Optional (if rccl enabled). Allowed: application/x-ndjson, application/ndjson\n- network_log: Optional (if rcsl enabled). Allowed: application/json\n\nMetadata (required):\n- systemMetadata (required): System information captured during recording\n  - date: Recording date (string)\n  - time: Recording time (string)\n  - browser: Browser info (string)\n  - os: Operating system info (string)\n  - windowSize: Browser window dimensions (object with width and height)\n- customMetadata (optional): Arbitrary key-value pairs for client-specific data\n\nResponse Headers:\n- X-Upload-Token-Expires-In: Upload token lifetime in seconds\n- X-Upload-Token-Expires-At: Upload token expiry timestamp (ISO 8601)\n- X-Presigned-Url-Expires-In: Presigned URL lifetime in seconds\n\nResponse data: UploadInitData (recordingId, uploadToken, presignedUrls)"
           },
           "response": []
         },
@@ -1585,7 +1604,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "session"]
             },
-            "description": "Mark upload as complete after all files uploaded successfully.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- All expected files must exist in storage with correct sizes\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'available')"
+            "description": "Mark upload as complete after all files uploaded successfully.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- All expected files must exist in storage with correct sizes\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'complete'\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'available')"
           },
           "response": []
         },
@@ -1606,14 +1625,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"partial\",\n  \"uploaded_files\": {\n    \"video\": true,\n    \"thumbnail\": true,\n    \"console_log\": false,\n    \"network_log\": false\n  }\n}"
+              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"partial\",\n  \"uploaded_files\": {\n    \"video\": true,\n    \"thumbnail\": true,\n    \"console_log\": false,\n    \"network_log\": false\n  },\n  \"client_info\": {\n    \"status_code\": 0,\n    \"message\": \"Console log upload failed after 3 retries\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "session"]
             },
-            "description": "Mark upload as partial when video uploaded but some secondary files failed.\n\nUse case: Video and thumbnail uploaded, but console_log failed after retries. User can still access the recording.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- uploaded_files required with video=true\n- Files marked as uploaded are verified in storage\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'partial', uploadedFiles, missingFiles)"
+            "description": "Mark upload as partial when video uploaded but some secondary files failed.\n\nUse case: Video and thumbnail uploaded, but console_log failed after retries. User can still access the recording.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- uploaded_files required with video=true\n- Files marked as uploaded are verified in storage\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'partial'\n- uploaded_files (required): Object indicating which files were uploaded successfully\n- client_info (optional): Client-side failure details (status_code, message up to 500 chars)\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'partial', uploadedFiles, missingFiles)"
           },
           "response": []
         },
@@ -1634,14 +1653,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"failed\",\n  \"reason\": \"Video upload failed after 3 retries\"\n}"
+              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"failed\",\n  \"reason\": \"Video upload failed after 3 retries\",\n  \"client_info\": {\n    \"status_code\": 500,\n    \"message\": \"Network error during video upload\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "session"]
             },
-            "description": "Mark upload as failed when video upload fails or user cancels.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'failed')"
+            "description": "Mark upload as failed when video upload fails or user cancels.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'failed'\n- reason (optional): Failure reason (max 500 characters)\n- client_info (optional): Client-side failure details (status_code, message up to 500 chars)\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'failed')"
           },
           "response": []
         }
