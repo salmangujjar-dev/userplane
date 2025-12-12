@@ -3,7 +3,7 @@
  * Handles all database operations for link entities
  */
 
-import { eq, and, count, desc, asc, inArray } from '@workspace/db';
+import { eq, and, count, desc, asc, inArray, sql } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { links, projects, workspaceMembers, user, workspaces } from '@workspace/db';
 import type {
@@ -354,5 +354,54 @@ export class LinkRepository {
       .where(and(eq(recordings.recordingLinkId, linkId), eq(recordings.isDeleted, false)));
 
     return Number(result?.count || 0);
+  }
+
+  /**
+   * Search links by title using PostgreSQL Full-Text Search
+   * Uses to_tsvector and to_tsquery with prefix matching and ranking
+   * Multi-word searches use & operator, results ordered by ts_rank
+   */
+  async searchByTitle(workspaceId: string, searchTerms: string[], limit: number) {
+    // Build tsquery string with prefix matching for each term
+    // Join multiple terms with & (AND operator)
+    const tsquery = searchTerms.map((term) => `${term}:*`).join(' & ');
+
+    // Use raw SQL for FTS with ranking
+    // to_tsvector('simple', ...) creates searchable document from linkTitle
+    // to_tsquery('simple', ...) creates search query with prefix matching
+    // ts_rank calculates relevance score
+    const searchResults = await this.db
+      .select({
+        id: links.id,
+        linkTitle: links.linkTitle,
+        linkType: links.linkType,
+        linkReusable: links.linkReusable,
+        linkProviderType: links.linkProviderType,
+        linkProviderId: links.linkProviderId,
+        linkProviderRef: links.linkProviderRef,
+        createdAt: links.createdAt,
+        projectId: projects.id,
+        projectTitle: projects.projectTitle,
+        creatorId: user.id,
+        creatorName: user.name,
+        rank: sql<number>`ts_rank(to_tsvector('simple', COALESCE(${links.linkTitle}, '')), to_tsquery('simple', ${tsquery}))`,
+      })
+      .from(links)
+      .innerJoin(projects, eq(links.projectId, projects.id))
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.id))
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .where(
+        and(
+          eq(links.workspaceId, workspaceId),
+          eq(links.isDeleted, false),
+          sql`to_tsvector('simple', COALESCE(${links.linkTitle}, '')) @@ to_tsquery('simple', ${tsquery})`
+        )
+      )
+      .orderBy(
+        sql`ts_rank(to_tsvector('simple', COALESCE(${links.linkTitle}, '')), to_tsquery('simple', ${tsquery})) DESC`
+      )
+      .limit(limit);
+
+    return searchResults;
   }
 }

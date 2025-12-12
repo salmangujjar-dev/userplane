@@ -627,6 +627,43 @@
             "description": "Update notification preferences for the authenticated user in the workspace.\n\nResponse data: { workspaceId }"
           },
           "response": []
+        },
+        {
+          "name": "Search Workspace",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/search?q=search term&type=members&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "search term",
+                  "description": "Search term (required, 1-100 characters)"
+                },
+                {
+                  "key": "type",
+                  "value": "members",
+                  "description": "Search type (required): members, projects, domains, or links"
+                },
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "description": "Results limit (optional, default: 5, max: 10 for members/projects/domains, max: 20 for links)"
+                }
+              ]
+            },
+            "description": "Unified search across workspace members, projects, domains, and links. Different search strategies used based on entity type:\n\nSIMPLE ENTITIES (members, projects, domains):\n- Uses case-insensitive ILIKE pattern matching\n- Multi-word terms split into separate ILIKE conditions with AND logic\n- Max 10 results\n\nSearch fields:\n- members: user.name\n- projects: projects.projectTitle\n- domains: domains.domainUrl\n\nLINKS (optimized for higher volume):\n- Uses PostgreSQL Full-Text Search (FTS) with to_tsvector/to_tsquery\n- Prefix matching support with :* operator\n- Multi-word terms joined with & (AND) operator\n- Results ordered by ts_rank (relevance score)\n- Max 20 results\n- Requires GIN index on linkTitle tsvector\n\nSearch field:\n- links: links.linkTitle\n\nExamples:\n- ?q=john&type=members (finds users with 'john' in name)\n- ?q=mobile app&type=projects (finds projects with both 'mobile' AND 'app' in title)\n- ?q=example.com&type=domains (finds domains with 'example.com' in URL)\n- ?q=bug fix&type=links (finds links with both 'bug' AND 'fix' in title, ranked by relevance)\n\nResponse data: { message, data: { results } }"
+          },
+          "response": []
         }
       ]
     },

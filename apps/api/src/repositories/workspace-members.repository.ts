@@ -3,7 +3,7 @@
  * Handles all database operations for workspace member entities
  */
 
-import { eq, and, count, sql, asc } from '@workspace/db';
+import { eq, and, count, sql, asc, ilike } from '@workspace/db';
 import type { DbClient, WorkspaceRole } from '@workspace/db';
 import { workspaceMembers, user } from '@workspace/db';
 import type { Transaction, CreateWorkspaceMemberInput } from '@/api/types';
@@ -239,5 +239,36 @@ export class WorkspaceMemberRepository {
       .returning();
 
     return updated || null;
+  }
+
+  /**
+   * Search workspace members by name
+   * Uses case-insensitive ILIKE pattern matching on user name
+   */
+  async searchByName(workspaceId: string, searchTerms: string[], limit: number) {
+    const conditions = [
+      eq(workspaceMembers.workspaceId, workspaceId),
+      eq(workspaceMembers.isDeleted, false),
+    ];
+
+    // Add ILIKE conditions for each search term
+    // Each term must match somewhere in the name (AND logic)
+    for (const term of searchTerms) {
+      conditions.push(ilike(user.name, `%${term}%`));
+    }
+
+    const members = await this.db
+      .select({
+        id: workspaceMembers.id,
+        role: workspaceMembers.workspaceRole,
+        userName: user.name,
+        userEmail: user.email,
+      })
+      .from(workspaceMembers)
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .where(and(...conditions))
+      .limit(limit);
+
+    return members;
   }
 }

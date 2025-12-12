@@ -9,6 +9,10 @@ import {
   generateInviteToken,
 } from '@/api/lib/id-generator';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
+import { ProjectRepository } from '@/api/repositories/projects.repository';
+import { DomainRepository } from '@/api/repositories/domains.repository';
+import { LinkRepository } from '@/api/repositories/links.repository';
 import { TokenService } from '@/api/services/token.service';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type { Transaction, CreateWorkspaceParams } from '@/api/types';
@@ -16,6 +20,10 @@ import type { Transaction, CreateWorkspaceParams } from '@/api/types';
 export interface WorkspaceServiceDeps {
   workspaceRepo: WorkspaceRepository;
   tokenService: TokenService;
+  workspaceMemberRepo?: WorkspaceMemberRepository;
+  projectRepo?: ProjectRepository;
+  domainRepo?: DomainRepository;
+  linkRepo?: LinkRepository;
 }
 
 export class WorkspaceService {
@@ -297,5 +305,61 @@ export class WorkspaceService {
     }
 
     return deleted;
+  }
+
+  /**
+   * Search workspace entities
+   * Unified search across members, projects, domains, and links
+   * Uses different strategies based on entity type:
+   * - members, projects, domains: ILIKE pattern matching (low volume)
+   * - links: PostgreSQL FTS with ranking (higher volume, better performance)
+   */
+  async search(
+    workspaceId: string,
+    searchTerm: string,
+    type: 'members' | 'projects' | 'domains' | 'links',
+    limit: number = 5
+  ) {
+    // Validate workspace exists
+    await this.getById(workspaceId);
+
+    // Split search term into words for AND-based matching
+    const searchTerms = searchTerm
+      .trim()
+      .split(/\s+/)
+      .filter((term) => term.length > 0);
+
+    if (searchTerms.length === 0) {
+      throw new ValidationError('Search term is required');
+    }
+
+    switch (type) {
+      case 'members': {
+        if (!this.deps.workspaceMemberRepo) {
+          throw new ValidationError('Member search not available');
+        }
+        return this.deps.workspaceMemberRepo.searchByName(workspaceId, searchTerms, limit);
+      }
+      case 'projects': {
+        if (!this.deps.projectRepo) {
+          throw new ValidationError('Project search not available');
+        }
+        return this.deps.projectRepo.searchByTitle(workspaceId, searchTerms, limit);
+      }
+      case 'domains': {
+        if (!this.deps.domainRepo) {
+          throw new ValidationError('Domain search not available');
+        }
+        return this.deps.domainRepo.searchByUrl(workspaceId, searchTerms, limit);
+      }
+      case 'links': {
+        if (!this.deps.linkRepo) {
+          throw new ValidationError('Link search not available');
+        }
+        return this.deps.linkRepo.searchByTitle(workspaceId, searchTerms, limit);
+      }
+      default:
+        throw new ValidationError('Invalid search type');
+    }
   }
 }
