@@ -3,7 +3,7 @@
  * Handles all database operations for project entities
  */
 
-import { eq, and, ne, count } from '@workspace/db';
+import { eq, and, ne, count, ilike } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { projects } from '@workspace/db';
 import type { Transaction, CreateProjectInput } from '@/api/types';
@@ -170,5 +170,25 @@ export class ProjectRepository {
       .returning();
 
     return deleted || null;
+  }
+
+  /**
+   * Search projects by title
+   * Uses case-insensitive ILIKE pattern matching on project title
+   */
+  async searchByTitle(workspaceId: string, searchTerms: string[], limit: number) {
+    const conditions = [eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)];
+
+    // Add ILIKE conditions for each search term
+    // Each term must match somewhere in the title (AND logic)
+    for (const term of searchTerms) {
+      conditions.push(ilike(projects.projectTitle, `%${term}%`));
+    }
+
+    return this.db
+      .select()
+      .from(projects)
+      .where(and(...conditions))
+      .limit(limit);
   }
 }

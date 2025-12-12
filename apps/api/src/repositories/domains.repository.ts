@@ -3,7 +3,7 @@
  * Handles all database operations for domain entities
  */
 
-import { eq, and, ne, count } from '@workspace/db';
+import { eq, and, ne, count, ilike } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { domains } from '@workspace/db';
 import type { Transaction, CreateDomainInput } from '@/api/types';
@@ -173,5 +173,25 @@ export class DomainRepository {
       .returning();
 
     return deleted || null;
+  }
+
+  /**
+   * Search domains by URL
+   * Uses case-insensitive ILIKE pattern matching on domain URL
+   */
+  async searchByUrl(workspaceId: string, searchTerms: string[], limit: number) {
+    const conditions = [eq(domains.workspaceId, workspaceId), eq(domains.isDeleted, false)];
+
+    // Add ILIKE conditions for each search term
+    // Each term must match somewhere in the URL (AND logic)
+    for (const term of searchTerms) {
+      conditions.push(ilike(domains.domainUrl, `%${term}%`));
+    }
+
+    return this.db
+      .select()
+      .from(domains)
+      .where(and(...conditions))
+      .limit(limit);
   }
 }

@@ -6,6 +6,12 @@ import { workspaceMembers } from './workspace-members';
 import { recordings } from './recordings';
 import { domains } from './domains';
 
+// FTS Index Requirement for Link Search
+// The link search feature uses PostgreSQL Full-Text Search (FTS) with to_tsvector/to_tsquery
+// For optimal performance, create a GIN index on linkTitle tsvector:
+// CREATE INDEX links_link_title_gin_idx ON recording_links USING GIN (to_tsvector('simple', COALESCE(link_title, '')));
+// This index significantly improves search performance for higher volume link tables
+
 // Link types - currently only 'recording' is supported in the API
 // Other types (file, session, screenshot) are reserved for future use
 export const linkTypeEnum = pgEnum('link_type', ['file', 'recording', 'session', 'screenshot']);

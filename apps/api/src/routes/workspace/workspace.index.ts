@@ -14,6 +14,7 @@ import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.
 import { UserRepository } from '@/api/repositories/users.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
+import { LinkRepository } from '@/api/repositories/links.repository';
 
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
@@ -30,10 +31,15 @@ const workspaceMemberRepo = new WorkspaceMemberRepository(db);
 const userRepo = new UserRepository(db);
 const projectRepo = new ProjectRepository(db);
 const domainRepo = new DomainRepository(db);
+const linkRepo = new LinkRepository(db);
 
 export const workspaceService = new WorkspaceService({
   workspaceRepo,
   tokenService,
+  workspaceMemberRepo,
+  projectRepo,
+  domainRepo,
+  linkRepo,
 });
 
 export const workspaceMemberService = new WorkspaceMemberService({

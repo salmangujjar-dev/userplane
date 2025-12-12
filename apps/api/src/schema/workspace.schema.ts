@@ -96,3 +96,24 @@ export const countWorkspacesQuerySchema = z.object({
       return validRoles as WorkspaceRole[];
     }),
 });
+
+/**
+ * Workspace search query schema
+ * Schema for unified workspace search across members, projects, domains, and links
+ */
+export const workspaceSearchQuerySchema = z.object({
+  q: z.string().min(1, 'Search term is required').max(100, 'Search term too long'),
+  type: z.enum(['members', 'projects', 'domains', 'links'], {
+    errorMap: () => ({ message: 'Type must be one of: members, projects, domains, links' }),
+  }),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return 5;
+      const num = parseInt(val, 10);
+      if (isNaN(num) || num < 1) return 5;
+      // Links have higher limit (20) due to FTS optimization
+      return Math.min(num, 20);
+    }),
+});

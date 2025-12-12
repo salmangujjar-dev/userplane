@@ -48,6 +48,7 @@ import {
   updateMemberRoleSchema,
   updateNotificationPreferencesSchema,
   countWorkspacesQuerySchema,
+  workspaceSearchQuerySchema,
 } from '@/api/schema';
 import { getAssetsStorage } from '@/api/clients/storage';
 import { ASSETS_ALLOWED_CONTENT_TYPES, type AssetsContentType } from '@workspace/storage';
@@ -1423,6 +1424,80 @@ export function deleteWorkspaceHandler(workspaceService: WorkspaceService) {
       };
       return c.json(response, 200);
     } catch (error) {
+      if (error instanceof ValidationError) {
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
+      }
+
+      if (error instanceof Error) {
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
+      }
+
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
+    }
+  };
+}
+
+export function workspaceSearchHandler(workspaceService: WorkspaceService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.req.param('workspaceId');
+
+      if (!user) {
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to search workspace',
+        };
+        return c.json(response, 401);
+      }
+
+      if (!workspaceId) {
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Workspace ID is required',
+        };
+        return c.json(response, 400);
+      }
+
+      const rawQuery = c.req.query();
+      const validatedQuery = workspaceSearchQuerySchema.parse(rawQuery);
+
+      const results = await workspaceService.search(
+        workspaceId,
+        validatedQuery.q,
+        validatedQuery.type,
+        validatedQuery.limit
+      );
+
+      const response: ApiResponse<{ results: unknown[] }> = {
+        message: 'Search completed successfully',
+        data: {
+          results,
+        },
+      };
+      return c.json(response, 200);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: firstError?.message || 'Invalid query parameters',
+        };
+        return c.json(response, 400);
+      }
+
       if (error instanceof ValidationError) {
         const response: ApiErrorResponse = {
           error: 'Validation Error',

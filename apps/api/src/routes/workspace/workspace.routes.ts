@@ -28,6 +28,7 @@ import {
   deleteDomainHandler,
   updateWorkspaceNameHandler,
   deleteWorkspaceHandler,
+  workspaceSearchHandler,
 } from '@/api/handlers/workspace.handlers';
 import {
   createProjectHandler,
@@ -227,6 +228,14 @@ export function createWorkspaceRoutes(
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     deleteDomainHandler(domainService)
+  );
+
+  // Search route
+  workspaceRoutes.get(
+    '/:workspaceId/search',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    workspaceSearchHandler(workspaceService)
   );
 
   return workspaceRoutes;
