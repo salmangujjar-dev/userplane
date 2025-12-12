@@ -6,6 +6,7 @@ interface LogoProps {
   href?: string;
   showText?: boolean;
   theme?: 'dark' | 'light';
+  variant?: 'default' | 'tiled';
 }
 
 const sizeVariants = {
@@ -14,27 +15,45 @@ const sizeVariants = {
   lg: { text: 'text-3xl', icon: 'h-9 w-9' },
 };
 
+const tiledSizes = {
+  sm: 'h-5 w-5',
+  md: 'h-8 w-8',
+  lg: 'h-12 w-12',
+};
+
 export default function Logo({
   className,
   size = 'md',
   href,
   showText = true,
   theme = 'dark',
+  variant = 'default',
 }: LogoProps) {
-  const logoContent = (
-    <div className={cn('flex items-center gap-2', className)}>
-      <img
-        src={`/logo-${theme}.svg`}
-        alt="Userplane"
-        className={cn(sizeVariants[size].icon, 'shrink-0')}
-      />
-      {showText && (
-        <span className={cn('font-dm-sans font-semibold tracking-tight', sizeVariants[size].text)}>
-          Userplane
-        </span>
-      )}
-    </div>
-  );
+  const logoContent =
+    variant === 'tiled' ? (
+      <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-white shadow-sm p-3">
+        <img
+          src={`/logo-${theme}.svg`}
+          alt="Userplane"
+          className={cn(tiledSizes[size], 'object-contain')}
+        />
+      </div>
+    ) : (
+      <div className={cn('flex items-center gap-2', className)}>
+        <img
+          src={`/logo-${theme}.svg`}
+          alt="Userplane"
+          className={cn(sizeVariants[size].icon, 'shrink-0')}
+        />
+        {showText && (
+          <span
+            className={cn('font-dm-sans font-semibold tracking-tight', sizeVariants[size].text)}
+          >
+            Userplane
+          </span>
+        )}
+      </div>
+    );
 
   if (href) {
     return (

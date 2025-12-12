@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
+import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
@@ -88,13 +88,7 @@ export function DomainVerificationPreModal({
         <div className="space-y-8">
           <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center gap-4">
-              <Image
-                src="/logo-dark.svg"
-                alt="Userplane"
-                width={56}
-                height={56}
-                className="h-14 w-14 shrink-0"
-              />
+              <Logo variant="tiled" size="md" showText={false} />
               <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
               <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
                 <Globe className="h-8 w-8" />

@@ -78,3 +78,12 @@ dump/
 
 # Mocked stores
 apps/api/localhost
+
+# Cursor dumps
+*.md
+
+!README.md
+!CLAUDE.md
+!AGENTS.md
+
+

@@ -191,6 +191,24 @@ export class WorkspaceService {
   }
 
   /**
+   * Count workspaces for a user with optional role-based filtering
+   * Returns count of workspaces where user has specified roles
+   * If no roles specified, counts all workspaces for the user
+   */
+  async countByUserWithRoles(userId: string, roles?: Array<'member' | 'admin' | 'owner'>) {
+    if (!userId) {
+      throw new ValidationError('User ID is required');
+    }
+
+    // If roles array is empty, return 0
+    if (roles && roles.length === 0) {
+      return 0;
+    }
+
+    return this.deps.workspaceRepo.countByUserIdWithRoleFilter(userId, roles);
+  }
+
+  /**
    * Get workspace invite token by ID
    */
   async getInviteToken(id: string) {
