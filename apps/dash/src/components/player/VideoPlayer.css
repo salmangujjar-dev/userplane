@@ -1,13 +1,22 @@
-/* Video Player Container */
+/* Video Player Container - this holds all the styling */
+.video-player-container {
+  position: relative;
+  overflow: visible;
+  z-index: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .video-player-wrapper {
   width: 100%;
-  border-radius: 16px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   background: #000;
 }
 
-/* Video.js player styling */
+/* Video.js player styling - clean, no extra styling */
 .video-js {
   width: 100%;
   height: auto;
@@ -16,9 +25,19 @@
   font-size: 14px;
 }
 
+/* Hide all video.js controls - we use custom controls */
+.video-js .vjs-control-bar {
+  display: none !important;
+}
+
+/* Hide video.js big play button - we have our own custom one */
+.video-js .vjs-big-play-button {
+  display: none !important;
+}
+
+/* Video tech element - no styling, just clean video */
 .video-js .vjs-tech {
-  border-radius: 16px;
-  background-color: rgba(255, 255, 255, 1);
+  background-color: #000;
 }
 
 /* Poster/Thumbnail */
@@ -35,218 +54,6 @@
 }
 
 /* ========================================
-   BIG PLAY BUTTON - Centered overlay
-   ======================================== */
-.video-js .vjs-big-play-button {
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  margin: 0 !important;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: none !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    0 0 0 8px rgba(255, 255, 255, 0.15),
-    0 0 0 16px rgba(255, 255, 255, 0.08),
-    0 0 40px rgba(255, 255, 255, 0.3) !important;
-}
-
-.video-js .vjs-big-play-button:hover {
-  background: rgba(255, 255, 255, 1);
-  transform: translate(-50%, -50%) scale(1.05) !important;
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.35),
-    0 6px 20px rgba(0, 0, 0, 0.25),
-    0 0 0 10px rgba(255, 255, 255, 0.2),
-    0 0 0 20px rgba(255, 255, 255, 0.1),
-    0 0 60px rgba(255, 255, 255, 0.4);
-}
-
-
-/* Hide default icon */
-.video-js .vjs-big-play-button .vjs-icon-placeholder:before {
-  display: none;
-}
-
-/* Custom rounded play triangle using SVG */
-.video-js .vjs-big-play-button .vjs-icon-placeholder {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.video-js .vjs-big-play-button .vjs-icon-placeholder:after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 53%;
-  transform: translate(-50%, -50%);
-  width: 30px;
-  height: 34px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M2 2.5c0-1.4 1.5-2.2 2.6-1.4l17.2 11.5c1 .7 1 2.1 0 2.8L4.6 26.9c-1.1.8-2.6 0-2.6-1.4V2.5z' fill='%23333'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-/* ========================================
-   DURATION BADGE - Below play button
-   ======================================== */
-.vjs-duration-badge {
-  position: absolute;
-  top: calc(50% + 55px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  z-index: 10;
-  pointer-events: none;
-}
-
-/* Gradient overlay covering bottom 1/3 of video */
-.video-js::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 33.33%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 40%, transparent 100%);
-  pointer-events: none;
-  border-radius: 0 0 16px 16px;
-  z-index: 1;
-  transition: opacity 0.3s ease;
-}
-
-/* ========================================
-   CONTROL BAR - Bottom bar
-   ======================================== */
-.video-js .vjs-control-bar {
-  background: transparent;
-  height: 50px;
-  padding: 0 12px;
-  border-radius: 0 0 16px 16px;
-  display: flex;
-  align-items: center;
-  z-index: 2;
-}
-
-/* Fade controls and gradient on inactivity */
-.video-js.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar,
-.video-js.vjs-has-started.vjs-user-inactive.vjs-playing::before {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.video-js.vjs-has-started.vjs-user-active .vjs-control-bar,
-.video-js.vjs-has-started.vjs-user-active::before,
-.video-js.vjs-has-started.vjs-paused .vjs-control-bar,
-.video-js.vjs-has-started.vjs-paused::before {
-  opacity: 1;
-  transition: opacity 0.3s ease;
-}
-
-/* ========================================
-   PROGRESS BAR
-   ======================================== */
-.video-js .vjs-progress-control {
-  flex: 1;
-  margin: 0 10px 6px 10px;
-  box-sizing: content-box;
-}
-
-.video-js .vjs-progress-holder {
-  height: 4px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-}
-
-.video-js .vjs-play-progress {
-  background: #fff;
-  border-radius: 2px;
-}
-
-.video-js .vjs-play-progress:before {
-  display: none;
-}
-
-.video-js .vjs-load-progress,
-.video-js .vjs-load-progress div {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-}
-
-/* Hover effect - thicker bar */
-.video-js:hover .vjs-progress-holder {
-  height: 6px;
-}
-
-/* ========================================
-   VOLUME PANEL - Let Video.js handle it
-   ======================================== */
-/* Remove grey background from vertical volume control */
-.video-js .vjs-volume-control.vjs-volume-vertical {
-  background: transparent;
-}
-
-/* Style the bars */
-.video-js .vjs-volume-bar {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-}
-
-.video-js .vjs-volume-level {
-  background: #fff;
-  border-radius: 2px;
-}
-
-.video-js .vjs-volume-level:before {
-  display: none;
-}
-
-/* ========================================
-   TIME DISPLAY
-   ======================================== */
-.video-js .vjs-time-control {
-  padding: 0 3px;
-  min-width: auto;
-}
-
-.video-js .vjs-time-divider {
-  padding: 0;
-  min-width: 1em;
-}
-
-/* ========================================
-   HIDE UNWANTED CONTROLS
-   ======================================== */
-.video-js .vjs-picture-in-picture-control,
-.video-js .vjs-playback-rate,
-.video-js .vjs-subs-caps-button,
-.video-js .vjs-audio-button,
-.video-js .vjs-descriptions-button,
-.video-js .vjs-chapters-button,
-.video-js .vjs-captions-button,
-.video-js .vjs-subtitles-button,
-.video-js .vjs-remaining-time {
-  display: none !important;
-}
-
-/* ========================================
    LOADING SPINNER
    ======================================== */
 .video-js .vjs-loading-spinner {
@@ -255,77 +62,27 @@
 }
 
 /* ========================================
-   TOOLTIPS - Hide all progress bar tooltips
+   FULLSCREEN MODE
    ======================================== */
-/* Hide all time tooltips on progress bar - time is shown in control bar */
-.video-js .vjs-progress-control .vjs-time-tooltip,
-.video-js .vjs-progress-control .vjs-mouse-display,
-.video-js .vjs-play-progress .vjs-time-tooltip,
-.video-js .vjs-slider .vjs-time-tooltip {
-  display: none !important;
+/* When in fullscreen mode */
+.recording-player-container.fullscreen .video-player-wrapper {
+  max-width: 100%;
 }
 
-/* ========================================
-   MARKERS ON PROGRESS BAR
-   ======================================== */
-.video-player-container {
-  position: relative;
-}
-
-.vjs-markers-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-}
-
-.vjs-marker {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 12px;
-  height: 12px;
-  background: #fbbf24;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  cursor: pointer;
-  pointer-events: auto;
-  z-index: 10;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.vjs-marker:hover {
-  transform: translate(-50%, -50%) scale(1.3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-/* ========================================
-   QUALITY SELECTOR - Hidden, using custom component
-   ======================================== */
-.video-js .vjs-quality-selector {
-  display: none !important;
+.recording-player-container.fullscreen .video-js {
+  height: 100%;
+  width: 100%;
 }
 
 /* ========================================
    RESPONSIVE
    ======================================== */
 @media (max-width: 768px) {
-  .video-js .vjs-big-play-button {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .video-js .vjs-control-bar {
-    height: 44px;
-    padding: 0 8px;
+  .video-player-container {
+    max-width: 100%;
   }
 
-  .vjs-marker {
-    width: 10px;
-    height: 10px;
+  .video-player-wrapper {
+    border-radius: 6px;
   }
 }
-
