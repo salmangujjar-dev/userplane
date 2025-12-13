@@ -148,7 +148,7 @@ export function FilterDropdown({
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-[240px] p-0 m-4" sideOffset={6}>
+      <DropdownMenuContent align="start" className="w-[240px] p-0" sideOffset={6}>
         <div className="flex items-center border-b px-3 py-2">
           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
           <Input
