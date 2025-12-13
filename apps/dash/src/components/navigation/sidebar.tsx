@@ -40,7 +40,7 @@ export function Sidebar({ planName, userEmail, userName }: SidebarProps) {
       title: 'Overview',
       items: [
         { label: 'Recordings', href: `/${workspaceId}/recordings`, icon: Video },
-        { label: 'Shared Links', href: `/${workspaceId}/links`, icon: LinkIcon },
+        { label: 'Links', href: `/${workspaceId}/links`, icon: LinkIcon },
       ],
     },
     {
