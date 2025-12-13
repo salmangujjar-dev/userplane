@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import { Input } from '@workspace/ui/components/input';
 import { Button } from '@workspace/ui/components/button';
-import { Search, AlertCircle, AlertTriangle, Info, MessageSquare, Bug } from 'lucide-react';
+import { Search, AlertCircle, AlertTriangle, Info, MessageSquare, Bug, Filter } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from '@workspace/ui/components/dropdown-menu';
 import {
   ConsoleLogEvent,
   LogLevel,
@@ -89,6 +95,149 @@ const mockLogs: ConsoleLogEvent[] = [
     url: 'components.js',
     lineNumber: 89,
   }),
+  createMockLogEvent('7', baseTime + 7998, 'info', 'API response received in 234ms', {
+    url: 'api-client.js',
+    lineNumber: 178,
+  }),
+  createMockLogEvent('8', baseTime + 9331, 'warning', 'Memory usage high: 85% of heap', {
+    url: 'monitor.js',
+    lineNumber: 45,
+  }),
+  {
+    id: '9',
+    timestamp: formatTimestamp(baseTime + 10664),
+    event: {
+      type: 'error',
+      args: [{ type: 'string', value: 'TypeError: Cannot read property "map" of undefined' }],
+      executionContextId: 1,
+      timestamp: baseTime + 10664,
+      stackTrace: {
+        callFrames: [
+          {
+            functionName: 'renderList',
+            scriptId: '2',
+            url: 'list-view.js',
+            lineNumber: 234,
+            columnNumber: 16,
+          },
+          {
+            functionName: 'render',
+            scriptId: '2',
+            url: 'component.js',
+            lineNumber: 67,
+            columnNumber: 8,
+          },
+        ],
+      },
+    },
+  },
+  createMockLogEvent('10', baseTime + 11997, 'log', 'Fetching user preferences', {
+    url: 'settings.js',
+    lineNumber: 56,
+  }),
+  createMockLogEvent('11', baseTime + 13330, 'debug', 'WebSocket connection established', {
+    url: 'websocket.js',
+    lineNumber: 123,
+  }),
+  createMockLogEvent('12', baseTime + 14663, 'info', 'Theme changed to dark mode', {
+    url: 'theme.js',
+    lineNumber: 89,
+  }),
+  createMockLogEvent('13', baseTime + 15996, 'warning', 'Slow network detected: 2G', {
+    url: 'network-monitor.js',
+    lineNumber: 34,
+  }),
+  {
+    id: '14',
+    timestamp: formatTimestamp(baseTime + 17329),
+    event: {
+      type: 'log',
+      args: [
+        {
+          type: 'object',
+          preview: {
+            type: 'object',
+            overflow: false,
+            properties: [
+              { name: 'status', type: 'string', value: 'success' },
+              { name: 'items', type: 'number', value: '42' },
+              { name: 'hasMore', type: 'boolean', value: 'true' },
+            ],
+          },
+          description: '{status: "success", items: 42, hasMore: true}',
+        },
+      ],
+      executionContextId: 1,
+      timestamp: baseTime + 17329,
+      stackTrace: {
+        callFrames: [
+          {
+            functionName: '',
+            scriptId: '3',
+            url: 'pagination.js',
+            lineNumber: 145,
+            columnNumber: 0,
+          },
+        ],
+      },
+    },
+  },
+  createMockLogEvent('15', baseTime + 18662, 'debug', 'Redux store updated', {
+    url: 'store.js',
+    lineNumber: 78,
+  }),
+  createMockLogEvent('16', baseTime + 19995, 'error', 'Failed to save to localStorage', {
+    url: 'storage.js',
+    lineNumber: 23,
+  }),
+  createMockLogEvent('17', baseTime + 21328, 'info', 'Form validation passed', {
+    url: 'form-validator.js',
+    lineNumber: 156,
+  }),
+  createMockLogEvent('18', baseTime + 22661, 'log', 'Animation completed', {
+    url: 'animations.js',
+    lineNumber: 234,
+  }),
+  createMockLogEvent('19', baseTime + 23994, 'warning', 'Image failed to load: avatar.png', {
+    url: 'image-loader.js',
+    lineNumber: 67,
+  }),
+  createMockLogEvent('20', baseTime + 25327, 'debug', 'Cache cleared for user session', {
+    url: 'cache.js',
+    lineNumber: 89,
+  }),
+  {
+    id: '21',
+    timestamp: formatTimestamp(baseTime + 26660),
+    event: {
+      type: 'error',
+      args: [{ type: 'string', value: 'Network request failed: 500 Internal Server Error' }],
+      executionContextId: 1,
+      timestamp: baseTime + 26660,
+      stackTrace: {
+        callFrames: [
+          {
+            functionName: 'handleError',
+            scriptId: '4',
+            url: 'error-handler.js',
+            lineNumber: 123,
+            columnNumber: 24,
+          },
+          {
+            functionName: 'fetch',
+            scriptId: '4',
+            url: 'api.js',
+            lineNumber: 45,
+            columnNumber: 12,
+          },
+        ],
+      },
+    },
+  },
+  createMockLogEvent('22', baseTime + 27993, 'info', 'User logged out successfully', {
+    url: 'auth.js',
+    lineNumber: 234,
+  }),
 ];
 
 export function ConsolePanel() {
@@ -121,58 +270,72 @@ export function ConsolePanel() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b p-3 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Filter"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
-          />
-        </div>
+      <div className="border-b p-3">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Filter"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
 
-        <div className="flex items-center gap-1 flex-wrap">
-          <Button
-            variant={activeFilters.has('error') ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => toggleFilter('error')}
-            className="h-7 text-xs px-2"
-          >
-            <AlertCircle className="h-3 w-3 text-red-500" />
-          </Button>
-          <Button
-            variant={activeFilters.has('warning') ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => toggleFilter('warning')}
-            className="h-7 text-xs px-2"
-          >
-            <AlertTriangle className="h-3 w-3 text-yellow-500" />
-          </Button>
-          <Button
-            variant={activeFilters.has('info') ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => toggleFilter('info')}
-            className="h-7 text-xs px-2"
-          >
-            <Info className="h-3 w-3 text-blue-500" />
-          </Button>
-          <Button
-            variant={activeFilters.has('log') ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => toggleFilter('log')}
-            className="h-7 text-xs px-2"
-          >
-            <MessageSquare className="h-3 w-3" />
-          </Button>
-          <Button
-            variant={activeFilters.has('debug') ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => toggleFilter('debug')}
-            className="h-7 text-xs px-2"
-          >
-            <Bug className="h-3 w-3 text-purple-500" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuCheckboxItem
+                checked={activeFilters.has('error')}
+                onCheckedChange={() => toggleFilter('error')}
+              >
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                  <span>Error</span>
+                </div>
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={activeFilters.has('warning')}
+                onCheckedChange={() => toggleFilter('warning')}
+              >
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                  <span>Warning</span>
+                </div>
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={activeFilters.has('info')}
+                onCheckedChange={() => toggleFilter('info')}
+              >
+                <div className="flex items-center gap-2">
+                  <Info className="h-4 w-4 text-blue-500" />
+                  <span>Info</span>
+                </div>
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={activeFilters.has('log')}
+                onCheckedChange={() => toggleFilter('log')}
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Log</span>
+                </div>
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={activeFilters.has('debug')}
+                onCheckedChange={() => toggleFilter('debug')}
+              >
+                <div className="flex items-center gap-2">
+                  <Bug className="h-4 w-4 text-purple-500" />
+                  <span>Debug</span>
+                </div>
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
