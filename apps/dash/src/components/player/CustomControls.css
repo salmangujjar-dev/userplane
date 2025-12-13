@@ -22,6 +22,17 @@
   pointer-events: auto;
 }
 
+/* Allow clicks through to video wrapper when not in initial state */
+.custom-video-controls:not([data-initial-state="true"]) {
+  pointer-events: none;
+}
+
+/* But keep controls themselves clickable */
+.custom-video-controls:not([data-initial-state="true"]) .custom-progress-container,
+.custom-video-controls:not([data-initial-state="true"]) .custom-controls-bar {
+  pointer-events: auto;
+}
+
 /* Custom Big Play Button - centered */
 .custom-big-play-container {
   position: absolute;
