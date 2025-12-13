@@ -77,6 +77,12 @@
       "value": "",
       "type": "string",
       "description": "Upload token for completing recording uploads"
+    },
+    {
+      "key": "domainVerificationToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT token for domain verification from recorder script"
     }
   ],
   "item": [
@@ -1099,6 +1105,33 @@
           "response": []
         },
         {
+          "name": "Get Domain by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "domains",
+                "{{domainId}}"
+              ]
+            },
+            "description": "Get a specific domain by ID.\n\nResponse data: DomainByIdData (workspaceId, domain)"
+          },
+          "response": []
+        },
+        {
           "name": "Delete Domain",
           "request": {
             "method": "DELETE",
@@ -1122,6 +1155,68 @@
               ]
             },
             "description": "Delete a domain from the workspace.\n\nResponse data: DomainDeleteData (workspaceId, domainId)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Domain Verification URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains/{{domainId}}/verify",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "domains",
+                "{{domainId}}",
+                "verify"
+              ]
+            },
+            "description": "Get the verification URL with JWT token for domain verification. This URL should be embedded in the recorder script on the domain to verify ownership.\n\nResponse data: { workspaceId, domainId, verificationUrl }"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Domain Verification",
+      "description": "Public domain verification endpoint. Used by recorder script to verify domain ownership. No authentication required - uses token-based verification.",
+      "item": [
+        {
+          "name": "Verify Domain",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "https://app.example.com",
+                "description": "Origin header from the domain being verified (required)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/domains/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "domains", "verify"]
+            },
+            "description": "Verify domain ownership using a JWT token embedded in the recorder script. This is a public endpoint with CORS enabled (origin: *, methods: POST).\n\nThe recorder script includes this token and makes a POST request from the domain to be verified. The Origin header is automatically set by the browser and must match the domain being verified.\n\nValidations:\n- Origin header is required and must be valid\n- Token must be valid JWT with domain information\n- Domain hostname must match the Origin header\n\nResponse data: DomainVerificationData (domainStatus: 'verified', workspaceId, domainId, domainUrl)"
           },
           "response": []
         }
@@ -1200,6 +1295,33 @@
               ]
             },
             "description": "Get paginated links for a workspace with optional filters and sorting.\n\nFilters support comma-separated values for multiple selections:\n- created_by: Filter by multiple workspace members (e.g., ?created_by=member1,member2)\n- domain_id: Filter by multiple domains (e.g., ?domain_id=dom1,dom2)\n- link_provider_type: Filter by multiple provider types (e.g., ?link_provider_type=github,linear,jira)\n\nMultiple filters combine with AND logic (must match all specified filters).\nWithin each filter, values combine with OR logic (match any of the specified values).\n\nResponse data: LinksListData (workspaceId, links, pagination)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Link by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/links/{{linkId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "links",
+                "{{linkId}}"
+              ]
+            },
+            "description": "Get detailed information for a specific link by ID.\n\nResponse data: LinkByIdData (workspaceId, link)"
           },
           "response": []
         },
