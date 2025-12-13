@@ -86,7 +86,7 @@ export default function RecordingDetailPage() {
             </div>
           </ResizablePanel>
 
-          <ResizableHandle />
+          <ResizableHandle withHandle />
 
           <ResizablePanel defaultSize={34} minSize={25} className="overflow-hidden">
             <div className="pl-4 h-full">
