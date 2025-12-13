@@ -6,7 +6,7 @@ import 'video.js/dist/video-js.css';
 import 'videojs-contrib-quality-levels';
 import 'videojs-hls-quality-selector';
 import './VideoPlayer.css';
-import Tooltip from './Tooltip';
+import CustomControls from './CustomControls';
 import type { VideoMarker, Player, PlayerOptions } from './types';
 
 interface VideoPlayerProps {
@@ -14,11 +14,7 @@ interface VideoPlayerProps {
   markers?: VideoMarker[];
   poster?: string | null;
   onPlayerReady?: (player: Player) => void;
-}
-
-interface ActiveMarker extends VideoMarker {
-  index: number;
-  element: HTMLElement;
+  onFullscreen?: () => void;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -26,13 +22,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   markers = [],
   poster = null,
   onPlayerReady,
+  onFullscreen,
 }) => {
   const videoRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<Player | null>(null);
-  const markersRef = useRef<HTMLDivElement | null>(null);
   const [duration, setDuration] = useState<number>(0);
-  const [activeMarker, setActiveMarker] = useState<ActiveMarker | null>(null);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
+  const [showControls, setShowControls] = useState<boolean>(false);
+  const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Make sure Video.js player is only initialized once
@@ -41,9 +38,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       videoElement.classList.add('vjs-big-play-centered');
       videoRef.current.appendChild(videoElement);
 
-      // Merge options with custom control bar configuration and HLS settings
+      // Merge options with disabled controls and big play button
       const playerOptions: PlayerOptions = {
         ...options,
+        controls: false,
+        bigPlayButton: false,
         ...(poster && { poster }),
         html5: {
           vhs: {
@@ -55,16 +54,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           nativeVideoTracks: false,
           nativeAudioTracks: false,
           nativeTextTracks: false,
-        },
-        controlBar: {
-          children: [
-            'playToggle',
-            'progressControl',
-            'currentTimeDisplay',
-            'timeDivider',
-            'durationDisplay',
-            'fullscreenToggle',
-          ],
         },
       };
 
@@ -112,86 +101,52 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, []);
 
-  // Add markers to the progress bar
-  useEffect(() => {
-    if (duration > 0 && markers.length > 0 && playerRef.current) {
-      const progressHolder = document.querySelector('.video-js .vjs-progress-holder');
-
-      if (progressHolder && !markersRef.current) {
-        // Create markers container
-        const markersContainer = document.createElement('div');
-        markersContainer.className = 'vjs-markers-container';
-        progressHolder.appendChild(markersContainer);
-        markersRef.current = markersContainer;
-
-        // Add markers
-        markers.forEach((marker, index) => {
-          const position = (marker.time / duration) * 100;
-
-          // Create marker dot
-          const markerEl = document.createElement('div');
-          markerEl.className = 'vjs-marker';
-          markerEl.style.left = `${position}%`;
-          markerEl.dataset.index = String(index);
-
-          // Set custom color if provided
-          if (marker.color) {
-            markerEl.style.backgroundColor = marker.color;
-          }
-
-          // Add hover events
-          markerEl.addEventListener('mouseenter', (e) => {
-            setActiveMarker({
-              ...marker,
-              index,
-              element: e.target as HTMLElement,
-            });
-          });
-
-          markerEl.addEventListener('mouseleave', () => {
-            setActiveMarker(null);
-          });
-
-          // Click to seek
-          markerEl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (playerRef.current) {
-              playerRef.current.currentTime(marker.time);
-            }
-          });
-
-          markersContainer.appendChild(markerEl);
-        });
-      }
+  // Handle container hover with delay
+  const handleContainerMouseEnter = () => {
+    // Clear any pending hide timeout
+    if (hideControlsTimeoutRef.current) {
+      clearTimeout(hideControlsTimeoutRef.current);
+      hideControlsTimeoutRef.current = null;
     }
-
-    // Cleanup markers on unmount
-    return () => {
-      if (markersRef.current) {
-        markersRef.current.remove();
-        markersRef.current = null;
-      }
-    };
-  }, [duration, markers]);
-
-  // Format time for display
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    // Show controls immediately
+    setShowControls(true);
   };
 
+  const handleContainerMouseLeave = () => {
+    // Wait 1.5 seconds before hiding controls
+    hideControlsTimeoutRef.current = setTimeout(() => {
+      setShowControls(false);
+      hideControlsTimeoutRef.current = null;
+    }, 1500);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hideControlsTimeoutRef.current) {
+        clearTimeout(hideControlsTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <div data-vjs-player className="video-player-container">
+    <div
+      data-vjs-player
+      className="video-player-container"
+      onMouseEnter={handleContainerMouseEnter}
+      onMouseLeave={handleContainerMouseLeave}
+    >
       <div ref={videoRef} className="video-player-wrapper" />
 
-      {/* Duration badge below play button - only shown before video starts */}
-      {duration > 0 && !hasStarted && (
-        <div className="vjs-duration-badge">{formatTime(duration)}</div>
-      )}
-
-      {/* Custom tooltip for markers */}
-      <Tooltip marker={activeMarker} containerRef={videoRef} />
+      {/* Custom controls */}
+      <CustomControls
+        player={playerRef.current}
+        markers={markers}
+        onFullscreen={onFullscreen}
+        duration={duration}
+        hasStarted={hasStarted}
+        showControls={showControls}
+      />
     </div>
   );
 };
