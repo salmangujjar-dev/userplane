@@ -194,4 +194,29 @@ export class DomainRepository {
       .where(and(...conditions))
       .limit(limit);
   }
+
+  /**
+   * Mark domain as verified
+   * Updates domain status to verified
+   */
+  async markAsVerified(workspaceId: string, url: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(domains)
+      .set({
+        domainStatus: 'verified',
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(domains.workspaceId, workspaceId),
+          eq(domains.domainUrl, url),
+          eq(domains.isDeleted, false)
+        )
+      )
+      .returning();
+
+    return updated || null;
+  }
 }

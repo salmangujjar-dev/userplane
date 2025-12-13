@@ -24,6 +24,7 @@ interface EnvConfig {
   port: number;
   host: string;
   nodeEnv: 'development' | 'production' | 'test';
+  jwtIssuer: string;
   cors: {
     origins: string[];
     credentials: boolean;
@@ -111,6 +112,7 @@ export function loadEnvConfig(): EnvConfig {
     port: parseInteger(process.env.PORT, 3001),
     host: process.env.HOST || '0.0.0.0',
     nodeEnv,
+    jwtIssuer: process.env.JWT_ISSUER || 'userplane',
     cors: {
       origins: parseCommaSeparated(process.env.CORS_ORIGINS, [
         'http://localhost:3000',

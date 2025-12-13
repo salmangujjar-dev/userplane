@@ -56,6 +56,7 @@ export const projectService = new ProjectService({
 
 export const domainService = new DomainService({
   domainRepo,
+  tokenService,
 });
 
 export const inviteService = new InviteService({

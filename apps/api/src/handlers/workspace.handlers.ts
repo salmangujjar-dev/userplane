@@ -593,6 +593,77 @@ export function getWorkspaceDomainsHandler(domainService: DomainService) {
   };
 }
 
+export function getDomainByIdHandler(domainService: DomainService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+      const domainId = c.req.param('domainId');
+
+      if (!user) {
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to get domain',
+        };
+        return c.json(response, 401);
+      }
+
+      if (!workspaceId) {
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to get domain',
+        };
+        return c.json(response, 403);
+      }
+
+      if (!domainId) {
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Domain ID is required',
+        };
+        return c.json(response, 400);
+      }
+
+      const domains = await domainService.getByWorkspaceId(workspaceId);
+      const domain = domains.find((d) => d.id === domainId);
+
+      if (!domain) {
+        const response: ApiErrorResponse = {
+          error: 'Not Found',
+          message: 'Domain not found',
+        };
+        return c.json(response, 404);
+      }
+
+      const response: ApiResponse<{ domain: DomainItem }> = {
+        message: 'Domain retrieved successfully',
+        data: {
+          domain: {
+            domainId: domain.id,
+            domainUrl: domain.domainUrl,
+            domainStatus: domain.domainStatus,
+          },
+        },
+      };
+      return c.json(response, 200);
+    } catch (error) {
+      if (error instanceof Error) {
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
+      }
+
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
+    }
+  };
+}
+
 export function addDomainHandler(domainService: DomainService) {
   return async (c: Context<AppEnv>) => {
     try {
@@ -812,6 +883,83 @@ export function deleteDomainHandler(domainService: DomainService) {
         return c.json(response, 400);
       }
 
+      if (error instanceof Error) {
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
+      }
+
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
+    }
+  };
+}
+
+export function getDomainVerificationUrlHandler(domainService: DomainService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+      const domainId = c.req.param('domainId');
+
+      if (!user) {
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to get domain verification URL',
+        };
+        return c.json(response, 401);
+      }
+
+      if (!workspaceId) {
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to get domain verification URL',
+        };
+        return c.json(response, 403);
+      }
+
+      if (!domainId) {
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Domain ID is required',
+        };
+        return c.json(response, 400);
+      }
+
+      const domains = await domainService.getByWorkspaceId(workspaceId);
+      const domain = domains.find((d) => d.id === domainId);
+
+      if (!domain) {
+        const response: ApiErrorResponse = {
+          error: 'Not Found',
+          message: 'Domain not found',
+        };
+        return c.json(response, 404);
+      }
+
+      const token = domainService.generateVerificationToken(
+        workspaceId,
+        domainId,
+        domain.domainUrl
+      );
+
+      // Construct verification URL: https://{domain}?userplane-action=verify&userplane-token={token}
+      const verificationUrl = `${domain.domainUrl}?userplane-action=verify&userplane-token=${token}`;
+
+      const response: ApiResponse<{ verificationUrl: string; domainUrl: string }> = {
+        message: 'Domain verification URL generated successfully',
+        data: {
+          verificationUrl,
+          domainUrl: domain.domainUrl,
+        },
+      };
+      return c.json(response, 200);
+    } catch (error) {
       if (error instanceof Error) {
         const response: ApiErrorResponse = {
           error: error.name,

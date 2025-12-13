@@ -28,6 +28,7 @@ export interface SessionPreferences {
  * Lifetime: 180 minutes
  */
 export interface SessionTokenPayload {
+  iss: string; // Issuer (JWT standard) - always 'userplane'
   lid: string; // Link ID
   lt: LinkType; // Link Type
   wid: string; // Workspace ID
@@ -43,6 +44,7 @@ export interface SessionTokenPayload {
  * Lifetime: 120 minutes
  */
 export interface UploadTokenPayload {
+  iss: string; // Issuer (JWT standard) - always 'userplane'
   rid: string; // Recording ID
   lid: string; // Link ID
   lt: LinkType; // Link Type

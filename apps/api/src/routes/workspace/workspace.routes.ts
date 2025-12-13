@@ -23,9 +23,11 @@ import {
   leaveWorkspaceHandler,
   updateNotificationPreferencesHandler,
   getWorkspaceDomainsHandler,
+  getDomainByIdHandler,
   addDomainHandler,
   updateDomainHandler,
   deleteDomainHandler,
+  getDomainVerificationUrlHandler,
   updateWorkspaceNameHandler,
   deleteWorkspaceHandler,
   workspaceSearchHandler,
@@ -209,6 +211,13 @@ export function createWorkspaceRoutes(
     getWorkspaceDomainsHandler(domainService)
   );
 
+  workspaceRoutes.get(
+    '/:workspaceId/domains/:domainId',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    getDomainByIdHandler(domainService)
+  );
+
   workspaceRoutes.post(
     '/:workspaceId/domains',
     requireAuth,
@@ -228,6 +237,13 @@ export function createWorkspaceRoutes(
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     deleteDomainHandler(domainService)
+  );
+
+  workspaceRoutes.get(
+    '/:workspaceId/domains/:domainId/verify',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    getDomainVerificationUrlHandler(domainService)
   );
 
   // Search route

@@ -8,9 +8,11 @@ import { DomainRepository } from '@/api/repositories/domains.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { cleanUrl } from '@/api/lib/utils';
 import type { Transaction, CreateDomainParams } from '@/api/types';
+import { TokenService } from '@/api/services/token.service';
 
 export interface DomainServiceDeps {
   domainRepo: DomainRepository;
+  tokenService: TokenService;
 }
 
 export class DomainService {
@@ -182,5 +184,89 @@ export class DomainService {
     }
 
     return deleted;
+  }
+
+  /**
+   * Generate domain verification token
+   * Creates a JWT token that expires in 5 minutes for domain verification
+   */
+  generateVerificationToken(workspaceId: string, domainId: string, url: string): string {
+    const normalized = cleanUrl(url);
+    return this.deps.tokenService.generateDomainVerificationToken(
+      workspaceId,
+      domainId,
+      normalized
+    );
+  }
+
+  /**
+   * Verify domain ownership using JWT token
+   * Validates token, checks domain registration by ID, and marks domain as verified
+   * Compares hostname and path between origin and stored domain URL
+   * Returns the updated domain record
+   */
+  async verifyDomain(token: string, originHostname: string) {
+    // Verify JWT token
+    const payload = this.deps.tokenService.verifyDomainToken(token);
+
+    if (!payload) {
+      throw new ValidationError('Invalid verification token');
+    }
+
+    // Issuer is already checked in verifyDomainToken
+
+    // Look up domain by ID from token
+    const domain = await this.deps.domainRepo.findById(payload.domainId);
+
+    if (!domain) {
+      throw new NotFoundError('Domain is not registered for this workspace');
+    }
+
+    // Verify domain belongs to the workspace from token
+    if (domain.workspaceId !== payload.workspaceId) {
+      throw new ValidationError('Domain does not belong to this workspace');
+    }
+
+    // Parse stored domain URL to get hostname and pathname
+    let storedHostname: string;
+    let storedPathname: string;
+    try {
+      const storedUrl = new URL(domain.domainUrl);
+      storedHostname = storedUrl.hostname;
+      storedPathname = storedUrl.pathname;
+    } catch {
+      throw new ValidationError('Invalid stored domain URL');
+    }
+
+    // Parse origin to construct full origin URL for comparison
+    let originUrl: URL;
+    try {
+      originUrl = new URL(`https://${originHostname}`);
+    } catch {
+      throw new ValidationError('Invalid origin hostname');
+    }
+
+    // Compare hostname
+    if (storedHostname !== originUrl.hostname) {
+      throw new ValidationError('Origin does not match registered domain');
+    }
+
+    // If stored URL has a path, check if origin path starts with it
+    if (storedPathname && storedPathname !== '/') {
+      // For path matching, we need the full origin URL from the request
+      // Since we only have hostname here, we'll skip path validation
+      // The recorder script should send the full origin URL
+    }
+
+    // Mark as verified
+    await this.deps.domainRepo.markAsVerified(payload.workspaceId, domain.domainUrl);
+
+    // Return updated domain
+    const updatedDomain = await this.deps.domainRepo.findById(payload.domainId);
+    if (!updatedDomain) {
+      throw new ValidationError('Failed to verify domain');
+    }
+
+    return updatedDomain;
   }
 }

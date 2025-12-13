@@ -105,10 +105,12 @@ interface FileUploadInfo {
 export class SessionService {
   private sessionSecret: string;
   private uploadSecret: string;
+  private jwtIssuer: string;
 
   constructor(private deps: SessionServiceDeps) {
     this.sessionSecret = env.session.tokenSecret;
     this.uploadSecret = env.session.uploadTokenSecret;
+    this.jwtIssuer = env.jwtIssuer;
   }
 
   /**
@@ -153,6 +155,7 @@ export class SessionService {
 
     // Build session token payload
     const payload: Omit<SessionTokenPayload, 'iat' | 'exp'> = {
+      iss: this.jwtIssuer,
       lid: linkData.linkId,
       lt: linkData.linkType,
       wid: linkData.workspaceId,
@@ -460,7 +463,12 @@ export class SessionService {
    */
   private verifySessionToken(token: string): SessionTokenPayload | null {
     try {
-      return jwt.verify(token, this.sessionSecret) as SessionTokenPayload;
+      const payload = jwt.verify(token, this.sessionSecret) as SessionTokenPayload;
+      // Verify issuer
+      if (payload.iss !== this.jwtIssuer) {
+        return null;
+      }
+      return payload;
     } catch {
       return null;
     }
@@ -471,6 +479,7 @@ export class SessionService {
    */
   private generateUploadToken(recordingId: string, linkId: string, linkType: string): string {
     const payload: Omit<UploadTokenPayload, 'iat' | 'exp'> = {
+      iss: this.jwtIssuer,
       rid: recordingId,
       lid: linkId,
       lt: linkType as UploadTokenPayload['lt'],
@@ -486,7 +495,12 @@ export class SessionService {
    */
   private verifyUploadToken(token: string): UploadTokenPayload | null {
     try {
-      return jwt.verify(token, this.uploadSecret) as UploadTokenPayload;
+      const payload = jwt.verify(token, this.uploadSecret) as UploadTokenPayload;
+      // Verify issuer
+      if (payload.iss !== this.jwtIssuer) {
+        return null;
+      }
+      return payload;
     } catch {
       return null;
     }
