@@ -19,6 +19,7 @@ import {
   Repeat,
   Link2,
   FolderKanban,
+  Globe,
 } from 'lucide-react';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
@@ -172,6 +173,17 @@ export function LinkPreview({
     return date.toLocaleDateString();
   };
 
+  const extractDomain = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace('www.', '');
+    } catch {
+      return '';
+    }
+  };
+
+  const displayDomain = displayReference ? extractDomain(displayReference) : '';
+
   return (
     <>
       <div
@@ -183,30 +195,51 @@ export function LinkPreview({
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-sm font-medium truncate">{displayTitle}</h3>
               {projectName && (
-                <div className="flex items-center gap-1.5 text-muted-foreground flex-shrink-0">
-                  <FolderKanban className="h-3.5 w-3.5" />
-                  <span className="text-xs">{projectName}</span>
-                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center text-muted-foreground flex-shrink-0">
+                      <FolderKanban className="h-3.5 w-3.5" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span className="text-xs">{projectName}</span>
+                  </TooltipContent>
+                </Tooltip>
               )}
+              {displayDomain && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center text-muted-foreground flex-shrink-0">
+                      <Globe className="h-3.5 w-3.5" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span className="text-xs">{displayDomain}</span>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center text-muted-foreground flex-shrink-0">
+                    {isReusable ? (
+                      <Repeat className="h-3.5 w-3.5" />
+                    ) : (
+                      <Link2 className="h-3.5 w-3.5" />
+                    )}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="text-xs">
+                    {isReusable ? 'Reusable link' : 'Single-use link'}
+                  </span>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <div className="flex items-center gap-2">
               <BoringAvatar name={displayCreator} size={20} />
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span>Created by {displayCreator} •</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex-shrink-0">
-                      {isReusable ? (
-                        <Repeat className="h-3.5 w-3.5" />
-                      ) : (
-                        <Link2 className="h-3.5 w-3.5" />
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {isReusable ? 'Reusable link' : 'Single-use link'}
-                  </TooltipContent>
-                </Tooltip>
+                <span>Created by {displayCreator}</span>
+                <span>•</span>
                 <span>{formatDate(displayDate)}</span>
               </div>
             </div>

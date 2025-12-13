@@ -4,7 +4,6 @@ import { AppearanceSection } from './appearance-section';
 import { UsageSection } from './usage-section';
 import { TeamSection } from './team-section';
 import { IntegrationSection } from './integration-section';
-import { WorkspacePlanSection } from './workspace-plan-section';
 import { DomainsSection } from './domains-section';
 import { ProjectsSection } from './projects-section';
 
@@ -15,12 +14,11 @@ export function SettingsTab() {
         <TabsList className="mb-6">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="team">Team</TabsTrigger>
-          <TabsTrigger value="plan-usage">Usage</TabsTrigger>
+          <TabsTrigger value="plan-usage">Plans</TabsTrigger>
           <TabsTrigger value="recording-links">Recording Links</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-8">
-          <WorkspacePlanSection />
           <OverviewSection />
           <IntegrationSection />
         </TabsContent>

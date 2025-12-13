@@ -188,6 +188,9 @@ export function FilterDropdown({
                     <BoringAvatar name={option.label} size={24} className="mr-2 shrink-0" />
                   )}
                   <span className="flex-1 text-left">{option.label}</span>
+                  {Icon && !showAvatars && (
+                    <Icon className="h-3.5 w-3.5 ml-2 text-muted-foreground shrink-0" />
+                  )}
                 </button>
               );
             })

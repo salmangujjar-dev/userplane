@@ -95,7 +95,7 @@ export default function ProjectPage() {
                   </TabsTrigger>
                   <TabsTrigger value="links" className="gap-2">
                     <LinkIcon className="h-4 w-4" />
-                    Shared Links
+                    Links
                   </TabsTrigger>
                 </TabsList>
 

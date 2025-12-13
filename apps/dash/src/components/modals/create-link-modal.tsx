@@ -25,7 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { Plus, ChevronDown, ChevronUp, ExternalLink, Check, HelpCircle } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, HelpCircle, Globe, FolderKanban } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { UrlInputWithFavicon } from '@/components/url-input-with-favicon';
 
@@ -34,9 +34,9 @@ interface CreateLinkModalProps {
 }
 
 const DOMAINS = [
-  { id: '1', name: 'userplane.com', url: 'https://userplane.com', isLogEnabled: true },
-  { id: '2', name: 'app.userplane.com', url: 'https://app.userplane.com', isLogEnabled: true },
-  { id: '3', name: 'custom.domain.com', url: 'https://custom.domain.com', isLogEnabled: false },
+  { id: '1', name: 'userplane.com', url: 'https://userplane.com' },
+  { id: '2', name: 'app.userplane.com', url: 'https://app.userplane.com' },
+  { id: '3', name: 'custom.domain.com', url: 'https://custom.domain.com' },
 ];
 
 export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
@@ -174,42 +174,10 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                       <DropdownMenuItem
                         key={domain.id}
                         onClick={() => setSelectedDomain(domain.id)}
-                        className="cursor-pointer flex items-center justify-between"
+                        className="cursor-pointer"
                       >
-                        <span>{domain.name}</span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-1.5 cursor-help">
-                                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                                  Log Capture
-                                </span>
-                                <div
-                                  className={`w-1.5 h-1.5 rounded-full ${
-                                    domain.isLogEnabled
-                                      ? 'bg-green-500 shadow-[0_0_4px_1px_rgba(34,197,94,0.5)]'
-                                      : 'bg-yellow-500 shadow-[0_0_4px_1px_rgba(234,179,8,0.5)]'
-                                  }`}
-                                />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="flex items-center gap-1.5">
-                                {domain.isLogEnabled ? (
-                                  <>
-                                    Log capture enabled
-                                    <Check className="h-3 w-3 inline-block" />
-                                  </>
-                                ) : (
-                                  <>
-                                    Enable log capture
-                                    <ExternalLink className="h-3 w-3 inline-block" />
-                                  </>
-                                )}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Globe className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                        {domain.name}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -251,6 +219,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                           onClick={() => setSelectedProject(project.id)}
                           className="cursor-pointer"
                         >
+                          <FolderKanban className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                           {project.name}
                         </DropdownMenuItem>
                       ))}
