@@ -31,9 +31,11 @@
 }
 
 .recording-player-container.fullscreen .recording-player-content {
-  width: 90vw;
-  height: 90vh;
-  max-width: 1920px;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  padding: 2rem;
+  box-sizing: border-box;
 }
 
 /* Overlay backdrop */
@@ -55,8 +57,9 @@
 /* Responsive */
 @media (max-width: 768px) {
   .recording-player-container.fullscreen .recording-player-content {
-    width: 95vw;
-    height: 95vh;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
   }
 }
 
