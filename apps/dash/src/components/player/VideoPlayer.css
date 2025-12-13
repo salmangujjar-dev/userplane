@@ -10,6 +10,8 @@
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  container-type: inline-size;
+  container-name: video-player;
 }
 
 .video-player-wrapper {
