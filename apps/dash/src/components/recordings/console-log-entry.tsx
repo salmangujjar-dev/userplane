@@ -42,43 +42,8 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
     }
   };
 
-  const getLevelColor = (type: ConsoleAPIType) => {
-    switch (type) {
-      case 'error':
-        return 'text-red-500';
-      case 'warning':
-        return 'text-yellow-500';
-      case 'info':
-        return 'text-blue-500';
-      case 'log':
-        return 'text-foreground';
-      case 'debug':
-        return 'text-purple-500';
-      default:
-        return 'text-foreground';
-    }
-  };
-
-  const getValueColor = (obj: RemoteObject): string => {
-    if (obj.subtype === 'null' || obj.type === 'undefined') {
-      return 'text-gray-500';
-    }
-
-    switch (obj.type) {
-      case 'string':
-        return 'text-red-600 dark:text-red-400';
-      case 'number':
-      case 'bigint':
-        return 'text-blue-600 dark:text-blue-400';
-      case 'boolean':
-        return 'text-purple-600 dark:text-purple-400';
-      case 'function':
-        return 'text-purple-600 dark:text-purple-400';
-      case 'object':
-        return 'text-foreground';
-      default:
-        return 'text-foreground';
-    }
+  const getValueColor = (): string => {
+    return 'text-foreground';
   };
 
   const hasExpandableContent = (obj: RemoteObject): boolean => {
@@ -87,7 +52,7 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
 
   const renderLogValue = (obj: RemoteObject, index: number) => {
     const canExpand = hasExpandableContent(obj);
-    const color = getValueColor(obj);
+    const color = getValueColor();
 
     if (canExpand) {
       return (
@@ -142,21 +107,9 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
       <div className="ml-8 mt-1 space-y-0.5">
         {firstArg.preview.properties.map((prop) => (
           <div key={prop.name} className="text-xs">
-            <span className="text-purple-600 dark:text-purple-400">{prop.name}</span>
+            <span>{prop.name}</span>
             <span className="text-muted-foreground">: </span>
-            <span
-              className={
-                prop.type === 'string'
-                  ? 'text-red-600 dark:text-red-400'
-                  : prop.type === 'number'
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : prop.type === 'boolean'
-                      ? 'text-purple-600 dark:text-purple-400'
-                      : 'text-foreground'
-              }
-            >
-              {prop.type === 'string' ? `"${prop.value}"` : prop.value}
-            </span>
+            <span>{prop.type === 'string' ? `"${prop.value}"` : prop.value}</span>
           </div>
         ))}
       </div>
@@ -180,7 +133,7 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
         </span>
         <div className="shrink-0 mt-0.5">{getLevelIcon(log.event.type)}</div>
 
-        <div className={`flex-1 ${getLevelColor(log.event.type)}`}>
+        <div className="flex-1">
           <div className="flex items-start gap-1 flex-wrap">
             {log.event.args.map((arg, index) => (
               <span key={index}>

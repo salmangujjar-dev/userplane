@@ -70,29 +70,26 @@ export default function RecordingDetailPage() {
   };
 
   return (
-    <div className="min-h-svh bg-background">
+    <div className="h-screen bg-background flex flex-col">
       <RecordingDetailNav
         onCopyLink={handleCopyLink}
         onShareLink={handleShareLink}
         onShareAtTimestamp={handleShareAtTimestamp}
       />
 
-      <main className="w-full px-6 py-8 overflow-visible">
-        <ResizablePanelGroup
-          direction="horizontal"
-          className="min-h-[calc(100vh-8rem)] rounded-lg overflow-visible"
-        >
-          <ResizablePanel defaultSize={66} minSize={30} className="overflow-visible">
-            <div className="relative pr-4 space-y-6 overflow-visible">
+      <main className="w-full pl-4 overflow-hidden flex-1">
+        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg overflow-hidden">
+          <ResizablePanel defaultSize={66} minSize={30} className="overflow-y-auto">
+            <div className="relative pr-4 space-y-6">
               <RecordingPlayer />
               <RecordingMetaPanel />
             </div>
           </ResizablePanel>
 
-          <ResizableHandle withHandle />
+          <ResizableHandle />
 
-          <ResizablePanel defaultSize={34} minSize={25}>
-            <div className="pl-4">
+          <ResizablePanel defaultSize={34} minSize={25} className="overflow-hidden">
+            <div className="pl-4 h-full">
               <RecordingLogReplayPanel />
             </div>
           </ResizablePanel>

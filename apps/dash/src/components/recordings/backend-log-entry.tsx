@@ -65,9 +65,11 @@ export function BackendLogEntry({ log, recordingStartTime }: BackendLogEntryProp
         </span>
         <div className="shrink-0 mt-0.5">{getLevelIcon(log.level)}</div>
 
-        <div className={`flex-1 ${getLevelColor(log.level)}`}>
+        <div className="flex-1">
           <div className="flex items-start gap-2 flex-wrap">
-            <span className="uppercase text-[10px] font-semibold">{log.level}</span>
+            <span className={`uppercase text-[10px] font-semibold ${getLevelColor(log.level)}`}>
+              {log.level}
+            </span>
             {log.service && (
               <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded">[{log.service}]</span>
             )}

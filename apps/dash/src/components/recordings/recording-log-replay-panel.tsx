@@ -7,7 +7,7 @@ import { BackendPanel } from './backend-panel';
 
 export function RecordingLogReplayPanel() {
   return (
-    <div className="w-full h-[calc(100vh-8rem)] rounded-2xl bg-card border sticky top-8 overflow-hidden flex flex-col">
+    <div className="w-full h-full overflow-hidden flex flex-col">
       <Tabs defaultValue="info" className="flex flex-col h-full">
         <div className="border-b px-6 pt-3">
           <TabsList className="w-full justify-center bg-transparent p-0 h-auto gap-6 border-0">

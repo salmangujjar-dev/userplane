@@ -88,6 +88,150 @@ const mockClicks: ClickEvent[] = [
       textContent: 'Save Changes',
     }
   ),
+  createMockClickEvent(
+    '8',
+    baseTime + 20000,
+    'div.dropdown > button',
+    'BUTTON',
+    { x: 200, y: 80 },
+    {
+      className: 'dropdown-toggle',
+      textContent: 'Options',
+    }
+  ),
+  createMockClickEvent(
+    '9',
+    baseTime + 22000,
+    'ul.menu > li > a',
+    'A',
+    { x: 220, y: 120 },
+    {
+      className: 'menu-item',
+      textContent: 'Export Data',
+    }
+  ),
+  createMockClickEvent(
+    '10',
+    baseTime + 25000,
+    'input[type="text"]',
+    'INPUT',
+    { x: 350, y: 180 },
+    {
+      className: 'search-input',
+      id: 'search',
+    }
+  ),
+  createMockClickEvent(
+    '11',
+    baseTime + 27000,
+    'button.icon-btn',
+    'BUTTON',
+    { x: 450, y: 60 },
+    {
+      className: 'icon-btn',
+      id: 'notifications',
+    }
+  ),
+  createMockClickEvent(
+    '12',
+    baseTime + 30000,
+    'div.card > a.link',
+    'A',
+    { x: 280, y: 320 },
+    {
+      className: 'link',
+      textContent: 'View Details',
+    }
+  ),
+  createMockClickEvent(
+    '13',
+    baseTime + 32000,
+    'button.secondary',
+    'BUTTON',
+    { x: 180, y: 450 },
+    {
+      className: 'secondary',
+      textContent: 'Cancel',
+    }
+  ),
+  createMockClickEvent(
+    '14',
+    baseTime + 35000,
+    'div.tabs > button',
+    'BUTTON',
+    { x: 160, y: 90 },
+    {
+      className: 'tab-button',
+      textContent: 'Profile',
+    }
+  ),
+  createMockClickEvent(
+    '15',
+    baseTime + 38000,
+    'form > button[type="submit"]',
+    'BUTTON',
+    { x: 320, y: 480 },
+    {
+      className: 'submit-btn',
+      textContent: 'Submit Form',
+    }
+  ),
+  createMockClickEvent(
+    '16',
+    baseTime + 40000,
+    'div.pagination > button',
+    'BUTTON',
+    { x: 400, y: 520 },
+    {
+      className: 'page-next',
+      textContent: 'Next',
+    }
+  ),
+  createMockClickEvent(
+    '17',
+    baseTime + 43000,
+    'input[type="radio"]',
+    'INPUT',
+    { x: 170, y: 240 },
+    {
+      className: 'radio-option',
+      id: 'option-2',
+    }
+  ),
+  createMockClickEvent(
+    '18',
+    baseTime + 45000,
+    'button.danger',
+    'BUTTON',
+    { x: 280, y: 380 },
+    {
+      className: 'danger',
+      id: 'confirm-delete',
+      textContent: 'Confirm Delete',
+    }
+  ),
+  createMockClickEvent(
+    '19',
+    baseTime + 48000,
+    'div.sidebar > a',
+    'A',
+    { x: 60, y: 140 },
+    {
+      className: 'sidebar-link',
+      textContent: 'Analytics',
+    }
+  ),
+  createMockClickEvent(
+    '20',
+    baseTime + 50000,
+    'button.toggle',
+    'BUTTON',
+    { x: 420, y: 100 },
+    {
+      className: 'toggle',
+      id: 'theme-toggle',
+    }
+  ),
 ];
 
 export function ActionsPanel() {

@@ -242,6 +242,268 @@ const mockRequests: NetworkRequest[] = [
       referrerPolicy: 'strict-origin-when-cross-origin',
     },
   },
+  createMockNetworkRequest(
+    '10',
+    'https://cdn.example.com/avatar.jpg',
+    'GET',
+    'Image',
+    200,
+    'OK',
+    45678,
+    234,
+    baseTime + 4000
+  ),
+  createMockNetworkRequest(
+    '11',
+    'https://api.example.com/notifications',
+    'GET',
+    'Fetch',
+    200,
+    'OK',
+    2048,
+    89,
+    baseTime + 4500
+  ),
+  createMockNetworkRequest(
+    '12',
+    'https://cdn.example.com/icons.svg',
+    'GET',
+    'Image',
+    200,
+    'OK',
+    8192,
+    67,
+    baseTime + 5000
+  ),
+  {
+    ...createMockNetworkRequest(
+      '13',
+      'https://api.example.com/users/123/settings',
+      'PATCH',
+      'Fetch',
+      200,
+      'OK',
+      384,
+      156,
+      baseTime + 5500
+    ),
+    request: {
+      url: 'https://api.example.com/users/123/settings',
+      method: 'PATCH',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+      postData: JSON.stringify(
+        {
+          theme: 'dark',
+          notifications: true,
+        },
+        null,
+        2
+      ),
+      hasPostData: true,
+      initialPriority: 'Medium',
+      referrerPolicy: 'strict-origin-when-cross-origin',
+    },
+  },
+  createMockNetworkRequest(
+    '14',
+    'https://fonts.googleapis.com/css2?family=Roboto',
+    'GET',
+    'Font',
+    200,
+    'OK',
+    12345,
+    78,
+    baseTime + 6000
+  ),
+  {
+    ...createMockNetworkRequest(
+      '15',
+      'https://api.example.com/search?q=test',
+      'GET',
+      'Fetch',
+      200,
+      'OK',
+      4096,
+      234,
+      baseTime + 6500
+    ),
+    responseBody: JSON.stringify(
+      {
+        results: [
+          { id: 1, title: 'Test Result 1', score: 0.95 },
+          { id: 2, title: 'Test Result 2', score: 0.87 },
+          { id: 3, title: 'Test Result 3', score: 0.72 },
+        ],
+        total: 3,
+        page: 1,
+      },
+      null,
+      2
+    ),
+  },
+  createMockNetworkRequest(
+    '16',
+    'https://cdn.example.com/banner.png',
+    'GET',
+    'Image',
+    200,
+    'OK',
+    67890,
+    345,
+    baseTime + 7000
+  ),
+  {
+    ...createMockNetworkRequest(
+      '17',
+      'https://api.example.com/users/456',
+      'DELETE',
+      'Fetch',
+      204,
+      'No Content',
+      0,
+      123,
+      baseTime + 7500
+    ),
+    request: {
+      url: 'https://api.example.com/users/456',
+      method: 'DELETE',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+      initialPriority: 'High',
+      referrerPolicy: 'strict-origin-when-cross-origin',
+    },
+  },
+  createMockNetworkRequest(
+    '18',
+    'https://cdn.example.com/video.mp4',
+    'GET',
+    'Media',
+    206,
+    'Partial Content',
+    2048576,
+    1234,
+    baseTime + 8000
+  ),
+  createMockNetworkRequest(
+    '19',
+    'https://api.example.com/health',
+    'GET',
+    'Fetch',
+    200,
+    'OK',
+    128,
+    45,
+    baseTime + 8500
+  ),
+  {
+    ...createMockNetworkRequest(
+      '20',
+      'https://api.example.com/upload',
+      'POST',
+      'Fetch',
+      413,
+      'Payload Too Large',
+      0,
+      234,
+      baseTime + 9000
+    ),
+    request: {
+      url: 'https://api.example.com/upload',
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Content-Type': 'multipart/form-data',
+      },
+      hasPostData: true,
+      initialPriority: 'High',
+      referrerPolicy: 'strict-origin-when-cross-origin',
+    },
+  },
+  createMockNetworkRequest(
+    '21',
+    'https://cdn.example.com/chart.js',
+    'GET',
+    'Script',
+    200,
+    'OK',
+    34567,
+    178,
+    baseTime + 9500
+  ),
+  createMockNetworkRequest(
+    '22',
+    'https://api.example.com/metrics',
+    'GET',
+    'Fetch',
+    304,
+    'Not Modified',
+    0,
+    23,
+    baseTime + 10000
+  ),
+  createMockNetworkRequest(
+    '23',
+    'https://cdn.example.com/background.jpg',
+    'GET',
+    'Image',
+    200,
+    'OK',
+    123456,
+    567,
+    baseTime + 10500
+  ),
+  {
+    ...createMockNetworkRequest(
+      '24',
+      'https://api.example.com/comments',
+      'POST',
+      'Fetch',
+      201,
+      'Created',
+      768,
+      234,
+      baseTime + 11000
+    ),
+    request: {
+      url: 'https://api.example.com/comments',
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      postData: JSON.stringify(
+        {
+          postId: 42,
+          text: 'Great article!',
+          author: 'user_789',
+        },
+        null,
+        2
+      ),
+      hasPostData: true,
+      initialPriority: 'Medium',
+      referrerPolicy: 'strict-origin-when-cross-origin',
+    },
+  },
+  createMockNetworkRequest(
+    '25',
+    'https://api.example.com/timeout',
+    'GET',
+    'Fetch',
+    408,
+    'Request Timeout',
+    0,
+    30000,
+    baseTime + 41000
+  ),
 ];
 
 export function NetworkPanel() {
