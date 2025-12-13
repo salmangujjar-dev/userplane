@@ -110,6 +110,7 @@
   padding: 20px 16px 16px;
   transition: all 0.3s ease;
   border-radius: 0 0 8px 8px;
+  overflow: visible;
 }
 
 /* Minimal "peeking" state - just show progress bar */
@@ -219,8 +220,9 @@
   font-size: 13px;
   white-space: nowrap;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 9999;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .custom-progress-tooltip::after {
@@ -250,6 +252,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  overflow: visible;
 }
 
 .custom-controls-left,
@@ -257,6 +260,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
+.custom-controls-right {
+  min-width: 0;
+  overflow: visible;
 }
 
 /* Control Buttons */
@@ -465,7 +475,105 @@
   pointer-events: all;
 }
 
-/* Responsive */
+/* Responsive - Hide controls progressively as space decreases */
+/* Using container queries for better adaptation */
+
+/* Hide volume slider first (keep icon only) when container is narrow */
+@container video-player (max-width: 650px) {
+  .custom-volume-slider {
+    display: none;
+  }
+  
+  .custom-volume-control {
+    gap: 0;
+  }
+}
+
+/* Hide quality selector */
+@container video-player (max-width: 550px) {
+  .custom-dropdown-container .custom-quality-button {
+    display: none;
+  }
+}
+
+/* Hide speed selector */
+@container video-player (max-width: 450px) {
+  .custom-dropdown-container .custom-speed-button {
+    display: none;
+  }
+}
+
+/* Compact layout for very small containers */
+@container video-player (max-width: 400px) {
+  .custom-time-display {
+    font-size: 12px;
+  }
+  
+  .custom-controls-bar {
+    gap: 6px;
+  }
+  
+  .custom-controls-left,
+  .custom-controls-right {
+    gap: 6px;
+  }
+  
+  .custom-control-button {
+    padding: 6px;
+  }
+}
+
+/* Fallback for browsers without container query support */
+@media (max-width: 900px) {
+  @supports not (container-type: inline-size) {
+    .custom-volume-slider {
+      display: none;
+    }
+    
+    .custom-volume-control {
+      gap: 0;
+    }
+  }
+}
+
+@media (max-width: 700px) {
+  @supports not (container-type: inline-size) {
+    .custom-dropdown-container .custom-quality-button {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  @supports not (container-type: inline-size) {
+    .custom-dropdown-container .custom-speed-button {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 500px) {
+  @supports not (container-type: inline-size) {
+    .custom-time-display {
+      font-size: 12px;
+    }
+    
+    .custom-controls-bar {
+      gap: 6px;
+    }
+    
+    .custom-controls-left,
+    .custom-controls-right {
+      gap: 6px;
+    }
+    
+    .custom-control-button {
+      padding: 6px;
+    }
+  }
+}
+
+/* Mobile specific styles */
 @media (max-width: 768px) {
   .custom-video-overlay {
     border-radius: 6px;
@@ -499,14 +607,6 @@
     padding: 6px 0;
   }
 
-  .custom-volume-slider {
-    width: 60px;
-  }
-
-  .custom-time-display {
-    font-size: 12px;
-  }
-
   .custom-progress-tooltip {
     font-size: 12px;
     padding: 6px 10px;
@@ -534,15 +634,6 @@
   .custom-dropdown-item {
     padding: 6px 10px;
     font-size: 13px;
-  }
-
-  .custom-controls-bar {
-    gap: 8px;
-  }
-
-  .custom-controls-left,
-  .custom-controls-right {
-    gap: 8px;
   }
 }
 

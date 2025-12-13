@@ -50,6 +50,7 @@ const CustomControls: React.FC<CustomControlsProps> = ({
 
   const progressBarRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Format time helper for controls (mm:ss format)
   const formatTime = (seconds: number): string => {
@@ -247,6 +248,26 @@ const CustomControls: React.FC<CustomControlsProps> = ({
     isDraggingRef.current = false;
   };
 
+  const handleProgressMouseEnter = () => {
+    // Clear any pending hide timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+      tooltipTimeoutRef.current = null;
+    }
+    setIsHovering(true);
+  };
+
+  const handleProgressMouseLeave = () => {
+    // Wait 1.5 seconds before hiding tooltip
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setIsHovering(false);
+      setHoverTime(null);
+      setHoverPosition(null);
+      setActiveMarker(null);
+      tooltipTimeoutRef.current = null;
+    }, 1500);
+  };
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDraggingRef.current && progressBarRef.current && player) {
@@ -278,6 +299,9 @@ const CustomControls: React.FC<CustomControlsProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousedown', handleClickOutside);
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+      }
     };
   }, [player, duration]);
 
@@ -338,13 +362,8 @@ const CustomControls: React.FC<CustomControlsProps> = ({
           onClick={handleProgressClick}
           onMouseDown={handleProgressMouseDown}
           onMouseUp={handleProgressMouseUp}
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => {
-            setIsHovering(false);
-            setHoverTime(null);
-            setHoverPosition(null);
-            setActiveMarker(null);
-          }}
+          onMouseEnter={handleProgressMouseEnter}
+          onMouseLeave={handleProgressMouseLeave}
           onMouseMove={handleProgressMouseMove}
         >
           {/* Progress bar background */}
