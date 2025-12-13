@@ -80,11 +80,11 @@ export default function RecordingsPage() {
                   icon={FolderKanban}
                 />
                 <FilterDropdown
-                  label="Creator"
+                  label="Member"
                   options={MOCK_CREATORS}
                   selected={selectedCreators}
                   onSelectionChange={setSelectedCreators}
-                  placeholder="Search creators..."
+                  placeholder="Search members..."
                   showAvatars
                 />
                 <FilterDropdown

@@ -102,11 +102,11 @@ export default function ProjectPage() {
                 {activeTab === 'recordings' && (
                   <div className="flex items-center gap-2">
                     <FilterDropdown
-                      label="Creator"
+                      label="Member"
                       options={MOCK_CREATORS}
                       selected={selectedCreators}
                       onSelectionChange={setSelectedCreators}
-                      placeholder="Search creators..."
+                      placeholder="Search members..."
                       showAvatars
                     />
                     <FilterDropdown
@@ -123,11 +123,11 @@ export default function ProjectPage() {
                 {activeTab === 'links' && (
                   <div className="flex items-center gap-2">
                     <FilterDropdown
-                      label="Creator"
+                      label="Member"
                       options={MOCK_CREATORS}
                       selected={selectedCreators}
                       onSelectionChange={setSelectedCreators}
-                      placeholder="Search creators..."
+                      placeholder="Search members..."
                       showAvatars
                     />
                     <FilterDropdown
