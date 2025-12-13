@@ -13,6 +13,7 @@ import type {
   LinksListData,
   LinkCreateData,
   LinkUpdateData,
+  LinkGetData,
   LinkFilters,
   LinkSortOptions,
   LinkSortField,
@@ -204,7 +205,17 @@ export function createLinkHandler(linkService: LinkService) {
             linkProviderType: created.linkProviderType,
             linkProviderId: created.linkProviderId,
             linkProviderReference: created.linkProviderRef,
+            linkURL: linkService.generateLinkURL(
+              created.id,
+              created.domainUrl,
+              created.domainStatus
+            ),
             createdAt: created.createdAt,
+            domain: {
+              id: created.domainId,
+              url: created.domainUrl,
+              status: created.domainStatus,
+            },
           },
         },
       };
@@ -319,6 +330,16 @@ export function updateLinkHandler(linkService: LinkService) {
             linkProviderType: updated.linkProviderType,
             linkProviderId: updated.linkProviderId,
             linkProviderReference: updated.linkProviderRef,
+            linkURL: linkService.generateLinkURL(
+              updated.id,
+              updated.domainUrl,
+              updated.domainStatus
+            ),
+            domain: {
+              id: updated.domainId,
+              url: updated.domainUrl,
+              status: updated.domainStatus,
+            },
           },
         },
       };
@@ -334,6 +355,92 @@ export function updateLinkHandler(linkService: LinkService) {
         return c.json(response, 400);
       }
 
+      if (error instanceof ValidationError) {
+        const response: ApiErrorResponse = {
+          error: 'Validation Error',
+          message: error.message,
+        };
+        return c.json(response, 400);
+      }
+
+      if (error instanceof Error) {
+        const response: ApiErrorResponse = {
+          error: error.name,
+          message: error.message,
+        };
+        return c.json(response, getErrorStatusCode(error));
+      }
+
+      const response: ApiErrorResponse = {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+      };
+      return c.json(response, 500);
+    }
+  };
+}
+
+/**
+ * Handler factory for getting a link by ID
+ * Returns complete link details including project and creator info
+ */
+export function getLinkByIdHandler(linkService: LinkService) {
+  return async (c: Context<AppEnv>) => {
+    try {
+      const user = c.get('user');
+      const workspaceId = c.get('workspaceId');
+      const linkId = c.req.param('linkId');
+
+      if (!user) {
+        const response: ApiErrorResponse = {
+          error: 'Unauthorized',
+          message: 'You must be logged in to access links',
+        };
+        return c.json(response, 401);
+      }
+
+      if (!workspaceId) {
+        const response: ApiErrorResponse = {
+          error: 'Forbidden',
+          message: 'You must be a workspace member to access links',
+        };
+        return c.json(response, 403);
+      }
+
+      if (!linkId) {
+        const response: ApiErrorResponse = {
+          error: 'Bad Request',
+          message: 'Link ID is required',
+        };
+        return c.json(response, 400);
+      }
+
+      // Get link details
+      const link = await linkService.getById(linkId, workspaceId);
+
+      const response: ApiResponse<LinkGetData> = {
+        message: 'Link retrieved successfully',
+        data: {
+          workspaceId,
+          link: {
+            id: link.id,
+            linkTitle: link.linkTitle,
+            linkType: link.linkType,
+            linkReusable: link.linkReusable,
+            linkProviderType: link.linkProviderType,
+            linkProviderId: link.linkProviderId,
+            linkProviderReference: link.linkProviderReference,
+            linkURL: link.linkURL,
+            createdAt: link.createdAt,
+            project: link.project,
+            creator: link.creator,
+            domain: link.domain,
+          },
+        },
+      };
+
+      return c.json(response, 200);
+    } catch (error) {
       if (error instanceof ValidationError) {
         const response: ApiErrorResponse = {
           error: 'Validation Error',

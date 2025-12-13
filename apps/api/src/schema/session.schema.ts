@@ -13,7 +13,7 @@ export const fileTypeSchema = z.enum(['video', 'thumbnail', 'console_log', 'netw
  * GET /api/v1/session query params
  */
 export const getSessionQuerySchema = z.object({
-  link_id: z.string().min(1, 'Link ID is required'),
+  token: z.string().min(1, 'Token is required'),
 });
 
 /**

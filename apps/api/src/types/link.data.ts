@@ -3,6 +3,7 @@
  * Types for link endpoint responses
  */
 
+import type { Domain } from '@workspace/db';
 import type { PaginationMeta } from './common';
 import type { LinkProviderType, LinkType } from './link.service';
 
@@ -17,6 +18,7 @@ export interface LinkItem {
   linkProviderType: LinkProviderType | null;
   linkProviderId: string | null;
   linkProviderReference: string | null;
+  linkURL: string;
   createdAt: Date;
   project: {
     id: string;
@@ -25,6 +27,11 @@ export interface LinkItem {
   creator: {
     id: string;
     name: string;
+  };
+  domain: {
+    id: string;
+    url: string;
+    status: Domain['domainStatus'];
   };
 }
 
@@ -49,6 +56,12 @@ export interface LinkUpdateData {
     linkProviderType: LinkProviderType | null;
     linkProviderId: string | null;
     linkProviderReference: string | null;
+    linkURL: string;
+    domain: {
+      id: string;
+      url: string;
+      status: Domain['domainStatus'];
+    };
   };
 }
 
@@ -65,6 +78,43 @@ export interface LinkCreateData {
     linkProviderType: LinkProviderType | null;
     linkProviderId: string | null;
     linkProviderReference: string | null;
+    linkURL: string;
     createdAt: Date;
+    domain: {
+      id: string;
+      url: string;
+      status: Domain['domainStatus'];
+    };
+  };
+}
+
+/**
+ * Response data for getting a link by ID
+ */
+export interface LinkGetData {
+  workspaceId: string;
+  link: {
+    id: string;
+    linkTitle: string | null;
+    linkType: LinkType;
+    linkReusable: boolean;
+    linkProviderType: LinkProviderType | null;
+    linkProviderId: string | null;
+    linkProviderReference: string | null;
+    linkURL: string;
+    createdAt: Date;
+    project: {
+      id: string;
+      title: string | null;
+    };
+    creator: {
+      id: string;
+      name: string;
+    };
+    domain: {
+      id: string;
+      url: string;
+      status: Domain['domainStatus'];
+    };
   };
 }

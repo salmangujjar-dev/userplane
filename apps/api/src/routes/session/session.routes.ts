@@ -16,7 +16,7 @@ export function createSessionRoutes(sessionService: SessionService) {
   const sessionRoutes = new Hono<AppEnv>();
 
   // GET /session - Initialize recording session
-  // Query params: link_id
+  // Query params: token (JWT token from link URL)
   // Returns: session_token, expires_in
   sessionRoutes.get('/', getSessionHandler(sessionService));
 
