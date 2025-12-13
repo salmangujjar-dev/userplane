@@ -11,6 +11,7 @@ import {
   type LinkWithWorkspacePrefsRow,
 } from '@/api/repositories/links.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import type { LinkService } from '@/api/services/link.service';
 import {
   ValidationError,
   NotFoundError,
@@ -50,6 +51,7 @@ export interface SessionServiceDeps {
   thumbnailsStorage: ThumbnailsStorageClient;
   consoleLogsStorage: ConsoleLogsStorageClient;
   networkLogsStorage: NetworkLogsStorageClient;
+  linkService: LinkService;
 }
 
 /**
@@ -112,8 +114,12 @@ export class SessionService {
   /**
    * Initialize a recording session for a link
    * GET /api/v1/session
+   * Validates the link token and extracts the link ID before proceeding
    */
-  async initSession(linkId: string): Promise<SessionInitResult> {
+  async initSession(linkToken: string): Promise<SessionInitResult> {
+    // Verify link token and extract link ID
+    const linkId = this.deps.linkService.verifyLinkToken(linkToken);
+
     // Fetch link with workspace preferences
     const linkData = await this.deps.linkRepo.findByIdWithWorkspacePrefs(linkId);
 

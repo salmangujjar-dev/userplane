@@ -4,8 +4,16 @@
  */
 
 import { eq, and, count, desc, asc, inArray, sql } from '@workspace/db';
-import type { DbClient } from '@workspace/db';
-import { links, projects, workspaceMembers, user, workspaces, recordings } from '@workspace/db';
+import type { DbClient, Domain } from '@workspace/db';
+import {
+  links,
+  projects,
+  workspaceMembers,
+  user,
+  workspaces,
+  recordings,
+  domains,
+} from '@workspace/db';
 import type {
   LinkFilters,
   Transaction,
@@ -27,10 +35,14 @@ export interface LinkListRow {
   linkProviderId: string | null;
   linkProviderRef: string | null;
   createdAt: Date;
+  workspaceId: string;
   projectId: string;
   projectTitle: string | null;
   creatorId: string;
   creatorName: string;
+  domainId: string;
+  domainUrl: string;
+  domainStatus: Domain['domainStatus'];
 }
 
 /**
@@ -191,15 +203,20 @@ export class LinkRepository {
         linkProviderId: links.linkProviderId,
         linkProviderRef: links.linkProviderRef,
         createdAt: links.createdAt,
+        workspaceId: links.workspaceId,
         projectId: links.projectId,
         projectTitle: projects.projectTitle,
         creatorId: workspaceMembers.id,
         creatorName: user.name,
+        domainId: domains.id,
+        domainUrl: domains.domainUrl,
+        domainStatus: domains.domainStatus,
       })
       .from(links)
       .innerJoin(projects, eq(links.projectId, projects.id))
       .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.id))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .innerJoin(domains, eq(links.domainId, domains.id))
       .where(whereConditions)
       .orderBy(orderBy)
       .limit(limit)
@@ -231,6 +248,41 @@ export class LinkRepository {
       .limit(1);
 
     return link || null;
+  }
+
+  /**
+   * Find link by ID with joined project and creator data
+   * Returns complete link details for API responses
+   */
+  async findByIdWithDetails(id: string): Promise<LinkListRow | null> {
+    const [result] = await this.db
+      .select({
+        id: links.id,
+        linkTitle: links.linkTitle,
+        linkType: links.linkType,
+        linkReusable: links.linkReusable,
+        linkProviderType: links.linkProviderType,
+        linkProviderId: links.linkProviderId,
+        linkProviderRef: links.linkProviderRef,
+        createdAt: links.createdAt,
+        workspaceId: links.workspaceId,
+        projectId: links.projectId,
+        projectTitle: projects.projectTitle,
+        creatorId: workspaceMembers.id,
+        creatorName: user.name,
+        domainId: domains.id,
+        domainUrl: domains.domainUrl,
+        domainStatus: domains.domainStatus,
+      })
+      .from(links)
+      .innerJoin(projects, eq(links.projectId, projects.id))
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.id))
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .innerJoin(domains, eq(links.domainId, domains.id))
+      .where(and(eq(links.id, id), eq(links.isDeleted, false)))
+      .limit(1);
+
+    return result || null;
   }
 
   /**
@@ -403,16 +455,21 @@ export class LinkRepository {
         linkProviderId: links.linkProviderId,
         linkProviderRef: links.linkProviderRef,
         createdAt: links.createdAt,
+        workspaceId: links.workspaceId,
         projectId: projects.id,
         projectTitle: projects.projectTitle,
         creatorId: user.id,
         creatorName: user.name,
+        domainId: domains.id,
+        domainUrl: domains.domainUrl,
+        domainStatus: domains.domainStatus,
         rank: sql<number>`ts_rank(to_tsvector('simple', COALESCE(${links.linkTitle}, '')), to_tsquery('simple', ${tsquery}))`,
       })
       .from(links)
       .innerJoin(projects, eq(links.projectId, projects.id))
       .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.id))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .innerJoin(domains, eq(links.domainId, domains.id))
       .where(
         and(
           eq(links.workspaceId, workspaceId),

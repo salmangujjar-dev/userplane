@@ -11,6 +11,7 @@ import {
   createLinkHandler,
   updateLinkHandler,
   deleteLinkHandler,
+  getLinkByIdHandler,
 } from '@/api/handlers/links.handlers';
 import type { LinkService } from '@/api/services/link.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
@@ -41,6 +42,15 @@ export function createLinksRoutes(
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     createLinkHandler(linkService)
+  );
+
+  // GET /workspace/:workspaceId/links/:linkId - Get a link by ID
+  // Returns complete link details including project and creator info
+  linksRoutes.get(
+    '/:linkId',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    getLinkByIdHandler(linkService)
   );
 
   // PUT /workspace/:workspaceId/links/:linkId - Update a link

@@ -42,6 +42,7 @@ interface EnvConfig {
   invite: {
     secret: string;
     appUrl: string;
+    expiresIn: string;
   };
   session: {
     tokenSecret: string;
@@ -49,6 +50,11 @@ interface EnvConfig {
   };
   database: {
     url: string;
+  };
+  recorder: {
+    url: string;
+    secret: string;
+    expiresIn: string;
   };
   email: {
     provider: 'localhost' | 'resend';
@@ -128,6 +134,7 @@ export function loadEnvConfig(): EnvConfig {
     invite: {
       secret: process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-in-production',
       appUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',
+      expiresIn: process.env.INVITE_TOKEN_EXPIRES_IN || '30d',
     },
     session: {
       tokenSecret: process.env.SESSION_TOKEN_SECRET || 'dev-session-secret-change-in-production',
@@ -136,6 +143,11 @@ export function loadEnvConfig(): EnvConfig {
     },
     database: {
       url: process.env.DATABASE_URL || '',
+    },
+    recorder: {
+      url: process.env.RECORDER_URL || 'http://localhost:4322',
+      secret: process.env.RECORDER_TOKEN_SECRET || 'dev-recorder-secret-change-in-production',
+      expiresIn: process.env.RECORDER_TOKEN_EXPIRES_IN || '180d',
     },
     email: {
       provider: (process.env.EMAIL_PROVIDER as 'localhost' | 'resend') || 'localhost',
@@ -216,6 +228,9 @@ if (env.nodeEnv === 'production') {
   if (env.session.uploadTokenSecret === 'dev-upload-secret-change-in-production') {
     throw new Error('UPLOAD_TOKEN_SECRET must be set in production');
   }
+  if (env.recorder.secret === 'dev-recorder-secret-change-in-production') {
+    throw new Error('RECORDER_TOKEN_SECRET must be set in production');
+  }
   if (!env.database.url) {
     throw new Error('DATABASE_URL must be set in production');
   }
@@ -249,6 +264,7 @@ export function logConfig(): void {
       authUrl: env.auth.url,
       authCookiePrefix: env.auth.cookiePrefix,
       inviteAppUrl: env.invite.appUrl,
+      recorderUrl: env.recorder.url,
       database: env.database.url ? 'Connected' : 'Not configured',
       googleOAuth: env.google.clientId ? 'Configured' : 'Not configured',
       emailProvider: env.email.provider,

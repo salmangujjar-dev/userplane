@@ -3,10 +3,13 @@
  * Contains validation and business rules for link management
  */
 
+import jwt, { type SignOptions } from 'jsonwebtoken';
+import { env } from '@/api/env';
 import { generateLinkId } from '@/api/lib/id-generator';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
+import { DomainRepository } from '@/api/repositories/domains.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { parseLinkReference } from '@/api/lib/link-reference-parser';
 import type {
@@ -21,6 +24,7 @@ export interface LinkServiceDeps {
   linkRepo: LinkRepository;
   workspaceMemberRepo: WorkspaceMemberRepository;
   projectRepo: ProjectRepository;
+  domainRepo: DomainRepository;
 }
 
 /**
@@ -67,6 +71,51 @@ export class LinkService {
     const trimmed = fullName.trim();
     const firstWord = trimmed.split(/\s+/)[0];
     return firstWord || trimmed;
+  }
+
+  /**
+   * Generate a JWT-encoded link URL for accessing recordings
+   * Token expires in 180 days
+   * Payload contains lid (link ID) for link identification
+   * Uses custom domain if verified, otherwise falls back to recorder URL
+   */
+  generateLinkURL(linkId: string, domainUrl?: string, domainStatus?: string): string {
+    const payload = {
+      lid: linkId,
+    };
+
+    const options: SignOptions = {
+      expiresIn: env.recorder.expiresIn as SignOptions['expiresIn'],
+    };
+    const token = jwt.sign(payload, env.recorder.secret, options);
+
+    // Use custom domain if verified, otherwise use recorder URL
+    const baseUrl =
+      domainStatus === 'verified' && domainUrl ? `https://${domainUrl}` : env.recorder.url;
+
+    return `${baseUrl}/r?token=${token}`;
+  }
+
+  /**
+   * Verify and decode a link token
+   * Returns the link ID if valid, throws error if invalid or expired
+   */
+  verifyLinkToken(token: string): string {
+    try {
+      const decoded = jwt.verify(token, env.recorder.secret) as { lid: string };
+      if (!decoded.lid) {
+        throw new ValidationError('Invalid link token: missing link ID');
+      }
+      return decoded.lid;
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new ValidationError('Link token has expired');
+      }
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new ValidationError('Invalid link token');
+      }
+      throw error;
+    }
   }
 
   /**
@@ -129,7 +178,33 @@ export class LinkService {
       options
     );
 
-    return link;
+    if (!link) {
+      throw new ValidationError('Failed to create link');
+    }
+
+    // Fetch domain info for linkURL generation
+    const domain = await this.deps.domainRepo.findById(params.domainId);
+
+    // Return link with domain info - construct explicit object to ensure proper types
+    return {
+      id: link.id,
+      workspaceId: link.workspaceId,
+      projectId: link.projectId,
+      domainId: link.domainId,
+      createdBy: link.createdBy,
+      linkTitle: link.linkTitle,
+      linkType: link.linkType,
+      linkReusable: link.linkReusable,
+      linkProviderType: link.linkProviderType,
+      linkProviderId: link.linkProviderId,
+      linkProviderRef: link.linkProviderRef,
+      createdAt: link.createdAt,
+      updatedAt: link.updatedAt,
+      isDeleted: link.isDeleted,
+      deletedAt: link.deletedAt,
+      domainUrl: domain?.domainUrl || '',
+      domainStatus: domain?.domainStatus || ('pending' as const),
+    };
   }
 
   /**
@@ -169,7 +244,7 @@ export class LinkService {
       sort ?? { field: 'created_at', direction: 'desc' }
     );
 
-    // Map database rows to response shape with flattened linkProvider fields
+    // Map database rows to response shape with flattened linkProvider fields and linkURL
     const links: LinkItem[] = rows.map((row) => ({
       id: row.id,
       linkTitle: row.linkTitle,
@@ -178,6 +253,7 @@ export class LinkService {
       linkProviderType: row.linkProviderType,
       linkProviderId: row.linkProviderId,
       linkProviderReference: row.linkProviderRef,
+      linkURL: this.generateLinkURL(row.id, row.domainUrl, row.domainStatus),
       createdAt: row.createdAt,
       project: {
         id: row.projectId,
@@ -186,6 +262,11 @@ export class LinkService {
       creator: {
         id: row.creatorId,
         name: row.creatorName,
+      },
+      domain: {
+        id: row.domainId,
+        url: row.domainUrl,
+        status: row.domainStatus,
       },
     }));
 
@@ -228,7 +309,81 @@ export class LinkService {
       throw new ValidationError('Failed to update link');
     }
 
-    return updated;
+    // Fetch domain info for linkURL generation
+    const domain = await this.deps.domainRepo.findById(updated.domainId);
+
+    // Return updated link with domain info - construct explicit object to ensure proper types
+    return {
+      id: updated.id,
+      workspaceId: updated.workspaceId,
+      projectId: updated.projectId,
+      domainId: updated.domainId,
+      createdBy: updated.createdBy,
+      linkTitle: updated.linkTitle,
+      linkType: updated.linkType,
+      linkReusable: updated.linkReusable,
+      linkProviderType: updated.linkProviderType,
+      linkProviderId: updated.linkProviderId,
+      linkProviderRef: updated.linkProviderRef,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+      isDeleted: updated.isDeleted,
+      deletedAt: updated.deletedAt,
+      domainUrl: domain?.domainUrl || '',
+      domainStatus: domain?.domainStatus || ('pending' as const),
+    };
+  }
+
+  /**
+   * Get a link by ID with full details
+   * Validates ownership before returning
+   */
+  async getById(linkId: string, workspaceId: string): Promise<LinkItem> {
+    // Get link with joined project and creator data
+    const linkWithDetails = await this.deps.linkRepo.findByIdWithDetails(linkId);
+
+    if (!linkWithDetails) {
+      const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
+      if (isSoftDeleted === true) {
+        throw new GoneError('Link has been deleted');
+      }
+      throw new NotFoundError('Link not found');
+    }
+
+    // Verify link belongs to the workspace
+    if (linkWithDetails.workspaceId !== workspaceId) {
+      throw new ValidationError('Link does not belong to this workspace');
+    }
+
+    // Map to LinkItem response shape with linkURL
+    return {
+      id: linkWithDetails.id,
+      linkTitle: linkWithDetails.linkTitle,
+      linkType: linkWithDetails.linkType,
+      linkReusable: linkWithDetails.linkReusable,
+      linkProviderType: linkWithDetails.linkProviderType,
+      linkProviderId: linkWithDetails.linkProviderId,
+      linkProviderReference: linkWithDetails.linkProviderRef,
+      linkURL: this.generateLinkURL(
+        linkWithDetails.id,
+        linkWithDetails.domainUrl,
+        linkWithDetails.domainStatus
+      ),
+      createdAt: linkWithDetails.createdAt,
+      project: {
+        id: linkWithDetails.projectId,
+        title: linkWithDetails.projectTitle,
+      },
+      creator: {
+        id: linkWithDetails.creatorId,
+        name: linkWithDetails.creatorName,
+      },
+      domain: {
+        id: linkWithDetails.domainId,
+        url: linkWithDetails.domainUrl,
+        status: linkWithDetails.domainStatus,
+      },
+    };
   }
 
   /**

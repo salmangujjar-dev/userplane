@@ -40,8 +40,8 @@ export function getSessionHandler(sessionService: SessionService) {
       const queryParams = c.req.query();
       const parsed = getSessionQuerySchema.parse(queryParams);
 
-      // Initialize session
-      const result = await sessionService.initSession(parsed.link_id);
+      // Initialize session with link token
+      const result = await sessionService.initSession(parsed.token);
 
       // Set response headers for token expiry
       c.header('X-Session-Token-Expires-In', String(result.expiresIn));
