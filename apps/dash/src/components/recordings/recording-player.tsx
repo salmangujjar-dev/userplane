@@ -1,7 +1,11 @@
 'use client';
 
-import VideoPlayer from '@/components/player';
+import dynamic from 'next/dynamic';
 import type { VideoMarker } from '@/components/player/types';
+
+const VideoPlayer = dynamic(() => import('@/components/player'), {
+  ssr: false,
+});
 
 export function RecordingPlayer() {
   // Sample video configuration
