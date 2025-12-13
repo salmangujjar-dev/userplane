@@ -5,6 +5,7 @@
 
 export * from './common.schema';
 export * from './workspace.schema';
+export * from './domain.schema';
 export * from './recording.schema';
 export * from './link.schema';
 export * from './project.schema';

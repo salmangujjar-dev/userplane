@@ -47,6 +47,7 @@ const projectService = new ProjectService({
 
 const domainService = new DomainService({
   domainRepo,
+  tokenService,
 });
 
 const userService = new UserService({

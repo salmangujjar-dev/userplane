@@ -26,6 +26,7 @@ import type { WorkspacePlan, WorkspaceRole, DomainStatus } from './database';
  * - ie: inviter email
  */
 export interface InviteTokenPayload {
+  iss: string; // Issuer (JWT standard) - always 'userplane'
   wi: string; // workspaceId
   wn: string; // workspaceName
   wt: string; // workspaceInviteToken
