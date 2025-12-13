@@ -26,6 +26,8 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "video.js": "^8.6.1",
+    "videojs-contrib-quality-levels": "^4.1.0",
+    "videojs-hls-quality-selector": "^2.0.0",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

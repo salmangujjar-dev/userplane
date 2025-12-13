@@ -1,9 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
 import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { RecordingMetaPanel } from '@/components/recordings/recording-meta-panel';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
+import { PlaybackOptions } from '@/components/player/PlaybackOptions';
+import type { Player } from '@/components/player/types';
 import { toast } from '@workspace/ui/components/sonner';
 import {
   ResizableHandle,
@@ -12,6 +15,7 @@ import {
 } from '@workspace/ui/components/resizable';
 
 export default function RecordingDetailPage() {
+  const [player, setPlayer] = useState<Player | null>(null);
   const handleCopyLink = async () => {
     try {
       const currentUrl = window.location.href;
@@ -80,8 +84,13 @@ export default function RecordingDetailPage() {
       <main className="w-full px-6 py-8">
         <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-8rem)] rounded-lg">
           <ResizablePanel defaultSize={66} minSize={30}>
-            <div className="pr-4 space-y-6">
-              <RecordingPlayer />
+            <div className="relative pr-4 space-y-6">
+              {/* Settings button positioned in the outer container */}
+              <div className="absolute top-4 right-8 z-50">
+                <PlaybackOptions player={player} />
+              </div>
+
+              <RecordingPlayer onPlayerReady={setPlayer} />
               <RecordingMetaPanel />
             </div>
           </ResizablePanel>

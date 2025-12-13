@@ -1,13 +1,17 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { VideoMarker } from '@/components/player/types';
+import type { VideoMarker, Player } from '@/components/player/types';
 
 const VideoPlayer = dynamic(() => import('@/components/player'), {
   ssr: false,
 });
 
-export function RecordingPlayer() {
+interface RecordingPlayerProps {
+  onPlayerReady?: (player: Player) => void;
+}
+
+export function RecordingPlayer({ onPlayerReady }: RecordingPlayerProps) {
   // Sample video configuration
   // Replace with actual recording data from props or API
   const videoOptions = {
@@ -36,7 +40,12 @@ export function RecordingPlayer() {
   return (
     <div className="relative w-full h-[calc(100vh-8rem)] rounded-2xl bg-muted p-4 flex items-center justify-center">
       <div className="relative w-full">
-        <VideoPlayer options={videoOptions} markers={markers} poster={poster} />
+        <VideoPlayer
+          options={videoOptions}
+          markers={markers}
+          poster={poster}
+          onPlayerReady={onPlayerReady}
+        />
       </div>
     </div>
   );

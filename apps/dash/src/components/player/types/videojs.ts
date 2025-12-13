@@ -1,8 +1,28 @@
 // Custom Video.js type definitions for v8
 // Since video.js v8 uses `any` for options, we define our own complete types
 
-// Re-export Player type from video.js
-export type { default as Player } from 'video.js/dist/types/player';
+// Import and extend Player type from video.js
+import type BasePlayer from 'video.js/dist/types/player';
+
+export interface Player extends BasePlayer {
+  hlsQualitySelector?: (options?: {
+    displayCurrentQuality?: boolean;
+    vjsIconClass?: string;
+    placementIndex?: number;
+  }) => void;
+
+  qualityLevels?: () => {
+    length: number;
+    selectedIndex: number;
+    [index: number]: {
+      id: string;
+      width: number;
+      height: number;
+      bitrate: number;
+      enabled: boolean;
+    };
+  };
+}
 
 export interface VideoJsSource {
   src: string;
@@ -37,6 +57,7 @@ export interface ControlBarOptions {
   descriptionsButton?: boolean;
   subsCapsButton?: boolean;
   audioTrackButton?: boolean;
+  qualitySelector?: boolean;
   fullscreenToggle?: boolean;
   pictureInPictureToggle?: boolean;
 }
@@ -87,7 +108,20 @@ export interface PlayerOptions {
 
   // Tech
   techOrder?: string[];
-  html5?: Record<string, unknown>;
+  html5?: {
+    vhs?: {
+      overrideNative?: boolean;
+      enableLowInitialPlaylist?: boolean;
+      smoothQualityChange?: boolean;
+      useBandwidthFromLocalStorage?: boolean;
+      bandwidth?: number;
+      limitRenditionByPlayerDimensions?: boolean;
+    };
+    nativeVideoTracks?: boolean;
+    nativeAudioTracks?: boolean;
+    nativeTextTracks?: boolean;
+    [key: string]: unknown;
+  };
 
   // Plugins
   plugins?: Record<string, unknown>;
