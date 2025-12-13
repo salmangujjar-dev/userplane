@@ -129,14 +129,39 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, []);
 
+  // Handle click on video to toggle play/pause
+  const handleVideoClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const player = playerRef.current;
+    if (!player) return;
+
+    // Only toggle if clicking on the video itself, not on controls
+    const target = e.target as HTMLElement;
+    if (target.closest('.custom-video-controls') || target.closest('.custom-big-play-button')) {
+      return;
+    }
+
+    // Toggle play/pause
+    if (player.paused()) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  };
+
+  // Disable right-click context menu
+  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
   return (
     <div
       data-vjs-player
       className="video-player-container"
       onMouseEnter={handleContainerMouseEnter}
       onMouseLeave={handleContainerMouseLeave}
+      onContextMenu={handleContextMenu}
     >
-      <div ref={videoRef} className="video-player-wrapper" />
+      <div ref={videoRef} className="video-player-wrapper" onClick={handleVideoClick} />
 
       {/* Custom controls */}
       <CustomControls
