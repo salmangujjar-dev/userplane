@@ -7,9 +7,11 @@ import { generateProjectId } from '@/api/lib/id-generator';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type { Transaction, CreateProjectParams } from '@/api/types';
+import type { RecordingService } from '@/api/services/recording.service';
 
 export interface ProjectServiceDeps {
   projectRepo: ProjectRepository;
+  recordingService?: RecordingService;
 }
 
 export class ProjectService {
@@ -158,6 +160,7 @@ export class ProjectService {
    * Marks project as deleted without removing from database
    * Prevents deletion of the last project in a workspace
    * If deleting a default project, automatically sets another project as default
+   * Also triggers cleanup of all recordings in the project
    */
   async deleteProject(projectId: string, workspaceId: string, options?: { tx?: Transaction }) {
     const project = await this.getById(projectId);
@@ -181,6 +184,24 @@ export class ProjectService {
       }
     }
 
+    // Cleanup all recordings in the project
+    // This will soft delete recordings in DB and trigger storage cleanup
+    // RecordingService is optional - only available when ProjectService is used in workspace routes
+    if (this.deps.recordingService) {
+      const cleanupResult = await this.deps.recordingService.cleanupProjectRecordings(
+        projectId,
+        workspaceId,
+        options
+      );
+
+      console.log('[Project Cleanup]', {
+        projectId,
+        recordingsSoftDeleted: cleanupResult.softDeleted,
+        storageCleanupTriggered: cleanupResult.cleanupTriggered,
+      });
+    }
+
+    // Soft delete the project
     const deleted = await this.deps.projectRepo.softDelete(projectId, options);
 
     if (!deleted) {

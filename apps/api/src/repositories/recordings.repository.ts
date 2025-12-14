@@ -559,4 +559,84 @@ export class RecordingRepository {
 
     return recording || null;
   }
+
+  /**
+   * Find all recordings by project ID and workspace ID with file paths
+   * Returns recordings that are not soft-deleted
+   * Used for bulk operations like project cleanup
+   */
+  async findByProjectIdWithFilePaths(projectId: string, workspaceId: string) {
+    return this.db
+      .select({
+        id: recordings.id,
+        recordingVideoRef: recordings.recordingVideoRef,
+        recordingThumbnailRef: recordings.recordingThumbnailRef,
+        recordingConsoleLogRef: recordings.recordingConsoleLogRef,
+        recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+      })
+      .from(recordings)
+      .where(
+        and(
+          eq(recordings.projectId, projectId),
+          eq(recordings.workspaceId, workspaceId),
+          eq(recordings.isDeleted, false)
+        )
+      );
+  }
+
+  /**
+   * Update recording upload status to purged
+   * Sets status after storage cleanup has been attempted
+   * Can only transition from failed state
+   */
+  async markAsPurged(id: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(recordings)
+      .set({
+        uploadStatus: 'purged',
+        updatedAt: new Date(),
+      })
+      .where(and(eq(recordings.id, id), eq(recordings.uploadStatus, 'failed')))
+      .returning();
+
+    return updated || null;
+  }
+
+  /**
+   * Soft delete multiple recordings by project ID and workspace ID
+   * More efficient than individual deletes for bulk operations
+   * Used for project deletion cleanup
+   */
+  async softDeleteByProjectId(
+    projectId: string,
+    workspaceId: string,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const deleted = await dbClient
+      .update(recordings)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(recordings.projectId, projectId),
+          eq(recordings.workspaceId, workspaceId),
+          eq(recordings.isDeleted, false)
+        )
+      )
+      .returning({
+        id: recordings.id,
+        recordingVideoRef: recordings.recordingVideoRef,
+        recordingThumbnailRef: recordings.recordingThumbnailRef,
+        recordingConsoleLogRef: recordings.recordingConsoleLogRef,
+        recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+      });
+
+    return deleted;
+  }
 }
