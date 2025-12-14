@@ -43,3 +43,30 @@ export interface DomainVerificationTokenPayload {
   iat: number;
   exp: number;
 }
+
+export interface DomainByIdData {
+  workspaceId: string;
+  domain: {
+    domainId: string;
+    domainUrl: string;
+    domainStatus: Domain['domainStatus'];
+    recordingHideSensitive: boolean;
+    recordingCaptureClientLog: boolean;
+    recordingCaptureServerLog: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}
+
+export interface DomainRecordingPreferencesData {
+  domainId: string;
+  workspaceId: string;
+  recordingHideSensitive: boolean;
+  recordingCaptureClientLog: boolean;
+  recordingCaptureServerLog: boolean;
+}
+
+export interface DomainRecordingPreferencesUpdateData {
+  domainId: string;
+  workspaceId: string;
+}

@@ -33,6 +33,11 @@ import {
   workspaceSearchHandler,
 } from '@/api/handlers/workspace.handlers';
 import {
+  getDomainRecordingPreferencesHandler,
+  updateDomainRecordingPreferencesHandler,
+  replaceDomainRecordingPreferencesHandler,
+} from '@/api/handlers/domains.handlers';
+import {
   createProjectHandler,
   getProjectsHandler,
   updateProjectHandler,
@@ -244,6 +249,28 @@ export function createWorkspaceRoutes(
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     getDomainVerificationUrlHandler(domainService)
+  );
+
+  // Domain recording preferences routes
+  workspaceRoutes.get(
+    '/:workspaceId/domains/:domainId/preferences',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    getDomainRecordingPreferencesHandler(domainService)
+  );
+
+  workspaceRoutes.patch(
+    '/:workspaceId/domains/:domainId/preferences',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    updateDomainRecordingPreferencesHandler(domainService)
+  );
+
+  workspaceRoutes.put(
+    '/:workspaceId/domains/:domainId/preferences',
+    requireAuth,
+    requireWorkspaceMember(workspaceMemberService, workspaceService),
+    replaceDomainRecordingPreferencesHandler(domainService)
   );
 
   // Search route

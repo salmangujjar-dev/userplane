@@ -41,17 +41,11 @@ export interface WorkspaceByIdData {
 export interface WorkspacePreferencesData {
   workspaceId: string;
   recordingCustomizeLink: boolean;
-  recordingHideSensitive: boolean;
-  recordingCaptureClientLog: boolean;
-  recordingCaptureServerLog: boolean;
 }
 
 export interface WorkspacePreferencesGetData {
   preferences: {
     recordingCustomizeLink: boolean;
-    recordingHideSensitive: boolean;
-    recordingCaptureClientLog: boolean;
-    recordingCaptureServerLog: boolean;
     recordingCompanyName: string | null;
     recordingCompanyLogoPath: string | null;
     recordingHeader: string | null;

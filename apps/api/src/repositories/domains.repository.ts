@@ -219,4 +219,62 @@ export class DomainRepository {
 
     return updated || null;
   }
+
+  /**
+   * Update domain recording preferences
+   * Updates recording toggle settings for the domain
+   */
+  async updateRecordingPreferences(
+    id: string,
+    data: Partial<{
+      recordingHideSensitive: boolean;
+      recordingCaptureClientLog: boolean;
+      recordingCaptureServerLog: boolean;
+    }>,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const updateData: Record<string, unknown> = {
+      updatedAt: new Date(),
+    };
+
+    if (data.recordingHideSensitive !== undefined) {
+      updateData.recordingHideSensitive = data.recordingHideSensitive;
+    }
+
+    if (data.recordingCaptureClientLog !== undefined) {
+      updateData.recordingCaptureClientLog = data.recordingCaptureClientLog;
+    }
+
+    if (data.recordingCaptureServerLog !== undefined) {
+      updateData.recordingCaptureServerLog = data.recordingCaptureServerLog;
+    }
+
+    const [updated] = await dbClient
+      .update(domains)
+      .set(updateData)
+      .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))
+      .returning();
+
+    return updated || null;
+  }
+
+  /**
+   * Find domain preferences by ID
+   * Returns recording toggle settings for the domain
+   */
+  async findPreferencesById(id: string) {
+    const [preferences] = await this.db
+      .select({
+        recordingHideSensitive: domains.recordingHideSensitive,
+        recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureServerLog: domains.recordingCaptureServerLog,
+      })
+      .from(domains)
+      .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))
+      .limit(1);
+
+    return preferences || null;
+  }
 }

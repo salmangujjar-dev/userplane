@@ -230,14 +230,12 @@ export class WorkspaceService {
   /**
    * Update workspace preferences
    * Updates recording-related settings
+   * Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) moved to domain level
    */
   async updatePreferences(
     workspaceId: string,
     updates: Partial<{
       recordingCustomizeLink: boolean;
-      recordingHideSensitive: boolean;
-      recordingCaptureClientLog: boolean;
-      recordingCaptureServerLog: boolean;
       recordingCompanyName: string | null;
       recordingCompanyLogoPath: string | null;
       recordingHeader: string | null;

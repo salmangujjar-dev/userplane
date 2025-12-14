@@ -72,15 +72,13 @@ export class WorkspaceRepository {
   /**
    * Find workspace preferences by ID
    * Returns recording-related settings
+   * Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) moved to domain level
    */
   async findPreferencesById(id: string) {
     const [preferences] = await this.db
       .select({
         recordingSlug: workspaces.recordingSlug,
         recordingCustomizeLink: workspaces.recordingCustomizeLink,
-        recordingHideSensitive: workspaces.recordingHideSensitive,
-        recordingCaptureClientLog: workspaces.recordingCaptureClientLog,
-        recordingCaptureServerLog: workspaces.recordingCaptureServerLog,
         recordingCompanyName: workspaces.recordingCompanyName,
         recordingCompanyLogoPath: workspaces.recordingCompanyLogoPath,
         recordingHeader: workspaces.recordingHeader,
@@ -327,14 +325,12 @@ export class WorkspaceRepository {
   /**
    * Update workspace preferences
    * Updates recording-related settings
+   * Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) moved to domain level
    */
   async updatePreferences(
     workspaceId: string,
     data: Partial<{
       recordingCustomizeLink: boolean;
-      recordingHideSensitive: boolean;
-      recordingCaptureClientLog: boolean;
-      recordingCaptureServerLog: boolean;
       recordingCompanyName: string | null;
       recordingCompanyLogoPath: string | null;
       recordingHeader: string | null;

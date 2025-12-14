@@ -29,12 +29,10 @@ export const updateDomainSchema = z.object({
 /**
  * Update workspace preferences schema
  * Schema for toggling recording behavior preferences
+ * Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) moved to domain level
  */
 export const updateWorkspacePreferencesSchema = z.object({
   recordingCustomizeLink: z.boolean().optional(),
-  recordingHideSensitive: z.boolean().optional(),
-  recordingCaptureClientLog: z.boolean().optional(),
-  recordingCaptureServerLog: z.boolean().optional(),
 });
 
 /**

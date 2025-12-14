@@ -269,4 +269,140 @@ export class DomainService {
 
     return updatedDomain;
   }
+
+  /**
+   * Get domain by ID with recording preferences
+   * Returns complete domain details including recording toggle settings
+   * Throws GoneError if soft-deleted, NotFoundError if not found
+   */
+  async getByIdWithPreferences(domainId: string, workspaceId: string) {
+    const domain = await this.deps.domainRepo.findById(domainId);
+
+    if (!domain) {
+      const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
+      if (isSoftDeleted === true) {
+        throw new GoneError('Domain has been deleted');
+      }
+      throw new NotFoundError('Domain not found');
+    }
+
+    if (domain.workspaceId !== workspaceId) {
+      throw new ValidationError('Domain does not belong to this workspace');
+    }
+
+    return domain;
+  }
+
+  /**
+   * Get domain recording preferences by ID
+   * Returns recording toggle settings for the domain
+   * Throws GoneError if soft-deleted, NotFoundError if not found
+   */
+  async getPreferencesById(domainId: string) {
+    const preferences = await this.deps.domainRepo.findPreferencesById(domainId);
+    if (!preferences) {
+      const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
+      if (isSoftDeleted === true) {
+        throw new GoneError('Domain has been deleted');
+      }
+      throw new NotFoundError('Domain not found');
+    }
+    return preferences;
+  }
+
+  /**
+   * Update domain recording preferences
+   * Updates recording toggle settings for the domain
+   * Only allows updates if domain is verified
+   * Throws GoneError if soft-deleted, NotFoundError if not found, ValidationError if not verified
+   */
+  async updateRecordingPreferences(
+    domainId: string,
+    workspaceId: string,
+    updates: Partial<{
+      recordingHideSensitive: boolean;
+      recordingCaptureClientLog: boolean;
+      recordingCaptureServerLog: boolean;
+    }>,
+    options?: { tx?: Transaction }
+  ) {
+    const domain = await this.deps.domainRepo.findById(domainId);
+
+    if (!domain) {
+      const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
+      if (isSoftDeleted === true) {
+        throw new GoneError('Domain has been deleted');
+      }
+      throw new NotFoundError('Domain not found');
+    }
+
+    if (domain.workspaceId !== workspaceId) {
+      throw new ValidationError('Domain does not belong to this workspace');
+    }
+
+    if (domain.domainStatus !== 'verified') {
+      throw new ValidationError(
+        'Cannot update recording preferences for unverified domain. Please verify the domain first.'
+      );
+    }
+
+    const updated = await this.deps.domainRepo.updateRecordingPreferences(
+      domainId,
+      updates,
+      options
+    );
+    if (!updated) {
+      throw new NotFoundError('Failed to update domain preferences');
+    }
+
+    return updated;
+  }
+
+  /**
+   * Replace domain recording preferences
+   * Replaces all recording toggle settings for the domain
+   * Only allows updates if domain is verified
+   * Throws GoneError if soft-deleted, NotFoundError if not found, ValidationError if not verified
+   */
+  async replaceRecordingPreferences(
+    domainId: string,
+    workspaceId: string,
+    preferences: {
+      recordingHideSensitive: boolean;
+      recordingCaptureClientLog: boolean;
+      recordingCaptureServerLog: boolean;
+    },
+    options?: { tx?: Transaction }
+  ) {
+    const domain = await this.deps.domainRepo.findById(domainId);
+
+    if (!domain) {
+      const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
+      if (isSoftDeleted === true) {
+        throw new GoneError('Domain has been deleted');
+      }
+      throw new NotFoundError('Domain not found');
+    }
+
+    if (domain.workspaceId !== workspaceId) {
+      throw new ValidationError('Domain does not belong to this workspace');
+    }
+
+    if (domain.domainStatus !== 'verified') {
+      throw new ValidationError(
+        'Cannot update recording preferences for unverified domain. Please verify the domain first.'
+      );
+    }
+
+    const updated = await this.deps.domainRepo.updateRecordingPreferences(
+      domainId,
+      preferences,
+      options
+    );
+    if (!updated) {
+      throw new NotFoundError('Failed to update domain preferences');
+    }
+
+    return updated;
+  }
 }

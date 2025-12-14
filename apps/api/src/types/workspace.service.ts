@@ -128,12 +128,10 @@ export interface AddDomainRequest {
 /**
  * Request body for updating workspace preferences
  * Note: recordingCompanyLogoPath is excluded as it can only be set via the upload endpoint
+ * Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) moved to domain level
  */
 export interface UpdateWorkspacePreferencesRequest {
   recordingCustomizeLink?: boolean;
-  recordingHideSensitive?: boolean;
-  recordingCaptureClientLog?: boolean;
-  recordingCaptureServerLog?: boolean;
   recordingCompanyName?: string | null;
   recordingHeader?: string | null;
   recordingFootnote?: string | null;
@@ -143,6 +141,7 @@ export interface UpdateWorkspacePreferencesRequest {
 
 /**
  * Link settings data
+ * Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) moved to domain level
  */
 export interface LinkSettings {
   workspaceId: string;
@@ -153,8 +152,5 @@ export interface LinkSettings {
   recordingPrimaryColor: string | null;
   recordingMaxDuration: number | null;
   recordingCustomizeLink: boolean;
-  recordingHideSensitive: boolean;
-  recordingCaptureClientLog: boolean;
-  recordingCaptureServerLog: boolean;
   recordingSlug: string;
 }

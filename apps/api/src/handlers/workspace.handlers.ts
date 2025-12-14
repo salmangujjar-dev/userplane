@@ -22,6 +22,7 @@ import type {
   DomainAddData,
   DomainUpdateData,
   DomainDeleteData,
+  DomainByIdData,
   WorkspacePreferencesUpdateData,
   WorkspacePreferencesGetData,
   WorkspaceByIdData,
@@ -624,24 +625,21 @@ export function getDomainByIdHandler(domainService: DomainService) {
         return c.json(response, 400);
       }
 
-      const domains = await domainService.getByWorkspaceId(workspaceId);
-      const domain = domains.find((d) => d.id === domainId);
+      const domain = await domainService.getByIdWithPreferences(domainId, workspaceId);
 
-      if (!domain) {
-        const response: ApiErrorResponse = {
-          error: 'Not Found',
-          message: 'Domain not found',
-        };
-        return c.json(response, 404);
-      }
-
-      const response: ApiResponse<{ domain: DomainItem }> = {
+      const response: ApiResponse<DomainByIdData> = {
         message: 'Domain retrieved successfully',
         data: {
+          workspaceId,
           domain: {
             domainId: domain.id,
             domainUrl: domain.domainUrl,
             domainStatus: domain.domainStatus,
+            recordingHideSensitive: domain.recordingHideSensitive,
+            recordingCaptureClientLog: domain.recordingCaptureClientLog,
+            recordingCaptureServerLog: domain.recordingCaptureServerLog,
+            createdAt: domain.createdAt,
+            updatedAt: domain.updatedAt,
           },
         },
       };
@@ -1427,9 +1425,6 @@ export function updateLinkSettingsHandler(workspaceService: WorkspaceService) {
           recordingPrimaryColor: updatedWorkspace.recordingPrimaryColor,
           recordingMaxDuration: updatedWorkspace.recordingMaxDuration,
           recordingCustomizeLink: updatedWorkspace.recordingCustomizeLink,
-          recordingHideSensitive: updatedWorkspace.recordingHideSensitive,
-          recordingCaptureClientLog: updatedWorkspace.recordingCaptureClientLog,
-          recordingCaptureServerLog: updatedWorkspace.recordingCaptureServerLog,
           recordingSlug: updatedWorkspace.recordingSlug,
         },
       };
