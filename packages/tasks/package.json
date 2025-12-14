@@ -1,0 +1,20 @@
+{
+  "name": "@workspace/tasks",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx trigger.dev@latest dev",
+    "deploy": "npx trigger.dev@latest deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@trigger.dev/sdk": "^4.0.0"
+  },
+  "devDependencies": {
+    "@trigger.dev/build": "^4.0.0",
+    "@types/bun": "latest",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "5.7.3"
+  }
+}
