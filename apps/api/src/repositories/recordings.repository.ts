@@ -417,6 +417,8 @@ export class RecordingRepository {
 
   /**
    * Create a new recording with pending status
+   * isDeleted is set to true because pending recordings should not be visible to users
+   * until they become available or partial
    */
   async create(data: CreateRecordingInput, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
@@ -436,7 +438,7 @@ export class RecordingRepository {
         recordingNetworkLogsRef: data.recordingNetworkLogsRef,
         recordingMeta: data.recordingMeta,
         uploadStatus: 'pending',
-        isDeleted: false,
+        isDeleted: true,
       })
       .returning();
 
@@ -446,6 +448,7 @@ export class RecordingRepository {
   /**
    * Update recording upload status to available
    * Can transition from pending or partial
+   * Sets isDeleted to false so recording becomes visible to users
    */
   async markAsAvailable(id: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
@@ -454,13 +457,13 @@ export class RecordingRepository {
       .update(recordings)
       .set({
         uploadStatus: 'available',
+        isDeleted: false,
         updatedAt: new Date(),
       })
       .where(
         and(
           eq(recordings.id, id),
-          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial')),
-          eq(recordings.isDeleted, false)
+          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial'))
         )
       )
       .returning();
@@ -471,6 +474,7 @@ export class RecordingRepository {
   /**
    * Update recording upload status to partial
    * Video uploaded, some secondary files missing
+   * Sets isDeleted to false so recording becomes visible to users
    */
   async markAsPartial(
     id: string,
@@ -488,14 +492,14 @@ export class RecordingRepository {
       .update(recordings)
       .set({
         uploadStatus: 'partial',
+        isDeleted: false,
         recordingMeta: { uploadedFiles },
         updatedAt: new Date(),
       })
       .where(
         and(
           eq(recordings.id, id),
-          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial')),
-          eq(recordings.isDeleted, false)
+          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial'))
         )
       )
       .returning();
@@ -506,6 +510,7 @@ export class RecordingRepository {
   /**
    * Update recording upload status to failed
    * Can transition from pending or partial
+   * Sets isDeleted to true so failed recordings are hidden from users
    */
   async markAsFailed(id: string, reason?: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
@@ -517,14 +522,14 @@ export class RecordingRepository {
       .update(recordings)
       .set({
         uploadStatus: 'failed',
+        isDeleted: true,
         recordingMeta: meta,
         updatedAt: new Date(),
       })
       .where(
         and(
           eq(recordings.id, id),
-          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial')),
-          eq(recordings.isDeleted, false)
+          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial'))
         )
       )
       .returning();

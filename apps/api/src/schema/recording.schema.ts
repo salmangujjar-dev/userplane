@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import type { Recording } from '@workspace/db';
 import { SORT_DIRECTIONS } from './common.schema';
 
 /**
@@ -113,9 +114,10 @@ export const RECORDING_STATUS_GROUPS = {
 export type RecordingStatusGroup = keyof typeof RECORDING_STATUS_GROUPS;
 
 /**
- * Upload status values (derived from database schema)
+ * Upload status values (derived from database enum)
+ * Automatically stays in sync with the database schema
  */
-export type UploadStatus = 'pending' | 'partial' | 'available' | 'failed' | 'expired' | 'purged';
+export type UploadStatus = Recording['uploadStatus'];
 
 /**
  * Get upload statuses for a given status group
