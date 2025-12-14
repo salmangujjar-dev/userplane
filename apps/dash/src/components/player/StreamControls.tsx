@@ -4,9 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PlayIcon, PauseIcon, Volume2Icon, VolumeXIcon, MaximizeIcon } from 'lucide-react';
 import type { Player } from './types';
 import type { VideoMarker } from './types';
-import './CustomControls.css';
+import './stream-controls.css';
 
-interface CustomControlsProps {
+interface StreamControlsProps {
   player: Player | null;
   markers?: VideoMarker[];
   onFullscreen?: () => void;
@@ -22,7 +22,7 @@ interface QualityLevel {
 
 const SPEED_OPTIONS = [0.5, 1, 1.25, 1.5, 2];
 
-const CustomControls: React.FC<CustomControlsProps> = ({
+const StreamControls: React.FC<StreamControlsProps> = ({
   player,
   markers = [],
   onFullscreen,
@@ -551,4 +551,4 @@ const CustomControls: React.FC<CustomControlsProps> = ({
   );
 };
 
-export default CustomControls;
+export default StreamControls;

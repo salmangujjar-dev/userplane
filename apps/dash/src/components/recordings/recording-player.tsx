@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import type { VideoMarker } from '@/components/player/types';
 import './recording-player.css';
 
-const VideoPlayer = dynamic(() => import('@/components/player'), {
+const StreamPlayer = dynamic(() => import('@/components/player'), {
   ssr: false,
 });
 
@@ -77,10 +77,10 @@ export function RecordingPlayer() {
       {/* Overlay backdrop for fullscreen */}
       {isFullscreen && <div className="recording-player-overlay" onClick={toggleFullscreen} />}
 
-      {/* Single VideoPlayer instance that persists */}
+      {/* Single StreamPlayer instance that persists */}
       <div className="recording-player-content">
-        <VideoPlayer
-          key="video-player-persistent"
+        <StreamPlayer
+          key="stream-player-persistent"
           options={videoOptions}
           markers={markers}
           poster={poster}
