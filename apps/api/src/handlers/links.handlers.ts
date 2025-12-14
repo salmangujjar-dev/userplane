@@ -208,7 +208,10 @@ export function createLinkHandler(linkService: LinkService) {
             linkURL: linkService.generateLinkURL(
               created.id,
               created.domainUrl,
-              created.domainStatus
+              created.domainStatus,
+              created.recordingHideSensitive,
+              created.recordingCaptureClientLog,
+              created.recordingCaptureServerLog
             ),
             createdAt: created.createdAt,
             domain: {
@@ -333,7 +336,10 @@ export function updateLinkHandler(linkService: LinkService) {
             linkURL: linkService.generateLinkURL(
               updated.id,
               updated.domainUrl,
-              updated.domainStatus
+              updated.domainStatus,
+              updated.recordingHideSensitive,
+              updated.recordingCaptureClientLog,
+              updated.recordingCaptureServerLog
             ),
             domain: {
               id: updated.domainId,
