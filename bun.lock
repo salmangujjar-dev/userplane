@@ -24,6 +24,7 @@
       "dependencies": {
         "@hono/zod-openapi": "^1.1.5",
         "@hono/zod-validator": "^0.4.1",
+        "@trigger.dev/sdk": "^4.0.0",
         "@workspace/auth": "workspace:*",
         "@workspace/db": "workspace:*",
         "@workspace/email": "workspace:*",
@@ -286,6 +287,8 @@
       "version": "0.0.1",
       "dependencies": {
         "@trigger.dev/sdk": "^4.0.0",
+        "@workspace/db": "workspace:*",
+        "@workspace/storage": "workspace:*",
       },
       "devDependencies": {
         "@trigger.dev/build": "^4.0.0",

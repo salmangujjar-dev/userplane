@@ -14,6 +14,7 @@ import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { TokenService } from '@/api/services/token.service';
+import type { ProjectService } from '@/api/services/project.service';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type { Transaction, CreateWorkspaceParams } from '@/api/types';
 
@@ -24,6 +25,7 @@ export interface WorkspaceServiceDeps {
   projectRepo?: ProjectRepository;
   domainRepo?: DomainRepository;
   linkRepo?: LinkRepository;
+  projectService?: ProjectService;
 }
 
 export class WorkspaceService {
@@ -288,6 +290,8 @@ export class WorkspaceService {
   /**
    * Soft delete a workspace
    * Marks workspace as deleted without removing from database
+   * Also triggers deletion of all projects in the workspace
+   * Each project deletion cascades to recording cleanup
    */
   async deleteWorkspace(workspaceId: string, options?: { tx?: Transaction }) {
     const workspace = await this.getById(workspaceId);
@@ -296,6 +300,36 @@ export class WorkspaceService {
       throw new NotFoundError('Workspace not found');
     }
 
+    // Delete all projects in the workspace (cascades to recordings)
+    // ProjectService and ProjectRepo are optional - only available when used in workspace routes
+    if (this.deps.projectService && this.deps.projectRepo) {
+      const projects = await this.deps.projectRepo.findByWorkspace(workspaceId);
+
+      console.log('[Workspace Cleanup]', {
+        workspaceId,
+        projectsToDelete: projects.length,
+      });
+
+      for (const project of projects) {
+        try {
+          // Delete project (cascades to recordings + storage cleanup)
+          await this.deps.projectService.deleteProject(project.id, workspaceId, options);
+          console.log('[Workspace Cleanup - Project Deleted]', {
+            workspaceId,
+            projectId: project.id,
+          });
+        } catch (error) {
+          // Log error but continue with other projects
+          console.error('[Workspace Cleanup - Project Delete Failed]', {
+            workspaceId,
+            projectId: project.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+    }
+
+    // Soft delete the workspace
     const deleted = await this.deps.workspaceRepo.softDelete(workspaceId, options);
 
     if (!deleted) {

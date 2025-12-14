@@ -33,15 +33,6 @@ const projectRepo = new ProjectRepository(db);
 const domainRepo = new DomainRepository(db);
 const linkRepo = new LinkRepository(db);
 
-export const workspaceService = new WorkspaceService({
-  workspaceRepo,
-  tokenService,
-  workspaceMemberRepo,
-  projectRepo,
-  domainRepo,
-  linkRepo,
-});
-
 export const workspaceMemberService = new WorkspaceMemberService({
   memberRepo: workspaceMemberRepo,
 });
@@ -50,8 +41,24 @@ const userService = new UserService({
   userRepo,
 });
 
+// ProjectService needs RecordingService which is in recordings.index
+// Import it to avoid circular dependency
+import { recordingService } from '../recordings/recordings.index';
+
 export const projectService = new ProjectService({
   projectRepo,
+  recordingService,
+});
+
+// WorkspaceService needs ProjectService for cascading deletes
+export const workspaceService = new WorkspaceService({
+  workspaceRepo,
+  tokenService,
+  workspaceMemberRepo,
+  projectRepo,
+  domainRepo,
+  linkRepo,
+  projectService,
 });
 
 export const domainService = new DomainService({

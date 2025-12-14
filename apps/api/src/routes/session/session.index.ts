@@ -6,6 +6,7 @@
 import createRouter from '@/api/lib/create-router';
 import { createSessionRoutes } from './session.routes';
 import { SessionService } from '@/api/services/session.service';
+import { CleanupService } from '@/api/services/cleanup.service';
 import { LinkService } from '@/api/services/link.service';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
@@ -43,6 +44,15 @@ const linkService = new LinkService({
   domainRepo,
 });
 
+// Initialize cleanup service for storage cleanup and purged state management
+const cleanupService = new CleanupService({
+  recordingRepo,
+  videoStorage,
+  thumbnailsStorage,
+  consoleLogsStorage,
+  networkLogsStorage,
+});
+
 // Initialize service with dependencies
 const sessionService = new SessionService({
   linkRepo,
@@ -52,6 +62,7 @@ const sessionService = new SessionService({
   consoleLogsStorage,
   networkLogsStorage,
   linkService,
+  cleanupService,
 });
 
 // Create and mount routes
