@@ -43,6 +43,9 @@ export interface LinkListRow {
   domainId: string;
   domainUrl: string;
   domainStatus: Domain['domainStatus'];
+  recordingHideSensitive: boolean;
+  recordingCaptureClientLog: boolean;
+  recordingCaptureServerLog: boolean;
 }
 
 /**
@@ -211,6 +214,9 @@ export class LinkRepository {
         domainId: domains.id,
         domainUrl: domains.domainUrl,
         domainStatus: domains.domainStatus,
+        recordingHideSensitive: domains.recordingHideSensitive,
+        recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureServerLog: domains.recordingCaptureServerLog,
       })
       .from(links)
       .innerJoin(projects, eq(links.projectId, projects.id))
@@ -273,6 +279,9 @@ export class LinkRepository {
         domainId: domains.id,
         domainUrl: domains.domainUrl,
         domainStatus: domains.domainStatus,
+        recordingHideSensitive: domains.recordingHideSensitive,
+        recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureServerLog: domains.recordingCaptureServerLog,
       })
       .from(links)
       .innerJoin(projects, eq(links.projectId, projects.id))
@@ -472,6 +481,9 @@ export class LinkRepository {
         domainId: domains.id,
         domainUrl: domains.domainUrl,
         domainStatus: domains.domainStatus,
+        recordingHideSensitive: domains.recordingHideSensitive,
+        recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureServerLog: domains.recordingCaptureServerLog,
         rank: sql<number>`ts_rank(to_tsvector('simple', COALESCE(${links.linkTitle}, '')), to_tsquery('simple', ${tsquery}))`,
       })
       .from(links)

@@ -77,21 +77,36 @@ export class LinkService {
    * Generate a JWT-encoded link URL for accessing recordings
    * Token expires in 180 days
    * Payload contains lid (link ID) for link identification
-   * Uses custom domain if verified, otherwise falls back to recorder URL
+   * Uses custom domain if verified AND recording features are enabled, otherwise falls back to recorder URL
+   * Recording features: hide sensitive fields, capture client logs, capture server logs
    */
-  generateLinkURL(linkId: string, domainUrl?: string, domainStatus?: string): string {
+  generateLinkURL(
+    linkId: string,
+    domainUrl?: string,
+    domainStatus?: string,
+    recordingHideSensitive?: boolean,
+    recordingCaptureClientLog?: boolean,
+    recordingCaptureServerLog?: boolean
+  ): string {
     const payload = {
       lid: linkId,
     };
 
     const options: SignOptions = {
-      expiresIn: env.recorder.expiresIn as SignOptions['expiresIn'],
+      expiresIn: env.recorder.expiresIn,
     };
     const token = jwt.sign(payload, env.recorder.secret, options);
 
-    // Use custom domain if verified, otherwise use recorder URL
+    // Use custom domain only if:
+    // 1. Domain is verified
+    // 2. Domain URL exists
+    // 3. At least one recording feature is enabled
+    const needsCustomDomain =
+      recordingHideSensitive || recordingCaptureClientLog || recordingCaptureServerLog;
     const baseUrl =
-      domainStatus === 'verified' && domainUrl ? `https://${domainUrl}` : env.recorder.url;
+      domainStatus === 'verified' && domainUrl && needsCustomDomain
+        ? `https://${domainUrl}`
+        : env.recorder.url;
 
     return `${baseUrl}/r?token=${token}`;
   }
@@ -204,6 +219,9 @@ export class LinkService {
       deletedAt: link.deletedAt,
       domainUrl: domain?.domainUrl || '',
       domainStatus: domain?.domainStatus || ('pending' as const),
+      recordingHideSensitive: domain?.recordingHideSensitive || false,
+      recordingCaptureClientLog: domain?.recordingCaptureClientLog || true,
+      recordingCaptureServerLog: domain?.recordingCaptureServerLog || true,
     };
   }
 
@@ -253,7 +271,14 @@ export class LinkService {
       linkProviderType: row.linkProviderType,
       linkProviderId: row.linkProviderId,
       linkProviderReference: row.linkProviderRef,
-      linkURL: this.generateLinkURL(row.id, row.domainUrl, row.domainStatus),
+      linkURL: this.generateLinkURL(
+        row.id,
+        row.domainUrl,
+        row.domainStatus,
+        row.recordingHideSensitive,
+        row.recordingCaptureClientLog,
+        row.recordingCaptureServerLog
+      ),
       createdAt: row.createdAt,
       project: {
         id: row.projectId,
@@ -331,6 +356,9 @@ export class LinkService {
       deletedAt: updated.deletedAt,
       domainUrl: domain?.domainUrl || '',
       domainStatus: domain?.domainStatus || ('pending' as const),
+      recordingHideSensitive: domain?.recordingHideSensitive || false,
+      recordingCaptureClientLog: domain?.recordingCaptureClientLog || true,
+      recordingCaptureServerLog: domain?.recordingCaptureServerLog || true,
     };
   }
 
@@ -367,7 +395,10 @@ export class LinkService {
       linkURL: this.generateLinkURL(
         linkWithDetails.id,
         linkWithDetails.domainUrl,
-        linkWithDetails.domainStatus
+        linkWithDetails.domainStatus,
+        linkWithDetails.recordingHideSensitive,
+        linkWithDetails.recordingCaptureClientLog,
+        linkWithDetails.recordingCaptureServerLog
       ),
       createdAt: linkWithDetails.createdAt,
       project: {

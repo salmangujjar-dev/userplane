@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { env } from '@/api/env';
 
 /**
  * File type enum for uploads
@@ -166,12 +167,13 @@ export function isTerminalState(status: string): boolean {
 
 /**
  * Validation constraints
+ * Expiry times are loaded from environment variables with fallbacks
  */
 export const SESSION_CONSTRAINTS = {
-  // Token expiry times in seconds
-  SESSION_TOKEN_EXPIRY: 180 * 60, // 180 minutes
-  UPLOAD_TOKEN_EXPIRY: 120 * 60, // 120 minutes
-  PRESIGNED_URL_EXPIRY: 90 * 60, // 90 minutes
+  // Token expiry times in seconds from environment
+  SESSION_TOKEN_EXPIRY: env.session.tokenExpiry,
+  UPLOAD_TOKEN_EXPIRY: env.session.uploadTokenExpiry,
+  PRESIGNED_URL_EXPIRY: env.session.presignedUrlExpiry,
 
   // File size limits in bytes
   MAX_FILE_SIZE: 500 * 1024 * 1024, // 500MB

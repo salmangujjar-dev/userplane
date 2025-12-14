@@ -10,14 +10,14 @@ import type { InviteTokenPayload, DomainVerificationTokenPayload } from '@/api/t
 export class TokenService {
   private jwtSecret: string;
   private appUrl: string;
-  private expiresIn: string;
+  private expiresIn: number;
   private domainVerificationSecret: string;
   private jwtIssuer: string;
 
   constructor(config: {
     jwtSecret: string;
     appUrl: string;
-    expiresIn: string;
+    expiresIn: number;
     domainVerificationSecret: string;
     jwtIssuer: string;
   }) {
@@ -37,7 +37,7 @@ export class TokenService {
       iss: this.jwtIssuer,
       ...payload,
     };
-    const options: SignOptions = { expiresIn: this.expiresIn as SignOptions['expiresIn'] };
+    const options: SignOptions = { expiresIn: this.expiresIn };
     const token = jwt.sign(fullPayload, this.jwtSecret, options);
     return `${this.appUrl}/invite?token=${token}`;
   }

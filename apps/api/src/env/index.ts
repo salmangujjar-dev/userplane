@@ -43,11 +43,14 @@ interface EnvConfig {
   invite: {
     secret: string;
     appUrl: string;
-    expiresIn: string;
+    expiresIn: number;
   };
   session: {
     tokenSecret: string;
     uploadTokenSecret: string;
+    tokenExpiry: number;
+    uploadTokenExpiry: number;
+    presignedUrlExpiry: number;
   };
   database: {
     url: string;
@@ -55,7 +58,7 @@ interface EnvConfig {
   recorder: {
     url: string;
     secret: string;
-    expiresIn: string;
+    expiresIn: number;
   };
   email: {
     provider: 'localhost' | 'resend';
@@ -136,12 +139,15 @@ export function loadEnvConfig(): EnvConfig {
     invite: {
       secret: process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-in-production',
       appUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',
-      expiresIn: process.env.INVITE_TOKEN_EXPIRES_IN || '30d',
+      expiresIn: parseInteger(process.env.INVITE_TOKEN_EXPIRES_IN, 30 * 24 * 60 * 60), // 30 days
     },
     session: {
       tokenSecret: process.env.SESSION_TOKEN_SECRET || 'dev-session-secret-change-in-production',
       uploadTokenSecret:
         process.env.UPLOAD_TOKEN_SECRET || 'dev-upload-secret-change-in-production',
+      tokenExpiry: parseInteger(process.env.SESSION_TOKEN_EXPIRY, 180 * 60), // 180 minutes
+      uploadTokenExpiry: parseInteger(process.env.UPLOAD_TOKEN_EXPIRY, 120 * 60), // 120 minutes
+      presignedUrlExpiry: parseInteger(process.env.PRESIGNED_URL_EXPIRY, 90 * 60), // 90 minutes
     },
     database: {
       url: process.env.DATABASE_URL || '',
@@ -149,7 +155,7 @@ export function loadEnvConfig(): EnvConfig {
     recorder: {
       url: process.env.RECORDER_URL || 'http://localhost:4322',
       secret: process.env.RECORDER_TOKEN_SECRET || 'dev-recorder-secret-change-in-production',
-      expiresIn: process.env.RECORDER_TOKEN_EXPIRES_IN || '180d',
+      expiresIn: parseInteger(process.env.RECORDER_TOKEN_EXPIRES_IN, 180 * 24 * 60 * 60), // 180 days
     },
     email: {
       provider: (process.env.EMAIL_PROVIDER as 'localhost' | 'resend') || 'localhost',
@@ -266,7 +272,14 @@ export function logConfig(): void {
       authUrl: env.auth.url,
       authCookiePrefix: env.auth.cookiePrefix,
       inviteAppUrl: env.invite.appUrl,
+      inviteTokenExpiry: `${env.invite.expiresIn}s`,
       recorderUrl: env.recorder.url,
+      recorderTokenExpiry: `${env.recorder.expiresIn}s`,
+      session: {
+        tokenExpiry: `${env.session.tokenExpiry}s`,
+        uploadTokenExpiry: `${env.session.uploadTokenExpiry}s`,
+        presignedUrlExpiry: `${env.session.presignedUrlExpiry}s`,
+      },
       database: env.database.url ? 'Connected' : 'Not configured',
       googleOAuth: env.google.clientId ? 'Configured' : 'Not configured',
       emailProvider: env.email.provider,
