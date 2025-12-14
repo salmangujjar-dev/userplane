@@ -513,14 +513,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recordingCustomizeLink\": true,\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true\n}"
+              "raw": "{\n  \"recordingCustomizeLink\": true\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/preferences",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "workspace", "{{workspaceId}}", "preferences"]
             },
-            "description": "Update workspace recording behavior toggles. All fields are optional booleans.\n\nResponse data: WorkspacePreferencesUpdateData (workspaceId)"
+            "description": "Update workspace recording behavior toggles. All fields are optional booleans. Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) are now configured at the domain level.\n\nResponse data: WorkspacePreferencesUpdateData (workspaceId)"
           },
           "response": []
         },
@@ -587,7 +587,7 @@
                 "link"
               ]
             },
-            "description": "Update link branding and customization settings. Accepts multipart form data with optional logo file upload.\n\nResponse data: LinkSettingsData (workspaceId, recordingCompanyName, recordingCompanyLogoPath, recordingHeader, recordingFootnote, recordingPrimaryColor, recordingMaxDuration, recordingCustomizeLink, recordingHideSensitive, recordingCaptureClientLog, recordingCaptureServerLog, recordingSlug)"
+            "description": "Update link branding and customization settings. Accepts multipart form data with optional logo file upload. Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) are now configured at the domain level.\n\nResponse data: LinkSettingsData (workspaceId, recordingCompanyName, recordingCompanyLogoPath, recordingHeader, recordingFootnote, recordingPrimaryColor, recordingMaxDuration, recordingCustomizeLink, recordingSlug)"
           },
           "response": []
         },
@@ -1127,7 +1127,7 @@
                 "{{domainId}}"
               ]
             },
-            "description": "Get a specific domain by ID.\n\nResponse data: DomainByIdData (workspaceId, domain)"
+            "description": "Get a specific domain by ID with complete details including recording preferences.\n\nResponse data: DomainByIdData (workspaceId, domain with domainId, domainUrl, domainStatus, recordingHideSensitive, recordingCaptureClientLog, recordingCaptureServerLog, createdAt, updatedAt)"
           },
           "response": []
         },
@@ -1183,6 +1183,106 @@
               ]
             },
             "description": "Get the verification URL with JWT token for domain verification. This URL should be embedded in the recorder script on the domain to verify ownership.\n\nResponse data: { workspaceId, domainId, verificationUrl }"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Domain Recording Preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains/{{domainId}}/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "domains",
+                "{{domainId}}",
+                "preferences"
+              ]
+            },
+            "description": "Get domain-specific recording toggle settings. These settings control recording behavior for all links associated with this domain.\n\nResponse data: DomainRecordingPreferencesData (domainId, workspaceId, recordingHideSensitive, recordingCaptureClientLog, recordingCaptureServerLog)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Domain Recording Preferences",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains/{{domainId}}/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "domains",
+                "{{domainId}}",
+                "preferences"
+              ]
+            },
+            "description": "Update domain-specific recording toggle settings (PATCH - partial update). All fields are optional booleans.\n\nIMPORTANT: Domain must be verified before recording preferences can be updated.\n\n- recordingHideSensitive: Hide sensitive data in recordings (default: false)\n- recordingCaptureClientLog: Capture client-side console logs (default: true)\n- recordingCaptureServerLog: Capture server-side network logs (default: true)\n\nResponse data: DomainRecordingPreferencesUpdateData (domainId, workspaceId)\n\nError responses:\n- 400: Domain is not verified\n- 401: Unauthorized\n- 403: Not a workspace member\n- 404: Domain not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Replace Domain Recording Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "userplane.session_token={{sessionToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains/{{domainId}}/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "workspace",
+                "{{workspaceId}}",
+                "domains",
+                "{{domainId}}",
+                "preferences"
+              ]
+            },
+            "description": "Replace all domain-specific recording toggle settings (PUT - complete replacement). All fields are required.\n\nIMPORTANT: Domain must be verified before recording preferences can be updated.\n\n- recordingHideSensitive: Hide sensitive data in recordings (default: false)\n- recordingCaptureClientLog: Capture client-side console logs (default: true)\n- recordingCaptureServerLog: Capture server-side network logs (default: true)\n\nResponse data: DomainRecordingPreferencesUpdateData (domainId, workspaceId)\n\nError responses:\n- 400: Domain is not verified or invalid request body\n- 401: Unauthorized\n- 403: Not a workspace member\n- 404: Domain not found"
           },
           "response": []
         }

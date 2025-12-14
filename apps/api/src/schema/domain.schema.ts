@@ -1,6 +1,6 @@
 /**
  * Domain validation schemas
- * Schemas for domain verification operations
+ * Schemas for domain verification and recording preferences
  */
 
 import { z } from 'zod';
@@ -10,4 +10,14 @@ import { z } from 'zod';
  */
 export const verifyDomainSchema = z.object({
   token: z.string().min(1, 'Verification token is required'),
+});
+
+/**
+ * Update domain recording preferences schema
+ * Schema for toggling recording behavior preferences at domain level
+ */
+export const updateDomainRecordingPreferencesSchema = z.object({
+  recordingHideSensitive: z.boolean().optional(),
+  recordingCaptureClientLog: z.boolean().optional(),
+  recordingCaptureServerLog: z.boolean().optional(),
 });

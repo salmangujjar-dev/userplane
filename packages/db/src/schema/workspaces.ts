@@ -40,9 +40,6 @@ export const workspaces = pgTable(
     // Recording link defaults
     recordingSlug: text('recording_slug').notNull(),
     recordingCustomizeLink: boolean('recording_customize_link').default(false).notNull(),
-    recordingHideSensitive: boolean('recording_hide_sensitive').default(false).notNull(),
-    recordingCaptureClientLog: boolean('recording_capture_client_log').default(true).notNull(),
-    recordingCaptureServerLog: boolean('recording_capture_server_log').default(true).notNull(),
     recordingCompanyName: text('recording_company_name'),
     recordingCompanyLogoPath: text('recording_company_logo_path'),
     recordingHeader: text('recording_header'),

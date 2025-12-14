@@ -362,8 +362,9 @@ export class LinkRepository {
   }
 
   /**
-   * Find link by ID with workspace preferences
+   * Find link by ID with workspace and domain preferences
    * Used for session initialization to get link context and recording settings
+   * Recording toggle settings now come from the domain, not workspace
    */
   async findByIdWithWorkspacePrefs(id: string): Promise<LinkWithWorkspacePrefsRow | null> {
     const [result] = await this.db
@@ -376,9 +377,9 @@ export class LinkRepository {
         domainId: links.domainId,
         createdBy: links.createdBy,
         recordingCustomizeLink: workspaces.recordingCustomizeLink,
-        recordingHideSensitive: workspaces.recordingHideSensitive,
-        recordingCaptureClientLog: workspaces.recordingCaptureClientLog,
-        recordingCaptureServerLog: workspaces.recordingCaptureServerLog,
+        recordingHideSensitive: domains.recordingHideSensitive,
+        recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureServerLog: domains.recordingCaptureServerLog,
         recordingCompanyName: workspaces.recordingCompanyName,
         recordingCompanyLogoPath: workspaces.recordingCompanyLogoPath,
         recordingHeader: workspaces.recordingHeader,
@@ -388,7 +389,15 @@ export class LinkRepository {
       })
       .from(links)
       .innerJoin(workspaces, eq(links.workspaceId, workspaces.id))
-      .where(and(eq(links.id, id), eq(links.isDeleted, false), eq(workspaces.isDeleted, false)))
+      .innerJoin(domains, eq(links.domainId, domains.id))
+      .where(
+        and(
+          eq(links.id, id),
+          eq(links.isDeleted, false),
+          eq(workspaces.isDeleted, false),
+          eq(domains.isDeleted, false)
+        )
+      )
       .limit(1);
 
     return result || null;
