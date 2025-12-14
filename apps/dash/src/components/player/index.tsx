@@ -5,11 +5,11 @@ import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import 'videojs-contrib-quality-levels';
 import 'videojs-hls-quality-selector';
-import './VideoPlayer.css';
-import CustomControls from './CustomControls';
+import './stream-player.css';
+import StreamControls from './StreamControls';
 import type { VideoMarker, Player, PlayerOptions } from './types';
 
-interface VideoPlayerProps {
+interface StreamPlayerProps {
   options: PlayerOptions;
   markers?: VideoMarker[];
   poster?: string | null;
@@ -17,7 +17,7 @@ interface VideoPlayerProps {
   onFullscreen?: () => void;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({
+const StreamPlayer: React.FC<StreamPlayerProps> = ({
   options,
   markers = [],
   poster = null,
@@ -164,7 +164,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       <div ref={videoRef} className="video-player-wrapper" onClick={handleVideoClick} />
 
       {/* Custom controls */}
-      <CustomControls
+      <StreamControls
         player={playerRef.current}
         markers={markers}
         onFullscreen={onFullscreen}
@@ -176,4 +176,4 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   );
 };
 
-export default VideoPlayer;
+export default StreamPlayer;
