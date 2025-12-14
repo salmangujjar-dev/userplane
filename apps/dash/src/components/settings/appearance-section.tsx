@@ -19,9 +19,6 @@ const DURATION_MARKS = [
 
 export function AppearanceSection() {
   const [workspaceSlug, setWorkspaceSlug] = useState('larys-workspace');
-  const [hideSensitiveFields, setHideSensitiveFields] = useState(false);
-  const [enableConsoleNetworkLog, setEnableConsoleNetworkLog] = useState(false);
-  const [enableBackendLog, setEnableBackendLog] = useState(false);
   const [customizeRecordingLink, setCustomizeRecordingLink] = useState(false);
   const [workspaceImage, setWorkspaceImage] = useState<string | null>(null);
   const [workspaceName, setWorkspaceName] = useState("Lary's Workspace");
@@ -452,39 +449,6 @@ export function AppearanceSection() {
                 </div>
               </>
             )}
-          </div>
-
-          <div className="flex items-center justify-between p-4 rounded-xl border bg-card">
-            <Label htmlFor="hide-sensitive" className="text-sm font-medium cursor-pointer">
-              Hide sensitive fields
-            </Label>
-            <Switch
-              id="hide-sensitive"
-              checked={hideSensitiveFields}
-              onCheckedChange={setHideSensitiveFields}
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-4 rounded-xl border bg-card">
-            <Label htmlFor="console-network-log" className="text-sm font-medium cursor-pointer">
-              Capture console and network logs
-            </Label>
-            <Switch
-              id="console-network-log"
-              checked={enableConsoleNetworkLog}
-              onCheckedChange={setEnableConsoleNetworkLog}
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-4 rounded-xl border bg-card">
-            <Label htmlFor="backend-log" className="text-sm font-medium cursor-pointer">
-              Capture backend and server logs
-            </Label>
-            <Switch
-              id="backend-log"
-              checked={enableBackendLog}
-              onCheckedChange={setEnableBackendLog}
-            />
           </div>
         </div>
       </div>

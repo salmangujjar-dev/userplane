@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:dev trigger\:deploy trigger\:whoami i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -90,6 +90,12 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)clean:all$(WHITE)                     ║$(RESET) Remove deps, builds, and caches                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)clean:deep$(WHITE)                    ║$(RESET) Remove all node_modules and reinstall                             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)reset$(WHITE)                         ║$(RESET) Clean and reinstall everything                                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)BACKGROUND TASKS (Trigger.dev)$(WHITE)                                                                ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:dev$(WHITE)                   ║$(RESET) Run Trigger.dev in development mode                               $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:deploy$(WHITE)                ║$(RESET) Deploy tasks to Trigger.dev                                       $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:whoami$(WHITE)                ║$(RESET) Show current Trigger.dev auth status                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╚═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╝$(RESET)"
 	@echo ""
 	@echo "$(YELLOW)Quick Shortcuts:$(RESET) $(CYAN)i$(RESET)=install $(CYAN)d$(RESET)=dev $(CYAN)b$(RESET)=build $(CYAN)l$(RESET)=lint $(CYAN)f$(RESET)=format $(CYAN)t$(RESET)=test $(CYAN)c$(RESET)=check"
@@ -362,6 +368,20 @@ db\:studio\:production: ## Open Drizzle Studio (production)
 		exit 1; \
 	fi
 	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:studio
+
+# Trigger.dev commands
+trigger\:dev: ## Run Trigger.dev in development mode
+	@echo "$(MAGENTA)Starting Trigger.dev development server...$(RESET)"
+	@cd packages/tasks && npx trigger.dev@latest dev
+
+trigger\:deploy: ## Deploy tasks to Trigger.dev
+	@echo "$(BLUE)Deploying tasks to Trigger.dev...$(RESET)"
+	@cd packages/tasks && npx trigger.dev@latest deploy
+	@echo "$(GREEN)Tasks deployed!$(RESET)"
+
+trigger\:whoami: ## Show current Trigger.dev auth status
+	@echo "$(CYAN)Checking Trigger.dev authentication...$(RESET)"
+	@npx trigger.dev@latest whoami
 
 i: install ## Shortcut for install
 d: dev ## Shortcut for dev
