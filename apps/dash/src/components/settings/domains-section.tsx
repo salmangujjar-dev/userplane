@@ -23,16 +23,111 @@ import { DomainVerificationVerifyingModal } from '@/components/modals/domain-ver
 import { DomainVerificationPostModal } from '@/components/modals/domain-verification-post-modal';
 import { EditDomainModal } from '@/components/modals/edit-domain-modal';
 import { CreateDomainModal } from '@/components/modals/create-domain-modal';
+import { DomainConfigureModal } from '@/components/modals/domain-configure-modal';
 
-const DOMAINS = [
-  { id: 1, url: 'localhost:5500/', status: 'Installed', verified: true },
-  { id: 2, url: 'app.userplane.io', status: 'Pending', verified: false },
-  { id: 3, url: 'staging.userplane.io/dashboard', status: 'Installed', verified: true },
-  { id: 4, url: 'dev.userplane.io', status: 'Installed', verified: true },
-  { id: 5, url: 'localhost:3000/app', status: 'Pending', verified: false },
-  { id: 6, url: 'beta.userplane.io/portal', status: 'Installed', verified: true },
-  { id: 7, url: 'testing.userplane.io', status: 'Pending', verified: false },
-  { id: 8, url: 'production.userplane.io', status: 'Installed', verified: true },
+interface DomainSettings {
+  hideSensitiveFields: boolean;
+  captureConsoleNetworkLogs: boolean;
+  captureBackendServerLogs: boolean;
+}
+
+interface Domain {
+  id: number;
+  url: string;
+  status: string;
+  verified: boolean;
+  settings: DomainSettings;
+}
+
+const DOMAINS: Domain[] = [
+  {
+    id: 1,
+    url: 'localhost:5500/',
+    status: 'Installed',
+    verified: true,
+    settings: {
+      hideSensitiveFields: false,
+      captureConsoleNetworkLogs: false,
+      captureBackendServerLogs: false,
+    },
+  },
+  {
+    id: 2,
+    url: 'app.userplane.io',
+    status: 'Pending',
+    verified: false,
+    settings: {
+      hideSensitiveFields: false,
+      captureConsoleNetworkLogs: false,
+      captureBackendServerLogs: false,
+    },
+  },
+  {
+    id: 3,
+    url: 'staging.userplane.io/dashboard',
+    status: 'Installed',
+    verified: true,
+    settings: {
+      hideSensitiveFields: true,
+      captureConsoleNetworkLogs: true,
+      captureBackendServerLogs: false,
+    },
+  },
+  {
+    id: 4,
+    url: 'dev.userplane.io',
+    status: 'Installed',
+    verified: true,
+    settings: {
+      hideSensitiveFields: false,
+      captureConsoleNetworkLogs: false,
+      captureBackendServerLogs: false,
+    },
+  },
+  {
+    id: 5,
+    url: 'localhost:3000/app',
+    status: 'Pending',
+    verified: false,
+    settings: {
+      hideSensitiveFields: false,
+      captureConsoleNetworkLogs: false,
+      captureBackendServerLogs: false,
+    },
+  },
+  {
+    id: 6,
+    url: 'beta.userplane.io/portal',
+    status: 'Installed',
+    verified: true,
+    settings: {
+      hideSensitiveFields: false,
+      captureConsoleNetworkLogs: false,
+      captureBackendServerLogs: false,
+    },
+  },
+  {
+    id: 7,
+    url: 'testing.userplane.io',
+    status: 'Pending',
+    verified: false,
+    settings: {
+      hideSensitiveFields: false,
+      captureConsoleNetworkLogs: false,
+      captureBackendServerLogs: false,
+    },
+  },
+  {
+    id: 8,
+    url: 'production.userplane.io',
+    status: 'Installed',
+    verified: true,
+    settings: {
+      hideSensitiveFields: true,
+      captureConsoleNetworkLogs: true,
+      captureBackendServerLogs: true,
+    },
+  },
 ];
 
 type VerificationStep = 'pre' | 'verifying' | 'post' | null;
@@ -40,20 +135,22 @@ type VerificationStep = 'pre' | 'verifying' | 'post' | null;
 const ITEMS_PER_PAGE = 5;
 
 export function DomainsSection() {
+  const [domains, setDomains] = useState<Domain[]>(DOMAINS);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [verifyingDomain, setVerifyingDomain] = useState<string | null>(null);
   const [verificationStep, setVerificationStep] = useState<VerificationStep>(null);
   const [editingDomain, setEditingDomain] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [configuringDomain, setConfiguringDomain] = useState<Domain | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const totalPages = Math.ceil(DOMAINS.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(domains.length / ITEMS_PER_PAGE);
 
   const paginatedDomains = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
-    return DOMAINS.slice(startIndex, endIndex);
-  }, [currentPage]);
+    return domains.slice(startIndex, endIndex);
+  }, [domains, currentPage]);
 
   const handleCreateDomain = (domainUrl: string) => {
     console.log('Adding domain:', domainUrl);
@@ -95,13 +192,33 @@ export function DomainsSection() {
 
   const handleDeleteDomain = (domainUrl: string) => {
     console.log('Deleting domain:', domainUrl);
+    setConfiguringDomain(null);
+  };
+
+  const handleConfigure = (domain: Domain) => {
+    setConfiguringDomain(domain);
+  };
+
+  const handleSaveSettings = (settings: DomainSettings) => {
+    if (configuringDomain) {
+      setDomains((prev) =>
+        prev.map((domain) =>
+          domain.id === configuringDomain.id
+            ? {
+                ...domain,
+                settings,
+              }
+            : domain
+        )
+      );
+    }
   };
 
   return (
     <div>
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Domains</h2>
-        <p className="text-sm text-muted-foreground">Manage allowed domains for recordings</p>
+        <p className="text-sm text-muted-foreground">Configure domain and recording settings</p>
       </div>
 
       <div className="max-w-2xl space-y-4">
@@ -128,27 +245,15 @@ export function DomainsSection() {
               </span>
             </div>
             <div className="flex items-center gap-3">
-              {domain.verified ? (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
-                  onClick={() => handleShowVerified(domain.url)}
-                >
-                  Verified
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
-                  onClick={() => handleVerify(domain.url)}
-                >
-                  Verify
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
+                onClick={() => handleConfigure(domain)}
+              >
+                Configure
+                <ChevronRight className="h-4 w-4" />
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -258,6 +363,31 @@ export function DomainsSection() {
         onOpenChange={setIsEditModalOpen}
         domainUrl={editingDomain || ''}
         onSave={handleSaveEdit}
+      />
+
+      <DomainConfigureModal
+        open={!!configuringDomain}
+        onOpenChange={(open) => !open && setConfiguringDomain(null)}
+        domainUrl={configuringDomain?.url || ''}
+        verified={configuringDomain?.verified || false}
+        settings={
+          configuringDomain?.settings || {
+            hideSensitiveFields: false,
+            captureConsoleNetworkLogs: false,
+            captureBackendServerLogs: false,
+          }
+        }
+        onSave={handleSaveSettings}
+        onVerify={() => {
+          if (configuringDomain) {
+            handleVerify(configuringDomain.url);
+          }
+        }}
+        onShowVerified={() => {
+          if (configuringDomain) {
+            handleShowVerified(configuringDomain.url);
+          }
+        }}
       />
     </div>
   );
