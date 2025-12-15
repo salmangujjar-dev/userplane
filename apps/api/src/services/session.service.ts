@@ -43,7 +43,6 @@ import type {
   ConsoleLogsStorageClient,
   NetworkLogsStorageClient,
 } from '@workspace/storage';
-import type { CleanupService } from '@/api/services/cleanup.service';
 
 export interface SessionServiceDeps {
   linkRepo: LinkRepository;
@@ -53,7 +52,6 @@ export interface SessionServiceDeps {
   consoleLogsStorage: ConsoleLogsStorageClient;
   networkLogsStorage: NetworkLogsStorageClient;
   linkService: LinkService;
-  cleanupService: CleanupService;
 }
 
 /**
@@ -427,40 +425,6 @@ export class SessionService {
       if (!updated) {
         throw new ValidationError('Failed to update recording status');
       }
-
-      // Trigger cleanup: delete storage objects and mark as purged if successful
-      // This runs asynchronously - we don't wait for it to complete
-      // CleanupService handles BOTH storage deletion AND marking as purged
-      // Lifecycle policy handles: incomplete multipart uploads
-      // Status only updates to 'purged' if all deletions succeed
-      // If cleanup fails, recording stays in 'failed' state for retry/manual intervention
-      this.deps.cleanupService
-        .cleanupRecording(recordingId, {
-          recordingVideoRef: recording.recordingVideoRef,
-          recordingThumbnailRef: recording.recordingThumbnailRef,
-          recordingConsoleLogRef: recording.recordingConsoleLogRef,
-          recordingNetworkLogsRef: recording.recordingNetworkLogsRef,
-        })
-        .then((result) => {
-          if (!result.success) {
-            console.error('[Cleanup Failed]', {
-              recordingId: result.recordingId,
-              filesDeleted: result.filesDeleted,
-              errors: result.errors,
-            });
-          } else {
-            console.log('[Cleanup Success - Marked as Purged]', {
-              recordingId: result.recordingId,
-              filesDeleted: result.filesDeleted,
-            });
-          }
-        })
-        .catch((error) => {
-          console.error('[Cleanup Error]', {
-            recordingId,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        });
 
       return {
         success: true,
