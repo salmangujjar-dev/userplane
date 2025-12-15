@@ -1,0 +1,32 @@
+/**
+ * Idempotency key builders for Trigger.dev tasks
+ * Ensures consistent and type-safe idempotency key generation
+ */
+
+/**
+ * Build idempotency key for recording deletion
+ */
+export function buildRecordingDeletionKey(recordingId: string): string {
+  return `delete-recording-${recordingId}`;
+}
+
+/**
+ * Build idempotency key for link deletion
+ */
+export function buildLinkDeletionKey(linkId: string): string {
+  return `delete-link-${linkId}`;
+}
+
+/**
+ * Build idempotency key for project deletion
+ */
+export function buildProjectDeletionKey(projectId: string): string {
+  return `delete-project-${projectId}`;
+}
+
+/**
+ * Build idempotency key for workspace deletion
+ */
+export function buildWorkspaceDeletionKey(workspaceId: string): string {
+  return `delete-workspace-${workspaceId}`;
+}
