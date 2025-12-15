@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -83,6 +83,15 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)test$(WHITE)                          ║$(RESET) Run all tests                                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)test:watch$(WHITE)                    ║$(RESET) Run tests in watch mode                                           $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)test:api$(WHITE)                      ║$(RESET) Test API endpoints                                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)BACKGROUND JOBS (Trigger.dev)$(WHITE)                                                                    ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:login$(WHITE)                 ║$(RESET) Login to trigger.dev CLI                                          $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:whoami$(WHITE)                ║$(RESET) Show current trigger.dev user                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:dev$(WHITE)                   ║$(RESET) Run trigger.dev dev server                                        $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:deploy$(WHITE)                ║$(RESET) Deploy tasks (dev)                                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:deploy:staging$(WHITE)        ║$(RESET) Deploy tasks (staging)                                            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:deploy:production$(WHITE)     ║$(RESET) Deploy tasks (production)                                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)MAINTENANCE$(WHITE)                                                                                       ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -362,6 +371,55 @@ db\:studio\:production: ## Open Drizzle Studio (production)
 		exit 1; \
 	fi
 	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:studio
+
+# Trigger.dev commands
+trigger\:login: ## Login to trigger.dev CLI
+	@echo "$(BLUE)Logging in to trigger.dev...$(RESET)"
+	@cd apps/api && npx trigger.dev@latest login
+	@echo "$(GREEN)Login complete!$(RESET)"
+
+trigger\:whoami: ## Show current trigger.dev user
+	@echo "$(BLUE)Checking trigger.dev identity...$(RESET)"
+	@cd apps/api && npx trigger.dev@latest whoami
+
+trigger\:dev: ## Run trigger.dev dev server
+	@echo "$(MAGENTA)Starting trigger.dev dev server...$(RESET)"
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
+		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@cd apps/api && export $$(grep -v '^#' .env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && npx trigger.dev@latest dev
+
+trigger\:deploy: ## Deploy tasks to trigger.dev (dev)
+	@echo "$(BLUE)Deploying tasks to trigger.dev (development)...$(RESET)"
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
+		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@cd apps/api && export $$(grep -v '^#' .env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && npx trigger.dev@latest deploy
+	@echo "$(GREEN)Deployment complete!$(RESET)"
+
+trigger\:deploy\:staging: ## Deploy tasks to trigger.dev (staging)
+	@echo "$(BLUE)Deploying tasks to trigger.dev (staging)...$(RESET)"
+	@if [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd apps/api && export $$(grep -v '^#' .env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && npx trigger.dev@latest deploy
+	@echo "$(GREEN)Deployment complete!$(RESET)"
+
+trigger\:deploy\:production: ## Deploy tasks to trigger.dev (production)
+	@echo "$(RED)Deploying tasks to trigger.dev (production)...$(RESET)"
+	@echo "$(RED)WARNING: This will deploy to PRODUCTION!$(RESET)"
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
+	@if [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd apps/api && export $$(grep -v '^#' .env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && npx trigger.dev@latest deploy
+	@echo "$(GREEN)Deployment complete!$(RESET)"
 
 i: install ## Shortcut for install
 d: dev ## Shortcut for dev
