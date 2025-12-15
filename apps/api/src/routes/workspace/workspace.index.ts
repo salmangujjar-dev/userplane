@@ -47,6 +47,7 @@ import { recordingService } from '../recordings/recordings.index';
 
 export const projectService = new ProjectService({
   projectRepo,
+  db,
   recordingService,
 });
 
@@ -54,6 +55,7 @@ export const projectService = new ProjectService({
 export const workspaceService = new WorkspaceService({
   workspaceRepo,
   tokenService,
+  db,
   workspaceMemberRepo,
   projectRepo,
   domainRepo,

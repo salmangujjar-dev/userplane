@@ -20,6 +20,10 @@ import type {
 } from '@/api/types';
 import type { Transaction } from '@/api/repositories/recordings.repository';
 import type { CleanupService } from '@/api/services/cleanup.service';
+import { tasks } from '@trigger.dev/sdk/v3';
+import { calculateDelay } from '@/api/trigger/delay-calculator';
+import { TASK_IDS } from '@/api/trigger/constants';
+import { buildRecordingDeletionKey } from '@/api/trigger/idempotency';
 
 export interface RecordingServiceDeps {
   recordingRepo: RecordingRepository;

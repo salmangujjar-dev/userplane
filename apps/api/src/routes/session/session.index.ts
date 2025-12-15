@@ -13,6 +13,7 @@ import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
+import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { db } from '@/api/clients/db';
 import {
   getVideoStorage,
@@ -35,13 +36,16 @@ const networkLogsStorage = getNetworkLogsStorage();
 
 // Initialize domain repository for link service
 const domainRepo = new DomainRepository(db);
+const workspaceRepo = new WorkspaceRepository(db);
+const projectRepoForLink = new ProjectRepository(db);
 
 // Initialize link service for token validation
 const linkService = new LinkService({
   linkRepo,
   workspaceMemberRepo,
-  projectRepo,
+  projectRepo: projectRepoForLink,
   domainRepo,
+  workspaceRepo,
 });
 
 // Initialize cleanup service for storage cleanup and purged state management

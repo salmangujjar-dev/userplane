@@ -10,6 +10,7 @@ import { LinkRepository } from '@/api/repositories/links.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
+import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { parseLinkReference } from '@/api/lib/link-reference-parser';
 import type {
@@ -25,6 +26,7 @@ export interface LinkServiceDeps {
   workspaceMemberRepo: WorkspaceMemberRepository;
   projectRepo: ProjectRepository;
   domainRepo: DomainRepository;
+  workspaceRepo: WorkspaceRepository;
 }
 
 /**
@@ -140,6 +142,15 @@ export class LinkService {
    * If projectId is not provided, uses the default project for the workspace
    */
   async create(params: CreateLinkParams, options?: { tx?: Transaction }) {
+    // Guard rail: Check if workspace is deleted
+    const isWorkspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(params.workspaceId);
+    if (isWorkspaceDeleted === null) {
+      throw new NotFoundError('Workspace not found');
+    }
+    if (isWorkspaceDeleted) {
+      throw new ValidationError('Workspace has been deleted');
+    }
+
     // Get the workspace member with user info
     const memberWithUser = await this.deps.workspaceMemberRepo.findByIdWithUser(params.createdBy);
     if (!memberWithUser) {
@@ -159,6 +170,15 @@ export class LinkService {
         throw new ValidationError('No default project found for workspace');
       }
       projectId = defaultProject.id;
+    }
+
+    // Guard rail: Check if project is deleted
+    const isProjectDeleted = await this.deps.projectRepo.isSoftDeleted(projectId);
+    if (isProjectDeleted === null) {
+      throw new NotFoundError('Project not found');
+    }
+    if (isProjectDeleted) {
+      throw new ValidationError('Project has been deleted');
     }
 
     // Determine linkReference - use provided or generate default based on user's first name

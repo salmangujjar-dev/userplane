@@ -20,6 +20,10 @@ import type {
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
 import { listRecordingsQuerySchema, RECORDING_SORT_FIELDS } from '@/api/schema';
+import { tasks } from '@trigger.dev/sdk/v3';
+import { calculateDelay } from '@/api/trigger/delay-calculator';
+import { TASK_IDS } from '@/api/trigger/constants';
+import { buildRecordingDeletionKey } from '@/api/trigger/idempotency';
 
 /**
  * Handler factory for listing recordings
@@ -235,8 +239,41 @@ export function deleteRecordingHandler(recordingService: RecordingService) {
         return c.json(response, 400);
       }
 
+      // Get recording to check uploadStatus
+      const recording = await recordingService.getById(recordingId, workspaceId);
+
+      // Check if already purged/expired - nothing to do
+      if (recording.meta.status === 'expired' || recording.meta.status === 'purged') {
+        const response: ApiResponse<{ workspaceId: string; recordingId: string }> = {
+          message: 'Recording deleted successfully',
+          data: {
+            workspaceId,
+            recordingId,
+          },
+        };
+        return c.json(response, 200);
+      }
+
       // Perform soft delete
       await recordingService.delete(recordingId, workspaceId);
+
+      // Trigger background cleanup task (best effort - fire and forget)
+      try {
+        await tasks.trigger(
+          TASK_IDS.DELETE_RECORDING_RESOURCES,
+          { recordingId },
+          {
+            idempotencyKey: buildRecordingDeletionKey(recordingId),
+            delay: calculateDelay(recording.meta.status),
+          }
+        );
+      } catch (triggerError) {
+        // Log error but don't fail the request - sweep job will catch it
+        console.error('[Recording Delete - Trigger Failed]', {
+          recordingId,
+          error: triggerError instanceof Error ? triggerError.message : 'Unknown error',
+        });
+      }
 
       const response: ApiResponse<{ workspaceId: string; recordingId: string }> = {
         message: 'Recording deleted successfully',

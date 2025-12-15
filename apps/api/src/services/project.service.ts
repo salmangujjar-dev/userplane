@@ -8,10 +8,14 @@ import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type { Transaction, CreateProjectParams } from '@/api/types';
 import type { RecordingService } from '@/api/services/recording.service';
+import type { LinkRepository } from '@/api/repositories/links.repository';
+import type { DbClient } from '@workspace/db';
 
 export interface ProjectServiceDeps {
   projectRepo: ProjectRepository;
+  db: DbClient;
   recordingService?: RecordingService;
+  linkRepo?: LinkRepository;
 }
 
 export class ProjectService {
@@ -156,11 +160,17 @@ export class ProjectService {
   }
 
   /**
-   * Soft delete a project
-   * Marks project as deleted without removing from database
-   * Prevents deletion of the last project in a workspace
-   * If deleting a default project, automatically sets another project as default
-   * Also triggers cleanup of all recordings in the project
+   * Soft delete a project with cascade deletion
+   *
+   * Transaction flow:
+   * 1. Validate project belongs to workspace
+   * 2. Prevent deletion of last project
+   * 3. Set another project as default if needed
+   * 4. Mark project as deleted
+   * 5. Mark all links in project as deleted
+   *
+   * After commit (handled by caller):
+   * - Trigger deleteProjectResources task
    */
   async deleteProject(projectId: string, workspaceId: string, options?: { tx?: Transaction }) {
     const project = await this.getById(projectId);
@@ -176,38 +186,36 @@ export class ProjectService {
       throw new ValidationError('Cannot delete the only project in a workspace');
     }
 
-    // If deleting a default project, set another one as default before deletion
-    if (project.isDefault) {
-      const otherProject = await this.deps.projectRepo.findOtherProject(workspaceId, projectId);
-      if (otherProject) {
-        await this.deps.projectRepo.update(otherProject.id, { isDefault: true }, options);
+    // Use transaction for atomic deletion
+    const performDeletion = async (tx: Transaction) => {
+      // If deleting a default project, set another one as default before deletion
+      if (project.isDefault) {
+        const otherProject = await this.deps.projectRepo.findOtherProject(workspaceId, projectId);
+        if (otherProject) {
+          await this.deps.projectRepo.update(otherProject.id, { isDefault: true }, { tx });
+        }
       }
+
+      // Soft delete the project
+      const deleted = await this.deps.projectRepo.softDelete(projectId, { tx });
+
+      if (!deleted) {
+        throw new ValidationError('Failed to delete project');
+      }
+
+      // Soft delete all links in project (if linkRepo available)
+      if (this.deps.linkRepo) {
+        await this.deps.linkRepo.softDeleteByProjectId(projectId, { tx });
+      }
+
+      return deleted;
+    };
+
+    // Execute in provided transaction or create new one
+    if (options?.tx) {
+      return performDeletion(options.tx);
     }
 
-    // Cleanup all recordings in the project
-    // This will soft delete recordings in DB and trigger storage cleanup
-    // RecordingService is optional - only available when ProjectService is used in workspace routes
-    if (this.deps.recordingService) {
-      const cleanupResult = await this.deps.recordingService.cleanupProjectRecordings(
-        projectId,
-        workspaceId,
-        options
-      );
-
-      console.log('[Project Cleanup]', {
-        projectId,
-        recordingsSoftDeleted: cleanupResult.softDeleted,
-        storageCleanupTriggered: cleanupResult.cleanupTriggered,
-      });
-    }
-
-    // Soft delete the project
-    const deleted = await this.deps.projectRepo.softDelete(projectId, options);
-
-    if (!deleted) {
-      throw new ValidationError('Failed to delete project');
-    }
-
-    return deleted;
+    return this.deps.db.transaction(performDeletion);
   }
 }

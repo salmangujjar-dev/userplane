@@ -136,6 +136,11 @@ export class SessionService {
       throw new NotFoundError('Link not found');
     }
 
+    // Guard rails: Check if related resources are deleted
+    // Note: The query findByIdWithWorkspacePrefs already filters for non-deleted workspace and domain
+    // via the JOIN conditions with eq(workspaces.isDeleted, false) and eq(domains.isDeleted, false)
+    // So if we reach here, workspace and domain are valid
+
     // Validate link type - only recording links allowed
     if (linkData.linkType !== 'recording') {
       throw new ValidationError(

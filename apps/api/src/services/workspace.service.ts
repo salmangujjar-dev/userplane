@@ -17,10 +17,12 @@ import { TokenService } from '@/api/services/token.service';
 import type { ProjectService } from '@/api/services/project.service';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type { Transaction, CreateWorkspaceParams } from '@/api/types';
+import type { DbClient } from '@workspace/db';
 
 export interface WorkspaceServiceDeps {
   workspaceRepo: WorkspaceRepository;
   tokenService: TokenService;
+  db: DbClient;
   workspaceMemberRepo?: WorkspaceMemberRepository;
   projectRepo?: ProjectRepository;
   domainRepo?: DomainRepository;
@@ -288,10 +290,15 @@ export class WorkspaceService {
   }
 
   /**
-   * Soft delete a workspace
-   * Marks workspace as deleted without removing from database
-   * Also triggers deletion of all projects in the workspace
-   * Each project deletion cascades to recording cleanup
+   * Soft delete a workspace with cascade deletion
+   *
+   * Transaction flow:
+   * 1. Mark workspace as deleted
+   * 2. Mark all projects as deleted
+   * 3. Mark all links as deleted
+   *
+   * After commit (handled by caller):
+   * - Trigger deleteWorkspaceResources task
    */
   async deleteWorkspace(workspaceId: string, options?: { tx?: Transaction }) {
     const workspace = await this.getById(workspaceId);
@@ -300,43 +307,34 @@ export class WorkspaceService {
       throw new NotFoundError('Workspace not found');
     }
 
-    // Delete all projects in the workspace (cascades to recordings)
-    // ProjectService and ProjectRepo are optional - only available when used in workspace routes
-    if (this.deps.projectService && this.deps.projectRepo) {
-      const projects = await this.deps.projectRepo.findByWorkspace(workspaceId);
+    // Use transaction for atomic deletion
+    const performDeletion = async (tx: Transaction) => {
+      // 1. Soft delete the workspace
+      const deleted = await this.deps.workspaceRepo.softDelete(workspaceId, { tx });
 
-      console.log('[Workspace Cleanup]', {
-        workspaceId,
-        projectsToDelete: projects.length,
-      });
-
-      for (const project of projects) {
-        try {
-          // Delete project (cascades to recordings + storage cleanup)
-          await this.deps.projectService.deleteProject(project.id, workspaceId, options);
-          console.log('[Workspace Cleanup - Project Deleted]', {
-            workspaceId,
-            projectId: project.id,
-          });
-        } catch (error) {
-          // Log error but continue with other projects
-          console.error('[Workspace Cleanup - Project Delete Failed]', {
-            workspaceId,
-            projectId: project.id,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
+      if (!deleted) {
+        throw new ValidationError('Failed to delete workspace');
       }
+
+      // 2. Soft delete all projects in workspace
+      if (this.deps.projectRepo) {
+        await this.deps.projectRepo.softDeleteByWorkspaceId(workspaceId, { tx });
+      }
+
+      // 3. Soft delete all links in workspace
+      if (this.deps.linkRepo) {
+        await this.deps.linkRepo.softDeleteByWorkspaceId(workspaceId, { tx });
+      }
+
+      return deleted;
+    };
+
+    // Execute in provided transaction or create new one
+    if (options?.tx) {
+      return performDeletion(options.tx);
     }
 
-    // Soft delete the workspace
-    const deleted = await this.deps.workspaceRepo.softDelete(workspaceId, options);
-
-    if (!deleted) {
-      throw new ValidationError('Failed to delete workspace');
-    }
-
-    return deleted;
+    return this.deps.db.transaction(performDeletion);
   }
 
   /**

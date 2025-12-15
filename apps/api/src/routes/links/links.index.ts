@@ -10,6 +10,7 @@ import { LinkRepository } from '@/api/repositories/links.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
+import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { LinkService } from '@/api/services/link.service';
 
 import { workspaceMemberService, workspaceService } from '../workspace/workspace.index';
@@ -20,12 +21,14 @@ const linkRepo = new LinkRepository(db);
 const workspaceMemberRepo = new WorkspaceMemberRepository(db);
 const projectRepo = new ProjectRepository(db);
 const domainRepo = new DomainRepository(db);
+const workspaceRepo = new WorkspaceRepository(db);
 
 export const linkService = new LinkService({
   linkRepo,
   workspaceMemberRepo,
   projectRepo,
   domainRepo,
+  workspaceRepo,
 });
 
 // Create routes with injected dependencies

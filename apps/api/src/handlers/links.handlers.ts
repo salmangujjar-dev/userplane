@@ -29,6 +29,9 @@ import {
   updateLinkSchema,
   LINK_SORT_FIELDS,
 } from '@/api/schema';
+import { tasks } from '@trigger.dev/sdk/v3';
+import { TASK_IDS } from '@/api/trigger/constants';
+import { buildLinkDeletionKey } from '@/api/trigger/idempotency';
 
 /**
  * Handler factory for listing links
@@ -509,6 +512,21 @@ export function deleteLinkHandler(linkService: LinkService) {
 
       // Perform soft delete
       await linkService.delete(linkId, workspaceId);
+
+      // Trigger background cleanup task (best effort - fire and forget)
+      try {
+        await tasks.trigger(
+          TASK_IDS.DELETE_LINK_RESOURCES,
+          { linkId },
+          { idempotencyKey: buildLinkDeletionKey(linkId) }
+        );
+      } catch (triggerError) {
+        // Log error but don't fail the request - sweep job will catch it
+        console.error('[Link Delete - Trigger Failed]', {
+          linkId,
+          error: triggerError instanceof Error ? triggerError.message : 'Unknown error',
+        });
+      }
 
       const response: ApiResponse<{ workspaceId: string; linkId: string }> = {
         message: 'Link deleted successfully',

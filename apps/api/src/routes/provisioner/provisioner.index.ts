@@ -35,6 +35,7 @@ const userRepo = new UserRepository(db);
 const workspaceService = new WorkspaceService({
   workspaceRepo,
   tokenService,
+  db,
 });
 
 const workspaceMemberService = new WorkspaceMemberService({
@@ -43,6 +44,7 @@ const workspaceMemberService = new WorkspaceMemberService({
 
 const projectService = new ProjectService({
   projectRepo,
+  db,
 });
 
 const domainService = new DomainService({
