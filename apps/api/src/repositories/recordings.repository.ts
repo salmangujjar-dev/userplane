@@ -744,29 +744,22 @@ export class RecordingRepository {
   }
 
   /**
-   * Find recordings that need cleanup by project ID
-   * Returns only recordings that are not expired or purged
+   * Find recordings by project ID with optional status group filter
+   * Defaults to 'AVAILABLE' status group if not specified
    */
-  async findForCleanupByProjectId(
-    projectId: string
+  async findByProjectId(
+    projectId: string,
+    statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
   ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+    const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
+
     const results = await this.db
       .select({
         id: recordings.id,
         uploadStatus: recordings.uploadStatus,
       })
       .from(recordings)
-      .where(
-        and(
-          eq(recordings.projectId, projectId),
-          or(
-            eq(recordings.uploadStatus, 'pending'),
-            eq(recordings.uploadStatus, 'partial'),
-            eq(recordings.uploadStatus, 'available'),
-            eq(recordings.uploadStatus, 'failed')
-          )
-        )
-      );
+      .where(and(eq(recordings.projectId, projectId), inArray(recordings.uploadStatus, statuses)));
 
     return results;
   }
