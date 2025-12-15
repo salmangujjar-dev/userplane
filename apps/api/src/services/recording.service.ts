@@ -4,6 +4,8 @@
  */
 
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { LinkRepository } from '@/api/repositories/links.repository';
+import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type {
   ThumbnailsStorageClient,
@@ -19,19 +21,15 @@ import type {
   ResourceResponse,
 } from '@/api/types';
 import type { Transaction } from '@/api/repositories/recordings.repository';
-import type { CleanupService } from '@/api/services/cleanup.service';
-import { tasks } from '@trigger.dev/sdk/v3';
-import { calculateDelay } from '@/api/trigger/delay-calculator';
-import { TASK_IDS } from '@/api/trigger/constants';
-import { buildRecordingDeletionKey } from '@/api/trigger/idempotency';
 
 export interface RecordingServiceDeps {
   recordingRepo: RecordingRepository;
+  linkRepo: LinkRepository;
+  workspaceMemberRepo: WorkspaceMemberRepository;
   thumbnailsStorage: ThumbnailsStorageClient;
   videoStorage: VideoStorageClient;
   consoleLogsStorage: ConsoleLogsStorageClient;
   networkLogsStorage: NetworkLogsStorageClient;
-  cleanupService: CleanupService;
 }
 
 /**
@@ -154,35 +152,6 @@ export class RecordingService {
     if (!deleted) {
       throw new ValidationError('Failed to delete recording');
     }
-
-    // Trigger storage cleanup asynchronously (don't await)
-    this.deps.cleanupService
-      .cleanupRecording(recordingId, {
-        recordingVideoRef: existingRecording.recordingVideoRef,
-        recordingThumbnailRef: existingRecording.recordingThumbnailRef,
-        recordingConsoleLogRef: existingRecording.recordingConsoleLogRef,
-        recordingNetworkLogsRef: existingRecording.recordingNetworkLogsRef,
-      })
-      .then((result) => {
-        if (!result.success) {
-          console.error('[Recording Delete - Storage Cleanup Failed]', {
-            recordingId: result.recordingId,
-            filesDeleted: result.filesDeleted,
-            errors: result.errors,
-          });
-        } else {
-          console.log('[Recording Delete - Storage Cleanup Success]', {
-            recordingId: result.recordingId,
-            filesDeleted: result.filesDeleted,
-          });
-        }
-      })
-      .catch((error) => {
-        console.error('[Recording Delete - Storage Cleanup Error]', {
-          recordingId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-      });
 
     return deleted;
   }
@@ -398,74 +367,5 @@ export class RecordingService {
     }
 
     return recording;
-  }
-
-  /**
-   * Clean up all recordings in a project
-   * This method:
-   * 1. Soft deletes ALL recordings for the project in a single query (efficient)
-   * 2. Triggers storage cleanup for each recording asynchronously
-   *
-   * Separation of concerns:
-   * - Database operations (batch soft delete) happen here in RecordingService
-   * - Storage cleanup happens in CleanupService (per recording, async)
-   *
-   * @param projectId - Project ID to clean up recordings for
-   * @param workspaceId - Workspace ID for security filtering
-   * @param options - Optional transaction
-   * @returns Count of recordings soft-deleted
-   */
-  async cleanupProjectRecordings(
-    projectId: string,
-    workspaceId: string,
-    options?: { tx?: Transaction }
-  ): Promise<{ softDeleted: number; cleanupTriggered: number }> {
-    // Batch soft delete all recordings for this project in single query
-    const deletedRecordings = await this.deps.recordingRepo.softDeleteByProjectId(
-      projectId,
-      workspaceId,
-      options
-    );
-
-    const softDeleted = deletedRecordings.length;
-    let cleanupTriggered = 0;
-
-    // Trigger storage cleanup asynchronously for each recording (don't await)
-    for (const recording of deletedRecordings) {
-      this.deps.cleanupService
-        .cleanupRecording(recording.id, {
-          recordingVideoRef: recording.recordingVideoRef,
-          recordingThumbnailRef: recording.recordingThumbnailRef,
-          recordingConsoleLogRef: recording.recordingConsoleLogRef,
-          recordingNetworkLogsRef: recording.recordingNetworkLogsRef,
-        })
-        .then((result) => {
-          if (!result.success) {
-            console.error('[Project Cleanup - Storage Failed]', {
-              projectId,
-              recordingId: result.recordingId,
-              filesDeleted: result.filesDeleted,
-              errors: result.errors,
-            });
-          } else {
-            console.log('[Project Cleanup - Storage Success]', {
-              projectId,
-              recordingId: result.recordingId,
-              filesDeleted: result.filesDeleted,
-            });
-          }
-        })
-        .catch((error) => {
-          console.error('[Project Cleanup - Storage Error]', {
-            projectId,
-            recordingId: recording.id,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        });
-
-      cleanupTriggered++;
-    }
-
-    return { softDeleted, cleanupTriggered };
   }
 }
