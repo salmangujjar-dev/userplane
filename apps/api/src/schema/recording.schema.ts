@@ -88,10 +88,17 @@ export const RECORDING_STATUS_GROUPS = {
 
   /**
    * Stale recordings - failed or expired uploads
-   * Includes: failed, expired, purged
-   * Used internally for cleanup/monitoring
+   * Includes: pending, failed
+   * Used internally for cleanup of stale recordings
    */
-  STALE: ['failed', 'expired', 'purged'] as const,
+  STALE: ['failed', 'pending'] as const,
+
+  /**
+   * Orphan recordings - recordings which are no longer associated
+   * Includes: pending, partial, available, failed
+   * Used internally for cleanup of orphan recordings
+   */
+  ORPHAN: ['pending', 'partial', 'available', 'failed'] as const,
 
   /**
    * Unavailable recordings - not yet ready or failed

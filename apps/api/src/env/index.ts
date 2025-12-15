@@ -74,6 +74,9 @@ interface EnvConfig {
     windowMs: number;
     maxRequests: number;
   };
+  trigger: {
+    sweepGracePeriod: number;
+  };
   storage: StorageConfig;
 }
 
@@ -170,6 +173,9 @@ export function loadEnvConfig(): EnvConfig {
     rateLimit: {
       windowMs: parseInteger(process.env.RATE_LIMIT_WINDOW, 60000),
       maxRequests: parseInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
+    },
+    trigger: {
+      sweepGracePeriod: parseInteger(process.env.SWEEP_GRACE_PERIOD, 5 * 24 * 60 * 60), // 5 days
     },
     storage: {
       profile: (process.env.STORAGE_PROFILE || 'development') as StorageConfig['profile'],

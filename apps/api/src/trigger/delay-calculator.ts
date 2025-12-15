@@ -5,21 +5,21 @@
 
 import { env } from '@/api/env';
 import type { Recording } from '@workspace/db';
+import { RECORDING_STATUS_GROUPS } from '../schema';
 
 /**
- * Calculate delay for recording deletion based on uploadStatus
- * Uses presignedUrlExpiry as base to ensure uploads complete before cleanup
- *
- * For pending/partial/failed uploads: delay = presignedUrlExpiry (converted to minutes)
- * For available uploads: no delay (immediate cleanup)
- *
- * @param uploadStatus - The recording upload status
- * @returns Delay string (e.g. "90m") or undefined for no delay
+ * getPurgeDelay - get the delay for purging a recording
+ * If the recording is in the STALE status group, return the delay for purging the recording
+ * If the recording is in the AVAILABLE status group, return undefined i.e. no delay.
+ * @param uploadStatus
+ * @returns
  */
-export function calculateDelay(uploadStatus: Recording['uploadStatus']): string | undefined {
-  if (uploadStatus === 'pending' || uploadStatus === 'partial' || uploadStatus === 'failed') {
+export function getPurgeDelay(
+  uploadStatus: Recording['uploadStatus'] = 'available'
+): string | undefined {
+  if (uploadStatus in RECORDING_STATUS_GROUPS.STALE) {
     const delayMinutes = Math.ceil(env.session.presignedUrlExpiry / 60);
-    return `${delayMinutes}m`;
+    return `${delayMinutes}m`; // Delay for STALE status group
   }
-  return undefined;
+  return undefined; // No delay for AVAILABLE status group
 }

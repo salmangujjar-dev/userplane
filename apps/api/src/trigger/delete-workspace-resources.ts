@@ -3,9 +3,9 @@ import { db } from '@/api/clients/db';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { deleteRecordingResources } from './delete-recording-resources';
-import { calculateDelay } from '@/api/trigger/delay-calculator';
 import { TASK_IDS, MAX_DURATIONS } from './constants';
 import { buildRecordingDeletionKey } from './idempotency';
+import { getPurgeDelay } from './delay-calculator';
 
 interface DeleteWorkspaceResourcesPayload {
   workspaceId: string;
@@ -80,7 +80,7 @@ export const deleteWorkspaceResources = task({
           payload: { recordingId: recording.id },
           options: {
             idempotencyKey: buildRecordingDeletionKey(recording.id),
-            delay: calculateDelay(recording.uploadStatus),
+            delay: getPurgeDelay(recording.uploadStatus),
           },
         }))
       );

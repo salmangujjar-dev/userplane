@@ -11,6 +11,9 @@ import {
   type LinkWithWorkspacePrefsRow,
 } from '@/api/repositories/links.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { ProjectRepository } from '@/api/repositories/projects.repository';
+import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import type { RecordingMeta } from '@/api/schema/recording-meta.schema';
 import type { LinkService } from '@/api/services/link.service';
 import {
   ValidationError,
@@ -43,10 +46,16 @@ import type {
   ConsoleLogsStorageClient,
   NetworkLogsStorageClient,
 } from '@workspace/storage';
+import { tasks } from '@trigger.dev/sdk/v3';
+import { TASK_IDS } from '@/api/trigger/constants';
+import { buildStaleRecordingCheckKey } from '@/api/trigger/idempotency';
+import { getPurgeDelay } from '../trigger/delay-calculator';
 
 export interface SessionServiceDeps {
   linkRepo: LinkRepository;
   recordingRepo: RecordingRepository;
+  projectRepo: ProjectRepository;
+  workspaceRepo: WorkspaceRepository;
   videoStorage: VideoStorageClient;
   thumbnailsStorage: ThumbnailsStorageClient;
   consoleLogsStorage: ConsoleLogsStorageClient;
@@ -278,6 +287,18 @@ export class SessionService {
       },
     });
 
+    // Schedule stale recording check
+    // Delays execution by presignedUrlExpiry to check if recording is still pending/failed
+    // If so, marks it deleted and triggers cleanup
+    await tasks.trigger(
+      TASK_IDS.CHECK_STALE_RECORDING,
+      { recordingId },
+      {
+        idempotencyKey: buildStaleRecordingCheckKey(recordingId),
+        delay: getPurgeDelay('pending'),
+      }
+    );
+
     // Generate upload token scoped to this recording
     const uploadToken = this.generateUploadToken(
       recordingId,
@@ -364,73 +385,11 @@ export class SessionService {
 
     // Handle based on state
     if (state === 'complete') {
-      // Verify all uploaded files
-      await this.verifyUploadedFiles(recording);
-
-      // Mark recording as available
-      const updated = await this.deps.recordingRepo.markAsAvailable(recordingId);
-      if (!updated) {
-        throw new ValidationError('Failed to update recording status');
-      }
-
-      return {
-        success: true,
-        recordingId,
-        status: 'available',
-      };
+      return await this.handleCompleteUpload(recordingId, recording);
     } else if (state === 'partial') {
-      // For partial, uploadedFiles is required with video=true
-      if (!uploadedFiles || !uploadedFiles.video) {
-        throw new ValidationError('For partial state, uploaded_files with video=true is required');
-      }
-
-      // Verify only the files marked as uploaded
-      const verificationResult = await this.verifyPartialUpload(recording, uploadedFiles);
-
-      // Mark recording as partial
-      const fileStatus: FileUploadStatus = {
-        video: uploadedFiles.video,
-        thumbnail: uploadedFiles.thumbnail,
-        consoleLog: uploadedFiles.console_log,
-        networkLog: uploadedFiles.network_log,
-      };
-
-      const updated = await this.deps.recordingRepo.markAsPartial(recordingId, fileStatus);
-      if (!updated) {
-        throw new ValidationError('Failed to update recording status');
-      }
-
-      return {
-        success: true,
-        recordingId,
-        status: 'partial',
-        uploadedFiles: fileStatus,
-        missingFiles: verificationResult.missingFiles,
-      };
+      return await this.handlePartialUpload(recordingId, recording, uploadedFiles);
     } else {
-      // Log client failure info for debugging
-      // TODO: Add error monitoring coverage for upload failures (e.g., Sentry, DataDog)
-      if (clientInfo) {
-        console.warn('[Upload Failed]', {
-          recordingId,
-          linkId: uploadPayload.lid,
-          reason,
-          clientStatusCode: clientInfo.status_code,
-          clientMessage: clientInfo.message,
-        });
-      }
-
-      // Mark recording as failed
-      const updated = await this.deps.recordingRepo.markAsFailed(recordingId, reason);
-      if (!updated) {
-        throw new ValidationError('Failed to update recording status');
-      }
-
-      return {
-        success: true,
-        recordingId,
-        status: 'failed',
-      };
+      return await this.handleFailedUpload(recordingId, uploadPayload.lid, reason, clientInfo);
     }
   }
 
@@ -697,6 +656,116 @@ export class SessionService {
   }
 
   /**
+   * Handle complete upload state
+   * Verifies all files and marks recording as available
+   */
+  private async handleCompleteUpload(
+    recordingId: string,
+    recording: {
+      recordingVideoRef: string | null;
+      recordingThumbnailRef: string | null;
+      recordingConsoleLogRef: string | null;
+      recordingNetworkLogsRef: string | null;
+      recordingMeta: RecordingMeta | null;
+    }
+  ): Promise<UploadCompleteResult> {
+    // Verify all uploaded files
+    await this.verifyUploadedFiles(recording);
+
+    // Mark recording as available
+    const updated = await this.deps.recordingRepo.markAsAvailable(recordingId);
+    if (!updated) {
+      throw new ValidationError('Failed to update recording status');
+    }
+
+    return {
+      success: true,
+      recordingId,
+      status: 'available',
+    };
+  }
+
+  /**
+   * Handle partial upload state
+   * Verifies uploaded files and marks recording as partial with file status
+   */
+  private async handlePartialUpload(
+    recordingId: string,
+    recording: {
+      recordingVideoRef: string | null;
+      recordingThumbnailRef: string | null;
+      recordingConsoleLogRef: string | null;
+      recordingNetworkLogsRef: string | null;
+      recordingMeta: RecordingMeta | null;
+    },
+    uploadedFiles?: FileStatus
+  ): Promise<UploadCompleteResult> {
+    // For partial, uploadedFiles is required with video=true
+    if (!uploadedFiles || !uploadedFiles.video) {
+      throw new ValidationError('For partial state, uploaded_files with video=true is required');
+    }
+
+    // Verify only the files marked as uploaded
+    const verificationResult = await this.verifyPartialUpload(recording, uploadedFiles);
+
+    // Mark recording as partial
+    const fileStatus: FileUploadStatus = {
+      video: uploadedFiles.video,
+      thumbnail: uploadedFiles.thumbnail,
+      consoleLog: uploadedFiles.console_log,
+      networkLog: uploadedFiles.network_log,
+    };
+
+    const updated = await this.deps.recordingRepo.markAsPartial(recordingId, fileStatus);
+    if (!updated) {
+      throw new ValidationError('Failed to update recording status');
+    }
+
+    return {
+      success: true,
+      recordingId,
+      status: 'partial',
+      uploadedFiles: fileStatus,
+      missingFiles: verificationResult.missingFiles,
+    };
+  }
+
+  /**
+   * Handle failed upload state
+   * Logs failure info and marks recording as failed
+   */
+  private async handleFailedUpload(
+    recordingId: string,
+    linkId: string,
+    reason?: string,
+    clientInfo?: ClientInfo
+  ): Promise<UploadCompleteResult> {
+    // Log client failure info for debugging
+    // TODO: Add error monitoring coverage for upload failures (e.g., Sentry, DataDog)
+    if (clientInfo) {
+      console.warn('[Upload Failed]', {
+        recordingId,
+        linkId,
+        reason,
+        clientStatusCode: clientInfo.status_code,
+        clientMessage: clientInfo.message,
+      });
+    }
+
+    // Mark recording as failed
+    const updated = await this.deps.recordingRepo.markAsFailed(recordingId, reason);
+    if (!updated) {
+      throw new ValidationError('Failed to update recording status');
+    }
+
+    return {
+      success: true,
+      recordingId,
+      status: 'failed',
+    };
+  }
+
+  /**
    * Verify all uploaded files exist and match expected sizes
    */
   private async verifyUploadedFiles(recording: {
@@ -704,7 +773,7 @@ export class SessionService {
     recordingThumbnailRef: string | null;
     recordingConsoleLogRef: string | null;
     recordingNetworkLogsRef: string | null;
-    recordingMeta: unknown;
+    recordingMeta: RecordingMeta | null;
   }): Promise<void> {
     const errors: string[] = [];
 
@@ -804,7 +873,7 @@ export class SessionService {
       recordingThumbnailRef: string | null;
       recordingConsoleLogRef: string | null;
       recordingNetworkLogsRef: string | null;
-      recordingMeta: unknown;
+      recordingMeta: RecordingMeta | null;
     },
     uploadedFiles: FileStatus
   ): Promise<{ missingFiles: string[] }> {
