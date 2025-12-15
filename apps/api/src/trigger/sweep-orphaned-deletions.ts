@@ -1,12 +1,12 @@
 import { task, logger, schedules } from '@trigger.dev/sdk/v3';
 import { db } from '@/api/clients/db';
+import { env } from '@/api/env';
 import { SweepRepository } from '@/api/repositories/sweep.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { deleteWorkspaceResources } from './delete-workspace-resources';
 import { deleteProjectResources } from './delete-project-resources';
 import { deleteLinkResources } from './delete-link-resources';
 import { deleteRecordingResources } from './delete-recording-resources';
-import { calculateDelay } from '@/api/trigger/delay-calculator';
 import { TASK_IDS, MAX_DURATIONS, SCHEDULES } from './constants';
 import {
   buildWorkspaceDeletionKey,
@@ -14,6 +14,7 @@ import {
   buildLinkDeletionKey,
   buildRecordingDeletionKey,
 } from './idempotency';
+import { getPurgeDelay } from './delay-calculator';
 
 interface SweepOrphanedDeletionsResult {
   workspacesTriggered: number;
@@ -27,7 +28,7 @@ interface SweepOrphanedDeletionsResult {
  *
  * Task ID: TASK_IDS.SWEEP_ORPHANED_DELETIONS
  * Schedule: Every 10 minutes
- * Grace period: 5 minutes (prevents racing with normal post-commit triggers)
+ * Grace period: Configurable via SWEEP_GRACE_PERIOD env var (default: 5 days)
  *
  * Purpose: Catch deletions where process died after transaction commit but before trigger call
  *
@@ -46,8 +47,9 @@ export const sweepOrphanedDeletions = task({
     const sweepRepo = new SweepRepository(db);
     const recordingRepo = new RecordingRepository(db);
 
-    const graceMinutes = 5;
-    const cutoffDate = new Date(Date.now() - graceMinutes * 60 * 1000);
+    // Grace period in seconds, configured via SWEEP_GRACE_PERIOD env var (default: 5 days)
+    const gracePeriodSeconds = env.trigger.sweepGracePeriod;
+    const cutoffDate = new Date(Date.now() - gracePeriodSeconds * 1000);
 
     // 1. Orphaned workspace deletions
     const orphanedWorkspaces = await sweepRepo.findOrphanedWorkspaces(cutoffDate);
@@ -102,7 +104,7 @@ export const sweepOrphanedDeletions = task({
           payload: { recordingId: recording.id },
           options: {
             idempotencyKey: buildRecordingDeletionKey(recording.id),
-            delay: calculateDelay(recording.uploadStatus),
+            delay: getPurgeDelay(recording.uploadStatus),
           },
         }))
       );

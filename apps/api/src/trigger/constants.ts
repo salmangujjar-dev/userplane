@@ -12,6 +12,7 @@ export const TASK_IDS = {
   DELETE_PROJECT_RESOURCES: 'delete-project-resources',
   DELETE_WORKSPACE_RESOURCES: 'delete-workspace-resources',
   SWEEP_ORPHANED_DELETIONS: 'sweep-orphaned-deletions',
+  CHECK_STALE_RECORDING: 'check-stale-recording',
 } as const;
 
 /**
@@ -28,6 +29,7 @@ export const MAX_DURATIONS = {
   PROJECT_CLEANUP: 300, // 5 minutes
   WORKSPACE_CLEANUP: 300, // 5 minutes
   ORPHANED_SWEEP: 600, // 10 minutes
+  STALE_CHECK: 120, // 2 minutes
 } as const;
 
 /**

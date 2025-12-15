@@ -7,8 +7,6 @@ import {
   getConsoleLogsStorage,
   getNetworkLogsStorage,
 } from '@/api/clients/storage';
-import { recordings } from '@workspace/db';
-import { eq } from '@workspace/db';
 import { TASK_IDS, MAX_DURATIONS } from './constants';
 
 interface DeleteRecordingResourcesPayload {
@@ -54,31 +52,17 @@ export const deleteRecordingResources = task({
     const networkLogsStorage = getNetworkLogsStorage();
 
     // 1. Short-circuit check
-    const recording = await recordingRepo.findById(recordingId);
+    const recording = await recordingRepo.findByIdWithStatusGroup(recordingId, 'AVAILABLE');
 
     if (!recording) {
       logger.info('Recording not found, skipping', { recordingId });
       return { success: true, recordingId, skipped: true, reason: 'not_found' };
     }
 
-    if (recording.uploadStatus === 'expired' || recording.uploadStatus === 'purged') {
-      logger.info('Recording already cleaned, skipping', {
-        recordingId,
-        uploadStatus: recording.uploadStatus,
-      });
-      return { success: true, recordingId, skipped: true, reason: 'already_cleaned' };
-    }
-
-    // 2. Mark deleted (if not already)
-    if (!recording.isDeleted) {
-      await recordingRepo.softDelete(recordingId);
-      logger.info('Recording marked as deleted', { recordingId });
-    }
-
     const filesDeleted: string[] = [];
     const errors: string[] = [];
 
-    // 3. Delete R2 objects (following CleanupService pattern)
+    // 2. Delete R2 objects (following CleanupService pattern)
     if (recording.recordingVideoRef) {
       try {
         await videoStorage.delete(recording.recordingVideoRef);
@@ -119,18 +103,11 @@ export const deleteRecordingResources = task({
       }
     }
 
-    // 4. Mark as purged if storage cleanup was successful
+    // 3. Mark as purged if storage cleanup was successful
     const storageSuccess = errors.length === 0;
     if (storageSuccess) {
       try {
-        // markAsPurged only works for 'failed' status, so update directly
-        await db
-          .update(recordings)
-          .set({
-            uploadStatus: 'purged',
-            updatedAt: new Date(),
-          })
-          .where(eq(recordings.id, recordingId));
+        await recordingRepo.markAsPurged(recordingId);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         errors.push(`mark_as_purged: ${message}`);

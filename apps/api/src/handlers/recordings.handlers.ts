@@ -21,9 +21,9 @@ import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
 import { listRecordingsQuerySchema, RECORDING_SORT_FIELDS } from '@/api/schema';
 import { tasks } from '@trigger.dev/sdk/v3';
-import { calculateDelay } from '@/api/trigger/delay-calculator';
 import { TASK_IDS } from '@/api/trigger/constants';
 import { buildRecordingDeletionKey } from '@/api/trigger/idempotency';
+import { getPurgeDelay } from '../trigger/delay-calculator';
 
 /**
  * Handler factory for listing recordings
@@ -239,21 +239,6 @@ export function deleteRecordingHandler(recordingService: RecordingService) {
         return c.json(response, 400);
       }
 
-      // Get recording to check uploadStatus
-      const recording = await recordingService.getById(recordingId, workspaceId);
-
-      // Check if already purged/expired - nothing to do
-      if (recording.meta.status === 'expired' || recording.meta.status === 'purged') {
-        const response: ApiResponse<{ workspaceId: string; recordingId: string }> = {
-          message: 'Recording deleted successfully',
-          data: {
-            workspaceId,
-            recordingId,
-          },
-        };
-        return c.json(response, 200);
-      }
-
       // Perform soft delete
       await recordingService.delete(recordingId, workspaceId);
 
@@ -264,7 +249,7 @@ export function deleteRecordingHandler(recordingService: RecordingService) {
           { recordingId },
           {
             idempotencyKey: buildRecordingDeletionKey(recordingId),
-            delay: calculateDelay(recording.meta.status),
+            delay: getPurgeDelay(),
           }
         );
       } catch (triggerError) {

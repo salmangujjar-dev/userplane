@@ -26,6 +26,8 @@ const linkRepo = new LinkRepository(db);
 const recordingRepo = new RecordingRepository(db);
 const workspaceMemberRepo = new WorkspaceMemberRepository(db);
 const projectRepo = new ProjectRepository(db);
+const workspaceRepo = new WorkspaceRepository(db);
+const domainRepo = new DomainRepository(db);
 
 // Initialize storage clients
 const videoStorage = getVideoStorage();
@@ -33,16 +35,11 @@ const thumbnailsStorage = getThumbnailsStorage();
 const consoleLogsStorage = getConsoleLogsStorage();
 const networkLogsStorage = getNetworkLogsStorage();
 
-// Initialize domain repository for link service
-const domainRepo = new DomainRepository(db);
-const workspaceRepo = new WorkspaceRepository(db);
-const projectRepoForLink = new ProjectRepository(db);
-
 // Initialize link service for token validation
 const linkService = new LinkService({
   linkRepo,
   workspaceMemberRepo,
-  projectRepo: projectRepoForLink,
+  projectRepo,
   domainRepo,
   workspaceRepo,
 });
@@ -51,6 +48,8 @@ const linkService = new LinkService({
 const sessionService = new SessionService({
   linkRepo,
   recordingRepo,
+  projectRepo,
+  workspaceRepo,
   videoStorage,
   thumbnailsStorage,
   consoleLogsStorage,

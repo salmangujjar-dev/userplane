@@ -8,35 +8,20 @@ import type { DbClient, Recording } from '@workspace/db';
 import { recordings, workspaceMembers, user, links, projects, domains } from '@workspace/db';
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
 import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
+import {
+  recordingMetaSchema,
+  type RecordingMeta,
+  type RecordingSystemMetadata,
+  type RecordingCustomMetadata,
+  type RecordingInternalMetadata,
+} from '@/api/schema/recording-meta.schema';
 
-/**
- * System metadata captured during recording
- */
-export interface RecordingSystemMetadata {
-  date: string;
-  time: string;
-  browser: string;
-  os: string;
-  windowSize: {
-    width: number;
-    height: number;
-  };
-}
-
-/**
- * Custom metadata - arbitrary key-value pairs
- */
-export type RecordingCustomMetadata = Record<string, unknown>;
-
-/**
- * Recording metadata structure
- * Versioned for backward compatibility
- */
-export interface RecordingMeta {
-  version: number;
-  systemMetadata: RecordingSystemMetadata;
-  customMetadata: RecordingCustomMetadata;
-}
+export type {
+  RecordingMeta,
+  RecordingSystemMetadata,
+  RecordingCustomMetadata,
+  RecordingInternalMetadata,
+};
 
 /**
  * Shape of recording list item with joined data
@@ -119,6 +104,59 @@ export interface RecordingFileInfo {
 
 export class RecordingRepository {
   constructor(private db: DbClient) {}
+
+  /**
+   * Transform and validate recording metadata from database
+   * Uses Zod for version-aware validation and type safety
+   *
+   * @param raw - Raw metadata from database (unknown type from jsonb)
+   * @returns Typed and validated RecordingMeta or null
+   */
+  private transformRecordingMeta(raw: unknown): RecordingMeta | null {
+    if (!raw) return null;
+
+    // Use Zod to parse and validate the metadata
+    const result = recordingMetaSchema.safeParse(raw);
+
+    if (!result.success) {
+      console.warn('[RecordingRepository] Invalid recordingMeta', {
+        errors: result.error.errors,
+        raw,
+      });
+      return null;
+    }
+
+    return result.data;
+  }
+
+  /**
+   * Merge internal metadata updates into existing metadata
+   * Preserves user-provided metadata while updating system operational data
+   *
+   * @param existingMeta - Raw metadata from database (unknown type)
+   * @param internalUpdates - Internal metadata fields to merge
+   * @returns Merged metadata object or undefined if no updates
+   */
+  private mergeInternalMetadata(
+    existingMeta: unknown,
+    internalUpdates: Partial<RecordingInternalMetadata>
+  ): RecordingMeta | { internalMetadata: Partial<RecordingInternalMetadata> } | undefined {
+    const parsedMeta = this.transformRecordingMeta(existingMeta);
+
+    if (parsedMeta) {
+      return {
+        ...parsedMeta,
+        internalMetadata: {
+          ...(parsedMeta.internalMetadata ?? {}),
+          ...internalUpdates,
+        },
+      };
+    }
+
+    // If no existing metadata and we have updates, create minimal structure
+    const hasUpdates = Object.values(internalUpdates).some((v) => v !== undefined);
+    return hasUpdates ? { internalMetadata: internalUpdates } : undefined;
+  }
 
   /**
    * Build WHERE conditions for recording queries
@@ -315,10 +353,9 @@ export class RecordingRepository {
       return null;
     }
 
-    // Cast jsonb fields to their typed equivalents
     return {
       ...result,
-      recordingMeta: result.recordingMeta as RecordingMeta | null,
+      recordingMeta: this.transformRecordingMeta(result.recordingMeta),
     };
   }
 
@@ -372,10 +409,9 @@ export class RecordingRepository {
       return null;
     }
 
-    // Cast jsonb fields to their typed equivalents
     return {
       ...result,
-      recordingMeta: result.recordingMeta as RecordingMeta | null,
+      recordingMeta: this.transformRecordingMeta(result.recordingMeta),
     };
   }
 
@@ -488,12 +524,24 @@ export class RecordingRepository {
   ) {
     const dbClient = options?.tx || this.db;
 
+    // Fetch existing recording to preserve metadata
+    const [existing] = await dbClient
+      .select({
+        recordingMeta: recordings.recordingMeta,
+      })
+      .from(recordings)
+      .where(eq(recordings.id, id))
+      .limit(1);
+
+    // Merge uploaded files into existing metadata
+    const updatedMeta = this.mergeInternalMetadata(existing?.recordingMeta, { uploadedFiles });
+
     const [updated] = await dbClient
       .update(recordings)
       .set({
         uploadStatus: 'partial',
         isDeleted: false,
-        recordingMeta: { uploadedFiles },
+        recordingMeta: updatedMeta,
         updatedAt: new Date(),
       })
       .where(
@@ -515,15 +563,26 @@ export class RecordingRepository {
   async markAsFailed(id: string, reason?: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
-    // Store failure reason in metadata
-    const meta = reason ? { failureReason: reason } : undefined;
+    // Fetch existing recording to preserve metadata
+    const [existing] = await dbClient
+      .select({
+        recordingMeta: recordings.recordingMeta,
+      })
+      .from(recordings)
+      .where(eq(recordings.id, id))
+      .limit(1);
+
+    // Merge failure reason into existing metadata
+    const updatedMeta = this.mergeInternalMetadata(existing?.recordingMeta, {
+      failureReason: reason,
+    });
 
     const [updated] = await dbClient
       .update(recordings)
       .set({
         uploadStatus: 'failed',
         isDeleted: true,
-        recordingMeta: meta,
+        recordingMeta: updatedMeta,
         updatedAt: new Date(),
       })
       .where(
@@ -540,8 +599,18 @@ export class RecordingRepository {
   /**
    * Get recording with file paths for verification
    */
-  async findByIdWithFilePaths(id: string) {
-    const [recording] = await this.db
+  async findByIdWithFilePaths(id: string): Promise<{
+    id: string;
+    recordingLinkId: string;
+    workspaceId: string;
+    uploadStatus: Recording['uploadStatus'];
+    recordingVideoRef: string | null;
+    recordingThumbnailRef: string | null;
+    recordingConsoleLogRef: string | null;
+    recordingNetworkLogsRef: string | null;
+    recordingMeta: RecordingMeta | null;
+  } | null> {
+    const [result] = await this.db
       .select({
         id: recordings.id,
         recordingLinkId: recordings.recordingLinkId,
@@ -557,7 +626,12 @@ export class RecordingRepository {
       .where(and(eq(recordings.id, id), eq(recordings.isDeleted, false)))
       .limit(1);
 
-    return recording || null;
+    if (!result) return null;
+
+    return {
+      ...result,
+      recordingMeta: this.transformRecordingMeta(result.recordingMeta),
+    };
   }
 
   /**
@@ -587,7 +661,7 @@ export class RecordingRepository {
   /**
    * Update recording upload status to purged
    * Sets status after storage cleanup has been attempted
-   * Can only transition from failed state
+   * Sets isDeleted to true to mark recording as cleaned up
    */
   async markAsPurged(id: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
@@ -596,9 +670,10 @@ export class RecordingRepository {
       .update(recordings)
       .set({
         uploadStatus: 'purged',
+        isDeleted: true,
         updatedAt: new Date(),
       })
-      .where(and(eq(recordings.id, id), eq(recordings.uploadStatus, 'failed')))
+      .where(eq(recordings.id, id))
       .returning();
 
     return updated || null;

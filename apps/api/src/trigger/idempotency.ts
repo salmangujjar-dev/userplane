@@ -30,3 +30,7 @@ export function buildProjectDeletionKey(projectId: string): string {
 export function buildWorkspaceDeletionKey(workspaceId: string): string {
   return `delete-workspace-${workspaceId}`;
 }
+
+export function buildStaleRecordingCheckKey(recordingId: string): string {
+  return `check-stale-recording-${recordingId}`;
+}
