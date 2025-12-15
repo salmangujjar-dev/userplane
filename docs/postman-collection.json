@@ -83,6 +83,12 @@
       "value": "",
       "type": "string",
       "description": "JWT token for domain verification from recorder script"
+    },
+    {
+      "key": "linkToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT token from the recording link URL for session initialization"
     }
   ],
   "item": [
@@ -966,14 +972,14 @@
               "raw": "{\n  \"projectTitle\": \"Complete Project Title\",\n  \"isDefault\": false\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/project/{{projectId}}",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/projects/{{projectId}}",
               "host": ["{{baseUrl}}"],
               "path": [
                 "api",
                 "{{apiVersion}}",
                 "workspace",
                 "{{workspaceId}}",
-                "project",
+                "projects",
                 "{{projectId}}"
               ]
             },
@@ -1759,18 +1765,18 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/session?link_id={{linkId}}",
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/session?token={{linkToken}}",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "session"],
               "query": [
                 {
-                  "key": "link_id",
-                  "value": "{{linkId}}",
-                  "description": "Link ID for the recording session"
+                  "key": "token",
+                  "value": "{{linkToken}}",
+                  "description": "JWT token from the link URL (obtained from the recording link)"
                 }
               ]
             },
-            "description": "Initialize a recording session for a link. Returns a session token with embedded workspace preferences.\n\nValidations:\n- Link must exist and not be deleted\n- Link type must be 'recording'\n- If link is not reusable, no existing recordings allowed\n\nResponse Headers:\n- X-Session-Token-Expires-In: Token lifetime in seconds\n- X-Session-Token-Expires-At: Token expiry timestamp (ISO 8601)\n\nResponse data: SessionInitData (sessionToken, expiresIn)"
+            "description": "Initialize a recording session using a JWT link token. Returns a session token with embedded workspace preferences.\n\nValidations:\n- Token must be a valid JWT link token\n- Link must exist and not be deleted\n- Link type must be 'recording'\n- If link is not reusable, no existing recordings allowed\n\nResponse Headers:\n- X-Session-Token-Expires-In: Token lifetime in seconds\n- X-Session-Token-Expires-At: Token expiry timestamp (ISO 8601)\n\nResponse data: SessionInitData (sessionToken, expiresIn)"
           },
           "response": []
         },
@@ -1847,14 +1853,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"partial\",\n  \"uploaded_files\": {\n    \"video\": true,\n    \"thumbnail\": true,\n    \"console_log\": false,\n    \"network_log\": false\n  },\n  \"client_info\": {\n    \"status_code\": 0,\n    \"message\": \"Console log upload failed after 3 retries\"\n  }\n}"
+              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"partial\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "session"]
             },
-            "description": "Mark upload as partial when video uploaded but some secondary files failed.\n\nUse case: Video and thumbnail uploaded, but console_log failed after retries. User can still access the recording.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- uploaded_files required with video=true\n- Files marked as uploaded are verified in storage\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'partial'\n- uploaded_files (required): Object indicating which files were uploaded successfully\n- client_info (optional): Client-side failure details (status_code, message up to 500 chars)\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'partial', uploadedFiles, missingFiles)"
+            "description": "Mark upload as partial when video uploaded but some secondary files failed.\n\nUse case: Video and thumbnail uploaded, but optional files (console_log or network_log) failed. The recording will still be accessible with the files that were successfully uploaded.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- Required files (video, thumbnail) must be successfully uploaded\n- The service verifies files in storage before setting status\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'partial'\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'partial')"
           },
           "response": []
         },
@@ -1875,14 +1881,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"failed\",\n  \"reason\": \"Video upload failed after 3 retries\",\n  \"client_info\": {\n    \"status_code\": 500,\n    \"message\": \"Network error during video upload\"\n  }\n}"
+              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"failed\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "session"]
             },
-            "description": "Mark upload as failed when video upload fails or user cancels.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'failed'\n- reason (optional): Failure reason (max 500 characters)\n- client_info (optional): Client-side failure details (status_code, message up to 500 chars)\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'failed')"
+            "description": "Mark upload as failed when video upload fails or user cancels.\n\nUse case: Critical files (video or thumbnail) failed to upload, making the recording unusable.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'failed'\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'failed')"
           },
           "response": []
         }

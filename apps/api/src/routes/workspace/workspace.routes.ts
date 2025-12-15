@@ -195,7 +195,7 @@ export function createWorkspaceRoutes(
   );
 
   workspaceRoutes.put(
-    '/:workspaceId/project/:projectId',
+    '/:workspaceId/projects/:projectId',
     requireAuth,
     requireWorkspaceMember(workspaceMemberService, workspaceService),
     replaceProjectHandler(projectService)
