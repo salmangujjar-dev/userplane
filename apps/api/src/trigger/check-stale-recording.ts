@@ -19,7 +19,7 @@ import { db } from '@/api/clients/db';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { TASK_IDS, MAX_DURATIONS } from './constants';
-import { buildStaleRecordingCheckKey, buildRecordingDeletionKey } from './idempotency';
+import { buildRecordingDeletionKey } from './idempotency';
 
 export interface CheckStaleRecordingPayload {
   recordingId: string;

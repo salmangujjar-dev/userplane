@@ -75,7 +75,8 @@ interface EnvConfig {
     maxRequests: number;
   };
   trigger: {
-    sweepGracePeriod: number;
+    sweepGracePeriodSeconds: number;
+    sweepCronSchedule: string;
   };
   storage: StorageConfig;
 }
@@ -175,7 +176,11 @@ export function loadEnvConfig(): EnvConfig {
       maxRequests: parseInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
     },
     trigger: {
-      sweepGracePeriod: parseInteger(process.env.SWEEP_GRACE_PERIOD, 5 * 24 * 60 * 60), // 5 days
+      sweepGracePeriodSeconds: parseInteger(
+        process.env.SWEEP_GRACE_PERIOD_SECONDS,
+        7 * 24 * 60 * 60
+      ), // 7 days
+      sweepCronSchedule: process.env.SWEEP_CRON_SCHEDULE || '0 0 */3 * *', // Every 3 days at midnight UTC
     },
     storage: {
       profile: (process.env.STORAGE_PROFILE || 'development') as StorageConfig['profile'],

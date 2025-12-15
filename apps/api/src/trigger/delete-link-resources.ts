@@ -4,8 +4,9 @@ import { LinkRepository } from '@/api/repositories/links.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { getPurgeDelay } from '@/api/trigger/delay-calculator';
-import { TASK_IDS, MAX_DURATIONS } from './constants';
+import { TASK_IDS, MAX_DURATIONS, BATCH_LIMITS } from './constants';
 import { buildRecordingDeletionKey } from './idempotency';
+import { chunkArray } from '@/api/lib/batch-utils';
 
 interface DeleteLinkResourcesPayload {
   linkId: string;
@@ -67,16 +68,35 @@ export const deleteLinkResources = task({
     logger.info('Found recordings to cleanup', { linkId, count: recordingsToCleanup.length });
 
     // 3. Fan-out (use batchTrigger for multiple recordings)
+    // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
     if (recordingsToCleanup.length > 0) {
-      await deleteRecordingResources.batchTrigger(
-        recordingsToCleanup.map((recording) => ({
-          payload: { recordingId: recording.id },
-          options: {
-            idempotencyKey: buildRecordingDeletionKey(recording.id),
-            delay: getPurgeDelay(recording.uploadStatus),
-          },
-        }))
-      );
+      const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
+
+      logger.info('Batching recording cleanup triggers', {
+        linkId,
+        totalRecordings: recordingsToCleanup.length,
+        batchCount: recordingChunks.length,
+        batchSize: BATCH_LIMITS.MAX_BATCH_SIZE,
+      });
+
+      for (const [index, chunk] of recordingChunks.entries()) {
+        await deleteRecordingResources.batchTrigger(
+          chunk.map((recording) => ({
+            payload: { recordingId: recording.id },
+            options: {
+              idempotencyKey: buildRecordingDeletionKey(recording.id),
+              delay: getPurgeDelay(recording.uploadStatus),
+            },
+          }))
+        );
+
+        logger.info('Triggered recording cleanup batch', {
+          linkId,
+          batchIndex: index + 1,
+          batchCount: recordingChunks.length,
+          recordingsInBatch: chunk.length,
+        });
+      }
 
       logger.info('Scheduled recording cleanup tasks', {
         linkId,

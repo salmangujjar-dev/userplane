@@ -3,9 +3,17 @@
  * Handles all database operations for recording entities
  */
 
-import { eq, and, count, desc, asc, or, inArray, lt } from '@workspace/db';
+import { eq, and, count, desc, asc, or, inArray, lt, sql } from '@workspace/db';
 import type { DbClient, Recording } from '@workspace/db';
-import { recordings, workspaceMembers, user, links, projects, domains } from '@workspace/db';
+import {
+  recordings,
+  workspaceMembers,
+  user,
+  links,
+  projects,
+  domains,
+  workspaces,
+} from '@workspace/db';
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
 import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
 import {
@@ -711,28 +719,26 @@ export class RecordingRepository {
   }
 
   /**
-   * Find orphaned recordings that are soft-deleted but not yet purged
-   * Used by sweep job to catch failed cleanup triggers
+   * Find deleted workspaces that have orphaned recordings
+   * Orphaned recordings are those with ORPHAN status group (pending, partial, available, failed)
+   * Used by sweep job to trigger workspace cleanup
    */
-  async findOrphanedRecordings(
+  async findWorkspacesWithOrphanedRecordings(
     cutoffDate: Date
-  ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+  ): Promise<Array<{ workspaceId: string }>> {
+    const orphanStatuses = [...getUploadStatusesForGroup('ORPHAN')];
+
     const results = await this.db
-      .select({
-        id: recordings.id,
-        uploadStatus: recordings.uploadStatus,
+      .selectDistinct({
+        workspaceId: recordings.workspaceId,
       })
       .from(recordings)
+      .innerJoin(workspaces, eq(workspaces.id, recordings.workspaceId))
       .where(
         and(
-          eq(recordings.isDeleted, true),
-          or(
-            eq(recordings.uploadStatus, 'pending'),
-            eq(recordings.uploadStatus, 'partial'),
-            eq(recordings.uploadStatus, 'available'),
-            eq(recordings.uploadStatus, 'failed')
-          ),
-          lt(recordings.deletedAt, cutoffDate)
+          eq(workspaces.isDeleted, true),
+          inArray(recordings.uploadStatus, orphanStatuses),
+          lt(recordings.createdAt, cutoffDate)
         )
       );
 
