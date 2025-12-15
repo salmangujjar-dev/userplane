@@ -28,9 +28,7 @@ import {
   getMaxFileSize,
   isTerminalState,
   type UploadFile,
-  type FileStatus,
   type RecordingMetaInput,
-  type ClientInfo,
 } from '@/api/schema/session.schema';
 import type {
   SessionTokenPayload,
@@ -38,7 +36,6 @@ import type {
   SessionPreferences,
   PresignedUrlInfo,
   UploadFileType,
-  FileUploadStatus,
 } from '@/api/types';
 import type {
   VideoStorageClient,
@@ -97,8 +94,6 @@ export interface UploadCompleteResult {
   success: boolean;
   recordingId: string;
   status: 'available' | 'partial' | 'failed';
-  uploadedFiles?: FileUploadStatus;
-  missingFiles?: string[];
 }
 
 /**
@@ -247,6 +242,10 @@ export class SessionService {
     }
 
     // Validate files and get exclusions
+    // filesToUpload stores the information about the files that will be uploaded
+    // excludedFiles stores the information about the files that were excluded
+    // excludedFiles is used to return the information about the files that were excluded
+    // to the client in the response headers
     const { filesToUpload, excludedFiles } = this.validateAndFilterFiles(
       files,
       sessionPayload.prefs,
@@ -261,7 +260,6 @@ export class SessionService {
 
     // Extract file paths and sizes for database (only for files being uploaded)
     const filePaths = this.extractFilePaths(fileUploads);
-    const fileSizes = this.extractFileSizes(filesToUpload);
 
     // Create recording record in database
     await this.deps.recordingRepo.create({
@@ -280,9 +278,7 @@ export class SessionService {
         systemMetadata: metadata.systemMetadata,
         customMetadata: {
           ...metadata.customMetadata,
-          fileSizes,
           sessionId: sessionPayload.sid,
-          excludedFiles: excludedFiles.length > 0 ? excludedFiles : undefined,
         },
       },
     });
@@ -329,17 +325,11 @@ export class SessionService {
    * @param uploadToken - Valid upload token from POST /api/v1/session
    * @param recordingId - Recording ID to update
    * @param state - Target state: complete, partial, or failed
-   * @param uploadedFiles - For partial state, indicates which files were uploaded
-   * @param reason - Optional reason for failure
-   * @param clientInfo - Optional client-side failure info for tracking
    */
   async completeUpload(
     uploadToken: string,
     recordingId: string,
-    state: 'complete' | 'partial' | 'failed',
-    uploadedFiles?: FileStatus,
-    reason?: string,
-    clientInfo?: ClientInfo
+    state: 'complete' | 'partial' | 'failed'
   ): Promise<UploadCompleteResult> {
     // Verify upload token
     const uploadPayload = this.verifyUploadToken(uploadToken);
@@ -385,11 +375,11 @@ export class SessionService {
 
     // Handle based on state
     if (state === 'complete') {
-      return await this.handleCompleteUpload(recordingId, recording);
+      return await this.handleCompleteUpload(recording);
     } else if (state === 'partial') {
-      return await this.handlePartialUpload(recordingId, recording, uploadedFiles);
+      return await this.handlePartialUpload(recording);
     } else {
-      return await this.handleFailedUpload(recordingId, uploadPayload.lid, reason, clientInfo);
+      return await this.handleFailedUpload(recording);
     }
   }
 
@@ -657,302 +647,150 @@ export class SessionService {
 
   /**
    * Handle complete upload state
-   * Verifies all files and marks recording as available
+   * Verifies all requested files exist, then marks recording as available
    */
-  private async handleCompleteUpload(
-    recordingId: string,
-    recording: {
-      recordingVideoRef: string | null;
-      recordingThumbnailRef: string | null;
-      recordingConsoleLogRef: string | null;
-      recordingNetworkLogsRef: string | null;
-      recordingMeta: RecordingMeta | null;
-    }
-  ): Promise<UploadCompleteResult> {
-    // Verify all uploaded files
-    await this.verifyUploadedFiles(recording);
+  private async handleCompleteUpload(recording: {
+    id: string;
+    recordingVideoRef: string | null;
+    recordingThumbnailRef: string | null;
+    recordingConsoleLogRef: string | null;
+    recordingNetworkLogsRef: string | null;
+  }): Promise<UploadCompleteResult> {
+    // Verify all requested files are uploaded
+    await this.verifyUploadedFiles(recording, 'complete');
 
     // Mark recording as available
-    const updated = await this.deps.recordingRepo.markAsAvailable(recordingId);
+    const updated = await this.deps.recordingRepo.markAsAvailable(recording.id);
     if (!updated) {
       throw new ValidationError('Failed to update recording status');
     }
 
     return {
       success: true,
-      recordingId,
+      recordingId: recording.id,
       status: 'available',
     };
   }
 
   /**
    * Handle partial upload state
-   * Verifies uploaded files and marks recording as partial with file status
+   * Verifies minimum required files (video and thumbnail), then marks as partial
    */
-  private async handlePartialUpload(
-    recordingId: string,
-    recording: {
-      recordingVideoRef: string | null;
-      recordingThumbnailRef: string | null;
-      recordingConsoleLogRef: string | null;
-      recordingNetworkLogsRef: string | null;
-      recordingMeta: RecordingMeta | null;
-    },
-    uploadedFiles?: FileStatus
-  ): Promise<UploadCompleteResult> {
-    // For partial, uploadedFiles is required with video=true
-    if (!uploadedFiles || !uploadedFiles.video) {
-      throw new ValidationError('For partial state, uploaded_files with video=true is required');
-    }
-
-    // Verify only the files marked as uploaded
-    const verificationResult = await this.verifyPartialUpload(recording, uploadedFiles);
+  private async handlePartialUpload(recording: {
+    id: string;
+    recordingVideoRef: string | null;
+    recordingThumbnailRef: string | null;
+    recordingConsoleLogRef: string | null;
+    recordingNetworkLogsRef: string | null;
+  }): Promise<UploadCompleteResult> {
+    // Verify only minimum required files (video and thumbnail)
+    await this.verifyUploadedFiles(recording, 'minimal');
 
     // Mark recording as partial
-    const fileStatus: FileUploadStatus = {
-      video: uploadedFiles.video,
-      thumbnail: uploadedFiles.thumbnail,
-      consoleLog: uploadedFiles.console_log,
-      networkLog: uploadedFiles.network_log,
-    };
-
-    const updated = await this.deps.recordingRepo.markAsPartial(recordingId, fileStatus);
+    const updated = await this.deps.recordingRepo.markAsPartial(recording.id);
     if (!updated) {
       throw new ValidationError('Failed to update recording status');
     }
 
     return {
       success: true,
-      recordingId,
+      recordingId: recording.id,
       status: 'partial',
-      uploadedFiles: fileStatus,
-      missingFiles: verificationResult.missingFiles,
     };
   }
 
   /**
    * Handle failed upload state
-   * Logs failure info and marks recording as failed
+   * Marks recording as failed
    */
-  private async handleFailedUpload(
-    recordingId: string,
-    linkId: string,
-    reason?: string,
-    clientInfo?: ClientInfo
-  ): Promise<UploadCompleteResult> {
-    // Log client failure info for debugging
-    // TODO: Add error monitoring coverage for upload failures (e.g., Sentry, DataDog)
-    if (clientInfo) {
-      console.warn('[Upload Failed]', {
-        recordingId,
-        linkId,
-        reason,
-        clientStatusCode: clientInfo.status_code,
-        clientMessage: clientInfo.message,
-      });
-    }
-
+  private async handleFailedUpload(recording: {
+    id: string;
+    recordingLinkId: string;
+  }): Promise<UploadCompleteResult> {
     // Mark recording as failed
-    const updated = await this.deps.recordingRepo.markAsFailed(recordingId, reason);
+    const updated = await this.deps.recordingRepo.markAsFailed(recording.id);
     if (!updated) {
       throw new ValidationError('Failed to update recording status');
     }
 
     return {
       success: true,
-      recordingId,
+      recordingId: recording.id,
       status: 'failed',
     };
   }
 
   /**
-   * Verify all uploaded files exist and match expected sizes
+   * Verify uploaded files exist in storage
+   *
+   * @param recording - Recording with file paths
+   * @param mode - Verification mode:
+   *   - 'complete': All requested files must exist (video, thumbnail, and any optional logs)
+   *   - 'minimal': Only minimum required files (video and thumbnail)
+   *   - 'none': Skip verification
    */
-  private async verifyUploadedFiles(recording: {
-    recordingVideoRef: string | null;
-    recordingThumbnailRef: string | null;
-    recordingConsoleLogRef: string | null;
-    recordingNetworkLogsRef: string | null;
-    recordingMeta: RecordingMeta | null;
-  }): Promise<void> {
-    const errors: string[] = [];
-
-    // Extract expected sizes from metadata
-    interface FileSizes {
-      videoSize: number | null;
-      thumbnailSize: number | null;
-      consoleLogSize: number | null;
-      networkLogSize: number | null;
-    }
-
-    interface RecordingMetaShape {
-      customMetadata?: {
-        fileSizes?: FileSizes;
-      };
-    }
-
-    const meta = recording.recordingMeta as RecordingMetaShape | null;
-    const expectedSizes: FileSizes = meta?.customMetadata?.fileSizes ?? {
-      videoSize: null,
-      thumbnailSize: null,
-      consoleLogSize: null,
-      networkLogSize: null,
-    };
-
-    // Verify video file
-    if (recording.recordingVideoRef) {
-      const videoInfo = await this.deps.videoStorage.head(recording.recordingVideoRef);
-      if (!videoInfo) {
-        errors.push('Video file not found in storage');
-      } else if (
-        expectedSizes.videoSize !== null &&
-        videoInfo.contentLength !== expectedSizes.videoSize
-      ) {
-        errors.push(
-          `Video file size mismatch: expected ${expectedSizes.videoSize}, got ${videoInfo.contentLength}`
-        );
-      }
-    }
-
-    // Verify thumbnail file
-    if (recording.recordingThumbnailRef) {
-      const thumbInfo = await this.deps.thumbnailsStorage.head(recording.recordingThumbnailRef);
-      if (!thumbInfo) {
-        errors.push('Thumbnail file not found in storage');
-      } else if (
-        expectedSizes.thumbnailSize !== null &&
-        thumbInfo.contentLength !== expectedSizes.thumbnailSize
-      ) {
-        errors.push(
-          `Thumbnail file size mismatch: expected ${expectedSizes.thumbnailSize}, got ${thumbInfo.contentLength}`
-        );
-      }
-    }
-
-    // Verify console log file (only if path exists - was requested for upload)
-    if (recording.recordingConsoleLogRef) {
-      const logInfo = await this.deps.consoleLogsStorage.head(recording.recordingConsoleLogRef);
-      if (!logInfo) {
-        errors.push('Console log file not found in storage');
-      } else if (
-        expectedSizes.consoleLogSize !== null &&
-        logInfo.contentLength !== expectedSizes.consoleLogSize
-      ) {
-        errors.push(
-          `Console log file size mismatch: expected ${expectedSizes.consoleLogSize}, got ${logInfo.contentLength}`
-        );
-      }
-    }
-
-    // Verify network log file (only if path exists - was requested for upload)
-    if (recording.recordingNetworkLogsRef) {
-      const netInfo = await this.deps.networkLogsStorage.head(recording.recordingNetworkLogsRef);
-      if (!netInfo) {
-        errors.push('Network log file not found in storage');
-      } else if (
-        expectedSizes.networkLogSize !== null &&
-        netInfo.contentLength !== expectedSizes.networkLogSize
-      ) {
-        errors.push(
-          `Network log file size mismatch: expected ${expectedSizes.networkLogSize}, got ${netInfo.contentLength}`
-        );
-      }
-    }
-
-    if (errors.length > 0) {
-      throw new ValidationError(`File verification failed: ${errors.join('; ')}`);
-    }
-  }
-
-  /**
-   * Verify partial upload - only check files marked as uploaded
-   */
-  private async verifyPartialUpload(
+  private async verifyUploadedFiles(
     recording: {
       recordingVideoRef: string | null;
       recordingThumbnailRef: string | null;
       recordingConsoleLogRef: string | null;
       recordingNetworkLogsRef: string | null;
-      recordingMeta: RecordingMeta | null;
     },
-    uploadedFiles: FileStatus
-  ): Promise<{ missingFiles: string[] }> {
+    mode: 'complete' | 'minimal' | 'none'
+  ): Promise<void> {
+    if (mode === 'none') {
+      return;
+    }
+
     const errors: string[] = [];
-    const missingFiles: string[] = [];
 
-    // Extract expected sizes from metadata
-    interface FileSizes {
-      videoSize: number | null;
-      thumbnailSize: number | null;
-      consoleLogSize: number | null;
-      networkLogSize: number | null;
-    }
-
-    interface RecordingMetaShape {
-      customMetadata?: {
-        fileSizes?: FileSizes;
-      };
-    }
-
-    const meta = recording.recordingMeta as RecordingMetaShape | null;
-    const expectedSizes: FileSizes = meta?.customMetadata?.fileSizes ?? {
-      videoSize: null,
-      thumbnailSize: null,
-      consoleLogSize: null,
-      networkLogSize: null,
-    };
-
-    // Video is always required for partial
-    if (uploadedFiles.video && recording.recordingVideoRef) {
-      const videoInfo = await this.deps.videoStorage.head(recording.recordingVideoRef);
-      if (!videoInfo) {
+    // Video is always required
+    if (recording.recordingVideoRef) {
+      const videoExists = await this.deps.videoStorage.head(recording.recordingVideoRef);
+      if (!videoExists) {
         errors.push('Video file not found in storage');
-      } else if (
-        expectedSizes.videoSize !== null &&
-        videoInfo.contentLength !== expectedSizes.videoSize
-      ) {
-        errors.push(
-          `Video file size mismatch: expected ${expectedSizes.videoSize}, got ${videoInfo.contentLength}`
-        );
       }
-    } else if (!uploadedFiles.video) {
-      errors.push('Video must be uploaded for partial state');
+    } else {
+      errors.push('Video file path not found');
     }
 
-    // Check thumbnail if marked as uploaded
-    if (uploadedFiles.thumbnail && recording.recordingThumbnailRef) {
-      const thumbInfo = await this.deps.thumbnailsStorage.head(recording.recordingThumbnailRef);
-      if (!thumbInfo) {
+    // Thumbnail is required
+    if (recording.recordingThumbnailRef) {
+      const thumbnailExists = await this.deps.thumbnailsStorage.head(
+        recording.recordingThumbnailRef
+      );
+      if (!thumbnailExists) {
         errors.push('Thumbnail file not found in storage');
       }
-    } else if (!uploadedFiles.thumbnail && recording.recordingThumbnailRef) {
-      missingFiles.push('thumbnail');
+    } else {
+      errors.push('Thumbnail file path not found');
     }
 
-    // Check console log if marked as uploaded (only if path exists)
-    if (uploadedFiles.console_log && recording.recordingConsoleLogRef) {
-      const logInfo = await this.deps.consoleLogsStorage.head(recording.recordingConsoleLogRef);
-      if (!logInfo) {
-        errors.push('Console log file not found in storage');
+    // For complete mode, also verify optional files if they were requested
+    if (mode === 'complete') {
+      // Console log - if requested, must exist
+      if (recording.recordingConsoleLogRef) {
+        const consoleLogExists = await this.deps.consoleLogsStorage.head(
+          recording.recordingConsoleLogRef
+        );
+        if (!consoleLogExists) {
+          errors.push('Console log file not found in storage');
+        }
       }
-    } else if (!uploadedFiles.console_log && recording.recordingConsoleLogRef) {
-      missingFiles.push('console_log');
-    }
 
-    // Check network log if marked as uploaded (only if path exists)
-    if (uploadedFiles.network_log && recording.recordingNetworkLogsRef) {
-      const netInfo = await this.deps.networkLogsStorage.head(recording.recordingNetworkLogsRef);
-      if (!netInfo) {
-        errors.push('Network log file not found in storage');
+      // Network log - if requested, must exist
+      if (recording.recordingNetworkLogsRef) {
+        const networkLogExists = await this.deps.networkLogsStorage.head(
+          recording.recordingNetworkLogsRef
+        );
+        if (!networkLogExists) {
+          errors.push('Network log file not found in storage');
+        }
       }
-    } else if (!uploadedFiles.network_log && recording.recordingNetworkLogsRef) {
-      missingFiles.push('network_log');
     }
 
     if (errors.length > 0) {
       throw new ValidationError(`File verification failed: ${errors.join('; ')}`);
     }
-
-    return { missingFiles };
   }
 }

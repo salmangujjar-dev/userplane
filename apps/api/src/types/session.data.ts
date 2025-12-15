@@ -114,24 +114,12 @@ export interface UploadInitData {
 }
 
 /**
- * File upload status for partial uploads
- */
-export interface FileUploadStatus {
-  video: boolean;
-  thumbnail: boolean;
-  consoleLog?: boolean;
-  networkLog?: boolean;
-}
-
-/**
  * PATCH /api/v1/session response
  */
 export interface UploadCompleteData {
   success: boolean;
   recordingId: string;
   status: 'available' | 'partial' | 'failed';
-  uploadedFiles?: FileUploadStatus;
-  missingFiles?: string[];
 }
 
 /**

@@ -26,25 +26,6 @@ export const recordingSystemMetadataSchema = z.object({
 export const recordingCustomMetadataSchema = z.record(z.unknown());
 
 /**
- * Zod schema for tracking uploaded files in partial uploads
- */
-export const uploadedFilesSchema = z.object({
-  video: z.boolean(),
-  thumbnail: z.boolean(),
-  consoleLog: z.boolean().optional(),
-  networkLog: z.boolean().optional(),
-});
-
-/**
- * Zod schema for internal metadata managed by the system
- * Used for operational tracking and should not be exposed to users
- */
-export const recordingInternalMetadataSchema = z.object({
-  uploadedFiles: uploadedFilesSchema.optional(),
-  failureReason: z.string().optional(),
-});
-
-/**
  * Zod schema for recording metadata (version 1)
  * Versioned for backward compatibility
  */
@@ -52,7 +33,6 @@ export const recordingMetaSchemaV1 = z.object({
   version: z.literal(1),
   systemMetadata: recordingSystemMetadataSchema,
   customMetadata: recordingCustomMetadataSchema,
-  internalMetadata: recordingInternalMetadataSchema.optional(),
 });
 
 /**
@@ -62,7 +42,6 @@ export const recordingMetaSchemaV1 = z.object({
 export const recordingMetaInputSchema = z.object({
   systemMetadata: recordingSystemMetadataSchema,
   customMetadata: recordingCustomMetadataSchema,
-  internalMetadata: recordingInternalMetadataSchema.optional(),
 });
 
 /**
@@ -81,16 +60,6 @@ export type RecordingSystemMetadata = z.infer<typeof recordingSystemMetadataSche
  * Custom metadata - arbitrary key-value pairs
  */
 export type RecordingCustomMetadata = z.infer<typeof recordingCustomMetadataSchema>;
-
-/**
- * Uploaded files tracking for partial uploads
- */
-export type UploadedFiles = z.infer<typeof uploadedFilesSchema>;
-
-/**
- * Internal metadata for operational tracking
- */
-export type RecordingInternalMetadata = z.infer<typeof recordingInternalMetadataSchema>;
 
 /**
  * Recording metadata structure
