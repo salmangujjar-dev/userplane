@@ -505,4 +505,42 @@ export class LinkRepository {
 
     return searchResults;
   }
+
+  /**
+   * Soft delete all links in workspace
+   * Used for workspace deletion cascade
+   */
+  async softDeleteByWorkspaceId(workspaceId: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const deleted = await dbClient
+      .update(links)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+      })
+      .where(and(eq(links.workspaceId, workspaceId), eq(links.isDeleted, false)))
+      .returning();
+
+    return deleted;
+  }
+
+  /**
+   * Soft delete all links in project
+   * Used for project deletion cascade
+   */
+  async softDeleteByProjectId(projectId: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const deleted = await dbClient
+      .update(links)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+      })
+      .where(and(eq(links.projectId, projectId), eq(links.isDeleted, false)))
+      .returning();
+
+    return deleted;
+  }
 }

@@ -3,7 +3,7 @@
  * Handles all database operations for recording entities
  */
 
-import { eq, and, count, desc, asc, or, inArray } from '@workspace/db';
+import { eq, and, count, desc, asc, or, inArray, lt } from '@workspace/db';
 import type { DbClient, Recording } from '@workspace/db';
 import { recordings, workspaceMembers, user, links, projects, domains } from '@workspace/db';
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
@@ -638,5 +638,118 @@ export class RecordingRepository {
       });
 
     return deleted;
+  }
+
+  /**
+   * Find recordings that need cleanup by workspace ID
+   * Returns only recordings that are not expired or purged
+   */
+  async findForCleanupByWorkspaceId(
+    workspaceId: string
+  ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+    const results = await this.db
+      .select({
+        id: recordings.id,
+        uploadStatus: recordings.uploadStatus,
+      })
+      .from(recordings)
+      .where(
+        and(
+          eq(recordings.workspaceId, workspaceId),
+          or(
+            eq(recordings.uploadStatus, 'pending'),
+            eq(recordings.uploadStatus, 'partial'),
+            eq(recordings.uploadStatus, 'available'),
+            eq(recordings.uploadStatus, 'failed')
+          )
+        )
+      );
+
+    return results;
+  }
+
+  /**
+   * Find recordings that need cleanup by project ID
+   * Returns only recordings that are not expired or purged
+   */
+  async findForCleanupByProjectId(
+    projectId: string
+  ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+    const results = await this.db
+      .select({
+        id: recordings.id,
+        uploadStatus: recordings.uploadStatus,
+      })
+      .from(recordings)
+      .where(
+        and(
+          eq(recordings.projectId, projectId),
+          or(
+            eq(recordings.uploadStatus, 'pending'),
+            eq(recordings.uploadStatus, 'partial'),
+            eq(recordings.uploadStatus, 'available'),
+            eq(recordings.uploadStatus, 'failed')
+          )
+        )
+      );
+
+    return results;
+  }
+
+  /**
+   * Find recordings that need cleanup by link ID
+   * Returns only recordings that are not expired or purged
+   */
+  async findForCleanupByLinkId(
+    linkId: string
+  ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+    const results = await this.db
+      .select({
+        id: recordings.id,
+        uploadStatus: recordings.uploadStatus,
+      })
+      .from(recordings)
+      .where(
+        and(
+          eq(recordings.recordingLinkId, linkId),
+          or(
+            eq(recordings.uploadStatus, 'pending'),
+            eq(recordings.uploadStatus, 'partial'),
+            eq(recordings.uploadStatus, 'available'),
+            eq(recordings.uploadStatus, 'failed')
+          )
+        )
+      );
+
+    return results;
+  }
+
+  /**
+   * Find orphaned recordings that are soft-deleted but not yet purged
+   * Used by sweep job to catch failed cleanup triggers
+   */
+  async findOrphanedRecordings(
+    cutoffDate: Date
+  ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+    const results = await this.db
+      .select({
+        id: recordings.id,
+        uploadStatus: recordings.uploadStatus,
+      })
+      .from(recordings)
+      .where(
+        and(
+          eq(recordings.isDeleted, true),
+          or(
+            eq(recordings.uploadStatus, 'pending'),
+            eq(recordings.uploadStatus, 'partial'),
+            eq(recordings.uploadStatus, 'available'),
+            eq(recordings.uploadStatus, 'failed')
+          ),
+          lt(recordings.deletedAt, cutoffDate)
+        )
+      );
+
+    return results;
   }
 }

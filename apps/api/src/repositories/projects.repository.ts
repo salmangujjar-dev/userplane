@@ -191,4 +191,23 @@ export class ProjectRepository {
       .where(and(...conditions))
       .limit(limit);
   }
+
+  /**
+   * Soft delete all projects in workspace
+   * Used for workspace deletion cascade
+   */
+  async softDeleteByWorkspaceId(workspaceId: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const deleted = await dbClient
+      .update(projects)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+      })
+      .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)))
+      .returning();
+
+    return deleted;
+  }
 }
