@@ -716,12 +716,15 @@ export class RecordingRepository {
   }
 
   /**
-   * Find recordings that need cleanup by workspace ID
-   * Returns only recordings that are not expired or purged
+   * Find recordings by workspace ID with optional status group filter
+   * Defaults to 'AVAILABLE' status group if not specified
    */
-  async findForCleanupByWorkspaceId(
-    workspaceId: string
+  async findByWorkspaceId(
+    workspaceId: string,
+    statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
   ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+    const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
+
     const results = await this.db
       .select({
         id: recordings.id,
@@ -729,15 +732,7 @@ export class RecordingRepository {
       })
       .from(recordings)
       .where(
-        and(
-          eq(recordings.workspaceId, workspaceId),
-          or(
-            eq(recordings.uploadStatus, 'pending'),
-            eq(recordings.uploadStatus, 'partial'),
-            eq(recordings.uploadStatus, 'available'),
-            eq(recordings.uploadStatus, 'failed')
-          )
-        )
+        and(eq(recordings.workspaceId, workspaceId), inArray(recordings.uploadStatus, statuses))
       );
 
     return results;

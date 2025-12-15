@@ -69,7 +69,8 @@ export const deleteWorkspaceResources = task({
     }
 
     // 2. List recordings to clean up
-    const recordingsToCleanup = await recordingRepo.findForCleanupByWorkspaceId(workspaceId);
+    // Pulls available recordings for deletion
+    const recordingsToCleanup = await recordingRepo.findByWorkspaceId(workspaceId);
 
     logger.info('Found recordings to cleanup', { workspaceId, count: recordingsToCleanup.length });
 
