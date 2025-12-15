@@ -345,27 +345,4 @@ export class RecordingService {
 
     return recording;
   }
-
-  /**
-   * Validate recording exists and belongs to workspace
-   * Returns the recording if valid, throws otherwise
-   * Used for operations that work on any status (like delete)
-   */
-  private async validateRecordingAccess(recordingId: string, workspaceId: string) {
-    const recording = await this.deps.recordingRepo.findById(recordingId);
-
-    if (!recording) {
-      const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
-      if (isSoftDeleted === true) {
-        throw new GoneError('Recording has already been deleted');
-      }
-      throw new NotFoundError('Recording not found');
-    }
-
-    if (recording.workspaceId !== workspaceId) {
-      throw new NotFoundError('Recording not found');
-    }
-
-    return recording;
-  }
 }

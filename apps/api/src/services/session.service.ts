@@ -629,23 +629,6 @@ export class SessionService {
   }
 
   /**
-   * Extract file sizes from upload files
-   */
-  private extractFileSizes(files: UploadFile[]): {
-    videoSize: number | null;
-    thumbnailSize: number | null;
-    consoleLogSize: number | null;
-    networkLogSize: number | null;
-  } {
-    return {
-      videoSize: files.find((f) => f.type === 'video')?.size ?? null,
-      thumbnailSize: files.find((f) => f.type === 'thumbnail')?.size ?? null,
-      consoleLogSize: files.find((f) => f.type === 'console_log')?.size ?? null,
-      networkLogSize: files.find((f) => f.type === 'network_log')?.size ?? null,
-    };
-  }
-
-  /**
    * Handle complete upload state
    * Verifies all requested files exist, then marks recording as available
    */
