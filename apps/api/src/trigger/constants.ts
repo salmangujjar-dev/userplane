@@ -4,6 +4,14 @@
  */
 
 /**
+ * Batch limits for trigger operations
+ * Maximum number of tasks that can be triggered in a single batchTrigger call
+ */
+export const BATCH_LIMITS = {
+  MAX_BATCH_SIZE: 500, // Maximum tasks per batchTrigger call
+} as const;
+
+/**
  * Task IDs for deletion tasks
  */
 export const TASK_IDS = {
@@ -11,7 +19,8 @@ export const TASK_IDS = {
   DELETE_LINK_RESOURCES: 'delete-link-resources',
   DELETE_PROJECT_RESOURCES: 'delete-project-resources',
   DELETE_WORKSPACE_RESOURCES: 'delete-workspace-resources',
-  SWEEP_ORPHANED_DELETIONS: 'sweep-orphaned-deletions',
+  CLEANUP_ORPHANED_WORKSPACE: 'cleanup-orphaned-workspace',
+  SWEEP_ORPHANED_WORKSPACES: 'sweep-orphaned-workspaces',
   CHECK_STALE_RECORDING: 'check-stale-recording',
 } as const;
 
@@ -30,14 +39,4 @@ export const MAX_DURATIONS = {
   WORKSPACE_CLEANUP: 300, // 5 minutes
   ORPHANED_SWEEP: 600, // 10 minutes
   STALE_CHECK: 120, // 2 minutes
-} as const;
-
-/**
- * Schedule configuration
- */
-export const SCHEDULES = {
-  ORPHANED_SWEEP: {
-    ID: 'sweep-orphaned-deletions-schedule',
-    CRON: '*/10 * * * *', // Every 10 minutes
-  },
 } as const;
