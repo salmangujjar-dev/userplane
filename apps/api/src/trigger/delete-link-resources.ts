@@ -3,7 +3,7 @@ import { db } from '@/api/clients/db';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { deleteRecordingResources } from './delete-recording-resources';
-import { calculateDelay } from '@/api/trigger/delay-calculator';
+import { getPurgeDelay } from '@/api/trigger/delay-calculator';
 import { TASK_IDS, MAX_DURATIONS } from './constants';
 import { buildRecordingDeletionKey } from './idempotency';
 
@@ -61,7 +61,8 @@ export const deleteLinkResources = task({
     }
 
     // 2. List recordings to clean up
-    const recordingsToCleanup = await recordingRepo.findForCleanupByLinkId(linkId);
+    // Pulls available recordings for deletion
+    const recordingsToCleanup = await recordingRepo.findByLinkId(linkId);
 
     logger.info('Found recordings to cleanup', { linkId, count: recordingsToCleanup.length });
 
@@ -72,7 +73,7 @@ export const deleteLinkResources = task({
           payload: { recordingId: recording.id },
           options: {
             idempotencyKey: buildRecordingDeletionKey(recording.id),
-            delay: calculateDelay(recording.uploadStatus),
+            delay: getPurgeDelay(recording.uploadStatus),
           },
         }))
       );
