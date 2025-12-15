@@ -5,7 +5,7 @@
 
 import { eq, and, count, or } from '@workspace/db';
 import type { DbClient, WorkspaceRole } from '@workspace/db';
-import { workspaces } from '@workspace/db';
+import { workspaces, workspaceMembers } from '@workspace/db';
 import type { Transaction, CreateWorkspaceInput } from '@/api/types';
 
 export class WorkspaceRepository {
@@ -162,7 +162,6 @@ export class WorkspaceRepository {
       includeWorkspaceMembership?: boolean;
     }
   ) {
-    const { workspaceMembers } = await import('@workspace/db');
     const includeNotifications = options?.includeNotificationPreferences || false;
     const includeMembership = options?.includeWorkspaceMembership || false;
 
@@ -211,8 +210,6 @@ export class WorkspaceRepository {
    * Count total workspaces for a user
    */
   async countByUserId(userId: string) {
-    const { workspaceMembers } = await import('@workspace/db');
-
     const [result] = await this.db
       .select({ count: count() })
       .from(workspaces)
@@ -233,8 +230,6 @@ export class WorkspaceRepository {
    * Filters by workspace role(s) when provided
    */
   async countByUserIdWithRoleFilter(userId: string, roles?: WorkspaceRole[]) {
-    const { workspaceMembers } = await import('@workspace/db');
-
     const conditions = [
       eq(workspaceMembers.userId, userId),
       eq(workspaces.isDeleted, false),
@@ -275,7 +270,6 @@ export class WorkspaceRepository {
       includeWorkspaceMembership?: boolean;
     }
   ) {
-    const { workspaceMembers } = await import('@workspace/db');
     const includeNotifications = options?.includeNotificationPreferences || false;
     const includeMembership = options?.includeWorkspaceMembership || false;
 
