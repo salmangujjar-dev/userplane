@@ -16,7 +16,6 @@ import type {
 } from '@/api/types';
 import { createPaginationMeta } from '@/api/types';
 import { ProjectService } from '@/api/services/project.service';
-import { WorkspaceService } from '@/api/services/workspace.service';
 import { z } from 'zod';
 import { getErrorStatusCode } from '@/api/lib/errors';
 import { createProjectSchema, updateProjectSchema, replaceProjectSchema } from '@/api/schema';
