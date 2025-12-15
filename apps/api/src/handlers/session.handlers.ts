@@ -303,14 +303,11 @@ export function completeUploadHandler(sessionService: SessionService) {
         c.header('X-Upload-Token-Remaining', String(remainingTime));
       }
 
-      // Complete upload with client info for tracking
+      // Complete upload
       const result = await sessionService.completeUpload(
         uploadToken,
         parsed.recording_id,
-        parsed.state,
-        parsed.uploaded_files,
-        parsed.reason,
-        parsed.client_info
+        parsed.state
       );
 
       // Build message based on status
@@ -333,8 +330,6 @@ export function completeUploadHandler(sessionService: SessionService) {
           success: result.success,
           recordingId: result.recordingId,
           status: result.status,
-          uploadedFiles: result.uploadedFiles,
-          missingFiles: result.missingFiles,
         },
       };
 

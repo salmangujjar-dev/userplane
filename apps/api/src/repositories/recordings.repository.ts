@@ -13,15 +13,9 @@ import {
   type RecordingMeta,
   type RecordingSystemMetadata,
   type RecordingCustomMetadata,
-  type RecordingInternalMetadata,
 } from '@/api/schema/recording-meta.schema';
 
-export type {
-  RecordingMeta,
-  RecordingSystemMetadata,
-  RecordingCustomMetadata,
-  RecordingInternalMetadata,
-};
+export type { RecordingMeta, RecordingSystemMetadata, RecordingCustomMetadata };
 
 /**
  * Shape of recording list item with joined data
@@ -127,35 +121,6 @@ export class RecordingRepository {
     }
 
     return result.data;
-  }
-
-  /**
-   * Merge internal metadata updates into existing metadata
-   * Preserves user-provided metadata while updating system operational data
-   *
-   * @param existingMeta - Raw metadata from database (unknown type)
-   * @param internalUpdates - Internal metadata fields to merge
-   * @returns Merged metadata object or undefined if no updates
-   */
-  private mergeInternalMetadata(
-    existingMeta: unknown,
-    internalUpdates: Partial<RecordingInternalMetadata>
-  ): RecordingMeta | { internalMetadata: Partial<RecordingInternalMetadata> } | undefined {
-    const parsedMeta = this.transformRecordingMeta(existingMeta);
-
-    if (parsedMeta) {
-      return {
-        ...parsedMeta,
-        internalMetadata: {
-          ...(parsedMeta.internalMetadata ?? {}),
-          ...internalUpdates,
-        },
-      };
-    }
-
-    // If no existing metadata and we have updates, create minimal structure
-    const hasUpdates = Object.values(internalUpdates).some((v) => v !== undefined);
-    return hasUpdates ? { internalMetadata: internalUpdates } : undefined;
   }
 
   /**
@@ -512,36 +477,14 @@ export class RecordingRepository {
    * Video uploaded, some secondary files missing
    * Sets isDeleted to false so recording becomes visible to users
    */
-  async markAsPartial(
-    id: string,
-    uploadedFiles: {
-      video: boolean;
-      thumbnail: boolean;
-      consoleLog?: boolean;
-      networkLog?: boolean;
-    },
-    options?: { tx?: Transaction }
-  ) {
+  async markAsPartial(id: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
-
-    // Fetch existing recording to preserve metadata
-    const [existing] = await dbClient
-      .select({
-        recordingMeta: recordings.recordingMeta,
-      })
-      .from(recordings)
-      .where(eq(recordings.id, id))
-      .limit(1);
-
-    // Merge uploaded files into existing metadata
-    const updatedMeta = this.mergeInternalMetadata(existing?.recordingMeta, { uploadedFiles });
 
     const [updated] = await dbClient
       .update(recordings)
       .set({
         uploadStatus: 'partial',
         isDeleted: false,
-        recordingMeta: updatedMeta,
         updatedAt: new Date(),
       })
       .where(
@@ -560,29 +503,14 @@ export class RecordingRepository {
    * Can transition from pending or partial
    * Sets isDeleted to true so failed recordings are hidden from users
    */
-  async markAsFailed(id: string, reason?: string, options?: { tx?: Transaction }) {
+  async markAsFailed(id: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
-
-    // Fetch existing recording to preserve metadata
-    const [existing] = await dbClient
-      .select({
-        recordingMeta: recordings.recordingMeta,
-      })
-      .from(recordings)
-      .where(eq(recordings.id, id))
-      .limit(1);
-
-    // Merge failure reason into existing metadata
-    const updatedMeta = this.mergeInternalMetadata(existing?.recordingMeta, {
-      failureReason: reason,
-    });
 
     const [updated] = await dbClient
       .update(recordings)
       .set({
         uploadStatus: 'failed',
         isDeleted: true,
-        recordingMeta: updatedMeta,
         updatedAt: new Date(),
       })
       .where(

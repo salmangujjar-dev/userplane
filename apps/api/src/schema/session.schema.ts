@@ -70,61 +70,18 @@ export const initUploadSchema = z.object({
 /**
  * Upload state enum
  * - complete: All files uploaded successfully
- * - partial: Video uploaded, some secondary files missing (thumbnail required)
+ * - partial: Video uploaded, some secondary files missing
  * - failed: Upload failed entirely
  */
 export const uploadStateSchema = z.enum(['complete', 'partial', 'failed']);
 
 /**
- * File status for partial uploads
- */
-export const fileStatusSchema = z.object({
-  video: z.boolean(),
-  thumbnail: z.boolean(),
-  console_log: z.boolean().optional(),
-  network_log: z.boolean().optional(),
-});
-
-/**
- * Client-side failure info for tracking purposes
- * Captures details about what went wrong on the client
- * Message is truncated to 500 chars for logging
- */
-export const clientInfoSchema = z
-  .object({
-    status_code: z.number().int().optional(),
-    message: z.string().optional(),
-  })
-  .transform((data) => ({
-    status_code: data.status_code,
-    message: data.message ? data.message.substring(0, 500) : undefined,
-  }));
-
-/**
  * PATCH /api/v1/session request body
- * For partial state, uploaded_files indicates which files were successfully uploaded
  */
-export const completeUploadSchema = z
-  .object({
-    recording_id: z.string().min(1, 'Recording ID is required'),
-    state: uploadStateSchema,
-    reason: z.string().max(500, 'Reason must be 500 characters or less').optional(),
-    uploaded_files: fileStatusSchema.optional(),
-    client_info: clientInfoSchema.optional(),
-  })
-  .refine(
-    (data) => {
-      // For partial state, uploaded_files is required and video must be true
-      if (data.state === 'partial') {
-        return data.uploaded_files && data.uploaded_files.video === true;
-      }
-      return true;
-    },
-    {
-      message: 'For partial state, uploaded_files is required with video=true',
-      path: ['uploaded_files'],
-    }
-  );
+export const completeUploadSchema = z.object({
+  recording_id: z.string().min(1, 'Recording ID is required'),
+  state: uploadStateSchema,
+});
 
 /**
  * Inferred types from schemas
@@ -133,10 +90,8 @@ export type GetSessionQuery = z.infer<typeof getSessionQuerySchema>;
 export type UploadFile = z.infer<typeof uploadFileSchema>;
 export type InitUploadBody = z.infer<typeof initUploadSchema>;
 export type CompleteUploadBody = z.infer<typeof completeUploadSchema>;
-export type FileStatus = z.infer<typeof fileStatusSchema>;
 export type SystemMetadata = z.infer<typeof systemMetadataSchema>;
 export type RecordingMetaInput = z.infer<typeof recordingMetaSchema>;
-export type ClientInfo = z.infer<typeof clientInfoSchema>;
 
 /**
  * Terminal states - once in these states, no further transitions allowed
