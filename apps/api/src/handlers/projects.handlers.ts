@@ -20,6 +20,9 @@ import { WorkspaceService } from '@/api/services/workspace.service';
 import { z } from 'zod';
 import { getErrorStatusCode } from '@/api/lib/errors';
 import { createProjectSchema, updateProjectSchema, replaceProjectSchema } from '@/api/schema';
+import { tasks } from '@trigger.dev/sdk/v3';
+import { TASK_IDS } from '@/api/trigger/constants';
+import { buildProjectDeletionKey } from '@/api/trigger/idempotency';
 
 export function createProjectHandler(projectService: ProjectService) {
   return async (c: Context<AppEnv>) => {
@@ -277,6 +280,21 @@ export function deleteProjectHandler(projectService: ProjectService) {
       }
 
       await projectService.deleteProject(projectId, workspaceId);
+
+      // Trigger background cleanup task (best effort - fire and forget)
+      try {
+        await tasks.trigger(
+          TASK_IDS.DELETE_PROJECT_RESOURCES,
+          { projectId },
+          { idempotencyKey: buildProjectDeletionKey(projectId) }
+        );
+      } catch (triggerError) {
+        // Log error but don't fail the request - sweep job will catch it
+        console.error('[Project Delete - Trigger Failed]', {
+          projectId,
+          error: triggerError instanceof Error ? triggerError.message : 'Unknown error',
+        });
+      }
 
       const response: ApiResponse<ProjectDeleteData> = {
         message: 'Project deleted successfully',

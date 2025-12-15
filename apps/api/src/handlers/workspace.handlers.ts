@@ -38,6 +38,9 @@ import type {
 import { createPaginationMeta } from '@/api/types';
 import { z } from 'zod';
 import type { WorkspaceRole } from '@workspace/db';
+import { tasks } from '@trigger.dev/sdk/v3';
+import { TASK_IDS } from '@/api/trigger/constants';
+import { buildWorkspaceDeletionKey } from '@/api/trigger/idempotency';
 import {
   idParamSchema as workspaceIdParamSchema,
   paginationQuerySchema,
@@ -1558,6 +1561,21 @@ export function deleteWorkspaceHandler(workspaceService: WorkspaceService) {
       }
 
       await workspaceService.deleteWorkspace(workspaceId);
+
+      // Trigger background cleanup task (best effort - fire and forget)
+      try {
+        await tasks.trigger(
+          TASK_IDS.DELETE_WORKSPACE_RESOURCES,
+          { workspaceId },
+          { idempotencyKey: buildWorkspaceDeletionKey(workspaceId) }
+        );
+      } catch (triggerError) {
+        // Log error but don't fail the request - sweep job will catch it
+        console.error('[Workspace Delete - Trigger Failed]', {
+          workspaceId,
+          error: triggerError instanceof Error ? triggerError.message : 'Unknown error',
+        });
+      }
 
       const response: ApiResponse<WorkspaceDeleteData> = {
         message: 'Workspace deleted successfully',
