@@ -109,7 +109,7 @@ export class RecordingService {
     const recordings: RecordingItem[] = rows.map((row) => ({
       id: row.id,
       recordingThumbnail: this.getThumbnailUrl(row.recordingThumbnailRef),
-      recordingDuration: row.recordingDuration,
+      recordingDurationMs: row.recordingDurationMs,
       createdAt: row.createdAt,
       creator: {
         id: row.creatorId,
@@ -220,7 +220,7 @@ export class RecordingService {
       return {
         url: null,
         message: 'Video not available for this recording',
-        duration: null,
+        durationMs: null,
       };
     }
 
@@ -232,13 +232,13 @@ export class RecordingService {
       return {
         url,
         message: 'Video URL generated successfully',
-        duration: recording.recordingDuration,
+        durationMs: recording.recordingDurationMs,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate video URL',
-        duration: recording.recordingDuration,
+        durationMs: recording.recordingDurationMs,
       };
     }
   }

@@ -97,7 +97,7 @@ export interface LinkWithWorkspacePrefsRow {
   recordingHeader: string | null;
   recordingFootnote: string | null;
   recordingPrimaryColor: string | null;
-  recordingMaxDuration: number | null;
+  recordingMaxDurationMs: number | null;
 }
 
 export class LinkRepository {
@@ -396,7 +396,7 @@ export class LinkRepository {
         recordingHeader: workspaces.recordingHeader,
         recordingFootnote: workspaces.recordingFootnote,
         recordingPrimaryColor: workspaces.recordingPrimaryColor,
-        recordingMaxDuration: workspaces.recordingMaxDuration,
+        recordingMaxDurationMs: workspaces.recordingMaxDurationMs,
       })
       .from(links)
       .innerJoin(workspaces, eq(links.workspaceId, workspaces.id))

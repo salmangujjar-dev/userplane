@@ -51,7 +51,7 @@ export interface WorkspacePreferencesGetData {
     recordingHeader: string | null;
     recordingFootnote: string | null;
     recordingPrimaryColor: string | null;
-    recordingMaxDuration: number | null;
+    recordingMaxDurationMs: number | null;
     recordingSlug: string;
     [key: string]: unknown;
   };

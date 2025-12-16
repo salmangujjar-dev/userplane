@@ -148,6 +148,6 @@ export interface LinkWithWorkspacePrefs {
     recordingHeader: string | null;
     recordingFootnote: string | null;
     recordingPrimaryColor: string | null;
-    recordingMaxDuration: number | null;
+    recordingMaxDurationMs: number | null;
   };
 }

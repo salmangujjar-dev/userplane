@@ -1383,7 +1383,7 @@ export function updateLinkSettingsHandler(workspaceService: WorkspaceService) {
         recordingHeader: parseNullableField(body['recordingHeader']),
         recordingFootnote: parseNullableField(body['recordingFootnote']),
         recordingPrimaryColor: parseNullableField(body['recordingPrimaryColor']),
-        recordingMaxDuration: parseNullableInt(body['recordingMaxDuration']),
+        recordingMaxDurationMs: parseNullableInt(body['recordingMaxDuration']),
       });
 
       const updates: Record<string, unknown> = { ...settings };
@@ -1426,7 +1426,7 @@ export function updateLinkSettingsHandler(workspaceService: WorkspaceService) {
           recordingHeader: updatedWorkspace.recordingHeader,
           recordingFootnote: updatedWorkspace.recordingFootnote,
           recordingPrimaryColor: updatedWorkspace.recordingPrimaryColor,
-          recordingMaxDuration: updatedWorkspace.recordingMaxDuration,
+          recordingMaxDurationMs: updatedWorkspace.recordingMaxDurationMs,
           recordingCustomizeLink: updatedWorkspace.recordingCustomizeLink,
           recordingSlug: updatedWorkspace.recordingSlug,
         },

@@ -45,7 +45,7 @@ export const workspaces = pgTable(
     recordingHeader: text('recording_header'),
     recordingFootnote: text('recording_footnote'),
     recordingPrimaryColor: text('recording_primary_color'),
-    recordingMaxDuration: integer('recording_max_duration'),
+    recordingMaxDurationMs: integer('recording_max_duration'),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),

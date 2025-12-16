@@ -56,7 +56,7 @@ export const SessionRecordingMetaSchema = z.object({
  * Init upload request
  */
 export const InitUploadSchema = z.object({
-  recording_duration: z.number().int().positive(),
+  recording_duration: z.number().int().positive().max(180000),
   files: z.array(UploadFileSchema).min(1).max(4),
   metadata: SessionRecordingMetaSchema,
 });

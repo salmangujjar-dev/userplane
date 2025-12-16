@@ -81,7 +81,7 @@ export const WorkspaceByIdDataSchema = z.object({
     recordingHeader: z.string().nullable(),
     recordingFootnote: z.string().nullable(),
     recordingPrimaryColor: z.string().nullable(),
-    recordingMaxDuration: z.number().int().nullable(),
+    recordingMaxDurationMs: z.number().int().nullable(),
     recordingSlug: z.string().nullable(),
     createdAt: z.string(),
     updatedAt: z.string(),
@@ -98,7 +98,7 @@ export const WorkspacePreferencesSchema = z.object({
   recordingHeader: z.string().nullable(),
   recordingFootnote: z.string().nullable(),
   recordingPrimaryColor: z.string().nullable(),
-  recordingMaxDuration: z.number().int().nullable(),
+  recordingMaxDurationMs: z.number().int().nullable(),
   recordingSlug: z.string().nullable(),
 });
 
@@ -304,7 +304,7 @@ export const UpdateLinkSettingsSchema = z.object({
   recordingHeader: z.string().nullable().optional(),
   recordingFootnote: z.string().nullable().optional(),
   recordingPrimaryColor: z.string().nullable().optional(),
-  recordingMaxDuration: z.number().int().positive().nullable().optional(),
+  recordingMaxDurationMs: z.number().int().positive().nullable().optional(),
 });
 
 /**
@@ -317,7 +317,7 @@ export const LinkSettingsDataSchema = z.object({
   recordingHeader: z.string().nullable(),
   recordingFootnote: z.string().nullable(),
   recordingPrimaryColor: z.string().nullable(),
-  recordingMaxDuration: z.number().int().nullable(),
+  recordingMaxDurationMs: z.number().int().nullable(),
   recordingCustomizeLink: z.boolean(),
   recordingSlug: z.string().nullable(),
 });
