@@ -1,0 +1,30 @@
+{
+  "name": "@workspace/client",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo dist node_modules"
+  },
+  "dependencies": {
+    "@orpc/client": "^1.12.3",
+    "@orpc/contract": "^1.12.3",
+    "@orpc/openapi-client": "^1.12.3",
+    "@workspace/contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "5.8.2"
+  }
+}

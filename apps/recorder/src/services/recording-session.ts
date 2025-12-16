@@ -3,8 +3,8 @@
  * Handles session initialization and file uploads using the userplane session API
  */
 
-import createClient from '@workspace/api-client';
-import type { Client } from '@workspace/api-client';
+import { getRecorderClient } from '@/client/api';
+import type { UserplaneClient } from '@workspace/client';
 
 export interface UploadProgress {
   partNumber: number;
@@ -26,7 +26,7 @@ export interface SystemMetadata {
 }
 
 export class RecordingSession {
-  private client: Client;
+  private client: UserplaneClient;
   private sessionToken: string | null = null;
   public sessionId: string | null = null;
   public recordingId: string | null = null;
@@ -36,8 +36,8 @@ export class RecordingSession {
   public workspaceLogoUrl: string | null = null;
   public workspaceName: string | null = null;
 
-  constructor(apiBaseUrl: string) {
-    this.client = createClient(apiBaseUrl);
+  constructor() {
+    this.client = getRecorderClient();
   }
 
   /**
@@ -47,16 +47,10 @@ export class RecordingSession {
     try {
       console.log('[Session] Initializing session with token');
 
-      const response = await this.client.api.v1.session.$get({
-        query: { token: linkToken },
+      const result = await this.client.session.init({
+        token: linkToken,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to initialize session');
-      }
-
-      const result = await response.json();
       this.sessionToken = result.data.sessionToken;
 
       if (!this.sessionToken) {
@@ -103,7 +97,12 @@ export class RecordingSession {
 
     const systemMetadata = this.captureSystemMetadata();
 
-    const files: Array<{ type: string; name: string; size: number; mime_type: string }> = [
+    const files: Array<{
+      type: 'video' | 'thumbnail' | 'console_log' | 'network_log';
+      name: string;
+      size: number;
+      mime_type: string;
+    }> = [
       {
         type: 'video',
         name: videoFile.name,
@@ -121,11 +120,8 @@ export class RecordingSession {
       });
     }
 
-    const initResponse = await this.client.api.v1.session.$post({
-      header: {
-        'x-session-token': this.sessionToken,
-      },
-      json: {
+    const uploadData = await this.client.session.upload.init(
+      {
         recording_duration: recordingDuration || 0,
         files,
         metadata: {
@@ -133,21 +129,22 @@ export class RecordingSession {
           customMetadata: {},
         },
       },
-    });
+      {
+        context: {
+          headers: {
+            'x-session-token': this.sessionToken,
+          },
+        },
+      }
+    );
 
-    if (!initResponse.ok) {
-      const error = await initResponse.json();
-      throw new Error(error.message || 'Failed to initialize upload');
-    }
-
-    const uploadData = await initResponse.json();
     this.recordingId = uploadData.data.recordingId;
     const uploadToken = uploadData.data.uploadToken;
     const presignedUrls = uploadData.data.presignedUrls;
 
     console.log('[Upload] Upload initialized, uploading files...');
 
-    const videoUrl = presignedUrls.find((u: any) => u.type === 'video');
+    const videoUrl = presignedUrls.find((u) => u.type === 'video');
     if (!videoUrl) {
       throw new Error('No video upload URL provided');
     }
@@ -155,7 +152,7 @@ export class RecordingSession {
     await this.uploadToS3(videoFile, videoUrl.url);
 
     if (thumbnailBlob && thumbnailBlob.size > 0) {
-      const thumbnailUrl = presignedUrls.find((u: any) => u.type === 'thumbnail');
+      const thumbnailUrl = presignedUrls.find((u) => u.type === 'thumbnail');
       if (thumbnailUrl) {
         const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', {
           type: 'image/jpeg',
@@ -174,20 +171,19 @@ export class RecordingSession {
       });
     }
 
-    const completeResponse = await this.client.api.v1.session.$patch({
-      header: {
-        'x-upload-token': uploadToken,
-      },
-      json: {
+    await this.client.session.upload.complete(
+      {
         recording_id: this.recordingId,
         state: 'complete',
       },
-    });
-
-    if (!completeResponse.ok) {
-      const error = await completeResponse.json();
-      throw new Error(error.message || 'Failed to complete upload');
-    }
+      {
+        context: {
+          headers: {
+            'x-upload-token': uploadToken,
+          },
+        },
+      }
+    );
 
     console.log('[Upload] Upload completed successfully');
   }

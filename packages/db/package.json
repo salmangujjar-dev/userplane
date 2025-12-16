@@ -18,6 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@workspace/contract": "workspace:*",
     "@workspace/logger": "workspace:*",
     "@workspace/pricing": "workspace:*",
     "better-auth": "^1.0.7",

@@ -46,8 +46,6 @@ export interface RecordingFlowActions {
   startOver: () => Promise<void>;
 }
 
-const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
-
 export function useRecordingFlow(linkToken: string | null): {
   state: RecordingFlowState;
   actions: RecordingFlowActions;
@@ -74,7 +72,6 @@ export function useRecordingFlow(linkToken: string | null): {
   useEffect(() => {
     console.log('[Flow] Hook initialized');
     console.log('[Flow] Link token:', linkToken ? 'Present' : 'Missing');
-    console.log('[Flow] API Base URL:', API_BASE_URL);
 
     if (!linkToken) {
       console.error('[Flow] Error: No link token provided');
@@ -154,7 +151,7 @@ export function useRecordingFlow(linkToken: string | null): {
       setFlowState('loading');
       setError(null);
 
-      const session = new RecordingSession(API_BASE_URL);
+      const session = new RecordingSession();
       console.log('[Flow] RecordingSession instance created');
 
       await session.initialize(token);
