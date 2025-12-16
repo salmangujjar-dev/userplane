@@ -15,13 +15,13 @@ import {
  */
 
 /**
- * GET /api/v1/session
+ * GET /session
  * Initialize recording session
  */
 export const getSession = oc
   .route({
     method: 'GET',
-    path: '/api/v1/session',
+    path: '/session',
     summary: 'Initialize session',
     description: 'Initialize a recording session and return session token',
     tags: ['Session'],
@@ -30,13 +30,13 @@ export const getSession = oc
   .output(ApiResponseSchema(SessionInitDataSchema));
 
 /**
- * POST /api/v1/session
+ * POST /session
  * Initialize upload with presigned URLs
  */
 export const initUpload = oc
   .route({
     method: 'POST',
-    path: '/api/v1/session',
+    path: '/session',
     summary: 'Initialize upload',
     description: 'Initialize upload and receive presigned URLs for file uploads',
     tags: ['Session'],
@@ -45,13 +45,13 @@ export const initUpload = oc
   .output(ApiResponseSchema(UploadInitDataSchema));
 
 /**
- * PATCH /api/v1/session
+ * PATCH /session
  * Complete, mark partial, or fail an upload
  */
 export const completeUpload = oc
   .route({
     method: 'PATCH',
-    path: '/api/v1/session',
+    path: '/session',
     summary: 'Complete upload',
     description: 'Mark upload as complete, partial, or failed',
     tags: ['Session'],

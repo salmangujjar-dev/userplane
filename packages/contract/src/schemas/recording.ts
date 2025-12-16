@@ -58,7 +58,7 @@ export const RecordingItemSchema = z.object({
   creatorName: z.string(),
   creatorEmail: z.string(),
   uploadStatus: UploadStatusSchema,
-  recordingDuration: z.number().int().nonnegative(),
+  recordingDuration: z.number().int().nonnegative().max(300),
   recordingMetadata: RecordingMetadataSchema,
   createdAt: z.string(),
 });

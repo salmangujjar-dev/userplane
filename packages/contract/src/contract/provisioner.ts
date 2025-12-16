@@ -7,13 +7,13 @@ import { CreateWorkspaceSchema, WorkspaceCreateDataSchema, ApiResponseSchema } f
  */
 
 /**
- * POST /api/v1/workspace
+ * POST /workspace
  * Create a new workspace
  */
 export const createWorkspace = oc
   .route({
     method: 'POST',
-    path: '/api/v1/workspace',
+    path: '/workspace',
     summary: 'Create workspace',
     description: 'Provision a new workspace with initial domain and project',
     tags: ['Provisioner'],

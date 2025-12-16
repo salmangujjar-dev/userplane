@@ -12,13 +12,13 @@ import {
  */
 
 /**
- * GET /api/v1/account
+ * GET /account
  * Get current user's account information
  */
 export const getAccount = oc
   .route({
     method: 'GET',
-    path: '/api/v1/account',
+    path: '/account',
     summary: 'Get account information',
     description: 'Retrieve current user account information',
     tags: ['Account'],
@@ -26,13 +26,13 @@ export const getAccount = oc
   .output(ApiResponseSchema(AccountDataSchema));
 
 /**
- * PATCH /api/v1/account
+ * PATCH /account
  * Update current user's account
  */
 export const updateAccount = oc
   .route({
     method: 'PATCH',
-    path: '/api/v1/account',
+    path: '/account',
     summary: 'Update account',
     description: 'Update current user account information',
     tags: ['Account'],

@@ -14,13 +14,13 @@ import {
  */
 
 /**
- * GET /api/v1/workspace/:workspaceId/recordings
+ * GET /workspace/:workspaceId/recordings
  * List recordings with pagination and filtering
  */
 export const getRecordings = oc
   .route({
     method: 'GET',
-    path: '/api/v1/workspace/:workspaceId/recordings',
+    path: '/workspace/:workspaceId/recordings',
     summary: 'List recordings',
     description: 'Retrieve paginated list of recordings with optional filters',
     tags: ['Recordings'],
@@ -29,13 +29,13 @@ export const getRecordings = oc
   .output(ApiResponseSchema(RecordingsListDataSchema));
 
 /**
- * GET /api/v1/workspace/:workspaceId/recordings/:recordingId
+ * GET /workspace/:workspaceId/recordings/:recordingId
  * Get recording details by ID
  */
 export const getRecordingById = oc
   .route({
     method: 'GET',
-    path: '/api/v1/workspace/:workspaceId/recordings/:recordingId',
+    path: '/workspace/:workspaceId/recordings/:recordingId',
     summary: 'Get recording by ID',
     description: 'Retrieve complete recording details with presigned URLs',
     tags: ['Recordings'],
@@ -43,13 +43,13 @@ export const getRecordingById = oc
   .output(ApiResponseSchema(RecordingDetailDataSchema));
 
 /**
- * DELETE /api/v1/workspace/:workspaceId/recordings/:recordingId
+ * DELETE /workspace/:workspaceId/recordings/:recordingId
  * Delete a recording
  */
 export const deleteRecording = oc
   .route({
     method: 'DELETE',
-    path: '/api/v1/workspace/:workspaceId/recordings/:recordingId',
+    path: '/workspace/:workspaceId/recordings/:recordingId',
     summary: 'Delete recording',
     description: 'Soft delete a recording',
     tags: ['Recordings'],
@@ -57,13 +57,13 @@ export const deleteRecording = oc
   .output(ApiResponseSchema(RecordingDeleteDataSchema));
 
 /**
- * GET /api/v1/workspace/:workspaceId/recordings/:recordingId/video
+ * GET /workspace/:workspaceId/recordings/:recordingId/video
  * Get recording video presigned URL
  */
 export const getRecordingVideo = oc
   .route({
     method: 'GET',
-    path: '/api/v1/workspace/:workspaceId/recordings/:recordingId/video',
+    path: '/workspace/:workspaceId/recordings/:recordingId/video',
     summary: 'Get recording video',
     description: 'Retrieve presigned URL for recording video',
     tags: ['Recordings'],
@@ -71,13 +71,13 @@ export const getRecordingVideo = oc
   .output(ApiResponseSchema(RecordingResourceDataSchema));
 
 /**
- * GET /api/v1/workspace/:workspaceId/recordings/:recordingId/thumbnail
+ * GET /workspace/:workspaceId/recordings/:recordingId/thumbnail
  * Get recording thumbnail presigned URL
  */
 export const getRecordingThumbnail = oc
   .route({
     method: 'GET',
-    path: '/api/v1/workspace/:workspaceId/recordings/:recordingId/thumbnail',
+    path: '/workspace/:workspaceId/recordings/:recordingId/thumbnail',
     summary: 'Get recording thumbnail',
     description: 'Retrieve presigned URL for recording thumbnail',
     tags: ['Recordings'],
@@ -85,13 +85,13 @@ export const getRecordingThumbnail = oc
   .output(ApiResponseSchema(RecordingResourceDataSchema));
 
 /**
- * GET /api/v1/workspace/:workspaceId/recordings/:recordingId/console-log
+ * GET /workspace/:workspaceId/recordings/:recordingId/console-log
  * Get recording console log presigned URL
  */
 export const getRecordingConsoleLog = oc
   .route({
     method: 'GET',
-    path: '/api/v1/workspace/:workspaceId/recordings/:recordingId/console-log',
+    path: '/workspace/:workspaceId/recordings/:recordingId/console-log',
     summary: 'Get recording console log',
     description: 'Retrieve presigned URL for recording console log',
     tags: ['Recordings'],
@@ -99,13 +99,13 @@ export const getRecordingConsoleLog = oc
   .output(ApiResponseSchema(RecordingResourceDataSchema));
 
 /**
- * GET /api/v1/workspace/:workspaceId/recordings/:recordingId/network-log
+ * GET /workspace/:workspaceId/recordings/:recordingId/network-log
  * Get recording network log presigned URL
  */
 export const getRecordingNetworkLog = oc
   .route({
     method: 'GET',
-    path: '/api/v1/workspace/:workspaceId/recordings/:recordingId/network-log',
+    path: '/workspace/:workspaceId/recordings/:recordingId/network-log',
     summary: 'Get recording network log',
     description: 'Retrieve presigned URL for recording network log',
     tags: ['Recordings'],

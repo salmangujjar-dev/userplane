@@ -8,13 +8,13 @@ import { VerifyDomainSchema, DomainVerificationDataSchema, ApiResponseSchema } f
  */
 
 /**
- * POST /api/v1/domains/verify
+ * POST /domains/verify
  * Verify domain ownership
  */
 export const verifyDomain = oc
   .route({
     method: 'POST',
-    path: '/api/v1/domains/verify',
+    path: '/domains/verify',
     summary: 'Verify domain',
     description: 'Verify domain ownership using verification token',
     tags: ['Domains'],
