@@ -44,7 +44,7 @@ export const updateLinkSettingsSchema = z.object({
   recordingHeader: z.string().nullable().optional(),
   recordingFootnote: z.string().nullable().optional(),
   recordingPrimaryColor: z.string().nullable().optional(),
-  recordingMaxDuration: z.number().int().positive().nullable().optional(),
+  recordingMaxDurationMs: z.number().int().positive().nullable().optional(),
 });
 
 /**

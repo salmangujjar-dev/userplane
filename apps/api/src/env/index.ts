@@ -75,6 +75,7 @@ interface EnvConfig {
     maxRequests: number;
   };
   trigger: {
+    secretKey?: string;
     sweepGracePeriodSeconds: number;
     sweepCronSchedule: string;
   };
@@ -176,6 +177,7 @@ export function loadEnvConfig(): EnvConfig {
       maxRequests: parseInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
     },
     trigger: {
+      secretKey: process.env.TRIGGER_SECRET_KEY,
       sweepGracePeriodSeconds: parseInteger(
         process.env.SWEEP_GRACE_PERIOD_SECONDS,
         7 * 24 * 60 * 60
@@ -253,6 +255,9 @@ if (env.nodeEnv === 'production') {
   if (!env.database.url) {
     throw new Error('DATABASE_URL must be set in production');
   }
+  if (!env.trigger.secretKey) {
+    throw new Error('TRIGGER_SECRET_KEY must be set in production');
+  }
   if (!env.google.clientId || !env.google.clientSecret) {
     logger.warn('Google OAuth credentials not set. Google authentication will not work.');
   }
@@ -308,6 +313,11 @@ export function logConfig(): void {
         cdn: env.storage.cdn ? 'Configured' : 'Not configured',
         assets: env.storage.assets ? 'Configured' : 'Not configured',
         reports: env.storage.reports ? 'Configured' : 'Not configured',
+      },
+      trigger: {
+        secretKey: env.trigger.secretKey ? 'Configured' : 'Not configured',
+        sweepGracePeriod: `${env.trigger.sweepGracePeriodSeconds}s`,
+        sweepCronSchedule: env.trigger.sweepCronSchedule,
       },
     },
     'Environment configuration loaded'

@@ -20,7 +20,7 @@ export interface RecordingCreator {
 export interface RecordingItem {
   id: string;
   recordingThumbnail: string | null;
-  recordingDuration: number | null;
+  recordingDurationMs: number | null;
   createdAt: Date;
   creator: RecordingCreator;
 }
@@ -87,7 +87,7 @@ export interface ResourceResponse {
   url: string | null;
   message: string;
   size?: number | null;
-  duration?: number | null;
+  durationMs?: number | null;
 }
 
 /**

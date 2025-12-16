@@ -59,7 +59,11 @@ export const recordingMetaSchema = z.object({
  * POST /api/v1/session request body
  */
 export const initUploadSchema = z.object({
-  recording_duration: z.number().int().positive('Recording duration must be positive'),
+  recording_duration: z
+    .number()
+    .int()
+    .positive('Recording duration must be positive')
+    .max(180000, 'Recording duration must be less than 3 minutes'),
   files: z
     .array(uploadFileSchema)
     .min(1, 'At least one file is required')

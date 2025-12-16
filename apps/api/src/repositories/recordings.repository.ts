@@ -31,7 +31,7 @@ export type { RecordingMeta, RecordingSystemMetadata, RecordingCustomMetadata };
 export interface RecordingListRow {
   id: string;
   recordingThumbnailRef: string | null;
-  recordingDuration: number | null;
+  recordingDurationMs: number | null;
   createdAt: Date;
   creatorId: string;
   creatorName: string;
@@ -52,7 +52,7 @@ export interface RecordingDetailRow {
   recordingConsoleLogRef: string | null;
   recordingNetworkLogsRef: string | null;
   recordingMeta: RecordingMeta | null;
-  recordingDuration: number | null;
+  recordingDurationMs: number | null;
   createdAt: Date;
   updatedAt: Date;
   // Creator info
@@ -86,7 +86,7 @@ export interface CreateRecordingInput {
   workspaceId: string;
   projectId: string;
   createdBy: string;
-  recordingDuration: number;
+  recordingDurationMs: number;
   recordingVideoRef: string | null;
   recordingThumbnailRef: string | null;
   recordingConsoleLogRef: string | null;
@@ -169,7 +169,7 @@ export class RecordingRepository {
 
     switch (sort?.field) {
       case 'recording_duration':
-        return direction(recordings.recordingDuration);
+        return direction(recordings.recordingDurationMs);
       case 'created_at':
       default:
         return direction(recordings.createdAt);
@@ -195,7 +195,7 @@ export class RecordingRepository {
       .select({
         id: recordings.id,
         recordingThumbnailRef: recordings.recordingThumbnailRef,
-        recordingDuration: recordings.recordingDuration,
+        recordingDurationMs: recordings.recordingDurationMs,
         createdAt: recordings.createdAt,
         creatorId: workspaceMembers.id,
         creatorName: user.name,
@@ -288,7 +288,7 @@ export class RecordingRepository {
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
         recordingMeta: recordings.recordingMeta,
-        recordingDuration: recordings.recordingDuration,
+        recordingDurationMs: recordings.recordingDurationMs,
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
         // Creator info
@@ -350,7 +350,7 @@ export class RecordingRepository {
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
         recordingMeta: recordings.recordingMeta,
-        recordingDuration: recordings.recordingDuration,
+        recordingDurationMs: recordings.recordingDurationMs,
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
         // Creator info
@@ -440,7 +440,7 @@ export class RecordingRepository {
         workspaceId: data.workspaceId,
         projectId: data.projectId,
         createdBy: data.createdBy,
-        recordingDuration: data.recordingDuration,
+        recordingDurationMs: data.recordingDurationMs,
         recordingVideoRef: data.recordingVideoRef,
         recordingThumbnailRef: data.recordingThumbnailRef,
         recordingConsoleLogRef: data.recordingConsoleLogRef,

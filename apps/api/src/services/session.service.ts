@@ -188,14 +188,14 @@ export class SessionService {
    * POST /api/v1/session
    *
    * @param sessionToken - Valid session token from GET /api/v1/session
-   * @param recordingDuration - Duration of the recording in seconds
+   * @param recordingDurationMs - Duration of the recording in milliseconds
    * @param files - Array of files to upload
    * @param metadata - Client-provided metadata
    * @param debugMode - When true, throws errors for disallowed files; when false, silently excludes them
    */
   async initUpload(
     sessionToken: string,
-    recordingDuration: number,
+    recordingDurationMs: number,
     files: UploadFile[],
     metadata: RecordingMetaInput,
     debugMode: boolean = false
@@ -235,9 +235,9 @@ export class SessionService {
     }
 
     // Validate recording duration against workspace limit
-    if (sessionPayload.prefs.rmd !== null && recordingDuration > sessionPayload.prefs.rmd) {
+    if (sessionPayload.prefs.rmd !== null && recordingDurationMs > sessionPayload.prefs.rmd) {
       throw new ValidationError(
-        `Recording duration ${recordingDuration}s exceeds limit of ${sessionPayload.prefs.rmd}s`
+        `Recording duration ${recordingDurationMs}ms exceeds limit of ${sessionPayload.prefs.rmd}ms`
       );
     }
 
@@ -268,7 +268,7 @@ export class SessionService {
       workspaceId: sessionPayload.wid,
       projectId: linkData.projectId,
       createdBy: linkData.createdBy,
-      recordingDuration,
+      recordingDurationMs,
       recordingVideoRef: filePaths.videoPath,
       recordingThumbnailRef: filePaths.thumbnailPath,
       recordingConsoleLogRef: filePaths.consoleLogPath,
@@ -408,7 +408,7 @@ export class SessionService {
       rh: linkData.recordingHeader,
       rf: linkData.recordingFootnote,
       rpc: linkData.recordingPrimaryColor,
-      rmd: linkData.recordingMaxDuration,
+      rmd: linkData.recordingMaxDurationMs,
       rrb: linkData.createdByName || '',
     };
   }

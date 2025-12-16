@@ -53,7 +53,7 @@ export const recordings = pgTable(
     recordingMeta: jsonb('recording_meta'),
 
     // Recording metrics
-    recordingDuration: integer('recording_duration'),
+    recordingDurationMs: integer('recording_duration').default(180000),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),

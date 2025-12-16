@@ -84,7 +84,7 @@ export class WorkspaceRepository {
         recordingHeader: workspaces.recordingHeader,
         recordingFootnote: workspaces.recordingFootnote,
         recordingPrimaryColor: workspaces.recordingPrimaryColor,
-        recordingMaxDuration: workspaces.recordingMaxDuration,
+        recordingMaxDurationMs: workspaces.recordingMaxDurationMs,
       })
       .from(workspaces)
       .where(and(eq(workspaces.id, id), eq(workspaces.isDeleted, false)))
@@ -330,7 +330,7 @@ export class WorkspaceRepository {
       recordingHeader: string | null;
       recordingFootnote: string | null;
       recordingPrimaryColor: string | null;
-      recordingMaxDuration: number | null;
+      recordingMaxDurationMs: number | null;
     }>,
     options?: { tx?: Transaction }
   ) {

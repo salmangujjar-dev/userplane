@@ -136,7 +136,7 @@ export interface UpdateWorkspacePreferencesRequest {
   recordingHeader?: string | null;
   recordingFootnote?: string | null;
   recordingPrimaryColor?: string | null;
-  recordingMaxDuration?: number | null;
+  recordingMaxDurationMs?: number | null;
 }
 
 /**
@@ -150,7 +150,7 @@ export interface LinkSettings {
   recordingHeader: string | null;
   recordingFootnote: string | null;
   recordingPrimaryColor: string | null;
-  recordingMaxDuration: number | null;
+  recordingMaxDurationMs: number | null;
   recordingCustomizeLink: boolean;
   recordingSlug: string;
 }
