@@ -11,6 +11,8 @@ import {
   isScreenRecordingSupported,
 } from '@/services/media-capture';
 import type { UploadProgress } from '@/services/recording-session';
+import type { UIPreferences } from '@/types/session-preferences';
+import { DEFAULT_UI_PREFERENCES } from '@/types/session-preferences';
 import { generateVideoThumbnail, blobToDataUrl } from '@/utils/video-thumbnail';
 
 export type FlowState =
@@ -34,9 +36,10 @@ export interface RecordingFlowState {
   workspaceName: string | null;
   mediaStream: MediaStream | null;
   isProcessing: boolean;
-  maxRecordingDuration: number | null;
+  maxRecordingDuration: number;
   maxRecordingSize: number | null;
   recordingDuration: number | null;
+  preferences: UIPreferences;
 }
 
 export interface RecordingFlowActions {
@@ -56,14 +59,15 @@ export function useRecordingFlow(linkToken: string | null): {
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [requesterName, setRequesterName] = useState('Unknown');
+  const [requesterName, setRequesterName] = useState('');
   const [workspaceLogoUrl, setWorkspaceLogoUrl] = useState<string | null>(null);
   const [workspaceName, setWorkspaceName] = useState<string | null>(null);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [maxRecordingDuration, setMaxRecordingDuration] = useState<number | null>(null);
+  const [maxRecordingDuration, setMaxRecordingDuration] = useState<number>(180000);
   const [maxRecordingSize, setMaxRecordingSize] = useState<number | null>(null);
   const [recordingDuration, setRecordingDuration] = useState<number | null>(null);
+  const [preferences, setPreferences] = useState<UIPreferences>(DEFAULT_UI_PREFERENCES);
 
   const sessionRef = useRef<RecordingSession | null>(null);
   const mediaCaptureRef = useRef<MediaCapture | null>(null);
@@ -127,7 +131,7 @@ export function useRecordingFlow(linkToken: string | null): {
   }, [flowState]);
 
   useEffect(() => {
-    if (flowState !== 'recording' || !maxRecordingDuration || !mediaCaptureRef.current) {
+    if (flowState !== 'recording' || !mediaCaptureRef.current) {
       return;
     }
 
@@ -160,7 +164,17 @@ export function useRecordingFlow(linkToken: string | null): {
 
       sessionRef.current = session;
 
-      setRequesterName(session.requesterName || 'Unknown');
+      if (session.preferences) {
+        setPreferences(session.preferences);
+        console.log('[Flow] Preferences loaded:', {
+          customizeLink: session.preferences.customizeLink,
+          companyName: session.preferences.companyName,
+          headerText: session.preferences.headerText,
+          primaryColor: session.preferences.primaryColor,
+        });
+      }
+
+      setRequesterName(session.requesterName || '');
       setWorkspaceLogoUrl(session.workspaceLogoUrl || null);
       setWorkspaceName(session.workspaceName || null);
 
@@ -174,9 +188,7 @@ export function useRecordingFlow(linkToken: string | null): {
       });
 
       console.log('[Flow] Constraints extracted:', {
-        maxDuration: session.maxRecordingDuration
-          ? `${session.maxRecordingDuration}ms`
-          : '(unlimited)',
+        maxDuration: `${session.maxRecordingDuration}ms (${Math.round(session.maxRecordingDuration / 1000)}s)`,
         maxSize: session.maxRecordingSize ? `${session.maxRecordingSize} bytes` : '(unlimited)',
       });
 
@@ -260,7 +272,7 @@ export function useRecordingFlow(linkToken: string | null): {
       console.log('[Flow] Blob size:', blob.size, 'bytes');
       console.log('[Flow] Blob type:', blob.type);
 
-      if (maxRecordingDuration && duration && duration > maxRecordingDuration) {
+      if (duration && duration > maxRecordingDuration) {
         console.warn('[Flow] Duration exceeds limit:', {
           actual: duration,
           limit: maxRecordingDuration,
@@ -430,6 +442,7 @@ export function useRecordingFlow(linkToken: string | null): {
       maxRecordingDuration,
       maxRecordingSize,
       recordingDuration,
+      preferences,
     },
     actions: {
       startRecording,

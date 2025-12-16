@@ -1,0 +1,140 @@
+---
+import '../styles/global.css';
+import { getAppMeta } from '@workspace/meta';
+import { NOT_FOUND_COPY } from '@/constants/screen-copy';
+
+const meta = getAppMeta('recorder');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href={meta.favicon} />
+    <meta name="generator" content={Astro.generator} />
+    <title>404 - Page Not Found | {meta.title}</title>
+  </head>
+
+  <body class="min-h-screen bg-background">
+    <div
+      class="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 overflow-hidden"
+    >
+      <!-- Decorative icons - Desktop Left Side -->
+      <div class="absolute left-0 top-0 h-full w-32 hidden lg:block">
+        <img
+          src="/tile/bubble.png"
+          alt=""
+          width="80"
+          height="80"
+          class="absolute top-[18%] -left-6 rotate-[-15deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <img
+          src="/tile/fin.png"
+          alt=""
+          width="90"
+          height="90"
+          class="absolute top-[38%] -left-8 rotate-12 transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <img
+          src="/tile/letterbox.png"
+          alt=""
+          width="85"
+          height="85"
+          class="absolute top-[58%] -left-7 rotate-[-8deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <img
+          src="/tile/paperplane.png"
+          alt=""
+          width="75"
+          height="75"
+          class="absolute top-[78%] -left-5 rotate-18 transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
+        />
+      </div>
+
+      <!-- Decorative icons - Desktop Right Side -->
+      <div class="absolute right-0 top-0 h-full w-32 hidden lg:block">
+        <img
+          src="/tile/intercom.png"
+          alt=""
+          width="85"
+          height="85"
+          class="absolute top-[17%] -right-7 rotate-10 transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <img
+          src="/tile/browsercursor.png"
+          alt=""
+          width="75"
+          height="75"
+          class="absolute top-[38%] -right-5 rotate-[-14deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <img
+          src="/tile/magf.png"
+          alt=""
+          width="80"
+          height="80"
+          class="absolute top-[59%] -right-6 rotate-[-10deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <img
+          src="/tile/documentation.png"
+          alt=""
+          width="85"
+          height="85"
+          class="absolute top-[80%] -right-7 rotate-13 transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
+        />
+      </div>
+
+      <!-- Decorative icons - Mobile Bottom -->
+      <div class="absolute bottom-0 left-0 right-0 w-full h-32 block lg:hidden">
+        <img
+          src="/tile/bubble.png"
+          alt=""
+          width="70"
+          height="70"
+          class="absolute bottom-[-20px] left-[10%] rotate-[-15deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
+        />
+        <img
+          src="/tile/intercom.png"
+          alt=""
+          width="75"
+          height="75"
+          class="absolute bottom-[-25px] left-[32%] rotate-12 transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
+        />
+        <img
+          src="/tile/fin.png"
+          alt=""
+          width="70"
+          height="70"
+          class="absolute bottom-[-22px] left-[54%] rotate-[-8deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
+        />
+        <img
+          src="/tile/pointer.png"
+          alt=""
+          width="65"
+          height="65"
+          class="absolute bottom-[-20px] left-[76%] -rotate-12 transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
+        />
+      </div>
+
+      <!-- Main Content -->
+      <div
+        class="w-full max-w-md space-y-8 relative z-10 flex flex-col items-center min-h-[60vh] justify-between"
+      >
+        <div class="flex-1 flex flex-col items-center justify-center gap-6">
+          <div class="text-center space-y-3">
+            <h1 class="text-7xl font-bold text-foreground">{NOT_FOUND_COPY.title}</h1>
+            <h2 class="text-2xl font-semibold text-foreground">{NOT_FOUND_COPY.heading}</h2>
+            <p class="text-muted-foreground max-w-sm mx-auto">
+              {NOT_FOUND_COPY.subtitle}
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center gap-3 pb-4">
+          <img src="/logo-dark.svg" alt="Userplane" class="h-6 w-auto" />
+          <span class="text-sm font-medium text-foreground">Userplane</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

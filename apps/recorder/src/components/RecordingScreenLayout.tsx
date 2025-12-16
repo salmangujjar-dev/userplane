@@ -1,6 +1,6 @@
 /**
  * Recording Screen Layout
- * Common layout for all recording screens
+ * Common layout for all recording screens with branding
  */
 
 import type { ReactNode } from 'react';
@@ -9,26 +9,37 @@ interface RecordingScreenLayoutProps {
   children: ReactNode;
   workspaceLogoUrl?: string | null;
   workspaceName?: string | null;
+  footnoteText?: string | null;
 }
 
 export default function RecordingScreenLayout({
   children,
   workspaceLogoUrl,
-  workspaceName,
+  workspaceName = 'Userplane',
+  footnoteText,
 }: RecordingScreenLayoutProps) {
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
-      {workspaceLogoUrl && (
-        <div className="mb-8">
-          <img
-            src={workspaceLogoUrl}
-            alt={workspaceName || 'Workspace logo'}
-            className="h-12 w-auto"
-          />
-        </div>
-      )}
+    <div className="min-h-screen bg-white flex flex-col">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div className="w-full max-w-2xl">{children}</div>
+      </div>
 
-      <div className="flex flex-col items-center justify-center w-full max-w-2xl">{children}</div>
+      <footer className="flex flex-col items-center gap-2 sm:gap-3 px-4 py-6 sm:py-8">
+        <div className="flex items-center gap-2">
+          <img
+            src={workspaceLogoUrl ?? '/logo-dark.svg'}
+            alt={workspaceName ?? 'Userplane'}
+            className="h-4 sm:h-5 w-auto object-contain opacity-60"
+          />
+          <span className="text-xs sm:text-sm font-medium text-gray-600">{workspaceName}</span>
+        </div>
+
+        {footnoteText && (
+          <p className="text-xs text-center text-gray-500 max-w-sm sm:max-w-md px-4">
+            {footnoteText}
+          </p>
+        )}
+      </footer>
     </div>
   );
 }

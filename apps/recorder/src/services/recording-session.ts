@@ -5,6 +5,12 @@
 
 import { getRecorderClient } from '@/client/api';
 import type { UserplaneClient } from '@workspace/client';
+import type {
+  SessionPreferences,
+  SessionTokenPayload,
+  UIPreferences,
+} from '@/types/session-preferences';
+import { toUIPreferences } from '@/types/session-preferences';
 
 export interface UploadProgress {
   partNumber: number;
@@ -30,11 +36,12 @@ export class RecordingSession {
   private sessionToken: string | null = null;
   public sessionId: string | null = null;
   public recordingId: string | null = null;
-  public maxRecordingDuration: number | null = null;
+  public maxRecordingDuration: number = 180000; // Default 3 minutes
   public maxRecordingSize: number | null = null;
   public requesterName: string | null = null;
   public workspaceLogoUrl: string | null = null;
   public workspaceName: string | null = null;
+  public preferences: UIPreferences | null = null;
 
   constructor() {
     this.client = getRecorderClient();
@@ -44,40 +51,50 @@ export class RecordingSession {
    * Initialize session from link token
    */
   async initialize(linkToken: string): Promise<void> {
-    try {
-      console.log('[Session] Initializing session with token');
+    console.log('[Session] Initializing session');
 
-      const result = await this.client.session.init({
-        token: linkToken,
-      });
+    const result = await this.client.session.init({
+      token: linkToken,
+    });
 
-      this.sessionToken = result.data.sessionToken;
+    this.sessionToken = result.data.sessionToken;
 
-      if (!this.sessionToken) {
-        throw new Error('No session token returned from API');
-      }
-
-      const payload = this.decodeJWT(this.sessionToken);
-      this.sessionId = payload.sid;
-
-      const linkPayload = this.decodeJWT(linkToken);
-      this.requesterName = linkPayload.rn || null;
-      this.workspaceLogoUrl = linkPayload.wlu || null;
-      this.workspaceName = linkPayload.wn || null;
-      this.maxRecordingDuration = linkPayload.rmd ? linkPayload.rmd * 1000 : null;
-      this.maxRecordingSize = linkPayload.rms || null;
-
-      console.log('[Session] Initialized:', {
-        sessionId: this.sessionId,
-        requester: this.requesterName || '(not provided)',
-        workspace: this.workspaceName || '(not provided)',
-        maxDuration: this.maxRecordingDuration ? `${this.maxRecordingDuration}ms` : '(unlimited)',
-        maxSize: this.maxRecordingSize ? `${this.maxRecordingSize} bytes` : '(unlimited)',
-      });
-    } catch (error) {
-      console.error('[Session] Initialization failed:', error);
-      throw error;
+    if (!this.sessionToken) {
+      throw new Error('No session token returned from API');
     }
+
+    const payload = this.decodeJWT(this.sessionToken) as SessionTokenPayload;
+    this.sessionId = payload.sid;
+
+    if (!payload.prefs) {
+      throw new Error('Session token missing preferences');
+    }
+
+    this.preferences = toUIPreferences(payload.prefs);
+    this.maxRecordingDuration = this.preferences.maxDuration;
+    this.requesterName = this.preferences.requestedBy;
+
+    const linkPayload = this.decodeJWT(linkToken);
+    this.maxRecordingSize = linkPayload.rms || null;
+
+    if (this.preferences.customizeLink) {
+      this.workspaceLogoUrl = this.preferences.companyLogoUrl;
+      this.workspaceName = this.preferences.companyName;
+    } else {
+      this.workspaceLogoUrl = null;
+      this.workspaceName = 'Userplane';
+    }
+
+    console.log('[Session] Initialized:', {
+      sessionId: this.sessionId,
+      requester: this.requesterName || '(not provided)',
+      workspace: this.workspaceName || '(not provided)',
+      customizeLink: this.preferences.customizeLink,
+      headerText: this.preferences.headerText || '(default)',
+      primaryColor: this.preferences.primaryColor || '(default)',
+      maxDuration: `${this.maxRecordingDuration}ms (${Math.round(this.maxRecordingDuration / 1000)}s)`,
+      maxSize: this.maxRecordingSize ? `${this.maxRecordingSize} bytes` : '(unlimited)',
+    });
   }
 
   /**
@@ -192,40 +209,21 @@ export class RecordingSession {
    * Upload file to S3 using presigned URL
    */
   private async uploadToS3(file: File, url: string): Promise<void> {
-    const maxRetries = 3;
-    let lastError: Error | null = null;
+    console.log(`[Upload] Uploading ${file.name}`);
 
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`[Upload] Uploading ${file.name} (attempt ${attempt + 1}/${maxRetries + 1})`);
+    const uploadResponse = await fetch(url, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    });
 
-        const uploadResponse = await fetch(url, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': file.type,
-          },
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error(`Failed to upload file: ${uploadResponse.status}`);
-        }
-
-        console.log(`[Upload] ${file.name} uploaded successfully`);
-        return;
-      } catch (error) {
-        lastError = error as Error;
-        console.error(`[Upload] Attempt ${attempt + 1} failed:`, error);
-
-        if (attempt < maxRetries) {
-          const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-          console.log(`[Upload] Retrying in ${delay}ms...`);
-          await this.sleep(delay);
-        }
-      }
+    if (!uploadResponse.ok) {
+      throw new Error(`Failed to upload file: ${uploadResponse.status}`);
     }
 
-    throw lastError || new Error('Upload failed');
+    console.log(`[Upload] ${file.name} uploaded successfully`);
   }
 
   /**
@@ -294,13 +292,6 @@ export class RecordingSession {
     const payload = parts[1];
     const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
     return JSON.parse(decoded);
-  }
-
-  /**
-   * Sleep utility for retry delays
-   */
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
