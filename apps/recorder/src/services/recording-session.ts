@@ -47,7 +47,7 @@ export class RecordingSession {
     try {
       console.log('[Session] Initializing session with token');
 
-      const response = await this.client.session.$get({
+      const response = await this.client.api.v1.session.$get({
         query: { token: linkToken },
       });
 
@@ -121,7 +121,7 @@ export class RecordingSession {
       });
     }
 
-    const initResponse = await this.client.session.$post({
+    const initResponse = await this.client.api.v1.session.$post({
       header: {
         'X-Session-Token': this.sessionToken,
       },
@@ -174,7 +174,7 @@ export class RecordingSession {
       });
     }
 
-    const completeResponse = await this.client.session.$patch({
+    const completeResponse = await this.client.api.v1.session.$patch({
       header: {
         'X-Upload-Token': uploadToken,
       },

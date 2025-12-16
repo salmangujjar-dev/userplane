@@ -1237,7 +1237,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true\n}"
+              "raw": "{\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": false,\n  \"recordingCaptureServerLog\": false\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains/{{domainId}}/preferences",
@@ -1252,7 +1252,7 @@
                 "preferences"
               ]
             },
-            "description": "Update domain-specific recording toggle settings (PATCH - partial update). All fields are optional booleans.\n\nIMPORTANT: Domain must be verified before recording preferences can be updated.\n\n- recordingHideSensitive: Hide sensitive data in recordings (default: false)\n- recordingCaptureClientLog: Capture client-side console logs (default: true)\n- recordingCaptureServerLog: Capture server-side network logs (default: true)\n\nResponse data: DomainRecordingPreferencesUpdateData (domainId, workspaceId)\n\nError responses:\n- 400: Domain is not verified\n- 401: Unauthorized\n- 403: Not a workspace member\n- 404: Domain not found"
+            "description": "Update domain-specific recording toggle settings (PATCH - partial update). All fields are optional booleans.\n\nIMPORTANT: Domain must be verified before recording preferences can be updated.\n\n- recordingHideSensitive: Hide sensitive data in recordings (default: false)\n- recordingCaptureClientLog: Capture client-side console logs (default: false)\n- recordingCaptureServerLog: Capture server-side network logs (default: false)\n\nResponse data: DomainRecordingPreferencesUpdateData (domainId, workspaceId)\n\nError responses:\n- 400: Domain is not verified\n- 401: Unauthorized\n- 403: Not a workspace member\n- 404: Domain not found"
           },
           "response": []
         },
@@ -1273,7 +1273,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": true,\n  \"recordingCaptureServerLog\": true\n}"
+              "raw": "{\n  \"recordingHideSensitive\": false,\n  \"recordingCaptureClientLog\": false,\n  \"recordingCaptureServerLog\": false\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/workspace/{{workspaceId}}/domains/{{domainId}}/preferences",
@@ -1288,7 +1288,7 @@
                 "preferences"
               ]
             },
-            "description": "Replace all domain-specific recording toggle settings (PUT - complete replacement). All fields are required.\n\nIMPORTANT: Domain must be verified before recording preferences can be updated.\n\n- recordingHideSensitive: Hide sensitive data in recordings (default: false)\n- recordingCaptureClientLog: Capture client-side console logs (default: true)\n- recordingCaptureServerLog: Capture server-side network logs (default: true)\n\nResponse data: DomainRecordingPreferencesUpdateData (domainId, workspaceId)\n\nError responses:\n- 400: Domain is not verified or invalid request body\n- 401: Unauthorized\n- 403: Not a workspace member\n- 404: Domain not found"
+            "description": "Replace all domain-specific recording toggle settings (PUT - complete replacement). All fields are required.\n\nIMPORTANT: Domain must be verified before recording preferences can be updated.\n\n- recordingHideSensitive: Hide sensitive data in recordings (default: false)\n- recordingCaptureClientLog: Capture client-side console logs (default: false)\n- recordingCaptureServerLog: Capture server-side network logs (default: false)\n\nResponse data: DomainRecordingPreferencesUpdateData (domainId, workspaceId)\n\nError responses:\n- 400: Domain is not verified or invalid request body\n- 401: Unauthorized\n- 403: Not a workspace member\n- 404: Domain not found"
           },
           "response": []
         }

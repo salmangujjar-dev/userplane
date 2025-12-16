@@ -32,7 +32,7 @@ app.use(
 app.use('*', prettyJSON());
 
 // Better Auth routes - must come before API routes
-app.on(['POST', 'GET'], '/api/auth/**', (c) => {
+app.on(['POST', 'GET'], '/api/auth/*', (c) => {
   return auth.handler(c.req.raw);
 });
 
