@@ -2,8 +2,9 @@ import { pgTable, text, timestamp, boolean, index, pgEnum, unique } from 'drizzl
 import { relations } from 'drizzle-orm';
 import { workspaces } from './workspaces';
 import { links } from './links';
+import { DOMAIN_STATUS_VALUES } from '../constants';
 
-export const domainStatusEnum = pgEnum('domain_status', ['pending', 'verified', 'revoked']);
+export const domainStatusEnum = pgEnum('domain_status', DOMAIN_STATUS_VALUES);
 
 export const domains = pgTable(
   'domains',

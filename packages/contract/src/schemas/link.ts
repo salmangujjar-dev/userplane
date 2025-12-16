@@ -1,0 +1,144 @@
+import { z } from 'zod';
+import {
+  LinkProviderTypeSchema,
+  LinkTypeSchema,
+  DomainStatusSchema,
+  SortDirectionSchema,
+  PaginationMetaSchema,
+} from './common';
+
+/**
+ * Link schemas
+ */
+
+/**
+ * Link sort fields
+ */
+export const LinkSortFieldSchema = z.enum(['created_at', 'link_title']);
+
+/**
+ * List links query parameters
+ */
+export const ListLinksQuerySchema = z.object({
+  page: z.number().int().positive().optional().default(1),
+  per_page: z.number().int().min(1).max(20).optional().default(10),
+  created_by: z.array(z.string()).optional(),
+  project_id: z.string().optional(),
+  domain_id: z.array(z.string()).optional(),
+  link_provider_type: z.array(LinkProviderTypeSchema).optional(),
+  link_type: LinkTypeSchema.optional(),
+  sort_by: LinkSortFieldSchema.optional().default('created_at'),
+  sort_direction: SortDirectionSchema.optional().default('desc'),
+});
+
+/**
+ * Domain info in link
+ */
+export const LinkDomainSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  status: DomainStatusSchema,
+});
+
+/**
+ * Project info in link
+ */
+export const LinkProjectSchema = z.object({
+  id: z.string(),
+  title: z.string().nullable(),
+});
+
+/**
+ * Creator info in link
+ */
+export const LinkCreatorSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+});
+
+/**
+ * Link item in list
+ */
+export const LinkItemSchema = z.object({
+  id: z.string(),
+  linkTitle: z.string(),
+  linkType: LinkTypeSchema,
+  linkReusable: z.boolean(),
+  linkProviderType: LinkProviderTypeSchema.nullable(),
+  linkProviderId: z.string().nullable(),
+  linkProviderReference: z.string().nullable(),
+  linkURL: z.string(),
+  createdAt: z.string(),
+  domain: LinkDomainSchema,
+});
+
+/**
+ * Full link details
+ */
+export const LinkDetailsSchema = LinkItemSchema.extend({
+  project: LinkProjectSchema.nullable(),
+  creator: LinkCreatorSchema,
+});
+
+/**
+ * Links list response
+ */
+export const LinksListDataSchema = z.object({
+  workspaceId: z.string(),
+  links: z.array(LinkItemSchema),
+  pagination: PaginationMetaSchema,
+});
+
+/**
+ * Create link request
+ */
+export const CreateLinkSchema = z.object({
+  projectId: z.string().optional(),
+  domainId: z.string().min(1),
+  linkReference: z.string().max(2048).optional(),
+  linkReusable: z.boolean().optional().default(false),
+});
+
+/**
+ * Link create response
+ */
+export const LinkCreateDataSchema = z.object({
+  workspaceId: z.string(),
+  link: LinkItemSchema,
+});
+
+/**
+ * Update link request
+ */
+export const UpdateLinkSchema = z.object({
+  linkTitle: z.string().max(255).nullable().optional(),
+  linkReusable: z.boolean().optional(),
+  linkProviderType: LinkProviderTypeSchema.nullable().optional(),
+  linkProviderId: z.string().max(255).nullable().optional(),
+  linkProviderRef: z.string().max(2048).nullable().optional(),
+});
+
+/**
+ * Link update response
+ */
+export const LinkUpdateDataSchema = z.object({
+  workspaceId: z.string(),
+  link: LinkItemSchema,
+});
+
+/**
+ * Link get response
+ */
+export const LinkGetDataSchema = z.object({
+  workspaceId: z.string(),
+  link: LinkDetailsSchema,
+});
+
+/**
+ * Link delete response
+ */
+export const LinkDeleteDataSchema = z.object({
+  workspaceId: z.string(),
+  linkId: z.string(),
+});

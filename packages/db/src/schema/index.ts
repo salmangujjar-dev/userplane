@@ -46,7 +46,6 @@ export type NewEntitlement = typeof entitlements.$inferInsert;
 
 export type WorkspaceMember = typeof workspaceMembers.$inferSelect;
 export type NewWorkspaceMember = typeof workspaceMembers.$inferInsert;
-export type WorkspaceRole = WorkspaceMember['workspaceRole'];
 
 export type Domain = typeof domains.$inferSelect;
 export type NewDomain = typeof domains.$inferInsert;

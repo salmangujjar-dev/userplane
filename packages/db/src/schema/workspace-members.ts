@@ -4,8 +4,9 @@ import { user } from './user';
 import { workspaces } from './workspaces';
 import { links } from './links';
 import { recordings } from './recordings';
+import { WORKSPACE_ROLE_VALUES } from '../constants';
 
-export const workspaceRoleEnum = pgEnum('workspace_role', ['owner', 'admin', 'member']);
+export const workspaceRoleEnum = pgEnum('workspace_role', WORKSPACE_ROLE_VALUES);
 
 export const workspaceMembers = pgTable(
   'workspace_members',

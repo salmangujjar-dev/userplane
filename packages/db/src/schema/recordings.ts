@@ -13,23 +13,15 @@ import { links } from './links';
 import { workspaces } from './workspaces';
 import { projects } from './projects';
 import { workspaceMembers } from './workspace-members';
+import {
+  UPLOAD_STATUS_VALUES,
+  STREAM_PROVIDER_VALUES,
+  STREAMING_STATUS_VALUES,
+} from '../constants';
 
-export const uploadStatusEnum = pgEnum('upload_status', [
-  'pending',
-  'partial',
-  'available',
-  'failed',
-  'expired',
-  'purged',
-]);
-export const streamProviderEnum = pgEnum('stream_provider', ['cloudflare', 'mux']);
-export const streamingStatusEnum = pgEnum('streaming_status', [
-  'pending',
-  'available',
-  'failed',
-  'expired',
-  'purged',
-]);
+export const uploadStatusEnum = pgEnum('upload_status', UPLOAD_STATUS_VALUES);
+export const streamProviderEnum = pgEnum('stream_provider', STREAM_PROVIDER_VALUES);
+export const streamingStatusEnum = pgEnum('streaming_status', STREAMING_STATUS_VALUES);
 
 export const recordings = pgTable(
   'recordings',

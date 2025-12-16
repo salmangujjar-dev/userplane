@@ -5,6 +5,7 @@ import { projects } from './projects';
 import { workspaceMembers } from './workspace-members';
 import { recordings } from './recordings';
 import { domains } from './domains';
+import { LINK_TYPE_VALUES, LINK_PROVIDER_TYPE_VALUES } from '../constants';
 
 // FTS Index Requirement for Link Search
 // The link search feature uses PostgreSQL Full-Text Search (FTS) with to_tsvector/to_tsquery
@@ -14,41 +15,9 @@ import { domains } from './domains';
 
 // Link types - currently only 'recording' is supported in the API
 // Other types (file, session, screenshot) are reserved for future use
-export const linkTypeEnum = pgEnum('link_type', ['file', 'recording', 'session', 'screenshot']);
+export const linkTypeEnum = pgEnum('link_type', LINK_TYPE_VALUES);
 
-export const linkProviderTypeEnum = pgEnum('link_provider_type', [
-  // Support/Helpdesk
-  'intercom',
-  'zendesk',
-  'hubspot',
-  'freshdesk',
-  'freshchat',
-  'jira_service_management',
-  'helpscout',
-  'happyfox',
-  'ada',
-  'forethought',
-  'servicenow',
-  'front',
-  'zoho_desk',
-  'crisp',
-  'pylon',
-  'plain',
-  // Project Management / Dev Tools
-  'asana',
-  'azure_devops',
-  'clickup',
-  'github',
-  'gitlab',
-  'jira',
-  'linear',
-  'notion',
-  'sentry',
-  'slack',
-  // Fallback
-  'web', // Valid URL but unknown provider
-  'others', // Not a URL (plain text)
-]);
+export const linkProviderTypeEnum = pgEnum('link_provider_type', LINK_PROVIDER_TYPE_VALUES);
 
 export const links = pgTable(
   'recording_links',
