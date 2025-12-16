@@ -3,8 +3,6 @@
  * User-facing text for recording screens
  */
 
-export const DEFAULT_REQUESTER_NAME = 'Someone';
-
 export const PRE_RECORDING_COPY = {
   title: 'Record your screen',
   subtitle: (requesterName: string) => `${requesterName} has requested a screen recording from you`,
@@ -45,4 +43,10 @@ export const PRE_RECORDING_ERROR_COPY = {
 
 export const POST_RECORDING_ERROR_COPY = {
   startOverButton: 'Start over',
+};
+
+export const NOT_FOUND_COPY = {
+  title: '404',
+  heading: 'Page not found',
+  subtitle: "The page you're looking for doesn't exist or may have been moved.",
 };

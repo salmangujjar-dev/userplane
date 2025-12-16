@@ -1,0 +1,36 @@
+---
+import '../styles/global.css';
+import RecordingApp from '@/components/RecordingApp';
+import { getAppMeta } from '@workspace/meta';
+
+const meta = getAppMeta('recorder');
+
+const params = Astro.url.searchParams;
+const token = params.get('token');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href={meta.favicon} />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{meta.title}</title>
+    <meta name="description" content={meta.description} />
+    <meta name="keywords" content={meta.keywords} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={meta.title} />
+    <meta property="og:description" content={meta.description} />
+    <meta property="og:locale" content={meta.locale} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={meta.title} />
+    <meta name="twitter:description" content={meta.description} />
+  </head>
+
+  <body class="min-h-screen bg-background">
+    <RecordingApp linkToken={token} client:load />
+  </body>
+</html>
