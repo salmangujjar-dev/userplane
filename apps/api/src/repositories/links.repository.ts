@@ -87,6 +87,7 @@ export interface LinkWithWorkspacePrefsRow {
   projectId: string;
   domainId: string;
   createdBy: string;
+  createdByName: string | null;
   recordingCustomizeLink: boolean;
   recordingHideSensitive: boolean;
   recordingCaptureClientLog: boolean;
@@ -385,6 +386,7 @@ export class LinkRepository {
         projectId: links.projectId,
         domainId: links.domainId,
         createdBy: links.createdBy,
+        createdByName: user.name,
         recordingCustomizeLink: workspaces.recordingCustomizeLink,
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
@@ -399,6 +401,8 @@ export class LinkRepository {
       .from(links)
       .innerJoin(workspaces, eq(links.workspaceId, workspaces.id))
       .innerJoin(domains, eq(links.domainId, domains.id))
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.id))
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
       .where(
         and(
           eq(links.id, id),
