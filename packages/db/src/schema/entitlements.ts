@@ -9,15 +9,9 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { workspaces } from './workspaces';
+import { RESOURCE_TYPE_VALUES } from '../constants';
 
-export const resourceTypeEnum = pgEnum('resource_type', [
-  'seats',
-  'links',
-  'recordings',
-  'recording_links',
-  'logs',
-  'screenshots',
-]);
+export const resourceTypeEnum = pgEnum('resource_type', RESOURCE_TYPE_VALUES);
 
 export const entitlements = pgTable(
   'entitlements',
