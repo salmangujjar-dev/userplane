@@ -123,7 +123,7 @@ export class RecordingSession {
 
     const initResponse = await this.client.api.v1.session.$post({
       header: {
-        'X-Session-Token': this.sessionToken,
+        'x-session-token': this.sessionToken,
       },
       json: {
         recording_duration: recordingDuration || 0,
@@ -176,7 +176,7 @@ export class RecordingSession {
 
     const completeResponse = await this.client.api.v1.session.$patch({
       header: {
-        'X-Upload-Token': uploadToken,
+        'x-upload-token': uploadToken,
       },
       json: {
         recording_id: this.recordingId,

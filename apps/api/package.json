@@ -13,10 +13,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@trigger.dev/sdk": "^4.3.0",
     "@hono/zod-openapi": "^1.1.5",
     "@hono/zod-validator": "^0.4.1",
+    "@orpc/openapi": "^1.12.3",
+    "@orpc/server": "^1.12.3",
+    "@trigger.dev/sdk": "^4.3.0",
     "@workspace/auth": "workspace:*",
+    "@workspace/contract": "workspace:*",
     "@workspace/db": "workspace:*",
     "@workspace/email": "workspace:*",
     "@workspace/logger": "workspace:*",

@@ -8,9 +8,20 @@ import { registerRoutes } from '@/api/routes';
 import { env, logConfig } from '@/api/env';
 import { auth } from '@/api/clients/auth';
 import { createAppLogger } from '@workspace/logger';
+import { OpenAPIHandler } from '@orpc/openapi/fetch';
+import { onError } from '@orpc/server';
+import { apiRouter } from '@/api/routes/api.router';
 
 const app = new Hono();
 const logger = createAppLogger('api');
+
+const openAPIHandler = new OpenAPIHandler(apiRouter, {
+  interceptors: [
+    onError((error) => {
+      logger.error({ err: error }, 'oRPC error');
+    }),
+  ],
+});
 
 // Log configuration on startup
 logConfig();
@@ -34,6 +45,23 @@ app.use('*', prettyJSON());
 // Better Auth routes - must come before API routes
 app.on(['POST', 'GET'], '/api/auth/*', (c) => {
   return auth.handler(c.req.raw);
+});
+
+// OpenAPI handler - handles RESTful requests (v2)
+// Respects HTTP methods and paths defined in the contract
+app.use('/api/v2/*', async (c, next) => {
+  const { matched, response } = await openAPIHandler.handle(c.req.raw, {
+    prefix: '/api/v2',
+    context: {
+      headers: c.req.raw.headers,
+    },
+  });
+
+  if (matched) {
+    return c.newResponse(response.body, response);
+  }
+
+  await next();
 });
 
 // API v1 routes - all routes are defined in routes/index.ts

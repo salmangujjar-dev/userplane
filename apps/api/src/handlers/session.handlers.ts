@@ -28,6 +28,7 @@ import {
   completeUploadSchema,
   SESSION_CONSTRAINTS,
 } from '@/api/schema';
+import { REQUEST_HEADERS, RESPONSE_HEADERS } from '@/api/constants/headers';
 
 /**
  * Handler factory for GET /api/v1/session
@@ -44,9 +45,9 @@ export function getSessionHandler(sessionService: SessionService) {
       const result = await sessionService.initSession(parsed.token);
 
       // Set response headers for token expiry
-      c.header('X-Session-Token-Expires-In', String(result.expiresIn));
+      c.header(RESPONSE_HEADERS.SESSION_TOKEN_EXPIRES_IN, String(result.expiresIn));
       c.header(
-        'X-Session-Token-Expires-At',
+        RESPONSE_HEADERS.SESSION_TOKEN_EXPIRES_AT,
         new Date(Date.now() + result.expiresIn * 1000).toISOString()
       );
 
@@ -130,24 +131,24 @@ export function getSessionHandler(sessionService: SessionService) {
  * Initializes upload with presigned URLs
  *
  * Headers:
- * - X-Session-Token (required): Valid session token from GET /api/v1/session
- * - X-Debug (optional): When "true", throws errors for disallowed files instead of silently excluding
+ * - x-session-token (required): Valid session token from GET /api/v1/session
+ * - x-debug (optional): When "true", throws errors for disallowed files instead of silently excluding
  */
 export function initUploadHandler(sessionService: SessionService) {
   return async (c: Context<AppEnv>) => {
     try {
-      // Get session token from X-Session-Token header
-      const sessionToken = c.req.header('X-Session-Token');
+      // Get session token from x-session-token header
+      const sessionToken = c.req.header(REQUEST_HEADERS.SESSION_TOKEN);
       if (!sessionToken) {
         const response: ApiErrorResponse = {
           error: 'Unauthorized',
-          message: 'Session token required in X-Session-Token header',
+          message: `Session token required in ${REQUEST_HEADERS.SESSION_TOKEN} header`,
         };
         return c.json(response, 401);
       }
 
-      // Check debug mode from X-Debug header
-      const debugHeader = c.req.header('X-Debug');
+      // Check debug mode from x-debug header
+      const debugHeader = c.req.header(REQUEST_HEADERS.DEBUG);
       const debugMode = debugHeader?.toLowerCase() === 'true';
 
       // Parse and validate request body
@@ -172,17 +173,20 @@ export function initUploadHandler(sessionService: SessionService) {
       );
 
       // Set response headers for token expiry
-      c.header('X-Upload-Token-Expires-In', String(result.uploadTokenExpiresIn));
+      c.header(RESPONSE_HEADERS.UPLOAD_TOKEN_EXPIRES_IN, String(result.uploadTokenExpiresIn));
       c.header(
-        'X-Upload-Token-Expires-At',
+        RESPONSE_HEADERS.UPLOAD_TOKEN_EXPIRES_AT,
         new Date(Date.now() + result.uploadTokenExpiresIn * 1000).toISOString()
       );
-      c.header('X-Presigned-Url-Expires-In', String(SESSION_CONSTRAINTS.PRESIGNED_URL_EXPIRY));
+      c.header(
+        RESPONSE_HEADERS.PRESIGNED_URL_EXPIRES_IN,
+        String(SESSION_CONSTRAINTS.PRESIGNED_URL_EXPIRY)
+      );
 
       // Set header for excluded files if any (format: type1|type2|...)
       if (result.excludedFiles.length > 0) {
         const excludedTypes = result.excludedFiles.map((f) => f.type).join('|');
-        c.header('X-Excluded', excludedTypes);
+        c.header(RESPONSE_HEADERS.EXCLUDED, excludedTypes);
       }
 
       const response: ApiResponse<UploadInitData> = {
@@ -278,17 +282,17 @@ export function initUploadHandler(sessionService: SessionService) {
  * Completes, marks partial, or fails an upload
  *
  * Headers:
- * - X-Upload-Token (required): Valid upload token from POST /api/v1/session
+ * - x-upload-token (required): Valid upload token from POST /api/v1/session
  */
 export function completeUploadHandler(sessionService: SessionService) {
   return async (c: Context<AppEnv>) => {
     try {
-      // Get upload token from X-Upload-Token header
-      const uploadToken = c.req.header('X-Upload-Token');
+      // Get upload token from x-upload-token header
+      const uploadToken = c.req.header(REQUEST_HEADERS.UPLOAD_TOKEN);
       if (!uploadToken) {
         const response: ApiErrorResponse = {
           error: 'Unauthorized',
-          message: 'Upload token required in X-Upload-Token header',
+          message: `Upload token required in ${REQUEST_HEADERS.UPLOAD_TOKEN} header`,
         };
         return c.json(response, 401);
       }
@@ -300,7 +304,7 @@ export function completeUploadHandler(sessionService: SessionService) {
       // Get remaining token time and add to response headers
       const remainingTime = sessionService.getUploadTokenRemainingTime(uploadToken);
       if (remainingTime !== null) {
-        c.header('X-Upload-Token-Remaining', String(remainingTime));
+        c.header(RESPONSE_HEADERS.UPLOAD_TOKEN_REMAINING, String(remainingTime));
       }
 
       // Complete upload

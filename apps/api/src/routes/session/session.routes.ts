@@ -21,13 +21,13 @@ export function createSessionRoutes(sessionService: SessionService) {
   sessionRoutes.get('/', getSessionHandler(sessionService));
 
   // POST /session - Initialize upload and get presigned URLs
-  // Headers: X-Session-Token: <session_token>
+  // Headers: x-session-token: <session_token>
   // Body: { recording_duration, files: [{type, name, size, mime_type}] }
   // Returns: recording_id, upload_token, presigned_urls
   sessionRoutes.post('/', initUploadHandler(sessionService));
 
   // PATCH /session - Complete or fail upload
-  // Headers: X-Upload-Token: <upload_token>
+  // Headers: x-upload-token: <upload_token>
   // Body: { recording_id, state: 'complete' | 'failed', reason? }
   // Returns: success, recording_id, status
   sessionRoutes.patch('/', completeUploadHandler(sessionService));
