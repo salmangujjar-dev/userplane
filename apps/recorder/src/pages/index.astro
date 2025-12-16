@@ -1,9 +1,12 @@
 ---
 import '../styles/global.css';
-import { ButtonDemo } from '@/components/ButtonDemo';
+import RecordingApp from '@/components/RecordingApp';
 import { getAppMeta } from '@workspace/meta';
 
 const meta = getAppMeta('recorder');
+
+const params = Astro.url.searchParams;
+const token = params.get('token');
 ---
 
 <html lang="en">
@@ -28,15 +31,6 @@ const meta = getAppMeta('recorder');
   </head>
 
   <body class="min-h-screen bg-background">
-    <main class="container mx-auto py-8">
-      <div class="flex flex-col items-center justify-center min-h-screen gap-8">
-        <div class="text-center">
-          <h1 class="text-4xl font-bold mb-2">Astro + React + shadcn/ui</h1>
-          <p class="text-muted-foreground">A simple counter example</p>
-        </div>
-
-        <ButtonDemo client:load />
-      </div>
-    </main>
+    <RecordingApp linkToken={token} client:load />
   </body>
 </html>
