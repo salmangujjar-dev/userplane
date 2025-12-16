@@ -409,7 +409,7 @@ export class SessionService {
       rf: linkData.recordingFootnote,
       rpc: linkData.recordingPrimaryColor,
       rmd: linkData.recordingMaxDuration,
-      rrb: linkData.createdBy,
+      rrb: linkData.createdByName || '',
     };
   }
 
