@@ -17,13 +17,13 @@ import {
  */
 
 /**
- * GET /api/v1/workspace/:workspaceId/projects
+ * GET /workspace/:workspaceId/projects
  * List projects with pagination
  */
 export const getProjects = oc
   .route({
     method: 'GET',
-    path: '/api/v1/workspace/:workspaceId/projects',
+    path: '/workspace/:workspaceId/projects',
     summary: 'List projects',
     description: 'Retrieve paginated list of projects',
     tags: ['Projects'],
@@ -32,13 +32,13 @@ export const getProjects = oc
   .output(ApiResponseSchema(ProjectsListDataSchema));
 
 /**
- * POST /api/v1/workspace/:workspaceId/projects
+ * POST /workspace/:workspaceId/projects
  * Create a new project
  */
 export const createProject = oc
   .route({
     method: 'POST',
-    path: '/api/v1/workspace/:workspaceId/projects',
+    path: '/workspace/:workspaceId/projects',
     summary: 'Create project',
     description: 'Create a new project in the workspace',
     tags: ['Projects'],
@@ -47,13 +47,13 @@ export const createProject = oc
   .output(ApiResponseSchema(ProjectDataSchema));
 
 /**
- * PATCH /api/v1/workspace/:workspaceId/projects/:projectId
+ * PATCH /workspace/:workspaceId/projects/:projectId
  * Update a project
  */
 export const updateProject = oc
   .route({
     method: 'PATCH',
-    path: '/api/v1/workspace/:workspaceId/projects/:projectId',
+    path: '/workspace/:workspaceId/projects/:projectId',
     summary: 'Update project',
     description: 'Partially update project properties',
     tags: ['Projects'],
@@ -62,13 +62,13 @@ export const updateProject = oc
   .output(ApiResponseSchema(ProjectUpdateDataSchema));
 
 /**
- * PUT /api/v1/workspace/:workspaceId/projects/:projectId
+ * PUT /workspace/:workspaceId/projects/:projectId
  * Replace project
  */
 export const replaceProject = oc
   .route({
     method: 'PUT',
-    path: '/api/v1/workspace/:workspaceId/projects/:projectId',
+    path: '/workspace/:workspaceId/projects/:projectId',
     summary: 'Replace project',
     description: 'Replace all project properties',
     tags: ['Projects'],
@@ -77,13 +77,13 @@ export const replaceProject = oc
   .output(ApiResponseSchema(ProjectDataSchema));
 
 /**
- * DELETE /api/v1/workspace/:workspaceId/projects/:projectId
+ * DELETE /workspace/:workspaceId/projects/:projectId
  * Delete a project
  */
 export const deleteProject = oc
   .route({
     method: 'DELETE',
-    path: '/api/v1/workspace/:workspaceId/projects/:projectId',
+    path: '/workspace/:workspaceId/projects/:projectId',
     summary: 'Delete project',
     description: 'Soft delete a project',
     tags: ['Projects'],

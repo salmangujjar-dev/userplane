@@ -13,13 +13,13 @@ import {
  */
 
 /**
- * POST /api/v1/invite
+ * POST /invite
  * Send workspace invitations via email
  */
 export const sendInvites = oc
   .route({
     method: 'POST',
-    path: '/api/v1/invite',
+    path: '/invite',
     summary: 'Send invites',
     description: 'Send workspace invitations to multiple email addresses',
     tags: ['Invites'],
@@ -28,13 +28,13 @@ export const sendInvites = oc
   .output(ApiResponseSchema(SendInvitesResultSchema));
 
 /**
- * GET /api/v1/invite
+ * GET /invite
  * Validate or accept an invitation
  */
 export const inviteAction = oc
   .route({
     method: 'GET',
-    path: '/api/v1/invite',
+    path: '/invite',
     summary: 'Handle invite action',
     description: 'Validate or accept a workspace invitation using token',
     tags: ['Invites'],

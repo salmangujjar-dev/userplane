@@ -1,6 +1,8 @@
 /**
- * Userplane API Contract
- * Complete contract definition for all API endpoints
+ * Userplane API Contracts
+ *
+ * Individual contracts per domain for modular imports.
+ * Each contract can be implemented independently.
  */
 
 import * as account from './account';
@@ -15,160 +17,181 @@ import * as status from './status';
 import * as workspace from './workspace';
 
 /**
- * Complete API contract tree
- * Organized by domain for easy navigation and type-safe access
+ * Status contract
+ * Public endpoints for API information and health checks
  */
-export const contract = {
-  /**
-   * Status endpoints
-   * Public endpoints for API information and health checks
-   */
-  status: {
-    apiInfo: status.apiInfo,
-    health: status.health,
+export const statusContract = {
+  apiInfo: status.apiInfo,
+  health: status.health,
+};
+
+/**
+ * Account contract
+ * User account management operations
+ */
+export const accountContract = {
+  get: account.getAccount,
+  update: account.updateAccount,
+};
+
+/**
+ * Provisioner contract
+ * Workspace creation and setup
+ */
+export const provisionerContract = {
+  createWorkspace: provisioner.createWorkspace,
+};
+
+/**
+ * Workspace contract
+ * Workspace management, members, domains, and settings
+ */
+export const workspaceContract = {
+  list: workspace.getAllWorkspaces,
+  count: workspace.countWorkspaces,
+  getById: workspace.getWorkspaceById,
+  updateName: workspace.updateWorkspaceName,
+  delete: workspace.deleteWorkspace,
+  search: workspace.workspaceSearch,
+
+  preferences: {
+    get: workspace.getWorkspacePreferences,
+    update: workspace.updateWorkspacePreferences,
   },
 
-  /**
-   * Account endpoints
-   * User account management operations
-   */
-  account: {
-    get: account.getAccount,
-    update: account.updateAccount,
+  members: {
+    list: workspace.getWorkspaceMembers,
+    updateRole: workspace.updateMemberRole,
+    remove: workspace.removeMember,
+    leave: workspace.leaveWorkspace,
   },
 
-  /**
-   * Provisioner endpoints
-   * Workspace creation and setup
-   */
-  provisioner: {
-    createWorkspace: provisioner.createWorkspace,
+  notifications: {
+    update: workspace.updateNotificationPreferences,
   },
 
-  /**
-   * Workspace endpoints
-   * Workspace management, members, domains, and settings
-   */
-  workspace: {
-    list: workspace.getAllWorkspaces,
-    count: workspace.countWorkspaces,
-    getById: workspace.getWorkspaceById,
-    updateName: workspace.updateWorkspaceName,
-    delete: workspace.deleteWorkspace,
-    search: workspace.workspaceSearch,
-
-    preferences: {
-      get: workspace.getWorkspacePreferences,
-      update: workspace.updateWorkspacePreferences,
-    },
-
-    members: {
-      list: workspace.getWorkspaceMembers,
-      updateRole: workspace.updateMemberRole,
-      remove: workspace.removeMember,
-      leave: workspace.leaveWorkspace,
-    },
-
-    notifications: {
-      update: workspace.updateNotificationPreferences,
-    },
-
-    invite: {
-      getUrl: workspace.getInviteUrl,
-      rotate: workspace.rotateInviteToken,
-      send: workspace.sendWorkspaceInvites,
-    },
-
-    domains: {
-      list: workspace.getWorkspaceDomains,
-      getById: workspace.getDomainById,
-      add: workspace.addDomain,
-      update: workspace.updateDomain,
-      delete: workspace.deleteDomain,
-      getVerificationUrl: workspace.getDomainVerificationUrl,
-      preferences: {
-        get: workspace.getDomainRecordingPreferences,
-        update: workspace.updateDomainRecordingPreferences,
-        replace: workspace.replaceDomainRecordingPreferences,
-      },
-    },
-
-    linkSettings: {
-      update: workspace.updateLinkSettings,
-    },
-  },
-
-  /**
-   * Domain endpoints
-   * Public domain verification endpoint
-   */
-  domain: {
-    verify: domain.verifyDomain,
-  },
-
-  /**
-   * Invite endpoints
-   * Workspace invitation management
-   */
   invite: {
-    send: invite.sendInvites,
-    action: invite.inviteAction,
+    getUrl: workspace.getInviteUrl,
+    rotate: workspace.rotateInviteToken,
+    send: workspace.sendWorkspaceInvites,
   },
 
-  /**
-   * Project endpoints
-   * Project management within workspaces
-   */
-  project: {
-    list: project.getProjects,
-    create: project.createProject,
-    update: project.updateProject,
-    replace: project.replaceProject,
-    delete: project.deleteProject,
-  },
-
-  /**
-   * Link endpoints
-   * Recording link management
-   */
-  link: {
-    list: link.getLinks,
-    create: link.createLink,
-    getById: link.getLinkById,
-    update: link.updateLink,
-    delete: link.deleteLink,
-  },
-
-  /**
-   * Recording endpoints
-   * Recording management and resource access
-   */
-  recording: {
-    list: recording.getRecordings,
-    getById: recording.getRecordingById,
-    delete: recording.deleteRecording,
-    resources: {
-      video: recording.getRecordingVideo,
-      thumbnail: recording.getRecordingThumbnail,
-      consoleLog: recording.getRecordingConsoleLog,
-      networkLog: recording.getRecordingNetworkLog,
+  domains: {
+    list: workspace.getWorkspaceDomains,
+    getById: workspace.getDomainById,
+    add: workspace.addDomain,
+    update: workspace.updateDomain,
+    delete: workspace.deleteDomain,
+    getVerificationUrl: workspace.getDomainVerificationUrl,
+    preferences: {
+      get: workspace.getDomainRecordingPreferences,
+      update: workspace.updateDomainRecordingPreferences,
+      replace: workspace.replaceDomainRecordingPreferences,
     },
   },
 
-  /**
-   * Session endpoints
-   * Recording session and upload management
-   */
-  session: {
-    init: session.getSession,
-    upload: {
-      init: session.initUpload,
-      complete: session.completeUpload,
-    },
+  linkSettings: {
+    update: workspace.updateLinkSettings,
   },
 };
 
 /**
- * Export contract type for client generation
+ * Invite contract
+ * Workspace invitation operations
  */
+export const inviteContract = {
+  send: invite.sendInvites,
+  action: invite.inviteAction,
+};
+
+/**
+ * Domain contract
+ * Public domain verification
+ */
+export const domainContract = {
+  verify: domain.verifyDomain,
+};
+
+/**
+ * Project contract
+ * Project management operations
+ */
+export const projectContract = {
+  list: project.getProjects,
+  create: project.createProject,
+  update: project.updateProject,
+  replace: project.replaceProject,
+  delete: project.deleteProject,
+};
+
+/**
+ * Link contract
+ * Recording link management
+ */
+export const linkContract = {
+  list: link.getLinks,
+  create: link.createLink,
+  getById: link.getLinkById,
+  update: link.updateLink,
+  delete: link.deleteLink,
+};
+
+/**
+ * Recording contract
+ * Recording management and resource access
+ */
+export const recordingContract = {
+  list: recording.getRecordings,
+  getById: recording.getRecordingById,
+  delete: recording.deleteRecording,
+  resources: {
+    video: recording.getRecordingVideo,
+    thumbnail: recording.getRecordingThumbnail,
+    consoleLog: recording.getRecordingConsoleLog,
+    networkLog: recording.getRecordingNetworkLog,
+  },
+};
+
+/**
+ * Session contract
+ * Recording session and upload management
+ */
+export const sessionContract = {
+  init: session.getSession,
+  upload: {
+    init: session.initUpload,
+    complete: session.completeUpload,
+  },
+};
+
+/**
+ * Complete API contract
+ * Combines all domain contracts for full API implementation
+ */
+export const contract = {
+  status: statusContract,
+  account: accountContract,
+  provisioner: provisionerContract,
+  workspace: workspaceContract,
+  invite: inviteContract,
+  domain: domainContract,
+  project: projectContract,
+  link: linkContract,
+  recording: recordingContract,
+  session: sessionContract,
+};
+
+/**
+ * Contract types
+ */
+export type StatusContract = typeof statusContract;
+export type AccountContract = typeof accountContract;
+export type ProvisionerContract = typeof provisionerContract;
+export type WorkspaceContract = typeof workspaceContract;
+export type InviteContract = typeof inviteContract;
+export type DomainContract = typeof domainContract;
+export type ProjectContract = typeof projectContract;
+export type LinkContract = typeof linkContract;
+export type RecordingContract = typeof recordingContract;
+export type SessionContract = typeof sessionContract;
 export type Contract = typeof contract;
