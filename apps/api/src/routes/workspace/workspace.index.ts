@@ -4,78 +4,14 @@
 
 import { Hono } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
-import { db } from '@/api/clients/db';
-
-import { tokenService } from '@/api/services/token.service';
-import { emailService } from '@/api/services/email.service';
-
-import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import { UserRepository } from '@/api/repositories/users.repository';
-import { ProjectRepository } from '@/api/repositories/projects.repository';
-import { DomainRepository } from '@/api/repositories/domains.repository';
-import { LinkRepository } from '@/api/repositories/links.repository';
-
-import { WorkspaceService } from '@/api/services/workspace.service';
-import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
-import { UserService } from '@/api/services/user.service';
-import { ProjectService } from '@/api/services/project.service';
-import { DomainService } from '@/api/services/domain.service';
-
-import { InviteService } from '@/api/services/invite.service';
-
-import { createWorkspaceRoutes } from './workspace.routes';
-
-const workspaceRepo = new WorkspaceRepository(db);
-const workspaceMemberRepo = new WorkspaceMemberRepository(db);
-const userRepo = new UserRepository(db);
-const projectRepo = new ProjectRepository(db);
-const domainRepo = new DomainRepository(db);
-const linkRepo = new LinkRepository(db);
-
-export const workspaceMemberService = new WorkspaceMemberService({
-  memberRepo: workspaceMemberRepo,
-});
-
-const userService = new UserService({
-  userRepo,
-});
-
-// ProjectService needs RecordingService which is in recordings.index
-// Import it to avoid circular dependency
-import { recordingService } from '../recordings/recordings.index';
-
-export const projectService = new ProjectService({
-  projectRepo,
-  db,
-  recordingService,
-});
-
-// WorkspaceService needs ProjectService for cascading deletes
-export const workspaceService = new WorkspaceService({
-  workspaceRepo,
-  tokenService,
-  db,
-  workspaceMemberRepo,
-  projectRepo,
-  domainRepo,
-  linkRepo,
-  projectService,
-});
-
-export const domainService = new DomainService({
-  domainRepo,
-  tokenService,
-});
-
-export const inviteService = new InviteService({
+import {
+  inviteService,
   workspaceMemberService,
   workspaceService,
-  userService,
-  emailService,
-  tokenService,
-  db,
-});
+  projectService,
+  domainService,
+} from '@/api/services';
+import { createWorkspaceRoutes } from './workspace.routes';
 
 const workspaceRoutes = createWorkspaceRoutes(
   inviteService,

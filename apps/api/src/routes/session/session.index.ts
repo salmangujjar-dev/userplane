@@ -1,63 +1,7 @@
-/**
- * Session routes index
- * Sets up session routes with dependencies
- */
-
 import createRouter from '@/api/lib/create-router';
+import { sessionService } from '@/api/services';
 import { createSessionRoutes } from './session.routes';
-import { SessionService } from '@/api/services/session.service';
-import { LinkService } from '@/api/services/link.service';
-import { LinkRepository } from '@/api/repositories/links.repository';
-import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import { ProjectRepository } from '@/api/repositories/projects.repository';
-import { DomainRepository } from '@/api/repositories/domains.repository';
-import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { db } from '@/api/clients/db';
-import {
-  getVideoStorage,
-  getThumbnailsStorage,
-  getConsoleLogsStorage,
-  getNetworkLogsStorage,
-} from '@/api/clients/storage';
 
-// Initialize repositories
-const linkRepo = new LinkRepository(db);
-const recordingRepo = new RecordingRepository(db);
-const workspaceMemberRepo = new WorkspaceMemberRepository(db);
-const projectRepo = new ProjectRepository(db);
-const workspaceRepo = new WorkspaceRepository(db);
-const domainRepo = new DomainRepository(db);
-
-// Initialize storage clients
-const videoStorage = getVideoStorage();
-const thumbnailsStorage = getThumbnailsStorage();
-const consoleLogsStorage = getConsoleLogsStorage();
-const networkLogsStorage = getNetworkLogsStorage();
-
-// Initialize link service for token validation
-const linkService = new LinkService({
-  linkRepo,
-  workspaceMemberRepo,
-  projectRepo,
-  domainRepo,
-  workspaceRepo,
-});
-
-// Initialize service with dependencies
-const sessionService = new SessionService({
-  linkRepo,
-  recordingRepo,
-  projectRepo,
-  workspaceRepo,
-  videoStorage,
-  thumbnailsStorage,
-  consoleLogsStorage,
-  networkLogsStorage,
-  linkService,
-});
-
-// Create and mount routes
 const app = createRouter();
 const sessionRoutes = createSessionRoutes(sessionService);
 app.route('/session', sessionRoutes);

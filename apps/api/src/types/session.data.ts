@@ -20,6 +20,7 @@ export interface SessionPreferences {
   rf: string | null; // recording_footnote
   rpc: string | null; // recording_primary_color
   rmd: number | null; // recording_max_duration (seconds)
+  rrb: string; // recording_requested_by
 }
 
 /**
