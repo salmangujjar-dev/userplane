@@ -240,8 +240,8 @@ export class LinkService {
       domainUrl: domain?.domainUrl || '',
       domainStatus: domain?.domainStatus || ('pending' as const),
       recordingHideSensitive: domain?.recordingHideSensitive || false,
-      recordingCaptureClientLog: domain?.recordingCaptureClientLog || true,
-      recordingCaptureServerLog: domain?.recordingCaptureServerLog || true,
+      recordingCaptureClientLog: domain?.recordingCaptureClientLog || false,
+      recordingCaptureServerLog: domain?.recordingCaptureServerLog || false,
     };
   }
 
@@ -377,8 +377,8 @@ export class LinkService {
       domainUrl: domain?.domainUrl || '',
       domainStatus: domain?.domainStatus || ('pending' as const),
       recordingHideSensitive: domain?.recordingHideSensitive || false,
-      recordingCaptureClientLog: domain?.recordingCaptureClientLog || true,
-      recordingCaptureServerLog: domain?.recordingCaptureServerLog || true,
+      recordingCaptureClientLog: domain?.recordingCaptureClientLog || false,
+      recordingCaptureServerLog: domain?.recordingCaptureServerLog || false,
     };
   }
 
