@@ -11,14 +11,15 @@ import {
   isScreenRecordingSupported,
 } from '@/services/media-capture';
 import type { UploadProgress } from '@/services/recording-session';
-import type { UIPreferences } from '@/types/session-preferences';
-import { DEFAULT_UI_PREFERENCES } from '@/types/session-preferences';
-import { generateVideoThumbnail, blobToDataUrl } from '@/utils/video-thumbnail';
+import type { RecordingPreferences } from '@/types/session-preferences';
+import { DEFAULT_RECORDING_PREFERENCES } from '@/types/session-preferences';
+import { generateVideoThumbnail } from '@/utils/video-thumbnail';
 
 export type FlowState =
   | 'loading'
   | 'error'
   | 'setup'
+  | 'countdown'
   | 'recording'
   | 'review'
   | 'uploading'
@@ -29,17 +30,16 @@ export interface RecordingFlowState {
   error: string | null;
   recordingMode: RecordingMode;
   recordingBlob: Blob | null;
-  thumbnailUrl: string | null;
+  videoUrl: string | null;
   uploadProgress: number;
   requesterName: string;
-  workspaceLogoUrl: string | null;
-  workspaceName: string | null;
   mediaStream: MediaStream | null;
   isProcessing: boolean;
-  maxRecordingDuration: number;
+  maxRecordingDurationMs: number;
   maxRecordingSize: number | null;
-  recordingDuration: number | null;
-  preferences: UIPreferences;
+  recordingDurationMs: number | null;
+  preferences: RecordingPreferences;
+  countdownSeconds: number;
 }
 
 export interface RecordingFlowActions {
@@ -57,17 +57,19 @@ export function useRecordingFlow(linkToken: string | null): {
   const [error, setError] = useState<string | null>(null);
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('screen-only');
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [thumbnailBlob, setThumbnailBlob] = useState<Blob | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [requesterName, setRequesterName] = useState('');
-  const [workspaceLogoUrl, setWorkspaceLogoUrl] = useState<string | null>(null);
-  const [workspaceName, setWorkspaceName] = useState<string | null>(null);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [maxRecordingDuration, setMaxRecordingDuration] = useState<number>(180000);
+  const [maxRecordingDurationMs, setMaxRecordingDurationMs] = useState<number>(180000);
   const [maxRecordingSize, setMaxRecordingSize] = useState<number | null>(null);
-  const [recordingDuration, setRecordingDuration] = useState<number | null>(null);
-  const [preferences, setPreferences] = useState<UIPreferences>(DEFAULT_UI_PREFERENCES);
+  const [recordingDurationMs, setRecordingDurationMs] = useState<number | null>(null);
+  const [preferences, setPreferences] = useState<RecordingPreferences>(
+    DEFAULT_RECORDING_PREFERENCES
+  );
+  const [countdownSeconds, setCountdownSeconds] = useState<number>(3);
 
   const sessionRef = useRef<RecordingSession | null>(null);
   const mediaCaptureRef = useRef<MediaCapture | null>(null);
@@ -105,7 +107,7 @@ export function useRecordingFlow(linkToken: string | null): {
   }, [linkToken]);
 
   useEffect(() => {
-    const criticalStates: FlowState[] = ['recording', 'review', 'uploading'];
+    const criticalStates: FlowState[] = ['countdown', 'recording', 'review', 'uploading'];
 
     if (criticalStates.includes(flowState)) {
       console.log('[Flow] Enabling beforeunload protection');
@@ -113,8 +115,6 @@ export function useRecordingFlow(linkToken: string | null): {
       const handler = (e: BeforeUnloadEvent) => {
         console.log('[Flow] beforeunload triggered - preventing accidental close');
         e.preventDefault();
-        e.returnValue = '';
-        return '';
       };
 
       beforeUnloadHandlerRef.current = handler;
@@ -135,17 +135,17 @@ export function useRecordingFlow(linkToken: string | null): {
       return;
     }
 
-    console.log('[Flow] Setting up auto-stop timer for', maxRecordingDuration, 'ms');
+    console.log('[Flow] Setting up auto-stop timer for', maxRecordingDurationMs, 'ms');
 
     const timer = setTimeout(() => {
       console.log('[Flow] Max duration reached, auto-stopping recording');
       stopRecording();
-    }, maxRecordingDuration);
+    }, maxRecordingDurationMs);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [flowState, maxRecordingDuration]);
+  }, [flowState, maxRecordingDurationMs]);
 
   async function initializeSession(token: string) {
     try {
@@ -161,36 +161,24 @@ export function useRecordingFlow(linkToken: string | null): {
       await session.initialize(token);
       console.log('[Flow] Session initialized successfully');
       console.log('[Flow] Session ID:', session.sessionId);
+      console.log('[Flow] Recording ID:', session.recordingId);
+      console.log('[Flow] Requester name:', session.requesterName);
+      console.log('[Flow] Max recording duration:', `${session.maxRecordingDurationMs}ms`);
+      console.log(
+        '[Flow] Max recording size:',
+        session.maxRecordingSize ? `${session.maxRecordingSize} bytes` : '(unlimited)'
+      );
+      console.log('[Flow] Preferences:', session.preferences);
 
       sessionRef.current = session;
 
       if (session.preferences) {
         setPreferences(session.preferences);
-        console.log('[Flow] Preferences loaded:', {
-          customizeLink: session.preferences.customizeLink,
-          companyName: session.preferences.companyName,
-          headerText: session.preferences.headerText,
-          primaryColor: session.preferences.primaryColor,
-        });
       }
 
       setRequesterName(session.requesterName || '');
-      setWorkspaceLogoUrl(session.workspaceLogoUrl || null);
-      setWorkspaceName(session.workspaceName || null);
-
-      setMaxRecordingDuration(session.maxRecordingDuration);
+      setMaxRecordingDurationMs(session.maxRecordingDurationMs);
       setMaxRecordingSize(session.maxRecordingSize);
-
-      console.log('[Flow] Metadata extracted:', {
-        requester: session.requesterName || '(not provided)',
-        workspaceLogoUrl: session.workspaceLogoUrl || '(not provided)',
-        workspaceName: session.workspaceName || '(not provided)',
-      });
-
-      console.log('[Flow] Constraints extracted:', {
-        maxDuration: `${session.maxRecordingDuration}ms (${Math.round(session.maxRecordingDuration / 1000)}s)`,
-        maxSize: session.maxRecordingSize ? `${session.maxRecordingSize} bytes` : '(unlimited)',
-      });
 
       console.log('[Flow] Transitioning to setup state');
       setFlowState('setup');
@@ -205,7 +193,7 @@ export function useRecordingFlow(linkToken: string | null): {
 
   async function startRecording(mode: RecordingMode) {
     try {
-      console.log('[Flow] Starting recording...');
+      console.log('[Flow] Preparing to start recording...');
       console.log('[Flow] Recording mode:', mode);
 
       setRecordingMode(mode);
@@ -214,20 +202,37 @@ export function useRecordingFlow(linkToken: string | null): {
       mediaCaptureRef.current = mediaCapture;
       console.log('[Flow] MediaCapture instance created');
 
-      await mediaCapture.start({
+      console.log('[Flow] Requesting media permissions...');
+      await mediaCapture.requestPermissions({
         mode,
         onStop: async (blob) => {
-          console.log('[Flow] Recording stopped callback');
+          console.log('[Flow] Recording stopped callback triggered');
           console.log('[Flow] Blob size:', blob.size, 'bytes');
+          console.log('[Flow] Blob type:', blob.type);
+
+          const durationMs = mediaCapture.getDuration();
+          console.log('[Flow] Recording duration:', durationMs ? `${durationMs}ms` : 'unknown');
+          setRecordingDurationMs(durationMs);
+
           setRecordingBlob(blob);
 
-          console.log('[Flow] Generating thumbnail from callback...');
+          const blobUrl = URL.createObjectURL(blob);
+          setVideoUrl(blobUrl);
+          console.log('[Flow] Video blob URL created for preview:', blobUrl);
+
+          console.log('[Flow] Generating thumbnail for upload...');
           const thumbnail = await generateVideoThumbnail(blob);
           if (thumbnail) {
-            const thumbnailDataUrl = await blobToDataUrl(thumbnail);
-            setThumbnailUrl(thumbnailDataUrl);
+            setThumbnailBlob(thumbnail);
+            console.log('[Flow] Thumbnail generated:', {
+              size: thumbnail.size,
+              type: thumbnail.type,
+            });
+          } else {
+            console.warn('[Flow] Thumbnail generation failed - will upload without thumbnail');
           }
 
+          console.log('[Flow] Transitioning to review state');
           setFlowState('review');
         },
         onError: (err) => {
@@ -237,13 +242,29 @@ export function useRecordingFlow(linkToken: string | null): {
         },
       });
 
-      console.log('[Flow] Recording started successfully');
+      console.log('[Flow] Media permissions granted');
       console.log('[Flow] Getting media stream for preview');
       const stream = mediaCapture.getStream();
       setMediaStream(stream);
       console.log('[Flow] Media stream:', stream ? 'Available' : 'Not available');
-      console.log('[Flow] Transitioning to recording state');
-      setFlowState('recording');
+
+      console.log('[Flow] Starting 3-second countdown...');
+      setFlowState('countdown');
+      setCountdownSeconds(3);
+
+      let countdown = 3;
+      const countdownInterval = setInterval(() => {
+        countdown -= 1;
+        setCountdownSeconds(countdown);
+        console.log('[Flow] Countdown:', countdown);
+
+        if (countdown === 0) {
+          clearInterval(countdownInterval);
+          console.log('[Flow] Countdown complete, starting recording...');
+          mediaCapture.startRecording();
+          setFlowState('recording');
+        }
+      }, 1000);
     } catch (err) {
       console.error('[Flow] Failed to start recording:', err);
       const errorMessage =
@@ -263,22 +284,28 @@ export function useRecordingFlow(linkToken: string | null): {
         throw new Error('No active recording');
       }
 
-      const duration = mediaCaptureRef.current.getDuration();
-      console.log('[Flow] Recording duration:', duration ? `${duration}ms` : 'unknown');
-      setRecordingDuration(duration);
+      const durationMs = mediaCaptureRef.current.getDuration();
+      console.log('[Flow] Recording duration:', durationMs ? `${durationMs}ms` : 'unknown');
+      setRecordingDurationMs(durationMs);
 
       const blob = await mediaCaptureRef.current.stop();
-      console.log('[Flow] Recording stopped');
+      console.log('[Flow] Recording stopped successfully');
       console.log('[Flow] Blob size:', blob.size, 'bytes');
       console.log('[Flow] Blob type:', blob.type);
+      console.log('[Flow] Checking constraints...');
+      console.log('[Flow] Max duration limit:', maxRecordingDurationMs, 'ms');
+      console.log(
+        '[Flow] Max size limit:',
+        maxRecordingSize ? `${maxRecordingSize} bytes` : 'unlimited'
+      );
 
-      if (duration && duration > maxRecordingDuration) {
+      if (durationMs && durationMs > maxRecordingDurationMs) {
         console.warn('[Flow] Duration exceeds limit:', {
-          actual: duration,
-          limit: maxRecordingDuration,
+          actual: durationMs,
+          limit: maxRecordingDurationMs,
         });
         throw new Error(
-          `Recording duration (${Math.round(duration / 1000)}s) exceeds the maximum allowed (${Math.round(maxRecordingDuration / 1000)}s)`
+          `Recording duration (${durationMs}ms) exceeds the maximum allowed (${maxRecordingDurationMs}ms)`
         );
       }
 
@@ -292,14 +319,8 @@ export function useRecordingFlow(linkToken: string | null): {
         );
       }
 
+      console.log('[Flow] All constraints passed');
       setRecordingBlob(blob);
-
-      console.log('[Flow] Generating thumbnail...');
-      const thumbnail = await generateVideoThumbnail(blob);
-      if (thumbnail) {
-        const thumbnailDataUrl = await blobToDataUrl(thumbnail);
-        setThumbnailUrl(thumbnailDataUrl);
-      }
 
       console.log('[Flow] Transitioning to review state');
       setFlowState('review');
@@ -342,22 +363,21 @@ export function useRecordingFlow(linkToken: string | null): {
 
       console.log('[Flow] Created file:', fileName);
       console.log('[Flow] File size:', file.size, 'bytes');
+      console.log('[Flow] File type:', file.type);
       console.log(
         '[Flow] Recording duration:',
-        recordingDuration ? `${recordingDuration}ms` : 'unknown'
+        recordingDurationMs ? `${recordingDurationMs}ms` : '0ms (will default to 0)'
+      );
+      console.log(
+        '[Flow] Thumbnail:',
+        thumbnailBlob ? `${thumbnailBlob.size} bytes, ${thumbnailBlob.type}` : 'none'
       );
       console.log('[Flow] Starting upload...');
-
-      let thumbnailBlob: Blob | null = null;
-      if (thumbnailUrl) {
-        const response = await fetch(thumbnailUrl);
-        thumbnailBlob = await response.blob();
-      }
 
       await sessionRef.current.uploadFiles(
         file,
         thumbnailBlob,
-        recordingDuration,
+        recordingDurationMs,
         (progress: UploadProgress) => {
           console.log('[Flow] Upload progress:', progress.percentage + '%');
           setUploadProgress(progress.percentage);
@@ -409,11 +429,19 @@ export function useRecordingFlow(linkToken: string | null): {
       }
 
       console.log('[Flow] Resetting state');
+
+      if (videoUrl) {
+        URL.revokeObjectURL(videoUrl);
+        console.log('[Flow] Video blob URL revoked');
+      }
+
       setRecordingBlob(null);
-      setThumbnailUrl(null);
+      setThumbnailBlob(null);
+      setVideoUrl(null);
       setUploadProgress(0);
       setError(null);
       setMediaStream(null);
+      setRecordingDurationMs(null);
 
       console.log('[Flow] Transitioning back to setup state');
       setFlowState('setup');
@@ -432,17 +460,16 @@ export function useRecordingFlow(linkToken: string | null): {
       error,
       recordingMode,
       recordingBlob,
-      thumbnailUrl,
+      videoUrl,
       uploadProgress,
       requesterName,
-      workspaceLogoUrl,
-      workspaceName,
       mediaStream,
       isProcessing,
-      maxRecordingDuration,
+      maxRecordingDurationMs,
       maxRecordingSize,
-      recordingDuration,
+      recordingDurationMs,
       preferences,
+      countdownSeconds,
     },
     actions: {
       startRecording,

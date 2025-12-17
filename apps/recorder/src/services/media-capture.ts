@@ -18,6 +18,8 @@ export class MediaCapture {
   private stream: MediaStream | null = null;
   private mode: RecordingMode;
   private startTime: number | null = null;
+  private onStopCallback: ((blob: Blob) => void) | null = null;
+  private onErrorCallback: ((error: Error) => void) | null = null;
 
   constructor(mode: RecordingMode = 'screen-only') {
     this.mode = mode;
@@ -49,12 +51,13 @@ export class MediaCapture {
   }
 
   /**
-   * Start recording
+   * Request permissions and set up media stream (but don't start recording yet)
    */
-  async start(options?: MediaCaptureOptions): Promise<void> {
+  async requestPermissions(options?: MediaCaptureOptions): Promise<void> {
     try {
       const mode = options?.mode || this.mode;
 
+      console.log('[MediaCapture] Requesting display media permissions...');
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
         video: {
           cursor: 'always',
@@ -67,6 +70,7 @@ export class MediaCapture {
 
       if (mode === 'screen-voice') {
         try {
+          console.log('[MediaCapture] Requesting audio permissions...');
           const audioStream = await navigator.mediaDevices.getUserMedia({
             audio: {
               echoCancellation: true,
@@ -96,9 +100,11 @@ export class MediaCapture {
         videoBitsPerSecond: 2500000,
       });
 
-      console.log(`[MediaCapture] Recording started with ${mimeType}`);
+      console.log(`[MediaCapture] MediaRecorder created with ${mimeType}`);
 
       this.recordedChunks = [];
+      this.onStopCallback = options?.onStop || null;
+      this.onErrorCallback = options?.onError || null;
 
       this.mediaRecorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
@@ -110,13 +116,17 @@ export class MediaCapture {
       this.mediaRecorder.onstop = () => {
         const blob = new Blob(this.recordedChunks, { type: mimeType });
         console.log(`[MediaCapture] Recording stopped, size: ${blob.size} bytes`);
-        options?.onStop?.(blob);
+        if (this.onStopCallback) {
+          this.onStopCallback(blob);
+        }
       };
 
       this.mediaRecorder.onerror = (event: any) => {
         const error = new Error(`MediaRecorder error: ${event.error}`);
         console.error('[MediaCapture] Error:', error);
-        options?.onError?.(error);
+        if (this.onErrorCallback) {
+          this.onErrorCallback(error);
+        }
       };
 
       combinedStream.getVideoTracks()[0].addEventListener('ended', () => {
@@ -124,14 +134,38 @@ export class MediaCapture {
         this.stop();
       });
 
-      this.mediaRecorder.start(1000);
-
-      this.startTime = Date.now();
-      console.log('[MediaCapture] Start time:', new Date(this.startTime).toISOString());
+      console.log('[MediaCapture] Permissions granted, ready to start recording');
     } catch (error) {
-      console.error('[MediaCapture] Failed to start recording:', error);
+      console.error('[MediaCapture] Failed to request permissions:', error);
       throw error;
     }
+  }
+
+  /**
+   * Start the actual recording (must call requestPermissions first)
+   */
+  startRecording(): void {
+    if (!this.mediaRecorder) {
+      throw new Error('MediaRecorder not initialized. Call requestPermissions first.');
+    }
+
+    if (this.mediaRecorder.state !== 'inactive') {
+      console.warn('[MediaCapture] Recording already started');
+      return;
+    }
+
+    console.log('[MediaCapture] Starting recording...');
+    this.mediaRecorder.start(1000);
+    this.startTime = Date.now();
+    console.log('[MediaCapture] Recording started at:', new Date(this.startTime).toISOString());
+  }
+
+  /**
+   * Start recording (legacy method - requests permissions and starts recording immediately)
+   */
+  async start(options?: MediaCaptureOptions): Promise<void> {
+    await this.requestPermissions(options);
+    this.startRecording();
   }
 
   /**

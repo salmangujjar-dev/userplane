@@ -17,7 +17,7 @@ export interface SessionPreferences {
   rh: string | null; // recording_header - Custom header text
   rf: string | null; // recording_footnote - Custom footnote text
   rpc: string | null; // recording_primary_color - Primary brand color
-  rmd: number | null; // recording_max_duration - Max duration in seconds
+  rmd: number | null; // recording_max_duration_ms - Max duration in milliseconds
   rrb: string; // recording_requested_by - Requester ID
 }
 
@@ -38,21 +38,21 @@ export interface SessionTokenPayload {
 /**
  * UI-friendly representation of session preferences
  */
-export interface UIPreferences {
+export interface RecordingPreferences {
   customizeLink: boolean;
   companyName: string | null;
   companyLogoUrl: string | null;
   headerText: string | null;
   footnoteText: string | null;
   primaryColor: string | null;
-  maxDuration: number; // milliseconds (default 180000 = 3 minutes)
+  maxDurationMs: number; // milliseconds (default 180000 = 3 minutes)
   requestedBy: string | null;
 }
 
 /**
  * Convert session preferences to UI preferences
  */
-export function toUIPreferences(prefs: SessionPreferences): UIPreferences {
+export function toRecordingPreferences(prefs: SessionPreferences): RecordingPreferences {
   return {
     customizeLink: prefs.rcl,
     companyName: prefs.rcn,
@@ -60,7 +60,7 @@ export function toUIPreferences(prefs: SessionPreferences): UIPreferences {
     headerText: prefs.rh,
     footnoteText: prefs.rf,
     primaryColor: prefs.rpc,
-    maxDuration: prefs.rmd ? prefs.rmd * 1000 : 180000, // Convert seconds to ms, default 3 minutes
+    maxDurationMs: prefs.rmd ? prefs.rmd : 180000, // Convert seconds to ms, default 3 minutes
     requestedBy: prefs.rrb || null,
   };
 }
@@ -68,13 +68,13 @@ export function toUIPreferences(prefs: SessionPreferences): UIPreferences {
 /**
  * Default UI preferences when customization is disabled
  */
-export const DEFAULT_UI_PREFERENCES: UIPreferences = {
+export const DEFAULT_RECORDING_PREFERENCES: RecordingPreferences = {
   customizeLink: false,
   companyName: 'Userplane',
   companyLogoUrl: null, // Will use /logo-dark.svg
   headerText: 'Get ready to record',
   footnoteText: null,
   primaryColor: '#000000',
-  maxDuration: 180000, // 3 minutes default
+  maxDurationMs: 180000, // 3 minutes default
   requestedBy: null,
 };

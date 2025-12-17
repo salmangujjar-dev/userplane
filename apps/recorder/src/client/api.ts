@@ -25,6 +25,10 @@ export function createRecorderClient(): UserplaneClient {
 
       return `${window.location.origin}/api/v2`;
     },
+    headers: ({ context }) => {
+      console.log('[API Client] Building headers with context:', context?.headers);
+      return context?.headers || {};
+    },
     credentials: 'include',
     onError: (error) => {
       console.error('[API Client] Error:', error);
