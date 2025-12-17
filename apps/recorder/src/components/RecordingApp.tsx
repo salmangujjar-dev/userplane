@@ -14,7 +14,7 @@ import RecordingInProgressScreen from './RecordingInProgressScreen';
 import PostRecordingReviewScreen from './PostRecordingReviewScreen';
 import PostRecordingUploadScreen from './PostRecordingUploadScreen';
 import PostRecordingAckScreen from './PostRecordingAckScreen';
-import { PRE_RECORDING_ERROR_COPY } from '@/constants/screen-copy';
+import { PRE_RECORDING_ERROR_COPY } from '@/constants/copy';
 
 interface RecordingAppProps {
   linkToken?: string | null;
@@ -117,8 +117,6 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
       return (
         <PreRecordingScreen
           requesterName={state.requesterName}
-          maxRecordingDuration={state.maxRecordingDurationMs}
-          maxRecordingSize={state.maxRecordingSize}
           preferences={state.preferences}
           onStartRecording={actions.startRecording}
         />

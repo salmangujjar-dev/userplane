@@ -98,7 +98,7 @@ export default function RecordingScreenLayout({
           <span className="text-xs sm:text-sm font-medium text-gray-600">{workspaceName}</span>
         </div>
 
-        <p className="text-xs text-center text-gray-500 max-w-sm sm:max-w-md px-4 min-h-[1rem]">
+        <p className="text-xs text-center text-gray-500 max-w-sm sm:max-w-md px-4 min-h-4">
           {footnoteText || '\u00A0'}
         </p>
       </footer>

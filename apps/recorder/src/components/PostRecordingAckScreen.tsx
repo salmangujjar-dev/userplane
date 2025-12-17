@@ -4,7 +4,7 @@
  */
 
 import RecordingScreenLayout from './RecordingScreenLayout';
-import { POST_RECORDING_ACK_COPY } from '@/constants/screen-copy';
+import { POST_RECORDING_ACK_COPY } from '@/constants/copy';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingAckScreenProps {

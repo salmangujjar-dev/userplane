@@ -3,6 +3,12 @@
  * Handles screen and audio recording using MediaRecorder API
  */
 
+import {
+  isScreenRecordingSupported as checkScreenRecordingSupport,
+  getBestMimeType,
+} from '@/utils/browser';
+import { VIDEO_BITRATE_BPS, AUDIO_SAMPLE_RATE_HZ, MEDIA_RECORDER_TIMESLICE_MS } from '@/constants';
+
 export type RecordingMode = 'screen-voice' | 'screen-only';
 
 export interface MediaCaptureOptions {
@@ -75,7 +81,7 @@ export class MediaCapture {
             audio: {
               echoCancellation: true,
               noiseSuppression: true,
-              sampleRate: 44100,
+              sampleRate: AUDIO_SAMPLE_RATE_HZ,
             },
             video: false,
           });
@@ -94,10 +100,10 @@ export class MediaCapture {
 
       this.stream = combinedStream;
 
-      const mimeType = this.getSupportedMimeType();
+      const mimeType = getBestMimeType();
       this.mediaRecorder = new MediaRecorder(combinedStream, {
         mimeType,
-        videoBitsPerSecond: 2500000,
+        videoBitsPerSecond: VIDEO_BITRATE_BPS,
       });
 
       console.log(`[MediaCapture] MediaRecorder created with ${mimeType}`);
@@ -155,7 +161,7 @@ export class MediaCapture {
     }
 
     console.log('[MediaCapture] Starting recording...');
-    this.mediaRecorder.start(1000);
+    this.mediaRecorder.start(MEDIA_RECORDER_TIMESLICE_MS);
     this.startTime = Date.now();
     console.log('[MediaCapture] Recording started at:', new Date(this.startTime).toISOString());
   }
@@ -234,27 +240,6 @@ export class MediaCapture {
   }
 
   /**
-   * Get supported MIME type
-   */
-  private getSupportedMimeType(): string {
-    const types = [
-      'video/webm;codecs=vp9,opus',
-      'video/webm;codecs=vp8,opus',
-      'video/webm;codecs=h264,opus',
-      'video/webm',
-      'video/mp4',
-    ];
-
-    for (const type of types) {
-      if (MediaRecorder.isTypeSupported(type)) {
-        return type;
-      }
-    }
-
-    return 'video/webm';
-  }
-
-  /**
    * Cleanup resources
    */
   private cleanup(): void {
@@ -280,17 +265,12 @@ export class MediaCapture {
 
 /**
  * Check if screen recording is supported
+ * Re-exported from browser utils for convenience
  */
-export function isScreenRecordingSupported(): boolean {
-  return !!(
-    navigator.mediaDevices &&
-    typeof navigator.mediaDevices.getDisplayMedia === 'function' &&
-    typeof window.MediaRecorder !== 'undefined'
-  );
-}
+export const isScreenRecordingSupported = checkScreenRecordingSupport;
 
 /**
- * Request permission for screen recording
+ * Request permission for screen recording (test only, immediately releases stream)
  */
 export async function requestScreenRecordingPermission(): Promise<boolean> {
   try {
@@ -300,7 +280,7 @@ export async function requestScreenRecordingPermission(): Promise<boolean> {
     stream.getTracks().forEach((track) => track.stop());
     return true;
   } catch (error) {
-    console.error('Screen recording permission denied:', error);
+    console.error('[MediaCapture] Screen recording permission denied:', error);
     return false;
   }
 }
