@@ -13,7 +13,6 @@ import {
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import type { RecordingMeta } from '@/api/schema/recording-meta.schema';
 import type { LinkService } from '@/api/services/link.service';
 import {
   ValidationError,
@@ -352,8 +351,9 @@ export class SessionService {
       throw new NotFoundError('Link not found');
     }
 
-    // Get recording from database
-    const recording = await this.deps.recordingRepo.findByIdWithFilePaths(recordingId);
+    // Get pending recording by ID with file paths
+    const recording =
+      await this.deps.recordingRepo.findPendingRecordingByIdWithFilePaths(recordingId);
     if (!recording) {
       // Check if soft deleted
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
@@ -366,11 +366,6 @@ export class SessionService {
     // Verify recording belongs to token's link
     if (recording.recordingLinkId !== uploadPayload.lid) {
       throw new ForbiddenError('Recording does not belong to this link');
-    }
-
-    // Check if already in terminal state - skip processing
-    if (isTerminalState(recording.uploadStatus)) {
-      throw new ConflictError(`Recording is already in terminal state: ${recording.uploadStatus}`);
     }
 
     // Handle based on state

@@ -141,24 +141,61 @@ export const SESSION_CONSTRAINTS = {
   MAX_LOG_SIZE: 50 * 1024 * 1024, // 50MB
 
   // Allowed MIME types per file type
-  ALLOWED_VIDEO_TYPES: ['video/webm', 'video/mp4', 'video/x-matroska', 'video/ogg'] as const,
+  // Video: Support base container formats and common codec specifications
+  ALLOWED_VIDEO_TYPES: [
+    'video/webm',
+    'video/webm;codecs=vp8',
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8.0',
+    'video/webm;codecs=vp9.0',
+    'video/webm;codecs=h264',
+    'video/webm;codecs=avc1',
+    'video/webm;codecs=av1',
+    'video/webm;codecs=vp8,opus',
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=h264,opus',
+    'video/webm;codecs=avc1,opus',
+    'video/mp4',
+    'video/mp4;codecs=avc1',
+    'video/mp4;codecs=h264',
+    'video/x-matroska',
+    'video/x-matroska;codecs=avc1',
+    'video/ogg',
+  ] as const,
+
   ALLOWED_THUMBNAIL_TYPES: ['image/png', 'image/jpeg', 'image/webp'] as const,
   ALLOWED_CONSOLE_LOG_TYPES: ['application/x-ndjson', 'application/ndjson'] as const,
   ALLOWED_NETWORK_LOG_TYPES: ['application/json'] as const,
+
+  // Base container formats for flexible validation
+  ALLOWED_VIDEO_CONTAINERS: ['video/webm', 'video/mp4', 'video/x-matroska', 'video/ogg'] as const,
 } as const;
 
 /**
  * Validate file type against allowed MIME types
+ * For video, accepts both exact matches and any codec variant of allowed containers
  */
 export function validateFileMimeType(
   fileType: z.infer<typeof fileTypeSchema>,
   mimeType: string
 ): boolean {
   switch (fileType) {
-    case 'video':
-      return SESSION_CONSTRAINTS.ALLOWED_VIDEO_TYPES.includes(
-        mimeType as (typeof SESSION_CONSTRAINTS.ALLOWED_VIDEO_TYPES)[number]
+    case 'video': {
+      // Check exact match first
+      if (
+        SESSION_CONSTRAINTS.ALLOWED_VIDEO_TYPES.includes(
+          mimeType as (typeof SESSION_CONSTRAINTS.ALLOWED_VIDEO_TYPES)[number]
+        )
+      ) {
+        return true;
+      }
+
+      // Check if base container format is allowed (for codec variants)
+      const baseFormat = mimeType.split(';')[0]?.trim();
+      return SESSION_CONSTRAINTS.ALLOWED_VIDEO_CONTAINERS.includes(
+        baseFormat as (typeof SESSION_CONSTRAINTS.ALLOWED_VIDEO_CONTAINERS)[number]
       );
+    }
     case 'thumbnail':
       return SESSION_CONSTRAINTS.ALLOWED_THUMBNAIL_TYPES.includes(
         mimeType as (typeof SESSION_CONSTRAINTS.ALLOWED_THUMBNAIL_TYPES)[number]
