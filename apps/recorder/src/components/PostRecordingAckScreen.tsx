@@ -4,7 +4,7 @@
  */
 
 import RecordingScreenLayout from './RecordingScreenLayout';
-import { POST_RECORDING_ACK_COPY } from '@/constants/copy';
+import { POST_RECORDING_ACK_COPY, DEFAULT_COMPANY_NAME } from '@/constants';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingAckScreenProps {
@@ -17,7 +17,7 @@ export default function PostRecordingAckScreen({ preferences }: PostRecordingAck
   return (
     <RecordingScreenLayout
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
-      workspaceName={customizeLink ? preferences.companyName : 'Userplane'}
+      workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
     >
       <div className="flex flex-col items-center justify-center text-center w-full">

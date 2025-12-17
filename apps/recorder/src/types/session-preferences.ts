@@ -76,11 +76,11 @@ export function toRecordingPreferences(prefs: SessionPreferences): RecordingPref
  */
 export const DEFAULT_RECORDING_PREFERENCES: RecordingPreferences = {
   customizeLink: false,
-  companyName: 'Userplane',
+  companyName: DEFAULT_COMPANY_NAME,
   companyLogoUrl: null, // Will use /logo-dark.svg
   headerText: 'Get ready to record',
   footnoteText: null,
-  primaryColor: '#000000',
-  maxDurationMs: 180000, // 3 minutes default
+  primaryColor: DEFAULT_PRIMARY_COLOR,
+  maxDurationMs: DEFAULT_MAX_RECORDING_DURATION_MS,
   requestedBy: null,
 };

@@ -6,7 +6,11 @@
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import VideoPlayer from './VideoPlayer';
-import { POST_RECORDING_REVIEW_COPY } from '@/constants/copy';
+import {
+  POST_RECORDING_REVIEW_COPY,
+  DEFAULT_COMPANY_NAME,
+  DEFAULT_PRIMARY_COLOR,
+} from '@/constants';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingReviewScreenProps {
@@ -46,7 +50,7 @@ export default function PostRecordingReviewScreen({
 
   const customizeLink = preferences.customizeLink;
   const primaryColor =
-    customizeLink && preferences.primaryColor ? preferences.primaryColor : '#000000';
+    customizeLink && preferences.primaryColor ? preferences.primaryColor : DEFAULT_PRIMARY_COLOR;
 
   const getSubmitButtonText = () => {
     if (isSubmitting) return 'Uploading...';
@@ -57,7 +61,7 @@ export default function PostRecordingReviewScreen({
   return (
     <RecordingScreenLayout
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
-      workspaceName={customizeLink ? preferences.companyName : 'Userplane'}
+      workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
     >
       <div className="flex flex-col items-center w-full">
