@@ -571,6 +571,44 @@ export class RecordingRepository {
   }
 
   /**
+   * Find pending recording by ID with file paths
+   */
+  async findPendingRecordingByIdWithFilePaths(id: string): Promise<{
+    id: string;
+    recordingLinkId: string;
+    workspaceId: string;
+    uploadStatus: Recording['uploadStatus'];
+    recordingVideoRef: string | null;
+    recordingThumbnailRef: string | null;
+    recordingConsoleLogRef: string | null;
+    recordingNetworkLogsRef: string | null;
+    recordingMeta: RecordingMeta | null;
+  } | null> {
+    const [result] = await this.db
+      .select({
+        id: recordings.id,
+        recordingLinkId: recordings.recordingLinkId,
+        workspaceId: recordings.workspaceId,
+        uploadStatus: recordings.uploadStatus,
+        recordingVideoRef: recordings.recordingVideoRef,
+        recordingThumbnailRef: recordings.recordingThumbnailRef,
+        recordingConsoleLogRef: recordings.recordingConsoleLogRef,
+        recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingMeta: recordings.recordingMeta,
+      })
+      .from(recordings)
+      .where(and(eq(recordings.id, id), eq(recordings.uploadStatus, 'pending')))
+      .limit(1);
+
+    if (!result) return null;
+
+    return {
+      ...result,
+      recordingMeta: this.transformRecordingMeta(result.recordingMeta),
+    };
+  }
+
+  /**
    * Find all recordings by project ID and workspace ID with file paths
    * Returns recordings that are not soft-deleted
    * Used for bulk operations like project cleanup
