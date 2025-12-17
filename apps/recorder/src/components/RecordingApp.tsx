@@ -141,6 +141,7 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
         <RecordingInProgressScreen
           mediaStream={state.mediaStream}
           preferences={state.preferences}
+          isProcessing={state.isProcessing}
           onStopRecording={actions.stopRecording}
         />
       );

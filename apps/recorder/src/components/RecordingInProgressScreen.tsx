@@ -14,6 +14,7 @@ interface RecordingInProgressScreenProps {
   subtitle?: string;
   mediaStream?: MediaStream | null;
   preferences: RecordingPreferences;
+  isProcessing?: boolean;
   onStopRecording?: () => void;
 }
 
@@ -22,6 +23,7 @@ export default function RecordingInProgressScreen({
   subtitle = RECORDING_IN_PROGRESS_COPY.subtitle,
   mediaStream,
   preferences,
+  isProcessing = false,
   onStopRecording,
 }: RecordingInProgressScreenProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -95,12 +97,13 @@ export default function RecordingInProgressScreen({
 
         <Button
           onClick={handleStopRecording}
-          className="w-full max-w-md h-11 sm:h-12 text-sm sm:text-base font-semibold text-white"
+          disabled={isProcessing}
+          className="w-full max-w-md h-11 sm:h-12 text-sm sm:text-base font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             backgroundColor: primaryColor,
           }}
         >
-          {RECORDING_IN_PROGRESS_COPY.stopButton}
+          {isProcessing ? 'Stopping recording' : RECORDING_IN_PROGRESS_COPY.stopButton}
         </Button>
       </div>
     </RecordingScreenLayout>
