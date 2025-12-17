@@ -5,7 +5,11 @@
 
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
-import { POST_RECORDING_ERROR_COPY } from '@/constants/copy';
+import {
+  POST_RECORDING_ERROR_COPY,
+  DEFAULT_COMPANY_NAME,
+  DEFAULT_PRIMARY_COLOR,
+} from '@/constants';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingErrorScreenProps {
@@ -33,12 +37,12 @@ export default function PostRecordingErrorScreen({
 }: PostRecordingErrorScreenProps) {
   const customizeLink = preferences?.customizeLink || false;
   const primaryColor =
-    customizeLink && preferences?.primaryColor ? preferences.primaryColor : '#000000';
+    customizeLink && preferences?.primaryColor ? preferences.primaryColor : DEFAULT_PRIMARY_COLOR;
 
   return (
     <RecordingScreenLayout
       workspaceLogoUrl={customizeLink && preferences ? preferences.companyLogoUrl : null}
-      workspaceName={customizeLink && preferences ? preferences.companyName : 'Userplane'}
+      workspaceName={customizeLink && preferences ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink && preferences ? preferences.footnoteText : null}
     >
       <div className="flex flex-col items-center justify-center text-center">

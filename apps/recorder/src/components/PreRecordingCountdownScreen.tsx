@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from 'react';
 import RecordingScreenLayout from './RecordingScreenLayout';
+import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PreRecordingCountdownScreenProps {
@@ -41,12 +42,12 @@ export default function PreRecordingCountdownScreen({
 
   const customizeLink = preferences.customizeLink;
   const primaryColor =
-    customizeLink && preferences.primaryColor ? preferences.primaryColor : '#000000';
+    customizeLink && preferences.primaryColor ? preferences.primaryColor : DEFAULT_PRIMARY_COLOR;
 
   return (
     <RecordingScreenLayout
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
-      workspaceName={customizeLink ? preferences.companyName : 'Userplane'}
+      workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
     >
       <div className="flex flex-col items-center w-full">

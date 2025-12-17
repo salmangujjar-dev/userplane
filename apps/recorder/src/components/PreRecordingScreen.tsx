@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
-import { PRE_RECORDING_COPY } from '@/constants/copy';
+import { PRE_RECORDING_COPY, DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
 import type { RecordingPreferences } from '@/types/session-preferences';
 import type { RecordingMode } from '@/services/media-capture';
 
@@ -39,14 +39,14 @@ export default function PreRecordingScreen({
   const headerText =
     customizeLink && preferences.headerText ? preferences.headerText : PRE_RECORDING_COPY.title;
   const primaryColor =
-    customizeLink && preferences.primaryColor ? preferences.primaryColor : '#000000';
+    customizeLink && preferences.primaryColor ? preferences.primaryColor : DEFAULT_PRIMARY_COLOR;
   const selectedBorderColor = primaryColor;
   const selectedBgColor = `${primaryColor}0D`;
 
   return (
     <RecordingScreenLayout
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
-      workspaceName={customizeLink ? preferences.companyName : 'Userplane'}
+      workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
     >
       <div className="flex flex-col items-center w-full">

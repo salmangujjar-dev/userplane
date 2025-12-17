@@ -4,6 +4,7 @@
  */
 
 import type { ReactNode } from 'react';
+import { DEFAULT_COMPANY_NAME } from '@/constants';
 
 interface RecordingScreenLayoutProps {
   children: ReactNode;
@@ -15,7 +16,7 @@ interface RecordingScreenLayoutProps {
 export default function RecordingScreenLayout({
   children,
   workspaceLogoUrl,
-  workspaceName = 'Userplane',
+  workspaceName = DEFAULT_COMPANY_NAME,
   footnoteText,
 }: RecordingScreenLayoutProps) {
   return (
@@ -92,7 +93,7 @@ export default function RecordingScreenLayout({
         <div className="flex items-center gap-2">
           <img
             src={workspaceLogoUrl ?? '/logo-dark.svg'}
-            alt={workspaceName ?? 'Userplane'}
+            alt={workspaceName ?? DEFAULT_COMPANY_NAME}
             className="h-4 sm:h-5 w-auto object-contain opacity-60"
           />
           <span className="text-xs sm:text-sm font-medium text-gray-600">{workspaceName}</span>

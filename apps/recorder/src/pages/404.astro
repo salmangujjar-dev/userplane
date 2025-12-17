@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import { getAppMeta } from '@workspace/meta';
-import { NOT_FOUND_COPY } from '@/constants/copy';
+import { NOT_FOUND_COPY, DEFAULT_COMPANY_NAME } from '@/constants';
 
 const meta = getAppMeta('recorder');
 ---
@@ -131,8 +131,8 @@ const meta = getAppMeta('recorder');
 
         <!-- Footer -->
         <div class="flex items-center gap-3 pb-4">
-          <img src="/logo-dark.svg" alt="Userplane" class="h-6 w-auto" />
-          <span class="text-sm font-medium text-foreground">Userplane</span>
+          <img src="/logo-dark.svg" alt={DEFAULT_COMPANY_NAME} class="h-6 w-auto" />
+          <span class="text-sm font-medium text-foreground">{DEFAULT_COMPANY_NAME}</span>
         </div>
       </div>
     </div>
