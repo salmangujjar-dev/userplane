@@ -5,27 +5,19 @@
 
 import RecordingScreenLayout from './RecordingScreenLayout';
 import { POST_RECORDING_ACK_COPY } from '@/constants/screen-copy';
-import type { UIPreferences } from '@/types/session-preferences';
+import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingAckScreenProps {
-  thumbnailUrl?: string;
-  workspaceLogoUrl?: string | null;
-  workspaceName?: string | null;
-  preferences: UIPreferences;
+  preferences: RecordingPreferences;
 }
 
-export default function PostRecordingAckScreen({
-  thumbnailUrl,
-  workspaceLogoUrl,
-  workspaceName,
-  preferences,
-}: PostRecordingAckScreenProps) {
+export default function PostRecordingAckScreen({ preferences }: PostRecordingAckScreenProps) {
   const customizeLink = preferences.customizeLink;
 
   return (
     <RecordingScreenLayout
-      workspaceLogoUrl={customizeLink ? workspaceLogoUrl : null}
-      workspaceName={customizeLink ? workspaceName : 'Userplane'}
+      workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
+      workspaceName={customizeLink ? preferences.companyName : 'Userplane'}
       footnoteText={customizeLink ? preferences.footnoteText : null}
     >
       <div className="flex flex-col items-center justify-center text-center w-full">
@@ -39,21 +31,7 @@ export default function PostRecordingAckScreen({
         <p className="text-sm sm:text-base text-gray-600 mb-2">
           {POST_RECORDING_ACK_COPY.subtitle}
         </p>
-        <p className="text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8">
-          {POST_RECORDING_ACK_COPY.closeInfo}
-        </p>
-
-        {thumbnailUrl && (
-          <div className="w-full max-w-md">
-            <div className="aspect-video w-full border-2 border-gray-300 rounded-xl overflow-hidden bg-gray-100">
-              <img
-                src={thumbnailUrl}
-                alt="Recording preview"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-        )}
+        <p className="text-xs sm:text-sm text-gray-500">{POST_RECORDING_ACK_COPY.closeInfo}</p>
       </div>
     </RecordingScreenLayout>
   );

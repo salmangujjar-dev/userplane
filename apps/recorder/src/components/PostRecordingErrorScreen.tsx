@@ -6,20 +6,31 @@
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import { POST_RECORDING_ERROR_COPY } from '@/constants/screen-copy';
+import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingErrorScreenProps {
   title: string;
   subtitle: string;
+  preferences?: RecordingPreferences;
   onStartOver: () => void;
 }
 
 export default function PostRecordingErrorScreen({
   title,
   subtitle,
+  preferences,
   onStartOver,
 }: PostRecordingErrorScreenProps) {
+  const customizeLink = preferences?.customizeLink || false;
+  const primaryColor =
+    customizeLink && preferences?.primaryColor ? preferences.primaryColor : '#000000';
+
   return (
-    <RecordingScreenLayout>
+    <RecordingScreenLayout
+      workspaceLogoUrl={customizeLink && preferences ? preferences.companyLogoUrl : null}
+      workspaceName={customizeLink && preferences ? preferences.companyName : 'Userplane'}
+      footnoteText={customizeLink && preferences ? preferences.footnoteText : null}
+    >
       <div className="flex flex-col items-center justify-center text-center">
         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
           <svg
@@ -40,7 +51,13 @@ export default function PostRecordingErrorScreen({
         <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
         <p className="text-gray-600 mb-8 max-w-md">{subtitle}</p>
 
-        <Button onClick={onStartOver} className="w-full max-w-md h-12 text-base font-semibold">
+        <Button
+          onClick={onStartOver}
+          className="w-full max-w-md h-12 text-base font-semibold text-white"
+          style={{
+            backgroundColor: primaryColor,
+          }}
+        >
           {POST_RECORDING_ERROR_COPY.startOverButton}
         </Button>
       </div>

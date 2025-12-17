@@ -7,24 +7,18 @@ import { useState } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import { PRE_RECORDING_COPY } from '@/constants/screen-copy';
-import type { UIPreferences } from '@/types/session-preferences';
+import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PreRecordingScreenProps {
   requesterName?: string;
-  workspaceLogoUrl?: string | null;
-  workspaceName?: string | null;
   maxRecordingDuration?: number;
   maxRecordingSize?: number | null;
-  preferences: UIPreferences;
+  preferences: RecordingPreferences;
   onStartRecording?: (mode: 'screen-voice' | 'screen-only') => void;
 }
 
 export default function PreRecordingScreen({
   requesterName,
-  workspaceLogoUrl,
-  workspaceName,
-  maxRecordingDuration,
-  maxRecordingSize,
   preferences,
   onStartRecording,
 }: PreRecordingScreenProps) {
@@ -46,8 +40,8 @@ export default function PreRecordingScreen({
 
   return (
     <RecordingScreenLayout
-      workspaceLogoUrl={customizeLink ? workspaceLogoUrl : null}
-      workspaceName={customizeLink ? workspaceName : 'Userplane'}
+      workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
+      workspaceName={customizeLink ? preferences.companyName : 'Userplane'}
       footnoteText={customizeLink ? preferences.footnoteText : null}
     >
       <div className="flex flex-col items-center w-full">

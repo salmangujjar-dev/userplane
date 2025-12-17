@@ -9,6 +9,7 @@ import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
 import PreRecordingErrorScreen from './PreRecordingErrorScreen';
 import PostRecordingErrorScreen from './PostRecordingErrorScreen';
 import PreRecordingScreen from './PreRecordingScreen';
+import PreRecordingCountdownScreen from './PreRecordingCountdownScreen';
 import RecordingInProgressScreen from './RecordingInProgressScreen';
 import PostRecordingReviewScreen from './PostRecordingReviewScreen';
 import PostRecordingUploadScreen from './PostRecordingUploadScreen';
@@ -56,7 +57,6 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
   console.log('[RecordingApp] Error:', state.error);
   console.log('[RecordingApp] Recording mode:', state.recordingMode);
   console.log('[RecordingApp] Has recording blob:', !!state.recordingBlob);
-  console.log('[RecordingApp] Has thumbnail:', !!state.thumbnailUrl);
   console.log('[RecordingApp] Upload progress:', state.uploadProgress + '%');
 
   switch (state.state) {
@@ -82,6 +82,7 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
           <PostRecordingErrorScreen
             title={getErrorTitle(state.error)}
             subtitle={getErrorSubtitle(state.error)}
+            preferences={state.preferences}
             onStartOver={actions.startOver}
           />
         );
@@ -92,6 +93,7 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
           title={getErrorTitle(state.error)}
           subtitle={getErrorSubtitle(state.error)}
           actionTitle={getActionTitle(isPermissionError)}
+          preferences={state.preferences}
           onAction={getActionHandler(isPermissionError)}
         />
       );
@@ -99,30 +101,38 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
     case 'setup':
       console.log('[RecordingApp] Rendering: PreRecordingScreen');
       console.log('[RecordingApp] Requester name:', state.requesterName);
-      console.log('[RecordingApp] Workspace logo URL:', state.workspaceLogoUrl || '(not provided)');
-      console.log('[RecordingApp] Workspace name:', state.workspaceName || '(not provided)');
+      console.log(
+        '[RecordingApp] Company name:',
+        state.preferences.companyName || '(not provided)'
+      );
       console.log(
         '[RecordingApp] Max duration:',
-        `${state.maxRecordingDuration}ms (${Math.round(state.maxRecordingDuration / 1000)}s)`
+        `${state.maxRecordingDurationMs}ms (${Math.round(state.maxRecordingDurationMs / 1000)}s)`
       );
       console.log(
         '[RecordingApp] Max size:',
         state.maxRecordingSize ? `${state.maxRecordingSize} bytes` : '(unlimited)'
       );
-      console.log('[RecordingApp] Preferences:', {
-        customizeLink: state.preferences.customizeLink,
-        headerText: state.preferences.headerText,
-        primaryColor: state.preferences.primaryColor,
-      });
+      console.log('[RecordingApp] Preferences:', state.preferences);
       return (
         <PreRecordingScreen
           requesterName={state.requesterName}
-          workspaceLogoUrl={state.workspaceLogoUrl}
-          workspaceName={state.workspaceName}
-          maxRecordingDuration={state.maxRecordingDuration}
+          maxRecordingDuration={state.maxRecordingDurationMs}
           maxRecordingSize={state.maxRecordingSize}
           preferences={state.preferences}
           onStartRecording={actions.startRecording}
+        />
+      );
+
+    case 'countdown':
+      console.log('[RecordingApp] Rendering: PreRecordingCountdownScreen');
+      console.log('[RecordingApp] Countdown seconds:', state.countdownSeconds);
+      console.log('[RecordingApp] Media stream available:', !!state.mediaStream);
+      return (
+        <PreRecordingCountdownScreen
+          countdownSeconds={state.countdownSeconds}
+          mediaStream={state.mediaStream}
+          preferences={state.preferences}
         />
       );
 
@@ -132,8 +142,6 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
       return (
         <RecordingInProgressScreen
           mediaStream={state.mediaStream}
-          workspaceLogoUrl={state.workspaceLogoUrl}
-          workspaceName={state.workspaceName}
           preferences={state.preferences}
           onStopRecording={actions.stopRecording}
         />
@@ -141,12 +149,16 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
 
     case 'review':
       console.log('[RecordingApp] Rendering: PostRecordingReviewScreen');
-      console.log('[RecordingApp] Thumbnail URL length:', state.thumbnailUrl?.length || 0);
+      console.log('[RecordingApp] Video URL available:', !!state.videoUrl);
+
+      if (!state.videoUrl) {
+        console.error('[RecordingApp] No video URL in review state');
+        return <PreRecordingLoadingScreen />;
+      }
+
       return (
         <PostRecordingReviewScreen
-          thumbnailUrl={state.thumbnailUrl || undefined}
-          workspaceLogoUrl={state.workspaceLogoUrl}
-          workspaceName={state.workspaceName}
+          videoUrl={state.videoUrl}
           preferences={state.preferences}
           onSubmit={actions.submitRecording}
           onStartOver={actions.startOver}
@@ -156,26 +168,23 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
     case 'uploading':
       console.log('[RecordingApp] Rendering: PostRecordingUploadScreen');
       console.log('[RecordingApp] Upload progress:', state.uploadProgress + '%');
+
+      if (!state.videoUrl) {
+        console.error('[RecordingApp] No video URL in uploading state');
+        return <PreRecordingLoadingScreen />;
+      }
+
       return (
         <PostRecordingUploadScreen
-          thumbnailUrl={state.thumbnailUrl || undefined}
+          videoUrl={state.videoUrl}
           progress={state.uploadProgress}
-          workspaceLogoUrl={state.workspaceLogoUrl}
-          workspaceName={state.workspaceName}
           preferences={state.preferences}
         />
       );
 
     case 'success':
       console.log('[RecordingApp] Rendering: PostRecordingAckScreen');
-      return (
-        <PostRecordingAckScreen
-          thumbnailUrl={state.thumbnailUrl || undefined}
-          workspaceLogoUrl={state.workspaceLogoUrl}
-          workspaceName={state.workspaceName}
-          preferences={state.preferences}
-        />
-      );
+      return <PostRecordingAckScreen preferences={state.preferences} />;
 
     default:
       console.log('[RecordingApp] Unknown state, rendering: PreRecordingLoadingScreen');
