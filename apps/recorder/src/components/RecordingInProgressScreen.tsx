@@ -7,15 +7,13 @@ import { useEffect, useRef } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import { RECORDING_IN_PROGRESS_COPY } from '@/constants/screen-copy';
-import type { UIPreferences } from '@/types/session-preferences';
+import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface RecordingInProgressScreenProps {
   title?: string;
   subtitle?: string;
   mediaStream?: MediaStream | null;
-  workspaceLogoUrl?: string | null;
-  workspaceName?: string | null;
-  preferences: UIPreferences;
+  preferences: RecordingPreferences;
   onStopRecording?: () => void;
 }
 
@@ -23,8 +21,6 @@ export default function RecordingInProgressScreen({
   title = RECORDING_IN_PROGRESS_COPY.title,
   subtitle = RECORDING_IN_PROGRESS_COPY.subtitle,
   mediaStream,
-  workspaceLogoUrl,
-  workspaceName,
   preferences,
   onStopRecording,
 }: RecordingInProgressScreenProps) {
@@ -61,8 +57,8 @@ export default function RecordingInProgressScreen({
 
   return (
     <RecordingScreenLayout
-      workspaceLogoUrl={customizeLink ? workspaceLogoUrl : null}
-      workspaceName={customizeLink ? workspaceName : 'Userplane'}
+      workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
+      workspaceName={customizeLink ? preferences.companyName : 'Userplane'}
       footnoteText={customizeLink ? preferences.footnoteText : null}
     >
       <div className="flex flex-col items-center w-full">

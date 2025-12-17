@@ -55,8 +55,8 @@ export async function generateVideoThumbnail(blob: Blob, seekTime?: number): Pro
               resolve(null);
             }
           },
-          'image/jpeg',
-          0.8
+          'image/webp',
+          0.85
         );
       } catch (err) {
         console.error('[VideoThumbnail] Error generating thumbnail:', err);
