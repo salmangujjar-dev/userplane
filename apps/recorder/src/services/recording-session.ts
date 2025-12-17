@@ -5,12 +5,8 @@
 
 import { getRecorderClient } from '@/client/api';
 import type { UserplaneClient } from '@workspace/client';
-import type {
-  SessionPreferences,
-  SessionTokenPayload,
-  UIPreferences,
-} from '@/types/session-preferences';
-import { toUIPreferences } from '@/types/session-preferences';
+import type { SessionTokenPayload, RecordingPreferences } from '@/types/session-preferences';
+import { toRecordingPreferences } from '@/types/session-preferences';
 
 export interface UploadProgress {
   partNumber: number;
@@ -36,12 +32,10 @@ export class RecordingSession {
   private sessionToken: string | null = null;
   public sessionId: string | null = null;
   public recordingId: string | null = null;
-  public maxRecordingDuration: number = 180000; // Default 3 minutes
+  public maxRecordingDurationMs: number = 180000; // Default 3 minutes
   public maxRecordingSize: number | null = null;
   public requesterName: string | null = null;
-  public workspaceLogoUrl: string | null = null;
-  public workspaceName: string | null = null;
-  public preferences: UIPreferences | null = null;
+  public preferences: RecordingPreferences | null = null;
 
   constructor() {
     this.client = getRecorderClient();
@@ -64,37 +58,31 @@ export class RecordingSession {
     }
 
     const payload = this.decodeJWT(this.sessionToken) as SessionTokenPayload;
+    console.log('[Session] Session token payload:', payload);
     this.sessionId = payload.sid;
 
     if (!payload.prefs) {
       throw new Error('Session token missing preferences');
     }
 
-    this.preferences = toUIPreferences(payload.prefs);
-    this.maxRecordingDuration = this.preferences.maxDuration;
+    console.log('[Session] Raw preferences from token:', payload.prefs);
+
+    this.preferences = toRecordingPreferences(payload.prefs);
+    this.maxRecordingDurationMs = this.preferences.maxDurationMs;
     this.requesterName = this.preferences.requestedBy;
 
     const linkPayload = this.decodeJWT(linkToken);
+    console.log('[Session] Link token payload:', linkPayload);
     this.maxRecordingSize = linkPayload.rms || null;
 
-    if (this.preferences.customizeLink) {
-      this.workspaceLogoUrl = this.preferences.companyLogoUrl;
-      this.workspaceName = this.preferences.companyName;
-    } else {
-      this.workspaceLogoUrl = null;
-      this.workspaceName = 'Userplane';
-    }
-
-    console.log('[Session] Initialized:', {
-      sessionId: this.sessionId,
-      requester: this.requesterName || '(not provided)',
-      workspace: this.workspaceName || '(not provided)',
-      customizeLink: this.preferences.customizeLink,
-      headerText: this.preferences.headerText || '(default)',
-      primaryColor: this.preferences.primaryColor || '(default)',
-      maxDuration: `${this.maxRecordingDuration}ms (${Math.round(this.maxRecordingDuration / 1000)}s)`,
-      maxSize: this.maxRecordingSize ? `${this.maxRecordingSize} bytes` : '(unlimited)',
-    });
+    console.log('[Session] Initialized successfully');
+    console.log('[Session] Session ID:', this.sessionId);
+    console.log('[Session] Preferences:', this.preferences);
+    console.log('[Session] Max recording duration:', `${this.maxRecordingDurationMs}ms`);
+    console.log(
+      '[Session] Max recording size:',
+      this.maxRecordingSize ? `${this.maxRecordingSize} bytes` : '(unlimited)'
+    );
   }
 
   /**
@@ -103,16 +91,27 @@ export class RecordingSession {
   async uploadFiles(
     videoFile: File,
     thumbnailBlob: Blob | null,
-    recordingDuration: number | null,
+    recordingDurationMs: number | null,
     onProgress?: (progress: UploadProgress) => void
   ): Promise<void> {
     console.log('[Upload] Starting upload process');
+    console.log('[Upload] Video file:', {
+      name: videoFile.name,
+      size: videoFile.size,
+      type: videoFile.type,
+    });
+    console.log(
+      '[Upload] Recording duration:',
+      recordingDurationMs ? `${recordingDurationMs}ms` : '0ms (default)'
+    );
+    console.log('[Upload] Thumbnail:', thumbnailBlob ? `${thumbnailBlob.size} bytes` : 'none');
 
     if (!this.sessionToken) {
       throw new Error('No session token available');
     }
 
     const systemMetadata = this.captureSystemMetadata();
+    console.log('[Upload] System metadata:', systemMetadata);
 
     const files: Array<{
       type: 'video' | 'thumbnail' | 'console_log' | 'network_log';
@@ -131,29 +130,37 @@ export class RecordingSession {
     if (thumbnailBlob && thumbnailBlob.size > 0) {
       files.push({
         type: 'thumbnail',
-        name: 'thumbnail.jpg',
+        name: 'thumbnail.webp',
         size: thumbnailBlob.size,
-        mime_type: 'image/jpeg',
+        mime_type: 'image/webp',
       });
     }
 
-    const uploadData = await this.client.session.upload.init(
-      {
-        recording_duration: recordingDuration || 0,
-        files,
-        metadata: {
-          systemMetadata,
-          customMetadata: {},
+    console.log(
+      '[Upload] Initiating upload with session token:',
+      this.sessionToken?.substring(0, 20) + '...'
+    );
+    console.log('[Upload] Session token header will be set as x-session-token');
+
+    const uploadInitPayload = {
+      recording_duration: recordingDurationMs || 0,
+      files,
+      metadata: {
+        systemMetadata,
+        customMetadata: {},
+      },
+    };
+    console.log('[Upload] Upload init payload:', uploadInitPayload);
+
+    const uploadData = await this.client.session.upload.init(uploadInitPayload, {
+      context: {
+        headers: {
+          'x-session-token': this.sessionToken,
         },
       },
-      {
-        context: {
-          headers: {
-            'x-session-token': this.sessionToken,
-          },
-        },
-      }
-    );
+    });
+
+    console.log('[Upload] Upload init response:', uploadData.data);
 
     this.recordingId = uploadData.data.recordingId;
     const uploadToken = uploadData.data.uploadToken;
@@ -171,8 +178,8 @@ export class RecordingSession {
     if (thumbnailBlob && thumbnailBlob.size > 0) {
       const thumbnailUrl = presignedUrls.find((u) => u.type === 'thumbnail');
       if (thumbnailUrl) {
-        const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', {
-          type: 'image/jpeg',
+        const thumbnailFile = new File([thumbnailBlob], 'thumbnail.webp', {
+          type: 'image/webp',
         });
         await this.uploadToS3(thumbnailFile, thumbnailUrl.url);
       }
@@ -187,6 +194,12 @@ export class RecordingSession {
         percentage: 100,
       });
     }
+
+    console.log(
+      '[Upload] Completing upload with upload token:',
+      uploadToken?.substring(0, 20) + '...'
+    );
+    console.log('[Upload] Upload token header will be set as x-upload-token');
 
     await this.client.session.upload.complete(
       {
