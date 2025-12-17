@@ -6,7 +6,7 @@
 import { useEffect, useRef } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
-import { RECORDING_IN_PROGRESS_COPY } from '@/constants/screen-copy';
+import { RECORDING_IN_PROGRESS_COPY } from '@/constants/copy';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface RecordingInProgressScreenProps {

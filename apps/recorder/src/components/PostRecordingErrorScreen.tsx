@@ -5,13 +5,21 @@
 
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
-import { POST_RECORDING_ERROR_COPY } from '@/constants/screen-copy';
+import { POST_RECORDING_ERROR_COPY } from '@/constants/copy';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingErrorScreenProps {
+  /** Error title */
   title: string;
+  /** Error description */
   subtitle: string;
+  /** Recording preferences for branding */
   preferences?: RecordingPreferences;
+  /** Whether the error is recoverable with retry */
+  canRetry?: boolean;
+  /** Callback when user clicks retry (only shown if canRetry is true) */
+  onRetry?: () => void;
+  /** Callback when user clicks start over */
   onStartOver: () => void;
 }
 
@@ -19,6 +27,8 @@ export default function PostRecordingErrorScreen({
   title,
   subtitle,
   preferences,
+  canRetry = false,
+  onRetry,
   onStartOver,
 }: PostRecordingErrorScreenProps) {
   const customizeLink = preferences?.customizeLink || false;
@@ -51,15 +61,35 @@ export default function PostRecordingErrorScreen({
         <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
         <p className="text-gray-600 mb-8 max-w-md">{subtitle}</p>
 
-        <Button
-          onClick={onStartOver}
-          className="w-full max-w-md h-12 text-base font-semibold text-white"
-          style={{
-            backgroundColor: primaryColor,
-          }}
-        >
-          {POST_RECORDING_ERROR_COPY.startOverButton}
-        </Button>
+        {canRetry && onRetry ? (
+          <>
+            <Button
+              onClick={onRetry}
+              className="w-full max-w-md h-12 text-base font-semibold text-white mb-3"
+              style={{
+                backgroundColor: primaryColor,
+              }}
+            >
+              Try Again
+            </Button>
+            <button
+              onClick={onStartOver}
+              className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Start from scratch
+            </button>
+          </>
+        ) : (
+          <Button
+            onClick={onStartOver}
+            className="w-full max-w-md h-12 text-base font-semibold text-white"
+            style={{
+              backgroundColor: primaryColor,
+            }}
+          >
+            {POST_RECORDING_ERROR_COPY.startOverButton}
+          </Button>
+        )}
       </div>
     </RecordingScreenLayout>
   );

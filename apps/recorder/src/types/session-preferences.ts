@@ -3,6 +3,12 @@
  * These preferences control UI customization and recording constraints
  */
 
+import {
+  DEFAULT_MAX_RECORDING_DURATION_MS,
+  DEFAULT_PRIMARY_COLOR,
+  DEFAULT_COMPANY_NAME,
+} from '@/constants';
+
 /**
  * Session preferences from JWT token
  * Matches the SessionPreferences type from apps/api/src/types/session.data.ts

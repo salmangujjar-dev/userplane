@@ -5,7 +5,7 @@
 
 import RecordingScreenLayout from './RecordingScreenLayout';
 import VideoPlayer from './VideoPlayer';
-import { POST_RECORDING_UPLOAD_COPY } from '@/constants/screen-copy';
+import { POST_RECORDING_UPLOAD_COPY } from '@/constants/copy';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingUploadScreenProps {
