@@ -26,6 +26,7 @@ export const getRecordings = oc
     summary: 'List recordings',
     description: 'Retrieve paginated list of recordings with optional filters',
     tags: ['Recordings'],
+    inputStructure: 'detailed',
   })
   .input(ListRecordingsQuerySchema)
   .output(ApiResponseSchema(RecordingsListDataSchema));
@@ -41,6 +42,7 @@ export const getRecordingById = oc
     summary: 'Get recording by ID',
     description: 'Retrieve complete recording details with presigned URLs',
     tags: ['Recordings'],
+    inputStructure: 'detailed',
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingDetailDataSchema));
@@ -56,6 +58,7 @@ export const deleteRecording = oc
     summary: 'Delete recording',
     description: 'Soft delete a recording',
     tags: ['Recordings'],
+    inputStructure: 'detailed',
   })
   .input(DeleteRecordingSchema)
   .output(ApiResponseSchema(RecordingDeleteDataSchema));
@@ -71,6 +74,7 @@ export const getRecordingVideo = oc
     summary: 'Get recording video',
     description: 'Retrieve presigned URL for recording video',
     tags: ['Recordings'],
+    inputStructure: 'detailed',
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
@@ -86,6 +90,7 @@ export const getRecordingThumbnail = oc
     summary: 'Get recording thumbnail',
     description: 'Retrieve presigned URL for recording thumbnail',
     tags: ['Recordings'],
+    inputStructure: 'detailed',
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
@@ -101,6 +106,7 @@ export const getRecordingConsoleLog = oc
     summary: 'Get recording console log',
     description: 'Retrieve presigned URL for recording console log',
     tags: ['Recordings'],
+    inputStructure: 'detailed',
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
@@ -116,6 +122,7 @@ export const getRecordingNetworkLog = oc
     summary: 'Get recording network log',
     description: 'Retrieve presigned URL for recording network log',
     tags: ['Recordings'],
+    inputStructure: 'detailed',
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));

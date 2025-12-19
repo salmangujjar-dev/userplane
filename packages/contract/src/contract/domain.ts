@@ -18,6 +18,7 @@ export const verifyDomain = oc
     summary: 'Verify domain',
     description: 'Verify domain ownership using verification token',
     tags: ['Domains'],
+    inputStructure: 'detailed',
   })
   .input(VerifyDomainSchema)
   .output(ApiResponseSchema(DomainVerificationDataSchema));

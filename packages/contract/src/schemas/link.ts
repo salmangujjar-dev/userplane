@@ -17,19 +17,23 @@ import {
 export const LinkSortFieldSchema = z.enum(['created_at', 'link_title']);
 
 /**
- * List links query parameters
+ * List links query parameters (detailed mode)
  */
 export const ListLinksQuerySchema = z.object({
-  workspaceId: z.string(),
-  page: z.number().int().positive().optional().default(1),
-  per_page: z.number().int().min(1).max(20).optional().default(10),
-  created_by: z.array(z.string()).optional(),
-  project_id: z.string().optional(),
-  domain_id: z.array(z.string()).optional(),
-  link_provider_type: z.array(LinkProviderTypeSchema).optional(),
-  link_type: LinkTypeSchema.optional(),
-  sort_by: LinkSortFieldSchema.optional().default('created_at'),
-  sort_direction: SortDirectionSchema.optional().default('desc'),
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  query: z.object({
+    page: z.number().int().positive().optional().default(1),
+    per_page: z.number().int().min(1).max(20).optional().default(10),
+    created_by: z.array(z.string()).optional(),
+    project_id: z.string().optional(),
+    domain_id: z.array(z.string()).optional(),
+    link_provider_type: z.array(LinkProviderTypeSchema).optional(),
+    link_type: LinkTypeSchema.optional(),
+    sort_by: LinkSortFieldSchema.optional().default('created_at'),
+    sort_direction: SortDirectionSchema.optional().default('desc'),
+  }),
 });
 
 /**
@@ -95,14 +99,18 @@ export const LinksListDataSchema = z.object({
 });
 
 /**
- * Create link request
+ * Create link request (detailed mode)
  */
 export const CreateLinkSchema = z.object({
-  workspaceId: z.string(),
-  projectId: z.string().optional(),
-  domainId: z.string().min(1),
-  linkReference: z.string().max(2048).optional(),
-  linkReusable: z.boolean().optional().default(false),
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    projectId: z.string().optional(),
+    domainId: z.string().min(1),
+    linkReference: z.string().max(2048).optional(),
+    linkReusable: z.boolean().optional().default(false),
+  }),
 });
 
 /**
@@ -114,16 +122,20 @@ export const LinkCreateDataSchema = z.object({
 });
 
 /**
- * Update link request
+ * Update link request (detailed mode)
  */
 export const UpdateLinkSchema = z.object({
-  workspaceId: z.string(),
-  linkId: z.string(),
-  linkTitle: z.string().max(255).nullable().optional(),
-  linkReusable: z.boolean().optional(),
-  linkProviderType: LinkProviderTypeSchema.optional(),
-  linkProviderId: z.string().max(255).nullable().optional(),
-  linkProviderRef: z.string().max(2048).nullable().optional(),
+  params: z.object({
+    workspaceId: z.string(),
+    linkId: z.string(),
+  }),
+  body: z.object({
+    linkTitle: z.string().max(255).nullable().optional(),
+    linkReusable: z.boolean().optional(),
+    linkProviderType: LinkProviderTypeSchema.optional(),
+    linkProviderId: z.string().max(255).nullable().optional(),
+    linkProviderRef: z.string().max(2048).nullable().optional(),
+  }),
 });
 
 /**
@@ -143,19 +155,23 @@ export const LinkGetDataSchema = z.object({
 });
 
 /**
- * Link by ID request
+ * Link by ID request (detailed mode)
  */
 export const LinkByIdSchema = z.object({
-  workspaceId: z.string(),
-  linkId: z.string(),
+  params: z.object({
+    workspaceId: z.string(),
+    linkId: z.string(),
+  }),
 });
 
 /**
- * Delete link request
+ * Delete link request (detailed mode)
  */
 export const DeleteLinkSchema = z.object({
-  workspaceId: z.string(),
-  linkId: z.string(),
+  params: z.object({
+    workspaceId: z.string(),
+    linkId: z.string(),
+  }),
 });
 
 /**

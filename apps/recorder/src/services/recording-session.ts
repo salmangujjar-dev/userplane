@@ -62,7 +62,9 @@ export class RecordingSession {
     console.log('[Session] Initializing session');
 
     const result = await this.client.session.init({
-      token: linkToken,
+      query: {
+        token: linkToken,
+      },
     });
 
     this.sessionToken = result.data.sessionToken;
@@ -156,17 +158,19 @@ export class RecordingSession {
     );
 
     const uploadInitPayload = {
-      recording_duration: recordingDurationMs || 0,
-      files,
-      metadata: {
-        systemMetadata: {
-          date: systemMetadata.date,
-          time: systemMetadata.time,
-          browser: systemMetadata.browser,
-          os: systemMetadata.os,
-          windowSize: systemMetadata.windowSize,
+      body: {
+        recording_duration: recordingDurationMs || 0,
+        files,
+        metadata: {
+          systemMetadata: {
+            date: systemMetadata.date,
+            time: systemMetadata.time,
+            browser: systemMetadata.browser,
+            os: systemMetadata.os,
+            windowSize: systemMetadata.windowSize,
+          },
+          customMetadata: {},
         },
-        customMetadata: {},
       },
     };
     console.log('[Upload:Init] Upload init payload:', uploadInitPayload);
@@ -298,7 +302,9 @@ export class RecordingSession {
 
     await this.client.session.upload.complete(
       {
-        recording_id: uploadState.recordingId,
+        body: {
+          recording_id: uploadState.recordingId,
+        },
       },
       {
         context: {

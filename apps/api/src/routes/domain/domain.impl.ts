@@ -40,7 +40,7 @@ export const verifyDomainImpl = (domainService: DomainService) => {
         throw new ValidationError('Invalid origin header');
       }
 
-      const domain = await domainService.verifyDomain(input.token, originHostname);
+      const domain = await domainService.verifyDomain(input.body.token, originHostname);
 
       return {
         message: 'Domain verified successfully',

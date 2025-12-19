@@ -67,7 +67,7 @@ const requireUploadToken = os.middleware(async ({ context, next }) => {
 export const getSessionImpl = (sessionService: SessionService) => {
   return os.init.handler(async ({ input }) => {
     try {
-      const result = await sessionService.initSession(input.token);
+      const result = await sessionService.initSession(input.query.token);
 
       return {
         message: 'Session initialized successfully',
@@ -115,7 +115,7 @@ export const getSessionImpl = (sessionService: SessionService) => {
 export const initUploadImpl = (sessionService: SessionService) => {
   return os.upload.init.use(requireSessionToken).handler(async ({ input, context }) => {
     try {
-      const files = input.files.map((f) => ({
+      const files = input.body.files.map((f) => ({
         type: f.type,
         name: f.name,
         size: f.size,
@@ -124,9 +124,9 @@ export const initUploadImpl = (sessionService: SessionService) => {
 
       const result = await sessionService.initUpload(
         context.sessionToken,
-        input.recording_duration,
+        input.body.recording_duration,
         files,
-        input.metadata
+        input.body.metadata
       );
 
       const message =
@@ -186,7 +186,10 @@ export const initUploadImpl = (sessionService: SessionService) => {
 export const completeUploadImpl = (sessionService: SessionService) => {
   return os.upload.complete.use(requireUploadToken).handler(async ({ input, context }) => {
     try {
-      const result = await sessionService.markAsAvailable(context.uploadToken, input.recording_id);
+      const result = await sessionService.markAsAvailable(
+        context.uploadToken,
+        input.body.recording_id
+      );
 
       return {
         message: 'Recording available',

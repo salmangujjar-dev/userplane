@@ -30,6 +30,7 @@ export const getLinks = oc
     summary: 'List links',
     description: 'Retrieve paginated list of recording links with optional filters',
     tags: ['Links'],
+    inputStructure: 'detailed',
   })
   .input(ListLinksQuerySchema)
   .output(ApiResponseSchema(LinksListDataSchema));
@@ -45,6 +46,7 @@ export const createLink = oc
     summary: 'Create link',
     description: 'Create a new recording link for a domain',
     tags: ['Links'],
+    inputStructure: 'detailed',
   })
   .input(CreateLinkSchema)
   .output(ApiResponseSchema(LinkCreateDataSchema));
@@ -60,6 +62,7 @@ export const getLinkById = oc
     summary: 'Get link by ID',
     description: 'Retrieve complete link details including project and creator info',
     tags: ['Links'],
+    inputStructure: 'detailed',
   })
   .input(LinkByIdSchema)
   .output(ApiResponseSchema(LinkGetDataSchema));
@@ -75,6 +78,7 @@ export const updateLink = oc
     summary: 'Update link',
     description: 'Update link properties',
     tags: ['Links'],
+    inputStructure: 'detailed',
   })
   .input(UpdateLinkSchema)
   .output(ApiResponseSchema(LinkUpdateDataSchema));
@@ -90,6 +94,7 @@ export const deleteLink = oc
     summary: 'Delete link',
     description: 'Soft delete a recording link',
     tags: ['Links'],
+    inputStructure: 'detailed',
   })
   .input(DeleteLinkSchema)
   .output(ApiResponseSchema(LinkDeleteDataSchema));

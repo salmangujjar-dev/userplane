@@ -25,26 +25,26 @@ export const getLinksImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.link.list
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
         const filters = {
-          createdBy: input.created_by,
-          projectId: input.project_id,
-          domainId: input.domain_id,
-          linkProviderType: input.link_provider_type,
-          linkType: input.link_type,
+          createdBy: input.query.created_by,
+          projectId: input.query.project_id,
+          domainId: input.query.domain_id,
+          linkProviderType: input.query.link_provider_type,
+          linkType: input.query.link_type,
         };
 
         const sort = {
-          field: input.sort_by || 'created_at',
-          direction: input.sort_direction || 'desc',
+          field: input.query.sort_by || 'created_at',
+          direction: input.query.sort_direction || 'desc',
         };
 
         const { links, total } = await linkService.getByWorkspaceIdPaginated(
-          input.workspaceId,
-          input.page || 1,
-          input.per_page || 10,
+          input.params.workspaceId,
+          input.query.page || 1,
+          input.query.per_page || 10,
           filters,
           sort as any
         );
@@ -52,9 +52,13 @@ export const getLinksImpl = (
         return {
           message: 'Links retrieved successfully',
           data: {
-            workspaceId: input.workspaceId,
+            workspaceId: input.params.workspaceId,
             links,
-            pagination: createPaginationMeta(input.page || 1, input.per_page || 10, total),
+            pagination: createPaginationMeta(
+              input.query.page || 1,
+              input.query.per_page || 10,
+              total
+            ),
           },
         };
       } catch (error) {
@@ -85,24 +89,24 @@ export const createLinkImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.link.create
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       try {
         const createdLink = await linkService.create({
-          workspaceId: input.workspaceId,
+          workspaceId: input.params.workspaceId,
           createdBy: context.workspaceMemberId,
-          projectId: input.projectId,
-          domainId: input.domainId,
-          linkReference: input.linkReference,
-          linkReusable: input.linkReusable,
+          projectId: input.body.projectId,
+          domainId: input.body.domainId,
+          linkReference: input.body.linkReference,
+          linkReusable: input.body.linkReusable,
         });
 
-        const link = await linkService.getById(createdLink.linkId, input.workspaceId);
+        const link = await linkService.getById(createdLink.linkId, input.params.workspaceId);
 
         return {
           message: 'Link created successfully',
           data: {
-            workspaceId: input.workspaceId,
+            workspaceId: input.params.workspaceId,
             link,
           },
         };
@@ -144,15 +148,15 @@ export const getLinkByIdImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.link.getById
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        const link = await linkService.getById(input.linkId, input.workspaceId);
+        const link = await linkService.getById(input.params.linkId, input.params.workspaceId);
 
         return {
           message: 'Link retrieved successfully',
           data: {
-            workspaceId: input.workspaceId,
+            workspaceId: input.params.workspaceId,
             link,
           },
         };
@@ -195,23 +199,23 @@ export const updateLinkImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.link.update
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        await linkService.update(input.linkId, input.workspaceId, {
-          linkTitle: input.linkTitle,
-          linkReusable: input.linkReusable,
-          linkProviderType: input.linkProviderType,
-          linkProviderId: input.linkProviderId,
-          linkProviderRef: input.linkProviderRef,
+        await linkService.update(input.params.linkId, input.params.workspaceId, {
+          linkTitle: input.body.linkTitle,
+          linkReusable: input.body.linkReusable,
+          linkProviderType: input.body.linkProviderType,
+          linkProviderId: input.body.linkProviderId,
+          linkProviderRef: input.body.linkProviderRef,
         });
 
-        const link = await linkService.getById(input.linkId, input.workspaceId);
+        const link = await linkService.getById(input.params.linkId, input.params.workspaceId);
 
         return {
           message: 'Link updated successfully',
           data: {
-            workspaceId: input.workspaceId,
+            workspaceId: input.params.workspaceId,
             link,
           },
         };
@@ -259,16 +263,16 @@ export const deleteLinkImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.link.delete
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       try {
-        await linkService.delete(input.linkId, input.workspaceId);
+        await linkService.delete(input.params.linkId, input.params.workspaceId);
 
         return {
           message: 'Link deleted successfully',
           data: {
-            workspaceId: input.workspaceId,
-            linkId: input.linkId,
+            workspaceId: input.params.workspaceId,
+            linkId: input.params.linkId,
           },
         };
       } catch (error) {

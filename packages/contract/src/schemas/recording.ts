@@ -12,17 +12,21 @@ import { RECORDING_DURATION_LIMITS } from '../constants/session';
 export const RecordingSortFieldSchema = z.enum(['created_at', 'recording_duration']);
 
 /**
- * List recordings query parameters
+ * List recordings query parameters (detailed mode)
  */
 export const ListRecordingsQuerySchema = z.object({
-  workspaceId: z.string(),
-  page: z.number().int().positive().optional().default(1),
-  per_page: z.number().int().min(1).max(20).optional().default(10),
-  created_by: z.array(z.string()).optional(),
-  project_id: z.array(z.string()).optional(),
-  link_id: z.array(z.string()).optional(),
-  sort_by: RecordingSortFieldSchema.optional().default('created_at'),
-  sort_direction: SortDirectionSchema.optional().default('desc'),
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  query: z.object({
+    page: z.number().int().positive().optional().default(1),
+    per_page: z.number().int().min(1).max(20).optional().default(10),
+    created_by: z.array(z.string()).optional(),
+    project_id: z.array(z.string()).optional(),
+    link_id: z.array(z.string()).optional(),
+    sort_by: RecordingSortFieldSchema.optional().default('created_at'),
+    sort_direction: SortDirectionSchema.optional().default('desc'),
+  }),
 });
 
 /**
@@ -150,19 +154,23 @@ export const RecordingResourceDataSchema = z.object({
 });
 
 /**
- * Recording by ID request
+ * Recording by ID request (detailed mode)
  */
 export const RecordingByIdSchema = z.object({
-  workspaceId: z.string(),
-  recordingId: z.string(),
+  params: z.object({
+    workspaceId: z.string(),
+    recordingId: z.string(),
+  }),
 });
 
 /**
- * Recording delete request
+ * Recording delete request (detailed mode)
  */
 export const DeleteRecordingSchema = z.object({
-  workspaceId: z.string(),
-  recordingId: z.string(),
+  params: z.object({
+    workspaceId: z.string(),
+    recordingId: z.string(),
+  }),
 });
 
 /**
