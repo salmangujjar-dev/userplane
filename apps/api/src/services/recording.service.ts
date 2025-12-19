@@ -19,6 +19,7 @@ import type {
   RecordingSortOptions,
   RecordingDetail,
   ResourceResponse,
+  LinkProviderType,
 } from '@/api/types';
 import type { Transaction } from '@/api/repositories/recordings.repository';
 
@@ -182,7 +183,7 @@ export class RecordingService {
         link: {
           id: row.recordingLinkId,
           title: row.linkTitle,
-          providerType: row.linkProviderType,
+          providerType: row.linkProviderType as LinkProviderType,
           providerId: row.linkProviderId,
           providerRef: row.linkProviderRef,
           providerData: row.linkProviderData,

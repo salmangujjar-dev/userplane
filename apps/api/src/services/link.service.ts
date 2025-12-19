@@ -5,14 +5,14 @@
 
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { env } from '@/api/env';
-import { generateLinkId } from '@/api/lib/id-generator';
+import { generateLinkId } from '@/api/lib/id';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
-import { parseLinkReference } from '@/api/lib/link-reference-parser';
+import { parseLinkReference } from '@/api/lib/parser';
 import type {
   LinkFilters,
   LinkItem,
@@ -57,7 +57,7 @@ export interface CreateLinkParams {
 export interface UpdateLinkParams {
   linkTitle?: string | null;
   linkReusable?: boolean;
-  linkProviderType?: LinkProviderType | null;
+  linkProviderType?: LinkProviderType;
   linkProviderId?: string | null;
   linkProviderRef?: string | null;
 }

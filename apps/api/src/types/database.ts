@@ -1,9 +1,9 @@
 /**
  * Database-related types
- * Transaction types and re-exports of database types for convenient importing
+ * Transaction types for database operations
  */
 
-import type { DbClient, WorkspaceRole, Domain, Workspace } from '@workspace/db';
+import type { DbClient } from '@workspace/db';
 
 /**
  * Database transaction type
@@ -17,12 +17,3 @@ export type Transaction = Parameters<Parameters<DbClient['transaction']>[0]>[0];
 export interface TransactionOptions {
   tx?: Transaction;
 }
-
-/**
- * Re-export types from database schema
- * These types are inferred from the database schema to ensure consistency
- * Single source of truth: changes to DB schema automatically propagate here
- */
-export type { WorkspaceRole };
-export type WorkspacePlan = Workspace['workspacePlan'];
-export type DomainStatus = Domain['domainStatus'];

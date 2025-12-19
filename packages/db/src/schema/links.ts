@@ -37,7 +37,7 @@ export const links = pgTable(
     linkType: linkTypeEnum('link_type').default('recording').notNull(),
 
     // External integration metadata
-    linkProviderType: linkProviderTypeEnum('link_provider_type'),
+    linkProviderType: linkProviderTypeEnum('link_provider_type').default('web').notNull(),
     linkProviderId: text('link_provider_id'),
     linkProviderRef: text('link_provider_ref'),
     linkProviderData: jsonb('link_provider_data'),

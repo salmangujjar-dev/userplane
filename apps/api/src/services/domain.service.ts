@@ -3,10 +3,10 @@
  * Contains business logic for domain management
  */
 
-import { generateDomainId } from '@/api/lib/id-generator';
+import { generateDomainId } from '@/api/lib/id';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
-import { cleanUrl } from '@/api/lib/utils';
+import { cleanUrl } from '@/api/lib/url';
 import type { Transaction, CreateDomainParams } from '@/api/types';
 import { TokenService } from '@/api/services/token.service';
 

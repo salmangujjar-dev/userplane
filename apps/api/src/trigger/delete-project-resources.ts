@@ -6,7 +6,7 @@ import { deleteRecordingResources } from './delete-recording-resources';
 import { getPurgeDelay } from '@/api/trigger/delay-calculator';
 import { TASK_IDS, MAX_DURATIONS, BATCH_LIMITS } from './constants';
 import { buildRecordingDeletionKey } from './idempotency';
-import { chunkArray } from '@/api/lib/batch-utils';
+import { chunkArray } from '@/api/lib/batch';
 
 interface DeleteProjectResourcesPayload {
   projectId: string;

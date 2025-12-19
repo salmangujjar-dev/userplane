@@ -3,7 +3,7 @@
  * Types for workspace membership and role management operations
  */
 
-import type { WorkspaceRole } from './database';
+import type { WorkspaceRole } from '@workspace/contract';
 
 /**
  * Parameters for adding a workspace owner

@@ -4,6 +4,7 @@
  */
 
 import type { Link } from '@workspace/db';
+import type { DomainStatus } from '@workspace/contract';
 
 /**
  * Link type inferred from database schema
@@ -15,7 +16,7 @@ export type LinkType = Link['linkType'];
  * Link provider type inferred from database schema
  * Single source of truth: changes to DB schema automatically propagate here
  */
-export type LinkProviderType = Link['linkProviderType'];
+export type LinkProviderType = NonNullable<Link['linkProviderType']>;
 
 /**
  * Sortable fields for links
@@ -57,4 +58,32 @@ export interface ListLinksParams {
   perPage: number;
   filters?: LinkFilters;
   sort?: LinkSortOptions;
+}
+
+/**
+ * Link item in list response
+ */
+export interface LinkItem {
+  id: string;
+  linkTitle: string | null;
+  linkType: LinkType;
+  linkReusable: boolean;
+  linkProviderType: LinkProviderType;
+  linkProviderId: string | null;
+  linkProviderReference: string | null;
+  linkURL: string;
+  createdAt: Date;
+  project: {
+    id: string;
+    title: string | null;
+  };
+  creator: {
+    id: string;
+    name: string;
+  };
+  domain: {
+    id: string;
+    url: string;
+    status: DomainStatus;
+  };
 }

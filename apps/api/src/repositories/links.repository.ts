@@ -31,7 +31,7 @@ export interface LinkListRow {
   linkTitle: string | null;
   linkType: LinkType;
   linkReusable: boolean;
-  linkProviderType: LinkProviderType | null;
+  linkProviderType: LinkProviderType;
   linkProviderId: string | null;
   linkProviderRef: string | null;
   createdAt: Date;
@@ -61,7 +61,7 @@ export interface CreateLinkInput {
   linkTitle: string | null;
   linkType: LinkType;
   linkReusable: boolean;
-  linkProviderType: LinkProviderType | null;
+  linkProviderType: LinkProviderType;
   linkProviderId: string | null;
   linkProviderRef: string | null;
 }
@@ -72,7 +72,7 @@ export interface CreateLinkInput {
 export interface UpdateLinkInput {
   linkTitle?: string | null;
   linkReusable?: boolean;
-  linkProviderType?: LinkProviderType | null;
+  linkProviderType?: LinkProviderType;
   linkProviderId?: string | null;
   linkProviderRef?: string | null;
 }

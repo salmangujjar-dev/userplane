@@ -3,6 +3,11 @@
  * Input types for recording service operations
  */
 
+import type { RecordingStatusGroup } from '../schema/recording.schema';
+import type { RecordingMeta } from '../schema/recording-meta.schema';
+import type { LinkProviderType } from './link.service';
+import type { Recording } from '@workspace/db';
+
 /**
  * Sortable fields for recordings
  */
@@ -15,8 +20,6 @@ export interface RecordingSortOptions {
   field: RecordingSortField;
   direction: 'asc' | 'desc';
 }
-
-import type { RecordingStatusGroup } from '../schema/recording.schema';
 
 /**
  * Filters for listing recordings
@@ -41,4 +44,62 @@ export interface ListRecordingsParams {
   perPage: number;
   filters?: RecordingFilters;
   sort?: RecordingSortOptions;
+}
+
+/**
+ * Recording item in list response
+ */
+export interface RecordingItem {
+  id: string;
+  recordingThumbnail: string | null;
+  recordingDurationMs: number | null;
+  createdAt: Date;
+  creator: {
+    id: string;
+    name: string;
+  };
+}
+
+/**
+ * Detailed recording response
+ */
+export interface RecordingDetail {
+  id: string;
+  meta: {
+    link: {
+      id: string;
+      title: string | null;
+      providerType: LinkProviderType;
+      providerId: string | null;
+      providerRef: string | null;
+      providerData: unknown;
+      createdAt: Date;
+    };
+    creator: {
+      id: string;
+      name: string;
+    };
+    project: {
+      id: string;
+      title: string | null;
+    };
+    domain: {
+      id: string;
+      url: string;
+    };
+    workspaceId: string;
+    status: Recording['uploadStatus'];
+    recordingMeta: RecordingMeta | null;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}
+
+/**
+ * Resource URL response
+ */
+export interface ResourceResponse {
+  url: string | null;
+  message: string;
+  durationMs?: number | null;
 }

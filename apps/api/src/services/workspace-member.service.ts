@@ -3,7 +3,7 @@
  * Contains business logic for workspace membership management
  */
 
-import { generateWorkspaceMemberId } from '@/api/lib/id-generator';
+import { generateWorkspaceMemberId } from '@/api/lib/id';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ValidationError, ConflictError } from '@/api/lib/errors';
 import type {
