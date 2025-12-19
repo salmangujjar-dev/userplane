@@ -66,7 +66,7 @@ export const LinkItemSchema = z.object({
   linkTitle: z.string().nullable(),
   linkType: LinkTypeSchema,
   linkReusable: z.boolean(),
-  linkProviderType: LinkProviderTypeSchema.nullable(),
+  linkProviderType: LinkProviderTypeSchema,
   linkProviderId: z.string().nullable(),
   linkProviderReference: z.string().nullable(),
   linkURL: z.string(),
@@ -121,7 +121,7 @@ export const UpdateLinkSchema = z.object({
   linkId: z.string(),
   linkTitle: z.string().max(255).nullable().optional(),
   linkReusable: z.boolean().optional(),
-  linkProviderType: LinkProviderTypeSchema.nullable().optional(),
+  linkProviderType: LinkProviderTypeSchema.optional(),
   linkProviderId: z.string().max(255).nullable().optional(),
   linkProviderRef: z.string().max(2048).nullable().optional(),
 });

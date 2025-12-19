@@ -3,7 +3,7 @@
  * Types for domain verification and management operations
  */
 
-import type { DomainStatus } from './database';
+import type { DomainStatus } from '@workspace/contract';
 import type { PaginationMeta } from './common';
 
 /**

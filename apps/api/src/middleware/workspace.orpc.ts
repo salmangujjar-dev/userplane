@@ -6,7 +6,7 @@
 import { ORPCError } from '@orpc/server';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
-import type { WorkspaceRole } from '@workspace/db';
+import type { WorkspaceRole } from '@workspace/contract';
 import { NotFoundError, GoneError } from '@/api/lib/errors';
 import { base, type AuthContext } from './auth.orpc';
 

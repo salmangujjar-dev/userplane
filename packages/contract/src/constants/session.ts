@@ -21,6 +21,7 @@ export const FILE_SIZE_LIMITS = {
   MAX_VIDEO_SIZE: 500 * 1024 * 1024, // 500MB
   MAX_THUMBNAIL_SIZE: 10 * 1024 * 1024, // 10MB
   MAX_LOG_SIZE: 50 * 1024 * 1024, // 50MB
+  MAX_LOGO_SIZE: 4 * 1024 * 1024, // 4MB
 } as const;
 
 /**

@@ -3,11 +3,7 @@
  * Contains business logic for workspace management
  */
 
-import {
-  generateWorkspaceId,
-  generateRecordingId,
-  generateInviteToken,
-} from '@/api/lib/id-generator';
+import { generateWorkspaceId, generateRecordingId, generateInviteToken } from '@/api/lib/id';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';

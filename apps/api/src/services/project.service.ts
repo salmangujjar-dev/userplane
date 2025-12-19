@@ -3,7 +3,7 @@
  * Contains business logic for project management
  */
 
-import { generateProjectId } from '@/api/lib/id-generator';
+import { generateProjectId } from '@/api/lib/id';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import type { Transaction, CreateProjectParams } from '@/api/types';

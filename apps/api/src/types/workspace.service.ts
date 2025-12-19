@@ -3,7 +3,8 @@
  * Types for workspace creation and management operations
  */
 
-import type { WorkspacePlan, WorkspaceRole, DomainStatus } from './database';
+import type { WorkspaceRole, DomainStatus } from '@workspace/contract';
+import type { PlanId as WorkspacePlan } from '@workspace/pricing';
 
 /**
  * Token and authentication types
@@ -33,6 +34,80 @@ export interface InviteTokenPayload {
   in: string; // inviterName
   ie: string; // inviterEmail
 }
+
+/**
+ * Domain verification token payload for JWT
+ * Used by recorder script to verify domain ownership
+ */
+export interface DomainVerificationTokenPayload {
+  iss: string; // Issuer
+  workspaceId: string;
+  domainId: string;
+  url: string;
+  iat: number; // Issued at
+  exp: number; // Expiry
+}
+
+/**
+ * Session token payload for recording sessions
+ * Short keys used to minimize JWT token length
+ */
+export interface SessionTokenPayload {
+  iss: string; // Issuer
+  lid: string; // Link ID
+  lt: string; // Link Type
+  wid: string; // Workspace ID
+  sid: string; // Session ID
+  prefs: SessionPreferences; // Session preferences
+  iat: number; // Issued at
+  exp: number; // Expiry
+}
+
+/**
+ * Upload token payload for file uploads
+ * Short keys used to minimize JWT token length
+ */
+export interface UploadTokenPayload {
+  iss: string; // Issuer
+  rid: string; // Recording ID
+  lid: string; // Link ID
+  lt: 'recording'; // Link Type
+  iat: number; // Issued at
+  exp: number; // Expiry
+}
+
+/**
+ * Session preferences from link and workspace settings
+ * Short keys used to minimize JWT token length
+ */
+export interface SessionPreferences {
+  rcl: boolean; // recording_customize_link
+  rhs: boolean; // recording_hide_sensitive
+  rccl: boolean; // recording_capture_client_log
+  rcsl: boolean; // recording_capture_server_log
+  rcnl: boolean; // recording_capture_network_log
+  rcn: string | null; // recording_company_name
+  rclp: string | null; // recording_company_logo_path
+  rh: string | null; // recording_header
+  rf: string | null; // recording_footnote
+  rpc: string | null; // recording_primary_color
+  rmd: number | null; // recording_max_duration_ms
+  rrb: string; // recording_requested_by (creator name)
+}
+
+/**
+ * Presigned URL info for file uploads
+ */
+export interface PresignedUrlInfo {
+  type: UploadFileType;
+  url: string;
+  expiresIn: number;
+}
+
+/**
+ * Upload file type enum
+ */
+export type UploadFileType = 'video' | 'thumbnail' | 'console_log' | 'network_log';
 
 /**
  * Workspace-related types

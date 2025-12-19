@@ -5,7 +5,7 @@
 
 import jwt from 'jsonwebtoken';
 import { env } from '@/api/env';
-import { generateSessionId, generateRecordingId } from '@/api/lib/id-generator';
+import { generateSessionId, generateRecordingId } from '@/api/lib/id';
 import {
   LinkRepository,
   type LinkWithWorkspacePrefsRow,
