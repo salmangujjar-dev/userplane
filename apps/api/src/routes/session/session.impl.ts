@@ -15,13 +15,7 @@ import {
   GoneError,
 } from '@/api/lib/errors';
 import { REQUEST_HEADERS } from '@/api/constants/headers';
-
-/**
- * Initial context type - required dependencies passed from HTTP adapter
- */
-type InitialContext = {
-  headers: Headers;
-};
+import type { InitialContext } from '@/api/middleware/auth.orpc';
 
 /**
  * Create the implementer from the session contract with initial context
