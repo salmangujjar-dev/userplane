@@ -19,6 +19,7 @@
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "@workspace/client": "workspace:*",
+    "@workspace/contract": "workspace:*",
     "@workspace/meta": "workspace:*",
     "@workspace/ui": "workspace:*",
     "astro": "^5.15.9",

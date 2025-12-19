@@ -87,12 +87,12 @@ export interface UploadInitResult {
 }
 
 /**
- * Result of upload completion
+ * Result of marking upload as available
  */
 export interface UploadCompleteResult {
   success: boolean;
   recordingId: string;
-  status: 'available' | 'partial' | 'failed';
+  status: 'available';
 }
 
 /**
@@ -150,7 +150,7 @@ export class SessionService {
     }
 
     // Check reusability - if not reusable, ensure no terminal state recordings
-    // Non-terminal states (pending, partial) are allowed to retry
+    // Non-terminal state (pending) is allowed to retry
     if (!linkData.linkReusable) {
       const terminalCount = await this.deps.linkRepo.countTerminalRecordingsForLink(linkId);
       if (terminalCount > 0) {
@@ -190,14 +190,12 @@ export class SessionService {
    * @param recordingDurationMs - Duration of the recording in milliseconds
    * @param files - Array of files to upload
    * @param metadata - Client-provided metadata
-   * @param debugMode - When true, throws errors for disallowed files; when false, silently excludes them
    */
   async initUpload(
     sessionToken: string,
     recordingDurationMs: number,
     files: UploadFile[],
-    metadata: RecordingMetaInput,
-    debugMode: boolean = false
+    metadata: RecordingMetaInput
   ): Promise<UploadInitResult> {
     // Verify and decode session token
     const sessionPayload = this.verifySessionToken(sessionToken);
@@ -223,7 +221,7 @@ export class SessionService {
     }
 
     // Check reusability again - only block if terminal state recordings exist
-    // Allows users to retry if previous upload was in non-terminal state (pending, partial)
+    // Allows users to retry if previous upload was in non-terminal state (pending)
     if (!linkData.linkReusable) {
       const terminalCount = await this.deps.linkRepo.countTerminalRecordingsForLink(
         sessionPayload.lid
@@ -233,10 +231,24 @@ export class SessionService {
       }
     }
 
-    // Validate recording duration against workspace limit
+    // Validate recording duration
+    if (recordingDurationMs < SESSION_CONSTRAINTS.MIN_DURATION_MS) {
+      throw new ValidationError(
+        `Recording duration ${recordingDurationMs}ms is below minimum of ${SESSION_CONSTRAINTS.MIN_DURATION_MS}ms`
+      );
+    }
+
+    // Validate against workspace-specific limit (if set)
     if (sessionPayload.prefs.rmd !== null && recordingDurationMs > sessionPayload.prefs.rmd) {
       throw new ValidationError(
-        `Recording duration ${recordingDurationMs}ms exceeds limit of ${sessionPayload.prefs.rmd}ms`
+        `Recording duration ${recordingDurationMs}ms exceeds workspace limit of ${sessionPayload.prefs.rmd}ms`
+      );
+    }
+
+    // Validate against absolute maximum
+    if (recordingDurationMs > SESSION_CONSTRAINTS.DEFAULT_MAX_DURATION_MS) {
+      throw new ValidationError(
+        `Recording duration ${recordingDurationMs}ms exceeds maximum of ${SESSION_CONSTRAINTS.DEFAULT_MAX_DURATION_MS}ms`
       );
     }
 
@@ -247,8 +259,7 @@ export class SessionService {
     // to the client in the response headers
     const { filesToUpload, excludedFiles } = this.validateAndFilterFiles(
       files,
-      sessionPayload.prefs,
-      debugMode
+      sessionPayload.prefs
     );
 
     // Generate recording ID
@@ -283,7 +294,7 @@ export class SessionService {
     });
 
     // Schedule stale recording check
-    // Delays execution by presignedUrlExpiry to check if recording is still pending/failed
+    // Delays execution by presignedUrlExpiry to check if recording is still pending
     // If so, marks it deleted and triggers cleanup
     await tasks.trigger(
       TASK_IDS.CHECK_STALE_RECORDING,
@@ -318,18 +329,13 @@ export class SessionService {
   }
 
   /**
-   * Complete, partial, or fail an upload
+   * Mark upload as available
    * PATCH /api/v1/session
    *
    * @param uploadToken - Valid upload token from POST /api/v1/session
    * @param recordingId - Recording ID to update
-   * @param state - Target state: complete, partial, or failed
    */
-  async completeUpload(
-    uploadToken: string,
-    recordingId: string,
-    state: 'complete' | 'partial' | 'failed'
-  ): Promise<UploadCompleteResult> {
+  async markAsAvailable(uploadToken: string, recordingId: string): Promise<UploadCompleteResult> {
     // Verify upload token
     const uploadPayload = this.verifyUploadToken(uploadToken);
     if (!uploadPayload) {
@@ -368,14 +374,20 @@ export class SessionService {
       throw new ForbiddenError('Recording does not belong to this link');
     }
 
-    // Handle based on state
-    if (state === 'complete') {
-      return await this.handleCompleteUpload(recording);
-    } else if (state === 'partial') {
-      return await this.handlePartialUpload(recording);
-    } else {
-      return await this.handleFailedUpload(recording);
+    // Verify all requested files are uploaded and mark as available
+    await this.verifyUploadedFiles(recording, 'minimal');
+
+    // Mark recording as available
+    const updated = await this.deps.recordingRepo.markAsAvailable(recording.id);
+    if (!updated) {
+      throw new ValidationError('Failed to update recording status');
     }
+
+    return {
+      success: true,
+      recordingId: recording.id,
+      status: 'available',
+    };
   }
 
   /**
@@ -462,13 +474,11 @@ export class SessionService {
    *
    * @param files - Array of files from the request
    * @param prefs - Workspace preferences from session token
-   * @param debugMode - When true, throws errors for disallowed files; when false, excludes them silently
    * @returns Object containing files to upload and list of excluded files with reasons
    */
   private validateAndFilterFiles(
     files: UploadFile[],
-    prefs: SessionPreferences,
-    debugMode: boolean
+    prefs: SessionPreferences
   ): { filesToUpload: UploadFile[]; excludedFiles: ExcludedFileInfo[] } {
     const excludedFiles: ExcludedFileInfo[] = [];
     const filesToUpload: UploadFile[] = [];
@@ -500,9 +510,6 @@ export class SessionService {
 
       // Check workspace permission for log files
       if (file.type === 'console_log' && file.size > 0 && !prefs.rccl) {
-        if (debugMode) {
-          throw new ValidationError('Console log capture is not enabled for this workspace');
-        }
         excludedFiles.push({
           type: 'console_log',
           reason: 'Console log capture is not enabled for this workspace',
@@ -511,9 +518,6 @@ export class SessionService {
       }
 
       if (file.type === 'network_log' && file.size > 0 && !prefs.rcnl) {
-        if (debugMode) {
-          throw new ValidationError('Network log capture is not enabled for this workspace');
-        }
         excludedFiles.push({
           type: 'network_log',
           reason: 'Network log capture is not enabled for this workspace',
@@ -622,87 +626,12 @@ export class SessionService {
   }
 
   /**
-   * Handle complete upload state
-   * Verifies all requested files exist, then marks recording as available
-   */
-  private async handleCompleteUpload(recording: {
-    id: string;
-    recordingVideoRef: string | null;
-    recordingThumbnailRef: string | null;
-    recordingConsoleLogRef: string | null;
-    recordingNetworkLogsRef: string | null;
-  }): Promise<UploadCompleteResult> {
-    // Verify all requested files are uploaded
-    await this.verifyUploadedFiles(recording, 'complete');
-
-    // Mark recording as available
-    const updated = await this.deps.recordingRepo.markAsAvailable(recording.id);
-    if (!updated) {
-      throw new ValidationError('Failed to update recording status');
-    }
-
-    return {
-      success: true,
-      recordingId: recording.id,
-      status: 'available',
-    };
-  }
-
-  /**
-   * Handle partial upload state
-   * Verifies minimum required files (video and thumbnail), then marks as partial
-   */
-  private async handlePartialUpload(recording: {
-    id: string;
-    recordingVideoRef: string | null;
-    recordingThumbnailRef: string | null;
-    recordingConsoleLogRef: string | null;
-    recordingNetworkLogsRef: string | null;
-  }): Promise<UploadCompleteResult> {
-    // Verify only minimum required files (video and thumbnail)
-    await this.verifyUploadedFiles(recording, 'minimal');
-
-    // Mark recording as partial
-    const updated = await this.deps.recordingRepo.markAsPartial(recording.id);
-    if (!updated) {
-      throw new ValidationError('Failed to update recording status');
-    }
-
-    return {
-      success: true,
-      recordingId: recording.id,
-      status: 'partial',
-    };
-  }
-
-  /**
-   * Handle failed upload state
-   * Marks recording as failed
-   */
-  private async handleFailedUpload(recording: {
-    id: string;
-    recordingLinkId: string;
-  }): Promise<UploadCompleteResult> {
-    // Mark recording as failed
-    const updated = await this.deps.recordingRepo.markAsFailed(recording.id);
-    if (!updated) {
-      throw new ValidationError('Failed to update recording status');
-    }
-
-    return {
-      success: true,
-      recordingId: recording.id,
-      status: 'failed',
-    };
-  }
-
-  /**
    * Verify uploaded files exist in storage
    *
    * @param recording - Recording with file paths
    * @param mode - Verification mode:
    *   - 'complete': All requested files must exist (video, thumbnail, and any optional logs)
-   *   - 'minimal': Only minimum required files (video and thumbnail)
+   *   - 'minimal': Only video file must exist
    *   - 'none': Skip verification
    */
   private async verifyUploadedFiles(
@@ -730,20 +659,20 @@ export class SessionService {
       errors.push('Video file path not found');
     }
 
-    // Thumbnail is required
-    if (recording.recordingThumbnailRef) {
-      const thumbnailExists = await this.deps.thumbnailsStorage.head(
-        recording.recordingThumbnailRef
-      );
-      if (!thumbnailExists) {
-        errors.push('Thumbnail file not found in storage');
-      }
-    } else {
-      errors.push('Thumbnail file path not found');
-    }
-
-    // For complete mode, also verify optional files if they were requested
+    // For complete mode, verify all requested files
     if (mode === 'complete') {
+      // Thumbnail is required in complete mode
+      if (recording.recordingThumbnailRef) {
+        const thumbnailExists = await this.deps.thumbnailsStorage.head(
+          recording.recordingThumbnailRef
+        );
+        if (!thumbnailExists) {
+          errors.push('Thumbnail file not found in storage');
+        }
+      } else {
+        errors.push('Thumbnail file path not found');
+      }
+
       // Console log - if requested, must exist
       if (recording.recordingConsoleLogRef) {
         const consoleLogExists = await this.deps.consoleLogsStorage.head(

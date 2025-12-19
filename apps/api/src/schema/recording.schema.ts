@@ -17,7 +17,7 @@ export const RECORDING_SORT_FIELDS = ['created_at', 'recording_duration'] as con
  * Validates pagination, filter, and sort parameters
  * Filters accept comma-separated values for multiple selections
  * Note: statusGroup is intentionally NOT exposed at API level
- * API always returns AVAILABLE recordings (available, partial) by default
+ * API always returns AVAILABLE recordings (available) by default
  */
 export const listRecordingsQuerySchema = z.object({
   page: z
@@ -73,39 +73,39 @@ export const listRecordingsQuerySchema = z.object({
  */
 export const RECORDING_STATUS_GROUPS = {
   /**
-   * Available recordings - fully uploaded and ready, or partially uploaded
-   * Includes: available, partial
+   * Available recordings - fully uploaded and ready
+   * Includes: available
    * This is the default for API-facing endpoints
    */
-  AVAILABLE: ['available', 'partial'] as const,
+  AVAILABLE: ['available'] as const,
 
   /**
    * Terminal recordings - uploads that have reached a final state
-   * Includes: available, failed, expired, purged
+   * Includes: available, expired, purged
    * Used internally for non-reusable link validation
    */
-  TERMINAL: ['available', 'failed', 'expired', 'purged'] as const,
+  TERMINAL: ['available', 'expired', 'purged'] as const,
 
   /**
-   * Stale recordings - failed or expired uploads
-   * Includes: pending, failed
+   * Stale recordings - pending uploads that never completed
+   * Includes: pending
    * Used internally for cleanup of stale recordings
    */
-  STALE: ['failed', 'pending'] as const,
+  STALE: ['pending'] as const,
 
   /**
    * Orphan recordings - recordings which are no longer associated
-   * Includes: pending, partial, available, failed
+   * Includes: pending, available
    * Used internally for cleanup of orphan recordings
    */
-  ORPHAN: ['pending', 'partial', 'available', 'failed'] as const,
+  ORPHAN: ['pending', 'available'] as const,
 
   /**
-   * Unavailable recordings - not yet ready or failed
-   * Includes: pending, failed, expired, purged
+   * Unavailable recordings - not yet ready or expired
+   * Includes: pending, expired, purged
    * Used internally for status tracking
    */
-  UNAVAILABLE: ['pending', 'failed', 'expired', 'purged'] as const,
+  UNAVAILABLE: ['pending', 'expired', 'purged'] as const,
 
   /**
    * Pending recordings - currently being uploaded

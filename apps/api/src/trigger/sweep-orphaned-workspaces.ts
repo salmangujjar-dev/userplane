@@ -136,7 +136,7 @@ export const cleanupOrphanedWorkspace = task({
  *
  * Finds:
  * - Deleted workspaces that have at least one recording with ORPHAN status group
- * - ORPHAN status group includes: pending, partial, available, failed
+ * - ORPHAN status group includes: pending, available
  * - Only considers recordings older than the grace period cutoff date
  * - Triggers workspace cleanup which cascades to all resources
  */

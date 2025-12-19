@@ -46,14 +46,14 @@ export const initUpload = oc
 
 /**
  * PATCH /session
- * Complete, mark partial, or fail an upload
+ * Mark upload as available
  */
 export const completeUpload = oc
   .route({
     method: 'PATCH',
     path: '/session',
-    summary: 'Complete upload',
-    description: 'Mark upload as complete, partial, or failed',
+    summary: 'Mark upload available',
+    description: 'Mark upload as available after all files are uploaded',
     tags: ['Session'],
   })
   .input(CompleteUploadSchema)

@@ -68,7 +68,7 @@ export class RecordingService {
 
   /**
    * Get recordings for a workspace with pagination, filters, and sorting
-   * Defaults to AVAILABLE status group (available, partial)
+   * Defaults to AVAILABLE status group (available)
    * Supports filtering by status groups: AVAILABLE, STALE, UNAVAILABLE, PENDING
    * All filtering and sorting is performed at the database level
    * Default sort: created_at descending (latest first)
@@ -158,7 +158,7 @@ export class RecordingService {
 
   /**
    * Get recording by ID with full details
-   * Defaults to AVAILABLE status group (available, partial)
+   * Defaults to AVAILABLE status group (available)
    * Returns recording metadata and metrics (resources fetched via separate endpoints)
    */
   async getById(recordingId: string, workspaceId: string): Promise<RecordingDetail> {
@@ -325,7 +325,7 @@ export class RecordingService {
 
   /**
    * Validate available recording exists and belongs to workspace
-   * Defaults to AVAILABLE status group (available, partial)
+   * Defaults to AVAILABLE status group (available)
    * Returns the recording if valid, throws otherwise
    */
   private async validateAvailableRecordingAccess(recordingId: string, workspaceId: string) {

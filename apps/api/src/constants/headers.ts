@@ -9,7 +9,6 @@
 export const REQUEST_HEADERS = {
   SESSION_TOKEN: 'x-session-token',
   UPLOAD_TOKEN: 'x-upload-token',
-  DEBUG: 'x-debug',
 } as const;
 
 /**

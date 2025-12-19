@@ -427,7 +427,7 @@ export class RecordingRepository {
   /**
    * Create a new recording with pending status
    * isDeleted is set to true because pending recordings should not be visible to users
-   * until they become available or partial
+   * until they become available
    */
   async create(data: CreateRecordingInput, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
@@ -456,7 +456,7 @@ export class RecordingRepository {
 
   /**
    * Update recording upload status to available
-   * Can transition from pending or partial
+   * All files uploaded successfully
    * Sets isDeleted to false so recording becomes visible to users
    */
   async markAsAvailable(id: string, options?: { tx?: Transaction }) {
@@ -469,64 +469,7 @@ export class RecordingRepository {
         isDeleted: false,
         updatedAt: new Date(),
       })
-      .where(
-        and(
-          eq(recordings.id, id),
-          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial'))
-        )
-      )
-      .returning();
-
-    return updated || null;
-  }
-
-  /**
-   * Update recording upload status to partial
-   * Video uploaded, some secondary files missing
-   * Sets isDeleted to false so recording becomes visible to users
-   */
-  async markAsPartial(id: string, options?: { tx?: Transaction }) {
-    const dbClient = options?.tx || this.db;
-
-    const [updated] = await dbClient
-      .update(recordings)
-      .set({
-        uploadStatus: 'partial',
-        isDeleted: false,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(recordings.id, id),
-          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial'))
-        )
-      )
-      .returning();
-
-    return updated || null;
-  }
-
-  /**
-   * Update recording upload status to failed
-   * Can transition from pending or partial
-   * Sets isDeleted to true so failed recordings are hidden from users
-   */
-  async markAsFailed(id: string, options?: { tx?: Transaction }) {
-    const dbClient = options?.tx || this.db;
-
-    const [updated] = await dbClient
-      .update(recordings)
-      .set({
-        uploadStatus: 'failed',
-        isDeleted: true,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(recordings.id, id),
-          or(eq(recordings.uploadStatus, 'pending'), eq(recordings.uploadStatus, 'partial'))
-        )
-      )
+      .where(and(eq(recordings.id, id), eq(recordings.uploadStatus, 'pending')))
       .returning();
 
     return updated || null;
@@ -758,7 +701,7 @@ export class RecordingRepository {
 
   /**
    * Find deleted workspaces that have orphaned recordings
-   * Orphaned recordings are those with ORPHAN status group (pending, partial, available, failed)
+   * Orphaned recordings are those with ORPHAN status group (pending, available)
    * Used by sweep job to trigger workspace cleanup
    */
   async findWorkspacesWithOrphanedRecordings(

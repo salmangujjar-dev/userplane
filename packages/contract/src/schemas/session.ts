@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { FileTypeSchema, UploadStateSchema, UploadStatusSchema } from './common';
+import { FileTypeSchema, UploadStatusSchema } from './common';
+import { RECORDING_DURATION_LIMITS } from '../constants/session';
 
 /**
  * Session schemas
@@ -56,7 +57,11 @@ export const SessionRecordingMetaSchema = z.object({
  * Init upload request
  */
 export const InitUploadSchema = z.object({
-  recording_duration: z.number().int().positive().max(180000),
+  recording_duration: z
+    .number()
+    .int()
+    .min(RECORDING_DURATION_LIMITS.MIN_DURATION_MS)
+    .max(RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS),
   files: z.array(UploadFileSchema).min(1).max(4),
   metadata: SessionRecordingMetaSchema,
 });
@@ -79,11 +84,10 @@ export const UploadInitDataSchema = z.object({
 });
 
 /**
- * Complete upload request
+ * Mark upload as available request
  */
 export const CompleteUploadSchema = z.object({
   recording_id: z.string().min(1),
-  state: UploadStateSchema,
 });
 
 /**

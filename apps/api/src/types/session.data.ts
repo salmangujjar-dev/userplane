@@ -121,13 +121,8 @@ export interface UploadInitData {
 export interface UploadCompleteData {
   success: boolean;
   recordingId: string;
-  status: 'available' | 'partial' | 'failed';
+  status: 'available';
 }
-
-/**
- * Upload completion state
- */
-export type UploadState = 'complete' | 'partial' | 'failed';
 
 /**
  * Link with workspace preferences for session initialization

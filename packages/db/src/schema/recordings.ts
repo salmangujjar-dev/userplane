@@ -18,6 +18,7 @@ import {
   STREAM_PROVIDER_VALUES,
   STREAMING_STATUS_VALUES,
 } from '../constants';
+import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
 
 export const uploadStatusEnum = pgEnum('upload_status', UPLOAD_STATUS_VALUES);
 export const streamProviderEnum = pgEnum('stream_provider', STREAM_PROVIDER_VALUES);
@@ -53,7 +54,9 @@ export const recordings = pgTable(
     recordingMeta: jsonb('recording_meta'),
 
     // Recording metrics
-    recordingDurationMs: integer('recording_duration').default(180000),
+    recordingDurationMs: integer('recording_duration').default(
+      RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS
+    ),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),

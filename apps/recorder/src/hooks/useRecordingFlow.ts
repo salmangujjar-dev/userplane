@@ -14,6 +14,7 @@ import type { UploadProgress } from '@/services/recording-session';
 import type { RecordingPreferences } from '@/types/session-preferences';
 import { DEFAULT_RECORDING_PREFERENCES } from '@/types/session-preferences';
 import { generateVideoThumbnail } from '@/utils/video-thumbnail';
+import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
 
 export type FlowState =
   | 'loading'
@@ -63,7 +64,9 @@ export function useRecordingFlow(linkToken: string | null): {
   const [requesterName, setRequesterName] = useState('');
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [maxRecordingDurationMs, setMaxRecordingDurationMs] = useState<number>(180000);
+  const [maxRecordingDurationMs, setMaxRecordingDurationMs] = useState<number>(
+    RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS
+  );
   const [maxRecordingSize, setMaxRecordingSize] = useState<number | null>(null);
   const [recordingDurationMs, setRecordingDurationMs] = useState<number | null>(null);
   const [preferences, setPreferences] = useState<RecordingPreferences>(

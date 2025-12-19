@@ -132,7 +132,6 @@ export function getSessionHandler(sessionService: SessionService) {
  *
  * Headers:
  * - x-session-token (required): Valid session token from GET /api/v1/session
- * - x-debug (optional): When "true", throws errors for disallowed files instead of silently excluding
  */
 export function initUploadHandler(sessionService: SessionService) {
   return async (c: Context<AppEnv>) => {
@@ -147,10 +146,6 @@ export function initUploadHandler(sessionService: SessionService) {
         return c.json(response, 401);
       }
 
-      // Check debug mode from x-debug header
-      const debugHeader = c.req.header(REQUEST_HEADERS.DEBUG);
-      const debugMode = debugHeader?.toLowerCase() === 'true';
-
       // Parse and validate request body
       const body = await c.req.json();
       const parsed = initUploadSchema.parse(body);
@@ -163,13 +158,12 @@ export function initUploadHandler(sessionService: SessionService) {
         mime_type: f.mime_type,
       }));
 
-      // Initialize upload with client metadata and debug mode
+      // Initialize upload with client metadata
       const result = await sessionService.initUpload(
         sessionToken,
         parsed.recording_duration,
         files,
-        parsed.metadata,
-        debugMode
+        parsed.metadata
       );
 
       // Set response headers for token expiry
@@ -279,7 +273,7 @@ export function initUploadHandler(sessionService: SessionService) {
 
 /**
  * Handler factory for PATCH /api/v1/session
- * Completes, marks partial, or fails an upload
+ * Marks upload as available
  *
  * Headers:
  * - x-upload-token (required): Valid upload token from POST /api/v1/session
@@ -307,29 +301,11 @@ export function completeUploadHandler(sessionService: SessionService) {
         c.header(RESPONSE_HEADERS.UPLOAD_TOKEN_REMAINING, String(remainingTime));
       }
 
-      // Complete upload
-      const result = await sessionService.completeUpload(
-        uploadToken,
-        parsed.recording_id,
-        parsed.state
-      );
-
-      // Build message based on status
-      let message: string;
-      switch (result.status) {
-        case 'available':
-          message = 'Recording available';
-          break;
-        case 'partial':
-          message = 'Recording partially uploaded';
-          break;
-        case 'failed':
-          message = 'Recording marked as failed';
-          break;
-      }
+      // Mark upload as available
+      const result = await sessionService.markAsAvailable(uploadToken, parsed.recording_id);
 
       const response: ApiResponse<UploadCompleteData> = {
-        message,
+        message: 'Recording available',
         data: {
           success: result.success,
           recordingId: result.recordingId,
@@ -349,7 +325,7 @@ export function completeUploadHandler(sessionService: SessionService) {
         return c.json(response, 400);
       }
 
-      // 400 - Validation Error: File verification failed, invalid state transition
+      // 400 - Validation Error: File verification failed
       if (error instanceof ValidationError) {
         const response: ApiErrorResponse = {
           error: 'Bad Request',

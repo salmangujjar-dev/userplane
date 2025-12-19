@@ -3,25 +3,27 @@
  * Limits and defaults for recording duration, size, and media settings
  */
 
+import { FILE_SIZE_LIMITS, RECORDING_DURATION_LIMITS } from '@workspace/contract';
+
 // ===========================================
-// Duration Limits
+// Duration Limits (from contract)
 // ===========================================
 
 /** Default max recording duration in milliseconds (3 minutes) */
-export const DEFAULT_MAX_RECORDING_DURATION_MS = 180000;
+export const DEFAULT_MAX_RECORDING_DURATION_MS = RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS;
 
 /** Minimum recording duration in milliseconds (1 second) */
-export const MIN_RECORDING_DURATION_MS = 1000;
+export const MIN_RECORDING_DURATION_MS = RECORDING_DURATION_LIMITS.MIN_DURATION_MS;
 
 // ===========================================
-// Size Limits
+// Size Limits (from contract)
 // ===========================================
 
 /** Maximum video file size in bytes (500MB) */
-export const MAX_VIDEO_FILE_SIZE_BYTES = 500 * 1024 * 1024;
+export const MAX_VIDEO_FILE_SIZE_BYTES = FILE_SIZE_LIMITS.MAX_VIDEO_SIZE;
 
 /** Maximum thumbnail file size in bytes (10MB) */
-export const MAX_THUMBNAIL_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+export const MAX_THUMBNAIL_FILE_SIZE_BYTES = FILE_SIZE_LIMITS.MAX_THUMBNAIL_SIZE;
 
 /** Bytes in a megabyte (for display calculations) */
 export const BYTES_PER_MB = 1024 * 1024;

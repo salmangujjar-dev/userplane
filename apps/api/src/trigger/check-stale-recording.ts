@@ -1,13 +1,12 @@
 /**
  * Check Stale Recording Task
- * Automatically cleans up recordings that failed to complete upload within the presigned URL expiry window
+ * Automatically cleans up recordings that never completed upload within the presigned URL expiry window
  *
  * Triggered by: SessionService.initSession (delayed by presignedUrlExpiry + buffer)
  *
  * Logic:
- * - If recording is 'pending': mark as deleted and trigger cleanup (upload never started)
- * - If recording is 'failed': mark as deleted and trigger cleanup (upload failed)
- * - If recording is 'available' or 'partial': do nothing (upload succeeded)
+ * - If recording is 'pending': mark as deleted and trigger cleanup (upload never completed)
+ * - If recording is 'available': do nothing (upload succeeded)
  * - If recording doesn't exist or already deleted: short-circuit (already handled)
  *
  * This ensures recordings that never complete their upload are automatically cleaned up
@@ -41,11 +40,11 @@ export const checkStaleRecording = task({
 
     const recordingRepo = new RecordingRepository(db);
 
-    // Check if recording exists with STALE status group (pending or failed)
+    // Check if recording exists with STALE status group (pending)
     // This pre-filters at the database level, so if null, it's either:
     // - Not found
     // - Already deleted
-    // - Completed successfully (available/partial)
+    // - Completed successfully (available)
     const recording = await recordingRepo.findByIdWithStatusGroup(recordingId, 'STALE');
 
     if (!recording) {
@@ -56,9 +55,9 @@ export const checkStaleRecording = task({
       };
     }
 
-    // Short-circuiting based on isDeleted should not be done as pending and failed recordings are already marked as deleted to prevent getting looked up by dashboard facing endpoints
+    // Short-circuiting based on isDeleted should not be done as pending recordings are already marked as deleted to prevent getting looked up by dashboard facing endpoints
 
-    // Trigger resource cleanup immediately (no delay needed, upload already failed/stale)
+    // Trigger resource cleanup immediately (no delay needed, upload already stale)
     await deleteRecordingResources.trigger(
       {
         recordingId,
