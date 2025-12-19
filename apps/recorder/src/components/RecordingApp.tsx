@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useRecordingFlow } from '@/hooks/useRecordingFlow';
+import { useRecordingFlow, type RecordingFlowActions } from '@/hooks/useRecordingFlow';
 import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import PreRecordingScreen from './PreRecordingScreen';
@@ -13,7 +13,13 @@ import RecordingInProgressScreen from './RecordingInProgressScreen';
 import PostRecordingReviewScreen from './PostRecordingReviewScreen';
 import PostRecordingUploadScreen from './PostRecordingUploadScreen';
 import PostRecordingAckScreen from './PostRecordingAckScreen';
-import { PRE_RECORDING_ERROR_COPY, POST_RECORDING_ERROR_COPY } from '@/constants/copy';
+import {
+  classifyError,
+  RecoveryStrategy,
+  ErrorCategory,
+  type RecordingError,
+} from '@/types/errors';
+import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface RecordingAppProps {
   linkToken?: string | null;
@@ -65,35 +71,15 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
 
     case 'error':
       const isPostRecordingError = !!state.recordingBlob;
-      const isPermissionError = isPermissionDeniedError(state.error);
+      const classifiedError = classifyError(state.error, isPostRecordingError);
 
       console.log('[RecordingApp] Rendering: ErrorScreen');
       console.log('[RecordingApp] Has recording blob:', !!state.recordingBlob);
-      console.log('[RecordingApp] Is permission error:', isPermissionError);
-      console.log('[RecordingApp] Error title:', getErrorTitle(state.error));
-      console.log('[RecordingApp] Error subtitle:', getErrorSubtitle(state.error));
+      console.log('[RecordingApp] Error category:', classifiedError.category);
+      console.log('[RecordingApp] Recovery strategy:', classifiedError.recoveryStrategy);
+      console.log('[RecordingApp] Error message:', classifiedError.message);
 
-      if (isPostRecordingError) {
-        return (
-          <ErrorScreen
-            title={getErrorTitle(state.error)}
-            subtitle={getErrorSubtitle(state.error)}
-            preferences={state.preferences}
-            primaryActionText={POST_RECORDING_ERROR_COPY.startOverButton}
-            onPrimaryAction={actions.startOver}
-          />
-        );
-      }
-
-      return (
-        <ErrorScreen
-          title={getErrorTitle(state.error)}
-          subtitle={getErrorSubtitle(state.error)}
-          preferences={state.preferences}
-          primaryActionText={getActionTitle(isPermissionError)}
-          onPrimaryAction={getActionHandler(isPermissionError)}
-        />
-      );
+      return renderErrorScreen(classifiedError, state.preferences, actions);
 
     case 'setup':
       console.log('[RecordingApp] Rendering: PreRecordingScreen');
@@ -188,86 +174,68 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
   }
 }
 
-function isPermissionDeniedError(error: string | null): boolean {
-  if (!error) return false;
-  return error.includes('permission') || error.includes('denied');
-}
+/**
+ * Renders the error screen with appropriate actions based on error type
+ */
+function renderErrorScreen(
+  error: RecordingError,
+  preferences: RecordingPreferences,
+  actions: RecordingFlowActions
+) {
+  // Determine primary action based on recovery strategy
+  let primaryActionText = error.primaryActionText;
+  let onPrimaryAction: (() => void) | undefined;
 
-function getErrorTitle(error: string | null): string {
-  if (!error) return 'Something went wrong';
-
-  if (error.includes('token') || error.includes('link')) {
-    return "Hmm... that link isn't valid";
-  }
-
-  if (error.includes('permission') || error.includes('denied')) {
-    return 'Permission denied';
-  }
-
-  if (error.includes('supported')) {
-    return 'Browser not supported';
-  }
-
-  if (error.includes('upload') || error.includes('Upload')) {
-    return 'Upload failed';
-  }
-
-  if (error.includes('network') || error.includes('fetch')) {
-    return 'Connection error';
-  }
-
-  return 'Something went wrong';
-}
-
-function getErrorSubtitle(error: string | null): string {
-  if (!error) return 'An unexpected error occurred';
-
-  if (error.includes('token') || error.includes('link')) {
-    return 'The recording link appears to be incorrect';
-  }
-
-  if (error.includes('permission') || error.includes('denied')) {
-    return 'Screen recording permission is required';
-  }
-
-  if (error.includes('supported')) {
-    return "Your browser doesn't support screen recording";
-  }
-
-  if (error.includes('upload') || error.includes('Upload')) {
-    return 'Something went wrong while uploading your recording';
-  }
-
-  if (error.includes('network') || error.includes('fetch')) {
-    return 'Unable to connect to the server';
-  }
-
-  return error;
-}
-
-function getActionTitle(isPermissionError: boolean): string {
-  return isPermissionError
-    ? PRE_RECORDING_ERROR_COPY.retryButton
-    : PRE_RECORDING_ERROR_COPY.requestLinkButton;
-}
-
-function getActionHandler(isPermissionError: boolean): () => void {
-  if (isPermissionError) {
-    return () => {
-      console.log('[RecordingApp] Retrying - refreshing page');
-      window.location.reload();
-    };
-  } else {
-    return async () => {
-      console.log('[RecordingApp] Copying request message to clipboard');
-      try {
-        await navigator.clipboard.writeText(PRE_RECORDING_ERROR_COPY.requestMessage);
-        console.log('[RecordingApp] Message copied successfully');
-        alert('Message copied to clipboard!');
-      } catch (err) {
-        console.error('[RecordingApp] Failed to copy to clipboard:', err);
-        alert('Failed to copy message');
+  switch (error.recoveryStrategy) {
+    case RecoveryStrategy.AUTO_RETRY:
+      // Auto-retry errors: Show manual retry button after auto-retry attempts
+      // For upload errors, use smart retry that preserves upload state
+      if (error.category === ErrorCategory.UPLOAD) {
+        onPrimaryAction = actions.retryUpload;
+      } else {
+        // For network errors, reload the page
+        onPrimaryAction = () => {
+          console.log('[RecordingApp] Manual retry - refreshing page');
+          window.location.reload();
+        };
       }
-    };
+      break;
+
+    case RecoveryStrategy.MANUAL_RETRY:
+      // Manual retry errors: User action required (e.g., grant permission)
+      onPrimaryAction = () => {
+        console.log('[RecordingApp] Retrying - refreshing page');
+        window.location.reload();
+      };
+      break;
+
+    case RecoveryStrategy.START_OVER:
+      onPrimaryAction = actions.startOver;
+      break;
+
+    case RecoveryStrategy.NONE:
+    default:
+      // Non-recoverable error - no primary action
+      onPrimaryAction = undefined;
+      primaryActionText = undefined;
+      break;
   }
+
+  // Secondary action (if available)
+  let onSecondaryAction: (() => void) | undefined;
+  if (error.secondaryActionText) {
+    onSecondaryAction = actions.startOver;
+  }
+
+  return (
+    <ErrorScreen
+      title={error.title}
+      subtitle={error.message}
+      preferences={preferences}
+      primaryActionText={primaryActionText}
+      onPrimaryAction={onPrimaryAction}
+      secondaryActionText={error.secondaryActionText}
+      onSecondaryAction={onSecondaryAction}
+    />
+  );
 }

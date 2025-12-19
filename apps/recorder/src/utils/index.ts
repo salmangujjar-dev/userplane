@@ -34,3 +34,13 @@ export { generateVideoThumbnail, blobToDataUrl } from './video-thumbnail';
 
 // Color utilities
 export { lightenColor, darkenColor } from './color';
+
+// Retry utilities
+export {
+  withRetry,
+  withTimeout,
+  sleep,
+  retryPredicates,
+  type RetryOptions,
+  type TimeoutOptions,
+} from './retry';

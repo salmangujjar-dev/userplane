@@ -3,6 +3,8 @@
  * Generic object storage upload functions with progress tracking and retries
  */
 
+import { withRetry } from './retry';
+
 export interface UploadProgress {
   loaded: number;
   total: number;
@@ -42,26 +44,15 @@ export async function uploadToObjectStore(
     retryDelay = 1000,
   } = options;
 
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const result = await uploadWithProgress(file, presignedUrl, timeout, onProgress);
-      return result;
-    } catch (error) {
-      lastError = error as Error;
+  return withRetry(() => uploadWithProgress(file, presignedUrl, timeout, onProgress), {
+    maxRetries,
+    baseDelay: retryDelay,
+    backoffStrategy: 'exponential',
+    onRetry: (error, attempt, delay) => {
       console.warn(`[Upload] Attempt ${attempt}/${maxRetries} failed:`, error);
-
-      if (attempt < maxRetries) {
-        // Exponential backoff: 1s, 2s, 4s, etc.
-        const delay = Math.pow(2, attempt - 1) * retryDelay;
-        console.log(`[Upload] Retrying in ${delay}ms...`);
-        await sleep(delay);
-      }
-    }
-  }
-
-  throw lastError || new Error('Upload failed after all retries');
+      console.log(`[Upload] Retrying in ${delay}ms...`);
+    },
+  });
 }
 
 /**
@@ -120,13 +111,6 @@ function uploadWithProgress(
     xhr.setRequestHeader('Content-Type', file.type);
     xhr.send(file);
   });
-}
-
-/**
- * Sleep utility for retry delays
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**

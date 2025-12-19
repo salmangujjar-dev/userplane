@@ -26,6 +26,21 @@ export interface UploadProgress {
   percentage: number;
 }
 
+/**
+ * Upload state containing presigned URLs and tokens
+ * This state can be stored and used to retry the upload step
+ */
+export interface UploadState {
+  recordingId: string;
+  uploadToken: string;
+  presignedUrls: Array<{
+    type: 'video' | 'thumbnail' | 'console_log' | 'network_log';
+    url: string;
+  }>;
+  videoFile: File;
+  thumbnailBlob: Blob | null;
+}
+
 export type { SystemMetadata };
 
 export class RecordingSession {
@@ -87,32 +102,32 @@ export class RecordingSession {
   }
 
   /**
-   * Upload recording files to object storage
+   * STEP 1: Initialize upload and get presigned URLs
+   * Returns upload state that can be stored for retry
    */
-  async uploadFiles(
+  async initializeUpload(
     videoFile: File,
     thumbnailBlob: Blob | null,
-    recordingDurationMs: number | null,
-    onProgress?: (progress: UploadProgress) => void
-  ): Promise<void> {
-    console.log('[Upload] Starting upload process');
-    console.log('[Upload] Video file:', {
+    recordingDurationMs: number | null
+  ): Promise<UploadState> {
+    console.log('[Upload:Init] Initializing upload');
+    console.log('[Upload:Init] Video file:', {
       name: videoFile.name,
       size: videoFile.size,
       type: videoFile.type,
     });
     console.log(
-      '[Upload] Recording duration:',
+      '[Upload:Init] Recording duration:',
       recordingDurationMs ? `${recordingDurationMs}ms` : '0ms (default)'
     );
-    console.log('[Upload] Thumbnail:', thumbnailBlob ? `${thumbnailBlob.size} bytes` : 'none');
+    console.log('[Upload:Init] Thumbnail:', thumbnailBlob ? `${thumbnailBlob.size} bytes` : 'none');
 
     if (!this.sessionToken) {
       throw new Error('No session token available');
     }
 
     const systemMetadata = captureSystemMetadata();
-    console.log('[Upload] System metadata:', systemMetadata);
+    console.log('[Upload:Init] System metadata:', systemMetadata);
 
     const files: Array<{
       type: 'video' | 'thumbnail' | 'console_log' | 'network_log';
@@ -138,7 +153,7 @@ export class RecordingSession {
     }
 
     console.log(
-      '[Upload] Initiating upload with session token:',
+      '[Upload:Init] Requesting presigned URLs with session token:',
       this.sessionToken?.substring(0, 20) + '...'
     );
 
@@ -156,7 +171,7 @@ export class RecordingSession {
         customMetadata: {},
       },
     };
-    console.log('[Upload] Upload init payload:', uploadInitPayload);
+    console.log('[Upload:Init] Upload init payload:', uploadInitPayload);
 
     const uploadData = await this.client.session.upload.init(uploadInitPayload, {
       context: {
@@ -166,13 +181,37 @@ export class RecordingSession {
       },
     });
 
-    console.log('[Upload] Upload init response:', uploadData.data);
+    console.log('[Upload:Init] Received upload initialization response');
 
     this.recordingId = uploadData.data.recordingId;
     const uploadToken = uploadData.data.uploadToken;
     const presignedUrls = uploadData.data.presignedUrls;
 
-    console.log('[Upload] Upload initialized, uploading files to object storage...');
+    console.log('[Upload:Init] Recording ID:', this.recordingId);
+    console.log('[Upload:Init] Upload token received');
+    console.log('[Upload:Init] Presigned URLs count:', presignedUrls.length);
+
+    return {
+      recordingId: this.recordingId,
+      uploadToken,
+      presignedUrls,
+      videoFile,
+      thumbnailBlob,
+    };
+  }
+
+  /**
+   * STEP 2: Upload files to object storage
+   * Can be retried independently if it fails
+   */
+  async uploadToStorage(
+    uploadState: UploadState,
+    onProgress?: (progress: UploadProgress) => void
+  ): Promise<void> {
+    console.log('[Upload:Storage] Starting file uploads to object storage');
+    console.log('[Upload:Storage] Recording ID:', uploadState.recordingId);
+
+    const { videoFile, thumbnailBlob, presignedUrls } = uploadState;
 
     const videoUrl = presignedUrls.find((u) => u.type === 'video');
     if (!videoUrl) {
@@ -197,6 +236,7 @@ export class RecordingSession {
       }
     };
 
+    console.log('[Upload:Storage] Uploading video file...');
     // Upload video file
     await uploadToObjectStore(videoFile, videoUrl.url, {
       timeout: VIDEO_UPLOAD_TIMEOUT_MS,
@@ -206,11 +246,13 @@ export class RecordingSession {
         reportProgress();
       },
     });
+    console.log('[Upload:Storage] Video upload complete');
 
     // Upload thumbnail if available
     if (thumbnailBlob && thumbnailBlob.size > 0) {
       const thumbnailUrl = presignedUrls.find((u) => u.type === 'thumbnail');
       if (thumbnailUrl) {
+        console.log('[Upload:Storage] Uploading thumbnail...');
         const thumbnailFile = new File([thumbnailBlob], 'thumbnail.webp', {
           type: 'image/webp',
         });
@@ -222,6 +264,7 @@ export class RecordingSession {
             reportProgress();
           },
         });
+        console.log('[Upload:Storage] Thumbnail upload complete');
       }
     }
 
@@ -236,25 +279,31 @@ export class RecordingSession {
       });
     }
 
-    console.log(
-      '[Upload] Completing upload with upload token:',
-      uploadToken?.substring(0, 20) + '...'
-    );
+    console.log('[Upload:Storage] All files uploaded successfully');
+  }
+
+  /**
+   * STEP 3: Complete upload and acknowledge success
+   * Marks the recording as available
+   */
+  async acknowledgeUpload(uploadState: UploadState): Promise<void> {
+    console.log('[Upload:Ack] Acknowledging upload completion');
+    console.log('[Upload:Ack] Recording ID:', uploadState.recordingId);
 
     await this.client.session.upload.complete(
       {
-        recording_id: this.recordingId,
+        recording_id: uploadState.recordingId,
       },
       {
         context: {
           headers: {
-            'x-upload-token': uploadToken,
+            'x-upload-token': uploadState.uploadToken,
           },
         },
       }
     );
 
-    console.log('[Upload] Upload completed successfully');
+    console.log('[Upload:Ack] Upload acknowledged successfully');
   }
 
   /**
