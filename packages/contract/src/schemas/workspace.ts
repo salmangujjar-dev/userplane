@@ -28,10 +28,20 @@ export const WorkspaceMembershipSchema = z.object({
  * Workspace item
  */
 export const WorkspaceItemSchema = z.object({
-  workspaceId: z.string(),
+  id: z.string(),
   workspaceName: z.string(),
-  workspaceRole: WorkspaceRoleSchema,
-  recordingCustomizeLink: z.boolean(),
+  workspacePlan: z.enum([
+    'starter_monthly',
+    'starter_annual',
+    'scale_up_monthly',
+    'scale_up_annual',
+    'enterprise_monthly',
+    'enterprise_annual',
+    'early_bird_monthly',
+    'tiny_bird_monthly',
+  ]),
+  createdAt: z.date(),
+  updatedAt: z.date(),
   notificationPreferences: WorkspaceNotificationPreferencesSchema.optional(),
   workspaceMembership: WorkspaceMembershipSchema.optional(),
 });
@@ -40,9 +50,9 @@ export const WorkspaceItemSchema = z.object({
  * Workspaces list query parameters
  */
 export const ListWorkspacesQuerySchema = z.object({
-  page: z.number().int().positive().optional().default(1),
-  include_notification_preference: z.boolean().optional().default(false),
-  include_workspace_membership: z.boolean().optional().default(false),
+  page: z.coerce.number().int().positive().optional().default(1),
+  include_notification_preference: z.coerce.boolean().optional().default(false),
+  include_workspace_membership: z.coerce.boolean().optional().default(false),
 });
 
 /**
@@ -69,22 +79,31 @@ export const WorkspaceCountDataSchema = z.object({
 });
 
 /**
+ * Workspace by ID request
+ */
+export const WorkspaceByIdSchema = z.object({
+  id: z.string(),
+});
+
+/**
  * Workspace by ID response
  */
 export const WorkspaceByIdDataSchema = z.object({
   workspace: z.object({
     id: z.string(),
     workspaceName: z.string(),
-    recordingCustomizeLink: z.boolean(),
-    recordingCompanyName: z.string().nullable(),
-    recordingCompanyLogoPath: z.string().nullable(),
-    recordingHeader: z.string().nullable(),
-    recordingFootnote: z.string().nullable(),
-    recordingPrimaryColor: z.string().nullable(),
-    recordingMaxDurationMs: z.number().int().nullable(),
-    recordingSlug: z.string().nullable(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
+    workspacePlan: z.enum([
+      'starter_monthly',
+      'starter_annual',
+      'scale_up_monthly',
+      'scale_up_annual',
+      'enterprise_monthly',
+      'enterprise_annual',
+      'early_bird_monthly',
+      'tiny_bird_monthly',
+    ]),
+    createdAt: z.date(),
+    updatedAt: z.date(),
   }),
 });
 
@@ -103,6 +122,13 @@ export const WorkspacePreferencesSchema = z.object({
 });
 
 /**
+ * Workspace preferences get request
+ */
+export const WorkspacePreferencesGetSchema = z.object({
+  id: z.string(),
+});
+
+/**
  * Workspace preferences get response
  */
 export const WorkspacePreferencesGetDataSchema = z.object({
@@ -113,14 +139,31 @@ export const WorkspacePreferencesGetDataSchema = z.object({
  * Update workspace preferences request
  */
 export const UpdateWorkspacePreferencesSchema = z.object({
+  workspaceId: z.string(),
   recordingCustomizeLink: z.boolean().optional(),
+  recordingCompanyName: z.string().nullable().optional(),
+  recordingCompanyLogoPath: z.string().nullable().optional(),
+  recordingHeader: z.string().nullable().optional(),
+  recordingFootnote: z.string().nullable().optional(),
+  recordingPrimaryColor: z.string().nullable().optional(),
+  recordingMaxDurationMs: z.number().int().nullable().optional(),
 });
 
 /**
  * Workspace preferences update response
  */
 export const WorkspacePreferencesUpdateDataSchema = z.object({
-  workspaceId: z.string(),
+  preferences: z.object({
+    id: z.string(),
+    workspaceName: z.string(),
+    recordingCustomizeLink: z.boolean(),
+    recordingCompanyName: z.string().nullable(),
+    recordingCompanyLogoPath: z.string().nullable(),
+    recordingHeader: z.string().nullable(),
+    recordingFootnote: z.string().nullable(),
+    recordingPrimaryColor: z.string().nullable(),
+    recordingMaxDurationMs: z.number().int().nullable(),
+  }),
 });
 
 /**
@@ -137,6 +180,7 @@ export const TeamMemberSchema = z.object({
  * Workspace team query parameters
  */
 export const WorkspaceTeamQuerySchema = z.object({
+  id: z.string(),
   page: z.number().int().positive().optional().default(1),
   include_me: z.boolean().optional().default(false),
 });
@@ -155,6 +199,8 @@ export const WorkspaceTeamDataSchema = z.object({
  * Update member role request
  */
 export const UpdateMemberRoleSchema = z.object({
+  id: z.string(),
+  workspaceMemberId: z.string(),
   role: WorkspaceRoleSchema,
 });
 
@@ -165,6 +211,14 @@ export const MemberRoleUpdateDataSchema = z.object({
   workspaceId: z.string(),
   workspaceMemberId: z.string(),
   workspaceRole: WorkspaceRoleSchema,
+});
+
+/**
+ * Member remove request
+ */
+export const RemoveMemberSchema = z.object({
+  id: z.string(),
+  workspaceMemberId: z.string(),
 });
 
 /**
@@ -213,6 +267,7 @@ export const DomainItemSchema = z.object({
  * Workspace domains query parameters
  */
 export const WorkspaceDomainsQuerySchema = z.object({
+  id: z.string(),
   page: z.number().int().positive().optional().default(1),
 });
 
@@ -223,6 +278,14 @@ export const WorkspaceDomainsDataSchema = z.object({
   workspaceId: z.string(),
   domains: z.array(DomainItemSchema),
   pagination: PaginationMetaSchema,
+});
+
+/**
+ * Domain by ID request
+ */
+export const DomainByIdSchema = z.object({
+  id: z.string(),
+  domainId: z.string(),
 });
 
 /**
@@ -247,6 +310,7 @@ export const DomainByIdDataSchema = z.object({
  * Add domain request
  */
 export const AddDomainSchema = z.object({
+  id: z.string(),
   url: z.string().url(),
 });
 
@@ -262,6 +326,8 @@ export const DomainAddDataSchema = z.object({
  * Update domain request
  */
 export const UpdateDomainSchema = z.object({
+  id: z.string(),
+  domainId: z.string(),
   url: z.string().url(),
 });
 
@@ -274,10 +340,26 @@ export const DomainUpdateDataSchema = z.object({
 });
 
 /**
+ * Domain delete request
+ */
+export const DeleteDomainSchema = z.object({
+  id: z.string(),
+  domainId: z.string(),
+});
+
+/**
  * Domain delete response
  */
 export const DomainDeleteDataSchema = z.object({
   workspaceId: z.string(),
+  domainId: z.string(),
+});
+
+/**
+ * Domain verification URL request
+ */
+export const DomainVerificationUrlSchema = z.object({
+  id: z.string(),
   domainId: z.string(),
 });
 
@@ -287,6 +369,13 @@ export const DomainDeleteDataSchema = z.object({
 export const DomainVerificationUrlDataSchema = z.object({
   verificationUrl: z.string(),
   domainUrl: z.string(),
+});
+
+/**
+ * Invite URL request
+ */
+export const InviteUrlSchema = z.object({
+  id: z.string(),
 });
 
 /**
@@ -327,6 +416,7 @@ export const LinkSettingsDataSchema = z.object({
  * Update workspace name request
  */
 export const UpdateWorkspaceNameSchema = z.object({
+  workspaceId: z.string(),
   name: z.string().min(1).max(255),
 });
 
@@ -339,10 +429,18 @@ export const WorkspaceNameUpdateDataSchema = z.object({
 });
 
 /**
+ * Workspace delete request
+ */
+export const DeleteWorkspaceSchema = z.object({
+  workspaceId: z.string(),
+});
+
+/**
  * Workspace delete response
  */
 export const WorkspaceDeleteDataSchema = z.object({
   workspaceId: z.string(),
+  success: z.boolean(),
 });
 
 /**

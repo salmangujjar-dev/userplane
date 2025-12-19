@@ -88,10 +88,9 @@ export type FileType = (typeof FILE_TYPE_VALUES)[number];
 export const PaginationMetaSchema = z.object({
   page: z.number().int().positive(),
   perPage: z.number().int().positive(),
-  totalItems: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
   totalPages: z.number().int().nonnegative(),
-  hasNextPage: z.boolean(),
-  hasPreviousPage: z.boolean(),
+  hasMore: z.boolean(),
 });
 
 /**

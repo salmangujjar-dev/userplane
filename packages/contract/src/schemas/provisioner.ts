@@ -16,10 +16,4 @@ export const CreateWorkspaceSchema = z.object({
  */
 export const WorkspaceCreateDataSchema = z.object({
   workspaceId: z.string(),
-  workspaceName: z.string(),
-  domainId: z.string(),
-  domainUrl: z.string(),
-  domainVerificationUrl: z.string(),
-  projectId: z.string(),
-  projectTitle: z.string().nullable(),
 });

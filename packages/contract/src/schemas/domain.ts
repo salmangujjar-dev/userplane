@@ -36,6 +36,8 @@ export const DomainRecordingPreferencesSchema = z.object({
  * Update domain recording preferences request
  */
 export const UpdateDomainRecordingPreferencesSchema = z.object({
+  id: z.string(),
+  domainId: z.string(),
   recordingHideSensitive: z.boolean().optional(),
   recordingCaptureClientLog: z.boolean().optional(),
   recordingCaptureServerLog: z.boolean().optional(),
@@ -46,10 +48,20 @@ export const UpdateDomainRecordingPreferencesSchema = z.object({
  * Replace domain recording preferences request
  */
 export const ReplaceDomainRecordingPreferencesSchema = z.object({
+  id: z.string(),
+  domainId: z.string(),
   recordingHideSensitive: z.boolean(),
   recordingCaptureClientLog: z.boolean(),
   recordingCaptureServerLog: z.boolean(),
   recordingCaptureNetworkLog: z.boolean(),
+});
+
+/**
+ * Get domain recording preferences request
+ */
+export const GetDomainRecordingPreferencesSchema = z.object({
+  id: z.string(),
+  domainId: z.string(),
 });
 
 /**
