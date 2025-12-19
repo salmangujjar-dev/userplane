@@ -5,7 +5,7 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
 import { recordingService, workspaceMemberService, workspaceService } from '@/api/services';
-import { createRecordingsRoutes } from './recordings.routes';
+import { createRecordingsRoutes } from './recording.routes';
 
 const recordingsRoutes = createRecordingsRoutes(
   recordingService,

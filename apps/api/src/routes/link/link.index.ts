@@ -5,7 +5,7 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '@/api/lib/types';
 import { linkService, workspaceMemberService, workspaceService } from '@/api/services';
-import { createLinksRoutes } from './links.routes';
+import { createLinksRoutes } from './link.routes';
 
 const linksRoutes = createLinksRoutes(linkService, workspaceMemberService, workspaceService);
 

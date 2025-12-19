@@ -12,12 +12,12 @@ import account from './account/account.index';
 import workspaceCreation from './provisioner/provisioner.index';
 import invite from './invite/invite.index';
 import workspace from './workspace/workspace.index';
-import links from './links/links.index';
-import recordings from './recordings/recordings.index';
+import link from './link/link.index';
+import recording from './recording/recording.index';
 
 // Public routes (token-based auth)
 import session from './session/session.index';
-import domains from './domains/domains.index';
+import domain from './domain/domain.index';
 
 export function registerRoutes(app: AppOpenAPI) {
   return (
@@ -25,15 +25,15 @@ export function registerRoutes(app: AppOpenAPI) {
       // Public routes
       .route('/', status)
       .route('/', session)
-      .route('/', domains)
+      .route('/', domain)
       // Protected routes
       .route('/account', account)
       // Workspace routes
       .route('/', workspaceCreation)
       .route('/', invite)
       .route('/', workspace)
-      .route('/', links)
-      .route('/', recordings)
+      .route('/', link)
+      .route('/', recording)
   );
 }
 
