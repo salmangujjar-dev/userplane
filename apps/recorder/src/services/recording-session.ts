@@ -244,7 +244,6 @@ export class RecordingSession {
     await this.client.session.upload.complete(
       {
         recording_id: this.recordingId,
-        state: 'complete',
       },
       {
         context: {

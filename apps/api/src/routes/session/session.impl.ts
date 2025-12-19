@@ -67,20 +67,6 @@ const requireUploadToken = os.middleware(async ({ context, next }) => {
 });
 
 /**
- * Middleware to extract x-debug header
- */
-const withDebugMode = os.middleware(async ({ context, next }) => {
-  const debugHeader = context.headers.get(REQUEST_HEADERS.DEBUG);
-  const debugMode = debugHeader?.toLowerCase() === 'true';
-
-  return next({
-    context: {
-      debugMode,
-    },
-  });
-});
-
-/**
  * GET /session - Initialize recording session
  * Converts link token to session token
  */
@@ -133,104 +119,83 @@ export const getSessionImpl = (sessionService: SessionService) => {
  * Requires session token from previous step
  */
 export const initUploadImpl = (sessionService: SessionService) => {
-  return os.upload.init
-    .use(requireSessionToken)
-    .use(withDebugMode)
-    .handler(async ({ input, context }) => {
-      try {
-        const files = input.files.map((f) => ({
-          type: f.type,
-          name: f.name,
-          size: f.size,
-          mime_type: f.mime_type,
-        }));
+  return os.upload.init.use(requireSessionToken).handler(async ({ input, context }) => {
+    try {
+      const files = input.files.map((f) => ({
+        type: f.type,
+        name: f.name,
+        size: f.size,
+        mime_type: f.mime_type,
+      }));
 
-        const result = await sessionService.initUpload(
-          context.sessionToken,
-          input.recording_duration,
-          files,
-          input.metadata,
-          context.debugMode
-        );
+      const result = await sessionService.initUpload(
+        context.sessionToken,
+        input.recording_duration,
+        files,
+        input.metadata
+      );
 
-        const message =
-          result.excludedFiles.length > 0
-            ? `Upload initialized with ${result.excludedFiles.length} file(s) excluded`
-            : 'Upload initialized successfully';
+      const message =
+        result.excludedFiles.length > 0
+          ? `Upload initialized with ${result.excludedFiles.length} file(s) excluded`
+          : 'Upload initialized successfully';
 
-        return {
-          message,
-          data: {
-            recordingId: result.recordingId,
-            uploadToken: result.uploadToken,
-            presignedUrls: result.presignedUrls,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof ForbiddenError) {
-          throw new ORPCError('FORBIDDEN', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof ConflictError) {
-          throw new ORPCError('CONFLICT', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        throw error;
+      return {
+        message,
+        data: {
+          recordingId: result.recordingId,
+          uploadToken: result.uploadToken,
+          presignedUrls: result.presignedUrls,
+        },
+      };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Invalid request body',
+        });
       }
-    });
+      if (error instanceof ValidationError) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: error.message,
+        });
+      }
+      if (error instanceof ForbiddenError) {
+        throw new ORPCError('FORBIDDEN', {
+          message: error.message,
+        });
+      }
+      if (error instanceof NotFoundError) {
+        throw new ORPCError('NOT_FOUND', {
+          message: error.message,
+        });
+      }
+      if (error instanceof ConflictError) {
+        throw new ORPCError('CONFLICT', {
+          message: error.message,
+        });
+      }
+      if (error instanceof GoneError) {
+        throw new ORPCError('GONE', {
+          status: 410,
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  });
 };
 
 /**
- * PATCH /session - Complete upload
+ * PATCH /session - Mark upload as available
  * Requires upload token from initUpload
  */
 export const completeUploadImpl = (sessionService: SessionService) => {
   return os.upload.complete.use(requireUploadToken).handler(async ({ input, context }) => {
     try {
-      const result = await sessionService.completeUpload(
-        context.uploadToken,
-        input.recording_id,
-        input.state
-      );
-
-      let message: string;
-      switch (result.status) {
-        case 'available':
-          message = 'Recording available';
-          break;
-        case 'partial':
-          message = 'Recording partially uploaded';
-          break;
-        case 'failed':
-          message = 'Recording marked as failed';
-          break;
-      }
+      const result = await sessionService.markAsAvailable(context.uploadToken, input.recording_id);
 
       return {
-        message,
+        message: 'Recording available',
         data: {
           success: result.success,
           recordingId: result.recordingId,

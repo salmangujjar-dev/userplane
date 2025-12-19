@@ -26,9 +26,9 @@ export function createSessionRoutes(sessionService: SessionService) {
   // Returns: recording_id, upload_token, presigned_urls
   sessionRoutes.post('/', initUploadHandler(sessionService));
 
-  // PATCH /session - Complete or fail upload
+  // PATCH /session - Mark upload as available
   // Headers: x-upload-token: <upload_token>
-  // Body: { recording_id, state: 'complete' | 'failed', reason? }
+  // Body: { recording_id }
   // Returns: success, recording_id, status
   sessionRoutes.patch('/', completeUploadHandler(sessionService));
 

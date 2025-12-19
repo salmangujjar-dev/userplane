@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 import { env } from '@/api/env';
+import { SESSION_CONSTANTS } from '@workspace/contract';
 
 /**
  * File type enum for uploads
@@ -62,8 +63,14 @@ export const initUploadSchema = z.object({
   recording_duration: z
     .number()
     .int()
-    .positive('Recording duration must be positive')
-    .max(180000, 'Recording duration must be less than 3 minutes'),
+    .min(
+      SESSION_CONSTANTS.MIN_DURATION_MS,
+      `Recording duration must be at least ${SESSION_CONSTANTS.MIN_DURATION_MS}ms`
+    )
+    .max(
+      SESSION_CONSTANTS.DEFAULT_MAX_DURATION_MS,
+      `Recording duration cannot exceed ${SESSION_CONSTANTS.DEFAULT_MAX_DURATION_MS}ms`
+    ),
   files: z
     .array(uploadFileSchema)
     .min(1, 'At least one file is required')
@@ -72,19 +79,10 @@ export const initUploadSchema = z.object({
 });
 
 /**
- * Upload state enum
- * - complete: All files uploaded successfully
- * - partial: Video uploaded, some secondary files missing
- * - failed: Upload failed entirely
- */
-export const uploadStateSchema = z.enum(['complete', 'partial', 'failed']);
-
-/**
  * PATCH /api/v1/session request body
  */
 export const completeUploadSchema = z.object({
   recording_id: z.string().min(1, 'Recording ID is required'),
-  state: uploadStateSchema,
 });
 
 /**
@@ -100,7 +98,7 @@ export type RecordingMetaInput = z.infer<typeof recordingMetaSchema>;
 /**
  * Terminal states - once in these states, no further transitions allowed
  */
-export const TERMINAL_UPLOAD_STATES = ['available', 'failed', 'expired', 'purged'] as const;
+export const TERMINAL_UPLOAD_STATES = ['available', 'expired', 'purged'] as const;
 
 /**
  * Terminal upload state type derived from constant
@@ -110,7 +108,7 @@ export type TerminalUploadState = (typeof TERMINAL_UPLOAD_STATES)[number];
 /**
  * Non-terminal states that allow transitions
  */
-export const ACTIVE_UPLOAD_STATES = ['pending', 'partial'] as const;
+export const ACTIVE_UPLOAD_STATES = ['pending'] as const;
 
 /**
  * Active upload state type derived from constant
@@ -126,7 +124,7 @@ export function isTerminalState(status: string): boolean {
 
 /**
  * Validation constraints
- * Expiry times are loaded from environment variables with fallbacks
+ * Combines shared constants from contract with environment-specific token expiry times
  */
 export const SESSION_CONSTRAINTS = {
   // Token expiry times in seconds from environment
@@ -134,41 +132,8 @@ export const SESSION_CONSTRAINTS = {
   UPLOAD_TOKEN_EXPIRY: env.session.uploadTokenExpiry,
   PRESIGNED_URL_EXPIRY: env.session.presignedUrlExpiry,
 
-  // File size limits in bytes
-  MAX_FILE_SIZE: 500 * 1024 * 1024, // 500MB
-  MAX_VIDEO_SIZE: 500 * 1024 * 1024, // 500MB
-  MAX_THUMBNAIL_SIZE: 10 * 1024 * 1024, // 10MB
-  MAX_LOG_SIZE: 50 * 1024 * 1024, // 50MB
-
-  // Allowed MIME types per file type
-  // Video: Support base container formats and common codec specifications
-  ALLOWED_VIDEO_TYPES: [
-    'video/webm',
-    'video/webm;codecs=vp8',
-    'video/webm;codecs=vp9',
-    'video/webm;codecs=vp8.0',
-    'video/webm;codecs=vp9.0',
-    'video/webm;codecs=h264',
-    'video/webm;codecs=avc1',
-    'video/webm;codecs=av1',
-    'video/webm;codecs=vp8,opus',
-    'video/webm;codecs=vp9,opus',
-    'video/webm;codecs=h264,opus',
-    'video/webm;codecs=avc1,opus',
-    'video/mp4',
-    'video/mp4;codecs=avc1',
-    'video/mp4;codecs=h264',
-    'video/x-matroska',
-    'video/x-matroska;codecs=avc1',
-    'video/ogg',
-  ] as const,
-
-  ALLOWED_THUMBNAIL_TYPES: ['image/png', 'image/jpeg', 'image/webp'] as const,
-  ALLOWED_CONSOLE_LOG_TYPES: ['application/x-ndjson', 'application/ndjson'] as const,
-  ALLOWED_NETWORK_LOG_TYPES: ['application/json'] as const,
-
-  // Base container formats for flexible validation
-  ALLOWED_VIDEO_CONTAINERS: ['video/webm', 'video/mp4', 'video/x-matroska', 'video/ogg'] as const,
+  // Shared constants from contract package
+  ...SESSION_CONSTANTS,
 } as const;
 
 /**
@@ -183,8 +148,8 @@ export function validateFileMimeType(
     case 'video': {
       // Check exact match first
       if (
-        SESSION_CONSTRAINTS.ALLOWED_VIDEO_TYPES.includes(
-          mimeType as (typeof SESSION_CONSTRAINTS.ALLOWED_VIDEO_TYPES)[number]
+        SESSION_CONSTRAINTS.VIDEO_MIME_TYPES.includes(
+          mimeType as (typeof SESSION_CONSTRAINTS.VIDEO_MIME_TYPES)[number]
         )
       ) {
         return true;

@@ -3,6 +3,8 @@
  * Functions for detecting browser, OS, and system capabilities
  */
 
+import { VIDEO_MIME_TYPES } from '@workspace/contract';
+
 export interface BrowserInfo {
   name: string;
   version: string | null;
@@ -172,50 +174,6 @@ export function isSystemAudioSupported(): boolean {
 }
 
 /**
- * Video MIME types ordered by compression efficiency and quality
- *
- * Priority order:
- * 1. AV1 - Best compression, newest codec (Chrome 100+, Firefox 113+)
- * 2. VP9 - Excellent compression, widely supported
- * 3. H.264 - Hardware acceleration, good compatibility
- * 4. VP8 - Older but universal WebM support
- * 5. Generic containers as fallback
- */
-const VIDEO_MIME_TYPES = [
-  // AV1 codec (best compression, ~30% better than VP9)
-  'video/webm;codecs=av1,opus',
-  'video/webm;codecs=av1',
-  'video/mp4;codecs=av01.0.04M.08',
-
-  // VP9 codec (excellent compression)
-  'video/webm;codecs=vp9,opus',
-  'video/webm;codecs=vp9.0,opus',
-  'video/webm;codecs=vp9,pcm',
-  'video/webm;codecs=vp9',
-  'video/webm;codecs=vp9.0',
-
-  // H.264 codec (hardware acceleration, Safari support)
-  'video/webm;codecs=h264,opus',
-  'video/webm;codecs=avc1,opus',
-  'video/mp4;codecs=h264,aac',
-  'video/mp4;codecs=avc1.42E01E,mp4a.40.2', // Baseline
-  'video/mp4;codecs=avc1.4D401F,mp4a.40.2', // Main
-  'video/mp4;codecs=avc1.64001F,mp4a.40.2', // High
-
-  // VP8 codec (good compatibility)
-  'video/webm;codecs=vp8,opus',
-  'video/webm;codecs=vp8.0,opus',
-  'video/webm;codecs=vp8,pcm',
-  'video/webm;codecs=vp8,vp9,opus',
-  'video/webm;codecs=vp8',
-  'video/webm;codecs=vp8.0',
-
-  // Generic containers (last resort)
-  'video/webm',
-  'video/mp4',
-] as const;
-
-/**
  * Get supported video MIME types for MediaRecorder
  * Returns types in order of preference (best compression first)
  */
@@ -223,7 +181,7 @@ export function getSupportedMimeTypes(): string[] {
   if (typeof MediaRecorder === 'undefined') {
     return [];
   }
-  return VIDEO_MIME_TYPES.filter((type) => MediaRecorder.isTypeSupported(type));
+  return VIDEO_MIME_TYPES.filter((type: string) => MediaRecorder.isTypeSupported(type));
 }
 
 /**

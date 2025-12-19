@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { UploadStatusSchema, SortDirectionSchema, PaginationMetaSchema } from './common';
+import { RECORDING_DURATION_LIMITS } from '../constants/session';
 
 /**
  * Recording schemas
@@ -58,7 +59,11 @@ export const RecordingItemSchema = z.object({
   creatorName: z.string(),
   creatorEmail: z.string(),
   uploadStatus: UploadStatusSchema,
-  recordingDurationMs: z.number().int().nonnegative().max(180000), // 3 minutes
+  recordingDurationMs: z
+    .number()
+    .int()
+    .nonnegative()
+    .max(RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS),
   recordingMetadata: RecordingMetadataSchema,
   createdAt: z.string(),
 });

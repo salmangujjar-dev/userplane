@@ -437,10 +437,10 @@ export class LinkRepository {
 
   /**
    * Count recordings in terminal states for a link
-   * Terminal states: available, failed, expired, purged
+   * Terminal states: available, expired, purged
    * Includes both deleted and non-deleted recordings to prevent link reuse
    * Used to check single-use link restrictions for session creation
-   * Non-terminal states (pending, partial) allow retry with new session tokens
+   * Non-terminal state (pending) allows retry with new session tokens
    */
   async countTerminalRecordingsForLink(linkId: string): Promise<number> {
     const terminalStatuses = [...getUploadStatusesForGroup('TERMINAL')];

@@ -8,6 +8,7 @@ import {
   DEFAULT_PRIMARY_COLOR,
   DEFAULT_COMPANY_NAME,
 } from '@/constants';
+import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
 
 /**
  * Session preferences from JWT token
@@ -51,7 +52,7 @@ export interface RecordingPreferences {
   headerText: string | null;
   footnoteText: string | null;
   primaryColor: string | null;
-  maxDurationMs: number; // milliseconds (default 180000 = 3 minutes)
+  maxDurationMs: number; // milliseconds (default from RECORDING_DURATION_LIMITS)
   requestedBy: string | null;
 }
 
@@ -66,7 +67,7 @@ export function toRecordingPreferences(prefs: SessionPreferences): RecordingPref
     headerText: prefs.rh,
     footnoteText: prefs.rf,
     primaryColor: prefs.rpc,
-    maxDurationMs: prefs.rmd ? prefs.rmd : 180000, // Convert seconds to ms, default 3 minutes
+    maxDurationMs: prefs.rmd ?? RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS,
     requestedBy: prefs.rrb || null,
   };
 }

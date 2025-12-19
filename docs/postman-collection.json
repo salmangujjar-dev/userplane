@@ -1757,7 +1757,7 @@
     },
     {
       "name": "Session (Upload)",
-      "description": "Recording session and upload endpoints. Public endpoints using token-based authentication (no cookie auth required).\n\nWorkflow:\n1. GET /session - Initialize session with link_id, receive session_token\n2. POST /session - Initialize upload with session_token, receive upload_token and presigned URLs\n3. Upload files directly to presigned URLs\n4. PATCH /session - Complete or mark upload as partial/failed\n\nToken Lifetimes:\n- Session Token: 180 minutes\n- Upload Token: 120 minutes\n- Presigned URLs: 90 minutes",
+      "description": "Recording session and upload endpoints. Public endpoints using token-based authentication (no cookie auth required).\n\nWorkflow:\n1. GET /session - Initialize session with link_id, receive session_token\n2. POST /session - Initialize upload with session_token, receive upload_token and presigned URLs\n3. Upload files directly to presigned URLs\n4. PATCH /session - Mark upload as available\n\nToken Lifetimes:\n- Session Token: 180 minutes\n- Upload Token: 120 minutes\n- Presigned URLs: 90 minutes",
       "item": [
         {
           "name": "Initialize Session",
@@ -1809,7 +1809,7 @@
           "response": []
         },
         {
-          "name": "Complete Upload",
+          "name": "Mark Upload Available",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1825,70 +1825,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"complete\"\n}"
+              "raw": "{\n  \"recording_id\": \"{{recordingId}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "session"]
             },
-            "description": "Mark upload as complete after all files uploaded successfully.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- All expected files must exist in storage with correct sizes\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'complete'\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'available')"
-          },
-          "response": []
-        },
-        {
-          "name": "Mark Upload Partial",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Upload-Token",
-                "value": "{{uploadToken}}",
-                "description": "Upload token from Initialize Upload"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"partial\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "session"]
-            },
-            "description": "Mark upload as partial when video uploaded but some secondary files failed.\n\nUse case: Video and thumbnail uploaded, but optional files (console_log or network_log) failed. The recording will still be accessible with the files that were successfully uploaded.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n- Required files (video, thumbnail) must be successfully uploaded\n- The service verifies files in storage before setting status\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'partial'\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'partial')"
-          },
-          "response": []
-        },
-        {
-          "name": "Mark Upload Failed",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Upload-Token",
-                "value": "{{uploadToken}}",
-                "description": "Upload token from Initialize Upload"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"recording_id\": \"{{recordingId}}\",\n  \"state\": \"failed\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/session",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "session"]
-            },
-            "description": "Mark upload as failed when video upload fails or user cancels.\n\nUse case: Critical files (video or thumbnail) failed to upload, making the recording unusable.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' or 'partial' state\n\nBody fields:\n- recording_id (required): ID of the recording\n- state (required): Must be 'failed'\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'failed')"
+            "description": "Mark upload as available after all files uploaded successfully.\n\nValidations:\n- Upload token must be valid and not expired\n- Recording ID must match token's recording ID\n- Recording must be in 'pending' state\n- All expected files must exist in storage with correct sizes\n\nBody fields:\n- recording_id (required): ID of the recording\n\nResponse Headers:\n- X-Upload-Token-Remaining: Seconds remaining on upload token\n\nResponse data: UploadCompleteData (success, recordingId, status: 'available')"
           },
           "response": []
         }

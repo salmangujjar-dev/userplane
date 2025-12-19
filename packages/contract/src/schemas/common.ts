@@ -72,14 +72,7 @@ export type LinkType = (typeof LINK_TYPE_VALUES)[number];
 /**
  * Recording upload status values
  */
-export const UPLOAD_STATUS_VALUES = [
-  'pending',
-  'partial',
-  'available',
-  'failed',
-  'expired',
-  'purged',
-] as const;
+export const UPLOAD_STATUS_VALUES = ['pending', 'available', 'expired', 'purged'] as const;
 export type UploadStatus = (typeof UPLOAD_STATUS_VALUES)[number];
 
 /**
@@ -174,9 +167,3 @@ export const UploadStatusSchema = z.enum(UPLOAD_STATUS_VALUES);
  * Synced with database: FILE_TYPE_VALUES
  */
 export const FileTypeSchema = z.enum(FILE_TYPE_VALUES);
-
-/**
- * Upload state enum
- * API-specific: used in upload completion flow, not stored in database
- */
-export const UploadStateSchema = z.enum(['complete', 'partial', 'failed']);
