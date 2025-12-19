@@ -53,6 +53,7 @@ export interface DomainByIdData {
     recordingHideSensitive: boolean;
     recordingCaptureClientLog: boolean;
     recordingCaptureServerLog: boolean;
+    recordingCaptureNetworkLog: boolean;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -64,6 +65,7 @@ export interface DomainRecordingPreferencesData {
   recordingHideSensitive: boolean;
   recordingCaptureClientLog: boolean;
   recordingCaptureServerLog: boolean;
+  recordingCaptureNetworkLog: boolean;
 }
 
 export interface DomainRecordingPreferencesUpdateData {

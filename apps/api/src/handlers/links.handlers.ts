@@ -214,7 +214,8 @@ export function createLinkHandler(linkService: LinkService) {
               created.domainStatus,
               created.recordingHideSensitive,
               created.recordingCaptureClientLog,
-              created.recordingCaptureServerLog
+              created.recordingCaptureServerLog,
+              created.recordingCaptureNetworkLog
             ),
             createdAt: created.createdAt,
             domain: {
@@ -342,7 +343,8 @@ export function updateLinkHandler(linkService: LinkService) {
               updated.domainStatus,
               updated.recordingHideSensitive,
               updated.recordingCaptureClientLog,
-              updated.recordingCaptureServerLog
+              updated.recordingCaptureServerLog,
+              updated.recordingCaptureNetworkLog
             ),
             domain: {
               id: updated.domainId,

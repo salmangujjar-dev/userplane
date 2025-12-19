@@ -398,6 +398,7 @@ export class SessionService {
       rhs: linkData.recordingHideSensitive,
       rccl: linkData.recordingCaptureClientLog,
       rcsl: linkData.recordingCaptureServerLog,
+      rcnl: linkData.recordingCaptureNetworkLog,
       rcn: linkData.recordingCompanyName,
       rclp: linkData.recordingCompanyLogoPath,
       rh: linkData.recordingHeader,
@@ -483,17 +484,13 @@ export class SessionService {
       throw new ValidationError('Video file size must be positive');
     }
 
-    if (!thumbnailFile) {
-      throw new ValidationError('Thumbnail file is required');
-    }
-    if (thumbnailFile.size <= 0) {
-      throw new ValidationError('Thumbnail file size must be positive');
-    }
-
     // Process each file
     for (const file of files) {
       // Skip validation for optional files with size <= 0 (they won't be uploaded)
-      if ((file.type === 'console_log' || file.type === 'network_log') && file.size <= 0) {
+      if (
+        (file.type === 'console_log' || file.type === 'network_log' || file.type === 'thumbnail') &&
+        file.size <= 0
+      ) {
         excludedFiles.push({
           type: file.type,
           reason: 'File size is zero or negative',
@@ -513,7 +510,7 @@ export class SessionService {
         continue;
       }
 
-      if (file.type === 'network_log' && file.size > 0 && !prefs.rcsl) {
+      if (file.type === 'network_log' && file.size > 0 && !prefs.rcnl) {
         if (debugMode) {
           throw new ValidationError('Network log capture is not enabled for this workspace');
         }

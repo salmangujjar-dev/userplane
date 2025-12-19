@@ -14,6 +14,7 @@ export interface SessionPreferences {
   rhs: boolean; // recording_hide_sensitive
   rccl: boolean; // recording_capture_client_log
   rcsl: boolean; // recording_capture_server_log
+  rcnl: boolean; // recording_capture_network_log
   rcn: string | null; // recording_company_name
   rclp: string | null; // recording_company_logo_path
   rh: string | null; // recording_header
@@ -143,6 +144,7 @@ export interface LinkWithWorkspacePrefs {
     recordingHideSensitive: boolean;
     recordingCaptureClientLog: boolean;
     recordingCaptureServerLog: boolean;
+    recordingCaptureNetworkLog: boolean;
     recordingCompanyName: string | null;
     recordingCompanyLogoPath: string | null;
     recordingHeader: string | null;

@@ -138,6 +138,7 @@ export function getDomainRecordingPreferencesHandler(domainService: DomainServic
           recordingHideSensitive: domain.recordingHideSensitive,
           recordingCaptureClientLog: domain.recordingCaptureClientLog,
           recordingCaptureServerLog: domain.recordingCaptureServerLog,
+          recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
         },
       };
 
@@ -286,6 +287,7 @@ export function replaceDomainRecordingPreferencesHandler(domainService: DomainSe
         recordingHideSensitive: z.boolean(),
         recordingCaptureClientLog: z.boolean(),
         recordingCaptureServerLog: z.boolean(),
+        recordingCaptureNetworkLog: z.boolean(),
       });
 
       const preferences = replaceSchema.parse(body);

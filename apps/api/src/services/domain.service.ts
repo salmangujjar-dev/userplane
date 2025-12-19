@@ -323,6 +323,7 @@ export class DomainService {
       recordingHideSensitive: boolean;
       recordingCaptureClientLog: boolean;
       recordingCaptureServerLog: boolean;
+      recordingCaptureNetworkLog: boolean;
     }>,
     options?: { tx?: Transaction }
   ) {
@@ -371,6 +372,7 @@ export class DomainService {
       recordingHideSensitive: boolean;
       recordingCaptureClientLog: boolean;
       recordingCaptureServerLog: boolean;
+      recordingCaptureNetworkLog: boolean;
     },
     options?: { tx?: Transaction }
   ) {
