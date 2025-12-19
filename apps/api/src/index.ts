@@ -3,8 +3,6 @@ import { logger as honoLogger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import { prettyJSON } from 'hono/pretty-json';
 import { serveStatic } from 'hono/bun';
-import createRouter from '@/api/lib/create-router';
-import { registerRoutes } from '@/api/routes';
 import { env, logConfig } from '@/api/env';
 import { auth } from '@/api/clients/auth';
 import { createAppLogger } from '@workspace/logger';
@@ -47,11 +45,11 @@ app.on(['POST', 'GET'], '/api/auth/*', (c) => {
   return auth.handler(c.req.raw);
 });
 
-// OpenAPI handler - handles RESTful requests (v2)
+// OpenAPI handler - handles RESTful requests
 // Respects HTTP methods and paths defined in the contract
-app.use('/api/v2/*', async (c, next) => {
+app.use('/api/v1/*', async (c, next) => {
   const { matched, response } = await openAPIHandler.handle(c.req.raw, {
-    prefix: '/api/v2',
+    prefix: '/api/v1',
     context: {
       headers: c.req.raw.headers,
     },
@@ -63,12 +61,6 @@ app.use('/api/v2/*', async (c, next) => {
 
   await next();
 });
-
-// API v1 routes - all routes are defined in routes/index.ts
-const apiRoutes = registerRoutes(createRouter());
-
-// Mount API routes
-app.route('/api/v1', apiRoutes);
 
 // 404 handler
 app.notFound((c) => {

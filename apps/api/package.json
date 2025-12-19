@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./routes": "./src/routes/index.ts"
+    "./routes": "./src/routes/index.ts",
+    "./routes/api.router": "./src/routes/api.router.ts"
   },
   "scripts": {
     "dev": "bun run --hot src/index.ts",
