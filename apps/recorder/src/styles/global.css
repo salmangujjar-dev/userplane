@@ -1,2 +1,16 @@
 /* Import shared UI styles from workspace */
 @import "@workspace/ui/globals.css";
+
+/* Custom animations */
+@keyframes pulse-fast {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

@@ -31,3 +31,6 @@ export { decodeJwtPayload, isJwtExpired, getJwtTimeToExpiry } from './jwt';
 
 // Video utilities
 export { generateVideoThumbnail, blobToDataUrl } from './video-thumbnail';
+
+// Color utilities
+export { lightenColor, darkenColor } from './color';

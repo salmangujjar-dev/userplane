@@ -6,15 +6,14 @@
 import { useEffect, useState } from 'react';
 import { useRecordingFlow } from '@/hooks/useRecordingFlow';
 import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
-import PreRecordingErrorScreen from './PreRecordingErrorScreen';
-import PostRecordingErrorScreen from './PostRecordingErrorScreen';
+import ErrorScreen from './ErrorScreen';
 import PreRecordingScreen from './PreRecordingScreen';
 import PreRecordingCountdownScreen from './PreRecordingCountdownScreen';
 import RecordingInProgressScreen from './RecordingInProgressScreen';
 import PostRecordingReviewScreen from './PostRecordingReviewScreen';
 import PostRecordingUploadScreen from './PostRecordingUploadScreen';
 import PostRecordingAckScreen from './PostRecordingAckScreen';
-import { PRE_RECORDING_ERROR_COPY } from '@/constants/copy';
+import { PRE_RECORDING_ERROR_COPY, POST_RECORDING_ERROR_COPY } from '@/constants/copy';
 
 interface RecordingAppProps {
   linkToken?: string | null;
@@ -68,10 +67,7 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
       const isPostRecordingError = !!state.recordingBlob;
       const isPermissionError = isPermissionDeniedError(state.error);
 
-      console.log(
-        '[RecordingApp] Rendering:',
-        isPostRecordingError ? 'PostRecordingErrorScreen' : 'PreRecordingErrorScreen'
-      );
+      console.log('[RecordingApp] Rendering: ErrorScreen');
       console.log('[RecordingApp] Has recording blob:', !!state.recordingBlob);
       console.log('[RecordingApp] Is permission error:', isPermissionError);
       console.log('[RecordingApp] Error title:', getErrorTitle(state.error));
@@ -79,22 +75,23 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
 
       if (isPostRecordingError) {
         return (
-          <PostRecordingErrorScreen
+          <ErrorScreen
             title={getErrorTitle(state.error)}
             subtitle={getErrorSubtitle(state.error)}
             preferences={state.preferences}
-            onStartOver={actions.startOver}
+            primaryActionText={POST_RECORDING_ERROR_COPY.startOverButton}
+            onPrimaryAction={actions.startOver}
           />
         );
       }
 
       return (
-        <PreRecordingErrorScreen
+        <ErrorScreen
           title={getErrorTitle(state.error)}
           subtitle={getErrorSubtitle(state.error)}
-          actionTitle={getActionTitle(isPermissionError)}
           preferences={state.preferences}
-          onAction={getActionHandler(isPermissionError)}
+          primaryActionText={getActionTitle(isPermissionError)}
+          onPrimaryAction={getActionHandler(isPermissionError)}
         />
       );
 

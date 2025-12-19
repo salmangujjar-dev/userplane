@@ -84,7 +84,7 @@ export default function RecordingInProgressScreen({
                 className="w-full h-full object-contain"
               />
               <div className="absolute top-3 right-3 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-md">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse-fast" />
                 <span className="text-xs font-semibold">REC</span>
               </div>
             </div>

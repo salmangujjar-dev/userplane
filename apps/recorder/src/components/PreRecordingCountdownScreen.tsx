@@ -6,6 +6,7 @@
 import { useEffect, useRef } from 'react';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
+import { lightenColor } from '@/utils';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PreRecordingCountdownScreenProps {
@@ -43,6 +44,7 @@ export default function PreRecordingCountdownScreen({
   const customizeLink = preferences.customizeLink;
   const primaryColor =
     customizeLink && preferences.primaryColor ? preferences.primaryColor : DEFAULT_PRIMARY_COLOR;
+  const countdownColor = lightenColor(primaryColor, 30);
 
   return (
     <RecordingScreenLayout
@@ -69,7 +71,7 @@ export default function PreRecordingCountdownScreen({
                 className="w-full h-full object-contain"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="text-9xl font-bold animate-pulse" style={{ color: primaryColor }}>
+                <div className="text-9xl font-bold animate-pulse" style={{ color: countdownColor }}>
                   {countdownSeconds}
                 </div>
               </div>
@@ -77,7 +79,10 @@ export default function PreRecordingCountdownScreen({
           </div>
         ) : (
           <div className="mb-6 sm:mb-8 flex flex-col items-center">
-            <div className="text-9xl font-bold mb-4 animate-pulse" style={{ color: primaryColor }}>
+            <div
+              className="text-9xl font-bold mb-4 animate-pulse"
+              style={{ color: countdownColor }}
+            >
               {countdownSeconds}
             </div>
             <img
