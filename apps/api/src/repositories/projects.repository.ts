@@ -20,7 +20,7 @@ export class ProjectRepository {
     const [project] = await dbClient
       .insert(projects)
       .values({
-        id: data.id,
+        projectId: data.projectId,
         workspaceId: data.workspaceId,
         projectTitle: data.projectTitle,
         isDefault: data.isDefault,
@@ -34,11 +34,11 @@ export class ProjectRepository {
   /**
    * Find project by ID
    */
-  async findById(id: string) {
+  async findById(projectId: string) {
     const [project] = await this.db
       .select()
       .from(projects)
-      .where(and(eq(projects.id, id), eq(projects.isDeleted, false)))
+      .where(and(eq(projects.projectId, projectId), eq(projects.isDeleted, false)))
       .limit(1);
 
     return project || null;
@@ -48,14 +48,14 @@ export class ProjectRepository {
    * Check if project is soft-deleted
    * Returns true if project exists but is marked as deleted
    */
-  async isSoftDeleted(id: string) {
+  async isSoftDeleted(projectId: string) {
     const [project] = await this.db
       .select({
-        id: projects.id,
+        projectId: projects.projectId,
         isDeleted: projects.isDeleted,
       })
       .from(projects)
-      .where(eq(projects.id, id))
+      .where(eq(projects.projectId, projectId))
       .limit(1);
 
     return project ? project.isDeleted : null;
@@ -84,7 +84,7 @@ export class ProjectRepository {
    * Update project
    */
   async update(
-    id: string,
+    projectId: string,
     data: Partial<Pick<CreateProjectInput, 'projectTitle' | 'isDefault'>>,
     options?: { tx?: Transaction }
   ) {
@@ -93,7 +93,7 @@ export class ProjectRepository {
     const [updated] = await dbClient
       .update(projects)
       .set(data)
-      .where(and(eq(projects.id, id), eq(projects.isDeleted, false)))
+      .where(and(eq(projects.projectId, projectId), eq(projects.isDeleted, false)))
       .returning();
 
     return updated;
@@ -144,7 +144,7 @@ export class ProjectRepository {
       .where(
         and(
           eq(projects.workspaceId, workspaceId),
-          ne(projects.id, excludeProjectId),
+          ne(projects.projectId, excludeProjectId),
           eq(projects.isDeleted, false)
         )
       )
@@ -157,7 +157,7 @@ export class ProjectRepository {
    * Soft delete a project
    * Sets isDeleted to true and updates deletedAt timestamp
    */
-  async softDelete(id: string, options?: { tx?: Transaction }) {
+  async softDelete(projectId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [deleted] = await dbClient
@@ -166,7 +166,7 @@ export class ProjectRepository {
         isDeleted: true,
         deletedAt: new Date(),
       })
-      .where(and(eq(projects.id, id), eq(projects.isDeleted, false)))
+      .where(and(eq(projects.projectId, projectId), eq(projects.isDeleted, false)))
       .returning();
 
     return deleted || null;

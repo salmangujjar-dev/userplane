@@ -44,7 +44,7 @@ export class DomainService {
 
     return this.deps.domainRepo.create(
       {
-        id: generateDomainId(),
+        domainId: generateDomainId(),
         workspaceId: params.workspaceId,
         url: normalized,
         domainStatus: params.status,

@@ -173,7 +173,7 @@ export class LinkService {
       if (!defaultProject) {
         throw new ValidationError('No default project found for workspace');
       }
-      projectId = defaultProject.id;
+      projectId = defaultProject.projectId;
     }
 
     // Guard rail: Check if project is deleted
@@ -202,7 +202,7 @@ export class LinkService {
     // Currently only 'recording' type is supported
     const link = await this.deps.linkRepo.create(
       {
-        id,
+        linkId: id,
         workspaceId: params.workspaceId,
         projectId,
         domainId: params.domainId,
@@ -226,7 +226,7 @@ export class LinkService {
 
     // Return link with domain info - construct explicit object to ensure proper types
     return {
-      id: link.id,
+      linkId: link.linkId,
       workspaceId: link.workspaceId,
       projectId: link.projectId,
       domainId: link.domainId,
@@ -289,7 +289,7 @@ export class LinkService {
 
     // Map database rows to response shape with flattened linkProvider fields and linkURL
     const links: LinkItem[] = rows.map((row) => ({
-      id: row.id,
+      linkId: row.linkId,
       linkTitle: row.linkTitle,
       linkType: row.linkType,
       linkReusable: row.linkReusable,
@@ -297,7 +297,7 @@ export class LinkService {
       linkProviderId: row.linkProviderId,
       linkProviderReference: row.linkProviderRef,
       linkURL: this.generateLinkURL(
-        row.id,
+        row.linkId,
         row.domainUrl,
         row.domainStatus,
         row.recordingHideSensitive,
@@ -307,15 +307,15 @@ export class LinkService {
       ),
       createdAt: row.createdAt,
       project: {
-        id: row.projectId,
+        projectId: row.projectId,
         title: row.projectTitle,
       },
       creator: {
-        id: row.creatorId,
+        workspaceMemberId: row.creatorId,
         name: row.creatorName,
       },
       domain: {
-        id: row.domainId,
+        domainId: row.domainId,
         url: row.domainUrl,
         status: row.domainStatus,
       },
@@ -365,7 +365,7 @@ export class LinkService {
 
     // Return updated link with domain info - construct explicit object to ensure proper types
     return {
-      id: updated.id,
+      linkId: updated.linkId,
       workspaceId: updated.workspaceId,
       projectId: updated.projectId,
       domainId: updated.domainId,
@@ -412,7 +412,7 @@ export class LinkService {
 
     // Map to LinkItem response shape with linkURL
     return {
-      id: linkWithDetails.id,
+      linkId: linkWithDetails.linkId,
       linkTitle: linkWithDetails.linkTitle,
       linkType: linkWithDetails.linkType,
       linkReusable: linkWithDetails.linkReusable,
@@ -420,7 +420,7 @@ export class LinkService {
       linkProviderId: linkWithDetails.linkProviderId,
       linkProviderReference: linkWithDetails.linkProviderRef,
       linkURL: this.generateLinkURL(
-        linkWithDetails.id,
+        linkWithDetails.linkId,
         linkWithDetails.domainUrl,
         linkWithDetails.domainStatus,
         linkWithDetails.recordingHideSensitive,
@@ -430,15 +430,15 @@ export class LinkService {
       ),
       createdAt: linkWithDetails.createdAt,
       project: {
-        id: linkWithDetails.projectId,
+        projectId: linkWithDetails.projectId,
         title: linkWithDetails.projectTitle,
       },
       creator: {
-        id: linkWithDetails.creatorId,
+        workspaceMemberId: linkWithDetails.creatorId,
         name: linkWithDetails.creatorName,
       },
       domain: {
-        id: linkWithDetails.domainId,
+        domainId: linkWithDetails.domainId,
         url: linkWithDetails.domainUrl,
         status: linkWithDetails.domainStatus,
       },

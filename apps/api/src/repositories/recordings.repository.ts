@@ -29,7 +29,7 @@ export type { RecordingMeta, RecordingSystemMetadata, RecordingCustomMetadata };
  * Shape of recording list item with joined data
  */
 export interface RecordingListRow {
-  id: string;
+  recordingId: string;
   recordingThumbnailRef: string | null;
   recordingDurationMs: number | null;
   createdAt: Date;
@@ -42,7 +42,7 @@ export interface RecordingListRow {
  * Uses inferred types from database schema to avoid duplication
  */
 export interface RecordingDetailRow {
-  id: string;
+  recordingId: string;
   workspaceId: string;
   projectId: string;
   recordingLinkId: string;
@@ -81,7 +81,7 @@ export type Transaction = Parameters<Parameters<DbClient['transaction']>[0]>[0];
  * Input for creating a recording
  */
 export interface CreateRecordingInput {
-  id: string;
+  recordingId: string;
   recordingLinkId: string;
   workspaceId: string;
   projectId: string;
@@ -193,15 +193,15 @@ export class RecordingRepository {
 
     const results = await this.db
       .select({
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingDurationMs: recordings.recordingDurationMs,
         createdAt: recordings.createdAt,
-        creatorId: workspaceMembers.id,
+        creatorId: workspaceMembers.workspaceMemberId,
         creatorName: user.name,
       })
       .from(recordings)
-      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.id))
+      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.workspaceMemberId))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
       .where(whereConditions)
       .orderBy(orderBy)
@@ -229,11 +229,11 @@ export class RecordingRepository {
   /**
    * Find recording by ID
    */
-  async findById(id: string) {
+  async findById(recordingId: string) {
     const [recording] = await this.db
       .select()
       .from(recordings)
-      .where(and(eq(recordings.id, id), eq(recordings.isDeleted, false)))
+      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.isDeleted, false)))
       .limit(1);
 
     return recording || null;
@@ -244,7 +244,7 @@ export class RecordingRepository {
    * Defaults to 'AVAILABLE' status group if not specified
    */
   async findByIdWithStatusGroup(
-    id: string,
+    recordingId: string,
     statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
   ) {
     const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
@@ -254,7 +254,7 @@ export class RecordingRepository {
       .from(recordings)
       .where(
         and(
-          eq(recordings.id, id),
+          eq(recordings.recordingId, recordingId),
           eq(recordings.isDeleted, false),
           inArray(recordings.uploadStatus, statuses)
         )
@@ -270,7 +270,7 @@ export class RecordingRepository {
    * Returns full recording details including recording link, creator, project, and domain
    */
   async findByIdWithDetailsAndStatusGroup(
-    id: string,
+    recordingId: string,
     statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
   ): Promise<RecordingDetailRow | null> {
     const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
@@ -278,7 +278,7 @@ export class RecordingRepository {
     const [result] = await this.db
       .select({
         // Recording fields
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         workspaceId: recordings.workspaceId,
         projectId: recordings.projectId,
         recordingLinkId: recordings.recordingLinkId,
@@ -292,7 +292,7 @@ export class RecordingRepository {
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
         // Creator info
-        creatorId: workspaceMembers.id,
+        creatorId: workspaceMembers.workspaceMemberId,
         creatorName: user.name,
         // Link info
         linkTitle: links.linkTitle,
@@ -304,18 +304,18 @@ export class RecordingRepository {
         // Project info
         projectTitle: projects.projectTitle,
         // Domain info
-        domainId: domains.id,
+        domainId: domains.domainId,
         domainUrl: domains.domainUrl,
       })
       .from(recordings)
-      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.id))
+      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.workspaceMemberId))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
-      .innerJoin(links, eq(recordings.recordingLinkId, links.id))
-      .innerJoin(projects, eq(recordings.projectId, projects.id))
-      .innerJoin(domains, eq(links.domainId, domains.id))
+      .innerJoin(links, eq(recordings.recordingLinkId, links.linkId))
+      .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
       .where(
         and(
-          eq(recordings.id, id),
+          eq(recordings.recordingId, recordingId),
           eq(recordings.isDeleted, false),
           inArray(recordings.uploadStatus, statuses)
         )
@@ -336,11 +336,11 @@ export class RecordingRepository {
    * Find recording by ID with all related data joined
    * Returns full recording details including recording link, creator, project, and domain
    */
-  async findByIdWithDetails(id: string): Promise<RecordingDetailRow | null> {
+  async findByIdWithDetails(recordingId: string): Promise<RecordingDetailRow | null> {
     const [result] = await this.db
       .select({
         // Recording fields
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         workspaceId: recordings.workspaceId,
         projectId: recordings.projectId,
         recordingLinkId: recordings.recordingLinkId,
@@ -354,7 +354,7 @@ export class RecordingRepository {
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
         // Creator info
-        creatorId: workspaceMembers.id,
+        creatorId: workspaceMembers.workspaceMemberId,
         creatorName: user.name,
         // Link info
         linkTitle: links.linkTitle,
@@ -366,16 +366,16 @@ export class RecordingRepository {
         // Project info
         projectTitle: projects.projectTitle,
         // Domain info
-        domainId: domains.id,
+        domainId: domains.domainId,
         domainUrl: domains.domainUrl,
       })
       .from(recordings)
-      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.id))
+      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.workspaceMemberId))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
-      .innerJoin(links, eq(recordings.recordingLinkId, links.id))
-      .innerJoin(projects, eq(recordings.projectId, projects.id))
-      .innerJoin(domains, eq(links.domainId, domains.id))
-      .where(and(eq(recordings.id, id), eq(recordings.isDeleted, false)))
+      .innerJoin(links, eq(recordings.recordingLinkId, links.linkId))
+      .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
+      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.isDeleted, false)))
       .limit(1);
 
     if (!result) {
@@ -392,14 +392,14 @@ export class RecordingRepository {
    * Check if recording is soft-deleted
    * Returns true if recording exists but is marked as deleted
    */
-  async isSoftDeleted(id: string) {
+  async isSoftDeleted(recordingId: string) {
     const [recording] = await this.db
       .select({
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         isDeleted: recordings.isDeleted,
       })
       .from(recordings)
-      .where(eq(recordings.id, id))
+      .where(eq(recordings.recordingId, recordingId))
       .limit(1);
 
     return recording ? recording.isDeleted : null;
@@ -409,7 +409,7 @@ export class RecordingRepository {
    * Soft delete a recording
    * Marks the recording as deleted without removing it from the database
    */
-  async softDelete(id: string, options?: { tx?: Transaction }) {
+  async softDelete(recordingId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [deleted] = await dbClient
@@ -418,7 +418,7 @@ export class RecordingRepository {
         isDeleted: true,
         deletedAt: new Date(),
       })
-      .where(and(eq(recordings.id, id), eq(recordings.isDeleted, false)))
+      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.isDeleted, false)))
       .returning();
 
     return deleted || null;
@@ -435,7 +435,7 @@ export class RecordingRepository {
     const [recording] = await dbClient
       .insert(recordings)
       .values({
-        id: data.id,
+        recordingId: data.recordingId,
         recordingLinkId: data.recordingLinkId,
         workspaceId: data.workspaceId,
         projectId: data.projectId,
@@ -459,7 +459,7 @@ export class RecordingRepository {
    * All files uploaded successfully
    * Sets isDeleted to false so recording becomes visible to users
    */
-  async markAsAvailable(id: string, options?: { tx?: Transaction }) {
+  async markAsAvailable(recordingId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [updated] = await dbClient
@@ -469,7 +469,7 @@ export class RecordingRepository {
         isDeleted: false,
         updatedAt: new Date(),
       })
-      .where(and(eq(recordings.id, id), eq(recordings.uploadStatus, 'pending')))
+      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.uploadStatus, 'pending')))
       .returning();
 
     return updated || null;
@@ -478,8 +478,8 @@ export class RecordingRepository {
   /**
    * Get recording with file paths for verification
    */
-  async findByIdWithFilePaths(id: string): Promise<{
-    id: string;
+  async findByIdWithFilePaths(recordingId: string): Promise<{
+    recordingId: string;
     recordingLinkId: string;
     workspaceId: string;
     uploadStatus: Recording['uploadStatus'];
@@ -491,7 +491,7 @@ export class RecordingRepository {
   } | null> {
     const [result] = await this.db
       .select({
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         recordingLinkId: recordings.recordingLinkId,
         workspaceId: recordings.workspaceId,
         uploadStatus: recordings.uploadStatus,
@@ -502,7 +502,7 @@ export class RecordingRepository {
         recordingMeta: recordings.recordingMeta,
       })
       .from(recordings)
-      .where(and(eq(recordings.id, id), eq(recordings.isDeleted, false)))
+      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.isDeleted, false)))
       .limit(1);
 
     if (!result) return null;
@@ -516,8 +516,8 @@ export class RecordingRepository {
   /**
    * Find pending recording by ID with file paths
    */
-  async findPendingRecordingByIdWithFilePaths(id: string): Promise<{
-    id: string;
+  async findPendingRecordingByIdWithFilePaths(recordingId: string): Promise<{
+    recordingId: string;
     recordingLinkId: string;
     workspaceId: string;
     uploadStatus: Recording['uploadStatus'];
@@ -529,7 +529,7 @@ export class RecordingRepository {
   } | null> {
     const [result] = await this.db
       .select({
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         recordingLinkId: recordings.recordingLinkId,
         workspaceId: recordings.workspaceId,
         uploadStatus: recordings.uploadStatus,
@@ -540,7 +540,7 @@ export class RecordingRepository {
         recordingMeta: recordings.recordingMeta,
       })
       .from(recordings)
-      .where(and(eq(recordings.id, id), eq(recordings.uploadStatus, 'pending')))
+      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.uploadStatus, 'pending')))
       .limit(1);
 
     if (!result) return null;
@@ -559,7 +559,7 @@ export class RecordingRepository {
   async findByProjectIdWithFilePaths(projectId: string, workspaceId: string) {
     return this.db
       .select({
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         recordingVideoRef: recordings.recordingVideoRef,
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
@@ -580,7 +580,7 @@ export class RecordingRepository {
    * Sets status after storage cleanup has been attempted
    * Sets isDeleted to true to mark recording as cleaned up
    */
-  async markAsPurged(id: string, options?: { tx?: Transaction }) {
+  async markAsPurged(recordingId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [updated] = await dbClient
@@ -590,7 +590,7 @@ export class RecordingRepository {
         isDeleted: true,
         updatedAt: new Date(),
       })
-      .where(eq(recordings.id, id))
+      .where(eq(recordings.recordingId, recordingId))
       .returning();
 
     return updated || null;
@@ -622,7 +622,7 @@ export class RecordingRepository {
         )
       )
       .returning({
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         recordingVideoRef: recordings.recordingVideoRef,
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
@@ -639,12 +639,12 @@ export class RecordingRepository {
   async findByWorkspaceId(
     workspaceId: string,
     statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
-  ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+  ): Promise<Array<{ recordingId: string; uploadStatus: Recording['uploadStatus'] }>> {
     const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
 
     const results = await this.db
       .select({
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         uploadStatus: recordings.uploadStatus,
       })
       .from(recordings)
@@ -662,12 +662,12 @@ export class RecordingRepository {
   async findByProjectId(
     projectId: string,
     statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
-  ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+  ): Promise<Array<{ recordingId: string; uploadStatus: Recording['uploadStatus'] }>> {
     const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
 
     const results = await this.db
       .select({
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         uploadStatus: recordings.uploadStatus,
       })
       .from(recordings)
@@ -683,12 +683,12 @@ export class RecordingRepository {
   async findByLinkId(
     linkId: string,
     statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
-  ): Promise<Array<{ id: string; uploadStatus: Recording['uploadStatus'] }>> {
+  ): Promise<Array<{ recordingId: string; uploadStatus: Recording['uploadStatus'] }>> {
     const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
 
     const results = await this.db
       .select({
-        id: recordings.id,
+        recordingId: recordings.recordingId,
         uploadStatus: recordings.uploadStatus,
       })
       .from(recordings)
@@ -714,7 +714,7 @@ export class RecordingRepository {
         workspaceId: recordings.workspaceId,
       })
       .from(recordings)
-      .innerJoin(workspaces, eq(workspaces.id, recordings.workspaceId))
+      .innerJoin(workspaces, eq(workspaces.workspaceId, recordings.workspaceId))
       .where(
         and(
           eq(workspaces.isDeleted, true),

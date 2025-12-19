@@ -51,7 +51,7 @@ export class ProvisionerService {
       // Create first project (automatically becomes default)
       await this.deps.projectService.createProject(
         {
-          workspaceId: createdWorkspace.id,
+          workspaceId: createdWorkspace.workspaceId,
           projectTitle: workspaceName,
         },
         { tx }
@@ -60,14 +60,14 @@ export class ProvisionerService {
       await this.deps.workspaceMemberService.addOwner(
         {
           userId,
-          workspaceId: createdWorkspace.id,
+          workspaceId: createdWorkspace.workspaceId,
         },
         { tx }
       );
 
       await this.deps.domainService.create(
         {
-          workspaceId: createdWorkspace.id,
+          workspaceId: createdWorkspace.workspaceId,
           url: url,
           status: 'pending',
         },
@@ -82,7 +82,7 @@ export class ProvisionerService {
     }
 
     return {
-      workspaceId: workspace.id,
+      workspaceId: workspace.workspaceId,
     };
   }
 }

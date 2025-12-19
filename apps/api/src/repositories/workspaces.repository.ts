@@ -20,7 +20,7 @@ export class WorkspaceRepository {
     const [workspace] = await dbClient
       .insert(workspaces)
       .values({
-        id: data.id,
+        workspaceId: data.workspaceId,
         workspaceName: data.workspaceName,
         recordingSlug: data.recordingSlug,
         workspacePlan: data.workspacePlan,
@@ -36,17 +36,17 @@ export class WorkspaceRepository {
    * Find workspace by ID
    * Returns only basic workspace info
    */
-  async findById(id: string) {
+  async findById(workspaceId: string) {
     const [workspace] = await this.db
       .select({
-        id: workspaces.id,
+        workspaceId: workspaces.workspaceId,
         workspaceName: workspaces.workspaceName,
         workspacePlan: workspaces.workspacePlan,
         createdAt: workspaces.createdAt,
         updatedAt: workspaces.updatedAt,
       })
       .from(workspaces)
-      .where(and(eq(workspaces.id, id), eq(workspaces.isDeleted, false)))
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .limit(1);
 
     return workspace || null;
@@ -56,14 +56,14 @@ export class WorkspaceRepository {
    * Check if workspace is soft-deleted
    * Returns true if workspace exists but is marked as deleted
    */
-  async isSoftDeleted(id: string) {
+  async isSoftDeleted(workspaceId: string) {
     const [workspace] = await this.db
       .select({
-        id: workspaces.id,
+        workspaceId: workspaces.workspaceId,
         isDeleted: workspaces.isDeleted,
       })
       .from(workspaces)
-      .where(eq(workspaces.id, id))
+      .where(eq(workspaces.workspaceId, workspaceId))
       .limit(1);
 
     return workspace ? workspace.isDeleted : null;
@@ -74,7 +74,7 @@ export class WorkspaceRepository {
    * Returns recording-related settings
    * Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) moved to domain level
    */
-  async findPreferencesById(id: string) {
+  async findPreferencesById(workspaceId: string) {
     const [preferences] = await this.db
       .select({
         recordingSlug: workspaces.recordingSlug,
@@ -87,7 +87,7 @@ export class WorkspaceRepository {
         recordingMaxDurationMs: workspaces.recordingMaxDurationMs,
       })
       .from(workspaces)
-      .where(and(eq(workspaces.id, id), eq(workspaces.isDeleted, false)))
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .limit(1);
 
     return preferences || null;
@@ -124,13 +124,13 @@ export class WorkspaceRepository {
   /**
    * Get workspace invite token by ID
    */
-  async findInviteTokenById(id: string) {
+  async findInviteTokenById(workspaceId: string) {
     const [workspace] = await this.db
       .select({
         workspaceInviteToken: workspaces.workspaceInviteToken,
       })
       .from(workspaces)
-      .where(and(eq(workspaces.id, id), eq(workspaces.isDeleted, false)))
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .limit(1);
 
     return workspace || null;
@@ -145,7 +145,7 @@ export class WorkspaceRepository {
     const [workspace] = await dbClient
       .update(workspaces)
       .set({ workspaceInviteToken: newToken })
-      .where(and(eq(workspaces.id, workspaceId), eq(workspaces.isDeleted, false)))
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .returning();
 
     return workspace || null;
@@ -167,7 +167,7 @@ export class WorkspaceRepository {
 
     // Build the select object dynamically based on options
     const selectFields: any = {
-      id: workspaces.id,
+      workspaceId: workspaces.workspaceId,
       workspaceName: workspaces.workspaceName,
       workspacePlan: workspaces.workspacePlan,
       createdAt: workspaces.createdAt,
@@ -186,7 +186,7 @@ export class WorkspaceRepository {
 
     if (includeMembership) {
       selectFields.workspaceMembership = {
-        workspaceMemberId: workspaceMembers.id,
+        workspaceMemberId: workspaceMembers.workspaceMemberId,
         workspaceRole: workspaceMembers.workspaceRole,
       };
     }
@@ -194,7 +194,7 @@ export class WorkspaceRepository {
     const result = await this.db
       .select(selectFields)
       .from(workspaces)
-      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .innerJoin(workspaceMembers, eq(workspaces.workspaceId, workspaceMembers.workspaceId))
       .where(
         and(
           eq(workspaceMembers.userId, userId),
@@ -213,7 +213,7 @@ export class WorkspaceRepository {
     const [result] = await this.db
       .select({ count: count() })
       .from(workspaces)
-      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .innerJoin(workspaceMembers, eq(workspaces.workspaceId, workspaceMembers.workspaceId))
       .where(
         and(
           eq(workspaceMembers.userId, userId),
@@ -252,7 +252,7 @@ export class WorkspaceRepository {
     const [result] = await this.db
       .select({ count: count() })
       .from(workspaces)
-      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .innerJoin(workspaceMembers, eq(workspaces.workspaceId, workspaceMembers.workspaceId))
       .where(and(...conditions));
 
     return Number(result?.count || 0);
@@ -275,7 +275,7 @@ export class WorkspaceRepository {
 
     // Build the select object dynamically based on options
     const selectFields: any = {
-      id: workspaces.id,
+      workspaceId: workspaces.workspaceId,
       workspaceName: workspaces.workspaceName,
       workspacePlan: workspaces.workspacePlan,
       createdAt: workspaces.createdAt,
@@ -294,7 +294,7 @@ export class WorkspaceRepository {
 
     if (includeMembership) {
       selectFields.workspaceMembership = {
-        workspaceMemberId: workspaceMembers.id,
+        workspaceMemberId: workspaceMembers.workspaceMemberId,
         workspaceRole: workspaceMembers.workspaceRole,
       };
     }
@@ -302,7 +302,7 @@ export class WorkspaceRepository {
     const result = await this.db
       .select(selectFields)
       .from(workspaces)
-      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .innerJoin(workspaceMembers, eq(workspaces.workspaceId, workspaceMembers.workspaceId))
       .where(
         and(
           eq(workspaceMembers.userId, userId),
@@ -339,7 +339,7 @@ export class WorkspaceRepository {
     const [updated] = await dbClient
       .update(workspaces)
       .set(data)
-      .where(and(eq(workspaces.id, workspaceId), eq(workspaces.isDeleted, false)))
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .returning();
 
     return updated || null;
@@ -355,9 +355,9 @@ export class WorkspaceRepository {
     const [updated] = await dbClient
       .update(workspaces)
       .set({ workspaceName: newName })
-      .where(and(eq(workspaces.id, workspaceId), eq(workspaces.isDeleted, false)))
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .returning({
-        id: workspaces.id,
+        workspaceId: workspaces.workspaceId,
         workspaceName: workspaces.workspaceName,
         workspacePlan: workspaces.workspacePlan,
         createdAt: workspaces.createdAt,
@@ -371,7 +371,7 @@ export class WorkspaceRepository {
    * Soft delete a workspace
    * Sets isDeleted to true and updates deletedAt timestamp
    */
-  async softDelete(id: string, options?: { tx?: Transaction }) {
+  async softDelete(workspaceId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [deleted] = await dbClient
@@ -380,7 +380,7 @@ export class WorkspaceRepository {
         isDeleted: true,
         deletedAt: new Date(),
       })
-      .where(and(eq(workspaces.id, id), eq(workspaces.isDeleted, false)))
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .returning();
 
     return deleted || null;

@@ -50,12 +50,12 @@ export interface ListRecordingsParams {
  * Recording item in list response
  */
 export interface RecordingItem {
-  id: string;
+  recordingId: string;
   recordingThumbnail: string | null;
   recordingDurationMs: number | null;
   createdAt: Date;
   creator: {
-    id: string;
+    workspaceMemberId: string;
     name: string;
   };
 }
@@ -64,10 +64,10 @@ export interface RecordingItem {
  * Detailed recording response
  */
 export interface RecordingDetail {
-  id: string;
+  recordingId: string;
   meta: {
     link: {
-      id: string;
+      linkId: string;
       title: string | null;
       providerType: LinkProviderType;
       providerId: string | null;
@@ -76,15 +76,15 @@ export interface RecordingDetail {
       createdAt: Date;
     };
     creator: {
-      id: string;
+      workspaceMemberId: string;
       name: string;
     };
     project: {
-      id: string;
+      projectId: string;
       title: string | null;
     };
     domain: {
-      id: string;
+      domainId: string;
       url: string;
     };
     workspaceId: string;

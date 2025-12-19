@@ -89,13 +89,13 @@ export const countWorkspacesImpl = (workspaceService: WorkspaceService) => {
 };
 
 /**
- * GET /workspace/:id - Get workspace by ID
+ * GET /workspace/:workspaceId - Get workspace by ID
  * Requires authentication
  */
 export const getWorkspaceByIdImpl = (workspaceService: WorkspaceService) => {
   return authorized.workspace.getById.handler(async ({ context, input }) => {
     try {
-      const workspace = await workspaceService.getById(input.id);
+      const workspace = await workspaceService.getById(input.workspaceId);
 
       return {
         message: 'Workspace retrieved successfully',
@@ -146,7 +146,7 @@ export const updateWorkspaceNameImpl = (
         return {
           message: 'Workspace name updated successfully',
           data: {
-            workspaceId: workspace.id,
+            workspaceId: workspace.workspaceId,
             workspaceName: workspace.workspaceName,
           },
         };
@@ -226,7 +226,7 @@ export const deleteWorkspaceImpl = (
 export const getWorkspacePreferencesImpl = (workspaceService: WorkspaceService) => {
   return authorized.workspace.preferences.get.handler(async ({ input }) => {
     try {
-      const preferences = await workspaceService.getPreferencesById(input.id);
+      const preferences = await workspaceService.getPreferencesById(input.workspaceId);
 
       return {
         message: 'Workspace preferences retrieved successfully',
@@ -306,29 +306,32 @@ export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberS
     try {
       const perPage = 5;
       const { members, total } = await workspaceMemberService.getTeamMembers(
-        input.id,
+        input.workspaceId,
         input.page || 1,
         perPage
       );
 
       const teamMembers = members.map((member) => ({
-        workspaceMemberId: member.id,
+        workspaceMemberId: member.workspaceMemberId,
         memberName: member.userName,
         memberEmail: member.userEmail,
         workspaceRole: member.role,
       }));
 
       let teamData: any = {
-        workspaceId: input.id,
+        workspaceId: input.workspaceId,
         workspaceMembers: teamMembers,
         pagination: createPaginationMeta(input.page || 1, perPage, total),
       };
 
       if (input.include_me) {
-        const myMembership = await workspaceMemberService.getMember(context.user.id, input.id);
+        const myMembership = await workspaceMemberService.getMember(
+          context.user.id,
+          input.workspaceId
+        );
         if (myMembership) {
           teamData.workspaceMembership = {
-            workspaceMemberId: myMembership.id,
+            workspaceMemberId: myMembership.workspaceMemberId,
             workspaceRole: myMembership.workspaceRole,
           };
         }
@@ -364,20 +367,20 @@ export const updateMemberRoleImpl = (
   );
 
   return authorized.workspace.members.updateRole
-    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.id }))
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input, context }) => {
       try {
         await workspaceMemberService.updateMemberRole({
           memberId: input.workspaceMemberId,
           newRole: input.role,
           userId: context.user.id,
-          workspaceId: input.id,
+          workspaceId: input.workspaceId,
         });
 
         return {
           message: 'Member role updated successfully',
           data: {
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
             workspaceMemberId: input.workspaceMemberId,
             workspaceRole: input.role,
           },
@@ -413,19 +416,19 @@ export const removeMemberImpl = (
   );
 
   return authorized.workspace.members.remove
-    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.id }))
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input, context }) => {
       try {
         await workspaceMemberService.removeMember({
           memberId: input.workspaceMemberId,
-          workspaceId: input.id,
+          workspaceId: input.workspaceId,
           userId: context.user.id,
         });
 
         return {
           message: 'Member removed successfully',
           data: {
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
             workspaceMemberId: input.workspaceMemberId,
           },
         };
@@ -457,16 +460,16 @@ export const getInviteUrlImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.invite.getUrl
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input, context }) => {
       try {
-        const inviteUrl = await inviteService.getInviteUrl(input.id, context.user.id);
+        const inviteUrl = await inviteService.getInviteUrl(input.workspaceId, context.user.id);
 
         return {
           message: 'Invite URL retrieved successfully',
           data: {
             inviteUrl,
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
           },
         };
       } catch (error) {
@@ -501,16 +504,19 @@ export const rotateInviteTokenImpl = (
   );
 
   return authorized.workspace.invite.rotate
-    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.id }))
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input, context }) => {
       try {
-        const inviteUrl = await inviteService.regenerateInviteUrl(input.id, context.user.id);
+        const inviteUrl = await inviteService.regenerateInviteUrl(
+          input.workspaceId,
+          context.user.id
+        );
 
         return {
           message: 'Invite token rotated successfully',
           data: {
             inviteUrl,
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
           },
         };
       } catch (error) {
@@ -541,11 +547,11 @@ export const sendWorkspaceInvitesImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.invite.send
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input, context }) => {
       try {
         const result = await inviteService.sendInvites({
-          workspaceId: input.id,
+          workspaceId: input.workspaceId,
           emails: input.emails,
           invitedBy: context.user.id,
         });
@@ -601,18 +607,18 @@ export const getWorkspaceDomainsImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.list
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input }) => {
       try {
         const perPage = 10;
         const { domains, total } = await domainService.getByWorkspaceIdPaginated(
-          input.id,
+          input.workspaceId,
           input.page || 1,
           perPage
         );
 
         const mappedDomains = domains.map((domain) => ({
-          domainId: domain.id,
+          domainId: domain.domainId,
           domainUrl: domain.domainUrl,
           domainStatus: domain.domainStatus,
           createdAt: domain.createdAt.toISOString(),
@@ -622,7 +628,7 @@ export const getWorkspaceDomainsImpl = (
         return {
           message: 'Workspace domains retrieved successfully',
           data: {
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
             domains: mappedDomains,
             pagination: createPaginationMeta(input.page || 1, perPage, total),
           },
@@ -655,17 +661,20 @@ export const getDomainByIdImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.getById
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        const domain = await domainService.getByIdWithPreferences(input.domainId, input.id);
+        const domain = await domainService.getByIdWithPreferences(
+          input.domainId,
+          input.workspaceId
+        );
 
         return {
           message: 'Domain retrieved successfully',
           data: {
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
             domain: {
-              domainId: domain.id,
+              domainId: domain.domainId,
               domainUrl: domain.domainUrl,
               domainStatus: domain.domainStatus,
               recordingHideSensitive: domain.recordingHideSensitive,
@@ -716,11 +725,11 @@ export const addDomainImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.add
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input }) => {
       try {
         const domain = await domainService.create({
-          workspaceId: input.id,
+          workspaceId: input.workspaceId,
           url: input.url,
           status: 'pending',
         });
@@ -732,9 +741,9 @@ export const addDomainImpl = (
         return {
           message: 'Domain added successfully',
           data: {
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
             domain: {
-              domainId: domain.id,
+              domainId: domain.domainId,
               domainUrl: domain.domainUrl,
               domainStatus: domain.domainStatus,
               createdAt: domain.createdAt.toISOString(),
@@ -775,17 +784,21 @@ export const updateDomainImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.update
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        const domain = await domainService.updateDomainUrl(input.domainId, input.id, input.url);
+        const domain = await domainService.updateDomainUrl(
+          input.domainId,
+          input.workspaceId,
+          input.url
+        );
 
         return {
           message: 'Domain updated successfully',
           data: {
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
             domain: {
-              domainId: domain.id,
+              domainId: domain.domainId,
               domainUrl: domain.domainUrl,
               domainStatus: domain.domainStatus,
               createdAt: domain.createdAt.toISOString(),
@@ -837,15 +850,15 @@ export const deleteDomainImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.delete
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        await domainService.deleteDomain(input.domainId, input.id);
+        await domainService.deleteDomain(input.domainId, input.workspaceId);
 
         return {
           message: 'Domain deleted successfully',
           data: {
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
             domainId: input.domainId,
           },
         };
@@ -888,13 +901,16 @@ export const getDomainVerificationUrlImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.getVerificationUrl
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        const domain = await domainService.getByIdWithPreferences(input.domainId, input.id);
+        const domain = await domainService.getByIdWithPreferences(
+          input.domainId,
+          input.workspaceId
+        );
         const token = domainService.generateVerificationToken(
-          input.id,
-          domain.id,
+          input.workspaceId,
+          domain.domainId,
           domain.domainUrl
         );
         const verificationUrl = `${domain.domainUrl}?userplane-action=verify&userplane-token=${token}`;
@@ -945,16 +961,19 @@ export const getDomainRecordingPreferencesImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.preferences.get
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        const domain = await domainService.getByIdWithPreferences(input.domainId, input.id);
+        const domain = await domainService.getByIdWithPreferences(
+          input.domainId,
+          input.workspaceId
+        );
 
         return {
           message: 'Domain recording preferences retrieved successfully',
           data: {
-            domainId: domain.id,
-            workspaceId: input.id,
+            domainId: domain.domainId,
+            workspaceId: input.workspaceId,
             recordingHideSensitive: domain.recordingHideSensitive,
             recordingCaptureClientLog: domain.recordingCaptureClientLog,
             recordingCaptureServerLog: domain.recordingCaptureServerLog,
@@ -995,10 +1014,10 @@ export const updateDomainRecordingPreferencesImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.preferences.update
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        await domainService.updateRecordingPreferences(input.domainId, input.id, {
+        await domainService.updateRecordingPreferences(input.domainId, input.workspaceId, {
           recordingHideSensitive: input.recordingHideSensitive,
           recordingCaptureClientLog: input.recordingCaptureClientLog,
           recordingCaptureServerLog: input.recordingCaptureServerLog,
@@ -1009,7 +1028,7 @@ export const updateDomainRecordingPreferencesImpl = (
           message: 'Domain recording preferences updated successfully',
           data: {
             domainId: input.domainId,
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
           },
         };
       } catch (error) {
@@ -1056,10 +1075,10 @@ export const replaceDomainRecordingPreferencesImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.preferences.replace
-    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        await domainService.replaceRecordingPreferences(input.domainId, input.id, {
+        await domainService.replaceRecordingPreferences(input.domainId, input.workspaceId, {
           recordingHideSensitive: input.recordingHideSensitive,
           recordingCaptureClientLog: input.recordingCaptureClientLog,
           recordingCaptureServerLog: input.recordingCaptureServerLog,
@@ -1070,7 +1089,7 @@ export const replaceDomainRecordingPreferencesImpl = (
           message: 'Domain recording preferences replaced successfully',
           data: {
             domainId: input.domainId,
-            workspaceId: input.id,
+            workspaceId: input.workspaceId,
           },
         };
       } catch (error) {

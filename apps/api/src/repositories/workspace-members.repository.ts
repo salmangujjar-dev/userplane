@@ -20,7 +20,7 @@ export class WorkspaceMemberRepository {
     const [member] = await dbClient
       .insert(workspaceMembers)
       .values({
-        id: data.id,
+        workspaceMemberId: data.workspaceMemberId,
         userId: data.userId,
         workspaceId: data.workspaceId,
         workspaceRole: data.workspaceRole,
@@ -74,7 +74,9 @@ export class WorkspaceMemberRepository {
     const [updated] = await dbClient
       .update(workspaceMembers)
       .set({ workspaceRole: newRole })
-      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, false)))
+      .where(
+        and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, false))
+      )
       .returning();
 
     return updated;
@@ -94,7 +96,7 @@ export class WorkspaceMemberRepository {
 
     const members = await this.db
       .select({
-        id: workspaceMembers.id,
+        workspaceMemberId: workspaceMembers.workspaceMemberId,
         role: workspaceMembers.workspaceRole,
         userName: user.name,
         userEmail: user.email,
@@ -151,7 +153,9 @@ export class WorkspaceMemberRepository {
     const [member] = await this.db
       .select()
       .from(workspaceMembers)
-      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, false)))
+      .where(
+        and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, false))
+      )
       .limit(1);
 
     return member || null;
@@ -163,7 +167,7 @@ export class WorkspaceMemberRepository {
   async findByIdWithUser(memberId: string) {
     const [member] = await this.db
       .select({
-        id: workspaceMembers.id,
+        workspaceMemberId: workspaceMembers.workspaceMemberId,
         userId: workspaceMembers.userId,
         workspaceId: workspaceMembers.workspaceId,
         role: workspaceMembers.workspaceRole,
@@ -172,7 +176,9 @@ export class WorkspaceMemberRepository {
       })
       .from(workspaceMembers)
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
-      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, false)))
+      .where(
+        and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, false))
+      )
       .limit(1);
 
     return member || null;
@@ -190,7 +196,9 @@ export class WorkspaceMemberRepository {
         isDeleted: true,
         deletedAt: new Date(),
       })
-      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, false)))
+      .where(
+        and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, false))
+      )
       .returning();
 
     return deleted || null;
@@ -210,7 +218,9 @@ export class WorkspaceMemberRepository {
         deletedAt: null,
         workspaceRole: newRole,
       })
-      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, true)))
+      .where(
+        and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, true))
+      )
       .returning();
 
     return restored || null;
@@ -235,7 +245,9 @@ export class WorkspaceMemberRepository {
     const [updated] = await dbClient
       .update(workspaceMembers)
       .set(preferences)
-      .where(and(eq(workspaceMembers.id, memberId), eq(workspaceMembers.isDeleted, false)))
+      .where(
+        and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, false))
+      )
       .returning();
 
     return updated || null;
@@ -259,7 +271,7 @@ export class WorkspaceMemberRepository {
 
     const members = await this.db
       .select({
-        id: workspaceMembers.id,
+        workspaceMemberId: workspaceMembers.workspaceMemberId,
         role: workspaceMembers.workspaceRole,
         userName: user.name,
         userEmail: user.email,

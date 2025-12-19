@@ -13,8 +13,8 @@ export class UserRepository {
   /**
    * Find user by ID
    */
-  async findById(id: string) {
-    const [foundUser] = await this.db.select().from(user).where(eq(user.id, id)).limit(1);
+  async findById(userId: string) {
+    const [foundUser] = await this.db.select().from(user).where(eq(user.id, userId)).limit(1);
 
     return foundUser || null;
   }

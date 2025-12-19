@@ -36,7 +36,7 @@ export const ListLinksQuerySchema = z.object({
  * Domain info in link
  */
 export const LinkDomainSchema = z.object({
-  id: z.string(),
+  domainId: z.string(),
   url: z.string(),
   status: DomainStatusSchema,
 });
@@ -45,24 +45,24 @@ export const LinkDomainSchema = z.object({
  * Project info in link
  */
 export const LinkProjectSchema = z.object({
-  id: z.string(),
+  projectId: z.string(),
   title: z.string().nullable(),
 });
 
 /**
  * Creator info in link
  */
-export const LinkCreatorSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string().email(),
-});
+// export const LinkCreatorSchema = z.object({
+//   id: z.string(),
+//   name: z.string(),
+//   email: z.string().email(),
+// });
 
 /**
  * Link item in list
  */
 export const LinkItemSchema = z.object({
-  id: z.string(),
+  linkId: z.string(),
   linkTitle: z.string().nullable(),
   linkType: LinkTypeSchema,
   linkReusable: z.boolean(),
@@ -73,7 +73,7 @@ export const LinkItemSchema = z.object({
   createdAt: z.date(),
   project: LinkProjectSchema,
   creator: z.object({
-    id: z.string(),
+    workspaceMemberId: z.string(),
     name: z.string(),
   }),
   domain: LinkDomainSchema,

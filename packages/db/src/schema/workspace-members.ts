@@ -12,7 +12,7 @@ export const workspaceMembers = pgTable(
   'workspace_members',
   {
     // Primary identifier
-    id: text('id').primaryKey(),
+    workspaceMemberId: text('workspace_member_id').primaryKey(),
 
     // Relationships
     userId: text('user_id').notNull(),
@@ -53,7 +53,7 @@ export const workspaceMembersRelations = relations(workspaceMembers, ({ one, man
   }),
   workspace: one(workspaces, {
     fields: [workspaceMembers.workspaceId],
-    references: [workspaces.id],
+    references: [workspaces.workspaceId],
   }),
   createdLinks: many(links),
   createdRecordings: many(recordings),

@@ -25,7 +25,7 @@ export const workspaces = pgTable(
   'workspaces',
   {
     // Primary identifier
-    id: text('id').primaryKey(),
+    workspaceId: text('workspace_id').primaryKey(),
 
     // Workspace identity and branding
     workspaceName: text('workspace_name').notNull(),

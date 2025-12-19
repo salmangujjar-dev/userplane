@@ -64,7 +64,7 @@ export interface ListLinksParams {
  * Link item in list response
  */
 export interface LinkItem {
-  id: string;
+  linkId: string;
   linkTitle: string | null;
   linkType: LinkType;
   linkReusable: boolean;
@@ -74,15 +74,15 @@ export interface LinkItem {
   linkURL: string;
   createdAt: Date;
   project: {
-    id: string;
+    projectId: string;
     title: string | null;
   };
   creator: {
-    id: string;
+    workspaceMemberId: string;
     name: string;
   };
   domain: {
-    id: string;
+    domainId: string;
     url: string;
     status: DomainStatus;
   };

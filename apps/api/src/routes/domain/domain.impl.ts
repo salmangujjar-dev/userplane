@@ -47,7 +47,7 @@ export const verifyDomainImpl = (domainService: DomainService) => {
         data: {
           domainStatus: domain.domainStatus,
           workspaceId: domain.workspaceId,
-          domainId: domain.id,
+          domainId: domain.domainId,
           domainUrl: domain.domainUrl,
         },
       };

@@ -40,7 +40,7 @@ export class InviteService {
     const inviter = await this.deps.userService.getById(userId);
 
     const inviteUrl = this.deps.tokenService.generateInviteUrl({
-      wi: workspace.id,
+      wi: workspace.workspaceId,
       wn: workspace.workspaceName,
       wt: inviteToken,
       in: inviter.name,
@@ -61,7 +61,7 @@ export class InviteService {
     const updatedWorkspace = await this.deps.workspaceService.rotateInviteUrl(workspaceId);
 
     const inviteUrl = this.deps.tokenService.generateInviteUrl({
-      wi: updatedWorkspace.id,
+      wi: updatedWorkspace.workspaceId,
       wn: updatedWorkspace.workspaceName,
       wt: updatedWorkspace.workspaceInviteToken,
       in: inviter.name,
@@ -83,7 +83,7 @@ export class InviteService {
     const inviter = await this.deps.userService.getById(invitedBy);
 
     const inviteUrl = this.deps.tokenService.generateInviteUrl({
-      wi: workspace.id,
+      wi: workspace.workspaceId,
       wn: workspace.workspaceName,
       wt: inviteToken,
       in: inviter.name,
@@ -146,7 +146,7 @@ export class InviteService {
 
       return {
         status: 'valid',
-        workspaceId: workspace.id,
+        workspaceId: workspace.workspaceId,
         workspaceName: inviteData.wn,
         inviterName: inviteData.in,
         inviterEmail: inviteData.ie,
@@ -183,7 +183,7 @@ export class InviteService {
       await this.deps.workspaceMemberService.addMember(
         {
           userId,
-          workspaceId: workspace.id,
+          workspaceId: workspace.workspaceId,
           role: 'member',
         },
         { tx }
@@ -193,7 +193,7 @@ export class InviteService {
     return {
       workspace: {
         workspaceName: workspace.workspaceName,
-        workspaceId: workspace.id,
+        workspaceId: workspace.workspaceId,
       },
     };
   }
@@ -230,7 +230,7 @@ export class InviteService {
             await this.deps.workspaceMemberService.addMember(
               {
                 userId,
-                workspaceId: workspace.id,
+                workspaceId: workspace.workspaceId,
                 role: 'member',
               },
               { tx }
@@ -239,7 +239,7 @@ export class InviteService {
 
           return {
             status: 'accepted',
-            workspaceId: workspace.id,
+            workspaceId: workspace.workspaceId,
             workspaceName: inviteData.wn,
             inviterName: inviteData.in,
             inviterEmail: inviteData.ie,
@@ -248,7 +248,7 @@ export class InviteService {
           if (error instanceof ConflictError) {
             return {
               status: 'already_member',
-              workspaceId: workspace.id,
+              workspaceId: workspace.workspaceId,
               workspaceName: inviteData.wn,
               inviterName: inviteData.in,
               inviterEmail: inviteData.ie,
@@ -263,7 +263,7 @@ export class InviteService {
       // Otherwise just validate
       return {
         status: 'valid',
-        workspaceId: workspace.id,
+        workspaceId: workspace.workspaceId,
         workspaceName: inviteData.wn,
         inviterName: inviteData.in,
         inviterEmail: inviteData.ie,
