@@ -1,0 +1,1177 @@
+/**
+ * Workspace contract implementation using oRPC
+ * Implements the workspace contract defined in @workspace/contract
+ *
+ * INCREMENTAL MIGRATION: Starting with basic CRUD operations
+ */
+
+import { ORPCError } from '@orpc/server';
+import { authorized } from '@/api/middleware/auth.orpc';
+import {
+  createWorkspaceMiddleware,
+  createWorkspaceRoleMiddleware,
+} from '@/api/middleware/workspace.orpc';
+import type { WorkspaceService } from '@/api/services/workspace.service';
+import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+import type { InviteService } from '@/api/services/invite.service';
+import type { ProjectService } from '@/api/services/project.service';
+import type { DomainService } from '@/api/services/domain.service';
+import { z } from 'zod';
+import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
+import { createPaginationMeta } from '@/api/types';
+
+/**
+ * GET /workspace - List all user workspaces
+ * Requires authentication
+ */
+export const getAllWorkspacesImpl = (workspaceService: WorkspaceService) => {
+  return authorized.workspace.list.handler(async ({ input, context }) => {
+    try {
+      const page = input.page || 1;
+      const perPage = 5;
+
+      const { workspaces, total } = await workspaceService.getByUserIdPaginated(
+        context.user.id,
+        page,
+        perPage,
+        {
+          includeNotificationPreferences: input.include_notification_preference,
+          includeWorkspaceMembership: input.include_workspace_membership,
+        }
+      );
+
+      return {
+        message: 'Workspaces retrieved successfully',
+        data: {
+          workspaces: workspaces as any,
+          total,
+          pagination: createPaginationMeta(page, perPage, total),
+        },
+      };
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: error.message,
+        });
+      }
+      if (error instanceof Error) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  });
+};
+
+/**
+ * GET /workspace/count - Count user workspaces by role
+ * Requires authentication
+ */
+export const countWorkspacesImpl = (workspaceService: WorkspaceService) => {
+  return authorized.workspace.count.handler(async ({ input, context }) => {
+    try {
+      const count = await workspaceService.countByUserWithRoles(context.user.id, input.roles);
+
+      return {
+        message: 'Workspace count retrieved successfully',
+        data: { count },
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  });
+};
+
+/**
+ * GET /workspace/:id - Get workspace by ID
+ * Requires authentication
+ */
+export const getWorkspaceByIdImpl = (workspaceService: WorkspaceService) => {
+  return authorized.workspace.getById.handler(async ({ context, input }) => {
+    try {
+      const workspace = await workspaceService.getById(input.id);
+
+      return {
+        message: 'Workspace retrieved successfully',
+        data: { workspace },
+      };
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw new ORPCError('NOT_FOUND', {
+          message: error.message,
+        });
+      }
+      if (error instanceof GoneError) {
+        throw new ORPCError('GONE', {
+          status: 410,
+          message: error.message,
+        });
+      }
+      if (error instanceof Error) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  });
+};
+
+/**
+ * PATCH /workspace/:workspaceId - Update workspace name
+ * Requires admin or owner role
+ */
+export const updateWorkspaceNameImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const workspaceRoleMiddleware = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.workspace.updateName
+    .use(workspaceRoleMiddleware, (input) => ({ workspaceId: input.workspaceId }))
+    .handler(async ({ input }) => {
+      try {
+        const workspace = await workspaceService.updateName(input.workspaceId, input.name);
+
+        return {
+          message: 'Workspace name updated successfully',
+          data: {
+            workspaceId: workspace.id,
+            workspaceName: workspace.workspaceName,
+          },
+        };
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: 'Invalid request body',
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * DELETE /workspace/:workspaceId - Delete workspace
+ * Requires admin or owner role
+ */
+export const deleteWorkspaceImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const workspaceRoleMiddleware = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.workspace.delete
+    .use(workspaceRoleMiddleware, (input) => ({ workspaceId: input.workspaceId }))
+    .handler(async ({ input }) => {
+      try {
+        await workspaceService.deleteWorkspace(input.workspaceId);
+
+        return {
+          message: 'Workspace deleted successfully',
+          data: {
+            workspaceId: input.workspaceId,
+            success: true,
+          },
+        };
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * GET /workspace/:id/preferences - Get workspace preferences
+ * Requires authentication
+ */
+export const getWorkspacePreferencesImpl = (workspaceService: WorkspaceService) => {
+  return authorized.workspace.preferences.get.handler(async ({ input }) => {
+    try {
+      const preferences = await workspaceService.getPreferencesById(input.id);
+
+      return {
+        message: 'Workspace preferences retrieved successfully',
+        data: { preferences },
+      };
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw new ORPCError('NOT_FOUND', {
+          message: error.message,
+        });
+      }
+      if (error instanceof Error) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  });
+};
+
+/**
+ * PATCH /workspace/:id/preferences - Update workspace preferences
+ * Requires workspace membership
+ */
+export const updateWorkspacePreferencesImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const workspaceMemberMiddleware = createWorkspaceMiddleware(
+    workspaceMemberService,
+    workspaceService
+  );
+
+  return authorized.workspace.preferences.update
+    .use(workspaceMemberMiddleware, (input) => ({ workspaceId: input.workspaceId }))
+    .handler(async ({ input }) => {
+      try {
+        const preferences = await workspaceService.updatePreferences(input.workspaceId, input);
+
+        return {
+          message: 'Workspace preferences updated successfully',
+          data: { preferences },
+        };
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: 'Invalid request body',
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * GET /workspace/:id/members - Get workspace members
+ * Requires authentication
+ */
+export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberService) => {
+  return authorized.workspace.members.list.handler(async ({ input, context }) => {
+    try {
+      const perPage = 5;
+      const { members, total } = await workspaceMemberService.getTeamMembers(
+        input.id,
+        input.page || 1,
+        perPage
+      );
+
+      const teamMembers = members.map((member) => ({
+        workspaceMemberId: member.id,
+        memberName: member.userName,
+        memberEmail: member.userEmail,
+        workspaceRole: member.role,
+      }));
+
+      let teamData: any = {
+        workspaceId: input.id,
+        workspaceMembers: teamMembers,
+        pagination: createPaginationMeta(input.page || 1, perPage, total),
+      };
+
+      if (input.include_me) {
+        const myMembership = await workspaceMemberService.getMember(context.user.id, input.id);
+        if (myMembership) {
+          teamData.workspaceMembership = {
+            workspaceMemberId: myMembership.id,
+            workspaceRole: myMembership.workspaceRole,
+          };
+        }
+      }
+
+      return {
+        message: 'Workspace members retrieved successfully',
+        data: teamData,
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  });
+};
+
+/**
+ * PATCH /workspace/:id/members/:workspaceMemberId - Update member role
+ * Requires admin or owner role
+ */
+export const updateMemberRoleImpl = (
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.workspace.members.updateRole
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input, context }) => {
+      try {
+        await workspaceMemberService.updateMemberRole({
+          memberId: input.workspaceMemberId,
+          newRole: input.role,
+          userId: context.user.id,
+          workspaceId: input.id,
+        });
+
+        return {
+          message: 'Member role updated successfully',
+          data: {
+            workspaceId: input.id,
+            workspaceMemberId: input.workspaceMemberId,
+            workspaceRole: input.role,
+          },
+        };
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * DELETE /workspace/:id/members/:workspaceMemberId - Remove member
+ * Requires admin or owner role
+ */
+export const removeMemberImpl = (
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.workspace.members.remove
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input, context }) => {
+      try {
+        await workspaceMemberService.removeMember({
+          memberId: input.workspaceMemberId,
+          workspaceId: input.id,
+          userId: context.user.id,
+        });
+
+        return {
+          message: 'Member removed successfully',
+          data: {
+            workspaceId: input.id,
+            workspaceMemberId: input.workspaceMemberId,
+          },
+        };
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * GET /workspace/:id/invite - Get invite URL
+ * Requires workspace member
+ */
+export const getInviteUrlImpl = (
+  inviteService: InviteService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.invite.getUrl
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input, context }) => {
+      try {
+        const inviteUrl = await inviteService.getInviteUrl(input.id, context.user.id);
+
+        return {
+          message: 'Invite URL retrieved successfully',
+          data: {
+            inviteUrl,
+            workspaceId: input.id,
+          },
+        };
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * POST /workspace/:id/invite/rotate - Rotate invite token
+ * Requires admin or owner role
+ */
+export const rotateInviteTokenImpl = (
+  inviteService: InviteService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.workspace.invite.rotate
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input, context }) => {
+      try {
+        const inviteUrl = await inviteService.regenerateInviteUrl(input.id, context.user.id);
+
+        return {
+          message: 'Invite token rotated successfully',
+          data: {
+            inviteUrl,
+            workspaceId: input.id,
+          },
+        };
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * POST /workspace/:id/invite - Send workspace invitations
+ * Requires workspace member
+ */
+export const sendWorkspaceInvitesImpl = (
+  inviteService: InviteService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.invite.send
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input, context }) => {
+      try {
+        const result = await inviteService.sendInvites({
+          workspaceId: input.id,
+          emails: input.emails,
+          invitedBy: context.user.id,
+        });
+
+        const sent = result.sentEmails.map((email) => ({
+          email,
+          success: true,
+        }));
+
+        const failed = result.failedEmails.map((item) => ({
+          email: item.email,
+          success: false,
+          error: item.reason,
+        }));
+
+        return {
+          message: 'Invites processed successfully',
+          data: {
+            sent,
+            failed,
+          },
+        };
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: 'Invalid request body',
+          });
+        }
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * GET /workspace/:id/domains - Get workspace domains
+ * Requires workspace member
+ */
+export const getWorkspaceDomainsImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.list
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input }) => {
+      try {
+        const perPage = 10;
+        const { domains, total } = await domainService.getByWorkspaceIdPaginated(
+          input.id,
+          input.page || 1,
+          perPage
+        );
+
+        const mappedDomains = domains.map((domain) => ({
+          domainId: domain.id,
+          domainUrl: domain.domainUrl,
+          domainStatus: domain.domainStatus,
+          createdAt: domain.createdAt.toISOString(),
+          updatedAt: domain.updatedAt.toISOString(),
+        }));
+
+        return {
+          message: 'Workspace domains retrieved successfully',
+          data: {
+            workspaceId: input.id,
+            domains: mappedDomains,
+            pagination: createPaginationMeta(input.page || 1, perPage, total),
+          },
+        };
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * GET /workspace/:id/domains/:domainId - Get domain by ID
+ * Requires workspace member
+ */
+export const getDomainByIdImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.getById
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input }) => {
+      try {
+        const domain = await domainService.getByIdWithPreferences(input.domainId, input.id);
+
+        return {
+          message: 'Domain retrieved successfully',
+          data: {
+            workspaceId: input.id,
+            domain: {
+              domainId: domain.id,
+              domainUrl: domain.domainUrl,
+              domainStatus: domain.domainStatus,
+              recordingHideSensitive: domain.recordingHideSensitive,
+              recordingCaptureClientLog: domain.recordingCaptureClientLog,
+              recordingCaptureServerLog: domain.recordingCaptureServerLog,
+              recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
+              createdAt: domain.createdAt.toISOString(),
+              updatedAt: domain.updatedAt.toISOString(),
+            },
+          },
+        };
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof GoneError) {
+          throw new ORPCError('GONE', {
+            status: 410,
+            message: error.message,
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * POST /workspace/:id/domains - Add domain
+ * Requires workspace member
+ */
+export const addDomainImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.add
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input }) => {
+      try {
+        const domain = await domainService.create({
+          workspaceId: input.id,
+          url: input.url,
+          status: 'pending',
+        });
+
+        if (!domain) {
+          throw new Error('Failed to create domain');
+        }
+
+        return {
+          message: 'Domain added successfully',
+          data: {
+            workspaceId: input.id,
+            domain: {
+              domainId: domain.id,
+              domainUrl: domain.domainUrl,
+              domainStatus: domain.domainStatus,
+              createdAt: domain.createdAt.toISOString(),
+              updatedAt: domain.updatedAt.toISOString(),
+            },
+          },
+        };
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: 'Invalid request body',
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * PATCH /workspace/:id/domains/:domainId - Update domain
+ * Requires workspace member
+ */
+export const updateDomainImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.update
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input }) => {
+      try {
+        const domain = await domainService.updateDomainUrl(input.domainId, input.id, input.url);
+
+        return {
+          message: 'Domain updated successfully',
+          data: {
+            workspaceId: input.id,
+            domain: {
+              domainId: domain.id,
+              domainUrl: domain.domainUrl,
+              domainStatus: domain.domainStatus,
+              createdAt: domain.createdAt.toISOString(),
+              updatedAt: domain.updatedAt.toISOString(),
+            },
+          },
+        };
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: 'Invalid request body',
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof GoneError) {
+          throw new ORPCError('GONE', {
+            status: 410,
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * DELETE /workspace/:id/domains/:domainId - Delete domain
+ * Requires workspace member
+ */
+export const deleteDomainImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.delete
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input }) => {
+      try {
+        await domainService.deleteDomain(input.domainId, input.id);
+
+        return {
+          message: 'Domain deleted successfully',
+          data: {
+            workspaceId: input.id,
+            domainId: input.domainId,
+          },
+        };
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof GoneError) {
+          throw new ORPCError('GONE', {
+            status: 410,
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * GET /workspace/:id/domains/:domainId/verify - Get domain verification URL
+ * Requires workspace member
+ */
+export const getDomainVerificationUrlImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.getVerificationUrl
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input }) => {
+      try {
+        const domain = await domainService.getByIdWithPreferences(input.domainId, input.id);
+        const token = domainService.generateVerificationToken(
+          input.id,
+          domain.id,
+          domain.domainUrl
+        );
+        const verificationUrl = `${domain.domainUrl}?userplane-action=verify&userplane-token=${token}`;
+
+        return {
+          message: 'Domain verification URL generated successfully',
+          data: {
+            verificationUrl,
+            domainUrl: domain.domainUrl,
+          },
+        };
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof GoneError) {
+          throw new ORPCError('GONE', {
+            status: 410,
+            message: error.message,
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * GET /workspace/:id/domains/:domainId/preferences - Get domain recording preferences
+ * Requires workspace member
+ */
+export const getDomainRecordingPreferencesImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.preferences.get
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input }) => {
+      try {
+        const domain = await domainService.getByIdWithPreferences(input.domainId, input.id);
+
+        return {
+          message: 'Domain recording preferences retrieved successfully',
+          data: {
+            domainId: domain.id,
+            workspaceId: input.id,
+            recordingHideSensitive: domain.recordingHideSensitive,
+            recordingCaptureClientLog: domain.recordingCaptureClientLog,
+            recordingCaptureServerLog: domain.recordingCaptureServerLog,
+            recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
+          },
+        };
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof GoneError) {
+          throw new ORPCError('GONE', {
+            status: 410,
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * PATCH /workspace/:id/domains/:domainId/preferences - Update domain recording preferences
+ * Requires workspace member
+ */
+export const updateDomainRecordingPreferencesImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.preferences.update
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input }) => {
+      try {
+        await domainService.updateRecordingPreferences(input.domainId, input.id, {
+          recordingHideSensitive: input.recordingHideSensitive,
+          recordingCaptureClientLog: input.recordingCaptureClientLog,
+          recordingCaptureServerLog: input.recordingCaptureServerLog,
+          recordingCaptureNetworkLog: input.recordingCaptureNetworkLog,
+        });
+
+        return {
+          message: 'Domain recording preferences updated successfully',
+          data: {
+            domainId: input.domainId,
+            workspaceId: input.id,
+          },
+        };
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: 'Invalid request body',
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof GoneError) {
+          throw new ORPCError('GONE', {
+            status: 410,
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * PUT /workspace/:id/domains/:domainId/preferences - Replace domain recording preferences
+ * Requires workspace member
+ */
+export const replaceDomainRecordingPreferencesImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.preferences.replace
+    .use(requireMember, (input) => ({ workspaceId: input.id }))
+    .handler(async ({ input }) => {
+      try {
+        await domainService.replaceRecordingPreferences(input.domainId, input.id, {
+          recordingHideSensitive: input.recordingHideSensitive,
+          recordingCaptureClientLog: input.recordingCaptureClientLog,
+          recordingCaptureServerLog: input.recordingCaptureServerLog,
+          recordingCaptureNetworkLog: input.recordingCaptureNetworkLog,
+        });
+
+        return {
+          message: 'Domain recording preferences replaced successfully',
+          data: {
+            domainId: input.domainId,
+            workspaceId: input.id,
+          },
+        };
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: 'Invalid request body',
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof GoneError) {
+          throw new ORPCError('GONE', {
+            status: 410,
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
+ * Create the workspace procedures object
+ * Complete implementation with CRUD, member management, invites, and domains
+ */
+export const createWorkspaceProcedures = (
+  inviteService: InviteService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService,
+  projectService: ProjectService,
+  domainService: DomainService
+) => {
+  return {
+    list: getAllWorkspacesImpl(workspaceService),
+    count: countWorkspacesImpl(workspaceService),
+    getById: getWorkspaceByIdImpl(workspaceService),
+    updateName: updateWorkspaceNameImpl(workspaceService, workspaceMemberService),
+    delete: deleteWorkspaceImpl(workspaceService, workspaceMemberService),
+
+    preferences: {
+      get: getWorkspacePreferencesImpl(workspaceService),
+      update: updateWorkspacePreferencesImpl(workspaceService, workspaceMemberService),
+    },
+
+    members: {
+      list: getWorkspaceMembersImpl(workspaceMemberService),
+      updateRole: updateMemberRoleImpl(workspaceMemberService, workspaceService),
+      remove: removeMemberImpl(workspaceMemberService, workspaceService),
+    },
+
+    invite: {
+      getUrl: getInviteUrlImpl(inviteService, workspaceMemberService, workspaceService),
+      rotate: rotateInviteTokenImpl(inviteService, workspaceMemberService, workspaceService),
+      send: sendWorkspaceInvitesImpl(inviteService, workspaceMemberService, workspaceService),
+    },
+
+    domains: {
+      list: getWorkspaceDomainsImpl(domainService, workspaceMemberService, workspaceService),
+      getById: getDomainByIdImpl(domainService, workspaceMemberService, workspaceService),
+      add: addDomainImpl(domainService, workspaceMemberService, workspaceService),
+      update: updateDomainImpl(domainService, workspaceMemberService, workspaceService),
+      delete: deleteDomainImpl(domainService, workspaceMemberService, workspaceService),
+      getVerificationUrl: getDomainVerificationUrlImpl(
+        domainService,
+        workspaceMemberService,
+        workspaceService
+      ),
+      preferences: {
+        get: getDomainRecordingPreferencesImpl(
+          domainService,
+          workspaceMemberService,
+          workspaceService
+        ),
+        update: updateDomainRecordingPreferencesImpl(
+          domainService,
+          workspaceMemberService,
+          workspaceService
+        ),
+        replace: replaceDomainRecordingPreferencesImpl(
+          domainService,
+          workspaceMemberService,
+          workspaceService
+        ),
+      },
+    },
+
+    // TODO: Add remaining endpoints incrementally
+    notifications: {} as any,
+    linkSettings: {} as any,
+  };
+};
