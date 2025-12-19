@@ -4,7 +4,9 @@ import {
   WorkspacesListDataSchema,
   CountWorkspacesQuerySchema,
   WorkspaceCountDataSchema,
+  WorkspaceByIdSchema,
   WorkspaceByIdDataSchema,
+  WorkspacePreferencesGetSchema,
   WorkspacePreferencesGetDataSchema,
   UpdateWorkspacePreferencesSchema,
   WorkspacePreferencesUpdateDataSchema,
@@ -12,23 +14,29 @@ import {
   WorkspaceTeamDataSchema,
   UpdateMemberRoleSchema,
   MemberRoleUpdateDataSchema,
+  RemoveMemberSchema,
   MemberRemoveDataSchema,
   LeaveWorkspaceDataSchema,
   UpdateNotificationPreferencesSchema,
   NotificationPreferencesUpdateDataSchema,
   WorkspaceDomainsQuerySchema,
   WorkspaceDomainsDataSchema,
+  DomainByIdSchema,
   DomainByIdDataSchema,
   AddDomainSchema,
   DomainAddDataSchema,
   UpdateDomainSchema,
   DomainUpdateDataSchema,
+  DeleteDomainSchema,
   DomainDeleteDataSchema,
+  DomainVerificationUrlSchema,
   DomainVerificationUrlDataSchema,
+  GetDomainRecordingPreferencesSchema,
   DomainRecordingPreferencesDataSchema,
   UpdateDomainRecordingPreferencesSchema,
   DomainRecordingPreferencesUpdateDataSchema,
   ReplaceDomainRecordingPreferencesSchema,
+  InviteUrlSchema,
   InviteUrlDataSchema,
   SendInvitesSchema,
   SendInvitesResultSchema,
@@ -36,6 +44,7 @@ import {
   LinkSettingsDataSchema,
   UpdateWorkspaceNameSchema,
   WorkspaceNameUpdateDataSchema,
+  DeleteWorkspaceSchema,
   WorkspaceDeleteDataSchema,
   WorkspaceSearchQuerySchema,
   WorkspaceSearchDataSchema,
@@ -89,6 +98,7 @@ export const getWorkspaceById = oc
     description: 'Retrieve complete workspace details',
     tags: ['Workspaces'],
   })
+  .input(WorkspaceByIdSchema)
   .output(ApiResponseSchema(WorkspaceByIdDataSchema));
 
 /**
@@ -103,6 +113,7 @@ export const getWorkspacePreferences = oc
     description: 'Retrieve workspace recording and customization preferences',
     tags: ['Workspaces'],
   })
+  .input(WorkspacePreferencesGetSchema)
   .output(ApiResponseSchema(WorkspacePreferencesGetDataSchema));
 
 /**
@@ -162,6 +173,7 @@ export const removeMember = oc
     description: 'Remove a member from the workspace',
     tags: ['Workspaces'],
   })
+  .input(RemoveMemberSchema)
   .output(ApiResponseSchema(MemberRemoveDataSchema));
 
 /**
@@ -205,6 +217,7 @@ export const getInviteUrl = oc
     description: 'Retrieve workspace invite URL',
     tags: ['Workspaces'],
   })
+  .input(InviteUrlSchema)
   .output(ApiResponseSchema(InviteUrlDataSchema));
 
 /**
@@ -219,6 +232,7 @@ export const rotateInviteToken = oc
     description: 'Generate new workspace invite URL',
     tags: ['Workspaces'],
   })
+  .input(InviteUrlSchema)
   .output(ApiResponseSchema(InviteUrlDataSchema));
 
 /**
@@ -263,6 +277,7 @@ export const getDomainById = oc
     description: 'Retrieve complete domain details including recording preferences',
     tags: ['Workspaces'],
   })
+  .input(DomainByIdSchema)
   .output(ApiResponseSchema(DomainByIdDataSchema));
 
 /**
@@ -307,6 +322,7 @@ export const deleteDomain = oc
     description: 'Remove a domain from the workspace',
     tags: ['Workspaces'],
   })
+  .input(DeleteDomainSchema)
   .output(ApiResponseSchema(DomainDeleteDataSchema));
 
 /**
@@ -321,6 +337,7 @@ export const getDomainVerificationUrl = oc
     description: 'Generate domain verification URL',
     tags: ['Workspaces'],
   })
+  .input(DomainVerificationUrlSchema)
   .output(ApiResponseSchema(DomainVerificationUrlDataSchema));
 
 /**
@@ -335,6 +352,7 @@ export const getDomainRecordingPreferences = oc
     description: 'Retrieve recording preferences for a specific domain',
     tags: ['Workspaces'],
   })
+  .input(GetDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesDataSchema));
 
 /**
@@ -409,6 +427,7 @@ export const deleteWorkspace = oc
     description: 'Permanently delete a workspace',
     tags: ['Workspaces'],
   })
+  .input(DeleteWorkspaceSchema)
   .output(ApiResponseSchema(WorkspaceDeleteDataSchema));
 
 /**

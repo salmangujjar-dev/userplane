@@ -5,9 +5,11 @@ import {
   LinksListDataSchema,
   CreateLinkSchema,
   LinkCreateDataSchema,
+  LinkByIdSchema,
   UpdateLinkSchema,
   LinkUpdateDataSchema,
   LinkGetDataSchema,
+  DeleteLinkSchema,
   LinkDeleteDataSchema,
   ApiResponseSchema,
 } from '../schemas';
@@ -59,6 +61,7 @@ export const getLinkById = oc
     description: 'Retrieve complete link details including project and creator info',
     tags: ['Links'],
   })
+  .input(LinkByIdSchema)
   .output(ApiResponseSchema(LinkGetDataSchema));
 
 /**
@@ -88,4 +91,5 @@ export const deleteLink = oc
     description: 'Soft delete a recording link',
     tags: ['Links'],
   })
+  .input(DeleteLinkSchema)
   .output(ApiResponseSchema(LinkDeleteDataSchema));
