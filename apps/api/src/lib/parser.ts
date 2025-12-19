@@ -10,7 +10,7 @@ import type { LinkProviderType } from '@/api/types';
  */
 export interface ParsedLinkReference {
   linkTitle: string | null;
-  linkProviderType: LinkProviderType | null;
+  linkProviderType: LinkProviderType;
   linkProviderId: string | null;
   linkProviderRef: string | null;
 }

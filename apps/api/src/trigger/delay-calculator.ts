@@ -5,7 +5,7 @@
 
 import { env } from '@/api/env';
 import type { Recording } from '@workspace/db';
-import { RECORDING_STATUS_GROUPS } from '../schema';
+import { RECORDING_STATUS_GROUPS } from '@/api/schema/recording.schema';
 
 /**
  * getPurgeDelay - get the delay for purging a recording
