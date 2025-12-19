@@ -49,6 +49,6 @@ export const entitlements = pgTable(
 export const entitlementsRelations = relations(entitlements, ({ one }) => ({
   workspace: one(workspaces, {
     fields: [entitlements.workspaceId],
-    references: [workspaces.id],
+    references: [workspaces.workspaceId],
   }),
 }));

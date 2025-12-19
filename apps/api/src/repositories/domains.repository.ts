@@ -20,7 +20,7 @@ export class DomainRepository {
     const [domain] = await dbClient
       .insert(domains)
       .values({
-        id: data.id,
+        domainId: data.domainId,
         workspaceId: data.workspaceId,
         domainUrl: data.url,
         domainStatus: data.domainStatus,
@@ -34,11 +34,11 @@ export class DomainRepository {
   /**
    * Find domain by ID
    */
-  async findById(id: string) {
+  async findById(domainId: string) {
     const [domain] = await this.db
       .select()
       .from(domains)
-      .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))
+      .where(and(eq(domains.domainId, domainId), eq(domains.isDeleted, false)))
       .limit(1);
 
     return domain || null;
@@ -48,14 +48,14 @@ export class DomainRepository {
    * Check if domain is soft-deleted
    * Returns true if domain exists but is marked as deleted
    */
-  async isSoftDeleted(id: string) {
+  async isSoftDeleted(domainId: string) {
     const [domain] = await this.db
       .select({
-        id: domains.id,
+        domainId: domains.domainId,
         isDeleted: domains.isDeleted,
       })
       .from(domains)
-      .where(eq(domains.id, id))
+      .where(eq(domains.domainId, domainId))
       .limit(1);
 
     return domain ? domain.isDeleted : null;
@@ -127,7 +127,7 @@ export class DomainRepository {
         and(
           eq(domains.workspaceId, workspaceId),
           eq(domains.domainUrl, url),
-          ne(domains.id, excludeDomainId),
+          ne(domains.domainId, excludeDomainId),
           eq(domains.isDeleted, false)
         )
       )
@@ -140,7 +140,7 @@ export class DomainRepository {
    * Update domain URL
    * Updates the domain URL and resets status to pending
    */
-  async updateUrl(id: string, url: string, options?: { tx?: Transaction }) {
+  async updateUrl(domainId: string, url: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [updated] = await dbClient
@@ -150,7 +150,7 @@ export class DomainRepository {
         domainStatus: 'pending',
         updatedAt: new Date(),
       })
-      .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))
+      .where(and(eq(domains.domainId, domainId), eq(domains.isDeleted, false)))
       .returning();
 
     return updated || null;
@@ -160,7 +160,7 @@ export class DomainRepository {
    * Soft delete a domain
    * Sets isDeleted to true and updates deletedAt timestamp
    */
-  async softDelete(id: string, options?: { tx?: Transaction }) {
+  async softDelete(domainId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [deleted] = await dbClient
@@ -169,7 +169,7 @@ export class DomainRepository {
         isDeleted: true,
         deletedAt: new Date(),
       })
-      .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))
+      .where(and(eq(domains.domainId, domainId), eq(domains.isDeleted, false)))
       .returning();
 
     return deleted || null;
@@ -225,7 +225,7 @@ export class DomainRepository {
    * Updates recording toggle settings for the domain
    */
   async updateRecordingPreferences(
-    id: string,
+    domainId: string,
     data: Partial<{
       recordingHideSensitive: boolean;
       recordingCaptureClientLog: boolean;
@@ -259,7 +259,7 @@ export class DomainRepository {
     const [updated] = await dbClient
       .update(domains)
       .set(updateData)
-      .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))
+      .where(and(eq(domains.domainId, domainId), eq(domains.isDeleted, false)))
       .returning();
 
     return updated || null;
@@ -269,7 +269,7 @@ export class DomainRepository {
    * Find domain preferences by ID
    * Returns recording toggle settings for the domain
    */
-  async findPreferencesById(id: string) {
+  async findPreferencesById(domainId: string) {
     const [preferences] = await this.db
       .select({
         recordingHideSensitive: domains.recordingHideSensitive,
@@ -278,7 +278,7 @@ export class DomainRepository {
         recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
       })
       .from(domains)
-      .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))
+      .where(and(eq(domains.domainId, domainId), eq(domains.isDeleted, false)))
       .limit(1);
 
     return preferences || null;

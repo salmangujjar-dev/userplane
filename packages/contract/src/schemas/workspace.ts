@@ -28,7 +28,7 @@ export const WorkspaceMembershipSchema = z.object({
  * Workspace item
  */
 export const WorkspaceItemSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   workspaceName: z.string(),
   workspacePlan: z.enum([
     'starter_monthly',
@@ -82,7 +82,7 @@ export const WorkspaceCountDataSchema = z.object({
  * Workspace by ID request
  */
 export const WorkspaceByIdSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
 });
 
 /**
@@ -90,7 +90,7 @@ export const WorkspaceByIdSchema = z.object({
  */
 export const WorkspaceByIdDataSchema = z.object({
   workspace: z.object({
-    id: z.string(),
+    workspaceId: z.string(),
     workspaceName: z.string(),
     workspacePlan: z.enum([
       'starter_monthly',
@@ -125,7 +125,7 @@ export const WorkspacePreferencesSchema = z.object({
  * Workspace preferences get request
  */
 export const WorkspacePreferencesGetSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
 });
 
 /**
@@ -154,7 +154,7 @@ export const UpdateWorkspacePreferencesSchema = z.object({
  */
 export const WorkspacePreferencesUpdateDataSchema = z.object({
   preferences: z.object({
-    id: z.string(),
+    workspaceId: z.string(),
     workspaceName: z.string(),
     recordingCustomizeLink: z.boolean(),
     recordingCompanyName: z.string().nullable(),
@@ -180,7 +180,7 @@ export const TeamMemberSchema = z.object({
  * Workspace team query parameters
  */
 export const WorkspaceTeamQuerySchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   page: z.number().int().positive().optional().default(1),
   include_me: z.boolean().optional().default(false),
 });
@@ -199,7 +199,7 @@ export const WorkspaceTeamDataSchema = z.object({
  * Update member role request
  */
 export const UpdateMemberRoleSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   workspaceMemberId: z.string(),
   role: WorkspaceRoleSchema,
 });
@@ -217,7 +217,7 @@ export const MemberRoleUpdateDataSchema = z.object({
  * Member remove request
  */
 export const RemoveMemberSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   workspaceMemberId: z.string(),
 });
 
@@ -267,7 +267,7 @@ export const DomainItemSchema = z.object({
  * Workspace domains query parameters
  */
 export const WorkspaceDomainsQuerySchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   page: z.number().int().positive().optional().default(1),
 });
 
@@ -284,7 +284,7 @@ export const WorkspaceDomainsDataSchema = z.object({
  * Domain by ID request
  */
 export const DomainByIdSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   domainId: z.string(),
 });
 
@@ -310,7 +310,7 @@ export const DomainByIdDataSchema = z.object({
  * Add domain request
  */
 export const AddDomainSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   url: z.string().url(),
 });
 
@@ -326,7 +326,7 @@ export const DomainAddDataSchema = z.object({
  * Update domain request
  */
 export const UpdateDomainSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   domainId: z.string(),
   url: z.string().url(),
 });
@@ -343,7 +343,7 @@ export const DomainUpdateDataSchema = z.object({
  * Domain delete request
  */
 export const DeleteDomainSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   domainId: z.string(),
 });
 
@@ -359,7 +359,7 @@ export const DomainDeleteDataSchema = z.object({
  * Domain verification URL request
  */
 export const DomainVerificationUrlSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
   domainId: z.string(),
 });
 
@@ -375,7 +375,7 @@ export const DomainVerificationUrlDataSchema = z.object({
  * Invite URL request
  */
 export const InviteUrlSchema = z.object({
-  id: z.string(),
+  workspaceId: z.string(),
 });
 
 /**

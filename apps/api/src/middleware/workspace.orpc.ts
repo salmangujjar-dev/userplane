@@ -33,7 +33,10 @@ export function createWorkspaceMiddleware(
 
       try {
         const workspace = await workspaceService.getById(workspaceId);
-        const member = await workspaceMemberService.getMember(context.user.id, workspace.id);
+        const member = await workspaceMemberService.getMember(
+          context.user.id,
+          workspace.workspaceId
+        );
 
         if (!member) {
           throw new ORPCError('FORBIDDEN', {
@@ -43,8 +46,8 @@ export function createWorkspaceMiddleware(
 
         return next({
           context: {
-            workspaceId: workspace.id,
-            workspaceMemberId: member.id,
+            workspaceId: workspace.workspaceId,
+            workspaceMemberId: member.workspaceMemberId,
             workspaceRole: member.workspaceRole,
           },
         });
@@ -83,7 +86,10 @@ export function createWorkspaceRoleMiddleware(
 
       try {
         const workspace = await workspaceService.getById(workspaceId);
-        const member = await workspaceMemberService.getMember(context.user.id, workspace.id);
+        const member = await workspaceMemberService.getMember(
+          context.user.id,
+          workspace.workspaceId
+        );
 
         if (!member) {
           throw new ORPCError('FORBIDDEN', {
@@ -99,8 +105,8 @@ export function createWorkspaceRoleMiddleware(
 
         return next({
           context: {
-            workspaceId: workspace.id,
-            workspaceMemberId: member.id,
+            workspaceId: workspace.workspaceId,
+            workspaceMemberId: member.workspaceMemberId,
             workspaceRole: member.workspaceRole,
           },
         });

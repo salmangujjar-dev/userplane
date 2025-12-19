@@ -97,7 +97,7 @@ export const createLinkImpl = (
           linkReusable: input.linkReusable,
         });
 
-        const link = await linkService.getById(createdLink.id, input.workspaceId);
+        const link = await linkService.getById(createdLink.linkId, input.workspaceId);
 
         return {
           message: 'Link created successfully',

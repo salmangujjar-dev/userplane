@@ -10,7 +10,7 @@ export const domains = pgTable(
   'domains',
   {
     // Primary identifier
-    id: text('id').primaryKey(),
+    domainId: text('domain_id').primaryKey(),
 
     // Workspace relationship
     workspaceId: text('workspace_id').notNull(),
@@ -46,7 +46,7 @@ export const domains = pgTable(
 export const domainsRelations = relations(domains, ({ one, many }) => ({
   workspace: one(workspaces, {
     fields: [domains.workspaceId],
-    references: [workspaces.id],
+    references: [workspaces.workspaceId],
   }),
   links: many(links),
 }));

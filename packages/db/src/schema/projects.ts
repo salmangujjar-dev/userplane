@@ -8,7 +8,7 @@ export const projects = pgTable(
   'projects',
   {
     // Primary identifier
-    id: text('id').primaryKey(),
+    projectId: text('project_id').primaryKey(),
 
     // Relationships
     workspaceId: text('workspace_id').notNull(),
@@ -34,7 +34,7 @@ export const projects = pgTable(
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   workspace: one(workspaces, {
     fields: [projects.workspaceId],
-    references: [workspaces.id],
+    references: [workspaces.workspaceId],
   }),
   links: many(links),
   recordings: many(recordings),

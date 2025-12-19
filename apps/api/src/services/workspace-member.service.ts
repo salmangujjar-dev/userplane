@@ -49,13 +49,13 @@ export class WorkspaceMemberService {
 
     // If soft-deleted member exists, restore them as owner
     if (deletedMember && deletedMember.isDeleted) {
-      return this.deps.memberRepo.restore(deletedMember.id, 'owner', options);
+      return this.deps.memberRepo.restore(deletedMember.workspaceMemberId, 'owner', options);
     }
 
     // Otherwise, create new member as owner
     return this.deps.memberRepo.create(
       {
-        id: generateWorkspaceMemberId(),
+        workspaceMemberId: generateWorkspaceMemberId(),
         userId: params.userId,
         workspaceId: params.workspaceId,
         workspaceRole: 'owner',
@@ -93,13 +93,13 @@ export class WorkspaceMemberService {
 
     // If soft-deleted member exists, restore them
     if (deletedMember && deletedMember.isDeleted) {
-      return this.deps.memberRepo.restore(deletedMember.id, params.role, options);
+      return this.deps.memberRepo.restore(deletedMember.workspaceMemberId, params.role, options);
     }
 
     // Otherwise, create new member
     return this.deps.memberRepo.create(
       {
-        id: generateWorkspaceMemberId(),
+        workspaceMemberId: generateWorkspaceMemberId(),
         userId: params.userId,
         workspaceId: params.workspaceId,
         workspaceRole: params.role,
@@ -246,7 +246,7 @@ export class WorkspaceMemberService {
       }
     }
 
-    return this.deps.memberRepo.softDelete(member.id, options);
+    return this.deps.memberRepo.softDelete(member.workspaceMemberId, options);
   }
 
   /**
@@ -274,6 +274,10 @@ export class WorkspaceMemberService {
       throw new ValidationError('You are not a member of this workspace');
     }
 
-    return this.deps.memberRepo.updateNotificationPreferences(member.id, preferences, options);
+    return this.deps.memberRepo.updateNotificationPreferences(
+      member.workspaceMemberId,
+      preferences,
+      options
+    );
   }
 }

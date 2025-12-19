@@ -118,7 +118,7 @@ export type UploadFileType = 'video' | 'thumbnail' | 'console_log' | 'network_lo
  * Workspace creation input
  */
 export interface CreateWorkspaceInput {
-  id: string;
+  workspaceId: string;
   workspaceName: string;
   recordingSlug: string;
   workspacePlan: WorkspacePlan;
@@ -129,7 +129,7 @@ export interface CreateWorkspaceInput {
  * Workspace member creation input
  */
 export interface CreateWorkspaceMemberInput {
-  id: string;
+  workspaceMemberId: string;
   userId: string;
   workspaceId: string;
   workspaceRole: WorkspaceRole;
@@ -139,7 +139,7 @@ export interface CreateWorkspaceMemberInput {
  * Project creation input
  */
 export interface CreateProjectInput {
-  id: string;
+  projectId: string;
   workspaceId: string;
   projectTitle: string | null;
   isDefault: boolean;
@@ -149,7 +149,7 @@ export interface CreateProjectInput {
  * Domain creation input
  */
 export interface CreateDomainInput {
-  id: string;
+  domainId: string;
   workspaceId: string;
   url: string;
   domainStatus: DomainStatus;

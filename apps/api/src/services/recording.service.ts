@@ -108,12 +108,12 @@ export class RecordingService {
 
     // Map database rows to response shape with thumbnail URL
     const recordings: RecordingItem[] = rows.map((row) => ({
-      id: row.id,
+      recordingId: row.recordingId,
       recordingThumbnail: this.getThumbnailUrl(row.recordingThumbnailRef),
       recordingDurationMs: row.recordingDurationMs,
       createdAt: row.createdAt,
       creator: {
-        id: row.creatorId,
+        workspaceMemberId: row.creatorId,
         name: row.creatorName,
       },
     }));
@@ -178,10 +178,10 @@ export class RecordingService {
     }
 
     return {
-      id: row.id,
+      recordingId: row.recordingId,
       meta: {
         link: {
-          id: row.recordingLinkId,
+          linkId: row.recordingLinkId,
           title: row.linkTitle,
           providerType: row.linkProviderType as LinkProviderType,
           providerId: row.linkProviderId,
@@ -190,15 +190,15 @@ export class RecordingService {
           createdAt: row.linkCreatedAt,
         },
         creator: {
-          id: row.creatorId,
+          workspaceMemberId: row.creatorId,
           name: row.creatorName,
         },
         project: {
-          id: row.projectId,
+          projectId: row.projectId,
           title: row.projectTitle,
         },
         domain: {
-          id: row.domainId,
+          domainId: row.domainId,
           url: row.domainUrl,
         },
         workspaceId: row.workspaceId,

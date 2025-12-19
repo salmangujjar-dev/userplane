@@ -23,7 +23,7 @@ export const links = pgTable(
   'recording_links',
   {
     // Primary identifier
-    id: text('id').primaryKey(),
+    linkId: text('link_id').primaryKey(),
 
     // Relationships
     workspaceId: text('workspace_id').notNull(),
@@ -66,19 +66,19 @@ export const links = pgTable(
 export const linksRelations = relations(links, ({ one, many }) => ({
   workspace: one(workspaces, {
     fields: [links.workspaceId],
-    references: [workspaces.id],
+    references: [workspaces.workspaceId],
   }),
   project: one(projects, {
     fields: [links.projectId],
-    references: [projects.id],
+    references: [projects.projectId],
   }),
   domain: one(domains, {
     fields: [links.domainId],
-    references: [domains.id],
+    references: [domains.domainId],
   }),
   creator: one(workspaceMembers, {
     fields: [links.createdBy],
-    references: [workspaceMembers.id],
+    references: [workspaceMembers.workspaceMemberId],
   }),
   recordings: many(recordings),
 }));

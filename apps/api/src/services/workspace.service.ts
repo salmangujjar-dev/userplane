@@ -46,7 +46,7 @@ export class WorkspaceService {
 
     return this.deps.workspaceRepo.create(
       {
-        id: generateWorkspaceId(),
+        workspaceId: generateWorkspaceId(),
         workspaceName: params.workspaceName,
         recordingSlug,
         workspacePlan: params.workspacePlan,
@@ -69,10 +69,10 @@ export class WorkspaceService {
    * Returns only basic workspace info
    * Throws GoneError if soft-deleted, NotFoundError if not found
    */
-  async getById(id: string) {
-    const workspace = await this.deps.workspaceRepo.findById(id);
+  async getById(workspaceId: string) {
+    const workspace = await this.deps.workspaceRepo.findById(workspaceId);
     if (!workspace) {
-      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(id);
+      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
       if (isSoftDeleted === true) {
         throw new GoneError('Workspace has been deleted');
       }
@@ -86,10 +86,10 @@ export class WorkspaceService {
    * Returns recording-related settings
    * Throws GoneError if soft-deleted, NotFoundError if not found
    */
-  async getPreferencesById(id: string) {
-    const preferences = await this.deps.workspaceRepo.findPreferencesById(id);
+  async getPreferencesById(workspaceId: string) {
+    const preferences = await this.deps.workspaceRepo.findPreferencesById(workspaceId);
     if (!preferences) {
-      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(id);
+      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
       if (isSoftDeleted === true) {
         throw new GoneError('Workspace has been deleted');
       }
@@ -127,7 +127,7 @@ export class WorkspaceService {
 
     // Update workspace with new token
     const updatedWorkspace = await this.deps.workspaceRepo.updateInviteToken(
-      workspace.id,
+      workspace.workspaceId,
       newToken,
       options
     );
@@ -219,8 +219,8 @@ export class WorkspaceService {
   /**
    * Get workspace invite token by ID
    */
-  async getInviteToken(id: string) {
-    const result = await this.deps.workspaceRepo.findInviteTokenById(id);
+  async getInviteToken(workspaceId: string) {
+    const result = await this.deps.workspaceRepo.findInviteTokenById(workspaceId);
     if (!result) {
       throw new NotFoundError('Workspace not found');
     }

@@ -27,7 +27,7 @@ import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
  * Shape of link list item with joined data
  */
 export interface LinkListRow {
-  id: string;
+  linkId: string;
   linkTitle: string | null;
   linkType: LinkType;
   linkReusable: boolean;
@@ -53,7 +53,7 @@ export interface LinkListRow {
  * Input for creating a link
  */
 export interface CreateLinkInput {
-  id: string;
+  linkId: string;
   workspaceId: string;
   projectId: string;
   domainId: string;
@@ -114,7 +114,7 @@ export class LinkRepository {
     const [link] = await dbClient
       .insert(links)
       .values({
-        id: data.id,
+        linkId: data.linkId,
         workspaceId: data.workspaceId,
         projectId: data.projectId,
         domainId: data.domainId,
@@ -201,7 +201,7 @@ export class LinkRepository {
 
     const results = await this.db
       .select({
-        id: links.id,
+        linkId: links.linkId,
         linkTitle: links.linkTitle,
         linkType: links.linkType,
         linkReusable: links.linkReusable,
@@ -212,9 +212,9 @@ export class LinkRepository {
         workspaceId: links.workspaceId,
         projectId: links.projectId,
         projectTitle: projects.projectTitle,
-        creatorId: workspaceMembers.id,
+        creatorId: workspaceMembers.workspaceMemberId,
         creatorName: user.name,
-        domainId: domains.id,
+        domainId: domains.domainId,
         domainUrl: domains.domainUrl,
         domainStatus: domains.domainStatus,
         recordingHideSensitive: domains.recordingHideSensitive,
@@ -223,10 +223,10 @@ export class LinkRepository {
         recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
       })
       .from(links)
-      .innerJoin(projects, eq(links.projectId, projects.id))
-      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.id))
+      .innerJoin(projects, eq(links.projectId, projects.projectId))
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.workspaceMemberId))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
-      .innerJoin(domains, eq(links.domainId, domains.id))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
       .where(whereConditions)
       .orderBy(orderBy)
       .limit(limit)
@@ -250,11 +250,11 @@ export class LinkRepository {
   /**
    * Find link by ID
    */
-  async findById(id: string) {
+  async findById(linkId: string) {
     const [link] = await this.db
       .select()
       .from(links)
-      .where(and(eq(links.id, id), eq(links.isDeleted, false)))
+      .where(and(eq(links.linkId, linkId), eq(links.isDeleted, false)))
       .limit(1);
 
     return link || null;
@@ -264,10 +264,10 @@ export class LinkRepository {
    * Find link by ID with joined project and creator data
    * Returns complete link details for API responses
    */
-  async findByIdWithDetails(id: string): Promise<LinkListRow | null> {
+  async findByIdWithDetails(linkId: string): Promise<LinkListRow | null> {
     const [result] = await this.db
       .select({
-        id: links.id,
+        linkId: links.linkId,
         linkTitle: links.linkTitle,
         linkType: links.linkType,
         linkReusable: links.linkReusable,
@@ -278,9 +278,9 @@ export class LinkRepository {
         workspaceId: links.workspaceId,
         projectId: links.projectId,
         projectTitle: projects.projectTitle,
-        creatorId: workspaceMembers.id,
+        creatorId: workspaceMembers.workspaceMemberId,
         creatorName: user.name,
-        domainId: domains.id,
+        domainId: domains.domainId,
         domainUrl: domains.domainUrl,
         domainStatus: domains.domainStatus,
         recordingHideSensitive: domains.recordingHideSensitive,
@@ -289,11 +289,11 @@ export class LinkRepository {
         recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
       })
       .from(links)
-      .innerJoin(projects, eq(links.projectId, projects.id))
-      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.id))
+      .innerJoin(projects, eq(links.projectId, projects.projectId))
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.workspaceMemberId))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
-      .innerJoin(domains, eq(links.domainId, domains.id))
-      .where(and(eq(links.id, id), eq(links.isDeleted, false)))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
+      .where(and(eq(links.linkId, linkId), eq(links.isDeleted, false)))
       .limit(1);
 
     return result || null;
@@ -303,14 +303,14 @@ export class LinkRepository {
    * Check if link is soft-deleted
    * Returns true if link exists but is marked as deleted
    */
-  async isSoftDeleted(id: string) {
+  async isSoftDeleted(linkId: string) {
     const [link] = await this.db
       .select({
-        id: links.id,
+        linkId: links.linkId,
         isDeleted: links.isDeleted,
       })
       .from(links)
-      .where(eq(links.id, id))
+      .where(eq(links.linkId, linkId))
       .limit(1);
 
     return link ? link.isDeleted : null;
@@ -320,7 +320,7 @@ export class LinkRepository {
    * Update link fields
    * Returns the updated link or null if not found
    */
-  async update(id: string, data: UpdateLinkInput, options?: { tx?: Transaction }) {
+  async update(linkId: string, data: UpdateLinkInput, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const updateData: Record<string, unknown> = {
@@ -350,7 +350,7 @@ export class LinkRepository {
     const [updated] = await dbClient
       .update(links)
       .set(updateData)
-      .where(and(eq(links.id, id), eq(links.isDeleted, false)))
+      .where(and(eq(links.linkId, linkId), eq(links.isDeleted, false)))
       .returning();
 
     return updated || null;
@@ -360,7 +360,7 @@ export class LinkRepository {
    * Soft delete a link
    * Marks the link as deleted without removing it from the database
    */
-  async softDelete(id: string, options?: { tx?: Transaction }) {
+  async softDelete(linkId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [deleted] = await dbClient
@@ -369,7 +369,7 @@ export class LinkRepository {
         isDeleted: true,
         deletedAt: new Date(),
       })
-      .where(and(eq(links.id, id), eq(links.isDeleted, false)))
+      .where(and(eq(links.linkId, linkId), eq(links.isDeleted, false)))
       .returning();
 
     return deleted || null;
@@ -380,10 +380,10 @@ export class LinkRepository {
    * Used for session initialization to get link context and recording settings
    * Recording toggle settings now come from the domain, not workspace
    */
-  async findByIdWithWorkspacePrefs(id: string): Promise<LinkWithWorkspacePrefsRow | null> {
+  async findByIdWithWorkspacePrefs(linkId: string): Promise<LinkWithWorkspacePrefsRow | null> {
     const [result] = await this.db
       .select({
-        linkId: links.id,
+        linkId: links.linkId,
         linkType: links.linkType,
         linkReusable: links.linkReusable,
         workspaceId: links.workspaceId,
@@ -404,13 +404,13 @@ export class LinkRepository {
         recordingMaxDurationMs: workspaces.recordingMaxDurationMs,
       })
       .from(links)
-      .innerJoin(workspaces, eq(links.workspaceId, workspaces.id))
-      .innerJoin(domains, eq(links.domainId, domains.id))
-      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.id))
+      .innerJoin(workspaces, eq(links.workspaceId, workspaces.workspaceId))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.workspaceMemberId))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
       .where(
         and(
-          eq(links.id, id),
+          eq(links.linkId, linkId),
           eq(links.isDeleted, false),
           eq(workspaces.isDeleted, false),
           eq(domains.isDeleted, false)
@@ -474,7 +474,7 @@ export class LinkRepository {
     // ts_rank calculates relevance score
     const searchResults = await this.db
       .select({
-        id: links.id,
+        linkId: links.linkId,
         linkTitle: links.linkTitle,
         linkType: links.linkType,
         linkReusable: links.linkReusable,
@@ -483,11 +483,11 @@ export class LinkRepository {
         linkProviderRef: links.linkProviderRef,
         createdAt: links.createdAt,
         workspaceId: links.workspaceId,
-        projectId: projects.id,
+        projectId: projects.projectId,
         projectTitle: projects.projectTitle,
-        creatorId: user.id,
+        creatorId: workspaceMembers.workspaceMemberId,
         creatorName: user.name,
-        domainId: domains.id,
+        domainId: domains.domainId,
         domainUrl: domains.domainUrl,
         domainStatus: domains.domainStatus,
         recordingHideSensitive: domains.recordingHideSensitive,
@@ -497,10 +497,10 @@ export class LinkRepository {
         rank: sql<number>`ts_rank(to_tsvector('simple', COALESCE(${links.linkTitle}, '')), to_tsquery('simple', ${tsquery}))`,
       })
       .from(links)
-      .innerJoin(projects, eq(links.projectId, projects.id))
-      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.id))
+      .innerJoin(projects, eq(links.projectId, projects.projectId))
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.workspaceMemberId))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
-      .innerJoin(domains, eq(links.domainId, domains.id))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
       .where(
         and(
           eq(links.workspaceId, workspaceId),

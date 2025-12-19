@@ -51,7 +51,7 @@ export const RecordingMetadataSchema = z.object({
  * Recording creator information
  */
 export const RecordingCreatorSchema = z.object({
-  id: z.string(),
+  workspaceMemberId: z.string(),
   name: z.string(),
 });
 
@@ -59,7 +59,7 @@ export const RecordingCreatorSchema = z.object({
  * Recording item in list
  */
 export const RecordingItemSchema = z.object({
-  id: z.string(),
+  recordingId: z.string(),
   recordingThumbnail: z.string().nullable(),
   recordingDurationMs: z.number().int().nullable(),
   createdAt: z.date(),
@@ -89,7 +89,7 @@ export const RecordingResourceSchema = z.object({
  * Link reference in recording detail
  */
 export const LinkRefSchema = z.object({
-  id: z.string(),
+  linkId: z.string(),
   title: z.string().nullable(),
   providerType: z.string().nullable(),
 });
@@ -98,7 +98,7 @@ export const LinkRefSchema = z.object({
  * Project reference in recording detail
  */
 export const RecordingProjectRefSchema = z.object({
-  id: z.string().nullable(),
+  projectId: z.string().nullable(),
   title: z.string().nullable(),
 });
 
@@ -106,7 +106,7 @@ export const RecordingProjectRefSchema = z.object({
  * Domain reference in recording detail
  */
 export const RecordingDomainRefSchema = z.object({
-  id: z.string(),
+  domainId: z.string(),
   url: z.string(),
 });
 
@@ -129,7 +129,7 @@ export const RecordingDetailMetaSchema = z.object({
  * Recording detail
  */
 export const RecordingDetailSchema = z.object({
-  id: z.string(),
+  recordingId: z.string(),
   meta: RecordingDetailMetaSchema,
 });
 

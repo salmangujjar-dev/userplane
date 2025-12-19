@@ -42,7 +42,11 @@ export class ProjectService {
           params.workspaceId
         );
         if (currentDefault) {
-          await this.deps.projectRepo.update(currentDefault.id, { isDefault: false }, options);
+          await this.deps.projectRepo.update(
+            currentDefault.projectId,
+            { isDefault: false },
+            options
+          );
         }
       }
     } else {
@@ -55,7 +59,7 @@ export class ProjectService {
 
     return this.deps.projectRepo.create(
       {
-        id: generateProjectId(),
+        projectId: generateProjectId(),
         workspaceId: params.workspaceId,
         projectTitle: params.projectTitle,
         isDefault,
@@ -68,10 +72,10 @@ export class ProjectService {
    * Get project by ID
    * Throws GoneError if soft-deleted, NotFoundError if not found
    */
-  async getById(id: string) {
-    const project = await this.deps.projectRepo.findById(id);
+  async getById(projectId: string) {
+    const project = await this.deps.projectRepo.findById(projectId);
     if (!project) {
-      const isSoftDeleted = await this.deps.projectRepo.isSoftDeleted(id);
+      const isSoftDeleted = await this.deps.projectRepo.isSoftDeleted(projectId);
       if (isSoftDeleted === true) {
         throw new GoneError('Project has been deleted');
       }
@@ -138,8 +142,8 @@ export class ProjectService {
 
     // Unset current default
     const currentDefault = await this.deps.projectRepo.findDefaultByWorkspace(project.workspaceId);
-    if (currentDefault && currentDefault.id !== projectId) {
-      await this.deps.projectRepo.update(currentDefault.id, { isDefault: false }, options);
+    if (currentDefault && currentDefault.projectId !== projectId) {
+      await this.deps.projectRepo.update(currentDefault.projectId, { isDefault: false }, options);
     }
 
     // Set new default
@@ -192,7 +196,7 @@ export class ProjectService {
       if (project.isDefault) {
         const otherProject = await this.deps.projectRepo.findOtherProject(workspaceId, projectId);
         if (otherProject) {
-          await this.deps.projectRepo.update(otherProject.id, { isDefault: true }, { tx });
+          await this.deps.projectRepo.update(otherProject.projectId, { isDefault: true }, { tx });
         }
       }
 

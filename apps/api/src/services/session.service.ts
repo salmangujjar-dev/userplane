@@ -263,7 +263,7 @@ export class SessionService {
 
     // Create recording record in database
     await this.deps.recordingRepo.create({
-      id: recordingId,
+      recordingId: recordingId,
       recordingLinkId: sessionPayload.lid,
       workspaceId: sessionPayload.wid,
       projectId: linkData.projectId,
@@ -368,14 +368,14 @@ export class SessionService {
     await this.verifyUploadedFiles(recording, 'minimal');
 
     // Mark recording as available
-    const updated = await this.deps.recordingRepo.markAsAvailable(recording.id);
+    const updated = await this.deps.recordingRepo.markAsAvailable(recording.recordingId);
     if (!updated) {
       throw new ValidationError("Couldn't finalize upload, try again");
     }
 
     return {
       success: true,
-      recordingId: recording.id,
+      recordingId: recording.recordingId,
       status: 'available',
     };
   }

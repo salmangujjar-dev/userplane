@@ -88,9 +88,9 @@ export const deleteProjectResources = task({
       for (const [index, chunk] of recordingChunks.entries()) {
         await deleteRecordingResources.batchTrigger(
           chunk.map((recording) => ({
-            payload: { recordingId: recording.id },
+            payload: { recordingId: recording.recordingId },
             options: {
-              idempotencyKey: buildRecordingDeletionKey(recording.id),
+              idempotencyKey: buildRecordingDeletionKey(recording.recordingId),
               delay: getPurgeDelay(recording.uploadStatus),
             },
           }))
