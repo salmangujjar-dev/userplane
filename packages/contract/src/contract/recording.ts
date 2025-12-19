@@ -2,8 +2,10 @@ import { oc } from '@orpc/contract';
 import {
   ListRecordingsQuerySchema,
   RecordingsListDataSchema,
+  RecordingByIdSchema,
   RecordingDetailDataSchema,
   RecordingResourceDataSchema,
+  DeleteRecordingSchema,
   RecordingDeleteDataSchema,
   ApiResponseSchema,
 } from '../schemas';
@@ -40,6 +42,7 @@ export const getRecordingById = oc
     description: 'Retrieve complete recording details with presigned URLs',
     tags: ['Recordings'],
   })
+  .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingDetailDataSchema));
 
 /**
@@ -54,6 +57,7 @@ export const deleteRecording = oc
     description: 'Soft delete a recording',
     tags: ['Recordings'],
   })
+  .input(DeleteRecordingSchema)
   .output(ApiResponseSchema(RecordingDeleteDataSchema));
 
 /**
@@ -68,6 +72,7 @@ export const getRecordingVideo = oc
     description: 'Retrieve presigned URL for recording video',
     tags: ['Recordings'],
   })
+  .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
 
 /**
@@ -82,6 +87,7 @@ export const getRecordingThumbnail = oc
     description: 'Retrieve presigned URL for recording thumbnail',
     tags: ['Recordings'],
   })
+  .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
 
 /**
@@ -96,6 +102,7 @@ export const getRecordingConsoleLog = oc
     description: 'Retrieve presigned URL for recording console log',
     tags: ['Recordings'],
   })
+  .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
 
 /**
@@ -110,4 +117,5 @@ export const getRecordingNetworkLog = oc
     description: 'Retrieve presigned URL for recording network log',
     tags: ['Recordings'],
   })
+  .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
