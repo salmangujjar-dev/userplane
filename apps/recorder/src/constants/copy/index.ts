@@ -11,4 +11,9 @@ export {
   POST_RECORDING_ACK_COPY,
   POST_RECORDING_ERROR_COPY,
 } from './post-recording';
-export { NOT_FOUND_COPY } from './errors';
+export {
+  NOT_FOUND_COPY,
+  STATUS_ERROR_TITLES,
+  BROWSER_ERROR_MESSAGES,
+  ERROR_ACTION_TEXT,
+} from './errors';

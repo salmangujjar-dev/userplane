@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { RecordingSession } from '@/services/recording-session';
+import { RecordingSession, type UploadState } from '@/services/recording-session';
 import {
   MediaCapture,
   type RecordingMode,
@@ -28,7 +28,7 @@ export type FlowState =
 
 export interface RecordingFlowState {
   state: FlowState;
-  error: string | null;
+  error: any;
   recordingMode: RecordingMode;
   recordingBlob: Blob | null;
   videoUrl: string | null;
@@ -47,6 +47,7 @@ export interface RecordingFlowActions {
   startRecording: (mode: RecordingMode) => Promise<void>;
   stopRecording: () => Promise<void>;
   submitRecording: () => Promise<void>;
+  retryUpload: () => Promise<void>;
   startOver: () => Promise<void>;
 }
 
@@ -55,7 +56,7 @@ export function useRecordingFlow(linkToken: string | null): {
   actions: RecordingFlowActions;
 } {
   const [flowState, setFlowState] = useState<FlowState>('loading');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any>(null);
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('screen-only');
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [thumbnailBlob, setThumbnailBlob] = useState<Blob | null>(null);
@@ -73,6 +74,7 @@ export function useRecordingFlow(linkToken: string | null): {
     DEFAULT_RECORDING_PREFERENCES
   );
   const [countdownSeconds, setCountdownSeconds] = useState<number>(3);
+  const [uploadState, setUploadState] = useState<UploadState | null>(null);
 
   const sessionRef = useRef<RecordingSession | null>(null);
   const mediaCaptureRef = useRef<MediaCapture | null>(null);
@@ -187,9 +189,8 @@ export function useRecordingFlow(linkToken: string | null): {
       setFlowState('setup');
     } catch (err) {
       console.error('[Flow] Session initialization failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize session';
-      console.error('[Flow] Error message:', errorMessage);
-      setError(errorMessage);
+      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+      setError(err);
       setFlowState('error');
     }
   }
@@ -240,7 +241,7 @@ export function useRecordingFlow(linkToken: string | null): {
         },
         onError: (err) => {
           console.error('[Flow] Recording error:', err);
-          setError(err.message);
+          setError(err);
           setFlowState('error');
         },
       });
@@ -270,10 +271,8 @@ export function useRecordingFlow(linkToken: string | null): {
       }, 1000);
     } catch (err) {
       console.error('[Flow] Failed to start recording:', err);
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to start recording. Please check permissions.';
-      console.error('[Flow] Error message:', errorMessage);
-      setError(errorMessage);
+      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+      setError(err);
       setFlowState('error');
     }
   }
@@ -329,9 +328,8 @@ export function useRecordingFlow(linkToken: string | null): {
       setFlowState('review');
     } catch (err) {
       console.error('[Flow] Failed to stop recording:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to stop recording';
-      console.error('[Flow] Error message:', errorMessage);
-      setError(errorMessage);
+      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+      setError(err);
       setFlowState('error');
     } finally {
       setIsProcessing(false);
@@ -375,17 +373,32 @@ export function useRecordingFlow(linkToken: string | null): {
         '[Flow] Thumbnail:',
         thumbnailBlob ? `${thumbnailBlob.size} bytes, ${thumbnailBlob.type}` : 'none'
       );
-      console.log('[Flow] Starting upload...');
 
-      await sessionRef.current.uploadFiles(
+      // STEP 1: Initialize upload and get presigned URLs
+      console.log('[Flow] Step 1: Initializing upload...');
+      const newUploadState = await sessionRef.current.initializeUpload(
         file,
         thumbnailBlob,
-        recordingDurationMs,
-        (progress: UploadProgress) => {
-          console.log('[Flow] Upload progress:', progress.percentage + '%');
-          setUploadProgress(progress.percentage);
-        }
+        recordingDurationMs
       );
+      setUploadState(newUploadState);
+      console.log('[Flow] Upload initialized, state saved for retry');
+
+      // STEP 2: Upload files to object storage (retryable)
+      console.log('[Flow] Step 2: Uploading files to storage...');
+      await sessionRef.current.uploadToStorage(newUploadState, (progress: UploadProgress) => {
+        console.log('[Flow] Upload progress:', progress.percentage + '%');
+        setUploadProgress(progress.percentage);
+      });
+      console.log('[Flow] Files uploaded to storage');
+
+      // STEP 3: Acknowledge upload completion
+      console.log('[Flow] Step 3: Acknowledging upload...');
+      await sessionRef.current.acknowledgeUpload(newUploadState);
+      console.log('[Flow] Upload acknowledged');
+
+      // Clear upload state after successful completion
+      setUploadState(null);
 
       console.log('[Flow] Upload completed successfully');
       console.log('[Flow] Transitioning to success state');
@@ -398,10 +411,67 @@ export function useRecordingFlow(linkToken: string | null): {
       }, 5000);
     } catch (err) {
       console.error('[Flow] Upload failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to upload recording';
-      console.error('[Flow] Error message:', errorMessage);
-      setError(errorMessage);
+      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+      setError(err);
       setFlowState('error');
+      // Upload state is preserved for retry
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  async function retryUpload() {
+    if (!uploadState) {
+      console.error('[Flow] No upload state available for retry');
+      setError('Cannot retry: No upload state available');
+      setFlowState('error');
+      return;
+    }
+
+    if (!sessionRef.current) {
+      console.error('[Flow] No active session');
+      setError('Cannot retry: No active session');
+      setFlowState('error');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      console.log('[Flow] Retrying upload from storage step...');
+      setFlowState('uploading');
+      setUploadProgress(0);
+
+      // STEP 2: Upload files to object storage (retry)
+      console.log('[Flow] Step 2 (retry): Uploading files to storage...');
+      await sessionRef.current.uploadToStorage(uploadState, (progress: UploadProgress) => {
+        console.log('[Flow] Upload progress:', progress.percentage + '%');
+        setUploadProgress(progress.percentage);
+      });
+      console.log('[Flow] Files uploaded to storage');
+
+      // STEP 3: Acknowledge upload completion
+      console.log('[Flow] Step 3: Acknowledging upload...');
+      await sessionRef.current.acknowledgeUpload(uploadState);
+      console.log('[Flow] Upload acknowledged');
+
+      // Clear upload state after successful completion
+      setUploadState(null);
+
+      console.log('[Flow] Retry successful');
+      console.log('[Flow] Transitioning to success state');
+      setFlowState('success');
+
+      console.log('[Flow] Tab will auto-close in 5 seconds');
+      setTimeout(() => {
+        console.log('[Flow] Closing tab...');
+        window.close();
+      }, 5000);
+    } catch (err) {
+      console.error('[Flow] Retry failed:', err);
+      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+      setError(err);
+      setFlowState('error');
+      // Upload state is preserved for another retry
     } finally {
       setIsProcessing(false);
     }
@@ -478,6 +548,7 @@ export function useRecordingFlow(linkToken: string | null): {
       startRecording,
       stopRecording,
       submitRecording,
+      retryUpload,
       startOver,
     },
   };
