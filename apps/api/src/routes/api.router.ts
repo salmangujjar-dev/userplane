@@ -1,8 +1,7 @@
 /**
  * oRPC API Router
  *
- * Combines all contract implementations for the v2 API.
- * As endpoints are migrated from v1 to v2, their implementations are added here.
+ * Combines all contract implementations for the API.
  *
  * Structure:
  * - Each domain has its own implementation file (e.g., session.impl.ts)
@@ -11,8 +10,8 @@
  * - Shared auth middleware is in middleware/auth.middleware.ts
  *
  * Usage:
- * The router is mounted at /api/v2 with OpenAPIHandler to respect REST paths
- * defined in the contract (e.g., GET /api/v2/session)
+ * The router is mounted at /api/v1 with OpenAPIHandler to respect REST paths
+ * defined in the contract (e.g., GET /api/v1/session)
  */
 
 // Services
@@ -71,7 +70,7 @@ const statusProcedures = createStatusProcedures();
 /**
  * Complete router export
  *
- * All v2 endpoints migrated to oRPC:
+ * All API endpoints implemented with oRPC:
  * - status: API info and health check (public)
  * - session: Session initialization and upload management
  * - account: User account management
@@ -98,3 +97,6 @@ export const apiRouter = {
 };
 
 export type ApiRouter = typeof apiRouter;
+
+// Re-export for external consumption
+export type { ApiRouter as router };
