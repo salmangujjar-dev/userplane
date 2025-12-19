@@ -20,4 +20,5 @@ export const updateDomainRecordingPreferencesSchema = z.object({
   recordingHideSensitive: z.boolean().optional(),
   recordingCaptureClientLog: z.boolean().optional(),
   recordingCaptureServerLog: z.boolean().optional(),
+  recordingCaptureNetworkLog: z.boolean().optional(),
 });

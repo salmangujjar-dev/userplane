@@ -641,6 +641,7 @@ export function getDomainByIdHandler(domainService: DomainService) {
             recordingHideSensitive: domain.recordingHideSensitive,
             recordingCaptureClientLog: domain.recordingCaptureClientLog,
             recordingCaptureServerLog: domain.recordingCaptureServerLog,
+            recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
             createdAt: domain.createdAt,
             updatedAt: domain.updatedAt,
           },

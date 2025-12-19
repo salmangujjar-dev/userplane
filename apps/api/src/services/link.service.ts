@@ -80,7 +80,7 @@ export class LinkService {
    * Token expires in 180 days
    * Payload contains lid (link ID) for link identification
    * Uses custom domain if verified AND recording features are enabled, otherwise falls back to recorder URL
-   * Recording features: hide sensitive fields, capture client logs, capture server logs
+   * Recording features: hide sensitive fields, capture client logs, capture server logs, capture network logs
    */
   generateLinkURL(
     linkId: string,
@@ -88,7 +88,8 @@ export class LinkService {
     domainStatus?: string,
     recordingHideSensitive?: boolean,
     recordingCaptureClientLog?: boolean,
-    recordingCaptureServerLog?: boolean
+    recordingCaptureServerLog?: boolean,
+    recordingCaptureNetworkLog?: boolean
   ): string {
     const payload = {
       lid: linkId,
@@ -104,7 +105,10 @@ export class LinkService {
     // 2. Domain URL exists
     // 3. At least one recording feature is enabled
     const needsCustomDomain =
-      recordingHideSensitive || recordingCaptureClientLog || recordingCaptureServerLog;
+      recordingHideSensitive ||
+      recordingCaptureClientLog ||
+      recordingCaptureServerLog ||
+      recordingCaptureNetworkLog;
     const baseUrl =
       domainStatus === 'verified' && domainUrl && needsCustomDomain
         ? `https://${domainUrl}`
@@ -242,6 +246,7 @@ export class LinkService {
       recordingHideSensitive: domain?.recordingHideSensitive || false,
       recordingCaptureClientLog: domain?.recordingCaptureClientLog || false,
       recordingCaptureServerLog: domain?.recordingCaptureServerLog || false,
+      recordingCaptureNetworkLog: domain?.recordingCaptureNetworkLog || false,
     };
   }
 
@@ -297,7 +302,8 @@ export class LinkService {
         row.domainStatus,
         row.recordingHideSensitive,
         row.recordingCaptureClientLog,
-        row.recordingCaptureServerLog
+        row.recordingCaptureServerLog,
+        row.recordingCaptureNetworkLog
       ),
       createdAt: row.createdAt,
       project: {
@@ -379,6 +385,7 @@ export class LinkService {
       recordingHideSensitive: domain?.recordingHideSensitive || false,
       recordingCaptureClientLog: domain?.recordingCaptureClientLog || false,
       recordingCaptureServerLog: domain?.recordingCaptureServerLog || false,
+      recordingCaptureNetworkLog: domain?.recordingCaptureNetworkLog || false,
     };
   }
 
@@ -418,7 +425,8 @@ export class LinkService {
         linkWithDetails.domainStatus,
         linkWithDetails.recordingHideSensitive,
         linkWithDetails.recordingCaptureClientLog,
-        linkWithDetails.recordingCaptureServerLog
+        linkWithDetails.recordingCaptureServerLog,
+        linkWithDetails.recordingCaptureNetworkLog
       ),
       createdAt: linkWithDetails.createdAt,
       project: {

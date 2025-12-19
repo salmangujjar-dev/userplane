@@ -46,6 +46,7 @@ export interface LinkListRow {
   recordingHideSensitive: boolean;
   recordingCaptureClientLog: boolean;
   recordingCaptureServerLog: boolean;
+  recordingCaptureNetworkLog: boolean;
 }
 
 /**
@@ -92,6 +93,7 @@ export interface LinkWithWorkspacePrefsRow {
   recordingHideSensitive: boolean;
   recordingCaptureClientLog: boolean;
   recordingCaptureServerLog: boolean;
+  recordingCaptureNetworkLog: boolean;
   recordingCompanyName: string | null;
   recordingCompanyLogoPath: string | null;
   recordingHeader: string | null;
@@ -218,6 +220,7 @@ export class LinkRepository {
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
+        recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
       })
       .from(links)
       .innerJoin(projects, eq(links.projectId, projects.id))
@@ -283,6 +286,7 @@ export class LinkRepository {
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
+        recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
       })
       .from(links)
       .innerJoin(projects, eq(links.projectId, projects.id))
@@ -391,6 +395,7 @@ export class LinkRepository {
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
+        recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
         recordingCompanyName: workspaces.recordingCompanyName,
         recordingCompanyLogoPath: workspaces.recordingCompanyLogoPath,
         recordingHeader: workspaces.recordingHeader,
@@ -488,6 +493,7 @@ export class LinkRepository {
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
+        recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
         rank: sql<number>`ts_rank(to_tsvector('simple', COALESCE(${links.linkTitle}, '')), to_tsquery('simple', ${tsquery}))`,
       })
       .from(links)

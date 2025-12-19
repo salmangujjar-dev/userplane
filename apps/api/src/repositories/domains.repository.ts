@@ -230,6 +230,7 @@ export class DomainRepository {
       recordingHideSensitive: boolean;
       recordingCaptureClientLog: boolean;
       recordingCaptureServerLog: boolean;
+      recordingCaptureNetworkLog: boolean;
     }>,
     options?: { tx?: Transaction }
   ) {
@@ -251,6 +252,10 @@ export class DomainRepository {
       updateData.recordingCaptureServerLog = data.recordingCaptureServerLog;
     }
 
+    if (data.recordingCaptureNetworkLog !== undefined) {
+      updateData.recordingCaptureNetworkLog = data.recordingCaptureNetworkLog;
+    }
+
     const [updated] = await dbClient
       .update(domains)
       .set(updateData)
@@ -270,6 +275,7 @@ export class DomainRepository {
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
+        recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
       })
       .from(domains)
       .where(and(eq(domains.id, id), eq(domains.isDeleted, false)))

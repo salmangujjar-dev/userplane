@@ -237,6 +237,7 @@ export const DomainByIdDataSchema = z.object({
     recordingHideSensitive: z.boolean(),
     recordingCaptureClientLog: z.boolean(),
     recordingCaptureServerLog: z.boolean(),
+    recordingCaptureNetworkLog: z.boolean(),
     createdAt: z.string(),
     updatedAt: z.string(),
   }),

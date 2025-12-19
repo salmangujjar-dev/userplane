@@ -29,6 +29,7 @@ export const DomainRecordingPreferencesSchema = z.object({
   recordingHideSensitive: z.boolean(),
   recordingCaptureClientLog: z.boolean(),
   recordingCaptureServerLog: z.boolean(),
+  recordingCaptureNetworkLog: z.boolean(),
 });
 
 /**
@@ -38,6 +39,7 @@ export const UpdateDomainRecordingPreferencesSchema = z.object({
   recordingHideSensitive: z.boolean().optional(),
   recordingCaptureClientLog: z.boolean().optional(),
   recordingCaptureServerLog: z.boolean().optional(),
+  recordingCaptureNetworkLog: z.boolean().optional(),
 });
 
 /**
@@ -47,6 +49,7 @@ export const ReplaceDomainRecordingPreferencesSchema = z.object({
   recordingHideSensitive: z.boolean(),
   recordingCaptureClientLog: z.boolean(),
   recordingCaptureServerLog: z.boolean(),
+  recordingCaptureNetworkLog: z.boolean(),
 });
 
 /**
@@ -58,6 +61,7 @@ export const DomainRecordingPreferencesDataSchema = z.object({
   recordingHideSensitive: z.boolean(),
   recordingCaptureClientLog: z.boolean(),
   recordingCaptureServerLog: z.boolean(),
+  recordingCaptureNetworkLog: z.boolean(),
 });
 
 /**
