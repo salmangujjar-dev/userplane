@@ -20,6 +20,7 @@ export const LinkSortFieldSchema = z.enum(['created_at', 'link_title']);
  * List links query parameters
  */
 export const ListLinksQuerySchema = z.object({
+  workspaceId: z.string(),
   page: z.number().int().positive().optional().default(1),
   per_page: z.number().int().min(1).max(20).optional().default(10),
   created_by: z.array(z.string()).optional(),
@@ -62,24 +63,27 @@ export const LinkCreatorSchema = z.object({
  */
 export const LinkItemSchema = z.object({
   id: z.string(),
-  linkTitle: z.string(),
+  linkTitle: z.string().nullable(),
   linkType: LinkTypeSchema,
   linkReusable: z.boolean(),
   linkProviderType: LinkProviderTypeSchema.nullable(),
   linkProviderId: z.string().nullable(),
   linkProviderReference: z.string().nullable(),
   linkURL: z.string(),
-  createdAt: z.string(),
+  createdAt: z.date(),
+  project: LinkProjectSchema,
+  creator: z.object({
+    id: z.string(),
+    name: z.string(),
+  }),
   domain: LinkDomainSchema,
 });
 
 /**
  * Full link details
+ * Note: Same as LinkItemSchema - creator already included without email in base schema
  */
-export const LinkDetailsSchema = LinkItemSchema.extend({
-  project: LinkProjectSchema.nullable(),
-  creator: LinkCreatorSchema,
-});
+export const LinkDetailsSchema = LinkItemSchema;
 
 /**
  * Links list response
@@ -94,6 +98,7 @@ export const LinksListDataSchema = z.object({
  * Create link request
  */
 export const CreateLinkSchema = z.object({
+  workspaceId: z.string(),
   projectId: z.string().optional(),
   domainId: z.string().min(1),
   linkReference: z.string().max(2048).optional(),
@@ -112,6 +117,8 @@ export const LinkCreateDataSchema = z.object({
  * Update link request
  */
 export const UpdateLinkSchema = z.object({
+  workspaceId: z.string(),
+  linkId: z.string(),
   linkTitle: z.string().max(255).nullable().optional(),
   linkReusable: z.boolean().optional(),
   linkProviderType: LinkProviderTypeSchema.nullable().optional(),
@@ -133,6 +140,22 @@ export const LinkUpdateDataSchema = z.object({
 export const LinkGetDataSchema = z.object({
   workspaceId: z.string(),
   link: LinkDetailsSchema,
+});
+
+/**
+ * Link by ID request
+ */
+export const LinkByIdSchema = z.object({
+  workspaceId: z.string(),
+  linkId: z.string(),
+});
+
+/**
+ * Delete link request
+ */
+export const DeleteLinkSchema = z.object({
+  workspaceId: z.string(),
+  linkId: z.string(),
 });
 
 /**

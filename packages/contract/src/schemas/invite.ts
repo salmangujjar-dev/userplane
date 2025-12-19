@@ -8,6 +8,7 @@ import { z } from 'zod';
  * Send invites request
  */
 export const SendInvitesSchema = z.object({
+  id: z.string(),
   emails: z.array(z.string().email()).min(1).max(10),
 });
 
