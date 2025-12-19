@@ -200,6 +200,8 @@ export class MediaCapture {
         resolve(blob);
       };
 
+      // Register event listener BEFORE calling stop() to avoid race condition
+      // where the recorder finishes quickly and we miss the event
       this.mediaRecorder.addEventListener('stop', handleStop, { once: true });
       this.mediaRecorder.stop();
     });

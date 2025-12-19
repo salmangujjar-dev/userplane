@@ -35,6 +35,39 @@ export const RETRY_BASE_DELAY_MS = 1000;
 /** Maximum delay between retries in milliseconds (30 seconds) */
 export const RETRY_MAX_DELAY_MS = 30000;
 
+/** Total timeout for video upload across all retries (15 minutes) */
+export const VIDEO_UPLOAD_TOTAL_TIMEOUT_MS = 900000;
+
+/** Total timeout for thumbnail upload across all retries (3 minutes) */
+export const THUMBNAIL_UPLOAD_TOTAL_TIMEOUT_MS = 180000;
+
+// ===========================================
+// Unified Upload Configuration
+// ===========================================
+
+export interface UploadConfig {
+  timeout: number;
+  maxRetries: number;
+  retryDelay: number;
+  totalTimeout: number;
+}
+
+/** Unified video upload configuration */
+export const VIDEO_UPLOAD_CONFIG: UploadConfig = {
+  timeout: VIDEO_UPLOAD_TIMEOUT_MS,
+  maxRetries: VIDEO_UPLOAD_MAX_RETRIES,
+  retryDelay: RETRY_BASE_DELAY_MS,
+  totalTimeout: VIDEO_UPLOAD_TOTAL_TIMEOUT_MS,
+};
+
+/** Unified thumbnail upload configuration */
+export const THUMBNAIL_UPLOAD_CONFIG: UploadConfig = {
+  timeout: THUMBNAIL_UPLOAD_TIMEOUT_MS,
+  maxRetries: THUMBNAIL_UPLOAD_MAX_RETRIES,
+  retryDelay: RETRY_BASE_DELAY_MS,
+  totalTimeout: THUMBNAIL_UPLOAD_TOTAL_TIMEOUT_MS,
+};
+
 // ===========================================
 // Progress
 // ===========================================

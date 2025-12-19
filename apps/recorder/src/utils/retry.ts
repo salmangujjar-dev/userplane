@@ -18,6 +18,8 @@ export interface RetryOptions {
   onRetry?: (error: Error, attempt: number, delay: number) => void;
   /** Timeout in milliseconds for the operation (optional) */
   timeout?: number;
+  /** Total timeout across all retry attempts (circuit breaker, optional) */
+  totalTimeout?: number;
 }
 
 export interface TimeoutOptions {
@@ -47,12 +49,22 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
     shouldRetry = () => true,
     onRetry,
     timeout,
+    totalTimeout,
   } = options;
 
   let lastError: Error | null = null;
+  const startTime = Date.now();
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      // Check if we've exceeded the total timeout across all attempts
+      if (totalTimeout !== undefined) {
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= totalTimeout) {
+          throw new Error(`Total timeout exceeded: ${elapsed}ms elapsed, ${totalTimeout}ms limit`);
+        }
+      }
+
       // Apply timeout if specified
       if (timeout !== undefined) {
         return await withTimeout(fn, { timeout });
@@ -72,7 +84,23 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
       }
 
       // Calculate delay with backoff
-      const delay = calculateDelay(attempt, baseDelay, maxDelay, backoffStrategy);
+      let delay = calculateDelay(attempt, baseDelay, maxDelay, backoffStrategy);
+
+      // Check if the delay would exceed the total timeout
+      if (totalTimeout !== undefined) {
+        const elapsed = Date.now() - startTime;
+        const remaining = totalTimeout - elapsed;
+        if (remaining <= 0) {
+          throw new Error(`Total timeout exceeded: ${elapsed}ms elapsed, ${totalTimeout}ms limit`);
+        }
+        // If the delay would push us over the total timeout, cap it
+        if (delay > remaining) {
+          console.warn(
+            `[Retry] Delay ${delay}ms would exceed total timeout, capping at ${remaining}ms`
+          );
+          delay = remaining;
+        }
+      }
 
       // Call retry callback if provided
       if (onRetry) {
