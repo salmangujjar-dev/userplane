@@ -20,6 +20,8 @@ export interface UploadOptions {
   maxRetries?: number;
   /** Base delay for exponential backoff in ms (default: 1000) */
   retryDelay?: number;
+  /** Total timeout across all retry attempts in ms (optional) */
+  totalTimeout?: number;
 }
 
 export interface UploadResult {
@@ -42,12 +44,14 @@ export async function uploadToObjectStore(
     onProgress,
     maxRetries = 3,
     retryDelay = 1000,
+    totalTimeout,
   } = options;
 
   return withRetry(() => uploadWithProgress(file, presignedUrl, timeout, onProgress), {
     maxRetries,
     baseDelay: retryDelay,
     backoffStrategy: 'exponential',
+    totalTimeout,
     onRetry: (error, attempt, delay) => {
       console.warn(`[Upload] Attempt ${attempt}/${maxRetries} failed:`, error);
       console.log(`[Upload] Retrying in ${delay}ms...`);
@@ -93,12 +97,14 @@ function uploadWithProgress(
           statusText: xhr.statusText,
         });
       } else {
+        xhr.abort();
         reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
       }
     });
 
     xhr.addEventListener('error', () => {
       clearTimeout(timeoutId);
+      xhr.abort();
       reject(new Error('Network error during upload'));
     });
 

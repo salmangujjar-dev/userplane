@@ -12,10 +12,8 @@ import { captureSystemMetadata, type SystemMetadata } from '@/utils/browser';
 import { decodeJwtPayload } from '@/utils/jwt';
 import {
   DEFAULT_MAX_RECORDING_DURATION_MS,
-  VIDEO_UPLOAD_TIMEOUT_MS,
-  THUMBNAIL_UPLOAD_TIMEOUT_MS,
-  VIDEO_UPLOAD_MAX_RETRIES,
-  THUMBNAIL_UPLOAD_MAX_RETRIES,
+  VIDEO_UPLOAD_CONFIG,
+  THUMBNAIL_UPLOAD_CONFIG,
 } from '@/constants';
 
 export interface UploadProgress {
@@ -237,10 +235,9 @@ export class RecordingSession {
     };
 
     console.log('[Upload:Storage] Uploading video file...');
-    // Upload video file
+    // Upload video file with unified configuration
     await uploadToObjectStore(videoFile, videoUrl.url, {
-      timeout: VIDEO_UPLOAD_TIMEOUT_MS,
-      maxRetries: VIDEO_UPLOAD_MAX_RETRIES,
+      ...VIDEO_UPLOAD_CONFIG,
       onProgress: (progress) => {
         videoUploaded = progress.loaded;
         reportProgress();
@@ -249,22 +246,31 @@ export class RecordingSession {
     console.log('[Upload:Storage] Video upload complete');
 
     // Upload thumbnail if available
+    // Thumbnail upload is non-critical: if it fails, we proceed with acknowledgment
+    // to prevent orphaning the already-uploaded video
     if (thumbnailBlob && thumbnailBlob.size > 0) {
       const thumbnailUrl = presignedUrls.find((u) => u.type === 'thumbnail');
       if (thumbnailUrl) {
         console.log('[Upload:Storage] Uploading thumbnail...');
-        const thumbnailFile = new File([thumbnailBlob], 'thumbnail.webp', {
-          type: 'image/webp',
-        });
-        await uploadToObjectStore(thumbnailFile, thumbnailUrl.url, {
-          timeout: THUMBNAIL_UPLOAD_TIMEOUT_MS,
-          maxRetries: THUMBNAIL_UPLOAD_MAX_RETRIES,
-          onProgress: (progress) => {
-            thumbnailUploaded = progress.loaded;
-            reportProgress();
-          },
-        });
-        console.log('[Upload:Storage] Thumbnail upload complete');
+        try {
+          const thumbnailFile = new File([thumbnailBlob], 'thumbnail.webp', {
+            type: 'image/webp',
+          });
+          await uploadToObjectStore(thumbnailFile, thumbnailUrl.url, {
+            ...THUMBNAIL_UPLOAD_CONFIG,
+            onProgress: (progress) => {
+              thumbnailUploaded = progress.loaded;
+              reportProgress();
+            },
+          });
+          console.log('[Upload:Storage] Thumbnail upload complete');
+        } catch (err) {
+          console.warn(
+            '[Upload:Storage] Thumbnail upload failed, proceeding without thumbnail:',
+            err
+          );
+          // Don't throw - proceed with acknowledgment anyway
+        }
       }
     }
 

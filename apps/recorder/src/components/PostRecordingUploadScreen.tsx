@@ -42,8 +42,10 @@ export default function PostRecordingUploadScreen({
         </p>
 
         <div className="w-full max-w-md mb-6 sm:mb-8">
-          <div className="aspect-video w-full border-2 border-gray-300 rounded-xl overflow-hidden">
-            <VideoPlayer src={videoUrl} showControls={false} muted={true} opacity={0.75} />
+          <div className="aspect-video w-full border-2 border-gray-300 rounded-xl overflow-hidden bg-white p-2">
+            <div className="w-full h-full rounded-lg overflow-hidden">
+              <VideoPlayer src={videoUrl} showControls={false} muted={true} opacity={0.75} />
+            </div>
           </div>
         </div>
 

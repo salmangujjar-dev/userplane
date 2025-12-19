@@ -62,17 +62,22 @@ export default function PreRecordingCountdownScreen({
 
         {mediaStream ? (
           <div className="w-full max-w-md mb-6 sm:mb-8">
-            <div className="relative aspect-video w-full border-2 border-gray-300 rounded-xl overflow-hidden bg-black shadow-lg">
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-full object-contain"
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="text-9xl font-bold animate-pulse" style={{ color: countdownColor }}>
-                  {countdownSeconds}
+            <div className="relative aspect-video w-full border-2 border-gray-300 rounded-xl overflow-hidden bg-white shadow-lg p-2">
+              <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-contain"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                  <div
+                    className="text-9xl font-bold animate-pulse"
+                    style={{ color: countdownColor }}
+                  >
+                    {countdownSeconds}
+                  </div>
                 </div>
               </div>
             </div>
