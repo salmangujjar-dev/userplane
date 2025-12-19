@@ -17,6 +17,7 @@ export const createWorkspace = oc
     summary: 'Create workspace',
     description: 'Provision a new workspace with initial domain and project',
     tags: ['Provisioner'],
+    inputStructure: 'detailed',
   })
   .input(CreateWorkspaceSchema)
   .output(ApiResponseSchema(WorkspaceCreateDataSchema));

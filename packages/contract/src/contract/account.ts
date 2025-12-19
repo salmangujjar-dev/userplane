@@ -36,6 +36,7 @@ export const updateAccount = oc
     summary: 'Update account',
     description: 'Update current user account information',
     tags: ['Account'],
+    inputStructure: 'detailed',
   })
   .input(UpdateAccountSchema)
   .output(ApiResponseSchema(AccountUpdateDataSchema));

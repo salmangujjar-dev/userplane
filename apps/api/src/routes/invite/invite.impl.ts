@@ -29,9 +29,9 @@ const base = implement(contract).$context<InitialContext>();
 export const inviteActionImpl = (inviteService: InviteService) => {
   return base.invite.action.handler(async ({ input, context }) => {
     try {
-      if (input.action === 'validate') {
+      if (input.query.action === 'validate') {
         // Validate invitation - no auth required
-        const result = await inviteService.validateInvite(input.token);
+        const result = await inviteService.validateInvite(input.query.token);
 
         // Handle validation status
         if (result.status !== 'valid') {
@@ -59,7 +59,7 @@ export const inviteActionImpl = (inviteService: InviteService) => {
         }
 
         const result = await inviteService.acceptInvite({
-          inviteToken: input.token,
+          inviteToken: input.query.token,
           userId: sessionData.user.id,
         });
 

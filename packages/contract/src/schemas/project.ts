@@ -16,10 +16,15 @@ export const ProjectItemSchema = z.object({
 });
 
 /**
- * Create project request
+ * Create project request (detailed mode)
  */
 export const CreateProjectSchema = z.object({
-  projectTitle: z.string().nullable().optional(),
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    projectTitle: z.string().nullable().optional(),
+  }),
 });
 
 /**
@@ -31,10 +36,15 @@ export const ProjectDataSchema = z.object({
 });
 
 /**
- * Projects list query parameters
+ * Projects list query parameters (detailed mode)
  */
 export const ListProjectsQuerySchema = z.object({
-  page: z.number().int().positive().optional().default(1),
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  query: z.object({
+    page: z.number().int().positive().optional().default(1),
+  }),
 });
 
 /**
@@ -47,11 +57,17 @@ export const ProjectsListDataSchema = z.object({
 });
 
 /**
- * Update project request
+ * Update project request (detailed mode)
  */
 export const UpdateProjectSchema = z.object({
-  projectTitle: z.string().nullable().optional(),
-  isDefault: z.boolean().optional(),
+  params: z.object({
+    workspaceId: z.string(),
+    projectId: z.string(),
+  }),
+  body: z.object({
+    projectTitle: z.string().nullable().optional(),
+    isDefault: z.boolean().optional(),
+  }),
 });
 
 /**
@@ -62,11 +78,27 @@ export const ProjectUpdateDataSchema = z.object({
 });
 
 /**
- * Replace project request
+ * Replace project request (detailed mode)
  */
 export const ReplaceProjectSchema = z.object({
-  projectTitle: z.string().nullable(),
-  isDefault: z.boolean(),
+  params: z.object({
+    workspaceId: z.string(),
+    projectId: z.string(),
+  }),
+  body: z.object({
+    projectTitle: z.string().nullable(),
+    isDefault: z.boolean(),
+  }),
+});
+
+/**
+ * Delete project request (detailed mode)
+ */
+export const DeleteProjectSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+    projectId: z.string(),
+  }),
 });
 
 /**

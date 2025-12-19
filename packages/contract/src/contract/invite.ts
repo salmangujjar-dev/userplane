@@ -23,6 +23,7 @@ export const sendInvites = oc
     summary: 'Send invites',
     description: 'Send workspace invitations to multiple email addresses',
     tags: ['Invites'],
+    inputStructure: 'detailed',
   })
   .input(SendInvitesSchema)
   .output(ApiResponseSchema(SendInvitesResultSchema));
@@ -38,6 +39,7 @@ export const inviteAction = oc
     summary: 'Handle invite action',
     description: 'Validate or accept a workspace invitation using token',
     tags: ['Invites'],
+    inputStructure: 'detailed',
   })
   .input(InviteActionQuerySchema)
   .output(ApiResponseSchema(InviteActionResultSchema));

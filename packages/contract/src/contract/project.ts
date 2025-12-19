@@ -7,6 +7,7 @@ import {
   UpdateProjectSchema,
   ProjectUpdateDataSchema,
   ReplaceProjectSchema,
+  DeleteProjectSchema,
   ProjectDeleteDataSchema,
   ApiResponseSchema,
 } from '../schemas';
@@ -27,6 +28,7 @@ export const getProjects = oc
     summary: 'List projects',
     description: 'Retrieve paginated list of projects',
     tags: ['Projects'],
+    inputStructure: 'detailed',
   })
   .input(ListProjectsQuerySchema)
   .output(ApiResponseSchema(ProjectsListDataSchema));
@@ -42,6 +44,7 @@ export const createProject = oc
     summary: 'Create project',
     description: 'Create a new project in the workspace',
     tags: ['Projects'],
+    inputStructure: 'detailed',
   })
   .input(CreateProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));
@@ -57,6 +60,7 @@ export const updateProject = oc
     summary: 'Update project',
     description: 'Partially update project properties',
     tags: ['Projects'],
+    inputStructure: 'detailed',
   })
   .input(UpdateProjectSchema)
   .output(ApiResponseSchema(ProjectUpdateDataSchema));
@@ -72,6 +76,7 @@ export const replaceProject = oc
     summary: 'Replace project',
     description: 'Replace all project properties',
     tags: ['Projects'],
+    inputStructure: 'detailed',
   })
   .input(ReplaceProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));
@@ -87,5 +92,7 @@ export const deleteProject = oc
     summary: 'Delete project',
     description: 'Soft delete a project',
     tags: ['Projects'],
+    inputStructure: 'detailed',
   })
+  .input(DeleteProjectSchema)
   .output(ApiResponseSchema(ProjectDeleteDataSchema));

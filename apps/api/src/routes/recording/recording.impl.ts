@@ -25,24 +25,24 @@ export const getRecordingsImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.recording.list
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
         const filters = {
-          createdBy: input.created_by,
-          projectId: input.project_id,
-          linkId: input.link_id,
+          createdBy: input.query.created_by,
+          projectId: input.query.project_id,
+          linkId: input.query.link_id,
         };
 
         const sort = {
-          field: input.sort_by || 'created_at',
-          direction: input.sort_direction || 'desc',
+          field: input.query.sort_by || 'created_at',
+          direction: input.query.sort_direction || 'desc',
         };
 
         const { recordings, total } = await recordingService.getByWorkspaceIdPaginated(
-          input.workspaceId,
-          input.page || 1,
-          input.per_page || 10,
+          input.params.workspaceId,
+          input.query.page || 1,
+          input.query.per_page || 10,
           filters,
           sort as any
         );
@@ -50,9 +50,13 @@ export const getRecordingsImpl = (
         return {
           message: 'Recordings retrieved successfully',
           data: {
-            workspaceId: input.workspaceId,
+            workspaceId: input.params.workspaceId,
             recordings,
-            pagination: createPaginationMeta(input.page || 1, input.per_page || 10, total),
+            pagination: createPaginationMeta(
+              input.query.page || 1,
+              input.query.per_page || 10,
+              total
+            ),
           },
         };
       } catch (error) {
@@ -83,15 +87,18 @@ export const getRecordingByIdImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.recording.getById
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        const recording = await recordingService.getById(input.recordingId, input.workspaceId);
+        const recording = await recordingService.getById(
+          input.params.recordingId,
+          input.params.workspaceId
+        );
 
         return {
           message: 'Recording retrieved successfully',
           data: {
-            workspaceId: input.workspaceId,
+            workspaceId: input.params.workspaceId,
             recording,
           },
         };
@@ -134,16 +141,16 @@ export const deleteRecordingImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.recording.delete
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       try {
-        await recordingService.delete(input.recordingId, input.workspaceId);
+        await recordingService.delete(input.params.recordingId, input.params.workspaceId);
 
         return {
           message: 'Recording deleted successfully',
           data: {
-            workspaceId: input.workspaceId,
-            recordingId: input.recordingId,
+            workspaceId: input.params.workspaceId,
+            recordingId: input.params.recordingId,
           },
         };
       } catch (error) {
@@ -185,18 +192,18 @@ export const getRecordingVideoImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.recording.resources.video
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
         const resource = await recordingService.getVideoResource(
-          input.recordingId,
-          input.workspaceId
+          input.params.recordingId,
+          input.params.workspaceId
         );
 
         return {
           message: 'Recording video URL retrieved successfully',
           data: {
-            recordingId: input.recordingId,
+            recordingId: input.params.recordingId,
             resource,
           },
         };
@@ -239,18 +246,18 @@ export const getRecordingThumbnailImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.recording.resources.thumbnail
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
         const resource = await recordingService.getThumbnailResource(
-          input.recordingId,
-          input.workspaceId
+          input.params.recordingId,
+          input.params.workspaceId
         );
 
         return {
           message: 'Recording thumbnail URL retrieved successfully',
           data: {
-            recordingId: input.recordingId,
+            recordingId: input.params.recordingId,
             resource,
           },
         };
@@ -293,18 +300,18 @@ export const getRecordingConsoleLogImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.recording.resources.consoleLog
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
         const resource = await recordingService.getConsoleLogResource(
-          input.recordingId,
-          input.workspaceId
+          input.params.recordingId,
+          input.params.workspaceId
         );
 
         return {
           message: 'Recording console log URL retrieved successfully',
           data: {
-            recordingId: input.recordingId,
+            recordingId: input.params.recordingId,
             resource,
           },
         };
@@ -347,18 +354,18 @@ export const getRecordingNetworkLogImpl = (
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.recording.resources.networkLog
-    .use(requireMember, (input) => ({ workspaceId: input.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
         const resource = await recordingService.getNetworkLogResource(
-          input.recordingId,
-          input.workspaceId
+          input.params.recordingId,
+          input.params.workspaceId
         );
 
         return {
           message: 'Recording network log URL retrieved successfully',
           data: {
-            recordingId: input.recordingId,
+            recordingId: input.params.recordingId,
             resource,
           },
         };

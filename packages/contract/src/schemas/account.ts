@@ -13,10 +13,12 @@ export const AccountDataSchema = z.object({
 });
 
 /**
- * Update account request
+ * Update account request (detailed mode)
  */
 export const UpdateAccountSchema = z.object({
-  name: z.string().min(1).trim(),
+  body: z.object({
+    name: z.string().min(1).trim(),
+  }),
 });
 
 /**

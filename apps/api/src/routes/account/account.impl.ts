@@ -43,7 +43,7 @@ export const getAccountImpl = (userService: UserService) => {
 export const updateAccountImpl = (userService: UserService) => {
   return authorized.account.update.handler(async ({ input, context }) => {
     try {
-      const updatedUser = await userService.updateName(context.user.id, input.name);
+      const updatedUser = await userService.updateName(context.user.id, input.body.name);
 
       return {
         message: 'Account updated successfully',

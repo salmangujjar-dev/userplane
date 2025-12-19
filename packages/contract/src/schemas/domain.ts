@@ -6,10 +6,12 @@ import { DomainStatusSchema } from './common';
  */
 
 /**
- * Domain verification request
+ * Domain verification request (detailed mode)
  */
 export const VerifyDomainSchema = z.object({
-  token: z.string().min(1),
+  body: z.object({
+    token: z.string().min(1),
+  }),
 });
 
 /**
@@ -33,35 +35,45 @@ export const DomainRecordingPreferencesSchema = z.object({
 });
 
 /**
- * Update domain recording preferences request
+ * Update domain recording preferences request (detailed mode)
  */
 export const UpdateDomainRecordingPreferencesSchema = z.object({
-  workspaceId: z.string(),
-  domainId: z.string(),
-  recordingHideSensitive: z.boolean().optional(),
-  recordingCaptureClientLog: z.boolean().optional(),
-  recordingCaptureServerLog: z.boolean().optional(),
-  recordingCaptureNetworkLog: z.boolean().optional(),
+  params: z.object({
+    workspaceId: z.string(),
+    domainId: z.string(),
+  }),
+  body: z.object({
+    recordingHideSensitive: z.boolean().optional(),
+    recordingCaptureClientLog: z.boolean().optional(),
+    recordingCaptureServerLog: z.boolean().optional(),
+    recordingCaptureNetworkLog: z.boolean().optional(),
+  }),
 });
 
 /**
- * Replace domain recording preferences request
+ * Replace domain recording preferences request (detailed mode)
  */
 export const ReplaceDomainRecordingPreferencesSchema = z.object({
-  workspaceId: z.string(),
-  domainId: z.string(),
-  recordingHideSensitive: z.boolean(),
-  recordingCaptureClientLog: z.boolean(),
-  recordingCaptureServerLog: z.boolean(),
-  recordingCaptureNetworkLog: z.boolean(),
+  params: z.object({
+    workspaceId: z.string(),
+    domainId: z.string(),
+  }),
+  body: z.object({
+    recordingHideSensitive: z.boolean(),
+    recordingCaptureClientLog: z.boolean(),
+    recordingCaptureServerLog: z.boolean(),
+    recordingCaptureNetworkLog: z.boolean(),
+  }),
 });
 
 /**
- * Get domain recording preferences request
+ * Get domain recording preferences request (detailed mode)
  */
 export const GetDomainRecordingPreferencesSchema = z.object({
-  workspaceId: z.string(),
-  domainId: z.string(),
+  params: z.object({
+    workspaceId: z.string(),
+    domainId: z.string(),
+  }),
 });
 
 /**

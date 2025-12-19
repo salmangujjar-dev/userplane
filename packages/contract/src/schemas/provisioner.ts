@@ -5,10 +5,12 @@ import { z } from 'zod';
  */
 
 /**
- * Create workspace request
+ * Create workspace request (detailed mode)
  */
 export const CreateWorkspaceSchema = z.object({
-  url: z.string().url(),
+  body: z.object({
+    url: z.string().url(),
+  }),
 });
 
 /**

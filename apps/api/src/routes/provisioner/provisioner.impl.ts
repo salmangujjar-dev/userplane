@@ -16,7 +16,7 @@ export const createWorkspaceImpl = (provisionerService: ProvisionerService) => {
   return authorized.provisioner.createWorkspace.handler(async ({ input, context }) => {
     try {
       const result = await provisionerService.createWorkspace({
-        url: input.url,
+        url: input.body.url,
         userId: context.user.id,
         userName: context.user.name,
       });
