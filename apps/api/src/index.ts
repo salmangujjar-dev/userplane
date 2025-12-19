@@ -62,6 +62,74 @@ app.use('/api/v1/*', async (c, next) => {
   await next();
 });
 
+// OpenAPI specification and documentation (development only)
+if (env.nodeEnv === 'development') {
+  const { OpenAPIGenerator } = await import('@orpc/openapi');
+  const { ZodToJsonSchemaConverter } = await import('@orpc/zod');
+
+  const openAPIGenerator = new OpenAPIGenerator({
+    schemaConverters: [new ZodToJsonSchemaConverter()],
+  });
+
+  // OpenAPI specification endpoint
+  app.get('/spec.json', async (c) => {
+    const spec = await openAPIGenerator.generate(apiRouter, {
+      info: {
+        title: 'Userplane API',
+        version: '1.0.0',
+        description: 'API for managing workspaces, recordings, links, and domains',
+      },
+      servers: [
+        {
+          url: `${env.auth.url}/api/v1`,
+          description: 'API Server',
+        },
+      ],
+      security: [{ bearerAuth: [] }],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            description: 'JWT Bearer token from authentication',
+          },
+        },
+      },
+    });
+
+    return c.json(spec);
+  });
+
+  // API documentation UI using Scalar
+  app.get('/docs', (c) => {
+    const html = `
+    <!doctype html>
+    <html>
+      <head>
+        <title>Userplane API Documentation</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+      </head>
+      <body>
+        <div id="app"></div>
+        <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+        <script>
+          Scalar.createApiReference('#app', {
+            url: '/spec.json',
+            theme: 'default',
+          })
+        </script>
+      </body>
+    </html>
+  `;
+
+    return c.html(html);
+  });
+
+  logger.info('API documentation available at /docs and /spec.json');
+}
+
 // 404 handler
 app.notFound((c) => {
   return c.json(
