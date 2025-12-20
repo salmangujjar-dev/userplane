@@ -21,7 +21,7 @@ export const getProjectsImpl = (projectService: ProjectService) => {
   return authorized.project.list.handler(async ({ input }) => {
     try {
       const page = input.query.page || 1;
-      const perPage = 10;
+      const perPage = input.query.per_page || 5;
 
       const { projects, total } = await projectService.getProjectsByWorkspacePaginated(
         input.params.workspaceId,

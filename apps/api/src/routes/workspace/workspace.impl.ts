@@ -317,10 +317,11 @@ export const updateWorkspacePreferencesImpl = (
 export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberService) => {
   return authorized.workspace.members.list.handler(async ({ input, context }) => {
     try {
-      const perPage = 5;
+      const page = input.query.page || 1;
+      const perPage = input.query.per_page || 5;
       const { members, total } = await workspaceMemberService.getTeamMembers(
         input.params.workspaceId,
-        input.query.page || 1,
+        page,
         perPage
       );
 
@@ -334,7 +335,7 @@ export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberS
       let teamData: any = {
         workspaceId: input.params.workspaceId,
         workspaceMembers: teamMembers,
-        pagination: createPaginationMeta(input.query.page || 1, perPage, total),
+        pagination: createPaginationMeta(page, perPage, total),
       };
 
       if (input.query.include_me) {
@@ -1119,6 +1120,55 @@ export const replaceDomainRecordingPreferencesImpl = (
 };
 
 /**
+ * GET /workspace/:workspaceId/search - Search workspace
+ * Requires workspace member
+ * Searches across members, projects, domains, and links
+ */
+export const workspaceSearchImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.search
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      try {
+        const results = await workspaceService.search(
+          input.params.workspaceId,
+          input.query.q,
+          input.query.type,
+          input.query.limit || 5
+        );
+
+        return {
+          message: 'Search results retrieved successfully',
+          data: {
+            results,
+          },
+        };
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
  * Create the workspace procedures object
  * Complete implementation with CRUD, member management, invites, and domains
  */
@@ -1135,6 +1185,7 @@ export const createWorkspaceProcedures = (
     getById: getWorkspaceByIdImpl(workspaceService),
     updateName: updateWorkspaceNameImpl(workspaceService, workspaceMemberService),
     delete: deleteWorkspaceImpl(workspaceService, workspaceMemberService),
+    search: workspaceSearchImpl(workspaceService, workspaceMemberService),
 
     preferences: {
       get: getWorkspacePreferencesImpl(workspaceService),
