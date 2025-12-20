@@ -3,22 +3,38 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useWorkspaceStore } from '@/stores/workspace';
+import { URLInput } from '@/components/url-input';
+import { useCreateWorkspace } from '@/hooks/use-create-workspace';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 export default function CreateWorkspacePage() {
   const [workspace, setWorkspace] = useState('');
   const router = useRouter();
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
+  const { mutate: createWorkspace, isPending } = useCreateWorkspace();
 
   const handleCreateWorkspace = () => {
-    // In a real application, this would create a workspace and return a workspaceId
-    const mockWorkspaceId = 'workspace-123';
-    setWorkspaceStore(mockWorkspaceId, workspace);
-    router.push(`/${mockWorkspaceId}`);
+    if (!workspace.trim()) {
+      toast.error('Please enter a workspace domain');
+      return;
+    }
+
+    createWorkspace(
+      { url: workspace },
+      {
+        onSuccess: (response) => {
+          const workspaceId = response.data.workspaceId;
+          setWorkspaceStore(workspaceId);
+          toast.success('Workspace created successfully');
+          router.push(`/${workspaceId}`);
+        },
+      }
+    );
   };
 
   return (
@@ -35,22 +51,33 @@ export default function CreateWorkspacePage() {
           <div className="space-y-2">
             <Label htmlFor="workspace">Workspace</Label>
             <p className="text-xs text-muted-foreground">Enter your company domain</p>
-            <Input
+            <URLInput
               id="workspace"
-              type="text"
-              placeholder="https://ramp.com"
+              placeholder="ramp.com"
               value={workspace}
-              onChange={(e) => setWorkspace(e.target.value)}
+              onChange={setWorkspace}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && workspace.trim() && !isPending) {
+                  handleCreateWorkspace();
+                }
+              }}
             />
           </div>
 
           <Button
             onClick={handleCreateWorkspace}
-            disabled={!workspace.trim()}
+            disabled={!workspace.trim() || isPending}
             size="lg"
             className="w-full rounded-full px-7 py-6"
           >
-            Create Workspace
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Workspace...
+              </>
+            ) : (
+              'Create Workspace'
+            )}
           </Button>
 
           <div className="flex justify-center pt-2">

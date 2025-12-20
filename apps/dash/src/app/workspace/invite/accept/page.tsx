@@ -18,7 +18,7 @@ export default function WorkspaceInviteAcceptPage() {
     // In a real application, this would accept the invite and return a workspaceId
     setTimeout(() => {
       const mockWorkspaceId = 'workspace-123';
-      setWorkspaceStore(mockWorkspaceId, "Lary's Workspace");
+      setWorkspaceStore(mockWorkspaceId);
       router.push(`/${mockWorkspaceId}`);
     }, 1000);
   };
