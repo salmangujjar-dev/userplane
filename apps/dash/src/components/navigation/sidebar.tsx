@@ -123,9 +123,12 @@ export function Sidebar() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <div className="flex flex-col gap-1 px-2 py-1.5">
-                <div className="text-sm font-semibold">{account.userName}</div>
-                <div className="text-xs text-muted-foreground">{account.userEmail}</div>
+              <div className="flex items-center gap-3 px-2 py-1.5">
+                <BoringAvatar size={32} name={account.userName} />
+                <div className="flex flex-col gap-1 flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate">{account.userName}</div>
+                  <div className="text-xs text-muted-foreground truncate">{account.userEmail}</div>
+                </div>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -138,7 +141,10 @@ export function Sidebar() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/accounts" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  href={`/${workspaceId}/accounts`}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <KeyRound className="h-4 w-4" />
                   Account
                 </Link>

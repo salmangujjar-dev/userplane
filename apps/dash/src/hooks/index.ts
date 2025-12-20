@@ -3,3 +3,4 @@
  * Centralized exports for all custom hooks
  */
 export { useAuth } from './use-auth';
+export { useWorkspaces } from './use-workspaces';

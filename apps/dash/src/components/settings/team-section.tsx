@@ -24,15 +24,16 @@ import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
 
+const ITEMS_PER_PAGE = 5;
+
 export function TeamSection() {
   const workspaceId = useWorkspaceId();
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
   const queryClient = useQueryClient();
 
   const { data: members, isLoading } = useWorkspaceMembers({
     includeMe: true,
-    perPage: 10,
+    perPage: ITEMS_PER_PAGE,
   });
 
   const updateRoleMutation = useMutation({
@@ -118,9 +119,7 @@ export function TeamSection() {
   }
 
   const displayedMembers = members || [];
-  const totalPages = Math.ceil(displayedMembers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedMembers = displayedMembers.slice(startIndex, startIndex + itemsPerPage);
+  const totalPages = 1;
 
   return (
     <div>
@@ -140,14 +139,14 @@ export function TeamSection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedMembers.length === 0 ? (
+              {displayedMembers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                     No team members found
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedMembers.map((member) => (
+                displayedMembers.map((member) => (
                   <TableRow key={member.workspaceMemberId}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -204,9 +203,7 @@ export function TeamSection() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <p className="text-xs text-muted-foreground">
-                Showing {startIndex + 1} to{' '}
-                {Math.min(startIndex + itemsPerPage, displayedMembers.length)} of{' '}
-                {displayedMembers.length} members
+                Showing {displayedMembers.length} members
               </p>
               <div className="flex gap-2">
                 <Button

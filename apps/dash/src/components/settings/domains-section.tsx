@@ -50,7 +50,7 @@ const ITEMS_PER_PAGE = 5;
 export function DomainsSection() {
   const workspaceId = useWorkspaceId();
   const { data: domains, isLoading } = useWorkspaceDomains({
-    perPage: 10,
+    perPage: ITEMS_PER_PAGE,
   });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [verifyingDomain, setVerifyingDomain] = useState<{ id: string; url: string } | null>(null);
@@ -339,13 +339,7 @@ export function DomainsSection() {
 
   // Calculate these before any conditional returns to avoid hook order issues
   const displayedDomains = useMemo(() => domains || [], [domains]);
-  const totalPages = Math.ceil(displayedDomains.length / ITEMS_PER_PAGE);
-
-  const paginatedDomains = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return displayedDomains.slice(startIndex, endIndex);
-  }, [displayedDomains, currentPage]);
+  const totalPages = 1;
 
   if (isLoading) {
     return (
@@ -371,7 +365,7 @@ export function DomainsSection() {
       </div>
 
       <div className="max-w-2xl space-y-4">
-        {paginatedDomains.map((domain) => {
+        {displayedDomains.map((domain) => {
           const isVerified = domain.domainStatus === 'verified';
 
           return (
