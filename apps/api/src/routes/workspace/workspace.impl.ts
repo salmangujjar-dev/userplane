@@ -626,19 +626,11 @@ export const getWorkspaceDomainsImpl = (
           perPage
         );
 
-        const mappedDomains = domains.map((domain) => ({
-          domainId: domain.domainId,
-          domainUrl: domain.domainUrl,
-          domainStatus: domain.domainStatus,
-          createdAt: domain.createdAt.toISOString(),
-          updatedAt: domain.updatedAt.toISOString(),
-        }));
-
         return {
           message: 'Workspace domains retrieved successfully',
           data: {
             workspaceId: input.params.workspaceId,
-            domains: mappedDomains,
+            domains,
             pagination: createPaginationMeta(input.query.page || 1, perPage, total),
           },
         };
@@ -682,17 +674,7 @@ export const getDomainByIdImpl = (
           message: 'Domain retrieved successfully',
           data: {
             workspaceId: input.params.workspaceId,
-            domain: {
-              domainId: domain.domainId,
-              domainUrl: domain.domainUrl,
-              domainStatus: domain.domainStatus,
-              recordingHideSensitive: domain.recordingHideSensitive,
-              recordingCaptureClientLog: domain.recordingCaptureClientLog,
-              recordingCaptureServerLog: domain.recordingCaptureServerLog,
-              recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
-              createdAt: domain.createdAt.toISOString(),
-              updatedAt: domain.updatedAt.toISOString(),
-            },
+            domain,
           },
         };
       } catch (error) {
@@ -751,13 +733,7 @@ export const addDomainImpl = (
           message: 'Domain added successfully',
           data: {
             workspaceId: input.params.workspaceId,
-            domain: {
-              domainId: domain.domainId,
-              domainUrl: domain.domainUrl,
-              domainStatus: domain.domainStatus,
-              createdAt: domain.createdAt.toISOString(),
-              updatedAt: domain.updatedAt.toISOString(),
-            },
+            domain,
           },
         };
       } catch (error) {
@@ -806,13 +782,7 @@ export const updateDomainImpl = (
           message: 'Domain updated successfully',
           data: {
             workspaceId: input.params.workspaceId,
-            domain: {
-              domainId: domain.domainId,
-              domainUrl: domain.domainUrl,
-              domainStatus: domain.domainStatus,
-              createdAt: domain.createdAt.toISOString(),
-              updatedAt: domain.updatedAt.toISOString(),
-            },
+            domain,
           },
         };
       } catch (error) {

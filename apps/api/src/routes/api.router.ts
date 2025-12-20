@@ -38,6 +38,7 @@ import { createDomainProcedures } from './domain/domain.impl';
 import { createInviteProcedures } from './invite/invite.impl';
 import { createProvisionerProcedures } from './provisioner/provisioner.impl';
 import { createStatusProcedures } from './status/status.impl';
+import { createProjectProcedures } from './project/project.impl';
 
 // Export context types for use in implementations
 export type { InitialContext, AuthContext } from '@/api/middleware/auth.orpc';
@@ -66,6 +67,11 @@ const domainProcedures = createDomainProcedures(domainService);
 const inviteProcedures = createInviteProcedures(inviteService);
 const provisionerProcedures = createProvisionerProcedures(provisionerService);
 const statusProcedures = createStatusProcedures();
+const projectProcedures = createProjectProcedures(
+  projectService,
+  workspaceMemberService,
+  workspaceService
+);
 
 /**
  * Complete router export
@@ -76,13 +82,11 @@ const statusProcedures = createStatusProcedures();
  * - account: User account management
  * - provisioner: Workspace creation
  * - workspace: Workspace management, members, domains, settings
+ * - project: Project management
  * - recording: Recording management and resources
  * - link: Recording link management
  * - domain: Public domain verification
  * - invite: Public invite validation and acceptance
- *
- * Pending implementation:
- * - project: Project management (standalone)
  */
 export const apiRouter = {
   status: statusProcedures,
@@ -90,6 +94,7 @@ export const apiRouter = {
   account: accountProcedures,
   provisioner: provisionerProcedures,
   workspace: workspaceProcedures,
+  project: projectProcedures,
   recording: recordingProcedures,
   link: linkProcedures,
   domain: domainProcedures,

@@ -19,9 +19,13 @@ export const getAccount = oc
   .route({
     method: 'GET',
     path: '/account',
-    summary: 'Get account information',
-    description: 'Retrieve current user account information',
-    tags: ['Account'],
+    inputStructure: 'detailed',
+    spec: {
+      summary: 'Get account information',
+      description: 'Retrieve current user account information',
+      tags: ['Account'],
+      security: [{ cookieAuth: [] }],
+    },
   })
   .output(ApiResponseSchema(AccountDataSchema));
 
@@ -33,10 +37,13 @@ export const updateAccount = oc
   .route({
     method: 'PATCH',
     path: '/account',
-    summary: 'Update account',
-    description: 'Update current user account information',
-    tags: ['Account'],
     inputStructure: 'detailed',
+    spec: {
+      summary: 'Update account',
+      description: 'Update current user account information',
+      tags: ['Account'],
+      security: [{ cookieAuth: [] }],
+    },
   })
   .input(UpdateAccountSchema)
   .output(ApiResponseSchema(AccountUpdateDataSchema));

@@ -85,16 +85,71 @@ if (env.nodeEnv === 'development') {
           description: 'API Server',
         },
       ],
-      security: [{ bearerAuth: [] }],
+      security: [{ cookieAuth: [] }],
       components: {
         securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            description: 'JWT Bearer token from authentication',
+          cookieAuth: {
+            type: 'apiKey',
+            in: 'cookie',
+            name: 'userplane.session_token',
+            description: 'Session token cookie from authentication (used by most endpoints)',
+          },
+          sessionTokenHeader: {
+            type: 'apiKey',
+            in: 'header',
+            name: 'x-session-token',
+            description: 'Session token header for upload initialization',
+          },
+          uploadTokenHeader: {
+            type: 'apiKey',
+            in: 'header',
+            name: 'x-upload-token',
+            description: 'Upload token header for completing uploads',
           },
         },
       },
+      tags: [
+        {
+          name: 'Status',
+          description: 'API health checks and service information',
+        },
+        {
+          name: 'Session',
+          description: 'Recording session initialization and upload management for the recorder',
+        },
+        {
+          name: 'Account',
+          description: 'User account management and profile operations',
+        },
+        {
+          name: 'Provisioner',
+          description: 'Workspace provisioning and initial setup',
+        },
+        {
+          name: 'Workspaces',
+          description: 'Workspace CRUD operations, settings, members, domains, and invites',
+        },
+        {
+          name: 'Projects',
+          description: 'Project management within workspaces for organizing recordings',
+        },
+        {
+          name: 'Recordings',
+          description: 'Recording management, playback, and resource access',
+        },
+        {
+          name: 'Links',
+          description: 'Recording link creation and management for sharing recordings',
+        },
+        {
+          name: 'Domains',
+          description: 'Public domain verification for recording capture',
+        },
+        {
+          name: 'Invites',
+          description: 'Public workspace invitation validation and acceptance',
+        },
+      ],
     });
 
     return c.json(spec);

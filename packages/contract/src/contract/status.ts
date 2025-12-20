@@ -14,9 +14,12 @@ export const apiInfo = oc
   .route({
     method: 'GET',
     path: '/',
-    summary: 'Get API info',
-    description: 'Retrieve API version and endpoint information',
-    tags: ['Status'],
+    spec: {
+      summary: 'Get API info',
+      description: 'Retrieve API version and endpoint information',
+      tags: ['Status'],
+      security: [],
+    },
   })
   .output(ApiResponseSchema(ApiInfoDataSchema));
 
@@ -28,8 +31,11 @@ export const health = oc
   .route({
     method: 'GET',
     path: '/health',
-    summary: 'Health check',
-    description: 'Check API health status',
-    tags: ['Status'],
+    spec: {
+      summary: 'Health check',
+      description: 'Check API health status',
+      tags: ['Status'],
+      security: [],
+    },
   })
   .output(ApiResponseSchema(HealthDataSchema));
