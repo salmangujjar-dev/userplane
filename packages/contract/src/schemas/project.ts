@@ -95,6 +95,24 @@ export const ReplaceProjectSchema = z.object({
 });
 
 /**
+ * Get project by ID request (detailed mode)
+ */
+export const ProjectByIdSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+    projectId: z.string(),
+  }),
+});
+
+/**
+ * Project by ID response
+ */
+export const ProjectByIdDataSchema = z.object({
+  workspaceId: z.string(),
+  project: ProjectItemSchema,
+});
+
+/**
  * Delete project request (detailed mode)
  */
 export const DeleteProjectSchema = z.object({

@@ -20,6 +20,7 @@ import { useWorkspaceLinks } from '@/hooks/use-workspace-links';
 import { useSearchableMembers } from '@/hooks/use-searchable-members';
 import { useSearchableLinks } from '@/hooks/use-searchable-links';
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
+import { useProject } from '@/hooks/use-project';
 import { LinksList } from '@/components/links/links-list';
 
 export default function ProjectPage() {
@@ -38,6 +39,10 @@ export default function ProjectPage() {
 
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
   const [linkSearchQuery, setLinkSearchQuery] = useState('');
+
+  // Fetch project details
+  const { data: project } = useProject(projectId);
+  const projectTitle = project?.projectTitle || 'Untitled Project';
 
   // Fetch recordings filtered by project
   const { data: recordingsData, isLoading: isLoadingRecordings } = useWorkspaceRecordings({
@@ -112,7 +117,7 @@ export default function ProjectPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-semibold">Project {projectId}</h2>
+                <h2 className="text-lg font-semibold">{projectTitle}</h2>
                 <p className="text-sm text-muted-foreground">
                   Manage recordings and links for this project
                 </p>

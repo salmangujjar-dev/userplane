@@ -119,6 +119,7 @@ export const domainContract = {
 export const projectContract = {
   list: project.getProjects,
   create: project.createProject,
+  getById: project.getProjectById,
   update: project.updateProject,
   replace: project.replaceProject,
   delete: project.deleteProject,
