@@ -26,6 +26,7 @@ import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import { formatDistanceToNow } from 'date-fns';
+import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
 
 interface WorkspaceNotifications {
   notifyOnLinkUsage: boolean;
@@ -53,6 +54,11 @@ export function WorkspaceSection() {
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const [expandedWorkspace, setExpandedWorkspace] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [leavingWorkspace, setLeavingWorkspace] = useState<{
+    workspaceId: string;
+    workspaceName: string;
+    isOwner: boolean;
+  } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: workspacesData, isLoading } = useWorkspaces({
@@ -63,35 +69,21 @@ export function WorkspaceSection() {
   const workspaces = useMemo<Workspace[]>(() => {
     if (!workspacesData?.workspaces) return [];
 
-    console.log('Current workspace ID from store:', currentWorkspaceId);
-    console.log(
-      'Available workspaces:',
-      workspacesData.workspaces.map((ws) => ws.workspaceId)
-    );
-
-    return workspacesData.workspaces.map((ws) => {
-      const isCurrent = ws.workspaceId === currentWorkspaceId;
-      console.log(`Workspace ${ws.workspaceName} (${ws.workspaceId}):`, {
-        isCurrent,
-        currentWorkspaceId,
-      });
-
-      return {
-        workspaceId: ws.workspaceId,
-        workspaceName: ws.workspaceName,
-        createdAt: ws.createdAt,
-        updatedAt: ws.updatedAt,
-        isCurrent,
-        notifications: {
-          notifyOnLinkUsage: ws.notificationPreferences?.notifyOnLinkUsage ?? false,
-          notifyOnQuotaReset: ws.notificationPreferences?.notifyOnQuotaReset ?? false,
-          notifyOnQuotaLimit: ws.notificationPreferences?.notifyOnQuotaLimit ?? false,
-          notifyOnMemberJoin: ws.notificationPreferences?.notifyOnMemberJoin ?? false,
-          notifyOnInviteAccepted: ws.notificationPreferences?.notifyOnInviteAccepted ?? false,
-        },
-        role: ws.workspaceMembership?.workspaceRole ?? 'member',
-      };
-    });
+    return workspacesData.workspaces.map((ws) => ({
+      workspaceId: ws.workspaceId,
+      workspaceName: ws.workspaceName,
+      createdAt: ws.createdAt,
+      updatedAt: ws.updatedAt,
+      isCurrent: ws.workspaceId === currentWorkspaceId,
+      notifications: {
+        notifyOnLinkUsage: ws.notificationPreferences?.notifyOnLinkUsage ?? false,
+        notifyOnQuotaReset: ws.notificationPreferences?.notifyOnQuotaReset ?? false,
+        notifyOnQuotaLimit: ws.notificationPreferences?.notifyOnQuotaLimit ?? false,
+        notifyOnMemberJoin: ws.notificationPreferences?.notifyOnMemberJoin ?? false,
+        notifyOnInviteAccepted: ws.notificationPreferences?.notifyOnInviteAccepted ?? false,
+      },
+      role: ws.workspaceMembership?.workspaceRole ?? 'member',
+    }));
   }, [workspacesData, currentWorkspaceId]);
 
   const totalPages = workspacesData?.pagination
@@ -141,11 +133,22 @@ export function WorkspaceSection() {
         params: { workspaceId },
       });
     },
-    onSuccess: (_, workspaceId) => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+    onSuccess: async (_, deletedWorkspaceId) => {
+      await queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success('Workspace deleted successfully');
-      if (workspaceId === currentWorkspaceId) {
-        router.push('/workspace/create');
+
+      if (deletedWorkspaceId === currentWorkspaceId) {
+        const remainingWorkspaces = workspaces.filter(
+          (ws) => ws.workspaceId !== deletedWorkspaceId
+        );
+
+        if (remainingWorkspaces.length > 0 && remainingWorkspaces[0]) {
+          const nextWorkspace = remainingWorkspaces[0];
+          setWorkspaceStore(nextWorkspace.workspaceId);
+          router.push(`/${nextWorkspace.workspaceId}/preferences`);
+        } else {
+          router.push('/workspace/create');
+        }
       }
     },
     onError: (error: Error) => {
@@ -159,11 +162,20 @@ export function WorkspaceSection() {
         params: { workspaceId },
       });
     },
-    onSuccess: (_, workspaceId) => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+    onSuccess: async (_, leftWorkspaceId) => {
+      await queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success('Left workspace successfully');
-      if (workspaceId === currentWorkspaceId) {
-        router.push('/workspace/create');
+
+      if (leftWorkspaceId === currentWorkspaceId) {
+        const remainingWorkspaces = workspaces.filter((ws) => ws.workspaceId !== leftWorkspaceId);
+
+        if (remainingWorkspaces.length > 0 && remainingWorkspaces[0]) {
+          const nextWorkspace = remainingWorkspaces[0];
+          setWorkspaceStore(nextWorkspace.workspaceId);
+          router.push(`/${nextWorkspace.workspaceId}/preferences`);
+        } else {
+          router.push('/workspace/create');
+        }
       }
     },
     onError: (error: Error) => {
@@ -196,10 +208,23 @@ export function WorkspaceSection() {
   };
 
   const handleDeleteWorkspace = (workspaceId: string, role: string) => {
-    if (role === 'owner') {
-      deleteWorkspaceMutation.mutate(workspaceId);
+    const workspace = workspaces.find((ws) => ws.workspaceId === workspaceId);
+    if (!workspace) return;
+
+    setLeavingWorkspace({
+      workspaceId,
+      workspaceName: workspace.workspaceName,
+      isOwner: role === 'owner',
+    });
+  };
+
+  const handleConfirmLeave = () => {
+    if (!leavingWorkspace) return;
+
+    if (leavingWorkspace.isOwner) {
+      deleteWorkspaceMutation.mutate(leavingWorkspace.workspaceId);
     } else {
-      leaveWorkspaceMutation.mutate(workspaceId);
+      leaveWorkspaceMutation.mutate(leavingWorkspace.workspaceId);
     }
   };
 
@@ -312,7 +337,7 @@ export function WorkspaceSection() {
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between py-1">
                         <div className="flex-1">
                           <div className="text-sm font-normal">
                             {workspace.role === 'owner' ? 'Delete workspace' : 'Leave workspace'}
@@ -324,7 +349,7 @@ export function WorkspaceSection() {
                           </p>
                         </div>
                         <Button
-                          variant="destructive"
+                          variant="secondary"
                           size="sm"
                           onClick={() =>
                             handleDeleteWorkspace(workspace.workspaceId, workspace.role)
@@ -530,6 +555,15 @@ export function WorkspaceSection() {
           </Pagination>
         )}
       </div>
+
+      <LeaveWorkspaceModal
+        open={!!leavingWorkspace}
+        onOpenChange={(open) => !open && setLeavingWorkspace(null)}
+        workspaceName={leavingWorkspace?.workspaceName || ''}
+        isOwner={leavingWorkspace?.isOwner || false}
+        onConfirm={handleConfirmLeave}
+        isLoading={deleteWorkspaceMutation.isPending || leaveWorkspaceMutation.isPending}
+      />
     </div>
   );
 }

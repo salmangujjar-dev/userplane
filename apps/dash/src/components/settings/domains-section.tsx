@@ -25,6 +25,7 @@ import { DomainVerificationPostModal } from '@/components/modals/domain-verifica
 import { EditDomainModal } from '@/components/modals/edit-domain-modal';
 import { CreateDomainModal } from '@/components/modals/create-domain-modal';
 import { DomainConfigureModal } from '@/components/modals/domain-configure-modal';
+import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { useWorkspaceId } from '@/stores/workspace';
@@ -60,6 +61,7 @@ export function DomainsSection() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [configuringDomain, setConfiguringDomain] = useState<ConfiguringDomain | null>(null);
   const [loadingConfigureId, setLoadingConfigureId] = useState<string | null>(null);
+  const [deletingDomain, setDeletingDomain] = useState<{ id: string; url: string } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -278,8 +280,15 @@ export function DomainsSection() {
     updateDomainMutation.mutate({ domainId: editingDomain.id, url: newDomainUrl });
   };
 
-  const handleDeleteDomain = (domainId: string) => {
-    deleteDomainMutation.mutate(domainId);
+  const handleDeleteDomain = (domainId: string, domainUrl: string) => {
+    setDeletingDomain({ id: domainId, url: domainUrl });
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingDomain) {
+      deleteDomainMutation.mutate(deletingDomain.id);
+      setDeletingDomain(null);
+    }
   };
 
   const handleConfigure = async (
@@ -421,8 +430,7 @@ export function DomainsSection() {
                       Edit Domain
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => handleDeleteDomain(domain.domainId)}
-                      className="text-destructive focus:text-destructive"
+                      onClick={() => handleDeleteDomain(domain.domainId, domain.domainUrl)}
                       disabled={deleteDomainMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
@@ -549,6 +557,15 @@ export function DomainsSection() {
           }
         }}
         loading={updateDomainPreferencesMutation.isPending}
+      />
+
+      <DeleteConfirmationModal
+        open={!!deletingDomain}
+        onOpenChange={(open) => !open && setDeletingDomain(null)}
+        itemName={deletingDomain?.url || ''}
+        itemType="domain"
+        onConfirm={handleConfirmDelete}
+        isLoading={deleteDomainMutation.isPending}
       />
     </div>
   );

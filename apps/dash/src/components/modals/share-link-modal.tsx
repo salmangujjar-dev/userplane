@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import {
@@ -25,6 +26,19 @@ interface ShareLinkModalProps {
 }
 
 export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
+  useEffect(() => {
+    if (open && link) {
+      navigator.clipboard
+        .writeText(link)
+        .then(() => {
+          toast.success('Link copied to clipboard');
+        })
+        .catch(() => {
+          toast.error('Failed to copy link');
+        });
+    }
+  }, [open, link]);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(link);

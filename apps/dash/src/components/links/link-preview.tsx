@@ -28,6 +28,7 @@ import { EditLinkModal } from '@/components/modals/edit-link-modal';
 
 interface LinkPreviewProps {
   linkId: string;
+  linkURL: string;
   onClick?: () => void;
   title: string | null;
   createdBy: string;
@@ -43,6 +44,7 @@ interface LinkPreviewProps {
 
 export function LinkPreview({
   linkId,
+  linkURL,
   onClick,
   title,
   createdBy,
@@ -71,13 +73,11 @@ export function LinkPreview({
     }
   };
 
-  const handleShare = async (e: React.MouseEvent) => {
+  const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onShare) {
       onShare();
     } else {
-      const shareUrl = `${window.location.origin}/recording/${linkId}`;
-      await navigator.clipboard.writeText(shareUrl);
       setIsShareModalOpen(true);
     }
   };
@@ -226,10 +226,7 @@ export function LinkPreview({
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  className="text-destructive focus:text-destructive"
-                >
+                <DropdownMenuItem onClick={handleDelete}>
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
@@ -249,7 +246,7 @@ export function LinkPreview({
       />
 
       <ShareLinkModal
-        link={`${typeof window !== 'undefined' ? window.location.origin : ''}/recording/${linkId}`}
+        link={linkURL}
         open={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
       />
