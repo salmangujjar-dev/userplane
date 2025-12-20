@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@workspace/ui/components/button';
 import { Switch } from '@workspace/ui/components/switch';
 import { Label } from '@workspace/ui/components/label';
@@ -20,13 +19,17 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@workspace/ui/components/pagination';
-import { toast } from '@workspace/ui/components/sonner';
 import { Building2, ArrowUpRight, ChevronDown } from 'lucide-react';
 import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
-import { apiClient } from '@/client';
 import { formatDistanceToNow } from 'date-fns';
 import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
+import {
+  useUpdateNotifications,
+  useRotateInvite,
+  useDeleteWorkspace,
+  useLeaveWorkspace,
+} from '@/queries/use-workspace-mutations';
 
 interface WorkspaceNotifications {
   notifyOnLinkUsage: boolean;
@@ -59,7 +62,6 @@ export function WorkspaceSection() {
     workspaceName: string;
     isOwner: boolean;
   } | null>(null);
-  const queryClient = useQueryClient();
 
   const { data: workspacesData, isLoading } = useWorkspaces({
     page: currentPage,
@@ -90,98 +92,20 @@ export function WorkspaceSection() {
     ? Math.ceil(workspacesData.total / ITEMS_PER_PAGE)
     : 1;
 
-  const updateNotificationsMutation = useMutation({
-    mutationFn: async ({
-      workspaceId,
-      notifications,
-    }: {
-      workspaceId: string;
-      notifications: Partial<WorkspaceNotifications>;
-    }) => {
-      return await apiClient.workspace.notifications.update({
-        params: { workspaceId },
-        body: notifications,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      toast.success('Notification preferences updated');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update notifications: ${error.message}`);
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-    },
-  });
-
-  const rotateInviteMutation = useMutation({
-    mutationFn: async (workspaceId: string) => {
-      return await apiClient.workspace.invite.rotate({
-        params: { workspaceId },
-      });
-    },
-    onSuccess: () => {
-      toast.success('Invite token reset successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to reset invite token: ${error.message}`);
-    },
-  });
-
-  const deleteWorkspaceMutation = useMutation({
-    mutationFn: async (workspaceId: string) => {
-      return await apiClient.workspace.delete({
-        params: { workspaceId },
-      });
-    },
-    onSuccess: async (_, deletedWorkspaceId) => {
-      await queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      toast.success('Workspace deleted successfully');
-
-      if (deletedWorkspaceId === currentWorkspaceId) {
-        const remainingWorkspaces = workspaces.filter(
-          (ws) => ws.workspaceId !== deletedWorkspaceId
-        );
-
-        if (remainingWorkspaces.length > 0 && remainingWorkspaces[0]) {
-          const nextWorkspace = remainingWorkspaces[0];
-          setWorkspaceStore(nextWorkspace.workspaceId);
-          router.push(`/${nextWorkspace.workspaceId}/preferences`);
-        } else {
-          router.push('/workspace/create');
-        }
-      }
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete workspace: ${error.message}`);
-    },
-  });
-
-  const leaveWorkspaceMutation = useMutation({
-    mutationFn: async (workspaceId: string) => {
-      return await apiClient.workspace.members.leave({
-        params: { workspaceId },
-      });
-    },
-    onSuccess: async (_, leftWorkspaceId) => {
-      await queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      toast.success('Left workspace successfully');
-
-      if (leftWorkspaceId === currentWorkspaceId) {
-        const remainingWorkspaces = workspaces.filter((ws) => ws.workspaceId !== leftWorkspaceId);
-
-        if (remainingWorkspaces.length > 0 && remainingWorkspaces[0]) {
-          const nextWorkspace = remainingWorkspaces[0];
-          setWorkspaceStore(nextWorkspace.workspaceId);
-          router.push(`/${nextWorkspace.workspaceId}/preferences`);
-        } else {
-          router.push('/workspace/create');
-        }
-      }
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to leave workspace: ${error.message}`);
-    },
-  });
+  const updateNotificationsMutation = useUpdateNotifications();
+  const rotateInviteMutation = useRotateInvite();
+  const deleteWorkspaceMutation = useDeleteWorkspace(
+    currentWorkspaceId,
+    workspaces,
+    (path) => router.push(path),
+    setWorkspaceStore
+  );
+  const leaveWorkspaceMutation = useLeaveWorkspace(
+    currentWorkspaceId,
+    workspaces,
+    (path) => router.push(path),
+    setWorkspaceStore
+  );
 
   const handleSwitch = (workspaceId: string) => {
     setWorkspaceStore(workspaceId);
@@ -222,9 +146,17 @@ export function WorkspaceSection() {
     if (!leavingWorkspace) return;
 
     if (leavingWorkspace.isOwner) {
-      deleteWorkspaceMutation.mutate(leavingWorkspace.workspaceId);
+      deleteWorkspaceMutation.mutate(leavingWorkspace.workspaceId, {
+        onSettled: () => {
+          setLeavingWorkspace(null);
+        },
+      });
     } else {
-      leaveWorkspaceMutation.mutate(leavingWorkspace.workspaceId);
+      leaveWorkspaceMutation.mutate(leavingWorkspace.workspaceId, {
+        onSettled: () => {
+          setLeavingWorkspace(null);
+        },
+      });
     }
   };
 

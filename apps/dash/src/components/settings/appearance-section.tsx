@@ -1,21 +1,18 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { Input } from '@workspace/ui/components/input';
 import { Button } from '@workspace/ui/components/button';
 import { Upload } from 'lucide-react';
-import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
 import { useWorkspaceId } from '@/stores/workspace';
-import { apiClient } from '@/client';
+import { useUpdateToggle, useUpdateAppearance } from '@/queries/use-appearance-mutations';
 
 export function AppearanceSection() {
   const workspaceId = useWorkspaceId();
-  const queryClient = useQueryClient();
   const { data: preferences, isLoading } = useWorkspacePreferences();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,51 +39,10 @@ export function AppearanceSection() {
     }
   }, [preferences]);
 
-  // Separate mutation for toggle (auto-saves immediately)
-  const updateToggleMutation = useMutation({
-    mutationFn: async (enabled: boolean) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.workspace.preferences.update({
-        params: { workspaceId },
-        body: { recordingCustomizeLink: enabled },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-preferences', workspaceId] });
-      toast.success('Recording link customization updated');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update customization: ${error.message}`);
-      // Revert on error
-      if (preferences) {
-        setCustomizeRecordingLink(preferences.recordingCustomizeLink);
-      }
-    },
+  const updateToggleMutation = useUpdateToggle(workspaceId, (previousValue) => {
+    setCustomizeRecordingLink(previousValue);
   });
-
-  // Mutation for other appearance fields (requires Update button)
-  const updateAppearanceMutation = useMutation({
-    mutationFn: async (updates: {
-      recordingCompanyName?: string | null;
-      recordingCompanyLogoPath?: string | null;
-      recordingHeader?: string | null;
-      recordingFootnote?: string | null;
-      recordingPrimaryColor?: string | null;
-    }) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.workspace.preferences.update({
-        params: { workspaceId },
-        body: updates,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-preferences', workspaceId] });
-      toast.success('Appearance settings updated successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update settings: ${error.message}`);
-    },
-  });
+  const updateAppearanceMutation = useUpdateAppearance(workspaceId);
 
   // Check if form has changes (excluding toggle, which auto-saves)
   const hasChanges = useMemo(() => {

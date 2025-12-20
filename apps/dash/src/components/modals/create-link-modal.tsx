@@ -30,8 +30,7 @@ import { useWorkspaceStore } from '@/stores/workspace';
 import { UrlInputWithFavicon } from '@/components/url-input-with-favicon';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/client';
+import { useCreateLink } from '@/queries/use-link-mutations';
 import { toast } from '@workspace/ui/components/sonner';
 
 interface CreateLinkModalProps {
@@ -40,7 +39,6 @@ interface CreateLinkModalProps {
 
 export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [reference, setReference] = useState('');
   const [selectedProject, setSelectedProject] = useState<string>('');
@@ -56,33 +54,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
     perPage: 10,
   });
 
-  const createLinkMutation = useMutation({
-    mutationFn: async (data: {
-      domainId: string;
-      projectId?: string;
-      linkReference?: string;
-      linkReusable: boolean;
-    }) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      const [error, response] = await apiClient.link.create({
-        params: { workspaceId },
-        body: data,
-      });
-      if (error) throw error;
-      return response;
-    },
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
-      toast.success('Link created successfully');
-      if (onLinkCreated) {
-        onLinkCreated(response.data.link.linkURL);
-      }
-      setOpen(false);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to create link: ${error.message}`);
-    },
-  });
+  const createLinkMutation = useCreateLink(workspaceId, domains);
 
   // Effect to set default project and domain when data loads
   useEffect(() => {
@@ -122,12 +94,22 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
       return;
     }
 
-    createLinkMutation.mutate({
-      domainId: selectedDomain,
-      projectId: selectedProject || undefined,
-      linkReference: reference || undefined,
-      linkReusable: isReusable,
-    });
+    createLinkMutation.mutate(
+      {
+        domainId: selectedDomain,
+        projectId: selectedProject || undefined,
+        linkReference: reference || undefined,
+        linkReusable: isReusable,
+      },
+      {
+        onSuccess: (response) => {
+          if (onLinkCreated) {
+            onLinkCreated(response.data.link.linkURL);
+          }
+          setOpen(false);
+        },
+      }
+    );
   };
 
   return (

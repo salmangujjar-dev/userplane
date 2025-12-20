@@ -303,7 +303,7 @@ export class RecordingSession {
     console.log('[Upload:Ack] Acknowledging upload completion');
     console.log('[Upload:Ack] Recording ID:', uploadState.recordingId);
 
-    const [error, response] = await this.client.session.upload.complete(
+    const [error] = await this.client.session.upload.complete(
       {
         body: {
           recording_id: uploadState.recordingId,

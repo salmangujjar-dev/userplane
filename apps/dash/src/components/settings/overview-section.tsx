@@ -1,20 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Button } from '@workspace/ui/components/button';
-import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceId } from '@/stores/workspace';
-import { apiClient } from '@/client';
+import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
 
 export function OverviewSection() {
   const workspaceId = useWorkspaceId();
   const { data: workspaceData, isLoading } = useWorkspace();
   const [workspaceName, setWorkspaceName] = useState('');
-  const queryClient = useQueryClient();
 
   const originalName = workspaceData?.workspace.workspaceName || '';
 
@@ -24,23 +21,9 @@ export function OverviewSection() {
     }
   }, [workspaceData]);
 
-  const updateNameMutation = useMutation({
-    mutationFn: async (newName: string) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.workspace.updateName({
-        params: { workspaceId },
-        body: { name: newName },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });
-      toast.success('Workspace name updated successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update workspace name: ${error.message}`);
-      setWorkspaceName(originalName);
-    },
-  });
+  const updateNameMutation = useUpdateWorkspaceName(workspaceId, (originalName) =>
+    setWorkspaceName(originalName)
+  );
 
   const handleSave = () => {
     if (workspaceName.trim() && workspaceName !== originalName) {

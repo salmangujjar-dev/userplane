@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LinkPreview } from './link-preview';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
-import { toast } from '@workspace/ui/components/sonner';
-import { apiClient } from '@/client';
 import { useWorkspaceId } from '@/stores/workspace';
+import { useUpdateLink, useDeleteLink } from '@/queries/use-link-mutations';
 import type { Link } from '@/hooks/use-workspace-links';
 
 interface LinksListProps {
@@ -16,59 +14,13 @@ interface LinksListProps {
 
 export function LinksList({ links, isLoading }: LinksListProps) {
   const workspaceId = useWorkspaceId();
-  const queryClient = useQueryClient();
   const [deletingLink, setDeletingLink] = useState<{
     linkId: string;
     linkTitle: string | null;
   } | null>(null);
 
-  const updateLinkMutation = useMutation({
-    mutationFn: async ({
-      linkId,
-      title,
-      reference,
-      reusable,
-    }: {
-      linkId: string;
-      title: string;
-      reference: string;
-      reusable: boolean;
-    }) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.link.update({
-        params: { workspaceId, linkId },
-        body: {
-          linkTitle: title || null,
-          linkProviderRef: reference || null,
-          linkReusable: reusable,
-        },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
-      toast.success('Link updated successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update link: ${error.message}`);
-    },
-  });
-
-  const deleteLinkMutation = useMutation({
-    mutationFn: async (linkId: string) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.link.delete({
-        params: { workspaceId, linkId },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
-      toast.success('Link deleted successfully');
-      setDeletingLink(null);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete link: ${error.message}`);
-    },
-  });
+  const updateLinkMutation = useUpdateLink(workspaceId);
+  const deleteLinkMutation = useDeleteLink(workspaceId);
 
   const handleEditLink = (linkId: string, title: string, reference: string, reusable: boolean) => {
     updateLinkMutation.mutate({ linkId, title, reference, reusable });
@@ -80,9 +32,14 @@ export function LinksList({ links, isLoading }: LinksListProps) {
 
   const handleConfirmDelete = () => {
     if (deletingLink) {
-      deleteLinkMutation.mutate(deletingLink.linkId);
+      deleteLinkMutation.mutate(deletingLink.linkId, {
+        onSuccess: () => {
+          setDeletingLink(null);
+        },
+      });
     }
   };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 gap-4">

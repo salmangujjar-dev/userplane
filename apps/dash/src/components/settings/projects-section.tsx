@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { Button } from '@workspace/ui/components/button';
 import {
@@ -24,9 +23,12 @@ import { Folder, Trash2, MoreVertical, ChevronRight, Pencil } from 'lucide-react
 import { CreateProjectModal } from '@/components/modals/create-project-modal';
 import { EditProjectModal } from '@/components/modals/edit-project-modal';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
-import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
-import { apiClient } from '@/client';
+import {
+  useCreateProject,
+  useUpdateProject,
+  useDeleteProject,
+} from '@/queries/use-project-mutations';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -44,78 +46,21 @@ export function ProjectsSection() {
     projectTitle: string | null;
   } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const queryClient = useQueryClient();
 
   const { data: projects, isLoading } = useWorkspaceProjects({
     perPage: ITEMS_PER_PAGE,
   });
 
-  const createProjectMutation = useMutation({
-    mutationFn: async (title: string) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.project.create({
-        params: { workspaceId },
-        body: { projectTitle: title || null },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
-      toast.success('Project created successfully');
-      setShowModal(false);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to create project: ${error.message}`);
-    },
-  });
-
-  const updateProjectMutation = useMutation({
-    mutationFn: async ({
-      projectId,
-      title,
-      isDefault,
-    }: {
-      projectId: string;
-      title: string;
-      isDefault?: boolean;
-    }) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.project.update({
-        params: { workspaceId, projectId },
-        body: {
-          projectTitle: title || null,
-          isDefault,
-        },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
-      toast.success('Project updated successfully');
-      setShowEditModal(false);
-      setEditingProject(null);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update project: ${error.message}`);
-    },
-  });
-
-  const deleteProjectMutation = useMutation({
-    mutationFn: async (projectId: string) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.project.delete({
-        params: { workspaceId, projectId },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
-      toast.success('Project deleted successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete project: ${error.message}`);
-    },
-  });
+  const createProjectMutation = useCreateProject(workspaceId);
+  const updateProjectMutation = useUpdateProject(workspaceId);
+  const deleteProjectMutation = useDeleteProject(workspaceId);
 
   const handleCreateProject = (newProject: { title: string; isDefault: boolean }) => {
-    createProjectMutation.mutate(newProject.title);
+    createProjectMutation.mutate(newProject.title, {
+      onSuccess: () => {
+        setShowModal(false);
+      },
+    });
   };
 
   const handleDeleteProject = (projectId: string, projectTitle: string | null) => {
@@ -124,8 +69,11 @@ export function ProjectsSection() {
 
   const handleConfirmDelete = () => {
     if (deletingProject) {
-      deleteProjectMutation.mutate(deletingProject.projectId);
-      setDeletingProject(null);
+      deleteProjectMutation.mutate(deletingProject.projectId, {
+        onSuccess: () => {
+          setDeletingProject(null);
+        },
+      });
     }
   };
 
@@ -142,11 +90,19 @@ export function ProjectsSection() {
 
   const handleSaveEdit = (updatedProject: { title: string; isDefault: boolean }) => {
     if (!editingProject) return;
-    updateProjectMutation.mutate({
-      projectId: editingProject.projectId,
-      title: updatedProject.title,
-      isDefault: updatedProject.isDefault,
-    });
+    updateProjectMutation.mutate(
+      {
+        projectId: editingProject.projectId,
+        title: updatedProject.title,
+        isDefault: updatedProject.isDefault,
+      },
+      {
+        onSuccess: () => {
+          setShowEditModal(false);
+          setEditingProject(null);
+        },
+      }
+    );
   };
 
   // Calculate these before any conditional returns to avoid hook order issues

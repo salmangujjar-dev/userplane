@@ -1,18 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Button } from '@workspace/ui/components/button';
-import { toast } from '@workspace/ui/components/sonner';
 import { useAccount } from '@/hooks/use-account';
-import { apiClient } from '@/client';
+import { useUpdateAccountName } from '@/queries/use-account-mutations';
 
 export function AccountSettingsSection() {
   const { data: accountData, isLoading } = useAccount();
   const [name, setName] = useState('');
-  const queryClient = useQueryClient();
 
   const originalName = accountData?.userName || '';
   const email = accountData?.userEmail || '';
@@ -23,21 +20,7 @@ export function AccountSettingsSection() {
     }
   }, [accountData]);
 
-  const updateNameMutation = useMutation({
-    mutationFn: async (newName: string) => {
-      return await apiClient.account.update({
-        body: { name: newName },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account'] });
-      toast.success('Account name updated successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update account name: ${error.message}`);
-      setName(originalName);
-    },
-  });
+  const updateNameMutation = useUpdateAccountName((originalName) => setName(originalName));
 
   const handleSave = () => {
     if (name.trim() && name !== originalName) {
