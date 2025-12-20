@@ -74,6 +74,7 @@ export const workspaceContract = {
     getUrl: workspace.getInviteUrl,
     rotate: workspace.rotateInviteToken,
     send: workspace.sendWorkspaceInvites,
+    accept: workspace.acceptInvite,
   },
 
   domains: {
@@ -97,11 +98,11 @@ export const workspaceContract = {
 
 /**
  * Invite contract
- * Workspace invitation operations
+ * Public invitation validation
+ * Note: Sending invites is part of workspace contract
  */
 export const inviteContract = {
-  send: invite.sendInvites,
-  action: invite.inviteAction,
+  validate: invite.validateInvite,
 };
 
 /**

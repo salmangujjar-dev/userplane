@@ -1,44 +1,24 @@
 import { oc } from '@orpc/contract';
-import {
-  SendInvitesSchema,
-  SendInvitesResultSchema,
-  InviteActionQuerySchema,
-  InviteActionResultSchema,
-  ApiResponseSchema,
-} from '../schemas';
+import { InviteActionQuerySchema, InviteActionResultSchema, ApiResponseSchema } from '../schemas';
 
 /**
  * Invite contract
- * Endpoints for workspace invitation operations
+ * Public invitation validation endpoint
+ * Note: Sending invites is handled by workspace contract at /workspace/{workspaceId}/invite
  */
 
 /**
- * POST /invite
- * Send workspace invitations via email
+ * POST /invite/validate
+ * Validate an invitation token
+ * Public endpoint - no authentication required
  */
-export const sendInvites = oc
+export const validateInvite = oc
   .route({
     method: 'POST',
-    path: '/invite',
+    path: '/invite/validate',
     inputStructure: 'detailed',
-    summary: 'Send invites',
-    description: 'Send workspace invitations to multiple email addresses',
-    tags: ['Invites'],
-  })
-  .input(SendInvitesSchema)
-  .output(ApiResponseSchema(SendInvitesResultSchema));
-
-/**
- * GET /invite
- * Validate or accept an invitation
- */
-export const inviteAction = oc
-  .route({
-    method: 'GET',
-    path: '/invite',
-    inputStructure: 'detailed',
-    summary: 'Handle invite action',
-    description: 'Validate or accept a workspace invitation using token',
+    summary: 'Validate invite',
+    description: 'Validate a workspace invitation token without accepting',
     tags: ['Invites'],
   })
   .input(InviteActionQuerySchema)

@@ -553,7 +553,7 @@ export const rotateInviteTokenImpl = (
 };
 
 /**
- * POST /workspace/:id/invite - Send workspace invitations
+ * POST /workspace/:id/invite/send - Send workspace invitations
  * Requires workspace member
  */
 export const sendWorkspaceInvitesImpl = (
@@ -610,6 +610,68 @@ export const sendWorkspaceInvitesImpl = (
         throw error;
       }
     });
+};
+
+/**
+ * POST /workspace/:workspaceId/invite/accept - Accept workspace invitation
+ * Requires authentication
+ * Validates token matches the workspace and adds user as member
+ */
+export const acceptInviteImpl = (
+  inviteService: InviteService,
+  workspaceService: WorkspaceService
+) => {
+  return authorized.workspace.invite.accept.handler(async ({ input, context }) => {
+    try {
+      // Verify the token is for the correct workspace
+      const validation = await inviteService.validateInvite(input.body.token);
+
+      if (validation.status !== 'valid') {
+        throw new ValidationError(validation.message || 'Invalid invitation token');
+      }
+
+      // Ensure the token's workspace matches the requested workspace
+      if (validation.workspaceId !== input.params.workspaceId) {
+        throw new ValidationError('Invitation token does not match the requested workspace');
+      }
+
+      // Accept the invite
+      const result = await inviteService.acceptInvite({
+        inviteToken: input.body.token,
+        userId: context.user.id,
+      });
+
+      return {
+        message: 'Invitation accepted successfully',
+        data: {
+          workspaceId: result.workspace.workspaceId,
+          workspaceName: result.workspace.workspaceName,
+        },
+      };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Invalid request body',
+        });
+      }
+      if (error instanceof ValidationError) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: error.message,
+        });
+      }
+      if (error instanceof NotFoundError) {
+        throw new ORPCError('NOT_FOUND', {
+          message: error.message,
+        });
+      }
+      if (error instanceof Error) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  });
 };
 
 /**
@@ -1203,6 +1265,7 @@ export const createWorkspaceProcedures = (
       getUrl: getInviteUrlImpl(inviteService, workspaceMemberService, workspaceService),
       rotate: rotateInviteTokenImpl(inviteService, workspaceMemberService, workspaceService),
       send: sendWorkspaceInvitesImpl(inviteService, workspaceMemberService, workspaceService),
+      accept: acceptInviteImpl(inviteService, workspaceService),
     },
 
     domains: {

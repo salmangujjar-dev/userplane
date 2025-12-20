@@ -41,6 +41,8 @@ import {
   InviteUrlDataSchema,
   SendWorkspaceInvitesSchema,
   SendInvitesResultSchema,
+  AcceptInviteSchema,
+  AcceptInviteDataSchema,
   UpdateLinkSettingsSchema,
   LinkSettingsDataSchema,
   UpdateWorkspaceNameSchema,
@@ -251,13 +253,13 @@ export const rotateInviteToken = oc
   .output(ApiResponseSchema(InviteUrlDataSchema));
 
 /**
- * POST /workspace/{workspaceId}/invite
+ * POST /workspace/{workspaceId}/invite/send
  * Send workspace invitations
  */
 export const sendWorkspaceInvites = oc
   .route({
     method: 'POST',
-    path: '/workspace/{workspaceId}/invite',
+    path: '/workspace/{workspaceId}/invite/send',
     inputStructure: 'detailed',
     summary: 'Send workspace invitations',
     description: 'Send workspace invitations to multiple email addresses',
@@ -265,6 +267,22 @@ export const sendWorkspaceInvites = oc
   })
   .input(SendWorkspaceInvitesSchema)
   .output(ApiResponseSchema(SendInvitesResultSchema));
+
+/**
+ * POST /workspace/{workspaceId}/invite/accept
+ * Accept workspace invitation
+ */
+export const acceptInvite = oc
+  .route({
+    method: 'POST',
+    path: '/workspace/{workspaceId}/invite/accept',
+    inputStructure: 'detailed',
+    summary: 'Accept workspace invitation',
+    description: 'Accept a workspace invitation if the token matches',
+    tags: ['Workspaces'],
+  })
+  .input(AcceptInviteSchema)
+  .output(ApiResponseSchema(AcceptInviteDataSchema));
 
 /**
  * GET /workspace/{workspaceId}/domains
