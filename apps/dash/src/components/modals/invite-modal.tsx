@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, KeyboardEvent, useMemo } from 'react';
+import { useState, KeyboardEvent } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import {
@@ -19,7 +19,7 @@ import {
 import { Link, X, HelpCircle } from 'lucide-react';
 import { toast } from '@workspace/ui/components/sonner';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { useWorkspaceStore } from '@/stores/workspace';
+import { useWorkspaceInvite, useSendWorkspaceInvites } from '@/hooks/use-workspace-invite';
 
 interface InviteModalProps {
   open: boolean;
@@ -27,19 +27,14 @@ interface InviteModalProps {
 }
 
 export function InviteModal({ open, onOpenChange }: InviteModalProps) {
-  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const [emailInput, setEmailInput] = useState('');
   const [emails, setEmails] = useState<string[]>([]);
   const MAX_EMAILS = 10;
 
-  // Generate workspace-specific invite link
-  // TODO: Replace with actual API call to generate/fetch invite token
-  const inviteLink = useMemo(() => {
-    if (!workspaceId) return 'https://userplane.com/workspace/invite/loading';
-    // In production, you'd fetch the actual invite token from your API
-    // Example: const token = await generateInviteToken(workspaceId);
-    return `${window.location.origin}/workspace/invite/accept?workspace=${workspaceId}&token=invite-${workspaceId}`;
-  }, [workspaceId]);
+  const { data: inviteToken, isLoading: isLoadingInvite } = useWorkspaceInvite();
+  const { mutate: sendInvites, isPending } = useSendWorkspaceInvites();
+
+  const inviteLink = inviteToken?.inviteUrl || 'Loading invite link...';
 
   const handleCopyLink = async () => {
     try {
@@ -79,15 +74,16 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     e.preventDefault();
     if (emailInput.trim()) {
       addEmail(emailInput);
+      return;
     }
     if (emails.length > 0) {
-      // TODO: Replace with actual API call to send invites
-      // Example: await sendWorkspaceInvites(workspaceId, emails);
-      console.log('Sending invites for workspace:', workspaceId, 'to:', emails);
-      toast.success(`Invites sent to ${emails.length} email${emails.length > 1 ? 's' : ''}`);
-      setEmails([]);
-      setEmailInput('');
-      onOpenChange(false);
+      sendInvites(emails, {
+        onSuccess: () => {
+          setEmails([]);
+          setEmailInput('');
+          onOpenChange(false);
+        },
+      });
     }
   };
 
@@ -141,6 +137,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
                   variant="secondary"
                   className="rounded-full px-4 py-2.5 h-auto"
                   onClick={handleCopyLink}
+                  disabled={isLoadingInvite}
                 >
                   <Link className="h-4 w-4" />
                 </Button>
@@ -196,8 +193,12 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="rounded-full px-6">
-                Send Invites
+              <Button
+                type="submit"
+                className="rounded-full px-6"
+                disabled={isPending || emails.length === 0}
+              >
+                {isPending ? 'Sending...' : 'Send Invites'}
               </Button>
             </div>
           </DialogFooter>

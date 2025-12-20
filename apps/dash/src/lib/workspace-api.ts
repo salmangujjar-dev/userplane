@@ -1,8 +1,9 @@
+import { apiClient } from '@/client';
+
 /**
  * Workspace API utilities
  *
- * These are placeholder functions that should be implemented with actual API calls
- * when the backend is ready.
+ * Uses the real API client for all workspace operations
  */
 
 export interface Project {
@@ -14,10 +15,8 @@ export interface Project {
 }
 
 export interface InviteToken {
-  token: string;
+  inviteUrl: string;
   workspaceId: string;
-  expiresAt: string;
-  createdBy: string;
 }
 
 /**
@@ -26,8 +25,8 @@ export interface InviteToken {
  * @returns Promise resolving to an array of projects
  */
 export async function fetchWorkspaceProjects(workspaceId: string): Promise<Project[]> {
-  // TODO: Implement actual API call
-  // Example: return apiClient.get(`/workspaces/${workspaceId}/projects`);
+  // TODO: Implement actual API call when projects endpoint is ready
+  // Example: return apiClient.workspace.projects.list({ params: { workspaceId } });
 
   console.log('Fetching projects for workspace:', workspaceId);
 
@@ -40,39 +39,34 @@ export async function fetchWorkspaceProjects(workspaceId: string): Promise<Proje
 }
 
 /**
- * Generate or fetch an invite token for a workspace
+ * Generate or fetch an invite URL for a workspace
+ * Uses the actual API to get the invite link
  * @param workspaceId - The workspace ID
- * @returns Promise resolving to an invite token object
+ * @returns Promise resolving to an invite token object containing the invite URL
  */
 export async function generateWorkspaceInviteToken(workspaceId: string): Promise<InviteToken> {
-  // TODO: Implement actual API call
-  // Example: return apiClient.post(`/workspaces/${workspaceId}/invite-token`);
-
-  console.log('Generating invite token for workspace:', workspaceId);
-
-  // Mock data for now
-  return Promise.resolve({
-    token: `invite-${workspaceId}-${Date.now()}`,
-    workspaceId,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-    createdBy: 'current-user-id',
+  const response = await apiClient.workspace.invite.getUrl({
+    params: { workspaceId },
   });
+
+  return {
+    inviteUrl: response.data.inviteUrl,
+    workspaceId: response.data.workspaceId,
+  };
 }
 
 /**
  * Send email invitations to join a workspace
+ * Uses the actual API to send invite emails
  * @param workspaceId - The workspace ID
  * @param emails - Array of email addresses to invite
  * @returns Promise resolving when invites are sent
  */
 export async function sendWorkspaceInvites(workspaceId: string, emails: string[]): Promise<void> {
-  // TODO: Implement actual API call
-  // Example: return apiClient.post(`/workspaces/${workspaceId}/invites`, { emails });
-
-  console.log('Sending workspace invites:', { workspaceId, emails });
-
-  // Mock implementation
-  return Promise.resolve();
+  await apiClient.workspace.invite.send({
+    params: { workspaceId },
+    body: { emails },
+  });
 }
 
 /**
@@ -90,8 +84,8 @@ export async function createRecordingLink(
     isReusable?: boolean;
   }
 ): Promise<string> {
-  // TODO: Implement actual API call
-  // Example: return apiClient.post(`/workspaces/${workspaceId}/links`, params);
+  // TODO: Implement actual API call when link creation endpoint is ready
+  // Example: return apiClient.workspace.links.create({ params: { workspaceId }, body: params });
 
   console.log('Creating recording link for workspace:', { workspaceId, ...params });
 
