@@ -4,26 +4,27 @@ import Link from 'next/link';
 import { Badge } from '@workspace/ui/components/badge';
 import Logo from '@workspace/ui/components/logo';
 import { WorkspaceMemberAvatars } from '../workspace/workspace-member-avatars';
-
-interface WorkspaceMember {
-  id: string;
-  name: string;
-}
+import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
 
 interface DashboardNavProps {
   workspaceName: string;
   planName: string;
   inviteButton?: React.ReactNode;
   createLinkButton?: React.ReactNode;
-  members?: WorkspaceMember[];
+  onInviteClick?: () => void;
 }
 
 export function DashboardNav({
   planName,
   inviteButton,
   createLinkButton,
-  members,
+  onInviteClick,
 }: DashboardNavProps) {
+  const { data: members } = useWorkspaceMembers({
+    perPage: 10,
+    enabled: true,
+  });
+
   return (
     <nav>
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
@@ -36,7 +37,7 @@ export function DashboardNav({
           </Badge>
         </div>
         <div className="flex items-center gap-3">
-          <WorkspaceMemberAvatars members={members} />
+          <WorkspaceMemberAvatars members={members} onInviteClick={onInviteClick} />
           {inviteButton}
           {createLinkButton}
         </div>
