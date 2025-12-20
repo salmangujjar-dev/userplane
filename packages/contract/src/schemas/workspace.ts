@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { WorkspaceRoleSchema, DomainStatusSchema, PaginationMetaSchema } from './common';
+import { PLAN_IDS, PLAN_NAME_VALUES } from '@workspace/pricing';
 import { SendWorkspaceInvitesSchema } from './invite';
 
 /**
@@ -99,16 +100,8 @@ export const WorkspaceByIdDataSchema = z.object({
   workspace: z.object({
     workspaceId: z.string(),
     workspaceName: z.string(),
-    workspacePlan: z.enum([
-      'starter_monthly',
-      'starter_annual',
-      'scale_up_monthly',
-      'scale_up_annual',
-      'enterprise_monthly',
-      'enterprise_annual',
-      'early_bird_monthly',
-      'tiny_bird_monthly',
-    ]),
+    workspacePlan: z.enum(PLAN_IDS),
+    workspacePlanName: z.enum(PLAN_NAME_VALUES),
     createdAt: z.date(),
     updatedAt: z.date(),
   }),

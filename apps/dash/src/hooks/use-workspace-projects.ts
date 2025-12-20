@@ -1,9 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { useWorkspaceStore } from '@/stores/workspace';
-import { fetchWorkspaceProjects, type Project } from '@/lib/workspace-api';
+import { useWorkspaceId } from '@/stores/workspace';
+import { apiClient } from '@/client';
+
+export interface Project {
+  projectId: string;
+  projectTitle: string | null;
+  isDefault: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 /**
  * Hook to fetch projects for the current workspace
+ * Fetches project list from API with pagination
  *
  * @example
  * ```tsx
@@ -15,8 +24,8 @@ import { fetchWorkspaceProjects, type Project } from '@/lib/workspace-api';
  *   return (
  *     <select>
  *       {projects?.map(project => (
- *         <option key={project.id} value={project.id}>
- *           {project.title}
+ *         <option key={project.projectId} value={project.projectId}>
+ *           {project.projectTitle || 'Untitled Project'}
  *         </option>
  *       ))}
  *     </select>
@@ -25,15 +34,19 @@ import { fetchWorkspaceProjects, type Project } from '@/lib/workspace-api';
  * ```
  */
 export function useWorkspaceProjects() {
-  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
+  const workspaceId = useWorkspaceId();
 
-  return useQuery<Project[]>({
+  return useQuery({
     queryKey: ['projects', workspaceId],
-    queryFn: () => {
+    queryFn: async () => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
-      return fetchWorkspaceProjects(workspaceId);
+      const response = await apiClient.project.list({
+        params: { workspaceId },
+        query: { page: 1 },
+      });
+      return response.data.projects;
     },
     enabled: !!workspaceId,
     staleTime: 5 * 60 * 1000, // 5 minutes

@@ -21,6 +21,38 @@ export const PLAN_IDS = [
 export type PlanId = (typeof PLAN_IDS)[number];
 
 /**
+ * Unique plan name values for type safety
+ */
+export const PLAN_NAME_VALUES = [
+  'Starter',
+  'Scale Up',
+  'Enterprise',
+  'Early Bird',
+  'Lite',
+  'Trial',
+] as const;
+export type PlanName = (typeof PLAN_NAME_VALUES)[number];
+
+/**
+ * User-friendly plan names - source of truth for display names
+ */
+export const PLAN_NAMES: Record<PlanId, PlanName> = {
+  starter_monthly: 'Starter',
+  starter_annual: 'Starter',
+  scale_up_monthly: 'Scale Up',
+  scale_up_annual: 'Scale Up',
+  enterprise_monthly: 'Enterprise',
+  enterprise_annual: 'Enterprise',
+  early_bird_monthly: 'Early Bird',
+  tiny_bird_monthly: 'Lite',
+};
+
+/**
+ * Default plan name for fallback
+ */
+export const DEFAULT_PLAN_NAME: PlanName = 'Trial';
+
+/**
  * Billing cycle for plans
  */
 export type PlanCycle = 'monthly' | 'annual' | 'one_time';
@@ -503,4 +535,13 @@ export function formatPlanRate(plan: BasePricingPlan): string {
     return 'Custom';
   }
   return `$${plan.details.planRate}`;
+}
+
+/**
+ * Get user-friendly plan name from plan ID
+ * @param planId - The plan identifier
+ * @returns User-friendly plan name
+ */
+export function getPlanName(planId: PlanId): PlanName {
+  return PLAN_NAMES[planId] as PlanName;
 }

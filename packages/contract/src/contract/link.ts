@@ -21,13 +21,13 @@ import {
  */
 
 /**
- * GET /workspace/:workspaceId/links
+ * GET /workspace/{workspaceId}/links
  * List links with pagination and filtering
  */
 export const getLinks = oc
   .route({
     method: 'GET',
-    path: '/workspace/:workspaceId/links',
+    path: '/workspace/{workspaceId}/links',
     inputStructure: 'detailed',
     summary: 'List links',
     description: 'Retrieve paginated list of recording links with optional filters',
@@ -37,13 +37,13 @@ export const getLinks = oc
   .output(ApiResponseSchema(LinksListDataSchema));
 
 /**
- * POST /workspace/:workspaceId/links
+ * POST /workspace/{workspaceId}/links
  * Create a new recording link
  */
 export const createLink = oc
   .route({
     method: 'POST',
-    path: '/workspace/:workspaceId/links',
+    path: '/workspace/{workspaceId}/links',
     inputStructure: 'detailed',
     summary: 'Create link',
     description: 'Create a new recording link for a domain',
@@ -53,13 +53,13 @@ export const createLink = oc
   .output(ApiResponseSchema(LinkCreateDataSchema));
 
 /**
- * GET /workspace/:workspaceId/links/:linkId
+ * GET /workspace/{workspaceId}/links/{linkId}
  * Get link details by ID
  */
 export const getLinkById = oc
   .route({
     method: 'GET',
-    path: '/workspace/:workspaceId/links/:linkId',
+    path: '/workspace/{workspaceId}/links/{linkId}',
     inputStructure: 'detailed',
     summary: 'Get link by ID',
     description: 'Retrieve complete link details including project and creator info',
@@ -69,13 +69,13 @@ export const getLinkById = oc
   .output(ApiResponseSchema(LinkGetDataSchema));
 
 /**
- * PUT /workspace/:workspaceId/links/:linkId
+ * PUT /workspace/{workspaceId}/links/{linkId}
  * Update a link
  */
 export const updateLink = oc
   .route({
     method: 'PUT',
-    path: '/workspace/:workspaceId/links/:linkId',
+    path: '/workspace/{workspaceId}/links/{linkId}',
     inputStructure: 'detailed',
     summary: 'Update link',
     description: 'Update link properties',
@@ -85,13 +85,13 @@ export const updateLink = oc
   .output(ApiResponseSchema(LinkUpdateDataSchema));
 
 /**
- * DELETE /workspace/:workspaceId/links/:linkId
+ * DELETE /workspace/{workspaceId}/links/{linkId}
  * Delete a link
  */
 export const deleteLink = oc
   .route({
     method: 'DELETE',
-    path: '/workspace/:workspaceId/links/:linkId',
+    path: '/workspace/{workspaceId}/links/{linkId}',
     inputStructure: 'detailed',
     summary: 'Delete link',
     description: 'Soft delete a recording link',
