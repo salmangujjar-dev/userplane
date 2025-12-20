@@ -84,7 +84,7 @@ export function DomainVerificationPreModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[580px]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
         <div className="space-y-8">
           <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center gap-4">

@@ -30,9 +30,16 @@ interface EditProjectModalProps {
     isDefault: boolean;
   } | null;
   onSave: (projectId: number, project: { title: string; isDefault: boolean }) => void;
+  loading?: boolean;
 }
 
-export function EditProjectModal({ open, onOpenChange, project, onSave }: EditProjectModalProps) {
+export function EditProjectModal({
+  open,
+  onOpenChange,
+  project,
+  onSave,
+  loading = false,
+}: EditProjectModalProps) {
   const [editedProject, setEditedProject] = useState({
     title: '',
     isDefault: false,
@@ -54,7 +61,6 @@ export function EditProjectModal({ open, onOpenChange, project, onSave }: EditPr
 
     if (isValid && project) {
       onSave(project.id, editedProject);
-      onOpenChange(false);
     }
   };
 
@@ -107,6 +113,7 @@ export function EditProjectModal({ open, onOpenChange, project, onSave }: EditPr
                 value={editedProject.title}
                 onChange={(e) => setEditedProject((prev) => ({ ...prev, title: e.target.value }))}
                 placeholder="e.g., Production App"
+                disabled={loading}
               />
             </div>
 
@@ -127,6 +134,7 @@ export function EditProjectModal({ open, onOpenChange, project, onSave }: EditPr
                     onCheckedChange={(checked) =>
                       setEditedProject((prev) => ({ ...prev, isDefault: checked }))
                     }
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -158,6 +166,7 @@ export function EditProjectModal({ open, onOpenChange, project, onSave }: EditPr
               variant="secondary"
               className="rounded-full px-6"
               onClick={handleCancel}
+              disabled={loading}
             >
               Cancel
             </Button>
@@ -165,9 +174,9 @@ export function EditProjectModal({ open, onOpenChange, project, onSave }: EditPr
               type="button"
               className="rounded-full px-6"
               onClick={handleSave}
-              disabled={!isFormValid}
+              disabled={!isFormValid || loading}
             >
-              Save Changes
+              {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </DialogFooter>

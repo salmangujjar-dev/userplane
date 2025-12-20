@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Input } from '@workspace/ui/components/input';
@@ -25,12 +25,14 @@ interface CreateProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateProject: (project: { title: string; isDefault: boolean }) => void;
+  loading?: boolean;
 }
 
 export function CreateProjectModal({
   open,
   onOpenChange,
   onCreateProject,
+  loading = false,
 }: CreateProjectModalProps) {
   const [newProject, setNewProject] = useState({
     title: '',
@@ -38,14 +40,18 @@ export function CreateProjectModal({
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  useEffect(() => {
+    if (!open) {
+      setNewProject({ title: '', isDefault: false });
+      setShowAdvanced(false);
+    }
+  }, [open]);
+
   const handleCreate = () => {
     const isValid = newProject.title.trim();
 
     if (isValid) {
       onCreateProject(newProject);
-      setNewProject({ title: '', isDefault: false });
-      setShowAdvanced(false);
-      onOpenChange(false);
     }
   };
 
@@ -100,6 +106,7 @@ export function CreateProjectModal({
                 value={newProject.title}
                 onChange={(e) => setNewProject((prev) => ({ ...prev, title: e.target.value }))}
                 placeholder="e.g., Production App"
+                disabled={loading}
               />
             </div>
 
@@ -120,6 +127,7 @@ export function CreateProjectModal({
                     onCheckedChange={(checked) =>
                       setNewProject((prev) => ({ ...prev, isDefault: checked }))
                     }
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -151,6 +159,7 @@ export function CreateProjectModal({
               variant="secondary"
               className="rounded-full px-6"
               onClick={handleCancel}
+              disabled={loading}
             >
               Cancel
             </Button>
@@ -158,9 +167,9 @@ export function CreateProjectModal({
               type="button"
               className="rounded-full px-6"
               onClick={handleCreate}
-              disabled={!isFormValid}
+              disabled={!isFormValid || loading}
             >
-              Create Project
+              {loading ? 'Creating...' : 'Create Project'}
             </Button>
           </div>
         </DialogFooter>

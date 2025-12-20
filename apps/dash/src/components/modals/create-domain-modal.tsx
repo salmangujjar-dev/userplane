@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
-import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
+import { URLInput } from '@/components/url-input';
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,15 @@ interface CreateDomainModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateDomain: (domainUrl: string) => void;
+  loading?: boolean;
 }
 
-export function CreateDomainModal({ open, onOpenChange, onCreateDomain }: CreateDomainModalProps) {
+export function CreateDomainModal({
+  open,
+  onOpenChange,
+  onCreateDomain,
+  loading = false,
+}: CreateDomainModalProps) {
   const [domainUrl, setDomainUrl] = useState('');
 
   useEffect(() => {
@@ -40,8 +46,6 @@ export function CreateDomainModal({ open, onOpenChange, onCreateDomain }: Create
 
     if (isValid) {
       onCreateDomain(domainUrl);
-      setDomainUrl('');
-      onOpenChange(false);
     }
   };
 
@@ -90,10 +94,10 @@ export function CreateDomainModal({ open, onOpenChange, onCreateDomain }: Create
               <Label htmlFor="domain-url" className="text-sm">
                 Domain URL
               </Label>
-              <Input
+              <URLInput
                 id="domain-url"
                 value={domainUrl}
-                onChange={(e) => setDomainUrl(e.target.value)}
+                onChange={setDomainUrl}
                 placeholder="example.com"
               />
             </div>
@@ -107,6 +111,7 @@ export function CreateDomainModal({ open, onOpenChange, onCreateDomain }: Create
               variant="secondary"
               className="rounded-full px-6"
               onClick={handleCancel}
+              disabled={loading}
             >
               Cancel
             </Button>
@@ -114,9 +119,9 @@ export function CreateDomainModal({ open, onOpenChange, onCreateDomain }: Create
               type="button"
               className="rounded-full px-6"
               onClick={handleCreate}
-              disabled={!isFormValid}
+              disabled={!isFormValid || loading}
             >
-              Add Domain
+              {loading ? 'Adding...' : 'Add Domain'}
             </Button>
           </div>
         </DialogFooter>

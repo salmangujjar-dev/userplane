@@ -10,8 +10,8 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
-import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
+import { URLInput } from '@/components/url-input';
 import {
   Tooltip,
   TooltipContent,
@@ -25,9 +25,16 @@ interface EditDomainModalProps {
   onOpenChange: (open: boolean) => void;
   domainUrl: string;
   onSave: (domainUrl: string) => void;
+  loading?: boolean;
 }
 
-export function EditDomainModal({ open, onOpenChange, domainUrl, onSave }: EditDomainModalProps) {
+export function EditDomainModal({
+  open,
+  onOpenChange,
+  domainUrl,
+  onSave,
+  loading = false,
+}: EditDomainModalProps) {
   const [editDomainUrl, setEditDomainUrl] = useState(domainUrl);
 
   useEffect(() => {
@@ -38,7 +45,6 @@ export function EditDomainModal({ open, onOpenChange, domainUrl, onSave }: EditD
 
   const handleSave = () => {
     onSave(editDomainUrl);
-    onOpenChange(false);
   };
 
   return (
@@ -77,10 +83,10 @@ export function EditDomainModal({ open, onOpenChange, domainUrl, onSave }: EditD
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="domain-url">Domain URL</Label>
-              <Input
+              <URLInput
                 id="domain-url"
                 value={editDomainUrl}
-                onChange={(e) => setEditDomainUrl(e.target.value)}
+                onChange={setEditDomainUrl}
                 placeholder="example.com"
               />
             </div>
@@ -92,11 +98,12 @@ export function EditDomainModal({ open, onOpenChange, domainUrl, onSave }: EditD
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="rounded-full px-6"
+            disabled={loading}
           >
             Cancel
           </Button>
-          <Button onClick={handleSave} className="rounded-full px-6">
-            Save Changes
+          <Button onClick={handleSave} className="rounded-full px-6" disabled={loading}>
+            {loading ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogFooter>
       </DialogContent>
