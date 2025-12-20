@@ -24,6 +24,7 @@ import { useWorkspaceId } from '@/stores/workspace';
 import { useAccount } from '@/hooks/use-account';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspace } from '@/hooks/use-workspace';
+import { useAuth } from '@/hooks/use-auth';
 import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 
 interface NavItem {
@@ -42,6 +43,7 @@ export function Sidebar() {
   const { data: account } = useAccount();
   const { data: projects, isLoading: isLoadingProjects } = useWorkspaceProjects();
   const { data: workspace } = useWorkspace();
+  const { signOut } = useAuth();
 
   const sections: NavSection[] = [
     {
@@ -150,7 +152,10 @@ export function Sidebar() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer">
+              <DropdownMenuItem
+                onClick={signOut}
+                className="text-red-600 focus:text-red-600 cursor-pointer"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 Log out
               </DropdownMenuItem>
