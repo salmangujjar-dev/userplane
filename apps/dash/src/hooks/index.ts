@@ -4,3 +4,9 @@
  */
 export { useAuth } from './use-auth';
 export { useWorkspaces } from './use-workspaces';
+export {
+  useWorkspaceInvite,
+  useSendWorkspaceInvites,
+  useValidateInvite,
+  useAcceptInvite,
+} from './use-workspace-invite';

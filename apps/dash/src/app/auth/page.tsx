@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks';
 import { logger } from '@/logger';
@@ -10,7 +10,7 @@ import { toast } from '@workspace/ui/components/sonner';
 import Link from 'next/link';
 import { AuthIcons } from '@/components/auth/auth-icons';
 
-export default function AuthPage() {
+function AuthPageContent() {
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect_to');
@@ -83,5 +83,13 @@ export default function AuthPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthPageContent />
+    </Suspense>
   );
 }
