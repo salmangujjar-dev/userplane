@@ -2,25 +2,26 @@
 
 import { LinksList } from './links-list';
 import { PaginationControls } from '../shared/pagination-controls';
+import type { Link } from '@/hooks/use-workspace-links';
 
 interface PaginatedLinksTabProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  linksPerPage?: number;
-  linkIds?: string[];
+  links?: Link[];
+  isLoading?: boolean;
 }
 
 export function PaginatedLinksTab({
   currentPage,
   totalPages,
   onPageChange,
-  linksPerPage = 10,
-  linkIds,
+  links,
+  isLoading,
 }: PaginatedLinksTabProps) {
   return (
     <div className="space-y-8">
-      <LinksList count={linksPerPage} linkIds={linkIds} />
+      <LinksList links={links} isLoading={isLoading} />
       <PaginationControls
         currentPage={currentPage}
         totalPages={totalPages}

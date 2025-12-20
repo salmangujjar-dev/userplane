@@ -27,7 +27,7 @@ export const ListLinksQuerySchema = z.object({
     page: z.coerce.number().int().positive().optional().default(1),
     per_page: z.coerce.number().int().min(1).max(20).optional().default(10),
     created_by: z.array(z.string()).optional(),
-    project_id: z.string().optional(),
+    project_id: z.array(z.string()).optional(),
     domain_id: z.array(z.string()).optional(),
     link_provider_type: z.array(LinkProviderTypeSchema).optional(),
     link_type: LinkTypeSchema.optional(),

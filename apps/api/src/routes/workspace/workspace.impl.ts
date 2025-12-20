@@ -627,10 +627,11 @@ export const getWorkspaceDomainsImpl = (
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        const perPage = 10;
+        const page = input.query.page || 1;
+        const perPage = input.query.per_page || 5;
         const { domains, total } = await domainService.getByWorkspaceIdPaginated(
           input.params.workspaceId,
-          input.query.page || 1,
+          page,
           perPage
         );
 
@@ -639,7 +640,7 @@ export const getWorkspaceDomainsImpl = (
           data: {
             workspaceId: input.params.workspaceId,
             domains,
-            pagination: createPaginationMeta(input.query.page || 1, perPage, total),
+            pagination: createPaginationMeta(page, perPage, total),
           },
         };
       } catch (error) {

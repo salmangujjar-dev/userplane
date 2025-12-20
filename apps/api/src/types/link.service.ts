@@ -43,7 +43,7 @@ export interface LinkSortOptions {
  */
 export interface LinkFilters {
   createdBy?: string[];
-  projectId?: string;
+  projectId?: string[];
   domainId?: string[];
   linkProviderType?: LinkProviderType[];
   linkType?: LinkType;

@@ -28,7 +28,7 @@ export interface Link {
   linkProviderId: string | null;
   linkProviderReference: string | null;
   linkURL: string;
-  createdAt: Date;
+  createdAt: string | Date;
   project: LinkProject;
   creator: LinkCreator;
   domain: LinkDomain;
@@ -36,12 +36,26 @@ export interface Link {
 
 export interface LinksFilters {
   createdBy?: string[];
-  projectId?: string;
+  projectId?: string[];
   domainId?: string[];
   linkProviderType?: LinkProviderType[];
   linkType?: LinkType;
   sortBy?: 'created_at' | 'link_title';
   sortDirection?: 'asc' | 'desc';
+}
+
+export interface PaginationMeta {
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+export interface LinksData {
+  workspaceId: string;
+  links: Link[];
+  pagination: PaginationMeta;
 }
 
 /**
@@ -111,7 +125,7 @@ export function useWorkspaceLinks(options?: {
         },
       });
 
-      return response.data.links;
+      return response.data;
     },
     enabled: enabled && !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes
