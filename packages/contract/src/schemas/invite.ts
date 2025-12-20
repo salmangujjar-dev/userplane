@@ -46,21 +46,42 @@ export const SendInvitesResultSchema = z.object({
 });
 
 /**
- * Invite action query parameters (detailed mode)
+ * Validate invite request (detailed mode)
+ * POST /invite/validate - public endpoint
  */
 export const InviteActionQuerySchema = z.object({
-  query: z.object({
+  body: z.object({
     token: z.string().min(1),
-    action: z.enum(['validate', 'accept']).optional().default('validate'),
   }),
 });
 
 /**
- * Invite action result response
+ * Validate invite result response
  */
 export const InviteActionResultSchema = z.object({
   workspaceId: z.string(),
   workspaceName: z.string(),
   invitedByName: z.string(),
   invitedByEmail: z.string(),
+});
+
+/**
+ * Accept invite request (detailed mode)
+ * POST /workspace/{workspaceId}/accept - authenticated endpoint
+ */
+export const AcceptInviteSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    token: z.string().min(1),
+  }),
+});
+
+/**
+ * Accept invite result response
+ */
+export const AcceptInviteDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceName: z.string(),
 });
