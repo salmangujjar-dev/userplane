@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@workspace/ui/components/button';
 import { Switch } from '@workspace/ui/components/switch';
 import { Label } from '@workspace/ui/components/label';
@@ -19,149 +20,160 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@workspace/ui/components/pagination';
+import { toast } from '@workspace/ui/components/sonner';
 import { Building2, ArrowUpRight, ChevronDown } from 'lucide-react';
+import { useWorkspaces } from '@/hooks/use-workspaces';
+import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
+import { apiClient } from '@/client';
+import { formatDistanceToNow } from 'date-fns';
 
 interface WorkspaceNotifications {
-  recordingLinksUsed: boolean;
-  quotaReset: boolean;
-  quotaReached: boolean;
-  someoneJoins: boolean;
-  inviteAccepted: boolean;
+  notifyOnLinkUsage: boolean;
+  notifyOnQuotaReset: boolean;
+  notifyOnQuotaLimit: boolean;
+  notifyOnMemberJoin: boolean;
+  notifyOnInviteAccepted: boolean;
 }
 
 interface Workspace {
-  id: string;
-  name: string;
-  joinedAt: string;
+  workspaceId: string;
+  workspaceName: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
   isCurrent: boolean;
   notifications: WorkspaceNotifications;
+  role: 'owner' | 'admin' | 'member';
 }
-
-const initialWorkspaces: Workspace[] = [
-  {
-    id: '1',
-    name: "Lary's Workspace",
-    joinedAt: 'Joined 2 months ago',
-    isCurrent: true,
-    notifications: {
-      recordingLinksUsed: true,
-      quotaReset: true,
-      quotaReached: true,
-      someoneJoins: true,
-      inviteAccepted: true,
-    },
-  },
-  {
-    id: '2',
-    name: 'Acme Corp',
-    joinedAt: 'Joined 6 months ago',
-    isCurrent: false,
-    notifications: {
-      recordingLinksUsed: false,
-      quotaReset: true,
-      quotaReached: false,
-      someoneJoins: false,
-      inviteAccepted: false,
-    },
-  },
-  {
-    id: '3',
-    name: 'Design Team',
-    joinedAt: 'Joined 1 year ago',
-    isCurrent: false,
-    notifications: {
-      recordingLinksUsed: true,
-      quotaReset: false,
-      quotaReached: true,
-      someoneJoins: true,
-      inviteAccepted: true,
-    },
-  },
-  {
-    id: '4',
-    name: 'Tech Startup Inc',
-    joinedAt: 'Joined 3 months ago',
-    isCurrent: false,
-    notifications: {
-      recordingLinksUsed: true,
-      quotaReset: true,
-      quotaReached: false,
-      someoneJoins: true,
-      inviteAccepted: false,
-    },
-  },
-  {
-    id: '5',
-    name: 'Marketing Team',
-    joinedAt: 'Joined 8 months ago',
-    isCurrent: false,
-    notifications: {
-      recordingLinksUsed: false,
-      quotaReset: false,
-      quotaReached: true,
-      someoneJoins: false,
-      inviteAccepted: true,
-    },
-  },
-  {
-    id: '6',
-    name: 'Engineering Hub',
-    joinedAt: 'Joined 4 months ago',
-    isCurrent: false,
-    notifications: {
-      recordingLinksUsed: true,
-      quotaReset: true,
-      quotaReached: true,
-      someoneJoins: true,
-      inviteAccepted: true,
-    },
-  },
-  {
-    id: '7',
-    name: 'Product Team',
-    joinedAt: 'Joined 10 months ago',
-    isCurrent: false,
-    notifications: {
-      recordingLinksUsed: false,
-      quotaReset: true,
-      quotaReached: false,
-      someoneJoins: true,
-      inviteAccepted: false,
-    },
-  },
-  {
-    id: '8',
-    name: 'Freelance Projects',
-    joinedAt: 'Joined 5 months ago',
-    isCurrent: false,
-    notifications: {
-      recordingLinksUsed: true,
-      quotaReset: false,
-      quotaReached: true,
-      someoneJoins: false,
-      inviteAccepted: true,
-    },
-  },
-];
 
 const ITEMS_PER_PAGE = 5;
 
 export function WorkspaceSection() {
   const router = useRouter();
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(initialWorkspaces);
+  const currentWorkspaceId = useWorkspaceId();
+  const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const [expandedWorkspace, setExpandedWorkspace] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
 
-  const totalPages = Math.ceil(workspaces.length / ITEMS_PER_PAGE);
+  const { data: workspacesData, isLoading } = useWorkspaces({
+    page: currentPage,
+    perPage: ITEMS_PER_PAGE,
+  });
 
-  const paginatedWorkspaces = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return workspaces.slice(startIndex, endIndex);
-  }, [workspaces, currentPage]);
+  const workspaces = useMemo<Workspace[]>(() => {
+    if (!workspacesData?.workspaces) return [];
+
+    console.log('Current workspace ID from store:', currentWorkspaceId);
+    console.log(
+      'Available workspaces:',
+      workspacesData.workspaces.map((ws) => ws.workspaceId)
+    );
+
+    return workspacesData.workspaces.map((ws) => {
+      const isCurrent = ws.workspaceId === currentWorkspaceId;
+      console.log(`Workspace ${ws.workspaceName} (${ws.workspaceId}):`, {
+        isCurrent,
+        currentWorkspaceId,
+      });
+
+      return {
+        workspaceId: ws.workspaceId,
+        workspaceName: ws.workspaceName,
+        createdAt: ws.createdAt,
+        updatedAt: ws.updatedAt,
+        isCurrent,
+        notifications: {
+          notifyOnLinkUsage: ws.notificationPreferences?.notifyOnLinkUsage ?? false,
+          notifyOnQuotaReset: ws.notificationPreferences?.notifyOnQuotaReset ?? false,
+          notifyOnQuotaLimit: ws.notificationPreferences?.notifyOnQuotaLimit ?? false,
+          notifyOnMemberJoin: ws.notificationPreferences?.notifyOnMemberJoin ?? false,
+          notifyOnInviteAccepted: ws.notificationPreferences?.notifyOnInviteAccepted ?? false,
+        },
+        role: ws.workspaceMembership?.workspaceRole ?? 'member',
+      };
+    });
+  }, [workspacesData, currentWorkspaceId]);
+
+  const totalPages = workspacesData?.pagination
+    ? Math.ceil(workspacesData.total / ITEMS_PER_PAGE)
+    : 1;
+
+  const updateNotificationsMutation = useMutation({
+    mutationFn: async ({
+      workspaceId,
+      notifications,
+    }: {
+      workspaceId: string;
+      notifications: Partial<WorkspaceNotifications>;
+    }) => {
+      return await apiClient.workspace.notifications.update({
+        params: { workspaceId },
+        body: notifications,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      toast.success('Notification preferences updated');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update notifications: ${error.message}`);
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+    },
+  });
+
+  const rotateInviteMutation = useMutation({
+    mutationFn: async (workspaceId: string) => {
+      return await apiClient.workspace.invite.rotate({
+        params: { workspaceId },
+      });
+    },
+    onSuccess: () => {
+      toast.success('Invite token reset successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to reset invite token: ${error.message}`);
+    },
+  });
+
+  const deleteWorkspaceMutation = useMutation({
+    mutationFn: async (workspaceId: string) => {
+      return await apiClient.workspace.delete({
+        params: { workspaceId },
+      });
+    },
+    onSuccess: (_, workspaceId) => {
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      toast.success('Workspace deleted successfully');
+      if (workspaceId === currentWorkspaceId) {
+        router.push('/workspace/create');
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete workspace: ${error.message}`);
+    },
+  });
+
+  const leaveWorkspaceMutation = useMutation({
+    mutationFn: async (workspaceId: string) => {
+      return await apiClient.workspace.members.leave({
+        params: { workspaceId },
+      });
+    },
+    onSuccess: (_, workspaceId) => {
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      toast.success('Left workspace successfully');
+      if (workspaceId === currentWorkspaceId) {
+        router.push('/workspace/create');
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to leave workspace: ${error.message}`);
+    },
+  });
 
   const handleSwitch = (workspaceId: string) => {
-    console.log('Switching to workspace:', workspaceId);
+    setWorkspaceStore(workspaceId);
+    router.push(`/${workspaceId}/recordings`);
   };
 
   const handleCreateWorkspace = () => {
@@ -173,28 +185,47 @@ export function WorkspaceSection() {
     key: keyof WorkspaceNotifications,
     value: boolean
   ) => {
-    setWorkspaces((prev) =>
-      prev.map((workspace) =>
-        workspace.id === workspaceId
-          ? {
-              ...workspace,
-              notifications: {
-                ...workspace.notifications,
-                [key]: value,
-              },
-            }
-          : workspace
-      )
-    );
+    updateNotificationsMutation.mutate({
+      workspaceId,
+      notifications: { [key]: value },
+    });
   };
 
   const handleResetInviteToken = (workspaceId: string) => {
-    console.log('Resetting invite token for workspace:', workspaceId);
+    rotateInviteMutation.mutate(workspaceId);
   };
 
-  const handleDeleteWorkspace = (workspaceId: string) => {
-    console.log('Deleting workspace:', workspaceId);
+  const handleDeleteWorkspace = (workspaceId: string, role: string) => {
+    if (role === 'owner') {
+      deleteWorkspaceMutation.mutate(workspaceId);
+    } else {
+      leaveWorkspaceMutation.mutate(workspaceId);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Workspace</h2>
+          <p className="text-sm text-muted-foreground">Manage current workspaces</p>
+        </div>
+        <div className="max-w-2xl space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border bg-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 bg-muted animate-pulse rounded" />
+                <div className="flex-1">
+                  <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                  <div className="h-3 w-24 bg-muted animate-pulse rounded mt-2" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -204,12 +235,14 @@ export function WorkspaceSection() {
       </div>
 
       <div className="max-w-2xl space-y-4">
-        {paginatedWorkspaces.map((workspace) => (
+        {workspaces.map((workspace) => (
           <Collapsible
-            key={workspace.id}
-            open={expandedWorkspace === workspace.id}
+            key={workspace.workspaceId}
+            open={expandedWorkspace === workspace.workspaceId}
             onOpenChange={() =>
-              setExpandedWorkspace(expandedWorkspace === workspace.id ? null : workspace.id)
+              setExpandedWorkspace(
+                expandedWorkspace === workspace.workspaceId ? null : workspace.workspaceId
+              )
             }
           >
             <div className="rounded-xl border bg-card">
@@ -218,10 +251,10 @@ export function WorkspaceSection() {
                   <Building2 className="h-5 w-5 text-muted-foreground" />
                   <div className="text-left">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{workspace.name}</span>
+                      <span className="text-sm font-medium">{workspace.workspaceName}</span>
                       <ChevronDown
                         className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                          expandedWorkspace === workspace.id ? 'rotate-180' : ''
+                          expandedWorkspace === workspace.workspaceId ? 'rotate-180' : ''
                         }`}
                       />
                       {workspace.isCurrent && (
@@ -230,14 +263,20 @@ export function WorkspaceSection() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">{workspace.joinedAt}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Joined {formatDistanceToNow(workspace.createdAt, { addSuffix: true })}
+                    </p>
                   </div>
                 </CollapsibleTrigger>
-                {expandedWorkspace !== workspace.id && (
+                {expandedWorkspace !== workspace.workspaceId && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleSwitch(workspace.id)}
+                    onClick={() =>
+                      workspace.isCurrent
+                        ? handleDeleteWorkspace(workspace.workspaceId, workspace.role)
+                        : handleSwitch(workspace.workspaceId)
+                    }
                     className="ml-2"
                   >
                     {workspace.isCurrent ? 'Leave' : 'Switch'}
@@ -251,62 +290,76 @@ export function WorkspaceSection() {
                     <div className="text-sm font-medium">Workspace Settings</div>
 
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="text-sm font-normal">
-                            Reset invite token for workspace
+                      {workspace.role === 'owner' && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="text-sm font-normal">
+                              Reset invite token for workspace
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Generate a new invite token and invalidate the old one
+                            </p>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Generate a new invite token and invalidate the old one
-                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleResetInviteToken(workspace.workspaceId)}
+                            disabled={rotateInviteMutation.isPending}
+                            className="ml-2 min-w-[70px]"
+                          >
+                            {rotateInviteMutation.isPending ? 'Resetting...' : 'Reset'}
+                          </Button>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleResetInviteToken(workspace.id)}
-                          className="ml-2 min-w-[70px]"
-                        >
-                          Reset
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="text-sm font-normal">Delete workspace</div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Permanently delete this workspace and all its data
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteWorkspace(workspace.id)}
-                          className="ml-2 min-w-[70px]"
-                        >
-                          Delete
-                        </Button>
-                      </div>
+                      )}
 
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="text-sm font-normal">
-                            {workspace.isCurrent ? 'Leave workspace' : 'Switch to workspace'}
+                            {workspace.role === 'owner' ? 'Delete workspace' : 'Leave workspace'}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {workspace.isCurrent
-                              ? 'Leave this workspace and switch to another'
-                              : 'Switch to this workspace'}
+                            {workspace.role === 'owner'
+                              ? 'Permanently delete this workspace and all its data'
+                              : 'Leave this workspace and remove your access'}
                           </p>
                         </div>
                         <Button
-                          variant="outline"
+                          variant="destructive"
                           size="sm"
-                          onClick={() => handleSwitch(workspace.id)}
+                          onClick={() =>
+                            handleDeleteWorkspace(workspace.workspaceId, workspace.role)
+                          }
+                          disabled={
+                            deleteWorkspaceMutation.isPending || leaveWorkspaceMutation.isPending
+                          }
                           className="ml-2 min-w-[70px]"
                         >
-                          {workspace.isCurrent ? 'Leave' : 'Switch'}
+                          {deleteWorkspaceMutation.isPending || leaveWorkspaceMutation.isPending
+                            ? 'Processing...'
+                            : workspace.role === 'owner'
+                              ? 'Delete'
+                              : 'Leave'}
                         </Button>
                       </div>
+
+                      {!workspace.isCurrent && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="text-sm font-normal">Switch to workspace</div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Switch to this workspace
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSwitch(workspace.workspaceId)}
+                            className="ml-2 min-w-[70px]"
+                          >
+                            Switch
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -316,81 +369,106 @@ export function WorkspaceSection() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Label
-                          htmlFor={`recording-links-${workspace.id}`}
+                          htmlFor={`recording-links-${workspace.workspaceId}`}
                           className="text-sm font-normal cursor-pointer flex-1"
                         >
                           When recording links gets used
                         </Label>
                         <Switch
-                          id={`recording-links-${workspace.id}`}
-                          checked={workspace.notifications.recordingLinksUsed}
+                          id={`recording-links-${workspace.workspaceId}`}
+                          checked={workspace.notifications.notifyOnLinkUsage}
                           onCheckedChange={(checked) =>
-                            handleNotificationToggle(workspace.id, 'recordingLinksUsed', checked)
+                            handleNotificationToggle(
+                              workspace.workspaceId,
+                              'notifyOnLinkUsage',
+                              checked
+                            )
                           }
+                          disabled={updateNotificationsMutation.isPending}
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
                         <Label
-                          htmlFor={`quota-reset-${workspace.id}`}
+                          htmlFor={`quota-reset-${workspace.workspaceId}`}
                           className="text-sm font-normal cursor-pointer flex-1"
                         >
                           When workspace quota is reset
                         </Label>
                         <Switch
-                          id={`quota-reset-${workspace.id}`}
-                          checked={workspace.notifications.quotaReset}
+                          id={`quota-reset-${workspace.workspaceId}`}
+                          checked={workspace.notifications.notifyOnQuotaReset}
                           onCheckedChange={(checked) =>
-                            handleNotificationToggle(workspace.id, 'quotaReset', checked)
+                            handleNotificationToggle(
+                              workspace.workspaceId,
+                              'notifyOnQuotaReset',
+                              checked
+                            )
                           }
+                          disabled={updateNotificationsMutation.isPending}
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
                         <Label
-                          htmlFor={`quota-reached-${workspace.id}`}
+                          htmlFor={`quota-reached-${workspace.workspaceId}`}
                           className="text-sm font-normal cursor-pointer flex-1"
                         >
                           When workspace quota is reached
                         </Label>
                         <Switch
-                          id={`quota-reached-${workspace.id}`}
-                          checked={workspace.notifications.quotaReached}
+                          id={`quota-reached-${workspace.workspaceId}`}
+                          checked={workspace.notifications.notifyOnQuotaLimit}
                           onCheckedChange={(checked) =>
-                            handleNotificationToggle(workspace.id, 'quotaReached', checked)
+                            handleNotificationToggle(
+                              workspace.workspaceId,
+                              'notifyOnQuotaLimit',
+                              checked
+                            )
                           }
+                          disabled={updateNotificationsMutation.isPending}
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
                         <Label
-                          htmlFor={`someone-joins-${workspace.id}`}
+                          htmlFor={`someone-joins-${workspace.workspaceId}`}
                           className="text-sm font-normal cursor-pointer flex-1"
                         >
                           When someone joins my workspace
                         </Label>
                         <Switch
-                          id={`someone-joins-${workspace.id}`}
-                          checked={workspace.notifications.someoneJoins}
+                          id={`someone-joins-${workspace.workspaceId}`}
+                          checked={workspace.notifications.notifyOnMemberJoin}
                           onCheckedChange={(checked) =>
-                            handleNotificationToggle(workspace.id, 'someoneJoins', checked)
+                            handleNotificationToggle(
+                              workspace.workspaceId,
+                              'notifyOnMemberJoin',
+                              checked
+                            )
                           }
+                          disabled={updateNotificationsMutation.isPending}
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
                         <Label
-                          htmlFor={`invite-accepted-${workspace.id}`}
+                          htmlFor={`invite-accepted-${workspace.workspaceId}`}
                           className="text-sm font-normal cursor-pointer flex-1"
                         >
                           When someone accepts my invite
                         </Label>
                         <Switch
-                          id={`invite-accepted-${workspace.id}`}
-                          checked={workspace.notifications.inviteAccepted}
+                          id={`invite-accepted-${workspace.workspaceId}`}
+                          checked={workspace.notifications.notifyOnInviteAccepted}
                           onCheckedChange={(checked) =>
-                            handleNotificationToggle(workspace.id, 'inviteAccepted', checked)
+                            handleNotificationToggle(
+                              workspace.workspaceId,
+                              'notifyOnInviteAccepted',
+                              checked
+                            )
                           }
+                          disabled={updateNotificationsMutation.isPending}
                         />
                       </div>
                     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -20,7 +20,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@workspace/ui/components/pagination';
-import { Folder, Trash2, MoreVertical, CheckCircle2, ChevronRight, Pencil } from 'lucide-react';
+import { Folder, Trash2, MoreVertical, ChevronRight, Pencil } from 'lucide-react';
 import { CreateProjectModal } from '@/components/modals/create-project-modal';
 import { EditProjectModal } from '@/components/modals/edit-project-modal';
 import { toast } from '@workspace/ui/components/sonner';
@@ -42,7 +42,7 @@ export function ProjectsSection() {
   const queryClient = useQueryClient();
 
   const { data: projects, isLoading } = useWorkspaceProjects({
-    perPage: 10,
+    perPage: ITEMS_PER_PAGE,
   });
 
   const createProjectMutation = useMutation({
@@ -139,13 +139,7 @@ export function ProjectsSection() {
 
   // Calculate these before any conditional returns to avoid hook order issues
   const displayedProjects = projects || [];
-  const totalPages = Math.ceil(displayedProjects.length / ITEMS_PER_PAGE);
-
-  const paginatedProjects = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return displayedProjects.slice(startIndex, endIndex);
-  }, [displayedProjects, currentPage]);
+  const totalPages = 1;
 
   if (isLoading) {
     return (
@@ -171,7 +165,7 @@ export function ProjectsSection() {
       </div>
 
       <div className="max-w-2xl space-y-4">
-        {paginatedProjects.map((project) => (
+        {displayedProjects.map((project) => (
           <div
             key={project.projectId}
             className="flex items-center justify-between p-4 rounded-xl border bg-card"
