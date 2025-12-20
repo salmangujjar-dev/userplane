@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryState } from 'nuqs';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
@@ -15,15 +16,16 @@ import { useSearchableProjects } from '@/hooks/use-searchable-projects';
 import { useSearchableMembers } from '@/hooks/use-searchable-members';
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { FolderKanban, Globe, Users } from 'lucide-react';
+import { stringArrayParser } from '@/lib/parsers';
 
 export default function LinksPage() {
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = usePagination();
   const linksPerPage = 10;
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
-  const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
-  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
+  const [selectedProjects, setSelectedProjects] = useQueryState('projects', stringArrayParser);
+  const [selectedCreators, setSelectedCreators] = useQueryState('creators', stringArrayParser);
+  const [selectedDomains, setSelectedDomains] = useQueryState('domains', stringArrayParser);
 
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
