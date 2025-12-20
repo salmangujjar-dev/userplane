@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@workspace/ui/components/button';
 import {
   Table,
@@ -18,24 +19,108 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import { MoreVertical, UserMinus, Shield } from 'lucide-react';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-
-const TEAM_MEMBERS = [
-  { id: 1, name: 'Bob Smith', email: 'bob.smith@email.com', role: 'Owner' },
-  { id: 2, name: 'Jackson Lee', email: 'jackson.lee@email.com', role: 'Admin' },
-  { id: 3, name: 'Isabella Nguyen', email: 'isabella.nguyen@email.com', role: 'Member' },
-  { id: 4, name: 'William Kim', email: 'william.kim@email.com', role: 'Member' },
-  { id: 5, name: 'Sofia Davis', email: 'sofia.davis@email.com', role: 'Member' },
-  { id: 6, name: 'Emma Wilson', email: 'emma.wilson@email.com', role: 'Member' },
-  { id: 7, name: 'James Brown', email: 'james.brown@email.com', role: 'Member' },
-];
+import { toast } from '@workspace/ui/components/sonner';
+import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
+import { useWorkspaceId } from '@/stores/workspace';
+import { apiClient } from '@/client';
 
 export function TeamSection() {
+  const workspaceId = useWorkspaceId();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const queryClient = useQueryClient();
 
-  const totalPages = Math.ceil(TEAM_MEMBERS.length / itemsPerPage);
+  const { data: members, isLoading } = useWorkspaceMembers({
+    includeMe: true,
+    perPage: 10,
+  });
+
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({
+      workspaceMemberId,
+      newRole,
+    }: {
+      workspaceMemberId: string;
+      newRole: 'admin' | 'member';
+    }) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      return await apiClient.workspace.members.updateRole({
+        params: { workspaceId, workspaceMemberId },
+        body: { role: newRole },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
+      toast.success('Member role updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update member role: ${error.message}`);
+    },
+  });
+
+  const removeMemberMutation = useMutation({
+    mutationFn: async (workspaceMemberId: string) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      return await apiClient.workspace.members.remove({
+        params: { workspaceId, workspaceMemberId },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
+      toast.success('Member removed successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to remove member: ${error.message}`);
+    },
+  });
+
+  const handleChangeRole = (workspaceMemberId: string, currentRole: string) => {
+    if (currentRole === 'owner') {
+      toast.error('Cannot change owner role');
+      return;
+    }
+    const newRole = currentRole === 'admin' ? 'member' : 'admin';
+    updateRoleMutation.mutate({ workspaceMemberId, newRole });
+  };
+
+  const handleRemoveMember = (workspaceMemberId: string, role: string) => {
+    if (role === 'owner') {
+      toast.error('Cannot remove workspace owner');
+      return;
+    }
+    removeMemberMutation.mutate(workspaceMemberId);
+  };
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Team</h2>
+          <p className="text-sm text-muted-foreground">Manage team members and permissions</p>
+        </div>
+        <div className="max-w-2xl">
+          <div className="rounded-xl border bg-card p-4">
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-48 bg-muted animate-pulse rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const displayedMembers = members || [];
+  const totalPages = Math.ceil(displayedMembers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const displayedMembers = TEAM_MEMBERS.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedMembers = displayedMembers.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div>
@@ -55,47 +140,64 @@ export function TeamSection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayedMembers.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <BoringAvatar size={32} name={member.email} />
-                      <div>
-                        <div className="font-medium text-sm">{member.name}</div>
-                        <div className="text-xs text-muted-foreground">{member.email}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{member.role}</span>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Shield className="h-4 w-4 mr-2" />
-                          {member.role === 'Admin'
-                            ? 'Make Member'
-                            : member.role === 'Member'
-                              ? 'Make Admin'
-                              : member.role === 'Owner'
-                                ? 'Make Admin'
-                                : 'Change role'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <UserMinus className="h-4 w-4 mr-2" />
-                          Remove member
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {paginatedMembers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                    No team members found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                paginatedMembers.map((member) => (
+                  <TableRow key={member.workspaceMemberId}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <BoringAvatar size={32} name={member.memberEmail} />
+                        <div>
+                          <div className="font-medium text-sm">{member.memberName}</div>
+                          <div className="text-xs text-muted-foreground">{member.memberEmail}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm capitalize">{member.workspaceRole}</span>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {member.workspaceRole !== 'owner' && (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleChangeRole(member.workspaceMemberId, member.workspaceRole)
+                              }
+                              disabled={updateRoleMutation.isPending}
+                            >
+                              <Shield className="h-4 w-4 mr-2" />
+                              {member.workspaceRole === 'admin' ? 'Make Member' : 'Make Admin'}
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() =>
+                              handleRemoveMember(member.workspaceMemberId, member.workspaceRole)
+                            }
+                            disabled={
+                              member.workspaceRole === 'owner' || removeMemberMutation.isPending
+                            }
+                          >
+                            <UserMinus className="h-4 w-4 mr-2" />
+                            Remove member
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
 
@@ -103,8 +205,8 @@ export function TeamSection() {
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <p className="text-xs text-muted-foreground">
                 Showing {startIndex + 1} to{' '}
-                {Math.min(startIndex + itemsPerPage, TEAM_MEMBERS.length)} of {TEAM_MEMBERS.length}{' '}
-                members
+                {Math.min(startIndex + itemsPerPage, displayedMembers.length)} of{' '}
+                {displayedMembers.length} members
               </p>
               <div className="flex gap-2">
                 <Button

@@ -1,13 +1,18 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { Input } from '@workspace/ui/components/input';
 import { Slider } from '@workspace/ui/components/slider';
 import { Button } from '@workspace/ui/components/button';
-import { Upload, Pencil } from 'lucide-react';
+import { Upload } from 'lucide-react';
+import { toast } from '@workspace/ui/components/sonner';
+import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
+import { useWorkspaceId } from '@/stores/workspace';
+import { apiClient } from '@/client';
 
 const DURATION_MARKS = [
   { value: 1, label: '1 min' },
@@ -18,23 +23,112 @@ const DURATION_MARKS = [
 ];
 
 export function AppearanceSection() {
-  const [workspaceSlug, setWorkspaceSlug] = useState('larys-workspace');
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+  const { data: preferences, isLoading } = useWorkspacePreferences();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form state
   const [customizeRecordingLink, setCustomizeRecordingLink] = useState(false);
   const [workspaceImage, setWorkspaceImage] = useState<string | null>(null);
-  const [workspaceName, setWorkspaceName] = useState("Lary's Workspace");
-  const [headerText, setHeaderText] = useState('Get ready to record');
+  const [workspaceName, setWorkspaceName] = useState('');
+  const [headerText, setHeaderText] = useState('');
   const [footnoteText, setFootnoteText] = useState('');
   const [recordingDuration, setRecordingDuration] = useState(3);
   const [primaryColor, setPrimaryColor] = useState('#000000');
   const [selectedOption, setSelectedOption] = useState<'screen-voice' | 'screen-only'>(
     'screen-voice'
   );
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-    setWorkspaceSlug(value);
-  };
+  // Initialize form with API data
+  useEffect(() => {
+    if (preferences) {
+      setCustomizeRecordingLink(preferences.recordingCustomizeLink);
+      setWorkspaceImage(preferences.recordingCompanyLogoPath);
+      setWorkspaceName(preferences.recordingCompanyName || '');
+      setHeaderText(preferences.recordingHeader || '');
+      setFootnoteText(preferences.recordingFootnote || '');
+      setRecordingDuration(
+        preferences.recordingMaxDurationMs
+          ? Math.round(preferences.recordingMaxDurationMs / 60000)
+          : 3
+      );
+      setPrimaryColor(preferences.recordingPrimaryColor || '#000000');
+    }
+  }, [preferences]);
+
+  // Separate mutation for toggle (auto-saves immediately)
+  const updateToggleMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      return await apiClient.workspace.preferences.update({
+        params: { workspaceId },
+        body: { recordingCustomizeLink: enabled },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-preferences', workspaceId] });
+      toast.success('Recording link customization updated');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update customization: ${error.message}`);
+      // Revert on error
+      if (preferences) {
+        setCustomizeRecordingLink(preferences.recordingCustomizeLink);
+      }
+    },
+  });
+
+  // Mutation for other appearance fields (requires Update button)
+  const updateAppearanceMutation = useMutation({
+    mutationFn: async (updates: {
+      recordingCompanyName?: string | null;
+      recordingCompanyLogoPath?: string | null;
+      recordingHeader?: string | null;
+      recordingFootnote?: string | null;
+      recordingPrimaryColor?: string | null;
+      recordingMaxDurationMs?: number | null;
+    }) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      return await apiClient.workspace.preferences.update({
+        params: { workspaceId },
+        body: updates,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-preferences', workspaceId] });
+      toast.success('Appearance settings updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update settings: ${error.message}`);
+    },
+  });
+
+  // Check if form has changes (excluding toggle, which auto-saves)
+  const hasChanges = useMemo(() => {
+    if (!preferences) return false;
+
+    const originalDuration = preferences.recordingMaxDurationMs
+      ? Math.round(preferences.recordingMaxDurationMs / 60000)
+      : 3;
+
+    return (
+      workspaceName !== (preferences.recordingCompanyName || '') ||
+      headerText !== (preferences.recordingHeader || '') ||
+      footnoteText !== (preferences.recordingFootnote || '') ||
+      primaryColor !== (preferences.recordingPrimaryColor || '#000000') ||
+      recordingDuration !== originalDuration ||
+      workspaceImage !== preferences.recordingCompanyLogoPath
+    );
+  }, [
+    preferences,
+    workspaceName,
+    headerText,
+    footnoteText,
+    primaryColor,
+    recordingDuration,
+    workspaceImage,
+  ]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,15 +141,54 @@ export function AppearanceSection() {
     }
   };
 
+  const handleToggleChange = (enabled: boolean) => {
+    setCustomizeRecordingLink(enabled);
+    updateToggleMutation.mutate(enabled);
+  };
+
   const handleUpdate = () => {
-    // TODO: Implement update logic to save preferences
-    console.log('Update appearance settings');
+    updateAppearanceMutation.mutate({
+      recordingCompanyName: workspaceName || null,
+      recordingCompanyLogoPath: workspaceImage,
+      recordingHeader: headerText || null,
+      recordingFootnote: footnoteText || null,
+      recordingPrimaryColor: primaryColor,
+      recordingMaxDurationMs: recordingDuration * 60000,
+    });
   };
 
   const handleCancel = () => {
-    // TODO: Implement cancel logic to reset form or navigate away
-    console.log('Cancel changes');
+    // Reset form to original values
+    if (preferences) {
+      setCustomizeRecordingLink(preferences.recordingCustomizeLink);
+      setWorkspaceImage(preferences.recordingCompanyLogoPath);
+      setWorkspaceName(preferences.recordingCompanyName || '');
+      setHeaderText(preferences.recordingHeader || '');
+      setFootnoteText(preferences.recordingFootnote || '');
+      setRecordingDuration(
+        preferences.recordingMaxDurationMs
+          ? Math.round(preferences.recordingMaxDurationMs / 60000)
+          : 3
+      );
+      setPrimaryColor(preferences.recordingPrimaryColor || '#000000');
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Appearance</h2>
+          <p className="text-sm text-muted-foreground">Customize your recording link appearance</p>
+        </div>
+        <div className="w-full max-w-2xl space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-muted animate-pulse rounded" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -89,17 +222,7 @@ export function AppearanceSection() {
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                 />
               </svg>
-              <div className="flex items-center flex-1 min-w-0">
-                <span className="text-zinc-500 shrink-0">recorder.userplane.io/r/</span>
-                <input
-                  id="workspace-slug"
-                  value={workspaceSlug}
-                  onChange={handleSlugChange}
-                  placeholder="your-slug"
-                  className="flex-1 min-w-0 bg-transparent border-none outline-none focus:outline-none focus:ring-0 p-0 font-semibold text-zinc-900 placeholder:text-zinc-400"
-                />
-                <Pencil className="h-3.5 w-3.5 text-zinc-400 shrink-0 ml-2" />
-              </div>
+              <span className="text-zinc-500">recorder.userplane.io</span>
             </div>
             <div className="mt-2 rounded-lg p-8 min-h-[400px] flex flex-col items-center justify-center bg-white">
               <div className="w-full max-w-xl bg-white rounded-2xl shadow-lg border p-10">
@@ -285,7 +408,8 @@ export function AppearanceSection() {
               <Switch
                 id="customize-recording-link"
                 checked={customizeRecordingLink}
-                onCheckedChange={setCustomizeRecordingLink}
+                onCheckedChange={handleToggleChange}
+                disabled={updateToggleMutation.isPending}
               />
             </div>
 
@@ -337,24 +461,6 @@ export function AppearanceSection() {
                           onChange={(e) => setWorkspaceName(e.target.value)}
                           placeholder="Enter workspace name"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="workspace-url" className="text-sm font-medium">
-                          Recording URL
-                        </Label>
-                        <div className="flex items-center gap-1 px-3 py-2 rounded-md border border-input bg-background">
-                          <span className="text-sm text-muted-foreground">
-                            recorder.userplane.io/r/
-                          </span>
-                          <input
-                            id="workspace-url"
-                            value={workspaceSlug}
-                            onChange={handleSlugChange}
-                            placeholder="your-slug"
-                            className="flex-1 min-w-0 bg-transparent border-none outline-none focus:outline-none focus:ring-0 p-0 text-sm font-medium"
-                          />
-                        </div>
                       </div>
 
                       <div className="space-y-2">
@@ -440,12 +546,20 @@ export function AppearanceSection() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3 justify-end pt-4 mt-6">
-                    <Button variant="outline" onClick={handleCancel}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleUpdate}>Update</Button>
-                  </div>
+                  {hasChanges && (
+                    <div className="flex gap-3 justify-end pt-4 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={handleCancel}
+                        disabled={updateAppearanceMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={handleUpdate} disabled={updateAppearanceMutation.isPending}>
+                        {updateAppearanceMutation.isPending ? 'Saving...' : 'Update'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </>
             )}

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { Button } from '@workspace/ui/components/button';
 import {
@@ -22,145 +23,165 @@ import {
 import { Folder, Trash2, MoreVertical, CheckCircle2, ChevronRight, Pencil } from 'lucide-react';
 import { CreateProjectModal } from '@/components/modals/create-project-modal';
 import { EditProjectModal } from '@/components/modals/edit-project-modal';
-
-interface Project {
-  id: number;
-  title: string;
-  isDefault: boolean;
-}
-
-const PROJECTS: Project[] = [
-  {
-    id: 1,
-    title: 'Production App',
-    isDefault: true,
-  },
-  {
-    id: 2,
-    title: 'Dev Environment',
-    isDefault: false,
-  },
-  {
-    id: 3,
-    title: 'Staging Server',
-    isDefault: false,
-  },
-  {
-    id: 4,
-    title: 'Testing Suite',
-    isDefault: false,
-  },
-  {
-    id: 5,
-    title: 'Beta Release',
-    isDefault: false,
-  },
-  {
-    id: 6,
-    title: 'Mobile App',
-    isDefault: false,
-  },
-  {
-    id: 7,
-    title: 'Integration Tests',
-    isDefault: false,
-  },
-  {
-    id: 8,
-    title: 'QA Environment',
-    isDefault: false,
-  },
-];
+import { toast } from '@workspace/ui/components/sonner';
+import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
+import { apiClient } from '@/client';
 
 const ITEMS_PER_PAGE = 5;
 
 export function ProjectsSection() {
   const router = useRouter();
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
-  const [projects, setProjects] = useState<Project[]>(PROJECTS);
   const [showModal, setShowModal] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingProject, setEditingProject] = useState<{
+    projectId: string;
+    projectTitle: string | null;
+  } | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
 
-  const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE);
+  const { data: projects, isLoading } = useWorkspaceProjects({
+    perPage: 10,
+  });
 
-  const paginatedProjects = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return projects.slice(startIndex, endIndex);
-  }, [projects, currentPage]);
+  const createProjectMutation = useMutation({
+    mutationFn: async (title: string) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      return await apiClient.project.create({
+        params: { workspaceId },
+        body: { projectTitle: title || null },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
+      toast.success('Project created successfully');
+      setShowModal(false);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to create project: ${error.message}`);
+    },
+  });
 
-  const handleSetDefault = (projectId: number) => {
-    setProjects((prev) =>
-      prev.map((project) => ({
-        ...project,
-        isDefault: project.id === projectId,
-      }))
-    );
-  };
+  const updateProjectMutation = useMutation({
+    mutationFn: async ({
+      projectId,
+      title,
+      isDefault,
+    }: {
+      projectId: string;
+      title: string;
+      isDefault?: boolean;
+    }) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      return await apiClient.project.update({
+        params: { workspaceId, projectId },
+        body: {
+          projectTitle: title || null,
+          isDefault,
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
+      toast.success('Project updated successfully');
+      setShowEditModal(false);
+      setEditingProject(null);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update project: ${error.message}`);
+    },
+  });
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      return await apiClient.project.delete({
+        params: { workspaceId, projectId },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
+      toast.success('Project deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete project: ${error.message}`);
+    },
+  });
 
   const handleCreateProject = (newProject: { title: string; isDefault: boolean }) => {
-    const project: Project = {
-      id: Math.max(...projects.map((p) => p.id), 0) + 1,
-      title: newProject.title,
-      isDefault: newProject.isDefault,
-    };
-    setProjects((prev) =>
-      prev
-        .map((p) => ({ ...p, isDefault: newProject.isDefault ? false : p.isDefault }))
-        .concat(project)
-    );
+    createProjectMutation.mutate(newProject.title);
   };
 
-  const handleDeleteProject = (projectId: number) => {
-    setProjects((prev) => prev.filter((project) => project.id !== projectId));
+  const handleDeleteProject = (projectId: string) => {
+    deleteProjectMutation.mutate(projectId);
   };
 
-  const handleViewProject = (projectId: number) => {
+  const handleViewProject = (projectId: string) => {
     if (workspaceId) {
       router.push(`/${workspaceId}/projects/${projectId}`);
     }
   };
 
-  const handleEditProject = (project: Project) => {
+  const handleEditProject = (project: { projectId: string; projectTitle: string | null }) => {
     setEditingProject(project);
     setShowEditModal(true);
   };
 
-  const handleSaveEdit = (
-    projectId: number,
-    updatedProject: { title: string; isDefault: boolean }
-  ) => {
-    setProjects((prev) =>
-      prev.map((p) => ({
-        ...p,
-        id: p.id === projectId ? projectId : p.id,
-        title: p.id === projectId ? updatedProject.title : p.title,
-        isDefault: updatedProject.isDefault
-          ? p.id === projectId
-          : p.isDefault && p.id !== projectId,
-      }))
-    );
+  const handleSaveEdit = (updatedProject: { title: string; isDefault: boolean }) => {
+    if (!editingProject) return;
+    updateProjectMutation.mutate({
+      projectId: editingProject.projectId,
+      title: updatedProject.title,
+      isDefault: updatedProject.isDefault,
+    });
   };
+
+  // Calculate these before any conditional returns to avoid hook order issues
+  const displayedProjects = projects || [];
+  const totalPages = Math.ceil(displayedProjects.length / ITEMS_PER_PAGE);
+
+  const paginatedProjects = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return displayedProjects.slice(startIndex, endIndex);
+  }, [displayedProjects, currentPage]);
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Projects</h2>
+          <p className="text-sm text-muted-foreground">Organize recordings by projects</p>
+        </div>
+        <div className="max-w-2xl space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 bg-muted animate-pulse rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Projects</h2>
-        <p className="text-sm text-muted-foreground">Manage workspace projects</p>
+        <p className="text-sm text-muted-foreground">Organize recordings by projects</p>
       </div>
 
       <div className="max-w-2xl space-y-4">
         {paginatedProjects.map((project) => (
           <div
-            key={project.id}
+            key={project.projectId}
             className="flex items-center justify-between p-4 rounded-xl border bg-card"
           >
             <div className="flex items-center gap-3">
               <Folder className="h-5 w-5 text-muted-foreground" />
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{project.title}</span>
+                <span className="text-sm font-medium">
+                  {project.projectTitle || 'Untitled Project'}
+                </span>
                 {project.isDefault && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                     Default
@@ -173,7 +194,7 @@ export function ProjectsSection() {
                 variant="secondary"
                 size="sm"
                 className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
-                onClick={() => handleViewProject(project.id)}
+                onClick={() => handleViewProject(project.projectId)}
               >
                 View
                 <ChevronRight className="h-4 w-4" />
@@ -185,17 +206,14 @@ export function ProjectsSection() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleSetDefault(project.id)}>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Set as default
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleEditProject(project)}>
                     <Pencil className="h-4 w-4 mr-2" />
                     Edit project
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => handleDeleteProject(project.id)}
+                    onClick={() => handleDeleteProject(project.projectId)}
                     className="text-destructive focus:text-destructive"
+                    disabled={deleteProjectMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete project
@@ -261,14 +279,22 @@ export function ProjectsSection() {
         open={showModal}
         onOpenChange={setShowModal}
         onCreateProject={handleCreateProject}
+        loading={createProjectMutation.isPending}
       />
 
-      <EditProjectModal
-        open={showEditModal}
-        onOpenChange={setShowEditModal}
-        project={editingProject}
-        onSave={handleSaveEdit}
-      />
+      {editingProject && (
+        <EditProjectModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          project={{
+            id: parseInt(editingProject.projectId),
+            title: editingProject.projectTitle || '',
+            isDefault: false,
+          }}
+          onSave={(projectId, updatedProject) => handleSaveEdit(updatedProject)}
+          loading={updateProjectMutation.isPending}
+        />
+      )}
     </div>
   );
 }
