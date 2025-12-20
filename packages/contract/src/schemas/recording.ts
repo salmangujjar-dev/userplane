@@ -19,8 +19,8 @@ export const ListRecordingsQuerySchema = z.object({
     workspaceId: z.string(),
   }),
   query: z.object({
-    page: z.number().int().positive().optional().default(1),
-    per_page: z.number().int().min(1).max(20).optional().default(10),
+    page: z.coerce.number().int().positive().optional().default(1),
+    per_page: z.coerce.number().int().min(1).max(20).optional().default(10),
     created_by: z.array(z.string()).optional(),
     project_id: z.array(z.string()).optional(),
     link_id: z.array(z.string()).optional(),
