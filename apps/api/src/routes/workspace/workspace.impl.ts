@@ -19,6 +19,7 @@ import type { DomainService } from '@/api/services/domain.service';
 import { z } from 'zod';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { createPaginationMeta } from '@/api/types';
+import { getPlanName } from '@workspace/pricing';
 
 /**
  * GET /workspace - List all user workspaces
@@ -96,10 +97,16 @@ export const getWorkspaceByIdImpl = (workspaceService: WorkspaceService) => {
   return authorized.workspace.getById.handler(async ({ context, input }) => {
     try {
       const workspace = await workspaceService.getById(input.params.workspaceId);
+      const workspacePlanName = getPlanName(workspace.workspacePlan);
 
       return {
         message: 'Workspace retrieved successfully',
-        data: { workspace },
+        data: {
+          workspace: {
+            ...workspace,
+            workspacePlanName,
+          },
+        },
       };
     } catch (error) {
       if (error instanceof NotFoundError) {

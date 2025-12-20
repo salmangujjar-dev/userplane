@@ -11,15 +11,20 @@ import {
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { Video, Link as LinkIcon, Settings, FolderKanban, KeyRound, LogOut } from 'lucide-react';
-import { useWorkspaceStore } from '@/stores/workspace';
-
-interface SidebarProps {
-  workspaceName: string;
-  planName: string;
-  userEmail?: string;
-  userName?: string;
-}
+import {
+  Video,
+  Link as LinkIcon,
+  Settings,
+  FolderKanban,
+  KeyRound,
+  LogOut,
+  Loader2,
+} from 'lucide-react';
+import { useWorkspaceId } from '@/stores/workspace';
+import { useAccount } from '@/hooks/use-account';
+import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
+import { useWorkspace } from '@/hooks/use-workspace';
+import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 
 interface NavItem {
   label: string;
@@ -32,8 +37,11 @@ interface NavSection {
   items: NavItem[];
 }
 
-export function Sidebar({ planName, userEmail, userName }: SidebarProps) {
-  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
+export function Sidebar() {
+  const workspaceId = useWorkspaceId();
+  const { data: account } = useAccount();
+  const { data: projects, isLoading: isLoadingProjects } = useWorkspaceProjects();
+  const { data: workspace } = useWorkspace();
 
   const sections: NavSection[] = [
     {
@@ -45,11 +53,13 @@ export function Sidebar({ planName, userEmail, userName }: SidebarProps) {
     },
     {
       title: 'Projects',
-      items: [
-        { label: 'Project 1', href: `/${workspaceId}/projects/1`, icon: FolderKanban },
-        { label: 'Project 2', href: `/${workspaceId}/projects/2`, icon: FolderKanban },
-        { label: 'Project 3', href: `/${workspaceId}/projects/3`, icon: FolderKanban },
-      ],
+      items: isLoadingProjects
+        ? []
+        : projects?.slice(0, 10).map((project) => ({
+            label: project.projectTitle || 'Untitled Project',
+            href: `/${workspaceId}/projects/${project.projectId}`,
+            icon: FolderKanban,
+          })) || [],
     },
   ];
 
@@ -61,7 +71,7 @@ export function Sidebar({ planName, userEmail, userName }: SidebarProps) {
             <Logo size="sm" />
           </Link>
           <Badge variant="secondary" className="rounded-md text-xs">
-            {planName}
+            {workspace?.workspace.workspacePlanName || DEFAULT_PLAN_NAME}
           </Badge>
         </div>
       </div>
@@ -72,43 +82,50 @@ export function Sidebar({ planName, userEmail, userName }: SidebarProps) {
             <div key={section.title}>
               <div className="text-sm font-semibold text-foreground mb-2">{section.title}</div>
               <div className="space-y-1">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="flex items-center gap-2 px-0 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
+                {section.title === 'Projects' && isLoadingProjects ? (
+                  <div className="flex items-center gap-2 px-0 py-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading...
+                  </div>
+                ) : section.items.length === 0 && section.title === 'Projects' ? (
+                  <div className="text-sm text-muted-foreground px-0 py-2">No projects yet</div>
+                ) : (
+                  section.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="flex items-center gap-2 px-0 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })
+                )}
               </div>
             </div>
           ))}
         </div>
       </nav>
 
-      {userName && (
+      {account && (
         <div className="px-6 py-4 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-3 hover:bg-accent rounded-lg transition-colors w-full p-2">
-                <BoringAvatar size={32} name={userName} />
+                <BoringAvatar size={32} name={account.userName} />
                 <div className="flex flex-col text-left flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">{userName}</div>
-                  {userEmail && (
-                    <div className="text-xs text-muted-foreground truncate">{userEmail}</div>
-                  )}
+                  <div className="text-sm font-semibold truncate">{account.userName}</div>
+                  <div className="text-xs text-muted-foreground truncate">{account.userEmail}</div>
                 </div>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="flex flex-col gap-1 px-2 py-1.5">
-                <div className="text-sm font-semibold">{userName}</div>
-                <div className="text-xs text-muted-foreground">{userEmail}</div>
+                <div className="text-sm font-semibold">{account.userName}</div>
+                <div className="text-xs text-muted-foreground">{account.userEmail}</div>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>

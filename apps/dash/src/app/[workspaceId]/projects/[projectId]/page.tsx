@@ -62,12 +62,7 @@ export default function ProjectPage() {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar
-        workspaceName="Lary's Workspace"
-        planName="Starter"
-        userName="Bob Smith"
-        userEmail="bob.smith@email.com"
-      />
+      <Sidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopActions
