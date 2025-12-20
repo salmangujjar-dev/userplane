@@ -28,7 +28,7 @@ export function useSearchableLinks(searchQuery: string, options?: { perPage?: nu
     if (searchQuery && searchResults) {
       return searchResults as SearchLink[];
     }
-    return initialLinks || [];
+    return initialLinks?.links || [];
   }, [searchQuery, searchResults, initialLinks]);
 
   return {

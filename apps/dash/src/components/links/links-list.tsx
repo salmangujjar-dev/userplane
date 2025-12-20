@@ -1,66 +1,47 @@
 import { LinkPreview } from './link-preview';
+import type { Link } from '@/hooks/use-workspace-links';
 
 interface LinksListProps {
-  count?: number;
-  linkIds?: string[];
+  links?: Link[];
+  isLoading?: boolean;
 }
 
-const SAMPLE_DATA = [
-  {
-    title: 'Customer Demo Recording',
-    createdBy: 'Sarah Wilson',
-    createdAt: new Date(Date.now() - 1 * 86400000),
-    projectName: 'Project 1',
-    isReusable: true,
-  },
-  {
-    title: 'Bug Report - Login Issue',
-    createdBy: 'Michael Chen',
-    createdAt: new Date(Date.now() - 3 * 86400000),
-    projectName: 'Project 2',
-    isReusable: false,
-  },
-  {
-    title: 'Onboarding Flow Testing',
-    createdBy: 'Emma Rodriguez',
-    createdAt: new Date(Date.now() - 5 * 86400000),
-    projectName: 'Project 1',
-    isReusable: true,
-  },
-  {
-    title: 'Feature Walkthrough - Dashboard',
-    createdBy: 'James Park',
-    createdAt: new Date(Date.now() - 7 * 86400000),
-    projectName: 'Project 3',
-    isReusable: false,
-  },
-  {
-    title: 'Team Standup Meeting',
-    createdBy: 'Olivia Brown',
-    createdAt: new Date(Date.now() - 14 * 86400000),
-    projectName: 'Project 2',
-    isReusable: true,
-  },
-];
+export function LinksList({ links, isLoading }: LinksListProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-4">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-20 bg-muted rounded-lg animate-pulse" />
+        ))}
+      </div>
+    );
+  }
 
-export function LinksList({ count = 5, linkIds }: LinksListProps) {
+  if (!links || links.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <p className="text-muted-foreground">No links found</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Create a link to start collecting recordings
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 gap-4">
-      {[...Array(count)].map((_, i) => {
-        const data = SAMPLE_DATA[i % SAMPLE_DATA.length];
-        if (!data) return null;
-        return (
-          <LinkPreview
-            key={i}
-            linkId={linkIds?.[i] || `link-${i + 1}`}
-            title={data.title}
-            createdBy={data.createdBy}
-            createdAt={data.createdAt}
-            projectName={data.projectName}
-            isReusable={data.isReusable}
-          />
-        );
-      })}
+      {links.map((link) => (
+        <LinkPreview
+          key={link.linkId}
+          linkId={link.linkId}
+          title={link.linkTitle}
+          createdBy={link.creator.name}
+          createdAt={link.createdAt}
+          projectName={link.project.title}
+          isReusable={link.linkReusable}
+          domainUrl={link.domain.url}
+        />
+      ))}
     </div>
   );
 }

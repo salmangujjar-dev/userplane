@@ -10,39 +10,62 @@ import { LinksTab } from '@/components/links/links-tab';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { usePagination } from '@/hooks/use-pagination';
-import { FolderKanban, Globe } from 'lucide-react';
-
-const MOCK_PROJECTS = [
-  { value: 'project-1', label: 'Website Redesign' },
-  { value: 'project-2', label: 'Mobile App' },
-  { value: 'project-3', label: 'Marketing Campaign' },
-  { value: 'project-4', label: 'Product Launch' },
-  { value: 'project-5', label: 'Customer Feedback' },
-];
-
-const MOCK_CREATORS = [
-  { value: 'creator-1', label: 'Lary Byrd', avatar: true },
-  { value: 'creator-2', label: 'Bob Smith', avatar: true },
-  { value: 'creator-3', label: 'Alice Johnson', avatar: true },
-  { value: 'creator-4', label: 'Charlie Brown', avatar: true },
-  { value: 'creator-5', label: 'Diana Prince', avatar: true },
-];
-
-const MOCK_DOMAINS = [
-  { value: 'domain-1', label: 'app.example.com' },
-  { value: 'domain-2', label: 'dashboard.example.com' },
-  { value: 'domain-3', label: 'admin.example.com' },
-  { value: 'domain-4', label: 'staging.example.com' },
-];
+import { useWorkspaceLinks } from '@/hooks/use-workspace-links';
+import { useSearchableProjects } from '@/hooks/use-searchable-projects';
+import { useSearchableMembers } from '@/hooks/use-searchable-members';
+import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
+import { FolderKanban, Globe, Users } from 'lucide-react';
 
 export default function LinksPage() {
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = usePagination();
+  const linksPerPage = 10;
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
-  const totalPages = 5;
+
+  const [projectSearchQuery, setProjectSearchQuery] = useState('');
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+
+  const { data: linksData, isLoading: isLoadingLinks } = useWorkspaceLinks({
+    page: currentPage,
+    perPage: linksPerPage,
+    filters: {
+      projectId: selectedProjects.length > 0 ? selectedProjects : undefined,
+      createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
+      domainId: selectedDomains.length > 0 ? selectedDomains : undefined,
+    },
+  });
+
+  const { projects, isLoading: isSearchingProjects } = useSearchableProjects(projectSearchQuery, {
+    perPage: 5,
+  });
+  const { members, isLoading: isSearchingMembers } = useSearchableMembers(memberSearchQuery, {
+    perPage: 5,
+  });
+  const { data: domains } = useWorkspaceDomains({ perPage: 5 });
+
+  const projectOptions =
+    projects?.map((project) => ({
+      value: project.projectId,
+      label: project.projectTitle || 'Untitled Project',
+    })) || [];
+
+  const memberOptions =
+    members?.map((member) => ({
+      value: member.workspaceMemberId,
+      label: member.memberName,
+      avatar: true,
+    })) || [];
+
+  const domainOptions =
+    domains?.map((domain) => ({
+      value: domain.domainId,
+      label: domain.domainUrl,
+    })) || [];
+
+  const totalPages = linksData?.pagination.totalPages || 1;
 
   const handleLinkCreated = (link: string) => {
     setShareLink(link);
@@ -65,23 +88,28 @@ export default function LinksPage() {
             <div className="flex items-center gap-2 -ml-2.5 mt-3">
               <FilterDropdown
                 label="Projects"
-                options={MOCK_PROJECTS}
+                options={projectOptions}
                 selected={selectedProjects}
                 onSelectionChange={setSelectedProjects}
+                onSearchChange={setProjectSearchQuery}
+                isSearching={isSearchingProjects}
                 placeholder="Search projects..."
                 icon={FolderKanban}
               />
               <FilterDropdown
                 label="Member"
-                options={MOCK_CREATORS}
+                options={memberOptions}
                 selected={selectedCreators}
                 onSelectionChange={setSelectedCreators}
+                onSearchChange={setMemberSearchQuery}
+                isSearching={isSearchingMembers}
                 placeholder="Search members..."
+                icon={Users}
                 showAvatars
               />
               <FilterDropdown
                 label="Domain"
-                options={MOCK_DOMAINS}
+                options={domainOptions}
                 selected={selectedDomains}
                 onSelectionChange={setSelectedDomains}
                 placeholder="Search domains..."
@@ -91,7 +119,7 @@ export default function LinksPage() {
           </div>
 
           <div className="space-y-6">
-            <LinksTab />
+            <LinksTab links={linksData?.links} isLoading={isLoadingLinks} />
             <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}

@@ -27,62 +27,29 @@ import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { EditLinkModal } from '@/components/modals/edit-link-modal';
 
 interface LinkPreviewProps {
-  linkId?: string;
+  linkId: string;
   onClick?: () => void;
-  title?: string;
-  reference?: string;
-  createdBy?: string;
-  createdAt?: Date;
-  projectName?: string;
-  isReusable?: boolean;
+  title: string | null;
+  createdBy: string;
+  createdAt: string | Date;
+  projectName: string | null;
+  isReusable: boolean;
+  domainUrl: string;
   onShare?: () => void;
   onView?: () => void;
   onEdit?: (title: string, reference: string, isReusable: boolean) => void;
   onDelete?: () => void;
 }
 
-const SAMPLE_TITLES = [
-  'Product Demo Recording',
-  'Customer Onboarding Session',
-  'Bug Reproduction Steps',
-  'Feature Walkthrough',
-  'User Testing Session',
-  'Team Collaboration Recording',
-  'Sprint Planning Meeting',
-  'Code Review Session',
-];
-
-const SAMPLE_CREATORS = [
-  'Alice Johnson',
-  'Bob Smith',
-  'Carol Williams',
-  'David Brown',
-  'Emma Davis',
-  'Frank Miller',
-  'Grace Wilson',
-  'Henry Moore',
-];
-
-const SAMPLE_REFERENCES = [
-  'https://github.com/userplane/dashboard/issues/42',
-  'https://linear.app/userplane/issue/USR-123',
-  'https://app.asana.com/0/1234567890/task',
-  'https://userplane.atlassian.net/browse/JIRA-456',
-  'https://github.com/vercel/next.js/issues/789',
-  'https://app.clickup.com/t/abc123',
-  'https://notion.so/userplane/Feature-Request',
-  'https://trello.com/c/xyz789/feature-update',
-];
-
 export function LinkPreview({
   linkId,
   onClick,
   title,
-  reference,
   createdBy,
   createdAt,
   projectName,
-  isReusable = false,
+  isReusable,
+  domainUrl,
   onShare,
   onView,
   onEdit,
@@ -93,19 +60,7 @@ export function LinkPreview({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  const getLinkIndex = (id: string) => {
-    const match = id.match(/\d+$/);
-    return match ? parseInt(match[0], 10) : 0;
-  };
-
-  const linkIndex = linkId ? getLinkIndex(linkId) : 0;
-  const displayTitle =
-    title || SAMPLE_TITLES[linkIndex % SAMPLE_TITLES.length] || 'Untitled Recording';
-  const displayCreator =
-    createdBy || SAMPLE_CREATORS[linkIndex % SAMPLE_CREATORS.length] || 'Unknown Creator';
-  const displayDate = createdAt || new Date(Date.now() - linkIndex * 86400000 * 2);
-  const displayReference =
-    reference || SAMPLE_REFERENCES[linkIndex % SAMPLE_REFERENCES.length] || '';
+  const displayTitle = title || 'Untitled Link';
 
   const handleView = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -161,16 +116,17 @@ export function LinkPreview({
     }
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string | Date) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - dateObj.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
     if (days === 0) return 'Today';
     if (days === 1) return 'Yesterday';
     if (days < 7) return `${days} days ago`;
     if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
-    return date.toLocaleDateString();
+    return dateObj.toLocaleDateString();
   };
 
   const extractDomain = (url: string): string => {
@@ -182,7 +138,7 @@ export function LinkPreview({
     }
   };
 
-  const displayDomain = displayReference ? extractDomain(displayReference) : '';
+  const displayDomain = extractDomain(domainUrl);
 
   return (
     <>
@@ -197,7 +153,7 @@ export function LinkPreview({
               {projectName && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center text-muted-foreground flex-shrink-0">
+                    <div className="flex items-center text-muted-foreground shrink-0">
                       <FolderKanban className="h-3.5 w-3.5" />
                     </div>
                   </TooltipTrigger>
@@ -209,7 +165,7 @@ export function LinkPreview({
               {displayDomain && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center text-muted-foreground flex-shrink-0">
+                    <div className="flex items-center text-muted-foreground shrink-0">
                       <Globe className="h-3.5 w-3.5" />
                     </div>
                   </TooltipTrigger>
@@ -220,7 +176,7 @@ export function LinkPreview({
               )}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="flex items-center text-muted-foreground flex-shrink-0">
+                  <div className="flex items-center text-muted-foreground shrink-0">
                     {isReusable ? (
                       <Repeat className="h-3.5 w-3.5" />
                     ) : (
@@ -236,16 +192,16 @@ export function LinkPreview({
               </Tooltip>
             </div>
             <div className="flex items-center gap-2">
-              <BoringAvatar name={displayCreator} size={20} />
+              <BoringAvatar name={createdBy} size={20} />
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span>Created by {displayCreator}</span>
+                <span>Created by {createdBy}</span>
                 <span>•</span>
-                <span>{formatDate(displayDate)}</span>
+                <span>{formatDate(createdAt)}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -287,7 +243,7 @@ export function LinkPreview({
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         title={displayTitle}
-        reference={displayReference}
+        reference=""
         isReusable={isReusable}
         onSave={handleSaveEdit}
       />

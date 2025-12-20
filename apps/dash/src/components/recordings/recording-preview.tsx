@@ -10,22 +10,13 @@ import { toast } from '@workspace/ui/components/sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 
 interface RecordingPreviewProps {
-  recordingId?: string;
+  recordingId: string;
   onClick?: () => void;
-  createdBy?: string;
-  createdAt?: string | Date;
-  durationMs?: number | null;
-  thumbnailUrl?: string | null;
+  createdBy: string;
+  createdAt: string | Date;
+  durationMs: number | null;
+  thumbnailUrl: string | null;
 }
-
-const SAMPLE_CREATORS = [
-  'Alice Johnson',
-  'Carol Williams',
-  'David Brown',
-  'Emma Davis',
-  'Lary Bird',
-  'Frank Miller',
-];
 
 export function RecordingPreview({
   recordingId,
@@ -38,11 +29,6 @@ export function RecordingPreview({
   const router = useRouter();
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const [isHovered, setIsHovered] = useState(false);
-
-  const getRecordingIndex = (id: string) => {
-    const match = id?.match(/\d+$/);
-    return match ? parseInt(match[0], 10) : 0;
-  };
 
   const formatDuration = (ms: number | null) => {
     if (!ms) return '0:00';
@@ -64,16 +50,12 @@ export function RecordingPreview({
     return dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
   };
 
-  const recordingIndex = recordingId ? getRecordingIndex(recordingId) : 0;
-  const displayCreator =
-    createdBy || SAMPLE_CREATORS[recordingIndex % SAMPLE_CREATORS.length] || 'Unknown Creator';
-  const displayDate = createdAt || new Date(Date.now() - recordingIndex * 86400000 * 2);
-  const displayDuration = formatDuration(durationMs ?? null);
+  const displayDuration = formatDuration(durationMs);
 
   const handleClick = () => {
     if (onClick) {
       onClick();
-    } else if (recordingId && workspaceId) {
+    } else if (workspaceId) {
       router.push(`/${workspaceId}/recordings/${recordingId}`);
     }
   };
@@ -142,12 +124,10 @@ export function RecordingPreview({
         <div className="pt-2 mt-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <BoringAvatar name={displayCreator} size={24} />
-              <span className="text-sm font-medium truncate">{displayCreator}</span>
+              <BoringAvatar name={createdBy} size={24} />
+              <span className="text-sm font-medium truncate">{createdBy}</span>
             </div>
-            <span className="text-sm text-muted-foreground shrink-0">
-              {formatDate(displayDate)}
-            </span>
+            <span className="text-sm text-muted-foreground shrink-0">{formatDate(createdAt)}</span>
           </div>
         </div>
       </div>

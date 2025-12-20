@@ -144,8 +144,8 @@ export class LinkRepository {
       conditions.push(inArray(links.createdBy, filters.createdBy));
     }
 
-    if (filters?.projectId) {
-      conditions.push(eq(links.projectId, filters.projectId));
+    if (filters?.projectId && filters.projectId.length > 0) {
+      conditions.push(inArray(links.projectId, filters.projectId));
     }
 
     if (filters?.domainId && filters.domainId.length > 0) {

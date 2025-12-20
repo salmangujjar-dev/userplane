@@ -12,7 +12,6 @@ interface RecordingsPageTabsProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   recordingsPerPage?: number;
-  linksPerPage?: number;
 }
 
 export function RecordingsPageTabs({
@@ -20,7 +19,6 @@ export function RecordingsPageTabs({
   totalPages,
   onPageChange,
   recordingsPerPage = 15,
-  linksPerPage = 10,
 }: RecordingsPageTabsProps) {
   const tabs: { value: RecordingsTabType; label: string; icon: typeof Video }[] = [
     { value: 'recordings', label: 'Recordings', icon: Video },
@@ -54,7 +52,8 @@ export function RecordingsPageTabs({
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={onPageChange}
-          linksPerPage={linksPerPage}
+          links={undefined}
+          isLoading={false}
         />
       </TabsContent>
     </Tabs>
