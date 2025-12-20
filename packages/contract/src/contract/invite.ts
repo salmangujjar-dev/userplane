@@ -21,11 +21,9 @@ export const sendInvites = oc
     method: 'POST',
     path: '/invite',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Send invites',
-      description: 'Send workspace invitations to multiple email addresses',
-      tags: ['Invites'],
-    },
+    summary: 'Send invites',
+    description: 'Send workspace invitations to multiple email addresses',
+    tags: ['Invites'],
   })
   .input(SendInvitesSchema)
   .output(ApiResponseSchema(SendInvitesResultSchema));
@@ -39,12 +37,9 @@ export const inviteAction = oc
     method: 'GET',
     path: '/invite',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Handle invite action',
-      description: 'Validate or accept a workspace invitation using token',
-      tags: ['Invites'],
-      security: [],
-    },
+    summary: 'Handle invite action',
+    description: 'Validate or accept a workspace invitation using token',
+    tags: ['Invites'],
   })
   .input(InviteActionQuerySchema)
   .output(ApiResponseSchema(InviteActionResultSchema));

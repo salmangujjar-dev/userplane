@@ -29,12 +29,9 @@ export const getLinks = oc
     method: 'GET',
     path: '/workspace/:workspaceId/links',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'List links',
-      description: 'Retrieve paginated list of recording links with optional filters',
-      tags: ['Links'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'List links',
+    description: 'Retrieve paginated list of recording links with optional filters',
+    tags: ['Links'],
   })
   .input(ListLinksQuerySchema)
   .output(ApiResponseSchema(LinksListDataSchema));
@@ -48,12 +45,9 @@ export const createLink = oc
     method: 'POST',
     path: '/workspace/:workspaceId/links',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Create link',
-      description: 'Create a new recording link for a domain',
-      tags: ['Links'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Create link',
+    description: 'Create a new recording link for a domain',
+    tags: ['Links'],
   })
   .input(CreateLinkSchema)
   .output(ApiResponseSchema(LinkCreateDataSchema));
@@ -67,12 +61,9 @@ export const getLinkById = oc
     method: 'GET',
     path: '/workspace/:workspaceId/links/:linkId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get link by ID',
-      description: 'Retrieve complete link details including project and creator info',
-      tags: ['Links'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get link by ID',
+    description: 'Retrieve complete link details including project and creator info',
+    tags: ['Links'],
   })
   .input(LinkByIdSchema)
   .output(ApiResponseSchema(LinkGetDataSchema));
@@ -86,12 +77,9 @@ export const updateLink = oc
     method: 'PUT',
     path: '/workspace/:workspaceId/links/:linkId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update link',
-      description: 'Update link properties',
-      tags: ['Links'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update link',
+    description: 'Update link properties',
+    tags: ['Links'],
   })
   .input(UpdateLinkSchema)
   .output(ApiResponseSchema(LinkUpdateDataSchema));
@@ -105,12 +93,9 @@ export const deleteLink = oc
     method: 'DELETE',
     path: '/workspace/:workspaceId/links/:linkId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Delete link',
-      description: 'Soft delete a recording link',
-      tags: ['Links'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Delete link',
+    description: 'Soft delete a recording link',
+    tags: ['Links'],
   })
   .input(DeleteLinkSchema)
   .output(ApiResponseSchema(LinkDeleteDataSchema));

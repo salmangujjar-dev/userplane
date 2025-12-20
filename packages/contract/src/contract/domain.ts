@@ -16,12 +16,9 @@ export const verifyDomain = oc
     method: 'POST',
     path: '/domains/verify',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Verify domain',
-      description: 'Verify domain ownership using verification token',
-      tags: ['Domains'],
-      security: [],
-    },
+    summary: 'Verify domain',
+    description: 'Verify domain ownership using verification token',
+    tags: ['Domains'],
   })
   .input(VerifyDomainSchema)
   .output(ApiResponseSchema(DomainVerificationDataSchema));
