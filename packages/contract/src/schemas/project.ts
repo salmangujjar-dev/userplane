@@ -45,7 +45,7 @@ export const ListProjectsQuerySchema = z.object({
   }),
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
-    per_page: z.coerce.number().int().min(1).max(20).optional().default(5),
+    per_page: z.coerce.number().int().min(1).max(10).optional().default(5),
   }),
 });
 

@@ -34,6 +34,14 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
       }
     };
 
+    // Initialize protocol from value prop
+    React.useEffect(() => {
+      if (value) {
+        const { protocol: detectedProtocol } = processUrl(value);
+        setProtocol(detectedProtocol);
+      }
+    }, [value]);
+
     // Handle input changes and detect protocol
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = e.target.value;
@@ -44,7 +52,8 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
         setProtocol(detectedProtocol);
       }
 
-      onChange(cleanUrl);
+      // Always return the full URL with protocol
+      onChange(`${protocol}://${cleanUrl}`);
     };
 
     const displayValue = processUrl(value).cleanUrl;

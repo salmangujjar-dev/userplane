@@ -22,6 +22,7 @@ interface DomainVerificationPostModalProps {
   onOpenChange: (open: boolean) => void;
   domainUrl: string;
   onReverify?: () => void;
+  verified?: boolean;
 }
 
 export function DomainVerificationPostModal({
@@ -29,6 +30,7 @@ export function DomainVerificationPostModal({
   onOpenChange,
   domainUrl,
   onReverify,
+  verified = true,
 }: DomainVerificationPostModalProps) {
   const [openSection, setOpenSection] = useState<number | null>(null);
 
@@ -56,7 +58,7 @@ export function DomainVerificationPostModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[580px]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
         <div className="space-y-8">
           <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center gap-4">
@@ -68,67 +70,108 @@ export function DomainVerificationPostModal({
             </div>
 
             <div className="text-center space-y-1">
-              <DialogTitle className="text-xl font-semibold">Your domain verified</DialogTitle>
+              <DialogTitle className="text-xl font-semibold">
+                {verified ? 'Your domain verified' : 'Verification timeout'}
+              </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                Console and network logs capture enabled
+                {verified
+                  ? 'Console and network logs capture enabled'
+                  : 'Unable to verify domain. Please check your DNS settings and try again.'}
               </DialogDescription>
             </div>
           </div>
 
-          <div className="space-y-3 w-full">
-            {guideSteps.map((step, index) => (
-              <Collapsible
-                key={index}
-                open={openSection === index}
-                onOpenChange={() => toggleSection(index)}
-                className="w-full"
-              >
-                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-muted/50 px-4 py-3 text-left hover:bg-muted transition-colors">
-                  <span className="text-sm font-medium">{step.title}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      openSection === index ? 'transform rotate-180' : ''
-                    }`}
-                  />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  <div className="rounded-lg border bg-background p-4">
-                    <p className="text-sm text-muted-foreground leading-relaxed">{step.content}</p>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
-          </div>
+          {verified && (
+            <div className="space-y-3 w-full">
+              {guideSteps.map((step, index) => (
+                <Collapsible
+                  key={index}
+                  open={openSection === index}
+                  onOpenChange={() => toggleSection(index)}
+                  className="w-full"
+                >
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-muted/50 px-4 py-3 text-left hover:bg-muted transition-colors">
+                    <span className="text-sm font-medium">{step.title}</span>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform duration-200 ${
+                        openSection === index ? 'transform rotate-180' : ''
+                      }`}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2">
+                    <div className="rounded-lg border bg-background p-4">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {step.content}
+                      </p>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+            </div>
+          )}
         </div>
 
         <DialogFooter className="mt-8">
-          <button
-            type="button"
-            onClick={() => {
-              console.log('Remove domain:', domainUrl);
-              onOpenChange(false);
-            }}
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
-          >
-            <HelpCircle className="h-4 w-4" />
-            Remove domain
-          </button>
-          <div className="flex gap-2">
-            <Button
+          {verified && (
+            <button
               type="button"
-              variant="secondary"
-              className="rounded-full px-6"
               onClick={() => {
-                if (onReverify) {
-                  onReverify();
-                }
+                console.log('Remove domain:', domainUrl);
+                onOpenChange(false);
               }}
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
             >
-              Reverify
-            </Button>
-            <Button type="button" className="rounded-full px-6" onClick={() => onOpenChange(false)}>
-              Done
-            </Button>
+              <HelpCircle className="h-4 w-4" />
+              Remove domain
+            </button>
+          )}
+          <div className="flex gap-2 ml-auto">
+            {verified && (
+              <Button
+                type="button"
+                variant="secondary"
+                className="rounded-full px-6"
+                onClick={() => {
+                  if (onReverify) {
+                    onReverify();
+                  }
+                }}
+              >
+                Reverify
+              </Button>
+            )}
+            {!verified && (
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full px-6"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+            )}
+            {!verified && (
+              <Button
+                type="button"
+                className="rounded-full px-6"
+                onClick={() => {
+                  if (onReverify) {
+                    onReverify();
+                  }
+                }}
+              >
+                Try Again
+              </Button>
+            )}
+            {verified && (
+              <Button
+                type="button"
+                className="rounded-full px-6"
+                onClick={() => onOpenChange(false)}
+              >
+                Done
+              </Button>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>

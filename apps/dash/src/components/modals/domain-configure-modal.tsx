@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Switch } from '@workspace/ui/components/switch';
@@ -18,7 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, AlertCircle } from 'lucide-react';
 
 interface DomainSettings {
   hideSensitiveFields: boolean;
@@ -35,6 +35,7 @@ interface DomainConfigureModalProps {
   onSave: (settings: DomainSettings) => void;
   onVerify: () => void;
   onShowVerified: () => void;
+  loading?: boolean;
 }
 
 export function DomainConfigureModal({
@@ -46,6 +47,7 @@ export function DomainConfigureModal({
   onSave,
   onVerify,
   onShowVerified,
+  loading = false,
 }: DomainConfigureModalProps) {
   const [localSettings, setLocalSettings] = useState<DomainSettings>(settings);
 
@@ -55,14 +57,20 @@ export function DomainConfigureModal({
     }
   }, [open, settings]);
 
+  const hasChanges = useMemo(() => {
+    return (
+      localSettings.hideSensitiveFields !== settings.hideSensitiveFields ||
+      localSettings.captureConsoleNetworkLogs !== settings.captureConsoleNetworkLogs ||
+      localSettings.captureBackendServerLogs !== settings.captureBackendServerLogs
+    );
+  }, [localSettings, settings]);
+
   const handleSave = () => {
     onSave(localSettings);
-    onOpenChange(false);
   };
 
   const handleCancel = () => {
     setLocalSettings(settings);
-    onOpenChange(false);
   };
 
   const handleVerify = () => {
@@ -142,11 +150,21 @@ export function DomainConfigureModal({
 
             <div className="space-y-4">
               <div className="text-sm font-medium">Recording Settings</div>
+
+              {!verified && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+                  <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    Verify your domain to enable recording settings
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-4 pl-1">
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="hide-sensitive"
-                    className="text-sm font-normal cursor-pointer flex-1"
+                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Hide sensitive fields
                   </Label>
@@ -156,13 +174,14 @@ export function DomainConfigureModal({
                     onCheckedChange={(checked) =>
                       setLocalSettings((prev) => ({ ...prev, hideSensitiveFields: checked }))
                     }
+                    disabled={loading || !verified}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="console-network"
-                    className="text-sm font-normal cursor-pointer flex-1"
+                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Capture console and network logs
                   </Label>
@@ -172,13 +191,14 @@ export function DomainConfigureModal({
                     onCheckedChange={(checked) =>
                       setLocalSettings((prev) => ({ ...prev, captureConsoleNetworkLogs: checked }))
                     }
+                    disabled={loading || !verified}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="backend-server"
-                    className="text-sm font-normal cursor-pointer flex-1"
+                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Capture backend and server logs
                   </Label>
@@ -188,18 +208,23 @@ export function DomainConfigureModal({
                     onCheckedChange={(checked) =>
                       setLocalSettings((prev) => ({ ...prev, captureBackendServerLogs: checked }))
                     }
+                    disabled={loading || !verified}
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
-          </DialogFooter>
+          {hasChanges && (
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancel} disabled={loading}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={loading}>
+                {loading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          )}
         </div>
       </DialogContent>
     </Dialog>
