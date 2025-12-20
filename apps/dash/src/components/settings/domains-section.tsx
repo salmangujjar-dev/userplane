@@ -69,12 +69,12 @@ export function DomainsSection() {
   const createDomainMutation = useMutation({
     mutationFn: async (url: string) => {
       if (!workspaceId) throw new Error('No workspace ID');
-      const [error, data] = await apiClient.workspace.domains.add({
+      const [error, response] = await apiClient.workspace.domains.add({
         params: { workspaceId },
         body: { url },
       });
       if (error) throw error;
-      return data;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
@@ -89,12 +89,12 @@ export function DomainsSection() {
   const updateDomainMutation = useMutation({
     mutationFn: async ({ domainId, url }: { domainId: string; url: string }) => {
       if (!workspaceId) throw new Error('No workspace ID');
-      const [error, data] = await apiClient.workspace.domains.update({
+      const [error, response] = await apiClient.workspace.domains.update({
         params: { workspaceId, domainId },
         body: { url },
       });
       if (error) throw error;
-      return data;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
@@ -110,11 +110,11 @@ export function DomainsSection() {
   const deleteDomainMutation = useMutation({
     mutationFn: async (domainId: string) => {
       if (!workspaceId) throw new Error('No workspace ID');
-      const [error, data] = await apiClient.workspace.domains.delete({
+      const [error, response] = await apiClient.workspace.domains.delete({
         params: { workspaceId, domainId },
       });
       if (error) throw error;
-      return data;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
@@ -129,7 +129,7 @@ export function DomainsSection() {
   const updateDomainPreferencesMutation = useMutation({
     mutationFn: async ({ domainId, settings }: { domainId: string; settings: DomainSettings }) => {
       if (!workspaceId) throw new Error('No workspace ID');
-      const [error, data] = await apiClient.workspace.domains.preferences.update({
+      const [error, response] = await apiClient.workspace.domains.preferences.update({
         params: { workspaceId, domainId },
         body: {
           recordingHideSensitive: settings.hideSensitiveFields,
@@ -139,7 +139,7 @@ export function DomainsSection() {
         },
       });
       if (error) throw error;
-      return data;
+      return response.data;
     },
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
@@ -147,12 +147,12 @@ export function DomainsSection() {
       // Refetch the updated preferences to update modal state
       if (configuringDomain && workspaceId) {
         try {
-          const [error, data] = await apiClient.workspace.domains.preferences.get({
+          const [error, response] = await apiClient.workspace.domains.preferences.get({
             params: { workspaceId, domainId: variables.domainId },
           });
 
           if (!error) {
-            const preferences = data.data;
+            const preferences = response.data;
             const updatedSettings: DomainSettings = {
               hideSensitiveFields: preferences.recordingHideSensitive,
               captureConsoleNetworkLogs:
@@ -207,12 +207,11 @@ export function DomainsSection() {
     if (!workspaceId) return;
 
     try {
-      const [error, data] = await apiClient.workspace.domains.getById({
+      const [error, response] = await apiClient.workspace.domains.getById({
         params: { workspaceId, domainId },
       });
 
       if (error) throw error;
-      const response = data;
 
       const domain = response.data.domain;
 
@@ -251,13 +250,13 @@ export function DomainsSection() {
       setVerificationStep('verifying');
 
       // Get verification URL from backend
-      const [error, data] = await apiClient.workspace.domains.getVerificationUrl({
+      const [error, response] = await apiClient.workspace.domains.getVerificationUrl({
         params: { workspaceId, domainId: verifyingDomain.id },
       });
 
       if (error) throw error;
 
-      const verificationUrl = data.data.verificationUrl;
+      const verificationUrl = response.data.verificationUrl;
 
       // Open verification URL in new tab
       window.open(verificationUrl, '_blank', 'noopener,noreferrer');
@@ -320,13 +319,13 @@ export function DomainsSection() {
 
     try {
       // Fetch current preferences
-      const [error, data] = await apiClient.workspace.domains.preferences.get({
+      const [error, response] = await apiClient.workspace.domains.preferences.get({
         params: { workspaceId, domainId },
       });
 
       if (error) throw error;
 
-      const preferences = data.data;
+      const preferences = response.data;
       const settings: DomainSettings = {
         hideSensitiveFields: preferences.recordingHideSensitive,
         captureConsoleNetworkLogs:

@@ -9,9 +9,9 @@ export function useAccount() {
   return useQuery({
     queryKey: ['account'],
     queryFn: async () => {
-      const [error, data] = await apiClient.account.get({});
+      const [error, response] = await apiClient.account.get({});
       if (error) throw error;
-      return data.data;
+      return response.data;
     },
     staleTime: 5 * 60 * 1000,
     retry: 1,

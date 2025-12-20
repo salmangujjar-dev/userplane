@@ -21,14 +21,14 @@ export function useCreateWorkspace() {
     mutationFn: async (input: CreateWorkspaceInput) => {
       const fullUrl = input.url.startsWith('http') ? input.url : `https://${input.url}`;
 
-      const [error, data] = await apiClient.provisioner.createWorkspace({
+      const [error, response] = await apiClient.provisioner.createWorkspace({
         body: {
           url: fullUrl,
         },
       });
 
       if (error) throw error;
-      return data;
+      return response;
     },
     onError: (error) => {
       console.error('Failed to create workspace:', error);

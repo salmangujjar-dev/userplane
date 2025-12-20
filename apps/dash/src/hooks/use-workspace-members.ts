@@ -47,7 +47,7 @@ export function useWorkspaceMembers(options?: {
         throw new Error('No workspace ID available');
       }
 
-      const [error, data] = await apiClient.workspace.members.list({
+      const [error, response] = await apiClient.workspace.members.list({
         params: { workspaceId },
         query: {
           page: 1,
@@ -57,7 +57,7 @@ export function useWorkspaceMembers(options?: {
       });
 
       if (error) throw error;
-      return data.data.workspaceMembers as WorkspaceMember[];
+      return response.data.workspaceMembers as WorkspaceMember[];
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000,

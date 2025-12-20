@@ -4,15 +4,15 @@
  * Type-safe client for interacting with the Userplane API
  */
 
-import { createClient } from '@workspace/client';
+import { createClient, createSafeClient } from '@workspace/client';
 import type { UserplaneClient } from '@workspace/client';
 
 /**
  * Create a client instance for the recorder
  * Uses lazy URL evaluation to work in browser environment
  */
-export function createRecorderClient(): UserplaneClient {
-  return createClient({
+export function createRecorderClient() {
+  const baseClient = createClient({
     url: () => {
       if (typeof window === 'undefined') {
         throw new Error('Recorder client must be used in browser environment');
@@ -34,14 +34,16 @@ export function createRecorderClient(): UserplaneClient {
       console.error('[API Client] Error:', error);
     },
   });
+
+  return createSafeClient(baseClient);
 }
 
 /**
  * Get or create a singleton client instance
  */
-let clientInstance: UserplaneClient | null = null;
+let clientInstance: ReturnType<typeof createRecorderClient> | null = null;
 
-export function getRecorderClient(): UserplaneClient {
+export function getRecorderClient() {
   if (!clientInstance) {
     clientInstance = createRecorderClient();
   }
