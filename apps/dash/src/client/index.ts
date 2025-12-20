@@ -4,3 +4,4 @@
  */
 
 export { authClient } from './auth';
+export { apiClient } from './api';
