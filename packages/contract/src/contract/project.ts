@@ -4,6 +4,8 @@ import {
   ProjectsListDataSchema,
   CreateProjectSchema,
   ProjectDataSchema,
+  ProjectByIdSchema,
+  ProjectByIdDataSchema,
   UpdateProjectSchema,
   ProjectUpdateDataSchema,
   ReplaceProjectSchema,
@@ -49,6 +51,22 @@ export const createProject = oc
   })
   .input(CreateProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/projects/{projectId}
+ * Get project by ID
+ */
+export const getProjectById = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/projects/{projectId}',
+    inputStructure: 'detailed',
+    summary: 'Get project by ID',
+    description: 'Retrieve complete project details',
+    tags: ['Projects'],
+  })
+  .input(ProjectByIdSchema)
+  .output(ApiResponseSchema(ProjectByIdDataSchema));
 
 /**
  * PATCH /workspace/{workspaceId}/projects/{projectId}

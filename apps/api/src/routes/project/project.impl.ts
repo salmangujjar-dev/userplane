@@ -49,6 +49,60 @@ export const getProjectsImpl = (projectService: ProjectService) => {
 };
 
 /**
+ * GET /workspace/:workspaceId/projects/:projectId
+ * Get project by ID
+ */
+export const getProjectByIdImpl = (
+  projectService: ProjectService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.project.getById
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      try {
+        const project = await projectService.getProjectById(
+          input.params.projectId,
+          input.params.workspaceId
+        );
+
+        return {
+          message: 'Project retrieved successfully',
+          data: {
+            workspaceId: input.params.workspaceId,
+            project,
+          },
+        };
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof GoneError) {
+          throw new ORPCError('GONE', {
+            status: 410,
+            message: error.message,
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
  * POST /workspace/:workspaceId/projects
  * Create a new project
  */
@@ -286,6 +340,7 @@ export const createProjectProcedures = (
   return {
     list: getProjectsImpl(projectService),
     create: createProjectImpl(projectService, workspaceMemberService, workspaceService),
+    getById: getProjectByIdImpl(projectService, workspaceMemberService, workspaceService),
     update: updateProjectImpl(projectService, workspaceMemberService, workspaceService),
     replace: replaceProjectImpl(projectService, workspaceMemberService, workspaceService),
     delete: deleteProjectImpl(projectService, workspaceMemberService, workspaceService),
