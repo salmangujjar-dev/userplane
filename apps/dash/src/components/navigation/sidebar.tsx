@@ -142,11 +142,11 @@ export function Sidebar() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/${workspaceId}/accounts`}
+                  href={`/${workspaceId}/preferences`}
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <KeyRound className="h-4 w-4" />
-                  Account
+                  Preferences
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

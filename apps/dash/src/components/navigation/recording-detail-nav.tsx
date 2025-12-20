@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
-import { Link as LinkIcon, Share2, ChevronDown } from 'lucide-react';
+import { Link as LinkIcon, Share2, ChevronDown, MoreVertical, Trash2 } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/workspace';
 import {
   DropdownMenu,
@@ -16,12 +16,14 @@ interface RecordingDetailNavProps {
   onCopyLink?: () => void;
   onShareLink?: () => void;
   onShareAtTimestamp?: () => void;
+  onDelete?: () => void;
 }
 
 export function RecordingDetailNav({
   onCopyLink,
   onShareLink,
   onShareAtTimestamp,
+  onDelete,
 }: RecordingDetailNavProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
@@ -52,6 +54,19 @@ export function RecordingDetailNav({
               <DropdownMenuItem onClick={onShareAtTimestamp}>
                 <Share2 className="h-4 w-4 mr-2" />
                 Share at 00:00
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onDelete}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Recording
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

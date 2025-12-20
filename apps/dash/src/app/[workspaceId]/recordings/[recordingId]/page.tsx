@@ -1,17 +1,46 @@
 'use client';
 
+import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
 import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { RecordingMetaPanel } from '@/components/recordings/recording-meta-panel';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
+import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { toast } from '@workspace/ui/components/sonner';
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from '@workspace/ui/components/resizable';
+import { apiClient } from '@/client';
+import { useWorkspaceId } from '@/stores/workspace';
 
 export default function RecordingDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+  const recordingId = params.recordingId as string;
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const deleteRecordingMutation = useMutation({
+    mutationFn: async () => {
+      if (!workspaceId || !recordingId) throw new Error('Missing workspace or recording ID');
+      return await apiClient.recording.delete({
+        params: { workspaceId, recordingId },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recordings', workspaceId] });
+      toast.success('Recording deleted successfully');
+      router.push(`/${workspaceId}/recordings`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete recording: ${error.message}`);
+    },
+  });
   const handleCopyLink = async () => {
     try {
       const currentUrl = window.location.href;
@@ -75,6 +104,7 @@ export default function RecordingDetailPage() {
         onCopyLink={handleCopyLink}
         onShareLink={handleShareLink}
         onShareAtTimestamp={handleShareAtTimestamp}
+        onDelete={() => setShowDeleteModal(true)}
       />
 
       <main className="w-full pl-4 overflow-hidden flex-1">
@@ -95,6 +125,15 @@ export default function RecordingDetailPage() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </main>
+
+      <DeleteConfirmationModal
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+        itemName={recordingId}
+        itemType="recording"
+        onConfirm={() => deleteRecordingMutation.mutate()}
+        isLoading={deleteRecordingMutation.isPending}
+      />
     </div>
   );
 }

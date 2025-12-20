@@ -15,7 +15,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@workspace/ui/components/collapsible';
-import { ArrowLeftRight, Globe, ChevronDown, HelpCircle } from 'lucide-react';
+import { ArrowLeftRight, Globe, ChevronDown, HelpCircle, Copy, Check } from 'lucide-react';
 
 interface DomainVerificationPostModalProps {
   open: boolean;
@@ -33,9 +33,61 @@ export function DomainVerificationPostModal({
   verified = true,
 }: DomainVerificationPostModalProps) {
   const [openSection, setOpenSection] = useState<number | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   const toggleSection = (index: number) => {
     setOpenSection((prev) => (prev === index ? null : index));
+  };
+
+  const codeSnippet = `<!-- Lets users record their screen from your site -->
+<meta name="jam:team" content="d30c1818-9009-495e-a81b-10de2469a353" />
+<script type="module" src="https://js.jam.dev/recorder.js"></script>
+
+<!-- Captures user events and developer logs -->
+<script type="module" src="https://js.jam.dev/capture.js"></script>`;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(codeSnippet);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const renderSyntaxHighlightedCode = () => {
+    return (
+      <div className="whitespace-pre-wrap break-all">
+        <div className="text-muted-foreground">
+          &lt;!-- Lets users record their screen from your site --&gt;
+        </div>
+        <div>
+          <span className="text-blue-600">&lt;meta</span>{' '}
+          <span className="text-purple-600">name</span>=
+          <span className="text-green-600">&quot;jam:team&quot;</span>{' '}
+          <span className="text-purple-600">content</span>=
+          <span className="text-green-600">&quot;d30c1818-9009-495e-a81b-10de2469a353&quot;</span>{' '}
+          <span className="text-blue-600">/&gt;</span>
+        </div>
+        <div>
+          <span className="text-blue-600">&lt;script</span>{' '}
+          <span className="text-purple-600">type</span>=
+          <span className="text-green-600">&quot;module&quot;</span>{' '}
+          <span className="text-purple-600">src</span>=
+          <span className="text-green-600">&quot;https://js.jam.dev/recorder.js&quot;</span>
+          <span className="text-blue-600">&gt;&lt;/script&gt;</span>
+        </div>
+        <div className="h-3" />
+        <div className="text-muted-foreground">
+          &lt;!-- Captures user events and developer logs --&gt;
+        </div>
+        <div>
+          <span className="text-blue-600">&lt;script</span>{' '}
+          <span className="text-purple-600">type</span>=
+          <span className="text-green-600">&quot;module&quot;</span>{' '}
+          <span className="text-purple-600">src</span>=
+          <span className="text-green-600">&quot;https://js.jam.dev/capture.js&quot;</span>
+          <span className="text-blue-600">&gt;&lt;/script&gt;</span>
+        </div>
+      </div>
+    );
   };
 
   const guideSteps = [
@@ -69,14 +121,12 @@ export function DomainVerificationPostModal({
               </div>
             </div>
 
-            <div className="text-center space-y-1">
+            <div className="text-center space-y-2">
               <DialogTitle className="text-xl font-semibold">
-                {verified ? 'Your domain verified' : 'Verification timeout'}
+                {verified ? 'Your domain verified' : "Let's try again"}
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                {verified
-                  ? 'Console and network logs capture enabled'
-                  : 'Unable to verify domain. Please check your DNS settings and try again.'}
+                {verified ? 'Console and network logs capture enabled' : ''}
               </DialogDescription>
             </div>
           </div>
@@ -107,6 +157,38 @@ export function DomainVerificationPostModal({
                   </CollapsibleContent>
                 </Collapsible>
               ))}
+            </div>
+          )}
+
+          {!verified && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground text-center">
+                  Paste scripts into the{' '}
+                  <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
+                    &lt;head&gt;
+                  </code>{' '}
+                  tag of <span className="font-semibold text-foreground">{domainUrl}</span>
+                </p>
+              </div>
+
+              <div className="relative">
+                <div className="p-4 pr-12 rounded-lg bg-muted overflow-hidden text-xs font-mono leading-relaxed">
+                  {renderSyntaxHighlightedCode()}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-8 w-8 p-0"
+                  onClick={handleCopy}
+                >
+                  {isCopied ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           )}
         </div>

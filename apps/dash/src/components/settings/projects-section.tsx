@@ -23,6 +23,7 @@ import {
 import { Folder, Trash2, MoreVertical, ChevronRight, Pencil } from 'lucide-react';
 import { CreateProjectModal } from '@/components/modals/create-project-modal';
 import { EditProjectModal } from '@/components/modals/edit-project-modal';
+import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { apiClient } from '@/client';
@@ -38,6 +39,10 @@ export function ProjectsSection() {
     projectTitle: string | null;
   } | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [deletingProject, setDeletingProject] = useState<{
+    projectId: string;
+    projectTitle: string | null;
+  } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
 
@@ -113,8 +118,15 @@ export function ProjectsSection() {
     createProjectMutation.mutate(newProject.title);
   };
 
-  const handleDeleteProject = (projectId: string) => {
-    deleteProjectMutation.mutate(projectId);
+  const handleDeleteProject = (projectId: string, projectTitle: string | null) => {
+    setDeletingProject({ projectId, projectTitle });
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingProject) {
+      deleteProjectMutation.mutate(deletingProject.projectId);
+      setDeletingProject(null);
+    }
   };
 
   const handleViewProject = (projectId: string) => {
@@ -205,8 +217,7 @@ export function ProjectsSection() {
                     Edit project
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => handleDeleteProject(project.projectId)}
-                    className="text-destructive focus:text-destructive"
+                    onClick={() => handleDeleteProject(project.projectId, project.projectTitle)}
                     disabled={deleteProjectMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
@@ -289,6 +300,15 @@ export function ProjectsSection() {
           loading={updateProjectMutation.isPending}
         />
       )}
+
+      <DeleteConfirmationModal
+        open={!!deletingProject}
+        onOpenChange={(open) => !open && setDeletingProject(null)}
+        itemName={deletingProject?.projectTitle || 'Untitled Project'}
+        itemType="project"
+        onConfirm={handleConfirmDelete}
+        isLoading={deleteProjectMutation.isPending}
+      />
     </div>
   );
 }

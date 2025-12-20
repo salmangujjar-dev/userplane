@@ -6,7 +6,7 @@ import { InviteModal } from '@/components/modals/invite-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { AccountsTab } from '@/components/accounts/accounts-tab';
 
-export default function AccountsPage() {
+export default function PreferencesPage() {
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
@@ -18,8 +18,8 @@ export default function AccountsPage() {
         <div className="h-[72px]" />
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-1">Accounts</h2>
-            <p className="text-sm text-muted-foreground">Manage your accounts settings</p>
+            <h2 className="text-lg font-semibold mb-1">Preferences</h2>
+            <p className="text-sm text-muted-foreground">Manage your preferences</p>
           </div>
 
           <AccountsTab />
