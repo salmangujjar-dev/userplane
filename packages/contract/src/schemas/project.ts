@@ -44,7 +44,7 @@ export const ListProjectsQuerySchema = z.object({
     workspaceId: z.string(),
   }),
   query: z.object({
-    page: z.number().int().positive().optional().default(1),
+    page: z.coerce.number().int().positive().optional().default(1),
   }),
 });
 

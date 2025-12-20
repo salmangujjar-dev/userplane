@@ -95,10 +95,11 @@ export const PaginationMetaSchema = z.object({
 
 /**
  * Pagination query parameters
+ * Uses coerce to handle HTTP query params which are always strings
  */
 export const PaginationQuerySchema = z.object({
-  page: z.number().int().positive().optional().default(1),
-  per_page: z.number().int().min(1).max(20).optional().default(10),
+  page: z.coerce.number().int().positive().optional().default(1),
+  per_page: z.coerce.number().int().min(1).max(20).optional().default(10),
 });
 
 /**

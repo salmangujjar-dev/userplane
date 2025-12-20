@@ -197,8 +197,8 @@ export const WorkspaceTeamQuerySchema = z.object({
     workspaceId: z.string(),
   }),
   query: z.object({
-    page: z.number().int().positive().optional().default(1),
-    include_me: z.boolean().optional().default(false),
+    page: z.coerce.number().int().positive().optional().default(1),
+    include_me: z.coerce.boolean().optional().default(false),
   }),
 });
 
@@ -310,7 +310,7 @@ export const WorkspaceDomainsQuerySchema = z.object({
     workspaceId: z.string(),
   }),
   query: z.object({
-    page: z.number().int().positive().optional().default(1),
+    page: z.coerce.number().int().positive().optional().default(1),
   }),
 });
 
@@ -523,7 +523,7 @@ export const WorkspaceSearchQuerySchema = z.object({
   query: z.object({
     q: z.string().min(1).max(100),
     type: z.enum(['members', 'projects', 'domains', 'links']),
-    limit: z.number().int().min(1).max(20).optional().default(5),
+    limit: z.coerce.number().int().min(1).max(20).optional().default(5),
   }),
 });
 
