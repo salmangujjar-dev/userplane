@@ -11,34 +11,16 @@ import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/components/tabs';
-import { LinkPreview } from '@/components/links/link-preview';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
-import { Video, Link as LinkIcon, Link2, Globe } from 'lucide-react';
+import { Video, Link as LinkIcon, Link2, Globe, Users } from 'lucide-react';
 import { usePagination } from '@/hooks/use-pagination';
 import { tabParser } from '@/lib/parsers';
-
-const MOCK_CREATORS = [
-  { value: 'creator-1', label: 'Lary Byrd', avatar: true },
-  { value: 'creator-2', label: 'Bob Smith', avatar: true },
-  { value: 'creator-3', label: 'Alice Johnson', avatar: true },
-  { value: 'creator-4', label: 'Charlie Brown', avatar: true },
-  { value: 'creator-5', label: 'Diana Prince', avatar: true },
-];
-
-const MOCK_RECORDING_LINKS = [
-  { value: 'link-1', label: 'Demo Recording' },
-  { value: 'link-2', label: 'Customer Feedback' },
-  { value: 'link-3', label: 'Support Session' },
-  { value: 'link-4', label: 'User Onboarding' },
-  { value: 'link-5', label: 'Product Testimonial' },
-];
-
-const MOCK_DOMAINS = [
-  { value: 'domain-1', label: 'app.example.com' },
-  { value: 'domain-2', label: 'dashboard.example.com' },
-  { value: 'domain-3', label: 'admin.example.com' },
-  { value: 'domain-4', label: 'staging.example.com' },
-];
+import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
+import { useWorkspaceLinks } from '@/hooks/use-workspace-links';
+import { useSearchableMembers } from '@/hooks/use-searchable-members';
+import { useSearchableLinks } from '@/hooks/use-searchable-links';
+import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
+import { LinksList } from '@/components/links/links-list';
 
 export default function ProjectPage() {
   const params = useParams();
@@ -51,10 +33,66 @@ export default function ProjectPage() {
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
   const [recordingsPage, setRecordingsPage] = usePagination('recordingsPage');
   const [linksPage, setLinksPage] = usePagination('linksPage');
-  const recordingsTotalPages = 5;
-  const linksTotalPages = 3;
   const recordingsPerPage = 16; // 4 columns x 4 rows
   const linksPerPage = 10;
+
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [linkSearchQuery, setLinkSearchQuery] = useState('');
+
+  // Fetch recordings filtered by project
+  const { data: recordingsData, isLoading: isLoadingRecordings } = useWorkspaceRecordings({
+    page: recordingsPage,
+    perPage: recordingsPerPage,
+    filters: {
+      projectId: [projectId],
+      createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
+      linkId: selectedRecordingLinks.length > 0 ? selectedRecordingLinks : undefined,
+    },
+  });
+
+  // Fetch links filtered by project
+  const { data: linksData, isLoading: isLoadingLinks } = useWorkspaceLinks({
+    page: linksPage,
+    perPage: linksPerPage,
+    filters: {
+      projectId: [projectId],
+      createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
+      domainId: selectedDomains.length > 0 ? selectedDomains : undefined,
+    },
+  });
+
+  // Searchable filters
+  const { members, isLoading: isSearchingMembers } = useSearchableMembers(memberSearchQuery, {
+    perPage: 5,
+  });
+  const { links, isLoading: isSearchingLinks } = useSearchableLinks(linkSearchQuery, {
+    perPage: 5,
+  });
+  const { data: domains } = useWorkspaceDomains({
+    perPage: 5,
+  });
+
+  const memberOptions =
+    members?.map((member) => ({
+      value: member.workspaceMemberId,
+      label: member.memberName,
+      avatar: true,
+    })) || [];
+
+  const linkOptions =
+    links?.map((link) => ({
+      value: link.linkId,
+      label: link.linkTitle || 'Untitled Link',
+    })) || [];
+
+  const domainOptions =
+    domains?.map((domain) => ({
+      value: domain.domainId,
+      label: domain.domainUrl,
+    })) || [];
+
+  const recordingsTotalPages = recordingsData?.pagination.totalPages || 1;
+  const linksTotalPages = linksData?.pagination.totalPages || 1;
 
   const handleLinkCreated = (link: string) => {
     setShareLink(link);
@@ -98,17 +136,22 @@ export default function ProjectPage() {
                   <div className="flex items-center gap-2">
                     <FilterDropdown
                       label="Member"
-                      options={MOCK_CREATORS}
+                      options={memberOptions}
                       selected={selectedCreators}
                       onSelectionChange={setSelectedCreators}
+                      onSearchChange={setMemberSearchQuery}
+                      isSearching={isSearchingMembers}
                       placeholder="Search members..."
+                      icon={Users}
                       showAvatars
                     />
                     <FilterDropdown
                       label="Link"
-                      options={MOCK_RECORDING_LINKS}
+                      options={linkOptions}
                       selected={selectedRecordingLinks}
                       onSelectionChange={setSelectedRecordingLinks}
+                      onSearchChange={setLinkSearchQuery}
+                      isSearching={isSearchingLinks}
                       placeholder="Search links..."
                       icon={Link2}
                     />
@@ -119,15 +162,18 @@ export default function ProjectPage() {
                   <div className="flex items-center gap-2">
                     <FilterDropdown
                       label="Member"
-                      options={MOCK_CREATORS}
+                      options={memberOptions}
                       selected={selectedCreators}
                       onSelectionChange={setSelectedCreators}
+                      onSearchChange={setMemberSearchQuery}
+                      isSearching={isSearchingMembers}
                       placeholder="Search members..."
+                      icon={Users}
                       showAvatars
                     />
                     <FilterDropdown
                       label="Domain"
-                      options={MOCK_DOMAINS}
+                      options={domainOptions}
                       selected={selectedDomains}
                       onSelectionChange={setSelectedDomains}
                       placeholder="Search domains..."
@@ -139,17 +185,33 @@ export default function ProjectPage() {
 
               <TabsContent value="recordings" className="space-y-6">
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {[...Array(recordingsPerPage)].map((_, i) => {
-                      const recordingIndex = (recordingsPage - 1) * recordingsPerPage + i;
-                      return (
+                  {isLoadingRecordings ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {[...Array(recordingsPerPage)].map((_, i) => (
+                        <div key={i} className="aspect-video bg-muted rounded-lg animate-pulse" />
+                      ))}
+                    </div>
+                  ) : recordingsData?.recordings.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <p className="text-muted-foreground">No recordings found</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Recordings for this project will appear here
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {recordingsData?.recordings.map((recording) => (
                         <RecordingPreview
-                          key={i}
-                          recordingId={`proj-${projectId}-rec-${recordingIndex + 1}`}
+                          key={recording.recordingId}
+                          recordingId={recording.recordingId}
+                          createdBy={recording.creator.name}
+                          createdAt={recording.createdAt}
+                          durationMs={recording.recordingDurationMs}
+                          thumbnailUrl={recording.recordingThumbnail}
                         />
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
+                  )}
 
                   <PaginationControls
                     currentPage={recordingsPage}
@@ -161,56 +223,7 @@ export default function ProjectPage() {
 
               <TabsContent value="links" className="space-y-6">
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 gap-4">
-                    {[...Array(linksPerPage)].map((_, i) => {
-                      const linkIndex = (linksPage - 1) * linksPerPage + i;
-                      const sampleData = [
-                        {
-                          title: 'Customer Demo Recording',
-                          createdBy: 'Sarah Wilson',
-                          createdAt: new Date(Date.now() - 1 * 86400000),
-                          isReusable: true,
-                        },
-                        {
-                          title: 'Bug Report - Login Issue',
-                          createdBy: 'Michael Chen',
-                          createdAt: new Date(Date.now() - 3 * 86400000),
-                          isReusable: false,
-                        },
-                        {
-                          title: 'Onboarding Flow Testing',
-                          createdBy: 'Emma Rodriguez',
-                          createdAt: new Date(Date.now() - 5 * 86400000),
-                          isReusable: true,
-                        },
-                        {
-                          title: 'Feature Walkthrough - Dashboard',
-                          createdBy: 'James Park',
-                          createdAt: new Date(Date.now() - 7 * 86400000),
-                          isReusable: false,
-                        },
-                        {
-                          title: 'Team Standup Meeting',
-                          createdBy: 'Olivia Brown',
-                          createdAt: new Date(Date.now() - 14 * 86400000),
-                          isReusable: true,
-                        },
-                      ];
-                      const data = sampleData[i % sampleData.length];
-                      if (!data) return null;
-                      return (
-                        <LinkPreview
-                          key={i}
-                          linkId={`proj-${projectId}-link-${linkIndex + 1}`}
-                          title={data.title}
-                          createdBy={data.createdBy}
-                          createdAt={data.createdAt}
-                          projectName={`Project ${projectId}`}
-                          isReusable={data.isReusable}
-                        />
-                      );
-                    })}
-                  </div>
+                  <LinksList links={linksData?.links} isLoading={isLoadingLinks} />
 
                   <PaginationControls
                     currentPage={linksPage}
