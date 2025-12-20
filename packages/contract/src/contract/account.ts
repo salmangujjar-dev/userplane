@@ -20,12 +20,9 @@ export const getAccount = oc
     method: 'GET',
     path: '/account',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get account information',
-      description: 'Retrieve current user account information',
-      tags: ['Account'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get account information',
+    description: 'Retrieve current user account information',
+    tags: ['Account'],
   })
   .output(ApiResponseSchema(AccountDataSchema));
 
@@ -38,12 +35,9 @@ export const updateAccount = oc
     method: 'PATCH',
     path: '/account',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update account',
-      description: 'Update current user account information',
-      tags: ['Account'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update account',
+    description: 'Update current user account information',
+    tags: ['Account'],
   })
   .input(UpdateAccountSchema)
   .output(ApiResponseSchema(AccountUpdateDataSchema));

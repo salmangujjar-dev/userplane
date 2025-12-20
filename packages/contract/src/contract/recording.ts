@@ -25,12 +25,9 @@ export const getRecordings = oc
     method: 'GET',
     path: '/workspace/:workspaceId/recordings',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'List recordings',
-      description: 'Retrieve paginated list of recordings with optional filters',
-      tags: ['Recordings'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'List recordings',
+    description: 'Retrieve paginated list of recordings with optional filters',
+    tags: ['Recordings'],
   })
   .input(ListRecordingsQuerySchema)
   .output(ApiResponseSchema(RecordingsListDataSchema));
@@ -44,12 +41,9 @@ export const getRecordingById = oc
     method: 'GET',
     path: '/workspace/:workspaceId/recordings/:recordingId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get recording by ID',
-      description: 'Retrieve complete recording details with presigned URLs',
-      tags: ['Recordings'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get recording by ID',
+    description: 'Retrieve complete recording details with presigned URLs',
+    tags: ['Recordings'],
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingDetailDataSchema));
@@ -63,12 +57,9 @@ export const deleteRecording = oc
     method: 'DELETE',
     path: '/workspace/:workspaceId/recordings/:recordingId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Delete recording',
-      description: 'Soft delete a recording',
-      tags: ['Recordings'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Delete recording',
+    description: 'Soft delete a recording',
+    tags: ['Recordings'],
   })
   .input(DeleteRecordingSchema)
   .output(ApiResponseSchema(RecordingDeleteDataSchema));
@@ -82,12 +73,9 @@ export const getRecordingVideo = oc
     method: 'GET',
     path: '/workspace/:workspaceId/recordings/:recordingId/video',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get recording video',
-      description: 'Retrieve presigned URL for recording video',
-      tags: ['Recordings'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get recording video',
+    description: 'Retrieve presigned URL for recording video',
+    tags: ['Recordings'],
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
@@ -101,12 +89,9 @@ export const getRecordingThumbnail = oc
     method: 'GET',
     path: '/workspace/:workspaceId/recordings/:recordingId/thumbnail',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get recording thumbnail',
-      description: 'Retrieve presigned URL for recording thumbnail',
-      tags: ['Recordings'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get recording thumbnail',
+    description: 'Retrieve presigned URL for recording thumbnail',
+    tags: ['Recordings'],
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
@@ -120,12 +105,9 @@ export const getRecordingConsoleLog = oc
     method: 'GET',
     path: '/workspace/:workspaceId/recordings/:recordingId/console-log',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get recording console log',
-      description: 'Retrieve presigned URL for recording console log',
-      tags: ['Recordings'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get recording console log',
+    description: 'Retrieve presigned URL for recording console log',
+    tags: ['Recordings'],
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
@@ -139,12 +121,9 @@ export const getRecordingNetworkLog = oc
     method: 'GET',
     path: '/workspace/:workspaceId/recordings/:recordingId/network-log',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get recording network log',
-      description: 'Retrieve presigned URL for recording network log',
-      tags: ['Recordings'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get recording network log',
+    description: 'Retrieve presigned URL for recording network log',
+    tags: ['Recordings'],
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));

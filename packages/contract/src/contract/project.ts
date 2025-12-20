@@ -27,12 +27,9 @@ export const getProjects = oc
     method: 'GET',
     path: '/workspace/:workspaceId/projects',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'List projects',
-      description: 'Retrieve paginated list of projects',
-      tags: ['Projects'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'List projects',
+    description: 'Retrieve paginated list of projects',
+    tags: ['Projects'],
   })
   .input(ListProjectsQuerySchema)
   .output(ApiResponseSchema(ProjectsListDataSchema));
@@ -46,12 +43,9 @@ export const createProject = oc
     method: 'POST',
     path: '/workspace/:workspaceId/projects',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Create project',
-      description: 'Create a new project in the workspace',
-      tags: ['Projects'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Create project',
+    description: 'Create a new project in the workspace',
+    tags: ['Projects'],
   })
   .input(CreateProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));
@@ -65,12 +59,9 @@ export const updateProject = oc
     method: 'PATCH',
     path: '/workspace/:workspaceId/projects/:projectId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update project',
-      description: 'Partially update project properties',
-      tags: ['Projects'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update project',
+    description: 'Partially update project properties',
+    tags: ['Projects'],
   })
   .input(UpdateProjectSchema)
   .output(ApiResponseSchema(ProjectUpdateDataSchema));
@@ -84,12 +75,9 @@ export const replaceProject = oc
     method: 'PUT',
     path: '/workspace/:workspaceId/projects/:projectId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Replace project',
-      description: 'Replace all project properties',
-      tags: ['Projects'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Replace project',
+    description: 'Replace all project properties',
+    tags: ['Projects'],
   })
   .input(ReplaceProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));
@@ -103,12 +91,9 @@ export const deleteProject = oc
     method: 'DELETE',
     path: '/workspace/:workspaceId/projects/:projectId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Delete project',
-      description: 'Soft delete a project',
-      tags: ['Projects'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Delete project',
+    description: 'Soft delete a project',
+    tags: ['Projects'],
   })
   .input(DeleteProjectSchema)
   .output(ApiResponseSchema(ProjectDeleteDataSchema));

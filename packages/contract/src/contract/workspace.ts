@@ -67,12 +67,9 @@ export const getAllWorkspaces = oc
     method: 'GET',
     path: '/workspace',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'List workspaces',
-      description: 'Retrieve paginated list of workspaces for the current user',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'List workspaces',
+    description: 'Retrieve paginated list of workspaces for the current user',
+    tags: ['Workspaces'],
   })
   .input(ListWorkspacesQuerySchema)
   .output(ApiResponseSchema(WorkspacesListDataSchema));
@@ -86,12 +83,9 @@ export const countWorkspaces = oc
     method: 'GET',
     path: '/workspace/count',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Count workspaces',
-      description: 'Count workspaces by role for the current user',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Count workspaces',
+    description: 'Count workspaces by role for the current user',
+    tags: ['Workspaces'],
   })
   .input(CountWorkspacesQuerySchema)
   .output(ApiResponseSchema(WorkspaceCountDataSchema));
@@ -105,12 +99,9 @@ export const getWorkspaceById = oc
     method: 'GET',
     path: '/workspace/:workspaceId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get workspace by ID',
-      description: 'Retrieve complete workspace details',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get workspace by ID',
+    description: 'Retrieve complete workspace details',
+    tags: ['Workspaces'],
   })
   .input(WorkspaceByIdSchema)
   .output(ApiResponseSchema(WorkspaceByIdDataSchema));
@@ -124,12 +115,9 @@ export const getWorkspacePreferences = oc
     method: 'GET',
     path: '/workspace/:workspaceId/preferences',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get workspace preferences',
-      description: 'Retrieve workspace recording and customization preferences',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get workspace preferences',
+    description: 'Retrieve workspace recording and customization preferences',
+    tags: ['Workspaces'],
   })
   .input(WorkspacePreferencesGetSchema)
   .output(ApiResponseSchema(WorkspacePreferencesGetDataSchema));
@@ -143,12 +131,9 @@ export const updateWorkspacePreferences = oc
     method: 'PATCH',
     path: '/workspace/:workspaceId/preferences',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update workspace preferences',
-      description: 'Partially update workspace preferences',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update workspace preferences',
+    description: 'Partially update workspace preferences',
+    tags: ['Workspaces'],
   })
   .input(UpdateWorkspacePreferencesSchema)
   .output(ApiResponseSchema(WorkspacePreferencesUpdateDataSchema));
@@ -162,12 +147,9 @@ export const getWorkspaceMembers = oc
     method: 'GET',
     path: '/workspace/:workspaceId/members',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get workspace members',
-      description: 'Retrieve paginated list of workspace team members',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get workspace members',
+    description: 'Retrieve paginated list of workspace team members',
+    tags: ['Workspaces'],
   })
   .input(WorkspaceTeamQuerySchema)
   .output(ApiResponseSchema(WorkspaceTeamDataSchema));
@@ -181,12 +163,9 @@ export const updateMemberRole = oc
     method: 'PATCH',
     path: '/workspace/:workspaceId/members/:workspaceMemberId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update member role',
-      description: 'Update workspace member role',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update member role',
+    description: 'Update workspace member role',
+    tags: ['Workspaces'],
   })
   .input(UpdateMemberRoleSchema)
   .output(ApiResponseSchema(MemberRoleUpdateDataSchema));
@@ -200,12 +179,9 @@ export const removeMember = oc
     method: 'DELETE',
     path: '/workspace/:workspaceId/members/:workspaceMemberId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Remove member',
-      description: 'Remove a member from the workspace',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Remove member',
+    description: 'Remove a member from the workspace',
+    tags: ['Workspaces'],
   })
   .input(RemoveMemberSchema)
   .output(ApiResponseSchema(MemberRemoveDataSchema));
@@ -219,12 +195,9 @@ export const leaveWorkspace = oc
     method: 'POST',
     path: '/workspace/:workspaceId/leave',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Leave workspace',
-      description: 'Leave a workspace as a member',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Leave workspace',
+    description: 'Leave a workspace as a member',
+    tags: ['Workspaces'],
   })
   .input(LeaveWorkspaceSchema)
   .output(ApiResponseSchema(LeaveWorkspaceDataSchema));
@@ -238,12 +211,9 @@ export const updateNotificationPreferences = oc
     method: 'PATCH',
     path: '/workspace/:workspaceId/notifications',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update notification preferences',
-      description: 'Update workspace notification preferences for current user',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update notification preferences',
+    description: 'Update workspace notification preferences for current user',
+    tags: ['Workspaces'],
   })
   .input(UpdateNotificationPreferencesSchema)
   .output(ApiResponseSchema(NotificationPreferencesUpdateDataSchema));
@@ -257,12 +227,9 @@ export const getInviteUrl = oc
     method: 'GET',
     path: '/workspace/:workspaceId/invite',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get invite URL',
-      description: 'Retrieve workspace invite URL',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get invite URL',
+    description: 'Retrieve workspace invite URL',
+    tags: ['Workspaces'],
   })
   .input(InviteUrlSchema)
   .output(ApiResponseSchema(InviteUrlDataSchema));
@@ -276,12 +243,9 @@ export const rotateInviteToken = oc
     method: 'POST',
     path: '/workspace/:workspaceId/invite/rotate',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Rotate invite token',
-      description: 'Generate new workspace invite URL',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Rotate invite token',
+    description: 'Generate new workspace invite URL',
+    tags: ['Workspaces'],
   })
   .input(InviteUrlSchema)
   .output(ApiResponseSchema(InviteUrlDataSchema));
@@ -295,12 +259,9 @@ export const sendWorkspaceInvites = oc
     method: 'POST',
     path: '/workspace/:workspaceId/invite',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Send workspace invitations',
-      description: 'Send workspace invitations to multiple email addresses',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Send workspace invitations',
+    description: 'Send workspace invitations to multiple email addresses',
+    tags: ['Workspaces'],
   })
   .input(SendWorkspaceInvitesSchema)
   .output(ApiResponseSchema(SendInvitesResultSchema));
@@ -314,12 +275,9 @@ export const getWorkspaceDomains = oc
     method: 'GET',
     path: '/workspace/:workspaceId/domains',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get workspace domains',
-      description: 'Retrieve paginated list of workspace domains',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get workspace domains',
+    description: 'Retrieve paginated list of workspace domains',
+    tags: ['Workspaces'],
   })
   .input(WorkspaceDomainsQuerySchema)
   .output(ApiResponseSchema(WorkspaceDomainsDataSchema));
@@ -333,12 +291,9 @@ export const getDomainById = oc
     method: 'GET',
     path: '/workspace/:workspaceId/domains/:domainId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get domain by ID',
-      description: 'Retrieve complete domain details including recording preferences',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get domain by ID',
+    description: 'Retrieve complete domain details including recording preferences',
+    tags: ['Workspaces'],
   })
   .input(DomainByIdSchema)
   .output(ApiResponseSchema(DomainByIdDataSchema));
@@ -352,12 +307,9 @@ export const addDomain = oc
     method: 'POST',
     path: '/workspace/:workspaceId/domains',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Add domain',
-      description: 'Add a new domain to the workspace',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Add domain',
+    description: 'Add a new domain to the workspace',
+    tags: ['Workspaces'],
   })
   .input(AddDomainSchema)
   .output(ApiResponseSchema(DomainAddDataSchema));
@@ -371,12 +323,9 @@ export const updateDomain = oc
     method: 'PATCH',
     path: '/workspace/:workspaceId/domains/:domainId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update domain',
-      description: 'Update domain URL',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update domain',
+    description: 'Update domain URL',
+    tags: ['Workspaces'],
   })
   .input(UpdateDomainSchema)
   .output(ApiResponseSchema(DomainUpdateDataSchema));
@@ -390,12 +339,9 @@ export const deleteDomain = oc
     method: 'DELETE',
     path: '/workspace/:workspaceId/domains/:domainId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Delete domain',
-      description: 'Remove a domain from the workspace',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Delete domain',
+    description: 'Remove a domain from the workspace',
+    tags: ['Workspaces'],
   })
   .input(DeleteDomainSchema)
   .output(ApiResponseSchema(DomainDeleteDataSchema));
@@ -409,12 +355,9 @@ export const getDomainVerificationUrl = oc
     method: 'GET',
     path: '/workspace/:workspaceId/domains/:domainId/verify',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get domain verification URL',
-      description: 'Generate domain verification URL',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get domain verification URL',
+    description: 'Generate domain verification URL',
+    tags: ['Workspaces'],
   })
   .input(DomainVerificationUrlSchema)
   .output(ApiResponseSchema(DomainVerificationUrlDataSchema));
@@ -428,12 +371,9 @@ export const getDomainRecordingPreferences = oc
     method: 'GET',
     path: '/workspace/:workspaceId/domains/:domainId/preferences',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Get domain recording preferences',
-      description: 'Retrieve recording preferences for a specific domain',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Get domain recording preferences',
+    description: 'Retrieve recording preferences for a specific domain',
+    tags: ['Workspaces'],
   })
   .input(GetDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesDataSchema));
@@ -447,12 +387,9 @@ export const updateDomainRecordingPreferences = oc
     method: 'PATCH',
     path: '/workspace/:workspaceId/domains/:domainId/preferences',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update domain recording preferences',
-      description: 'Partially update recording preferences for a specific domain',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update domain recording preferences',
+    description: 'Partially update recording preferences for a specific domain',
+    tags: ['Workspaces'],
   })
   .input(UpdateDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesUpdateDataSchema));
@@ -466,12 +403,9 @@ export const replaceDomainRecordingPreferences = oc
     method: 'PUT',
     path: '/workspace/:workspaceId/domains/:domainId/preferences',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Replace domain recording preferences',
-      description: 'Replace all recording preferences for a specific domain',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Replace domain recording preferences',
+    description: 'Replace all recording preferences for a specific domain',
+    tags: ['Workspaces'],
   })
   .input(ReplaceDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesUpdateDataSchema));
@@ -485,12 +419,9 @@ export const updateLinkSettings = oc
     method: 'PUT',
     path: '/workspace/:workspaceId/preferences/link',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update link settings',
-      description: 'Update recording link branding and customization settings',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update link settings',
+    description: 'Update recording link branding and customization settings',
+    tags: ['Workspaces'],
   })
   .input(UpdateLinkSettingsSchema)
   .output(ApiResponseSchema(LinkSettingsDataSchema));
@@ -504,12 +435,9 @@ export const updateWorkspaceName = oc
     method: 'PATCH',
     path: '/workspace/:workspaceId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Update workspace name',
-      description: 'Update workspace name',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Update workspace name',
+    description: 'Update workspace name',
+    tags: ['Workspaces'],
   })
   .input(UpdateWorkspaceNameSchema)
   .output(ApiResponseSchema(WorkspaceNameUpdateDataSchema));
@@ -523,12 +451,9 @@ export const deleteWorkspace = oc
     method: 'DELETE',
     path: '/workspace/:workspaceId',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Delete workspace',
-      description: 'Permanently delete a workspace',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Delete workspace',
+    description: 'Permanently delete a workspace',
+    tags: ['Workspaces'],
   })
   .input(DeleteWorkspaceSchema)
   .output(ApiResponseSchema(WorkspaceDeleteDataSchema));
@@ -542,12 +467,9 @@ export const workspaceSearch = oc
     method: 'GET',
     path: '/workspace/:workspaceId/search',
     inputStructure: 'detailed',
-    spec: {
-      summary: 'Search workspace',
-      description: 'Search across workspace members, projects, domains, and links',
-      tags: ['Workspaces'],
-      security: [{ cookieAuth: [] }],
-    },
+    summary: 'Search workspace',
+    description: 'Search across workspace members, projects, domains, and links',
+    tags: ['Workspaces'],
   })
   .input(WorkspaceSearchQuerySchema)
   .output(ApiResponseSchema(WorkspaceSearchDataSchema));
