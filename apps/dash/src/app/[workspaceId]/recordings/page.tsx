@@ -10,41 +10,65 @@ import { RecordingPreview } from '@/components/recordings/recording-preview';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { usePagination } from '@/hooks/use-pagination';
-import { FolderKanban, Link2 } from 'lucide-react';
-
-const MOCK_PROJECTS = [
-  { value: 'project-1', label: 'Website Redesign' },
-  { value: 'project-2', label: 'Mobile App' },
-  { value: 'project-3', label: 'Marketing Campaign' },
-  { value: 'project-4', label: 'Product Launch' },
-  { value: 'project-5', label: 'Customer Feedback' },
-];
-
-const MOCK_CREATORS = [
-  { value: 'creator-1', label: 'Lary Byrd', avatar: true },
-  { value: 'creator-2', label: 'Bob Smith', avatar: true },
-  { value: 'creator-3', label: 'Alice Johnson', avatar: true },
-  { value: 'creator-4', label: 'Charlie Brown', avatar: true },
-  { value: 'creator-5', label: 'Diana Prince', avatar: true },
-];
-
-const MOCK_RECORDING_LINKS = [
-  { value: 'link-1', label: 'Demo Recording' },
-  { value: 'link-2', label: 'Customer Feedback' },
-  { value: 'link-3', label: 'Support Session' },
-  { value: 'link-4', label: 'User Onboarding' },
-  { value: 'link-5', label: 'Product Testimonial' },
-];
+import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
+import { useSearchableProjects } from '@/hooks/use-searchable-projects';
+import { useSearchableMembers } from '@/hooks/use-searchable-members';
+import { useSearchableLinks } from '@/hooks/use-searchable-links';
+import { FolderKanban, Link2, Users } from 'lucide-react';
 
 export default function RecordingsPage() {
   const [currentPage, setCurrentPage] = usePagination();
-  const totalPages = 10;
   const recordingsPerPage = 16; // 4 columns x 4 rows
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
   const [selectedRecordingLinks, setSelectedRecordingLinks] = useState<string[]>([]);
+
+  const [projectSearchQuery, setProjectSearchQuery] = useState('');
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [linkSearchQuery, setLinkSearchQuery] = useState('');
+
+  const { data: recordingsData, isLoading: isLoadingRecordings } = useWorkspaceRecordings({
+    page: currentPage,
+    perPage: recordingsPerPage,
+    filters: {
+      projectId: selectedProjects.length > 0 ? selectedProjects : undefined,
+      createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
+      linkId: selectedRecordingLinks.length > 0 ? selectedRecordingLinks : undefined,
+    },
+  });
+
+  const { projects, isLoading: isSearchingProjects } = useSearchableProjects(projectSearchQuery, {
+    perPage: 5,
+  });
+  const { members, isLoading: isSearchingMembers } = useSearchableMembers(memberSearchQuery, {
+    perPage: 5,
+  });
+  const { links, isLoading: isSearchingLinks } = useSearchableLinks(linkSearchQuery, {
+    perPage: 5,
+  });
+
+  const projectOptions =
+    projects?.map((project) => ({
+      value: project.projectId,
+      label: project.projectTitle || 'Untitled Project',
+    })) || [];
+
+  const memberOptions =
+    members?.map((member) => ({
+      value: member.workspaceMemberId,
+      label: member.memberName,
+      avatar: true,
+    })) || [];
+
+  const linkOptions =
+    links?.map((link) => ({
+      value: link.linkId,
+      label: link.linkTitle || 'Untitled Link',
+    })) || [];
+
+  const totalPages = recordingsData?.pagination.totalPages || 1;
 
   const handleLinkCreated = (link: string) => {
     setShareLink(link);
@@ -68,43 +92,65 @@ export default function RecordingsPage() {
               <div className="flex items-center gap-2 -ml-2.5 mt-3">
                 <FilterDropdown
                   label="Projects"
-                  options={MOCK_PROJECTS}
+                  options={projectOptions}
                   selected={selectedProjects}
                   onSelectionChange={setSelectedProjects}
+                  onSearchChange={setProjectSearchQuery}
+                  isSearching={isSearchingProjects}
                   placeholder="Search projects..."
                   icon={FolderKanban}
                 />
                 <FilterDropdown
                   label="Member"
-                  options={MOCK_CREATORS}
+                  options={memberOptions}
                   selected={selectedCreators}
                   onSelectionChange={setSelectedCreators}
+                  onSearchChange={setMemberSearchQuery}
+                  isSearching={isSearchingMembers}
                   placeholder="Search members..."
+                  icon={Users}
                   showAvatars
                 />
                 <FilterDropdown
                   label="Link"
-                  options={MOCK_RECORDING_LINKS}
+                  options={linkOptions}
                   selected={selectedRecordingLinks}
                   onSelectionChange={setSelectedRecordingLinks}
+                  onSearchChange={setLinkSearchQuery}
+                  isSearching={isSearchingLinks}
                   placeholder="Search links..."
                   icon={Link2}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[...Array(recordingsPerPage)].map((_, i) => {
-                const recordingIndex = (currentPage - 1) * recordingsPerPage + i;
-                return (
+            {isLoadingRecordings ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {[...Array(recordingsPerPage)].map((_, i) => (
+                  <div key={i} className="aspect-video bg-muted rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : recordingsData?.recordings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-muted-foreground">No recordings found</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Recordings will appear here when someone submits through your links
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {recordingsData?.recordings.map((recording) => (
                   <RecordingPreview
-                    key={i}
-                    recordingId={`rec-${recordingIndex + 1}`}
-                    createdBy="Bob Smith"
+                    key={recording.recordingId}
+                    recordingId={recording.recordingId}
+                    createdBy={recording.creator.name}
+                    createdAt={recording.createdAt}
+                    durationMs={recording.recordingDurationMs}
+                    thumbnailUrl={recording.recordingThumbnail}
                   />
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            )}
 
             <PaginationControls
               currentPage={currentPage}

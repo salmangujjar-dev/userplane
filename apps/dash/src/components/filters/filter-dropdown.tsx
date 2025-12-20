@@ -27,6 +27,8 @@ interface FilterDropdownProps {
   showAvatars?: boolean;
   className?: string;
   singleSelect?: boolean;
+  onSearchChange?: (query: string) => void;
+  isSearching?: boolean;
 }
 
 export function FilterDropdown({
@@ -39,13 +41,22 @@ export function FilterDropdown({
   showAvatars = false,
   className,
   singleSelect = false,
+  onSearchChange,
+  isSearching = false,
 }: FilterDropdownProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [open, setOpen] = useState(false);
 
-  const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (onSearchChange) {
+      onSearchChange(value);
+    }
+  };
+
+  const filteredOptions = onSearchChange
+    ? options
+    : options.filter((option) => option.label.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleToggle = (value: string) => {
     if (singleSelect) {
@@ -154,12 +165,14 @@ export function FilterDropdown({
           <Input
             placeholder={placeholder}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="h-8 border-0 bg-transparent px-0 py-1 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
           />
         </div>
         <div className="max-h-[300px] overflow-y-auto p-1">
-          {filteredOptions.length === 0 ? (
+          {isSearching ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">Searching...</div>
+          ) : filteredOptions.length === 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">No results found</div>
           ) : (
             filteredOptions.map((option) => {
