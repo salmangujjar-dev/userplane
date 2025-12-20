@@ -16,11 +16,11 @@ export function useProject(projectId: string, options?: { enabled?: boolean }) {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
-      const [error, data] = await apiClient.project.getById({
+      const [error, response] = await apiClient.project.getById({
         params: { workspaceId, projectId },
       });
       if (error) throw error;
-      return data.data.project;
+      return response.data.project;
     },
     enabled: enabled && !!workspaceId && !!projectId,
     staleTime: 5 * 60 * 1000,

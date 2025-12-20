@@ -42,13 +42,13 @@ export function useWorkspaceDomains(options?: { perPage?: number; enabled?: bool
         throw new Error('No workspace ID available');
       }
 
-      const [error, data] = await apiClient.workspace.domains.list({
+      const [error, response] = await apiClient.workspace.domains.list({
         params: { workspaceId },
         query: { page: 1, per_page: perPage },
       });
 
       if (error) throw error;
-      return data.data.domains;
+      return response.data.domains;
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000,

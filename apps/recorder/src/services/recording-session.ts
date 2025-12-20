@@ -4,7 +4,6 @@
  */
 
 import { getRecorderClient } from '@/client/api';
-import type { UserplaneClient } from '@workspace/client';
 import type { SessionTokenPayload, RecordingPreferences } from '@/types/session-preferences';
 import { toRecordingPreferences } from '@/types/session-preferences';
 import { uploadToObjectStore } from '@/utils/upload';
@@ -42,7 +41,7 @@ export interface UploadState {
 export type { SystemMetadata };
 
 export class RecordingSession {
-  private client: UserplaneClient;
+  private client: ReturnType<typeof getRecorderClient>;
   private sessionToken: string | null = null;
   public sessionId: string | null = null;
   public recordingId: string | null = null;
@@ -61,13 +60,15 @@ export class RecordingSession {
   async initialize(linkToken: string): Promise<void> {
     console.log('[Session] Initializing session');
 
-    const result = await this.client.session.init({
+    const [error, response] = await this.client.session.init({
       query: {
         token: linkToken,
       },
     });
 
-    this.sessionToken = result.data.sessionToken;
+    if (error) throw error;
+
+    this.sessionToken = response.data.sessionToken;
 
     if (!this.sessionToken) {
       throw new Error('No session token returned from API');
@@ -175,7 +176,7 @@ export class RecordingSession {
     };
     console.log('[Upload:Init] Upload init payload:', uploadInitPayload);
 
-    const uploadData = await this.client.session.upload.init(uploadInitPayload, {
+    const [error, response] = await this.client.session.upload.init(uploadInitPayload, {
       context: {
         headers: {
           'x-session-token': this.sessionToken,
@@ -183,11 +184,13 @@ export class RecordingSession {
       },
     });
 
+    if (error) throw error;
+
     console.log('[Upload:Init] Received upload initialization response');
 
-    this.recordingId = uploadData.data.recordingId;
-    const uploadToken = uploadData.data.uploadToken;
-    const presignedUrls = uploadData.data.presignedUrls;
+    this.recordingId = response.data.recordingId;
+    const uploadToken = response.data.uploadToken;
+    const presignedUrls = response.data.presignedUrls;
 
     console.log('[Upload:Init] Recording ID:', this.recordingId);
     console.log('[Upload:Init] Upload token received');
@@ -300,7 +303,7 @@ export class RecordingSession {
     console.log('[Upload:Ack] Acknowledging upload completion');
     console.log('[Upload:Ack] Recording ID:', uploadState.recordingId);
 
-    await this.client.session.upload.complete(
+    const [error, response] = await this.client.session.upload.complete(
       {
         body: {
           recording_id: uploadState.recordingId,
@@ -314,6 +317,8 @@ export class RecordingSession {
         },
       }
     );
+
+    if (error) throw error;
 
     console.log('[Upload:Ack] Upload acknowledged successfully');
   }

@@ -110,7 +110,7 @@ export function useWorkspaceLinks(options?: {
         throw new Error('No workspace ID available');
       }
 
-      const [error, data] = await apiClient.link.list({
+      const [error, response] = await apiClient.link.list({
         params: { workspaceId },
         query: {
           page,
@@ -126,7 +126,7 @@ export function useWorkspaceLinks(options?: {
       });
 
       if (error) throw error;
-      return data.data;
+      return response.data;
     },
     enabled: enabled && !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes

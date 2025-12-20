@@ -26,9 +26,10 @@ export function useWorkspaceInvite() {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
-      const response = await apiClient.workspace.invite.getUrl({
+      const [error, response] = await apiClient.workspace.invite.getUrl({
         params: { workspaceId },
       });
+      if (error) throw error;
       return response.data;
     },
     enabled: !!workspaceId,
@@ -65,10 +66,12 @@ export function useSendWorkspaceInvites() {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
-      await apiClient.workspace.invite.send({
+      const [error, response] = await apiClient.workspace.invite.send({
         params: { workspaceId },
         body: { emails },
       });
+      if (error) throw error;
+      return response.data;
     },
     onSuccess: (_, emails) => {
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
@@ -109,9 +112,10 @@ export function useValidateInvite(token: string | null, enabled = true) {
       if (!token) {
         throw new Error('No invite token provided');
       }
-      const response = await apiClient.invite.validate({
+      const [error, response] = await apiClient.invite.validate({
         body: { token },
       });
+      if (error) throw error;
       return response.data;
     },
     enabled: !!token && enabled,
@@ -148,7 +152,7 @@ export function useAcceptInvite() {
 
   return useMutation({
     mutationFn: async ({ workspaceId, token }: { workspaceId: string; token: string }) => {
-      const [error, data] = await apiClient.workspace.invite.accept({
+      const [error, response] = await apiClient.workspace.invite.accept({
         params: { workspaceId },
         body: { token },
       });
@@ -166,7 +170,7 @@ export function useAcceptInvite() {
       }
 
       return {
-        ...data.data,
+        ...response.data,
         isAlreadyMember: false,
       };
     },

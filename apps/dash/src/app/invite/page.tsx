@@ -38,7 +38,7 @@ function InvitePageContent() {
 
     acceptInvite(
       {
-        workspaceId: inviteInfo.data.workspaceId,
+        workspaceId: inviteInfo.workspaceId,
         token,
       },
       {
@@ -109,11 +109,9 @@ function InvitePageContent() {
     <InviteLayout>
       <div className="flex flex-col items-center gap-3">
         <Logo showText={false} />
-        <h1 className="text-xl font-medium text-foreground">
-          Join {inviteInfo.data.workspaceName}
-        </h1>
+        <h1 className="text-xl font-medium text-foreground">Join {inviteInfo.workspaceName}</h1>
         <p className="text-sm text-muted-foreground text-center">
-          {inviteInfo.data.invitedByName} has invited you to join this workspace
+          {inviteInfo.invitedByName} has invited you to join this workspace
         </p>
       </div>
 
