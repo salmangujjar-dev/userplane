@@ -6,21 +6,12 @@ import Image from 'next/image';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { Input } from '@workspace/ui/components/input';
-import { Slider } from '@workspace/ui/components/slider';
 import { Button } from '@workspace/ui/components/button';
 import { Upload } from 'lucide-react';
 import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-
-const DURATION_MARKS = [
-  { value: 1, label: '1 min' },
-  { value: 2, label: '2 min' },
-  { value: 3, label: '3 min' },
-  { value: 4, label: '4 min' },
-  { value: 5, label: '5 min' },
-];
 
 export function AppearanceSection() {
   const workspaceId = useWorkspaceId();
@@ -34,7 +25,6 @@ export function AppearanceSection() {
   const [workspaceName, setWorkspaceName] = useState('');
   const [headerText, setHeaderText] = useState('');
   const [footnoteText, setFootnoteText] = useState('');
-  const [recordingDuration, setRecordingDuration] = useState(3);
   const [primaryColor, setPrimaryColor] = useState('#000000');
   const [selectedOption, setSelectedOption] = useState<'screen-voice' | 'screen-only'>(
     'screen-voice'
@@ -48,11 +38,6 @@ export function AppearanceSection() {
       setWorkspaceName(preferences.recordingCompanyName || '');
       setHeaderText(preferences.recordingHeader || '');
       setFootnoteText(preferences.recordingFootnote || '');
-      setRecordingDuration(
-        preferences.recordingMaxDurationMs
-          ? Math.round(preferences.recordingMaxDurationMs / 60000)
-          : 3
-      );
       setPrimaryColor(preferences.recordingPrimaryColor || '#000000');
     }
   }, [preferences]);
@@ -87,7 +72,6 @@ export function AppearanceSection() {
       recordingHeader?: string | null;
       recordingFootnote?: string | null;
       recordingPrimaryColor?: string | null;
-      recordingMaxDurationMs?: number | null;
     }) => {
       if (!workspaceId) throw new Error('No workspace ID');
       return await apiClient.workspace.preferences.update({
@@ -108,27 +92,14 @@ export function AppearanceSection() {
   const hasChanges = useMemo(() => {
     if (!preferences) return false;
 
-    const originalDuration = preferences.recordingMaxDurationMs
-      ? Math.round(preferences.recordingMaxDurationMs / 60000)
-      : 3;
-
     return (
       workspaceName !== (preferences.recordingCompanyName || '') ||
       headerText !== (preferences.recordingHeader || '') ||
       footnoteText !== (preferences.recordingFootnote || '') ||
       primaryColor !== (preferences.recordingPrimaryColor || '#000000') ||
-      recordingDuration !== originalDuration ||
       workspaceImage !== preferences.recordingCompanyLogoPath
     );
-  }, [
-    preferences,
-    workspaceName,
-    headerText,
-    footnoteText,
-    primaryColor,
-    recordingDuration,
-    workspaceImage,
-  ]);
+  }, [preferences, workspaceName, headerText, footnoteText, primaryColor, workspaceImage]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -153,7 +124,6 @@ export function AppearanceSection() {
       recordingHeader: headerText || null,
       recordingFootnote: footnoteText || null,
       recordingPrimaryColor: primaryColor,
-      recordingMaxDurationMs: recordingDuration * 60000,
     });
   };
 
@@ -165,11 +135,6 @@ export function AppearanceSection() {
       setWorkspaceName(preferences.recordingCompanyName || '');
       setHeaderText(preferences.recordingHeader || '');
       setFootnoteText(preferences.recordingFootnote || '');
-      setRecordingDuration(
-        preferences.recordingMaxDurationMs
-          ? Math.round(preferences.recordingMaxDurationMs / 60000)
-          : 3
-      );
       setPrimaryColor(preferences.recordingPrimaryColor || '#000000');
     }
   };
@@ -485,42 +450,6 @@ export function AppearanceSection() {
                           onChange={(e) => setFootnoteText(e.target.value)}
                           placeholder="Enter footnote text (optional)"
                         />
-                      </div>
-
-                      <div className="space-y-3">
-                        <Label htmlFor="recording-duration" className="text-sm font-medium">
-                          Recording Duration
-                        </Label>
-                        <div className="px-4 pt-2">
-                          <Slider
-                            id="recording-duration"
-                            value={[recordingDuration]}
-                            onValueChange={(value) => setRecordingDuration(value[0] ?? 1)}
-                            min={1}
-                            max={5}
-                            step={1}
-                            className="w-full"
-                          />
-                          <div className="relative w-full mt-2 h-5">
-                            {DURATION_MARKS.map((mark) => (
-                              <button
-                                key={mark.value}
-                                type="button"
-                                onClick={() => setRecordingDuration(mark.value)}
-                                style={{
-                                  left: `${((mark.value - 1) / 4) * 100}%`,
-                                }}
-                                className={`absolute -translate-x-1/2 text-xs transition-colors ${
-                                  recordingDuration === mark.value
-                                    ? 'text-foreground font-medium'
-                                    : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                              >
-                                {mark.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
                       </div>
 
                       <div className="space-y-2">

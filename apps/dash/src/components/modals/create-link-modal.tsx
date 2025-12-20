@@ -28,48 +28,84 @@ import {
 import { Plus, ChevronDown, ChevronUp, HelpCircle, Globe, FolderKanban } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { UrlInputWithFavicon } from '@/components/url-input-with-favicon';
+import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
+import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/client';
+import { toast } from '@workspace/ui/components/sonner';
 
 interface CreateLinkModalProps {
-  onLinkCreated: (link: string) => void;
+  onLinkCreated?: (linkUrl: string) => void;
 }
-
-const DOMAINS = [
-  { id: '1', name: 'userplane.com', url: 'https://userplane.com' },
-  { id: '2', name: 'app.userplane.com', url: 'https://app.userplane.com' },
-  { id: '3', name: 'custom.domain.com', url: 'https://custom.domain.com' },
-];
 
 export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [reference, setReference] = useState('');
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [isReusable, setIsReusable] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [selectedDomain, setSelectedDomain] = useState<string | undefined>(DOMAINS[0]?.id);
+  const [selectedDomain, setSelectedDomain] = useState<string>('');
 
-  // TODO: Replace with actual API call to fetch projects for the workspace
-  // Example: const { data: projects } = useQuery(['projects', workspaceId], () => fetchProjects(workspaceId));
-  const projects = [
-    { id: '1', name: 'Project 1' },
-    { id: '2', name: 'Project 2' },
-    { id: '3', name: 'Project 3' },
-  ];
+  const { data: projects, isLoading: isLoadingProjects } = useWorkspaceProjects({
+    perPage: 10,
+  });
 
-  // Effect to fetch projects when modal opens and workspaceId is available
+  const { data: domains, isLoading: isLoadingDomains } = useWorkspaceDomains({
+    perPage: 10,
+  });
+
+  const createLinkMutation = useMutation({
+    mutationFn: async (data: {
+      domainId: string;
+      projectId?: string;
+      linkReference?: string;
+      linkReusable: boolean;
+    }) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      return await apiClient.link.create({
+        params: { workspaceId },
+        body: data,
+      });
+    },
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
+      toast.success('Link created successfully');
+      if (onLinkCreated) {
+        onLinkCreated(response.data.link.linkURL);
+      }
+      setOpen(false);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to create link: ${error.message}`);
+    },
+  });
+
+  // Effect to set default project and domain when data loads
   useEffect(() => {
-    if (open && workspaceId) {
-      // TODO: Fetch projects for this workspace
-      // fetchProjects(workspaceId);
-      console.log('Fetching projects for workspace:', workspaceId);
+    if (open && projects && projects.length > 0 && !selectedProject) {
+      const defaultProject = projects.find((p) => p.isDefault) || projects[0];
+      if (defaultProject) {
+        setSelectedProject(defaultProject.projectId);
+      }
     }
-  }, [open, workspaceId]);
+  }, [open, projects, selectedProject]);
+
+  useEffect(() => {
+    if (open && domains && domains.length > 0 && !selectedDomain) {
+      const verifiedDomain = domains.find((d) => d.domainStatus === 'verified') || domains[0];
+      if (verifiedDomain) {
+        setSelectedDomain(verifiedDomain.domainId);
+      }
+    }
+  }, [open, domains, selectedDomain]);
 
   // Effect to reset form state when modal closes
   useEffect(() => {
     if (!open) {
       setReference('');
-      setSelectedDomain(DOMAINS[0]?.id);
+      setSelectedDomain('');
       setSelectedProject('');
       setIsReusable(false);
       setShowAdvanced(false);
@@ -78,16 +114,18 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const selectedDomainUrl =
-      DOMAINS.find((d) => d.id === selectedDomain)?.url || 'https://userplane.com';
-    const generatedLink = `${selectedDomainUrl}/r/${Math.random().toString(36).substring(7)}`;
-    onLinkCreated(generatedLink);
-    setOpen(false);
-    setReference('');
-    setSelectedDomain(DOMAINS[0]?.id);
-    setSelectedProject('');
-    setIsReusable(false);
-    setShowAdvanced(false);
+
+    if (!selectedDomain) {
+      toast.error('Please select a domain');
+      return;
+    }
+
+    createLinkMutation.mutate({
+      domainId: selectedDomain,
+      projectId: selectedProject || undefined,
+      linkReference: reference || undefined,
+      linkReusable: isReusable,
+    });
   };
 
   return (
@@ -147,7 +185,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
               />
             </div>
 
-            {DOMAINS.length > 0 && selectedDomain && (
+            {domains && domains.length > 0 && (
               <div className="space-y-2.5">
                 <div className="space-y-0.5">
                   <Label htmlFor="domain" className="text-sm font-medium">
@@ -162,22 +200,29 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                     <button
                       type="button"
                       className="w-full flex items-center justify-between rounded-lg bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      disabled={isLoadingDomains}
                     >
                       <span className="text-foreground">
-                        {DOMAINS.find((d) => d.id === selectedDomain)?.name || 'Select a domain'}
+                        {selectedDomain
+                          ? domains.find((d) => d.domainId === selectedDomain)?.domainUrl ||
+                            'Select a domain'
+                          : 'Select a domain'}
                       </span>
                       <ChevronDown className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) max-h-[280px] overflow-y-auto">
-                    {DOMAINS.map((domain) => (
+                    {domains.map((domain) => (
                       <DropdownMenuItem
-                        key={domain.id}
-                        onClick={() => setSelectedDomain(domain.id)}
+                        key={domain.domainId}
+                        onClick={() => setSelectedDomain(domain.domainId)}
                         className="cursor-pointer"
                       >
                         <Globe className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                        {domain.name}
+                        {domain.domainUrl}
+                        {domain.domainStatus === 'verified' && (
+                          <span className="ml-2 text-xs text-green-600">Verified</span>
+                        )}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -187,45 +232,54 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
 
             {showAdvanced && (
               <div className="space-y-5 pt-5 border-t">
-                <div className="space-y-2.5">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="project" className="text-sm font-medium">
-                      Project
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Associate this link with a specific project
-                    </p>
+                {projects && projects.length > 0 && (
+                  <div className="space-y-2.5">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="project" className="text-sm font-medium">
+                        Project
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Associate this link with a specific project
+                      </p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between rounded-lg bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          disabled={isLoadingProjects}
+                        >
+                          <span
+                            className={
+                              selectedProject ? 'text-foreground' : 'text-muted-foreground'
+                            }
+                          >
+                            {selectedProject
+                              ? projects.find((p) => p.projectId === selectedProject)
+                                  ?.projectTitle || 'Untitled Project'
+                              : 'Select a project'}
+                          </span>
+                          <ChevronDown className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) max-h-[280px] overflow-y-auto">
+                        {projects.map((project) => (
+                          <DropdownMenuItem
+                            key={project.projectId}
+                            onClick={() => setSelectedProject(project.projectId)}
+                            className="cursor-pointer"
+                          >
+                            <FolderKanban className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                            {project.projectTitle || 'Untitled Project'}
+                            {project.isDefault && (
+                              <span className="ml-2 text-xs text-primary">Default</span>
+                            )}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="w-full flex items-center justify-between rounded-lg bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      >
-                        <span
-                          className={selectedProject ? 'text-foreground' : 'text-muted-foreground'}
-                        >
-                          {selectedProject
-                            ? projects.find((p) => p.id === selectedProject)?.name
-                            : 'Select a project'}
-                        </span>
-                        <ChevronDown className="h-4 w-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) max-h-[280px] overflow-y-auto">
-                      {projects.map((project) => (
-                        <DropdownMenuItem
-                          key={project.id}
-                          onClick={() => setSelectedProject(project.id)}
-                          className="cursor-pointer"
-                        >
-                          <FolderKanban className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                          {project.name}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                )}
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -246,6 +300,7 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
               className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+              disabled={createLinkMutation.isPending}
             >
               {showAdvanced ? (
                 <>
@@ -265,11 +320,16 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
                 variant="secondary"
                 className="rounded-full px-6"
                 onClick={() => setOpen(false)}
+                disabled={createLinkMutation.isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="rounded-full px-6">
-                Create Link
+              <Button
+                type="submit"
+                className="rounded-full px-6"
+                disabled={createLinkMutation.isPending || !selectedDomain}
+              >
+                {createLinkMutation.isPending ? 'Creating...' : 'Create Link'}
               </Button>
             </div>
           </DialogFooter>
