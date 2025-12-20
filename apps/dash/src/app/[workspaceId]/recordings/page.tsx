@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryState } from 'nuqs';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
@@ -15,15 +16,19 @@ import { useSearchableProjects } from '@/hooks/use-searchable-projects';
 import { useSearchableMembers } from '@/hooks/use-searchable-members';
 import { useSearchableLinks } from '@/hooks/use-searchable-links';
 import { FolderKanban, Link2, Users } from 'lucide-react';
+import { stringArrayParser } from '@/lib/parsers';
 
 export default function RecordingsPage() {
   const [currentPage, setCurrentPage] = usePagination();
   const recordingsPerPage = 16; // 4 columns x 4 rows
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
-  const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
-  const [selectedRecordingLinks, setSelectedRecordingLinks] = useState<string[]>([]);
+  const [selectedProjects, setSelectedProjects] = useQueryState('projects', stringArrayParser);
+  const [selectedCreators, setSelectedCreators] = useQueryState('creators', stringArrayParser);
+  const [selectedRecordingLinks, setSelectedRecordingLinks] = useQueryState(
+    'links',
+    stringArrayParser
+  );
 
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
   const [memberSearchQuery, setMemberSearchQuery] = useState('');

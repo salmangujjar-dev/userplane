@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/componen
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { Video, Link as LinkIcon, Link2, Globe, Users } from 'lucide-react';
 import { usePagination } from '@/hooks/use-pagination';
-import { tabParser } from '@/lib/parsers';
+import { tabParser, stringArrayParser } from '@/lib/parsers';
 import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
 import { useWorkspaceLinks } from '@/hooks/use-workspace-links';
 import { useSearchableMembers } from '@/hooks/use-searchable-members';
@@ -29,9 +29,12 @@ export default function ProjectPage() {
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useQueryState('tab', tabParser.withDefault('recordings'));
-  const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
-  const [selectedRecordingLinks, setSelectedRecordingLinks] = useState<string[]>([]);
-  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
+  const [selectedCreators, setSelectedCreators] = useQueryState('creators', stringArrayParser);
+  const [selectedRecordingLinks, setSelectedRecordingLinks] = useQueryState(
+    'links',
+    stringArrayParser
+  );
+  const [selectedDomains, setSelectedDomains] = useQueryState('domains', stringArrayParser);
   const [recordingsPage, setRecordingsPage] = usePagination('recordingsPage');
   const [linksPage, setLinksPage] = usePagination('linksPage');
   const recordingsPerPage = 16; // 4 columns x 4 rows

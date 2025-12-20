@@ -22,3 +22,11 @@ export const sortParser = createParser({
   parse: (value) => value as 'asc' | 'desc',
   serialize: (value) => value,
 }).withDefault('desc' as const);
+
+export const stringArrayParser = createParser({
+  parse: (value) => {
+    if (!value) return [];
+    return value.split(',').filter(Boolean);
+  },
+  serialize: (value) => value.join(','),
+}).withDefault([]);

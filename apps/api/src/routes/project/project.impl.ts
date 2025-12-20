@@ -63,10 +63,12 @@ export const getProjectByIdImpl = (
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       try {
-        const project = await projectService.getProjectById(
-          input.params.projectId,
-          input.params.workspaceId
-        );
+        const project = await projectService.getById(input.params.projectId);
+
+        // Validate project belongs to workspace
+        if (project.workspaceId !== input.params.workspaceId) {
+          throw new ValidationError('Project does not belong to this workspace');
+        }
 
         return {
           message: 'Project retrieved successfully',
