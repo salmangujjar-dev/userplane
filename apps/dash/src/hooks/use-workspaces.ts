@@ -28,17 +28,18 @@ export function useWorkspaces(options?: { page?: number; perPage?: number; enabl
   return useQuery({
     queryKey: ['workspaces', page, perPage],
     queryFn: async () => {
-      const response = await apiClient.workspace.list({
+      const [error, data] = await apiClient.workspace.list({
         query: {
           page,
           include_notification_preference: true,
           include_workspace_membership: true,
         },
       });
-      return response.data;
+      if (error) throw error;
+      return data.data;
     },
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 }

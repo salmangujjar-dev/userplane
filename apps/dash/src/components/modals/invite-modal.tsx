@@ -34,7 +34,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const { data: inviteToken, isLoading: isLoadingInvite } = useWorkspaceInvite();
   const { mutate: sendInvites, isPending } = useSendWorkspaceInvites();
 
-  const inviteLink = inviteToken?.inviteUrl || 'Loading invite link...';
+  const inviteLink = inviteToken?.data.inviteUrl || 'Loading invite link...';
 
   const handleCopyLink = async () => {
     try {

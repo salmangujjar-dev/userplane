@@ -148,15 +148,37 @@ export function useAcceptInvite() {
 
   return useMutation({
     mutationFn: async ({ workspaceId, token }: { workspaceId: string; token: string }) => {
-      const response = await apiClient.workspace.invite.accept({
+      const [error, data] = await apiClient.workspace.invite.accept({
         params: { workspaceId },
         body: { token },
       });
-      return response.data;
+
+      if (error) {
+        // Check if it's a CONFLICT error (already a member)
+        if ('status' in error && error.status === 409) {
+          return {
+            workspaceId,
+            workspaceName: '',
+            isAlreadyMember: true,
+          };
+        }
+        throw error;
+      }
+
+      return {
+        ...data.data,
+        isAlreadyMember: false,
+      };
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       queryClient.invalidateQueries({ queryKey: ['workspace', result.workspaceId] });
+
+      if (result.isAlreadyMember) {
+        // Don't show error for already member case
+        return;
+      }
+
       toast.success(`Successfully joined ${result.workspaceName}`);
     },
     onError: (error) => {

@@ -43,13 +43,14 @@ export function useWorkspaceProjects(options?: { perPage?: number; enabled?: boo
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
-      const response = await apiClient.project.list({
+      const [error, data] = await apiClient.project.list({
         params: { workspaceId },
         query: { page: 1, per_page: perPage },
       });
-      return response.data.projects;
+      if (error) throw error;
+      return data.data.projects;
     },
     enabled: enabled && !!workspaceId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }

@@ -15,13 +15,14 @@ export function useWorkspace() {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
-      const response = await apiClient.workspace.getById({
+      const [error, data] = await apiClient.workspace.getById({
         params: { workspaceId },
       });
-      return response.data;
+      if (error) throw error;
+      return data.data;
     },
     enabled: !!workspaceId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 }

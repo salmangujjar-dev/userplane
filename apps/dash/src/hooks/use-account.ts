@@ -9,10 +9,11 @@ export function useAccount() {
   return useQuery({
     queryKey: ['account'],
     queryFn: async () => {
-      const response = await apiClient.account.get({});
-      return response.data;
+      const [error, data] = await apiClient.account.get({});
+      if (error) throw error;
+      return data.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 }

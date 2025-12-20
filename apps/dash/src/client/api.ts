@@ -1,7 +1,7 @@
-import { createClient } from '@workspace/client';
+import { createClient, createSafeClient } from '@workspace/client';
 import { env } from '@/env';
 
-export const apiClient = createClient({
+const baseClient = createClient({
   url: `${env.api.url}/api/v1`,
   credentials: 'include',
   onError: (error) => {
@@ -18,3 +18,6 @@ export const apiClient = createClient({
     }
   },
 });
+
+// Wrap client with safe error handling
+export const apiClient = createSafeClient(baseClient);
