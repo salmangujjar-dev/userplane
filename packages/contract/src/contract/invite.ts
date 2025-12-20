@@ -20,10 +20,12 @@ export const sendInvites = oc
   .route({
     method: 'POST',
     path: '/invite',
-    summary: 'Send invites',
-    description: 'Send workspace invitations to multiple email addresses',
-    tags: ['Invites'],
     inputStructure: 'detailed',
+    spec: {
+      summary: 'Send invites',
+      description: 'Send workspace invitations to multiple email addresses',
+      tags: ['Invites'],
+    },
   })
   .input(SendInvitesSchema)
   .output(ApiResponseSchema(SendInvitesResultSchema));
@@ -36,10 +38,13 @@ export const inviteAction = oc
   .route({
     method: 'GET',
     path: '/invite',
-    summary: 'Handle invite action',
-    description: 'Validate or accept a workspace invitation using token',
-    tags: ['Invites'],
     inputStructure: 'detailed',
+    spec: {
+      summary: 'Handle invite action',
+      description: 'Validate or accept a workspace invitation using token',
+      tags: ['Invites'],
+      security: [],
+    },
   })
   .input(InviteActionQuerySchema)
   .output(ApiResponseSchema(InviteActionResultSchema));

@@ -15,10 +15,13 @@ export const verifyDomain = oc
   .route({
     method: 'POST',
     path: '/domains/verify',
-    summary: 'Verify domain',
-    description: 'Verify domain ownership using verification token',
-    tags: ['Domains'],
     inputStructure: 'detailed',
+    spec: {
+      summary: 'Verify domain',
+      description: 'Verify domain ownership using verification token',
+      tags: ['Domains'],
+      security: [],
+    },
   })
   .input(VerifyDomainSchema)
   .output(ApiResponseSchema(DomainVerificationDataSchema));

@@ -14,10 +14,13 @@ export const createWorkspace = oc
   .route({
     method: 'POST',
     path: '/workspace',
-    summary: 'Create workspace',
-    description: 'Provision a new workspace with initial domain and project',
-    tags: ['Provisioner'],
     inputStructure: 'detailed',
+    spec: {
+      summary: 'Create workspace',
+      description: 'Provision a new workspace with initial domain and project',
+      tags: ['Provisioner'],
+      security: [{ cookieAuth: [] }],
+    },
   })
   .input(CreateWorkspaceSchema)
   .output(ApiResponseSchema(WorkspaceCreateDataSchema));

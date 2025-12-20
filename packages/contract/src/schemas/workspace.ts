@@ -298,6 +298,8 @@ export const DomainItemSchema = z.object({
   domainId: z.string(),
   domainUrl: z.string(),
   domainStatus: DomainStatusSchema,
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 /**
@@ -344,8 +346,8 @@ export const DomainByIdDataSchema = z.object({
     recordingCaptureClientLog: z.boolean(),
     recordingCaptureServerLog: z.boolean(),
     recordingCaptureNetworkLog: z.boolean(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
   }),
 });
 

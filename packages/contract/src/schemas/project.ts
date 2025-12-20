@@ -12,7 +12,8 @@ export const ProjectItemSchema = z.object({
   projectId: z.string(),
   projectTitle: z.string().nullable(),
   isDefault: z.boolean(),
-  createdAt: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 /**
@@ -74,7 +75,8 @@ export const UpdateProjectSchema = z.object({
  * Project update response
  */
 export const ProjectUpdateDataSchema = z.object({
-  projectId: z.string(),
+  workspaceId: z.string(),
+  project: ProjectItemSchema,
 });
 
 /**
@@ -105,5 +107,6 @@ export const DeleteProjectSchema = z.object({
  * Project delete response
  */
 export const ProjectDeleteDataSchema = z.object({
+  workspaceId: z.string(),
   projectId: z.string(),
 });
