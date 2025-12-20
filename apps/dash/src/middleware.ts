@@ -28,17 +28,23 @@ export function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (isAuthRoute && hasSession) {
-    logger.info({ path, redirectTo: '/' }, 'Redirecting authenticated user from auth page');
-    return NextResponse.redirect(new URL('/', request.url));
+    const redirectTo = request.nextUrl.searchParams.get('redirect_to');
+    const destination = redirectTo || '/';
+    logger.info({ path, redirectTo: destination }, 'Redirecting authenticated user from auth page');
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   // Redirect unauthenticated users away from protected routes
   if (isProtectedRoute && !hasSession) {
+    const redirectUrl = new URL('/auth', request.url);
+    const originalPath = request.nextUrl.pathname + request.nextUrl.search;
+    redirectUrl.searchParams.set('redirect_to', originalPath);
+
     logger.info(
-      { path, redirectTo: '/auth' },
+      { path, redirectTo: redirectUrl.toString(), originalPath },
       'Redirecting unauthenticated user from protected route'
     );
-    return NextResponse.redirect(new URL('/auth', request.url));
+    return NextResponse.redirect(redirectUrl);
   }
 
   return NextResponse.next();

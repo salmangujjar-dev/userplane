@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks';
 import { logger } from '@/logger';
 import { Button } from '@workspace/ui/components/button';
@@ -11,13 +12,15 @@ import { AuthIcons } from '@/components/auth/auth-icons';
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect_to');
   const { signInWithGoogle } = useAuth();
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      logger.info({ provider: 'google' }, 'Initiating Google authentication');
-      await signInWithGoogle();
+      logger.info({ provider: 'google', redirectTo }, 'Initiating Google authentication');
+      await signInWithGoogle(redirectTo || undefined);
       logger.info({ provider: 'google' }, 'Google authentication successful');
     } catch (error) {
       logger.error({ err: error, provider: 'google' }, 'Authentication failed');

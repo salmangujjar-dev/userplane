@@ -10,10 +10,14 @@ export function useAuth() {
     window.location.href = '/auth';
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (redirectTo?: string) => {
+    const callbackURL = redirectTo
+      ? `${window.location.origin}${redirectTo}`
+      : `${window.location.origin}/`;
+
     await authClient.signIn.social({
       provider: 'google',
-      callbackURL: `${window.location.origin}/`,
+      callbackURL,
     });
   };
 
