@@ -5,7 +5,6 @@
  */
 
 import { createClient, createSafeClient } from '@workspace/client';
-import type { UserplaneClient } from '@workspace/client';
 
 /**
  * Create a client instance for the recorder

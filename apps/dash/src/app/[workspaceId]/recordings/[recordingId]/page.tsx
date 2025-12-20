@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
 import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { RecordingMetaPanel } from '@/components/recordings/recording-meta-panel';
@@ -14,32 +13,18 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@workspace/ui/components/resizable';
-import { apiClient } from '@/client';
 import { useWorkspaceId } from '@/stores/workspace';
+import { useDeleteRecording } from '@/queries/use-recording-mutations';
 
 export default function RecordingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const workspaceId = useWorkspaceId();
-  const queryClient = useQueryClient();
   const recordingId = params.recordingId as string;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const deleteRecordingMutation = useMutation({
-    mutationFn: async () => {
-      if (!workspaceId || !recordingId) throw new Error('Missing workspace or recording ID');
-      return await apiClient.recording.delete({
-        params: { workspaceId, recordingId },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recordings', workspaceId] });
-      toast.success('Recording deleted successfully');
-      router.push(`/${workspaceId}/recordings`);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete recording: ${error.message}`);
-    },
+  const deleteRecordingMutation = useDeleteRecording(workspaceId, () => {
+    router.push(`/${workspaceId}/recordings`);
   });
   const handleCopyLink = async () => {
     try {
@@ -131,7 +116,7 @@ export default function RecordingDetailPage() {
         onOpenChange={setShowDeleteModal}
         itemName={recordingId}
         itemType="recording"
-        onConfirm={() => deleteRecordingMutation.mutate()}
+        onConfirm={() => deleteRecordingMutation.mutate(recordingId)}
         isLoading={deleteRecordingMutation.isPending}
       />
     </div>

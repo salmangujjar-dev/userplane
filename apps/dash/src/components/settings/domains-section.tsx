@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -30,6 +30,12 @@ import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
+import {
+  useCreateDomain,
+  useUpdateDomain,
+  useDeleteDomain,
+  useUpdateDomainPreferences,
+} from '@/queries/use-domain-mutations';
 
 interface DomainSettings {
   hideSensitiveFields: boolean;
@@ -66,124 +72,27 @@ export function DomainsSection() {
   const queryClient = useQueryClient();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const createDomainMutation = useMutation({
-    mutationFn: async (url: string) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      const [error, response] = await apiClient.workspace.domains.add({
-        params: { workspaceId },
-        body: { url },
-      });
-      if (error) throw error;
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
-      toast.success('Domain added successfully');
-      setShowCreateModal(false);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to add domain: ${error.message}`);
-    },
-  });
-
-  const updateDomainMutation = useMutation({
-    mutationFn: async ({ domainId, url }: { domainId: string; url: string }) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      const [error, response] = await apiClient.workspace.domains.update({
-        params: { workspaceId, domainId },
-        body: { url },
-      });
-      if (error) throw error;
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
-      toast.success('Domain updated successfully');
-      setIsEditModalOpen(false);
-      setEditingDomain(null);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update domain: ${error.message}`);
-    },
-  });
-
-  const deleteDomainMutation = useMutation({
-    mutationFn: async (domainId: string) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      const [error, response] = await apiClient.workspace.domains.delete({
-        params: { workspaceId, domainId },
-      });
-      if (error) throw error;
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
-      toast.success('Domain deleted successfully');
-      setConfiguringDomain(null);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete domain: ${error.message}`);
-    },
-  });
-
-  const updateDomainPreferencesMutation = useMutation({
-    mutationFn: async ({ domainId, settings }: { domainId: string; settings: DomainSettings }) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      const [error, response] = await apiClient.workspace.domains.preferences.update({
-        params: { workspaceId, domainId },
-        body: {
-          recordingHideSensitive: settings.hideSensitiveFields,
-          recordingCaptureClientLog: settings.captureConsoleNetworkLogs,
-          recordingCaptureServerLog: settings.captureBackendServerLogs,
-          recordingCaptureNetworkLog: settings.captureConsoleNetworkLogs,
-        },
-      });
-      if (error) throw error;
-      return response.data;
-    },
-    onSuccess: async (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
-
-      // Refetch the updated preferences to update modal state
-      if (configuringDomain && workspaceId) {
-        try {
-          const [error, response] = await apiClient.workspace.domains.preferences.get({
-            params: { workspaceId, domainId: variables.domainId },
-          });
-
-          if (!error) {
-            const preferences = response.data;
-            const updatedSettings: DomainSettings = {
-              hideSensitiveFields: preferences.recordingHideSensitive,
-              captureConsoleNetworkLogs:
-                preferences.recordingCaptureClientLog || preferences.recordingCaptureNetworkLog,
-              captureBackendServerLogs: preferences.recordingCaptureServerLog,
-            };
-
-            // Update modal with fresh settings
-            setConfiguringDomain({
-              ...configuringDomain,
-              settings: updatedSettings,
-            });
-          } else {
-            // If refetch fails, just close modal
-            setConfiguringDomain(null);
-          }
-        } catch {
-          // If refetch fails, just close modal
-          setConfiguringDomain(null);
-        }
+  const createDomainMutation = useCreateDomain(workspaceId);
+  const updateDomainMutation = useUpdateDomain(workspaceId);
+  const deleteDomainMutation = useDeleteDomain(workspaceId);
+  const updateDomainPreferencesMutation = useUpdateDomainPreferences(
+    workspaceId,
+    (domainId, settings) => {
+      if (configuringDomain && configuringDomain.domainId === domainId) {
+        setConfiguringDomain({
+          ...configuringDomain,
+          settings,
+        });
       }
-
-      toast.success('Domain settings updated successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update domain settings: ${error.message}`);
-    },
-  });
+    }
+  );
 
   const handleCreateDomain = (domainUrl: string) => {
-    createDomainMutation.mutate(domainUrl);
+    createDomainMutation.mutate(domainUrl, {
+      onSuccess: () => {
+        setShowCreateModal(false);
+      },
+    });
   };
 
   const handleVerify = (domainId: string, domainUrl: string) => {
@@ -294,7 +203,15 @@ export function DomainsSection() {
 
   const handleSaveEdit = (newDomainUrl: string) => {
     if (!editingDomain) return;
-    updateDomainMutation.mutate({ domainId: editingDomain.id, url: newDomainUrl });
+    updateDomainMutation.mutate(
+      { domainId: editingDomain.id, url: newDomainUrl },
+      {
+        onSuccess: () => {
+          setIsEditModalOpen(false);
+          setEditingDomain(null);
+        },
+      }
+    );
   };
 
   const handleDeleteDomain = (domainId: string, domainUrl: string) => {
@@ -303,8 +220,12 @@ export function DomainsSection() {
 
   const handleConfirmDelete = () => {
     if (deletingDomain) {
-      deleteDomainMutation.mutate(deletingDomain.id);
-      setDeletingDomain(null);
+      deleteDomainMutation.mutate(deletingDomain.id, {
+        onSuccess: () => {
+          setConfiguringDomain(null);
+          setDeletingDomain(null);
+        },
+      });
     }
   };
 

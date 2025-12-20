@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@workspace/ui/components/button';
 import {
   Table,
@@ -22,58 +21,21 @@ import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
 import { useWorkspaceId } from '@/stores/workspace';
-import { apiClient } from '@/client';
+import { useUpdateMemberRole, useRemoveMember } from '@/queries/use-team-mutations';
 
 const ITEMS_PER_PAGE = 5;
 
 export function TeamSection() {
   const workspaceId = useWorkspaceId();
   const [currentPage, setCurrentPage] = useState(1);
-  const queryClient = useQueryClient();
 
   const { data: members, isLoading } = useWorkspaceMembers({
     includeMe: true,
     perPage: ITEMS_PER_PAGE,
   });
 
-  const updateRoleMutation = useMutation({
-    mutationFn: async ({
-      workspaceMemberId,
-      newRole,
-    }: {
-      workspaceMemberId: string;
-      newRole: 'admin' | 'member';
-    }) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.workspace.members.updateRole({
-        params: { workspaceId, workspaceMemberId },
-        body: { role: newRole },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
-      toast.success('Member role updated successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update member role: ${error.message}`);
-    },
-  });
-
-  const removeMemberMutation = useMutation({
-    mutationFn: async (workspaceMemberId: string) => {
-      if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.workspace.members.remove({
-        params: { workspaceId, workspaceMemberId },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
-      toast.success('Member removed successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to remove member: ${error.message}`);
-    },
-  });
+  const updateRoleMutation = useUpdateMemberRole(workspaceId);
+  const removeMemberMutation = useRemoveMember(workspaceId);
 
   const handleChangeRole = (workspaceMemberId: string, currentRole: string) => {
     if (currentRole === 'owner') {
