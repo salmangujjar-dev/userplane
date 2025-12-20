@@ -17,7 +17,7 @@ import type { InviteService } from '@/api/services/invite.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { DomainService } from '@/api/services/domain.service';
 import { z } from 'zod';
-import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
+import { ValidationError, NotFoundError, GoneError, ConflictError } from '@/api/lib/errors';
 import { createPaginationMeta } from '@/api/types';
 import { getPlanName } from '@workspace/pricing';
 
@@ -656,6 +656,11 @@ export const acceptInviteImpl = (
       }
       if (error instanceof ValidationError) {
         throw new ORPCError('BAD_REQUEST', {
+          message: error.message,
+        });
+      }
+      if (error instanceof ConflictError) {
+        throw new ORPCError('CONFLICT', {
           message: error.message,
         });
       }

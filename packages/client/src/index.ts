@@ -150,6 +150,11 @@ export type {
 } from '@orpc/client';
 
 /**
+ * Re-export oRPC error handling utilities
+ */
+export { safe, isDefinedError, createSafeClient } from '@orpc/client';
+
+/**
  * Re-export domain-specific client types
  */
 export type {

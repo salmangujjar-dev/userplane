@@ -69,7 +69,7 @@ export function useWorkspaceSearch(options: {
         return [];
       }
 
-      const response = await apiClient.workspace.search({
+      const [error, data] = await apiClient.workspace.search({
         params: { workspaceId },
         query: {
           q: query.trim(),
@@ -78,7 +78,8 @@ export function useWorkspaceSearch(options: {
         },
       });
 
-      return response.data.results as SearchResult[];
+      if (error) throw error;
+      return data.data.results as SearchResult[];
     },
     enabled: enabled && !!workspaceId && !!query && query.trim().length > 0,
     staleTime: 30 * 1000, // 30 seconds

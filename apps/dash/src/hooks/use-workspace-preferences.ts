@@ -27,13 +27,14 @@ export function useWorkspacePreferences() {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
-      const response = await apiClient.workspace.preferences.get({
+      const [error, data] = await apiClient.workspace.preferences.get({
         params: { workspaceId },
       });
-      return response.data.preferences;
+      if (error) throw error;
+      return data.data.preferences;
     },
     enabled: !!workspaceId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 }

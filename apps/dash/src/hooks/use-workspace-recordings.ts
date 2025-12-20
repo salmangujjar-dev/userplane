@@ -87,7 +87,7 @@ export function useWorkspaceRecordings(options?: {
         throw new Error('No workspace ID available');
       }
 
-      const response = await apiClient.recording.list({
+      const [error, data] = await apiClient.recording.list({
         params: { workspaceId },
         query: {
           page,
@@ -100,7 +100,8 @@ export function useWorkspaceRecordings(options?: {
         },
       });
 
-      return response.data;
+      if (error) throw error;
+      return data.data;
     },
     enabled: enabled && !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes

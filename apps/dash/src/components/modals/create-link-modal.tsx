@@ -64,10 +64,12 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
       linkReusable: boolean;
     }) => {
       if (!workspaceId) throw new Error('No workspace ID');
-      return await apiClient.link.create({
+      const [error, response] = await apiClient.link.create({
         params: { workspaceId },
         body: data,
       });
+      if (error) throw error;
+      return response;
     },
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
