@@ -7,3 +7,4 @@ export * from './use-account-mutations';
 export * from './use-appearance-mutations';
 export * from './use-overview-mutations';
 export * from './use-recording-mutations';
+export * from './use-recording-query';
