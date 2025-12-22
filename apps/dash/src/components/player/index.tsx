@@ -13,6 +13,7 @@ interface StreamPlayerProps {
   options: PlayerOptions;
   markers?: VideoMarker[];
   poster?: string | null;
+  durationMs?: number;
   onPlayerReady?: (player: Player) => void;
   onFullscreen?: () => void;
 }
@@ -21,12 +22,13 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
   options,
   markers = [],
   poster = null,
+  durationMs,
   onPlayerReady,
   onFullscreen,
 }) => {
   const videoRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<Player | null>(null);
-  const [duration, setDuration] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(durationMs ? durationMs / 1000 : 0);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(false);
   const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -64,14 +66,18 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
         }
       }) as Player);
 
-      // Listen for loadedmetadata to get duration
+      // Listen for loadedmetadata to get duration (only if not provided via props)
       player.on('loadedmetadata', () => {
-        setDuration(player.duration() || 0);
+        if (!durationMs) {
+          setDuration(player.duration() || 0);
+        }
       });
 
-      // Also try to get duration when it changes
+      // Also try to get duration when it changes (only if not provided via props)
       player.on('durationchange', () => {
-        setDuration(player.duration() || 0);
+        if (!durationMs) {
+          setDuration(player.duration() || 0);
+        }
       });
 
       // Track when video starts playing
@@ -87,7 +93,7 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
         player.src(options.sources);
       }
     }
-  }, [options, poster, onPlayerReady]);
+  }, [options, poster, onPlayerReady, durationMs]);
 
   // Dispose the Video.js player when the component unmounts
   useEffect(() => {

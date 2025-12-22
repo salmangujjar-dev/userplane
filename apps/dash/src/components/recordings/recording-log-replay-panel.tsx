@@ -5,7 +5,51 @@ import { NetworkPanel } from './network-panel';
 import { ActionsPanel } from './actions-panel';
 import { BackendPanel } from './backend-panel';
 
-export function RecordingLogReplayPanel() {
+interface RecordingLogReplayPanelProps {
+  recordingId: string;
+  recording: {
+    recordingId: string;
+    recordingDurationMs: number;
+    meta: {
+      link: {
+        linkId: string;
+        title: string | null;
+        providerType: string | null;
+      };
+      creator: {
+        workspaceMemberId: string;
+        name: string;
+      };
+      project: {
+        projectId: string | null;
+        title: string | null;
+      };
+      domain: {
+        domainId: string;
+        url: string;
+      };
+      workspaceId: string;
+      status: string;
+      recordingMeta: {
+        systemMetadata: {
+          date: string;
+          time: string;
+          browser: string;
+          os: string;
+          windowSize: {
+            width: number;
+            height: number;
+          };
+        };
+        customMetadata?: Record<string, unknown>;
+      } | null;
+      createdAt: Date | string;
+      updatedAt: Date | string;
+    };
+  };
+}
+
+export function RecordingLogReplayPanel({ recording }: RecordingLogReplayPanelProps) {
   return (
     <div className="w-full h-full overflow-hidden flex flex-col">
       <Tabs defaultValue="info" className="flex flex-col h-full">
@@ -46,7 +90,7 @@ export function RecordingLogReplayPanel() {
 
         <div className="flex-1 overflow-y-auto">
           <TabsContent value="info" className="h-full mt-0 p-0">
-            <InfoPanel />
+            <InfoPanel recording={recording} />
           </TabsContent>
           <TabsContent value="console" className="h-full mt-0 p-0">
             <ConsolePanel />
