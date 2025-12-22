@@ -179,6 +179,7 @@ export class RecordingService {
 
     return {
       recordingId: row.recordingId,
+      recordingDurationMs: row.recordingDurationMs,
       meta: {
         link: {
           linkId: row.recordingLinkId,
@@ -221,6 +222,8 @@ export class RecordingService {
       return {
         url: null,
         message: 'Video not available for this recording',
+        type: null,
+        sources: [],
         durationMs: null,
       };
     }
@@ -230,17 +233,54 @@ export class RecordingService {
         recording.recordingVideoRef,
         { expiresIn: PRESIGNED_URL_EXPIRY }
       );
+
+      // Determine video type based on URL
+      const videoType = this.getVideoType(url);
+
       return {
         url,
         message: 'Video URL generated successfully',
+        type: videoType,
+        sources: [{ url, type: videoType }],
         durationMs: recording.recordingDurationMs,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate video URL',
+        type: null,
+        sources: [],
         durationMs: recording.recordingDurationMs,
       };
+    }
+  }
+
+  /**
+   * Determine video MIME type from URL
+   */
+  private getVideoType(url: string): string {
+    // Cloudflare Stream uses HLS
+    if (url.includes('cloudflarestream.com') || url.includes('.m3u8')) {
+      return 'application/x-mpegURL';
+    }
+
+    // For R2/direct files, extract extension from path (before query params)
+    try {
+      const pathname = new URL(url).pathname;
+      const extension = pathname.split('.').pop()?.toLowerCase();
+
+      switch (extension) {
+        case 'webm':
+          return 'video/webm';
+        case 'mp4':
+          return 'video/mp4';
+        case 'ogg':
+          return 'video/ogg';
+        default:
+          return 'video/webm'; // default to webm since that's R2 format
+      }
+    } catch {
+      return 'video/webm'; // fallback to webm
     }
   }
 

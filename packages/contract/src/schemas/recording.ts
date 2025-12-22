@@ -80,11 +80,21 @@ export const RecordingsListDataSchema = z.object({
 });
 
 /**
+ * Video source with URL and MIME type
+ */
+export const VideoSourceSchema = z.object({
+  url: z.string(),
+  type: z.string(),
+});
+
+/**
  * Recording resource
  */
 export const RecordingResourceSchema = z.object({
   url: z.string().nullable(),
   message: z.string(),
+  type: z.string().nullable().optional(),
+  sources: z.array(VideoSourceSchema).optional(),
   size: z.number().int().nullable().optional(),
   durationMs: z.number().int().nullable().optional(),
 });
@@ -134,6 +144,7 @@ export const RecordingDetailMetaSchema = z.object({
  */
 export const RecordingDetailSchema = z.object({
   recordingId: z.string(),
+  recordingDurationMs: z.number().int(),
   meta: RecordingDetailMetaSchema,
 });
 

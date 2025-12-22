@@ -65,6 +65,7 @@ export interface RecordingItem {
  */
 export interface RecordingDetail {
   recordingId: string;
+  recordingDurationMs: number;
   meta: {
     link: {
       linkId: string;
@@ -96,10 +97,20 @@ export interface RecordingDetail {
 }
 
 /**
+ * Video source with URL and MIME type
+ */
+export interface VideoSource {
+  url: string;
+  type: string;
+}
+
+/**
  * Resource URL response
  */
 export interface ResourceResponse {
   url: string | null;
   message: string;
+  type?: string | null;
+  sources?: VideoSource[];
   durationMs?: number | null;
 }
