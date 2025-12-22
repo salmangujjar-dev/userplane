@@ -31,7 +31,7 @@ export type { RecordingMeta, RecordingSystemMetadata, RecordingCustomMetadata };
 export interface RecordingListRow {
   recordingId: string;
   recordingThumbnailRef: string | null;
-  recordingDurationMs: number | null;
+  recordingDurationMs: number;
   createdAt: Date;
   creatorId: string;
   creatorName: string;
@@ -52,7 +52,7 @@ export interface RecordingDetailRow {
   recordingConsoleLogRef: string | null;
   recordingNetworkLogsRef: string | null;
   recordingMeta: RecordingMeta | null;
-  recordingDurationMs: number | null;
+  recordingDurationMs: number;
   createdAt: Date;
   updatedAt: Date;
   // Creator info
