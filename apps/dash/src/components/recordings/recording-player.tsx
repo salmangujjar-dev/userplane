@@ -9,7 +9,24 @@ const StreamPlayer = dynamic(() => import('@/components/player'), {
   ssr: false,
 });
 
-export function RecordingPlayer() {
+interface VideoSource {
+  url: string;
+  type: string;
+}
+
+interface RecordingPlayerProps {
+  videoSources: VideoSource[];
+  thumbnailUrl: string | null;
+  durationMs: number;
+  markers?: VideoMarker[];
+}
+
+export function RecordingPlayer({
+  videoSources,
+  thumbnailUrl,
+  durationMs,
+  markers = [],
+}: RecordingPlayerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = React.useCallback(() => {
@@ -35,39 +52,35 @@ export function RecordingPlayer() {
     };
   }, [isFullscreen]);
 
-  // Sample video configuration - useMemo to prevent recreating on every render
-  // Replace with actual recording data from props or API
-  const videoOptions = React.useMemo(
-    () => ({
+  // Video configuration with actual recording data
+  const videoOptions = React.useMemo(() => {
+    if (!videoSources || videoSources.length === 0) {
+      return null;
+    }
+
+    return {
       controls: true,
       responsive: true,
       fluid: true,
-      sources: [
-        {
-          src: 'https://customer-9o3ovno0sscvd4n0.cloudflarestream.com/d9ec8ed1f01cfaa79099e83808db6540/manifest/video.m3u8',
-          type: 'application/x-mpegURL',
-        },
-      ],
-    }),
-    []
-  );
+      sources: videoSources.map((source) => ({
+        src: source.url,
+        type: source.type,
+      })),
+    };
+  }, [videoSources]);
 
-  // Sample markers for timeline annotations - useMemo to prevent recreating
-  // Replace with actual marker data from props or API
-  const markers: VideoMarker[] = React.useMemo(
-    () => [
-      { time: 5, label: 'Button Click', color: '#fbbf24' },
-      { time: 15, label: 'Form Submit', color: '#3b82f6' },
-      { time: 30, label: 'Page Navigation', color: '#10b981' },
-    ],
-    []
-  );
+  const poster = React.useMemo(() => thumbnailUrl ?? undefined, [thumbnailUrl]);
 
-  const poster = React.useMemo(
-    () =>
-      'https://customer-9o3ovno0sscvd4n0.cloudflarestream.com/d9ec8ed1f01cfaa79099e83808db6540/thumbnails/thumbnail.jpg?time=0s&height=600',
-    []
-  );
+  // Show loading or error state if no video URL
+  if (!videoOptions) {
+    return (
+      <div className="recording-player-container">
+        <div className="flex items-center justify-center h-[500px] bg-muted rounded-lg">
+          <p className="text-muted-foreground">Video not available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -84,6 +97,7 @@ export function RecordingPlayer() {
           options={videoOptions}
           markers={markers}
           poster={poster}
+          durationMs={durationMs}
           onFullscreen={toggleFullscreen}
         />
       </div>

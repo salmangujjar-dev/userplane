@@ -1,138 +1,147 @@
 'use client';
 
-export function InfoPanel() {
-  const systemMetadata = {
-    date: new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }),
-    time: new Date().toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    }),
-    browser: 'Chrome 120.0.6099.109',
-    os: 'macOS 14.2.1',
-    windowSize: '1920 × 1080',
-  };
+import { format } from 'date-fns';
 
-  const recordingLinkData = {
-    linkTitle: 'Customer Demo Recording',
-    link: 'https://userplane.com/r/a7b3k9m',
-    linkReference: 'https://github.com/userplane/dashboard/issues/42',
+interface InfoPanelProps {
+  recording: {
+    recordingId: string;
+    recordingDurationMs: number;
+    meta: {
+      link: {
+        linkId: string;
+        title: string | null;
+        providerType: string | null;
+      };
+      creator: {
+        workspaceMemberId: string;
+        name: string;
+      };
+      project: {
+        projectId: string | null;
+        title: string | null;
+      };
+      domain: {
+        domainId: string;
+        url: string;
+      };
+      workspaceId: string;
+      status: string;
+      recordingMeta: {
+        systemMetadata: {
+          date: string;
+          time: string;
+          browser: string;
+          os: string;
+          windowSize: {
+            width: number;
+            height: number;
+          };
+        };
+        customMetadata?: Record<string, unknown>;
+      } | null;
+      createdAt: Date | string;
+      updatedAt: Date | string;
+    };
   };
+}
 
-  const customMetadata = {
-    customerId: 'cust_4JhN8fK2pQx9',
-    isPaying: true,
-    isEnterprise: false,
-    plan: 'Pro',
-    region: 'US-EAST',
-    accountAge: '2 years',
-    lastLogin: '2 hours ago',
+export function InfoPanel({ recording }: InfoPanelProps) {
+  const { meta, recordingDurationMs } = recording;
+  const systemMeta = meta.recordingMeta?.systemMetadata;
+
+  const formatDuration = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
     <div className="h-full overflow-y-auto p-6 space-y-6">
-      <div>
-        <h3 className="text-sm font-semibold mb-4">System Metadata</h3>
-        <div className="space-y-3">
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Date</span>
-            <span className="font-mono">{systemMetadata.date}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Time</span>
-            <span className="font-mono">{systemMetadata.time}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Browser</span>
-            <span className="font-mono">{systemMetadata.browser}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">OS</span>
-            <span className="font-mono">{systemMetadata.os}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Window Size</span>
-            <span className="font-mono">{systemMetadata.windowSize}</span>
+      {/* System Metadata */}
+      {systemMeta && (
+        <div>
+          <h3 className="text-sm font-semibold mb-4">System Metadata</h3>
+          <div className="space-y-3">
+            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+              <span className="text-muted-foreground">Date</span>
+              <span className="font-mono">{systemMeta.date}</span>
+            </div>
+            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+              <span className="text-muted-foreground">Time</span>
+              <span className="font-mono">{systemMeta.time}</span>
+            </div>
+            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+              <span className="text-muted-foreground">Browser</span>
+              <span className="font-mono">{systemMeta.browser}</span>
+            </div>
+            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+              <span className="text-muted-foreground">OS</span>
+              <span className="font-mono">{systemMeta.os}</span>
+            </div>
+            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+              <span className="text-muted-foreground">Window Size</span>
+              <span className="font-mono">
+                {systemMeta.windowSize.width} × {systemMeta.windowSize.height}
+              </span>
+            </div>
+            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+              <span className="text-muted-foreground">Duration</span>
+              <span className="font-mono">{formatDuration(recordingDurationMs)}</span>
+            </div>
+            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+              <span className="text-muted-foreground">Status</span>
+              <span className="font-mono">{meta.status}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
+      {/* Custom Metadata */}
+      {meta.recordingMeta?.customMetadata &&
+        Object.keys(meta.recordingMeta.customMetadata).length > 0 && (
+          <div className="border-t pt-6">
+            <h3 className="text-sm font-semibold mb-4">Custom Metadata</h3>
+            <div className="space-y-3">
+              {Object.entries(meta.recordingMeta.customMetadata).map(([key, value]) => (
+                <div key={key} className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+                  <span className="text-muted-foreground">{key}</span>
+                  <span className="font-mono">
+                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      {/* Link Metadata */}
       <div className="border-t pt-6">
         <h3 className="text-sm font-semibold mb-4">Link Metadata</h3>
         <div className="space-y-3">
           <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
             <span className="text-muted-foreground">Link Title</span>
-            <span className="font-mono">{recordingLinkData.linkTitle}</span>
+            <span className="font-mono">{meta.link.title || 'Untitled'}</span>
           </div>
           <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Link Reference</span>
-            <a
-              href={recordingLinkData.linkReference}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-foreground hover:underline truncate block"
-            >
-              {recordingLinkData.linkReference}
-            </a>
+            <span className="text-muted-foreground">Requested By</span>
+            <span className="font-mono">{meta.creator.name}</span>
           </div>
           <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Recording Link</span>
-            <a
-              href={recordingLinkData.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-foreground hover:underline truncate block"
-            >
-              {recordingLinkData.link}
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t pt-6">
-        <h3 className="text-sm font-semibold mb-4">Custom Metadata</h3>
-        <div className="space-y-3">
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Customer ID</span>
-            <span className="font-mono">{customMetadata.customerId}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Is Paying</span>
-            <span className="flex items-center gap-2">
-              <span
-                className={`inline-block w-2 h-2 rounded-full ${customMetadata.isPaying ? 'bg-green-500' : 'bg-red-500'}`}
-              />
-              <span className="font-mono">{customMetadata.isPaying ? 'Yes' : 'No'}</span>
+            <span className="text-muted-foreground">Requested At</span>
+            <span className="font-mono">
+              {format(new Date(meta.createdAt), 'MMM dd, yyyy HH:mm:ss')}
             </span>
           </div>
+          {meta.project.title && (
+            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+              <span className="text-muted-foreground">Project Title</span>
+              <span className="font-mono">{meta.project.title}</span>
+            </div>
+          )}
           <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Is Enterprise</span>
-            <span className="flex items-center gap-2">
-              <span
-                className={`inline-block w-2 h-2 rounded-full ${customMetadata.isEnterprise ? 'bg-green-500' : 'bg-red-500'}`}
-              />
-              <span className="font-mono">{customMetadata.isEnterprise ? 'Yes' : 'No'}</span>
-            </span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Plan</span>
-            <span className="font-mono">{customMetadata.plan}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Region</span>
-            <span className="font-mono">{customMetadata.region}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Account Age</span>
-            <span className="font-mono">{customMetadata.accountAge}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Last Login</span>
-            <span className="font-mono">{customMetadata.lastLogin}</span>
+            <span className="text-muted-foreground">Domain URL</span>
+            <span className="font-mono truncate">{meta.domain.url}</span>
           </div>
         </div>
       </div>
