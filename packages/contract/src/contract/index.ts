@@ -151,6 +151,7 @@ export const recordingContract = {
     thumbnail: recording.getRecordingThumbnail,
     consoleLog: recording.getRecordingConsoleLog,
     networkLog: recording.getRecordingNetworkLog,
+    action: recording.getRecordingAction,
   },
 };
 

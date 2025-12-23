@@ -13,4 +13,5 @@ export * from './provisioner';
 export * from './recording';
 export * from './session';
 export * from './status';
+export * from './token';
 export * from './workspace';

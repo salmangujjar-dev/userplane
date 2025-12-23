@@ -127,3 +127,19 @@ export const getRecordingNetworkLog = oc
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/recordings/{recordingId}/action
+ * Get recording client action presigned URL
+ */
+export const getRecordingAction = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/recordings/{recordingId}/action',
+    inputStructure: 'detailed',
+    summary: 'Get recording client action',
+    description: 'Retrieve presigned URL for recording client action log',
+    tags: ['Recordings'],
+  })
+  .input(RecordingByIdSchema)
+  .output(ApiResponseSchema(RecordingResourceDataSchema));

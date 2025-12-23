@@ -96,6 +96,11 @@ export const ALLOWED_CONSOLE_LOG_TYPES = ['application/x-ndjson', 'application/n
 export const ALLOWED_NETWORK_LOG_TYPES = ['application/json'] as const;
 
 /**
+ * Allowed MIME types for client action files
+ */
+export const ALLOWED_ACTION_TYPES = ['application/json'] as const;
+
+/**
  * Base container formats for flexible video validation
  */
 export const ALLOWED_VIDEO_CONTAINERS = [
@@ -116,5 +121,6 @@ export const SESSION_CONSTANTS = {
   ALLOWED_THUMBNAIL_TYPES,
   ALLOWED_CONSOLE_LOG_TYPES,
   ALLOWED_NETWORK_LOG_TYPES,
+  ALLOWED_ACTION_TYPES,
   ALLOWED_VIDEO_CONTAINERS,
 } as const;
