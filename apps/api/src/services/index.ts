@@ -15,6 +15,7 @@ import {
   getVideoStorage,
   getConsoleLogsStorage,
   getNetworkLogsStorage,
+  getClientActionsStorage,
 } from '@/api/clients/storage';
 
 import { tokenService } from '@/api/services/token.service';
@@ -68,6 +69,7 @@ export const recordingService = new RecordingService({
   videoStorage: getVideoStorage(),
   consoleLogsStorage: getConsoleLogsStorage(),
   networkLogsStorage: getNetworkLogsStorage(),
+  clientActionsStorage: getClientActionsStorage(),
 });
 
 // Level 2: Services that depend on level 1
@@ -128,5 +130,6 @@ export const sessionService = new SessionService({
   thumbnailsStorage: getThumbnailsStorage(),
   consoleLogsStorage: getConsoleLogsStorage(),
   networkLogsStorage: getNetworkLogsStorage(),
+  clientActionsStorage: getClientActionsStorage(),
   linkService,
 });

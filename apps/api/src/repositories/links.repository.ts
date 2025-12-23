@@ -45,6 +45,7 @@ export interface LinkListRow {
   domainStatus: Domain['domainStatus'];
   recordingHideSensitive: boolean;
   recordingCaptureClientLog: boolean;
+  recordingCaptureClientAction: boolean;
   recordingCaptureServerLog: boolean;
   recordingCaptureNetworkLog: boolean;
 }
@@ -92,6 +93,7 @@ export interface LinkWithWorkspacePrefsRow {
   recordingCustomizeLink: boolean;
   recordingHideSensitive: boolean;
   recordingCaptureClientLog: boolean;
+  recordingCaptureClientAction: boolean;
   recordingCaptureServerLog: boolean;
   recordingCaptureNetworkLog: boolean;
   recordingCompanyName: string | null;
@@ -219,6 +221,7 @@ export class LinkRepository {
         domainStatus: domains.domainStatus,
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureClientAction: domains.recordingCaptureClientAction,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
         recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
       })
@@ -285,6 +288,7 @@ export class LinkRepository {
         domainStatus: domains.domainStatus,
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureClientAction: domains.recordingCaptureClientAction,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
         recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
       })
@@ -394,6 +398,7 @@ export class LinkRepository {
         recordingCustomizeLink: workspaces.recordingCustomizeLink,
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureClientAction: domains.recordingCaptureClientAction,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
         recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
         recordingCompanyName: workspaces.recordingCompanyName,
@@ -492,6 +497,7 @@ export class LinkRepository {
         domainStatus: domains.domainStatus,
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureClientAction: domains.recordingCaptureClientAction,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
         recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
         rank: sql<number>`ts_rank(to_tsvector('simple', COALESCE(${links.linkTitle}, '')), to_tsquery('simple', ${tsquery}))`,

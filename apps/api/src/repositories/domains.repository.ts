@@ -229,6 +229,7 @@ export class DomainRepository {
     data: Partial<{
       recordingHideSensitive: boolean;
       recordingCaptureClientLog: boolean;
+      recordingCaptureClientAction: boolean;
       recordingCaptureServerLog: boolean;
       recordingCaptureNetworkLog: boolean;
     }>,
@@ -246,6 +247,10 @@ export class DomainRepository {
 
     if (data.recordingCaptureClientLog !== undefined) {
       updateData.recordingCaptureClientLog = data.recordingCaptureClientLog;
+    }
+
+    if (data.recordingCaptureClientAction !== undefined) {
+      updateData.recordingCaptureClientAction = data.recordingCaptureClientAction;
     }
 
     if (data.recordingCaptureServerLog !== undefined) {
@@ -274,6 +279,7 @@ export class DomainRepository {
       .select({
         recordingHideSensitive: domains.recordingHideSensitive,
         recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureClientAction: domains.recordingCaptureClientAction,
         recordingCaptureServerLog: domains.recordingCaptureServerLog,
         recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
       })

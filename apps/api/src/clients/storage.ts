@@ -8,6 +8,7 @@ import {
   type StorageConfig,
   type ConsoleLogsStorageClient,
   type NetworkLogsStorageClient,
+  type ClientActionsStorageClient,
   type VideoStorageClient,
   type ScreenshotsStorageClient,
   type ThumbnailsStorageClient,
@@ -18,6 +19,7 @@ import { env } from '@/api/env';
 // Singleton instances
 let consoleLogsClient: ConsoleLogsStorageClient | null = null;
 let networkLogsClient: NetworkLogsStorageClient | null = null;
+let clientActionsClient: ClientActionsStorageClient | null = null;
 let videoClient: VideoStorageClient | null = null;
 let screenshotsClient: ScreenshotsStorageClient | null = null;
 let thumbnailsClient: ThumbnailsStorageClient | null = null;
@@ -45,6 +47,13 @@ export function getNetworkLogsStorage(): NetworkLogsStorageClient {
     networkLogsClient = getStorage({ kind: 'networkLogs', config: getConfig() });
   }
   return networkLogsClient;
+}
+
+export function getClientActionsStorage(): ClientActionsStorageClient {
+  if (!clientActionsClient) {
+    clientActionsClient = getStorage({ kind: 'clientActions', config: getConfig() });
+  }
+  return clientActionsClient;
 }
 
 export function getVideoStorage(): VideoStorageClient {
@@ -89,6 +98,7 @@ export function getAssetsStorage(): AssetsStorageClient {
 export function resetStorage(): void {
   consoleLogsClient = null;
   networkLogsClient = null;
+  clientActionsClient = null;
   videoClient = null;
   screenshotsClient = null;
   thumbnailsClient = null;

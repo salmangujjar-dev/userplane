@@ -9,7 +9,6 @@ import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { DomainService } from '@/api/services/domain.service';
 import { deriveWorkspaceNameFromUser } from '@/api/lib/workspace';
-import type { ProvisionWorkspaceParams, ProvisionWorkspaceResult } from '@/api/types';
 
 export interface ProvisionerServiceDeps {
   workspaceService: WorkspaceService;
@@ -27,7 +26,11 @@ export class ProvisionerService {
    * Orchestrates workspace, project, member, and domain creation
    * Accepts any valid URL format
    */
-  async createWorkspace(params: ProvisionWorkspaceParams): Promise<ProvisionWorkspaceResult> {
+  async createWorkspace(params: {
+    url: string;
+    userId: string;
+    userName?: string;
+  }): Promise<{ workspaceId: string }> {
     const { url, userId, userName } = params;
 
     // Derive workspace name from user's name

@@ -88,6 +88,7 @@ export class LinkService {
     domainStatus?: string,
     recordingHideSensitive?: boolean,
     recordingCaptureClientLog?: boolean,
+    recordingCaptureClientAction?: boolean,
     recordingCaptureServerLog?: boolean,
     recordingCaptureNetworkLog?: boolean
   ): string {
@@ -107,6 +108,7 @@ export class LinkService {
     const needsCustomDomain =
       recordingHideSensitive ||
       recordingCaptureClientLog ||
+      recordingCaptureClientAction ||
       recordingCaptureServerLog ||
       recordingCaptureNetworkLog;
     const baseUrl =
@@ -302,6 +304,7 @@ export class LinkService {
         row.domainStatus,
         row.recordingHideSensitive,
         row.recordingCaptureClientLog,
+        row.recordingCaptureClientAction,
         row.recordingCaptureServerLog,
         row.recordingCaptureNetworkLog
       ),
@@ -384,6 +387,7 @@ export class LinkService {
       domainStatus: domain?.domainStatus || ('pending' as const),
       recordingHideSensitive: domain?.recordingHideSensitive || false,
       recordingCaptureClientLog: domain?.recordingCaptureClientLog || false,
+      recordingCaptureClientAction: domain?.recordingCaptureClientAction || false,
       recordingCaptureServerLog: domain?.recordingCaptureServerLog || false,
       recordingCaptureNetworkLog: domain?.recordingCaptureNetworkLog || false,
     };
@@ -425,6 +429,7 @@ export class LinkService {
         linkWithDetails.domainStatus,
         linkWithDetails.recordingHideSensitive,
         linkWithDetails.recordingCaptureClientLog,
+        linkWithDetails.recordingCaptureClientAction,
         linkWithDetails.recordingCaptureServerLog,
         linkWithDetails.recordingCaptureNetworkLog
       ),

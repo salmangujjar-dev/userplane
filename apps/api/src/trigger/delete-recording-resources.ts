@@ -6,6 +6,7 @@ import {
   getThumbnailsStorage,
   getConsoleLogsStorage,
   getNetworkLogsStorage,
+  getClientActionsStorage,
 } from '@/api/clients/storage';
 import { TASK_IDS, MAX_DURATIONS } from './constants';
 
@@ -50,6 +51,7 @@ export const deleteRecordingResources = task({
     const thumbnailsStorage = getThumbnailsStorage();
     const consoleLogsStorage = getConsoleLogsStorage();
     const networkLogsStorage = getNetworkLogsStorage();
+    const clientActionsStorage = getClientActionsStorage();
 
     // 1. Short-circuit check
     const recording = await recordingRepo.findByIdWithStatusGroup(recordingId, 'AVAILABLE');
@@ -100,6 +102,16 @@ export const deleteRecordingResources = task({
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         errors.push(`network_log: ${message}`);
+      }
+    }
+
+    if (recording.recordingActionRef) {
+      try {
+        await clientActionsStorage.delete(recording.recordingActionRef);
+        filesDeleted.push('action');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        errors.push(`action: ${message}`);
       }
     }
 

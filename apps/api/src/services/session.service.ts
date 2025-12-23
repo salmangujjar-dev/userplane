@@ -41,6 +41,7 @@ import type {
   ThumbnailsStorageClient,
   ConsoleLogsStorageClient,
   NetworkLogsStorageClient,
+  ClientActionsStorageClient,
 } from '@workspace/storage';
 import { tasks } from '@trigger.dev/sdk/v3';
 import { TASK_IDS } from '@/api/trigger/constants';
@@ -56,6 +57,7 @@ export interface SessionServiceDeps {
   thumbnailsStorage: ThumbnailsStorageClient;
   consoleLogsStorage: ConsoleLogsStorageClient;
   networkLogsStorage: NetworkLogsStorageClient;
+  clientActionsStorage: ClientActionsStorageClient;
   linkService: LinkService;
 }
 
@@ -273,6 +275,7 @@ export class SessionService {
       recordingThumbnailRef: filePaths.thumbnailPath,
       recordingConsoleLogRef: filePaths.consoleLogPath,
       recordingNetworkLogsRef: filePaths.networkLogPath,
+      recordingActionRef: filePaths.actionPath,
       recordingMeta: {
         version: 1,
         systemMetadata: metadata.systemMetadata,
@@ -399,6 +402,7 @@ export class SessionService {
       rcl: linkData.recordingCustomizeLink,
       rhs: linkData.recordingHideSensitive,
       rccl: linkData.recordingCaptureClientLog,
+      rcca: linkData.recordingCaptureClientAction,
       rcsl: linkData.recordingCaptureServerLog,
       rcnl: linkData.recordingCaptureNetworkLog,
       rcn: linkData.recordingCompanyName,
@@ -488,7 +492,10 @@ export class SessionService {
     for (const file of files) {
       // Skip validation for optional files with size <= 0 (they won't be uploaded)
       if (
-        (file.type === 'console_log' || file.type === 'network_log' || file.type === 'thumbnail') &&
+        (file.type === 'console_log' ||
+          file.type === 'network_log' ||
+          file.type === 'action' ||
+          file.type === 'thumbnail') &&
         file.size <= 0
       ) {
         excludedFiles.push({
@@ -511,6 +518,14 @@ export class SessionService {
         excludedFiles.push({
           type: 'network_log',
           reason: 'Network log capture is not enabled for this workspace',
+        });
+        continue;
+      }
+
+      if (file.type === 'action' && file.size > 0 && !prefs.rcca) {
+        excludedFiles.push({
+          type: 'action',
+          reason: 'Client action capture is not enabled for this workspace',
         });
         continue;
       }
@@ -591,6 +606,12 @@ export class SessionService {
           expiresIn,
         });
 
+      case 'action':
+        return this.deps.clientActionsStorage.getUploadUrl(recordingId, {
+          contentLength: file.size,
+          expiresIn,
+        });
+
       default:
         throw new ValidationError("Format's not supported, try recording again");
     }
@@ -604,12 +625,14 @@ export class SessionService {
     thumbnailPath: string | null;
     consoleLogPath: string | null;
     networkLogPath: string | null;
+    actionPath: string | null;
   } {
     return {
       videoPath: uploads.find((f) => f.type === 'video')?.path ?? null,
       thumbnailPath: uploads.find((f) => f.type === 'thumbnail')?.path ?? null,
       consoleLogPath: uploads.find((f) => f.type === 'console_log')?.path ?? null,
       networkLogPath: uploads.find((f) => f.type === 'network_log')?.path ?? null,
+      actionPath: uploads.find((f) => f.type === 'action')?.path ?? null,
     };
   }
 
@@ -628,6 +651,7 @@ export class SessionService {
       recordingThumbnailRef: string | null;
       recordingConsoleLogRef: string | null;
       recordingNetworkLogsRef: string | null;
+      recordingActionRef: string | null;
     },
     mode: 'complete' | 'minimal' | 'none'
   ): Promise<void> {
@@ -678,6 +702,16 @@ export class SessionService {
         );
         if (!networkLogExists) {
           errors.push('Network log file not found in storage');
+        }
+      }
+
+      // Client action - if requested, must exist
+      if (recording.recordingActionRef) {
+        const actionExists = await this.deps.clientActionsStorage.head(
+          recording.recordingActionRef
+        );
+        if (!actionExists) {
+          errors.push('Client action file not found in storage');
         }
       }
     }

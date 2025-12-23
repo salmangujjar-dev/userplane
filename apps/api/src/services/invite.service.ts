@@ -10,13 +10,19 @@ import { UserService } from '@/api/services/user.service';
 import { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
 import { NotFoundError, ConflictError } from '@/api/lib/errors';
-import type {
-  SendInvitesParams,
-  SendInvitesResult,
-  AcceptInviteParams,
-  AcceptInviteResult,
-  InviteActionResult,
-} from '@/api/types';
+
+/**
+ * Internal invite action result type for service orchestration
+ * Used to handle different invite validation/acceptance states
+ */
+export interface InviteActionResult {
+  status: 'valid' | 'accepted' | 'invalid' | 'expired' | 'already_member';
+  workspaceId?: string;
+  workspaceName?: string;
+  inviterName?: string;
+  inviterEmail?: string;
+  message?: string;
+}
 
 export interface InviteServiceDeps {
   workspaceMemberService: WorkspaceMemberService;
@@ -75,7 +81,11 @@ export class InviteService {
    * Send workspace invitations to multiple emails
    * Returns list of sent and failed invitations
    */
-  async sendInvites(params: SendInvitesParams): Promise<SendInvitesResult> {
+  async sendInvites(params: {
+    workspaceId: string;
+    emails: string[];
+    invitedBy: string;
+  }): Promise<{ sentEmails: string[]; failedEmails: Array<{ email: string; reason: string }> }> {
     const { workspaceId, emails, invitedBy } = params;
 
     const workspace = await this.deps.workspaceService.getById(workspaceId);
@@ -163,7 +173,10 @@ export class InviteService {
    * Accept workspace invitation
    * Verifies token and adds user as member
    */
-  async acceptInvite(params: AcceptInviteParams): Promise<AcceptInviteResult> {
+  async acceptInvite(params: {
+    inviteToken: string;
+    userId: string;
+  }): Promise<{ workspace: { workspaceName: string; workspaceId: string } }> {
     const { inviteToken, userId } = params;
 
     const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);

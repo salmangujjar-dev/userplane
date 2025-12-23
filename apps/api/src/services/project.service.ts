@@ -6,7 +6,7 @@
 import { generateProjectId } from '@/api/lib/id';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
-import type { Transaction, CreateProjectParams } from '@/api/types';
+import type { Transaction } from '@/api/types';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { LinkRepository } from '@/api/repositories/links.repository';
 import type { DbClient } from '@workspace/db';
@@ -26,7 +26,10 @@ export class ProjectService {
    * If isDefault not specified, auto-determines based on whether workspace has existing projects
    * If isDefault is true, unsets any current default project
    */
-  async createProject(params: CreateProjectParams, options?: { tx?: Transaction }) {
+  async createProject(
+    params: { workspaceId: string; projectTitle: string | null; isDefault?: boolean },
+    options?: { tx?: Transaction }
+  ) {
     if (!params.workspaceId) {
       throw new ValidationError('Workspace ID is required');
     }
@@ -156,7 +159,7 @@ export class ProjectService {
    */
   async updateProject(
     projectId: string,
-    updates: Partial<Pick<CreateProjectParams, 'projectTitle'>>,
+    updates: Partial<{ projectTitle: string | null }>,
     options?: { tx?: Transaction }
   ) {
     const project = await this.getById(projectId);
