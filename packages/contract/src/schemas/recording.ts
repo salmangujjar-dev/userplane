@@ -106,6 +106,10 @@ export const LinkRefSchema = z.object({
   linkId: z.string(),
   title: z.string().nullable(),
   providerType: z.string().nullable(),
+  providerId: z.string().nullable(),
+  providerRef: z.string().nullable(),
+  providerData: z.unknown(),
+  createdAt: z.date(),
 });
 
 /**

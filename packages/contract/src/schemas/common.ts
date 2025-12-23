@@ -77,10 +77,17 @@ export type UploadStatus = (typeof UPLOAD_STATUS_VALUES)[number];
 
 /**
  * File type values for recording uploads
- * Maps to recording table columns: video, thumbnail, console_log, network_log
+ * Maps to recording table columns: video, thumbnail, console_log, network_log, action
  */
-export const FILE_TYPE_VALUES = ['video', 'thumbnail', 'console_log', 'network_log'] as const;
+export const FILE_TYPE_VALUES = [
+  'video',
+  'thumbnail',
+  'console_log',
+  'network_log',
+  'action',
+] as const;
 export type FileType = (typeof FILE_TYPE_VALUES)[number];
+export type UploadFileType = FileType;
 
 /**
  * Pagination metadata
