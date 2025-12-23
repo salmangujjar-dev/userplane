@@ -5,6 +5,7 @@
 
 import { ConsoleLogsStorageClient } from './clients/logs';
 import { NetworkLogsStorageClient } from './clients/network-logs';
+import { ClientActionsStorageClient } from './clients/client-actions';
 import { VideoStorageClient } from './clients/recordings';
 import { ScreenshotsStorageClient } from './clients/screenshots';
 import { ThumbnailsStorageClient } from './clients/thumbnails';
@@ -23,6 +24,11 @@ import type { GetStorageOptions, StorageClientMap, StorageKind } from './types';
  * // Network logs client
  * const networkLogs = getStorage({ kind: 'networkLogs', config });
  * await networkLogs.getUploadUrl(sessionId, { contentLength: 1024 });
+ *
+ * @example
+ * // Client actions client
+ * const clientActions = getStorage({ kind: 'clientActions', config });
+ * await clientActions.getUploadUrl(sessionId, { contentLength: 1024 });
  *
  * @example
  * // Video client
@@ -50,6 +56,9 @@ export function getStorage<K extends StorageKind>(
 
     case 'networkLogs':
       return new NetworkLogsStorageClient(config) as StorageClientMap[K];
+
+    case 'clientActions':
+      return new ClientActionsStorageClient(config) as StorageClientMap[K];
 
     case 'video':
       return new VideoStorageClient(config) as StorageClientMap[K];
