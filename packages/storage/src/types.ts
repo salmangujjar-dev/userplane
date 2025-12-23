@@ -5,6 +5,7 @@ export type BucketType = 'cdn' | 'assets' | 'reports';
 export type StorageKind =
   | 'consoleLogs'
   | 'networkLogs'
+  | 'clientActions'
   | 'video'
   | 'screenshots'
   | 'thumbnails'
@@ -58,6 +59,7 @@ interface BaseStorageOptions {
 export type GetStorageOptions =
   | (BaseStorageOptions & { kind: 'consoleLogs' })
   | (BaseStorageOptions & { kind: 'networkLogs' })
+  | (BaseStorageOptions & { kind: 'clientActions' })
   | (BaseStorageOptions & { kind: 'video' })
   | (BaseStorageOptions & { kind: 'screenshots' })
   | (BaseStorageOptions & { kind: 'thumbnails'; domain?: string })
@@ -67,6 +69,7 @@ export type GetStorageOptions =
 export interface StorageClientMap {
   consoleLogs: import('./clients/logs').ConsoleLogsStorageClient;
   networkLogs: import('./clients/network-logs').NetworkLogsStorageClient;
+  clientActions: import('./clients/client-actions').ClientActionsStorageClient;
   video: import('./clients/recordings').VideoStorageClient;
   screenshots: import('./clients/screenshots').ScreenshotsStorageClient;
   thumbnails: import('./clients/thumbnails').ThumbnailsStorageClient;

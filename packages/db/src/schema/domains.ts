@@ -22,6 +22,9 @@ export const domains = pgTable(
     // Recording toggles
     recordingHideSensitive: boolean('recording_hide_sensitive').default(false).notNull(),
     recordingCaptureClientLog: boolean('recording_capture_client_log').default(false).notNull(),
+    recordingCaptureClientAction: boolean('recording_capture_client_action')
+      .default(false)
+      .notNull(),
     recordingCaptureServerLog: boolean('recording_capture_server_log').default(false).notNull(),
     recordingCaptureNetworkLog: boolean('recording_capture_network_log').default(false).notNull(),
 
