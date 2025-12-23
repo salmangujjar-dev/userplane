@@ -49,6 +49,7 @@ export const recordings = pgTable(
     recordingThumbnailRef: text('recording_thumbnail_ref'),
     recordingConsoleLogRef: text('recording_console_log_ref'),
     recordingNetworkLogsRef: text('recording_network_logs_ref'),
+    recordingActionRef: text('recording_action_ref'),
 
     // Recording metadata
     recordingMeta: jsonb('recording_meta'),
