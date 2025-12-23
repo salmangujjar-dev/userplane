@@ -3,8 +3,6 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@workspace/ui/components/button';
-import { Switch } from '@workspace/ui/components/switch';
-import { Label } from '@workspace/ui/components/label';
 import {
   Collapsible,
   CollapsibleContent,
@@ -25,19 +23,10 @@ import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 import { formatDistanceToNow } from 'date-fns';
 import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
 import {
-  useUpdateNotifications,
   useRotateInvite,
   useDeleteWorkspace,
   useLeaveWorkspace,
 } from '@/queries/use-workspace-mutations';
-
-interface WorkspaceNotifications {
-  notifyOnLinkUsage: boolean;
-  notifyOnQuotaReset: boolean;
-  notifyOnQuotaLimit: boolean;
-  notifyOnMemberJoin: boolean;
-  notifyOnInviteAccepted: boolean;
-}
 
 interface Workspace {
   workspaceId: string;
@@ -45,7 +34,6 @@ interface Workspace {
   createdAt: string | Date;
   updatedAt: string | Date;
   isCurrent: boolean;
-  notifications: WorkspaceNotifications;
   role: 'owner' | 'admin' | 'member';
 }
 
@@ -77,13 +65,6 @@ export function WorkspaceSection() {
       createdAt: ws.createdAt,
       updatedAt: ws.updatedAt,
       isCurrent: ws.workspaceId === currentWorkspaceId,
-      notifications: {
-        notifyOnLinkUsage: ws.notificationPreferences?.notifyOnLinkUsage ?? false,
-        notifyOnQuotaReset: ws.notificationPreferences?.notifyOnQuotaReset ?? false,
-        notifyOnQuotaLimit: ws.notificationPreferences?.notifyOnQuotaLimit ?? false,
-        notifyOnMemberJoin: ws.notificationPreferences?.notifyOnMemberJoin ?? false,
-        notifyOnInviteAccepted: ws.notificationPreferences?.notifyOnInviteAccepted ?? false,
-      },
       role: ws.workspaceMembership?.workspaceRole ?? 'member',
     }));
   }, [workspacesData, currentWorkspaceId]);
@@ -92,7 +73,6 @@ export function WorkspaceSection() {
     ? Math.ceil(workspacesData.total / ITEMS_PER_PAGE)
     : 1;
 
-  const updateNotificationsMutation = useUpdateNotifications();
   const rotateInviteMutation = useRotateInvite();
   const deleteWorkspaceMutation = useDeleteWorkspace(
     currentWorkspaceId,
@@ -114,17 +94,6 @@ export function WorkspaceSection() {
 
   const handleCreateWorkspace = () => {
     router.push('/workspace/create');
-  };
-
-  const handleNotificationToggle = (
-    workspaceId: string,
-    key: keyof WorkspaceNotifications,
-    value: boolean
-  ) => {
-    updateNotificationsMutation.mutate({
-      workspaceId,
-      notifications: { [key]: value },
-    });
   };
 
   const handleResetInviteToken = (workspaceId: string) => {
@@ -317,117 +286,6 @@ export function WorkspaceSection() {
                           </Button>
                         </div>
                       )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="text-sm font-medium">Notification Settings</div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label
-                          htmlFor={`recording-links-${workspace.workspaceId}`}
-                          className="text-sm font-normal cursor-pointer flex-1"
-                        >
-                          When recording links gets used
-                        </Label>
-                        <Switch
-                          id={`recording-links-${workspace.workspaceId}`}
-                          checked={workspace.notifications.notifyOnLinkUsage}
-                          onCheckedChange={(checked) =>
-                            handleNotificationToggle(
-                              workspace.workspaceId,
-                              'notifyOnLinkUsage',
-                              checked
-                            )
-                          }
-                          disabled={updateNotificationsMutation.isPending}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label
-                          htmlFor={`quota-reset-${workspace.workspaceId}`}
-                          className="text-sm font-normal cursor-pointer flex-1"
-                        >
-                          When workspace quota is reset
-                        </Label>
-                        <Switch
-                          id={`quota-reset-${workspace.workspaceId}`}
-                          checked={workspace.notifications.notifyOnQuotaReset}
-                          onCheckedChange={(checked) =>
-                            handleNotificationToggle(
-                              workspace.workspaceId,
-                              'notifyOnQuotaReset',
-                              checked
-                            )
-                          }
-                          disabled={updateNotificationsMutation.isPending}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label
-                          htmlFor={`quota-reached-${workspace.workspaceId}`}
-                          className="text-sm font-normal cursor-pointer flex-1"
-                        >
-                          When workspace quota is reached
-                        </Label>
-                        <Switch
-                          id={`quota-reached-${workspace.workspaceId}`}
-                          checked={workspace.notifications.notifyOnQuotaLimit}
-                          onCheckedChange={(checked) =>
-                            handleNotificationToggle(
-                              workspace.workspaceId,
-                              'notifyOnQuotaLimit',
-                              checked
-                            )
-                          }
-                          disabled={updateNotificationsMutation.isPending}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label
-                          htmlFor={`someone-joins-${workspace.workspaceId}`}
-                          className="text-sm font-normal cursor-pointer flex-1"
-                        >
-                          When someone joins my workspace
-                        </Label>
-                        <Switch
-                          id={`someone-joins-${workspace.workspaceId}`}
-                          checked={workspace.notifications.notifyOnMemberJoin}
-                          onCheckedChange={(checked) =>
-                            handleNotificationToggle(
-                              workspace.workspaceId,
-                              'notifyOnMemberJoin',
-                              checked
-                            )
-                          }
-                          disabled={updateNotificationsMutation.isPending}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label
-                          htmlFor={`invite-accepted-${workspace.workspaceId}`}
-                          className="text-sm font-normal cursor-pointer flex-1"
-                        >
-                          When someone accepts my invite
-                        </Label>
-                        <Switch
-                          id={`invite-accepted-${workspace.workspaceId}`}
-                          checked={workspace.notifications.notifyOnInviteAccepted}
-                          onCheckedChange={(checked) =>
-                            handleNotificationToggle(
-                              workspace.workspaceId,
-                              'notifyOnInviteAccepted',
-                              checked
-                            )
-                          }
-                          disabled={updateNotificationsMutation.isPending}
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>

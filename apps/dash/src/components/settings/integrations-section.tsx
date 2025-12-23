@@ -7,7 +7,7 @@ import { ChevronRight } from 'lucide-react';
 import { IntegrationPreConnectModal } from '@/components/modals/integration-pre-connect-modal';
 import { IntegrationPostConnectModal } from '@/components/modals/integration-post-connect-modal';
 
-export function IntegrationSection() {
+export function IntegrationsSection() {
   const [isConnected, setIsConnected] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -17,8 +17,8 @@ export function IntegrationSection() {
 
   return (
     <div>
-      <div className="space-y-2 mb-4">
-        <h3 className="text-sm font-medium">Integrations</h3>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">Integrations</h2>
         <p className="text-sm text-muted-foreground">
           Connect third-party services to your workspace
         </p>

@@ -11,7 +11,7 @@ import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateToggle, useUpdateAppearance } from '@/queries/use-appearance-mutations';
 
-export function AppearanceSection() {
+export function RecordingLinkSection() {
   const workspaceId = useWorkspaceId();
   const { data: preferences, isLoading } = useWorkspacePreferences();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,7 +99,7 @@ export function AppearanceSection() {
     return (
       <div>
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">Appearance</h2>
+          <h2 className="text-lg font-semibold">Recording Link</h2>
           <p className="text-sm text-muted-foreground">Customize your recording link appearance</p>
         </div>
         <div className="w-full max-w-2xl space-y-4">
@@ -116,7 +116,7 @@ export function AppearanceSection() {
       <div className="w-full max-w-2xl space-y-6">
         <div className="space-y-2">
           <div className="mb-4">
-            <h2 className="text-lg font-semibold">Appearance</h2>
+            <h2 className="text-lg font-semibold">Recording Link</h2>
             <p className="text-sm text-muted-foreground">
               Customize your recording link appearance
             </p>
