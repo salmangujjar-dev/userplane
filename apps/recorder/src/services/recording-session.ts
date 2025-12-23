@@ -31,7 +31,7 @@ export interface UploadState {
   recordingId: string;
   uploadToken: string;
   presignedUrls: Array<{
-    type: 'video' | 'thumbnail' | 'console_log' | 'network_log';
+    type: 'video' | 'thumbnail' | 'console_log' | 'network_log' | 'action';
     url: string;
   }>;
   videoFile: File;
@@ -85,8 +85,9 @@ export class RecordingSession {
     console.log('[Session] Raw preferences from token:', payload.prefs);
 
     this.preferences = toRecordingPreferences(payload.prefs);
-    this.maxRecordingDurationMs = this.preferences.maxDurationMs;
-    this.requesterName = this.preferences.requestedBy;
+    this.maxRecordingDurationMs =
+      this.preferences?.maxDurationMs ?? DEFAULT_MAX_RECORDING_DURATION_MS;
+    this.requesterName = this.preferences?.requestedBy ?? null;
 
     const linkPayload = decodeJwtPayload<{ rms?: number }>(linkToken);
     console.log('[Session] Link token payload:', linkPayload);
@@ -131,7 +132,7 @@ export class RecordingSession {
     console.log('[Upload:Init] System metadata:', systemMetadata);
 
     const files: Array<{
-      type: 'video' | 'thumbnail' | 'console_log' | 'network_log';
+      type: 'video' | 'thumbnail' | 'console_log' | 'network_log' | 'action';
       name: string;
       size: number;
       mime_type: string;

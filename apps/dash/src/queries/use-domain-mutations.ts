@@ -5,7 +5,9 @@ import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
 
 interface DomainSettings {
   hideSensitiveFields: boolean;
-  captureConsoleNetworkLogs: boolean;
+  captureConsoleLogs: boolean;
+  captureClientActions: boolean;
+  captureNetworkLogs: boolean;
   captureBackendServerLogs: boolean;
 }
 
@@ -139,9 +141,10 @@ export function useUpdateDomainPreferences(
         params: { workspaceId, domainId },
         body: {
           recordingHideSensitive: settings.hideSensitiveFields,
-          recordingCaptureClientLog: settings.captureConsoleNetworkLogs,
+          recordingCaptureClientLog: settings.captureConsoleLogs,
+          recordingCaptureClientAction: settings.captureClientActions,
+          recordingCaptureNetworkLog: settings.captureNetworkLogs,
           recordingCaptureServerLog: settings.captureBackendServerLogs,
-          recordingCaptureNetworkLog: settings.captureConsoleNetworkLogs,
         },
       });
       if (error) throw error;
@@ -176,8 +179,9 @@ export function useUpdateDomainPreferences(
             const preferences = response.data;
             const updatedSettings: DomainSettings = {
               hideSensitiveFields: preferences.recordingHideSensitive,
-              captureConsoleNetworkLogs:
-                preferences.recordingCaptureClientLog || preferences.recordingCaptureNetworkLog,
+              captureConsoleLogs: preferences.recordingCaptureClientLog,
+              captureClientActions: preferences.recordingCaptureClientAction,
+              captureNetworkLogs: preferences.recordingCaptureNetworkLog,
               captureBackendServerLogs: preferences.recordingCaptureServerLog,
             };
             onPreferencesUpdate(variables.domainId, updatedSettings);

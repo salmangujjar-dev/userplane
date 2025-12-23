@@ -39,7 +39,9 @@ import {
 
 interface DomainSettings {
   hideSensitiveFields: boolean;
-  captureConsoleNetworkLogs: boolean;
+  captureConsoleLogs: boolean;
+  captureClientActions: boolean;
+  captureNetworkLogs: boolean;
   captureBackendServerLogs: boolean;
 }
 
@@ -249,8 +251,9 @@ export function DomainsSection() {
       const preferences = response.data;
       const settings: DomainSettings = {
         hideSensitiveFields: preferences.recordingHideSensitive,
-        captureConsoleNetworkLogs:
-          preferences.recordingCaptureClientLog || preferences.recordingCaptureNetworkLog,
+        captureConsoleLogs: preferences.recordingCaptureClientLog,
+        captureClientActions: preferences.recordingCaptureClientAction,
+        captureNetworkLogs: preferences.recordingCaptureNetworkLog,
         captureBackendServerLogs: preferences.recordingCaptureServerLog,
       };
 
@@ -269,7 +272,9 @@ export function DomainsSection() {
         status,
         settings: {
           hideSensitiveFields: false,
-          captureConsoleNetworkLogs: false,
+          captureConsoleLogs: false,
+          captureClientActions: false,
+          captureNetworkLogs: false,
           captureBackendServerLogs: false,
         },
       });
@@ -481,7 +486,9 @@ export function DomainsSection() {
         settings={
           configuringDomain?.settings || {
             hideSensitiveFields: false,
-            captureConsoleNetworkLogs: false,
+            captureConsoleLogs: false,
+            captureClientActions: false,
+            captureNetworkLogs: false,
             captureBackendServerLogs: false,
           }
         }

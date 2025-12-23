@@ -22,7 +22,9 @@ import { HelpCircle, AlertCircle } from 'lucide-react';
 
 interface DomainSettings {
   hideSensitiveFields: boolean;
-  captureConsoleNetworkLogs: boolean;
+  captureConsoleLogs: boolean;
+  captureClientActions: boolean;
+  captureNetworkLogs: boolean;
   captureBackendServerLogs: boolean;
 }
 
@@ -60,7 +62,9 @@ export function DomainConfigureModal({
   const hasChanges = useMemo(() => {
     return (
       localSettings.hideSensitiveFields !== settings.hideSensitiveFields ||
-      localSettings.captureConsoleNetworkLogs !== settings.captureConsoleNetworkLogs ||
+      localSettings.captureConsoleLogs !== settings.captureConsoleLogs ||
+      localSettings.captureClientActions !== settings.captureClientActions ||
+      localSettings.captureNetworkLogs !== settings.captureNetworkLogs ||
       localSettings.captureBackendServerLogs !== settings.captureBackendServerLogs
     );
   }, [localSettings, settings]);
@@ -180,16 +184,50 @@ export function DomainConfigureModal({
 
                 <div className="flex items-center justify-between">
                   <Label
-                    htmlFor="console-network"
+                    htmlFor="console-logs"
                     className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    Capture console and network logs
+                    Capture console logs
                   </Label>
                   <Switch
-                    id="console-network"
-                    checked={localSettings.captureConsoleNetworkLogs}
+                    id="console-logs"
+                    checked={localSettings.captureConsoleLogs}
                     onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({ ...prev, captureConsoleNetworkLogs: checked }))
+                      setLocalSettings((prev) => ({ ...prev, captureConsoleLogs: checked }))
+                    }
+                    disabled={loading || !verified}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="client-actions"
+                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    Capture client actions
+                  </Label>
+                  <Switch
+                    id="client-actions"
+                    checked={localSettings.captureClientActions}
+                    onCheckedChange={(checked) =>
+                      setLocalSettings((prev) => ({ ...prev, captureClientActions: checked }))
+                    }
+                    disabled={loading || !verified}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="network-logs"
+                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    Capture network logs
+                  </Label>
+                  <Switch
+                    id="network-logs"
+                    checked={localSettings.captureNetworkLogs}
+                    onCheckedChange={(checked) =>
+                      setLocalSettings((prev) => ({ ...prev, captureNetworkLogs: checked }))
                     }
                     disabled={loading || !verified}
                   />
