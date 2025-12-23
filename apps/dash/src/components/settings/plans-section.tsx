@@ -1,5 +1,5 @@
 import { WorkspacePlanSection } from './workspace-plan-section';
 
-export function UsageSection() {
+export function PlansSection() {
   return <WorkspacePlanSection />;
 }

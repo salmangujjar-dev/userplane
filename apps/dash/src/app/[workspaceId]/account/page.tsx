@@ -18,8 +18,8 @@ export default function PreferencesPage() {
         <div className="h-[72px]" />
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-1">Preferences</h2>
-            <p className="text-sm text-muted-foreground">Manage your preferences</p>
+            <h2 className="text-lg font-semibold mb-1">Account Settings</h2>
+            <p className="text-sm text-muted-foreground">Manage your account settings</p>
           </div>
 
           <AccountsTab />

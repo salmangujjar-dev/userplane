@@ -18,8 +18,8 @@ export function WorkspacePlanSection() {
   if (isLoading) {
     return (
       <div>
-        <div className="space-y-2 mb-4">
-          <h3 className="text-sm font-medium">Workspace Plan</h3>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Workspace Plan</h2>
           <p className="text-sm text-muted-foreground">
             Manage your workspace subscription and plan details
           </p>
@@ -38,8 +38,8 @@ export function WorkspacePlanSection() {
   return (
     <TooltipProvider>
       <div>
-        <div className="space-y-2 mb-4">
-          <h3 className="text-sm font-medium">Workspace Plan</h3>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Workspace Plan</h2>
           <p className="text-sm text-muted-foreground">
             Manage your workspace subscription and plan details
           </p>
@@ -47,11 +47,6 @@ export function WorkspacePlanSection() {
         <div className="max-w-md rounded-xl border bg-card p-6">
           <h4 className="text-xl font-semibold mb-4">{planName}</h4>
           <div className="space-y-3 mb-4">
-            {/* TODO: Implement recordings usage tracking
-             * Fetch from API endpoint to get:
-             * - Current month recordings count
-             * - Plan limit for recordings
-             */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Recordings</span>
@@ -72,11 +67,6 @@ export function WorkspacePlanSection() {
               <Progress value={0} className="h-2" />
             </div>
 
-            {/* TODO: Implement seats usage tracking
-             * Fetch from API endpoint to get:
-             * - Current active members count
-             * - Plan limit for seats
-             */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Seats</span>
