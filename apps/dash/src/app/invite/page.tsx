@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { AuthIcons } from '@/components/auth/auth-icons';
@@ -67,7 +68,7 @@ function InvitePageContent() {
     return (
       <InviteLayout>
         <div className="flex flex-col items-center gap-3">
-          <Logo showText={false} />
+          <Image src="/assets/dino.svg" alt="Dino" width={120} height={120} className="mb-2" />
           <h1 className="text-xl font-medium text-foreground">Invalid Invite</h1>
           <p className="text-sm text-muted-foreground text-center">
             This invite link is invalid or has expired. Please request a new one.
@@ -77,7 +78,6 @@ function InvitePageContent() {
           <Button
             onClick={() => router.push('/')}
             size="lg"
-            variant="secondary"
             className="w-full rounded-full px-7 py-6"
           >
             Go to Dashboard
