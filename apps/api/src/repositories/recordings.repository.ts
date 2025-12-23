@@ -51,6 +51,7 @@ export interface RecordingDetailRow {
   recordingThumbnailRef: string | null;
   recordingConsoleLogRef: string | null;
   recordingNetworkLogsRef: string | null;
+  recordingActionRef: string | null;
   recordingMeta: RecordingMeta | null;
   recordingDurationMs: number;
   createdAt: Date;
@@ -91,6 +92,7 @@ export interface CreateRecordingInput {
   recordingThumbnailRef: string | null;
   recordingConsoleLogRef: string | null;
   recordingNetworkLogsRef: string | null;
+  recordingActionRef: string | null;
   recordingMeta?: RecordingMeta | null;
 }
 
@@ -102,6 +104,7 @@ export interface RecordingFileInfo {
   thumbnailSize: number | null;
   consoleLogSize: number | null;
   networkLogSize: number | null;
+  actionSize: number | null;
 }
 
 export class RecordingRepository {
@@ -287,6 +290,7 @@ export class RecordingRepository {
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingActionRef: recordings.recordingActionRef,
         recordingMeta: recordings.recordingMeta,
         recordingDurationMs: recordings.recordingDurationMs,
         createdAt: recordings.createdAt,
@@ -349,6 +353,7 @@ export class RecordingRepository {
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingActionRef: recordings.recordingActionRef,
         recordingMeta: recordings.recordingMeta,
         recordingDurationMs: recordings.recordingDurationMs,
         createdAt: recordings.createdAt,
@@ -445,6 +450,7 @@ export class RecordingRepository {
         recordingThumbnailRef: data.recordingThumbnailRef,
         recordingConsoleLogRef: data.recordingConsoleLogRef,
         recordingNetworkLogsRef: data.recordingNetworkLogsRef,
+        recordingActionRef: data.recordingActionRef,
         recordingMeta: data.recordingMeta,
         uploadStatus: 'pending',
         isDeleted: true,
@@ -487,6 +493,7 @@ export class RecordingRepository {
     recordingThumbnailRef: string | null;
     recordingConsoleLogRef: string | null;
     recordingNetworkLogsRef: string | null;
+    recordingActionRef: string | null;
     recordingMeta: RecordingMeta | null;
   } | null> {
     const [result] = await this.db
@@ -499,6 +506,7 @@ export class RecordingRepository {
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingActionRef: recordings.recordingActionRef,
         recordingMeta: recordings.recordingMeta,
       })
       .from(recordings)
@@ -525,6 +533,7 @@ export class RecordingRepository {
     recordingThumbnailRef: string | null;
     recordingConsoleLogRef: string | null;
     recordingNetworkLogsRef: string | null;
+    recordingActionRef: string | null;
     recordingMeta: RecordingMeta | null;
   } | null> {
     const [result] = await this.db
@@ -537,6 +546,7 @@ export class RecordingRepository {
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingActionRef: recordings.recordingActionRef,
         recordingMeta: recordings.recordingMeta,
       })
       .from(recordings)
@@ -564,6 +574,7 @@ export class RecordingRepository {
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingActionRef: recordings.recordingActionRef,
       })
       .from(recordings)
       .where(
@@ -627,6 +638,7 @@ export class RecordingRepository {
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
+        recordingActionRef: recordings.recordingActionRef,
       });
 
     return deleted;

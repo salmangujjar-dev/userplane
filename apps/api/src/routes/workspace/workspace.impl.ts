@@ -1031,6 +1031,7 @@ export const getDomainRecordingPreferencesImpl = (
             workspaceId: input.params.workspaceId,
             recordingHideSensitive: domain.recordingHideSensitive,
             recordingCaptureClientLog: domain.recordingCaptureClientLog,
+            recordingCaptureClientAction: domain.recordingCaptureClientAction,
             recordingCaptureServerLog: domain.recordingCaptureServerLog,
             recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
           },
@@ -1078,6 +1079,7 @@ export const updateDomainRecordingPreferencesImpl = (
           {
             recordingHideSensitive: input.body.recordingHideSensitive,
             recordingCaptureClientLog: input.body.recordingCaptureClientLog,
+            recordingCaptureClientAction: input.body.recordingCaptureClientAction,
             recordingCaptureServerLog: input.body.recordingCaptureServerLog,
             recordingCaptureNetworkLog: input.body.recordingCaptureNetworkLog,
           }
@@ -1143,6 +1145,7 @@ export const replaceDomainRecordingPreferencesImpl = (
           {
             recordingHideSensitive: input.body.recordingHideSensitive,
             recordingCaptureClientLog: input.body.recordingCaptureClientLog,
+            recordingCaptureClientAction: input.body.recordingCaptureClientAction,
             recordingCaptureServerLog: input.body.recordingCaptureServerLog,
             recordingCaptureNetworkLog: input.body.recordingCaptureNetworkLog,
           }

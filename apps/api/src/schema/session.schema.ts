@@ -9,7 +9,13 @@ import { SESSION_CONSTANTS } from '@workspace/contract';
 /**
  * File type enum for uploads
  */
-export const fileTypeSchema = z.enum(['video', 'thumbnail', 'console_log', 'network_log']);
+export const fileTypeSchema = z.enum([
+  'video',
+  'thumbnail',
+  'console_log',
+  'network_log',
+  'action',
+]);
 
 /**
  * GET /api/v1/session query params
@@ -74,7 +80,7 @@ export const initUploadSchema = z.object({
   files: z
     .array(uploadFileSchema)
     .min(1, 'At least one file is required')
-    .max(4, 'Maximum 4 files allowed'),
+    .max(5, 'Maximum 5 files allowed'),
   metadata: recordingMetaSchema,
 });
 
@@ -173,6 +179,10 @@ export function validateFileMimeType(
       return SESSION_CONSTRAINTS.ALLOWED_NETWORK_LOG_TYPES.includes(
         mimeType as (typeof SESSION_CONSTRAINTS.ALLOWED_NETWORK_LOG_TYPES)[number]
       );
+    case 'action':
+      return SESSION_CONSTRAINTS.ALLOWED_ACTION_TYPES.includes(
+        mimeType as (typeof SESSION_CONSTRAINTS.ALLOWED_ACTION_TYPES)[number]
+      );
     default:
       return false;
   }
@@ -189,6 +199,7 @@ export function getMaxFileSize(fileType: z.infer<typeof fileTypeSchema>): number
       return SESSION_CONSTRAINTS.MAX_THUMBNAIL_SIZE;
     case 'console_log':
     case 'network_log':
+    case 'action':
       return SESSION_CONSTRAINTS.MAX_LOG_SIZE;
     default:
       return SESSION_CONSTRAINTS.MAX_FILE_SIZE;

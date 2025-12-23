@@ -397,6 +397,60 @@ export const getRecordingNetworkLogImpl = (
 };
 
 /**
+ * GET /workspace/:workspaceId/recordings/:recordingId/action - Get recording client action
+ * Requires workspace member
+ */
+export const getRecordingActionImpl = (
+  recordingService: RecordingService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.recording.resources.action
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      try {
+        const resource = await recordingService.getActionResource(
+          input.params.recordingId,
+          input.params.workspaceId
+        );
+
+        return {
+          message: 'Recording client action URL retrieved successfully',
+          data: {
+            recordingId: input.params.recordingId,
+            resource,
+          },
+        };
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw new ORPCError('NOT_FOUND', {
+            message: error.message,
+          });
+        }
+        if (error instanceof GoneError) {
+          throw new ORPCError('GONE', {
+            status: 410,
+            message: error.message,
+          });
+        }
+        if (error instanceof ValidationError) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: error.message,
+          });
+        }
+        if (error instanceof Error) {
+          throw new ORPCError('INTERNAL_SERVER_ERROR', {
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    });
+};
+
+/**
  * Create the recording procedures object
  */
 export const createRecordingProcedures = (
@@ -425,6 +479,7 @@ export const createRecordingProcedures = (
         workspaceMemberService,
         workspaceService
       ),
+      action: getRecordingActionImpl(recordingService, workspaceMemberService, workspaceService),
     },
   };
 };

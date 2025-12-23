@@ -6,13 +6,8 @@
 import { generateWorkspaceMemberId } from '@/api/lib/id';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ValidationError, ConflictError } from '@/api/lib/errors';
-import type {
-  Transaction,
-  AddOwnerParams,
-  AddMemberParams,
-  UpdateRoleParams,
-  RemoveMemberParams,
-} from '@/api/types';
+import type { Transaction } from '@/api/types';
+import type { WorkspaceRole } from '@workspace/contract';
 
 export interface WorkspaceMemberServiceDeps {
   memberRepo: WorkspaceMemberRepository;
@@ -26,7 +21,7 @@ export class WorkspaceMemberService {
    * Used only during workspace creation
    * If user was previously soft-deleted, restores them as owner instead
    */
-  async addOwner(params: AddOwnerParams, options?: { tx?: Transaction }) {
+  async addOwner(params: { userId: string; workspaceId: string }, options?: { tx?: Transaction }) {
     if (!params.userId || !params.workspaceId) {
       throw new ValidationError('User ID and Workspace ID are required');
     }
@@ -70,7 +65,10 @@ export class WorkspaceMemberService {
    * Always creates 'member' role - upgrades handled separately
    * If user was previously soft-deleted, restores them instead
    */
-  async addMember(params: AddMemberParams, options?: { tx?: Transaction }) {
+  async addMember(
+    params: { userId: string; workspaceId: string; role: WorkspaceRole },
+    options?: { tx?: Transaction }
+  ) {
     if (!params.userId || !params.workspaceId) {
       throw new ValidationError('User ID and Workspace ID are required');
     }
@@ -114,7 +112,10 @@ export class WorkspaceMemberService {
    * Requires owner/admin authorization (handled in middleware)
    * Prevents self-role changes and ensures at least one owner remains
    */
-  async updateMemberRole(params: UpdateRoleParams, options?: { tx?: Transaction }) {
+  async updateMemberRole(
+    params: { memberId: string; newRole: WorkspaceRole; userId: string; workspaceId: string },
+    options?: { tx?: Transaction }
+  ) {
     if (!params.memberId) {
       throw new ValidationError('Member ID is required');
     }
@@ -149,7 +150,10 @@ export class WorkspaceMemberService {
    * Cannot remove yourself (use leaveWorkspace instead)
    * Cannot remove the last owner
    */
-  async removeMember(params: RemoveMemberParams, options?: { tx?: Transaction }) {
+  async removeMember(
+    params: { memberId: string; workspaceId: string; userId: string },
+    options?: { tx?: Transaction }
+  ) {
     if (!params.memberId) {
       throw new ValidationError('Member ID is required');
     }

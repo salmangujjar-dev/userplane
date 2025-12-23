@@ -12,6 +12,7 @@ import type {
   VideoStorageClient,
   ConsoleLogsStorageClient,
   NetworkLogsStorageClient,
+  ClientActionsStorageClient,
 } from '@workspace/storage';
 import type {
   RecordingFilters,
@@ -31,6 +32,7 @@ export interface RecordingServiceDeps {
   videoStorage: VideoStorageClient;
   consoleLogsStorage: ConsoleLogsStorageClient;
   networkLogsStorage: NetworkLogsStorageClient;
+  clientActionsStorage: ClientActionsStorageClient;
 }
 
 /**
@@ -360,6 +362,34 @@ export class RecordingService {
       return {
         url: null,
         message: 'Failed to generate network log URL',
+      };
+    }
+  }
+
+  /**
+   * Get client action resource for an available recording
+   * Only works with recordings that have uploadStatus = 'available'
+   */
+  async getActionResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+
+    if (!recording.recordingActionRef) {
+      return { url: null, message: 'Client actions not available for this recording' };
+    }
+
+    try {
+      const url = await this.deps.clientActionsStorage.getDownloadUrl(
+        recording.recordingActionRef,
+        { expiresIn: PRESIGNED_URL_EXPIRY }
+      );
+      return {
+        url,
+        message: 'Client action URL generated successfully',
+      };
+    } catch {
+      return {
+        url: null,
+        message: 'Failed to generate client action URL',
       };
     }
   }

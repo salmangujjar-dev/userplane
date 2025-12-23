@@ -7,7 +7,8 @@ import { generateDomainId } from '@/api/lib/id';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { cleanUrl } from '@/api/lib/url';
-import type { Transaction, CreateDomainParams } from '@/api/types';
+import type { Transaction } from '@/api/types';
+import type { DomainStatus } from '@workspace/contract';
 import { TokenService } from '@/api/services/token.service';
 
 export interface DomainServiceDeps {
@@ -24,7 +25,10 @@ export class DomainService {
    * Stores protocol + hostname + path (removes query params, hash, and trailing slashes)
    * Checks for duplicates before creating
    */
-  async create(params: CreateDomainParams, options?: { tx?: Transaction }) {
+  async create(
+    params: { workspaceId: string; url: string; status: DomainStatus },
+    options?: { tx?: Transaction }
+  ) {
     if (!params.url) {
       throw new ValidationError('Domain URL is required');
     }
@@ -322,6 +326,7 @@ export class DomainService {
     updates: Partial<{
       recordingHideSensitive: boolean;
       recordingCaptureClientLog: boolean;
+      recordingCaptureClientAction: boolean;
       recordingCaptureServerLog: boolean;
       recordingCaptureNetworkLog: boolean;
     }>,
@@ -371,6 +376,7 @@ export class DomainService {
     preferences: {
       recordingHideSensitive: boolean;
       recordingCaptureClientLog: boolean;
+      recordingCaptureClientAction: boolean;
       recordingCaptureServerLog: boolean;
       recordingCaptureNetworkLog: boolean;
     },
