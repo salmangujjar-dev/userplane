@@ -10,10 +10,35 @@ import {
 } from '@workspace/ui/components/tooltip';
 import { ArrowUpRight, Info } from 'lucide-react';
 import { useWorkspace } from '@/hooks/use-workspace';
+import { SectionError } from '@/components/shared/section-error';
 
 export function WorkspacePlanSection() {
-  const { data: workspaceData, isLoading } = useWorkspace();
+  const { data: workspaceData, isLoading, error, refetch } = useWorkspace();
   const planName = workspaceData?.workspace.workspacePlanName || 'Free';
+
+  if (error) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Workspace Plan</h2>
+          <p className="text-sm text-muted-foreground">
+            Manage your workspace subscription and plan details
+          </p>
+        </div>
+        <div className="max-w-md">
+          <SectionError
+            title="Failed to load plan details"
+            description={
+              error instanceof Error
+                ? error.message
+                : 'Something went wrong while loading plan details.'
+            }
+            onRetry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

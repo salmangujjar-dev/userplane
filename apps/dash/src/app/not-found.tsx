@@ -1,0 +1,22 @@
+import Image from 'next/image';
+import Link from 'next/link';
+import { Button } from '@workspace/ui/components/button';
+
+export default function NotFound() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12 bg-background">
+      <div className="flex flex-col items-center gap-4 max-w-md text-center">
+        <Image src="/assets/dino.svg" alt="Not Found" width={120} height={120} className="mb-2" />
+        <h1 className="text-2xl font-semibold text-foreground">Page not found</h1>
+        <p className="text-sm text-muted-foreground">
+          The page you're looking for doesn't exist or has been moved.
+        </p>
+        <Link href="/" className="mt-4">
+          <Button size="lg" className="rounded-full px-8">
+            Go to Dashboard
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}

@@ -9,7 +9,6 @@ const baseClient = createClient({
 
     // Handle 401 Unauthorized errors by redirecting to sign-in
     if (error && typeof error === 'object' && 'status' in error && error.status === 401) {
-      // Only redirect if we're in a browser environment
       if (typeof window !== 'undefined') {
         const currentPath = window.location.pathname + window.location.search;
         const redirectUrl = `/auth?redirect_to=${encodeURIComponent(currentPath)}`;

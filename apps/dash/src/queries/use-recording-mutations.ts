@@ -11,7 +11,10 @@ export function useDeleteRecording(workspaceId: string | null, onSuccess?: () =>
       const [error, response] = await apiClient.recording.delete({
         params: { workspaceId, recordingId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onSuccess: () => {

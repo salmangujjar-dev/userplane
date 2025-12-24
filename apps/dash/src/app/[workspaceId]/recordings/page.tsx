@@ -17,6 +17,7 @@ import { useSearchableMembers } from '@/hooks/use-searchable-members';
 import { useSearchableLinks } from '@/hooks/use-searchable-links';
 import { FolderKanban, Link2, Users } from 'lucide-react';
 import { stringArrayParser } from '@/lib/parsers';
+import { DinoError } from '@/components/shared/dino-error';
 
 export default function RecordingsPage() {
   const [currentPage, setCurrentPage] = usePagination();
@@ -34,7 +35,12 @@ export default function RecordingsPage() {
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
   const [linkSearchQuery, setLinkSearchQuery] = useState('');
 
-  const { data: recordingsData, isLoading: isLoadingRecordings } = useWorkspaceRecordings({
+  const {
+    data: recordingsData,
+    isLoading: isLoadingRecordings,
+    error: recordingsError,
+    refetch: refetchRecordings,
+  } = useWorkspaceRecordings({
     page: currentPage,
     perPage: recordingsPerPage,
     filters: {
@@ -129,7 +135,20 @@ export default function RecordingsPage() {
               </div>
             </div>
 
-            {isLoadingRecordings ? (
+            {recordingsError ? (
+              <div className="flex items-center justify-center py-12">
+                <DinoError
+                  title="Failed to load recordings"
+                  description={
+                    recordingsError instanceof Error
+                      ? recordingsError.message
+                      : 'Something went wrong while loading recordings.'
+                  }
+                  onRetry={() => refetchRecordings()}
+                  showGoBack={false}
+                />
+              </div>
+            ) : isLoadingRecordings ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {[...Array(recordingsPerPage)].map((_, i) => (
                   <div key={i} className="aspect-video bg-muted rounded-lg animate-pulse" />

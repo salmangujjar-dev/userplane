@@ -7,6 +7,7 @@ import {
   CompleteUploadSchema,
   UploadCompleteDataSchema,
   ApiResponseSchema,
+  SessionErrors,
 } from '../schemas';
 
 /**
@@ -30,6 +31,12 @@ export const getSession = oc
       security: [],
     },
   })
+  .errors({
+    SESSION_LINK_GONE: SessionErrors.SESSION_LINK_GONE,
+    SESSION_LINK_NOT_FOUND: SessionErrors.SESSION_LINK_NOT_FOUND,
+    SESSION_LINK_INVALID_TYPE: SessionErrors.SESSION_LINK_INVALID_TYPE,
+    SESSION_LINK_ALREADY_USED: SessionErrors.SESSION_LINK_ALREADY_USED,
+  })
   .input(GetSessionQuerySchema)
   .output(ApiResponseSchema(SessionInitDataSchema));
 
@@ -49,6 +56,19 @@ export const initUpload = oc
       security: [{ sessionTokenHeader: [] }],
     },
   })
+  .errors({
+    SESSION_TOKEN_EXPIRED: SessionErrors.SESSION_TOKEN_EXPIRED,
+    SESSION_LINK_GONE: SessionErrors.SESSION_LINK_GONE,
+    SESSION_LINK_NOT_FOUND: SessionErrors.SESSION_LINK_NOT_FOUND,
+    SESSION_LINK_INVALID_TYPE: SessionErrors.SESSION_LINK_INVALID_TYPE,
+    SESSION_LINK_ALREADY_USED: SessionErrors.SESSION_LINK_ALREADY_USED,
+    SESSION_DURATION_TOO_SHORT: SessionErrors.SESSION_DURATION_TOO_SHORT,
+    SESSION_DURATION_TOO_LONG: SessionErrors.SESSION_DURATION_TOO_LONG,
+    SESSION_VIDEO_MISSING: SessionErrors.SESSION_VIDEO_MISSING,
+    SESSION_VIDEO_EMPTY: SessionErrors.SESSION_VIDEO_EMPTY,
+    SESSION_FILE_FORMAT_UNSUPPORTED: SessionErrors.SESSION_FILE_FORMAT_UNSUPPORTED,
+    SESSION_FILE_TOO_LARGE: SessionErrors.SESSION_FILE_TOO_LARGE,
+  })
   .input(InitUploadSchema)
   .output(ApiResponseSchema(UploadInitDataSchema));
 
@@ -67,6 +87,16 @@ export const completeUpload = oc
       tags: ['Session'],
       security: [{ uploadTokenHeader: [] }],
     },
+  })
+  .errors({
+    SESSION_UPLOAD_TOKEN_EXPIRED: SessionErrors.SESSION_UPLOAD_TOKEN_EXPIRED,
+    SESSION_UPLOAD_TOKEN_MISMATCH: SessionErrors.SESSION_UPLOAD_TOKEN_MISMATCH,
+    SESSION_LINK_GONE: SessionErrors.SESSION_LINK_GONE,
+    SESSION_LINK_NOT_FOUND: SessionErrors.SESSION_LINK_NOT_FOUND,
+    SESSION_RECORDING_GONE: SessionErrors.SESSION_RECORDING_GONE,
+    SESSION_RECORDING_NOT_FOUND: SessionErrors.SESSION_RECORDING_NOT_FOUND,
+    SESSION_UPLOAD_FAILED: SessionErrors.SESSION_UPLOAD_FAILED,
+    SESSION_FILE_VERIFICATION_FAILED: SessionErrors.SESSION_FILE_VERIFICATION_FAILED,
   })
   .input(CompleteUploadSchema)
   .output(ApiResponseSchema(UploadCompleteDataSchema));

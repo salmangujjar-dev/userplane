@@ -36,6 +36,7 @@ import {
   useDeleteDomain,
   useUpdateDomainPreferences,
 } from '@/queries/use-domain-mutations';
+import { SectionError } from '@/components/shared/section-error';
 
 interface DomainSettings {
   hideSensitiveFields: boolean;
@@ -58,7 +59,12 @@ const ITEMS_PER_PAGE = 5;
 
 export function DomainsSection() {
   const workspaceId = useWorkspaceId();
-  const { data: domains, isLoading } = useWorkspaceDomains({
+  const {
+    data: domains,
+    isLoading,
+    error,
+    refetch,
+  } = useWorkspaceDomains({
     perPage: ITEMS_PER_PAGE,
   });
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -165,7 +171,10 @@ export function DomainsSection() {
         params: { workspaceId, domainId: verifyingDomain.id },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
 
       const verificationUrl = response.data.verificationUrl;
 
@@ -246,7 +255,10 @@ export function DomainsSection() {
         params: { workspaceId, domainId },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
 
       const preferences = response.data;
       const settings: DomainSettings = {
@@ -294,6 +306,26 @@ export function DomainsSection() {
   // Calculate these before any conditional returns to avoid hook order issues
   const displayedDomains = useMemo(() => domains || [], [domains]);
   const totalPages = 1;
+
+  if (error) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Domains</h2>
+          <p className="text-sm text-muted-foreground">Configure domain and recording settings</p>
+        </div>
+        <div className="max-w-2xl">
+          <SectionError
+            title="Failed to load domains"
+            description={
+              error instanceof Error ? error.message : 'Something went wrong while loading domains.'
+            }
+            onRetry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

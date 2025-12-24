@@ -56,7 +56,10 @@ export function useWorkspaceMembers(options?: {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data.workspaceMembers as WorkspaceMember[];
     },
     enabled: enabled && !!workspaceId,

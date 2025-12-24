@@ -6,6 +6,7 @@ import { Label } from '@workspace/ui/components/label';
 import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateNotifications } from '@/queries/use-workspace-mutations';
+import { SectionError } from '@/components/shared/section-error';
 
 interface WorkspaceNotifications {
   notifyOnLinkUsage: boolean;
@@ -17,7 +18,12 @@ interface WorkspaceNotifications {
 
 export function NotificationsSection() {
   const currentWorkspaceId = useWorkspaceId();
-  const { data: workspacesData, isLoading } = useWorkspaces({
+  const {
+    data: workspacesData,
+    isLoading,
+    error,
+    refetch,
+  } = useWorkspaces({
     page: 1,
     perPage: 100,
   });
@@ -51,6 +57,28 @@ export function NotificationsSection() {
       notifications: { [key]: value },
     });
   };
+
+  if (error) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Notification</h2>
+          <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
+        </div>
+        <div className="max-w-md">
+          <SectionError
+            title="Failed to load notifications"
+            description={
+              error instanceof Error
+                ? error.message
+                : 'Something went wrong while loading notification settings.'
+            }
+            onRetry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

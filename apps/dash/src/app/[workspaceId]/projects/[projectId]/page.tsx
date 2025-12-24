@@ -12,8 +12,9 @@ import { RecordingPreview } from '@/components/recordings/recording-preview';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/components/tabs';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
-import { Video, Link as LinkIcon, Link2, Globe, Users } from 'lucide-react';
+import { Video, Link as LinkIcon, Link2, Globe, Users, Loader2 } from 'lucide-react';
 import { usePagination } from '@/hooks/use-pagination';
+import { DinoError } from '@/components/shared/dino-error';
 import { tabParser, stringArrayParser } from '@/lib/parsers';
 import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
 import { useWorkspaceLinks } from '@/hooks/use-workspace-links';
@@ -44,7 +45,7 @@ export default function ProjectPage() {
   const [linkSearchQuery, setLinkSearchQuery] = useState('');
 
   // Fetch project details
-  const { data: project } = useProject(projectId);
+  const { data: project, isLoading: isLoadingProject, error: projectError } = useProject(projectId);
   const projectTitle = project?.projectTitle || 'Untitled Project';
 
   // Fetch recordings filtered by project
@@ -105,6 +106,42 @@ export default function ProjectPage() {
   const handleLinkCreated = (link: string) => {
     setShareLink(link);
   };
+
+  // Show loading state for project
+  if (isLoadingProject) {
+    return (
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Loading project...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state for project
+  if (projectError || !project) {
+    return (
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <div className="flex flex-1 items-center justify-center">
+          <DinoError
+            title="Project not found"
+            description={
+              projectError instanceof Error
+                ? projectError.message
+                : 'This project may have been deleted or you may not have access.'
+            }
+            onGoBack={() => window.history.back()}
+            showRetry={false}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background">

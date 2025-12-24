@@ -52,6 +52,9 @@ import {
   WorkspaceSearchQuerySchema,
   WorkspaceSearchDataSchema,
   ApiResponseSchema,
+  WorkspaceErrors,
+  InviteErrors,
+  DomainErrors,
 } from '../schemas';
 
 /**
@@ -73,6 +76,10 @@ export const getAllWorkspaces = oc
     description: 'Retrieve paginated list of workspaces for the current user',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_USER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_USER_ID_REQUIRED,
+    WORKSPACE_INVALID_PAGINATION: WorkspaceErrors.WORKSPACE_INVALID_PAGINATION,
+  })
   .input(ListWorkspacesQuerySchema)
   .output(ApiResponseSchema(WorkspacesListDataSchema));
 
@@ -88,6 +95,9 @@ export const countWorkspaces = oc
     summary: 'Count workspaces',
     description: 'Count workspaces by role for the current user',
     tags: ['Workspaces'],
+  })
+  .errors({
+    WORKSPACE_USER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_USER_ID_REQUIRED,
   })
   .input(CountWorkspacesQuerySchema)
   .output(ApiResponseSchema(WorkspaceCountDataSchema));
@@ -105,6 +115,10 @@ export const getWorkspaceById = oc
     description: 'Retrieve complete workspace details',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
   .input(WorkspaceByIdSchema)
   .output(ApiResponseSchema(WorkspaceByIdDataSchema));
 
@@ -120,6 +134,10 @@ export const getWorkspacePreferences = oc
     summary: 'Get workspace preferences',
     description: 'Retrieve workspace recording and customization preferences',
     tags: ['Workspaces'],
+  })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
   .input(WorkspacePreferencesGetSchema)
   .output(ApiResponseSchema(WorkspacePreferencesGetDataSchema));
@@ -137,6 +155,10 @@ export const updateWorkspacePreferences = oc
     description: 'Partially update workspace preferences',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
   .input(UpdateWorkspacePreferencesSchema)
   .output(ApiResponseSchema(WorkspacePreferencesUpdateDataSchema));
 
@@ -152,6 +174,12 @@ export const getWorkspaceMembers = oc
     summary: 'Get workspace members',
     description: 'Retrieve paginated list of workspace team members',
     tags: ['Workspaces'],
+  })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_USER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_USER_ID_REQUIRED,
+    WORKSPACE_MEMBER_INVALID_PAGINATION: WorkspaceErrors.WORKSPACE_MEMBER_INVALID_PAGINATION,
   })
   .input(WorkspaceTeamQuerySchema)
   .output(ApiResponseSchema(WorkspaceTeamDataSchema));
@@ -169,6 +197,16 @@ export const updateMemberRole = oc
     description: 'Update workspace member role',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_MEMBER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_ID_REQUIRED,
+    WORKSPACE_MEMBER_NOT_FOUND: WorkspaceErrors.WORKSPACE_MEMBER_NOT_FOUND,
+    WORKSPACE_MEMBER_CANNOT_CHANGE_OWN_ROLE:
+      WorkspaceErrors.WORKSPACE_MEMBER_CANNOT_CHANGE_OWN_ROLE,
+    WORKSPACE_MEMBER_LAST_OWNER_ROLE_CHANGE:
+      WorkspaceErrors.WORKSPACE_MEMBER_LAST_OWNER_ROLE_CHANGE,
+  })
   .input(UpdateMemberRoleSchema)
   .output(ApiResponseSchema(MemberRoleUpdateDataSchema));
 
@@ -184,6 +222,15 @@ export const removeMember = oc
     summary: 'Remove member',
     description: 'Remove a member from the workspace',
     tags: ['Workspaces'],
+  })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_MEMBER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_ID_REQUIRED,
+    WORKSPACE_MEMBER_NOT_FOUND: WorkspaceErrors.WORKSPACE_MEMBER_NOT_FOUND,
+    WORKSPACE_MEMBER_WRONG_WORKSPACE: WorkspaceErrors.WORKSPACE_MEMBER_WRONG_WORKSPACE,
+    WORKSPACE_MEMBER_CANNOT_REMOVE_SELF: WorkspaceErrors.WORKSPACE_MEMBER_CANNOT_REMOVE_SELF,
+    WORKSPACE_MEMBER_LAST_OWNER_REMOVE: WorkspaceErrors.WORKSPACE_MEMBER_LAST_OWNER_REMOVE,
   })
   .input(RemoveMemberSchema)
   .output(ApiResponseSchema(MemberRemoveDataSchema));
@@ -201,6 +248,13 @@ export const leaveWorkspace = oc
     description: 'Leave a workspace as a member',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_MEMBER_IDS_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_IDS_REQUIRED,
+    WORKSPACE_MEMBER_NOT_IN_WORKSPACE: WorkspaceErrors.WORKSPACE_MEMBER_NOT_IN_WORKSPACE,
+    WORKSPACE_MEMBER_LAST_OWNER_LEAVE: WorkspaceErrors.WORKSPACE_MEMBER_LAST_OWNER_LEAVE,
+  })
   .input(LeaveWorkspaceSchema)
   .output(ApiResponseSchema(LeaveWorkspaceDataSchema));
 
@@ -216,6 +270,12 @@ export const updateNotificationPreferences = oc
     summary: 'Update notification preferences',
     description: 'Update workspace notification preferences for current user',
     tags: ['Workspaces'],
+  })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_MEMBER_IDS_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_IDS_REQUIRED,
+    WORKSPACE_MEMBER_NOT_IN_WORKSPACE: WorkspaceErrors.WORKSPACE_MEMBER_NOT_IN_WORKSPACE,
   })
   .input(UpdateNotificationPreferencesSchema)
   .output(ApiResponseSchema(NotificationPreferencesUpdateDataSchema));
@@ -233,6 +293,10 @@ export const getInviteUrl = oc
     description: 'Retrieve workspace invite URL',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
   .input(InviteUrlSchema)
   .output(ApiResponseSchema(InviteUrlDataSchema));
 
@@ -248,6 +312,10 @@ export const rotateInviteToken = oc
     summary: 'Rotate invite token',
     description: 'Generate new workspace invite URL',
     tags: ['Workspaces'],
+  })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
   .input(InviteUrlSchema)
   .output(ApiResponseSchema(InviteUrlDataSchema));
@@ -265,6 +333,10 @@ export const sendWorkspaceInvites = oc
     description: 'Send workspace invitations to multiple email addresses',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
   .input(SendWorkspaceInvitesSchema)
   .output(ApiResponseSchema(SendInvitesResultSchema));
 
@@ -280,6 +352,10 @@ export const acceptInvite = oc
     summary: 'Accept workspace invitation',
     description: 'Accept a workspace invitation if the token matches',
     tags: ['Workspaces'],
+  })
+  .errors({
+    INVITE_TOKEN_INVALID: InviteErrors.INVITE_TOKEN_INVALID,
+    INVITE_TOKEN_INVALIDATED: InviteErrors.INVITE_TOKEN_INVALIDATED,
   })
   .input(AcceptInviteSchema)
   .output(ApiResponseSchema(AcceptInviteDataSchema));
@@ -297,6 +373,10 @@ export const getWorkspaceDomains = oc
     description: 'Retrieve paginated list of workspace domains',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
   .input(WorkspaceDomainsQuerySchema)
   .output(ApiResponseSchema(WorkspaceDomainsDataSchema));
 
@@ -312,6 +392,13 @@ export const getDomainById = oc
     summary: 'Get domain by ID',
     description: 'Retrieve complete domain details including recording preferences',
     tags: ['Workspaces'],
+  })
+  .errors({
+    DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
+    DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
+    DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
   .input(DomainByIdSchema)
   .output(ApiResponseSchema(DomainByIdDataSchema));
@@ -329,6 +416,12 @@ export const addDomain = oc
     description: 'Add a new domain to the workspace',
     tags: ['Workspaces'],
   })
+  .errors({
+    DOMAIN_URL_REQUIRED: DomainErrors.DOMAIN_URL_REQUIRED,
+    DOMAIN_ALREADY_EXISTS: DomainErrors.DOMAIN_ALREADY_EXISTS,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
   .input(AddDomainSchema)
   .output(ApiResponseSchema(DomainAddDataSchema));
 
@@ -344,6 +437,16 @@ export const updateDomain = oc
     summary: 'Update domain',
     description: 'Update domain URL',
     tags: ['Workspaces'],
+  })
+  .errors({
+    DOMAIN_URL_REQUIRED: DomainErrors.DOMAIN_URL_REQUIRED,
+    DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
+    DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
+    DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
+    DOMAIN_ALREADY_EXISTS: DomainErrors.DOMAIN_ALREADY_EXISTS,
+    DOMAIN_UPDATE_FAILED: DomainErrors.DOMAIN_UPDATE_FAILED,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
   .input(UpdateDomainSchema)
   .output(ApiResponseSchema(DomainUpdateDataSchema));
@@ -361,6 +464,15 @@ export const deleteDomain = oc
     description: 'Remove a domain from the workspace',
     tags: ['Workspaces'],
   })
+  .errors({
+    DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
+    DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
+    DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
+    DOMAIN_LAST_DOMAIN_DELETE_FORBIDDEN: DomainErrors.DOMAIN_LAST_DOMAIN_DELETE_FORBIDDEN,
+    DOMAIN_DELETE_FAILED: DomainErrors.DOMAIN_DELETE_FAILED,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
   .input(DeleteDomainSchema)
   .output(ApiResponseSchema(DomainDeleteDataSchema));
 
@@ -376,6 +488,13 @@ export const getDomainVerificationUrl = oc
     summary: 'Get domain verification URL',
     description: 'Generate domain verification URL',
     tags: ['Workspaces'],
+  })
+  .errors({
+    DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
+    DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
+    DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
   .input(DomainVerificationUrlSchema)
   .output(ApiResponseSchema(DomainVerificationUrlDataSchema));
@@ -393,6 +512,12 @@ export const getDomainRecordingPreferences = oc
     description: 'Retrieve recording preferences for a specific domain',
     tags: ['Workspaces'],
   })
+  .errors({
+    DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
+    DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
   .input(GetDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesDataSchema));
 
@@ -408,6 +533,15 @@ export const updateDomainRecordingPreferences = oc
     summary: 'Update domain recording preferences',
     description: 'Partially update recording preferences for a specific domain',
     tags: ['Workspaces'],
+  })
+  .errors({
+    DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
+    DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
+    DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
+    DOMAIN_UNVERIFIED: DomainErrors.DOMAIN_UNVERIFIED,
+    DOMAIN_PREFERENCES_UPDATE_FAILED: DomainErrors.DOMAIN_PREFERENCES_UPDATE_FAILED,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
   .input(UpdateDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesUpdateDataSchema));
@@ -425,6 +559,15 @@ export const replaceDomainRecordingPreferences = oc
     description: 'Replace all recording preferences for a specific domain',
     tags: ['Workspaces'],
   })
+  .errors({
+    DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
+    DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
+    DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
+    DOMAIN_UNVERIFIED: DomainErrors.DOMAIN_UNVERIFIED,
+    DOMAIN_PREFERENCES_UPDATE_FAILED: DomainErrors.DOMAIN_PREFERENCES_UPDATE_FAILED,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
   .input(ReplaceDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesUpdateDataSchema));
 
@@ -440,6 +583,10 @@ export const updateLinkSettings = oc
     summary: 'Update link settings',
     description: 'Update recording link branding and customization settings',
     tags: ['Workspaces'],
+  })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
   .input(UpdateLinkSettingsSchema)
   .output(ApiResponseSchema(LinkSettingsDataSchema));
@@ -457,6 +604,12 @@ export const updateWorkspaceName = oc
     description: 'Update workspace name',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_NAME_REQUIRED: WorkspaceErrors.WORKSPACE_NAME_REQUIRED,
+    WORKSPACE_NAME_TOO_LONG: WorkspaceErrors.WORKSPACE_NAME_TOO_LONG,
+  })
   .input(UpdateWorkspaceNameSchema)
   .output(ApiResponseSchema(WorkspaceNameUpdateDataSchema));
 
@@ -473,6 +626,11 @@ export const deleteWorkspace = oc
     description: 'Permanently delete a workspace',
     tags: ['Workspaces'],
   })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_DELETE_FAILED: WorkspaceErrors.WORKSPACE_DELETE_FAILED,
+  })
   .input(DeleteWorkspaceSchema)
   .output(ApiResponseSchema(WorkspaceDeleteDataSchema));
 
@@ -488,6 +646,13 @@ export const workspaceSearch = oc
     summary: 'Search workspace',
     description: 'Search across workspace members, projects, domains, and links',
     tags: ['Workspaces'],
+  })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_SEARCH_TERM_REQUIRED: WorkspaceErrors.WORKSPACE_SEARCH_TERM_REQUIRED,
+    WORKSPACE_SEARCH_TYPE_INVALID: WorkspaceErrors.WORKSPACE_SEARCH_TYPE_INVALID,
+    WORKSPACE_SEARCH_UNAVAILABLE: WorkspaceErrors.WORKSPACE_SEARCH_UNAVAILABLE,
   })
   .input(WorkspaceSearchQuerySchema)
   .output(ApiResponseSchema(WorkspaceSearchDataSchema));

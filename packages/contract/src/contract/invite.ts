@@ -1,5 +1,10 @@
 import { oc } from '@orpc/contract';
-import { InviteActionQuerySchema, InviteActionResultSchema, ApiResponseSchema } from '../schemas';
+import {
+  InviteActionQuerySchema,
+  InviteActionResultSchema,
+  ApiResponseSchema,
+  InviteErrors,
+} from '../schemas';
 
 /**
  * Invite contract
@@ -20,6 +25,10 @@ export const validateInvite = oc
     summary: 'Validate invite',
     description: 'Validate a workspace invitation token without accepting',
     tags: ['Invites'],
+  })
+  .errors({
+    INVITE_TOKEN_INVALID: InviteErrors.INVITE_TOKEN_INVALID,
+    INVITE_TOKEN_INVALIDATED: InviteErrors.INVITE_TOKEN_INVALIDATED,
   })
   .input(InviteActionQuerySchema)
   .output(ApiResponseSchema(InviteActionResultSchema));

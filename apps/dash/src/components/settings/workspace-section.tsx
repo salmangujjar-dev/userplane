@@ -8,10 +8,11 @@ import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
 import { useRotateInvite } from '@/queries/use-workspace-mutations';
+import { SectionError } from '@/components/shared/section-error';
 
 export function WorkspaceSection() {
   const workspaceId = useWorkspaceId();
-  const { data: workspaceData, isLoading } = useWorkspace();
+  const { data: workspaceData, isLoading, error, refetch } = useWorkspace();
   const [workspaceName, setWorkspaceName] = useState('');
 
   const originalName = workspaceData?.workspace.workspaceName || '';
@@ -39,6 +40,28 @@ export function WorkspaceSection() {
   };
 
   const hasChanges = workspaceName.trim() !== originalName && workspaceName.trim().length > 0;
+
+  if (error) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Workspace</h2>
+          <p className="text-sm text-muted-foreground">Manage your workspace settings</p>
+        </div>
+        <div className="max-w-2xl">
+          <SectionError
+            title="Failed to load workspace"
+            description={
+              error instanceof Error
+                ? error.message
+                : 'Something went wrong while loading workspace settings.'
+            }
+            onRetry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

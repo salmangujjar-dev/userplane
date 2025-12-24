@@ -12,6 +12,7 @@ import {
   DeleteProjectSchema,
   ProjectDeleteDataSchema,
   ApiResponseSchema,
+  ProjectErrors,
 } from '../schemas';
 
 /**
@@ -33,6 +34,10 @@ export const getProjects = oc
     description: 'Retrieve paginated list of projects',
     tags: ['Projects'],
   })
+  .errors({
+    PROJECT_PAGE_INVALID: ProjectErrors.PROJECT_PAGE_INVALID,
+    PROJECT_PER_PAGE_INVALID: ProjectErrors.PROJECT_PER_PAGE_INVALID,
+  })
   .input(ListProjectsQuerySchema)
   .output(ApiResponseSchema(ProjectsListDataSchema));
 
@@ -48,6 +53,9 @@ export const createProject = oc
     summary: 'Create project',
     description: 'Create a new project in the workspace',
     tags: ['Projects'],
+  })
+  .errors({
+    PROJECT_WORKSPACE_ID_REQUIRED: ProjectErrors.PROJECT_WORKSPACE_ID_REQUIRED,
   })
   .input(CreateProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));
@@ -65,6 +73,10 @@ export const getProjectById = oc
     description: 'Retrieve complete project details',
     tags: ['Projects'],
   })
+  .errors({
+    PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
+    PROJECT_GONE: ProjectErrors.PROJECT_GONE,
+  })
   .input(ProjectByIdSchema)
   .output(ApiResponseSchema(ProjectByIdDataSchema));
 
@@ -80,6 +92,10 @@ export const updateProject = oc
     summary: 'Update project',
     description: 'Partially update project properties',
     tags: ['Projects'],
+  })
+  .errors({
+    PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
+    PROJECT_GONE: ProjectErrors.PROJECT_GONE,
   })
   .input(UpdateProjectSchema)
   .output(ApiResponseSchema(ProjectUpdateDataSchema));
@@ -97,6 +113,10 @@ export const replaceProject = oc
     description: 'Replace all project properties',
     tags: ['Projects'],
   })
+  .errors({
+    PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
+    PROJECT_GONE: ProjectErrors.PROJECT_GONE,
+  })
   .input(ReplaceProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));
 
@@ -112,6 +132,13 @@ export const deleteProject = oc
     summary: 'Delete project',
     description: 'Soft delete a project',
     tags: ['Projects'],
+  })
+  .errors({
+    PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
+    PROJECT_GONE: ProjectErrors.PROJECT_GONE,
+    PROJECT_WORKSPACE_MISMATCH: ProjectErrors.PROJECT_WORKSPACE_MISMATCH,
+    PROJECT_LAST_PROJECT_DELETE_FORBIDDEN: ProjectErrors.PROJECT_LAST_PROJECT_DELETE_FORBIDDEN,
+    PROJECT_DELETE_FAILED: ProjectErrors.PROJECT_DELETE_FAILED,
   })
   .input(DeleteProjectSchema)
   .output(ApiResponseSchema(ProjectDeleteDataSchema));

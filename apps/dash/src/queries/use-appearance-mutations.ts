@@ -24,7 +24,10 @@ export function useUpdateToggle(
         params: { workspaceId },
         body: { recordingCustomizeLink: enabled },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (enabled) => {
@@ -81,7 +84,10 @@ export function useUpdateAppearance(workspaceId: string | null) {
         params: { workspaceId },
         body: updates,
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (updates) => {

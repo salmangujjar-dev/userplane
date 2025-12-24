@@ -21,7 +21,11 @@ export function useCreateDomain(workspaceId: string | null) {
         params: { workspaceId },
         body: { url },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
+
       return response.data;
     },
     onMutate: async (url) => {
@@ -63,7 +67,10 @@ export function useUpdateDomain(workspaceId: string | null) {
         params: { workspaceId, domainId },
         body: { url },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async ({ domainId, url }) => {
@@ -101,7 +108,10 @@ export function useDeleteDomain(workspaceId: string | null) {
       const [error, response] = await apiClient.workspace.domains.delete({
         params: { workspaceId, domainId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (domainId) => {
@@ -147,7 +157,10 @@ export function useUpdateDomainPreferences(
           recordingCaptureServerLog: settings.captureBackendServerLogs,
         },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async ({ domainId, settings }) => {

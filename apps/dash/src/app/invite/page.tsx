@@ -2,8 +2,8 @@
 
 import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
+import { DinoError } from '@/components/shared/dino-error';
 import Logo from '@workspace/ui/components/logo';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useWorkspaceStore } from '@/stores/workspace';

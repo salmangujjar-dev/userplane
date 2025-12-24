@@ -22,7 +22,10 @@ export function useUpdateWorkspaceName(
         params: { workspaceId },
         body: { name: newName },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (newName) => {

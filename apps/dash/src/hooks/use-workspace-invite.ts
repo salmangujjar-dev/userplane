@@ -29,7 +29,10 @@ export function useWorkspaceInvite() {
       const [error, response] = await apiClient.workspace.invite.getUrl({
         params: { workspaceId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     enabled: !!workspaceId,
@@ -70,7 +73,10 @@ export function useSendWorkspaceInvites() {
         params: { workspaceId },
         body: { emails },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onSuccess: (_, emails) => {
@@ -115,7 +121,10 @@ export function useValidateInvite(token: string | null, enabled = true) {
       const [error, response] = await apiClient.invite.validate({
         body: { token },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     enabled: !!token && enabled,

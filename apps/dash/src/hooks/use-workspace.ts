@@ -18,7 +18,13 @@ export function useWorkspace() {
       const [error, response] = await apiClient.workspace.getById({
         params: { workspaceId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        console.log('error message: ', error.message);
+        console.log('error cause: ', error.cause);
+        console.log('error name: ', error.name);
+        throw error;
+      }
       return response.data;
     },
     enabled: !!workspaceId,

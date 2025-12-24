@@ -14,6 +14,7 @@ import {
 } from '@workspace/ui/components/resizable';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useDeleteRecording } from '@/queries/use-recording-mutations';
+import { DinoError } from '@/components/shared/dino-error';
 import {
   useRecording,
   useRecordingVideo,
@@ -59,12 +60,16 @@ export default function RecordingDetailPage() {
   if (recordingError || !recordingData) {
     return (
       <div className="h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 max-w-md text-center">
-          <p className="text-lg font-medium">Failed to load recording</p>
-          <p className="text-sm text-muted-foreground">
-            {recordingError instanceof Error ? recordingError.message : 'Recording not found'}
-          </p>
-        </div>
+        <DinoError
+          title="Recording not found"
+          description={
+            recordingError instanceof Error
+              ? recordingError.message
+              : 'This recording may have been deleted or you may not have access.'
+          }
+          onGoBack={() => window.history.back()}
+          showRetry={false}
+        />
       </div>
     );
   }

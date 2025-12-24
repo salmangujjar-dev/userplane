@@ -6,9 +6,10 @@ import { Label } from '@workspace/ui/components/label';
 import { Button } from '@workspace/ui/components/button';
 import { useAccount } from '@/hooks/use-account';
 import { useUpdateAccountName } from '@/queries/use-account-mutations';
+import { SectionError } from '@/components/shared/section-error';
 
 export function AccountSettingsSection() {
-  const { data: accountData, isLoading } = useAccount();
+  const { data: accountData, isLoading, error, refetch } = useAccount();
   const [name, setName] = useState('');
 
   const originalName = accountData?.userName || '';
@@ -29,6 +30,22 @@ export function AccountSettingsSection() {
   };
 
   const hasChanges = name.trim() !== originalName && name.trim().length > 0;
+
+  if (error) {
+    return (
+      <div className="w-full max-w-2xl">
+        <SectionError
+          title="Failed to load account"
+          description={
+            error instanceof Error
+              ? error.message
+              : 'Something went wrong while loading your account.'
+          }
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

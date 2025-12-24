@@ -30,7 +30,10 @@ export function useWorkspacePreferences() {
       const [error, response] = await apiClient.workspace.preferences.get({
         params: { workspaceId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data.preferences;
     },
     enabled: !!workspaceId,

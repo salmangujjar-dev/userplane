@@ -35,7 +35,10 @@ export function useWorkspaces(options?: { page?: number; perPage?: number; enabl
           include_workspace_membership: true,
         },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     enabled,
