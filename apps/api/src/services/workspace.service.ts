@@ -36,7 +36,10 @@ export class WorkspaceService {
    */
   async create(params: CreateWorkspaceParams, options?: { tx?: Transaction }) {
     if (!params.workspaceName) {
-      throw new ORPCError('WORKSPACE_NAME_REQUIRED', { message: 'Workspace name is required' });
+      throw new ORPCError('WORKSPACE_NAME_REQUIRED', {
+        status: 400,
+        message: 'Workspace name is required',
+      });
     }
 
     // Generate unique recording slug if not provided
@@ -80,7 +83,7 @@ export class WorkspaceService {
           message: 'Workspace has been deleted',
         });
       }
-      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
     }
     return workspace;
   }
@@ -100,7 +103,7 @@ export class WorkspaceService {
           message: 'Workspace has been deleted',
         });
       }
-      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
     }
     return preferences;
   }
@@ -142,6 +145,7 @@ export class WorkspaceService {
 
     if (!updatedWorkspace) {
       throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        status: 404,
         message: 'Failed to rotate workspace invite URL',
       });
     }
@@ -163,7 +167,10 @@ export class WorkspaceService {
     }
   ) {
     if (!userId) {
-      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', { message: 'User ID is required' });
+      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', {
+        status: 400,
+        message: 'User ID is required',
+      });
     }
     return this.deps.workspaceRepo.findByUserId(userId, options);
   }
@@ -186,17 +193,22 @@ export class WorkspaceService {
     }
   ) {
     if (!userId) {
-      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', { message: 'User ID is required' });
+      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', {
+        status: 400,
+        message: 'User ID is required',
+      });
     }
 
     if (page < 1) {
       throw new ORPCError('WORKSPACE_INVALID_PAGINATION', {
+        status: 400,
         message: 'Page must be greater than 0',
       });
     }
 
     if (perPage < 1 || perPage > 50) {
       throw new ORPCError('WORKSPACE_INVALID_PAGINATION', {
+        status: 400,
         message: 'Per page must be between 1 and 50',
       });
     }
@@ -224,7 +236,10 @@ export class WorkspaceService {
    */
   async countByUserWithRoles(userId: string, roles?: Array<'member' | 'admin' | 'owner'>) {
     if (!userId) {
-      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', { message: 'User ID is required' });
+      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', {
+        status: 400,
+        message: 'User ID is required',
+      });
     }
 
     // If roles array is empty, return 0
@@ -242,7 +257,7 @@ export class WorkspaceService {
   async getInviteToken(workspaceId: string) {
     const result = await this.deps.workspaceRepo.findInviteTokenById(workspaceId);
     if (!result) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
     }
     return result.workspaceInviteToken;
   }
@@ -268,12 +283,13 @@ export class WorkspaceService {
   ) {
     const workspace = await this.getById(workspaceId);
     if (!workspace) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
     }
 
     const updated = await this.deps.workspaceRepo.updatePreferences(workspaceId, updates, options);
     if (!updated) {
       throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        status: 404,
         message: 'Failed to update workspace preferences',
       });
     }
@@ -289,24 +305,31 @@ export class WorkspaceService {
    */
   async updateName(workspaceId: string, newName: string, options?: { tx?: Transaction }) {
     if (!newName || newName.trim().length === 0) {
-      throw new ORPCError('WORKSPACE_NAME_REQUIRED', { message: 'Workspace name is required' });
+      throw new ORPCError('WORKSPACE_NAME_REQUIRED', {
+        status: 400,
+        message: 'Workspace name is required',
+      });
     }
 
     if (newName.length > 255) {
       throw new ORPCError('WORKSPACE_NAME_TOO_LONG', {
+        status: 400,
         message: 'Workspace name must be less than 255 characters',
       });
     }
 
     const workspace = await this.getById(workspaceId);
     if (!workspace) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
     }
 
     const updated = await this.deps.workspaceRepo.updateName(workspaceId, newName.trim(), options);
 
     if (!updated) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Failed to update workspace name' });
+      throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        status: 404,
+        message: 'Failed to update workspace name',
+      });
     }
 
     return updated;
@@ -329,7 +352,7 @@ export class WorkspaceService {
     const workspace = await this.getById(workspaceId);
 
     if (!workspace) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
     }
 
     // Use transaction for atomic deletion
@@ -338,7 +361,10 @@ export class WorkspaceService {
       const deleted = await this.deps.workspaceRepo.softDelete(workspaceId, { tx });
 
       if (!deleted) {
-        throw new ORPCError('WORKSPACE_DELETE_FAILED', { message: 'Failed to delete workspace' });
+        throw new ORPCError('WORKSPACE_DELETE_FAILED', {
+          status: 500,
+          message: 'Failed to delete workspace',
+        });
       }
 
       // 2. Soft delete all projects in workspace
@@ -386,13 +412,17 @@ export class WorkspaceService {
       .filter((term) => term.length > 0);
 
     if (searchTerms.length === 0) {
-      throw new ORPCError('WORKSPACE_SEARCH_TERM_REQUIRED', { message: 'Search term is required' });
+      throw new ORPCError('WORKSPACE_SEARCH_TERM_REQUIRED', {
+        status: 400,
+        message: 'Search term is required',
+      });
     }
 
     switch (type) {
       case 'members': {
         if (!this.deps.workspaceMemberRepo) {
           throw new ORPCError('WORKSPACE_SEARCH_UNAVAILABLE', {
+            status: 500,
             message: 'Member search not available',
           });
         }
@@ -401,6 +431,7 @@ export class WorkspaceService {
       case 'projects': {
         if (!this.deps.projectRepo) {
           throw new ORPCError('WORKSPACE_SEARCH_UNAVAILABLE', {
+            status: 500,
             message: 'Project search not available',
           });
         }
@@ -409,6 +440,7 @@ export class WorkspaceService {
       case 'domains': {
         if (!this.deps.domainRepo) {
           throw new ORPCError('WORKSPACE_SEARCH_UNAVAILABLE', {
+            status: 500,
             message: 'Domain search not available',
           });
         }
@@ -417,13 +449,17 @@ export class WorkspaceService {
       case 'links': {
         if (!this.deps.linkRepo) {
           throw new ORPCError('WORKSPACE_SEARCH_UNAVAILABLE', {
+            status: 500,
             message: 'Link search not available',
           });
         }
         return this.deps.linkRepo.searchByTitle(workspaceId, searchTerms, limit);
       }
       default:
-        throw new ORPCError('WORKSPACE_SEARCH_TYPE_INVALID', { message: 'Invalid search type' });
+        throw new ORPCError('WORKSPACE_SEARCH_TYPE_INVALID', {
+          status: 400,
+          message: 'Invalid search type',
+        });
     }
   }
 }

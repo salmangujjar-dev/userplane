@@ -37,6 +37,7 @@ export const verifyDomainImpl = (domainService: DomainService) => {
       originHostname = originUrl.hostname;
     } catch {
       throw new ORPCError('BAD_REQUEST', {
+        status: 400,
         message: 'Invalid origin header',
       });
     }

@@ -32,6 +32,7 @@ export class DomainService {
   ) {
     if (!params.url) {
       throw new ORPCError('DOMAIN_URL_REQUIRED', {
+        status: 400,
         message: 'Domain URL is required',
       });
     }
@@ -79,12 +80,14 @@ export class DomainService {
   async getByWorkspaceIdPaginated(workspaceId: string, page: number = 1, perPage: number = 5) {
     if (page < 1) {
       throw new ORPCError('DOMAIN_PAGE_INVALID', {
+        status: 400,
         message: 'Page must be greater than 0',
       });
     }
 
     if (perPage < 1 || perPage > 10) {
       throw new ORPCError('DOMAIN_PER_PAGE_INVALID', {
+        status: 400,
         message: 'Per page must be between 1 and 10',
       });
     }
@@ -94,6 +97,7 @@ export class DomainService {
     // If no domains exist, workspace doesn't exist (workspace always has at least 1 domain)
     if (total === 0) {
       throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        status: 404,
         message: 'Workspace not found',
       });
     }
@@ -126,6 +130,7 @@ export class DomainService {
   ) {
     if (!newUrl) {
       throw new ORPCError('DOMAIN_URL_REQUIRED', {
+        status: 400,
         message: 'Domain URL is required',
       });
     }
@@ -142,6 +147,7 @@ export class DomainService {
         });
       }
       throw new ORPCError('DOMAIN_NOT_FOUND', {
+        status: 404,
         message: 'Domain not found',
       });
     }
@@ -149,6 +155,7 @@ export class DomainService {
     // Verify domain belongs to the workspace
     if (domain.workspaceId !== workspaceId) {
       throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Domain does not belong to this workspace',
       });
     }
@@ -170,6 +177,7 @@ export class DomainService {
 
     if (existingDomain) {
       throw new ORPCError('DOMAIN_ALREADY_EXISTS', {
+        status: 409,
         message: 'This domain has already been added to the workspace',
       });
     }
@@ -179,6 +187,7 @@ export class DomainService {
 
     if (!updated) {
       throw new ORPCError('DOMAIN_UPDATE_FAILED', {
+        status: 500,
         message: 'Failed to update domain',
       });
     }
@@ -204,12 +213,14 @@ export class DomainService {
         });
       }
       throw new ORPCError('DOMAIN_NOT_FOUND', {
+        status: 404,
         message: 'Domain not found',
       });
     }
 
     if (domain.workspaceId !== workspaceId) {
       throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Domain does not belong to this workspace',
       });
     }
@@ -219,6 +230,7 @@ export class DomainService {
 
     if (domainCount === 1) {
       throw new ORPCError('DOMAIN_LAST_DOMAIN_DELETE_FORBIDDEN', {
+        status: 403,
         message: 'Cannot delete the only domain in a workspace',
       });
     }
@@ -227,6 +239,7 @@ export class DomainService {
 
     if (!deleted) {
       throw new ORPCError('DOMAIN_DELETE_FAILED', {
+        status: 500,
         message: 'Failed to delete domain',
       });
     }
@@ -260,6 +273,7 @@ export class DomainService {
 
     if (!payload) {
       throw new ORPCError('DOMAIN_VERIFICATION_TOKEN_INVALID', {
+        status: 401,
         message: 'Invalid verification token',
       });
     }
@@ -271,6 +285,7 @@ export class DomainService {
 
     if (!domain) {
       throw new ORPCError('DOMAIN_NOT_REGISTERED', {
+        status: 404,
         message: 'Domain is not registered for this workspace',
       });
     }
@@ -278,6 +293,7 @@ export class DomainService {
     // Verify domain belongs to the workspace from token
     if (domain.workspaceId !== payload.workspaceId) {
       throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Domain does not belong to this workspace',
       });
     }
@@ -291,6 +307,7 @@ export class DomainService {
       storedPathname = storedUrl.pathname;
     } catch {
       throw new ORPCError('DOMAIN_URL_INVALID', {
+        status: 400,
         message: 'Invalid stored domain URL',
       });
     }
@@ -301,6 +318,7 @@ export class DomainService {
       originUrl = new URL(`https://${originHostname}`);
     } catch {
       throw new ORPCError('DOMAIN_ORIGIN_INVALID', {
+        status: 400,
         message: 'Invalid origin hostname',
       });
     }
@@ -308,6 +326,7 @@ export class DomainService {
     // Compare hostname
     if (storedHostname !== originUrl.hostname) {
       throw new ORPCError('DOMAIN_ORIGIN_MISMATCH', {
+        status: 403,
         message: 'Origin does not match registered domain',
       });
     }
@@ -326,6 +345,7 @@ export class DomainService {
     const updatedDomain = await this.deps.domainRepo.findById(payload.domainId);
     if (!updatedDomain) {
       throw new ORPCError('DOMAIN_VERIFICATION_FAILED', {
+        status: 500,
         message: 'Failed to verify domain',
       });
     }
@@ -379,6 +399,7 @@ export class DomainService {
         });
       }
       throw new ORPCError('DOMAIN_NOT_FOUND', {
+        status: 404,
         message: 'Domain not found',
       });
     }
@@ -414,18 +435,21 @@ export class DomainService {
         });
       }
       throw new ORPCError('DOMAIN_NOT_FOUND', {
+        status: 404,
         message: 'Domain not found',
       });
     }
 
     if (domain.workspaceId !== workspaceId) {
       throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Domain does not belong to this workspace',
       });
     }
 
     if (domain.domainStatus !== 'verified') {
       throw new ORPCError('DOMAIN_UNVERIFIED', {
+        status: 403,
         message:
           'Cannot update recording preferences for unverified domain. Please verify the domain first.',
       });
@@ -438,6 +462,7 @@ export class DomainService {
     );
     if (!updated) {
       throw new ORPCError('DOMAIN_PREFERENCES_UPDATE_FAILED', {
+        status: 500,
         message: 'Failed to update domain preferences',
       });
     }
@@ -474,18 +499,21 @@ export class DomainService {
         });
       }
       throw new ORPCError('DOMAIN_NOT_FOUND', {
+        status: 404,
         message: 'Domain not found',
       });
     }
 
     if (domain.workspaceId !== workspaceId) {
       throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Domain does not belong to this workspace',
       });
     }
 
     if (domain.domainStatus !== 'verified') {
       throw new ORPCError('DOMAIN_UNVERIFIED', {
+        status: 403,
         message:
           'Cannot update recording preferences for unverified domain. Please verify the domain first.',
       });
@@ -498,6 +526,7 @@ export class DomainService {
     );
     if (!updated) {
       throw new ORPCError('DOMAIN_PREFERENCES_UPDATE_FAILED', {
+        status: 500,
         message: 'Failed to update domain preferences',
       });
     }

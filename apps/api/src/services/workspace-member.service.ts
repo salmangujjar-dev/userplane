@@ -26,6 +26,7 @@ export class WorkspaceMemberService {
   async addOwner(params: { userId: string; workspaceId: string }, options?: { tx?: Transaction }) {
     if (!params.userId || !params.workspaceId) {
       throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        status: 400,
         message: 'User ID and Workspace ID are required',
       });
     }
@@ -38,6 +39,7 @@ export class WorkspaceMemberService {
 
     if (existing) {
       throw new ORPCError('WORKSPACE_MEMBER_ALREADY_EXISTS', {
+        status: 409,
         message: 'User is already a member of this workspace',
       });
     }
@@ -79,6 +81,7 @@ export class WorkspaceMemberService {
   ) {
     if (!params.userId || !params.workspaceId) {
       throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        status: 400,
         message: 'User ID and Workspace ID are required',
       });
     }
@@ -91,6 +94,7 @@ export class WorkspaceMemberService {
 
     if (existing) {
       throw new ORPCError('WORKSPACE_MEMBER_ALREADY_EXISTS', {
+        status: 409,
         message: 'User is already a member of this workspace',
       });
     }
@@ -132,6 +136,7 @@ export class WorkspaceMemberService {
   ) {
     if (!params.memberId) {
       throw new ORPCError('WORKSPACE_MEMBER_ID_REQUIRED', {
+        status: 400,
         message: 'Member ID is required',
       });
     }
@@ -139,6 +144,7 @@ export class WorkspaceMemberService {
     const member = await this.deps.memberRepo.findById(params.memberId);
     if (!member) {
       throw new ORPCError('WORKSPACE_MEMBER_NOT_FOUND', {
+        status: 404,
         message: 'Workspace member not found',
       });
     }
@@ -146,6 +152,7 @@ export class WorkspaceMemberService {
     // Prevent users from changing their own role
     if (member.userId === params.userId) {
       throw new ORPCError('WORKSPACE_MEMBER_CANNOT_CHANGE_OWN_ROLE', {
+        status: 403,
         message: 'You cannot change your own role',
       });
     }
@@ -156,6 +163,7 @@ export class WorkspaceMemberService {
 
       if (ownerCount <= 1) {
         throw new ORPCError('WORKSPACE_MEMBER_LAST_OWNER_ROLE_CHANGE', {
+          status: 403,
           message: 'Cannot change role of the last owner. Promote another member to owner first.',
         });
       }
@@ -179,6 +187,7 @@ export class WorkspaceMemberService {
   ) {
     if (!params.memberId) {
       throw new ORPCError('WORKSPACE_MEMBER_ID_REQUIRED', {
+        status: 400,
         message: 'Member ID is required',
       });
     }
@@ -186,12 +195,14 @@ export class WorkspaceMemberService {
     const member = await this.deps.memberRepo.findById(params.memberId);
     if (!member) {
       throw new ORPCError('WORKSPACE_MEMBER_NOT_FOUND', {
+        status: 404,
         message: 'Workspace member not found',
       });
     }
 
     if (member.workspaceId !== params.workspaceId) {
       throw new ORPCError('WORKSPACE_MEMBER_WRONG_WORKSPACE', {
+        status: 403,
         message: 'Member does not belong to this workspace',
       });
     }
@@ -199,6 +210,7 @@ export class WorkspaceMemberService {
     // Prevent users from removing themselves (they should use leave endpoint)
     if (member.userId === params.userId) {
       throw new ORPCError('WORKSPACE_MEMBER_CANNOT_REMOVE_SELF', {
+        status: 403,
         message: 'You cannot remove yourself. Use the leave workspace endpoint instead.',
       });
     }
@@ -209,6 +221,7 @@ export class WorkspaceMemberService {
 
       if (ownerCount <= 1) {
         throw new ORPCError('WORKSPACE_MEMBER_LAST_OWNER_REMOVE', {
+          status: 403,
           message: 'Cannot remove the last owner from workspace',
         });
       }
@@ -234,18 +247,21 @@ export class WorkspaceMemberService {
   async getTeamMembers(workspaceId: string, page: number = 1, perPage: number = 5) {
     if (!workspaceId) {
       throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', {
+        status: 400,
         message: 'Workspace ID is required',
       });
     }
 
     if (page < 1) {
       throw new ORPCError('WORKSPACE_MEMBER_INVALID_PAGINATION', {
+        status: 400,
         message: 'Page must be greater than 0',
       });
     }
 
     if (perPage < 1 || perPage > 10) {
       throw new ORPCError('WORKSPACE_MEMBER_INVALID_PAGINATION', {
+        status: 400,
         message: 'Per page must be between 1 and 10',
       });
     }
@@ -255,6 +271,7 @@ export class WorkspaceMemberService {
     // If no members exist, workspace doesn't exist (workspace always has at least 1 member)
     if (total === 0) {
       throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        status: 404,
         message: 'Workspace not found',
       });
     }
@@ -282,6 +299,7 @@ export class WorkspaceMemberService {
   async leaveWorkspace(userId: string, workspaceId: string, options?: { tx?: Transaction }) {
     if (!userId || !workspaceId) {
       throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        status: 400,
         message: 'User ID and Workspace ID are required',
       });
     }
@@ -289,6 +307,7 @@ export class WorkspaceMemberService {
     const member = await this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
     if (!member) {
       throw new ORPCError('WORKSPACE_MEMBER_NOT_IN_WORKSPACE', {
+        status: 404,
         message: 'You are not a member of this workspace',
       });
     }
@@ -299,6 +318,7 @@ export class WorkspaceMemberService {
 
       if (ownerCount <= 1) {
         throw new ORPCError('WORKSPACE_MEMBER_LAST_OWNER_LEAVE', {
+          status: 403,
           message:
             'Cannot leave workspace as the last owner. Transfer ownership or delete the workspace first.',
         });
@@ -316,6 +336,7 @@ export class WorkspaceMemberService {
   async getNotificationPreferences(userId: string, workspaceId: string) {
     if (!userId || !workspaceId) {
       throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        status: 400,
         message: 'User ID and Workspace ID are required',
       });
     }
@@ -323,6 +344,7 @@ export class WorkspaceMemberService {
     const member = await this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
     if (!member) {
       throw new ORPCError('WORKSPACE_MEMBER_NOT_IN_WORKSPACE', {
+        status: 404,
         message: 'You are not a member of this workspace',
       });
     }
@@ -355,6 +377,7 @@ export class WorkspaceMemberService {
   ) {
     if (!userId || !workspaceId) {
       throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        status: 400,
         message: 'User ID and Workspace ID are required',
       });
     }
@@ -362,6 +385,7 @@ export class WorkspaceMemberService {
     const member = await this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
     if (!member) {
       throw new ORPCError('WORKSPACE_MEMBER_NOT_IN_WORKSPACE', {
+        status: 404,
         message: 'You are not a member of this workspace',
       });
     }

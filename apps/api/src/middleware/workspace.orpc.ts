@@ -26,6 +26,7 @@ export function createWorkspaceMiddleware(
 
       if (!workspaceId) {
         throw new ORPCError('BAD_REQUEST', {
+          status: 400,
           message: 'Workspace ID is required',
         });
       }
@@ -35,6 +36,7 @@ export function createWorkspaceMiddleware(
 
       if (!member) {
         throw new ORPCError('FORBIDDEN', {
+          status: 403,
           message: 'You are not a member of this workspace',
         });
       }
@@ -61,6 +63,7 @@ export function createWorkspaceRoleMiddleware(
 
       if (!workspaceId) {
         throw new ORPCError('BAD_REQUEST', {
+          status: 400,
           message: 'Workspace ID is required',
         });
       }
@@ -70,12 +73,14 @@ export function createWorkspaceRoleMiddleware(
 
       if (!member) {
         throw new ORPCError('FORBIDDEN', {
+          status: 403,
           message: 'You are not a member of this workspace',
         });
       }
 
       if (!allowedRoles.includes(member.workspaceRole)) {
         throw new ORPCError('FORBIDDEN', {
+          status: 403,
           message: 'You do not have permission to perform this action',
         });
       }

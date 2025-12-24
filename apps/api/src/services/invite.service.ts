@@ -145,6 +145,7 @@ export class InviteService {
 
     if (!inviteData) {
       throw new ORPCError('INVITE_TOKEN_INVALID', {
+        status: 401,
         message: 'Invalid or expired invite token',
       });
     }
@@ -154,6 +155,7 @@ export class InviteService {
 
     if (currentInviteToken !== inviteData.wt) {
       throw new ORPCError('INVITE_TOKEN_INVALIDATED', {
+        status: 410,
         message: 'Invite token has been invalidated',
       });
     }
@@ -182,6 +184,7 @@ export class InviteService {
 
     if (!inviteData) {
       throw new ORPCError('INVITE_TOKEN_INVALID', {
+        status: 401,
         message: 'Invalid or expired invite token',
       });
     }
@@ -191,6 +194,7 @@ export class InviteService {
 
     if (currentInviteToken !== inviteData.wt) {
       throw new ORPCError('INVITE_TOKEN_INVALIDATED', {
+        status: 410,
         message: 'Invite token has been invalidated',
       });
     }
@@ -234,6 +238,7 @@ export class InviteService {
 
     if (!inviteData) {
       throw new ORPCError('INVITE_TOKEN_INVALID', {
+        status: 401,
         message: 'Invalid or expired invite token',
       });
     }
@@ -243,6 +248,7 @@ export class InviteService {
 
     if (currentInviteToken !== inviteData.wt) {
       throw new ORPCError('INVITE_TOKEN_INVALIDATED', {
+        status: 410,
         message: 'Invite token has been invalidated',
       });
     }

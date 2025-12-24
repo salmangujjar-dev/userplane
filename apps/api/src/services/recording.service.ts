@@ -86,11 +86,15 @@ export class RecordingService {
   ): Promise<{ recordings: RecordingItem[]; total: number }> {
     // Validate pagination params
     if (page < 1) {
-      throw new ORPCError('RECORDING_PAGE_INVALID', { message: 'Page must be greater than 0' });
+      throw new ORPCError('RECORDING_PAGE_INVALID', {
+        status: 400,
+        message: 'Page must be greater than 0',
+      });
     }
 
     if (perPage < 1 || perPage > MAX_PER_PAGE) {
       throw new ORPCError('RECORDING_PER_PAGE_INVALID', {
+        status: 400,
         message: `Per page must be between 1 and ${MAX_PER_PAGE}`,
       });
     }
@@ -151,12 +155,13 @@ export class RecordingService {
           message: 'Recording has already been deleted',
         });
       }
-      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
+      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
     }
 
     // Verify recording belongs to the workspace
     if (existingRecording.workspaceId !== workspaceId) {
       throw new ORPCError('RECORDING_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Recording does not belong to this workspace',
       });
     }
@@ -165,7 +170,10 @@ export class RecordingService {
     const deleted = await this.deps.recordingRepo.softDelete(recordingId, options);
 
     if (!deleted) {
-      throw new ORPCError('RECORDING_DELETE_FAILED', { message: 'Failed to delete recording' });
+      throw new ORPCError('RECORDING_DELETE_FAILED', {
+        status: 500,
+        message: 'Failed to delete recording',
+      });
     }
 
     return deleted;
@@ -189,11 +197,11 @@ export class RecordingService {
           message: 'Recording has already been deleted',
         });
       }
-      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
+      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
     }
 
     if (row.workspaceId !== workspaceId) {
-      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
+      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
     }
 
     return {
@@ -429,11 +437,11 @@ export class RecordingService {
           message: 'Recording has already been deleted',
         });
       }
-      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
+      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
     }
 
     if (recording.workspaceId !== workspaceId) {
-      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
+      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
     }
 
     return recording;
