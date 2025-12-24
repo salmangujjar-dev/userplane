@@ -26,13 +26,13 @@ export default function RootPage() {
   useEffect(() => {
     if (isLoading) return;
 
-    if (isError) {
+    if (isError || !workspacesData || !workspacesData.success) {
       router.push('/workspace/create');
       return;
     }
 
-    if (workspacesData?.workspaces && workspacesData.workspaces.length > 0) {
-      const firstWorkspace = workspacesData.workspaces[0];
+    if (workspacesData.data.workspaces && workspacesData.data.workspaces.length > 0) {
+      const firstWorkspace = workspacesData.data.workspaces[0];
       if (firstWorkspace) {
         router.push(`/${firstWorkspace.workspaceId}`);
       } else {

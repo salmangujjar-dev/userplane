@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
+import { handleQueryResult } from '@/lib/errors';
 
 export interface WorkspacePreferences {
   workspaceId: string;
@@ -17,6 +18,9 @@ export interface WorkspacePreferences {
 /**
  * Hook to fetch workspace preferences and recording link settings
  * Returns customization settings for recording links
+ *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
  */
 export function useWorkspacePreferences() {
   const workspaceId = useWorkspaceId();
@@ -30,11 +34,7 @@ export function useWorkspacePreferences() {
       const [error, response] = await apiClient.workspace.preferences.get({
         params: { workspaceId },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data.preferences;
+      return handleQueryResult(error, response?.data.preferences ?? null);
     },
     enabled: !!workspaceId,
     staleTime: 5 * 60 * 1000,

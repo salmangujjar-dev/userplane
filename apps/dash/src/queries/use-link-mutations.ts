@@ -3,37 +3,31 @@ import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
 import type { Link } from '@/hooks/use-workspace-links';
 import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
+import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
+
+interface CreateLinkInput {
+  domainId: string;
+  projectId?: string;
+  linkReference?: string;
+  linkReusable: boolean;
+}
 
 export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDomain[]) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
-      domainId: string;
-      projectId?: string;
-      linkReference?: string;
-      linkReusable: boolean;
-    }) => {
+    mutationFn: async (data: CreateLinkInput) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.link.create({
         params: { workspaceId },
         body: data,
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response;
+      return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async (data: {
-      domainId: string;
-      projectId?: string;
-      linkReference?: string;
-      linkReusable: boolean;
-    }) => {
+    onMutate: async (data: CreateLinkInput) => {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
-      const previousLinks = queryClient.getQueryData(['links', workspaceId]);
+      const previousLinks = queryClient.getQueryData<{ links: Link[] }>(['links', workspaceId]);
 
       // Find domain for optimistic data
       const domain = domains?.find((d) => d.domainId === data.domainId);
@@ -57,23 +51,23 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
 
       return { previousLinks };
     },
-    onError: (
-      error: Error,
-      data: {
-        domainId: string;
-        projectId?: string;
-        linkReference?: string;
-        linkReusable: boolean;
-      },
-      context: { previousLinks: unknown } | undefined
-    ) => {
+    onSuccess: (result, data, context) => {
+      if (!result.success) {
+        if (context?.previousLinks) {
+          queryClient.setQueryData(['links', workspaceId], context.previousLinks);
+        }
+        handleApiError(result.error, 'Failed to create link');
+        return;
+      }
+      toast.success('Link created successfully');
+    },
+    onError: (error: unknown, data, context) => {
       if (context?.previousLinks) {
         queryClient.setQueryData(['links', workspaceId], context.previousLinks);
       }
-      toast.error(`Failed to create link: ${error.message}`);
-    },
-    onSuccess: () => {
-      toast.success('Link created successfully');
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
@@ -81,16 +75,18 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
   });
 }
 
+interface UpdateLinkInput {
+  linkId: string;
+  title: string;
+  reference: string;
+  reusable: boolean;
+}
+
 export function useUpdateLink(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    unknown,
-    Error,
-    { linkId: string; title: string; reference: string; reusable: boolean },
-    { previousLinks: unknown }
-  >({
-    mutationFn: async ({ linkId, title, reference, reusable }) => {
+  return useMutation({
+    mutationFn: async ({ linkId, title, reference, reusable }: UpdateLinkInput) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.link.update({
         params: { workspaceId, linkId },
@@ -100,16 +96,12 @@ export function useUpdateLink(workspaceId: string | null) {
           linkReusable: reusable,
         },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ?? null);
     },
     onMutate: async ({ linkId, title, reusable }) => {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
-      const previousLinks = queryClient.getQueryData(['links', workspaceId]);
+      const previousLinks = queryClient.getQueryData<{ links: Link[] }>(['links', workspaceId]);
 
       queryClient.setQueryData(['links', workspaceId], (old: { links: Link[] } | undefined) => {
         if (!old) return old;
@@ -129,14 +121,23 @@ export function useUpdateLink(workspaceId: string | null) {
 
       return { previousLinks };
     },
-    onError: (error, variables, context) => {
+    onSuccess: (result, variables, context) => {
+      if (!result.success) {
+        if (context?.previousLinks) {
+          queryClient.setQueryData(['links', workspaceId], context.previousLinks);
+        }
+        handleApiError(result.error, 'Failed to update link');
+        return;
+      }
+      toast.success('Link updated successfully');
+    },
+    onError: (error: unknown, variables, context) => {
       if (context?.previousLinks) {
         queryClient.setQueryData(['links', workspaceId], context.previousLinks);
       }
-      toast.error(`Failed to update link: ${error.message}`);
-    },
-    onSuccess: () => {
-      toast.success('Link updated successfully');
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
@@ -147,22 +148,18 @@ export function useUpdateLink(workspaceId: string | null) {
 export function useDeleteLink(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
-  return useMutation<unknown, Error, string, { previousLinks: unknown }>({
-    mutationFn: async (linkId) => {
+  return useMutation({
+    mutationFn: async (linkId: string) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.link.delete({
         params: { workspaceId, linkId },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ? { deleted: true } : null);
     },
     onMutate: async (linkId) => {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
-      const previousLinks = queryClient.getQueryData(['links', workspaceId]);
+      const previousLinks = queryClient.getQueryData<{ links: Link[] }>(['links', workspaceId]);
 
       queryClient.setQueryData(['links', workspaceId], (old: { links: Link[] } | undefined) => {
         if (!old) return old;
@@ -174,14 +171,23 @@ export function useDeleteLink(workspaceId: string | null) {
 
       return { previousLinks };
     },
-    onError: (error, variables, context) => {
+    onSuccess: (result, variables, context) => {
+      if (!result.success) {
+        if (context?.previousLinks) {
+          queryClient.setQueryData(['links', workspaceId], context.previousLinks);
+        }
+        handleApiError(result.error, 'Failed to delete link');
+        return;
+      }
+      toast.success('Link deleted successfully');
+    },
+    onError: (error: unknown, variables, context) => {
       if (context?.previousLinks) {
         queryClient.setQueryData(['links', workspaceId], context.previousLinks);
       }
-      toast.error(`Failed to delete link: ${error.message}`);
-    },
-    onSuccess: () => {
-      toast.success('Link deleted successfully');
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });

@@ -27,6 +27,14 @@ export const WorkspaceMembershipSchema = z.object({
 });
 
 /**
+ * Minimal workspace item (just ID and name)
+ */
+export const WorkspaceMinimalItemSchema = z.object({
+  workspaceId: z.string(),
+  workspaceName: z.string(),
+});
+
+/**
  * Workspace item
  */
 export const WorkspaceItemSchema = z.object({
@@ -54,6 +62,7 @@ export const WorkspaceItemSchema = z.object({
 export const ListWorkspacesQuerySchema = z.object({
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
+    minimal: z.coerce.boolean().optional().default(false),
     include_notification_preference: z.coerce.boolean().optional().default(false),
     include_workspace_membership: z.coerce.boolean().optional().default(false),
   }),
@@ -63,7 +72,7 @@ export const ListWorkspacesQuerySchema = z.object({
  * Workspaces list response
  */
 export const WorkspacesListDataSchema = z.object({
-  workspaces: z.array(WorkspaceItemSchema),
+  workspaces: z.array(z.union([WorkspaceItemSchema, WorkspaceMinimalItemSchema])),
   total: z.number().int().nonnegative(),
   pagination: PaginationMetaSchema,
 });
@@ -260,6 +269,23 @@ export const LeaveWorkspaceSchema = z.object({
  */
 export const LeaveWorkspaceDataSchema = z.object({
   workspaceId: z.string(),
+});
+
+/**
+ * Get notification preferences request (detailed mode)
+ */
+export const GetNotificationPreferencesSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+});
+
+/**
+ * Notification preferences get response
+ */
+export const NotificationPreferencesGetDataSchema = z.object({
+  workspaceId: z.string(),
+  notificationPreferences: WorkspaceNotificationPreferencesSchema,
 });
 
 /**

@@ -260,16 +260,19 @@ export class WorkspaceRepository {
 
   /**
    * Find workspaces for a user with pagination
+   * Supports minimal mode which returns only ID and name
    */
   async findByUserIdPaginated(
     userId: string,
     limit: number,
     offset: number,
     options?: {
+      minimal?: boolean;
       includeNotificationPreferences?: boolean;
       includeWorkspaceMembership?: boolean;
     }
   ) {
+    const isMinimal = options?.minimal || false;
     const includeNotifications = options?.includeNotificationPreferences || false;
     const includeMembership = options?.includeWorkspaceMembership || false;
 
@@ -277,26 +280,30 @@ export class WorkspaceRepository {
     const selectFields: any = {
       workspaceId: workspaces.workspaceId,
       workspaceName: workspaces.workspaceName,
-      workspacePlan: workspaces.workspacePlan,
-      createdAt: workspaces.createdAt,
-      updatedAt: workspaces.updatedAt,
     };
 
-    if (includeNotifications) {
-      selectFields.notificationPreferences = {
-        notifyOnLinkUsage: workspaceMembers.notifyOnLinkUsage,
-        notifyOnQuotaReset: workspaceMembers.notifyOnQuotaReset,
-        notifyOnQuotaLimit: workspaceMembers.notifyOnQuotaLimit,
-        notifyOnInviteAccepted: workspaceMembers.notifyOnInviteAccepted,
-        notifyOnMemberJoin: workspaceMembers.notifyOnMemberJoin,
-      };
-    }
+    // Only add extra fields if not in minimal mode
+    if (!isMinimal) {
+      selectFields.workspacePlan = workspaces.workspacePlan;
+      selectFields.createdAt = workspaces.createdAt;
+      selectFields.updatedAt = workspaces.updatedAt;
 
-    if (includeMembership) {
-      selectFields.workspaceMembership = {
-        workspaceMemberId: workspaceMembers.workspaceMemberId,
-        workspaceRole: workspaceMembers.workspaceRole,
-      };
+      if (includeNotifications) {
+        selectFields.notificationPreferences = {
+          notifyOnLinkUsage: workspaceMembers.notifyOnLinkUsage,
+          notifyOnQuotaReset: workspaceMembers.notifyOnQuotaReset,
+          notifyOnQuotaLimit: workspaceMembers.notifyOnQuotaLimit,
+          notifyOnInviteAccepted: workspaceMembers.notifyOnInviteAccepted,
+          notifyOnMemberJoin: workspaceMembers.notifyOnMemberJoin,
+        };
+      }
+
+      if (includeMembership) {
+        selectFields.workspaceMembership = {
+          workspaceMemberId: workspaceMembers.workspaceMemberId,
+          workspaceRole: workspaceMembers.workspaceRole,
+        };
+      }
     }
 
     const result = await this.db

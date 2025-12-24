@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
+import { handleQueryResult } from '@/lib/errors';
 
 export interface WorkspaceDomain {
   domainId: string;
@@ -12,16 +13,22 @@ export interface WorkspaceDomain {
  * Hook to fetch domains for the current workspace
  * Returns list of domains with their verification status
  *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
+ *
  * @example
  * ```tsx
  * function DomainSelector() {
- *   const { data: domains, isLoading } = useWorkspaceDomains();
+ *   const { data, isLoading } = useWorkspaceDomains();
  *
  *   if (isLoading) return <div>Loading...</div>;
+ *   if (data && !data.success) {
+ *     return <ErrorState error={data.error} />;
+ *   }
  *
  *   return (
  *     <select>
- *       {domains?.map(domain => (
+ *       {data.data.map(domain => (
  *         <option key={domain.domainId} value={domain.domainId}>
  *           {domain.domainUrl}
  *         </option>
@@ -47,11 +54,7 @@ export function useWorkspaceDomains(options?: { perPage?: number; enabled?: bool
         query: { page: 1, per_page: perPage },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data.domains;
+      return handleQueryResult(error, response?.data.domains ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000,

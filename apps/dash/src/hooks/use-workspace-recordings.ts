@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
+import { handleQueryResult, type SafeResult } from '@/lib/errors';
 
 export interface RecordingCreator {
   workspaceMemberId: string;
@@ -40,6 +41,9 @@ export interface RecordingsData {
  * Hook to fetch recordings for the current workspace
  * Supports pagination and filtering by creator, project, and link
  *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
+ *
  * @example
  * ```tsx
  * function RecordingsList() {
@@ -50,10 +54,13 @@ export interface RecordingsData {
  *   });
  *
  *   if (isLoading) return <div>Loading...</div>;
+ *   if (data && !data.success) {
+ *     return <ErrorState error={data.error} />;
+ *   }
  *
  *   return (
  *     <div>
- *       {data?.recordings.map(recording => (
+ *       {data.data.recordings.map(recording => (
  *         <RecordingPreview key={recording.recordingId} {...recording} />
  *       ))}
  *     </div>
@@ -82,7 +89,7 @@ export function useWorkspaceRecordings(options?: {
       filters.sortBy,
       filters.sortDirection,
     ],
-    queryFn: async (): Promise<RecordingsData> => {
+    queryFn: async (): Promise<SafeResult<RecordingsData>> => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
@@ -100,11 +107,7 @@ export function useWorkspaceRecordings(options?: {
         },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes

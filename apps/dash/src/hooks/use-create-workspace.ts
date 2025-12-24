@@ -1,15 +1,14 @@
 import { useMutation } from '@tanstack/react-query';
+import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
-import { toast } from 'sonner';
+import { handleSafeResult, handleApiError, type SafeResult } from '@/lib/errors';
 
 interface CreateWorkspaceInput {
   url: string;
 }
 
-interface CreateWorkspaceResponse {
-  data: {
-    workspaceId: string;
-  };
+interface CreateWorkspaceData {
+  workspaceId: string;
 }
 
 /**
@@ -17,7 +16,7 @@ interface CreateWorkspaceResponse {
  * Handles API call, loading states, and error handling
  */
 export function useCreateWorkspace() {
-  return useMutation<CreateWorkspaceResponse, Error, CreateWorkspaceInput>({
+  return useMutation<SafeResult<CreateWorkspaceData>, Error, CreateWorkspaceInput>({
     mutationFn: async (input: CreateWorkspaceInput) => {
       const fullUrl = input.url.startsWith('http') ? input.url : `https://${input.url}`;
 
@@ -27,16 +26,18 @@ export function useCreateWorkspace() {
         },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response;
+      return handleSafeResult(error, response?.data ?? null);
     },
-    onError: (error) => {
-      console.error('Failed to create workspace:', error);
-      toast.error('Failed to create workspace', {
-        description: error.message || 'Please try again later.',
+    onSuccess: (result) => {
+      if (!result.success) {
+        handleApiError(result.error, 'Failed to create workspace');
+        return;
+      }
+    },
+    onError: (error: unknown) => {
+      // Only unknown errors reach here (will trigger Sentry)
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
       });
     },
   });

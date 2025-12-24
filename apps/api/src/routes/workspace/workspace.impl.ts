@@ -33,6 +33,7 @@ export const getAllWorkspacesImpl = (workspaceService: WorkspaceService) => {
       page,
       perPage,
       {
+        minimal: input.query.minimal,
         includeNotificationPreferences: input.query.include_notification_preference,
         includeWorkspaceMembership: input.query.include_workspace_membership,
       }
@@ -324,6 +325,34 @@ export const leaveWorkspaceImpl = (
         data: {
           workspaceId: input.params.workspaceId,
           success: true,
+        },
+      };
+    });
+};
+
+/**
+ * GET /workspace/:workspaceId/notifications - Get notification preferences
+ * Requires workspace member
+ */
+export const getNotificationPreferencesImpl = (
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.notifications.get
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      const notificationPreferences = await workspaceMemberService.getNotificationPreferences(
+        context.user.id,
+        input.params.workspaceId
+      );
+
+      return {
+        message: 'Notification preferences retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          notificationPreferences,
         },
       };
     });
@@ -892,6 +921,7 @@ export const createWorkspaceProcedures = (
     },
 
     notifications: {
+      get: getNotificationPreferencesImpl(workspaceMemberService, workspaceService),
       update: updateNotificationPreferencesImpl(workspaceMemberService, workspaceService),
     },
 

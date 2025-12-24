@@ -172,6 +172,7 @@ export class WorkspaceService {
    * Get workspaces for a user with pagination
    * Returns workspaces where the user is a member
    * Optionally includes notification preferences and workspace membership info
+   * Supports minimal mode which returns only ID and name for efficient loading
    * Throws WORKSPACE_USER_ID_REQUIRED, WORKSPACE_INVALID_PAGINATION if validation fails
    */
   async getByUserIdPaginated(
@@ -179,6 +180,7 @@ export class WorkspaceService {
     page: number = 1,
     perPage: number = 5,
     options?: {
+      minimal?: boolean;
       includeNotificationPreferences?: boolean;
       includeWorkspaceMembership?: boolean;
     }

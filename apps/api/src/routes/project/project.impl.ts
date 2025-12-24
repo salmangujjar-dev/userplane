@@ -14,27 +14,36 @@ import { createPaginationMeta } from '@/api/types';
 /**
  * GET /workspace/:workspaceId/projects
  * List projects with pagination
+ * Requires workspace member
  */
-export const getProjectsImpl = (projectService: ProjectService) => {
-  return authorized.project.list.handler(async ({ input }) => {
-    const page = input.query.page || 1;
-    const perPage = input.query.per_page || 5;
+export const getProjectsImpl = (
+  projectService: ProjectService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-    const { projects, total } = await projectService.getProjectsByWorkspacePaginated(
-      input.params.workspaceId,
-      page,
-      perPage
-    );
+  return authorized.project.list
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const page = input.query.page || 1;
+      const perPage = input.query.per_page || 5;
 
-    return {
-      message: 'Projects retrieved successfully',
-      data: {
-        workspaceId: input.params.workspaceId,
-        projects,
-        pagination: createPaginationMeta(page, perPage, total),
-      },
-    };
-  });
+      const { projects, total } = await projectService.getProjectsByWorkspacePaginated(
+        input.params.workspaceId,
+        page,
+        perPage
+      );
+
+      return {
+        message: 'Projects retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          projects,
+          pagination: createPaginationMeta(page, perPage, total),
+        },
+      };
+    });
 };
 
 /**
@@ -202,7 +211,7 @@ export const createProjectProcedures = (
   workspaceService: WorkspaceService
 ) => {
   return {
-    list: getProjectsImpl(projectService),
+    list: getProjectsImpl(projectService, workspaceMemberService, workspaceService),
     create: createProjectImpl(projectService, workspaceMemberService, workspaceService),
     getById: getProjectByIdImpl(projectService, workspaceMemberService, workspaceService),
     update: updateProjectImpl(projectService, workspaceMemberService, workspaceService),

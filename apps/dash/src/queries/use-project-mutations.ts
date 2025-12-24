@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
 import type { Project } from '@/hooks/use-workspace-projects';
+import { handleApiError, handleSafeResult, isErrorCode } from '@/lib/errors';
 
 export function useCreateProject(workspaceId: string | null) {
   const queryClient = useQueryClient();
@@ -13,16 +14,12 @@ export function useCreateProject(workspaceId: string | null) {
         params: { workspaceId },
         body: { projectTitle: title || null },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async (title) => {
+    onMutate: async (title: string) => {
       await queryClient.cancelQueries({ queryKey: ['projects', workspaceId] });
 
-      const previousProjects = queryClient.getQueryData(['projects', workspaceId]);
+      const previousProjects = queryClient.getQueryData<Project[]>(['projects', workspaceId]);
 
       // Optimistically add new project
       const optimisticProject = {
@@ -39,14 +36,23 @@ export function useCreateProject(workspaceId: string | null) {
 
       return { previousProjects };
     },
-    onError: (error: Error, title, context) => {
+    onSuccess: (result, title, context) => {
+      if (!result.success) {
+        if (context?.previousProjects) {
+          queryClient.setQueryData(['projects', workspaceId], context.previousProjects);
+        }
+        handleApiError(result.error, 'Failed to create project');
+        return;
+      }
+      toast.success('Project created successfully');
+    },
+    onError: (error: unknown, title, context) => {
       if (context?.previousProjects) {
         queryClient.setQueryData(['projects', workspaceId], context.previousProjects);
       }
-      toast.error(`Failed to create project: ${error.message}`);
-    },
-    onSuccess: () => {
-      toast.success('Project created successfully');
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
@@ -54,19 +60,17 @@ export function useCreateProject(workspaceId: string | null) {
   });
 }
 
+interface UpdateProjectInput {
+  projectId: string;
+  title: string;
+  isDefault?: boolean;
+}
+
 export function useUpdateProject(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      projectId,
-      title,
-      isDefault,
-    }: {
-      projectId: string;
-      title: string;
-      isDefault?: boolean;
-    }) => {
+    mutationFn: async ({ projectId, title, isDefault }: UpdateProjectInput) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.project.update({
         params: { workspaceId, projectId },
@@ -75,16 +79,12 @@ export function useUpdateProject(workspaceId: string | null) {
           isDefault,
         },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async ({ projectId, title, isDefault }) => {
+    onMutate: async ({ projectId, title, isDefault }: UpdateProjectInput) => {
       await queryClient.cancelQueries({ queryKey: ['projects', workspaceId] });
 
-      const previousProjects = queryClient.getQueryData(['projects', workspaceId]);
+      const previousProjects = queryClient.getQueryData<Project[]>(['projects', workspaceId]);
 
       queryClient.setQueryData(['projects', workspaceId], (old: Project[] | undefined) => {
         if (!old) return old;
@@ -101,14 +101,23 @@ export function useUpdateProject(workspaceId: string | null) {
 
       return { previousProjects };
     },
-    onError: (error: Error, variables, context) => {
+    onSuccess: (result, variables, context) => {
+      if (!result.success) {
+        if (context?.previousProjects) {
+          queryClient.setQueryData(['projects', workspaceId], context.previousProjects);
+        }
+        handleApiError(result.error, 'Failed to update project');
+        return;
+      }
+      toast.success('Project updated successfully');
+    },
+    onError: (error: unknown, variables, context) => {
       if (context?.previousProjects) {
         queryClient.setQueryData(['projects', workspaceId], context.previousProjects);
       }
-      toast.error(`Failed to update project: ${error.message}`);
-    },
-    onSuccess: () => {
-      toast.success('Project updated successfully');
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
@@ -125,16 +134,12 @@ export function useDeleteProject(workspaceId: string | null) {
       const [error, response] = await apiClient.project.delete({
         params: { workspaceId, projectId },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async (projectId) => {
+    onMutate: async (projectId: string) => {
       await queryClient.cancelQueries({ queryKey: ['projects', workspaceId] });
 
-      const previousProjects = queryClient.getQueryData(['projects', workspaceId]);
+      const previousProjects = queryClient.getQueryData<Project[]>(['projects', workspaceId]);
 
       queryClient.setQueryData(['projects', workspaceId], (old: Project[] | undefined) => {
         if (!old) return old;
@@ -143,14 +148,30 @@ export function useDeleteProject(workspaceId: string | null) {
 
       return { previousProjects };
     },
-    onError: (error: Error, projectId, context) => {
+    onSuccess: (result, projectId, context) => {
+      if (!result.success) {
+        if (context?.previousProjects) {
+          queryClient.setQueryData(['projects', workspaceId], context.previousProjects);
+        }
+        // Handle last project deletion error
+        if (isErrorCode(result.error, 'PROJECT_LAST_PROJECT_DELETE_FORBIDDEN')) {
+          toast.error("Can't delete the only project", {
+            description: 'Create another project first.',
+          });
+          return;
+        }
+        handleApiError(result.error, 'Failed to delete project');
+        return;
+      }
+      toast.success('Project deleted successfully');
+    },
+    onError: (error: unknown, projectId, context) => {
       if (context?.previousProjects) {
         queryClient.setQueryData(['projects', workspaceId], context.previousProjects);
       }
-      toast.error(`Failed to delete project: ${error.message}`);
-    },
-    onSuccess: () => {
-      toast.success('Project deleted successfully');
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });

@@ -51,10 +51,12 @@ export function WorkspaceSection() {
     isOwner: boolean;
   } | null>(null);
 
-  const { data: workspacesData, isLoading } = useWorkspaces({
+  const { data: workspacesResult, isLoading } = useWorkspaces({
     page: currentPage,
     perPage: ITEMS_PER_PAGE,
   });
+
+  const workspacesData = workspacesResult?.success ? workspacesResult.data : null;
 
   const workspaces = useMemo<Workspace[]>(() => {
     if (!workspacesData?.workspaces) return [];

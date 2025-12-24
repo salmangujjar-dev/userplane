@@ -18,6 +18,8 @@ import {
   MemberRemoveDataSchema,
   LeaveWorkspaceSchema,
   LeaveWorkspaceDataSchema,
+  GetNotificationPreferencesSchema,
+  NotificationPreferencesGetDataSchema,
   UpdateNotificationPreferencesSchema,
   NotificationPreferencesUpdateDataSchema,
   WorkspaceDomainsQuerySchema,
@@ -257,6 +259,28 @@ export const leaveWorkspace = oc
   })
   .input(LeaveWorkspaceSchema)
   .output(ApiResponseSchema(LeaveWorkspaceDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/notifications
+ * Get notification preferences
+ */
+export const getNotificationPreferences = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/notifications',
+    inputStructure: 'detailed',
+    summary: 'Get notification preferences',
+    description: 'Retrieve workspace notification preferences for current user',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_MEMBER_IDS_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_IDS_REQUIRED,
+    WORKSPACE_MEMBER_NOT_IN_WORKSPACE: WorkspaceErrors.WORKSPACE_MEMBER_NOT_IN_WORKSPACE,
+  })
+  .input(GetNotificationPreferencesSchema)
+  .output(ApiResponseSchema(NotificationPreferencesGetDataSchema));
 
 /**
  * PATCH /workspace/{workspaceId}/notifications

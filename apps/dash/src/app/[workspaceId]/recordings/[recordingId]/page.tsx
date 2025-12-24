@@ -30,15 +30,20 @@ export default function RecordingDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const {
-    data: recordingData,
+    data: recordingResult,
     isLoading: isLoadingRecording,
     error: recordingError,
   } = useRecording(workspaceId, recordingId);
-  const { data: videoData, isLoading: isLoadingVideo } = useRecordingVideo(
+  const recordingData = recordingResult?.success ? recordingResult.data : null;
+
+  const { data: videoResult, isLoading: isLoadingVideo } = useRecordingVideo(
     workspaceId,
     recordingId
   );
-  const { data: thumbnailData } = useRecordingThumbnail(workspaceId, recordingId);
+  const videoData = videoResult?.success ? videoResult.data : null;
+
+  const { data: thumbnailResult } = useRecordingThumbnail(workspaceId, recordingId);
+  const thumbnailData = thumbnailResult?.success ? thumbnailResult.data : null;
 
   const deleteRecordingMutation = useDeleteRecording(workspaceId, () => {
     router.push(`/${workspaceId}/recordings`);
@@ -57,7 +62,7 @@ export default function RecordingDetailPage() {
   }
 
   // Show error state
-  if (recordingError || !recordingData) {
+  if (recordingError || (recordingResult && !recordingResult.success) || !recordingData) {
     return (
       <div className="h-screen bg-background flex items-center justify-center">
         <DinoError
@@ -65,7 +70,9 @@ export default function RecordingDetailPage() {
           description={
             recordingError instanceof Error
               ? recordingError.message
-              : 'This recording may have been deleted or you may not have access.'
+              : recordingResult && !recordingResult.success
+                ? recordingResult.error.message
+                : 'This recording may have been deleted or you may not have access.'
           }
           onGoBack={() => window.history.back()}
           showRetry={false}

@@ -36,7 +36,7 @@ export default function RecordingsPage() {
   const [linkSearchQuery, setLinkSearchQuery] = useState('');
 
   const {
-    data: recordingsData,
+    data: recordingsResult,
     isLoading: isLoadingRecordings,
     error: recordingsError,
     refetch: refetchRecordings,
@@ -49,6 +49,8 @@ export default function RecordingsPage() {
       linkId: selectedRecordingLinks.length > 0 ? selectedRecordingLinks : undefined,
     },
   });
+
+  const recordingsData = recordingsResult?.success ? recordingsResult.data : null;
 
   const { projects, isLoading: isSearchingProjects } = useSearchableProjects(projectSearchQuery, {
     perPage: 5,
@@ -135,14 +137,16 @@ export default function RecordingsPage() {
               </div>
             </div>
 
-            {recordingsError ? (
+            {recordingsError || (recordingsResult && !recordingsResult.success) ? (
               <div className="flex items-center justify-center py-12">
                 <DinoError
                   title="Failed to load recordings"
                   description={
                     recordingsError instanceof Error
                       ? recordingsError.message
-                      : 'Something went wrong while loading recordings.'
+                      : recordingsResult && !recordingsResult.success
+                        ? recordingsResult.error.message
+                        : 'Something went wrong while loading recordings.'
                   }
                   onRetry={() => refetchRecordings()}
                   showGoBack={false}

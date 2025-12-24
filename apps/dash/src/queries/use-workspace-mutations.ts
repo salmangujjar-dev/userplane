@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
 
 interface WorkspaceNotifications {
   notifyOnLinkUsage?: boolean;
@@ -21,30 +22,29 @@ interface WorkspacesData {
   total: number;
 }
 
+interface UpdateNotificationsData {
+  updated: boolean;
+}
+
 export function useUpdateNotifications() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({
-      workspaceId,
-      notifications,
-    }: {
-      workspaceId: string;
-      notifications: Partial<WorkspaceNotifications>;
-    }) => {
+  return useMutation<
+    SafeResult<UpdateNotificationsData>,
+    Error,
+    { workspaceId: string; notifications: Partial<WorkspaceNotifications> },
+    { previousWorkspaces: WorkspacesData | undefined }
+  >({
+    mutationFn: async ({ workspaceId, notifications }) => {
       const [error, response] = await apiClient.workspace.notifications.update({
         params: { workspaceId },
         body: notifications,
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ? { updated: true } : null);
     },
     onMutate: async ({ workspaceId, notifications }) => {
       await queryClient.cancelQueries({ queryKey: ['workspaces'] });
-      const previousWorkspaces = queryClient.getQueryData(['workspaces']);
+      const previousWorkspaces = queryClient.getQueryData<WorkspacesData>(['workspaces']);
       queryClient.setQueryData(['workspaces'], (old: WorkspacesData | undefined) => {
         if (!old) return old;
         return {
@@ -64,14 +64,23 @@ export function useUpdateNotifications() {
       });
       return { previousWorkspaces };
     },
-    onError: (error: Error, variables, context) => {
+    onSuccess: (result, variables, context) => {
+      if (!result.success) {
+        if (context?.previousWorkspaces) {
+          queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
+        }
+        handleApiError(result.error, 'Failed to update notifications');
+        return;
+      }
+      toast.success('Notification preferences updated');
+    },
+    onError: (error: unknown, variables, context) => {
       if (context?.previousWorkspaces) {
         queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
       }
-      toast.error(`Failed to update notifications: ${error.message}`);
-    },
-    onSuccess: () => {
-      toast.success('Notification preferences updated');
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
@@ -79,25 +88,35 @@ export function useUpdateNotifications() {
   });
 }
 
+interface RotateInviteData {
+  inviteUrl: string;
+}
+
 export function useRotateInvite() {
-  return useMutation({
+  return useMutation<SafeResult<RotateInviteData>, Error, string>({
     mutationFn: async (workspaceId: string) => {
       const [error, response] = await apiClient.workspace.invite.rotate({
         params: { workspaceId },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ?? null);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (!result.success) {
+        handleApiError(result.error, 'Failed to reset invite token');
+        return;
+      }
       toast.success('Invite token reset successfully');
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to reset invite token: ${error.message}`);
+    onError: (error: unknown) => {
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
   });
+}
+
+interface DeleteWorkspaceData {
+  deleted: boolean;
 }
 
 export function useDeleteWorkspace(
@@ -108,20 +127,21 @@ export function useDeleteWorkspace(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<
+    SafeResult<DeleteWorkspaceData>,
+    Error,
+    string,
+    { previousWorkspaces: WorkspacesData | undefined }
+  >({
     mutationFn: async (workspaceId: string) => {
       const [error, response] = await apiClient.workspace.delete({
         params: { workspaceId },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ? { deleted: true } : null);
     },
     onMutate: async (workspaceId) => {
       await queryClient.cancelQueries({ queryKey: ['workspaces'] });
-      const previousWorkspaces = queryClient.getQueryData(['workspaces']);
+      const previousWorkspaces = queryClient.getQueryData<WorkspacesData>(['workspaces']);
       queryClient.setQueryData(['workspaces'], (old: WorkspacesData | undefined) => {
         if (!old) return old;
         return {
@@ -131,13 +151,15 @@ export function useDeleteWorkspace(
       });
       return { previousWorkspaces };
     },
-    onError: (error: Error, workspaceId, context) => {
-      if (context?.previousWorkspaces) {
-        queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
+    onSuccess: (result, deletedWorkspaceId, context) => {
+      if (!result.success) {
+        if (context?.previousWorkspaces) {
+          queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
+        }
+        handleApiError(result.error, 'Failed to delete workspace');
+        return;
       }
-      toast.error(`Failed to delete workspace: ${error.message}`);
-    },
-    onSuccess: async (_, deletedWorkspaceId) => {
+
       toast.success('Workspace deleted successfully');
 
       if (deletedWorkspaceId === currentWorkspaceId) {
@@ -154,10 +176,22 @@ export function useDeleteWorkspace(
         }
       }
     },
+    onError: (error: unknown, workspaceId, context) => {
+      if (context?.previousWorkspaces) {
+        queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
+      }
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
     },
   });
+}
+
+interface LeaveWorkspaceData {
+  left: boolean;
 }
 
 export function useLeaveWorkspace(
@@ -168,20 +202,21 @@ export function useLeaveWorkspace(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<
+    SafeResult<LeaveWorkspaceData>,
+    Error,
+    string,
+    { previousWorkspaces: WorkspacesData | undefined }
+  >({
     mutationFn: async (workspaceId: string) => {
       const [error, response] = await apiClient.workspace.members.leave({
         params: { workspaceId },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ? { left: true } : null);
     },
     onMutate: async (workspaceId) => {
       await queryClient.cancelQueries({ queryKey: ['workspaces'] });
-      const previousWorkspaces = queryClient.getQueryData(['workspaces']);
+      const previousWorkspaces = queryClient.getQueryData<WorkspacesData>(['workspaces']);
       queryClient.setQueryData(['workspaces'], (old: WorkspacesData | undefined) => {
         if (!old) return old;
         return {
@@ -191,13 +226,22 @@ export function useLeaveWorkspace(
       });
       return { previousWorkspaces };
     },
-    onError: (error: Error, workspaceId, context) => {
-      if (context?.previousWorkspaces) {
-        queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
+    onSuccess: (result, leftWorkspaceId, context) => {
+      if (!result.success) {
+        if (context?.previousWorkspaces) {
+          queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
+        }
+        // Special handling for last owner trying to leave
+        if (isErrorCode(result.error, 'WORKSPACE_MEMBER_LAST_OWNER_LEAVE')) {
+          toast.error("You're the last owner", {
+            description: 'Transfer ownership or delete the workspace first.',
+          });
+          return;
+        }
+        handleApiError(result.error, 'Failed to leave workspace');
+        return;
       }
-      toast.error(`Failed to leave workspace: ${error.message}`);
-    },
-    onSuccess: async (_, leftWorkspaceId) => {
+
       toast.success('Left workspace successfully');
 
       if (leftWorkspaceId === currentWorkspaceId) {
@@ -211,6 +255,14 @@ export function useLeaveWorkspace(
           onNavigate('/workspace/create');
         }
       }
+    },
+    onError: (error: unknown, workspaceId, context) => {
+      if (context?.previousWorkspaces) {
+        queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
+      }
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });

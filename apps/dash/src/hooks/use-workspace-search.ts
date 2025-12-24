@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
+import { handleQueryResult, type SafeResult } from '@/lib/errors';
 
 type SearchType = 'members' | 'projects' | 'domains' | 'links';
 
@@ -30,18 +31,25 @@ type SearchResult = SearchMember | SearchProject | SearchLink;
  * Hook to search workspace entities using server-side search
  * Searches across members, projects, domains, and links
  *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
+ *
  * @example
  * ```tsx
  * function SearchableFilter() {
- *   const { data: results } = useWorkspaceSearch({
+ *   const { data } = useWorkspaceSearch({
  *     query: 'john',
  *     type: 'members',
  *     limit: 5
  *   });
  *
+ *   if (data && !data.success) {
+ *     return <ErrorState error={data.error} />;
+ *   }
+ *
  *   return (
  *     <div>
- *       {results?.map(member => (
+ *       {data?.data.map(member => (
  *         <div key={member.workspaceMemberId}>{member.userName}</div>
  *       ))}
  *     </div>
@@ -60,13 +68,13 @@ export function useWorkspaceSearch(options: {
 
   return useQuery({
     queryKey: ['workspace-search', workspaceId, type, query, limit],
-    queryFn: async (): Promise<SearchResult[]> => {
+    queryFn: async (): Promise<SafeResult<SearchResult[]>> => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
 
       if (!query || query.trim().length === 0) {
-        return [];
+        return { success: true, data: [] };
       }
 
       const [error, response] = await apiClient.workspace.search({
@@ -78,11 +86,7 @@ export function useWorkspaceSearch(options: {
         },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data.results as SearchResult[];
+      return handleQueryResult(error, (response?.data.results as SearchResult[]) ?? null);
     },
     enabled: enabled && !!workspaceId && !!query && query.trim().length > 0,
     staleTime: 30 * 1000, // 30 seconds

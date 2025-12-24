@@ -46,13 +46,16 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<string>('');
 
-  const { data: projects, isLoading: isLoadingProjects } = useWorkspaceProjects({
+  const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects({
     perPage: 10,
   });
 
-  const { data: domains, isLoading: isLoadingDomains } = useWorkspaceDomains({
+  const { data: domainsResult, isLoading: isLoadingDomains } = useWorkspaceDomains({
     perPage: 10,
   });
+
+  const projects = projectsResult?.success ? projectsResult.data : undefined;
+  const domains = domainsResult?.success ? domainsResult.data : undefined;
 
   const createLinkMutation = useCreateLink(workspaceId, domains);
 
@@ -102,9 +105,12 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
         linkReusable: isReusable,
       },
       {
-        onSuccess: (response) => {
+        onSuccess: (result) => {
+          // Error already handled by mutation's onSuccess
+          if (!result.success) return;
+
           if (onLinkCreated) {
-            onLinkCreated(response.data.link.linkURL);
+            onLinkCreated(result.data.link.linkURL);
           }
           setOpen(false);
         },

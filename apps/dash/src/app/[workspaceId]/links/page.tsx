@@ -32,7 +32,7 @@ export default function LinksPage() {
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
 
   const {
-    data: linksData,
+    data: linksResult,
     isLoading: isLoadingLinks,
     error: linksError,
     refetch: refetchLinks,
@@ -46,13 +46,16 @@ export default function LinksPage() {
     },
   });
 
+  const linksData = linksResult?.success ? linksResult.data : null;
+
   const { projects, isLoading: isSearchingProjects } = useSearchableProjects(projectSearchQuery, {
     perPage: 5,
   });
   const { members, isLoading: isSearchingMembers } = useSearchableMembers(memberSearchQuery, {
     perPage: 5,
   });
-  const { data: domains } = useWorkspaceDomains({ perPage: 5 });
+  const { data: domainsResult } = useWorkspaceDomains({ perPage: 5 });
+  const domains = domainsResult?.success ? domainsResult.data : null;
 
   const projectOptions =
     projects?.map((project) => ({
@@ -127,14 +130,16 @@ export default function LinksPage() {
           </div>
 
           <div className="space-y-6">
-            {linksError ? (
+            {linksError || (linksResult && !linksResult.success) ? (
               <div className="flex items-center justify-center py-12">
                 <DinoError
                   title="Failed to load links"
                   description={
                     linksError instanceof Error
                       ? linksError.message
-                      : 'Something went wrong while loading links.'
+                      : linksResult && !linksResult.success
+                        ? linksResult.error.message
+                        : 'Something went wrong while loading links.'
                   }
                   onRetry={() => refetchLinks()}
                   showGoBack={false}

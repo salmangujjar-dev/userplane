@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import type { LinkProviderType, LinkType } from '@workspace/contract';
+import { handleQueryResult } from '@/lib/errors';
 
 export interface LinkDomain {
   domainId: string;
@@ -62,19 +63,25 @@ export interface LinksData {
  * Hook to fetch links for the current workspace
  * Supports pagination and filtering
  *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
+ *
  * @example
  * ```tsx
  * function LinksList() {
- *   const { data: links, isLoading } = useWorkspaceLinks({
+ *   const { data, isLoading } = useWorkspaceLinks({
  *     page: 1,
  *     perPage: 10,
  *   });
  *
  *   if (isLoading) return <div>Loading...</div>;
+ *   if (data && !data.success) {
+ *     return <ErrorState error={data.error} />;
+ *   }
  *
  *   return (
  *     <div>
- *       {links?.map(link => (
+ *       {data.data.links?.map(link => (
  *         <div key={link.linkId}>{link.linkTitle}</div>
  *       ))}
  *     </div>
@@ -125,11 +132,7 @@ export function useWorkspaceLinks(options?: {
         },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes

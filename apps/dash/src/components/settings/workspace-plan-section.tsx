@@ -13,10 +13,11 @@ import { useWorkspace } from '@/hooks/use-workspace';
 import { SectionError } from '@/components/shared/section-error';
 
 export function WorkspacePlanSection() {
-  const { data: workspaceData, isLoading, error, refetch } = useWorkspace();
+  const { data: workspaceResult, isLoading, error, refetch } = useWorkspace();
+  const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const planName = workspaceData?.workspace.workspacePlanName || 'Free';
 
-  if (error) {
+  if (error || (workspaceResult && !workspaceResult.success)) {
     return (
       <div>
         <div className="mb-4">
@@ -31,7 +32,9 @@ export function WorkspacePlanSection() {
             description={
               error instanceof Error
                 ? error.message
-                : 'Something went wrong while loading plan details.'
+                : workspaceResult && !workspaceResult.success
+                  ? workspaceResult.error.message
+                  : 'Something went wrong while loading plan details.'
             }
             onRetry={() => refetch()}
           />

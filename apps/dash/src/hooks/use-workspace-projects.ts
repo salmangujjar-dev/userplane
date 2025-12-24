@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
+import { handleQueryResult } from '@/lib/errors';
 
 export interface Project {
   projectId: string;
@@ -14,16 +15,22 @@ export interface Project {
  * Hook to fetch projects for the current workspace
  * Fetches project list from API with pagination
  *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
+ *
  * @example
  * ```tsx
  * function ProjectSelector() {
- *   const { data: projects, isLoading } = useWorkspaceProjects();
+ *   const { data, isLoading } = useWorkspaceProjects();
  *
  *   if (isLoading) return <div>Loading...</div>;
+ *   if (data && !data.success) {
+ *     return <ErrorState error={data.error} />;
+ *   }
  *
  *   return (
  *     <select>
- *       {projects?.map(project => (
+ *       {data.data.map(project => (
  *         <option key={project.projectId} value={project.projectId}>
  *           {project.projectTitle || 'Untitled Project'}
  *         </option>
@@ -47,11 +54,7 @@ export function useWorkspaceProjects(options?: { perPage?: number; enabled?: boo
         params: { workspaceId },
         query: { page: 1, per_page: perPage },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data.projects;
+      return handleQueryResult(error, response?.data.projects ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000,

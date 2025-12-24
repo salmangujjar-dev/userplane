@@ -112,7 +112,9 @@ export class ProjectService {
 
   /**
    * Get projects in workspace with pagination
+   * If no projects found, validates workspace existence (since workspace always has at least 1 project)
    * Throws PROJECT_PAGE_INVALID or PROJECT_PER_PAGE_INVALID if pagination params are invalid
+   * Throws WORKSPACE_NOT_FOUND if workspace doesn't exist when no projects found
    */
   async getProjectsByWorkspacePaginated(
     workspaceId: string,
@@ -130,6 +132,14 @@ export class ProjectService {
     }
 
     const total = await this.deps.projectRepo.countByWorkspace(workspaceId);
+
+    // If no projects exist, workspace doesn't exist (workspace always has at least 1 project)
+    if (total === 0) {
+      throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        message: 'Workspace not found',
+      });
+    }
+
     const offset = (page - 1) * perPage;
     const projects = await this.deps.projectRepo.findByWorkspacePaginated(
       workspaceId,
