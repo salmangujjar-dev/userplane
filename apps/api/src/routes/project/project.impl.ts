@@ -65,6 +65,7 @@ export const getProjectByIdImpl = (
       // Validate project belongs to workspace
       if (project.workspaceId !== input.params.workspaceId) {
         throw new ORPCError('BAD_REQUEST', {
+          status: 400,
           message: 'Project does not belong to this workspace',
         });
       }
@@ -99,7 +100,10 @@ export const createProjectImpl = (
       });
 
       if (!project) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', { message: 'Failed to create project' });
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          status: 500,
+          message: 'Failed to create project',
+        });
       }
 
       return {
@@ -131,7 +135,10 @@ export const updateProjectImpl = (
       });
 
       if (!project) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', { message: 'Failed to update project' });
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          status: 500,
+          message: 'Failed to update project',
+        });
       }
 
       return {
@@ -163,7 +170,10 @@ export const replaceProjectImpl = (
       });
 
       if (!project) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', { message: 'Failed to replace project' });
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          status: 500,
+          message: 'Failed to replace project',
+        });
       }
 
       return {

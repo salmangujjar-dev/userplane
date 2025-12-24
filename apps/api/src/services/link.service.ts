@@ -129,16 +129,20 @@ export class LinkService {
       const decoded = jwt.verify(token, env.recorder.secret) as { lid: string };
       if (!decoded.lid) {
         throw new ORPCError('LINK_TOKEN_MISSING_ID', {
+          status: 400,
           message: 'Invalid link token: missing link ID',
         });
       }
       return decoded.lid;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new ORPCError('LINK_TOKEN_EXPIRED', { message: 'Link token has expired' });
+        throw new ORPCError('LINK_TOKEN_EXPIRED', {
+          status: 401,
+          message: 'Link token has expired',
+        });
       }
       if (error instanceof jwt.JsonWebTokenError) {
-        throw new ORPCError('LINK_TOKEN_INVALID', { message: 'Invalid link token' });
+        throw new ORPCError('LINK_TOKEN_INVALID', { status: 401, message: 'Invalid link token' });
       }
       throw error;
     }
@@ -156,21 +160,28 @@ export class LinkService {
     // Guard rail: Check if workspace is deleted
     const isWorkspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(params.workspaceId);
     if (isWorkspaceDeleted === null) {
-      throw new ORPCError('NOT_FOUND', { message: 'Workspace not found' });
+      throw new ORPCError('NOT_FOUND', { status: 404, message: 'Workspace not found' });
     }
     if (isWorkspaceDeleted) {
-      throw new ORPCError('LINK_WORKSPACE_DELETED', { message: 'Workspace has been deleted' });
+      throw new ORPCError('LINK_WORKSPACE_DELETED', {
+        status: 410,
+        message: 'Workspace has been deleted',
+      });
     }
 
     // Get the workspace member with user info
     const memberWithUser = await this.deps.workspaceMemberRepo.findByIdWithUser(params.createdBy);
     if (!memberWithUser) {
-      throw new ORPCError('LINK_MEMBER_NOT_FOUND', { message: 'Workspace member not found' });
+      throw new ORPCError('LINK_MEMBER_NOT_FOUND', {
+        status: 404,
+        message: 'Workspace member not found',
+      });
     }
 
     // Verify member belongs to the workspace
     if (memberWithUser.workspaceId !== params.workspaceId) {
       throw new ORPCError('LINK_MEMBER_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Workspace member does not belong to this workspace',
       });
     }
@@ -181,6 +192,7 @@ export class LinkService {
       const defaultProject = await this.deps.projectRepo.findDefaultByWorkspace(params.workspaceId);
       if (!defaultProject) {
         throw new ORPCError('LINK_DEFAULT_PROJECT_NOT_FOUND', {
+          status: 404,
           message: 'No default project found for workspace',
         });
       }
@@ -190,10 +202,13 @@ export class LinkService {
     // Guard rail: Check if project is deleted
     const isProjectDeleted = await this.deps.projectRepo.isSoftDeleted(projectId);
     if (isProjectDeleted === null) {
-      throw new ORPCError('NOT_FOUND', { message: 'Project not found' });
+      throw new ORPCError('NOT_FOUND', { status: 404, message: 'Project not found' });
     }
     if (isProjectDeleted) {
-      throw new ORPCError('LINK_PROJECT_DELETED', { message: 'Project has been deleted' });
+      throw new ORPCError('LINK_PROJECT_DELETED', {
+        status: 410,
+        message: 'Project has been deleted',
+      });
     }
 
     // Determine linkReference - use provided or generate default based on user's first name
@@ -229,7 +244,7 @@ export class LinkService {
     );
 
     if (!link) {
-      throw new ORPCError('LINK_CREATE_FAILED', { message: 'Failed to create link' });
+      throw new ORPCError('LINK_CREATE_FAILED', { status: 500, message: 'Failed to create link' });
     }
 
     // Fetch domain info for linkURL generation
@@ -276,11 +291,15 @@ export class LinkService {
   ): Promise<{ links: LinkItem[]; total: number }> {
     // Validate pagination params
     if (page < 1) {
-      throw new ORPCError('LINK_PAGE_INVALID', { message: 'Page must be greater than 0' });
+      throw new ORPCError('LINK_PAGE_INVALID', {
+        status: 400,
+        message: 'Page must be greater than 0',
+      });
     }
 
     if (perPage < 1 || perPage > MAX_PER_PAGE) {
       throw new ORPCError('LINK_PER_PAGE_INVALID', {
+        status: 400,
         message: `Per page must be between 1 and ${MAX_PER_PAGE}`,
       });
     }
@@ -363,12 +382,13 @@ export class LinkService {
       if (isSoftDeleted === true) {
         throw new ORPCError('LINK_GONE', { status: 410, message: 'Link has been deleted' });
       }
-      throw new ORPCError('LINK_NOT_FOUND', { message: 'Link not found' });
+      throw new ORPCError('LINK_NOT_FOUND', { status: 404, message: 'Link not found' });
     }
 
     // Verify link belongs to the workspace
     if (existingLink.workspaceId !== workspaceId) {
       throw new ORPCError('LINK_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Link does not belong to this workspace',
       });
     }
@@ -377,7 +397,7 @@ export class LinkService {
     const updated = await this.deps.linkRepo.update(linkId, params, options);
 
     if (!updated) {
-      throw new ORPCError('LINK_UPDATE_FAILED', { message: 'Failed to update link' });
+      throw new ORPCError('LINK_UPDATE_FAILED', { status: 500, message: 'Failed to update link' });
     }
 
     // Fetch domain info for linkURL generation
@@ -426,12 +446,13 @@ export class LinkService {
       if (isSoftDeleted === true) {
         throw new ORPCError('LINK_GONE', { status: 410, message: 'Link has been deleted' });
       }
-      throw new ORPCError('LINK_NOT_FOUND', { message: 'Link not found' });
+      throw new ORPCError('LINK_NOT_FOUND', { status: 404, message: 'Link not found' });
     }
 
     // Verify link belongs to the workspace
     if (linkWithDetails.workspaceId !== workspaceId) {
       throw new ORPCError('LINK_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Link does not belong to this workspace',
       });
     }
@@ -489,12 +510,13 @@ export class LinkService {
       if (isSoftDeleted === true) {
         throw new ORPCError('LINK_GONE', { status: 410, message: 'Link has already been deleted' });
       }
-      throw new ORPCError('LINK_NOT_FOUND', { message: 'Link not found' });
+      throw new ORPCError('LINK_NOT_FOUND', { status: 404, message: 'Link not found' });
     }
 
     // Verify link belongs to the workspace
     if (existingLink.workspaceId !== workspaceId) {
       throw new ORPCError('LINK_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Link does not belong to this workspace',
       });
     }
@@ -503,7 +525,7 @@ export class LinkService {
     const deleted = await this.deps.linkRepo.softDelete(linkId, options);
 
     if (!deleted) {
-      throw new ORPCError('LINK_DELETE_FAILED', { message: 'Failed to delete link' });
+      throw new ORPCError('LINK_DELETE_FAILED', { status: 500, message: 'Failed to delete link' });
     }
 
     return deleted;

@@ -52,6 +52,7 @@ export class ProvisionerService {
 
       if (!createdWorkspace) {
         throw new ORPCError('PROVISIONER_WORKSPACE_CREATE_FAILED', {
+          status: 500,
           message: 'Failed to create workspace',
         });
       }
@@ -86,7 +87,10 @@ export class ProvisionerService {
     });
 
     if (!workspace) {
-      throw new ORPCError('PROVISIONER_TRANSACTION_FAILED', { message: 'Transaction failed' });
+      throw new ORPCError('PROVISIONER_TRANSACTION_FAILED', {
+        status: 500,
+        message: 'Transaction failed',
+      });
     }
 
     return {

@@ -134,6 +134,7 @@ export class SessionService {
         });
       }
       throw new ORPCError('SESSION_LINK_NOT_FOUND', {
+        status: 404,
         message: "Link doesn't seem to exist, try requesting a new one",
       });
     }
@@ -146,6 +147,7 @@ export class SessionService {
     // Validate link type - only recording links allowed
     if (linkData.linkType !== 'recording') {
       throw new ORPCError('SESSION_LINK_INVALID_TYPE', {
+        status: 400,
         message: "Link isn't set up for recordings",
       });
     }
@@ -156,6 +158,7 @@ export class SessionService {
       const terminalCount = await this.deps.linkRepo.countTerminalRecordingsForLink(linkId);
       if (terminalCount > 0) {
         throw new ORPCError('SESSION_LINK_ALREADY_USED', {
+          status: 403,
           message: "Link's been used already, grab a new one",
         });
       }
@@ -204,6 +207,7 @@ export class SessionService {
     const sessionPayload = this.verifySessionToken(sessionToken);
     if (!sessionPayload) {
       throw new ORPCError('SESSION_TOKEN_EXPIRED', {
+        status: 401,
         message: "Session's expired, let's start over",
       });
     }
@@ -219,6 +223,7 @@ export class SessionService {
         });
       }
       throw new ORPCError('SESSION_LINK_NOT_FOUND', {
+        status: 404,
         message: "Link doesn't seem to exist, try requesting a new one",
       });
     }
@@ -226,6 +231,7 @@ export class SessionService {
     // Validate link type again
     if (linkData.linkType !== 'recording') {
       throw new ORPCError('SESSION_LINK_INVALID_TYPE', {
+        status: 400,
         message: "Link isn't set up for recordings",
       });
     }
@@ -238,6 +244,7 @@ export class SessionService {
       );
       if (terminalCount > 0) {
         throw new ORPCError('SESSION_LINK_ALREADY_USED', {
+          status: 403,
           message: "Link's been used already, grab a new one",
         });
       }
@@ -246,6 +253,7 @@ export class SessionService {
     // Validate recording duration
     if (recordingDurationMs < SESSION_CONSTRAINTS.MIN_DURATION_MS) {
       throw new ORPCError('SESSION_DURATION_TOO_SHORT', {
+        status: 400,
         message: 'Recording needs to be a bit longer',
       });
     }
@@ -253,6 +261,7 @@ export class SessionService {
     // Validate against workspace-specific limit (if set)
     if (sessionPayload.prefs.rmd !== null && recordingDurationMs > sessionPayload.prefs.rmd) {
       throw new ORPCError('SESSION_DURATION_TOO_LONG', {
+        status: 400,
         message: 'Recording ran too long, try keeping it shorter',
       });
     }
@@ -260,6 +269,7 @@ export class SessionService {
     // Validate against absolute maximum
     if (recordingDurationMs > SESSION_CONSTRAINTS.DEFAULT_MAX_DURATION_MS) {
       throw new ORPCError('SESSION_DURATION_TOO_LONG', {
+        status: 400,
         message: 'Recording ran too long, try keeping it shorter',
       });
     }
@@ -353,6 +363,7 @@ export class SessionService {
     const uploadPayload = this.verifyUploadToken(uploadToken);
     if (!uploadPayload) {
       throw new ORPCError('SESSION_UPLOAD_TOKEN_EXPIRED', {
+        status: 401,
         message: 'Upload session expired, try uploading again',
       });
     }
@@ -360,6 +371,7 @@ export class SessionService {
     // Validate recording ID matches token
     if (uploadPayload.rid !== recordingId) {
       throw new ORPCError('SESSION_UPLOAD_TOKEN_MISMATCH', {
+        status: 400,
         message: 'Upload got mixed up, try again',
       });
     }
@@ -375,6 +387,7 @@ export class SessionService {
         });
       }
       throw new ORPCError('SESSION_LINK_NOT_FOUND', {
+        status: 404,
         message: "Link doesn't seem to exist, try requesting a new one",
       });
     }
@@ -392,6 +405,7 @@ export class SessionService {
         });
       }
       throw new ORPCError('SESSION_RECORDING_NOT_FOUND', {
+        status: 404,
         message: "Can't find that recording, try again",
       });
     }
@@ -399,6 +413,7 @@ export class SessionService {
     // Verify recording belongs to token's link
     if (recording.recordingLinkId !== uploadPayload.lid) {
       throw new ORPCError('SESSION_UPLOAD_TOKEN_MISMATCH', {
+        status: 400,
         message: 'Upload got mixed up, try again',
       });
     }
@@ -410,6 +425,7 @@ export class SessionService {
     const updated = await this.deps.recordingRepo.markAsAvailable(recording.recordingId);
     if (!updated) {
       throw new ORPCError('SESSION_UPLOAD_FAILED', {
+        status: 500,
         message: "Couldn't finalize upload, try again",
       });
     }
@@ -521,11 +537,13 @@ export class SessionService {
 
     if (!videoFile) {
       throw new ORPCError('SESSION_VIDEO_MISSING', {
+        status: 400,
         message: "Video's missing, try recording again",
       });
     }
     if (videoFile.size <= 0) {
       throw new ORPCError('SESSION_VIDEO_EMPTY', {
+        status: 400,
         message: 'Video file is empty, try recording again',
       });
     }
@@ -576,6 +594,7 @@ export class SessionService {
       if (!validateFileMimeType(file.type, file.mime_type)) {
         // MIME type errors are always thrown (not silently excluded)
         throw new ORPCError('SESSION_FILE_FORMAT_UNSUPPORTED', {
+          status: 400,
           message: "Format's not supported, try recording again",
         });
       }
@@ -585,6 +604,7 @@ export class SessionService {
       if (file.size > maxSize) {
         // Size limit errors are always thrown (not silently excluded)
         throw new ORPCError('SESSION_FILE_TOO_LARGE', {
+          status: 400,
           message: "File's too big, try recording something shorter",
         });
       }
@@ -660,6 +680,7 @@ export class SessionService {
 
       default:
         throw new ORPCError('SESSION_FILE_FORMAT_UNSUPPORTED', {
+          status: 400,
           message: "Format's not supported, try recording again",
         });
     }
@@ -766,6 +787,7 @@ export class SessionService {
 
     if (errors.length > 0) {
       throw new ORPCError('SESSION_FILE_VERIFICATION_FAILED', {
+        status: 400,
         message: "Couldn't verify files, try uploading again",
       });
     }

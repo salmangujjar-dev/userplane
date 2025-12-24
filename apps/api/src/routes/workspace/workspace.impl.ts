@@ -544,6 +544,7 @@ export const acceptInviteImpl = (
     // Ensure the token's workspace matches the requested workspace
     if (validation.workspaceId !== input.params.workspaceId) {
       throw new ORPCError('BAD_REQUEST', {
+        status: 400,
         message: 'Invitation token does not match the requested workspace',
       });
     }
@@ -648,6 +649,7 @@ export const addDomainImpl = (
 
       if (!domain) {
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          status: 500,
           message: 'Failed to create domain',
         });
       }

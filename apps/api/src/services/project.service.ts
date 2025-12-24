@@ -32,7 +32,10 @@ export class ProjectService {
     options?: { tx?: Transaction }
   ) {
     if (!params.workspaceId) {
-      throw new ORPCError('PROJECT_WORKSPACE_ID_REQUIRED', { message: 'Workspace ID is required' });
+      throw new ORPCError('PROJECT_WORKSPACE_ID_REQUIRED', {
+        status: 400,
+        message: 'Workspace ID is required',
+      });
     }
 
     let isDefault: boolean;
@@ -83,7 +86,7 @@ export class ProjectService {
       if (isSoftDeleted === true) {
         throw new ORPCError('PROJECT_GONE', { status: 410, message: 'Project has been deleted' });
       }
-      throw new ORPCError('PROJECT_NOT_FOUND', { message: 'Project not found' });
+      throw new ORPCError('PROJECT_NOT_FOUND', { status: 404, message: 'Project not found' });
     }
     return project;
   }
@@ -97,6 +100,7 @@ export class ProjectService {
     const project = await this.deps.projectRepo.findDefaultByWorkspace(workspaceId);
     if (!project) {
       throw new ORPCError('PROJECT_DEFAULT_NOT_FOUND', {
+        status: 404,
         message: 'No default project found for workspace',
       });
     }
@@ -122,11 +126,15 @@ export class ProjectService {
     perPage: number = 5
   ) {
     if (page < 1) {
-      throw new ORPCError('PROJECT_PAGE_INVALID', { message: 'Page must be greater than 0' });
+      throw new ORPCError('PROJECT_PAGE_INVALID', {
+        status: 400,
+        message: 'Page must be greater than 0',
+      });
     }
 
     if (perPage < 1 || perPage > 10) {
       throw new ORPCError('PROJECT_PER_PAGE_INVALID', {
+        status: 400,
         message: 'Per page must be between 1 and 10',
       });
     }
@@ -136,6 +144,7 @@ export class ProjectService {
     // If no projects exist, workspace doesn't exist (workspace always has at least 1 project)
     if (total === 0) {
       throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        status: 404,
         message: 'Workspace not found',
       });
     }
@@ -202,6 +211,7 @@ export class ProjectService {
 
     if (project.workspaceId !== workspaceId) {
       throw new ORPCError('PROJECT_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Project does not belong to this workspace',
       });
     }
@@ -211,6 +221,7 @@ export class ProjectService {
 
     if (projectCount === 1) {
       throw new ORPCError('PROJECT_LAST_PROJECT_DELETE_FORBIDDEN', {
+        status: 403,
         message: 'Cannot delete the only project in a workspace',
       });
     }
@@ -229,7 +240,10 @@ export class ProjectService {
       const deleted = await this.deps.projectRepo.softDelete(projectId, { tx });
 
       if (!deleted) {
-        throw new ORPCError('PROJECT_DELETE_FAILED', { message: 'Failed to delete project' });
+        throw new ORPCError('PROJECT_DELETE_FAILED', {
+          status: 500,
+          message: 'Failed to delete project',
+        });
       }
 
       // Soft delete all links in project (if linkRepo available)

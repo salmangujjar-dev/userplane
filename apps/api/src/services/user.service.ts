@@ -21,6 +21,7 @@ export class UserService {
     const user = await this.deps.userRepo.findById(userId);
     if (!user) {
       throw new ORPCError('USER_NOT_FOUND', {
+        status: 404,
         message: 'User not found',
       });
     }
@@ -35,6 +36,7 @@ export class UserService {
   async updateName(userId: string, name: string) {
     if (!name || name.trim().length === 0) {
       throw new ORPCError('USER_NAME_REQUIRED', {
+        status: 400,
         message: 'Name cannot be empty',
       });
     }
@@ -42,6 +44,7 @@ export class UserService {
     const user = await this.deps.userRepo.updateName(userId, name.trim());
     if (!user) {
       throw new ORPCError('USER_NOT_FOUND', {
+        status: 404,
         message: 'User not found',
       });
     }
