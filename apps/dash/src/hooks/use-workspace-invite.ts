@@ -7,7 +7,6 @@ import {
   handleSafeResult,
   handleQueryResult,
   isDefinedError,
-  isErrorCode,
   type SafeResult,
 } from '@/lib/errors';
 

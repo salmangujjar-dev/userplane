@@ -6,6 +6,7 @@ import { useWorkspaceId } from '@/stores/workspace';
 import { useWorkspaceNotifications } from '@/hooks/use-workspace-notifications';
 import { useUpdateNotifications } from '@/queries/use-workspace-mutations';
 import { SectionError } from '@/components/shared/section-error';
+import { NotificationsSectionSkeleton } from '@/components/skeleton';
 
 interface WorkspaceNotifications {
   notifyOnLinkUsage: boolean;
@@ -33,6 +34,10 @@ export function NotificationsSection() {
     });
   };
 
+  if (isLoading) {
+    return <NotificationsSectionSkeleton />;
+  }
+
   if (error || (notificationsResult && !notificationsResult.success)) {
     return (
       <div>
@@ -52,25 +57,6 @@ export function NotificationsSection() {
             }
             onRetry={() => refetch()}
           />
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Notification</h2>
-          <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
-        </div>
-        <div className="max-w-md space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex items-center justify-between">
-              <div className="h-4 w-48 bg-muted animate-pulse rounded" />
-              <div className="h-6 w-12 bg-muted animate-pulse rounded-full" />
-            </div>
-          ))}
         </div>
       </div>
     );

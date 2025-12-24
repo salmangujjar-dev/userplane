@@ -17,6 +17,26 @@ export function WorkspacePlanSection() {
   const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const planName = workspaceData?.workspace.workspacePlanName || 'Free';
 
+  if (isLoading) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Workspace Plan</h2>
+          <p className="text-sm text-muted-foreground">
+            Manage your workspace subscription and plan details
+          </p>
+        </div>
+        <div className="max-w-md rounded-xl border bg-card p-6">
+          <div className="h-7 w-24 bg-muted animate-pulse rounded mb-4" />
+          <div className="space-y-4">
+            <div className="h-16 bg-muted animate-pulse rounded" />
+            <div className="h-16 bg-muted animate-pulse rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (error || (workspaceResult && !workspaceResult.success)) {
     return (
       <div>
@@ -38,26 +58,6 @@ export function WorkspacePlanSection() {
             }
             onRetry={() => refetch()}
           />
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Workspace Plan</h2>
-          <p className="text-sm text-muted-foreground">
-            Manage your workspace subscription and plan details
-          </p>
-        </div>
-        <div className="max-w-md rounded-xl border bg-card p-6">
-          <div className="h-7 w-24 bg-muted animate-pulse rounded mb-4" />
-          <div className="space-y-4">
-            <div className="h-16 bg-muted animate-pulse rounded" />
-            <div className="h-16 bg-muted animate-pulse rounded" />
-          </div>
         </div>
       </div>
     );

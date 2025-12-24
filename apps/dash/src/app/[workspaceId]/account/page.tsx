@@ -1,15 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
-import { InviteModal } from '@/components/modals/invite-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
-import { AccountsTab } from '@/components/accounts/accounts-tab';
+import { AccountSettingsSection } from '@/components/accounts/account-settings-section';
 
 export default function PreferencesPage() {
-  const [shareLink, setShareLink] = useState<string | null>(null);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -22,17 +16,9 @@ export default function PreferencesPage() {
             <p className="text-sm text-muted-foreground">Manage your account settings</p>
           </div>
 
-          <AccountsTab />
+          <AccountSettingsSection />
         </main>
       </div>
-
-      <InviteModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
-
-      <ShareLinkModal
-        link={shareLink || ''}
-        open={!!shareLink}
-        onClose={() => setShareLink(null)}
-      />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { LinkPreview } from './link-preview';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
+import { LinksListSkeleton } from '@/components/skeleton';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateLink, useDeleteLink } from '@/queries/use-link-mutations';
 import type { Link } from '@/hooks/use-workspace-links';
@@ -41,13 +42,7 @@ export function LinksList({ links, isLoading }: LinksListProps) {
   };
 
   if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 gap-4">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-20 bg-muted rounded-lg animate-pulse" />
-        ))}
-      </div>
-    );
+    return <LinksListSkeleton count={10} />;
   }
 
   if (!links || links.length === 0) {

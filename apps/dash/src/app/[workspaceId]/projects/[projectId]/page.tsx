@@ -9,10 +9,12 @@ import { InviteModal } from '@/components/modals/invite-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
+import { RecordingGridSkeleton } from '@/components/skeleton';
 import { PaginationControls } from '@/components/shared/pagination-controls';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/components/tabs';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
-import { Video, Link as LinkIcon, Link2, Globe, Users, Loader2 } from 'lucide-react';
+import { Video, Link as LinkIcon, Link2, Globe, Users } from 'lucide-react';
 import { usePagination } from '@/hooks/use-pagination';
 import { DinoError } from '@/components/shared/dino-error';
 import { tabParser, stringArrayParser } from '@/lib/parsers';
@@ -120,11 +122,22 @@ export default function ProjectPage() {
     return (
       <div className="flex h-screen bg-background">
         <Sidebar />
-        <div className="flex flex-1 items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Loading project...</p>
-          </div>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <TopActions
+            onInviteClick={() => setInviteModalOpen(true)}
+            createLinkButton={<CreateLinkModal onLinkCreated={handleLinkCreated} />}
+          />
+          <main className="flex-1 overflow-y-auto px-6 pb-8">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-7 w-48" />
+                  <Skeleton className="h-4 w-64" />
+                </div>
+              </div>
+              <RecordingGridSkeleton count={recordingsPerPage} />
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -241,11 +254,7 @@ export default function ProjectPage() {
               <TabsContent value="recordings" className="space-y-6">
                 <div className="space-y-6">
                   {isLoadingRecordings ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {[...Array(recordingsPerPage)].map((_, i) => (
-                        <div key={i} className="aspect-video bg-muted rounded-lg animate-pulse" />
-                      ))}
-                    </div>
+                    <RecordingGridSkeleton count={recordingsPerPage} />
                   ) : recordingsData?.recordings.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <p className="text-muted-foreground">No recordings found</p>

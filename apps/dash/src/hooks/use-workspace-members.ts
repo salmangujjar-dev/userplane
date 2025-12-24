@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-import { handleQueryResult, type SafeResult } from '@/lib/errors';
+import { handleQueryResult } from '@/lib/errors';
 
 export interface WorkspaceMember {
   workspaceMemberId: string;

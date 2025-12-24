@@ -8,6 +8,7 @@ import { InviteModal } from '@/components/modals/invite-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
+import { RecordingGridSkeleton } from '@/components/skeleton';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { usePagination } from '@/hooks/use-pagination';
@@ -153,11 +154,7 @@ export default function RecordingsPage() {
                 />
               </div>
             ) : isLoadingRecordings ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {[...Array(recordingsPerPage)].map((_, i) => (
-                  <div key={i} className="aspect-video bg-muted rounded-lg animate-pulse" />
-                ))}
-              </div>
+              <RecordingGridSkeleton count={recordingsPerPage} />
             ) : recordingsData?.recordings.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <p className="text-muted-foreground">No recordings found</p>

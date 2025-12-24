@@ -116,6 +116,21 @@ export function ProjectsSection() {
   const displayedProjects = projects || [];
   const totalPages = 1;
 
+  if (isLoading) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Projects</h2>
+          <p className="text-sm text-muted-foreground">Organize recordings by projects</p>
+        </div>
+        <div className="max-w-2xl rounded-lg bg-card p-6 space-y-4">
+          <div className="h-16 w-full bg-muted animate-pulse rounded" />
+          <div className="h-16 w-full bg-muted animate-pulse rounded" />
+        </div>
+      </div>
+    );
+  }
+
   if (error || (projectsResult && !projectsResult.success)) {
     return (
       <div>

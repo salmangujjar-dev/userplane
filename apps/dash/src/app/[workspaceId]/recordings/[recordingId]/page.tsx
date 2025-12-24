@@ -20,7 +20,7 @@ import {
   useRecordingVideo,
   useRecordingThumbnail,
 } from '@/queries/use-recording-query';
-import { Loader2 } from 'lucide-react';
+import { RecordingDetailSkeleton } from '@/components/skeleton';
 
 export default function RecordingDetailPage() {
   const params = useParams();
@@ -51,14 +51,7 @@ export default function RecordingDetailPage() {
 
   // Show loading state
   if (isLoadingRecording || isLoadingVideo) {
-    return (
-      <div className="h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Loading recording...</p>
-        </div>
-      </div>
-    );
+    return <RecordingDetailSkeleton />;
   }
 
   // Show error state

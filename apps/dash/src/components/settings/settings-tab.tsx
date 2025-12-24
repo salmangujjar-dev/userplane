@@ -4,7 +4,7 @@ import { useQueryState } from 'nuqs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import { WorkspaceSection } from './workspace-section';
 import { RecordingLinkSection } from './recording-link-section';
-import { PlansSection } from './plans-section';
+import { WorkspacePlanSection } from './workspace-plan-section';
 import { TeamSection } from './team-section';
 import { IntegrationsSection } from './integrations-section';
 import { DomainsSection } from './domains-section';
@@ -41,7 +41,7 @@ export function SettingsTab() {
         </TabsContent>
 
         <TabsContent value="plan-usage" className="space-y-8">
-          <PlansSection />
+          <WorkspacePlanSection />
         </TabsContent>
 
         <TabsContent value="customization" className="space-y-8">
