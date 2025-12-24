@@ -1,5 +1,10 @@
 import { oc } from '@orpc/contract';
-import { VerifyDomainSchema, DomainVerificationDataSchema, ApiResponseSchema } from '../schemas';
+import {
+  VerifyDomainSchema,
+  DomainVerificationDataSchema,
+  ApiResponseSchema,
+  DomainErrors,
+} from '../schemas';
 
 /**
  * Domain contract
@@ -19,6 +24,16 @@ export const verifyDomain = oc
     summary: 'Verify domain',
     description: 'Verify domain ownership using verification token',
     tags: ['Domains'],
+  })
+  .errors({
+    DOMAIN_VERIFICATION_TOKEN_INVALID: DomainErrors.DOMAIN_VERIFICATION_TOKEN_INVALID,
+    DOMAIN_NOT_REGISTERED: DomainErrors.DOMAIN_NOT_REGISTERED,
+    DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
+    DOMAIN_URL_INVALID: DomainErrors.DOMAIN_URL_INVALID,
+    DOMAIN_ORIGIN_INVALID: DomainErrors.DOMAIN_ORIGIN_INVALID,
+    DOMAIN_ORIGIN_MISMATCH: DomainErrors.DOMAIN_ORIGIN_MISMATCH,
+    DOMAIN_VERIFICATION_FAILED: DomainErrors.DOMAIN_VERIFICATION_FAILED,
+    INTERNAL_SERVER_ERROR: DomainErrors.INTERNAL_SERVER_ERROR,
   })
   .input(VerifyDomainSchema)
   .output(ApiResponseSchema(DomainVerificationDataSchema));

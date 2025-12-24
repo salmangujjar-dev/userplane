@@ -66,7 +66,10 @@ export class RecordingSession {
       },
     });
 
-    if (error) throw error;
+    if (error) {
+      console.log('error: ', error);
+      throw error;
+    }
 
     this.sessionToken = response.data.sessionToken;
 
@@ -185,7 +188,10 @@ export class RecordingSession {
       },
     });
 
-    if (error) throw error;
+    if (error) {
+      console.log('error: ', error);
+      throw error;
+    }
 
     console.log('[Upload:Init] Received upload initialization response');
 
@@ -319,7 +325,10 @@ export class RecordingSession {
       }
     );
 
-    if (error) throw error;
+    if (error) {
+      console.log('error: ', error);
+      throw error;
+    }
 
     console.log('[Upload:Ack] Upload acknowledged successfully');
   }

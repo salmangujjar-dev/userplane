@@ -36,7 +36,10 @@ export function useUpdateNotifications() {
         params: { workspaceId },
         body: notifications,
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async ({ workspaceId, notifications }) => {
@@ -82,7 +85,10 @@ export function useRotateInvite() {
       const [error, response] = await apiClient.workspace.invite.rotate({
         params: { workspaceId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onSuccess: () => {
@@ -107,7 +113,10 @@ export function useDeleteWorkspace(
       const [error, response] = await apiClient.workspace.delete({
         params: { workspaceId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (workspaceId) => {
@@ -164,7 +173,10 @@ export function useLeaveWorkspace(
       const [error, response] = await apiClient.workspace.members.leave({
         params: { workspaceId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (workspaceId) => {

@@ -10,10 +10,11 @@ import { Upload } from 'lucide-react';
 import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateToggle, useUpdateAppearance } from '@/queries/use-appearance-mutations';
+import { SectionError } from '@/components/shared/section-error';
 
 export function RecordingLinkSection() {
   const workspaceId = useWorkspaceId();
-  const { data: preferences, isLoading } = useWorkspacePreferences();
+  const { data: preferences, isLoading, error, refetch } = useWorkspacePreferences();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -94,6 +95,28 @@ export function RecordingLinkSection() {
       setPrimaryColor(preferences.recordingPrimaryColor || '#000000');
     }
   };
+
+  if (error) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Recording Link</h2>
+          <p className="text-sm text-muted-foreground">Customize your recording link appearance</p>
+        </div>
+        <div className="w-full max-w-2xl">
+          <SectionError
+            title="Failed to load preferences"
+            description={
+              error instanceof Error
+                ? error.message
+                : 'Something went wrong while loading preferences.'
+            }
+            onRetry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

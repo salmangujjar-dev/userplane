@@ -19,7 +19,10 @@ export function useProject(projectId: string, options?: { enabled?: boolean }) {
       const [error, response] = await apiClient.project.getById({
         params: { workspaceId, projectId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data.project;
     },
     enabled: enabled && !!workspaceId && !!projectId,

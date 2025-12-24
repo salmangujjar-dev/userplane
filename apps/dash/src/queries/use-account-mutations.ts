@@ -15,7 +15,10 @@ export function useUpdateAccountName(onError?: (originalName: string) => void) {
       const [error, response] = await apiClient.account.update({
         body: { name: newName },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (newName) => {

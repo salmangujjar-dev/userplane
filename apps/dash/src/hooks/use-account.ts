@@ -10,7 +10,10 @@ export function useAccount() {
     queryKey: ['account'],
     queryFn: async () => {
       const [error, response] = await apiClient.account.get({});
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     staleTime: 5 * 60 * 1000,

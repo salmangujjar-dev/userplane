@@ -4,6 +4,7 @@ import {
   UpdateAccountSchema,
   AccountUpdateDataSchema,
   ApiResponseSchema,
+  AccountErrors,
 } from '../schemas';
 
 /**
@@ -24,6 +25,9 @@ export const getAccount = oc
     description: 'Retrieve current user account information',
     tags: ['Account'],
   })
+  .errors({
+    USER_NOT_FOUND: AccountErrors.USER_NOT_FOUND,
+  })
   .output(ApiResponseSchema(AccountDataSchema));
 
 /**
@@ -38,6 +42,10 @@ export const updateAccount = oc
     summary: 'Update account',
     description: 'Update current user account information',
     tags: ['Account'],
+  })
+  .errors({
+    USER_NOT_FOUND: AccountErrors.USER_NOT_FOUND,
+    USER_NAME_REQUIRED: AccountErrors.USER_NAME_REQUIRED,
   })
   .input(UpdateAccountSchema)
   .output(ApiResponseSchema(AccountUpdateDataSchema));

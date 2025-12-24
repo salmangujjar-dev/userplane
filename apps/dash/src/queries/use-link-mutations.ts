@@ -19,7 +19,10 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
         params: { workspaceId },
         body: data,
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response;
     },
     onMutate: async (data: {
@@ -97,7 +100,10 @@ export function useUpdateLink(workspaceId: string | null) {
           linkReusable: reusable,
         },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async ({ linkId, title, reusable }) => {
@@ -147,7 +153,10 @@ export function useDeleteLink(workspaceId: string | null) {
       const [error, response] = await apiClient.link.delete({
         params: { workspaceId, linkId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (linkId) => {

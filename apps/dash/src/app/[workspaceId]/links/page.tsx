@@ -17,6 +17,7 @@ import { useSearchableMembers } from '@/hooks/use-searchable-members';
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { FolderKanban, Globe, Users } from 'lucide-react';
 import { stringArrayParser } from '@/lib/parsers';
+import { DinoError } from '@/components/shared/dino-error';
 
 export default function LinksPage() {
   const [shareLink, setShareLink] = useState<string | null>(null);
@@ -30,7 +31,12 @@ export default function LinksPage() {
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
 
-  const { data: linksData, isLoading: isLoadingLinks } = useWorkspaceLinks({
+  const {
+    data: linksData,
+    isLoading: isLoadingLinks,
+    error: linksError,
+    refetch: refetchLinks,
+  } = useWorkspaceLinks({
     page: currentPage,
     perPage: linksPerPage,
     filters: {
@@ -121,12 +127,29 @@ export default function LinksPage() {
           </div>
 
           <div className="space-y-6">
-            <LinksTab links={linksData?.links} isLoading={isLoadingLinks} />
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+            {linksError ? (
+              <div className="flex items-center justify-center py-12">
+                <DinoError
+                  title="Failed to load links"
+                  description={
+                    linksError instanceof Error
+                      ? linksError.message
+                      : 'Something went wrong while loading links.'
+                  }
+                  onRetry={() => refetchLinks()}
+                  showGoBack={false}
+                />
+              </div>
+            ) : (
+              <>
+                <LinksTab links={linksData?.links} isLoading={isLoadingLinks} />
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )}
           </div>
         </main>
       </div>

@@ -29,6 +29,7 @@ import {
   useUpdateProject,
   useDeleteProject,
 } from '@/queries/use-project-mutations';
+import { SectionError } from '@/components/shared/section-error';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -47,7 +48,12 @@ export function ProjectsSection() {
   } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: projects, isLoading } = useWorkspaceProjects({
+  const {
+    data: projects,
+    isLoading,
+    error,
+    refetch,
+  } = useWorkspaceProjects({
     perPage: ITEMS_PER_PAGE,
   });
 
@@ -108,6 +114,28 @@ export function ProjectsSection() {
   // Calculate these before any conditional returns to avoid hook order issues
   const displayedProjects = projects || [];
   const totalPages = 1;
+
+  if (error) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Projects</h2>
+          <p className="text-sm text-muted-foreground">Organize recordings by projects</p>
+        </div>
+        <div className="max-w-2xl">
+          <SectionError
+            title="Failed to load projects"
+            description={
+              error instanceof Error
+                ? error.message
+                : 'Something went wrong while loading projects.'
+            }
+            onRetry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

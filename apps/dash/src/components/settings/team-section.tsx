@@ -22,6 +22,7 @@ import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateMemberRole, useRemoveMember } from '@/queries/use-team-mutations';
+import { SectionError } from '@/components/shared/section-error';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -29,7 +30,12 @@ export function TeamSection() {
   const workspaceId = useWorkspaceId();
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: members, isLoading } = useWorkspaceMembers({
+  const {
+    data: members,
+    isLoading,
+    error,
+    refetch,
+  } = useWorkspaceMembers({
     includeMe: true,
     perPage: ITEMS_PER_PAGE,
   });
@@ -53,6 +59,28 @@ export function TeamSection() {
     }
     removeMemberMutation.mutate(workspaceMemberId);
   };
+
+  if (error) {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Team</h2>
+          <p className="text-sm text-muted-foreground">Manage team members and permissions</p>
+        </div>
+        <div className="max-w-2xl">
+          <SectionError
+            title="Failed to load team members"
+            description={
+              error instanceof Error
+                ? error.message
+                : 'Something went wrong while loading team members.'
+            }
+            onRetry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

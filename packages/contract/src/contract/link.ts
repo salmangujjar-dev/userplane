@@ -12,6 +12,7 @@ import {
   DeleteLinkSchema,
   LinkDeleteDataSchema,
   ApiResponseSchema,
+  LinkErrors,
 } from '../schemas';
 
 /**
@@ -33,6 +34,10 @@ export const getLinks = oc
     description: 'Retrieve paginated list of recording links with optional filters',
     tags: ['Links'],
   })
+  .errors({
+    LINK_PAGE_INVALID: LinkErrors.LINK_PAGE_INVALID,
+    LINK_PER_PAGE_INVALID: LinkErrors.LINK_PER_PAGE_INVALID,
+  })
   .input(ListLinksQuerySchema)
   .output(ApiResponseSchema(LinksListDataSchema));
 
@@ -48,6 +53,14 @@ export const createLink = oc
     summary: 'Create link',
     description: 'Create a new recording link for a domain',
     tags: ['Links'],
+  })
+  .errors({
+    LINK_WORKSPACE_DELETED: LinkErrors.LINK_WORKSPACE_DELETED,
+    LINK_MEMBER_NOT_FOUND: LinkErrors.LINK_MEMBER_NOT_FOUND,
+    LINK_MEMBER_WORKSPACE_MISMATCH: LinkErrors.LINK_MEMBER_WORKSPACE_MISMATCH,
+    LINK_DEFAULT_PROJECT_NOT_FOUND: LinkErrors.LINK_DEFAULT_PROJECT_NOT_FOUND,
+    LINK_PROJECT_DELETED: LinkErrors.LINK_PROJECT_DELETED,
+    LINK_CREATE_FAILED: LinkErrors.LINK_CREATE_FAILED,
   })
   .input(CreateLinkSchema)
   .output(ApiResponseSchema(LinkCreateDataSchema));
@@ -65,6 +78,11 @@ export const getLinkById = oc
     description: 'Retrieve complete link details including project and creator info',
     tags: ['Links'],
   })
+  .errors({
+    LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
+    LINK_GONE: LinkErrors.LINK_GONE,
+    LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
+  })
   .input(LinkByIdSchema)
   .output(ApiResponseSchema(LinkGetDataSchema));
 
@@ -81,6 +99,12 @@ export const updateLink = oc
     description: 'Update link properties',
     tags: ['Links'],
   })
+  .errors({
+    LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
+    LINK_GONE: LinkErrors.LINK_GONE,
+    LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
+    LINK_UPDATE_FAILED: LinkErrors.LINK_UPDATE_FAILED,
+  })
   .input(UpdateLinkSchema)
   .output(ApiResponseSchema(LinkUpdateDataSchema));
 
@@ -96,6 +120,12 @@ export const deleteLink = oc
     summary: 'Delete link',
     description: 'Soft delete a recording link',
     tags: ['Links'],
+  })
+  .errors({
+    LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
+    LINK_GONE: LinkErrors.LINK_GONE,
+    LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
+    LINK_DELETE_FAILED: LinkErrors.LINK_DELETE_FAILED,
   })
   .input(DeleteLinkSchema)
   .output(ApiResponseSchema(LinkDeleteDataSchema));

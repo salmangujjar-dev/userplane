@@ -8,6 +8,7 @@ import {
   DeleteRecordingSchema,
   RecordingDeleteDataSchema,
   ApiResponseSchema,
+  RecordingErrors,
 } from '../schemas';
 
 /**
@@ -29,6 +30,10 @@ export const getRecordings = oc
     description: 'Retrieve paginated list of recordings with optional filters',
     tags: ['Recordings'],
   })
+  .errors({
+    RECORDING_PAGE_INVALID: RecordingErrors.RECORDING_PAGE_INVALID,
+    RECORDING_PER_PAGE_INVALID: RecordingErrors.RECORDING_PER_PAGE_INVALID,
+  })
   .input(ListRecordingsQuerySchema)
   .output(ApiResponseSchema(RecordingsListDataSchema));
 
@@ -44,6 +49,10 @@ export const getRecordingById = oc
     summary: 'Get recording by ID',
     description: 'Retrieve complete recording details with presigned URLs',
     tags: ['Recordings'],
+  })
+  .errors({
+    RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
+    RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingDetailDataSchema));
@@ -61,6 +70,12 @@ export const deleteRecording = oc
     description: 'Soft delete a recording',
     tags: ['Recordings'],
   })
+  .errors({
+    RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
+    RECORDING_GONE: RecordingErrors.RECORDING_GONE,
+    RECORDING_WORKSPACE_MISMATCH: RecordingErrors.RECORDING_WORKSPACE_MISMATCH,
+    RECORDING_DELETE_FAILED: RecordingErrors.RECORDING_DELETE_FAILED,
+  })
   .input(DeleteRecordingSchema)
   .output(ApiResponseSchema(RecordingDeleteDataSchema));
 
@@ -76,6 +91,10 @@ export const getRecordingVideo = oc
     summary: 'Get recording video',
     description: 'Retrieve presigned URL for recording video',
     tags: ['Recordings'],
+  })
+  .errors({
+    RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
+    RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
@@ -93,6 +112,10 @@ export const getRecordingThumbnail = oc
     description: 'Retrieve presigned URL for recording thumbnail',
     tags: ['Recordings'],
   })
+  .errors({
+    RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
+    RECORDING_GONE: RecordingErrors.RECORDING_GONE,
+  })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
 
@@ -108,6 +131,10 @@ export const getRecordingConsoleLog = oc
     summary: 'Get recording console log',
     description: 'Retrieve presigned URL for recording console log',
     tags: ['Recordings'],
+  })
+  .errors({
+    RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
+    RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
@@ -125,6 +152,10 @@ export const getRecordingNetworkLog = oc
     description: 'Retrieve presigned URL for recording network log',
     tags: ['Recordings'],
   })
+  .errors({
+    RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
+    RECORDING_GONE: RecordingErrors.RECORDING_GONE,
+  })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
 
@@ -140,6 +171,10 @@ export const getRecordingAction = oc
     summary: 'Get recording client action',
     description: 'Retrieve presigned URL for recording client action log',
     tags: ['Recordings'],
+  })
+  .errors({
+    RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
+    RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));

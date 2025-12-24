@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { ArrowLeftRight } from 'lucide-react';
+import { toast } from '@workspace/ui/components/sonner';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -16,12 +17,19 @@ export default function ConnectIntercomPage() {
 
   const handleConnect = async () => {
     setIsConnecting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsConnecting(false);
-    // In a real application, this would connect to Intercom and return a workspaceId
-    const mockWorkspaceId = 'workspace-123';
-    setWorkspaceStore(mockWorkspaceId);
-    router.push(`/${mockWorkspaceId}`);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // In a real application, this would connect to Intercom and return a workspaceId
+      const mockWorkspaceId = 'workspace-123';
+      setWorkspaceStore(mockWorkspaceId);
+      router.push(`/${mockWorkspaceId}`);
+    } catch (error) {
+      toast.error('Failed to connect to Intercom', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   return (

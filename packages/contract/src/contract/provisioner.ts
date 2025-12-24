@@ -1,5 +1,10 @@
 import { oc } from '@orpc/contract';
-import { CreateWorkspaceSchema, WorkspaceCreateDataSchema, ApiResponseSchema } from '../schemas';
+import {
+  CreateWorkspaceSchema,
+  WorkspaceCreateDataSchema,
+  ApiResponseSchema,
+  ProvisionerErrors,
+} from '../schemas';
 
 /**
  * Provisioner contract
@@ -18,6 +23,10 @@ export const createWorkspace = oc
     summary: 'Create workspace',
     description: 'Provision a new workspace with initial domain and project',
     tags: ['Provisioner'],
+  })
+  .errors({
+    PROVISIONER_WORKSPACE_CREATE_FAILED: ProvisionerErrors.PROVISIONER_WORKSPACE_CREATE_FAILED,
+    PROVISIONER_TRANSACTION_FAILED: ProvisionerErrors.PROVISIONER_TRANSACTION_FAILED,
   })
   .input(CreateWorkspaceSchema)
   .output(ApiResponseSchema(WorkspaceCreateDataSchema));

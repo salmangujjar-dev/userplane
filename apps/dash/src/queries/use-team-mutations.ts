@@ -19,7 +19,10 @@ export function useUpdateMemberRole(workspaceId: string | null) {
         params: { workspaceId, workspaceMemberId },
         body: { role: newRole },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async ({ workspaceMemberId, newRole }) => {
@@ -65,7 +68,10 @@ export function useRemoveMember(workspaceId: string | null) {
       const [error, response] = await apiClient.workspace.members.remove({
         params: { workspaceId, workspaceMemberId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (workspaceMemberId) => {

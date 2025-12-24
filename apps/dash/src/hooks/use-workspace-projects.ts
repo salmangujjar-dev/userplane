@@ -47,7 +47,10 @@ export function useWorkspaceProjects(options?: { perPage?: number; enabled?: boo
         params: { workspaceId },
         query: { page: 1, per_page: perPage },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data.projects;
     },
     enabled: enabled && !!workspaceId,

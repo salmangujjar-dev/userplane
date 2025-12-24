@@ -17,7 +17,10 @@ export function useRecording(workspaceId: string | null, recordingId: string) {
         params: { workspaceId, recordingId },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     enabled: !!workspaceId && !!recordingId,
@@ -42,7 +45,10 @@ export function useRecordingVideo(workspaceId: string | null, recordingId: strin
         params: { workspaceId, recordingId },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     enabled: !!workspaceId && !!recordingId,
@@ -67,7 +73,10 @@ export function useRecordingThumbnail(workspaceId: string | null, recordingId: s
         params: { workspaceId, recordingId },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     enabled: !!workspaceId && !!recordingId,
@@ -92,7 +101,10 @@ export function useRecordingConsoleLog(workspaceId: string | null, recordingId: 
         params: { workspaceId, recordingId },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     enabled: !!workspaceId && !!recordingId,
@@ -117,7 +129,10 @@ export function useRecordingNetworkLog(workspaceId: string | null, recordingId: 
         params: { workspaceId, recordingId },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     enabled: !!workspaceId && !!recordingId,

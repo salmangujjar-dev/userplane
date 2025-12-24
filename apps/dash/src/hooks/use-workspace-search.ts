@@ -78,7 +78,10 @@ export function useWorkspaceSearch(options: {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data.results as SearchResult[];
     },
     enabled: enabled && !!workspaceId && !!query && query.trim().length > 0,

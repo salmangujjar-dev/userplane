@@ -1,0 +1,41 @@
+'use client';
+
+import Image from 'next/image';
+import { Button } from '@workspace/ui/components/button';
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <html>
+      <body>
+        <div className="flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-white">
+          <div className="flex flex-col items-center gap-3 max-w-md">
+            <Image src="/assets/dino.svg" alt="Error" width={120} height={120} className="mb-2" />
+            <h1 className="text-xl font-medium text-zinc-900">Something went wrong</h1>
+            <p className="text-sm text-zinc-500 text-center">
+              {error.message || 'An unexpected error occurred. Please try again.'}
+            </p>
+          </div>
+          <div className="flex gap-3 mt-8">
+            <Button
+              onClick={() => (window.location.href = '/')}
+              variant="outline"
+              size="lg"
+              className="rounded-full px-7"
+            >
+              Go Home
+            </Button>
+            <Button onClick={reset} size="lg" className="rounded-full px-7">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </body>
+    </html>
+  );
+}

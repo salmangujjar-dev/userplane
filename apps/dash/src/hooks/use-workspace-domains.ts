@@ -47,7 +47,10 @@ export function useWorkspaceDomains(options?: { perPage?: number; enabled?: bool
         query: { page: 1, per_page: perPage },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data.domains;
     },
     enabled: enabled && !!workspaceId,

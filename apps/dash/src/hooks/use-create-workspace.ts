@@ -27,7 +27,10 @@ export function useCreateWorkspace() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response;
     },
     onError: (error) => {

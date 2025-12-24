@@ -13,7 +13,10 @@ export function useCreateProject(workspaceId: string | null) {
         params: { workspaceId },
         body: { projectTitle: title || null },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (title) => {
@@ -72,7 +75,10 @@ export function useUpdateProject(workspaceId: string | null) {
           isDefault,
         },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async ({ projectId, title, isDefault }) => {
@@ -119,7 +125,10 @@ export function useDeleteProject(workspaceId: string | null) {
       const [error, response] = await apiClient.project.delete({
         params: { workspaceId, projectId },
       });
-      if (error) throw error;
+      if (error) {
+        console.log('error: ', error);
+        throw error;
+      }
       return response.data;
     },
     onMutate: async (projectId) => {
