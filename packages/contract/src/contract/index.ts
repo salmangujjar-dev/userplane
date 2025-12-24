@@ -67,6 +67,7 @@ export const workspaceContract = {
   },
 
   notifications: {
+    get: workspace.getNotificationPreferences,
     update: workspace.updateNotificationPreferences,
   },
 

@@ -31,9 +31,10 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const [emails, setEmails] = useState<string[]>([]);
   const MAX_EMAILS = 10;
 
-  const { data: inviteToken, isLoading: isLoadingInvite } = useWorkspaceInvite();
+  const { data: inviteResult, isLoading: isLoadingInvite } = useWorkspaceInvite();
   const { mutate: sendInvites, isPending } = useSendWorkspaceInvites();
 
+  const inviteToken = inviteResult?.success ? inviteResult.data : null;
   const inviteLink = inviteToken?.inviteUrl || 'Loading invite link...';
 
   const handleCopyLink = async () => {

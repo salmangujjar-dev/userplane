@@ -1,10 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Switch } from '@workspace/ui/components/switch';
 import { Label } from '@workspace/ui/components/label';
-import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useWorkspaceId } from '@/stores/workspace';
+import { useWorkspaceNotifications } from '@/hooks/use-workspace-notifications';
 import { useUpdateNotifications } from '@/queries/use-workspace-mutations';
 import { SectionError } from '@/components/shared/section-error';
 
@@ -18,36 +17,12 @@ interface WorkspaceNotifications {
 
 export function NotificationsSection() {
   const currentWorkspaceId = useWorkspaceId();
-  const {
-    data: workspacesData,
-    isLoading,
-    error,
-    refetch,
-  } = useWorkspaces({
-    page: 1,
-    perPage: 100,
-  });
+  const { data: notificationsResult, isLoading, error, refetch } = useWorkspaceNotifications();
 
+  const notificationsData = notificationsResult?.success
+    ? notificationsResult.data.notificationPreferences
+    : null;
   const updateNotificationsMutation = useUpdateNotifications();
-
-  const notifications = useMemo<WorkspaceNotifications | null>(() => {
-    if (!workspacesData?.workspaces || !currentWorkspaceId) return null;
-
-    const currentWorkspace = workspacesData.workspaces.find(
-      (ws) => ws.workspaceId === currentWorkspaceId
-    );
-
-    if (!currentWorkspace) return null;
-
-    return {
-      notifyOnLinkUsage: currentWorkspace.notificationPreferences?.notifyOnLinkUsage ?? false,
-      notifyOnQuotaReset: currentWorkspace.notificationPreferences?.notifyOnQuotaReset ?? false,
-      notifyOnQuotaLimit: currentWorkspace.notificationPreferences?.notifyOnQuotaLimit ?? false,
-      notifyOnMemberJoin: currentWorkspace.notificationPreferences?.notifyOnMemberJoin ?? false,
-      notifyOnInviteAccepted:
-        currentWorkspace.notificationPreferences?.notifyOnInviteAccepted ?? false,
-    };
-  }, [workspacesData, currentWorkspaceId]);
 
   const handleNotificationToggle = (key: keyof WorkspaceNotifications, value: boolean) => {
     if (!currentWorkspaceId) return;
@@ -58,7 +33,7 @@ export function NotificationsSection() {
     });
   };
 
-  if (error) {
+  if (error || (notificationsResult && !notificationsResult.success)) {
     return (
       <div>
         <div className="mb-4">
@@ -71,7 +46,9 @@ export function NotificationsSection() {
             description={
               error instanceof Error
                 ? error.message
-                : 'Something went wrong while loading notification settings.'
+                : notificationsResult && !notificationsResult.success
+                  ? notificationsResult.error.message
+                  : 'Something went wrong while loading notification settings.'
             }
             onRetry={() => refetch()}
           />
@@ -99,7 +76,7 @@ export function NotificationsSection() {
     );
   }
 
-  if (!notifications) {
+  if (!notificationsData) {
     return (
       <div>
         <div className="mb-4">
@@ -107,7 +84,7 @@ export function NotificationsSection() {
           <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
         </div>
         <div className="max-w-md">
-          <p className="text-sm text-muted-foreground">No workspace found.</p>
+          <p className="text-sm text-muted-foreground">No notification preferences found.</p>
         </div>
       </div>
     );
@@ -126,7 +103,7 @@ export function NotificationsSection() {
           </Label>
           <Switch
             id="recording-links"
-            checked={notifications.notifyOnLinkUsage}
+            checked={notificationsData.notifyOnLinkUsage}
             onCheckedChange={(checked) => handleNotificationToggle('notifyOnLinkUsage', checked)}
             disabled={updateNotificationsMutation.isPending}
           />
@@ -138,7 +115,7 @@ export function NotificationsSection() {
           </Label>
           <Switch
             id="quota-reset"
-            checked={notifications.notifyOnQuotaReset}
+            checked={notificationsData.notifyOnQuotaReset}
             onCheckedChange={(checked) => handleNotificationToggle('notifyOnQuotaReset', checked)}
             disabled={updateNotificationsMutation.isPending}
           />
@@ -150,7 +127,7 @@ export function NotificationsSection() {
           </Label>
           <Switch
             id="quota-reached"
-            checked={notifications.notifyOnQuotaLimit}
+            checked={notificationsData.notifyOnQuotaLimit}
             onCheckedChange={(checked) => handleNotificationToggle('notifyOnQuotaLimit', checked)}
             disabled={updateNotificationsMutation.isPending}
           />
@@ -162,7 +139,7 @@ export function NotificationsSection() {
           </Label>
           <Switch
             id="someone-joins"
-            checked={notifications.notifyOnMemberJoin}
+            checked={notificationsData.notifyOnMemberJoin}
             onCheckedChange={(checked) => handleNotificationToggle('notifyOnMemberJoin', checked)}
             disabled={updateNotificationsMutation.isPending}
           />
@@ -174,7 +151,7 @@ export function NotificationsSection() {
           </Label>
           <Switch
             id="invite-accepted"
-            checked={notifications.notifyOnInviteAccepted}
+            checked={notificationsData.notifyOnInviteAccepted}
             onCheckedChange={(checked) =>
               handleNotificationToggle('notifyOnInviteAccepted', checked)
             }

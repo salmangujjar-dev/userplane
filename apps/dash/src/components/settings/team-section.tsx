@@ -31,7 +31,7 @@ export function TeamSection() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const {
-    data: members,
+    data: membersResult,
     isLoading,
     error,
     refetch,
@@ -39,6 +39,7 @@ export function TeamSection() {
     includeMe: true,
     perPage: ITEMS_PER_PAGE,
   });
+  const members = membersResult?.success ? membersResult.data : null;
 
   const updateRoleMutation = useUpdateMemberRole(workspaceId);
   const removeMemberMutation = useRemoveMember(workspaceId);
@@ -60,7 +61,7 @@ export function TeamSection() {
     removeMemberMutation.mutate(workspaceMemberId);
   };
 
-  if (error) {
+  if (error || (membersResult && !membersResult.success)) {
     return (
       <div>
         <div className="mb-4">
@@ -73,7 +74,9 @@ export function TeamSection() {
             description={
               error instanceof Error
                 ? error.message
-                : 'Something went wrong while loading team members.'
+                : membersResult && !membersResult.success
+                  ? membersResult.error.message
+                  : 'Something went wrong while loading team members.'
             }
             onRetry={() => refetch()}
           />

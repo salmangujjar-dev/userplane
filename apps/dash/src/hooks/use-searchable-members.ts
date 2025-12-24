@@ -25,15 +25,18 @@ export function useSearchableMembers(searchQuery: string, options?: { perPage?: 
   });
 
   const members = useMemo(() => {
-    if (searchQuery && searchResults) {
-      return (searchResults as SearchMember[]).map((result) => ({
+    if (searchQuery && searchResults?.success) {
+      return (searchResults.data as SearchMember[]).map((result) => ({
         workspaceMemberId: result.workspaceMemberId,
         memberName: result.userName,
         memberEmail: result.userEmail,
         workspaceRole: result.role as 'owner' | 'admin' | 'member',
       }));
     }
-    return initialMembers || [];
+    if (initialMembers?.success) {
+      return initialMembers.data || [];
+    }
+    return [];
   }, [searchQuery, searchResults, initialMembers]);
 
   return {

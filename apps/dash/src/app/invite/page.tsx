@@ -2,8 +2,8 @@
 
 import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
-import { DinoError } from '@/components/shared/dino-error';
 import Logo from '@workspace/ui/components/logo';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -27,10 +27,11 @@ function InvitePageContent() {
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
 
   const {
-    data: inviteInfo,
+    data: inviteResult,
     isLoading: isValidating,
     error: validationError,
   } = useValidateInvite(token);
+  const inviteInfo = inviteResult?.success ? inviteResult.data : null;
 
   const { mutate: acceptInvite, isPending: isAccepting } = useAcceptInvite();
 
@@ -44,13 +45,16 @@ function InvitePageContent() {
       },
       {
         onSuccess: (result) => {
-          const logMessage = result.isAlreadyMember
+          // Error already handled by mutation's onSuccess
+          if (!result.success) return;
+
+          const logMessage = result.data.isAlreadyMember
             ? 'User is already a member, redirecting'
             : 'Successfully joined workspace';
 
-          logger.info({ workspaceId: result.workspaceId }, logMessage);
-          setWorkspaceStore(result.workspaceId);
-          router.push(`/${result.workspaceId}`);
+          logger.info({ workspaceId: result.data.workspaceId }, logMessage);
+          setWorkspaceStore(result.data.workspaceId);
+          router.push(`/${result.data.workspaceId}`);
         },
         onError: (error) => {
           logger.error({ err: error }, 'Failed to accept invite');
@@ -59,9 +63,15 @@ function InvitePageContent() {
     );
   };
 
-  if (!token || validationError) {
+  if (!token || validationError || (inviteResult && !inviteResult.success)) {
     logger.error(
-      !token ? 'No invite token provided' : { err: validationError },
+      !token
+        ? 'No invite token provided'
+        : validationError
+          ? { err: validationError }
+          : inviteResult && !inviteResult.success
+            ? { code: inviteResult.error.code, message: inviteResult.error.message }
+            : 'Unknown validation error',
       'Invalid invite attempt'
     );
 
@@ -71,7 +81,9 @@ function InvitePageContent() {
           <Image src="/assets/dino.svg" alt="Dino" width={120} height={120} className="mb-2" />
           <h1 className="text-xl font-medium text-foreground">Invalid Invite</h1>
           <p className="text-sm text-muted-foreground text-center">
-            This invite link is invalid or has expired. Please request a new one.
+            {inviteResult && !inviteResult.success
+              ? inviteResult.error.message
+              : 'This invite link is invalid or has expired. Please request a new one.'}
           </p>
         </div>
         <div className="space-y-6">

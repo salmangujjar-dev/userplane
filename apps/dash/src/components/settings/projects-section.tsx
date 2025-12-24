@@ -49,13 +49,14 @@ export function ProjectsSection() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const {
-    data: projects,
+    data: projectsResult,
     isLoading,
     error,
     refetch,
   } = useWorkspaceProjects({
     perPage: ITEMS_PER_PAGE,
   });
+  const projects = projectsResult?.success ? projectsResult.data : null;
 
   const createProjectMutation = useCreateProject(workspaceId);
   const updateProjectMutation = useUpdateProject(workspaceId);
@@ -115,7 +116,7 @@ export function ProjectsSection() {
   const displayedProjects = projects || [];
   const totalPages = 1;
 
-  if (error) {
+  if (error || (projectsResult && !projectsResult.success)) {
     return (
       <div>
         <div className="mb-4">
@@ -128,7 +129,9 @@ export function ProjectsSection() {
             description={
               error instanceof Error
                 ? error.message
-                : 'Something went wrong while loading projects.'
+                : projectsResult && !projectsResult.success
+                  ? projectsResult.error.message
+                  : 'Something went wrong while loading projects.'
             }
             onRetry={() => refetch()}
           />

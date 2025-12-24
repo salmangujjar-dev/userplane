@@ -49,11 +49,16 @@ export function Sidebar() {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
-  const { data: account } = useAccount();
-  const { data: projects, isLoading: isLoadingProjects } = useWorkspaceProjects();
-  const { data: workspace } = useWorkspace();
-  const { data: workspacesData } = useWorkspaces({ page: 1, perPage: 100 });
+  const { data: accountResult } = useAccount();
+  const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects();
+  const { data: workspaceResult } = useWorkspace();
+  const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 50, minimal: true });
   const { signOut } = useAuth();
+
+  const account = accountResult?.success ? accountResult.data : null;
+  const projects = projectsResult?.success ? projectsResult.data : null;
+  const workspace = workspaceResult?.success ? workspaceResult.data : null;
+  const workspacesData = workspacesResult?.success ? workspacesResult.data : null;
 
   const sections: NavSection[] = [
     {

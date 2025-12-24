@@ -20,10 +20,12 @@ export function DashboardNav({
   createLinkButton,
   onInviteClick,
 }: DashboardNavProps) {
-  const { data: members } = useWorkspaceMembers({
+  const { data: membersResult } = useWorkspaceMembers({
     perPage: 10,
     enabled: true,
   });
+
+  const members = membersResult?.success ? membersResult.data : undefined;
 
   return (
     <nav>

@@ -1,29 +1,35 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
 
 interface AccountData {
   userName: string;
   userEmail: string;
 }
 
+interface UpdateAccountData {
+  userName: string;
+}
+
 export function useUpdateAccountName(onError?: (originalName: string) => void) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<
+    SafeResult<UpdateAccountData>,
+    Error,
+    string,
+    { previousAccount: AccountData | undefined }
+  >({
     mutationFn: async (newName: string) => {
       const [error, response] = await apiClient.account.update({
         body: { name: newName },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ?? null);
     },
     onMutate: async (newName) => {
       await queryClient.cancelQueries({ queryKey: ['account'] });
-      const previousAccount = queryClient.getQueryData(['account']);
+      const previousAccount = queryClient.getQueryData<AccountData>(['account']);
       queryClient.setQueryData(['account'], (old: AccountData | undefined) => {
         if (!old) return old;
         return {
@@ -33,18 +39,31 @@ export function useUpdateAccountName(onError?: (originalName: string) => void) {
       });
       return { previousAccount };
     },
-    onError: (error: Error, newName, context) => {
+    onSuccess: (result, newName, context) => {
+      if (!result.success) {
+        if (context?.previousAccount) {
+          queryClient.setQueryData(['account'], context.previousAccount);
+          const originalName = context.previousAccount.userName || '';
+          if (onError) {
+            onError(originalName);
+          }
+        }
+        handleApiError(result.error, 'Failed to update account name');
+        return;
+      }
+      toast.success('Account name updated successfully');
+    },
+    onError: (error: unknown, newName, context) => {
       if (context?.previousAccount) {
         queryClient.setQueryData(['account'], context.previousAccount);
-        const originalName = (context.previousAccount as AccountData)?.userName || '';
+        const originalName = context.previousAccount.userName || '';
         if (onError) {
           onError(originalName);
         }
       }
-      toast.error(`Failed to update account name: ${error.message}`);
-    },
-    onSuccess: () => {
-      toast.success('Account name updated successfully');
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['account'] });

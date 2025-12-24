@@ -25,10 +25,13 @@ export function useSearchableProjects(searchQuery: string, options?: { perPage?:
   });
 
   const projects = useMemo(() => {
-    if (searchQuery && searchResults) {
-      return searchResults as SearchProject[];
+    if (searchQuery && searchResults?.success) {
+      return searchResults.data as SearchProject[];
     }
-    return initialProjects || [];
+    if (initialProjects?.success) {
+      return initialProjects.data || [];
+    }
+    return [];
   }, [searchQuery, searchResults, initialProjects]);
 
   return {

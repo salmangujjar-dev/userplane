@@ -14,8 +14,10 @@ import { SectionError } from '@/components/shared/section-error';
 
 export function RecordingLinkSection() {
   const workspaceId = useWorkspaceId();
-  const { data: preferences, isLoading, error, refetch } = useWorkspacePreferences();
+  const { data: preferencesResult, isLoading, error, refetch } = useWorkspacePreferences();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const preferences = preferencesResult?.success ? preferencesResult.data : null;
 
   // Form state
   const [customizeRecordingLink, setCustomizeRecordingLink] = useState(false);
@@ -96,7 +98,7 @@ export function RecordingLinkSection() {
     }
   };
 
-  if (error) {
+  if (error || (preferencesResult && !preferencesResult.success)) {
     return (
       <div>
         <div className="mb-4">
@@ -109,7 +111,9 @@ export function RecordingLinkSection() {
             description={
               error instanceof Error
                 ? error.message
-                : 'Something went wrong while loading preferences.'
+                : preferencesResult && !preferencesResult.success
+                  ? preferencesResult.error.message
+                  : 'Something went wrong while loading preferences.'
             }
             onRetry={() => refetch()}
           />

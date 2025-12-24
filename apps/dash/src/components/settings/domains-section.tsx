@@ -60,13 +60,14 @@ const ITEMS_PER_PAGE = 5;
 export function DomainsSection() {
   const workspaceId = useWorkspaceId();
   const {
-    data: domains,
+    data: domainsResult,
     isLoading,
     error,
     refetch,
   } = useWorkspaceDomains({
     perPage: ITEMS_PER_PAGE,
   });
+  const domains = domainsResult?.success ? domainsResult.data : null;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [verifyingDomain, setVerifyingDomain] = useState<{ id: string; url: string } | null>(null);
   const [verificationStep, setVerificationStep] = useState<VerificationStep>(null);
@@ -307,7 +308,7 @@ export function DomainsSection() {
   const displayedDomains = useMemo(() => domains || [], [domains]);
   const totalPages = 1;
 
-  if (error) {
+  if (error || (domainsResult && !domainsResult.success)) {
     return (
       <div>
         <div className="mb-4">
@@ -318,7 +319,11 @@ export function DomainsSection() {
           <SectionError
             title="Failed to load domains"
             description={
-              error instanceof Error ? error.message : 'Something went wrong while loading domains.'
+              error instanceof Error
+                ? error.message
+                : domainsResult && !domainsResult.success
+                  ? domainsResult.error.message
+                  : 'Something went wrong while loading domains.'
             }
             onRetry={() => refetch()}
           />

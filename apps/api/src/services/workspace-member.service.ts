@@ -227,7 +227,9 @@ export class WorkspaceMemberService {
   /**
    * Get team members of a workspace with user details (paginated)
    * Returns members sorted by role (owner > admin > member)
+   * If no members found, validates workspace existence (since workspace always has at least 1 member)
    * Throws WORKSPACE_USER_ID_REQUIRED, WORKSPACE_MEMBER_INVALID_PAGINATION for invalid params
+   * Throws WORKSPACE_NOT_FOUND if workspace doesn't exist when no members found
    */
   async getTeamMembers(workspaceId: string, page: number = 1, perPage: number = 5) {
     if (!workspaceId) {
@@ -249,6 +251,14 @@ export class WorkspaceMemberService {
     }
 
     const total = await this.deps.memberRepo.countByWorkspace(workspaceId);
+
+    // If no members exist, workspace doesn't exist (workspace always has at least 1 member)
+    if (total === 0) {
+      throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        message: 'Workspace not found',
+      });
+    }
+
     const offset = (page - 1) * perPage;
     const members = await this.deps.memberRepo.findByWorkspaceWithUsersPaginated(
       workspaceId,
@@ -296,6 +306,34 @@ export class WorkspaceMemberService {
     }
 
     return this.deps.memberRepo.softDelete(member.workspaceMemberId, options);
+  }
+
+  /**
+   * Get notification preferences for authenticated user in workspace
+   * Returns member's notification settings
+   * Throws WORKSPACE_MEMBER_IDS_REQUIRED, WORKSPACE_MEMBER_NOT_IN_WORKSPACE for validation errors
+   */
+  async getNotificationPreferences(userId: string, workspaceId: string) {
+    if (!userId || !workspaceId) {
+      throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        message: 'User ID and Workspace ID are required',
+      });
+    }
+
+    const member = await this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
+    if (!member) {
+      throw new ORPCError('WORKSPACE_MEMBER_NOT_IN_WORKSPACE', {
+        message: 'You are not a member of this workspace',
+      });
+    }
+
+    return {
+      notifyOnLinkUsage: member.notifyOnLinkUsage,
+      notifyOnQuotaReset: member.notifyOnQuotaReset,
+      notifyOnQuotaLimit: member.notifyOnQuotaLimit,
+      notifyOnInviteAccepted: member.notifyOnInviteAccepted,
+      notifyOnMemberJoin: member.notifyOnMemberJoin,
+    };
   }
 
   /**

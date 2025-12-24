@@ -45,11 +45,16 @@ export default function ProjectPage() {
   const [linkSearchQuery, setLinkSearchQuery] = useState('');
 
   // Fetch project details
-  const { data: project, isLoading: isLoadingProject, error: projectError } = useProject(projectId);
+  const {
+    data: projectResult,
+    isLoading: isLoadingProject,
+    error: projectError,
+  } = useProject(projectId);
+  const project = projectResult?.success ? projectResult.data : null;
   const projectTitle = project?.projectTitle || 'Untitled Project';
 
   // Fetch recordings filtered by project
-  const { data: recordingsData, isLoading: isLoadingRecordings } = useWorkspaceRecordings({
+  const { data: recordingsResult, isLoading: isLoadingRecordings } = useWorkspaceRecordings({
     page: recordingsPage,
     perPage: recordingsPerPage,
     filters: {
@@ -58,9 +63,10 @@ export default function ProjectPage() {
       linkId: selectedRecordingLinks.length > 0 ? selectedRecordingLinks : undefined,
     },
   });
+  const recordingsData = recordingsResult?.success ? recordingsResult.data : null;
 
   // Fetch links filtered by project
-  const { data: linksData, isLoading: isLoadingLinks } = useWorkspaceLinks({
+  const { data: linksResult, isLoading: isLoadingLinks } = useWorkspaceLinks({
     page: linksPage,
     perPage: linksPerPage,
     filters: {
@@ -69,6 +75,7 @@ export default function ProjectPage() {
       domainId: selectedDomains.length > 0 ? selectedDomains : undefined,
     },
   });
+  const linksData = linksResult?.success ? linksResult.data : null;
 
   // Searchable filters
   const { members, isLoading: isSearchingMembers } = useSearchableMembers(memberSearchQuery, {
@@ -77,9 +84,10 @@ export default function ProjectPage() {
   const { links, isLoading: isSearchingLinks } = useSearchableLinks(linkSearchQuery, {
     perPage: 5,
   });
-  const { data: domains } = useWorkspaceDomains({
+  const { data: domainsResult } = useWorkspaceDomains({
     perPage: 5,
   });
+  const domains = domainsResult?.success ? domainsResult.data : null;
 
   const memberOptions =
     members?.map((member) => ({
@@ -123,7 +131,7 @@ export default function ProjectPage() {
   }
 
   // Show error state for project
-  if (projectError || !project) {
+  if (projectError || (projectResult && !projectResult.success) || !project) {
     return (
       <div className="flex h-screen bg-background">
         <Sidebar />
@@ -133,7 +141,9 @@ export default function ProjectPage() {
             description={
               projectError instanceof Error
                 ? projectError.message
-                : 'This project may have been deleted or you may not have access.'
+                : projectResult && !projectResult.success
+                  ? projectResult.error.message
+                  : 'This project may have been deleted or you may not have access.'
             }
             onGoBack={() => window.history.back()}
             showRetry={false}

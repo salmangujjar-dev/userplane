@@ -1,31 +1,38 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
 
-export function useDeleteRecording(workspaceId: string | null, onSuccess?: () => void) {
+interface DeleteRecordingData {
+  deleted: boolean;
+}
+
+export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?: () => void) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<SafeResult<DeleteRecordingData>, Error, string>({
     mutationFn: async (recordingId: string) => {
       if (!workspaceId || !recordingId) throw new Error('Missing workspace or recording ID');
       const [error, response] = await apiClient.recording.delete({
         params: { workspaceId, recordingId },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ? { deleted: true } : null);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (!result.success) {
+        handleApiError(result.error, 'Failed to delete recording');
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ['recordings', workspaceId] });
       toast.success('Recording deleted successfully');
-      if (onSuccess) {
-        onSuccess();
+      if (onDeleteSuccess) {
+        onDeleteSuccess();
       }
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete recording: ${error.message}`);
+    onError: (error: unknown) => {
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
   });
 }

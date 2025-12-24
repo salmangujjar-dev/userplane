@@ -27,8 +27,11 @@ export default function CreateWorkspacePage() {
     createWorkspace(
       { url: workspace },
       {
-        onSuccess: (response) => {
-          const workspaceId = response.data.workspaceId;
+        onSuccess: (result) => {
+          // Error already handled by mutation's onSuccess
+          if (!result.success) return;
+
+          const workspaceId = result.data.workspaceId;
           setWorkspaceStore(workspaceId);
           toast.success('Workspace created successfully');
           router.push(`/${workspaceId}`);

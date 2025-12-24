@@ -1,10 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
+import { handleQueryResult } from '@/lib/errors';
 
 /**
  * Hook to fetch workspace information
  * Returns workspace details including name and settings
+ *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
  */
 export function useWorkspace() {
   const workspaceId = useWorkspaceId();
@@ -18,14 +22,7 @@ export function useWorkspace() {
       const [error, response] = await apiClient.workspace.getById({
         params: { workspaceId },
       });
-      if (error) {
-        console.log('error: ', error);
-        console.log('error message: ', error.message);
-        console.log('error cause: ', error.cause);
-        console.log('error name: ', error.name);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId,
     staleTime: 5 * 60 * 1000,

@@ -1,9 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/client';
+import { handleQueryResult } from '@/lib/errors';
 
 /**
  * Hook to fetch recording details by ID
  * Returns recording metadata and basic information
+ *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
  */
 export function useRecording(workspaceId: string | null, recordingId: string) {
   return useQuery({
@@ -17,11 +21,7 @@ export function useRecording(workspaceId: string | null, recordingId: string) {
         params: { workspaceId, recordingId },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -32,6 +32,9 @@ export function useRecording(workspaceId: string | null, recordingId: string) {
 /**
  * Hook to fetch recording video resource
  * Returns presigned URL for video playback
+ *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
  */
 export function useRecordingVideo(workspaceId: string | null, recordingId: string) {
   return useQuery({
@@ -45,11 +48,7 @@ export function useRecordingVideo(workspaceId: string | null, recordingId: strin
         params: { workspaceId, recordingId },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 50 * 60 * 1000, // 50 minutes (presigned URLs typically last 1 hour)
@@ -60,6 +59,9 @@ export function useRecordingVideo(workspaceId: string | null, recordingId: strin
 /**
  * Hook to fetch recording thumbnail resource
  * Returns presigned URL for thumbnail image
+ *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
  */
 export function useRecordingThumbnail(workspaceId: string | null, recordingId: string) {
   return useQuery({
@@ -73,11 +75,7 @@ export function useRecordingThumbnail(workspaceId: string | null, recordingId: s
         params: { workspaceId, recordingId },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 50 * 60 * 1000, // 50 minutes
@@ -88,6 +86,9 @@ export function useRecordingThumbnail(workspaceId: string | null, recordingId: s
 /**
  * Hook to fetch recording console log resource
  * Returns presigned URL for console log file
+ *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
  */
 export function useRecordingConsoleLog(workspaceId: string | null, recordingId: string) {
   return useQuery({
@@ -101,11 +102,7 @@ export function useRecordingConsoleLog(workspaceId: string | null, recordingId: 
         params: { workspaceId, recordingId },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 50 * 60 * 1000, // 50 minutes
@@ -116,6 +113,9 @@ export function useRecordingConsoleLog(workspaceId: string | null, recordingId: 
 /**
  * Hook to fetch recording network log resource
  * Returns presigned URL for network log file
+ *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
  */
 export function useRecordingNetworkLog(workspaceId: string | null, recordingId: string) {
   return useQuery({
@@ -129,11 +129,7 @@ export function useRecordingNetworkLog(workspaceId: string | null, recordingId: 
         params: { workspaceId, recordingId },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 50 * 60 * 1000, // 50 minutes

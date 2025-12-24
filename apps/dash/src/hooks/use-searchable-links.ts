@@ -25,10 +25,13 @@ export function useSearchableLinks(searchQuery: string, options?: { perPage?: nu
   });
 
   const links = useMemo(() => {
-    if (searchQuery && searchResults) {
-      return searchResults as SearchLink[];
+    if (searchQuery && searchResults?.success) {
+      return searchResults.data as SearchLink[];
     }
-    return initialLinks?.links || [];
+    if (initialLinks?.success) {
+      return initialLinks.data.links || [];
+    }
+    return [];
   }, [searchQuery, searchResults, initialLinks]);
 
   return {

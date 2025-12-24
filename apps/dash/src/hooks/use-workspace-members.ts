@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
+import { handleQueryResult, type SafeResult } from '@/lib/errors';
 
 export interface WorkspaceMember {
   workspaceMemberId: string;
@@ -13,16 +14,22 @@ export interface WorkspaceMember {
  * Hook to fetch workspace members
  * Returns all members in the workspace
  *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
+ *
  * @example
  * ```tsx
  * function MembersFilter() {
- *   const { data: members, isLoading } = useWorkspaceMembers();
+ *   const { data, isLoading } = useWorkspaceMembers();
  *
  *   if (isLoading) return <div>Loading...</div>;
+ *   if (data && !data.success) {
+ *     return <ErrorState error={data.error} />;
+ *   }
  *
  *   return (
  *     <select>
- *       {members?.map(member => (
+ *       {data.data.map(member => (
  *         <option key={member.workspaceMemberId} value={member.workspaceMemberId}>
  *           {member.memberName}
  *         </option>
@@ -56,11 +63,10 @@ export function useWorkspaceMembers(options?: {
         },
       });
 
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data.workspaceMembers as WorkspaceMember[];
+      return handleQueryResult(
+        error,
+        (response?.data.workspaceMembers as WorkspaceMember[]) ?? null
+      );
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000,

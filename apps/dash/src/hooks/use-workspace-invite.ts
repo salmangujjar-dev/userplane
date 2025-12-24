@@ -2,16 +2,32 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+import {
+  handleApiError,
+  handleSafeResult,
+  handleQueryResult,
+  isDefinedError,
+  isErrorCode,
+  type SafeResult,
+} from '@/lib/errors';
 
 /**
  * Hook to fetch the invite token for the current workspace
  *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
+ *
  * @example
  * ```tsx
  * function InviteSection() {
- *   const { data: inviteToken, isLoading } = useWorkspaceInvite();
+ *   const { data, isLoading } = useWorkspaceInvite();
  *
- *   const inviteUrl = inviteToken?.inviteUrl;
+ *   if (isLoading) return <div>Loading...</div>;
+ *   if (data && !data.success) {
+ *     return <ErrorState error={data.error} />;
+ *   }
+ *
+ *   const inviteUrl = data.data.inviteUrl;
  *
  *   return <div>Share: {inviteUrl}</div>;
  * }
@@ -29,11 +45,7 @@ export function useWorkspaceInvite() {
       const [error, response] = await apiClient.workspace.invite.getUrl({
         params: { workspaceId },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId,
     staleTime: 60 * 60 * 1000, // 1 hour
@@ -60,11 +72,15 @@ export function useWorkspaceInvite() {
  * }
  * ```
  */
+interface SendInvitesData {
+  sentCount: number;
+}
+
 export function useSendWorkspaceInvites() {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<SafeResult<SendInvitesData>, Error, string[]>({
     mutationFn: async (emails: string[]) => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
@@ -73,19 +89,21 @@ export function useSendWorkspaceInvites() {
         params: { workspaceId },
         body: { emails },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleSafeResult(error, response?.data ? { sentCount: emails.length } : null);
     },
-    onSuccess: (_, emails) => {
+    onSuccess: (result, emails) => {
+      if (!result.success) {
+        handleApiError(result.error, 'Failed to send invites');
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
       toast.success(`Invites sent to ${emails.length} email${emails.length > 1 ? 's' : ''}`);
     },
-    onError: (error) => {
-      console.error('Failed to send invites:', error);
-      toast.error('Failed to send invites. Please try again.');
+    onError: (error: unknown) => {
+      // Only unknown errors reach here
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
   });
 }
@@ -93,6 +111,9 @@ export function useSendWorkspaceInvites() {
 /**
  * Hook to validate an invite token
  * This is a public endpoint and does not require authentication
+ *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
  *
  * @param token - The invite token from the URL
  * @param enabled - Whether to run the query (default: true when token exists)
@@ -102,12 +123,14 @@ export function useSendWorkspaceInvites() {
  * function InviteAcceptPage() {
  *   const searchParams = useSearchParams();
  *   const token = searchParams.get('token');
- *   const { data: inviteInfo, isLoading, error } = useValidateInvite(token);
+ *   const { data, isLoading } = useValidateInvite(token);
  *
- *   if (error) return <div>Invalid invite</div>;
  *   if (isLoading) return <div>Loading...</div>;
+ *   if (data && !data.success) {
+ *     return <div>Invalid invite: {data.error.message}</div>;
+ *   }
  *
- *   return <div>Join {inviteInfo?.workspaceName}</div>;
+ *   return <div>Join {data.data.workspaceName}</div>;
  * }
  * ```
  */
@@ -121,11 +144,7 @@ export function useValidateInvite(token: string | null, enabled = true) {
       const [error, response] = await apiClient.invite.validate({
         body: { token },
       });
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-      return response.data;
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: !!token && enabled,
     retry: false,
@@ -156,47 +175,93 @@ export function useValidateInvite(token: string | null, enabled = true) {
  * }
  * ```
  */
+interface AcceptInviteData {
+  workspaceId: string;
+  workspaceName: string;
+  isAlreadyMember: boolean;
+}
+
+type AcceptInviteResult =
+  | { success: true; data: AcceptInviteData; error?: never }
+  | { success: false; data?: never; error: { code: string; message: string } };
+
 export function useAcceptInvite() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ workspaceId, token }: { workspaceId: string; token: string }) => {
+  return useMutation<AcceptInviteResult, Error, { workspaceId: string; token: string }>({
+    mutationFn: async ({ workspaceId, token }) => {
       const [error, response] = await apiClient.workspace.invite.accept({
         params: { workspaceId },
         body: { token },
       });
 
       if (error) {
-        // Check if it's a CONFLICT error (already a member)
+        // Check if it's a CONFLICT error (already a member) - handle as success case
         if ('status' in error && error.status === 409) {
           return {
-            workspaceId,
-            workspaceName: '',
-            isAlreadyMember: true,
+            success: true,
+            data: {
+              workspaceId,
+              workspaceName: '',
+              isAlreadyMember: true,
+            },
           };
         }
+
+        // Known errors - return as error result
+        if (isDefinedError(error)) {
+          return {
+            success: false,
+            error: { code: error.code, message: error.message },
+          };
+        }
+
+        // Unknown error - throw for Sentry
         throw error;
       }
 
       return {
-        ...response.data,
-        isAlreadyMember: false,
+        success: true,
+        data: {
+          ...response.data,
+          isAlreadyMember: false,
+        },
       };
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      queryClient.invalidateQueries({ queryKey: ['workspace', result.workspaceId] });
-
-      if (result.isAlreadyMember) {
-        // Don't show error for already member case
+      if (!result.success) {
+        // Handle known errors gracefully
+        if (result.error.code === 'INVITE_TOKEN_INVALID') {
+          toast.error('Invalid invite link', {
+            description: 'This invite link is invalid or has expired.',
+          });
+          return;
+        }
+        if (result.error.code === 'INVITE_TOKEN_INVALIDATED') {
+          toast.error('Invite revoked', {
+            description: 'This invite has been revoked by the workspace owner.',
+          });
+          return;
+        }
+        toast.error(result.error.message || 'Failed to join workspace');
         return;
       }
 
-      toast.success(`Successfully joined ${result.workspaceName}`);
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      queryClient.invalidateQueries({ queryKey: ['workspace', result.data.workspaceId] });
+
+      if (result.data.isAlreadyMember) {
+        // Don't show message for already member case
+        return;
+      }
+
+      toast.success(`Successfully joined ${result.data.workspaceName}`);
     },
-    onError: (error) => {
-      console.error('Failed to accept invite:', error);
-      toast.error('Failed to join workspace. Please try again.');
+    onError: (error: unknown) => {
+      // Only unknown errors reach here
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     },
   });
 }

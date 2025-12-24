@@ -12,9 +12,10 @@ import { SectionError } from '@/components/shared/section-error';
 
 export function WorkspaceSection() {
   const workspaceId = useWorkspaceId();
-  const { data: workspaceData, isLoading, error, refetch } = useWorkspace();
+  const { data: workspaceResult, isLoading, error, refetch } = useWorkspace();
   const [workspaceName, setWorkspaceName] = useState('');
 
+  const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const originalName = workspaceData?.workspace.workspaceName || '';
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export function WorkspaceSection() {
 
   const hasChanges = workspaceName.trim() !== originalName && workspaceName.trim().length > 0;
 
-  if (error) {
+  if (error || (workspaceResult && !workspaceResult.success)) {
     return (
       <div>
         <div className="mb-4">
@@ -54,7 +55,9 @@ export function WorkspaceSection() {
             description={
               error instanceof Error
                 ? error.message
-                : 'Something went wrong while loading workspace settings.'
+                : workspaceResult && !workspaceResult.success
+                  ? workspaceResult.error.message
+                  : 'Something went wrong while loading workspace settings.'
             }
             onRetry={() => refetch()}
           />
