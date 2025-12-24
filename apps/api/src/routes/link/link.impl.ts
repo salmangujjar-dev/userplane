@@ -3,14 +3,11 @@
  * Implements the link contract defined in @workspace/contract
  */
 
-import { ORPCError } from '@orpc/server';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { LinkService } from '@/api/services/link.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
-import { z } from 'zod';
-import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { createPaginationMeta } from '@/api/types';
 
 /**
@@ -27,53 +24,39 @@ export const getLinksImpl = (
   return authorized.link.list
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const filters = {
-          createdBy: input.query.created_by,
-          projectId: input.query.project_id,
-          domainId: input.query.domain_id,
-          linkProviderType: input.query.link_provider_type,
-          linkType: input.query.link_type,
-        };
+      const filters = {
+        createdBy: input.query.created_by,
+        projectId: input.query.project_id,
+        domainId: input.query.domain_id,
+        linkProviderType: input.query.link_provider_type,
+        linkType: input.query.link_type,
+      };
 
-        const sort = {
-          field: input.query.sort_by || 'created_at',
-          direction: input.query.sort_direction || 'desc',
-        };
+      const sort = {
+        field: input.query.sort_by || 'created_at',
+        direction: input.query.sort_direction || 'desc',
+      };
 
-        const { links, total } = await linkService.getByWorkspaceIdPaginated(
-          input.params.workspaceId,
-          input.query.page || 1,
-          input.query.per_page || 10,
-          filters,
-          sort as any
-        );
+      const { links, total } = await linkService.getByWorkspaceIdPaginated(
+        input.params.workspaceId,
+        input.query.page || 1,
+        input.query.per_page || 10,
+        filters,
+        sort as any
+      );
 
-        return {
-          message: 'Links retrieved successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            links,
-            pagination: createPaginationMeta(
-              input.query.page || 1,
-              input.query.per_page || 10,
-              total
-            ),
-          },
-        };
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Links retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          links,
+          pagination: createPaginationMeta(
+            input.query.page || 1,
+            input.query.per_page || 10,
+            total
+          ),
+        },
+      };
     });
 };
 
@@ -91,48 +74,24 @@ export const createLinkImpl = (
   return authorized.link.create
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      try {
-        const createdLink = await linkService.create({
+      const createdLink = await linkService.create({
+        workspaceId: input.params.workspaceId,
+        createdBy: context.workspaceMemberId,
+        projectId: input.body.projectId,
+        domainId: input.body.domainId,
+        linkReference: input.body.linkReference,
+        linkReusable: input.body.linkReusable,
+      });
+
+      const link = await linkService.getById(createdLink.linkId, input.params.workspaceId);
+
+      return {
+        message: 'Link created successfully',
+        data: {
           workspaceId: input.params.workspaceId,
-          createdBy: context.workspaceMemberId,
-          projectId: input.body.projectId,
-          domainId: input.body.domainId,
-          linkReference: input.body.linkReference,
-          linkReusable: input.body.linkReusable,
-        });
-
-        const link = await linkService.getById(createdLink.linkId, input.params.workspaceId);
-
-        return {
-          message: 'Link created successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            link,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+          link,
+        },
+      };
     });
 };
 
@@ -150,40 +109,15 @@ export const getLinkByIdImpl = (
   return authorized.link.getById
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const link = await linkService.getById(input.params.linkId, input.params.workspaceId);
+      const link = await linkService.getById(input.params.linkId, input.params.workspaceId);
 
-        return {
-          message: 'Link retrieved successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            link,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Link retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          link,
+        },
+      };
     });
 };
 
@@ -201,53 +135,23 @@ export const updateLinkImpl = (
   return authorized.link.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        await linkService.update(input.params.linkId, input.params.workspaceId, {
-          linkTitle: input.body.linkTitle,
-          linkReusable: input.body.linkReusable,
-          linkProviderType: input.body.linkProviderType,
-          linkProviderId: input.body.linkProviderId,
-          linkProviderRef: input.body.linkProviderRef,
-        });
+      await linkService.update(input.params.linkId, input.params.workspaceId, {
+        linkTitle: input.body.linkTitle,
+        linkReusable: input.body.linkReusable,
+        linkProviderType: input.body.linkProviderType,
+        linkProviderId: input.body.linkProviderId,
+        linkProviderRef: input.body.linkProviderRef,
+      });
 
-        const link = await linkService.getById(input.params.linkId, input.params.workspaceId);
+      const link = await linkService.getById(input.params.linkId, input.params.workspaceId);
 
-        return {
-          message: 'Link updated successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            link,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Link updated successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          link,
+        },
+      };
     });
 };
 
@@ -265,40 +169,15 @@ export const deleteLinkImpl = (
   return authorized.link.delete
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      try {
-        await linkService.delete(input.params.linkId, input.params.workspaceId);
+      await linkService.delete(input.params.linkId, input.params.workspaceId);
 
-        return {
-          message: 'Link deleted successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            linkId: input.params.linkId,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Link deleted successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          linkId: input.params.linkId,
+        },
+      };
     });
 };
 

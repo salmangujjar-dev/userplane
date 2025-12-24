@@ -3,14 +3,11 @@
  * Implements the recording contract defined in @workspace/contract
  */
 
-import { ORPCError } from '@orpc/server';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
-import { z } from 'zod';
-import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { createPaginationMeta } from '@/api/types';
 
 /**
@@ -27,51 +24,37 @@ export const getRecordingsImpl = (
   return authorized.recording.list
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const filters = {
-          createdBy: input.query.created_by,
-          projectId: input.query.project_id,
-          linkId: input.query.link_id,
-        };
+      const filters = {
+        createdBy: input.query.created_by,
+        projectId: input.query.project_id,
+        linkId: input.query.link_id,
+      };
 
-        const sort = {
-          field: input.query.sort_by || 'created_at',
-          direction: input.query.sort_direction || 'desc',
-        };
+      const sort = {
+        field: input.query.sort_by || 'created_at',
+        direction: input.query.sort_direction || 'desc',
+      };
 
-        const { recordings, total } = await recordingService.getByWorkspaceIdPaginated(
-          input.params.workspaceId,
-          input.query.page || 1,
-          input.query.per_page || 10,
-          filters,
-          sort as any
-        );
+      const { recordings, total } = await recordingService.getByWorkspaceIdPaginated(
+        input.params.workspaceId,
+        input.query.page || 1,
+        input.query.per_page || 10,
+        filters,
+        sort as any
+      );
 
-        return {
-          message: 'Recordings retrieved successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            recordings,
-            pagination: createPaginationMeta(
-              input.query.page || 1,
-              input.query.per_page || 10,
-              total
-            ),
-          },
-        };
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Recordings retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          recordings,
+          pagination: createPaginationMeta(
+            input.query.page || 1,
+            input.query.per_page || 10,
+            total
+          ),
+        },
+      };
     });
 };
 
@@ -89,43 +72,18 @@ export const getRecordingByIdImpl = (
   return authorized.recording.getById
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const recording = await recordingService.getById(
-          input.params.recordingId,
-          input.params.workspaceId
-        );
+      const recording = await recordingService.getById(
+        input.params.recordingId,
+        input.params.workspaceId
+      );
 
-        return {
-          message: 'Recording retrieved successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            recording,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Recording retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          recording,
+        },
+      };
     });
 };
 
@@ -143,40 +101,15 @@ export const deleteRecordingImpl = (
   return authorized.recording.delete
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      try {
-        await recordingService.delete(input.params.recordingId, input.params.workspaceId);
+      await recordingService.delete(input.params.recordingId, input.params.workspaceId);
 
-        return {
-          message: 'Recording deleted successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            recordingId: input.params.recordingId,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Recording deleted successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          recordingId: input.params.recordingId,
+        },
+      };
     });
 };
 
@@ -194,43 +127,18 @@ export const getRecordingVideoImpl = (
   return authorized.recording.resources.video
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const resource = await recordingService.getVideoResource(
-          input.params.recordingId,
-          input.params.workspaceId
-        );
+      const resource = await recordingService.getVideoResource(
+        input.params.recordingId,
+        input.params.workspaceId
+      );
 
-        return {
-          message: 'Recording video URL retrieved successfully',
-          data: {
-            recordingId: input.params.recordingId,
-            resource,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Recording video URL retrieved successfully',
+        data: {
+          recordingId: input.params.recordingId,
+          resource,
+        },
+      };
     });
 };
 
@@ -248,43 +156,18 @@ export const getRecordingThumbnailImpl = (
   return authorized.recording.resources.thumbnail
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const resource = await recordingService.getThumbnailResource(
-          input.params.recordingId,
-          input.params.workspaceId
-        );
+      const resource = await recordingService.getThumbnailResource(
+        input.params.recordingId,
+        input.params.workspaceId
+      );
 
-        return {
-          message: 'Recording thumbnail URL retrieved successfully',
-          data: {
-            recordingId: input.params.recordingId,
-            resource,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Recording thumbnail URL retrieved successfully',
+        data: {
+          recordingId: input.params.recordingId,
+          resource,
+        },
+      };
     });
 };
 
@@ -302,43 +185,18 @@ export const getRecordingConsoleLogImpl = (
   return authorized.recording.resources.consoleLog
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const resource = await recordingService.getConsoleLogResource(
-          input.params.recordingId,
-          input.params.workspaceId
-        );
+      const resource = await recordingService.getConsoleLogResource(
+        input.params.recordingId,
+        input.params.workspaceId
+      );
 
-        return {
-          message: 'Recording console log URL retrieved successfully',
-          data: {
-            recordingId: input.params.recordingId,
-            resource,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Recording console log URL retrieved successfully',
+        data: {
+          recordingId: input.params.recordingId,
+          resource,
+        },
+      };
     });
 };
 
@@ -356,43 +214,18 @@ export const getRecordingNetworkLogImpl = (
   return authorized.recording.resources.networkLog
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const resource = await recordingService.getNetworkLogResource(
-          input.params.recordingId,
-          input.params.workspaceId
-        );
+      const resource = await recordingService.getNetworkLogResource(
+        input.params.recordingId,
+        input.params.workspaceId
+      );
 
-        return {
-          message: 'Recording network log URL retrieved successfully',
-          data: {
-            recordingId: input.params.recordingId,
-            resource,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Recording network log URL retrieved successfully',
+        data: {
+          recordingId: input.params.recordingId,
+          resource,
+        },
+      };
     });
 };
 
@@ -410,43 +243,18 @@ export const getRecordingActionImpl = (
   return authorized.recording.resources.action
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const resource = await recordingService.getActionResource(
-          input.params.recordingId,
-          input.params.workspaceId
-        );
+      const resource = await recordingService.getActionResource(
+        input.params.recordingId,
+        input.params.workspaceId
+      );
 
-        return {
-          message: 'Recording client action URL retrieved successfully',
-          data: {
-            recordingId: input.params.recordingId,
-            resource,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Recording client action URL retrieved successfully',
+        data: {
+          recordingId: input.params.recordingId,
+          resource,
+        },
+      };
     });
 };
 

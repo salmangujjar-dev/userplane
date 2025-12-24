@@ -11,7 +11,7 @@ import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
+import { ORPCError } from '@orpc/server';
 import { parseLinkReference } from '@/api/lib/parser';
 import type {
   LinkFilters,
@@ -122,20 +122,23 @@ export class LinkService {
   /**
    * Verify and decode a link token
    * Returns the link ID if valid, throws error if invalid or expired
+   * Throws LINK_TOKEN_MISSING_ID, LINK_TOKEN_EXPIRED, or LINK_TOKEN_INVALID if token is invalid or expired
    */
   verifyLinkToken(token: string): string {
     try {
       const decoded = jwt.verify(token, env.recorder.secret) as { lid: string };
       if (!decoded.lid) {
-        throw new ValidationError('Invalid link token: missing link ID');
+        throw new ORPCError('LINK_TOKEN_MISSING_ID', {
+          message: 'Invalid link token: missing link ID',
+        });
       }
       return decoded.lid;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new ValidationError('Link token has expired');
+        throw new ORPCError('LINK_TOKEN_EXPIRED', { message: 'Link token has expired' });
       }
       if (error instanceof jwt.JsonWebTokenError) {
-        throw new ValidationError('Invalid link token');
+        throw new ORPCError('LINK_TOKEN_INVALID', { message: 'Invalid link token' });
       }
       throw error;
     }
@@ -146,26 +149,30 @@ export class LinkService {
    * Parses the linkReference to infer provider info and generate title
    * If linkReference is empty, uses user's first name as default
    * If projectId is not provided, uses the default project for the workspace
+   * Throws NOT_FOUND if workspace or project doesn't exist
+   * Throws specific link errors if validation fails
    */
   async create(params: CreateLinkParams, options?: { tx?: Transaction }) {
     // Guard rail: Check if workspace is deleted
     const isWorkspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(params.workspaceId);
     if (isWorkspaceDeleted === null) {
-      throw new NotFoundError('Workspace not found');
+      throw new ORPCError('NOT_FOUND', { message: 'Workspace not found' });
     }
     if (isWorkspaceDeleted) {
-      throw new ValidationError('Workspace has been deleted');
+      throw new ORPCError('LINK_WORKSPACE_DELETED', { message: 'Workspace has been deleted' });
     }
 
     // Get the workspace member with user info
     const memberWithUser = await this.deps.workspaceMemberRepo.findByIdWithUser(params.createdBy);
     if (!memberWithUser) {
-      throw new ValidationError('Workspace member not found');
+      throw new ORPCError('LINK_MEMBER_NOT_FOUND', { message: 'Workspace member not found' });
     }
 
     // Verify member belongs to the workspace
     if (memberWithUser.workspaceId !== params.workspaceId) {
-      throw new ValidationError('Workspace member does not belong to this workspace');
+      throw new ORPCError('LINK_MEMBER_WORKSPACE_MISMATCH', {
+        message: 'Workspace member does not belong to this workspace',
+      });
     }
 
     // Determine projectId - use provided or get default
@@ -173,7 +180,9 @@ export class LinkService {
     if (!projectId) {
       const defaultProject = await this.deps.projectRepo.findDefaultByWorkspace(params.workspaceId);
       if (!defaultProject) {
-        throw new ValidationError('No default project found for workspace');
+        throw new ORPCError('LINK_DEFAULT_PROJECT_NOT_FOUND', {
+          message: 'No default project found for workspace',
+        });
       }
       projectId = defaultProject.projectId;
     }
@@ -181,10 +190,10 @@ export class LinkService {
     // Guard rail: Check if project is deleted
     const isProjectDeleted = await this.deps.projectRepo.isSoftDeleted(projectId);
     if (isProjectDeleted === null) {
-      throw new NotFoundError('Project not found');
+      throw new ORPCError('NOT_FOUND', { message: 'Project not found' });
     }
     if (isProjectDeleted) {
-      throw new ValidationError('Project has been deleted');
+      throw new ORPCError('LINK_PROJECT_DELETED', { message: 'Project has been deleted' });
     }
 
     // Determine linkReference - use provided or generate default based on user's first name
@@ -220,7 +229,7 @@ export class LinkService {
     );
 
     if (!link) {
-      throw new ValidationError('Failed to create link');
+      throw new ORPCError('LINK_CREATE_FAILED', { message: 'Failed to create link' });
     }
 
     // Fetch domain info for linkURL generation
@@ -256,6 +265,7 @@ export class LinkService {
    * Get links for a workspace with pagination, filters, and sorting
    * All filtering and sorting is performed at the database level
    * Default sort: created_at descending (latest first)
+   * Throws LINK_PAGE_INVALID or LINK_PER_PAGE_INVALID if pagination params are invalid
    */
   async getByWorkspaceIdPaginated(
     workspaceId: string,
@@ -266,11 +276,13 @@ export class LinkService {
   ): Promise<{ links: LinkItem[]; total: number }> {
     // Validate pagination params
     if (page < 1) {
-      throw new ValidationError('Page must be greater than 0');
+      throw new ORPCError('LINK_PAGE_INVALID', { message: 'Page must be greater than 0' });
     }
 
     if (perPage < 1 || perPage > MAX_PER_PAGE) {
-      throw new ValidationError(`Per page must be between 1 and ${MAX_PER_PAGE}`);
+      throw new ORPCError('LINK_PER_PAGE_INVALID', {
+        message: `Per page must be between 1 and ${MAX_PER_PAGE}`,
+      });
     }
 
     // Get total count with filters applied at DB level
@@ -333,6 +345,9 @@ export class LinkService {
   /**
    * Update a link
    * Validates ownership before updating
+   * Throws LINK_NOT_FOUND if link doesn't exist
+   * Throws LINK_GONE if link has been deleted
+   * Throws LINK_WORKSPACE_MISMATCH or LINK_UPDATE_FAILED if validation fails
    */
   async update(
     linkId: string,
@@ -346,21 +361,23 @@ export class LinkService {
     if (!existingLink) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Link has been deleted');
+        throw new ORPCError('LINK_GONE', { status: 410, message: 'Link has been deleted' });
       }
-      throw new NotFoundError('Link not found');
+      throw new ORPCError('LINK_NOT_FOUND', { message: 'Link not found' });
     }
 
     // Verify link belongs to the workspace
     if (existingLink.workspaceId !== workspaceId) {
-      throw new ValidationError('Link does not belong to this workspace');
+      throw new ORPCError('LINK_WORKSPACE_MISMATCH', {
+        message: 'Link does not belong to this workspace',
+      });
     }
 
     // Perform update
     const updated = await this.deps.linkRepo.update(linkId, params, options);
 
     if (!updated) {
-      throw new ValidationError('Failed to update link');
+      throw new ORPCError('LINK_UPDATE_FAILED', { message: 'Failed to update link' });
     }
 
     // Fetch domain info for linkURL generation
@@ -396,6 +413,9 @@ export class LinkService {
   /**
    * Get a link by ID with full details
    * Validates ownership before returning
+   * Throws LINK_NOT_FOUND if link doesn't exist
+   * Throws LINK_GONE if link has been deleted
+   * Throws LINK_WORKSPACE_MISMATCH if link doesn't belong to workspace
    */
   async getById(linkId: string, workspaceId: string): Promise<LinkItem> {
     // Get link with joined project and creator data
@@ -404,14 +424,16 @@ export class LinkService {
     if (!linkWithDetails) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Link has been deleted');
+        throw new ORPCError('LINK_GONE', { status: 410, message: 'Link has been deleted' });
       }
-      throw new NotFoundError('Link not found');
+      throw new ORPCError('LINK_NOT_FOUND', { message: 'Link not found' });
     }
 
     // Verify link belongs to the workspace
     if (linkWithDetails.workspaceId !== workspaceId) {
-      throw new ValidationError('Link does not belong to this workspace');
+      throw new ORPCError('LINK_WORKSPACE_MISMATCH', {
+        message: 'Link does not belong to this workspace',
+      });
     }
 
     // Map to LinkItem response shape with linkURL
@@ -454,6 +476,9 @@ export class LinkService {
    * Delete a link
    * Validates ownership before soft deleting
    * Performs soft delete by marking isDeleted as true
+   * Throws LINK_NOT_FOUND if link doesn't exist
+   * Throws LINK_GONE if link has already been deleted
+   * Throws LINK_WORKSPACE_MISMATCH or LINK_DELETE_FAILED if validation fails
    */
   async delete(linkId: string, workspaceId: string, options?: { tx?: Transaction }) {
     // Get existing link
@@ -462,21 +487,23 @@ export class LinkService {
     if (!existingLink) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Link has already been deleted');
+        throw new ORPCError('LINK_GONE', { status: 410, message: 'Link has already been deleted' });
       }
-      throw new NotFoundError('Link not found');
+      throw new ORPCError('LINK_NOT_FOUND', { message: 'Link not found' });
     }
 
     // Verify link belongs to the workspace
     if (existingLink.workspaceId !== workspaceId) {
-      throw new ValidationError('Link does not belong to this workspace');
+      throw new ORPCError('LINK_WORKSPACE_MISMATCH', {
+        message: 'Link does not belong to this workspace',
+      });
     }
 
     // Perform soft delete
     const deleted = await this.deps.linkRepo.softDelete(linkId, options);
 
     if (!deleted) {
-      throw new ValidationError('Failed to delete link');
+      throw new ORPCError('LINK_DELETE_FAILED', { message: 'Failed to delete link' });
     }
 
     return deleted;

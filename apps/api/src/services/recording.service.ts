@@ -6,7 +6,7 @@
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
+import { ORPCError } from '@orpc/server';
 import type {
   ThumbnailsStorageClient,
   VideoStorageClient,
@@ -75,6 +75,7 @@ export class RecordingService {
    * Supports filtering by status groups: AVAILABLE, STALE, UNAVAILABLE, PENDING
    * All filtering and sorting is performed at the database level
    * Default sort: created_at descending (latest first)
+   * Throws RECORDING_PAGE_INVALID or RECORDING_PER_PAGE_INVALID if pagination params are invalid
    */
   async getByWorkspaceIdPaginated(
     workspaceId: string,
@@ -85,11 +86,13 @@ export class RecordingService {
   ): Promise<{ recordings: RecordingItem[]; total: number }> {
     // Validate pagination params
     if (page < 1) {
-      throw new ValidationError('Page must be greater than 0');
+      throw new ORPCError('RECORDING_PAGE_INVALID', { message: 'Page must be greater than 0' });
     }
 
     if (perPage < 1 || perPage > MAX_PER_PAGE) {
-      throw new ValidationError(`Per page must be between 1 and ${MAX_PER_PAGE}`);
+      throw new ORPCError('RECORDING_PER_PAGE_INVALID', {
+        message: `Per page must be between 1 and ${MAX_PER_PAGE}`,
+      });
     }
 
     // Get total count with filters applied at DB level (defaults to AVAILABLE)
@@ -131,6 +134,10 @@ export class RecordingService {
    * Validates ownership before soft deleting
    * Performs soft delete by marking isDeleted as true
    * Triggers storage cleanup asynchronously
+   * Throws RECORDING_NOT_FOUND if recording doesn't exist
+   * Throws RECORDING_GONE if recording already deleted
+   * Throws RECORDING_WORKSPACE_MISMATCH if validation fails
+   * Throws RECORDING_DELETE_FAILED if soft delete fails
    */
   async delete(recordingId: string, workspaceId: string, options?: { tx?: Transaction }) {
     // Get existing recording with file paths for cleanup
@@ -139,21 +146,26 @@ export class RecordingService {
     if (!existingRecording) {
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Recording has already been deleted');
+        throw new ORPCError('RECORDING_GONE', {
+          status: 410,
+          message: 'Recording has already been deleted',
+        });
       }
-      throw new NotFoundError('Recording not found');
+      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
     }
 
     // Verify recording belongs to the workspace
     if (existingRecording.workspaceId !== workspaceId) {
-      throw new ValidationError('Recording does not belong to this workspace');
+      throw new ORPCError('RECORDING_WORKSPACE_MISMATCH', {
+        message: 'Recording does not belong to this workspace',
+      });
     }
 
     // Perform soft delete
     const deleted = await this.deps.recordingRepo.softDelete(recordingId, options);
 
     if (!deleted) {
-      throw new ValidationError('Failed to delete recording');
+      throw new ORPCError('RECORDING_DELETE_FAILED', { message: 'Failed to delete recording' });
     }
 
     return deleted;
@@ -163,6 +175,8 @@ export class RecordingService {
    * Get recording by ID with full details
    * Defaults to AVAILABLE status group (available)
    * Returns recording metadata and metrics (resources fetched via separate endpoints)
+   * Throws RECORDING_NOT_FOUND if recording doesn't exist or doesn't belong to workspace
+   * Throws RECORDING_GONE if recording has been deleted
    */
   async getById(recordingId: string, workspaceId: string): Promise<RecordingDetail> {
     const row = await this.deps.recordingRepo.findByIdWithDetailsAndStatusGroup(recordingId);
@@ -170,13 +184,16 @@ export class RecordingService {
     if (!row) {
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Recording has already been deleted');
+        throw new ORPCError('RECORDING_GONE', {
+          status: 410,
+          message: 'Recording has already been deleted',
+        });
       }
-      throw new NotFoundError('Recording not found');
+      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
     }
 
     if (row.workspaceId !== workspaceId) {
-      throw new NotFoundError('Recording not found');
+      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
     }
 
     return {
@@ -398,6 +415,8 @@ export class RecordingService {
    * Validate available recording exists and belongs to workspace
    * Defaults to AVAILABLE status group (available)
    * Returns the recording if valid, throws otherwise
+   * Throws RECORDING_NOT_FOUND if recording doesn't exist or doesn't belong to workspace
+   * Throws RECORDING_GONE if recording has been deleted
    */
   private async validateAvailableRecordingAccess(recordingId: string, workspaceId: string) {
     const recording = await this.deps.recordingRepo.findByIdWithStatusGroup(recordingId);
@@ -405,13 +424,16 @@ export class RecordingService {
     if (!recording) {
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Recording has already been deleted');
+        throw new ORPCError('RECORDING_GONE', {
+          status: 410,
+          message: 'Recording has already been deleted',
+        });
       }
-      throw new NotFoundError('Recording not found');
+      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
     }
 
     if (recording.workspaceId !== workspaceId) {
-      throw new NotFoundError('Recording not found');
+      throw new ORPCError('RECORDING_NOT_FOUND', { message: 'Recording not found' });
     }
 
     return recording;
