@@ -3,6 +3,7 @@
  * Handles token generation, validation, and upload workflow
  */
 
+import { ORPCError } from '@orpc/server';
 import jwt from 'jsonwebtoken';
 import { env } from '@/api/env';
 import { generateSessionId, generateRecordingId } from '@/api/lib/id';
@@ -14,13 +15,6 @@ import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { LinkService } from '@/api/services/link.service';
-import {
-  ValidationError,
-  NotFoundError,
-  GoneError,
-  ForbiddenError,
-  ConflictError,
-} from '@/api/lib/errors';
 import {
   SESSION_CONSTRAINTS,
   validateFileMimeType,
@@ -134,9 +128,14 @@ export class SessionService {
       // Check if link was deleted
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new GoneError("Link's expired, try requesting a new one");
+        throw new ORPCError('SESSION_LINK_GONE', {
+          status: 410,
+          message: "Link's expired, try requesting a new one",
+        });
       }
-      throw new NotFoundError("Link doesn't seem to exist, try requesting a new one");
+      throw new ORPCError('SESSION_LINK_NOT_FOUND', {
+        message: "Link doesn't seem to exist, try requesting a new one",
+      });
     }
 
     // Guard rails: Check if related resources are deleted
@@ -146,7 +145,9 @@ export class SessionService {
 
     // Validate link type - only recording links allowed
     if (linkData.linkType !== 'recording') {
-      throw new ValidationError("Link isn't set up for recordings");
+      throw new ORPCError('SESSION_LINK_INVALID_TYPE', {
+        message: "Link isn't set up for recordings",
+      });
     }
 
     // Check reusability - if not reusable, ensure no terminal state recordings
@@ -154,7 +155,9 @@ export class SessionService {
     if (!linkData.linkReusable) {
       const terminalCount = await this.deps.linkRepo.countTerminalRecordingsForLink(linkId);
       if (terminalCount > 0) {
-        throw new ConflictError("Link's been used already, grab a new one");
+        throw new ORPCError('SESSION_LINK_ALREADY_USED', {
+          message: "Link's been used already, grab a new one",
+        });
       }
     }
 
@@ -200,7 +203,9 @@ export class SessionService {
     // Verify and decode session token
     const sessionPayload = this.verifySessionToken(sessionToken);
     if (!sessionPayload) {
-      throw new ForbiddenError("Session's expired, let's start over");
+      throw new ORPCError('SESSION_TOKEN_EXPIRED', {
+        message: "Session's expired, let's start over",
+      });
     }
 
     // Re-validate link state (may have been deleted since session init)
@@ -208,14 +213,21 @@ export class SessionService {
     if (!linkData) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(sessionPayload.lid);
       if (isSoftDeleted === true) {
-        throw new GoneError("Link's expired, try requesting a new one");
+        throw new ORPCError('SESSION_LINK_GONE', {
+          status: 410,
+          message: "Link's expired, try requesting a new one",
+        });
       }
-      throw new NotFoundError("Link doesn't seem to exist, try requesting a new one");
+      throw new ORPCError('SESSION_LINK_NOT_FOUND', {
+        message: "Link doesn't seem to exist, try requesting a new one",
+      });
     }
 
     // Validate link type again
     if (linkData.linkType !== 'recording') {
-      throw new ValidationError("Link isn't set up for recordings");
+      throw new ORPCError('SESSION_LINK_INVALID_TYPE', {
+        message: "Link isn't set up for recordings",
+      });
     }
 
     // Check reusability again - only block if terminal state recordings exist
@@ -225,23 +237,31 @@ export class SessionService {
         sessionPayload.lid
       );
       if (terminalCount > 0) {
-        throw new ConflictError("Link's been used already, grab a new one");
+        throw new ORPCError('SESSION_LINK_ALREADY_USED', {
+          message: "Link's been used already, grab a new one",
+        });
       }
     }
 
     // Validate recording duration
     if (recordingDurationMs < SESSION_CONSTRAINTS.MIN_DURATION_MS) {
-      throw new ValidationError('Recording needs to be a bit longer');
+      throw new ORPCError('SESSION_DURATION_TOO_SHORT', {
+        message: 'Recording needs to be a bit longer',
+      });
     }
 
     // Validate against workspace-specific limit (if set)
     if (sessionPayload.prefs.rmd !== null && recordingDurationMs > sessionPayload.prefs.rmd) {
-      throw new ValidationError('Recording ran too long, try keeping it shorter');
+      throw new ORPCError('SESSION_DURATION_TOO_LONG', {
+        message: 'Recording ran too long, try keeping it shorter',
+      });
     }
 
     // Validate against absolute maximum
     if (recordingDurationMs > SESSION_CONSTRAINTS.DEFAULT_MAX_DURATION_MS) {
-      throw new ValidationError('Recording ran too long, try keeping it shorter');
+      throw new ORPCError('SESSION_DURATION_TOO_LONG', {
+        message: 'Recording ran too long, try keeping it shorter',
+      });
     }
 
     // Validate files and get exclusions
@@ -332,12 +352,16 @@ export class SessionService {
     // Verify upload token
     const uploadPayload = this.verifyUploadToken(uploadToken);
     if (!uploadPayload) {
-      throw new ForbiddenError('Upload session expired, try uploading again');
+      throw new ORPCError('SESSION_UPLOAD_TOKEN_EXPIRED', {
+        message: 'Upload session expired, try uploading again',
+      });
     }
 
     // Validate recording ID matches token
     if (uploadPayload.rid !== recordingId) {
-      throw new ForbiddenError('Upload got mixed up, try again');
+      throw new ORPCError('SESSION_UPLOAD_TOKEN_MISMATCH', {
+        message: 'Upload got mixed up, try again',
+      });
     }
 
     // Check if link still exists
@@ -345,9 +369,14 @@ export class SessionService {
     if (!linkExists) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(uploadPayload.lid);
       if (isSoftDeleted === true) {
-        throw new GoneError("Link's expired, try requesting a new one");
+        throw new ORPCError('SESSION_LINK_GONE', {
+          status: 410,
+          message: "Link's expired, try requesting a new one",
+        });
       }
-      throw new NotFoundError("Link doesn't seem to exist, try requesting a new one");
+      throw new ORPCError('SESSION_LINK_NOT_FOUND', {
+        message: "Link doesn't seem to exist, try requesting a new one",
+      });
     }
 
     // Get pending recording by ID with file paths
@@ -357,14 +386,21 @@ export class SessionService {
       // Check if soft deleted
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
       if (isSoftDeleted === true) {
-        throw new GoneError("Recording's expired, try starting fresh");
+        throw new ORPCError('SESSION_RECORDING_GONE', {
+          status: 410,
+          message: "Recording's expired, try starting fresh",
+        });
       }
-      throw new NotFoundError("Can't find that recording, try again");
+      throw new ORPCError('SESSION_RECORDING_NOT_FOUND', {
+        message: "Can't find that recording, try again",
+      });
     }
 
     // Verify recording belongs to token's link
     if (recording.recordingLinkId !== uploadPayload.lid) {
-      throw new ForbiddenError('Upload got mixed up, try again');
+      throw new ORPCError('SESSION_UPLOAD_TOKEN_MISMATCH', {
+        message: 'Upload got mixed up, try again',
+      });
     }
 
     // Verify all requested files are uploaded and mark as available
@@ -373,7 +409,9 @@ export class SessionService {
     // Mark recording as available
     const updated = await this.deps.recordingRepo.markAsAvailable(recording.recordingId);
     if (!updated) {
-      throw new ValidationError("Couldn't finalize upload, try again");
+      throw new ORPCError('SESSION_UPLOAD_FAILED', {
+        message: "Couldn't finalize upload, try again",
+      });
     }
 
     return {
@@ -482,10 +520,14 @@ export class SessionService {
     const thumbnailFile = files.find((f) => f.type === 'thumbnail');
 
     if (!videoFile) {
-      throw new ValidationError("Video's missing, try recording again");
+      throw new ORPCError('SESSION_VIDEO_MISSING', {
+        message: "Video's missing, try recording again",
+      });
     }
     if (videoFile.size <= 0) {
-      throw new ValidationError('Video file is empty, try recording again');
+      throw new ORPCError('SESSION_VIDEO_EMPTY', {
+        message: 'Video file is empty, try recording again',
+      });
     }
 
     // Process each file
@@ -533,14 +575,18 @@ export class SessionService {
       // Validate MIME type
       if (!validateFileMimeType(file.type, file.mime_type)) {
         // MIME type errors are always thrown (not silently excluded)
-        throw new ValidationError("Format's not supported, try recording again");
+        throw new ORPCError('SESSION_FILE_FORMAT_UNSUPPORTED', {
+          message: "Format's not supported, try recording again",
+        });
       }
 
       // Validate file size
       const maxSize = getMaxFileSize(file.type);
       if (file.size > maxSize) {
         // Size limit errors are always thrown (not silently excluded)
-        throw new ValidationError("File's too big, try recording something shorter");
+        throw new ORPCError('SESSION_FILE_TOO_LARGE', {
+          message: "File's too big, try recording something shorter",
+        });
       }
 
       // File passed all checks, include it
@@ -613,7 +659,9 @@ export class SessionService {
         });
 
       default:
-        throw new ValidationError("Format's not supported, try recording again");
+        throw new ORPCError('SESSION_FILE_FORMAT_UNSUPPORTED', {
+          message: "Format's not supported, try recording again",
+        });
     }
   }
 
@@ -717,7 +765,9 @@ export class SessionService {
     }
 
     if (errors.length > 0) {
-      throw new ValidationError("Couldn't verify files, try uploading again");
+      throw new ORPCError('SESSION_FILE_VERIFICATION_FAILED', {
+        message: "Couldn't verify files, try uploading again",
+      });
     }
   }
 }

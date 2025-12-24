@@ -3,14 +3,12 @@
  * Implements the project contract defined in @workspace/contract
  */
 
-import { ORPCError } from '@orpc/server';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { ProjectService } from '@/api/services/project.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
-import { z } from 'zod';
-import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
+import { ORPCError } from '@orpc/server';
 import { createPaginationMeta } from '@/api/types';
 
 /**
@@ -19,32 +17,23 @@ import { createPaginationMeta } from '@/api/types';
  */
 export const getProjectsImpl = (projectService: ProjectService) => {
   return authorized.project.list.handler(async ({ input }) => {
-    try {
-      const page = input.query.page || 1;
-      const perPage = input.query.per_page || 5;
+    const page = input.query.page || 1;
+    const perPage = input.query.per_page || 5;
 
-      const { projects, total } = await projectService.getProjectsByWorkspacePaginated(
-        input.params.workspaceId,
-        page,
-        perPage
-      );
+    const { projects, total } = await projectService.getProjectsByWorkspacePaginated(
+      input.params.workspaceId,
+      page,
+      perPage
+    );
 
-      return {
-        message: 'Projects retrieved successfully',
-        data: {
-          workspaceId: input.params.workspaceId,
-          projects,
-          pagination: createPaginationMeta(page, perPage, total),
-        },
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          message: error.message,
-        });
-      }
-      throw error;
-    }
+    return {
+      message: 'Projects retrieved successfully',
+      data: {
+        workspaceId: input.params.workspaceId,
+        projects,
+        pagination: createPaginationMeta(page, perPage, total),
+      },
+    };
   });
 };
 
@@ -62,45 +51,22 @@ export const getProjectByIdImpl = (
   return authorized.project.getById
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const project = await projectService.getById(input.params.projectId);
+      const project = await projectService.getById(input.params.projectId);
 
-        // Validate project belongs to workspace
-        if (project.workspaceId !== input.params.workspaceId) {
-          throw new ValidationError('Project does not belong to this workspace');
-        }
-
-        return {
-          message: 'Project retrieved successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            project,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
+      // Validate project belongs to workspace
+      if (project.workspaceId !== input.params.workspaceId) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Project does not belong to this workspace',
+        });
       }
+
+      return {
+        message: 'Project retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          project,
+        },
+      };
     });
 };
 
@@ -118,41 +84,22 @@ export const createProjectImpl = (
   return authorized.project.create
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const project = await projectService.createProject({
-          workspaceId: input.params.workspaceId,
-          projectTitle: input.body.projectTitle ?? null,
-        });
+      const project = await projectService.createProject({
+        workspaceId: input.params.workspaceId,
+        projectTitle: input.body.projectTitle ?? null,
+      });
 
-        if (!project) {
-          throw new Error('Failed to create project');
-        }
-
-        return {
-          message: 'Project created successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            project,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
+      if (!project) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', { message: 'Failed to create project' });
       }
+
+      return {
+        message: 'Project created successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          project,
+        },
+      };
     });
 };
 
@@ -170,51 +117,21 @@ export const updateProjectImpl = (
   return authorized.project.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const project = await projectService.updateProject(input.params.projectId, {
-          projectTitle: input.body.projectTitle,
-        });
+      const project = await projectService.updateProject(input.params.projectId, {
+        projectTitle: input.body.projectTitle,
+      });
 
-        if (!project) {
-          throw new Error('Failed to update project');
-        }
-
-        return {
-          message: 'Project updated successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            project,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
+      if (!project) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', { message: 'Failed to update project' });
       }
+
+      return {
+        message: 'Project updated successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          project,
+        },
+      };
     });
 };
 
@@ -232,51 +149,21 @@ export const replaceProjectImpl = (
   return authorized.project.replace
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const project = await projectService.updateProject(input.params.projectId, {
-          projectTitle: input.body.projectTitle,
-        });
+      const project = await projectService.updateProject(input.params.projectId, {
+        projectTitle: input.body.projectTitle,
+      });
 
-        if (!project) {
-          throw new Error('Failed to replace project');
-        }
-
-        return {
-          message: 'Project replaced successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            project,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
+      if (!project) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', { message: 'Failed to replace project' });
       }
+
+      return {
+        message: 'Project replaced successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          project,
+        },
+      };
     });
 };
 
@@ -294,40 +181,15 @@ export const deleteProjectImpl = (
   return authorized.project.delete
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        await projectService.deleteProject(input.params.projectId, input.params.workspaceId);
+      await projectService.deleteProject(input.params.projectId, input.params.workspaceId);
 
-        return {
-          message: 'Project deleted successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            projectId: input.params.projectId,
-          },
-        };
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Project deleted successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          projectId: input.params.projectId,
+        },
+      };
     });
 };
 

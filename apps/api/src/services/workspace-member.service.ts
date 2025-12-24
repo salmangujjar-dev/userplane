@@ -3,9 +3,9 @@
  * Contains business logic for workspace membership management
  */
 
+import { ORPCError } from '@orpc/server';
 import { generateWorkspaceMemberId } from '@/api/lib/id';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import { ValidationError, ConflictError } from '@/api/lib/errors';
 import type { Transaction } from '@/api/types';
 import type { WorkspaceRole } from '@workspace/contract';
 
@@ -20,10 +20,14 @@ export class WorkspaceMemberService {
    * Add user as workspace owner
    * Used only during workspace creation
    * If user was previously soft-deleted, restores them as owner instead
+   * Throws WORKSPACE_MEMBER_IDS_REQUIRED if params are invalid
+   * Throws WORKSPACE_MEMBER_ALREADY_EXISTS if user is already a member
    */
   async addOwner(params: { userId: string; workspaceId: string }, options?: { tx?: Transaction }) {
     if (!params.userId || !params.workspaceId) {
-      throw new ValidationError('User ID and Workspace ID are required');
+      throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        message: 'User ID and Workspace ID are required',
+      });
     }
 
     // Check if user is currently an active member
@@ -33,7 +37,9 @@ export class WorkspaceMemberService {
     );
 
     if (existing) {
-      throw new ConflictError('User is already a member of this workspace');
+      throw new ORPCError('WORKSPACE_MEMBER_ALREADY_EXISTS', {
+        message: 'User is already a member of this workspace',
+      });
     }
 
     // Check if user was previously a member but soft-deleted
@@ -64,13 +70,17 @@ export class WorkspaceMemberService {
    * Used when accepting invites
    * Always creates 'member' role - upgrades handled separately
    * If user was previously soft-deleted, restores them instead
+   * Throws WORKSPACE_MEMBER_IDS_REQUIRED if params are invalid
+   * Throws WORKSPACE_MEMBER_ALREADY_EXISTS if user is already a member
    */
   async addMember(
     params: { userId: string; workspaceId: string; role: WorkspaceRole },
     options?: { tx?: Transaction }
   ) {
     if (!params.userId || !params.workspaceId) {
-      throw new ValidationError('User ID and Workspace ID are required');
+      throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        message: 'User ID and Workspace ID are required',
+      });
     }
 
     // Check if user is currently an active member
@@ -80,7 +90,9 @@ export class WorkspaceMemberService {
     );
 
     if (existing) {
-      throw new ConflictError('User is already a member of this workspace');
+      throw new ORPCError('WORKSPACE_MEMBER_ALREADY_EXISTS', {
+        message: 'User is already a member of this workspace',
+      });
     }
 
     // Check if user was previously a member but soft-deleted
@@ -111,23 +123,31 @@ export class WorkspaceMemberService {
    * Validates that member exists and role is valid
    * Requires owner/admin authorization (handled in middleware)
    * Prevents self-role changes and ensures at least one owner remains
+   * Throws WORKSPACE_MEMBER_ID_REQUIRED, WORKSPACE_MEMBER_NOT_FOUND,
+   *        WORKSPACE_MEMBER_CANNOT_CHANGE_OWN_ROLE, WORKSPACE_MEMBER_LAST_OWNER_ROLE_CHANGE for validation errors
    */
   async updateMemberRole(
     params: { memberId: string; newRole: WorkspaceRole; userId: string; workspaceId: string },
     options?: { tx?: Transaction }
   ) {
     if (!params.memberId) {
-      throw new ValidationError('Member ID is required');
+      throw new ORPCError('WORKSPACE_MEMBER_ID_REQUIRED', {
+        message: 'Member ID is required',
+      });
     }
 
     const member = await this.deps.memberRepo.findById(params.memberId);
     if (!member) {
-      throw new ValidationError('Workspace member not found');
+      throw new ORPCError('WORKSPACE_MEMBER_NOT_FOUND', {
+        message: 'Workspace member not found',
+      });
     }
 
     // Prevent users from changing their own role
     if (member.userId === params.userId) {
-      throw new ValidationError('You cannot change your own role');
+      throw new ORPCError('WORKSPACE_MEMBER_CANNOT_CHANGE_OWN_ROLE', {
+        message: 'You cannot change your own role',
+      });
     }
 
     // If downgrading from owner, ensure at least one owner remains
@@ -135,9 +155,9 @@ export class WorkspaceMemberService {
       const ownerCount = await this.deps.memberRepo.countOwnersByWorkspace(params.workspaceId);
 
       if (ownerCount <= 1) {
-        throw new ValidationError(
-          'Cannot change role of the last owner. Promote another member to owner first.'
-        );
+        throw new ORPCError('WORKSPACE_MEMBER_LAST_OWNER_ROLE_CHANGE', {
+          message: 'Cannot change role of the last owner. Promote another member to owner first.',
+        });
       }
     }
 
@@ -149,29 +169,38 @@ export class WorkspaceMemberService {
    * Requires owner/admin authorization (handled in middleware)
    * Cannot remove yourself (use leaveWorkspace instead)
    * Cannot remove the last owner
+   * Throws WORKSPACE_MEMBER_ID_REQUIRED, WORKSPACE_MEMBER_NOT_FOUND,
+   *        WORKSPACE_MEMBER_WRONG_WORKSPACE, WORKSPACE_MEMBER_CANNOT_REMOVE_SELF,
+   *        WORKSPACE_MEMBER_LAST_OWNER_REMOVE for validation errors
    */
   async removeMember(
     params: { memberId: string; workspaceId: string; userId: string },
     options?: { tx?: Transaction }
   ) {
     if (!params.memberId) {
-      throw new ValidationError('Member ID is required');
+      throw new ORPCError('WORKSPACE_MEMBER_ID_REQUIRED', {
+        message: 'Member ID is required',
+      });
     }
 
     const member = await this.deps.memberRepo.findById(params.memberId);
     if (!member) {
-      throw new ValidationError('Workspace member not found');
+      throw new ORPCError('WORKSPACE_MEMBER_NOT_FOUND', {
+        message: 'Workspace member not found',
+      });
     }
 
     if (member.workspaceId !== params.workspaceId) {
-      throw new ValidationError('Member does not belong to this workspace');
+      throw new ORPCError('WORKSPACE_MEMBER_WRONG_WORKSPACE', {
+        message: 'Member does not belong to this workspace',
+      });
     }
 
     // Prevent users from removing themselves (they should use leave endpoint)
     if (member.userId === params.userId) {
-      throw new ValidationError(
-        'You cannot remove yourself. Use the leave workspace endpoint instead.'
-      );
+      throw new ORPCError('WORKSPACE_MEMBER_CANNOT_REMOVE_SELF', {
+        message: 'You cannot remove yourself. Use the leave workspace endpoint instead.',
+      });
     }
 
     // Check if this is the last owner
@@ -179,7 +208,9 @@ export class WorkspaceMemberService {
       const ownerCount = await this.deps.memberRepo.countOwnersByWorkspace(params.workspaceId);
 
       if (ownerCount <= 1) {
-        throw new ValidationError('Cannot remove the last owner from workspace');
+        throw new ORPCError('WORKSPACE_MEMBER_LAST_OWNER_REMOVE', {
+          message: 'Cannot remove the last owner from workspace',
+        });
       }
     }
 
@@ -196,18 +227,25 @@ export class WorkspaceMemberService {
   /**
    * Get team members of a workspace with user details (paginated)
    * Returns members sorted by role (owner > admin > member)
+   * Throws WORKSPACE_USER_ID_REQUIRED, WORKSPACE_MEMBER_INVALID_PAGINATION for invalid params
    */
   async getTeamMembers(workspaceId: string, page: number = 1, perPage: number = 5) {
     if (!workspaceId) {
-      throw new ValidationError('Workspace ID is required');
+      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', {
+        message: 'Workspace ID is required',
+      });
     }
 
     if (page < 1) {
-      throw new ValidationError('Page must be greater than 0');
+      throw new ORPCError('WORKSPACE_MEMBER_INVALID_PAGINATION', {
+        message: 'Page must be greater than 0',
+      });
     }
 
     if (perPage < 1 || perPage > 10) {
-      throw new ValidationError('Per page must be between 1 and 10');
+      throw new ORPCError('WORKSPACE_MEMBER_INVALID_PAGINATION', {
+        message: 'Per page must be between 1 and 10',
+      });
     }
 
     const total = await this.deps.memberRepo.countByWorkspace(workspaceId);
@@ -228,15 +266,21 @@ export class WorkspaceMemberService {
    * Leave workspace (self-removal via soft delete)
    * Allows member to remove themselves from workspace
    * Cannot leave if you're the last owner
+   * Throws WORKSPACE_MEMBER_IDS_REQUIRED, WORKSPACE_MEMBER_NOT_IN_WORKSPACE,
+   *        WORKSPACE_MEMBER_LAST_OWNER_LEAVE for validation errors
    */
   async leaveWorkspace(userId: string, workspaceId: string, options?: { tx?: Transaction }) {
     if (!userId || !workspaceId) {
-      throw new ValidationError('User ID and Workspace ID are required');
+      throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        message: 'User ID and Workspace ID are required',
+      });
     }
 
     const member = await this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
     if (!member) {
-      throw new ValidationError('You are not a member of this workspace');
+      throw new ORPCError('WORKSPACE_MEMBER_NOT_IN_WORKSPACE', {
+        message: 'You are not a member of this workspace',
+      });
     }
 
     // Check if this is the last owner
@@ -244,9 +288,10 @@ export class WorkspaceMemberService {
       const ownerCount = await this.deps.memberRepo.countOwnersByWorkspace(workspaceId);
 
       if (ownerCount <= 1) {
-        throw new ValidationError(
-          'Cannot leave workspace as the last owner. Transfer ownership or delete the workspace first.'
-        );
+        throw new ORPCError('WORKSPACE_MEMBER_LAST_OWNER_LEAVE', {
+          message:
+            'Cannot leave workspace as the last owner. Transfer ownership or delete the workspace first.',
+        });
       }
     }
 
@@ -256,6 +301,7 @@ export class WorkspaceMemberService {
   /**
    * Update notification preferences for authenticated user in workspace
    * Member can only update their own preferences
+   * Throws WORKSPACE_MEMBER_IDS_REQUIRED, WORKSPACE_MEMBER_NOT_IN_WORKSPACE for validation errors
    */
   async updateNotificationPreferences(
     userId: string,
@@ -270,12 +316,16 @@ export class WorkspaceMemberService {
     options?: { tx?: Transaction }
   ) {
     if (!userId || !workspaceId) {
-      throw new ValidationError('User ID and Workspace ID are required');
+      throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
+        message: 'User ID and Workspace ID are required',
+      });
     }
 
     const member = await this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
     if (!member) {
-      throw new ValidationError('You are not a member of this workspace');
+      throw new ORPCError('WORKSPACE_MEMBER_NOT_IN_WORKSPACE', {
+        message: 'You are not a member of this workspace',
+      });
     }
 
     return this.deps.memberRepo.updateNotificationPreferences(

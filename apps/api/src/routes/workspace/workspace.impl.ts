@@ -16,8 +16,6 @@ import type { WorkspaceMemberService } from '@/api/services/workspace-member.ser
 import type { InviteService } from '@/api/services/invite.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { DomainService } from '@/api/services/domain.service';
-import { z } from 'zod';
-import { ValidationError, NotFoundError, GoneError, ConflictError } from '@/api/lib/errors';
 import { createPaginationMeta } from '@/api/types';
 import { getPlanName } from '@workspace/pricing';
 
@@ -27,41 +25,27 @@ import { getPlanName } from '@workspace/pricing';
  */
 export const getAllWorkspacesImpl = (workspaceService: WorkspaceService) => {
   return authorized.workspace.list.handler(async ({ input, context }) => {
-    try {
-      const page = input.query.page || 1;
-      const perPage = 5;
+    const page = input.query.page || 1;
+    const perPage = 5;
 
-      const { workspaces, total } = await workspaceService.getByUserIdPaginated(
-        context.user.id,
-        page,
-        perPage,
-        {
-          includeNotificationPreferences: input.query.include_notification_preference,
-          includeWorkspaceMembership: input.query.include_workspace_membership,
-        }
-      );
+    const { workspaces, total } = await workspaceService.getByUserIdPaginated(
+      context.user.id,
+      page,
+      perPage,
+      {
+        includeNotificationPreferences: input.query.include_notification_preference,
+        includeWorkspaceMembership: input.query.include_workspace_membership,
+      }
+    );
 
-      return {
-        message: 'Workspaces retrieved successfully',
-        data: {
-          workspaces: workspaces as any,
-          total,
-          pagination: createPaginationMeta(page, perPage, total),
-        },
-      };
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw new ORPCError('BAD_REQUEST', {
-          message: error.message,
-        });
-      }
-      if (error instanceof Error) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          message: error.message,
-        });
-      }
-      throw error;
-    }
+    return {
+      message: 'Workspaces retrieved successfully',
+      data: {
+        workspaces: workspaces as any,
+        total,
+        pagination: createPaginationMeta(page, perPage, total),
+      },
+    };
   });
 };
 
@@ -71,21 +55,12 @@ export const getAllWorkspacesImpl = (workspaceService: WorkspaceService) => {
  */
 export const countWorkspacesImpl = (workspaceService: WorkspaceService) => {
   return authorized.workspace.count.handler(async ({ input, context }) => {
-    try {
-      const count = await workspaceService.countByUserWithRoles(context.user.id, input.query.roles);
+    const count = await workspaceService.countByUserWithRoles(context.user.id, input.query.roles);
 
-      return {
-        message: 'Workspace count retrieved successfully',
-        data: { count },
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          message: error.message,
-        });
-      }
-      throw error;
-    }
+    return {
+      message: 'Workspace count retrieved successfully',
+      data: { count },
+    };
   });
 };
 
@@ -95,38 +70,18 @@ export const countWorkspacesImpl = (workspaceService: WorkspaceService) => {
  */
 export const getWorkspaceByIdImpl = (workspaceService: WorkspaceService) => {
   return authorized.workspace.getById.handler(async ({ context, input }) => {
-    try {
-      const workspace = await workspaceService.getById(input.params.workspaceId);
-      const workspacePlanName = getPlanName(workspace.workspacePlan);
+    const workspace = await workspaceService.getById(input.params.workspaceId);
+    const workspacePlanName = getPlanName(workspace.workspacePlan);
 
-      return {
-        message: 'Workspace retrieved successfully',
-        data: {
-          workspace: {
-            ...workspace,
-            workspacePlanName,
-          },
+    return {
+      message: 'Workspace retrieved successfully',
+      data: {
+        workspace: {
+          ...workspace,
+          workspacePlanName,
         },
-      };
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw new ORPCError('NOT_FOUND', {
-          message: error.message,
-        });
-      }
-      if (error instanceof GoneError) {
-        throw new ORPCError('GONE', {
-          status: 410,
-          message: error.message,
-        });
-      }
-      if (error instanceof Error) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          message: error.message,
-        });
-      }
-      throw error;
-    }
+      },
+    };
   });
 };
 
@@ -147,42 +102,18 @@ export const updateWorkspaceNameImpl = (
   return authorized.workspace.updateName
     .use(workspaceRoleMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const workspace = await workspaceService.updateName(
-          input.params.workspaceId,
-          input.body.name
-        );
+      const workspace = await workspaceService.updateName(
+        input.params.workspaceId,
+        input.body.name
+      );
 
-        return {
-          message: 'Workspace name updated successfully',
-          data: {
-            workspaceId: workspace.workspaceId,
-            workspaceName: workspace.workspaceName,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Workspace name updated successfully',
+        data: {
+          workspaceId: workspace.workspaceId,
+          workspaceName: workspace.workspaceName,
+        },
+      };
     });
 };
 
@@ -203,29 +134,15 @@ export const deleteWorkspaceImpl = (
   return authorized.workspace.delete
     .use(workspaceRoleMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        await workspaceService.deleteWorkspace(input.params.workspaceId);
+      await workspaceService.deleteWorkspace(input.params.workspaceId);
 
-        return {
-          message: 'Workspace deleted successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            success: true,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Workspace deleted successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          success: true,
+        },
+      };
     });
 };
 
@@ -235,26 +152,12 @@ export const deleteWorkspaceImpl = (
  */
 export const getWorkspacePreferencesImpl = (workspaceService: WorkspaceService) => {
   return authorized.workspace.preferences.get.handler(async ({ input }) => {
-    try {
-      const preferences = await workspaceService.getPreferencesById(input.params.workspaceId);
+    const preferences = await workspaceService.getPreferencesById(input.params.workspaceId);
 
-      return {
-        message: 'Workspace preferences retrieved successfully',
-        data: { preferences },
-      };
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw new ORPCError('NOT_FOUND', {
-          message: error.message,
-        });
-      }
-      if (error instanceof Error) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          message: error.message,
-        });
-      }
-      throw error;
-    }
+    return {
+      message: 'Workspace preferences retrieved successfully',
+      data: { preferences },
+    };
   });
 };
 
@@ -274,39 +177,15 @@ export const updateWorkspacePreferencesImpl = (
   return authorized.workspace.preferences.update
     .use(workspaceMemberMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const preferences = await workspaceService.updatePreferences(
-          input.params.workspaceId,
-          input.body
-        );
+      const preferences = await workspaceService.updatePreferences(
+        input.params.workspaceId,
+        input.body
+      );
 
-        return {
-          message: 'Workspace preferences updated successfully',
-          data: { preferences },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Workspace preferences updated successfully',
+        data: { preferences },
+      };
     });
 };
 
@@ -316,53 +195,44 @@ export const updateWorkspacePreferencesImpl = (
  */
 export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberService) => {
   return authorized.workspace.members.list.handler(async ({ input, context }) => {
-    try {
-      const page = input.query.page || 1;
-      const perPage = input.query.per_page || 5;
-      const { members, total } = await workspaceMemberService.getTeamMembers(
-        input.params.workspaceId,
-        page,
-        perPage
+    const page = input.query.page || 1;
+    const perPage = input.query.per_page || 5;
+    const { members, total } = await workspaceMemberService.getTeamMembers(
+      input.params.workspaceId,
+      page,
+      perPage
+    );
+
+    const teamMembers = members.map((member) => ({
+      workspaceMemberId: member.workspaceMemberId,
+      memberName: member.userName,
+      memberEmail: member.userEmail,
+      workspaceRole: member.role,
+    }));
+
+    let teamData: any = {
+      workspaceId: input.params.workspaceId,
+      workspaceMembers: teamMembers,
+      pagination: createPaginationMeta(page, perPage, total),
+    };
+
+    if (input.query.include_me) {
+      const myMembership = await workspaceMemberService.getMember(
+        context.user.id,
+        input.params.workspaceId
       );
-
-      const teamMembers = members.map((member) => ({
-        workspaceMemberId: member.workspaceMemberId,
-        memberName: member.userName,
-        memberEmail: member.userEmail,
-        workspaceRole: member.role,
-      }));
-
-      let teamData: any = {
-        workspaceId: input.params.workspaceId,
-        workspaceMembers: teamMembers,
-        pagination: createPaginationMeta(page, perPage, total),
-      };
-
-      if (input.query.include_me) {
-        const myMembership = await workspaceMemberService.getMember(
-          context.user.id,
-          input.params.workspaceId
-        );
-        if (myMembership) {
-          teamData.workspaceMembership = {
-            workspaceMemberId: myMembership.workspaceMemberId,
-            workspaceRole: myMembership.workspaceRole,
-          };
-        }
+      if (myMembership) {
+        teamData.workspaceMembership = {
+          workspaceMemberId: myMembership.workspaceMemberId,
+          workspaceRole: myMembership.workspaceRole,
+        };
       }
-
-      return {
-        message: 'Workspace members retrieved successfully',
-        data: teamData,
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          message: error.message,
-        });
-      }
-      throw error;
     }
+
+    return {
+      message: 'Workspace members retrieved successfully',
+      data: teamData,
+    };
   });
 };
 
@@ -383,35 +253,21 @@ export const updateMemberRoleImpl = (
   return authorized.workspace.members.updateRole
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      try {
-        await workspaceMemberService.updateMemberRole({
-          memberId: input.params.workspaceMemberId,
-          newRole: input.body.role,
-          userId: context.user.id,
-          workspaceId: input.params.workspaceId,
-        });
+      await workspaceMemberService.updateMemberRole({
+        memberId: input.params.workspaceMemberId,
+        newRole: input.body.role,
+        userId: context.user.id,
+        workspaceId: input.params.workspaceId,
+      });
 
-        return {
-          message: 'Member role updated successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            workspaceMemberId: input.params.workspaceMemberId,
-            workspaceRole: input.body.role,
-          },
-        };
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Member role updated successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          workspaceMemberId: input.params.workspaceMemberId,
+          workspaceRole: input.body.role,
+        },
+      };
     });
 };
 
@@ -432,33 +288,114 @@ export const removeMemberImpl = (
   return authorized.workspace.members.remove
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      try {
-        await workspaceMemberService.removeMember({
-          memberId: input.params.workspaceMemberId,
-          workspaceId: input.params.workspaceId,
-          userId: context.user.id,
-        });
+      await workspaceMemberService.removeMember({
+        memberId: input.params.workspaceMemberId,
+        workspaceId: input.params.workspaceId,
+        userId: context.user.id,
+      });
 
-        return {
-          message: 'Member removed successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            workspaceMemberId: input.params.workspaceMemberId,
-          },
-        };
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Member removed successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          workspaceMemberId: input.params.workspaceMemberId,
+        },
+      };
+    });
+};
+
+/**
+ * POST /workspace/:workspaceId/leave - Leave workspace
+ * Requires authentication, allows member to remove themselves
+ */
+export const leaveWorkspaceImpl = (
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.members.leave
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      await workspaceMemberService.leaveWorkspace(context.user.id, input.params.workspaceId);
+
+      return {
+        message: 'Successfully left workspace',
+        data: {
+          workspaceId: input.params.workspaceId,
+          success: true,
+        },
+      };
+    });
+};
+
+/**
+ * PATCH /workspace/:workspaceId/notifications - Update notification preferences
+ * Requires workspace member
+ */
+export const updateNotificationPreferencesImpl = (
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.notifications.update
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      await workspaceMemberService.updateNotificationPreferences(
+        context.user.id,
+        input.params.workspaceId,
+        input.body
+      );
+
+      return {
+        message: 'Notification preferences updated successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+        },
+      };
+    });
+};
+
+/**
+ * PUT /workspace/:workspaceId/preferences/link - Update link branding settings
+ * Requires admin or owner role
+ */
+export const updateLinkSettingsImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.workspace.linkSettings.update
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const updated = await workspaceService.updatePreferences(input.params.workspaceId, {
+        recordingCompanyName: input.body.recordingCompanyName,
+        recordingHeader: input.body.recordingHeader,
+        recordingFootnote: input.body.recordingFootnote,
+        recordingPrimaryColor: input.body.recordingPrimaryColor,
+        recordingMaxDurationMs: input.body.recordingMaxDurationMs,
+      });
+
+      return {
+        message: 'Link settings updated successfully',
+        data: {
+          workspaceId: updated.workspaceId,
+          recordingCustomizeLink: updated.recordingCustomizeLink,
+          recordingCompanyName: updated.recordingCompanyName,
+          recordingCompanyLogoPath: updated.recordingCompanyLogoPath,
+          recordingHeader: updated.recordingHeader,
+          recordingFootnote: updated.recordingFootnote,
+          recordingPrimaryColor: updated.recordingPrimaryColor,
+          recordingMaxDurationMs: updated.recordingMaxDurationMs,
+          recordingSlug: updated.recordingSlug,
+        },
+      };
     });
 };
 
@@ -476,32 +413,15 @@ export const getInviteUrlImpl = (
   return authorized.workspace.invite.getUrl
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      try {
-        const inviteUrl = await inviteService.getInviteUrl(
-          input.params.workspaceId,
-          context.user.id
-        );
+      const inviteUrl = await inviteService.getInviteUrl(input.params.workspaceId, context.user.id);
 
-        return {
-          message: 'Invite URL retrieved successfully',
-          data: {
-            inviteUrl,
-            workspaceId: input.params.workspaceId,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Invite URL retrieved successfully',
+        data: {
+          inviteUrl,
+          workspaceId: input.params.workspaceId,
+        },
+      };
     });
 };
 
@@ -523,32 +443,18 @@ export const rotateInviteTokenImpl = (
   return authorized.workspace.invite.rotate
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      try {
-        const inviteUrl = await inviteService.regenerateInviteUrl(
-          input.params.workspaceId,
-          context.user.id
-        );
+      const inviteUrl = await inviteService.regenerateInviteUrl(
+        input.params.workspaceId,
+        context.user.id
+      );
 
-        return {
-          message: 'Invite token rotated successfully',
-          data: {
-            inviteUrl,
-            workspaceId: input.params.workspaceId,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Invite token rotated successfully',
+        data: {
+          inviteUrl,
+          workspaceId: input.params.workspaceId,
+        },
+      };
     });
 };
 
@@ -566,49 +472,30 @@ export const sendWorkspaceInvitesImpl = (
   return authorized.workspace.invite.send
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      try {
-        const result = await inviteService.sendInvites({
-          workspaceId: input.params.workspaceId,
-          emails: input.body.emails,
-          invitedBy: context.user.id,
-        });
+      const result = await inviteService.sendInvites({
+        workspaceId: input.params.workspaceId,
+        emails: input.body.emails,
+        invitedBy: context.user.id,
+      });
 
-        const sent = result.sentEmails.map((email) => ({
-          email,
-          success: true,
-        }));
+      const sent = result.sentEmails.map((email) => ({
+        email,
+        success: true,
+      }));
 
-        const failed = result.failedEmails.map((item) => ({
-          email: item.email,
-          success: false,
-          error: item.reason,
-        }));
+      const failed = result.failedEmails.map((item) => ({
+        email: item.email,
+        success: false,
+        error: item.reason,
+      }));
 
-        return {
-          message: 'Invites processed successfully',
-          data: {
-            sent,
-            failed,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Invites processed successfully',
+        data: {
+          sent,
+          failed,
+        },
+      };
     });
 };
 
@@ -622,60 +509,29 @@ export const acceptInviteImpl = (
   workspaceService: WorkspaceService
 ) => {
   return authorized.workspace.invite.accept.handler(async ({ input, context }) => {
-    try {
-      // Verify the token is for the correct workspace
-      const validation = await inviteService.validateInvite(input.body.token);
+    // Verify the token is for the correct workspace
+    const validation = await inviteService.validateInvite(input.body.token);
 
-      if (validation.status !== 'valid') {
-        throw new ValidationError(validation.message || 'Invalid invitation token');
-      }
-
-      // Ensure the token's workspace matches the requested workspace
-      if (validation.workspaceId !== input.params.workspaceId) {
-        throw new ValidationError('Invitation token does not match the requested workspace');
-      }
-
-      // Accept the invite
-      const result = await inviteService.acceptInvite({
-        inviteToken: input.body.token,
-        userId: context.user.id,
+    // Ensure the token's workspace matches the requested workspace
+    if (validation.workspaceId !== input.params.workspaceId) {
+      throw new ORPCError('BAD_REQUEST', {
+        message: 'Invitation token does not match the requested workspace',
       });
-
-      return {
-        message: 'Invitation accepted successfully',
-        data: {
-          workspaceId: result.workspace.workspaceId,
-          workspaceName: result.workspace.workspaceName,
-        },
-      };
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Invalid request body',
-        });
-      }
-      if (error instanceof ValidationError) {
-        throw new ORPCError('BAD_REQUEST', {
-          message: error.message,
-        });
-      }
-      if (error instanceof ConflictError) {
-        throw new ORPCError('CONFLICT', {
-          message: error.message,
-        });
-      }
-      if (error instanceof NotFoundError) {
-        throw new ORPCError('NOT_FOUND', {
-          message: error.message,
-        });
-      }
-      if (error instanceof Error) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          message: error.message,
-        });
-      }
-      throw error;
     }
+
+    // Accept the invite
+    const result = await inviteService.acceptInvite({
+      inviteToken: input.body.token,
+      userId: context.user.id,
+    });
+
+    return {
+      message: 'Invitation accepted successfully',
+      data: {
+        workspaceId: result.workspace.workspaceId,
+        workspaceName: result.workspace.workspaceName,
+      },
+    };
   });
 };
 
@@ -693,36 +549,22 @@ export const getWorkspaceDomainsImpl = (
   return authorized.workspace.domains.list
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const page = input.query.page || 1;
-        const perPage = input.query.per_page || 5;
-        const { domains, total } = await domainService.getByWorkspaceIdPaginated(
-          input.params.workspaceId,
-          page,
-          perPage
-        );
+      const page = input.query.page || 1;
+      const perPage = input.query.per_page || 5;
+      const { domains, total } = await domainService.getByWorkspaceIdPaginated(
+        input.params.workspaceId,
+        page,
+        perPage
+      );
 
-        return {
-          message: 'Workspace domains retrieved successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            domains,
-            pagination: createPaginationMeta(page, perPage, total),
-          },
-        };
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Workspace domains retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          domains,
+          pagination: createPaginationMeta(page, perPage, total),
+        },
+      };
     });
 };
 
@@ -740,43 +582,18 @@ export const getDomainByIdImpl = (
   return authorized.workspace.domains.getById
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const domain = await domainService.getByIdWithPreferences(
-          input.params.domainId,
-          input.params.workspaceId
-        );
+      const domain = await domainService.getByIdWithPreferences(
+        input.params.domainId,
+        input.params.workspaceId
+      );
 
-        return {
-          message: 'Domain retrieved successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            domain,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Domain retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          domain,
+        },
+      };
     });
 };
 
@@ -794,42 +611,25 @@ export const addDomainImpl = (
   return authorized.workspace.domains.add
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const domain = await domainService.create({
-          workspaceId: input.params.workspaceId,
-          url: input.body.url,
-          status: 'pending',
+      const domain = await domainService.create({
+        workspaceId: input.params.workspaceId,
+        url: input.body.url,
+        status: 'pending',
+      });
+
+      if (!domain) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          message: 'Failed to create domain',
         });
-
-        if (!domain) {
-          throw new Error('Failed to create domain');
-        }
-
-        return {
-          message: 'Domain added successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            domain,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
       }
+
+      return {
+        message: 'Domain added successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          domain,
+        },
+      };
     });
 };
 
@@ -847,49 +647,19 @@ export const updateDomainImpl = (
   return authorized.workspace.domains.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const domain = await domainService.updateDomainUrl(
-          input.params.domainId,
-          input.params.workspaceId,
-          input.body.url
-        );
+      const domain = await domainService.updateDomainUrl(
+        input.params.domainId,
+        input.params.workspaceId,
+        input.body.url
+      );
 
-        return {
-          message: 'Domain updated successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            domain,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Domain updated successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          domain,
+        },
+      };
     });
 };
 
@@ -907,40 +677,15 @@ export const deleteDomainImpl = (
   return authorized.workspace.domains.delete
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        await domainService.deleteDomain(input.params.domainId, input.params.workspaceId);
+      await domainService.deleteDomain(input.params.domainId, input.params.workspaceId);
 
-        return {
-          message: 'Domain deleted successfully',
-          data: {
-            workspaceId: input.params.workspaceId,
-            domainId: input.params.domainId,
-          },
-        };
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Domain deleted successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          domainId: input.params.domainId,
+        },
+      };
     });
 };
 
@@ -958,49 +703,24 @@ export const getDomainVerificationUrlImpl = (
   return authorized.workspace.domains.getVerificationUrl
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const domain = await domainService.getByIdWithPreferences(
-          input.params.domainId,
-          input.params.workspaceId
-        );
-        const token = domainService.generateVerificationToken(
-          input.params.workspaceId,
-          domain.domainId,
-          domain.domainUrl
-        );
-        const verificationUrl = `${domain.domainUrl}?userplane-action=verify&userplane-token=${token}`;
+      const domain = await domainService.getByIdWithPreferences(
+        input.params.domainId,
+        input.params.workspaceId
+      );
+      const token = domainService.generateVerificationToken(
+        input.params.workspaceId,
+        domain.domainId,
+        domain.domainUrl
+      );
+      const verificationUrl = `${domain.domainUrl}?userplane-action=verify&userplane-token=${token}`;
 
-        return {
-          message: 'Domain verification URL generated successfully',
-          data: {
-            verificationUrl,
-            domainUrl: domain.domainUrl,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Domain verification URL generated successfully',
+        data: {
+          verificationUrl,
+          domainUrl: domain.domainUrl,
+        },
+      };
     });
 };
 
@@ -1018,43 +738,23 @@ export const getDomainRecordingPreferencesImpl = (
   return authorized.workspace.domains.preferences.get
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const domain = await domainService.getByIdWithPreferences(
-          input.params.domainId,
-          input.params.workspaceId
-        );
+      const domain = await domainService.getByIdWithPreferences(
+        input.params.domainId,
+        input.params.workspaceId
+      );
 
-        return {
-          message: 'Domain recording preferences retrieved successfully',
-          data: {
-            domainId: domain.domainId,
-            workspaceId: input.params.workspaceId,
-            recordingHideSensitive: domain.recordingHideSensitive,
-            recordingCaptureClientLog: domain.recordingCaptureClientLog,
-            recordingCaptureClientAction: domain.recordingCaptureClientAction,
-            recordingCaptureServerLog: domain.recordingCaptureServerLog,
-            recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
-          },
-        };
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Domain recording preferences retrieved successfully',
+        data: {
+          domainId: domain.domainId,
+          workspaceId: input.params.workspaceId,
+          recordingHideSensitive: domain.recordingHideSensitive,
+          recordingCaptureClientLog: domain.recordingCaptureClientLog,
+          recordingCaptureClientAction: domain.recordingCaptureClientAction,
+          recordingCaptureServerLog: domain.recordingCaptureServerLog,
+          recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
+        },
+      };
     });
 };
 
@@ -1072,55 +772,25 @@ export const updateDomainRecordingPreferencesImpl = (
   return authorized.workspace.domains.preferences.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        await domainService.updateRecordingPreferences(
-          input.params.domainId,
-          input.params.workspaceId,
-          {
-            recordingHideSensitive: input.body.recordingHideSensitive,
-            recordingCaptureClientLog: input.body.recordingCaptureClientLog,
-            recordingCaptureClientAction: input.body.recordingCaptureClientAction,
-            recordingCaptureServerLog: input.body.recordingCaptureServerLog,
-            recordingCaptureNetworkLog: input.body.recordingCaptureNetworkLog,
-          }
-        );
+      await domainService.updateRecordingPreferences(
+        input.params.domainId,
+        input.params.workspaceId,
+        {
+          recordingHideSensitive: input.body.recordingHideSensitive,
+          recordingCaptureClientLog: input.body.recordingCaptureClientLog,
+          recordingCaptureClientAction: input.body.recordingCaptureClientAction,
+          recordingCaptureServerLog: input.body.recordingCaptureServerLog,
+          recordingCaptureNetworkLog: input.body.recordingCaptureNetworkLog,
+        }
+      );
 
-        return {
-          message: 'Domain recording preferences updated successfully',
-          data: {
-            domainId: input.params.domainId,
-            workspaceId: input.params.workspaceId,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Domain recording preferences updated successfully',
+        data: {
+          domainId: input.params.domainId,
+          workspaceId: input.params.workspaceId,
+        },
+      };
     });
 };
 
@@ -1138,55 +808,25 @@ export const replaceDomainRecordingPreferencesImpl = (
   return authorized.workspace.domains.preferences.replace
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        await domainService.replaceRecordingPreferences(
-          input.params.domainId,
-          input.params.workspaceId,
-          {
-            recordingHideSensitive: input.body.recordingHideSensitive,
-            recordingCaptureClientLog: input.body.recordingCaptureClientLog,
-            recordingCaptureClientAction: input.body.recordingCaptureClientAction,
-            recordingCaptureServerLog: input.body.recordingCaptureServerLog,
-            recordingCaptureNetworkLog: input.body.recordingCaptureNetworkLog,
-          }
-        );
+      await domainService.replaceRecordingPreferences(
+        input.params.domainId,
+        input.params.workspaceId,
+        {
+          recordingHideSensitive: input.body.recordingHideSensitive,
+          recordingCaptureClientLog: input.body.recordingCaptureClientLog,
+          recordingCaptureClientAction: input.body.recordingCaptureClientAction,
+          recordingCaptureServerLog: input.body.recordingCaptureServerLog,
+          recordingCaptureNetworkLog: input.body.recordingCaptureNetworkLog,
+        }
+      );
 
-        return {
-          message: 'Domain recording preferences replaced successfully',
-          data: {
-            domainId: input.params.domainId,
-            workspaceId: input.params.workspaceId,
-          },
-        };
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid request body',
-          });
-        }
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Domain recording preferences replaced successfully',
+        data: {
+          domainId: input.params.domainId,
+          workspaceId: input.params.workspaceId,
+        },
+      };
     });
 };
 
@@ -1204,38 +844,19 @@ export const workspaceSearchImpl = (
   return authorized.workspace.search
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      try {
-        const results = await workspaceService.search(
-          input.params.workspaceId,
-          input.query.q,
-          input.query.type,
-          input.query.limit || 5
-        );
+      const results = await workspaceService.search(
+        input.params.workspaceId,
+        input.query.q,
+        input.query.type,
+        input.query.limit || 5
+      );
 
-        return {
-          message: 'Search results retrieved successfully',
-          data: {
-            results,
-          },
-        };
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        if (error instanceof Error) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: error.message,
-          });
-        }
-        throw error;
-      }
+      return {
+        message: 'Search results retrieved successfully',
+        data: {
+          results,
+        },
+      };
     });
 };
 
@@ -1267,6 +888,15 @@ export const createWorkspaceProcedures = (
       list: getWorkspaceMembersImpl(workspaceMemberService),
       updateRole: updateMemberRoleImpl(workspaceMemberService, workspaceService),
       remove: removeMemberImpl(workspaceMemberService, workspaceService),
+      leave: leaveWorkspaceImpl(workspaceMemberService, workspaceService),
+    },
+
+    notifications: {
+      update: updateNotificationPreferencesImpl(workspaceMemberService, workspaceService),
+    },
+
+    linkSettings: {
+      update: updateLinkSettingsImpl(workspaceService, workspaceMemberService),
     },
 
     invite: {
@@ -1305,9 +935,5 @@ export const createWorkspaceProcedures = (
         ),
       },
     },
-
-    // TODO: Add remaining endpoints incrementally
-    notifications: {} as any,
-    linkSettings: {} as any,
   };
 };

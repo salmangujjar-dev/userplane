@@ -5,7 +5,7 @@
 
 import { generateProjectId } from '@/api/lib/id';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
-import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
+import { ORPCError } from '@orpc/server';
 import type { Transaction } from '@/api/types';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { LinkRepository } from '@/api/repositories/links.repository';
@@ -25,13 +25,14 @@ export class ProjectService {
    * Create project
    * If isDefault not specified, auto-determines based on whether workspace has existing projects
    * If isDefault is true, unsets any current default project
+   * Throws PROJECT_WORKSPACE_ID_REQUIRED if workspace ID is missing
    */
   async createProject(
     params: { workspaceId: string; projectTitle: string | null; isDefault?: boolean },
     options?: { tx?: Transaction }
   ) {
     if (!params.workspaceId) {
-      throw new ValidationError('Workspace ID is required');
+      throw new ORPCError('PROJECT_WORKSPACE_ID_REQUIRED', { message: 'Workspace ID is required' });
     }
 
     let isDefault: boolean;
@@ -73,16 +74,16 @@ export class ProjectService {
 
   /**
    * Get project by ID
-   * Throws GoneError if soft-deleted, NotFoundError if not found
+   * Throws PROJECT_GONE if soft-deleted, PROJECT_NOT_FOUND if not found
    */
   async getById(projectId: string) {
     const project = await this.deps.projectRepo.findById(projectId);
     if (!project) {
       const isSoftDeleted = await this.deps.projectRepo.isSoftDeleted(projectId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Project has been deleted');
+        throw new ORPCError('PROJECT_GONE', { status: 410, message: 'Project has been deleted' });
       }
-      throw new NotFoundError('Project not found');
+      throw new ORPCError('PROJECT_NOT_FOUND', { message: 'Project not found' });
     }
     return project;
   }
@@ -90,11 +91,14 @@ export class ProjectService {
   /**
    * Get default project for workspace
    * Should never fail as workspace always has at least 1 project
+   * Throws PROJECT_DEFAULT_NOT_FOUND if no default project exists
    */
   async getDefaultProject(workspaceId: string) {
     const project = await this.deps.projectRepo.findDefaultByWorkspace(workspaceId);
     if (!project) {
-      throw new NotFoundError('No default project found for workspace');
+      throw new ORPCError('PROJECT_DEFAULT_NOT_FOUND', {
+        message: 'No default project found for workspace',
+      });
     }
     return project;
   }
@@ -108,6 +112,7 @@ export class ProjectService {
 
   /**
    * Get projects in workspace with pagination
+   * Throws PROJECT_PAGE_INVALID or PROJECT_PER_PAGE_INVALID if pagination params are invalid
    */
   async getProjectsByWorkspacePaginated(
     workspaceId: string,
@@ -115,11 +120,13 @@ export class ProjectService {
     perPage: number = 5
   ) {
     if (page < 1) {
-      throw new ValidationError('Page must be greater than 0');
+      throw new ORPCError('PROJECT_PAGE_INVALID', { message: 'Page must be greater than 0' });
     }
 
     if (perPage < 1 || perPage > 10) {
-      throw new ValidationError('Per page must be between 1 and 10');
+      throw new ORPCError('PROJECT_PER_PAGE_INVALID', {
+        message: 'Per page must be between 1 and 10',
+      });
     }
 
     const total = await this.deps.projectRepo.countByWorkspace(workspaceId);
@@ -178,19 +185,24 @@ export class ProjectService {
    *
    * After commit (handled by caller):
    * - Trigger deleteProjectResources task
+   * Throws PROJECT_WORKSPACE_MISMATCH, PROJECT_LAST_PROJECT_DELETE_FORBIDDEN, or PROJECT_DELETE_FAILED if validation fails
    */
   async deleteProject(projectId: string, workspaceId: string, options?: { tx?: Transaction }) {
     const project = await this.getById(projectId);
 
     if (project.workspaceId !== workspaceId) {
-      throw new ValidationError('Project does not belong to this workspace');
+      throw new ORPCError('PROJECT_WORKSPACE_MISMATCH', {
+        message: 'Project does not belong to this workspace',
+      });
     }
 
     // Check if this is the last project in the workspace
     const projectCount = await this.deps.projectRepo.countByWorkspace(workspaceId);
 
     if (projectCount === 1) {
-      throw new ValidationError('Cannot delete the only project in a workspace');
+      throw new ORPCError('PROJECT_LAST_PROJECT_DELETE_FORBIDDEN', {
+        message: 'Cannot delete the only project in a workspace',
+      });
     }
 
     // Use transaction for atomic deletion
@@ -207,7 +219,7 @@ export class ProjectService {
       const deleted = await this.deps.projectRepo.softDelete(projectId, { tx });
 
       if (!deleted) {
-        throw new ValidationError('Failed to delete project');
+        throw new ORPCError('PROJECT_DELETE_FAILED', { message: 'Failed to delete project' });
       }
 
       // Soft delete all links in project (if linkRepo available)

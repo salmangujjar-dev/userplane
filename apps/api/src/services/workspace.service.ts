@@ -11,7 +11,7 @@ import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { TokenService } from '@/api/services/token.service';
 import type { ProjectService } from '@/api/services/project.service';
-import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
+import { ORPCError } from '@orpc/server';
 import type { Transaction, CreateWorkspaceParams } from '@/api/types';
 import type { DbClient } from '@workspace/db';
 
@@ -32,10 +32,11 @@ export class WorkspaceService {
   /**
    * Create a new workspace
    * Generates unique recording slug internally if not provided
+   * Throws WORKSPACE_NAME_REQUIRED if workspace name is missing
    */
   async create(params: CreateWorkspaceParams, options?: { tx?: Transaction }) {
     if (!params.workspaceName) {
-      throw new ValidationError('Workspace name is required');
+      throw new ORPCError('WORKSPACE_NAME_REQUIRED', { message: 'Workspace name is required' });
     }
 
     // Generate unique recording slug if not provided
@@ -67,16 +68,19 @@ export class WorkspaceService {
   /**
    * Get workspace by ID
    * Returns only basic workspace info
-   * Throws GoneError if soft-deleted, NotFoundError if not found
+   * Throws WORKSPACE_GONE if soft-deleted, WORKSPACE_NOT_FOUND if not found
    */
   async getById(workspaceId: string) {
     const workspace = await this.deps.workspaceRepo.findById(workspaceId);
     if (!workspace) {
       const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Workspace has been deleted');
+        throw new ORPCError('WORKSPACE_GONE', {
+          status: 410,
+          message: 'Workspace has been deleted',
+        });
       }
-      throw new NotFoundError('Workspace not found');
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
     }
     return workspace;
   }
@@ -84,16 +88,19 @@ export class WorkspaceService {
   /**
    * Get workspace preferences by ID
    * Returns recording-related settings
-   * Throws GoneError if soft-deleted, NotFoundError if not found
+   * Throws WORKSPACE_GONE if soft-deleted, WORKSPACE_NOT_FOUND if not found
    */
   async getPreferencesById(workspaceId: string) {
     const preferences = await this.deps.workspaceRepo.findPreferencesById(workspaceId);
     if (!preferences) {
       const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Workspace has been deleted');
+        throw new ORPCError('WORKSPACE_GONE', {
+          status: 410,
+          message: 'Workspace has been deleted',
+        });
       }
-      throw new NotFoundError('Workspace not found');
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
     }
     return preferences;
   }
@@ -118,6 +125,7 @@ export class WorkspaceService {
    * Rotate workspace invite URL
    * Generates new invite token and updates workspace
    * This invalidates all existing invite links
+   * Throws WORKSPACE_NOT_FOUND if update fails
    */
   async rotateInviteUrl(workspaceId: string, options?: { tx?: Transaction }) {
     const workspace = await this.getById(workspaceId);
@@ -133,7 +141,9 @@ export class WorkspaceService {
     );
 
     if (!updatedWorkspace) {
-      throw new NotFoundError('Failed to rotate workspace invite URL');
+      throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        message: 'Failed to rotate workspace invite URL',
+      });
     }
 
     return updatedWorkspace;
@@ -143,6 +153,7 @@ export class WorkspaceService {
    * Get all workspaces for a user
    * Returns workspaces where the user is a member
    * Optionally includes notification preferences and workspace membership info
+   * Throws WORKSPACE_USER_ID_REQUIRED if user ID is missing
    */
   async getByUserId(
     userId: string,
@@ -152,7 +163,7 @@ export class WorkspaceService {
     }
   ) {
     if (!userId) {
-      throw new ValidationError('User ID is required');
+      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', { message: 'User ID is required' });
     }
     return this.deps.workspaceRepo.findByUserId(userId, options);
   }
@@ -161,6 +172,7 @@ export class WorkspaceService {
    * Get workspaces for a user with pagination
    * Returns workspaces where the user is a member
    * Optionally includes notification preferences and workspace membership info
+   * Throws WORKSPACE_USER_ID_REQUIRED, WORKSPACE_INVALID_PAGINATION if validation fails
    */
   async getByUserIdPaginated(
     userId: string,
@@ -172,15 +184,19 @@ export class WorkspaceService {
     }
   ) {
     if (!userId) {
-      throw new ValidationError('User ID is required');
+      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', { message: 'User ID is required' });
     }
 
     if (page < 1) {
-      throw new ValidationError('Page must be greater than 0');
+      throw new ORPCError('WORKSPACE_INVALID_PAGINATION', {
+        message: 'Page must be greater than 0',
+      });
     }
 
     if (perPage < 1 || perPage > 50) {
-      throw new ValidationError('Per page must be between 1 and 50');
+      throw new ORPCError('WORKSPACE_INVALID_PAGINATION', {
+        message: 'Per page must be between 1 and 50',
+      });
     }
 
     const total = await this.deps.workspaceRepo.countByUserId(userId);
@@ -202,10 +218,11 @@ export class WorkspaceService {
    * Count workspaces for a user with optional role-based filtering
    * Returns count of workspaces where user has specified roles
    * If no roles specified, counts all workspaces for the user
+   * Throws WORKSPACE_USER_ID_REQUIRED if user ID is missing
    */
   async countByUserWithRoles(userId: string, roles?: Array<'member' | 'admin' | 'owner'>) {
     if (!userId) {
-      throw new ValidationError('User ID is required');
+      throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', { message: 'User ID is required' });
     }
 
     // If roles array is empty, return 0
@@ -218,11 +235,12 @@ export class WorkspaceService {
 
   /**
    * Get workspace invite token by ID
+   * Throws WORKSPACE_NOT_FOUND if workspace not found
    */
   async getInviteToken(workspaceId: string) {
     const result = await this.deps.workspaceRepo.findInviteTokenById(workspaceId);
     if (!result) {
-      throw new NotFoundError('Workspace not found');
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
     }
     return result.workspaceInviteToken;
   }
@@ -231,6 +249,7 @@ export class WorkspaceService {
    * Update workspace preferences
    * Updates recording-related settings
    * Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) moved to domain level
+   * Throws WORKSPACE_NOT_FOUND if workspace not found or update fails
    */
   async updatePreferences(
     workspaceId: string,
@@ -247,12 +266,14 @@ export class WorkspaceService {
   ) {
     const workspace = await this.getById(workspaceId);
     if (!workspace) {
-      throw new NotFoundError('Workspace not found');
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
     }
 
     const updated = await this.deps.workspaceRepo.updatePreferences(workspaceId, updates, options);
     if (!updated) {
-      throw new NotFoundError('Failed to update workspace preferences');
+      throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        message: 'Failed to update workspace preferences',
+      });
     }
 
     return updated;
@@ -261,25 +282,29 @@ export class WorkspaceService {
   /**
    * Update workspace name
    * Requires admin or owner role
+   * Throws WORKSPACE_NAME_REQUIRED, WORKSPACE_NAME_TOO_LONG if validation fails
+   * Throws WORKSPACE_NOT_FOUND if workspace not found or update fails
    */
   async updateName(workspaceId: string, newName: string, options?: { tx?: Transaction }) {
     if (!newName || newName.trim().length === 0) {
-      throw new ValidationError('Workspace name is required');
+      throw new ORPCError('WORKSPACE_NAME_REQUIRED', { message: 'Workspace name is required' });
     }
 
     if (newName.length > 255) {
-      throw new ValidationError('Workspace name must be less than 255 characters');
+      throw new ORPCError('WORKSPACE_NAME_TOO_LONG', {
+        message: 'Workspace name must be less than 255 characters',
+      });
     }
 
     const workspace = await this.getById(workspaceId);
     if (!workspace) {
-      throw new NotFoundError('Workspace not found');
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
     }
 
     const updated = await this.deps.workspaceRepo.updateName(workspaceId, newName.trim(), options);
 
     if (!updated) {
-      throw new NotFoundError('Failed to update workspace name');
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Failed to update workspace name' });
     }
 
     return updated;
@@ -295,12 +320,14 @@ export class WorkspaceService {
    *
    * After commit (handled by caller):
    * - Trigger deleteWorkspaceResources task
+   * Throws WORKSPACE_NOT_FOUND if workspace not found
+   * Throws WORKSPACE_DELETE_FAILED if deletion fails
    */
   async deleteWorkspace(workspaceId: string, options?: { tx?: Transaction }) {
     const workspace = await this.getById(workspaceId);
 
     if (!workspace) {
-      throw new NotFoundError('Workspace not found');
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { message: 'Workspace not found' });
     }
 
     // Use transaction for atomic deletion
@@ -309,7 +336,7 @@ export class WorkspaceService {
       const deleted = await this.deps.workspaceRepo.softDelete(workspaceId, { tx });
 
       if (!deleted) {
-        throw new ValidationError('Failed to delete workspace');
+        throw new ORPCError('WORKSPACE_DELETE_FAILED', { message: 'Failed to delete workspace' });
       }
 
       // 2. Soft delete all projects in workspace
@@ -339,6 +366,7 @@ export class WorkspaceService {
    * Uses different strategies based on entity type:
    * - members, projects, domains: ILIKE pattern matching (low volume)
    * - links: PostgreSQL FTS with ranking (higher volume, better performance)
+   * Throws WORKSPACE_SEARCH_TERM_REQUIRED, WORKSPACE_SEARCH_TYPE_INVALID, WORKSPACE_SEARCH_UNAVAILABLE if validation fails
    */
   async search(
     workspaceId: string,
@@ -356,36 +384,44 @@ export class WorkspaceService {
       .filter((term) => term.length > 0);
 
     if (searchTerms.length === 0) {
-      throw new ValidationError('Search term is required');
+      throw new ORPCError('WORKSPACE_SEARCH_TERM_REQUIRED', { message: 'Search term is required' });
     }
 
     switch (type) {
       case 'members': {
         if (!this.deps.workspaceMemberRepo) {
-          throw new ValidationError('Member search not available');
+          throw new ORPCError('WORKSPACE_SEARCH_UNAVAILABLE', {
+            message: 'Member search not available',
+          });
         }
         return this.deps.workspaceMemberRepo.searchByName(workspaceId, searchTerms, limit);
       }
       case 'projects': {
         if (!this.deps.projectRepo) {
-          throw new ValidationError('Project search not available');
+          throw new ORPCError('WORKSPACE_SEARCH_UNAVAILABLE', {
+            message: 'Project search not available',
+          });
         }
         return this.deps.projectRepo.searchByTitle(workspaceId, searchTerms, limit);
       }
       case 'domains': {
         if (!this.deps.domainRepo) {
-          throw new ValidationError('Domain search not available');
+          throw new ORPCError('WORKSPACE_SEARCH_UNAVAILABLE', {
+            message: 'Domain search not available',
+          });
         }
         return this.deps.domainRepo.searchByUrl(workspaceId, searchTerms, limit);
       }
       case 'links': {
         if (!this.deps.linkRepo) {
-          throw new ValidationError('Link search not available');
+          throw new ORPCError('WORKSPACE_SEARCH_UNAVAILABLE', {
+            message: 'Link search not available',
+          });
         }
         return this.deps.linkRepo.searchByTitle(workspaceId, searchTerms, limit);
       }
       default:
-        throw new ValidationError('Invalid search type');
+        throw new ORPCError('WORKSPACE_SEARCH_TYPE_INVALID', { message: 'Invalid search type' });
     }
   }
 }

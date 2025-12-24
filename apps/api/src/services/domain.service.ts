@@ -3,9 +3,9 @@
  * Contains business logic for domain management
  */
 
+import { ORPCError } from '@orpc/server';
 import { generateDomainId } from '@/api/lib/id';
 import { DomainRepository } from '@/api/repositories/domains.repository';
-import { ValidationError, NotFoundError, GoneError } from '@/api/lib/errors';
 import { cleanUrl } from '@/api/lib/url';
 import type { Transaction } from '@/api/types';
 import type { DomainStatus } from '@workspace/contract';
@@ -24,13 +24,16 @@ export class DomainService {
    * Accepts any URL format and cleans it before storage
    * Stores protocol + hostname + path (removes query params, hash, and trailing slashes)
    * Checks for duplicates before creating
+   * Throws DOMAIN_URL_REQUIRED if URL is missing or DOMAIN_ALREADY_EXISTS if duplicate
    */
   async create(
     params: { workspaceId: string; url: string; status: DomainStatus },
     options?: { tx?: Transaction }
   ) {
     if (!params.url) {
-      throw new ValidationError('Domain URL is required');
+      throw new ORPCError('DOMAIN_URL_REQUIRED', {
+        message: 'Domain URL is required',
+      });
     }
 
     // Clean URL: remove query parameters, hash, and trailing slashes
@@ -43,7 +46,9 @@ export class DomainService {
     );
 
     if (existingDomain) {
-      throw new ValidationError('This domain has already been added to the workspace');
+      throw new ORPCError('DOMAIN_ALREADY_EXISTS', {
+        message: 'This domain has already been added to the workspace',
+      });
     }
 
     return this.deps.domainRepo.create(
@@ -67,14 +72,19 @@ export class DomainService {
 
   /**
    * Get domains for a workspace with pagination
+   * Throws DOMAIN_PAGE_INVALID or DOMAIN_PER_PAGE_INVALID if pagination params are invalid
    */
   async getByWorkspaceIdPaginated(workspaceId: string, page: number = 1, perPage: number = 5) {
     if (page < 1) {
-      throw new ValidationError('Page must be greater than 0');
+      throw new ORPCError('DOMAIN_PAGE_INVALID', {
+        message: 'Page must be greater than 0',
+      });
     }
 
     if (perPage < 1 || perPage > 10) {
-      throw new ValidationError('Per page must be between 1 and 10');
+      throw new ORPCError('DOMAIN_PER_PAGE_INVALID', {
+        message: 'Per page must be between 1 and 10',
+      });
     }
 
     const total = await this.deps.domainRepo.countByWorkspace(workspaceId);
@@ -96,7 +106,7 @@ export class DomainService {
    * Cleans and validates new URL
    * Checks for uniqueness within the workspace (excluding current domain)
    * Resets domain status to "pending" since verification needs to be redone
-   * Throws GoneError if soft-deleted, NotFoundError if not found
+   * Throws DOMAIN_GONE if soft-deleted, DOMAIN_NOT_FOUND if not found, or other domain-specific errors for validation
    */
   async updateDomainUrl(
     domainId: string,
@@ -105,7 +115,9 @@ export class DomainService {
     options?: { tx?: Transaction }
   ) {
     if (!newUrl) {
-      throw new ValidationError('Domain URL is required');
+      throw new ORPCError('DOMAIN_URL_REQUIRED', {
+        message: 'Domain URL is required',
+      });
     }
 
     // Get existing domain and check if it exists
@@ -114,14 +126,21 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Domain has been deleted');
+        throw new ORPCError('DOMAIN_GONE', {
+          status: 410,
+          message: 'Domain has been deleted',
+        });
       }
-      throw new NotFoundError('Domain not found');
+      throw new ORPCError('DOMAIN_NOT_FOUND', {
+        message: 'Domain not found',
+      });
     }
 
     // Verify domain belongs to the workspace
     if (domain.workspaceId !== workspaceId) {
-      throw new ValidationError('Domain does not belong to this workspace');
+      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        message: 'Domain does not belong to this workspace',
+      });
     }
 
     // Clean URL: remove query parameters, hash, and trailing slashes
@@ -140,14 +159,18 @@ export class DomainService {
     );
 
     if (existingDomain) {
-      throw new ValidationError('This domain has already been added to the workspace');
+      throw new ORPCError('DOMAIN_ALREADY_EXISTS', {
+        message: 'This domain has already been added to the workspace',
+      });
     }
 
     // Update the domain URL and reset status to pending
     const updated = await this.deps.domainRepo.updateUrl(domainId, normalized, options);
 
     if (!updated) {
-      throw new ValidationError('Failed to update domain');
+      throw new ORPCError('DOMAIN_UPDATE_FAILED', {
+        message: 'Failed to update domain',
+      });
     }
 
     return updated;
@@ -157,7 +180,7 @@ export class DomainService {
    * Soft delete a domain
    * Marks domain as deleted without removing from database
    * Prevents deletion of the last domain in a workspace
-   * Throws GoneError if already soft-deleted, NotFoundError if not found
+   * Throws DOMAIN_GONE if already soft-deleted, DOMAIN_NOT_FOUND if not found, or other domain-specific errors for validation
    */
   async deleteDomain(domainId: string, workspaceId: string, options?: { tx?: Transaction }) {
     const domain = await this.deps.domainRepo.findById(domainId);
@@ -165,26 +188,37 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Domain has been deleted');
+        throw new ORPCError('DOMAIN_GONE', {
+          status: 410,
+          message: 'Domain has been deleted',
+        });
       }
-      throw new NotFoundError('Domain not found');
+      throw new ORPCError('DOMAIN_NOT_FOUND', {
+        message: 'Domain not found',
+      });
     }
 
     if (domain.workspaceId !== workspaceId) {
-      throw new ValidationError('Domain does not belong to this workspace');
+      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        message: 'Domain does not belong to this workspace',
+      });
     }
 
     // Check if this is the last domain in the workspace
     const domainCount = await this.deps.domainRepo.countByWorkspace(workspaceId);
 
     if (domainCount === 1) {
-      throw new ValidationError('Cannot delete the only domain in a workspace');
+      throw new ORPCError('DOMAIN_LAST_DOMAIN_DELETE_FORBIDDEN', {
+        message: 'Cannot delete the only domain in a workspace',
+      });
     }
 
     const deleted = await this.deps.domainRepo.softDelete(domainId, options);
 
     if (!deleted) {
-      throw new ValidationError('Failed to delete domain');
+      throw new ORPCError('DOMAIN_DELETE_FAILED', {
+        message: 'Failed to delete domain',
+      });
     }
 
     return deleted;
@@ -208,13 +242,16 @@ export class DomainService {
    * Validates token, checks domain registration by ID, and marks domain as verified
    * Compares hostname and path between origin and stored domain URL
    * Returns the updated domain record
+   * Throws domain-specific errors for validation errors, DOMAIN_NOT_REGISTERED if domain not registered
    */
   async verifyDomain(token: string, originHostname: string) {
     // Verify JWT token
     const payload = this.deps.tokenService.verifyDomainToken(token);
 
     if (!payload) {
-      throw new ValidationError('Invalid verification token');
+      throw new ORPCError('DOMAIN_VERIFICATION_TOKEN_INVALID', {
+        message: 'Invalid verification token',
+      });
     }
 
     // Issuer is already checked in verifyDomainToken
@@ -223,12 +260,16 @@ export class DomainService {
     const domain = await this.deps.domainRepo.findById(payload.domainId);
 
     if (!domain) {
-      throw new NotFoundError('Domain is not registered for this workspace');
+      throw new ORPCError('DOMAIN_NOT_REGISTERED', {
+        message: 'Domain is not registered for this workspace',
+      });
     }
 
     // Verify domain belongs to the workspace from token
     if (domain.workspaceId !== payload.workspaceId) {
-      throw new ValidationError('Domain does not belong to this workspace');
+      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        message: 'Domain does not belong to this workspace',
+      });
     }
 
     // Parse stored domain URL to get hostname and pathname
@@ -239,7 +280,9 @@ export class DomainService {
       storedHostname = storedUrl.hostname;
       storedPathname = storedUrl.pathname;
     } catch {
-      throw new ValidationError('Invalid stored domain URL');
+      throw new ORPCError('DOMAIN_URL_INVALID', {
+        message: 'Invalid stored domain URL',
+      });
     }
 
     // Parse origin to construct full origin URL for comparison
@@ -247,12 +290,16 @@ export class DomainService {
     try {
       originUrl = new URL(`https://${originHostname}`);
     } catch {
-      throw new ValidationError('Invalid origin hostname');
+      throw new ORPCError('DOMAIN_ORIGIN_INVALID', {
+        message: 'Invalid origin hostname',
+      });
     }
 
     // Compare hostname
     if (storedHostname !== originUrl.hostname) {
-      throw new ValidationError('Origin does not match registered domain');
+      throw new ORPCError('DOMAIN_ORIGIN_MISMATCH', {
+        message: 'Origin does not match registered domain',
+      });
     }
 
     // If stored URL has a path, check if origin path starts with it
@@ -268,7 +315,9 @@ export class DomainService {
     // Return updated domain
     const updatedDomain = await this.deps.domainRepo.findById(payload.domainId);
     if (!updatedDomain) {
-      throw new ValidationError('Failed to verify domain');
+      throw new ORPCError('DOMAIN_VERIFICATION_FAILED', {
+        message: 'Failed to verify domain',
+      });
     }
 
     return updatedDomain;
@@ -277,7 +326,7 @@ export class DomainService {
   /**
    * Get domain by ID with recording preferences
    * Returns complete domain details including recording toggle settings
-   * Throws GoneError if soft-deleted, NotFoundError if not found
+   * Throws DOMAIN_GONE if soft-deleted, DOMAIN_NOT_FOUND if not found, DOMAIN_WORKSPACE_MISMATCH for validation errors
    */
   async getByIdWithPreferences(domainId: string, workspaceId: string) {
     const domain = await this.deps.domainRepo.findById(domainId);
@@ -285,13 +334,20 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Domain has been deleted');
+        throw new ORPCError('DOMAIN_GONE', {
+          status: 410,
+          message: 'Domain has been deleted',
+        });
       }
-      throw new NotFoundError('Domain not found');
+      throw new ORPCError('DOMAIN_NOT_FOUND', {
+        message: 'Domain not found',
+      });
     }
 
     if (domain.workspaceId !== workspaceId) {
-      throw new ValidationError('Domain does not belong to this workspace');
+      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        message: 'Domain does not belong to this workspace',
+      });
     }
 
     return domain;
@@ -300,16 +356,21 @@ export class DomainService {
   /**
    * Get domain recording preferences by ID
    * Returns recording toggle settings for the domain
-   * Throws GoneError if soft-deleted, NotFoundError if not found
+   * Throws DOMAIN_GONE if soft-deleted, DOMAIN_NOT_FOUND if not found
    */
   async getPreferencesById(domainId: string) {
     const preferences = await this.deps.domainRepo.findPreferencesById(domainId);
     if (!preferences) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Domain has been deleted');
+        throw new ORPCError('DOMAIN_GONE', {
+          status: 410,
+          message: 'Domain has been deleted',
+        });
       }
-      throw new NotFoundError('Domain not found');
+      throw new ORPCError('DOMAIN_NOT_FOUND', {
+        message: 'Domain not found',
+      });
     }
     return preferences;
   }
@@ -318,7 +379,7 @@ export class DomainService {
    * Update domain recording preferences
    * Updates recording toggle settings for the domain
    * Only allows updates if domain is verified
-   * Throws GoneError if soft-deleted, NotFoundError if not found, ValidationError if not verified
+   * Throws DOMAIN_GONE if soft-deleted, DOMAIN_NOT_FOUND if not found, or other domain-specific errors for validation
    */
   async updateRecordingPreferences(
     domainId: string,
@@ -337,19 +398,27 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Domain has been deleted');
+        throw new ORPCError('DOMAIN_GONE', {
+          status: 410,
+          message: 'Domain has been deleted',
+        });
       }
-      throw new NotFoundError('Domain not found');
+      throw new ORPCError('DOMAIN_NOT_FOUND', {
+        message: 'Domain not found',
+      });
     }
 
     if (domain.workspaceId !== workspaceId) {
-      throw new ValidationError('Domain does not belong to this workspace');
+      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        message: 'Domain does not belong to this workspace',
+      });
     }
 
     if (domain.domainStatus !== 'verified') {
-      throw new ValidationError(
-        'Cannot update recording preferences for unverified domain. Please verify the domain first.'
-      );
+      throw new ORPCError('DOMAIN_UNVERIFIED', {
+        message:
+          'Cannot update recording preferences for unverified domain. Please verify the domain first.',
+      });
     }
 
     const updated = await this.deps.domainRepo.updateRecordingPreferences(
@@ -358,7 +427,9 @@ export class DomainService {
       options
     );
     if (!updated) {
-      throw new NotFoundError('Failed to update domain preferences');
+      throw new ORPCError('DOMAIN_PREFERENCES_UPDATE_FAILED', {
+        message: 'Failed to update domain preferences',
+      });
     }
 
     return updated;
@@ -368,7 +439,7 @@ export class DomainService {
    * Replace domain recording preferences
    * Replaces all recording toggle settings for the domain
    * Only allows updates if domain is verified
-   * Throws GoneError if soft-deleted, NotFoundError if not found, ValidationError if not verified
+   * Throws DOMAIN_GONE if soft-deleted, DOMAIN_NOT_FOUND if not found, or other domain-specific errors for validation
    */
   async replaceRecordingPreferences(
     domainId: string,
@@ -387,19 +458,27 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new GoneError('Domain has been deleted');
+        throw new ORPCError('DOMAIN_GONE', {
+          status: 410,
+          message: 'Domain has been deleted',
+        });
       }
-      throw new NotFoundError('Domain not found');
+      throw new ORPCError('DOMAIN_NOT_FOUND', {
+        message: 'Domain not found',
+      });
     }
 
     if (domain.workspaceId !== workspaceId) {
-      throw new ValidationError('Domain does not belong to this workspace');
+      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        message: 'Domain does not belong to this workspace',
+      });
     }
 
     if (domain.domainStatus !== 'verified') {
-      throw new ValidationError(
-        'Cannot update recording preferences for unverified domain. Please verify the domain first.'
-      );
+      throw new ORPCError('DOMAIN_UNVERIFIED', {
+        message:
+          'Cannot update recording preferences for unverified domain. Please verify the domain first.',
+      });
     }
 
     const updated = await this.deps.domainRepo.updateRecordingPreferences(
@@ -408,7 +487,9 @@ export class DomainService {
       options
     );
     if (!updated) {
-      throw new NotFoundError('Failed to update domain preferences');
+      throw new ORPCError('DOMAIN_PREFERENCES_UPDATE_FAILED', {
+        message: 'Failed to update domain preferences',
+      });
     }
 
     return updated;

@@ -9,6 +9,7 @@ import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { DomainService } from '@/api/services/domain.service';
 import { deriveWorkspaceNameFromUser } from '@/api/lib/workspace';
+import { ORPCError } from '@orpc/server';
 
 export interface ProvisionerServiceDeps {
   workspaceService: WorkspaceService;
@@ -25,6 +26,8 @@ export class ProvisionerService {
    * Create workspace with all related resources
    * Orchestrates workspace, project, member, and domain creation
    * Accepts any valid URL format
+   * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
+   * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
    */
   async createWorkspace(params: {
     url: string;
@@ -48,7 +51,9 @@ export class ProvisionerService {
       );
 
       if (!createdWorkspace) {
-        throw new Error('Failed to create workspace');
+        throw new ORPCError('PROVISIONER_WORKSPACE_CREATE_FAILED', {
+          message: 'Failed to create workspace',
+        });
       }
 
       // Create first project (automatically becomes default)
@@ -81,7 +86,7 @@ export class ProvisionerService {
     });
 
     if (!workspace) {
-      throw new Error('Transaction failed');
+      throw new ORPCError('PROVISIONER_TRANSACTION_FAILED', { message: 'Transaction failed' });
     }
 
     return {

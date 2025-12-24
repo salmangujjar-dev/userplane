@@ -3,13 +3,13 @@
  * Orchestrates sending and accepting workspace invitations
  */
 
+import { ORPCError } from '@orpc/server';
 import type { DbClient } from '@workspace/db';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { UserService } from '@/api/services/user.service';
 import { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
-import { NotFoundError, ConflictError } from '@/api/lib/errors';
 
 /**
  * Internal invite action result type for service orchestration
@@ -132,46 +132,45 @@ export class InviteService {
   /**
    * Validate workspace invitation without accepting
    * Verifies token and returns workspace and inviter information
+   * Throws INVITE_TOKEN_INVALID if token is invalid or expired
+   * Throws INVITE_TOKEN_INVALIDATED if token has been invalidated
    */
-  async validateInvite(inviteToken: string): Promise<InviteActionResult> {
+  async validateInvite(inviteToken: string): Promise<{
+    workspaceId: string;
+    workspaceName: string;
+    inviterName: string;
+    inviterEmail: string;
+  }> {
     const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);
 
     if (!inviteData) {
-      return {
-        status: 'invalid',
+      throw new ORPCError('INVITE_TOKEN_INVALID', {
         message: 'Invalid or expired invite token',
-      };
+      });
     }
 
-    try {
-      const workspace = await this.deps.workspaceService.getById(inviteData.wi);
-      const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
+    const workspace = await this.deps.workspaceService.getById(inviteData.wi);
+    const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
 
-      if (currentInviteToken !== inviteData.wt) {
-        return {
-          status: 'expired',
-          message: 'Invite token has been invalidated',
-        };
-      }
-
-      return {
-        status: 'valid',
-        workspaceId: workspace.workspaceId,
-        workspaceName: inviteData.wn,
-        inviterName: inviteData.in,
-        inviterEmail: inviteData.ie,
-      };
-    } catch (error) {
-      return {
-        status: 'invalid',
-        message: 'Workspace not found or has been deleted',
-      };
+    if (currentInviteToken !== inviteData.wt) {
+      throw new ORPCError('INVITE_TOKEN_INVALIDATED', {
+        message: 'Invite token has been invalidated',
+      });
     }
+
+    return {
+      workspaceId: workspace.workspaceId,
+      workspaceName: inviteData.wn,
+      inviterName: inviteData.in,
+      inviterEmail: inviteData.ie,
+    };
   }
 
   /**
    * Accept workspace invitation
    * Verifies token and adds user as member
+   * Throws INVITE_TOKEN_INVALID if token is invalid or expired
+   * Throws INVITE_TOKEN_INVALIDATED if token has been invalidated
    */
   async acceptInvite(params: {
     inviteToken: string;
@@ -182,14 +181,18 @@ export class InviteService {
     const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);
 
     if (!inviteData) {
-      throw new NotFoundError('Invalid or expired invite token');
+      throw new ORPCError('INVITE_TOKEN_INVALID', {
+        message: 'Invalid or expired invite token',
+      });
     }
 
     const workspace = await this.deps.workspaceService.getById(inviteData.wi);
     const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
 
     if (currentInviteToken !== inviteData.wt) {
-      throw new NotFoundError('Invite token has been invalidated');
+      throw new ORPCError('INVITE_TOKEN_INVALIDATED', {
+        message: 'Invite token has been invalidated',
+      });
     }
 
     await this.deps.db.transaction(async (tx) => {
@@ -214,86 +217,65 @@ export class InviteService {
   /**
    * Unified invite action handler
    * Validates or accepts invite based on userId
+   * Throws INVITE_TOKEN_INVALID if token is invalid or expired
+   * Throws INVITE_TOKEN_INVALIDATED if token has been invalidated
    */
-  async handleInviteAction(inviteToken: string, userId?: string): Promise<InviteActionResult> {
+  async handleInviteAction(
+    inviteToken: string,
+    userId?: string
+  ): Promise<{
+    status: 'valid' | 'accepted';
+    workspaceId: string;
+    workspaceName: string;
+    inviterName: string;
+    inviterEmail: string;
+  }> {
     const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);
 
     if (!inviteData) {
-      return {
-        status: 'invalid',
+      throw new ORPCError('INVITE_TOKEN_INVALID', {
         message: 'Invalid or expired invite token',
-      };
+      });
     }
 
-    try {
-      const workspace = await this.deps.workspaceService.getById(inviteData.wi);
-      const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
+    const workspace = await this.deps.workspaceService.getById(inviteData.wi);
+    const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
 
-      if (currentInviteToken !== inviteData.wt) {
-        return {
-          status: 'expired',
-          message: 'Invite token has been invalidated',
-        };
-      }
+    if (currentInviteToken !== inviteData.wt) {
+      throw new ORPCError('INVITE_TOKEN_INVALIDATED', {
+        message: 'Invite token has been invalidated',
+      });
+    }
 
-      // If userId provided, accept the invite
-      if (userId) {
-        try {
-          await this.deps.db.transaction(async (tx) => {
-            await this.deps.workspaceMemberService.addMember(
-              {
-                userId,
-                workspaceId: workspace.workspaceId,
-                role: 'member',
-              },
-              { tx }
-            );
-          });
-
-          return {
-            status: 'accepted',
+    // If userId provided, accept the invite
+    if (userId) {
+      await this.deps.db.transaction(async (tx) => {
+        await this.deps.workspaceMemberService.addMember(
+          {
+            userId,
             workspaceId: workspace.workspaceId,
-            workspaceName: inviteData.wn,
-            inviterName: inviteData.in,
-            inviterEmail: inviteData.ie,
-          };
-        } catch (error) {
-          if (error instanceof ConflictError) {
-            return {
-              status: 'already_member',
-              workspaceId: workspace.workspaceId,
-              workspaceName: inviteData.wn,
-              inviterName: inviteData.in,
-              inviterEmail: inviteData.ie,
-              message: 'You are already a member of this workspace',
-            };
-          }
-          // Re-throw to be caught by outer catch
-          throw error;
-        }
-      }
+            role: 'member',
+          },
+          { tx }
+        );
+      });
 
-      // Otherwise just validate
       return {
-        status: 'valid',
+        status: 'accepted',
         workspaceId: workspace.workspaceId,
         workspaceName: inviteData.wn,
         inviterName: inviteData.in,
         inviterEmail: inviteData.ie,
       };
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        return {
-          status: 'invalid',
-          message: 'Workspace not found or has been deleted',
-        };
-      }
-
-      // For any other unexpected error, return generic invalid status
-      return {
-        status: 'invalid',
-        message: 'An error occurred while processing the invite',
-      };
     }
+
+    // Otherwise just validate
+    return {
+      status: 'valid',
+      workspaceId: workspace.workspaceId,
+      workspaceName: inviteData.wn,
+      inviterName: inviteData.in,
+      inviterEmail: inviteData.ie,
+    };
   }
 }

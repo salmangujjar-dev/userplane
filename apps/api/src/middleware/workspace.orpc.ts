@@ -7,7 +7,6 @@ import { ORPCError } from '@orpc/server';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceRole } from '@workspace/contract';
-import { NotFoundError, GoneError } from '@/api/lib/errors';
 import { base, type AuthContext } from './auth.orpc';
 
 export type WorkspaceContext = {
@@ -31,40 +30,22 @@ export function createWorkspaceMiddleware(
         });
       }
 
-      try {
-        const workspace = await workspaceService.getById(workspaceId);
-        const member = await workspaceMemberService.getMember(
-          context.user.id,
-          workspace.workspaceId
-        );
+      const workspace = await workspaceService.getById(workspaceId);
+      const member = await workspaceMemberService.getMember(context.user.id, workspace.workspaceId);
 
-        if (!member) {
-          throw new ORPCError('FORBIDDEN', {
-            message: 'You are not a member of this workspace',
-          });
-        }
-
-        return next({
-          context: {
-            workspaceId: workspace.workspaceId,
-            workspaceMemberId: member.workspaceMemberId,
-            workspaceRole: member.workspaceRole,
-          },
+      if (!member) {
+        throw new ORPCError('FORBIDDEN', {
+          message: 'You are not a member of this workspace',
         });
-      } catch (error) {
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        throw error;
       }
+
+      return next({
+        context: {
+          workspaceId: workspace.workspaceId,
+          workspaceMemberId: member.workspaceMemberId,
+          workspaceRole: member.workspaceRole,
+        },
+      });
     });
 }
 
@@ -84,45 +65,27 @@ export function createWorkspaceRoleMiddleware(
         });
       }
 
-      try {
-        const workspace = await workspaceService.getById(workspaceId);
-        const member = await workspaceMemberService.getMember(
-          context.user.id,
-          workspace.workspaceId
-        );
+      const workspace = await workspaceService.getById(workspaceId);
+      const member = await workspaceMemberService.getMember(context.user.id, workspace.workspaceId);
 
-        if (!member) {
-          throw new ORPCError('FORBIDDEN', {
-            message: 'You are not a member of this workspace',
-          });
-        }
-
-        if (!allowedRoles.includes(member.workspaceRole)) {
-          throw new ORPCError('FORBIDDEN', {
-            message: 'You do not have permission to perform this action',
-          });
-        }
-
-        return next({
-          context: {
-            workspaceId: workspace.workspaceId,
-            workspaceMemberId: member.workspaceMemberId,
-            workspaceRole: member.workspaceRole,
-          },
+      if (!member) {
+        throw new ORPCError('FORBIDDEN', {
+          message: 'You are not a member of this workspace',
         });
-      } catch (error) {
-        if (error instanceof GoneError) {
-          throw new ORPCError('GONE', {
-            status: 410,
-            message: error.message,
-          });
-        }
-        if (error instanceof NotFoundError) {
-          throw new ORPCError('NOT_FOUND', {
-            message: error.message,
-          });
-        }
-        throw error;
       }
+
+      if (!allowedRoles.includes(member.workspaceRole)) {
+        throw new ORPCError('FORBIDDEN', {
+          message: 'You do not have permission to perform this action',
+        });
+      }
+
+      return next({
+        context: {
+          workspaceId: workspace.workspaceId,
+          workspaceMemberId: member.workspaceMemberId,
+          workspaceRole: member.workspaceRole,
+        },
+      });
     });
 }
