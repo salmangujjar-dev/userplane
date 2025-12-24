@@ -23,6 +23,7 @@ import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateMemberRole, useRemoveMember } from '@/queries/use-team-mutations';
 import { SectionError } from '@/components/shared/section-error';
+import { TeamSectionSkeleton } from '@/components/skeleton';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -61,6 +62,10 @@ export function TeamSection() {
     removeMemberMutation.mutate(workspaceMemberId);
   };
 
+  if (isLoading) {
+    return <TeamSectionSkeleton />;
+  }
+
   if (error || (membersResult && !membersResult.success)) {
     return (
       <div>
@@ -80,32 +85,6 @@ export function TeamSection() {
             }
             onRetry={() => refetch()}
           />
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Team</h2>
-          <p className="text-sm text-muted-foreground">Manage team members and permissions</p>
-        </div>
-        <div className="max-w-2xl">
-          <div className="rounded-xl border bg-card p-4">
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 w-32 bg-muted animate-pulse rounded" />
-                    <div className="h-3 w-48 bg-muted animate-pulse rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     );

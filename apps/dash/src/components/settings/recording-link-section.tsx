@@ -11,6 +11,7 @@ import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateToggle, useUpdateAppearance } from '@/queries/use-appearance-mutations';
 import { SectionError } from '@/components/shared/section-error';
+import { RecordingLinkSectionSkeleton } from '@/components/skeleton';
 
 export function RecordingLinkSection() {
   const workspaceId = useWorkspaceId();
@@ -98,6 +99,10 @@ export function RecordingLinkSection() {
     }
   };
 
+  if (isLoading) {
+    return <RecordingLinkSectionSkeleton />;
+  }
+
   if (error || (preferencesResult && !preferencesResult.success)) {
     return (
       <div>
@@ -117,22 +122,6 @@ export function RecordingLinkSection() {
             }
             onRetry={() => refetch()}
           />
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Recording Link</h2>
-          <p className="text-sm text-muted-foreground">Customize your recording link appearance</p>
-        </div>
-        <div className="w-full max-w-2xl space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-muted animate-pulse rounded" />
-          ))}
         </div>
       </div>
     );

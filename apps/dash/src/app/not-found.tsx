@@ -9,7 +9,7 @@ export default function NotFound() {
         <Image src="/assets/dino.svg" alt="Not Found" width={120} height={120} className="mb-2" />
         <h1 className="text-2xl font-semibold text-foreground">Page not found</h1>
         <p className="text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
         <Link href="/" className="mt-4">
           <Button size="lg" className="rounded-full px-8">

@@ -2,8 +2,6 @@
 
 import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { DinoError } from '@/components/shared/dino-error';
@@ -21,36 +19,31 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
     }
   }, [workspaceIdFromUrl, setWorkspace]);
 
-  const { data: workspace, isLoading, error } = useWorkspace();
+  const { data: workspaceResult, error } = useWorkspace();
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Loading workspace...</p>
-        </div>
-      </div>
-    );
-  }
+  // Show error state only if there's an actual error
+  // Check for React Query error (unknown errors) or SafeResult failure (known API errors)
+  const hasError = error || (workspaceResult && !workspaceResult.success);
 
-  // Show error state for invalid workspace
-  if (error || !workspace) {
+  if (hasError) {
     const handleGoHome = () => {
       clearWorkspace();
       window.location.href = '/';
     };
 
+    // Determine error message from either React Query error or SafeResult error
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : workspaceResult && !workspaceResult.success
+          ? workspaceResult.error.message
+          : 'This workspace may have been deleted or you may not have access.';
+
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <DinoError
           title="Workspace not found"
-          description={
-            error instanceof Error
-              ? error.message
-              : 'This workspace may have been deleted or you may not have access.'
-          }
+          description={errorMessage}
           onGoBack={handleGoHome}
           showRetry={false}
           showGoBack={true}
@@ -59,5 +52,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
     );
   }
 
+  // While loading or when workspace exists, render children
+  // Page-level loading.tsx will handle the loading state
   return <>{children}</>;
 }

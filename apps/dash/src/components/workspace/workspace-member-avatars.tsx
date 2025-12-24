@@ -1,3 +1,5 @@
+'use client';
+
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { Plus } from 'lucide-react';
 

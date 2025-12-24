@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 
 interface DinoErrorProps {
   title?: string;
@@ -29,12 +30,14 @@ export function DinoError({
       </div>
       <div className="flex gap-3 mt-8">
         {showGoBack && onGoBack && (
-          <Button variant="outline" onClick={onGoBack} size="lg" className="rounded-full px-7">
+          <Button onClick={onGoBack} size="lg" className="rounded-full px-7">
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Go Back
           </Button>
         )}
         {showRetry && onRetry && (
           <Button onClick={onRetry} size="lg" className="rounded-full px-7">
+            <RefreshCw className="mr-2 h-4 w-4" />
             Try Again
           </Button>
         )}

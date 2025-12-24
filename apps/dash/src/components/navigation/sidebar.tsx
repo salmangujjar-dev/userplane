@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { SidebarProjectsSkeleton } from '@/components/skeleton';
 import {
   Video,
   Link as LinkIcon,
@@ -19,7 +20,6 @@ import {
   Settings2,
   FolderKanban,
   LogOut,
-  Loader2,
   Building2,
   Check,
   Plus,
@@ -101,10 +101,7 @@ export function Sidebar() {
               <div className="text-sm font-semibold text-foreground mb-2">{section.title}</div>
               <div className="space-y-1">
                 {section.title === 'Projects' && isLoadingProjects ? (
-                  <div className="flex items-center gap-2 px-0 py-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading...
-                  </div>
+                  <SidebarProjectsSkeleton count={3} />
                 ) : section.items.length === 0 && section.title === 'Projects' ? (
                   <div className="text-sm text-muted-foreground px-0 py-2">No projects yet</div>
                 ) : (

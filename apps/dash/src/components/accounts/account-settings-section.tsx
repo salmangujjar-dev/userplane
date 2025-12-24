@@ -7,6 +7,7 @@ import { Button } from '@workspace/ui/components/button';
 import { useAccount } from '@/hooks/use-account';
 import { useUpdateAccountName } from '@/queries/use-account-mutations';
 import { SectionError } from '@/components/shared/section-error';
+import { AccountSettingsSectionSkeleton } from '@/components/skeleton';
 
 export function AccountSettingsSection() {
   const { data: accountResult, isLoading, error, refetch } = useAccount();
@@ -32,6 +33,10 @@ export function AccountSettingsSection() {
 
   const hasChanges = name.trim() !== originalName && name.trim().length > 0;
 
+  if (isLoading) {
+    return <AccountSettingsSectionSkeleton />;
+  }
+
   if (error || (accountResult && !accountResult.success)) {
     return (
       <div className="w-full max-w-2xl">
@@ -46,23 +51,6 @@ export function AccountSettingsSection() {
           }
           onRetry={() => refetch()}
         />
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="w-full max-w-2xl">
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <div className="h-4 w-32 bg-muted animate-pulse rounded" />
-            <div className="h-10 w-full max-w-md bg-muted animate-pulse rounded" />
-          </div>
-          <div className="space-y-2">
-            <div className="h-4 w-32 bg-muted animate-pulse rounded" />
-            <div className="h-10 w-full max-w-md bg-muted animate-pulse rounded" />
-          </div>
-        </div>
       </div>
     );
   }

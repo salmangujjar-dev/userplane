@@ -37,6 +37,7 @@ import {
   useUpdateDomainPreferences,
 } from '@/queries/use-domain-mutations';
 import { SectionError } from '@/components/shared/section-error';
+import { DomainsSectionSkeleton } from '@/components/skeleton';
 
 interface DomainSettings {
   hideSensitiveFields: boolean;
@@ -308,6 +309,10 @@ export function DomainsSection() {
   const displayedDomains = useMemo(() => domains || [], [domains]);
   const totalPages = 1;
 
+  if (isLoading) {
+    return <DomainsSectionSkeleton />;
+  }
+
   if (error || (domainsResult && !domainsResult.success)) {
     return (
       <div>
@@ -327,22 +332,6 @@ export function DomainsSection() {
             }
             onRetry={() => refetch()}
           />
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Domains</h2>
-          <p className="text-sm text-muted-foreground">Configure domain and recording settings</p>
-        </div>
-        <div className="max-w-2xl space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-muted animate-pulse rounded-xl" />
-          ))}
         </div>
       </div>
     );
