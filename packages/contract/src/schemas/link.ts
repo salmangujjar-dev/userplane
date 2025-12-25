@@ -6,6 +6,7 @@ import {
   SortDirectionSchema,
   PaginationMetaSchema,
 } from './common';
+import { LINK_PAGINATION } from '../constants';
 
 /**
  * Link schemas
@@ -25,7 +26,13 @@ export const ListLinksQuerySchema = z.object({
   }),
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
-    per_page: z.coerce.number().int().min(1).max(20).optional().default(10),
+    per_page: z.coerce
+      .number()
+      .int()
+      .min(LINK_PAGINATION.MIN_PER_PAGE)
+      .max(LINK_PAGINATION.MAX_PER_PAGE)
+      .optional()
+      .default(LINK_PAGINATION.DEFAULT_PER_PAGE),
     created_by: z.array(z.string()).optional(),
     project_id: z.array(z.string()).optional(),
     domain_id: z.array(z.string()).optional(),

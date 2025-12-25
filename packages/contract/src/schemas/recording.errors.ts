@@ -15,10 +15,4 @@ export const RecordingErrors = {
   RECORDING_DELETE_FAILED: {
     message: 'Failed to delete recording',
   },
-  RECORDING_PAGE_INVALID: {
-    message: 'Page must be greater than 0',
-  },
-  RECORDING_PER_PAGE_INVALID: {
-    message: 'Per page must be between 1 and 20',
-  },
 } as const;

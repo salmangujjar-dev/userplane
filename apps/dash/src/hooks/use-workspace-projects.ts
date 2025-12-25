@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import { handleQueryResult } from '@/lib/errors';
+import { DEFAULT_PROJECTS_PER_PAGE } from '@/constants/pagination';
 
 export interface Project {
   projectId: string;
@@ -42,7 +43,7 @@ export interface Project {
  */
 export function useWorkspaceProjects(options?: { perPage?: number; enabled?: boolean }) {
   const workspaceId = useWorkspaceId();
-  const { perPage = 5, enabled = true } = options || {};
+  const { perPage = DEFAULT_PROJECTS_PER_PAGE, enabled = true } = options || {};
 
   return useQuery({
     queryKey: ['projects', workspaceId, perPage],

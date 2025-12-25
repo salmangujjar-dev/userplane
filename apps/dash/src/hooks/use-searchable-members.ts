@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useWorkspaceMembers } from './use-workspace-members';
 import { useWorkspaceSearch, type SearchMember } from './use-workspace-search';
 import { useDebouncedValue } from './use-debounced-value';
+import { DEFAULT_SEARCHABLE_MEMBERS_PER_PAGE } from '@/constants/pagination';
 
 /**
  * Hook that combines initial member list with server-side search
@@ -10,7 +11,7 @@ import { useDebouncedValue } from './use-debounced-value';
  */
 export function useSearchableMembers(searchQuery: string, options?: { perPage?: number }) {
   const debouncedQuery = useDebouncedValue(searchQuery, 300);
-  const { perPage = 5 } = options || {};
+  const { perPage = DEFAULT_SEARCHABLE_MEMBERS_PER_PAGE } = options || {};
 
   const { data: initialMembers, isLoading: isLoadingInitial } = useWorkspaceMembers({
     perPage,

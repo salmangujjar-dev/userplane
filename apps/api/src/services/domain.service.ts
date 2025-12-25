@@ -74,24 +74,10 @@ export class DomainService {
   /**
    * Get domains for a workspace with pagination
    * If no domains found, validates workspace existence (since workspace always has at least 1 domain)
-   * Throws DOMAIN_PAGE_INVALID or DOMAIN_PER_PAGE_INVALID if pagination params are invalid
+   * Pagination params are validated by the contract schema
    * Throws WORKSPACE_NOT_FOUND if workspace doesn't exist when no domains found
    */
   async getByWorkspaceIdPaginated(workspaceId: string, page: number = 1, perPage: number = 5) {
-    if (page < 1) {
-      throw new ORPCError('DOMAIN_PAGE_INVALID', {
-        status: 400,
-        message: 'Page must be greater than 0',
-      });
-    }
-
-    if (perPage < 1 || perPage > 10) {
-      throw new ORPCError('DOMAIN_PER_PAGE_INVALID', {
-        status: 400,
-        message: 'Per page must be between 1 and 10',
-      });
-    }
-
     const total = await this.deps.domainRepo.countByWorkspace(workspaceId);
 
     // If no domains exist, workspace doesn't exist (workspace always has at least 1 domain)

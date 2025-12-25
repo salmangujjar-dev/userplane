@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import { handleQueryResult } from '@/lib/errors';
+import { DEFAULT_MEMBERS_PER_PAGE } from '@/constants/pagination';
 
 export interface WorkspaceMember {
   workspaceMemberId: string;
@@ -45,7 +46,7 @@ export function useWorkspaceMembers(options?: {
   enabled?: boolean;
 }) {
   const workspaceId = useWorkspaceId();
-  const { includeMe = false, perPage = 5, enabled = true } = options || {};
+  const { includeMe = false, perPage = DEFAULT_MEMBERS_PER_PAGE, enabled = true } = options || {};
 
   return useQuery({
     queryKey: ['workspace-members', workspaceId, includeMe, perPage],

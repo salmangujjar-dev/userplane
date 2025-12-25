@@ -241,7 +241,8 @@ export class WorkspaceMemberService {
    * Get team members of a workspace with user details (paginated)
    * Returns members sorted by role (owner > admin > member)
    * If no members found, validates workspace existence (since workspace always has at least 1 member)
-   * Throws WORKSPACE_USER_ID_REQUIRED, WORKSPACE_MEMBER_INVALID_PAGINATION for invalid params
+   * Pagination params are validated by the contract schema
+   * Throws WORKSPACE_USER_ID_REQUIRED for invalid params
    * Throws WORKSPACE_NOT_FOUND if workspace doesn't exist when no members found
    */
   async getTeamMembers(workspaceId: string, page: number = 1, perPage: number = 5) {
@@ -249,20 +250,6 @@ export class WorkspaceMemberService {
       throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', {
         status: 400,
         message: 'Workspace ID is required',
-      });
-    }
-
-    if (page < 1) {
-      throw new ORPCError('WORKSPACE_MEMBER_INVALID_PAGINATION', {
-        status: 400,
-        message: 'Page must be greater than 0',
-      });
-    }
-
-    if (perPage < 1 || perPage > 10) {
-      throw new ORPCError('WORKSPACE_MEMBER_INVALID_PAGINATION', {
-        status: 400,
-        message: 'Per page must be between 1 and 10',
       });
     }
 

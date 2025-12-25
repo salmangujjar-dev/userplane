@@ -80,7 +80,6 @@ export const getAllWorkspaces = oc
   })
   .errors({
     WORKSPACE_USER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_USER_ID_REQUIRED,
-    WORKSPACE_INVALID_PAGINATION: WorkspaceErrors.WORKSPACE_INVALID_PAGINATION,
   })
   .input(ListWorkspacesQuerySchema)
   .output(ApiResponseSchema(WorkspacesListDataSchema));
@@ -181,7 +180,6 @@ export const getWorkspaceMembers = oc
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_USER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_USER_ID_REQUIRED,
-    WORKSPACE_MEMBER_INVALID_PAGINATION: WorkspaceErrors.WORKSPACE_MEMBER_INVALID_PAGINATION,
   })
   .input(WorkspaceTeamQuerySchema)
   .output(ApiResponseSchema(WorkspaceTeamDataSchema));

@@ -52,7 +52,7 @@ export function Sidebar() {
   const { data: accountResult } = useAccount();
   const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects();
   const { data: workspaceResult } = useWorkspace();
-  const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 50, minimal: true });
+  const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
   const { signOut } = useAuth();
 
   const account = accountResult?.success ? accountResult.data : null;

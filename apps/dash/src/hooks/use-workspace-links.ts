@@ -3,6 +3,7 @@ import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import type { LinkProviderType, LinkType } from '@workspace/contract';
 import { handleQueryResult } from '@/lib/errors';
+import { DEFAULT_LINKS_PER_PAGE } from '@/constants/pagination';
 
 export interface LinkDomain {
   domainId: string;
@@ -96,7 +97,12 @@ export function useWorkspaceLinks(options?: {
   enabled?: boolean;
 }) {
   const workspaceId = useWorkspaceId();
-  const { page = 1, perPage = 20, filters = {}, enabled = true } = options || {};
+  const {
+    page = 1,
+    perPage = DEFAULT_LINKS_PER_PAGE,
+    filters = {},
+    enabled = true,
+  } = options || {};
 
   return useQuery({
     queryKey: [

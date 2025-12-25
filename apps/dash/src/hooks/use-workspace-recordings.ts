@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import { handleQueryResult, type SafeResult } from '@/lib/errors';
+import { DEFAULT_RECORDINGS_PER_PAGE } from '@/constants/pagination';
 
 export interface RecordingCreator {
   workspaceMemberId: string;
@@ -75,7 +76,12 @@ export function useWorkspaceRecordings(options?: {
   enabled?: boolean;
 }) {
   const workspaceId = useWorkspaceId();
-  const { page = 1, perPage = 16, filters = {}, enabled = true } = options || {};
+  const {
+    page = 1,
+    perPage = DEFAULT_RECORDINGS_PER_PAGE,
+    filters = {},
+    enabled = true,
+  } = options || {};
 
   return useQuery({
     queryKey: [

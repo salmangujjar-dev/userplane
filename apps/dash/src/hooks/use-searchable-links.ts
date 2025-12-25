@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useWorkspaceLinks } from './use-workspace-links';
 import { useWorkspaceSearch, type SearchLink } from './use-workspace-search';
 import { useDebouncedValue } from './use-debounced-value';
+import { DEFAULT_SEARCHABLE_LINKS_PER_PAGE } from '@/constants/pagination';
 
 /**
  * Hook that combines initial link list with server-side search
@@ -10,7 +11,7 @@ import { useDebouncedValue } from './use-debounced-value';
  */
 export function useSearchableLinks(searchQuery: string, options?: { perPage?: number }) {
   const debouncedQuery = useDebouncedValue(searchQuery, 300);
-  const { perPage = 5 } = options || {};
+  const { perPage = DEFAULT_SEARCHABLE_LINKS_PER_PAGE } = options || {};
 
   const { data: initialLinks, isLoading: isLoadingInitial } = useWorkspaceLinks({
     perPage,

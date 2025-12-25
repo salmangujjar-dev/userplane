@@ -34,10 +34,6 @@ export const getLinks = oc
     description: 'Retrieve paginated list of recording links with optional filters',
     tags: ['Links'],
   })
-  .errors({
-    LINK_PAGE_INVALID: LinkErrors.LINK_PAGE_INVALID,
-    LINK_PER_PAGE_INVALID: LinkErrors.LINK_PER_PAGE_INVALID,
-  })
   .input(ListLinksQuerySchema)
   .output(ApiResponseSchema(LinksListDataSchema));
 

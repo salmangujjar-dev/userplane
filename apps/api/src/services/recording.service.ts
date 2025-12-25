@@ -75,7 +75,7 @@ export class RecordingService {
    * Supports filtering by status groups: AVAILABLE, STALE, UNAVAILABLE, PENDING
    * All filtering and sorting is performed at the database level
    * Default sort: created_at descending (latest first)
-   * Throws RECORDING_PAGE_INVALID or RECORDING_PER_PAGE_INVALID if pagination params are invalid
+   * Pagination params are validated by the contract schema
    */
   async getByWorkspaceIdPaginated(
     workspaceId: string,
@@ -84,21 +84,6 @@ export class RecordingService {
     filters?: RecordingFilters,
     sort?: RecordingSortOptions
   ): Promise<{ recordings: RecordingItem[]; total: number }> {
-    // Validate pagination params
-    if (page < 1) {
-      throw new ORPCError('RECORDING_PAGE_INVALID', {
-        status: 400,
-        message: 'Page must be greater than 0',
-      });
-    }
-
-    if (perPage < 1 || perPage > MAX_PER_PAGE) {
-      throw new ORPCError('RECORDING_PER_PAGE_INVALID', {
-        status: 400,
-        message: `Per page must be between 1 and ${MAX_PER_PAGE}`,
-      });
-    }
-
     // Get total count with filters applied at DB level (defaults to AVAILABLE)
     const total = await this.deps.recordingRepo.countByWorkspace(workspaceId, filters);
 

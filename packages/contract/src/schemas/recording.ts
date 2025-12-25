@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { UploadStatusSchema, SortDirectionSchema, PaginationMetaSchema } from './common';
-import { RECORDING_DURATION_LIMITS } from '../constants/session';
+import { RECORDING_DURATION_LIMITS, RECORDING_PAGINATION } from '../constants';
 
 /**
  * Recording schemas
@@ -20,7 +20,13 @@ export const ListRecordingsQuerySchema = z.object({
   }),
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
-    per_page: z.coerce.number().int().min(1).max(20).optional().default(10),
+    per_page: z.coerce
+      .number()
+      .int()
+      .min(RECORDING_PAGINATION.MIN_PER_PAGE)
+      .max(RECORDING_PAGINATION.MAX_PER_PAGE)
+      .optional()
+      .default(RECORDING_PAGINATION.DEFAULT_PER_PAGE),
     created_by: z.array(z.string()).optional(),
     project_id: z.array(z.string()).optional(),
     link_id: z.array(z.string()).optional(),
