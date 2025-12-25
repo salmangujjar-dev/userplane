@@ -51,8 +51,9 @@ export const recordings = pgTable(
     recordingNetworkLogsRef: text('recording_network_logs_ref'),
     recordingActionRef: text('recording_action_ref'),
 
-    // Recording metadata
-    recordingMeta: jsonb('recording_meta'),
+    // Recording metadata - split into system and custom
+    systemMeta: jsonb('system_meta'),
+    customMeta: jsonb('custom_meta'),
 
     // Recording metrics
     recordingDurationMs: integer('recording_duration')

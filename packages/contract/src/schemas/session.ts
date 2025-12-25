@@ -34,18 +34,9 @@ export const UploadFileSchema = z.object({
 });
 
 /**
- * System metadata
+ * System metadata - arbitrary key-value pairs
  */
-export const SessionSystemMetadataSchema = z.object({
-  date: z.string().min(1),
-  time: z.string().min(1),
-  browser: z.string().min(1),
-  os: z.string().min(1),
-  windowSize: z.object({
-    width: z.number().int().nonnegative(),
-    height: z.number().int().nonnegative(),
-  }),
-});
+export const SessionSystemMetadataSchema = z.record(z.string(), z.unknown());
 
 /**
  * Recording metadata

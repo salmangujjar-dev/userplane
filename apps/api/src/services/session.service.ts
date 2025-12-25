@@ -306,13 +306,10 @@ export class SessionService {
       recordingConsoleLogRef: filePaths.consoleLogPath,
       recordingNetworkLogsRef: filePaths.networkLogPath,
       recordingActionRef: filePaths.actionPath,
-      recordingMeta: {
-        version: 1,
-        systemMetadata: metadata.systemMetadata,
-        customMetadata: {
-          ...metadata.customMetadata,
-          sessionId: sessionPayload.sid,
-        },
+      systemMeta: metadata.systemMetadata,
+      customMeta: {
+        ...metadata.customMetadata,
+        sessionId: sessionPayload.sid,
       },
     });
 

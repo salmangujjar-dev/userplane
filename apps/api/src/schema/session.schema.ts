@@ -36,18 +36,9 @@ export const uploadFileSchema = z.object({
 });
 
 /**
- * System metadata captured by client during recording
+ * System metadata - arbitrary key-value pairs captured by client during recording
  */
-export const systemMetadataSchema = z.object({
-  date: z.string().min(1, 'Date is required'),
-  time: z.string().min(1, 'Time is required'),
-  browser: z.string().min(1, 'Browser info is required'),
-  os: z.string().min(1, 'OS info is required'),
-  windowSize: z.object({
-    width: z.number().int().nonnegative(),
-    height: z.number().int().nonnegative(),
-  }),
-});
+export const systemMetadataSchema = z.record(z.string(), z.unknown());
 
 /**
  * Custom metadata - arbitrary key-value pairs from client
@@ -57,7 +48,7 @@ export const customMetadataSchema = z.record(z.string(), z.unknown()).optional()
 /**
  * Recording metadata from client
  */
-export const recordingMetaSchema = z.object({
+export const recordingMetaInputSchema = z.object({
   systemMetadata: systemMetadataSchema,
   customMetadata: customMetadataSchema,
 });
@@ -81,7 +72,7 @@ export const initUploadSchema = z.object({
     .array(uploadFileSchema)
     .min(1, 'At least one file is required')
     .max(5, 'Maximum 5 files allowed'),
-  metadata: recordingMetaSchema,
+  metadata: recordingMetaInputSchema,
 });
 
 /**
@@ -99,7 +90,7 @@ export type UploadFile = z.infer<typeof uploadFileSchema>;
 export type InitUploadBody = z.infer<typeof initUploadSchema>;
 export type CompleteUploadBody = z.infer<typeof completeUploadSchema>;
 export type SystemMetadata = z.infer<typeof systemMetadataSchema>;
-export type RecordingMetaInput = z.infer<typeof recordingMetaSchema>;
+export type RecordingMetaInput = z.infer<typeof recordingMetaInputSchema>;
 
 /**
  * Terminal states - once in these states, no further transitions allowed

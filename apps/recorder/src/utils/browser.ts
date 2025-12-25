@@ -152,6 +152,28 @@ export function captureSystemMetadata(): SystemMetadata {
 }
 
 /**
+ * Convert system metadata to pretty format for storage/display
+ * Flattens structure and formats keys with spaces and readable values
+ */
+export function prettySystemMetadata(
+  metadata: SystemMetadata
+): Record<string, string | number | null> {
+  return {
+    Date: metadata.date,
+    Time: metadata.time,
+    Browser: metadata.browser,
+    'Browser Version': metadata.browserVersion,
+    OS: metadata.os,
+    'OS Version': metadata.osVersion,
+    'Window Size': `${metadata.windowSize.width} x ${metadata.windowSize.height}`,
+    'Screen Size': `${metadata.screenSize.width} x ${metadata.screenSize.height}`,
+    'Device Pixel Ratio': metadata.devicePixelRatio,
+    Language: metadata.language,
+    Timezone: metadata.timezone,
+  };
+}
+
+/**
  * Check if the browser supports screen recording
  */
 export function isScreenRecordingSupported(): boolean {

@@ -7,7 +7,7 @@ import { getRecorderClient } from '@/client/api';
 import type { SessionTokenPayload, RecordingPreferences } from '@/types/session-preferences';
 import { toRecordingPreferences } from '@/types/session-preferences';
 import { uploadToObjectStore } from '@/utils/upload';
-import { captureSystemMetadata, type SystemMetadata } from '@/utils/browser';
+import { captureSystemMetadata, prettySystemMetadata, type SystemMetadata } from '@/utils/browser';
 import { decodeJwtPayload } from '@/utils/jwt';
 import {
   DEFAULT_MAX_RECORDING_DURATION_MS,
@@ -167,13 +167,7 @@ export class RecordingSession {
         recording_duration: recordingDurationMs || 0,
         files,
         metadata: {
-          systemMetadata: {
-            date: systemMetadata.date,
-            time: systemMetadata.time,
-            browser: systemMetadata.browser,
-            os: systemMetadata.os,
-            windowSize: systemMetadata.windowSize,
-          },
+          systemMetadata: prettySystemMetadata(systemMetadata),
           customMetadata: {},
         },
       },

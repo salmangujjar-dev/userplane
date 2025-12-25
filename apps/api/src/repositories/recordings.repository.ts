@@ -17,13 +17,13 @@ import {
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
 import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
 import {
-  recordingMetaSchema,
-  type RecordingMeta,
-  type RecordingSystemMetadata,
-  type RecordingCustomMetadata,
+  systemMetaSchema,
+  customMetaSchema,
+  type SystemMeta,
+  type CustomMeta,
 } from '@/api/schema/recording-meta.schema';
 
-export type { RecordingMeta, RecordingSystemMetadata, RecordingCustomMetadata };
+export type { SystemMeta, CustomMeta };
 
 /**
  * Shape of recording list item with joined data
@@ -52,7 +52,8 @@ export interface RecordingDetailRow {
   recordingConsoleLogRef: string | null;
   recordingNetworkLogsRef: string | null;
   recordingActionRef: string | null;
-  recordingMeta: RecordingMeta | null;
+  systemMeta: SystemMeta | null;
+  customMeta: CustomMeta | null;
   recordingDurationMs: number;
   createdAt: Date;
   updatedAt: Date;
@@ -93,7 +94,8 @@ export interface CreateRecordingInput {
   recordingConsoleLogRef: string | null;
   recordingNetworkLogsRef: string | null;
   recordingActionRef: string | null;
-  recordingMeta?: RecordingMeta | null;
+  systemMeta?: SystemMeta | null;
+  customMeta?: CustomMeta | null;
 }
 
 /**
@@ -111,26 +113,34 @@ export class RecordingRepository {
   constructor(private db: DbClient) {}
 
   /**
-   * Transform and validate recording metadata from database
-   * Uses Zod for version-aware validation and type safety
-   *
-   * @param raw - Raw metadata from database (unknown type from jsonb)
-   * @returns Typed and validated RecordingMeta or null
+   * Transform and validate system metadata from database
    */
-  private transformRecordingMeta(raw: unknown): RecordingMeta | null {
+  private transformSystemMeta(raw: unknown): SystemMeta | null {
     if (!raw) return null;
-
-    // Use Zod to parse and validate the metadata
-    const result = recordingMetaSchema.safeParse(raw);
-
+    const result = systemMetaSchema.safeParse(raw);
     if (!result.success) {
-      console.warn('[RecordingRepository] Invalid recordingMeta', {
+      console.warn('[RecordingRepository] Invalid systemMeta', {
         errors: result.error.errors,
         raw,
       });
       return null;
     }
+    return result.data;
+  }
 
+  /**
+   * Transform and validate custom metadata from database
+   */
+  private transformCustomMeta(raw: unknown): CustomMeta | null {
+    if (!raw) return null;
+    const result = customMetaSchema.safeParse(raw);
+    if (!result.success) {
+      console.warn('[RecordingRepository] Invalid customMeta', {
+        errors: result.error.errors,
+        raw,
+      });
+      return null;
+    }
     return result.data;
   }
 
@@ -291,7 +301,8 @@ export class RecordingRepository {
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
         recordingActionRef: recordings.recordingActionRef,
-        recordingMeta: recordings.recordingMeta,
+        systemMeta: recordings.systemMeta,
+        customMeta: recordings.customMeta,
         recordingDurationMs: recordings.recordingDurationMs,
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
@@ -332,7 +343,8 @@ export class RecordingRepository {
 
     return {
       ...result,
-      recordingMeta: this.transformRecordingMeta(result.recordingMeta),
+      systemMeta: this.transformSystemMeta(result.systemMeta),
+      customMeta: this.transformCustomMeta(result.customMeta),
     };
   }
 
@@ -354,7 +366,8 @@ export class RecordingRepository {
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
         recordingActionRef: recordings.recordingActionRef,
-        recordingMeta: recordings.recordingMeta,
+        systemMeta: recordings.systemMeta,
+        customMeta: recordings.customMeta,
         recordingDurationMs: recordings.recordingDurationMs,
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
@@ -389,7 +402,8 @@ export class RecordingRepository {
 
     return {
       ...result,
-      recordingMeta: this.transformRecordingMeta(result.recordingMeta),
+      systemMeta: this.transformSystemMeta(result.systemMeta),
+      customMeta: this.transformCustomMeta(result.customMeta),
     };
   }
 
@@ -451,7 +465,8 @@ export class RecordingRepository {
         recordingConsoleLogRef: data.recordingConsoleLogRef,
         recordingNetworkLogsRef: data.recordingNetworkLogsRef,
         recordingActionRef: data.recordingActionRef,
-        recordingMeta: data.recordingMeta,
+        systemMeta: data.systemMeta,
+        customMeta: data.customMeta,
         uploadStatus: 'pending',
         isDeleted: true,
       })
@@ -494,7 +509,8 @@ export class RecordingRepository {
     recordingConsoleLogRef: string | null;
     recordingNetworkLogsRef: string | null;
     recordingActionRef: string | null;
-    recordingMeta: RecordingMeta | null;
+    systemMeta: SystemMeta | null;
+    customMeta: CustomMeta | null;
   } | null> {
     const [result] = await this.db
       .select({
@@ -507,7 +523,8 @@ export class RecordingRepository {
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
         recordingActionRef: recordings.recordingActionRef,
-        recordingMeta: recordings.recordingMeta,
+        systemMeta: recordings.systemMeta,
+        customMeta: recordings.customMeta,
       })
       .from(recordings)
       .where(and(eq(recordings.recordingId, recordingId), eq(recordings.isDeleted, false)))
@@ -517,7 +534,8 @@ export class RecordingRepository {
 
     return {
       ...result,
-      recordingMeta: this.transformRecordingMeta(result.recordingMeta),
+      systemMeta: this.transformSystemMeta(result.systemMeta),
+      customMeta: this.transformCustomMeta(result.customMeta),
     };
   }
 
@@ -534,7 +552,8 @@ export class RecordingRepository {
     recordingConsoleLogRef: string | null;
     recordingNetworkLogsRef: string | null;
     recordingActionRef: string | null;
-    recordingMeta: RecordingMeta | null;
+    systemMeta: SystemMeta | null;
+    customMeta: CustomMeta | null;
   } | null> {
     const [result] = await this.db
       .select({
@@ -547,7 +566,8 @@ export class RecordingRepository {
         recordingConsoleLogRef: recordings.recordingConsoleLogRef,
         recordingNetworkLogsRef: recordings.recordingNetworkLogsRef,
         recordingActionRef: recordings.recordingActionRef,
-        recordingMeta: recordings.recordingMeta,
+        systemMeta: recordings.systemMeta,
+        customMeta: recordings.customMeta,
       })
       .from(recordings)
       .where(and(eq(recordings.recordingId, recordingId), eq(recordings.uploadStatus, 'pending')))
@@ -557,7 +577,8 @@ export class RecordingRepository {
 
     return {
       ...result,
-      recordingMeta: this.transformRecordingMeta(result.recordingMeta),
+      systemMeta: this.transformSystemMeta(result.systemMeta),
+      customMeta: this.transformCustomMeta(result.customMeta),
     };
   }
 
