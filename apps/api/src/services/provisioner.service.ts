@@ -8,7 +8,7 @@ import { WorkspaceService } from '@/api/services/workspace.service';
 import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { DomainService } from '@/api/services/domain.service';
-import { deriveWorkspaceNameFromUser } from '@/api/lib/workspace';
+import { deriveWorkspaceName } from '@/api/lib/workspace';
 import { ORPCError } from '@orpc/server';
 
 export interface ProvisionerServiceDeps {
@@ -37,7 +37,7 @@ export class ProvisionerService {
     const { url, userId, userName } = params;
 
     // Derive workspace name from user's name
-    const workspaceName = deriveWorkspaceNameFromUser(userName);
+    const workspaceName = deriveWorkspaceName(url, userName);
 
     const workspace = await this.deps.db.transaction(async (tx) => {
       // Create workspace with default recording preferences
