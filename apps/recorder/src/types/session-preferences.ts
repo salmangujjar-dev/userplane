@@ -7,6 +7,7 @@ import {
   DEFAULT_MAX_RECORDING_DURATION_MS,
   DEFAULT_PRIMARY_COLOR,
   DEFAULT_COMPANY_NAME,
+  DEFAULT_RECORDING_HEADER,
 } from '@/constants';
 import type { z } from 'zod';
 import {
@@ -51,7 +52,7 @@ export const DEFAULT_RECORDING_PREFERENCES = {
   captureNetworkLog: true,
   companyName: DEFAULT_COMPANY_NAME,
   companyLogoUrl: null, // Will use /logo-dark.svg
-  headerText: 'Get ready to record',
+  headerText: DEFAULT_RECORDING_HEADER,
   footnoteText: null,
   primaryColor: DEFAULT_PRIMARY_COLOR,
   maxDurationMs: DEFAULT_MAX_RECORDING_DURATION_MS,

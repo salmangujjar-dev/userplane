@@ -4,6 +4,7 @@
  */
 
 import { generateWorkspaceId, generateRecordingId, generateInviteToken } from '@/api/lib/id';
+import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
@@ -32,6 +33,7 @@ export class WorkspaceService {
   /**
    * Create a new workspace
    * Generates unique recording slug internally if not provided
+   * Sets default recording preferences from recorder app configuration
    * Throws WORKSPACE_NAME_REQUIRED if workspace name is missing
    */
   async create(params: CreateWorkspaceParams, options?: { tx?: Transaction }) {
@@ -48,6 +50,9 @@ export class WorkspaceService {
     // Generate workspace invite token
     const inviteToken = generateInviteToken();
 
+    // Get default recording preferences
+    const defaultPrefs = getDefaultRecordingPreferences();
+
     return this.deps.workspaceRepo.create(
       {
         workspaceId: generateWorkspaceId(),
@@ -55,6 +60,11 @@ export class WorkspaceService {
         recordingSlug,
         workspacePlan: params.workspacePlan,
         workspaceInviteToken: inviteToken,
+        recordingCompanyName: defaultPrefs.recordingCompanyName,
+        recordingHeader: defaultPrefs.recordingHeader,
+        recordingFootnote: defaultPrefs.recordingFootnote,
+        recordingPrimaryColor: defaultPrefs.recordingPrimaryColor,
+        recordingMaxDurationMs: defaultPrefs.recordingMaxDurationMs,
       },
       options
     );

@@ -25,6 +25,11 @@ export class WorkspaceRepository {
         recordingSlug: data.recordingSlug,
         workspacePlan: data.workspacePlan,
         workspaceInviteToken: data.workspaceInviteToken,
+        recordingCompanyName: data.recordingCompanyName,
+        recordingHeader: data.recordingHeader,
+        recordingFootnote: data.recordingFootnote,
+        recordingPrimaryColor: data.recordingPrimaryColor,
+        recordingMaxDurationMs: data.recordingMaxDurationMs,
         isDeleted: false,
       })
       .returning();
