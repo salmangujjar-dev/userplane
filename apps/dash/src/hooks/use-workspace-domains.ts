@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import { handleQueryResult } from '@/lib/errors';
+import { DEFAULT_DOMAINS_PER_PAGE } from '@/constants/pagination';
 
 export interface WorkspaceDomain {
   domainId: string;
@@ -40,7 +41,7 @@ export interface WorkspaceDomain {
  */
 export function useWorkspaceDomains(options?: { perPage?: number; enabled?: boolean }) {
   const workspaceId = useWorkspaceId();
-  const { perPage = 10, enabled = true } = options || {};
+  const { perPage = DEFAULT_DOMAINS_PER_PAGE, enabled = true } = options || {};
 
   return useQuery({
     queryKey: ['domains', workspaceId, perPage],

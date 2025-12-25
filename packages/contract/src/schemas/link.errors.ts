@@ -36,12 +36,6 @@ export const LinkErrors = {
   LINK_CREATE_FAILED: {
     message: 'Failed to create link',
   },
-  LINK_PAGE_INVALID: {
-    message: 'Page must be greater than 0',
-  },
-  LINK_PER_PAGE_INVALID: {
-    message: 'Per page must be between 1 and 20',
-  },
   LINK_WORKSPACE_MISMATCH: {
     message: 'Link does not belong to this workspace',
   },

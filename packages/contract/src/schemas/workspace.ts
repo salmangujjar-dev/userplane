@@ -2,6 +2,12 @@ import { z } from 'zod';
 import { WorkspaceRoleSchema, DomainStatusSchema, PaginationMetaSchema } from './common';
 import { PLAN_IDS, PLAN_NAME_VALUES } from '@workspace/pricing';
 import { SendWorkspaceInvitesSchema } from './invite';
+import {
+  WORKSPACE_PAGINATION,
+  WORKSPACE_MEMBERS_PAGINATION,
+  DOMAIN_PAGINATION,
+  SEARCH_PAGINATION,
+} from '../constants';
 
 /**
  * Workspace schemas
@@ -62,6 +68,13 @@ export const WorkspaceItemSchema = z.object({
 export const ListWorkspacesQuerySchema = z.object({
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
+    per_page: z.coerce
+      .number()
+      .int()
+      .min(WORKSPACE_PAGINATION.MIN_PER_PAGE)
+      .max(WORKSPACE_PAGINATION.MAX_PER_PAGE)
+      .optional()
+      .default(WORKSPACE_PAGINATION.DEFAULT_PER_PAGE),
     minimal: z.coerce.boolean().optional().default(false),
     include_notification_preference: z.coerce.boolean().optional().default(false),
     include_workspace_membership: z.coerce.boolean().optional().default(false),
@@ -200,7 +213,13 @@ export const WorkspaceTeamQuerySchema = z.object({
   }),
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
-    per_page: z.coerce.number().int().min(1).max(10).optional().default(5),
+    per_page: z.coerce
+      .number()
+      .int()
+      .min(WORKSPACE_MEMBERS_PAGINATION.MIN_PER_PAGE)
+      .max(WORKSPACE_MEMBERS_PAGINATION.MAX_PER_PAGE)
+      .optional()
+      .default(WORKSPACE_MEMBERS_PAGINATION.DEFAULT_PER_PAGE),
     include_me: z.coerce.boolean().optional().default(false),
   }),
 });
@@ -331,7 +350,13 @@ export const WorkspaceDomainsQuerySchema = z.object({
   }),
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
-    per_page: z.coerce.number().int().min(1).max(10).optional().default(5),
+    per_page: z.coerce
+      .number()
+      .int()
+      .min(DOMAIN_PAGINATION.MIN_PER_PAGE)
+      .max(DOMAIN_PAGINATION.MAX_PER_PAGE)
+      .optional()
+      .default(DOMAIN_PAGINATION.DEFAULT_PER_PAGE),
   }),
 });
 
@@ -545,7 +570,13 @@ export const WorkspaceSearchQuerySchema = z.object({
   query: z.object({
     q: z.string().min(1).max(100),
     type: z.enum(['members', 'projects', 'domains', 'links']),
-    limit: z.coerce.number().int().min(1).max(20).optional().default(5),
+    limit: z.coerce
+      .number()
+      .int()
+      .min(SEARCH_PAGINATION.MIN_LIMIT)
+      .max(SEARCH_PAGINATION.MAX_LIMIT)
+      .optional()
+      .default(SEARCH_PAGINATION.DEFAULT_LIMIT),
   }),
 });
 

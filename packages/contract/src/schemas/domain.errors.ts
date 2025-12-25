@@ -9,12 +9,6 @@ export const DomainErrors = {
   DOMAIN_ALREADY_EXISTS: {
     message: 'This domain has already been added to the workspace',
   },
-  DOMAIN_PAGE_INVALID: {
-    message: 'Page must be greater than 0',
-  },
-  DOMAIN_PER_PAGE_INVALID: {
-    message: 'Per page must be between 1 and 10',
-  },
   DOMAIN_NOT_FOUND: {
     message: 'Domain not found',
   },

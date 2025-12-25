@@ -15,12 +15,6 @@ export const ProjectErrors = {
   PROJECT_DEFAULT_NOT_FOUND: {
     message: 'No default project found for workspace',
   },
-  PROJECT_PAGE_INVALID: {
-    message: 'Page must be greater than 0',
-  },
-  PROJECT_PER_PAGE_INVALID: {
-    message: 'Per page must be between 1 and 10',
-  },
   PROJECT_WORKSPACE_MISMATCH: {
     message: 'Project does not belong to this workspace',
   },

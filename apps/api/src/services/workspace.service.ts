@@ -180,7 +180,8 @@ export class WorkspaceService {
    * Returns workspaces where the user is a member
    * Optionally includes notification preferences and workspace membership info
    * Supports minimal mode which returns only ID and name for efficient loading
-   * Throws WORKSPACE_USER_ID_REQUIRED, WORKSPACE_INVALID_PAGINATION if validation fails
+   * Pagination params are validated by the contract schema
+   * Throws WORKSPACE_USER_ID_REQUIRED if validation fails
    */
   async getByUserIdPaginated(
     userId: string,
@@ -196,20 +197,6 @@ export class WorkspaceService {
       throw new ORPCError('WORKSPACE_USER_ID_REQUIRED', {
         status: 400,
         message: 'User ID is required',
-      });
-    }
-
-    if (page < 1) {
-      throw new ORPCError('WORKSPACE_INVALID_PAGINATION', {
-        status: 400,
-        message: 'Page must be greater than 0',
-      });
-    }
-
-    if (perPage < 1 || perPage > 50) {
-      throw new ORPCError('WORKSPACE_INVALID_PAGINATION', {
-        status: 400,
-        message: 'Per page must be between 1 and 50',
       });
     }
 

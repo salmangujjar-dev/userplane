@@ -30,10 +30,6 @@ export const getRecordings = oc
     description: 'Retrieve paginated list of recordings with optional filters',
     tags: ['Recordings'],
   })
-  .errors({
-    RECORDING_PAGE_INVALID: RecordingErrors.RECORDING_PAGE_INVALID,
-    RECORDING_PER_PAGE_INVALID: RecordingErrors.RECORDING_PER_PAGE_INVALID,
-  })
   .input(ListRecordingsQuerySchema)
   .output(ApiResponseSchema(RecordingsListDataSchema));
 

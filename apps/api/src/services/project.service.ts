@@ -117,7 +117,7 @@ export class ProjectService {
   /**
    * Get projects in workspace with pagination
    * If no projects found, validates workspace existence (since workspace always has at least 1 project)
-   * Throws PROJECT_PAGE_INVALID or PROJECT_PER_PAGE_INVALID if pagination params are invalid
+   * Pagination params are validated by the contract schema
    * Throws WORKSPACE_NOT_FOUND if workspace doesn't exist when no projects found
    */
   async getProjectsByWorkspacePaginated(
@@ -125,20 +125,6 @@ export class ProjectService {
     page: number = 1,
     perPage: number = 5
   ) {
-    if (page < 1) {
-      throw new ORPCError('PROJECT_PAGE_INVALID', {
-        status: 400,
-        message: 'Page must be greater than 0',
-      });
-    }
-
-    if (perPage < 1 || perPage > 10) {
-      throw new ORPCError('PROJECT_PER_PAGE_INVALID', {
-        status: 400,
-        message: 'Per page must be between 1 and 10',
-      });
-    }
-
     const total = await this.deps.projectRepo.countByWorkspace(workspaceId);
 
     // If no projects exist, workspace doesn't exist (workspace always has at least 1 project)

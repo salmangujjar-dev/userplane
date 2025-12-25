@@ -18,9 +18,6 @@ export const WorkspaceErrors = {
   WORKSPACE_USER_ID_REQUIRED: {
     message: 'User ID is required',
   },
-  WORKSPACE_INVALID_PAGINATION: {
-    message: 'Invalid pagination parameters',
-  },
   WORKSPACE_SEARCH_TERM_REQUIRED: {
     message: 'Search term is required',
   },
@@ -68,8 +65,5 @@ export const WorkspaceErrors = {
   WORKSPACE_MEMBER_LAST_OWNER_LEAVE: {
     message:
       'Cannot leave workspace as the last owner. Transfer ownership or delete the workspace first.',
-  },
-  WORKSPACE_MEMBER_INVALID_PAGINATION: {
-    message: 'Invalid pagination parameters',
   },
 } as const;

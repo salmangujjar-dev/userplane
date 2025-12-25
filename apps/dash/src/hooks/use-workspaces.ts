@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { handleQueryResult } from '@/lib/errors';
+import { DEFAULT_WORKSPACES_PER_PAGE } from '@/constants/pagination';
 
 /**
  * Hook to fetch all workspaces for the current user
@@ -36,7 +37,12 @@ export function useWorkspaces(options?: {
   minimal?: boolean;
   enabled?: boolean;
 }) {
-  const { page = 1, perPage = 100, minimal = false, enabled = true } = options || {};
+  const {
+    page = 1,
+    perPage = DEFAULT_WORKSPACES_PER_PAGE,
+    minimal = false,
+    enabled = true,
+  } = options || {};
 
   return useQuery({
     queryKey: ['workspaces', page, perPage, minimal],
@@ -44,6 +50,7 @@ export function useWorkspaces(options?: {
       const [error, response] = await apiClient.workspace.list({
         query: {
           page,
+          per_page: perPage,
           minimal,
           include_notification_preference: !minimal,
           include_workspace_membership: !minimal,

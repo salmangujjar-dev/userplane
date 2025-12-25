@@ -34,10 +34,6 @@ export const getProjects = oc
     description: 'Retrieve paginated list of projects',
     tags: ['Projects'],
   })
-  .errors({
-    PROJECT_PAGE_INVALID: ProjectErrors.PROJECT_PAGE_INVALID,
-    PROJECT_PER_PAGE_INVALID: ProjectErrors.PROJECT_PER_PAGE_INVALID,
-  })
   .input(ListProjectsQuerySchema)
   .output(ApiResponseSchema(ProjectsListDataSchema));
 
