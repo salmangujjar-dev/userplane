@@ -26,19 +26,8 @@ interface InfoPanelProps {
       };
       workspaceId: string;
       status: string;
-      recordingMeta: {
-        systemMetadata: {
-          date: string;
-          time: string;
-          browser: string;
-          os: string;
-          windowSize: {
-            width: number;
-            height: number;
-          };
-        };
-        customMetadata?: Record<string, unknown>;
-      } | null;
+      systemMeta: Record<string, unknown> | null;
+      customMeta?: Record<string, unknown> | null;
       createdAt: Date | string;
       updatedAt: Date | string;
     };
@@ -47,7 +36,7 @@ interface InfoPanelProps {
 
 export function InfoPanel({ recording }: InfoPanelProps) {
   const { meta, recordingDurationMs } = recording;
-  const systemMeta = meta.recordingMeta?.systemMetadata;
+  const systemMeta = meta.systemMeta;
 
   const formatDuration = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -56,64 +45,51 @@ export function InfoPanel({ recording }: InfoPanelProps) {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const formatValue = (value: unknown): string => {
+    if (typeof value === 'number') {
+      return Number.isInteger(value) ? String(value) : value.toFixed(2);
+    }
+    if (typeof value === 'object' && value !== null) {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
   return (
     <div className="h-full overflow-y-auto p-6 space-y-6">
       {/* System Metadata */}
-      {systemMeta && (
+      {systemMeta && Object.keys(systemMeta).length > 0 && (
         <div>
           <h3 className="text-sm font-semibold mb-4">System Metadata</h3>
           <div className="space-y-3">
-            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-              <span className="text-muted-foreground">Date</span>
-              <span className="font-mono">{systemMeta.date}</span>
-            </div>
-            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-              <span className="text-muted-foreground">Time</span>
-              <span className="font-mono">{systemMeta.time}</span>
-            </div>
-            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-              <span className="text-muted-foreground">Browser</span>
-              <span className="font-mono">{systemMeta.browser}</span>
-            </div>
-            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-              <span className="text-muted-foreground">OS</span>
-              <span className="font-mono">{systemMeta.os}</span>
-            </div>
-            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-              <span className="text-muted-foreground">Window Size</span>
-              <span className="font-mono">
-                {systemMeta.windowSize.width} × {systemMeta.windowSize.height}
-              </span>
-            </div>
+            {Object.entries(systemMeta).map(([key, value]) => (
+              <div key={key} className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+                <span className="text-muted-foreground">{key}</span>
+                <span className="font-mono">{formatValue(value)}</span>
+              </div>
+            ))}
             <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
               <span className="text-muted-foreground">Duration</span>
               <span className="font-mono">{formatDuration(recordingDurationMs)}</span>
-            </div>
-            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-              <span className="text-muted-foreground">Status</span>
-              <span className="font-mono">{meta.status}</span>
             </div>
           </div>
         </div>
       )}
 
       {/* Custom Metadata */}
-      {meta.recordingMeta?.customMetadata &&
-        Object.keys(meta.recordingMeta.customMetadata).length > 0 && (
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-semibold mb-4">Custom Metadata</h3>
-            <div className="space-y-3">
-              {Object.entries(meta.recordingMeta.customMetadata).map(([key, value]) => (
-                <div key={key} className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-                  <span className="text-muted-foreground">{key}</span>
-                  <span className="font-mono">
-                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                  </span>
-                </div>
-              ))}
-            </div>
+      {meta.customMeta && Object.keys(meta.customMeta).length > 0 && (
+        <div className="border-t pt-6">
+          <h3 className="text-sm font-semibold mb-4">Custom Metadata</h3>
+          <div className="space-y-3">
+            {Object.entries(meta.customMeta).map(([key, value]) => (
+              <div key={key} className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+                <span className="text-muted-foreground">{key}</span>
+                <span className="font-mono">{formatValue(value)}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
       {/* Link Metadata */}
       <div className="border-t pt-6">

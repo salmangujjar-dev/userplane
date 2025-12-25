@@ -36,26 +36,14 @@ export const ListRecordingsQuerySchema = z.object({
 });
 
 /**
- * System metadata
+ * System metadata - arbitrary key-value pairs
  */
-export const SystemMetadataSchema = z.object({
-  date: z.string(),
-  time: z.string(),
-  browser: z.string(),
-  os: z.string(),
-  windowSize: z.object({
-    width: z.number().int().nonnegative(),
-    height: z.number().int().nonnegative(),
-  }),
-});
+export const SystemMetaSchema = z.record(z.string(), z.unknown());
 
 /**
- * Recording metadata
+ * Custom metadata - arbitrary key-value pairs
  */
-export const RecordingMetadataSchema = z.object({
-  systemMetadata: SystemMetadataSchema,
-  customMetadata: z.record(z.string(), z.unknown()).optional(),
-});
+export const CustomMetaSchema = z.record(z.string(), z.unknown());
 
 /**
  * Recording creator information
@@ -144,7 +132,8 @@ export const RecordingDetailMetaSchema = z.object({
   domain: RecordingDomainRefSchema,
   workspaceId: z.string(),
   status: UploadStatusSchema,
-  recordingMeta: RecordingMetadataSchema.nullable(),
+  systemMeta: SystemMetaSchema.nullable(),
+  customMeta: CustomMetaSchema.nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

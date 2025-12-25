@@ -30,19 +30,8 @@ interface RecordingLogReplayPanelProps {
       };
       workspaceId: string;
       status: string;
-      recordingMeta: {
-        systemMetadata: {
-          date: string;
-          time: string;
-          browser: string;
-          os: string;
-          windowSize: {
-            width: number;
-            height: number;
-          };
-        };
-        customMetadata?: Record<string, unknown>;
-      } | null;
+      systemMeta: Record<string, unknown> | null;
+      customMeta?: Record<string, unknown> | null;
       createdAt: Date | string;
       updatedAt: Date | string;
     };
