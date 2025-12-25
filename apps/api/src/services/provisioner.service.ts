@@ -40,7 +40,8 @@ export class ProvisionerService {
     const workspaceName = deriveWorkspaceNameFromUser(userName);
 
     const workspace = await this.deps.db.transaction(async (tx) => {
-      // Create workspace - recording slug is generated internally
+      // Create workspace with default recording preferences
+      // Recording slug and defaults (company name, header, color, etc.) are set internally
       const createdWorkspace = await this.deps.workspaceService.create(
         {
           workspaceName,

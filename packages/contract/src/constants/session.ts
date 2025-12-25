@@ -14,6 +14,21 @@ export const RECORDING_DURATION_LIMITS = {
 } as const;
 
 /**
+ * Default UI preferences for recordings
+ * Used by recorder app and API when creating workspaces
+ */
+export const RECORDING_DEFAULTS = {
+  /** Default company name displayed in recordings */
+  COMPANY_NAME: 'Userplane',
+  /** Default header text shown before recording starts */
+  HEADER: 'Get ready to record',
+  /** Default footnote text (null means no footnote) */
+  FOOTNOTE: null,
+  /** Default primary color for recording UI (black) */
+  PRIMARY_COLOR: '#000000',
+} as const;
+
+/**
  * File size limits in bytes
  */
 export const FILE_SIZE_LIMITS = {

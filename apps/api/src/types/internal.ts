@@ -117,6 +117,11 @@ export interface CreateWorkspaceInput {
   recordingSlug: string;
   workspacePlan: WorkspacePlan;
   workspaceInviteToken: string;
+  recordingCompanyName?: string;
+  recordingHeader?: string;
+  recordingFootnote?: string | null;
+  recordingPrimaryColor?: string;
+  recordingMaxDurationMs?: number;
 }
 
 /**

@@ -3,15 +3,20 @@
  * Colors, timings, and display defaults
  */
 
+import { RECORDING_DEFAULTS } from '@workspace/contract';
+
 // ===========================================
-// Colors
+// Colors and Branding (from contract)
 // ===========================================
 
 /** Default primary color (black) */
-export const DEFAULT_PRIMARY_COLOR = '#000000';
+export const DEFAULT_PRIMARY_COLOR = RECORDING_DEFAULTS.PRIMARY_COLOR;
 
 /** Default branding company name */
-export const DEFAULT_COMPANY_NAME = 'Userplane';
+export const DEFAULT_COMPANY_NAME = RECORDING_DEFAULTS.COMPANY_NAME;
+
+/** Default header text shown before recording starts */
+export const DEFAULT_RECORDING_HEADER = RECORDING_DEFAULTS.HEADER;
 
 // ===========================================
 // Countdown
