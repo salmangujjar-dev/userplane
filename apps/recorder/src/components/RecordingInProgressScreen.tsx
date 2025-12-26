@@ -3,7 +3,7 @@
  * Shows live preview and recording indicator
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import {
@@ -31,6 +31,7 @@ export default function RecordingInProgressScreen({
   onStopRecording,
 }: RecordingInProgressScreenProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isLocalProcessing, setIsLocalProcessing] = useState(false);
 
   useEffect(() => {
     console.log('[RecordingInProgress] Setting up video preview');
@@ -51,7 +52,28 @@ export default function RecordingInProgressScreen({
     };
   }, [mediaStream]);
 
+  // Reset local processing state when parent processing state changes
+  // This handles cases where the parent fails to update isProcessing
+  useEffect(() => {
+    if (isProcessing) {
+      // Parent confirmed processing started, keep local state in sync
+      setIsLocalProcessing(true);
+    } else {
+      // Parent finished processing, reset local state
+      setIsLocalProcessing(false);
+    }
+  }, [isProcessing]);
+
   const handleStopRecording = () => {
+    // Prevent double-clicks with local state guard
+    if (isLocalProcessing || isProcessing) {
+      console.log('[RecordingInProgress] Stop already in progress, ignoring click');
+      return;
+    }
+
+    console.log('[RecordingInProgress] Stop recording clicked');
+    setIsLocalProcessing(true);
+
     if (onStopRecording) {
       onStopRecording();
     }
@@ -103,13 +125,15 @@ export default function RecordingInProgressScreen({
 
         <Button
           onClick={handleStopRecording}
-          disabled={isProcessing}
+          disabled={isProcessing || isLocalProcessing}
           className="w-full max-w-md h-11 sm:h-12 text-sm sm:text-base font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             backgroundColor: primaryColor,
           }}
         >
-          {isProcessing ? 'Stopping recording' : RECORDING_IN_PROGRESS_COPY.stopButton}
+          {isProcessing || isLocalProcessing
+            ? 'Stopping recording'
+            : RECORDING_IN_PROGRESS_COPY.stopButton}
         </Button>
       </div>
     </RecordingScreenLayout>

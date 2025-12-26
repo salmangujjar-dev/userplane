@@ -3,7 +3,7 @@
  * Manages the state machine for the entire recording flow
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { RecordingSession, type UploadState } from '@/services/recording-session';
 import {
   MediaCapture,
@@ -15,6 +15,7 @@ import type { RecordingPreferences } from '@/types/session-preferences';
 import { DEFAULT_RECORDING_PREFERENCES } from '@/types/session-preferences';
 import { generateVideoThumbnail } from '@/utils/video-thumbnail';
 import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
+import { SUCCESS_AUTO_CLOSE_DELAY_MS } from '@/constants';
 
 export type FlowState =
   | 'loading'
@@ -79,6 +80,9 @@ export function useRecordingFlow(linkToken: string | null): {
   const sessionRef = useRef<RecordingSession | null>(null);
   const mediaCaptureRef = useRef<MediaCapture | null>(null);
   const beforeUnloadHandlerRef = useRef<((e: BeforeUnloadEvent) => void) | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const autoStopTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const stopRecordingRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     console.log('[Flow] Hook initialized');
@@ -102,11 +106,24 @@ export function useRecordingFlow(linkToken: string | null): {
     initializeSession(linkToken);
 
     return () => {
+      // Cleanup on unmount
       if (sessionRef.current) {
         sessionRef.current.destroy();
       }
       if (mediaCaptureRef.current) {
-        mediaCaptureRef.current.destroy();
+        // Async destroy, but we can't await in cleanup
+        // Trigger it and let it complete asynchronously
+        mediaCaptureRef.current.destroy().catch((err) => {
+          console.error('[Flow] Error during mediaCapture cleanup:', err);
+        });
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      if (autoStopTimerRef.current) {
+        clearTimeout(autoStopTimerRef.current);
+        autoStopTimerRef.current = null;
       }
     };
   }, [linkToken]);
@@ -142,13 +159,23 @@ export function useRecordingFlow(linkToken: string | null): {
 
     console.log('[Flow] Setting up auto-stop timer for', maxRecordingDurationMs, 'ms');
 
-    const timer = setTimeout(() => {
+    // Clear any existing timer
+    if (autoStopTimerRef.current) {
+      clearTimeout(autoStopTimerRef.current);
+    }
+
+    autoStopTimerRef.current = setTimeout(() => {
       console.log('[Flow] Max duration reached, auto-stopping recording');
-      stopRecording();
+      if (stopRecordingRef.current) {
+        stopRecordingRef.current();
+      }
     }, maxRecordingDurationMs);
 
     return () => {
-      clearTimeout(timer);
+      if (autoStopTimerRef.current) {
+        clearTimeout(autoStopTimerRef.current);
+        autoStopTimerRef.current = null;
+      }
     };
   }, [flowState, maxRecordingDurationMs]);
 
@@ -209,35 +236,12 @@ export function useRecordingFlow(linkToken: string | null): {
       console.log('[Flow] Requesting media permissions...');
       await mediaCapture.requestPermissions({
         mode,
-        onStop: async (blob) => {
-          console.log('[Flow] Recording stopped callback triggered');
-          console.log('[Flow] Blob size:', blob.size, 'bytes');
-          console.log('[Flow] Blob type:', blob.type);
-
-          const durationMs = mediaCapture.getDuration();
-          console.log('[Flow] Recording duration:', durationMs ? `${durationMs}ms` : 'unknown');
-          setRecordingDurationMs(durationMs);
-
-          setRecordingBlob(blob);
-
-          const blobUrl = URL.createObjectURL(blob);
-          setVideoUrl(blobUrl);
-          console.log('[Flow] Video blob URL created for preview:', blobUrl);
-
-          console.log('[Flow] Generating thumbnail for upload...');
-          const thumbnail = await generateVideoThumbnail(blob);
-          if (thumbnail) {
-            setThumbnailBlob(thumbnail);
-            console.log('[Flow] Thumbnail generated:', {
-              size: thumbnail.size,
-              type: thumbnail.type,
-            });
-          } else {
-            console.warn('[Flow] Thumbnail generation failed - will upload without thumbnail');
+        onStop: async () => {
+          // User stopped sharing via browser UI - delegate to stopRecording
+          console.log('[Flow] User stopped sharing via browser UI');
+          if (stopRecordingRef.current) {
+            await stopRecordingRef.current();
           }
-
-          console.log('[Flow] Transitioning to review state');
-          setFlowState('review');
         },
         onError: (err) => {
           console.error('[Flow] Recording error:', err);
@@ -256,14 +260,22 @@ export function useRecordingFlow(linkToken: string | null): {
       setFlowState('countdown');
       setCountdownSeconds(3);
 
+      // Clear any existing countdown interval
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+
       let countdown = 3;
-      const countdownInterval = setInterval(() => {
+      countdownIntervalRef.current = setInterval(() => {
         countdown -= 1;
         setCountdownSeconds(countdown);
         console.log('[Flow] Countdown:', countdown);
 
         if (countdown === 0) {
-          clearInterval(countdownInterval);
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+          }
           console.log('[Flow] Countdown complete, starting recording...');
           mediaCapture.startRecording();
           setFlowState('recording');
@@ -277,8 +289,16 @@ export function useRecordingFlow(linkToken: string | null): {
     }
   }
 
-  async function stopRecording() {
+  const stopRecording = useCallback(async () => {
+    // Guard against concurrent calls
+    if (isProcessing) {
+      console.log('[Flow] Stop already in progress, ignoring duplicate call');
+      return;
+    }
+
     setIsProcessing(true);
+    let createdBlobUrl: string | null = null;
+
     try {
       console.log('[Flow] Stopping recording...');
 
@@ -288,7 +308,6 @@ export function useRecordingFlow(linkToken: string | null): {
 
       const durationMs = mediaCaptureRef.current.getDuration();
       console.log('[Flow] Recording duration:', durationMs ? `${durationMs}ms` : 'unknown');
-      setRecordingDurationMs(durationMs);
 
       const blob = await mediaCaptureRef.current.stop();
       console.log('[Flow] Recording stopped successfully');
@@ -322,19 +341,52 @@ export function useRecordingFlow(linkToken: string | null): {
       }
 
       console.log('[Flow] All constraints passed');
+
+      // Store duration and blob
+      setRecordingDurationMs(durationMs);
       setRecordingBlob(blob);
+
+      // Create video URL for preview
+      createdBlobUrl = URL.createObjectURL(blob);
+      setVideoUrl(createdBlobUrl);
+      console.log('[Flow] Video blob URL created for preview:', createdBlobUrl);
+
+      // Generate thumbnail for upload
+      console.log('[Flow] Generating thumbnail for upload...');
+      const thumbnail = await generateVideoThumbnail(blob);
+      if (thumbnail) {
+        setThumbnailBlob(thumbnail);
+        console.log('[Flow] Thumbnail generated:', {
+          size: thumbnail.size,
+          type: thumbnail.type,
+        });
+      } else {
+        console.warn('[Flow] Thumbnail generation failed - will upload without thumbnail');
+      }
 
       console.log('[Flow] Transitioning to review state');
       setFlowState('review');
     } catch (err) {
       console.error('[Flow] Failed to stop recording:', err);
       console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+
+      // Clean up blob URL if it was created but we're erroring out
+      if (createdBlobUrl) {
+        console.log('[Flow] Revoking blob URL due to error');
+        URL.revokeObjectURL(createdBlobUrl);
+      }
+
       setError(err);
       setFlowState('error');
     } finally {
       setIsProcessing(false);
     }
-  }
+  }, [isProcessing, maxRecordingDurationMs, maxRecordingSize]);
+
+  // Keep stopRecordingRef in sync with the latest stopRecording function
+  useEffect(() => {
+    stopRecordingRef.current = stopRecording;
+  }, [stopRecording]);
 
   async function submitRecording() {
     setIsProcessing(true);
@@ -404,11 +456,11 @@ export function useRecordingFlow(linkToken: string | null): {
       console.log('[Flow] Transitioning to success state');
       setFlowState('success');
 
-      console.log('[Flow] Tab will auto-close in 5 seconds');
+      console.log(`[Flow] Tab will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
       setTimeout(() => {
         console.log('[Flow] Closing tab...');
         window.close();
-      }, 5000);
+      }, SUCCESS_AUTO_CLOSE_DELAY_MS);
     } catch (err) {
       console.error('[Flow] Upload failed:', err);
       console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
@@ -461,11 +513,11 @@ export function useRecordingFlow(linkToken: string | null): {
       console.log('[Flow] Transitioning to success state');
       setFlowState('success');
 
-      console.log('[Flow] Tab will auto-close in 5 seconds');
+      console.log(`[Flow] Tab will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
       setTimeout(() => {
         console.log('[Flow] Closing tab...');
         window.close();
-      }, 5000);
+      }, SUCCESS_AUTO_CLOSE_DELAY_MS);
     } catch (err) {
       console.error('[Flow] Retry failed:', err);
       console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
@@ -482,6 +534,19 @@ export function useRecordingFlow(linkToken: string | null): {
     setIsProcessing(true);
 
     try {
+      // Clear any active timers
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+        console.log('[Flow] Countdown interval cleared');
+      }
+
+      if (autoStopTimerRef.current) {
+        clearTimeout(autoStopTimerRef.current);
+        autoStopTimerRef.current = null;
+        console.log('[Flow] Auto-stop timer cleared');
+      }
+
       if (mediaCaptureRef.current) {
         const currentState = mediaCaptureRef.current.getState();
         console.log('[Flow] Current recording state:', currentState);
@@ -497,7 +562,7 @@ export function useRecordingFlow(linkToken: string | null): {
         }
 
         console.log('[Flow] Destroying media capture');
-        mediaCaptureRef.current.destroy();
+        await mediaCaptureRef.current.destroy();
         mediaCaptureRef.current = null;
       }
 
