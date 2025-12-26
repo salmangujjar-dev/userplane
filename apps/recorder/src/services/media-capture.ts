@@ -26,6 +26,8 @@ export class MediaCapture {
   private startTime: number | null = null;
   private onStopCallback: ((blob: Blob) => void) | null = null;
   private onErrorCallback: ((error: Error) => void) | null = null;
+  private isStopping: boolean = false;
+  private stopPromiseResolve: ((blob: Blob) => void) | null = null;
 
   constructor(mode: RecordingMode = 'screen-only') {
     this.mode = mode;
@@ -119,9 +121,23 @@ export class MediaCapture {
         }
       };
 
+      // Set up onstop handler - this is the single source of truth for blob creation
+      // Fires both for programmatic stops and browser UI stops
       this.mediaRecorder.onstop = () => {
-        const blob = new Blob(this.recordedChunks, { type: mimeType });
+        const blob = new Blob(this.recordedChunks, {
+          type: this.mediaRecorder!.mimeType,
+        });
         console.log(`[MediaCapture] Recording stopped, size: ${blob.size} bytes`);
+        this.cleanup();
+        this.isStopping = false;
+
+        // Resolve stop() promise if it's waiting
+        if (this.stopPromiseResolve) {
+          this.stopPromiseResolve(blob);
+          this.stopPromiseResolve = null;
+        }
+
+        // Notify callback if set (for browser UI stops)
         if (this.onStopCallback) {
           this.onStopCallback(blob);
         }
@@ -135,9 +151,11 @@ export class MediaCapture {
         }
       };
 
+      // When user clicks "Stop sharing" in browser, MediaRecorder will automatically
+      // stop and fire the onstop event above
       combinedStream.getVideoTracks()[0].addEventListener('ended', () => {
-        console.log('[MediaCapture] User stopped sharing');
-        this.stop();
+        console.log('[MediaCapture] User stopped sharing via browser UI');
+        // No need to do anything here - onstop handler will fire automatically
       });
 
       console.log('[MediaCapture] Permissions granted, ready to start recording');
@@ -176,6 +194,7 @@ export class MediaCapture {
 
   /**
    * Stop recording
+   * Returns a promise that resolves with the recorded blob
    */
   stop(): Promise<Blob> {
     return new Promise((resolve, reject) => {
@@ -185,6 +204,7 @@ export class MediaCapture {
       }
 
       if (this.mediaRecorder.state === 'inactive') {
+        // Already stopped - return existing blob
         const blob = new Blob(this.recordedChunks, {
           type: this.mediaRecorder.mimeType,
         });
@@ -192,17 +212,20 @@ export class MediaCapture {
         return;
       }
 
-      const handleStop = () => {
-        const blob = new Blob(this.recordedChunks, {
-          type: this.mediaRecorder!.mimeType,
-        });
-        this.cleanup();
-        resolve(blob);
-      };
+      // Guard against concurrent stop calls
+      if (this.isStopping) {
+        console.log('[MediaCapture] Stop already in progress, ignoring duplicate call');
+        reject(new Error('Stop already in progress'));
+        return;
+      }
 
-      // Register event listener BEFORE calling stop() to avoid race condition
-      // where the recorder finishes quickly and we miss the event
-      this.mediaRecorder.addEventListener('stop', handleStop, { once: true });
+      this.isStopping = true;
+
+      // Store the resolve function - onstop handler will call it
+      this.stopPromiseResolve = resolve;
+
+      // Trigger stop - onstop handler will create blob and resolve promise
+      console.log('[MediaCapture] Stopping MediaRecorder...');
       this.mediaRecorder.stop();
     });
   }
@@ -253,15 +276,25 @@ export class MediaCapture {
 
   /**
    * Destroy and cleanup all resources
+   * Async to properly await stop() if recording is active
    */
-  destroy(): void {
+  async destroy(): Promise<void> {
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop();
+      try {
+        console.log('[MediaCapture] Awaiting stop before destroy...');
+        await this.stop();
+      } catch (err) {
+        console.warn('[MediaCapture] Error stopping during destroy:', err);
+      }
     }
     this.cleanup();
     this.mediaRecorder = null;
     this.recordedChunks = [];
     this.startTime = null;
+    this.isStopping = false;
+    this.stopPromiseResolve = null;
+    this.onStopCallback = null;
+    this.onErrorCallback = null;
   }
 }
 
