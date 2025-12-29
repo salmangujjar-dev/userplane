@@ -22,6 +22,7 @@ import { DinoError } from '@/components/shared/dino-error';
 export default function LinksPage() {
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = usePagination();
   const linksPerPage = 10;
   const [selectedProjects, setSelectedProjects] = useQueryState('projects', stringArrayParser);
@@ -147,12 +148,18 @@ export default function LinksPage() {
               </div>
             ) : (
               <>
-                <LinksTab links={linksData?.links} isLoading={isLoadingLinks} />
-                <PaginationControls
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
+                <LinksTab
+                  links={linksData?.links}
+                  isLoading={isLoadingLinks}
+                  onRequestRecording={() => setCreateLinkModalOpen(true)}
                 />
+                {!isLoadingLinks && linksData && linksData.links.length > 0 && (
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
               </>
             )}
           </div>
@@ -160,6 +167,13 @@ export default function LinksPage() {
       </div>
 
       <InviteModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
+
+      <CreateLinkModal
+        open={createLinkModalOpen}
+        onOpenChange={setCreateLinkModalOpen}
+        onLinkCreated={handleLinkCreated}
+        hideButton
+      />
 
       <ShareLinkModal
         link={shareLink || ''}

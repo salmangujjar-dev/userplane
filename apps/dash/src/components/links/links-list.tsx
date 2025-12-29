@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { LinkPreview } from './link-preview';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { LinksListSkeleton } from '@/components/skeleton';
+import { ListViewEmptyState } from '@/components/shared/empty-state';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateLink, useDeleteLink } from '@/queries/use-link-mutations';
 import type { Link } from '@/hooks/use-workspace-links';
@@ -11,9 +12,10 @@ import type { Link } from '@/hooks/use-workspace-links';
 interface LinksListProps {
   links?: Link[];
   isLoading?: boolean;
+  onRequestRecording?: () => void;
 }
 
-export function LinksList({ links, isLoading }: LinksListProps) {
+export function LinksList({ links, isLoading, onRequestRecording }: LinksListProps) {
   const workspaceId = useWorkspaceId();
   const [deletingLink, setDeletingLink] = useState<{
     linkId: string;
@@ -47,12 +49,11 @@ export function LinksList({ links, isLoading }: LinksListProps) {
 
   if (!links || links.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="text-muted-foreground">No links found</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Create a link to start collecting recordings
-        </p>
-      </div>
+      <ListViewEmptyState
+        subtitle="Request a screen recording to get started"
+        buttonLabel="Request a recording"
+        onButtonClick={onRequestRecording}
+      />
     );
   }
 

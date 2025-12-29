@@ -10,6 +10,7 @@ import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
 import { RecordingGridSkeleton } from '@/components/skeleton';
 import { PaginationControls } from '@/components/shared/pagination-controls';
+import { ListViewEmptyState } from '@/components/shared/empty-state';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { usePagination } from '@/hooks/use-pagination';
 import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
@@ -25,6 +26,7 @@ export default function RecordingsPage() {
   const recordingsPerPage = 16; // 4 columns x 4 rows
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
   const [selectedProjects, setSelectedProjects] = useQueryState('projects', stringArrayParser);
   const [selectedCreators, setSelectedCreators] = useQueryState('creators', stringArrayParser);
   const [selectedRecordingLinks, setSelectedRecordingLinks] = useQueryState(
@@ -156,12 +158,11 @@ export default function RecordingsPage() {
             ) : isLoadingRecordings ? (
               <RecordingGridSkeleton count={recordingsPerPage} />
             ) : recordingsData?.recordings.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-muted-foreground">No recordings found</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Recordings will appear here when someone submits through your links
-                </p>
-              </div>
+              <ListViewEmptyState
+                subtitle="Request a screen recording to get started"
+                buttonLabel="Request a recording"
+                onButtonClick={() => setCreateLinkModalOpen(true)}
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {recordingsData?.recordings.map((recording) => (
@@ -177,16 +178,25 @@ export default function RecordingsPage() {
               </div>
             )}
 
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+            {!isLoadingRecordings && recordingsData && recordingsData.recordings.length > 0 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </div>
         </main>
       </div>
 
       <InviteModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
+
+      <CreateLinkModal
+        open={createLinkModalOpen}
+        onOpenChange={setCreateLinkModalOpen}
+        onLinkCreated={handleLinkCreated}
+        hideButton
+      />
 
       <ShareLinkModal
         link={shareLink || ''}

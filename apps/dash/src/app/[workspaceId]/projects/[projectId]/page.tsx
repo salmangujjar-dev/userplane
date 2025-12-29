@@ -11,6 +11,7 @@ import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
 import { RecordingGridSkeleton } from '@/components/skeleton';
 import { PaginationControls } from '@/components/shared/pagination-controls';
+import { ListViewEmptyState } from '@/components/shared/empty-state';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/components/tabs';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
@@ -31,6 +32,7 @@ export default function ProjectPage() {
   const projectId = params.projectId as string;
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useQueryState('tab', tabParser.withDefault('recordings'));
   const [selectedCreators, setSelectedCreators] = useQueryState('creators', stringArrayParser);
   const [selectedRecordingLinks, setSelectedRecordingLinks] = useQueryState(
@@ -256,12 +258,11 @@ export default function ProjectPage() {
                   {isLoadingRecordings ? (
                     <RecordingGridSkeleton count={recordingsPerPage} />
                   ) : recordingsData?.recordings.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <p className="text-muted-foreground">No recordings found</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Recordings for this project will appear here
-                      </p>
-                    </div>
+                    <ListViewEmptyState
+                      subtitle="Request a screen recording to get started"
+                      buttonLabel="Request a recording"
+                      onButtonClick={() => setCreateLinkModalOpen(true)}
+                    />
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {recordingsData?.recordings.map((recording) => (
@@ -277,23 +278,33 @@ export default function ProjectPage() {
                     </div>
                   )}
 
-                  <PaginationControls
-                    currentPage={recordingsPage}
-                    totalPages={recordingsTotalPages}
-                    onPageChange={setRecordingsPage}
-                  />
+                  {!isLoadingRecordings &&
+                    recordingsData &&
+                    recordingsData.recordings.length > 0 && (
+                      <PaginationControls
+                        currentPage={recordingsPage}
+                        totalPages={recordingsTotalPages}
+                        onPageChange={setRecordingsPage}
+                      />
+                    )}
                 </div>
               </TabsContent>
 
               <TabsContent value="links" className="space-y-6">
                 <div className="space-y-6">
-                  <LinksList links={linksData?.links} isLoading={isLoadingLinks} />
-
-                  <PaginationControls
-                    currentPage={linksPage}
-                    totalPages={linksTotalPages}
-                    onPageChange={setLinksPage}
+                  <LinksList
+                    links={linksData?.links}
+                    isLoading={isLoadingLinks}
+                    onRequestRecording={() => setCreateLinkModalOpen(true)}
                   />
+
+                  {!isLoadingLinks && linksData && linksData.links.length > 0 && (
+                    <PaginationControls
+                      currentPage={linksPage}
+                      totalPages={linksTotalPages}
+                      onPageChange={setLinksPage}
+                    />
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
@@ -302,6 +313,13 @@ export default function ProjectPage() {
       </div>
 
       <InviteModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
+
+      <CreateLinkModal
+        open={createLinkModalOpen}
+        onOpenChange={setCreateLinkModalOpen}
+        onLinkCreated={handleLinkCreated}
+        hideButton
+      />
 
       <ShareLinkModal
         link={shareLink || ''}

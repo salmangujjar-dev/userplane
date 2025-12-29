@@ -35,11 +35,22 @@ import { toast } from '@workspace/ui/components/sonner';
 
 interface CreateLinkModalProps {
   onLinkCreated?: (linkUrl: string) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideButton?: boolean;
 }
 
-export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
+export function CreateLinkModal({
+  onLinkCreated,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  hideButton = false,
+}: CreateLinkModalProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
   const [reference, setReference] = useState('');
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [isReusable, setIsReusable] = useState(false);
@@ -120,12 +131,14 @@ export function CreateLinkModal({ onLinkCreated }: CreateLinkModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="default" size="default" className="rounded-full">
-          Create Link
-          <Plus className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+      {!hideButton && (
+        <DialogTrigger asChild>
+          <Button variant="default" size="default" className="rounded-full">
+            Create Link
+            <Plus className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[600px]" showCloseButton={false}>
         <form onSubmit={handleSubmit}>
           <div className="space-y-6 py-4">
