@@ -11,7 +11,7 @@ import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
 import { RecordingGridSkeleton } from '@/components/skeleton';
 import { PaginationControls } from '@/components/shared/pagination-controls';
-import { ListViewEmptyState } from '@/components/shared/empty-state';
+import { ProjectRecordingEmptyState } from '@/components/shared/empty-state';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/components/tabs';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
@@ -258,10 +258,8 @@ export default function ProjectPage() {
                   {isLoadingRecordings ? (
                     <RecordingGridSkeleton count={recordingsPerPage} />
                   ) : recordingsData?.recordings.length === 0 ? (
-                    <ListViewEmptyState
-                      subtitle="Request a screen recording to get started"
-                      buttonLabel="Request a recording"
-                      onButtonClick={() => setCreateLinkModalOpen(true)}
+                    <ProjectRecordingEmptyState
+                      onRequestRecording={() => setCreateLinkModalOpen(true)}
                     />
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -296,6 +294,7 @@ export default function ProjectPage() {
                     links={linksData?.links}
                     isLoading={isLoadingLinks}
                     onRequestRecording={() => setCreateLinkModalOpen(true)}
+                    isProjectContext
                   />
 
                   {!isLoadingLinks && linksData && linksData.links.length > 0 && (
@@ -319,6 +318,7 @@ export default function ProjectPage() {
         onOpenChange={setCreateLinkModalOpen}
         onLinkCreated={handleLinkCreated}
         hideButton
+        defaultProjectId={projectId}
       />
 
       <ShareLinkModal

@@ -38,6 +38,7 @@ interface CreateLinkModalProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideButton?: boolean;
+  defaultProjectId?: string;
 }
 
 export function CreateLinkModal({
@@ -45,6 +46,7 @@ export function CreateLinkModal({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   hideButton = false,
+  defaultProjectId,
 }: CreateLinkModalProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const [internalOpen, setInternalOpen] = useState(false);
@@ -73,12 +75,21 @@ export function CreateLinkModal({
   // Effect to set default project and domain when data loads
   useEffect(() => {
     if (open && projects && projects.length > 0 && !selectedProject) {
+      // Use defaultProjectId if provided and exists in projects list
+      if (defaultProjectId) {
+        const projectExists = projects.some((p) => p.projectId === defaultProjectId);
+        if (projectExists) {
+          setSelectedProject(defaultProjectId);
+          return;
+        }
+      }
+      // Fall back to default project or first project
       const defaultProject = projects.find((p) => p.isDefault) || projects[0];
       if (defaultProject) {
         setSelectedProject(defaultProject.projectId);
       }
     }
-  }, [open, projects, selectedProject]);
+  }, [open, projects, selectedProject, defaultProjectId]);
 
   useEffect(() => {
     if (open && domains && domains.length > 0 && !selectedDomain) {

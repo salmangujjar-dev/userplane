@@ -10,7 +10,7 @@ import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
 import { RecordingGridSkeleton } from '@/components/skeleton';
 import { PaginationControls } from '@/components/shared/pagination-controls';
-import { ListViewEmptyState } from '@/components/shared/empty-state';
+import { RecordingEmptyState } from '@/components/shared/empty-state';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { usePagination } from '@/hooks/use-pagination';
 import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
@@ -158,11 +158,7 @@ export default function RecordingsPage() {
             ) : isLoadingRecordings ? (
               <RecordingGridSkeleton count={recordingsPerPage} />
             ) : recordingsData?.recordings.length === 0 ? (
-              <ListViewEmptyState
-                subtitle="Request a screen recording to get started"
-                buttonLabel="Request a recording"
-                onButtonClick={() => setCreateLinkModalOpen(true)}
-              />
+              <RecordingEmptyState onRequestRecording={() => setCreateLinkModalOpen(true)} />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {recordingsData?.recordings.map((recording) => (
