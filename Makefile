@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -83,6 +83,11 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)test$(WHITE)                          ║$(RESET) Run all tests                                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)test:watch$(WHITE)                    ║$(RESET) Run tests in watch mode                                           $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)test:api$(WHITE)                      ║$(RESET) Test API endpoints                                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)STORYBOOK$(WHITE)                                                                                         ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:recorder$(WHITE)            ║$(RESET) Run Storybook for recorder app                                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:recorder:build$(WHITE)      ║$(RESET) Build Storybook for recorder app                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BACKGROUND JOBS (Trigger.dev)$(WHITE)                                                                    ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -234,6 +239,15 @@ preview\:astro: ## Preview astro production build
 test\:api: ## Test API endpoints
 	@echo "$(CYAN)Testing API endpoints...$(RESET)"
 	@cd apps/api && ./test-api.sh
+
+storybook\:recorder: ## Run Storybook for recorder app
+	@echo "$(MAGENTA)Starting Storybook for recorder...$(RESET)"
+	@cd apps/recorder && bun run storybook
+
+storybook\:recorder\:build: ## Build Storybook for recorder app
+	@echo "$(BLUE)Building Storybook for recorder...$(RESET)"
+	@cd apps/recorder && bun run build-storybook
+	@echo "$(GREEN)Storybook build complete!$(RESET)"
 
 update: ## Update dependencies
 	@echo "$(BLUE)Updating dependencies...$(RESET)"
