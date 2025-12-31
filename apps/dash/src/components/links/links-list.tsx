@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { LinkPreview } from './link-preview';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { LinksListSkeleton } from '@/components/skeleton';
-import { ListViewEmptyState } from '@/components/shared/empty-state';
+import { LinkEmptyState, ProjectLinkEmptyState } from '@/components/shared/empty-state';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateLink, useDeleteLink } from '@/queries/use-link-mutations';
 import type { Link } from '@/hooks/use-workspace-links';
@@ -13,9 +13,15 @@ interface LinksListProps {
   links?: Link[];
   isLoading?: boolean;
   onRequestRecording?: () => void;
+  isProjectContext?: boolean;
 }
 
-export function LinksList({ links, isLoading, onRequestRecording }: LinksListProps) {
+export function LinksList({
+  links,
+  isLoading,
+  onRequestRecording,
+  isProjectContext,
+}: LinksListProps) {
   const workspaceId = useWorkspaceId();
   const [deletingLink, setDeletingLink] = useState<{
     linkId: string;
@@ -48,13 +54,8 @@ export function LinksList({ links, isLoading, onRequestRecording }: LinksListPro
   }
 
   if (!links || links.length === 0) {
-    return (
-      <ListViewEmptyState
-        subtitle="Request a screen recording to get started"
-        buttonLabel="Request a recording"
-        onButtonClick={onRequestRecording}
-      />
-    );
+    const EmptyState = isProjectContext ? ProjectLinkEmptyState : LinkEmptyState;
+    return <EmptyState onCreateLink={onRequestRecording ?? (() => {})} />;
   }
 
   return (
