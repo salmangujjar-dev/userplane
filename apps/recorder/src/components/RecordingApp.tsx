@@ -13,12 +13,7 @@ import RecordingInProgressScreen from './RecordingInProgressScreen';
 import PostRecordingReviewScreen from './PostRecordingReviewScreen';
 import PostRecordingUploadScreen from './PostRecordingUploadScreen';
 import PostRecordingAckScreen from './PostRecordingAckScreen';
-import {
-  classifyError,
-  RecoveryStrategy,
-  ErrorCategory,
-  type RecordingError,
-} from '@/types/errors';
+import { classifyError, type RecordingError, type ErrorAction } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface RecordingAppProps {
@@ -70,13 +65,12 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
       return <PreRecordingLoadingScreen />;
 
     case 'error':
-      const isPostRecordingError = !!state.recordingBlob;
-      const classifiedError = classifyError(state.error, isPostRecordingError);
+      const classifiedError = classifyError(state.error);
 
       console.log('[RecordingApp] Rendering: ErrorScreen');
       console.log('[RecordingApp] Has recording blob:', !!state.recordingBlob);
-      console.log('[RecordingApp] Error category:', classifiedError.category);
-      console.log('[RecordingApp] Recovery strategy:', classifiedError.recoveryStrategy);
+      console.log('[RecordingApp] Error:', classifiedError.title);
+      console.log('[RecordingApp] Primary action:', classifiedError.primaryAction?.action);
       console.log('[RecordingApp] Error message:', classifiedError.message);
 
       return renderErrorScreen(classifiedError, state.preferences, actions);
@@ -175,66 +169,46 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
 }
 
 /**
- * Renders the error screen with appropriate actions based on error type
+ * Map action type to handler function
+ */
+function getActionHandler(action: ErrorAction, actions: RecordingFlowActions): () => void {
+  switch (action) {
+    case 'retry-upload':
+      return actions.retryUpload;
+    case 'reload':
+      return () => {
+        console.log('[RecordingApp] Reloading page');
+        window.location.reload();
+      };
+    case 'start-over':
+      return actions.startOver;
+  }
+}
+
+/**
+ * Renders the error screen with appropriate actions
  */
 function renderErrorScreen(
   error: RecordingError,
   preferences: RecordingPreferences,
   actions: RecordingFlowActions
 ) {
-  // Determine primary action based on recovery strategy
-  let primaryActionText = error.primaryActionText;
-  let onPrimaryAction: (() => void) | undefined;
+  const onPrimaryAction = error.primaryAction
+    ? getActionHandler(error.primaryAction.action, actions)
+    : undefined;
 
-  switch (error.recoveryStrategy) {
-    case RecoveryStrategy.AUTO_RETRY:
-      // Auto-retry errors: Show manual retry button after auto-retry attempts
-      // For upload errors, use smart retry that preserves upload state
-      if (error.category === ErrorCategory.UPLOAD) {
-        onPrimaryAction = actions.retryUpload;
-      } else {
-        // For network errors, reload the page
-        onPrimaryAction = () => {
-          console.log('[RecordingApp] Manual retry - refreshing page');
-          window.location.reload();
-        };
-      }
-      break;
-
-    case RecoveryStrategy.MANUAL_RETRY:
-      // Manual retry errors: User action required (e.g., grant permission)
-      onPrimaryAction = () => {
-        console.log('[RecordingApp] Retrying - refreshing page');
-        window.location.reload();
-      };
-      break;
-
-    case RecoveryStrategy.START_OVER:
-      onPrimaryAction = actions.startOver;
-      break;
-
-    case RecoveryStrategy.NONE:
-    default:
-      // Non-recoverable error - no primary action
-      onPrimaryAction = undefined;
-      primaryActionText = undefined;
-      break;
-  }
-
-  // Secondary action (if available)
-  let onSecondaryAction: (() => void) | undefined;
-  if (error.secondaryActionText) {
-    onSecondaryAction = actions.startOver;
-  }
+  const onSecondaryAction = error.secondaryAction
+    ? getActionHandler(error.secondaryAction.action, actions)
+    : undefined;
 
   return (
     <ErrorScreen
       title={error.title}
       subtitle={error.message}
       preferences={preferences}
-      primaryActionText={primaryActionText}
+      primaryActionText={error.primaryAction?.label}
       onPrimaryAction={onPrimaryAction}
-      secondaryActionText={error.secondaryActionText}
+      secondaryActionText={error.secondaryAction?.label}
       onSecondaryAction={onSecondaryAction}
     />
   );

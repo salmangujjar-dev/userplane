@@ -14,6 +14,7 @@ import {
   VIDEO_UPLOAD_CONFIG,
   THUMBNAIL_UPLOAD_CONFIG,
 } from '@/constants';
+import { handleServerResult, type ServerResult } from '@/lib/server-errors';
 
 export interface UploadProgress {
   partNumber: number;
@@ -38,6 +39,17 @@ export interface UploadState {
   thumbnailBlob: Blob | null;
 }
 
+/**
+ * Session initialization result
+ */
+export interface SessionData {
+  sessionId: string;
+  preferences: RecordingPreferences;
+  maxRecordingDurationMs: number;
+  maxRecordingSize: number | null;
+  requesterName: string | null;
+}
+
 export type { SystemMetadata };
 
 export class RecordingSession {
@@ -57,7 +69,7 @@ export class RecordingSession {
   /**
    * Initialize session from link token
    */
-  async initialize(linkToken: string): Promise<void> {
+  async initialize(linkToken: string): Promise<ServerResult<SessionData>> {
     console.log('[Session] Initializing session');
 
     const [error, response] = await this.client.session.init({
@@ -66,23 +78,52 @@ export class RecordingSession {
       },
     });
 
-    if (error) {
-      console.log('error: ', error);
-      throw error;
+    const result = handleServerResult(error, response?.data);
+
+    if (!result.ok) {
+      console.log('[Session] Initialize failed:', result.error);
+      return result;
     }
 
-    this.sessionToken = response.data.sessionToken;
+    this.sessionToken = result.data.sessionToken;
 
     if (!this.sessionToken) {
-      throw new Error('No session token returned from API');
+      return {
+        ok: false,
+        error: {
+          title: 'Session error',
+          message: 'No session token returned from API',
+          primaryAction: { label: 'Start over', action: 'start-over' },
+        },
+      };
     }
 
-    const payload = decodeJwtPayload<SessionTokenPayload>(this.sessionToken);
+    let payload: SessionTokenPayload;
+    try {
+      payload = decodeJwtPayload<SessionTokenPayload>(this.sessionToken);
+    } catch {
+      return {
+        ok: false,
+        error: {
+          title: 'Invalid session',
+          message: 'Could not decode session token',
+          primaryAction: { label: 'Start over', action: 'start-over' },
+        },
+      };
+    }
+
     console.log('[Session] Session token payload:', payload);
     this.sessionId = payload.sid;
 
     if (!payload.prefs) {
-      throw new Error('Session token missing preferences');
+      return {
+        ok: false,
+        error: {
+          title: 'Session error',
+          message: 'Session token missing preferences',
+          primaryAction: { label: 'Start over', action: 'start-over' },
+        },
+      };
     }
 
     console.log('[Session] Raw preferences from token:', payload.prefs);
@@ -92,7 +133,12 @@ export class RecordingSession {
       this.preferences?.maxDurationMs ?? DEFAULT_MAX_RECORDING_DURATION_MS;
     this.requesterName = this.preferences?.requestedBy ?? null;
 
-    const linkPayload = decodeJwtPayload<{ rms?: number }>(linkToken);
+    let linkPayload: { rms?: number };
+    try {
+      linkPayload = decodeJwtPayload<{ rms?: number }>(linkToken);
+    } catch (err) {
+      linkPayload = {};
+    }
     console.log('[Session] Link token payload:', linkPayload);
     this.maxRecordingSize = linkPayload.rms || null;
 
@@ -104,6 +150,17 @@ export class RecordingSession {
       '[Session] Max recording size:',
       this.maxRecordingSize ? `${this.maxRecordingSize} bytes` : '(unlimited)'
     );
+
+    return {
+      ok: true,
+      data: {
+        sessionId: this.sessionId,
+        preferences: this.preferences,
+        maxRecordingDurationMs: this.maxRecordingDurationMs,
+        maxRecordingSize: this.maxRecordingSize,
+        requesterName: this.requesterName,
+      },
+    };
   }
 
   /**
@@ -114,7 +171,7 @@ export class RecordingSession {
     videoFile: File,
     thumbnailBlob: Blob | null,
     recordingDurationMs: number | null
-  ): Promise<UploadState> {
+  ): Promise<ServerResult<UploadState>> {
     console.log('[Upload:Init] Initializing upload');
     console.log('[Upload:Init] Video file:', {
       name: videoFile.name,
@@ -128,7 +185,14 @@ export class RecordingSession {
     console.log('[Upload:Init] Thumbnail:', thumbnailBlob ? `${thumbnailBlob.size} bytes` : 'none');
 
     if (!this.sessionToken) {
-      throw new Error('No session token available');
+      return {
+        ok: false,
+        error: {
+          title: 'Session expired',
+          message: 'No session token available. Please start over.',
+          primaryAction: { label: 'Start over', action: 'start-over' },
+        },
+      };
     }
 
     const systemMetadata = captureSystemMetadata();
@@ -182,27 +246,32 @@ export class RecordingSession {
       },
     });
 
-    if (error) {
-      console.log('error: ', error);
-      throw error;
+    const result = handleServerResult(error, response?.data);
+
+    if (!result.ok) {
+      console.log('[Upload:Init] Failed:', result.error);
+      return result;
     }
 
     console.log('[Upload:Init] Received upload initialization response');
 
-    this.recordingId = response.data.recordingId;
-    const uploadToken = response.data.uploadToken;
-    const presignedUrls = response.data.presignedUrls;
+    this.recordingId = result.data.recordingId;
+    const uploadToken = result.data.uploadToken;
+    const presignedUrls = result.data.presignedUrls;
 
     console.log('[Upload:Init] Recording ID:', this.recordingId);
     console.log('[Upload:Init] Upload token received');
     console.log('[Upload:Init] Presigned URLs count:', presignedUrls.length);
 
     return {
-      recordingId: this.recordingId,
-      uploadToken,
-      presignedUrls,
-      videoFile,
-      thumbnailBlob,
+      ok: true,
+      data: {
+        recordingId: this.recordingId,
+        uploadToken,
+        presignedUrls,
+        videoFile,
+        thumbnailBlob,
+      },
     };
   }
 
@@ -213,7 +282,7 @@ export class RecordingSession {
   async uploadToStorage(
     uploadState: UploadState,
     onProgress?: (progress: UploadProgress) => void
-  ): Promise<void> {
+  ): Promise<ServerResult<void>> {
     console.log('[Upload:Storage] Starting file uploads to object storage');
     console.log('[Upload:Storage] Recording ID:', uploadState.recordingId);
 
@@ -221,7 +290,14 @@ export class RecordingSession {
 
     const videoUrl = presignedUrls.find((u) => u.type === 'video');
     if (!videoUrl) {
-      throw new Error('No video upload URL provided');
+      return {
+        ok: false,
+        error: {
+          title: 'Upload error',
+          message: 'No video upload URL provided',
+          primaryAction: { label: 'Start over', action: 'start-over' },
+        },
+      };
     }
 
     // Track progress across both files
@@ -243,14 +319,29 @@ export class RecordingSession {
     };
 
     console.log('[Upload:Storage] Uploading video file...');
-    // Upload video file with unified configuration
-    await uploadToObjectStore(videoFile, videoUrl.url, {
-      ...VIDEO_UPLOAD_CONFIG,
-      onProgress: (progress) => {
-        videoUploaded = progress.loaded;
-        reportProgress();
-      },
-    });
+
+    try {
+      // Upload video file with unified configuration
+      await uploadToObjectStore(videoFile, videoUrl.url, {
+        ...VIDEO_UPLOAD_CONFIG,
+        onProgress: (progress) => {
+          videoUploaded = progress.loaded;
+          reportProgress();
+        },
+      });
+    } catch (err) {
+      console.error('[Upload:Storage] Video upload failed:', err);
+      return {
+        ok: false,
+        error: {
+          title: 'Upload failed',
+          message: 'Failed to upload video. Check your connection and try again.',
+          primaryAction: { label: 'Retry', action: 'retry-upload' },
+          secondaryAction: { label: 'Start over', action: 'start-over' },
+        },
+      };
+    }
+
     console.log('[Upload:Storage] Video upload complete');
 
     // Upload thumbnail if available
@@ -277,7 +368,7 @@ export class RecordingSession {
             '[Upload:Storage] Thumbnail upload failed, proceeding without thumbnail:',
             err
           );
-          // Don't throw - proceed with acknowledgment anyway
+          // Don't return error - proceed with acknowledgment anyway
         }
       }
     }
@@ -294,13 +385,14 @@ export class RecordingSession {
     }
 
     console.log('[Upload:Storage] All files uploaded successfully');
+    return { ok: true, data: undefined };
   }
 
   /**
    * STEP 3: Complete upload and acknowledge success
    * Marks the recording as available
    */
-  async acknowledgeUpload(uploadState: UploadState): Promise<void> {
+  async acknowledgeUpload(uploadState: UploadState): Promise<ServerResult<void>> {
     console.log('[Upload:Ack] Acknowledging upload completion');
     console.log('[Upload:Ack] Recording ID:', uploadState.recordingId);
 
@@ -319,12 +411,15 @@ export class RecordingSession {
       }
     );
 
-    if (error) {
-      console.log('error: ', error);
-      throw error;
+    const result = handleServerResult(error, undefined);
+
+    if (!result.ok) {
+      console.log('[Upload:Ack] Failed:', result.error);
+      return result;
     }
 
     console.log('[Upload:Ack] Upload acknowledged successfully');
+    return { ok: true, data: undefined };
   }
 
   /**
