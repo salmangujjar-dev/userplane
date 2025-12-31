@@ -16,6 +16,7 @@ import { DEFAULT_RECORDING_PREFERENCES } from '@/types/session-preferences';
 import { generateVideoThumbnail } from '@/utils/video-thumbnail';
 import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
 import { SUCCESS_AUTO_CLOSE_DELAY_MS } from '@/constants';
+import { type RecordingError, classifyError } from '@/types/errors';
 
 export type FlowState =
   | 'loading'
@@ -29,7 +30,7 @@ export type FlowState =
 
 export interface RecordingFlowState {
   state: FlowState;
-  error: any;
+  error: RecordingError | null;
   recordingMode: RecordingMode;
   recordingBlob: Blob | null;
   videoUrl: string | null;
@@ -57,7 +58,7 @@ export function useRecordingFlow(linkToken: string | null): {
   actions: RecordingFlowActions;
 } {
   const [flowState, setFlowState] = useState<FlowState>('loading');
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<RecordingError | null>(null);
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('screen-only');
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [thumbnailBlob, setThumbnailBlob] = useState<Blob | null>(null);
@@ -90,14 +91,20 @@ export function useRecordingFlow(linkToken: string | null): {
 
     if (!linkToken) {
       console.error('[Flow] Error: No link token provided');
-      setError('No link token provided');
+      setError({
+        title: 'Missing link',
+        message: 'No link token provided',
+      });
       setFlowState('error');
       return;
     }
 
     if (!isScreenRecordingSupported()) {
       console.error('[Flow] Error: Screen recording not supported');
-      setError('Screen recording is not supported in your browser');
+      setError({
+        title: 'Not supported',
+        message: 'Screen recording is not supported in your browser',
+      });
       setFlowState('error');
       return;
     }
@@ -180,46 +187,42 @@ export function useRecordingFlow(linkToken: string | null): {
   }, [flowState, maxRecordingDurationMs]);
 
   async function initializeSession(token: string) {
-    try {
-      console.log('[Flow] Initializing session...');
-      console.log('[Flow] Token (first 50 chars):', token.substring(0, 50));
+    console.log('[Flow] Initializing session...');
+    console.log('[Flow] Token (first 50 chars):', token.substring(0, 50));
 
-      setFlowState('loading');
-      setError(null);
+    setFlowState('loading');
+    setError(null);
 
-      const session = new RecordingSession();
-      console.log('[Flow] RecordingSession instance created');
+    const session = new RecordingSession();
+    console.log('[Flow] RecordingSession instance created');
 
-      await session.initialize(token);
-      console.log('[Flow] Session initialized successfully');
-      console.log('[Flow] Session ID:', session.sessionId);
-      console.log('[Flow] Recording ID:', session.recordingId);
-      console.log('[Flow] Requester name:', session.requesterName);
-      console.log('[Flow] Max recording duration:', `${session.maxRecordingDurationMs}ms`);
-      console.log(
-        '[Flow] Max recording size:',
-        session.maxRecordingSize ? `${session.maxRecordingSize} bytes` : '(unlimited)'
-      );
-      console.log('[Flow] Preferences:', session.preferences);
+    const result = await session.initialize(token);
 
-      sessionRef.current = session;
-
-      if (session.preferences) {
-        setPreferences(session.preferences);
-      }
-
-      setRequesterName(session.requesterName || '');
-      setMaxRecordingDurationMs(session.maxRecordingDurationMs);
-      setMaxRecordingSize(session.maxRecordingSize);
-
-      console.log('[Flow] Transitioning to setup state');
-      setFlowState('setup');
-    } catch (err) {
-      console.error('[Flow] Session initialization failed:', err);
-      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
-      setError(err);
+    if (!result.ok) {
+      console.error('[Flow] Session initialization failed:', result.error);
+      setError(result.error);
       setFlowState('error');
+      return;
     }
+
+    console.log('[Flow] Session initialized successfully');
+    console.log('[Flow] Session ID:', result.data.sessionId);
+    console.log('[Flow] Requester name:', result.data.requesterName);
+    console.log('[Flow] Max recording duration:', `${result.data.maxRecordingDurationMs}ms`);
+    console.log(
+      '[Flow] Max recording size:',
+      result.data.maxRecordingSize ? `${result.data.maxRecordingSize} bytes` : '(unlimited)'
+    );
+    console.log('[Flow] Preferences:', result.data.preferences);
+
+    sessionRef.current = session;
+    setPreferences(result.data.preferences);
+    setRequesterName(result.data.requesterName || '');
+    setMaxRecordingDurationMs(result.data.maxRecordingDurationMs);
+    setMaxRecordingSize(result.data.maxRecordingSize);
+
+    console.log('[Flow] Transitioning to setup state');
+    setFlowState('setup');
   }
 
   async function startRecording(mode: RecordingMode) {
@@ -245,7 +248,7 @@ export function useRecordingFlow(linkToken: string | null): {
         },
         onError: (err) => {
           console.error('[Flow] Recording error:', err);
-          setError(err);
+          setError(classifyError(err));
           setFlowState('error');
         },
       });
@@ -284,7 +287,7 @@ export function useRecordingFlow(linkToken: string | null): {
     } catch (err) {
       console.error('[Flow] Failed to start recording:', err);
       console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
-      setError(err);
+      setError(classifyError(err as Error));
       setFlowState('error');
     }
   }
@@ -325,9 +328,13 @@ export function useRecordingFlow(linkToken: string | null): {
           actual: durationMs,
           limit: maxRecordingDurationMs,
         });
-        throw new Error(
-          `Recording duration (${durationMs}ms) exceeds the maximum allowed (${maxRecordingDurationMs}ms)`
-        );
+        setError({
+          title: 'Recording too long',
+          message: `Recording duration (${Math.round(durationMs / 1000)}s) exceeds the maximum allowed (${Math.round(maxRecordingDurationMs / 1000)}s)`,
+          primaryAction: { label: 'Start over', action: 'start-over' },
+        });
+        setFlowState('error');
+        return;
       }
 
       if (maxRecordingSize && blob.size > maxRecordingSize) {
@@ -335,9 +342,13 @@ export function useRecordingFlow(linkToken: string | null): {
           actual: blob.size,
           limit: maxRecordingSize,
         });
-        throw new Error(
-          `Recording size (${Math.round(blob.size / 1048576)}MB) exceeds the maximum allowed (${Math.round(maxRecordingSize / 1048576)}MB)`
-        );
+        setError({
+          title: 'Recording too large',
+          message: `Recording size (${Math.round(blob.size / 1048576)}MB) exceeds the maximum allowed (${Math.round(maxRecordingSize / 1048576)}MB)`,
+          primaryAction: { label: 'Start over', action: 'start-over' },
+        });
+        setFlowState('error');
+        return;
       }
 
       console.log('[Flow] All constraints passed');
@@ -376,7 +387,7 @@ export function useRecordingFlow(linkToken: string | null): {
         URL.revokeObjectURL(createdBlobUrl);
       }
 
-      setError(err);
+      setError(classifyError(err as Error));
       setFlowState('error');
     } finally {
       setIsProcessing(false);
@@ -390,143 +401,203 @@ export function useRecordingFlow(linkToken: string | null): {
 
   async function submitRecording() {
     setIsProcessing(true);
-    try {
-      console.log('[Flow] Submitting recording...');
+    console.log('[Flow] Submitting recording...');
 
-      if (!recordingBlob) {
-        throw new Error('No recording to submit');
-      }
-
-      if (!sessionRef.current) {
-        throw new Error('No active session');
-      }
-
-      console.log('[Flow] Recording blob size:', recordingBlob.size, 'bytes');
-      console.log('[Flow] Recording blob type:', recordingBlob.type);
-
-      setFlowState('uploading');
-      setUploadProgress(0);
-
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const extension = recordingBlob.type.includes('webm') ? 'webm' : 'mp4';
-      const fileName = `recording-${timestamp}.${extension}`;
-      const file = new File([recordingBlob], fileName, {
-        type: recordingBlob.type,
+    if (!recordingBlob) {
+      setError({
+        title: 'No recording',
+        message: 'No recording to submit',
+        primaryAction: { label: 'Start over', action: 'start-over' },
       });
+      setFlowState('error');
+      setIsProcessing(false);
+      return;
+    }
 
-      console.log('[Flow] Created file:', fileName);
-      console.log('[Flow] File size:', file.size, 'bytes');
-      console.log('[Flow] File type:', file.type);
-      console.log(
-        '[Flow] Recording duration:',
-        recordingDurationMs ? `${recordingDurationMs}ms` : '0ms (will default to 0)'
-      );
-      console.log(
-        '[Flow] Thumbnail:',
-        thumbnailBlob ? `${thumbnailBlob.size} bytes, ${thumbnailBlob.type}` : 'none'
-      );
+    if (!sessionRef.current) {
+      setError({
+        title: 'Session expired',
+        message: 'No active session',
+        primaryAction: { label: 'Start over', action: 'start-over' },
+      });
+      setFlowState('error');
+      setIsProcessing(false);
+      return;
+    }
 
-      // STEP 1: Initialize upload and get presigned URLs
-      console.log('[Flow] Step 1: Initializing upload...');
-      const newUploadState = await sessionRef.current.initializeUpload(
-        file,
-        thumbnailBlob,
-        recordingDurationMs
-      );
-      setUploadState(newUploadState);
-      console.log('[Flow] Upload initialized, state saved for retry');
+    console.log('[Flow] Recording blob size:', recordingBlob.size, 'bytes');
+    console.log('[Flow] Recording blob type:', recordingBlob.type);
 
-      // STEP 2: Upload files to object storage (retryable)
-      console.log('[Flow] Step 2: Uploading files to storage...');
-      await sessionRef.current.uploadToStorage(newUploadState, (progress: UploadProgress) => {
+    setFlowState('uploading');
+    setUploadProgress(0);
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const extension = recordingBlob.type.includes('webm') ? 'webm' : 'mp4';
+    const fileName = `recording-${timestamp}.${extension}`;
+    const file = new File([recordingBlob], fileName, {
+      type: recordingBlob.type,
+    });
+
+    console.log('[Flow] Created file:', fileName);
+    console.log('[Flow] File size:', file.size, 'bytes');
+    console.log('[Flow] File type:', file.type);
+    console.log(
+      '[Flow] Recording duration:',
+      recordingDurationMs ? `${recordingDurationMs}ms` : '0ms (will default to 0)'
+    );
+    console.log(
+      '[Flow] Thumbnail:',
+      thumbnailBlob ? `${thumbnailBlob.size} bytes, ${thumbnailBlob.type}` : 'none'
+    );
+
+    // STEP 1: Initialize upload and get presigned URLs
+    console.log('[Flow] Step 1: Initializing upload...');
+    const initResult = await sessionRef.current.initializeUpload(
+      file,
+      thumbnailBlob,
+      recordingDurationMs
+    );
+
+    if (!initResult.ok) {
+      console.error('[Flow] Upload initialization failed:', initResult.error);
+      setError(initResult.error);
+      setFlowState('error');
+      setIsProcessing(false);
+      return;
+    }
+
+    const newUploadState = initResult.data;
+    setUploadState(newUploadState);
+    console.log('[Flow] Upload initialized, state saved for retry');
+
+    // STEP 2: Upload files to object storage (retryable)
+    console.log('[Flow] Step 2: Uploading files to storage...');
+    const storageResult = await sessionRef.current.uploadToStorage(
+      newUploadState,
+      (progress: UploadProgress) => {
         console.log('[Flow] Upload progress:', progress.percentage + '%');
         setUploadProgress(progress.percentage);
-      });
-      console.log('[Flow] Files uploaded to storage');
+      }
+    );
 
-      // STEP 3: Acknowledge upload completion
-      console.log('[Flow] Step 3: Acknowledging upload...');
-      await sessionRef.current.acknowledgeUpload(newUploadState);
-      console.log('[Flow] Upload acknowledged');
-
-      // Clear upload state after successful completion
-      setUploadState(null);
-
-      console.log('[Flow] Upload completed successfully');
-      console.log('[Flow] Transitioning to success state');
-      setFlowState('success');
-
-      console.log(`[Flow] Tab will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
-      setTimeout(() => {
-        console.log('[Flow] Closing tab...');
-        window.close();
-      }, SUCCESS_AUTO_CLOSE_DELAY_MS);
-    } catch (err) {
-      console.error('[Flow] Upload failed:', err);
-      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
-      setError(err);
+    if (!storageResult.ok) {
+      console.error('[Flow] Storage upload failed:', storageResult.error);
+      setError(storageResult.error);
       setFlowState('error');
-      // Upload state is preserved for retry
-    } finally {
       setIsProcessing(false);
+      // Upload state is preserved for retry
+      return;
     }
+
+    console.log('[Flow] Files uploaded to storage');
+
+    // STEP 3: Acknowledge upload completion
+    console.log('[Flow] Step 3: Acknowledging upload...');
+    const ackResult = await sessionRef.current.acknowledgeUpload(newUploadState);
+
+    if (!ackResult.ok) {
+      console.error('[Flow] Upload acknowledgment failed:', ackResult.error);
+      setError(ackResult.error);
+      setFlowState('error');
+      setIsProcessing(false);
+      // Upload state is preserved for retry
+      return;
+    }
+
+    console.log('[Flow] Upload acknowledged');
+
+    // Clear upload state after successful completion
+    setUploadState(null);
+
+    console.log('[Flow] Upload completed successfully');
+    console.log('[Flow] Transitioning to success state');
+    setFlowState('success');
+    setIsProcessing(false);
+
+    console.log(`[Flow] Tab will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
+    setTimeout(() => {
+      console.log('[Flow] Closing tab...');
+      window.close();
+    }, SUCCESS_AUTO_CLOSE_DELAY_MS);
   }
 
   async function retryUpload() {
     if (!uploadState) {
       console.error('[Flow] No upload state available for retry');
-      setError('Cannot retry: No upload state available');
+      setError({
+        title: 'Cannot retry',
+        message: 'No upload state available. Please start over.',
+        primaryAction: { label: 'Start over', action: 'start-over' },
+      });
       setFlowState('error');
       return;
     }
 
     if (!sessionRef.current) {
       console.error('[Flow] No active session');
-      setError('Cannot retry: No active session');
+      setError({
+        title: 'Session expired',
+        message: 'No active session. Please start over.',
+        primaryAction: { label: 'Start over', action: 'start-over' },
+      });
       setFlowState('error');
       return;
     }
 
     setIsProcessing(true);
-    try {
-      console.log('[Flow] Retrying upload from storage step...');
-      setFlowState('uploading');
-      setUploadProgress(0);
+    console.log('[Flow] Retrying upload from storage step...');
+    setFlowState('uploading');
+    setUploadProgress(0);
 
-      // STEP 2: Upload files to object storage (retry)
-      console.log('[Flow] Step 2 (retry): Uploading files to storage...');
-      await sessionRef.current.uploadToStorage(uploadState, (progress: UploadProgress) => {
+    // STEP 2: Upload files to object storage (retry)
+    console.log('[Flow] Step 2 (retry): Uploading files to storage...');
+    const storageResult = await sessionRef.current.uploadToStorage(
+      uploadState,
+      (progress: UploadProgress) => {
         console.log('[Flow] Upload progress:', progress.percentage + '%');
         setUploadProgress(progress.percentage);
-      });
-      console.log('[Flow] Files uploaded to storage');
+      }
+    );
 
-      // STEP 3: Acknowledge upload completion
-      console.log('[Flow] Step 3: Acknowledging upload...');
-      await sessionRef.current.acknowledgeUpload(uploadState);
-      console.log('[Flow] Upload acknowledged');
-
-      // Clear upload state after successful completion
-      setUploadState(null);
-
-      console.log('[Flow] Retry successful');
-      console.log('[Flow] Transitioning to success state');
-      setFlowState('success');
-
-      console.log(`[Flow] Tab will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
-      setTimeout(() => {
-        console.log('[Flow] Closing tab...');
-        window.close();
-      }, SUCCESS_AUTO_CLOSE_DELAY_MS);
-    } catch (err) {
-      console.error('[Flow] Retry failed:', err);
-      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
-      setError(err);
+    if (!storageResult.ok) {
+      console.error('[Flow] Retry storage upload failed:', storageResult.error);
+      setError(storageResult.error);
       setFlowState('error');
-      // Upload state is preserved for another retry
-    } finally {
       setIsProcessing(false);
+      // Upload state is preserved for another retry
+      return;
     }
+
+    console.log('[Flow] Files uploaded to storage');
+
+    // STEP 3: Acknowledge upload completion
+    console.log('[Flow] Step 3: Acknowledging upload...');
+    const ackResult = await sessionRef.current.acknowledgeUpload(uploadState);
+
+    if (!ackResult.ok) {
+      console.error('[Flow] Retry acknowledgment failed:', ackResult.error);
+      setError(ackResult.error);
+      setFlowState('error');
+      setIsProcessing(false);
+      // Upload state is preserved for another retry
+      return;
+    }
+
+    console.log('[Flow] Upload acknowledged');
+
+    // Clear upload state after successful completion
+    setUploadState(null);
+
+    console.log('[Flow] Retry successful');
+    console.log('[Flow] Transitioning to success state');
+    setFlowState('success');
+    setIsProcessing(false);
+
+    console.log(`[Flow] Tab will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
+    setTimeout(() => {
+      console.log('[Flow] Closing tab...');
+      window.close();
+    }, SUCCESS_AUTO_CLOSE_DELAY_MS);
   }
 
   async function startOver() {

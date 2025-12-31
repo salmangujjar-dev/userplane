@@ -8,6 +8,7 @@ import {
   getBestMimeType,
 } from '@/utils/browser';
 import { VIDEO_BITRATE_BPS, AUDIO_SAMPLE_RATE_HZ, MEDIA_RECORDER_TIMESLICE_MS } from '@/constants';
+import { ClientError } from '@/lib/client-errors';
 
 export type RecordingMode = 'screen-voice' | 'screen-only';
 
@@ -144,8 +145,8 @@ export class MediaCapture {
       };
 
       this.mediaRecorder.onerror = (event: any) => {
-        const error = new Error(`MediaRecorder error: ${event.error}`);
-        console.error('[MediaCapture] Error:', error);
+        const error = new ClientError('CLIENT_MEDIA_CONNECTION_FAILED', event.error);
+        console.error('[MediaCapture] Error:', error.code);
         if (this.onErrorCallback) {
           this.onErrorCallback(error);
         }
@@ -161,7 +162,7 @@ export class MediaCapture {
       console.log('[MediaCapture] Permissions granted, ready to start recording');
     } catch (error) {
       console.error('[MediaCapture] Failed to request permissions:', error);
-      throw error;
+      throw ClientError.fromBrowserError(error as Error);
     }
   }
 
