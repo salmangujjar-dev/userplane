@@ -20,7 +20,6 @@ interface StoryArgs extends PreferenceArgs {
 
 const meta: Meta<StoryArgs> = {
   title: 'Screens/PostRecordingUploadScreen',
-  component: PostRecordingUploadScreen,
   parameters: {
     layout: 'fullscreen',
   },

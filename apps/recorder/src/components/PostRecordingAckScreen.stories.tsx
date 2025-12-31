@@ -11,7 +11,9 @@ type StoryArgs = PreferenceArgs;
 
 const meta: Meta<StoryArgs> = {
   title: 'Screens/PostRecordingAckScreen',
-  component: PostRecordingAckScreen,
+  // Storybook expects the component prop to take args directly,
+  // but our PostRecordingAckScreen expects a 'preferences' prop.
+  // Omit the 'component' key here and use `render` below for proper mapping.
   parameters: {
     layout: 'fullscreen',
   },

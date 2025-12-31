@@ -16,7 +16,6 @@ interface StoryArgs extends PreferenceArgs {
 
 const meta: Meta<StoryArgs> = {
   title: 'Screens/ErrorScreen',
-  component: ErrorScreen,
   parameters: {
     layout: 'fullscreen',
   },

@@ -13,7 +13,6 @@ interface StoryArgs extends PreferenceArgs {
 
 const meta: Meta<StoryArgs> = {
   title: 'Screens/PreRecordingCountdownScreen',
-  component: PreRecordingCountdownScreen,
   parameters: {
     layout: 'fullscreen',
   },

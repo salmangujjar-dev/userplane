@@ -15,7 +15,6 @@ interface StoryArgs extends PreferenceArgs {
 
 const meta: Meta<StoryArgs> = {
   title: 'Screens/RecordingInProgressScreen',
-  component: RecordingInProgressScreen,
   parameters: {
     layout: 'fullscreen',
   },
