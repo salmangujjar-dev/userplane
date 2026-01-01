@@ -30,6 +30,10 @@ export const getRecordings = oc
     description: 'Retrieve paginated list of recordings with optional filters',
     tags: ['Recordings'],
   })
+  .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
+  })
   .input(ListRecordingsQuerySchema)
   .output(ApiResponseSchema(RecordingsListDataSchema));
 
@@ -47,6 +51,8 @@ export const getRecordingById = oc
     tags: ['Recordings'],
   })
   .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
     RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })
@@ -67,6 +73,8 @@ export const deleteRecording = oc
     tags: ['Recordings'],
   })
   .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
     RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
     RECORDING_WORKSPACE_MISMATCH: RecordingErrors.RECORDING_WORKSPACE_MISMATCH,
@@ -89,6 +97,8 @@ export const getRecordingVideo = oc
     tags: ['Recordings'],
   })
   .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
     RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })
@@ -109,6 +119,8 @@ export const getRecordingThumbnail = oc
     tags: ['Recordings'],
   })
   .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
     RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })
@@ -129,6 +141,8 @@ export const getRecordingConsoleLog = oc
     tags: ['Recordings'],
   })
   .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
     RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })
@@ -149,6 +163,8 @@ export const getRecordingNetworkLog = oc
     tags: ['Recordings'],
   })
   .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
     RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })
@@ -169,6 +185,8 @@ export const getRecordingAction = oc
     tags: ['Recordings'],
   })
   .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
     RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
   })

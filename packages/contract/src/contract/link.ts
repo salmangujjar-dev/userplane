@@ -34,6 +34,10 @@ export const getLinks = oc
     description: 'Retrieve paginated list of recording links with optional filters',
     tags: ['Links'],
   })
+  .errors({
+    UNAUTHORIZED: LinkErrors.UNAUTHORIZED,
+    FORBIDDEN: LinkErrors.FORBIDDEN,
+  })
   .input(ListLinksQuerySchema)
   .output(ApiResponseSchema(LinksListDataSchema));
 
@@ -51,6 +55,8 @@ export const createLink = oc
     tags: ['Links'],
   })
   .errors({
+    UNAUTHORIZED: LinkErrors.UNAUTHORIZED,
+    FORBIDDEN: LinkErrors.FORBIDDEN,
     LINK_WORKSPACE_DELETED: LinkErrors.LINK_WORKSPACE_DELETED,
     LINK_MEMBER_NOT_FOUND: LinkErrors.LINK_MEMBER_NOT_FOUND,
     LINK_MEMBER_WORKSPACE_MISMATCH: LinkErrors.LINK_MEMBER_WORKSPACE_MISMATCH,
@@ -75,6 +81,8 @@ export const getLinkById = oc
     tags: ['Links'],
   })
   .errors({
+    UNAUTHORIZED: LinkErrors.UNAUTHORIZED,
+    FORBIDDEN: LinkErrors.FORBIDDEN,
     LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
     LINK_GONE: LinkErrors.LINK_GONE,
     LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
@@ -96,6 +104,8 @@ export const updateLink = oc
     tags: ['Links'],
   })
   .errors({
+    UNAUTHORIZED: LinkErrors.UNAUTHORIZED,
+    FORBIDDEN: LinkErrors.FORBIDDEN,
     LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
     LINK_GONE: LinkErrors.LINK_GONE,
     LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
@@ -118,6 +128,8 @@ export const deleteLink = oc
     tags: ['Links'],
   })
   .errors({
+    UNAUTHORIZED: LinkErrors.UNAUTHORIZED,
+    FORBIDDEN: LinkErrors.FORBIDDEN,
     LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
     LINK_GONE: LinkErrors.LINK_GONE,
     LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,

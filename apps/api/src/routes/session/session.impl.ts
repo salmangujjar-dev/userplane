@@ -21,7 +21,7 @@ const requireSessionToken = os.middleware(async ({ context, next }) => {
   const sessionToken = context.headers.get(REQUEST_HEADERS.SESSION_TOKEN);
 
   if (!sessionToken) {
-    throw new ORPCError('UNAUTHORIZED', {
+    throw new ORPCError('SESSION_TOKEN_MISSING', {
       status: 401,
       message: `Session token required in ${REQUEST_HEADERS.SESSION_TOKEN} header`,
     });
@@ -41,7 +41,7 @@ const requireUploadToken = os.middleware(async ({ context, next }) => {
   const uploadToken = context.headers.get(REQUEST_HEADERS.UPLOAD_TOKEN);
 
   if (!uploadToken) {
-    throw new ORPCError('UNAUTHORIZED', {
+    throw new ORPCError('UPLOAD_TOKEN_MISSING', {
       status: 401,
       message: `Upload token required in ${REQUEST_HEADERS.UPLOAD_TOKEN} header`,
     });

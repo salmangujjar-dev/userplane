@@ -26,6 +26,7 @@ export const getAccount = oc
     tags: ['Account'],
   })
   .errors({
+    UNAUTHORIZED: AccountErrors.UNAUTHORIZED,
     USER_NOT_FOUND: AccountErrors.USER_NOT_FOUND,
   })
   .output(ApiResponseSchema(AccountDataSchema));
@@ -44,8 +45,9 @@ export const updateAccount = oc
     tags: ['Account'],
   })
   .errors({
-    USER_NOT_FOUND: AccountErrors.USER_NOT_FOUND,
+    UNAUTHORIZED: AccountErrors.UNAUTHORIZED,
     USER_NAME_REQUIRED: AccountErrors.USER_NAME_REQUIRED,
+    USER_NOT_FOUND: AccountErrors.USER_NOT_FOUND,
   })
   .input(UpdateAccountSchema)
   .output(ApiResponseSchema(AccountUpdateDataSchema));

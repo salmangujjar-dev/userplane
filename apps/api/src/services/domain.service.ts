@@ -48,6 +48,7 @@ export class DomainService {
 
     if (existingDomain) {
       throw new ORPCError('DOMAIN_ALREADY_EXISTS', {
+        status: 409,
         message: 'This domain has already been added to the workspace',
       });
     }
@@ -356,12 +357,14 @@ export class DomainService {
         });
       }
       throw new ORPCError('DOMAIN_NOT_FOUND', {
+        status: 404,
         message: 'Domain not found',
       });
     }
 
     if (domain.workspaceId !== workspaceId) {
       throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        status: 403,
         message: 'Domain does not belong to this workspace',
       });
     }

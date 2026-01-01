@@ -32,6 +32,9 @@ export const getSession = oc
     },
   })
   .errors({
+    LINK_TOKEN_MISSING_ID: SessionErrors.LINK_TOKEN_MISSING_ID,
+    LINK_TOKEN_EXPIRED: SessionErrors.LINK_TOKEN_EXPIRED,
+    LINK_TOKEN_INVALID: SessionErrors.LINK_TOKEN_INVALID,
     SESSION_LINK_GONE: SessionErrors.SESSION_LINK_GONE,
     SESSION_LINK_NOT_FOUND: SessionErrors.SESSION_LINK_NOT_FOUND,
     SESSION_LINK_INVALID_TYPE: SessionErrors.SESSION_LINK_INVALID_TYPE,
@@ -57,6 +60,7 @@ export const initUpload = oc
     },
   })
   .errors({
+    SESSION_TOKEN_MISSING: SessionErrors.SESSION_TOKEN_MISSING,
     SESSION_TOKEN_EXPIRED: SessionErrors.SESSION_TOKEN_EXPIRED,
     SESSION_LINK_GONE: SessionErrors.SESSION_LINK_GONE,
     SESSION_LINK_NOT_FOUND: SessionErrors.SESSION_LINK_NOT_FOUND,
@@ -68,6 +72,8 @@ export const initUpload = oc
     SESSION_VIDEO_EMPTY: SessionErrors.SESSION_VIDEO_EMPTY,
     SESSION_FILE_FORMAT_UNSUPPORTED: SessionErrors.SESSION_FILE_FORMAT_UNSUPPORTED,
     SESSION_FILE_TOO_LARGE: SessionErrors.SESSION_FILE_TOO_LARGE,
+    SESSION_STORAGE_ERROR: SessionErrors.SESSION_STORAGE_ERROR,
+    SESSION_DATABASE_ERROR: SessionErrors.SESSION_DATABASE_ERROR,
   })
   .input(InitUploadSchema)
   .output(ApiResponseSchema(UploadInitDataSchema));
@@ -89,6 +95,7 @@ export const completeUpload = oc
     },
   })
   .errors({
+    UPLOAD_TOKEN_MISSING: SessionErrors.UPLOAD_TOKEN_MISSING,
     SESSION_UPLOAD_TOKEN_EXPIRED: SessionErrors.SESSION_UPLOAD_TOKEN_EXPIRED,
     SESSION_UPLOAD_TOKEN_MISMATCH: SessionErrors.SESSION_UPLOAD_TOKEN_MISMATCH,
     SESSION_LINK_GONE: SessionErrors.SESSION_LINK_GONE,
@@ -97,6 +104,7 @@ export const completeUpload = oc
     SESSION_RECORDING_NOT_FOUND: SessionErrors.SESSION_RECORDING_NOT_FOUND,
     SESSION_UPLOAD_FAILED: SessionErrors.SESSION_UPLOAD_FAILED,
     SESSION_FILE_VERIFICATION_FAILED: SessionErrors.SESSION_FILE_VERIFICATION_FAILED,
+    SESSION_STORAGE_ERROR: SessionErrors.SESSION_STORAGE_ERROR,
   })
   .input(CompleteUploadSchema)
   .output(ApiResponseSchema(UploadCompleteDataSchema));

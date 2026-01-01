@@ -294,36 +294,52 @@ export class SessionService {
     const filePaths = this.extractFilePaths(fileUploads);
 
     // Create recording record in database
-    await this.deps.recordingRepo.create({
-      recordingId: recordingId,
-      recordingLinkId: sessionPayload.lid,
-      workspaceId: sessionPayload.wid,
-      projectId: linkData.projectId,
-      createdBy: linkData.createdBy,
-      recordingDurationMs,
-      recordingVideoRef: filePaths.videoPath,
-      recordingThumbnailRef: filePaths.thumbnailPath,
-      recordingConsoleLogRef: filePaths.consoleLogPath,
-      recordingNetworkLogsRef: filePaths.networkLogPath,
-      recordingActionRef: filePaths.actionPath,
-      systemMeta: metadata.systemMetadata,
-      customMeta: {
-        ...metadata.customMetadata,
-        sessionId: sessionPayload.sid,
-      },
-    });
+    try {
+      await this.deps.recordingRepo.create({
+        recordingId: recordingId,
+        recordingLinkId: sessionPayload.lid,
+        workspaceId: sessionPayload.wid,
+        projectId: linkData.projectId,
+        createdBy: linkData.createdBy,
+        recordingDurationMs,
+        recordingVideoRef: filePaths.videoPath,
+        recordingThumbnailRef: filePaths.thumbnailPath,
+        recordingConsoleLogRef: filePaths.consoleLogPath,
+        recordingNetworkLogsRef: filePaths.networkLogPath,
+        recordingActionRef: filePaths.actionPath,
+        systemMeta: metadata.systemMetadata,
+        customMeta: {
+          ...metadata.customMetadata,
+          sessionId: sessionPayload.sid,
+        },
+      });
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('SESSION_DATABASE_ERROR', {
+        status: 500,
+        message: 'Database operation failed, try again',
+      });
+    }
 
     // Schedule stale recording check
     // Delays execution by presignedUrlExpiry to check if recording is still pending
     // If so, marks it deleted and triggers cleanup
-    await tasks.trigger(
-      TASK_IDS.CHECK_STALE_RECORDING,
-      { recordingId },
-      {
-        idempotencyKey: buildStaleRecordingCheckKey(recordingId),
-        delay: getPurgeDelay('pending'),
-      }
-    );
+    // Note: Trigger.dev failures are non-blocking - recording can still proceed
+    try {
+      await tasks.trigger(
+        TASK_IDS.CHECK_STALE_RECORDING,
+        { recordingId },
+        {
+          idempotencyKey: buildStaleRecordingCheckKey(recordingId),
+          delay: getPurgeDelay('pending'),
+        }
+      );
+    } catch {
+      // Log but don't fail the request - stale check is a background task
+      // The recording will still be created and can be uploaded
+    }
 
     // Generate upload token scoped to this recording
     const uploadToken = this.generateUploadToken(
@@ -637,6 +653,7 @@ export class SessionService {
 
   /**
    * Get presigned URL for a specific file type
+   * Wraps storage operations to convert infrastructure errors to ORPC errors
    */
   private async getPresignedUrlForFile(
     recordingId: string,
@@ -644,42 +661,58 @@ export class SessionService {
   ): Promise<{ url: string; path: string }> {
     const expiresIn = SESSION_CONSTRAINTS.PRESIGNED_URL_EXPIRY;
 
-    switch (file.type) {
-      case 'video':
-        return this.deps.videoStorage.getRecordingUploadUrl(recordingId, file.mime_type, {
-          contentLength: file.size,
-          expiresIn,
-        });
+    try {
+      switch (file.type) {
+        case 'video':
+          return await this.deps.videoStorage.getRecordingUploadUrl(recordingId, file.mime_type, {
+            contentLength: file.size,
+            expiresIn,
+          });
 
-      case 'thumbnail':
-        return this.deps.thumbnailsStorage.getThumbnailUploadUrl(recordingId, file.mime_type, {
-          contentLength: file.size,
-          expiresIn,
-        });
+        case 'thumbnail':
+          return await this.deps.thumbnailsStorage.getThumbnailUploadUrl(
+            recordingId,
+            file.mime_type,
+            {
+              contentLength: file.size,
+              expiresIn,
+            }
+          );
 
-      case 'console_log':
-        return this.deps.consoleLogsStorage.getUploadUrl(recordingId, {
-          contentLength: file.size,
-          expiresIn,
-        });
+        case 'console_log':
+          return await this.deps.consoleLogsStorage.getUploadUrl(recordingId, {
+            contentLength: file.size,
+            expiresIn,
+          });
 
-      case 'network_log':
-        return this.deps.networkLogsStorage.getUploadUrl(recordingId, {
-          contentLength: file.size,
-          expiresIn,
-        });
+        case 'network_log':
+          return await this.deps.networkLogsStorage.getUploadUrl(recordingId, {
+            contentLength: file.size,
+            expiresIn,
+          });
 
-      case 'action':
-        return this.deps.clientActionsStorage.getUploadUrl(recordingId, {
-          contentLength: file.size,
-          expiresIn,
-        });
+        case 'action':
+          return await this.deps.clientActionsStorage.getUploadUrl(recordingId, {
+            contentLength: file.size,
+            expiresIn,
+          });
 
-      default:
-        throw new ORPCError('SESSION_FILE_FORMAT_UNSUPPORTED', {
-          status: 400,
-          message: "Format's not supported, try recording again",
-        });
+        default:
+          throw new ORPCError('SESSION_FILE_FORMAT_UNSUPPORTED', {
+            status: 400,
+            message: "Format's not supported, try recording again",
+          });
+      }
+    } catch (error) {
+      // Re-throw ORPC errors as-is
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      // Convert storage/S3 errors to typed error
+      throw new ORPCError('SESSION_STORAGE_ERROR', {
+        status: 500,
+        message: 'Storage operation failed, try again',
+      });
     }
   }
 
@@ -704,6 +737,7 @@ export class SessionService {
 
   /**
    * Verify uploaded files exist in storage
+   * Wraps storage operations to convert infrastructure errors to ORPC errors
    *
    * @param recording - Recording with file paths
    * @param mode - Verification mode:
@@ -725,67 +759,79 @@ export class SessionService {
       return;
     }
 
-    const errors: string[] = [];
+    try {
+      const errors: string[] = [];
 
-    // Video is always required
-    if (recording.recordingVideoRef) {
-      const videoExists = await this.deps.videoStorage.head(recording.recordingVideoRef);
-      if (!videoExists) {
-        errors.push('Video file not found in storage');
-      }
-    } else {
-      errors.push('Video file path not found');
-    }
-
-    // For complete mode, verify all requested files
-    if (mode === 'complete') {
-      // Thumbnail is required in complete mode
-      if (recording.recordingThumbnailRef) {
-        const thumbnailExists = await this.deps.thumbnailsStorage.head(
-          recording.recordingThumbnailRef
-        );
-        if (!thumbnailExists) {
-          errors.push('Thumbnail file not found in storage');
+      // Video is always required
+      if (recording.recordingVideoRef) {
+        const videoExists = await this.deps.videoStorage.head(recording.recordingVideoRef);
+        if (!videoExists) {
+          errors.push('Video file not found in storage');
         }
       } else {
-        errors.push('Thumbnail file path not found');
+        errors.push('Video file path not found');
       }
 
-      // Console log - if requested, must exist
-      if (recording.recordingConsoleLogRef) {
-        const consoleLogExists = await this.deps.consoleLogsStorage.head(
-          recording.recordingConsoleLogRef
-        );
-        if (!consoleLogExists) {
-          errors.push('Console log file not found in storage');
+      // For complete mode, verify all requested files
+      if (mode === 'complete') {
+        // Thumbnail is required in complete mode
+        if (recording.recordingThumbnailRef) {
+          const thumbnailExists = await this.deps.thumbnailsStorage.head(
+            recording.recordingThumbnailRef
+          );
+          if (!thumbnailExists) {
+            errors.push('Thumbnail file not found in storage');
+          }
+        } else {
+          errors.push('Thumbnail file path not found');
+        }
+
+        // Console log - if requested, must exist
+        if (recording.recordingConsoleLogRef) {
+          const consoleLogExists = await this.deps.consoleLogsStorage.head(
+            recording.recordingConsoleLogRef
+          );
+          if (!consoleLogExists) {
+            errors.push('Console log file not found in storage');
+          }
+        }
+
+        // Network log - if requested, must exist
+        if (recording.recordingNetworkLogsRef) {
+          const networkLogExists = await this.deps.networkLogsStorage.head(
+            recording.recordingNetworkLogsRef
+          );
+          if (!networkLogExists) {
+            errors.push('Network log file not found in storage');
+          }
+        }
+
+        // Client action - if requested, must exist
+        if (recording.recordingActionRef) {
+          const actionExists = await this.deps.clientActionsStorage.head(
+            recording.recordingActionRef
+          );
+          if (!actionExists) {
+            errors.push('Client action file not found in storage');
+          }
         }
       }
 
-      // Network log - if requested, must exist
-      if (recording.recordingNetworkLogsRef) {
-        const networkLogExists = await this.deps.networkLogsStorage.head(
-          recording.recordingNetworkLogsRef
-        );
-        if (!networkLogExists) {
-          errors.push('Network log file not found in storage');
-        }
+      if (errors.length > 0) {
+        throw new ORPCError('SESSION_FILE_VERIFICATION_FAILED', {
+          status: 400,
+          message: "Couldn't verify files, try uploading again",
+        });
       }
-
-      // Client action - if requested, must exist
-      if (recording.recordingActionRef) {
-        const actionExists = await this.deps.clientActionsStorage.head(
-          recording.recordingActionRef
-        );
-        if (!actionExists) {
-          errors.push('Client action file not found in storage');
-        }
+    } catch (error) {
+      // Re-throw ORPC errors as-is
+      if (error instanceof ORPCError) {
+        throw error;
       }
-    }
-
-    if (errors.length > 0) {
-      throw new ORPCError('SESSION_FILE_VERIFICATION_FAILED', {
-        status: 400,
-        message: "Couldn't verify files, try uploading again",
+      // Convert storage/S3 errors to typed error
+      throw new ORPCError('SESSION_STORAGE_ERROR', {
+        status: 500,
+        message: 'Storage operation failed, try again',
       });
     }
   }

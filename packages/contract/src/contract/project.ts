@@ -34,6 +34,10 @@ export const getProjects = oc
     description: 'Retrieve paginated list of projects',
     tags: ['Projects'],
   })
+  .errors({
+    UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
+    FORBIDDEN: ProjectErrors.FORBIDDEN,
+  })
   .input(ListProjectsQuerySchema)
   .output(ApiResponseSchema(ProjectsListDataSchema));
 
@@ -51,6 +55,8 @@ export const createProject = oc
     tags: ['Projects'],
   })
   .errors({
+    UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
+    FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_WORKSPACE_ID_REQUIRED: ProjectErrors.PROJECT_WORKSPACE_ID_REQUIRED,
   })
   .input(CreateProjectSchema)
@@ -70,6 +76,8 @@ export const getProjectById = oc
     tags: ['Projects'],
   })
   .errors({
+    UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
+    FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
   })
@@ -90,6 +98,8 @@ export const updateProject = oc
     tags: ['Projects'],
   })
   .errors({
+    UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
+    FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
   })
@@ -110,6 +120,8 @@ export const replaceProject = oc
     tags: ['Projects'],
   })
   .errors({
+    UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
+    FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
   })
@@ -130,6 +142,8 @@ export const deleteProject = oc
     tags: ['Projects'],
   })
   .errors({
+    UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
+    FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
     PROJECT_WORKSPACE_MISMATCH: ProjectErrors.PROJECT_WORKSPACE_MISMATCH,
