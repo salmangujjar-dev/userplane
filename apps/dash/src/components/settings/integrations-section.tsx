@@ -23,7 +23,7 @@ export function IntegrationsSection() {
           Connect third-party services to your workspace
         </p>
       </div>
-      <div className="max-w-md">
+      <div className="max-w-2xl">
         <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
           <div className="flex items-center gap-3">
             <Image

@@ -143,7 +143,7 @@ export function LinkPreview({
   return (
     <>
       <div
-        className="rounded-xl border border-border hover:border-foreground transition-colors p-4 cursor-pointer"
+        className="rounded-xl border border-border hover:border-foreground transition-colors p-6 cursor-pointer"
         onClick={handleCardClick}
       >
         <div className="flex items-center justify-between gap-4">
@@ -193,7 +193,7 @@ export function LinkPreview({
             </div>
             <div className="flex items-center gap-2">
               <BoringAvatar name={createdBy} size={20} />
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>Created by {createdBy}</span>
                 <span>•</span>
                 <span>{formatDate(createdAt)}</span>

@@ -26,7 +26,7 @@ export function WorkspacePlanSection() {
             Manage your workspace subscription and plan details
           </p>
         </div>
-        <div className="max-w-md rounded-xl border bg-card p-6">
+        <div className="max-w-2xl rounded-xl border bg-card p-6">
           <div className="h-7 w-24 bg-muted animate-pulse rounded mb-4" />
           <div className="space-y-4">
             <div className="h-16 bg-muted animate-pulse rounded" />
@@ -46,7 +46,7 @@ export function WorkspacePlanSection() {
             Manage your workspace subscription and plan details
           </p>
         </div>
-        <div className="max-w-md">
+        <div className="max-w-2xl">
           <SectionError
             title="Failed to load plan details"
             description={
@@ -72,10 +72,10 @@ export function WorkspacePlanSection() {
             Manage your workspace subscription and plan details
           </p>
         </div>
-        <div className="max-w-md rounded-xl border bg-card p-6">
+        <div className="max-w-2xl rounded-xl border bg-card p-6">
           <h4 className="text-xl font-semibold mb-4">{planName}</h4>
           <div className="space-y-3 mb-4">
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Recordings</span>
                 <Tooltip>
@@ -95,7 +95,7 @@ export function WorkspacePlanSection() {
               <Progress value={0} className="h-2" />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Seats</span>
                 <Tooltip>

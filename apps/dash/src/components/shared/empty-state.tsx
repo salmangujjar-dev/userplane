@@ -46,7 +46,7 @@ function RecordingIllustration() {
                 <circle cx="12" cy="12" r="10" />
               </svg>
             </div>
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-2">
               <div className="h-2 bg-gray-200 rounded w-3/4" />
               <div className="h-1.5 bg-gray-100 rounded w-1/2" />
             </div>
@@ -58,7 +58,7 @@ function RecordingIllustration() {
                 <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" />
               </svg>
             </div>
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-2">
               <div className="h-2 bg-gray-200 rounded w-2/3" />
               <div className="h-1.5 bg-gray-100 rounded w-2/5" />
             </div>
@@ -94,7 +94,7 @@ function LinkIllustration() {
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
             </div>
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-2">
               <div className="h-2 bg-gray-200 rounded w-3/4" />
               <div className="h-1.5 bg-gray-100 rounded w-1/2" />
             </div>
@@ -113,7 +113,7 @@ function LinkIllustration() {
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
             </div>
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-2">
               <div className="h-2 bg-gray-200 rounded w-2/3" />
               <div className="h-1.5 bg-gray-100 rounded w-2/5" />
             </div>

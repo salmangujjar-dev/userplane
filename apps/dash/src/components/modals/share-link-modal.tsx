@@ -58,7 +58,7 @@ export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
               <DialogTitle className="text-xl font-semibold">
                 Link copied, ready to share
               </DialogTitle>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <DialogDescription className="text-sm text-muted-foreground">
                   Share with anyone to capture their screen
                 </DialogDescription>

@@ -139,7 +139,7 @@ export function RecordingLinkSection() {
           </div>
           <div className="relative rounded-lg border border-zinc-200 bg-linear-to-b from-zinc-100 to-zinc-50 px-3 py-2">
             <div className="flex items-center gap-2 mb-1">
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
                 <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
@@ -335,7 +335,7 @@ export function RecordingLinkSection() {
 
         <div className="space-y-4">
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-xl border bg-card">
+            <div className="flex items-center justify-between p-6 rounded-xl border bg-card">
               <Label
                 htmlFor="customize-recording-link"
                 className="text-sm font-medium cursor-pointer"
@@ -352,7 +352,7 @@ export function RecordingLinkSection() {
 
             {customizeRecordingLink && (
               <>
-                <div className="p-4 rounded-xl border bg-card">
+                <div className="p-6 rounded-xl border bg-card">
                   <div className="flex gap-6">
                     <div className="shrink-0">
                       <Label className="text-sm font-medium">Company Image</Label>

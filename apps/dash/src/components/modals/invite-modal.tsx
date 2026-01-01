@@ -97,7 +97,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
               <Logo variant="tiled" size="md" showText={false} />
               <div className="flex flex-col space-y-1">
                 <DialogTitle className="text-xl font-semibold">Invite teammates</DialogTitle>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <DialogDescription className="text-sm text-muted-foreground">
                     Send the invite link or email invitations to your team
                   </DialogDescription>

@@ -64,7 +64,7 @@ export function CreateDomainModal({
             <Logo variant="tiled" size="md" showText={false} />
             <div className="flex flex-col space-y-1">
               <DialogTitle className="text-xl font-semibold">Add New Domain</DialogTitle>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <DialogDescription className="text-sm text-muted-foreground">
                   Add a new domain for recording sessions
                 </DialogDescription>

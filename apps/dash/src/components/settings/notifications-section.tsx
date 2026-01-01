@@ -45,7 +45,7 @@ export function NotificationsSection() {
           <h2 className="text-lg font-semibold">Notification</h2>
           <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
         </div>
-        <div className="max-w-md">
+        <div className="max-w-2xl">
           <SectionError
             title="Failed to load notifications"
             description={
@@ -69,7 +69,7 @@ export function NotificationsSection() {
           <h2 className="text-lg font-semibold">Notification</h2>
           <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
         </div>
-        <div className="max-w-md">
+        <div className="max-w-2xl">
           <p className="text-sm text-muted-foreground">No notification preferences found.</p>
         </div>
       </div>
@@ -82,7 +82,7 @@ export function NotificationsSection() {
         <h2 className="text-lg font-semibold">Notification</h2>
         <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
       </div>
-      <div className="max-w-md space-y-4">
+      <div className="max-w-2xl space-y-4">
         <div className="flex items-center justify-between">
           <Label htmlFor="recording-links" className="text-sm font-normal cursor-pointer flex-1">
             When recording links gets used
