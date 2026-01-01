@@ -79,6 +79,7 @@ export const getAllWorkspaces = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
     WORKSPACE_USER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_USER_ID_REQUIRED,
   })
   .input(ListWorkspacesQuerySchema)
@@ -98,6 +99,7 @@ export const countWorkspaces = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
     WORKSPACE_USER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_USER_ID_REQUIRED,
   })
   .input(CountWorkspacesQuerySchema)
@@ -117,6 +119,8 @@ export const getWorkspaceById = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
@@ -137,6 +141,8 @@ export const getWorkspacePreferences = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
@@ -157,6 +163,8 @@ export const updateWorkspacePreferences = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
@@ -177,6 +185,8 @@ export const getWorkspaceMembers = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_USER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_USER_ID_REQUIRED,
@@ -198,6 +208,8 @@ export const updateMemberRole = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_MEMBER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_ID_REQUIRED,
@@ -224,6 +236,8 @@ export const removeMember = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_MEMBER_ID_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_ID_REQUIRED,
@@ -249,6 +263,8 @@ export const leaveWorkspace = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_MEMBER_IDS_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_IDS_REQUIRED,
@@ -272,6 +288,8 @@ export const getNotificationPreferences = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_MEMBER_IDS_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_IDS_REQUIRED,
@@ -294,6 +312,8 @@ export const updateNotificationPreferences = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_MEMBER_IDS_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_IDS_REQUIRED,
@@ -336,6 +356,8 @@ export const rotateInviteToken = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
@@ -356,6 +378,8 @@ export const sendWorkspaceInvites = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
@@ -376,6 +400,7 @@ export const acceptInvite = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: InviteErrors.UNAUTHORIZED,
     INVITE_TOKEN_INVALID: InviteErrors.INVITE_TOKEN_INVALID,
     INVITE_TOKEN_INVALIDATED: InviteErrors.INVITE_TOKEN_INVALIDATED,
   })
@@ -396,6 +421,8 @@ export const getWorkspaceDomains = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
@@ -416,6 +443,8 @@ export const getDomainById = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
     DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
     DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
@@ -439,6 +468,8 @@ export const addDomain = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     DOMAIN_URL_REQUIRED: DomainErrors.DOMAIN_URL_REQUIRED,
     DOMAIN_ALREADY_EXISTS: DomainErrors.DOMAIN_ALREADY_EXISTS,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
@@ -461,6 +492,8 @@ export const updateDomain = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     DOMAIN_URL_REQUIRED: DomainErrors.DOMAIN_URL_REQUIRED,
     DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
     DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
@@ -487,6 +520,8 @@ export const deleteDomain = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
     DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
     DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
@@ -512,6 +547,8 @@ export const getDomainVerificationUrl = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
     DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
     DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
@@ -535,6 +572,8 @@ export const getDomainRecordingPreferences = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
     DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
@@ -557,6 +596,8 @@ export const updateDomainRecordingPreferences = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
     DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
     DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
@@ -582,6 +623,8 @@ export const replaceDomainRecordingPreferences = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
     DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
     DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
@@ -607,6 +650,8 @@ export const updateLinkSettings = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
   })
@@ -627,6 +672,8 @@ export const updateWorkspaceName = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_NAME_REQUIRED: WorkspaceErrors.WORKSPACE_NAME_REQUIRED,
@@ -649,6 +696,8 @@ export const deleteWorkspace = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_DELETE_FAILED: WorkspaceErrors.WORKSPACE_DELETE_FAILED,
@@ -670,6 +719,8 @@ export const workspaceSearch = oc
     tags: ['Workspaces'],
   })
   .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_SEARCH_TERM_REQUIRED: WorkspaceErrors.WORKSPACE_SEARCH_TERM_REQUIRED,

@@ -135,16 +135,19 @@ export class LinkService {
       }
       return decoded.lid;
     } catch (error) {
+      // Re-throw ORPC errors as-is (e.g., LINK_TOKEN_MISSING_ID)
+      if (error instanceof ORPCError) {
+        throw error;
+      }
       if (error instanceof jwt.TokenExpiredError) {
         throw new ORPCError('LINK_TOKEN_EXPIRED', {
           status: 401,
           message: 'Link token has expired',
         });
       }
-      if (error instanceof jwt.JsonWebTokenError) {
-        throw new ORPCError('LINK_TOKEN_INVALID', { status: 401, message: 'Invalid link token' });
-      }
-      throw error;
+      // JsonWebTokenError, SyntaxError (malformed/tampered token), or any other error
+      // All indicate an invalid token
+      throw new ORPCError('LINK_TOKEN_INVALID', { status: 401, message: 'Invalid link token' });
     }
   }
 

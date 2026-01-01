@@ -25,6 +25,7 @@ export const createWorkspace = oc
     tags: ['Provisioner'],
   })
   .errors({
+    UNAUTHORIZED: ProvisionerErrors.UNAUTHORIZED,
     PROVISIONER_WORKSPACE_CREATE_FAILED: ProvisionerErrors.PROVISIONER_WORKSPACE_CREATE_FAILED,
     PROVISIONER_TRANSACTION_FAILED: ProvisionerErrors.PROVISIONER_TRANSACTION_FAILED,
   })

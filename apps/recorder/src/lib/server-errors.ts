@@ -24,6 +24,20 @@ export type ServerResult<T> =
  * Each error specifies exactly what to show and do.
  */
 const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
+  // Link token errors (from LinkService.verifyLinkToken)
+  LINK_TOKEN_MISSING_ID: {
+    title: 'Invalid link',
+    message: 'Try requesting a new one',
+  },
+  LINK_TOKEN_EXPIRED: {
+    title: 'Link token expired',
+    message: 'Try requesting a new one',
+  },
+  LINK_TOKEN_INVALID: {
+    title: 'Invalid link',
+    message: 'Try requesting a new one',
+  },
+
   // Link errors - no recovery (need new link)
   SESSION_LINK_GONE: {
     title: "Link's expired",
@@ -40,6 +54,18 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   SESSION_LINK_ALREADY_USED: {
     title: "Link's been used",
     message: 'Grab a new one',
+  },
+
+  // Token missing errors (from route middleware)
+  SESSION_TOKEN_MISSING: {
+    title: 'Session token missing',
+    message: "Let's start fresh",
+    primaryAction: { label: 'Start over', action: 'start-over' },
+  },
+  UPLOAD_TOKEN_MISSING: {
+    title: 'Upload token missing',
+    message: "Let's start fresh",
+    primaryAction: { label: 'Start over', action: 'start-over' },
   },
 
   // Token errors - start over
@@ -113,6 +139,20 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   SESSION_FILE_VERIFICATION_FAILED: {
     title: "Couldn't verify files",
     message: 'Try uploading again',
+    primaryAction: { label: 'Retry', action: 'retry-upload' },
+    secondaryAction: { label: 'Start over', action: 'start-over' },
+  },
+
+  // Infrastructure errors - retry
+  SESSION_STORAGE_ERROR: {
+    title: 'Storage issue',
+    message: 'Try again in a moment',
+    primaryAction: { label: 'Retry', action: 'retry-upload' },
+    secondaryAction: { label: 'Start over', action: 'start-over' },
+  },
+  SESSION_DATABASE_ERROR: {
+    title: 'Server issue',
+    message: 'Try again in a moment',
     primaryAction: { label: 'Retry', action: 'retry-upload' },
     secondaryAction: { label: 'Start over', action: 'start-over' },
   },
