@@ -89,8 +89,6 @@
 }
 
 @theme {
-  --font-family-dm-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-family-inter: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-family-geist: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-family-geist-mono: var(--font-geist-mono), ui-monospace, monospace;
 }

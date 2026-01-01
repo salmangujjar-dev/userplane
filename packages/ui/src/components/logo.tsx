@@ -46,9 +46,7 @@ export default function Logo({
           className={cn(sizeVariants[size].icon, 'shrink-0')}
         />
         {showText && (
-          <span
-            className={cn('font-dm-sans font-semibold tracking-tight', sizeVariants[size].text)}
-          >
+          <span className={cn('font-semibold tracking-tight', sizeVariants[size].text)}>
             Userplane
           </span>
         )}

@@ -218,7 +218,7 @@ const StreamControls: React.FC<StreamControlsProps> = ({
     if (!player || !progressBarRef.current) return;
     const rect = progressBarRef.current.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
-    const newTime = percent * duration;
+    const newTime = percent * effectiveDuration;
     player.currentTime(newTime);
   };
 
@@ -226,13 +226,13 @@ const StreamControls: React.FC<StreamControlsProps> = ({
     if (!progressBarRef.current) return;
     const rect = progressBarRef.current.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
-    const time = percent * duration;
+    const time = percent * effectiveDuration;
     setHoverTime(time);
     setHoverPosition(e.clientX - rect.left);
 
     // Check if hovering over a marker
     const hoveredMarker = markers.find((marker) => {
-      const markerPercent = marker.time / duration;
+      const markerPercent = marker.time / effectiveDuration;
       const markerPosition = markerPercent * rect.width;
       return Math.abs(e.clientX - rect.left - markerPosition) < 8;
     });
@@ -268,12 +268,16 @@ const StreamControls: React.FC<StreamControlsProps> = ({
     }, 1500);
   };
 
+  // Use prop-provided duration if available; fall back to player's reported duration
+  const effectiveDuration = videoDuration > 0 ? videoDuration : duration;
+  const progress = effectiveDuration > 0 ? (currentTime / effectiveDuration) * 100 : 0;
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDraggingRef.current && progressBarRef.current && player) {
         const rect = progressBarRef.current.getBoundingClientRect();
         const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-        const newTime = percent * duration;
+        const newTime = percent * effectiveDuration;
         player.currentTime(newTime);
       }
     };
@@ -303,9 +307,7 @@ const StreamControls: React.FC<StreamControlsProps> = ({
         clearTimeout(tooltipTimeoutRef.current);
       }
     };
-  }, [player, duration]);
-
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  }, [player, effectiveDuration]);
 
   // Handle big play button click
   const handleBigPlayClick = () => {
@@ -394,7 +396,8 @@ const StreamControls: React.FC<StreamControlsProps> = ({
 
             {/* Markers */}
             {markers.map((marker, index) => {
-              const markerPosition = duration > 0 ? (marker.time / duration) * 100 : 0;
+              const markerPosition =
+                effectiveDuration > 0 ? (marker.time / effectiveDuration) * 100 : 0;
               return (
                 <div
                   key={index}
@@ -429,7 +432,7 @@ const StreamControls: React.FC<StreamControlsProps> = ({
             <div className="custom-time-display">
               <span className="custom-time-current">{formatTime(currentTime)}</span>
               <span className="custom-time-separator">/</span>
-              <span className="custom-time-duration">{formatTime(duration)}</span>
+              <span className="custom-time-duration">{formatTime(effectiveDuration)}</span>
             </div>
           </div>
 
