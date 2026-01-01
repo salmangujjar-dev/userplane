@@ -36,7 +36,7 @@ export function TeamSectionSkeleton() {
         <p className="text-sm text-muted-foreground">Manage team members and permissions</p>
       </div>
       <div className="max-w-2xl">
-        <div className="rounded-xl border bg-card p-4">
+        <div className="rounded-xl border bg-card p-6">
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -114,7 +114,7 @@ export function NotificationsSectionSkeleton() {
         <h2 className="text-lg font-semibold">Notification</h2>
         <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
       </div>
-      <div className="max-w-md space-y-6">
+      <div className="max-w-2xl space-y-6">
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex items-center justify-between">
             <div className="space-y-1">
@@ -138,7 +138,7 @@ export function IntegrationsSectionSkeleton() {
           Connect third-party services to your workspace
         </p>
       </div>
-      <div className="max-w-md">
+      <div className="max-w-2xl">
         <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
           <div className="flex items-center gap-3">
             <Skeleton className="h-8 w-8 rounded" />

@@ -351,7 +351,7 @@ export function DomainsSection() {
           return (
             <div
               key={domain.domainId}
-              className="flex items-center justify-between p-4 rounded-xl border bg-card"
+              className="flex items-center justify-between p-6 rounded-xl border bg-card"
             >
               <div className="flex items-center gap-3">
                 <div

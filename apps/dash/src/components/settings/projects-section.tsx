@@ -182,7 +182,7 @@ export function ProjectsSection() {
         {displayedProjects.map((project) => (
           <div
             key={project.projectId}
-            className="flex items-center justify-between p-4 rounded-xl border bg-card"
+            className="flex items-center justify-between p-6 rounded-xl border bg-card"
           >
             <div className="flex items-center gap-3">
               <Folder className="h-5 w-5 text-muted-foreground" />

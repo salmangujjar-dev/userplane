@@ -88,6 +88,7 @@ export default function RecordingsPage() {
 
   const handleLinkCreated = (link: string) => {
     setShareLink(link);
+    // refetchRecordings();
   };
 
   return (

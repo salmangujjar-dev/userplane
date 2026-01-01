@@ -140,7 +140,7 @@ export function FilterDropdown({
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-normal transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md border',
+            'inline-flex items-center gap-2 px-2.5 py-1.5 text-sm font-normal transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md border',
             selected.length > 0
               ? 'bg-background text-foreground border-border hover:bg-accent'
               : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground',
