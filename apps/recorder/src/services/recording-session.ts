@@ -396,7 +396,7 @@ export class RecordingSession {
     console.log('[Upload:Ack] Acknowledging upload completion');
     console.log('[Upload:Ack] Recording ID:', uploadState.recordingId);
 
-    const [error] = await this.client.session.upload.complete(
+    const [error, response] = await this.client.session.upload.complete(
       {
         body: {
           recording_id: uploadState.recordingId,
@@ -411,7 +411,7 @@ export class RecordingSession {
       }
     );
 
-    const result = handleServerResult(error, undefined);
+    const result = handleServerResult(error, response?.data);
 
     if (!result.ok) {
       console.log('[Upload:Ack] Failed:', result.error);
