@@ -89,7 +89,7 @@ export default function RecordingScreenLayout({
         <div className="w-full max-w-2xl">{children}</div>
       </div>
 
-      <footer className="flex flex-col items-center gap-2 sm:gap-3 px-4 py-6 sm:py-8 relative z-10">
+      <footer className="flex flex-col items-center gap-2 sm:gap-4 px-4 py-6 sm:py-8 relative z-10">
         <div className="flex items-center gap-2">
           <img
             src={workspaceLogoUrl ?? '/logo-dark.svg'}

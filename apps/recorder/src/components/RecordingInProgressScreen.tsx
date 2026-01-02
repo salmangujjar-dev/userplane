@@ -96,20 +96,18 @@ export default function RecordingInProgressScreen({
         <p className="text-sm sm:text-base text-gray-600 text-center mb-6 sm:mb-8">{subtitle}</p>
 
         {mediaStream ? (
-          <div className="w-full max-w-md mb-6 sm:mb-8">
-            <div className="relative aspect-video w-full border-2 border-gray-300 rounded-xl overflow-hidden bg-white shadow-lg p-2">
-              <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-contain"
-                />
-                <div className="absolute top-3 right-3 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-md">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse-fast" />
-                  <span className="text-xs font-semibold">REC</span>
-                </div>
+          <div className="w-full max-w-md mb-6 sm:mb-8 aspect-video border-2 border-gray-300 rounded-xl overflow-hidden bg-white shadow-lg p-2">
+            <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute top-3 right-3 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-md">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse-fast" />
+                <span className="text-xs font-semibold">REC</span>
               </div>
             </div>
           </div>
