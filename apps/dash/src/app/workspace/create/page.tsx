@@ -11,12 +11,18 @@ import { URLInput } from '@/components/url-input';
 import { useCreateWorkspace } from '@/hooks/use-create-workspace';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useAccount } from '@/hooks/use-account';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function CreateWorkspacePage() {
   const [workspace, setWorkspace] = useState('');
   const router = useRouter();
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { mutate: createWorkspace, isPending } = useCreateWorkspace();
+  const { data: accountResult } = useAccount();
+  const { signOut } = useAuth();
+
+  const account = accountResult?.success ? accountResult.data : null;
 
   const handleCreateWorkspace = () => {
     if (!workspace.trim()) {
@@ -41,8 +47,19 @@ export default function CreateWorkspacePage() {
   };
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
+    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 pb-32 lg:pb-12 bg-background overflow-hidden">
       <AuthIcons />
+
+      {account && (
+        <div className="absolute bottom-24 lg:bottom-6 left-1/2 -translate-x-1/2 z-20">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Not {account.userName}?</span>
+            <button onClick={signOut} className="text-foreground hover:underline font-medium">
+              Log out
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="w-full max-w-md space-y-10 relative z-10">
         <div className="flex flex-col items-center gap-3">
@@ -83,7 +100,7 @@ export default function CreateWorkspacePage() {
             )}
           </Button>
 
-          <div className="flex justify-center pt-2">
+          <div className="flex justify-center">
             <button
               type="button"
               onClick={() => router.push('/workspace/connect/intercom')}

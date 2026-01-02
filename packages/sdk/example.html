@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Userplane SDK - CDN Example</title>
+</head>
+<body>
+    <h1>Userplane SDK Example</h1>
+    <div id="output"></div>
+
+    <!-- Using UMD build from CDN -->
+    <script src="./dist/sdk.umd.cjs"></script>
+    <script>
+        // The SDK is available as UserplaneSDK global
+        const sdk = new UserplaneSDK({
+            apiKey: 'your-api-key',
+            endpoint: 'https://api.example.com'
+        });
+
+        sdk.initialize().then(() => {
+            console.log('SDK initialized!');
+            document.getElementById('output').innerHTML = `
+                <p>SDK initialized successfully!</p>
+                <pre>${JSON.stringify(sdk.getConfig(), null, 2)}</pre>
+            `;
+        });
+    </script>
+
+    <!-- Alternative: Using ES Module build -->
+    <!--
+    <script type="module">
+        import { createSDK } from './dist/sdk.js';
+
+        const sdk = createSDK({
+            apiKey: 'your-api-key',
+            endpoint: 'https://api.example.com'
+        });
+
+        await sdk.initialize();
+        console.log('SDK initialized!', sdk.getConfig());
+    </script>
+    -->
+</body>
+</html>
