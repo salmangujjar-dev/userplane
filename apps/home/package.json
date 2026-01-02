@@ -9,7 +9,8 @@
     "preview": "astro preview --port 4321",
     "astro": "astro",
     "lint": "astro check",
-    "typecheck": "astro check"
+    "typecheck": "astro check",
+    "dev:all": "astro dev --port 4321"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.11",

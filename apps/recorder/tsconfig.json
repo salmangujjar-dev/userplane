@@ -1,7 +1,7 @@
 {
   "extends": ["astro/tsconfigs/strict", "@workspace/typescript-config/astro.json"],
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"],
+  "exclude": ["dist", "storybook-static"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

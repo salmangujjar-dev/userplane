@@ -1,24 +1,10 @@
 {
-  "name": "@workspace/api",
-  "version": "0.0.1",
-  "type": "module",
-  "private": true,
-  "exports": {
-    "./routes": "./src/routes/index.ts",
-    "./routes/api.router": "./src/routes/api.router.ts"
-  },
-  "scripts": {
-    "dev": "bun run --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir ./dist --target bun",
-    "start": "bun run dist/index.js",
-    "typecheck": "tsc --noEmit"
-  },
   "dependencies": {
     "@hono/zod-openapi": "^1.1.5",
     "@hono/zod-validator": "^0.4.1",
     "@orpc/openapi": "^1.12.3",
     "@orpc/server": "^1.12.3",
-    "@trigger.dev/sdk": "^4.3.0",
+    "@trigger.dev/sdk": "4.3.1",
     "@workspace/auth": "workspace:*",
     "@workspace/contract": "workspace:*",
     "@workspace/db": "workspace:*",
@@ -45,6 +31,25 @@
     "@types/react-dom": "^19.2.3",
     "@types/uuid": "^11.0.0",
     "@workspace/eslint-config": "workspace:^",
-    "@workspace/typescript-config": "workspace:*"
-  }
+    "@workspace/typescript-config": "workspace:*",
+    "concurrently": "^9.2.1"
+  },
+  "exports": {
+    "./routes": "./src/routes/index.ts",
+    "./routes/api.router": "./src/routes/api.router.ts"
+  },
+  "name": "@workspace/api",
+  "private": true,
+  "scripts": {
+    "build": "bun build src/index.ts --outdir ./dist --target bun",
+    "dev": "bun run --watch src/index.ts",
+    "dev:all": "concurrently \"bun run dev:api\" \"bun run dev:trigger\" --names \"api,trigger\" --prefix-colors \"blue,yellow\"",
+    "dev:api": "bun run --watch src/index.ts",
+    "dev:trigger": "npx trigger.dev@latest dev",
+    "dev:hot": "bun run --hot src/index.ts",
+    "start": "bun run dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module",
+  "version": "0.0.1"
 }

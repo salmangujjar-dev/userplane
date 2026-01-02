@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build i d b l f t c
+.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -53,7 +53,8 @@ help: ## Show this help message
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)DEVELOPMENT$(WHITE)                                                                                       ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev$(WHITE)                           ║$(RESET) Run all apps in dev mode                                          $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev$(WHITE)                           ║$(RESET) Run apps in minimal mode (no Storybook/Trigger)                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:all$(WHITE)                       ║$(RESET) Run all apps with Storybook and Trigger.dev                       $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:web$(WHITE)                       ║$(RESET) Run web app only                                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:astro$(WHITE)                     ║$(RESET) Run astro app only                                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:api$(WHITE)                       ║$(RESET) Run API only                                                      $(WHITE)║$(RESET)"
@@ -114,9 +115,13 @@ install: ## Install all dependencies
 	@bun install
 	@echo "$(GREEN)Dependencies installed!$(RESET)"
 
-dev: ## Run all apps in dev mode
-	@echo "$(MAGENTA)Starting all apps in development mode...$(RESET)"
+dev: ## Run apps in minimal dev mode (no Storybook, no Trigger.dev)
+	@echo "$(MAGENTA)Starting apps in minimal development mode...$(RESET)"
 	@bun dev
+
+dev\:all: ## Run all apps with Storybook and Trigger.dev
+	@echo "$(MAGENTA)Starting all apps in full development mode...$(RESET)"
+	@bunx turbo dev:all --concurrency=15
 
 dev\:web: ## Run web app only
 	@echo "$(MAGENTA)Starting web app (Next.js)...$(RESET)"

@@ -14,7 +14,8 @@
     "dev": "tsc --watch",
     "build": "rm -rf dist && tsc",
     "typecheck": "tsc --noEmit",
-    "clean": "git clean -xdf .cache .turbo dist node_modules"
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev:all": "tsc --watch"
   },
   "dependencies": {
     "@orpc/client": "^1.12.3",
