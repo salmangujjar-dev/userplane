@@ -61,7 +61,7 @@ export default function PreRecordingScreen({
           <div className="mb-6 sm:mb-10" />
         )}
 
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8 w-full max-w-md mx-auto">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-6 sm:mb-8 w-full max-w-md mx-auto">
           <button
             onClick={() => setSelectedMode('screen-voice')}
             className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 border-2 rounded-xl transition-all"

@@ -400,7 +400,7 @@ export const acceptInvite = oc
     tags: ['Workspaces'],
   })
   .errors({
-    UNAUTHORIZED: InviteErrors.UNAUTHORIZED,
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
     INVITE_TOKEN_INVALID: InviteErrors.INVITE_TOKEN_INVALID,
     INVITE_TOKEN_INVALIDATED: InviteErrors.INVITE_TOKEN_INVALIDATED,
   })

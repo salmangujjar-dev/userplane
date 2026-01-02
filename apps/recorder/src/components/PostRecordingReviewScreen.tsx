@@ -73,15 +73,11 @@ export default function PostRecordingReviewScreen({
         </p>
 
         <div className="w-full max-w-md mb-6 sm:mb-8">
-          <div className="aspect-video w-full border-2 border-gray-300 rounded-xl overflow-hidden bg-white p-2">
-            <div className="w-full h-full rounded-lg overflow-hidden">
-              <VideoPlayer src={videoUrl} showControls={true} />
-            </div>
-          </div>
+          <VideoPlayer src={videoUrl} showControls={true} />
         </div>
 
         {errorMessage && (
-          <div className="w-full max-w-md mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="w-full max-w-md mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-800">{errorMessage}</p>
           </div>
         )}
