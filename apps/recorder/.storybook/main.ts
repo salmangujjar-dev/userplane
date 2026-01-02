@@ -5,21 +5,10 @@ import tailwindcss from '@tailwindcss/vite';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-/**
- * Resolve absolute path for monorepo packages
- */
-function getAbsolutePath(value: string): string {
-  return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
-}
-
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
-  addons: [
-    getAbsolutePath('@storybook/addon-docs'),
-    getAbsolutePath('@storybook/addon-a11y'),
-    getAbsolutePath('@chromatic-com/storybook'),
-  ],
-  framework: getAbsolutePath('@storybook/react-vite'),
+  addons: ['@storybook/addon-docs', '@storybook/addon-a11y', '@chromatic-com/storybook'],
+  framework: '@storybook/react-vite',
   viteFinal: async (config) => {
     // Add path aliases
     config.resolve = config.resolve || {};

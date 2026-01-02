@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "email dev -p 3003 --dir src/templates",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev:all": "email dev -p 3003 --dir src/templates"
   },
   "dependencies": {
     "@react-email/components": "^1.0.1",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@react-email/preview-server": "5.0.5",
+    "@types/node": "^22.10.5",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@workspace/typescript-config": "workspace:*",

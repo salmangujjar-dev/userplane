@@ -16,7 +16,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev:all": "tsc --watch"
   },
   "devDependencies": {
     "@workspace/typescript-config": "workspace:*",
