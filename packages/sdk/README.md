@@ -44,8 +44,13 @@ The recorder will automatically mount.
 2. Script detects `userplane-action=recording` in URL
 3. Reads `userplane-token` parameter
 4. Reads workspace ID from meta tag
-5. Mounts fullscreen recorder iframe
-6. User records and submits
+5. Mounts fullscreen recorder iframe with all parameters
+6. Recorder validates workspace ID matches token payload
+7. User records and submits
+
+## Security
+
+The workspace ID from the meta tag is passed to the recorder and validated against the `wid` field in the session token payload. This prevents recording links from one workspace being used on another workspace's site.
 
 ## Development
 
@@ -126,7 +131,17 @@ When mounted, the recorder iframe:
 - Backdrop blur for focus
 - Sandbox: `allow-same-origin allow-scripts allow-popups`
 - Permissions: `microphone; camera; display-capture`
-- Passes workspace ID, token, and action to recorder app
+- URL includes: `userplane-token`, `userplane-action`, `userplane-workspace`
+
+### Workspace Validation
+
+The recorder validates that the `userplane-workspace` parameter matches the `wid` (workspace ID) in the session token JWT payload. If they don't match, the recorder will show an error:
+
+```
+"Workspace mismatch: This recording link is not valid for this workspace"
+```
+
+This prevents someone from using a recording link generated for workspace A on workspace B's website.
 
 ## License
 

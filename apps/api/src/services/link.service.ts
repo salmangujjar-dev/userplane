@@ -84,6 +84,7 @@ export class LinkService {
    */
   generateLinkURL(
     linkId: string,
+    workspaceId: string,
     domainUrl?: string,
     domainStatus?: string,
     recordingHideSensitive?: boolean,
@@ -111,12 +112,13 @@ export class LinkService {
       recordingCaptureClientAction ||
       recordingCaptureServerLog ||
       recordingCaptureNetworkLog;
-    const baseUrl =
-      domainStatus === 'verified' && domainUrl && needsCustomDomain
-        ? `https://${domainUrl}`
-        : env.recorder.url;
+    const isCustomDomain = domainStatus === 'verified' && domainUrl && needsCustomDomain;
+    const baseUrl = isCustomDomain ? `https://${domainUrl}` : env.recorder.url;
 
-    return `${baseUrl}/r?userplane-action=recording&userplane-token=${token}`;
+    // Custom domain: workspace comes from page's meta tag (SDK)
+    // Default domain: workspace included in URL for direct sharing
+    const url = `${baseUrl}/r?userplane-action=recording&userplane-token=${token}`;
+    return isCustomDomain ? url : `${url}&userplane-workspace=${workspaceId}`;
   }
 
   /**
@@ -319,6 +321,7 @@ export class LinkService {
       linkProviderReference: row.linkProviderRef,
       linkURL: this.generateLinkURL(
         row.linkId,
+        row.workspaceId,
         row.domainUrl,
         row.domainStatus,
         row.recordingHideSensitive,
@@ -456,6 +459,7 @@ export class LinkService {
       linkProviderReference: linkWithDetails.linkProviderRef,
       linkURL: this.generateLinkURL(
         linkWithDetails.linkId,
+        linkWithDetails.workspaceId,
         linkWithDetails.domainUrl,
         linkWithDetails.domainStatus,
         linkWithDetails.recordingHideSensitive,

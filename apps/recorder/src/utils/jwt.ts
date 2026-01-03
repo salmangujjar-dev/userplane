@@ -1,13 +1,24 @@
 /**
  * JWT Utilities
  * Client-side JWT decoding (not verification)
+ *
+ * Uses types from @workspace/contract for type safety
  */
+
+/**
+ * Base JWT payload with standard claims
+ */
+interface BaseJwtPayload {
+  iss?: string; // Issuer
+  iat?: number; // Issued at
+  exp?: number; // Expiry
+}
 
 /**
  * Decode a JWT token payload (client-side only, does not verify signature)
  * @throws Error if token format is invalid
  */
-export function decodeJwtPayload<T = unknown>(token: string): T {
+export function decodeJwtPayload<T extends BaseJwtPayload = BaseJwtPayload>(token: string): T {
   const parts = token.split('.');
   if (parts.length !== 3) {
     throw new Error('Invalid JWT format: expected 3 parts');
@@ -33,7 +44,7 @@ export function decodeJwtPayload<T = unknown>(token: string): T {
  */
 export function isJwtExpired(token: string): boolean {
   try {
-    const payload = decodeJwtPayload<{ exp?: number }>(token);
+    const payload = decodeJwtPayload<BaseJwtPayload>(token);
     if (!payload.exp) {
       return false; // No expiry set
     }
@@ -49,7 +60,7 @@ export function isJwtExpired(token: string): boolean {
  */
 export function getJwtTimeToExpiry(token: string): number | null {
   try {
-    const payload = decodeJwtPayload<{ exp?: number }>(token);
+    const payload = decodeJwtPayload<BaseJwtPayload>(token);
     if (!payload.exp) {
       return null; // No expiry set
     }
