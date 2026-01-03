@@ -1,5 +1,5 @@
 // Import from the built library
-import { bridge } from '../lib/postbridge.js';
+import { bridge } from '../../dist/index.js';
 
 // DOM elements
 const counterEl = document.getElementById('counter');
@@ -31,7 +31,7 @@ async function init() {
 
     // Connect - just like Rimless!
     const connection = await bridge.connect(schema, {
-      workerURL: '/lib/bridge-worker.js',
+      workerURL: '/packages/postbridge/dist/bridge-worker.js',
     });
 
     // Connected!
