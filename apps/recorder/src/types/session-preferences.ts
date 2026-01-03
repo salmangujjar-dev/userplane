@@ -9,29 +9,18 @@ import {
   DEFAULT_COMPANY_NAME,
   DEFAULT_RECORDING_HEADER,
 } from '@/constants';
-import type { z } from 'zod';
 import {
-  SessionPreferencesSchema,
-  SessionTokenPayloadSchema,
   toRecordingPreferences as contractToRecordingPreferences,
   type RecordingPreferences,
+  type SessionPreferences,
+  type SessionTokenPayload,
 } from '@workspace/contract';
 
 /**
- * Session preferences from JWT token (inferred from contract)
+ * Re-export types from contract for convenience
+ * These are properly typed and maintained in the contract package
  */
-export type SessionPreferences = z.infer<typeof SessionPreferencesSchema>;
-
-/**
- * Session token payload structure (inferred from contract)
- */
-export type SessionTokenPayload = z.infer<typeof SessionTokenPayloadSchema>;
-
-/**
- * UI-friendly representation of session preferences
- * Re-export from contract for convenience
- */
-export type { RecordingPreferences };
+export type { RecordingPreferences, SessionPreferences, SessionTokenPayload };
 
 /**
  * Convert session preferences to UI preferences

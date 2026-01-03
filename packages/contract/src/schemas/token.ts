@@ -80,6 +80,15 @@ export const DomainVerificationTokenPayloadSchema = z.object({
 });
 
 /**
+ * TypeScript types for JWT payloads
+ */
+export type SessionPreferences = z.infer<typeof SessionPreferencesSchema>;
+export type SessionTokenPayload = z.infer<typeof SessionTokenPayloadSchema>;
+export type UploadTokenPayload = z.infer<typeof UploadTokenPayloadSchema>;
+export type InviteTokenPayload = z.infer<typeof InviteTokenPayloadSchema>;
+export type DomainVerificationTokenPayload = z.infer<typeof DomainVerificationTokenPayloadSchema>;
+
+/**
  * Presigned URL info for file uploads
  */
 export const PresignedUrlInfoSchema = z.object({

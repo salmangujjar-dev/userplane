@@ -48,6 +48,10 @@ class UserplaneRecorder {
     const token = params.get('userplane-token');
 
     if (action === 'recording' && token) {
+      if (!this.workspaceId) {
+        console.error('[Userplane] Recording action detected but no workspace ID in meta tag');
+        return;
+      }
       console.log('[Userplane] Recording action detected, mounting recorder');
       this.mountRecorder(token, action);
     }
@@ -64,6 +68,9 @@ class UserplaneRecorder {
     }
 
     console.log('[Userplane] Creating recorder iframe');
+    console.log('[Userplane] Token:', token.substring(0, 20) + '...');
+    console.log('[Userplane] Action:', action);
+    console.log('[Userplane] Workspace (from meta):', this.workspaceId);
 
     const overlay = document.createElement('div');
     const iframe = document.createElement('iframe');
@@ -71,7 +78,11 @@ class UserplaneRecorder {
     const url = new URL(this.recorderUrl);
     url.searchParams.set('userplane-token', token);
     url.searchParams.set('userplane-action', action);
+    if (this.workspaceId) {
+      url.searchParams.set('userplane-workspace', this.workspaceId);
+    }
 
+    console.log('[Userplane] Iframe URL:', url.toString());
     iframe.src = url.toString();
 
     this.styleOverlay(overlay);

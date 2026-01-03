@@ -54,8 +54,9 @@ export interface RecordingFlowActions {
 }
 
 export function useRecordingFlow(
-  linkToken: string | null,
-  action: string | null
+  linkToken: string,
+  action: string,
+  workspace: string
 ): {
   state: RecordingFlowState;
   actions: RecordingFlowActions;
@@ -90,10 +91,11 @@ export function useRecordingFlow(
 
   useEffect(() => {
     console.log('[Flow] Hook initialized');
-    console.log('[Flow] Link token:', linkToken ? 'Present' : 'Missing');
-    console.log('[Flow] Action:', action || 'Missing');
+    console.log('[Flow] Link token:', linkToken ? 'Present' : 'Empty');
+    console.log('[Flow] Action:', action || 'Empty');
+    console.log('[Flow] Workspace:', workspace || 'Empty');
 
-    if (!linkToken) {
+    if (!linkToken || linkToken.trim() === '') {
       console.error('[Flow] Error: No link token provided');
       setError({
         title: 'Invalid link',
@@ -103,7 +105,7 @@ export function useRecordingFlow(
       return;
     }
 
-    if (!action) {
+    if (!action || action.trim() === '') {
       console.error('[Flow] Error: No action provided');
       setError({
         title: 'Invalid link',
@@ -123,6 +125,16 @@ export function useRecordingFlow(
       return;
     }
 
+    if (!workspace || workspace.trim() === '') {
+      console.error('[Flow] Error: No workspace ID provided');
+      setError({
+        title: 'Invalid link',
+        message: 'No workspace ID provided in the link',
+      });
+      setFlowState('error');
+      return;
+    }
+
     if (!isScreenRecordingSupported()) {
       console.error('[Flow] Error: Screen recording not supported');
       setError({
@@ -134,7 +146,7 @@ export function useRecordingFlow(
     }
 
     console.log('[Flow] Screen recording supported, initializing session...');
-    initializeSession(linkToken);
+    initializeSession(linkToken, workspace);
 
     return () => {
       // Cleanup on unmount
@@ -157,7 +169,7 @@ export function useRecordingFlow(
         autoStopTimerRef.current = null;
       }
     };
-  }, [linkToken, action]);
+  }, [linkToken, action, workspace]);
 
   useEffect(() => {
     const criticalStates: FlowState[] = ['countdown', 'recording', 'review', 'uploading'];
@@ -210,9 +222,10 @@ export function useRecordingFlow(
     };
   }, [flowState, maxRecordingDurationMs]);
 
-  async function initializeSession(token: string) {
+  async function initializeSession(linkToken: string, expectedWorkspaceId: string) {
     console.log('[Flow] Initializing session...');
-    console.log('[Flow] Token (first 50 chars):', token.substring(0, 50));
+    console.log('[Flow] Link token (first 50 chars):', linkToken.substring(0, 50));
+    console.log('[Flow] Expected workspace ID:', expectedWorkspaceId);
 
     setFlowState('loading');
     setError(null);
@@ -220,7 +233,8 @@ export function useRecordingFlow(
     const session = new RecordingSession();
     console.log('[Flow] RecordingSession instance created');
 
-    const result = await session.initialize(token);
+    // Initialize session - this exchanges link token for session token
+    const result = await session.initialize(linkToken);
 
     if (!result.ok) {
       console.error('[Flow] Session initialization failed:', result.error);
@@ -228,6 +242,36 @@ export function useRecordingFlow(
       setFlowState('error');
       return;
     }
+
+    // Validate workspace ID from the decoded session properties
+    if (!session.workspaceId) {
+      console.error('[Flow] Session missing workspace ID');
+      setError({
+        title: 'Invalid session',
+        message: 'Session is missing workspace information',
+      });
+      setFlowState('error');
+      return;
+    }
+
+    if (session.workspaceId !== expectedWorkspaceId) {
+      console.error('[Flow] Workspace ID mismatch');
+      console.error('[Flow] Expected:', expectedWorkspaceId);
+      console.error('[Flow] Session contains:', session.workspaceId);
+      setError({
+        title: 'Workspace mismatch',
+        message: 'This recording link is not valid for this workspace',
+      });
+      setFlowState('error');
+      return;
+    }
+
+    console.log('[Flow] Workspace ID validated successfully');
+    console.log('[Flow] Session properties:', {
+      workspaceId: session.workspaceId,
+      sessionId: session.sessionId,
+      linkId: session.linkId,
+    });
 
     console.log('[Flow] Session initialized successfully');
     console.log('[Flow] Session ID:', result.data.sessionId);

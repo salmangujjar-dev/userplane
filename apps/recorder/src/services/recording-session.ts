@@ -55,6 +55,10 @@ export type { SystemMetadata };
 export class RecordingSession {
   private client: ReturnType<typeof getRecorderClient>;
   private sessionToken: string | null = null;
+
+  // Decoded session token properties (public API)
+  public workspaceId: string | null = null;
+  public linkId: string | null = null;
   public sessionId: string | null = null;
   public recordingId: string | null = null;
   public maxRecordingDurationMs: number = DEFAULT_MAX_RECORDING_DURATION_MS;
@@ -113,6 +117,10 @@ export class RecordingSession {
     }
 
     console.log('[Session] Session token payload:', payload);
+
+    // Extract decoded properties from session token
+    this.workspaceId = payload.wid || null;
+    this.linkId = payload.lid || null;
     this.sessionId = payload.sid;
 
     if (!payload.prefs) {
@@ -132,17 +140,11 @@ export class RecordingSession {
     this.maxRecordingDurationMs =
       this.preferences?.maxDurationMs ?? DEFAULT_MAX_RECORDING_DURATION_MS;
     this.requesterName = this.preferences?.requestedBy ?? null;
-
-    let linkPayload: { rms?: number };
-    try {
-      linkPayload = decodeJwtPayload<{ rms?: number }>(linkToken);
-    } catch (err) {
-      linkPayload = {};
-    }
-    console.log('[Session] Link token payload:', linkPayload);
-    this.maxRecordingSize = linkPayload.rms || null;
+    this.maxRecordingSize = null; // Not currently used
 
     console.log('[Session] Initialized successfully');
+    console.log('[Session] Workspace ID:', this.workspaceId);
+    console.log('[Session] Link ID:', this.linkId);
     console.log('[Session] Session ID:', this.sessionId);
     console.log('[Session] Preferences:', this.preferences);
     console.log('[Session] Max recording duration:', `${this.maxRecordingDurationMs}ms`);

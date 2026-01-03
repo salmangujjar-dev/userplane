@@ -4,10 +4,6 @@ import RecordingApp from '@/components/RecordingApp';
 import { getAppMeta } from '@workspace/meta';
 
 const meta = getAppMeta('recorder');
-
-const params = Astro.url.searchParams;
-const token = params.get('userplane-token');
-const action = params.get('userplane-action');
 ---
 
 <html lang="en">
@@ -32,6 +28,6 @@ const action = params.get('userplane-action');
   </head>
 
   <body class="min-h-screen bg-background">
-    <RecordingApp linkToken={token} action={action} client:load />
+    <RecordingApp client:load />
   </body>
 </html>
