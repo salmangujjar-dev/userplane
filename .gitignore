@@ -31,17 +31,14 @@ dist/
 .astro/
 .trigger/
 
-# TypeScript compiled files (should only be in dist/)
-*.js
-*.d.ts
-*.d.ts.map
-!*.config.js
-!*.config.ts
-# Allow root config files
-!eslint.config.mjs
-!next.config.js
-!vite.config.ts
-!astro.config.mjs
+# TypeScript compiled files in dist directories
+**/dist/**/*.js
+**/dist/**/*.d.ts
+**/dist/**/*.d.ts.map
+**/.next/**/*.js
+**/.next/**/*.d.ts
+**/build/**/*.js
+**/build/**/*.d.ts
 
 # Debug & Logs
 npm-debug.log*
