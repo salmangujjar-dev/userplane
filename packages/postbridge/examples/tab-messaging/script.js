@@ -1,4 +1,4 @@
-import { bridge } from '../lib/postbridge.js';
+import { bridge } from '../../dist/index.js';
 
 // DOM elements
 const myTabIdEl = document.getElementById('my-tab-id');
@@ -39,7 +39,7 @@ let connection;
 async function init() {
   try {
     connection = await bridge.connect(schema, {
-      workerURL: '/lib/bridge-worker.js',
+      workerURL: '/packages/postbridge/dist/bridge-worker.js',
       channel: 'message-relay',
     });
 

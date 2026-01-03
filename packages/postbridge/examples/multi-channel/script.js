@@ -1,4 +1,4 @@
-import { bridge } from '../lib/postbridge.js';
+import { bridge } from '../../dist/index.js';
 
 // Channel A Elements
 const statusAEl = document.getElementById('statusA');
@@ -43,7 +43,7 @@ async function initChannelA() {
     statusAEl.className = 'status connecting';
 
     const connectionA = await bridge.connect(schemaA, {
-      workerURL: '/lib/bridge-worker.js',
+      workerURL: '/packages/postbridge/dist/bridge-worker.js',
       channel: 'counter-a',
     });
 
@@ -90,7 +90,7 @@ async function initChannelB() {
     statusBEl.className = 'status connecting';
 
     const connectionB = await bridge.connect(schemaB, {
-      workerURL: '/lib/bridge-worker.js',
+      workerURL: '/packages/postbridge/dist/bridge-worker.js',
       channel: 'counter-b',
     });
 
