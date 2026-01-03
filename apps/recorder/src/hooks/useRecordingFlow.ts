@@ -53,7 +53,10 @@ export interface RecordingFlowActions {
   startOver: () => Promise<void>;
 }
 
-export function useRecordingFlow(linkToken: string | null): {
+export function useRecordingFlow(
+  linkToken: string | null,
+  action: string | null
+): {
   state: RecordingFlowState;
   actions: RecordingFlowActions;
 } {
@@ -88,12 +91,33 @@ export function useRecordingFlow(linkToken: string | null): {
   useEffect(() => {
     console.log('[Flow] Hook initialized');
     console.log('[Flow] Link token:', linkToken ? 'Present' : 'Missing');
+    console.log('[Flow] Action:', action || 'Missing');
 
     if (!linkToken) {
       console.error('[Flow] Error: No link token provided');
       setError({
-        title: 'Missing link',
+        title: 'Invalid link',
         message: 'No link token provided',
+      });
+      setFlowState('error');
+      return;
+    }
+
+    if (!action) {
+      console.error('[Flow] Error: No action provided');
+      setError({
+        title: 'Invalid link',
+        message: 'No action specified in the link',
+      });
+      setFlowState('error');
+      return;
+    }
+
+    if (action !== 'recording') {
+      console.error('[Flow] Error: Invalid action:', action);
+      setError({
+        title: 'Invalid action',
+        message: `Action "${action}" is not supported`,
       });
       setFlowState('error');
       return;
@@ -133,7 +157,7 @@ export function useRecordingFlow(linkToken: string | null): {
         autoStopTimerRef.current = null;
       }
     };
-  }, [linkToken]);
+  }, [linkToken, action]);
 
   useEffect(() => {
     const criticalStates: FlowState[] = ['countdown', 'recording', 'review', 'uploading'];

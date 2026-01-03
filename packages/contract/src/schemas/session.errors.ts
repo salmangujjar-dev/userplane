@@ -27,11 +27,11 @@ export const SessionErrors = {
   // Route middleware errors
   SESSION_TOKEN_MISSING: {
     status: 401,
-    message: 'Session token required in x-session-token header',
+    message: 'Session token required in x-userplane-session-token header',
   },
   UPLOAD_TOKEN_MISSING: {
     status: 401,
-    message: 'Upload token required in x-upload-token header',
+    message: 'Upload token required in x-userplane-upload-token header',
   },
 
   // Link state errors

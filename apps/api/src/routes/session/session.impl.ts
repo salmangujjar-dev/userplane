@@ -61,7 +61,7 @@ const requireUploadToken = os.middleware(async ({ context, next }) => {
  */
 export const getSessionImpl = (sessionService: SessionService) => {
   return os.init.handler(async ({ input }) => {
-    const result = await sessionService.initSession(input.query.token);
+    const result = await sessionService.initSession(input.query['userplane-token']);
 
     return {
       message: 'Session initialized successfully',
