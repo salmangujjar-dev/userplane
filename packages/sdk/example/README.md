@@ -6,7 +6,7 @@ A minimal customer dashboard showing how to integrate Userplane recorder.
 
 - `index.html` - Main HTML with meta tag and script
 - `styles.css` - Dashboard styling
-- `app.js` - Your application code
+- `script.js` - Your application code
 
 ## Setup
 
@@ -61,7 +61,7 @@ Recorder will auto-mount!
 example/
 ├── index.html       # Main page with meta tag
 ├── styles.css       # Dashboard styling
-├── app.js          # Your application code
+├── script.js          # Your application code
 └── README.md       # This file
 ```
 
