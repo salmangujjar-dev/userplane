@@ -211,12 +211,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/session?token=strin",
+              "raw": "{{baseUrl}}/session?userplane-token=strin",
               "host": ["{{baseUrl}}"],
               "path": ["session"],
               "query": [
                 {
-                  "key": "token",
+                  "key": "userplane-token",
                   "value": "strin"
                 }
               ]
@@ -240,12 +240,12 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/session?token=strin",
+                  "raw": "{{baseUrl}}/session?userplane-token=strin",
                   "host": ["{{baseUrl}}"],
                   "path": ["session"],
                   "query": [
                     {
-                      "key": "token",
+                      "key": "userplane-token",
                       "value": "strin"
                     }
                   ]

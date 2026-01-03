@@ -97,13 +97,13 @@ if (env.nodeEnv === 'development') {
           sessionTokenHeader: {
             type: 'apiKey',
             in: 'header',
-            name: 'x-session-token',
+            name: 'x-userplane-session-token',
             description: 'Session token header for upload initialization',
           },
           uploadTokenHeader: {
             type: 'apiKey',
             in: 'header',
-            name: 'x-upload-token',
+            name: 'x-userplane-upload-token',
             description: 'Upload token header for completing uploads',
           },
         },

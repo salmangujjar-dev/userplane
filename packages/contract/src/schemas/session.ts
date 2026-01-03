@@ -11,7 +11,7 @@ import { RECORDING_DURATION_LIMITS } from '../constants/session';
  */
 export const GetSessionQuerySchema = z.object({
   query: z.object({
-    token: z.string().min(1),
+    'userplane-token': z.string().min(1),
   }),
 });
 

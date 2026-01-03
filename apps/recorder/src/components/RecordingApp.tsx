@@ -18,27 +18,35 @@ import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface RecordingAppProps {
   linkToken?: string | null;
+  action?: string | null;
 }
 
-export default function RecordingApp({ linkToken: propToken }: RecordingAppProps) {
+export default function RecordingApp({
+  linkToken: propToken,
+  action: propAction,
+}: RecordingAppProps) {
   const [linkToken, setLinkToken] = useState<string | null>(propToken || null);
+  const [action, setAction] = useState<string | null>(propAction || null);
 
   useEffect(() => {
-    console.log('[RecordingApp] useEffect - Extracting token from URL');
+    console.log('[RecordingApp] useEffect - Extracting token and action from URL');
     console.log(
       '[RecordingApp] Prop token:',
       propToken ? 'Present (' + propToken.length + ' chars)' : 'NULL'
     );
+    console.log('[RecordingApp] Prop action:', propAction || 'NULL');
     console.log('[RecordingApp] Window location:', window.location.href);
     console.log('[RecordingApp] Window search:', window.location.search);
 
     const params = new URLSearchParams(window.location.search);
-    const urlToken = params.get('token');
+    const urlToken = params.get('userplane-token');
+    const urlAction = params.get('userplane-action');
 
     console.log(
       '[RecordingApp] URL token from URLSearchParams:',
       urlToken ? 'Present (' + urlToken.length + ' chars)' : 'NULL'
     );
+    console.log('[RecordingApp] URL action from URLSearchParams:', urlAction || 'NULL');
 
     if (urlToken) {
       console.log('[RecordingApp] Setting token from URL:', urlToken.substring(0, 50) + '...');
@@ -49,9 +57,19 @@ export default function RecordingApp({ linkToken: propToken }: RecordingAppProps
     } else {
       console.error('[RecordingApp] No token found in URL or props!');
     }
-  }, [propToken]);
 
-  const { state, actions } = useRecordingFlow(linkToken);
+    if (urlAction) {
+      console.log('[RecordingApp] Setting action from URL:', urlAction);
+      setAction(urlAction);
+    } else if (propAction) {
+      console.log('[RecordingApp] Using action from props:', propAction);
+      setAction(propAction);
+    } else {
+      console.error('[RecordingApp] No action found in URL or props!');
+    }
+  }, [propToken, propAction]);
+
+  const { state, actions } = useRecordingFlow(linkToken, action);
 
   console.log('[RecordingApp] Current state:', state.state);
   console.log('[RecordingApp] Error:', state.error);

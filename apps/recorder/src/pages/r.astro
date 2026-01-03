@@ -6,7 +6,8 @@ import { getAppMeta } from '@workspace/meta';
 const meta = getAppMeta('recorder');
 
 const params = Astro.url.searchParams;
-const token = params.get('token');
+const token = params.get('userplane-token');
+const action = params.get('userplane-action');
 ---
 
 <html lang="en">
@@ -31,6 +32,6 @@ const token = params.get('token');
   </head>
 
   <body class="min-h-screen bg-background">
-    <RecordingApp linkToken={token} client:load />
+    <RecordingApp linkToken={token} action={action} client:load />
   </body>
 </html>

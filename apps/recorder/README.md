@@ -27,10 +27,10 @@ The recorder will be available at `http://localhost:4322`
 
 ## Usage
 
-The recorder expects a `token` query parameter in the URL:
+The recorder expects `userplane-action` and `userplane-token` query parameters in the URL:
 
 ```
-http://localhost:4322/?token=YOUR_LINK_TOKEN
+http://localhost:4322/?userplane-action=recording&userplane-token=YOUR_LINK_TOKEN
 ```
 
 ## Environment Variables
@@ -69,7 +69,7 @@ PUBLIC_API_URL=http://localhost:3000
 
 The recorder integrates with the userplane session API:
 
-1. `GET /api/v1/session?token=LINK_TOKEN` - Initialize session
+1. `GET /api/v1/session?userplane-token=LINK_TOKEN` - Initialize session
 2. `POST /api/v1/session` - Initialize upload with presigned URLs
 3. Upload files directly to S3 using presigned URLs
 4. `PATCH /api/v1/session` - Complete upload

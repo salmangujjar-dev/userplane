@@ -74,7 +74,7 @@ export class RecordingSession {
 
     const [error, response] = await this.client.session.init({
       query: {
-        token: linkToken,
+        'userplane-token': linkToken,
       },
     });
 
@@ -241,7 +241,7 @@ export class RecordingSession {
     const [error, response] = await this.client.session.upload.init(uploadInitPayload, {
       context: {
         headers: {
-          'x-session-token': this.sessionToken,
+          'x-userplane-session-token': this.sessionToken,
         },
       },
     });
@@ -405,7 +405,7 @@ export class RecordingSession {
       {
         context: {
           headers: {
-            'x-upload-token': uploadState.uploadToken,
+            'x-userplane-upload-token': uploadState.uploadToken,
           },
         },
       }

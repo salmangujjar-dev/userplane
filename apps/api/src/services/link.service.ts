@@ -116,7 +116,7 @@ export class LinkService {
         ? `https://${domainUrl}`
         : env.recorder.url;
 
-    return `${baseUrl}/r?token=${token}`;
+    return `${baseUrl}/r?userplane-action=recording&userplane-token=${token}`;
   }
 
   /**
