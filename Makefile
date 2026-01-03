@@ -89,6 +89,8 @@ help: ## Show this help message
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:recorder$(WHITE)            ║$(RESET) Run Storybook for recorder app                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:recorder:build$(WHITE)      ║$(RESET) Build Storybook for recorder app                                  $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:postbridge$(WHITE)          ║$(RESET) Run Storybook for postbridge package                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:postbridge:build$(WHITE)    ║$(RESET) Build Storybook for postbridge package                            $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BACKGROUND JOBS (Trigger.dev)$(WHITE)                                                                    ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -252,6 +254,15 @@ storybook\:recorder: ## Run Storybook for recorder app
 storybook\:recorder\:build: ## Build Storybook for recorder app
 	@echo "$(BLUE)Building Storybook for recorder...$(RESET)"
 	@cd apps/recorder && bun run build-storybook
+	@echo "$(GREEN)Storybook build complete!$(RESET)"
+
+storybook\:postbridge: ## Run Storybook for postbridge package
+	@echo "$(MAGENTA)Starting Storybook for postbridge...$(RESET)"
+	@cd packages/postbridge && bun run storybook
+
+storybook\:postbridge\:build: ## Build Storybook for postbridge package
+	@echo "$(BLUE)Building Storybook for postbridge...$(RESET)"
+	@cd packages/postbridge && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
 
 update: ## Update dependencies
