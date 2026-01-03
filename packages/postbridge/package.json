@@ -1,0 +1,54 @@
+{
+  "name": "@workspace/postbridge",
+  "version": "0.6.3",
+  "type": "module",
+  "private": true,
+  "description": "Type-safe bidirectional RPC for postMessage contexts - iframes, workers, and cross-tab communication",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "dev:all": "concurrently \"bun run dev\" \"bun run dev:storybook\" --names \"tsc,storybook\" --prefix-colors \"cyan,magenta\"",
+    "dev:storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6007",
+    "build": "rm -rf dist && tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6007",
+    "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^1.7.0",
+    "@storybook/addon-docs": "^8.6.15",
+    "@storybook/addon-essentials": "^8.6.15",
+    "@storybook/addon-interactions": "^8.6.15",
+    "@storybook/addon-links": "^8.6.15",
+    "@storybook/blocks": "^8.6.15",
+    "@storybook/react": "^8.6.15",
+    "@storybook/react-vite": "^8.6.15",
+    "@storybook/test": "^8.6.15",
+    "@types/node": "^22.14.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "@workspace/typescript-config": "workspace:*",
+    "concurrently": "^9.2.1",
+    "happy-dom": "^15.7.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remark-gfm": "^4.0.1",
+    "storybook": "^8.6.15",
+    "typescript": "5.8.2",
+    "vite": "^6.3.3",
+    "vitest": "^2.0.5"
+  }
+}
