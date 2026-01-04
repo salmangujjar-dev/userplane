@@ -2,7 +2,7 @@ import { authClient } from '@/client/auth';
 
 /**
  * Custom hook for authentication operations
- * Provides methods for sign in, sign out, sign up, etc.
+ * Provides methods for sign in, sign out, sign up, impersonation, etc.
  */
 export function useAuth() {
   const signOut = async () => {
@@ -21,8 +21,18 @@ export function useAuth() {
     });
   };
 
+  /**
+   * Stop impersonating a user and return to the admin's own session.
+   * This will reload the page to refresh the session state.
+   */
+  const stopImpersonating = async () => {
+    await authClient.admin.stopImpersonating();
+    window.location.href = '/';
+  };
+
   return {
     signOut,
     signInWithGoogle,
+    stopImpersonating,
   };
 }
