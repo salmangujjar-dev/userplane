@@ -189,9 +189,30 @@ export class AdminRepository {
   }
 
   /**
-   * Get user workspaces
+   * Get user workspaces with pagination
    */
-  async getUserWorkspaces(userId: string): Promise<AdminUserWorkspace[]> {
+  async getUserWorkspaces(
+    userId: string,
+    options: { limit: number; offset: number } = { limit: 10, offset: 0 }
+  ): Promise<{ workspaces: AdminUserWorkspace[]; total: number }> {
+    const { limit, offset } = options;
+
+    // Get total count
+    const [countResult] = await this.db
+      .select({ count: count() })
+      .from(workspaceMembers)
+      .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.workspaceId))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaceMembers.isDeleted, false),
+          eq(workspaces.isDeleted, false)
+        )
+      );
+
+    const total = countResult?.count ?? 0;
+
+    // Get paginated workspaces
     const result = await this.db
       .select({
         workspaceId: workspaces.workspaceId,
@@ -208,9 +229,30 @@ export class AdminRepository {
           eq(workspaces.isDeleted, false)
         )
       )
-      .orderBy(desc(workspaceMembers.createdAt));
+      .orderBy(desc(workspaceMembers.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-    return result;
+    return { workspaces: result, total };
+  }
+
+  /**
+   * Get user workspace count
+   */
+  async getUserWorkspaceCount(userId: string): Promise<number> {
+    const [countResult] = await this.db
+      .select({ count: count() })
+      .from(workspaceMembers)
+      .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.workspaceId))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaceMembers.isDeleted, false),
+          eq(workspaces.isDeleted, false)
+        )
+      );
+
+    return countResult?.count ?? 0;
   }
 
   /**

@@ -33,13 +33,19 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import type { AdminUserDetail, AdminUserSession } from '@/hooks/use-admin-api';
+import type { AdminUserDetail, AdminUserSession, AdminUserWorkspace } from '@/hooks/use-admin-api';
 
 interface UserDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: AdminUserDetail | null;
   isLoading: boolean;
+  workspaces: AdminUserWorkspace[];
+  isLoadingWorkspaces: boolean;
+  workspacesTotal: number;
+  workspacesPage: number;
+  workspacesPageSize: number;
+  onWorkspacesPageChange: (page: number) => void;
   sessions: AdminUserSession[];
   isLoadingSessions: boolean;
   sessionsTotal: number;
@@ -73,6 +79,12 @@ export function UserDetailSheet({
   onOpenChange,
   user,
   isLoading,
+  workspaces,
+  isLoadingWorkspaces,
+  workspacesTotal,
+  workspacesPage,
+  workspacesPageSize,
+  onWorkspacesPageChange,
   sessions,
   isLoadingSessions,
   sessionsTotal,
@@ -87,6 +99,7 @@ export function UserDetailSheet({
 }: UserDetailSheetProps) {
   const isBanned = user ? !!user.banned && !isBanExpired(user.banExpires) : false;
   const totalSessionPages = Math.ceil(sessionsTotal / sessionsPageSize);
+  const totalWorkspacePages = Math.ceil(workspacesTotal / workspacesPageSize);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -245,12 +258,54 @@ export function UserDetailSheet({
               )}
 
               <div>
-                <h5 className="text-sm font-medium mb-3">Workspaces ({user.workspaces.length})</h5>
-                {user.workspaces.length === 0 ? (
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="text-sm font-medium flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    Workspaces ({workspacesTotal})
+                  </h5>
+                  {workspacesTotal > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => onWorkspacesPageChange(workspacesPage - 1)}
+                        disabled={workspacesPage === 0 || isLoadingWorkspaces}
+                      >
+                        <ChevronLeft className="h-3 w-3" />
+                      </Button>
+                      <span className="text-xs text-muted-foreground min-w-12 text-center">
+                        {workspacesPage + 1} / {Math.max(1, totalWorkspacePages)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => onWorkspacesPageChange(workspacesPage + 1)}
+                        disabled={workspacesPage >= totalWorkspacePages - 1 || isLoadingWorkspaces}
+                      >
+                        <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {isLoadingWorkspaces ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+                        <Skeleton className="h-4 w-4" />
+                        <div className="flex-1 space-y-1">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : workspaces.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No workspaces</p>
                 ) : (
                   <div className="space-y-2">
-                    {user.workspaces.slice(0, 5).map((ws) => (
+                    {workspaces.map((ws) => (
                       <div
                         key={ws.workspaceId}
                         className="flex items-center gap-3 p-2 rounded-lg bg-muted/50"
@@ -264,11 +319,6 @@ export function UserDetailSheet({
                         </div>
                       </div>
                     ))}
-                    {user.workspaces.length > 5 && (
-                      <p className="text-xs text-muted-foreground text-center">
-                        +{user.workspaces.length - 5} more workspaces
-                      </p>
-                    )}
                   </div>
                 )}
               </div>

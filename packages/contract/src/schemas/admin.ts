@@ -47,7 +47,7 @@ export const AdminUserListItemSchema = z.object({
 
 /**
  * Admin user detail view
- * Note: Sessions are fetched separately via listUserSessions endpoint
+ * Note: Sessions and workspaces are fetched separately via dedicated endpoints
  */
 export const AdminUserDetailSchema = z.object({
   id: z.string(),
@@ -60,7 +60,7 @@ export const AdminUserDetailSchema = z.object({
   banExpires: z.string().nullable(),
   emailVerified: z.boolean(),
   createdAt: z.string(),
-  workspaces: z.array(AdminUserWorkspaceSchema),
+  workspaceCount: z.number(),
 });
 
 /**
@@ -167,6 +167,33 @@ export const AdminUserSessionsDataSchema = z.object({
   offset: z.number(),
 });
 
+/**
+ * List user workspaces input
+ */
+export const AdminListUserWorkspacesInputSchema = z.object({
+  params: z.object({
+    userId: z.string().min(1),
+  }),
+  query: z
+    .object({
+      limit: z.coerce.number().int().min(1).max(10).optional().default(10),
+      offset: z.coerce.number().int().min(0).optional().default(0),
+    })
+    .optional()
+    .default({}),
+});
+
+/**
+ * User workspaces list response
+ */
+export const AdminUserWorkspacesDataSchema = z.object({
+  workspaces: z.array(AdminUserWorkspaceSchema),
+  userId: z.string(),
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+});
+
 // ============================================
 // ADMIN WORKSPACE SCHEMAS
 // ============================================
@@ -248,7 +275,7 @@ export const AdminListWorkspaceMembersInputSchema = z.object({
   }),
   query: z
     .object({
-      limit: z.coerce.number().int().min(1).max(5).optional().default(5),
+      limit: z.coerce.number().int().min(1).max(10).optional().default(10),
       offset: z.coerce.number().int().min(0).optional().default(0),
     })
     .optional()
@@ -420,6 +447,8 @@ export type AdminListUserSessionsInput = z.infer<typeof AdminListUserSessionsInp
 export type AdminRevokeSessionInput = z.infer<typeof AdminRevokeSessionInputSchema>;
 export type AdminRevokeAllSessionsInput = z.infer<typeof AdminRevokeAllSessionsInputSchema>;
 export type AdminUserSessionsData = z.infer<typeof AdminUserSessionsDataSchema>;
+export type AdminListUserWorkspacesInput = z.infer<typeof AdminListUserWorkspacesInputSchema>;
+export type AdminUserWorkspacesData = z.infer<typeof AdminUserWorkspacesDataSchema>;
 
 /**
  * Types - Workspaces

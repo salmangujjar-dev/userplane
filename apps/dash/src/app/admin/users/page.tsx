@@ -29,6 +29,7 @@ import {
   useAdminSearchUsers,
   useAdminUserDetail,
   useAdminUserSessions,
+  useAdminUserWorkspaces,
   useAdminBanUser,
   useAdminUnbanUser,
   useAdminRevokeSession,
@@ -38,6 +39,7 @@ import {
 
 const ITEMS_PER_PAGE = 10;
 const SESSIONS_PER_PAGE = 5;
+const WORKSPACES_PER_PAGE = 10;
 
 interface UserToAction {
   id: string;
@@ -80,11 +82,10 @@ function AdminUsersPageContent() {
   const router = useRouter();
   const { isAdmin, isPending: isSessionPending, user: currentUser } = useSession();
   const [search, setSearch] = useQueryState('search', searchParser);
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useQueryState('page', pageParser);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  // Filter states
+  // Filter states (URL-synced)
   const [selectedStatus, setSelectedStatus] = useQueryState('status', singleValueArrayParser);
   const [selectedSortBy, setSelectedSortBy] = useQueryState('sortBy', adminUserSortByParser);
   const [selectedSortDirection, setSelectedSortDirection] = useQueryState(
@@ -92,9 +93,18 @@ function AdminUsersPageContent() {
     adminSortDirectionParser
   );
 
-  // Sessions pagination
+  // Debounced filter states for API calls
+  const [debouncedFilters, setDebouncedFilters] = useState({
+    search: '',
+    status: selectedStatus[0] as 'active' | 'banned' | undefined,
+    sortBy: (selectedSortBy[0] as 'createdAt' | 'name' | 'email') || 'createdAt',
+    sortDirection: (selectedSortDirection[0] as 'asc' | 'desc') || 'desc',
+  });
+
+  // Sessions and workspaces pagination
   const [detailSessionsPage, setDetailSessionsPage] = useState(0);
   const [modalSessionsPage, setModalSessionsPage] = useState(0);
+  const [detailWorkspacesPage, setDetailWorkspacesPage] = useState(0);
 
   // Modal states
   const [userToImpersonate, setUserToImpersonate] = useState<UserToAction | null>(null);
@@ -110,27 +120,45 @@ function AdminUsersPageContent() {
   const revokeSessionMutation = useAdminRevokeSession();
   const revokeAllSessionsMutation = useAdminRevokeAllSessions();
 
-  // Debounce search input
+  // Debounce all filter changes (search, status, sort) together
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      void setCurrentPage(1);
+      const newFilters = {
+        search,
+        status: selectedStatus[0] as 'active' | 'banned' | undefined,
+        sortBy: (selectedSortBy[0] as 'createdAt' | 'name' | 'email') || 'createdAt',
+        sortDirection: (selectedSortDirection[0] as 'asc' | 'desc') || 'desc',
+      };
+
+      // Check if filters actually changed to avoid unnecessary page resets
+      const filtersChanged =
+        newFilters.search !== debouncedFilters.search ||
+        newFilters.status !== debouncedFilters.status ||
+        newFilters.sortBy !== debouncedFilters.sortBy ||
+        newFilters.sortDirection !== debouncedFilters.sortDirection;
+
+      if (filtersChanged) {
+        setDebouncedFilters(newFilters);
+        void setCurrentPage(1);
+      }
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, setCurrentPage]);
-
-  // Reset page when filters change
-  useEffect(() => {
-    void setCurrentPage(1);
-  }, [selectedStatus, selectedSortBy, selectedSortDirection, setCurrentPage]);
+  }, [
+    search,
+    selectedStatus,
+    selectedSortBy,
+    selectedSortDirection,
+    debouncedFilters,
+    setCurrentPage,
+  ]);
 
   const { data: usersResult, isLoading: isLoadingUsers } = useAdminSearchUsers({
-    search: debouncedSearch,
+    search: debouncedFilters.search,
     limit: ITEMS_PER_PAGE,
     offset: (currentPage - 1) * ITEMS_PER_PAGE,
-    sortBy: (selectedSortBy[0] as 'createdAt' | 'name' | 'email' | undefined) || 'createdAt',
-    sortDirection: (selectedSortDirection[0] as 'asc' | 'desc' | undefined) || 'desc',
-    filterStatus: selectedStatus[0] as 'active' | 'banned' | undefined,
+    sortBy: debouncedFilters.sortBy,
+    sortDirection: debouncedFilters.sortDirection,
+    filterStatus: debouncedFilters.status,
     enabled: isAdmin,
   });
 
@@ -148,6 +176,15 @@ function AdminUsersPageContent() {
       enabled: isAdmin && !!selectedUserId,
     });
 
+  // Workspaces for the detail sheet (fetched when a user is selected)
+  const { data: selectedUserWorkspacesResult, isLoading: isLoadingSelectedUserWorkspaces } =
+    useAdminUserWorkspaces({
+      userId: selectedUserId,
+      limit: WORKSPACES_PER_PAGE,
+      offset: detailWorkspacesPage * WORKSPACES_PER_PAGE,
+      enabled: isAdmin && !!selectedUserId,
+    });
+
   // Sessions for the sessions modal (fetched when viewing sessions)
   const { data: userSessionsResult, isLoading: isLoadingSessions } = useAdminUserSessions({
     userId: userForSessions?.id ?? null,
@@ -156,9 +193,10 @@ function AdminUsersPageContent() {
     enabled: isAdmin && !!userForSessions,
   });
 
-  // Reset sessions pages when user changes
+  // Reset sessions and workspaces pages when user changes
   useEffect(() => {
     setDetailSessionsPage(0);
+    setDetailWorkspacesPage(0);
   }, [selectedUserId]);
 
   useEffect(() => {
@@ -210,6 +248,12 @@ function AdminUsersPageContent() {
     : [];
   const selectedUserSessionsTotal = selectedUserSessionsResult?.success
     ? selectedUserSessionsResult.data.total
+    : 0;
+  const selectedUserWorkspaces = selectedUserWorkspacesResult?.success
+    ? selectedUserWorkspacesResult.data.workspaces
+    : [];
+  const selectedUserWorkspacesTotal = selectedUserWorkspacesResult?.success
+    ? selectedUserWorkspacesResult.data.total
     : 0;
   const userSessions = userSessionsResult?.success ? userSessionsResult.data.sessions : [];
   const userSessionsTotal = userSessionsResult?.success ? userSessionsResult.data.total : 0;
@@ -343,7 +387,9 @@ function AdminUsersPageContent() {
             ) : users.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <p className="text-muted-foreground">
-                  {debouncedSearch ? 'No users found matching your search' : 'No users found'}
+                  {debouncedFilters.search
+                    ? 'No users found matching your search'
+                    : 'No users found'}
                 </p>
               </div>
             ) : (
@@ -411,6 +457,12 @@ function AdminUsersPageContent() {
         onOpenChange={(open) => !open && setSelectedUserId(null)}
         user={userDetail}
         isLoading={isLoadingUserDetail}
+        workspaces={selectedUserWorkspaces}
+        isLoadingWorkspaces={isLoadingSelectedUserWorkspaces}
+        workspacesTotal={selectedUserWorkspacesTotal}
+        workspacesPage={detailWorkspacesPage}
+        workspacesPageSize={WORKSPACES_PER_PAGE}
+        onWorkspacesPageChange={setDetailWorkspacesPage}
         sessions={selectedUserSessions}
         isLoadingSessions={isLoadingSelectedUserSessions}
         sessionsTotal={selectedUserSessionsTotal}
