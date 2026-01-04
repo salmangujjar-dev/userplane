@@ -7,12 +7,15 @@ import { Input } from '@workspace/ui/components/input';
 import { Search, Building2, Clock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
 import { WorkspaceCard } from '@/components/admin/workspace-card';
-import { WorkspaceDetailSheet } from '@/components/admin/workspace-detail-sheet';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { useSession } from '@/hooks/use-session';
-import { useImpersonation } from '@/hooks/use-impersonation';
+import {
+  useAdminSearchWorkspaces,
+  useAdminDeactivateWorkspace,
+  useAdminResetInviteToken,
+} from '@/hooks/use-admin-workspace-api';
 import {
   searchParser,
   pageParser,
@@ -20,37 +23,10 @@ import {
   adminWorkspaceSortByParser,
   adminSortDirectionParser,
 } from '@/lib/parsers';
-import {
-  useAdminSearchWorkspaces,
-  useAdminWorkspaceDetail,
-  useAdminWorkspaceMembers,
-  useAdminDeactivateWorkspace,
-  useAdminResetInviteToken,
-} from '@/hooks/use-admin-workspace-api';
-import { useAdminBanUser } from '@/hooks/use-admin-api';
-import { AdminBanUserModal } from '@/components/modals/admin-ban-user-modal';
-import { ImpersonateConfirmModal } from '@/components/modals/impersonate-confirm-modal';
 import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 
 const ITEMS_PER_PAGE = 10;
-const MEMBERS_PER_PAGE = 5; // Max 5 per API limit
-
-interface UserToAction {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface WorkspaceToDeactivate {
-  workspaceId: string;
-  workspaceName: string;
-}
-
-interface WorkspaceToResetToken {
-  workspaceId: string;
-  workspaceName: string;
-}
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -68,6 +44,16 @@ const SORT_DIRECTION_OPTIONS = [
   { value: 'asc', label: 'Oldest First' },
 ];
 
+interface WorkspaceToDeactivate {
+  workspaceId: string;
+  workspaceName: string;
+}
+
+interface WorkspaceToResetToken {
+  workspaceId: string;
+  workspaceName: string;
+}
+
 function WorkspaceCardSkeleton() {
   return (
     <div className="rounded-xl border border-border p-6">
@@ -83,13 +69,12 @@ function WorkspaceCardSkeleton() {
   );
 }
 
-function AdminWorkspacesPageContent() {
+function AdminRecordingsPageContent() {
   const router = useRouter();
   const { isAdmin, isPending: isSessionPending } = useSession();
   const [search, setSearch] = useQueryState('search', searchParser);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useQueryState('page', pageParser);
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
 
   // Filter states
   const [selectedStatus, setSelectedStatus] = useQueryState('status', singleValueArrayParser);
@@ -99,12 +84,7 @@ function AdminWorkspacesPageContent() {
     adminSortDirectionParser
   );
 
-  // Members pagination
-  const [membersPage, setMembersPage] = useState(0);
-
   // Modal states
-  const [userToImpersonate, setUserToImpersonate] = useState<UserToAction | null>(null);
-  const [userToBan, setUserToBan] = useState<UserToAction | null>(null);
   const [workspaceToDeactivate, setWorkspaceToDeactivate] = useState<WorkspaceToDeactivate | null>(
     null
   );
@@ -112,9 +92,7 @@ function AdminWorkspacesPageContent() {
     null
   );
 
-  // Hooks
-  const { impersonateUser, isPending: isImpersonating } = useImpersonation();
-  const banMutation = useAdminBanUser();
+  // Mutations
   const deactivateMutation = useAdminDeactivateWorkspace();
   const resetTokenMutation = useAdminResetInviteToken();
 
@@ -132,6 +110,7 @@ function AdminWorkspacesPageContent() {
     void setCurrentPage(1);
   }, [selectedStatus, selectedSortBy, selectedSortDirection, setCurrentPage]);
 
+  // Fetch workspaces
   const { data: workspacesResult, isLoading: isLoadingWorkspaces } = useAdminSearchWorkspaces({
     search: debouncedSearch,
     limit: ITEMS_PER_PAGE,
@@ -141,22 +120,6 @@ function AdminWorkspacesPageContent() {
     filterStatus: selectedStatus[0] as 'active' | 'deleted' | undefined,
     enabled: isAdmin,
   });
-
-  const { data: workspaceDetailResult, isLoading: isLoadingWorkspaceDetail } =
-    useAdminWorkspaceDetail(selectedWorkspaceId, isAdmin);
-
-  const { data: workspaceMembersResult, isLoading: isLoadingWorkspaceMembers } =
-    useAdminWorkspaceMembers({
-      workspaceId: selectedWorkspaceId,
-      limit: MEMBERS_PER_PAGE,
-      offset: membersPage * MEMBERS_PER_PAGE,
-      enabled: isAdmin && !!selectedWorkspaceId,
-    });
-
-  // Reset members page when workspace changes
-  useEffect(() => {
-    setMembersPage(0);
-  }, [selectedWorkspaceId]);
 
   // Redirect non-admins
   useEffect(() => {
@@ -197,16 +160,9 @@ function AdminWorkspacesPageContent() {
   const workspaces = workspacesResult?.success ? workspacesResult.data.workspaces : [];
   const totalWorkspaces = workspacesResult?.success ? workspacesResult.data.total : 0;
   const totalPages = Math.ceil(totalWorkspaces / ITEMS_PER_PAGE);
-  const workspaceDetail = workspaceDetailResult?.success ? workspaceDetailResult.data : null;
-  const workspaceMembers = workspaceMembersResult?.success
-    ? workspaceMembersResult.data.members
-    : [];
-  const workspaceMembersTotal = workspaceMembersResult?.success
-    ? workspaceMembersResult.data.total
-    : 0;
 
   const handleSelectWorkspace = (workspaceId: string) => {
-    setSelectedWorkspaceId(workspaceId === selectedWorkspaceId ? null : workspaceId);
+    router.push(`/admin/workspaces/${workspaceId}`);
   };
 
   const handleDeactivate = (workspaceId: string, workspaceName: string) => {
@@ -235,32 +191,6 @@ function AdminWorkspacesPageContent() {
     }
   };
 
-  const handleImpersonateUser = (userId: string, userName: string, userEmail: string) => {
-    setUserToImpersonate({ id: userId, name: userName, email: userEmail });
-  };
-
-  const confirmImpersonate = () => {
-    if (userToImpersonate) {
-      impersonateUser({
-        userId: userToImpersonate.id,
-        userName: userToImpersonate.name,
-      });
-    }
-  };
-
-  const handleBanUser = (userId: string, userName: string, userEmail: string) => {
-    setUserToBan({ id: userId, name: userName, email: userEmail });
-  };
-
-  const confirmBan = (options: { reason: string; expiresInSeconds?: number }) => {
-    if (userToBan) {
-      banMutation.mutate(
-        { userId: userToBan.id, ...options },
-        { onSuccess: () => setUserToBan(null) }
-      );
-    }
-  };
-
   const getSortDirectionIcon = () => {
     if (selectedSortDirection[0] === 'asc') return ArrowUp;
     if (selectedSortDirection[0] === 'desc') return ArrowDown;
@@ -279,7 +209,7 @@ function AdminWorkspacesPageContent() {
             <div className="mb-6">
               <h2 className="text-lg font-semibold">Workspaces</h2>
               <p className="text-sm text-muted-foreground mt-1">Manage userplane workspaces</p>
-              <div className="flex items-center gap-2 mt-3">
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
                 <div className="relative w-80">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -290,7 +220,7 @@ function AdminWorkspacesPageContent() {
                     className="pl-10"
                   />
                 </div>
-                <div className="flex items-center gap-2 ml-2">
+                <div className="flex items-center gap-2">
                   <FilterDropdown
                     label="Status"
                     options={STATUS_OPTIONS}
@@ -330,6 +260,7 @@ function AdminWorkspacesPageContent() {
               </div>
             ) : workspaces.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16">
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
                   {debouncedSearch
                     ? 'No workspaces found matching your search'
@@ -348,7 +279,6 @@ function AdminWorkspacesPageContent() {
                     linkCount={workspace.linkCount}
                     recordingCount={workspace.recordingCount}
                     isDeleted={workspace.isDeleted}
-                    isSelected={selectedWorkspaceId === workspace.workspaceId}
                     onClick={() => handleSelectWorkspace(workspace.workspaceId)}
                     onDeactivate={() =>
                       handleDeactivate(workspace.workspaceId, workspace.workspaceName)
@@ -361,7 +291,7 @@ function AdminWorkspacesPageContent() {
               </div>
             )}
 
-            {!isLoadingWorkspaces && workspaces.length > 0 && (
+            {!isLoadingWorkspaces && totalWorkspaces > 0 && (
               <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -372,47 +302,7 @@ function AdminWorkspacesPageContent() {
         </main>
       </div>
 
-      {/* Workspace Detail Sheet */}
-      <WorkspaceDetailSheet
-        open={!!selectedWorkspaceId}
-        onOpenChange={(open) => !open && setSelectedWorkspaceId(null)}
-        workspace={workspaceDetail}
-        isLoading={isLoadingWorkspaceDetail}
-        members={workspaceMembers}
-        isLoadingMembers={isLoadingWorkspaceMembers}
-        membersTotal={workspaceMembersTotal}
-        membersPage={membersPage}
-        membersPageSize={MEMBERS_PER_PAGE}
-        onMembersPageChange={setMembersPage}
-        onDeactivate={() =>
-          workspaceDetail &&
-          handleDeactivate(workspaceDetail.workspaceId, workspaceDetail.workspaceName)
-        }
-        onResetInviteToken={() =>
-          workspaceDetail &&
-          handleResetInviteToken(workspaceDetail.workspaceId, workspaceDetail.workspaceName)
-        }
-        onImpersonateUser={handleImpersonateUser}
-        onBanUser={handleBanUser}
-      />
-
       {/* Modals */}
-      <ImpersonateConfirmModal
-        open={!!userToImpersonate}
-        onOpenChange={(open) => !open && setUserToImpersonate(null)}
-        user={userToImpersonate}
-        onConfirm={confirmImpersonate}
-        isPending={isImpersonating}
-      />
-
-      <AdminBanUserModal
-        open={!!userToBan}
-        onOpenChange={(open) => !open && setUserToBan(null)}
-        user={userToBan}
-        onConfirm={confirmBan}
-        isPending={banMutation.isPending}
-      />
-
       <AdminDeactivateWorkspaceModal
         open={!!workspaceToDeactivate}
         onOpenChange={(open) => !open && setWorkspaceToDeactivate(null)}
@@ -432,15 +322,15 @@ function AdminWorkspacesPageContent() {
   );
 }
 
-export default function AdminWorkspacesPage() {
+export default function AdminRecordingsPage() {
   return (
-    <Suspense fallback={<AdminWorkspacesPageSkeleton />}>
-      <AdminWorkspacesPageContent />
+    <Suspense fallback={<AdminRecordingsPageSkeleton />}>
+      <AdminRecordingsPageContent />
     </Suspense>
   );
 }
 
-function AdminWorkspacesPageSkeleton() {
+function AdminRecordingsPageSkeleton() {
   return (
     <div className="flex h-screen bg-background">
       <div className="w-64 shrink-0">

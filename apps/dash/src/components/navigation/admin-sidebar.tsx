@@ -20,7 +20,6 @@ import {
   Building2,
   ChevronsUpDown,
   Shield,
-  Video,
 } from 'lucide-react';
 import { useAccount } from '@/hooks/use-account';
 import { useWorkspaces } from '@/hooks/use-workspaces';
@@ -44,7 +43,6 @@ const sections: NavSection[] = [
     items: [
       { label: 'Users', href: '/admin/users', icon: Users },
       { label: 'Workspaces', href: '/admin/workspaces', icon: Building2 },
-      { label: 'Recordings', href: '/admin/recordings', icon: Video },
     ],
   },
 ];
