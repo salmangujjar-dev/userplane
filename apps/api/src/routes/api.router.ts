@@ -26,6 +26,9 @@ import {
   recordingService,
   linkService,
   provisionerService,
+  adminService,
+  adminWorkspaceService,
+  adminRecordingService,
 } from '@/api/services';
 
 // Implementations
@@ -39,6 +42,7 @@ import { createInviteProcedures } from './invite/invite.impl';
 import { createProvisionerProcedures } from './provisioner/provisioner.impl';
 import { createStatusProcedures } from './status/status.impl';
 import { createProjectProcedures } from './project/project.impl';
+import { createAdminProcedures } from './admin/admin.impl';
 
 // Export context types for use in implementations
 export type { InitialContext, AuthContext } from '@/api/middleware/auth.orpc';
@@ -67,6 +71,11 @@ const domainProcedures = createDomainProcedures(domainService);
 const inviteProcedures = createInviteProcedures(inviteService);
 const provisionerProcedures = createProvisionerProcedures(provisionerService);
 const statusProcedures = createStatusProcedures();
+const adminProcedures = createAdminProcedures(
+  adminService,
+  adminWorkspaceService,
+  adminRecordingService
+);
 const projectProcedures = createProjectProcedures(
   projectService,
   workspaceMemberService,
@@ -92,6 +101,7 @@ export const apiRouter = {
   status: statusProcedures,
   session: sessionProcedures,
   account: accountProcedures,
+  admin: adminProcedures,
   provisioner: provisionerProcedures,
   workspace: workspaceProcedures,
   project: projectProcedures,

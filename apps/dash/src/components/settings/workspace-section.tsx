@@ -129,8 +129,16 @@ export function WorkspaceSection() {
       <ResetInviteTokenModal
         open={resetInviteModalOpen}
         onOpenChange={setResetInviteModalOpen}
+        workspace={
+          workspaceData
+            ? {
+                workspaceId: workspaceData.workspace.workspaceId,
+                workspaceName: workspaceData.workspace.workspaceName,
+              }
+            : null
+        }
         onConfirm={handleConfirmResetInviteToken}
-        isLoading={rotateInviteMutation.isPending}
+        isPending={rotateInviteMutation.isPending}
       />
     </>
   );

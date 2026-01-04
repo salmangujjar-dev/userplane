@@ -13,6 +13,9 @@ export const auth = createAuth({
     clientSecret: env.google.clientSecret,
     redirectURI: env.google.redirectUri,
   },
+  admin: {
+    adminUserIds: env.admin.userIds,
+  },
 });
 
 export type Auth = typeof auth;

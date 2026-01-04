@@ -25,6 +25,7 @@ import {
   Plus,
   ChevronsUpDown,
   HelpCircle,
+  Shield,
 } from 'lucide-react';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 import { useAccount } from '@/hooks/use-account';
@@ -32,6 +33,7 @@ import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useAuth } from '@/hooks/use-auth';
+import { useSession } from '@/hooks/use-session';
 import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 
 interface NavItem {
@@ -54,6 +56,7 @@ export function Sidebar() {
   const { data: workspaceResult } = useWorkspace();
   const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
   const { signOut } = useAuth();
+  const { isAdmin } = useSession();
 
   const account = accountResult?.success ? accountResult.data : null;
   const projects = projectsResult?.success ? projectsResult.data : null;
@@ -197,6 +200,15 @@ export function Sidebar() {
                 <Settings2 className="h-4 w-4" />
                 Account
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
+                >
+                  <Shield className="h-4 w-4" />
+                  Admin
+                </Link>
+              )}
               <DropdownMenuSeparator className="-mx-2 my-2" />
               <a
                 href="https://docs.userplane.com"

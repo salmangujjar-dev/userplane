@@ -29,6 +29,9 @@ import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { AdminRepository } from '@/api/repositories/admin.repository';
+import { AdminWorkspaceRepository } from '@/api/repositories/admin-workspace.repository';
+import { AdminRecordingRepository } from '@/api/repositories/admin-recording.repository';
 
 // Services
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
@@ -41,6 +44,10 @@ import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
 import { ProvisionerService } from '@/api/services/provisioner.service';
 import { SessionService } from '@/api/services/session.service';
+import { AdminService } from '@/api/services/admin.service';
+import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
+import { AdminRecordingService } from '@/api/services/admin-recording.service';
+import { env } from '@/api/env';
 
 // Initialize repositories
 const workspaceRepo = new WorkspaceRepository(db);
@@ -50,6 +57,9 @@ const projectRepo = new ProjectRepository(db);
 const domainRepo = new DomainRepository(db);
 const linkRepo = new LinkRepository(db);
 const recordingRepo = new RecordingRepository(db);
+const adminRepo = new AdminRepository(db);
+const adminWorkspaceRepo = new AdminWorkspaceRepository(db);
+const adminRecordingRepo = new AdminRecordingRepository(db);
 
 // Initialize services in dependency order
 // Level 1: Services with no dependencies on other services
@@ -59,6 +69,19 @@ export const workspaceMemberService = new WorkspaceMemberService({
 
 export const userService = new UserService({
   userRepo,
+});
+
+export const adminService = new AdminService({
+  adminRepo,
+  adminUserIds: env.admin.userIds,
+});
+
+export const adminWorkspaceService = new AdminWorkspaceService({
+  adminWorkspaceRepo,
+});
+
+export const adminRecordingService = new AdminRecordingService({
+  adminRecordingRepo,
 });
 
 export const recordingService = new RecordingService({

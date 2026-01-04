@@ -20,6 +20,9 @@ export const session = pgTable(
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
 
+    // Impersonation (admin plugin)
+    impersonatedBy: text('impersonated_by'),
+
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
