@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryState } from 'nuqs';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
@@ -27,6 +27,8 @@ export default function RecordingsPage() {
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
+
+  // Filter states (URL-synced)
   const [selectedProjects, setSelectedProjects] = useQueryState('projects', stringArrayParser);
   const [selectedCreators, setSelectedCreators] = useQueryState('creators', stringArrayParser);
   const [selectedRecordingLinks, setSelectedRecordingLinks] = useQueryState(
@@ -38,6 +40,46 @@ export default function RecordingsPage() {
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
   const [linkSearchQuery, setLinkSearchQuery] = useState('');
 
+  // Debounced filter states for API calls
+  const [debouncedFilters, setDebouncedFilters] = useState<{
+    projectId?: string[];
+    createdBy?: string[];
+    linkId?: string[];
+  }>({
+    projectId: selectedProjects.length > 0 ? selectedProjects : undefined,
+    createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
+    linkId: selectedRecordingLinks.length > 0 ? selectedRecordingLinks : undefined,
+  });
+
+  // Debounce filter changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const newFilters = {
+        projectId: selectedProjects.length > 0 ? selectedProjects : undefined,
+        createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
+        linkId: selectedRecordingLinks.length > 0 ? selectedRecordingLinks : undefined,
+      };
+
+      // Check if filters actually changed to avoid unnecessary page resets
+      const filtersChanged =
+        JSON.stringify(newFilters.projectId) !== JSON.stringify(debouncedFilters.projectId) ||
+        JSON.stringify(newFilters.createdBy) !== JSON.stringify(debouncedFilters.createdBy) ||
+        JSON.stringify(newFilters.linkId) !== JSON.stringify(debouncedFilters.linkId);
+
+      if (filtersChanged) {
+        setDebouncedFilters(newFilters);
+        void setCurrentPage(1);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [
+    selectedProjects,
+    selectedCreators,
+    selectedRecordingLinks,
+    debouncedFilters,
+    setCurrentPage,
+  ]);
+
   const {
     data: recordingsResult,
     isLoading: isLoadingRecordings,
@@ -46,11 +88,7 @@ export default function RecordingsPage() {
   } = useWorkspaceRecordings({
     page: currentPage,
     perPage: recordingsPerPage,
-    filters: {
-      projectId: selectedProjects.length > 0 ? selectedProjects : undefined,
-      createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
-      linkId: selectedRecordingLinks.length > 0 ? selectedRecordingLinks : undefined,
-    },
+    filters: debouncedFilters,
   });
 
   const recordingsData = recordingsResult?.success ? recordingsResult.data : null;

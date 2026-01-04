@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryState } from 'nuqs';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
@@ -25,12 +25,48 @@ export default function LinksPage() {
   const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = usePagination();
   const linksPerPage = 10;
+
+  // Filter states (URL-synced)
   const [selectedProjects, setSelectedProjects] = useQueryState('projects', stringArrayParser);
   const [selectedCreators, setSelectedCreators] = useQueryState('creators', stringArrayParser);
   const [selectedDomains, setSelectedDomains] = useQueryState('domains', stringArrayParser);
 
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
+
+  // Debounced filter states for API calls
+  const [debouncedFilters, setDebouncedFilters] = useState<{
+    projectId?: string[];
+    createdBy?: string[];
+    domainId?: string[];
+  }>({
+    projectId: selectedProjects.length > 0 ? selectedProjects : undefined,
+    createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
+    domainId: selectedDomains.length > 0 ? selectedDomains : undefined,
+  });
+
+  // Debounce filter changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const newFilters = {
+        projectId: selectedProjects.length > 0 ? selectedProjects : undefined,
+        createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
+        domainId: selectedDomains.length > 0 ? selectedDomains : undefined,
+      };
+
+      // Check if filters actually changed to avoid unnecessary page resets
+      const filtersChanged =
+        JSON.stringify(newFilters.projectId) !== JSON.stringify(debouncedFilters.projectId) ||
+        JSON.stringify(newFilters.createdBy) !== JSON.stringify(debouncedFilters.createdBy) ||
+        JSON.stringify(newFilters.domainId) !== JSON.stringify(debouncedFilters.domainId);
+
+      if (filtersChanged) {
+        setDebouncedFilters(newFilters);
+        void setCurrentPage(1);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [selectedProjects, selectedCreators, selectedDomains, debouncedFilters, setCurrentPage]);
 
   const {
     data: linksResult,
@@ -40,11 +76,7 @@ export default function LinksPage() {
   } = useWorkspaceLinks({
     page: currentPage,
     perPage: linksPerPage,
-    filters: {
-      projectId: selectedProjects.length > 0 ? selectedProjects : undefined,
-      createdBy: selectedCreators.length > 0 ? selectedCreators : undefined,
-      domainId: selectedDomains.length > 0 ? selectedDomains : undefined,
-    },
+    filters: debouncedFilters,
   });
 
   const linksData = linksResult?.success ? linksResult.data : null;
