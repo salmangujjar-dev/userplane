@@ -1,7 +1,15 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { admin } from 'better-auth/plugins';
 import type { DbClient } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
+
+export interface AdminConfig {
+  /** User IDs that should always be treated as admins */
+  adminUserIds?: string[];
+  /** Duration of impersonation session in seconds (default: 1 hour) */
+  impersonationSessionDuration?: number;
+}
 
 export interface AuthConfig {
   database: DbClient;
@@ -14,6 +22,7 @@ export interface AuthConfig {
     clientSecret: string;
     redirectURI?: string;
   };
+  admin?: AdminConfig;
 }
 
 export function createAuth(config: AuthConfig) {
@@ -27,6 +36,12 @@ export function createAuth(config: AuthConfig) {
     secret: config.secret,
     baseURL: config.baseURL,
     trustedOrigins: config.trustedOrigins,
+    plugins: [
+      admin({
+        adminUserIds: config.admin?.adminUserIds,
+        impersonationSessionDuration: config.admin?.impersonationSessionDuration ?? 60 * 60, // 1 hour default
+      }),
+    ],
     socialProviders: {
       google: {
         clientId: config.google.clientId,
