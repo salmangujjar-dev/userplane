@@ -60,7 +60,11 @@ export function FilterDropdown({
 
   const handleToggle = (value: string) => {
     if (singleSelect) {
-      onSelectionChange([value]);
+      if (selected.includes(value)) {
+        onSelectionChange([]);
+      } else {
+        onSelectionChange([value]);
+      }
       setOpen(false);
     } else {
       const newSelected = selected.includes(value)

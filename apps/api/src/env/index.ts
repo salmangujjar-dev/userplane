@@ -80,6 +80,9 @@ interface EnvConfig {
     sweepCronSchedule: string;
   };
   storage: StorageConfig;
+  admin: {
+    userIds: string[];
+  };
 }
 
 /**
@@ -219,6 +222,9 @@ export function loadEnvConfig(): EnvConfig {
             bucketName: process.env.R2_REPORTS_BUCKET_NAME || '',
           }
         : undefined,
+    },
+    admin: {
+      userIds: parseCommaSeparated(process.env.ADMIN_USER_IDS, []),
     },
   };
 
