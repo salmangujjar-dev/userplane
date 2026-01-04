@@ -6,6 +6,7 @@
  */
 
 import * as account from './account';
+import * as admin from './admin';
 import * as domain from './domain';
 import * as invite from './invite';
 import * as link from './link';
@@ -32,6 +33,38 @@ export const statusContract = {
 export const accountContract = {
   get: account.getAccount,
   update: account.updateAccount,
+};
+
+/**
+ * Admin contract
+ * Admin user and workspace management operations
+ */
+export const adminContract = {
+  users: {
+    search: admin.searchUsers,
+    get: admin.getUser,
+    ban: admin.banUser,
+    unban: admin.unbanUser,
+    sessions: {
+      list: admin.listUserSessions,
+      revokeAll: admin.revokeAllSessions,
+    },
+  },
+  sessions: {
+    revoke: admin.revokeSession,
+  },
+  workspaces: {
+    search: admin.searchWorkspaces,
+    get: admin.getWorkspace,
+    members: {
+      list: admin.listWorkspaceMembers,
+    },
+    deactivate: admin.deactivateWorkspace,
+    reactivate: admin.reactivateWorkspace,
+    resetInviteToken: admin.resetInviteToken,
+    recordingStats: admin.getWorkspaceRecordingStats,
+    memberRecordingStats: admin.getWorkspaceMemberRecordingStats,
+  },
 };
 
 /**
@@ -175,6 +208,7 @@ export const sessionContract = {
 export const contract = {
   status: statusContract,
   account: accountContract,
+  admin: adminContract,
   provisioner: provisionerContract,
   workspace: workspaceContract,
   invite: inviteContract,
@@ -190,6 +224,7 @@ export const contract = {
  */
 export type StatusContract = typeof statusContract;
 export type AccountContract = typeof accountContract;
+export type AdminContract = typeof adminContract;
 export type ProvisionerContract = typeof provisionerContract;
 export type WorkspaceContract = typeof workspaceContract;
 export type InviteContract = typeof inviteContract;
