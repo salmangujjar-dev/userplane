@@ -10,6 +10,8 @@ import {
   AdminRevokeSessionInputSchema,
   AdminRevokeAllSessionsInputSchema,
   AdminUserSessionsDataSchema,
+  AdminListUserWorkspacesInputSchema,
+  AdminUserWorkspacesDataSchema,
   AdminWorkspacesListDataSchema,
   AdminWorkspaceDetailSchema,
   AdminWorkspaceMembersListDataSchema,
@@ -186,6 +188,27 @@ export const revokeAllSessions = oc
   })
   .input(AdminRevokeAllSessionsInputSchema)
   .output(ApiResponseSchema(AdminUserSessionsDataSchema));
+
+/**
+ * GET /admin/users/:userId/workspaces
+ * List user workspaces with pagination
+ */
+export const listUserWorkspaces = oc
+  .route({
+    method: 'GET',
+    path: '/admin/users/{userId}/workspaces',
+    inputStructure: 'detailed',
+    summary: 'List user workspaces',
+    description: 'Get paginated list of workspaces for a user',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    USER_NOT_FOUND: AdminErrors.USER_NOT_FOUND,
+  })
+  .input(AdminListUserWorkspacesInputSchema)
+  .output(ApiResponseSchema(AdminUserWorkspacesDataSchema));
 
 // ============================================
 // WORKSPACE MANAGEMENT

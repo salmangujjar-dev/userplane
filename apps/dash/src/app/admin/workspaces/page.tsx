@@ -73,16 +73,23 @@ function AdminRecordingsPageContent() {
   const router = useRouter();
   const { isAdmin, isPending: isSessionPending } = useSession();
   const [search, setSearch] = useQueryState('search', searchParser);
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useQueryState('page', pageParser);
 
-  // Filter states
+  // Filter states (URL-synced)
   const [selectedStatus, setSelectedStatus] = useQueryState('status', singleValueArrayParser);
   const [selectedSortBy, setSelectedSortBy] = useQueryState('sortBy', adminWorkspaceSortByParser);
   const [selectedSortDirection, setSelectedSortDirection] = useQueryState(
     'order',
     adminSortDirectionParser
   );
+
+  // Debounced filter states for API calls
+  const [debouncedFilters, setDebouncedFilters] = useState({
+    search: '',
+    status: selectedStatus[0] as 'active' | 'deleted' | undefined,
+    sortBy: (selectedSortBy[0] as 'createdAt' | 'name' | 'memberCount') || 'createdAt',
+    sortDirection: (selectedSortDirection[0] as 'asc' | 'desc') || 'desc',
+  });
 
   // Modal states
   const [workspaceToDeactivate, setWorkspaceToDeactivate] = useState<WorkspaceToDeactivate | null>(
@@ -96,28 +103,46 @@ function AdminRecordingsPageContent() {
   const deactivateMutation = useAdminDeactivateWorkspace();
   const resetTokenMutation = useAdminResetInviteToken();
 
-  // Debounce search input
+  // Debounce all filter changes (search, status, sort) together
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      void setCurrentPage(1);
+      const newFilters = {
+        search,
+        status: selectedStatus[0] as 'active' | 'deleted' | undefined,
+        sortBy: (selectedSortBy[0] as 'createdAt' | 'name' | 'memberCount') || 'createdAt',
+        sortDirection: (selectedSortDirection[0] as 'asc' | 'desc') || 'desc',
+      };
+
+      // Check if filters actually changed to avoid unnecessary page resets
+      const filtersChanged =
+        newFilters.search !== debouncedFilters.search ||
+        newFilters.status !== debouncedFilters.status ||
+        newFilters.sortBy !== debouncedFilters.sortBy ||
+        newFilters.sortDirection !== debouncedFilters.sortDirection;
+
+      if (filtersChanged) {
+        setDebouncedFilters(newFilters);
+        void setCurrentPage(1);
+      }
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, setCurrentPage]);
-
-  // Reset page when filters change
-  useEffect(() => {
-    void setCurrentPage(1);
-  }, [selectedStatus, selectedSortBy, selectedSortDirection, setCurrentPage]);
+  }, [
+    search,
+    selectedStatus,
+    selectedSortBy,
+    selectedSortDirection,
+    debouncedFilters,
+    setCurrentPage,
+  ]);
 
   // Fetch workspaces
   const { data: workspacesResult, isLoading: isLoadingWorkspaces } = useAdminSearchWorkspaces({
-    search: debouncedSearch,
+    search: debouncedFilters.search,
     limit: ITEMS_PER_PAGE,
     offset: (currentPage - 1) * ITEMS_PER_PAGE,
-    sortBy: (selectedSortBy[0] as 'createdAt' | 'name' | 'memberCount' | undefined) || 'createdAt',
-    sortDirection: (selectedSortDirection[0] as 'asc' | 'desc' | undefined) || 'desc',
-    filterStatus: selectedStatus[0] as 'active' | 'deleted' | undefined,
+    sortBy: debouncedFilters.sortBy,
+    sortDirection: debouncedFilters.sortDirection,
+    filterStatus: debouncedFilters.status,
     enabled: isAdmin,
   });
 
@@ -262,7 +287,7 @@ function AdminRecordingsPageContent() {
               <div className="flex flex-col items-center justify-center py-16">
                 <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
-                  {debouncedSearch
+                  {debouncedFilters.search
                     ? 'No workspaces found matching your search'
                     : 'No workspaces found'}
                 </p>

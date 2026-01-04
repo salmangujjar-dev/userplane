@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/client';
 import { handleQueryResult, handleSafeResult, handleApiError, type SafeResult } from '@/lib/errors';
@@ -46,7 +46,7 @@ export interface AdminUserSession {
 
 /**
  * Admin user detail
- * Note: Sessions are fetched separately via useAdminUserSessions
+ * Note: Sessions and workspaces are fetched separately via dedicated hooks
  */
 export interface AdminUserDetail {
   id: string;
@@ -59,7 +59,7 @@ export interface AdminUserDetail {
   banExpires: string | null;
   emailVerified: boolean;
   createdAt: string;
-  workspaces: AdminUserWorkspace[];
+  workspaceCount: number;
 }
 
 /**
@@ -190,7 +190,53 @@ export function useAdminUserSessions({
       return handleQueryResult(error, response?.data ?? null);
     },
     enabled: enabled && !!userId,
-    staleTime: 15 * 1000,
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+}
+
+/**
+ * Hook params for user workspaces
+ */
+export interface UseAdminUserWorkspacesParams {
+  userId: string | null;
+  limit?: number;
+  offset?: number;
+  enabled?: boolean;
+}
+
+/**
+ * User workspaces response with pagination
+ */
+export interface AdminUserWorkspacesResponse {
+  workspaces: AdminUserWorkspace[];
+  userId: string;
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Hook for getting user workspaces with pagination (admin only)
+ */
+export function useAdminUserWorkspaces({
+  userId,
+  limit = 10,
+  offset = 0,
+  enabled = true,
+}: UseAdminUserWorkspacesParams) {
+  return useQuery({
+    queryKey: ['admin-user-workspaces', userId, { limit, offset }],
+    queryFn: async () => {
+      if (!userId) return null;
+      const [error, response] = await apiClient.admin.users.workspaces.list({
+        params: { userId },
+        query: { limit, offset },
+      });
+      return handleQueryResult(error, response?.data ?? null);
+    },
+    enabled: enabled && !!userId,
+    staleTime: 30 * 1000,
     retry: 1,
   });
 }
@@ -206,11 +252,17 @@ export interface BanUserInput {
 
 /**
  * Hook for banning a user (admin only)
+ * Uses optimistic updates and targeted cache invalidation
  */
 export function useAdminBanUser() {
   const queryClient = useQueryClient();
 
-  return useMutation<SafeResult<AdminUserDetail>, Error, BanUserInput>({
+  return useMutation<
+    SafeResult<AdminUserDetail>,
+    Error,
+    BanUserInput,
+    { previousUserDetail: SafeResult<AdminUserDetail> | undefined }
+  >({
     mutationFn: async ({ userId, reason, expiresInSeconds }) => {
       const [error, response] = await apiClient.admin.users.ban({
         params: { userId },
@@ -221,16 +273,54 @@ export function useAdminBanUser() {
       });
       return handleSafeResult(error, response?.data ?? null);
     },
+    onMutate: async ({ userId, reason, expiresInSeconds }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin-user-detail', userId] });
+
+      // Snapshot previous value
+      const previousUserDetail = queryClient.getQueryData<SafeResult<AdminUserDetail>>([
+        'admin-user-detail',
+        userId,
+      ]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        ['admin-user-detail', userId],
+        (old: SafeResult<AdminUserDetail> | undefined) => {
+          if (!old?.success) return old;
+          const banExpires = expiresInSeconds
+            ? new Date(Date.now() + expiresInSeconds * 1000).toISOString()
+            : null;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              banned: true,
+              banReason: reason,
+              banExpires,
+            },
+          };
+        }
+      );
+
+      return { previousUserDetail };
+    },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
         handleApiError(result.error, 'Failed to ban user');
         return;
       }
       toast.success('User banned successfully');
-      queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
+      // Only invalidate the user detail to get fresh data from server
       queryClient.invalidateQueries({ queryKey: ['admin-user-detail', userId] });
+      // Invalidate sessions since banning revokes all sessions
+      queryClient.invalidateQueries({ queryKey: ['admin-user-sessions', userId] });
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, { userId }, context) => {
+      // Rollback on error
+      if (context?.previousUserDetail) {
+        queryClient.setQueryData(['admin-user-detail', userId], context.previousUserDetail);
+      }
       toast.error('Failed to ban user', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -240,16 +330,51 @@ export function useAdminBanUser() {
 
 /**
  * Hook for unbanning a user (admin only)
+ * Uses optimistic updates and targeted cache invalidation
  */
 export function useAdminUnbanUser() {
   const queryClient = useQueryClient();
 
-  return useMutation<SafeResult<AdminUserDetail>, Error, { userId: string }>({
+  return useMutation<
+    SafeResult<AdminUserDetail>,
+    Error,
+    { userId: string },
+    { previousUserDetail: SafeResult<AdminUserDetail> | undefined }
+  >({
     mutationFn: async ({ userId }) => {
       const [error, response] = await apiClient.admin.users.unban({
         params: { userId },
       });
       return handleSafeResult(error, response?.data ?? null);
+    },
+    onMutate: async ({ userId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin-user-detail', userId] });
+
+      // Snapshot previous value
+      const previousUserDetail = queryClient.getQueryData<SafeResult<AdminUserDetail>>([
+        'admin-user-detail',
+        userId,
+      ]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        ['admin-user-detail', userId],
+        (old: SafeResult<AdminUserDetail> | undefined) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              banned: false,
+              banReason: null,
+              banExpires: null,
+            },
+          };
+        }
+      );
+
+      return { previousUserDetail };
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
@@ -257,10 +382,14 @@ export function useAdminUnbanUser() {
         return;
       }
       toast.success('User unbanned successfully');
-      queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
+      // Only invalidate the user detail to get fresh data from server
       queryClient.invalidateQueries({ queryKey: ['admin-user-detail', userId] });
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, { userId }, context) => {
+      // Rollback on error
+      if (context?.previousUserDetail) {
+        queryClient.setQueryData(['admin-user-detail', userId], context.previousUserDetail);
+      }
       toast.error('Failed to unban user', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -270,14 +399,18 @@ export function useAdminUnbanUser() {
 
 /**
  * Hook for revoking a specific session (admin only)
+ * Uses optimistic updates and targeted cache invalidation
  */
 export function useAdminRevokeSession() {
   const queryClient = useQueryClient();
 
+  type SessionsQueryData = [QueryKey, SafeResult<AdminUserSessionsResponse> | undefined][];
+
   return useMutation<
     SafeResult<{ sessions: AdminUserSession[]; revoked: string }>,
     Error,
-    { sessionId: string; userId: string }
+    { sessionId: string; userId: string },
+    { previousSessions: SessionsQueryData }
   >({
     mutationFn: async ({ sessionId }) => {
       const [error, response] = await apiClient.admin.sessions.revoke({
@@ -285,17 +418,49 @@ export function useAdminRevokeSession() {
       });
       return handleSafeResult(error, response?.data ?? null);
     },
+    onMutate: async ({ sessionId, userId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin-user-sessions', userId] });
+
+      // Snapshot previous value - need to get all cached sessions queries for this user
+      const previousSessions = queryClient.getQueriesData<SafeResult<AdminUserSessionsResponse>>({
+        queryKey: ['admin-user-sessions', userId],
+      });
+
+      // Optimistically remove the session from all cached queries
+      queryClient.setQueriesData<SafeResult<AdminUserSessionsResponse>>(
+        { queryKey: ['admin-user-sessions', userId] },
+        (old: SafeResult<AdminUserSessionsResponse> | undefined) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              sessions: old.data.sessions.filter((s: AdminUserSession) => s.id !== sessionId),
+              total: Math.max(0, old.data.total - 1),
+            },
+          };
+        }
+      );
+
+      return { previousSessions };
+    },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
         handleApiError(result.error, 'Failed to revoke session');
         return;
       }
       toast.success('Session revoked successfully');
+      // Only invalidate the sessions for this user
       queryClient.invalidateQueries({ queryKey: ['admin-user-sessions', userId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-user-detail', userId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, _variables, context) => {
+      // Rollback on error
+      if (context?.previousSessions) {
+        context.previousSessions.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast.error('Failed to revoke session', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -305,16 +470,51 @@ export function useAdminRevokeSession() {
 
 /**
  * Hook for revoking all sessions for a user (admin only)
+ * Uses optimistic updates and targeted cache invalidation
  */
 export function useAdminRevokeAllSessions() {
   const queryClient = useQueryClient();
 
-  return useMutation<SafeResult<AdminUserSessionsResponse>, Error, { userId: string }>({
+  type SessionsQueryData = [QueryKey, SafeResult<AdminUserSessionsResponse> | undefined][];
+
+  return useMutation<
+    SafeResult<AdminUserSessionsResponse>,
+    Error,
+    { userId: string },
+    { previousSessions: SessionsQueryData }
+  >({
     mutationFn: async ({ userId }) => {
       const [error, response] = await apiClient.admin.users.sessions.revokeAll({
         params: { userId },
       });
       return handleSafeResult(error, response?.data ?? null);
+    },
+    onMutate: async ({ userId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin-user-sessions', userId] });
+
+      // Snapshot previous value
+      const previousSessions = queryClient.getQueriesData<SafeResult<AdminUserSessionsResponse>>({
+        queryKey: ['admin-user-sessions', userId],
+      });
+
+      // Optimistically clear all sessions
+      queryClient.setQueriesData<SafeResult<AdminUserSessionsResponse>>(
+        { queryKey: ['admin-user-sessions', userId] },
+        (old: SafeResult<AdminUserSessionsResponse> | undefined) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              sessions: [],
+              total: 0,
+            },
+          };
+        }
+      );
+
+      return { previousSessions };
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
@@ -322,11 +522,16 @@ export function useAdminRevokeAllSessions() {
         return;
       }
       toast.success('All sessions revoked successfully');
+      // Only invalidate the sessions for this user
       queryClient.invalidateQueries({ queryKey: ['admin-user-sessions', userId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-user-detail', userId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, _variables, context) => {
+      // Rollback on error
+      if (context?.previousSessions) {
+        context.previousSessions.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast.error('Failed to revoke all sessions', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });

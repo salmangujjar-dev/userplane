@@ -40,7 +40,7 @@ function formatSession(session: {
 
 /**
  * Format user detail for response
- * Note: Sessions are fetched separately via listUserSessions endpoint
+ * Note: Sessions and workspaces are fetched separately via dedicated endpoints
  */
 function formatUserDetail(user: {
   id: string;
@@ -54,12 +54,7 @@ function formatUserDetail(user: {
   emailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
-  workspaces: Array<{
-    workspaceId: string;
-    workspaceName: string;
-    workspaceRole: 'owner' | 'admin' | 'member';
-    joinedAt: Date;
-  }>;
+  workspaceCount: number;
 }) {
   return {
     id: user.id,
@@ -72,12 +67,24 @@ function formatUserDetail(user: {
     banExpires: formatDate(user.banExpires),
     emailVerified: user.emailVerified,
     createdAt: user.createdAt.toISOString(),
-    workspaces: user.workspaces.map((w) => ({
-      workspaceId: w.workspaceId,
-      workspaceName: w.workspaceName,
-      workspaceRole: w.workspaceRole,
-      joinedAt: w.joinedAt.toISOString(),
-    })),
+    workspaceCount: user.workspaceCount,
+  };
+}
+
+/**
+ * Format user workspace for response
+ */
+function formatUserWorkspace(workspace: {
+  workspaceId: string;
+  workspaceName: string;
+  workspaceRole: 'owner' | 'admin' | 'member';
+  joinedAt: Date;
+}) {
+  return {
+    workspaceId: workspace.workspaceId,
+    workspaceName: workspace.workspaceName,
+    workspaceRole: workspace.workspaceRole,
+    joinedAt: workspace.joinedAt.toISOString(),
   };
 }
 
@@ -238,6 +245,29 @@ const revokeAllSessionsImpl = (adminService: AdminService) => {
         },
       };
     });
+};
+
+/**
+ * List user workspaces implementation
+ */
+const listUserWorkspacesImpl = (adminService: AdminService) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized.use(adminMiddleware).admin.users.workspaces.list.handler(async ({ input }) => {
+    const { limit, offset } = input.query;
+    const result = await adminService.listUserWorkspaces(input.params.userId, { limit, offset });
+
+    return {
+      message: 'Workspaces retrieved successfully',
+      data: {
+        workspaces: result.workspaces.map(formatUserWorkspace),
+        userId: result.userId,
+        total: result.total,
+        limit,
+        offset,
+      },
+    };
+  });
 };
 
 // ============================================
@@ -542,6 +572,9 @@ export const createAdminProcedures = (
       sessions: {
         list: listUserSessionsImpl(adminService),
         revokeAll: revokeAllSessionsImpl(adminService),
+      },
+      workspaces: {
+        list: listUserWorkspacesImpl(adminService),
       },
     },
     sessions: {

@@ -181,16 +181,50 @@ export function useAdminWorkspaceMembers({
 
 /**
  * Hook for deactivating a workspace (admin only)
+ * Uses optimistic updates and targeted cache invalidation
  */
 export function useAdminDeactivateWorkspace() {
   const queryClient = useQueryClient();
 
-  return useMutation<SafeResult<AdminWorkspaceDetail>, Error, { workspaceId: string }>({
+  return useMutation<
+    SafeResult<AdminWorkspaceDetail>,
+    Error,
+    { workspaceId: string },
+    { previousWorkspaceDetail: SafeResult<AdminWorkspaceDetail> | undefined }
+  >({
     mutationFn: async ({ workspaceId }) => {
       const [error, response] = await apiClient.admin.workspaces.deactivate({
         params: { workspaceId },
       });
       return handleSafeResult(error, response?.data ?? null);
+    },
+    onMutate: async ({ workspaceId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin-workspace-detail', workspaceId] });
+
+      // Snapshot previous value
+      const previousWorkspaceDetail = queryClient.getQueryData<SafeResult<AdminWorkspaceDetail>>([
+        'admin-workspace-detail',
+        workspaceId,
+      ]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        ['admin-workspace-detail', workspaceId],
+        (old: SafeResult<AdminWorkspaceDetail> | undefined) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              isDeleted: true,
+              deletedAt: new Date().toISOString(),
+            },
+          };
+        }
+      );
+
+      return { previousWorkspaceDetail };
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
@@ -198,10 +232,17 @@ export function useAdminDeactivateWorkspace() {
         return;
       }
       toast.success('Workspace deactivated successfully');
-      queryClient.invalidateQueries({ queryKey: ['admin-search-workspaces'] });
+      // Only invalidate the workspace detail to get fresh data from server
       queryClient.invalidateQueries({ queryKey: ['admin-workspace-detail', workspaceId] });
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, { workspaceId }, context) => {
+      // Rollback on error
+      if (context?.previousWorkspaceDetail) {
+        queryClient.setQueryData(
+          ['admin-workspace-detail', workspaceId],
+          context.previousWorkspaceDetail
+        );
+      }
       toast.error('Failed to deactivate workspace', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -211,16 +252,50 @@ export function useAdminDeactivateWorkspace() {
 
 /**
  * Hook for reactivating a workspace (admin only)
+ * Uses optimistic updates and targeted cache invalidation
  */
 export function useAdminReactivateWorkspace() {
   const queryClient = useQueryClient();
 
-  return useMutation<SafeResult<AdminWorkspaceDetail>, Error, { workspaceId: string }>({
+  return useMutation<
+    SafeResult<AdminWorkspaceDetail>,
+    Error,
+    { workspaceId: string },
+    { previousWorkspaceDetail: SafeResult<AdminWorkspaceDetail> | undefined }
+  >({
     mutationFn: async ({ workspaceId }) => {
       const [error, response] = await apiClient.admin.workspaces.reactivate({
         params: { workspaceId },
       });
       return handleSafeResult(error, response?.data ?? null);
+    },
+    onMutate: async ({ workspaceId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin-workspace-detail', workspaceId] });
+
+      // Snapshot previous value
+      const previousWorkspaceDetail = queryClient.getQueryData<SafeResult<AdminWorkspaceDetail>>([
+        'admin-workspace-detail',
+        workspaceId,
+      ]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        ['admin-workspace-detail', workspaceId],
+        (old: SafeResult<AdminWorkspaceDetail> | undefined) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              isDeleted: false,
+              deletedAt: null,
+            },
+          };
+        }
+      );
+
+      return { previousWorkspaceDetail };
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
@@ -228,10 +303,17 @@ export function useAdminReactivateWorkspace() {
         return;
       }
       toast.success('Workspace reactivated successfully');
-      queryClient.invalidateQueries({ queryKey: ['admin-search-workspaces'] });
+      // Only invalidate the workspace detail to get fresh data from server
       queryClient.invalidateQueries({ queryKey: ['admin-workspace-detail', workspaceId] });
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, { workspaceId }, context) => {
+      // Rollback on error
+      if (context?.previousWorkspaceDetail) {
+        queryClient.setQueryData(
+          ['admin-workspace-detail', workspaceId],
+          context.previousWorkspaceDetail
+        );
+      }
       toast.error('Failed to reactivate workspace', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -241,6 +323,7 @@ export function useAdminReactivateWorkspace() {
 
 /**
  * Hook for resetting workspace invite token (admin only)
+ * Uses targeted cache invalidation (no optimistic update - token is server-generated)
  */
 export function useAdminResetInviteToken() {
   const queryClient = useQueryClient();
@@ -258,6 +341,7 @@ export function useAdminResetInviteToken() {
         return;
       }
       toast.success('Invite token reset successfully');
+      // Only invalidate the workspace detail to get fresh data from server
       queryClient.invalidateQueries({ queryKey: ['admin-workspace-detail', workspaceId] });
     },
     onError: (error: unknown) => {

@@ -49,6 +49,9 @@ export const adminContract = {
       list: admin.listUserSessions,
       revokeAll: admin.revokeAllSessions,
     },
+    workspaces: {
+      list: admin.listUserWorkspaces,
+    },
   },
   sessions: {
     revoke: admin.revokeSession,

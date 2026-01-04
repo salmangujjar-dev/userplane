@@ -46,8 +46,8 @@ export class AdminService {
   }
 
   /**
-   * Get user detail with workspaces
-   * Note: Sessions are fetched separately via listUserSessions
+   * Get user detail with workspace count
+   * Note: Sessions and workspaces are fetched separately via dedicated endpoints
    */
   async getUserDetail(userId: string) {
     const userDetail = await this.deps.adminRepo.findUserById(userId);
@@ -58,12 +58,28 @@ export class AdminService {
       });
     }
 
-    const workspaces = await this.deps.adminRepo.getUserWorkspaces(userId);
+    const workspaceCount = await this.deps.adminRepo.getUserWorkspaceCount(userId);
 
     return {
       ...userDetail,
-      workspaces,
+      workspaceCount,
     };
+  }
+
+  /**
+   * List user workspaces with pagination
+   */
+  async listUserWorkspaces(userId: string, options: { limit: number; offset: number }) {
+    const targetUser = await this.deps.adminRepo.findUserById(userId);
+    if (!targetUser) {
+      throw new ORPCError('USER_NOT_FOUND', {
+        status: 404,
+        message: 'User not found',
+      });
+    }
+
+    const result = await this.deps.adminRepo.getUserWorkspaces(userId, options);
+    return { workspaces: result.workspaces, userId, total: result.total };
   }
 
   /**
