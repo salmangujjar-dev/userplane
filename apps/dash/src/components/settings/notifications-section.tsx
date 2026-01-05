@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { Switch } from '@workspace/ui/components/switch';
 import { Label } from '@workspace/ui/components/label';
 import { useWorkspaceId } from '@/stores/workspace';
@@ -20,19 +21,63 @@ export function NotificationsSection() {
   const currentWorkspaceId = useWorkspaceId();
   const { data: notificationsResult, isLoading, error, refetch } = useWorkspaceNotifications();
 
-  const notificationsData = notificationsResult?.success
+  const serverData = notificationsResult?.success
     ? notificationsResult.data.notificationPreferences
     : null;
-  const updateNotificationsMutation = useUpdateNotifications();
 
-  const handleNotificationToggle = (key: keyof WorkspaceNotifications, value: boolean) => {
-    if (!currentWorkspaceId) return;
+  const [localState, setLocalState] = useState<WorkspaceNotifications | null>(null);
+  const debounceTimerRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const shouldSyncRef = useRef(true);
 
-    updateNotificationsMutation.mutate({
-      workspaceId: currentWorkspaceId,
-      notifications: { [key]: value },
-    });
-  };
+  const updateNotificationsMutation = useUpdateNotifications({
+    onError: () => {
+      // Allow re-sync from server on next data change
+      shouldSyncRef.current = true;
+    },
+  });
+
+  // Sync local state with server data only when allowed
+  // Initially true, then false after first sync, reset to true on error
+  useEffect(() => {
+    if (serverData && shouldSyncRef.current) {
+      setLocalState(serverData);
+      shouldSyncRef.current = false;
+    }
+  }, [serverData]);
+
+  useEffect(() => {
+    const timers = debounceTimerRef.current;
+    return () => {
+      Object.values(timers).forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
+
+  const handleNotificationToggle = useCallback(
+    (key: keyof WorkspaceNotifications, value: boolean) => {
+      if (!currentWorkspaceId) return;
+
+      // Immediate local state update for optimistic UI
+      setLocalState((prev) => (prev ? { ...prev, [key]: value } : prev));
+
+      // Clear existing timer for this key
+      if (debounceTimerRef.current[key]) {
+        clearTimeout(debounceTimerRef.current[key]);
+      }
+
+      // Debounce the API call
+      debounceTimerRef.current[key] = setTimeout(() => {
+        updateNotificationsMutation.mutate({
+          workspaceId: currentWorkspaceId,
+          notifications: { [key]: value },
+        });
+        delete debounceTimerRef.current[key];
+      }, 500);
+    },
+    [currentWorkspaceId, updateNotificationsMutation]
+  );
+
+  // Use local state for display (optimistic), fall back to server data
+  const notificationsData = localState ?? serverData;
 
   if (isLoading) {
     return <NotificationsSectionSkeleton />;
@@ -91,7 +136,6 @@ export function NotificationsSection() {
             id="recording-links"
             checked={notificationsData.notifyOnLinkUsage}
             onCheckedChange={(checked) => handleNotificationToggle('notifyOnLinkUsage', checked)}
-            disabled={updateNotificationsMutation.isPending}
           />
         </div>
 
@@ -103,7 +147,6 @@ export function NotificationsSection() {
             id="quota-reset"
             checked={notificationsData.notifyOnQuotaReset}
             onCheckedChange={(checked) => handleNotificationToggle('notifyOnQuotaReset', checked)}
-            disabled={updateNotificationsMutation.isPending}
           />
         </div>
 
@@ -115,7 +158,6 @@ export function NotificationsSection() {
             id="quota-reached"
             checked={notificationsData.notifyOnQuotaLimit}
             onCheckedChange={(checked) => handleNotificationToggle('notifyOnQuotaLimit', checked)}
-            disabled={updateNotificationsMutation.isPending}
           />
         </div>
 
@@ -127,7 +169,6 @@ export function NotificationsSection() {
             id="someone-joins"
             checked={notificationsData.notifyOnMemberJoin}
             onCheckedChange={(checked) => handleNotificationToggle('notifyOnMemberJoin', checked)}
-            disabled={updateNotificationsMutation.isPending}
           />
         </div>
 
@@ -141,7 +182,6 @@ export function NotificationsSection() {
             onCheckedChange={(checked) =>
               handleNotificationToggle('notifyOnInviteAccepted', checked)
             }
-            disabled={updateNotificationsMutation.isPending}
           />
         </div>
       </div>

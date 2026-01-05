@@ -26,14 +26,13 @@ interface UpdateNotificationsData {
   updated: boolean;
 }
 
-export function useUpdateNotifications() {
+export function useUpdateNotifications(options?: { onError?: () => void }) {
   const queryClient = useQueryClient();
 
   return useMutation<
     SafeResult<UpdateNotificationsData>,
     Error,
-    { workspaceId: string; notifications: Partial<WorkspaceNotifications> },
-    { previousWorkspaces: WorkspacesData | undefined }
+    { workspaceId: string; notifications: Partial<WorkspaceNotifications> }
   >({
     mutationFn: async ({ workspaceId, notifications }) => {
       const [error, response] = await apiClient.workspace.notifications.update({
@@ -42,48 +41,27 @@ export function useUpdateNotifications() {
       });
       return handleSafeResult(error, response?.data ? { updated: true } : null);
     },
-    onMutate: async ({ workspaceId, notifications }) => {
-      await queryClient.cancelQueries({ queryKey: ['workspaces'] });
-      const previousWorkspaces = queryClient.getQueryData<WorkspacesData>(['workspaces']);
-      queryClient.setQueryData(['workspaces'], (old: WorkspacesData | undefined) => {
-        if (!old) return old;
-        return {
-          ...old,
-          workspaces: old.workspaces.map((ws) =>
-            ws.workspaceId === workspaceId
-              ? {
-                  ...ws,
-                  notificationPreferences: {
-                    ...ws.notificationPreferences,
-                    ...notifications,
-                  },
-                }
-              : ws
-          ),
-        };
-      });
-      return { previousWorkspaces };
-    },
-    onSuccess: (result, variables, context) => {
+    onSuccess: (result, variables) => {
       if (!result.success) {
-        if (context?.previousWorkspaces) {
-          queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
-        }
         handleApiError(result.error, 'Failed to update notifications');
+        // Invalidate to restore server state on API error
+        queryClient.invalidateQueries({
+          queryKey: ['workspace-notifications', variables.workspaceId],
+        });
+        options?.onError?.();
         return;
       }
       toast.success('Notification preferences updated');
     },
-    onError: (error: unknown, variables, context) => {
-      if (context?.previousWorkspaces) {
-        queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
-      }
+    onError: (error: unknown, variables) => {
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      // Invalidate to restore server state on network error
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-notifications', variables.workspaceId],
+      });
+      options?.onError?.();
     },
   });
 }

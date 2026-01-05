@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
@@ -31,10 +31,19 @@ export function RecordingLinkSection() {
     'screen-voice'
   );
 
+  // Track if toggle should sync from server
+  const shouldSyncToggleRef = useRef(true);
+  const toggleDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
   // Initialize form with API data
   useEffect(() => {
     if (preferences) {
-      setCustomizeRecordingLink(preferences.recordingCustomizeLink);
+      // Only sync toggle when allowed (initial load or after error)
+      if (shouldSyncToggleRef.current) {
+        setCustomizeRecordingLink(preferences.recordingCustomizeLink);
+        shouldSyncToggleRef.current = false;
+      }
+      // Always sync other fields
       setWorkspaceImage(preferences.recordingCompanyLogoPath);
       setWorkspaceName(preferences.recordingCompanyName || '');
       setHeaderText(preferences.recordingHeader || '');
@@ -43,8 +52,18 @@ export function RecordingLinkSection() {
     }
   }, [preferences]);
 
-  const updateToggleMutation = useUpdateToggle(workspaceId, (previousValue) => {
-    setCustomizeRecordingLink(previousValue);
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (toggleDebounceRef.current) {
+        clearTimeout(toggleDebounceRef.current);
+      }
+    };
+  }, []);
+
+  const updateToggleMutation = useUpdateToggle(workspaceId, () => {
+    // On error, allow re-sync from server
+    shouldSyncToggleRef.current = true;
   });
   const updateAppearanceMutation = useUpdateAppearance(workspaceId);
 
@@ -72,10 +91,24 @@ export function RecordingLinkSection() {
     }
   };
 
-  const handleToggleChange = (enabled: boolean) => {
-    setCustomizeRecordingLink(enabled);
-    updateToggleMutation.mutate(enabled);
-  };
+  const handleToggleChange = useCallback(
+    (enabled: boolean) => {
+      // Immediate optimistic update
+      setCustomizeRecordingLink(enabled);
+
+      // Clear existing debounce timer
+      if (toggleDebounceRef.current) {
+        clearTimeout(toggleDebounceRef.current);
+      }
+
+      // Debounce the API call
+      toggleDebounceRef.current = setTimeout(() => {
+        updateToggleMutation.mutate(enabled);
+        toggleDebounceRef.current = null;
+      }, 500);
+    },
+    [updateToggleMutation]
+  );
 
   const handleUpdate = () => {
     updateAppearanceMutation.mutate({
@@ -346,7 +379,6 @@ export function RecordingLinkSection() {
                 id="customize-recording-link"
                 checked={customizeRecordingLink}
                 onCheckedChange={handleToggleChange}
-                disabled={updateToggleMutation.isPending}
               />
             </div>
 
