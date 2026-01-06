@@ -1,0 +1,28 @@
+/**
+ * URL parameter constants for Userplane recording flow
+ */
+
+/**
+ * URL parameter names used in the recording flow
+ */
+export const URL_PARAMS = {
+  TOKEN: 'userplane-token',
+  ACTION: 'userplane-action',
+  WORKSPACE: 'userplane-workspace',
+} as const;
+
+/**
+ * Action values for the recording flow
+ */
+export const ACTIONS = {
+  RECORDING: 'recording',
+} as const;
+
+/**
+ * Interface for URL parameters extracted from the query string
+ */
+export interface UrlParams {
+  token: string;
+  action: string;
+  workspace: string;
+}

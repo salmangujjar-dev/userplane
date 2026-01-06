@@ -15,27 +15,18 @@ import PostRecordingUploadScreen from './PostRecordingUploadScreen';
 import PostRecordingAckScreen from './PostRecordingAckScreen';
 import { classifyError, type RecordingError, type ErrorAction } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
+import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
+import { URL_PARAMS } from '@/constants';
 
 interface RecordingAppProps {}
-
-// Helper to read URL params during initial render (SSR-safe)
-function getUrlParams() {
-  if (typeof window === 'undefined') {
-    return { token: '', action: '', workspace: '' };
-  }
-  const params = new URLSearchParams(window.location.search);
-  return {
-    token: params.get('userplane-token') || '',
-    action: params.get('userplane-action') || '',
-    workspace: params.get('userplane-workspace') || '',
-  };
-}
 
 export default function RecordingApp({}: RecordingAppProps = {}) {
   // Initialize state from URL immediately to avoid race condition
   const [linkToken, setLinkToken] = useState<string>(() => getUrlParams().token);
   const [action, setAction] = useState<string>(() => getUrlParams().action);
-  const [workspace, setWorkspace] = useState<string>(() => getUrlParams().workspace);
+  const [workspaceIds, setWorkspaceIds] = useState<string[]>(() =>
+    parseWorkspaceIds(getUrlParams().workspace)
+  );
 
   useEffect(() => {
     console.log('[RecordingApp] useEffect - Extracting token, action and workspace from URL');
@@ -43,9 +34,9 @@ export default function RecordingApp({}: RecordingAppProps = {}) {
     console.log('[RecordingApp] Window search:', window.location.search);
 
     const params = new URLSearchParams(window.location.search);
-    const urlToken = params.get('userplane-token');
-    const urlAction = params.get('userplane-action');
-    const urlWorkspace = params.get('userplane-workspace');
+    const urlToken = params.get(URL_PARAMS.TOKEN);
+    const urlAction = params.get(URL_PARAMS.ACTION);
+    const urlWorkspace = params.get(URL_PARAMS.WORKSPACE);
 
     console.log(
       '[RecordingApp] URL token:',
@@ -65,12 +56,13 @@ export default function RecordingApp({}: RecordingAppProps = {}) {
     }
 
     if (urlWorkspace) {
-      console.log('[RecordingApp] Setting workspace:', urlWorkspace);
-      setWorkspace(urlWorkspace);
+      const parsedWorkspaceIds = parseWorkspaceIds(urlWorkspace);
+      console.log('[RecordingApp] Setting workspace IDs:', parsedWorkspaceIds);
+      setWorkspaceIds(parsedWorkspaceIds);
     }
   }, []);
 
-  const { state, actions } = useRecordingFlow(linkToken, action, workspace);
+  const { state, actions } = useRecordingFlow(linkToken, action, workspaceIds);
 
   console.log('[RecordingApp] Current state:', state.state);
   console.log('[RecordingApp] Error:', state.error);

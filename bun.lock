@@ -328,6 +328,9 @@
     "packages/sdk": {
       "name": "@workspace/sdk",
       "version": "0.0.1",
+      "dependencies": {
+        "nanoid": "^5.1.6",
+      },
       "devDependencies": {
         "@types/node": "^22.14.1",
         "@workspace/typescript-config": "workspace:*",
