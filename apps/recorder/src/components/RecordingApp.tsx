@@ -3,9 +3,13 @@
  * Main application component that orchestrates the recording flow
  */
 
-import { useEffect, useState } from 'react';
-import { useRecordingFlow, type RecordingFlowActions } from '@/hooks/useRecordingFlow';
-import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
+import { useEffect, useState, useRef } from 'react';
+import {
+  useRecordingFlow,
+  type RecordingFlowActions,
+  type FlowState,
+} from '@/hooks/useRecordingFlow';
+import { AppModeProvider, useAppMode, useBridge } from '@/contexts/AppModeContext';
 import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import PreRecordingScreen from './PreRecordingScreen';
@@ -37,12 +41,17 @@ export default function RecordingApp({}: RecordingAppProps = {}) {
  */
 function RecordingAppContent() {
   const { mode, isEmbedded } = useAppMode();
+  const bridge = useBridge();
   // Initialize state from URL immediately to avoid race condition
   const [linkToken, setLinkToken] = useState<string>(() => getUrlParams().token);
   const [action, setAction] = useState<string>(() => getUrlParams().action);
   const [workspaceIds, setWorkspaceIds] = useState<string[]>(() =>
     parseWorkspaceIds(getUrlParams().workspace)
   );
+
+  // Track previous flow state for detecting transitions
+  const prevFlowStateRef = useRef<FlowState | null>(null);
+  const sessionReportedRef = useRef(false);
 
   useEffect(() => {
     console.log(
@@ -83,7 +92,53 @@ function RecordingAppContent() {
     }
   }, [mode, isEmbedded]);
 
-  const { state, actions } = useRecordingFlow(linkToken, action, workspaceIds);
+  const { state, actions, sessionInfo } = useRecordingFlow(linkToken, action, workspaceIds);
+
+  // Report state changes to parent via bridge (embedded mode only)
+  useEffect(() => {
+    if (!bridge) return;
+    if (state.state === prevFlowStateRef.current) return;
+
+    console.log('[RecordingApp] Flow state changed:', prevFlowStateRef.current, '->', state.state);
+    prevFlowStateRef.current = state.state;
+
+    // Notify parent based on flow state
+    switch (state.state) {
+      case 'countdown':
+      case 'recording':
+        bridge.recordingActive();
+        break;
+      case 'review':
+      case 'uploading':
+        bridge.recordingRetained();
+        break;
+      case 'loading':
+      case 'setup':
+      case 'success':
+        bridge.recordingInactive();
+        break;
+      case 'error':
+        // Error with recording blob = retained, otherwise inactive
+        if (state.recordingBlob) {
+          bridge.recordingRetained();
+        } else {
+          bridge.recordingInactive();
+        }
+        break;
+    }
+  }, [bridge, state.state, state.recordingBlob]);
+
+  // Initialize session with parent when ready (embedded mode only)
+  useEffect(() => {
+    if (!bridge || !isEmbedded || sessionReportedRef.current) return;
+
+    // Initialize session when we have session info and are in setup state
+    if (sessionInfo && state.state === 'setup') {
+      console.log('[RecordingApp] Initializing session with parent');
+      bridge.initSession(sessionInfo);
+      sessionReportedRef.current = true;
+    }
+  }, [bridge, isEmbedded, sessionInfo, state.state]);
 
   console.log('[RecordingApp] Current state:', state.state);
   console.log('[RecordingApp] Error:', state.error);

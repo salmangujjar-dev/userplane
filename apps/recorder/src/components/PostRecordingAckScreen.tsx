@@ -1,10 +1,17 @@
 /**
  * Post-Recording Acknowledgment Screen
  * Shows success message after upload completes
+ * Handles auto-close after delay in both embedded and standalone modes
  */
 
+import { useEffect, useRef } from 'react';
 import RecordingScreenLayout from './RecordingScreenLayout';
-import { POST_RECORDING_ACK_COPY, DEFAULT_COMPANY_NAME } from '@/constants';
+import {
+  POST_RECORDING_ACK_COPY,
+  DEFAULT_COMPANY_NAME,
+  SUCCESS_AUTO_CLOSE_DELAY_MS,
+} from '@/constants';
+import { useAppMode, useBridge } from '@/contexts/AppModeContext';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingAckScreenProps {
@@ -13,6 +20,31 @@ interface PostRecordingAckScreenProps {
 
 export default function PostRecordingAckScreen({ preferences }: PostRecordingAckScreenProps) {
   const customizeLink = preferences.customizeLink;
+  const { isEmbedded, isStandalone } = useAppMode();
+  const bridge = useBridge();
+  const cleanupDoneRef = useRef(false);
+
+  // Auto-close after delay
+  useEffect(() => {
+    if (cleanupDoneRef.current) return;
+    cleanupDoneRef.current = true;
+
+    console.log(`[PostRecordingAckScreen] Will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
+
+    const timer = setTimeout(() => {
+      if (isEmbedded && bridge) {
+        // Embedded mode: finish session via bridge (host handles cleanup and close)
+        console.log('[PostRecordingAckScreen] Finishing session (embedded)');
+        bridge.finishSession();
+      } else if (isStandalone) {
+        // Standalone mode: close the tab directly
+        console.log('[PostRecordingAckScreen] Closing tab (standalone)');
+        window.close();
+      }
+    }, SUCCESS_AUTO_CLOSE_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [isEmbedded, isStandalone, bridge]);
 
   return (
     <RecordingScreenLayout
