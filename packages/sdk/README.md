@@ -9,10 +9,10 @@ Based on [Jam's recording links pattern](https://jam.dev/docs/jam-for-customer-s
 - Auto-initialization on script load
 - Workspace ID from meta tag
 - URL parameter detection
-- Automatic iframe mounting
-- Zero configuration needed
+- Automatic iframe mounting OR manual control
+- Zero configuration needed (or full control if you want it)
 - TypeScript definitions included
-- Tiny bundle size (~3.6 KB gzipped)
+- Tiny bundle size (~3.2 KB gzipped)
 
 ## Quick Start
 
@@ -65,14 +65,13 @@ bun run dev
 bun run typecheck
 ```
 
-## Example
+## Examples
 
-See [example/](./example/) folder for a complete working example. It includes:
+See [example/](./example/) folder for complete working examples:
 
-- `index.html` - Customer dashboard with Userplane integration
+- `index.html` - Auto-open example (default behavior)
+- `manual-control.html` - Manual control example with UI
 - `styles.css` - Dashboard styling
-- `app.js` - Application code
-- `README.md` - Example documentation
 
 To test locally:
 
@@ -85,22 +84,191 @@ bun run build
 cd ../../apps/recorder
 bun run dev
 
-# Open example
+# Open auto-open example
 open example/index.html?userplane-action=recording&userplane-token=test123
+
+# Open manual control example
+open example/manual-control.html?userplane-action=recording&userplane-token=test123
 ```
 
 ## Programmatic Access
 
-The recorder is available at `window.Userplane.recorder`:
+### Auto-open (Default Behavior)
+
+By default, the recorder opens automatically when URL parameters are detected:
 
 ```javascript
 // Check if mounted
-if (window.Userplane.recorder.isRecorderMounted()) {
+if (window.Userplane.isRecorderMounted()) {
   console.log('Recorder is active');
 }
 
 // Unmount programmatically
-window.Userplane.recorder.unmount();
+window.Userplane.unmount();
+```
+
+### Manual Control
+
+For advanced use cases, you can control when the recorder opens:
+
+```html
+<script type="module">
+  import UserplaneRecorder from 'https://cdn.userplane.com/recorder.js';
+
+  // Initialize with manual control - capture the returned instance
+  const Userplane = UserplaneRecorder.initialize({ openImmediately: false });
+
+  // Later, open when ready (uses token from URL)
+  document.getElementById('start-btn').addEventListener('click', () => {
+    Userplane.open();
+  });
+
+  // Or open with a custom token
+  Userplane.open('custom_token_123');
+
+  // Close when done
+  Userplane.unmount();
+</script>
+```
+
+**Alternative:** Use the global `window.Userplane` instance:
+
+```html
+<script type="module" src="https://cdn.userplane.com/recorder.js"></script>
+<script>
+  // Access the auto-initialized instance
+  window.Userplane.unmount();
+  window.Userplane.open('custom_token');
+</script>
+```
+
+### API Reference
+
+#### `UserplaneRecorder.initialize(options?)`
+
+Initialize the SDK with options. This is a static method.
+
+**Options:**
+
+- `openImmediately` (boolean, default: `true`) - Whether to automatically open when URL params are detected
+- `recorderBaseUrl` (string, optional) - Custom recorder URL (defaults to production URL)
+
+**Returns:** `UserplaneRecorder` instance
+
+```javascript
+import UserplaneRecorder from './recorder.js';
+
+const recorder = UserplaneRecorder.initialize({
+  openImmediately: false,
+  recorderBaseUrl: 'https://custom-recorder.com',
+});
+
+// Now use the instance
+recorder.open();
+```
+
+#### `recorder.open(token?)`
+
+Manually open the recorder. This is an instance method.
+
+**Parameters:**
+
+- `token` (string, optional) - Recording token. If not provided, uses token from URL.
+
+**Returns:** `boolean` - `true` if opened successfully, `false` otherwise
+
+```javascript
+// Use token from URL
+recorder.open();
+
+// Use custom token
+recorder.open('rec_abc123xyz');
+
+// Or via window.Userplane
+window.Userplane.open('rec_abc123xyz');
+```
+
+#### `recorder.unmount()`
+
+Close and remove the recorder iframe.
+
+```javascript
+recorder.unmount();
+
+// Or via window.Userplane
+window.Userplane.unmount();
+```
+
+#### `recorder.isRecorderMounted()`
+
+Check if the recorder is currently open.
+
+**Returns:** `boolean`
+
+```javascript
+if (recorder.isRecorderMounted()) {
+  console.log('Recorder is active');
+}
+
+// Or via window.Userplane
+if (window.Userplane.isRecorderMounted()) {
+  console.log('Recorder is active');
+}
+```
+
+#### `recorder.getInitializationStatus()`
+
+Check if the SDK has been initialized.
+
+**Returns:** `boolean`
+
+```javascript
+if (recorder.getInitializationStatus()) {
+  console.log('SDK is ready');
+}
+```
+
+#### `recorder.getTabRef()`
+
+Get the unique reference for the current browser tab.
+
+**Returns:** `string` - Unique tab reference (format: `tab_[nanoid]`)
+
+```javascript
+const tabRef = recorder.getTabRef();
+console.log('Current tab:', tabRef);
+
+// Also available globally
+console.log(window.__userplaneTabRef);
+
+// Also in sessionStorage (persists across refreshes within the tab)
+console.log(sessionStorage.getItem('userplane_tab_ref'));
+```
+
+**Persistence:** The tab ref is stored in `sessionStorage` and survives page refreshes within the same tab. Each browser tab maintains its own unique reference, and the ref is cleared when the tab is closed.
+
+**Use Cases:**
+
+- Track user activity within a specific browser tab
+- Identify which tab initiated a recording
+- Correlate logs from different tabs
+- Session tracking across page refreshes
+- Tab-scoped analytics and debugging
+
+#### `UserplaneRecorder.clearTabRef()`
+
+Clear the tab reference from sessionStorage and window namespace. A new tab ref will be generated on next initialization.
+
+**Static method**
+
+```javascript
+import UserplaneRecorder from './recorder.js';
+
+// Clear tab ref (useful for testing)
+UserplaneRecorder.clearTabRef();
+
+// Refresh to get new tab ref
+window.location.reload();
 ```
 
 ## Meta Tag
