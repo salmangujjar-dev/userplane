@@ -162,6 +162,80 @@ await conn.remote.updateDocument("new text", Date.now());
 
 ---
 
+## Pattern 5: Compare-and-Swap (CAS)
+
+**Use Case:** Atomic updates where you need to prevent lost updates from race conditions.
+
+```typescript
+const schema = {
+  counter: 0,
+  inventory: { widget: 100 },
+  setCounter: (newValue, remote) => {
+    remote.counter = newValue;
+    return newValue;
+  },
+  setInventory: (item, quantity, remote) => {
+    remote.inventory = { ...remote.inventory, [item]: quantity };
+    return remote.inventory;
+  },
+};
+
+const conn = await bridge.connect(schema);
+
+// Safe increment with CAS retry loop
+async function safeIncrement() {
+  while (true) {
+    const { value, version } = conn.getVersionedState<number>("counter");
+    const result = await conn.compareAndSwap("counter", version, value + 1);
+
+    if (result.success) {
+      await conn.remote.setCounter(result.value);
+      return result.value;
+    }
+    // Conflict - loop retries with new value
+  }
+}
+
+// Safe inventory decrement (prevents overselling)
+async function decrementInventory(item: string, amount: number) {
+  while (true) {
+    const { value, version } = conn.getVersionedState<Record<string, number>>("inventory");
+    const current = value[item] ?? 0;
+
+    if (current < amount) {
+      throw new Error("Insufficient inventory");
+    }
+
+    const result = await conn.compareAndSwap("inventory", version, {
+      ...value,
+      [item]: current - amount,
+    });
+
+    if (result.success) {
+      await conn.remote.setInventory(item, result.value[item]);
+      return result.value;
+    }
+    // Conflict - loop retries
+  }
+}
+```
+
+**When this works:**
+
+- Atomic counters that must not lose updates
+- Inventory management (prevent overselling)
+- Toggle operations that must be race-free
+- Any operation where "lost updates" would be problematic
+
+**Key benefits:**
+
+- Guaranteed atomicity via version checking
+- Automatic conflict detection
+- Explicit retry logic gives you control
+- Works with any value type
+
+---
+
 ## Anti-Patterns to Avoid
 
 ###  Increment/Decrement on Shared State
@@ -241,6 +315,9 @@ const schema = {
 | Just notify tabs of events     | Pattern 3 (Event Broadcasting) | Simplest, no race conditions       |
 | Collaborative editing          | Pattern 4 (Last-Writer-Wins)   | Requires conflict resolution       |
 | Counter/accumulator            |  Use Local State             | Or use a server as source of truth |
+| Atomic counter/accumulator     | Pattern 5 (CAS)                | Race-free increments with retry    |
+| Inventory/stock management     | Pattern 5 (CAS)                | Prevents overselling               |
+| Toggle with guarantee          | Pattern 5 (CAS)                | Ensures one toggle per click       |
 
 ---
 
@@ -263,6 +340,7 @@ const schema = {
 1. **Shared variables are best for read-only state** that new tabs catch up on
 2. **Shared functions should avoid mutating shared state** unless you use explicit values
 3. **When in doubt, use local state** and broadcast events instead
-4. **Think like a distributed system**: Multiple writers = race conditions
+4. **Use CAS for atomic updates** when you need guaranteed no-lost-updates semantics
+5. **Think like a distributed system**: Multiple writers = race conditions
 
 **Remember:** This isn't a limitation - it's the reality of distributed computing. Bridge gives you the tools; you choose the pattern that fits your use case.

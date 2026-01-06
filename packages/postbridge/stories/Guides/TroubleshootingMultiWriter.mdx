@@ -195,7 +195,54 @@ document.getElementById("reset").onclick = () => {
 
 ##  "But What If I WANT Mutations?"
 
-### Option 1: Use Local State Instead
+### Option 1: Use Compare-and-Swap (CAS) for Atomic Updates
+
+Bridge now provides a built-in CAS mechanism for race-free atomic updates:
+
+```typescript
+const schema = {
+  counter: 0,
+  setCounter: (newValue, remote) => {
+    remote.counter = newValue;
+    document.getElementById("counter").textContent = newValue;
+    return newValue;
+  },
+};
+
+const connection = await bridge.connect(schema);
+
+// Safe increment with CAS retry loop
+async function safeIncrement() {
+  while (true) {
+    // Read current value WITH version
+    const { value, version } = connection.getVersionedState<number>("counter");
+
+    // Compute new value
+    const newValue = value + 1;
+
+    // Atomic update - only succeeds if version matches
+    const result = await connection.compareAndSwap("counter", version, newValue);
+
+    if (result.success) {
+      // Broadcast to update UI in all tabs
+      await connection.remote.setCounter(result.value);
+      return result.value;
+    }
+    // Conflict - someone else updated first, retry
+  }
+}
+
+incrementBtn.onclick = () => safeIncrement();
+```
+
+**Why CAS works:**
+
+- Each state value has a version number
+- CAS only succeeds if the version matches what you expect
+- If another tab updated first, you retry with the new value
+- Guarantees no lost updates
+
+### Option 2: Use Local State
 
 If each tab should have independent state:
 
@@ -218,7 +265,7 @@ incrementBtn.onclick = () => {
 };
 ```
 
-### Option 2: Use a Server as Source of Truth
+### Option 3: Use a Server as Source of Truth
 
 If you need a true shared accumulator:
 
@@ -238,7 +285,7 @@ const schema = {
 };
 ```
 
-### Option 3: Designated "Leader" Tab
+### Option 4: Designated "Leader" Tab
 
 Advanced: One tab owns mutations, others are read-only:
 
@@ -278,7 +325,8 @@ if (isLeader) {
 1. **Shared functions execute in ALL tabs** (not just the caller)
 2. **Mutations (`++`, `.push()`, etc.) cause double/triple/N-tuple changes**
 3. **Fix: Use explicit values** (`setCounter(newValue)` not `counter++`)
-4. **Caller computes, all tabs receive** the same value
-5. **Shared variables are perfect for** catching up new tabs to current state
+4. **For atomic guarantees: Use CAS** (`compareAndSwap` with retry loop)
+5. **Caller computes, all tabs receive** the same value
+6. **Shared variables are perfect for** catching up new tabs to current state
 
 **Remember:** This isn't a bug - it's distributed systems! Bridge gives you the primitives; you choose the pattern. 

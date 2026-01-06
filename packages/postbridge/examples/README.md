@@ -49,6 +49,21 @@ Send messages to specific tabs or broadcast to all tabs. Shows both 1:1 targeted
 
 [View Example →](./tab-messaging/)
 
+### 4. CAS Counter (`cas-counter/`)
+
+**What it demonstrates:** Atomic Compare-and-Swap (CAS) operations
+
+A counter that uses CAS for race-free atomic updates. Even with rapid concurrent clicks across multiple tabs, no increments are lost.
+
+**Key features:**
+
+- Atomic compare-and-swap operations
+- Version tracking for optimistic concurrency
+- Conflict detection and automatic retry
+- Operation log showing conflicts and successes
+
+[View Example →](./cas-counter/)
+
 ## Running the Examples
 
 ### Prerequisites
@@ -66,9 +81,10 @@ Send messages to specific tabs or broadcast to all tabs. Shows both 1:1 targeted
    ```
 
 3. Open any example in your browser:
-   - Counter Sync: http://localhost:3000/examples/counter-sync/
-   - Multi-Channel: http://localhost:3000/examples/multi-channel/
-   - Tab Messaging: http://localhost:3000/examples/tab-messaging/
+   - Counter Sync: http://localhost:3000/packages/postbridge/examples/counter-sync/
+   - Multi-Channel: http://localhost:3000/packages/postbridge/examples/multi-channel/
+   - Tab Messaging: http://localhost:3000/packages/postbridge/examples/tab-messaging/
+   - CAS Counter: http://localhost:3000/packages/postbridge/examples/cas-counter/
 
 ### Testing Multi-Tab Behavior
 

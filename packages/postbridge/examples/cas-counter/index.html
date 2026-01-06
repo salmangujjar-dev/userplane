@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bridge - CAS (Compare-and-Swap) Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>CAS Demo</h1>
+  <p class="subtitle">Atomic Compare-and-Swap Operations</p>
+
+  <div class="instructions">
+    <strong>Instructions:</strong>
+    Open this page in multiple browser tabs and click "Increment" rapidly in different tabs.
+    CAS ensures no updates are lost, even with concurrent modifications.
+    Watch the log to see conflicts and retries in action!
+  </div>
+
+  <div id="status" class="status connecting">
+    [CONNECTING] Initializing SharedWorker...
+  </div>
+
+  <div class="counter-section">
+    <div class="counter-label">Atomic Counter (CAS Protected)</div>
+    <div class="counter-value" id="counter">0</div>
+    <div class="version-info">
+      Version: <span id="version">0</span>
+    </div>
+    <div class="button-group">
+      <button id="incrementBtn" disabled>+ Safe Increment</button>
+      <button id="resetBtn" disabled>Reset</button>
+    </div>
+    <div class="tab-info">
+      Tab ID: <span class="tab-id" id="tabId">...</span>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <div class="log-header">
+      <span>Operation Log</span>
+      <button id="clearLogBtn" class="clear-btn">Clear</button>
+    </div>
+    <div id="log" class="log"></div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
+
