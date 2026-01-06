@@ -1,0 +1,281 @@
+/**
+ * Bridge Connection Manager
+ * Manages the postbridge connection between SDK (host) and recorder iframe (guest)
+ */
+
+import { host, type Connection } from '@workspace/postbridge';
+import type {
+  HostSchema,
+  GuestSchema,
+  RecordingState,
+  RecordingSessionInfo,
+  RecordingContext,
+} from './types';
+import { URL_PARAMS } from '../constants';
+
+/**
+ * Callbacks for SDK events from the recorder
+ */
+export interface BridgeCallbacks {
+  onSessionReady?: (info: RecordingSessionInfo) => void;
+  onRecordingStateChange?: (state: RecordingState) => void;
+  onRequestClose?: () => void;
+}
+
+/**
+ * Options for creating a bridge connection
+ */
+export interface BridgeConnectionOptions {
+  callbacks?: BridgeCallbacks;
+  tabRef: string;
+}
+
+/**
+ * Manages the postbridge connection to the recorder iframe
+ */
+export class BridgeConnection {
+  private connection: Connection | null = null;
+  private beforeUnloadHandler: ((e: BeforeUnloadEvent) => void) | null = null;
+  private originalTitle: string = '';
+  private tabRef: string;
+  private callbacks: BridgeCallbacks;
+
+  private context: RecordingContext = {
+    state: 'inactive',
+    sessionInfo: null,
+    tabUnloadEnabled: false,
+  };
+
+  // Session data stored directly for easy access
+  private sessionId: string | null = null;
+  private linkId: string | null = null;
+
+  constructor(options: BridgeConnectionOptions) {
+    this.tabRef = options.tabRef;
+    this.callbacks = options.callbacks ?? {};
+  }
+
+  /**
+   * Connect to the recorder iframe
+   * @param iframe - The iframe element to connect to
+   * @returns Promise that resolves when connected
+   */
+  public async connect(iframe: HTMLIFrameElement): Promise<void> {
+    if (this.connection) {
+      console.warn('[Bridge] Already connected');
+      return;
+    }
+
+    console.log('[Bridge] Connecting to recorder iframe');
+
+    // Store original title for restoration
+    this.originalTitle = document.title;
+
+    // Create host schema with methods exposed to the recorder
+    const schema: HostSchema = {
+      getTabRef: () => this.tabRef,
+      initSession: this.handleInitSession.bind(this),
+      finishSession: this.handleFinishSession.bind(this),
+      recordingActive: this.handleRecordingActive.bind(this),
+      recordingRetained: this.handleRecordingRetained.bind(this),
+      recordingInactive: this.handleRecordingInactive.bind(this),
+    };
+
+    try {
+      this.connection = await host.connect(iframe, schema);
+      console.log('[Bridge] Connected to recorder, connection ID:', this.connection.id);
+    } catch (error) {
+      console.error('[Bridge] Failed to connect:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Disconnect from the recorder and cleanup
+   */
+  public disconnect(): void {
+    if (!this.connection) {
+      console.warn('[Bridge] Not connected');
+      return;
+    }
+
+    console.log('[Bridge] Disconnecting from recorder');
+
+    // Disable tab unload protection
+    this.disableTabUnloadProtection();
+
+    // Restore original title
+    if (this.originalTitle) {
+      document.title = this.originalTitle;
+    }
+
+    // Close the connection
+    this.connection.close();
+    this.connection = null;
+
+    // Reset context and session data
+    this.context = {
+      state: 'inactive',
+      sessionInfo: null,
+      tabUnloadEnabled: false,
+    };
+    this.sessionId = null;
+    this.linkId = null;
+  }
+
+  /**
+   * Check if connected to the recorder
+   */
+  public isConnected(): boolean {
+    return this.connection !== null;
+  }
+
+  /**
+   * Get the current recording context
+   */
+  public getContext(): Readonly<RecordingContext> {
+    return { ...this.context };
+  }
+
+  /**
+   * Get the remote API to call methods on the recorder
+   */
+  public getRemote(): GuestSchema | null {
+    if (!this.connection) {
+      return null;
+    }
+    return this.connection.remote as GuestSchema;
+  }
+
+  /**
+   * Get the current session ID
+   */
+  public getSessionId(): string | null {
+    return this.sessionId;
+  }
+
+  /**
+   * Get the current link ID
+   */
+  public getLinkId(): string | null {
+    return this.linkId;
+  }
+
+  // Host methods exposed to recorder
+
+  /**
+   * Initialize the recording session
+   * Sets title, stores session info, and notifies callbacks
+   */
+  private handleInitSession(info: RecordingSessionInfo, title: string): void {
+    console.log('[Bridge] Initializing session:', { info, title });
+
+    // Set parent title
+    document.title = title;
+
+    // Store session info
+    this.context.sessionInfo = info;
+    this.sessionId = info.sessionId;
+    this.linkId = info.linkId ?? null;
+
+    // Set state to inactive (setup phase)
+    this.updateState('inactive');
+
+    // Notify callback
+    this.callbacks.onSessionReady?.(info);
+  }
+
+  /**
+   * Finish the recording session and cleanup
+   * Resets title, clears URL params, disables protection, and closes recorder
+   */
+  private handleFinishSession(): void {
+    console.log('[Bridge] Finishing session');
+
+    // Reset title to original
+    if (this.originalTitle) {
+      document.title = this.originalTitle;
+    }
+
+    // Clear URL params so refresh doesn't re-open recorder
+    const url = new URL(window.location.href);
+    url.searchParams.delete(URL_PARAMS.TOKEN);
+    url.searchParams.delete(URL_PARAMS.ACTION);
+    url.searchParams.delete(URL_PARAMS.WORKSPACE);
+    window.history.replaceState({}, '', url.toString());
+
+    // Set state to inactive and disable protection
+    this.updateState('inactive');
+    this.disableTabUnloadProtection();
+
+    // Request close (unmount iframe)
+    this.callbacks.onRequestClose?.();
+  }
+
+  /**
+   * Called by recorder when recording becomes active (countdown/recording)
+   * Enables tab unload protection and updates state
+   */
+  private handleRecordingActive(): void {
+    console.log('[Bridge] Recording active');
+    this.updateState('active');
+    this.enableTabUnloadProtection();
+  }
+
+  /**
+   * Called by recorder when recording is retained (review/uploading)
+   * Keeps tab unload protection enabled and updates state
+   */
+  private handleRecordingRetained(): void {
+    console.log('[Bridge] Recording retained');
+    this.updateState('retained');
+    this.enableTabUnloadProtection();
+  }
+
+  /**
+   * Called by recorder when recording becomes inactive (setup/success/cancelled)
+   * Disables tab unload protection and updates state
+   */
+  private handleRecordingInactive(): void {
+    console.log('[Bridge] Recording inactive');
+    this.updateState('inactive');
+    this.disableTabUnloadProtection();
+  }
+
+  /**
+   * Update state and notify callback
+   */
+  private updateState(state: RecordingState): void {
+    if (this.context.state === state) return;
+    this.context.state = state;
+    this.callbacks.onRecordingStateChange?.(state);
+  }
+
+  // Internal helpers
+
+  private enableTabUnloadProtection(): void {
+    if (this.context.tabUnloadEnabled) {
+      return;
+    }
+
+    this.beforeUnloadHandler = (e: BeforeUnloadEvent) => {
+      console.log('[Bridge] beforeunload triggered - preventing accidental close');
+      e.preventDefault();
+    };
+
+    window.addEventListener('beforeunload', this.beforeUnloadHandler);
+    this.context.tabUnloadEnabled = true;
+  }
+
+  private disableTabUnloadProtection(): void {
+    if (!this.context.tabUnloadEnabled) {
+      return;
+    }
+
+    if (this.beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+      this.beforeUnloadHandler = null;
+    }
+    this.context.tabUnloadEnabled = false;
+  }
+}

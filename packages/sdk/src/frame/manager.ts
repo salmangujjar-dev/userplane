@@ -8,13 +8,32 @@ import type { RecorderFrame, FrameConfig, RecorderParams } from '../types';
 import { URL_PARAMS } from '../constants';
 import { FrameConfigBuilder } from '../config/builder';
 import { createOverlay, createIframe, hasExistingRecorder } from './dom';
+import { BridgeConnection, type BridgeCallbacks, type RecordingContext } from '../bridge';
 
 /**
  * Manages the recorder iframe and overlay.
- * Responsible for config building, mounting checks, and frame lifecycle.
+ * Responsible for config building, mounting checks, frame lifecycle, and bridge connection.
  */
 export class FrameManager {
   private frame: RecorderFrame | null = null;
+  private bridge: BridgeConnection | null = null;
+  private bridgeCallbacks: BridgeCallbacks = {};
+  private tabRef: string = '';
+
+  /**
+   * Set the tab reference to be shared with the recorder
+   */
+  public setTabRef(tabRef: string): void {
+    this.tabRef = tabRef;
+  }
+
+  /**
+   * Set callbacks for bridge events
+   * Must be called before mounting if you want to receive events
+   */
+  public setBridgeCallbacks(callbacks: BridgeCallbacks): void {
+    this.bridgeCallbacks = callbacks;
+  }
 
   /**
    * Attempts to mount the recorder with the provided parameters.
@@ -49,8 +68,39 @@ export class FrameManager {
 
     this.createFrame(config);
     this.mount();
+    // Bridge connection is established after iframe loads (see buildConfig onLoad callback)
 
     return true;
+  }
+
+  /**
+   * Establishes the postbridge connection to the recorder iframe
+   */
+  private establishBridgeConnection(): void {
+    if (!this.frame) {
+      console.error('[FrameManager] No frame to connect bridge to');
+      return;
+    }
+
+    console.log('[FrameManager] Establishing bridge connection');
+
+    // Create bridge with tabRef and callbacks
+    this.bridge = new BridgeConnection({
+      tabRef: this.tabRef,
+      callbacks: {
+        ...this.bridgeCallbacks,
+        onRequestClose: () => {
+          console.log('[FrameManager] Close requested via bridge');
+          this.bridgeCallbacks.onRequestClose?.();
+          this.unmount();
+        },
+      },
+    });
+
+    // Connect to iframe (async, but we don't await - connection happens in background)
+    this.bridge.connect(this.frame.iframe).catch((error) => {
+      console.error('[FrameManager] Bridge connection failed:', error);
+    });
   }
 
   /**
@@ -71,7 +121,11 @@ export class FrameManager {
 
     return new FrameConfigBuilder()
       .withUrl(url.toString())
-      .withOnLoad(() => console.log('[FrameManager] Recorder loaded successfully'))
+      .withOnLoad(() => {
+        console.log('[FrameManager] Recorder loaded successfully');
+        // Establish bridge after iframe loads to ensure guest is ready
+        this.establishBridgeConnection();
+      })
       .withOnError(() => console.error('[FrameManager] Failed to load recorder'))
       .build();
   }
@@ -129,10 +183,17 @@ export class FrameManager {
   }
 
   /**
-   * Unmounts and cleans up the frame.
-   * Removes from DOM and clears internal reference.
+   * Unmounts and cleans up the frame and bridge connection.
+   * Removes from DOM and clears internal references.
    */
   public unmount(): void {
+    // Disconnect bridge first
+    if (this.bridge) {
+      this.bridge.disconnect();
+      this.bridge = null;
+      console.log('[FrameManager] Bridge disconnected');
+    }
+
     if (!this.frame) {
       console.warn('[FrameManager] No frame to unmount');
       return;
@@ -162,5 +223,35 @@ export class FrameManager {
    */
   public getFrame(): RecorderFrame | null {
     return this.frame;
+  }
+
+  /**
+   * Check if the bridge is connected to the recorder
+   */
+  public isBridgeConnected(): boolean {
+    return this.bridge?.isConnected() ?? false;
+  }
+
+  /**
+   * Get the current recording context from the bridge
+   *
+   * @returns RecordingContext if connected, null otherwise
+   */
+  public getRecordingContext(): RecordingContext | null {
+    return this.bridge?.getContext() ?? null;
+  }
+
+  /**
+   * Get the current session ID from the recording
+   */
+  public getSessionId(): string | null {
+    return this.bridge?.getSessionId() ?? null;
+  }
+
+  /**
+   * Get the current link ID from the recording
+   */
+  public getLinkId(): string | null {
+    return this.bridge?.getLinkId() ?? null;
   }
 }

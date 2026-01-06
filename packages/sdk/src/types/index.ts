@@ -2,6 +2,9 @@
  * TypeScript types and interfaces for the Userplane SDK
  */
 
+// Re-export bridge types for external use
+export type { RecordingState, RecordingSessionInfo, RecordingContext } from '../bridge/types';
+
 /**
  * Represents the recorder frame structure containing the overlay and iframe elements.
  */

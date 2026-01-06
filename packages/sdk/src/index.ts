@@ -18,11 +18,24 @@
  * the workspace ID in the recording session for validation to succeed.
  */
 
-import type { RecorderParams, InitializeOptions } from './types';
+import type { RecorderParams, InitializeOptions, RecordingState, RecordingContext } from './types';
 import { FrameManager } from './frame/manager';
 import { parseUrlParams } from './utils/url';
 import { readWorkspaceIds } from './utils/meta';
 import { getOrCreateTabRef, clearTabRef } from './utils/tab';
+import type { BridgeCallbacks, RecordingSessionInfo } from './bridge';
+
+/**
+ * Event callbacks for SDK consumers
+ */
+export interface UserplaneCallbacks {
+  /** Called when the recorder session is ready with session info */
+  onSessionReady?: (info: RecordingSessionInfo) => void;
+  /** Called when the recording state changes */
+  onRecordingStateChange?: (state: RecordingState) => void;
+  /** Called when the recorder is closed */
+  onRecorderClose?: () => void;
+}
 
 /**
  * Main orchestrator for the Userplane Recorder SDK
@@ -35,11 +48,48 @@ class UserplaneRecorder {
   private isInitialized: boolean = false;
   private pendingParams: RecorderParams | null = null;
   private tabRef: string;
+  private callbacks: UserplaneCallbacks = {};
 
   private constructor() {
     this.frameManager = new FrameManager();
     this.tabRef = getOrCreateTabRef();
     console.log('[Userplane] Tab Ref:', this.tabRef);
+
+    // Set tab ref on frame manager for bridge
+    this.frameManager.setTabRef(this.tabRef);
+
+    // Set up bridge callbacks
+    this.setupBridgeCallbacks();
+  }
+
+  /**
+   * Configure bridge callbacks to forward events to SDK consumers
+   */
+  private setupBridgeCallbacks(): void {
+    const bridgeCallbacks: BridgeCallbacks = {
+      onSessionReady: (info) => {
+        console.log('[Userplane] Session ready:', info);
+        this.callbacks.onSessionReady?.(info);
+      },
+      onRecordingStateChange: (state) => {
+        console.log('[Userplane] Recording state changed:', state);
+        this.callbacks.onRecordingStateChange?.(state);
+      },
+      onRequestClose: () => {
+        console.log('[Userplane] Recorder requested close');
+        this.callbacks.onRecorderClose?.();
+      },
+    };
+
+    this.frameManager.setBridgeCallbacks(bridgeCallbacks);
+  }
+
+  /**
+   * Set callbacks for SDK events
+   * Can be called at any time to update callbacks
+   */
+  public setCallbacks(callbacks: UserplaneCallbacks): void {
+    this.callbacks = { ...this.callbacks, ...callbacks };
   }
 
   /**
@@ -202,6 +252,46 @@ class UserplaneRecorder {
   public static clearTabRef(): void {
     clearTabRef();
     console.log('[Userplane] Tab Ref cleared');
+  }
+
+  /**
+   * Get the current recording state
+   * Returns 'inactive' if recorder is not mounted or bridge is not connected
+   */
+  public getRecordingState(): RecordingState {
+    const context = this.frameManager.getRecordingContext();
+    return context?.state ?? 'inactive';
+  }
+
+  /**
+   * Get the full recording context including session info
+   * Returns null if recorder is not mounted or bridge is not connected
+   */
+  public getRecordingContext(): RecordingContext | null {
+    return this.frameManager.getRecordingContext();
+  }
+
+  /**
+   * Check if the bridge connection to the recorder is established
+   */
+  public isBridgeConnected(): boolean {
+    return this.frameManager.isBridgeConnected();
+  }
+
+  /**
+   * Get the current session ID from the recording
+   * Returns null if no active recording session
+   */
+  public getSessionId(): string | null {
+    return this.frameManager.getSessionId();
+  }
+
+  /**
+   * Get the current link ID from the recording
+   * Returns null if no active recording session
+   */
+  public getLinkId(): string | null {
+    return this.frameManager.getLinkId();
   }
 }
 
