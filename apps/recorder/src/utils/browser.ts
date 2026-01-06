@@ -5,6 +5,41 @@
 
 import { VIDEO_MIME_TYPES } from '@workspace/contract';
 
+/**
+ * Application mode indicating whether the recorder is running embedded (iframe) or standalone
+ */
+export type AppMode = 'embedded' | 'standalone';
+
+/**
+ * Detect if the application is running inside an iframe (embedded mode) or as a standalone page
+ * Returns 'embedded' when running inside an iframe, 'standalone' otherwise
+ */
+export function detectAppMode(): AppMode {
+  try {
+    // window.self !== window.top is true when inside an iframe
+    // This check may throw a SecurityError in cross-origin scenarios, which still means embedded
+    return window.self !== window.top ? 'embedded' : 'standalone';
+  } catch {
+    // Cross-origin iframe restrictions throw an error when accessing window.top
+    // If we can't access window.top, we're definitely in an iframe
+    return 'embedded';
+  }
+}
+
+/**
+ * Check if the application is running in embedded mode (inside an iframe)
+ */
+export function isEmbedded(): boolean {
+  return detectAppMode() === 'embedded';
+}
+
+/**
+ * Check if the application is running in standalone mode (not in an iframe)
+ */
+export function isStandalone(): boolean {
+  return detectAppMode() === 'standalone';
+}
+
 export interface BrowserInfo {
   name: string;
   version: string | null;
