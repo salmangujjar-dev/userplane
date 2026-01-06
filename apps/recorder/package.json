@@ -26,6 +26,7 @@
     "@workspace/client": "workspace:*",
     "@workspace/contract": "workspace:*",
     "@workspace/meta": "workspace:*",
+    "@workspace/postbridge": "workspace:*",
     "@workspace/ui": "workspace:*",
     "astro": "^5.15.9",
     "canvas-confetti": "^1.9.3",

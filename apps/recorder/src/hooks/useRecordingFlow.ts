@@ -15,7 +15,6 @@ import type { RecordingPreferences } from '@/types/session-preferences';
 import { DEFAULT_RECORDING_PREFERENCES } from '@/types/session-preferences';
 import { generateVideoThumbnail } from '@/utils/video-thumbnail';
 import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
-import { SUCCESS_AUTO_CLOSE_DELAY_MS } from '@/constants';
 import { type RecordingError, classifyError } from '@/types/errors';
 
 export type FlowState =
@@ -27,6 +26,15 @@ export type FlowState =
   | 'review'
   | 'uploading'
   | 'success';
+
+/**
+ * Session information exposed to parent components
+ */
+export interface SessionInfo {
+  workspaceId: string;
+  sessionId: string;
+  linkId?: string;
+}
 
 export interface RecordingFlowState {
   state: FlowState;
@@ -60,9 +68,11 @@ export function useRecordingFlow(
 ): {
   state: RecordingFlowState;
   actions: RecordingFlowActions;
+  sessionInfo: SessionInfo | null;
 } {
   const [flowState, setFlowState] = useState<FlowState>('loading');
   const [error, setError] = useState<RecordingError | null>(null);
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('screen-only');
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [thumbnailBlob, setThumbnailBlob] = useState<Blob | null>(null);
@@ -290,6 +300,20 @@ export function useRecordingFlow(
     setRequesterName(result.data.requesterName || '');
     setMaxRecordingDurationMs(result.data.maxRecordingDurationMs);
     setMaxRecordingSize(result.data.maxRecordingSize);
+
+    // Set session info for parent communication
+    if (session.workspaceId && session.sessionId) {
+      setSessionInfo({
+        workspaceId: session.workspaceId,
+        sessionId: session.sessionId,
+        linkId: session.linkId ?? undefined,
+      });
+      console.log('[Flow] Session info set:', {
+        workspaceId: session.workspaceId,
+        sessionId: session.sessionId,
+        linkId: session.linkId,
+      });
+    }
 
     console.log('[Flow] Transitioning to setup state');
     setFlowState('setup');
@@ -583,12 +607,6 @@ export function useRecordingFlow(
     console.log('[Flow] Transitioning to success state');
     setFlowState('success');
     setIsProcessing(false);
-
-    console.log(`[Flow] Tab will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
-    setTimeout(() => {
-      console.log('[Flow] Closing tab...');
-      window.close();
-    }, SUCCESS_AUTO_CLOSE_DELAY_MS);
   }
 
   async function retryUpload() {
@@ -662,12 +680,6 @@ export function useRecordingFlow(
     console.log('[Flow] Transitioning to success state');
     setFlowState('success');
     setIsProcessing(false);
-
-    console.log(`[Flow] Tab will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
-    setTimeout(() => {
-      console.log('[Flow] Closing tab...');
-      window.close();
-    }, SUCCESS_AUTO_CLOSE_DELAY_MS);
   }
 
   async function startOver() {
@@ -757,5 +769,6 @@ export function useRecordingFlow(
       retryUpload,
       startOver,
     },
+    sessionInfo,
   };
 }
