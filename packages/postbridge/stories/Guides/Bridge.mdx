@@ -460,7 +460,68 @@ async function distributeTasks(tasks: string[]) {
 distributeTasks(["task-1", "task-2", "task-3", "task-4"]);
 ```
 
-### Example 8: Peer-to-Peer Chat Between Tabs
+### Example 8: Atomic Counter with Compare-and-Swap
+
+Use CAS for race-free increments across tabs:
+
+```typescript
+const schema = {
+  counter: 0,
+  setCounter: (newValue, remote) => {
+    remote.counter = newValue;
+    updateUI(newValue);
+    return newValue;
+  },
+};
+
+const conn = await bridge.connect(schema);
+
+// Safe increment using CAS with retry loop
+async function safeIncrement() {
+  let retries = 0;
+  const maxRetries = 5;
+
+  while (retries < maxRetries) {
+    // Read current value with version
+    const { value, version } = conn.getVersionedState<number>("counter");
+
+    // Compute new value
+    const newValue = value + 1;
+
+    // Atomic update - only succeeds if no one else updated
+    const result = await conn.compareAndSwap("counter", version, newValue);
+
+    if (result.success) {
+      // Success! Broadcast to update UI in all tabs
+      await conn.remote.setCounter(result.value);
+      return result.value;
+    }
+
+    // Conflict - retry with latest value
+    retries++;
+    console.log(`CAS conflict, retry ${retries}/${maxRetries}`);
+  }
+
+  throw new Error("Max retries exceeded");
+}
+
+// Wire up button
+incrementBtn.onclick = () => safeIncrement();
+```
+
+**When to use CAS:**
+
+| Scenario                    | Use CAS? | Why                                         |
+| --------------------------- | -------- | ------------------------------------------- |
+| Counter increment           | Yes      | Prevents lost updates from race conditions  |
+| Atomic inventory decrement  | Yes      | Ensures no overselling                      |
+| Toggle boolean              | Yes      | Prevents toggle-toggle-toggle chaos         |
+| Set user preference         | No       | Last-write-wins is usually fine             |
+| Broadcast notification      | No       | No conflict possible                        |
+
+**Live Demo**: See `examples/cas-counter/` for a working demonstration of CAS with conflict detection and retry loops.
+
+### Example 9: Peer-to-Peer Chat Between Tabs
 
 Implement private messaging between specific tabs:
 
@@ -505,6 +566,7 @@ Establishes a cross-tab broadcasting connection.
   - `workerURL?: string`: Custom SharedWorker URL (defaults to embedded worker)
   - `channel?: string`: Channel name for isolated state spaces (defaults to "default")
   - `tabID?: string`: Custom tab identifier (auto-generated if not provided)
+  - `casTimeout?: number`: Default timeout for CAS operations in ms (defaults to 5000)
 
 **Returns:** `Promise<BridgeConnection>`
 
@@ -520,6 +582,7 @@ const conn = await bridge.connect(schema, {
   channel: "my-app", // Namespace for isolation
   tabID: "session-abc123", // Custom identifier
   workerURL: "/worker.js", // Custom worker URL
+  casTimeout: 10000, // CAS timeout in ms (default: 5000)
 });
 ```
 
@@ -647,6 +710,60 @@ console.log(`${tabIDs.length} tabs connected`);
 - Debug multi-tab behavior
 
 **Note:** The returned list includes the current tab's ID, so the minimum length is 1.
+
+##### `compareAndSwap<T>(key, expectedVersion, newValue, timeoutMs?): Promise<CASResult<T>>`
+
+Atomic compare-and-swap operation on shared state. Only updates if `expectedVersion` matches the current version.
+
+**Parameters:**
+
+- `key: string`: The state key to update
+- `expectedVersion: number`: The version you expect the state to have
+- `newValue: T`: The new value to set if the version matches
+- `timeoutMs?: number`: Optional timeout in ms (defaults to `casTimeout` option or 5000ms)
+
+**Returns:** `Promise<CASResult<T>>` with:
+
+- `success: boolean`: Whether the swap succeeded
+- `version: number`: Current version after operation
+- `value: T`: Current value after operation
+
+```typescript
+// Read current state with version
+const { value, version } = conn.getVersionedState<number>("counter");
+
+// Compute new value
+const newCount = value + 1;
+
+// Atomic update - only succeeds if no one else updated
+const result = await conn.compareAndSwap("counter", version, newCount);
+
+if (result.success) {
+  console.log("Updated to", result.value, "at version", result.version);
+} else {
+  // Conflict - someone else updated first
+  console.log("Conflict! Current:", result.value, "v" + result.version);
+  // Retry with the new version...
+}
+```
+
+##### `getVersionedState<T>(key): VersionedValue<T>`
+
+Get state value with its current version for use with `compareAndSwap`.
+
+**Parameters:**
+
+- `key: string`: The state key to read
+
+**Returns:** `VersionedValue<T>` with:
+
+- `value: T`: The current value
+- `version: number`: The current version number
+
+```typescript
+const { value, version } = conn.getVersionedState<number>("counter");
+console.log(`Counter is ${value} at version ${version}`);
+```
 
 ##### `close(): void`
 

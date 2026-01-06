@@ -390,6 +390,94 @@ When two tabs simultaneously edit:
 - May need a reconciliation strategy for complex conflicts
 - Consider using a server for authoritative conflict resolution
 
+### Pattern 5: Compare-and-Swap (CAS) for Atomic Updates
+
+**Concept**: Use version-based atomic operations to ensure updates are applied only when the state hasn't changed since you read it.
+
+**When to use**:
+- Atomic counters that must not lose increments
+- Inventory management where overselling must be prevented
+- Toggle operations that need guaranteed single-execution
+- Any mutation where lost updates would be problematic
+
+**Implementation**:
+
+```typescript
+const schema = {
+  counter: 0,
+  inventory: { widgets: 100 },
+  
+  setCounter: (newValue, remote) => {
+    remote.counter = newValue;
+    updateCounterUI(newValue);
+    return newValue;
+  },
+  
+  setInventory: (inventory, remote) => {
+    remote.inventory = inventory;
+    updateInventoryUI(inventory);
+    return inventory;
+  }
+};
+
+const connection = await bridge.connect(schema);
+
+// Safe increment with CAS retry loop
+async function safeIncrement() {
+  while (true) {
+    const { value, version } = connection.getVersionedState<number>('counter');
+    const newValue = value + 1;
+    
+    const result = await connection.compareAndSwap('counter', version, newValue);
+    
+    if (result.success) {
+      await connection.remote.setCounter(result.value);
+      return result.value;
+    }
+    // Conflict - retry with updated value
+  }
+}
+
+// Safe inventory decrement (prevents overselling)
+async function reserveWidget(quantity: number) {
+  while (true) {
+    const { value, version } = connection.getVersionedState<{widgets: number}>('inventory');
+    
+    if (value.widgets < quantity) {
+      throw new Error('Insufficient inventory');
+    }
+    
+    const newInventory = { ...value, widgets: value.widgets - quantity };
+    const result = await connection.compareAndSwap('inventory', version, newInventory);
+    
+    if (result.success) {
+      await connection.remote.setInventory(result.value);
+      return result.value;
+    }
+    // Conflict - retry with updated inventory
+  }
+}
+```
+
+**Why this works**:
+
+1. Each state value has a monotonically increasing version number
+2. `compareAndSwap` only succeeds if the current version matches `expectedVersion`
+3. If another tab updated first, the version won't match, and you retry with fresh data
+4. This guarantees no lost updates even with concurrent writers
+
+**Benefits**:
+- True atomic operations without server roundtrips
+- Automatic conflict detection
+- Explicit retry logic gives full control over failure handling
+- Works with any value type (numbers, objects, arrays)
+
+**Considerations**:
+- Retry loops are needed for conflict handling
+- High contention scenarios may need backoff strategies
+- More complex than simple set operations
+- Best for operations where correctness is critical
+
 ## Anti-Patterns and Common Mistakes
 
 ### Anti-Pattern 1: In-Place Mutations on Shared State
@@ -683,11 +771,15 @@ When designing a Bridge application, ask these questions:
 
 **5. Can you use explicit values instead of mutations?**
 - Yes: Use Pattern 2 (Single Source of Truth)
-- No: Use Pattern 4 (Last-Writer-Wins) or consider a server
+- No: Continue to question 6
 
-**6. Is eventual consistency acceptable?**
+**6. Do you need atomic guarantees (no lost updates)?**
+- Yes: Use Pattern 5 (CAS) with retry loops
+- No: Use Pattern 4 (Last-Writer-Wins) for eventual consistency
+
+**7. Is eventual consistency acceptable?**
 - Yes: Use Pattern 4 with timestamps
-- No: Use a server as the authoritative source
+- No: Use Pattern 5 (CAS) or a server as the authoritative source
 
 ## Comparison with Traditional PostBridge RPC
 
@@ -712,13 +804,15 @@ The key insights are:
 
 1. **Understand the execution model**: When you call a function, every tab executes it, not just yours.
 
-2. **Choose the right pattern**: Read-only state, explicit values, event broadcasting, or conflict resolution—each has its place.
+2. **Choose the right pattern**: Read-only state, explicit values, event broadcasting, conflict resolution, or CAS—each has its place.
 
 3. **Avoid mutations**: Operations like increment, decrement, push, splice, and toggle are dangerous in a multi-writer context.
 
-4. **Think distributed**: Bridge shares more in common with distributed systems than with traditional RPC.
+4. **Use CAS for atomicity**: When you need guaranteed atomic updates without lost writes, use `compareAndSwap` with retry loops.
 
-5. **Not everything is shared**: Keep local UI state and temporary data in each tab's local scope.
+5. **Think distributed**: Bridge shares more in common with distributed systems than with traditional RPC.
+
+6. **Not everything is shared**: Keep local UI state and temporary data in each tab's local scope.
 
 By following these patterns and understanding the underlying mechanics, you can build robust, consistent multi-tab applications that leverage Bridge's capabilities without falling into common traps. The shared state model is not a limitation but a design choice with specific tradeoffs—understanding those tradeoffs is the key to successful implementation.
 
