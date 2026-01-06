@@ -91,6 +91,10 @@ import {
   BridgeRelayPayload,
   BridgeGetTabsPayload,
   BridgeDirectMessagePayload,
+  BridgeCASStatePayload,
+  BridgeCASResponsePayload,
+  CASResult,
+  VersionedValue,
 } from './types';
 
 /**
@@ -314,6 +318,13 @@ async function connect(
 
       // Step 4: Set up message handler for handshake and state updates from worker
       const sharedStateCache: Record<string, any> = {};
+      const stateVersionCache: Record<string, number> = {};
+
+      // Pending CAS requests (requestID -> { resolve, reject })
+      const pendingCASRequests: Map<
+        string,
+        { resolve: (result: CASResult) => void; reject: (error: Error) => void }
+      > = new Map();
 
       port.onmessage = async (event: MessageEvent) => {
         const data = event.data;
@@ -332,8 +343,25 @@ async function connect(
             break;
 
           case bridgeActions.BRIDGE_STATE_UPDATE:
-            // Worker broadcasted a state change - update our cache
+            // Worker broadcasted a state change - update our cache with value and version
             sharedStateCache[data.key] = data.value;
+            if (data.version !== undefined) {
+              stateVersionCache[data.key] = data.version;
+            }
+            break;
+
+          case bridgeActions.BRIDGE_CAS_RESPONSE:
+            // CAS operation completed - resolve the pending promise
+            const casResponse = data as BridgeCASResponsePayload;
+            const pendingCAS = pendingCASRequests.get(casResponse.requestID);
+            if (pendingCAS) {
+              pendingCASRequests.delete(casResponse.requestID);
+              pendingCAS.resolve({
+                success: casResponse.success,
+                version: casResponse.currentVersion,
+                value: casResponse.currentValue,
+              });
+            }
             break;
 
           // BRIDGE_RELAY will be handled by the updated handler in handleHandshakeAck
@@ -353,9 +381,22 @@ async function connect(
         // remote will be both an object (for broadcasts) and a function (for direct messages)
         const remoteBase: Schema = { ...schema };
 
-        // Initialize shared state cache
+        // Initialize shared state and version caches
         if (payload.sharedState) {
           Object.assign(sharedStateCache, payload.sharedState);
+
+          // Initialize version cache from handshake (if provided)
+          const handshakeWithVersions = payload as BridgeHandshakeAckPayload & {
+            stateVersions?: Record<string, number>;
+          };
+          if (handshakeWithVersions.stateVersions) {
+            Object.assign(stateVersionCache, handshakeWithVersions.stateVersions);
+          } else {
+            // Fallback: initialize all versions to 1
+            for (const key of Object.keys(payload.sharedState)) {
+              stateVersionCache[key] = 1;
+            }
+          }
 
           // Add shared state as reactive properties on remoteBase
           for (const key of Object.keys(payload.sharedState)) {
@@ -364,7 +405,7 @@ async function connect(
                 return sharedStateCache[key];
               },
               set(newValue) {
-                // Update local cache
+                // Update local cache (version will be updated on STATE_UPDATE from worker)
                 sharedStateCache[key] = newValue;
                 // Send update to worker (it will broadcast to all tabs)
                 port.postMessage({
@@ -510,11 +551,84 @@ async function connect(
         }
 
         /**
+         * Compare-And-Swap
+         * ────────────────
+         * Atomically updates state only if expectedVersion matches.
+         * Returns success/failure with current value and version.
+         *
+         * @param key State key to update
+         * @param expectedVersion Version you expect the state to have
+         * @param newValue New value to set if version matches
+         * @returns Promise resolving to CASResult
+         */
+        /**
+         * Default timeout for CAS operations (ms)
+         */
+        const CAS_TIMEOUT_MS = options?.casTimeout ?? 5000;
+
+        function compareAndSwap<T = any>(
+          key: string,
+          expectedVersion: number,
+          newValue: T,
+          timeoutMs?: number
+        ): Promise<CASResult<T>> {
+          return new Promise((resolve, reject) => {
+            const requestID = generateId();
+
+            // Register pending request
+            pendingCASRequests.set(requestID, { resolve, reject });
+
+            // Send CAS request to worker
+            const casPayload: BridgeCASStatePayload = {
+              action: bridgeActions.BRIDGE_CAS_STATE,
+              channel,
+              key,
+              expectedVersion,
+              newValue,
+              requestID,
+              tabID,
+            };
+            port.postMessage(casPayload);
+
+            // Timeout (use provided value, or connection default, or 5000ms)
+            const timeout = timeoutMs ?? CAS_TIMEOUT_MS;
+            setTimeout(() => {
+              if (pendingCASRequests.has(requestID)) {
+                pendingCASRequests.delete(requestID);
+                reject(new Error(`CAS request for "${key}" timed out after ${timeout}ms`));
+              }
+            }, timeout);
+          });
+        }
+
+        /**
+         * Get Versioned State
+         * ──────────────────
+         * Returns state value with its current version.
+         * Use this for optimistic concurrency with compareAndSwap.
+         *
+         * @param key State key to read
+         * @returns VersionedValue { value, version }
+         */
+        function getVersionedState<T = any>(key: string): VersionedValue<T> {
+          return {
+            value: sharedStateCache[key] as T,
+            version: stateVersionCache[key] ?? 0,
+          };
+        }
+
+        /**
          * Close Connection
          * ───────────────
          * Disconnects from SharedWorker and cleans up.
          */
         function close(): void {
+          // Reject any pending CAS requests
+          for (const pending of pendingCASRequests.values()) {
+            pending.reject(new Error('Connection closed'));
+          }
+          pendingCASRequests.clear();
+
           // Send disconnect message
           const disconnectPayload = {
             action: bridgeActions.BRIDGE_DISCONNECT,
@@ -532,6 +646,8 @@ async function connect(
           id: tabID,
           remote,
           getConnectedTabs,
+          compareAndSwap,
+          getVersionedState,
           close,
         };
 

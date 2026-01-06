@@ -58,6 +58,8 @@ import {
   BridgeGetTabsPayload,
   BridgeTabsResponsePayload,
   BridgeDirectMessagePayload,
+  BridgeCASStatePayload,
+  BridgeCASResponsePayload,
 } from './types';
 
 /**
@@ -75,16 +77,26 @@ interface TabConnection {
 }
 
 /**
+ * Versioned Value
+ * ──────────────
+ * State value with version number for CAS operations.
+ */
+interface VersionedValue {
+  value: any;
+  version: number;
+}
+
+/**
  * Channel State
  * ─────────────
  * Isolated state space for a channel.
- * Each channel maintains its own tabs and shared state.
+ * Each channel maintains its own tabs and versioned state.
  */
 interface ChannelState {
   /** Tabs connected to this channel */
   tabs: Map<string, TabConnection>;
-  /** Shared state for this channel */
-  sharedState: Record<string, any>;
+  /** Versioned shared state for this channel (key -> { value, version }) */
+  sharedState: Record<string, VersionedValue>;
 }
 
 /**
@@ -145,33 +157,51 @@ function getOrCreateChannel(channelName: string): ChannelState {
         break;
 
       case bridgeActions.BRIDGE_GET_STATE:
-        // Return current shared state for a specific channel
+        // Return current shared state for a specific channel (unwrap versioned values)
         const getStateData = data as { channel: string };
         const getStateChannel = getOrCreateChannel(getStateData.channel || 'default');
+        const unwrappedState: Record<string, any> = {};
+        for (const [key, versionedValue] of Object.entries(getStateChannel.sharedState)) {
+          unwrappedState[key] = versionedValue.value;
+        }
         port.postMessage({
           action: bridgeActions.BRIDGE_STATE_RESPONSE,
-          state: { ...getStateChannel.sharedState },
+          state: unwrappedState,
         });
         break;
 
       case bridgeActions.BRIDGE_SET_STATE:
-        // Update shared state and broadcast to all tabs on the same channel
+        // Update shared state (last-write-wins) and broadcast to all tabs
         const setStateData = data as { key: string; value: any; channel: string };
         const setStateChannel = getOrCreateChannel(setStateData.channel || 'default');
-        setStateChannel.sharedState[setStateData.key] = setStateData.value;
 
-        // Broadcast state change to all tabs on this channel
+        // Get or create versioned value
+        const existingVersioned = setStateChannel.sharedState[setStateData.key];
+        const newVersion = existingVersioned ? existingVersioned.version + 1 : 1;
+
+        setStateChannel.sharedState[setStateData.key] = {
+          value: setStateData.value,
+          version: newVersion,
+        };
+
+        // Broadcast state change to all tabs on this channel (with version)
         for (const [tabID, connection] of setStateChannel.tabs.entries()) {
           try {
             connection.port.postMessage({
               action: bridgeActions.BRIDGE_STATE_UPDATE,
               key: setStateData.key,
               value: setStateData.value,
+              version: newVersion,
             });
           } catch (error) {
             console.error(`[Bridge Worker] Failed to broadcast state to ${tabID}:`, error);
           }
         }
+        break;
+
+      case bridgeActions.BRIDGE_CAS_STATE:
+        // Atomic compare-and-swap: only update if version matches
+        handleCASState(port, data as BridgeCASStatePayload);
         break;
 
       case bridgeActions.BRIDGE_GET_TABS:
@@ -249,17 +279,30 @@ function handleHandshake(port: MessagePort, payload: BridgeHandshakePayload) {
     channel: channelName,
   });
 
-  // Initialize shared state from first tab's schema (if this is the first tab on this channel)
+  // Initialize versioned shared state from first tab's schema (if this is the first tab on this channel)
   if (channel.tabs.size === 1 && payload.schema) {
-    Object.assign(channel.sharedState, payload.schema);
+    for (const [key, value] of Object.entries(payload.schema)) {
+      if (typeof value !== 'function') {
+        channel.sharedState[key] = { value, version: 1 };
+      }
+    }
+  }
+
+  // Unwrap versioned state for handshake response (include versions for client tracking)
+  const unwrappedState: Record<string, any> = {};
+  const stateVersions: Record<string, number> = {};
+  for (const [key, versionedValue] of Object.entries(channel.sharedState)) {
+    unwrappedState[key] = versionedValue.value;
+    stateVersions[key] = versionedValue.version;
   }
 
   // Send acknowledgment with current shared state for this channel
-  const ackPayload: BridgeHandshakeAckPayload = {
+  const ackPayload: BridgeHandshakeAckPayload & { stateVersions?: Record<string, number> } = {
     action: bridgeActions.BRIDGE_HANDSHAKE_ACK,
     tabID,
     channel: channelName,
-    sharedState: { ...channel.sharedState },
+    sharedState: unwrappedState,
+    stateVersions, // Include versions for CAS support
   };
   port.postMessage(ackPayload);
 
@@ -444,6 +487,103 @@ function handleDisconnect(payload: BridgeDisconnectPayload) {
       console.log(`[Bridge Worker] Channel "${channelName}" cleaned up (no tabs remaining)`);
     }
   }
+}
+
+/**
+ * Handle CAS (Compare-And-Swap) State
+ * ───────────────────────────────────
+ * Atomically updates state only if the expected version matches.
+ * This enables optimistic concurrency control across tabs.
+ *
+ * Flow:
+ * 1. Tab sends CAS request with { key, expectedVersion, newValue }
+ * 2. Worker checks if current version === expectedVersion
+ * 3a. If match: Update value, increment version, broadcast to all tabs, respond success
+ * 3b. If mismatch: Respond failure with current value/version (no update, no broadcast)
+ *
+ * @param port The MessagePort of the requesting tab
+ * @param payload The CAS request payload
+ */
+function handleCASState(port: MessagePort, payload: BridgeCASStatePayload) {
+  const {
+    channel: channelName = 'default',
+    key,
+    expectedVersion,
+    newValue,
+    requestID,
+    tabID,
+  } = payload;
+
+  const channel = channels.get(channelName);
+  if (!channel) {
+    // Channel doesn't exist - fail CAS
+    const response: BridgeCASResponsePayload = {
+      action: bridgeActions.BRIDGE_CAS_RESPONSE,
+      success: false,
+      requestID,
+      currentVersion: 0,
+      currentValue: undefined,
+    };
+    port.postMessage(response);
+    return;
+  }
+
+  const existingVersioned = channel.sharedState[key];
+  const currentVersion = existingVersioned?.version ?? 0;
+  const currentValue = existingVersioned?.value;
+
+  // Compare version
+  if (currentVersion !== expectedVersion) {
+    // Version mismatch - CAS failed
+    const response: BridgeCASResponsePayload = {
+      action: bridgeActions.BRIDGE_CAS_RESPONSE,
+      success: false,
+      requestID,
+      currentVersion,
+      currentValue,
+    };
+    port.postMessage(response);
+    console.log(
+      `[Bridge Worker] CAS failed for "${key}": expected v${expectedVersion}, current v${currentVersion}`
+    );
+    return;
+  }
+
+  // Version matches - perform atomic swap
+  const newVersion = currentVersion + 1;
+  channel.sharedState[key] = {
+    value: newValue,
+    version: newVersion,
+  };
+
+  // Send success response to requesting tab
+  const response: BridgeCASResponsePayload = {
+    action: bridgeActions.BRIDGE_CAS_RESPONSE,
+    success: true,
+    requestID,
+    currentVersion: newVersion,
+    currentValue: newValue,
+  };
+  port.postMessage(response);
+
+  // Broadcast state update to ALL tabs on this channel (including the requester)
+  // All tabs need to know about the new value/version for their local caches
+  for (const [connTabID, connection] of channel.tabs.entries()) {
+    try {
+      connection.port.postMessage({
+        action: bridgeActions.BRIDGE_STATE_UPDATE,
+        key,
+        value: newValue,
+        version: newVersion,
+      });
+    } catch (error) {
+      console.error(`[Bridge Worker] Failed to broadcast CAS update to ${connTabID}:`, error);
+    }
+  }
+
+  console.log(
+    `[Bridge Worker] CAS success for "${key}" by tab ${tabID}: v${expectedVersion} -> v${newVersion}`
+  );
 }
 
 /**
