@@ -56,7 +56,7 @@ export interface RecordingFlowActions {
 export function useRecordingFlow(
   linkToken: string,
   action: string,
-  workspace: string
+  workspaceIds: string[]
 ): {
   state: RecordingFlowState;
   actions: RecordingFlowActions;
@@ -93,7 +93,7 @@ export function useRecordingFlow(
     console.log('[Flow] Hook initialized');
     console.log('[Flow] Link token:', linkToken ? 'Present' : 'Empty');
     console.log('[Flow] Action:', action || 'Empty');
-    console.log('[Flow] Workspace:', workspace || 'Empty');
+    console.log('[Flow] Workspace IDs:', workspaceIds.length > 0 ? workspaceIds : 'Empty');
 
     if (!linkToken || linkToken.trim() === '') {
       console.error('[Flow] Error: No link token provided');
@@ -125,8 +125,8 @@ export function useRecordingFlow(
       return;
     }
 
-    if (!workspace || workspace.trim() === '') {
-      console.error('[Flow] Error: No workspace ID provided');
+    if (!workspaceIds || workspaceIds.length === 0) {
+      console.error('[Flow] Error: No workspace IDs provided');
       setError({
         title: 'Invalid link',
         message: 'No workspace ID provided in the link',
@@ -146,7 +146,7 @@ export function useRecordingFlow(
     }
 
     console.log('[Flow] Screen recording supported, initializing session...');
-    initializeSession(linkToken, workspace);
+    initializeSession(linkToken, workspaceIds);
 
     return () => {
       // Cleanup on unmount
@@ -169,7 +169,7 @@ export function useRecordingFlow(
         autoStopTimerRef.current = null;
       }
     };
-  }, [linkToken, action, workspace]);
+  }, [linkToken, action, workspaceIds]);
 
   useEffect(() => {
     const criticalStates: FlowState[] = ['countdown', 'recording', 'review', 'uploading'];
@@ -222,10 +222,10 @@ export function useRecordingFlow(
     };
   }, [flowState, maxRecordingDurationMs]);
 
-  async function initializeSession(linkToken: string, expectedWorkspaceId: string) {
+  async function initializeSession(linkToken: string, expectedWorkspaceIds: string[]) {
     console.log('[Flow] Initializing session...');
     console.log('[Flow] Link token (first 50 chars):', linkToken.substring(0, 50));
-    console.log('[Flow] Expected workspace ID:', expectedWorkspaceId);
+    console.log('[Flow] Expected workspace IDs:', expectedWorkspaceIds);
 
     setFlowState('loading');
     setError(null);
@@ -254,9 +254,11 @@ export function useRecordingFlow(
       return;
     }
 
-    if (session.workspaceId !== expectedWorkspaceId) {
-      console.error('[Flow] Workspace ID mismatch');
-      console.error('[Flow] Expected:', expectedWorkspaceId);
+    // Check if at least one of the expected workspace IDs matches
+    const workspaceMatch = expectedWorkspaceIds.includes(session.workspaceId);
+    if (!workspaceMatch) {
+      console.error('[Flow] Workspace ID mismatch - none of the provided IDs match');
+      console.error('[Flow] Expected one of:', expectedWorkspaceIds);
       console.error('[Flow] Session contains:', session.workspaceId);
       setError({
         title: 'Workspace mismatch',
@@ -266,7 +268,7 @@ export function useRecordingFlow(
       return;
     }
 
-    console.log('[Flow] Workspace ID validated successfully');
+    console.log('[Flow] Workspace ID validated successfully - matched:', session.workspaceId);
     console.log('[Flow] Session properties:', {
       workspaceId: session.workspaceId,
       sessionId: session.sessionId,

@@ -44,3 +44,6 @@ export {
   type RetryOptions,
   type TimeoutOptions,
 } from './retry';
+
+// URL utilities
+export { getUrlParams, parseWorkspaceIds } from './url';
