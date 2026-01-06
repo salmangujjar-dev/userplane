@@ -482,6 +482,10 @@ export enum bridgeActions {
   BRIDGE_TABS_RESPONSE = 'SOCKBRIDGE/TABS_RESPONSE',
   /** Tab sends direct message to specific tab */
   BRIDGE_DIRECT_MESSAGE = 'SOCKBRIDGE/DIRECT_MESSAGE',
+  /** Tab requests atomic compare-and-swap on state */
+  BRIDGE_CAS_STATE = 'SOCKBRIDGE/CAS_STATE',
+  /** Worker responds with CAS result */
+  BRIDGE_CAS_RESPONSE = 'SOCKBRIDGE/CAS_RESPONSE',
 }
 
 /**
@@ -647,6 +651,45 @@ export interface BridgeTabsResponsePayload {
 }
 
 /**
+ * SocketBridge CAS State Payload
+ * ──────────────────────────────
+ * Sent by tab to request an atomic compare-and-swap on a state key.
+ * Worker will only update if expectedVersion matches current version.
+ */
+export interface BridgeCASStatePayload {
+  action: bridgeActions.BRIDGE_CAS_STATE;
+  /** Channel containing the state */
+  channel: string;
+  /** State key to update */
+  key: string;
+  /** Expected version (must match for swap to succeed) */
+  expectedVersion: number;
+  /** New value to set if version matches */
+  newValue: any;
+  /** Unique request ID for response matching */
+  requestID: string;
+  /** Tab making the request */
+  tabID: string;
+}
+
+/**
+ * SocketBridge CAS Response Payload
+ * ─────────────────────────────────
+ * Sent by worker in response to a CAS request.
+ */
+export interface BridgeCASResponsePayload {
+  action: bridgeActions.BRIDGE_CAS_RESPONSE;
+  /** Whether the swap succeeded */
+  success: boolean;
+  /** Request ID from the CAS request */
+  requestID: string;
+  /** Current version after operation (new version if success, existing if failure) */
+  currentVersion: number;
+  /** Current value after operation (new value if success, existing if failure) */
+  currentValue: any;
+}
+
+/**
  * SocketBridge Connection
  * ───────────────────────
  * Represents an active cross-tab broadcast connection.
@@ -657,6 +700,32 @@ export interface BridgeTabsResponsePayload {
  * - getConnectedTabs: Get list of all connected tab IDs
  * - close: Disconnect and cleanup
  */
+/**
+ * CAS Result
+ * ──────────
+ * Result of a compare-and-swap operation.
+ */
+export interface CASResult<T = any> {
+  /** Whether the swap succeeded */
+  success: boolean;
+  /** Current version after operation */
+  version: number;
+  /** Current value after operation */
+  value: T;
+}
+
+/**
+ * Versioned State Value
+ * ─────────────────────
+ * State value with version for optimistic concurrency.
+ */
+export interface VersionedValue<T = any> {
+  /** The actual value */
+  value: T;
+  /** Version number (increments on each update) */
+  version: number;
+}
+
 export interface BridgeConnection {
   /** Unique identifier for this tab */
   id: string;
@@ -673,6 +742,49 @@ export interface BridgeConnection {
    * @returns Promise that resolves to array of tab IDs (includes this tab)
    */
   getConnectedTabs(): Promise<string[]>;
+  /**
+   * Atomic compare-and-swap operation on shared state.
+   * Only updates if expectedVersion matches current version.
+   *
+   * @param key State key to update
+   * @param expectedVersion Version you expect the state to have
+   * @param newValue New value to set if version matches
+   * @param timeoutMs Optional timeout in ms (defaults to casTimeout option or 5000ms)
+   * @returns Promise with CAS result (success, current version, current value)
+   *
+   * Example:
+   * ```ts
+   * // Read current state with version
+   * const { value, version } = conn.getVersionedState('count');
+   *
+   * // Compute new value
+   * const newCount = value + 1;
+   *
+   * // Atomic update - only succeeds if no one else updated
+   * const result = await conn.compareAndSwap('count', version, newCount);
+   * if (!result.success) {
+   *   // Someone else updated first - retry with new value/version
+   *   console.log('Conflict! Current value:', result.value);
+   * }
+   *
+   * // With custom timeout
+   * const result = await conn.compareAndSwap('count', version, newCount, 10000);
+   * ```
+   */
+  compareAndSwap<T = any>(
+    key: string,
+    expectedVersion: number,
+    newValue: T,
+    timeoutMs?: number
+  ): Promise<CASResult<T>>;
+  /**
+   * Get state value with its current version.
+   * Use this for optimistic concurrency with compareAndSwap.
+   *
+   * @param key State key to read
+   * @returns Versioned value { value, version }
+   */
+  getVersionedState<T = any>(key: string): VersionedValue<T>;
   /** Close the connection and cleanup */
   close: () => void;
 }
@@ -694,4 +806,6 @@ export type BridgeConnectOptions = {
   channel?: string;
   /** Custom tab identifier (optional, auto-generated if not provided) */
   tabID?: string;
+  /** Default timeout for CAS operations in milliseconds (optional, defaults to 5000) */
+  casTimeout?: number;
 };
