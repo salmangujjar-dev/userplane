@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRecordingFlow, type RecordingFlowActions } from '@/hooks/useRecordingFlow';
+import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
 import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import PreRecordingScreen from './PreRecordingScreen';
@@ -20,7 +21,22 @@ import { URL_PARAMS } from '@/constants';
 
 interface RecordingAppProps {}
 
+/**
+ * Root component that provides app mode context
+ */
 export default function RecordingApp({}: RecordingAppProps = {}) {
+  return (
+    <AppModeProvider>
+      <RecordingAppContent />
+    </AppModeProvider>
+  );
+}
+
+/**
+ * Main content component that uses the app mode context
+ */
+function RecordingAppContent() {
+  const { mode, isEmbedded } = useAppMode();
   // Initialize state from URL immediately to avoid race condition
   const [linkToken, setLinkToken] = useState<string>(() => getUrlParams().token);
   const [action, setAction] = useState<string>(() => getUrlParams().action);
@@ -29,6 +45,11 @@ export default function RecordingApp({}: RecordingAppProps = {}) {
   );
 
   useEffect(() => {
+    console.log(
+      '[RecordingApp] App mode:',
+      mode,
+      isEmbedded ? '(running in iframe)' : '(standalone)'
+    );
     console.log('[RecordingApp] useEffect - Extracting token, action and workspace from URL');
     console.log('[RecordingApp] Window location:', window.location.href);
     console.log('[RecordingApp] Window search:', window.location.search);
@@ -60,7 +81,7 @@ export default function RecordingApp({}: RecordingAppProps = {}) {
       console.log('[RecordingApp] Setting workspace IDs:', parsedWorkspaceIds);
       setWorkspaceIds(parsedWorkspaceIds);
     }
-  }, []);
+  }, [mode, isEmbedded]);
 
   const { state, actions } = useRecordingFlow(linkToken, action, workspaceIds);
 

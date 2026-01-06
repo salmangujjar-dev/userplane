@@ -12,9 +12,13 @@ export {
   isSystemAudioSupported,
   getSupportedMimeTypes,
   getBestMimeType,
+  detectAppMode,
+  isEmbedded,
+  isStandalone,
   type BrowserInfo,
   type OSInfo,
   type SystemMetadata,
+  type AppMode,
 } from './browser';
 
 // Upload utilities
