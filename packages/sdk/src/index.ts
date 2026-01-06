@@ -2,176 +2,210 @@
  * Userplane Recorder SDK
  * Auto-mounts recorder iframe when userplane-action=recording is detected
  *
- * Usage:
+ * Usage (auto-open):
  *   <meta name="userplane:workspace" content="ws_xxx" />
  *   <script type="module" src="https://cdn.userplane.com/recorder.js"></script>
+ *
+ * Usage (manual control):
+ *   <script type="module">
+ *     import Userplane from './recorder.js';
+ *     Userplane.initialize({ openImmediately: false });
+ *     // Later...
+ *     Userplane.open('token-from-url');
+ *   </script>
+ *
+ * Note: Multiple workspace meta tags can be specified. At least one must match
+ * the workspace ID in the recording session for validation to succeed.
  */
 
-interface RecorderFrame {
-  overlay: HTMLDivElement;
-  iframe: HTMLIFrameElement;
-}
+import type { RecorderParams, InitializeOptions } from './types';
+import { FrameManager } from './frame/manager';
+import { parseUrlParams } from './utils/url';
+import { readWorkspaceIds } from './utils/meta';
+import { getOrCreateTabRef, clearTabRef } from './utils/tab';
 
+/**
+ * Main orchestrator for the Userplane Recorder SDK
+ * Collects data (workspace IDs, URL params) and delegates frame management to FrameManager
+ */
 class UserplaneRecorder {
   private static instance: UserplaneRecorder | null = null;
-  private recorderFrame: RecorderFrame | null = null;
-  private workspaceId: string | null = null;
-  private recorderUrl: string = 'http://localhost:4322/r';
+  private frameManager: FrameManager;
+  private recorderBaseUrl: string = 'http://localhost:4322/r';
+  private isInitialized: boolean = false;
+  private pendingParams: RecorderParams | null = null;
+  private tabRef: string;
 
   private constructor() {
-    this.readWorkspaceId();
-    this.checkAndMountRecorder();
+    this.frameManager = new FrameManager();
+    this.tabRef = getOrCreateTabRef();
+    console.log('[Userplane] Tab Ref:', this.tabRef);
   }
 
-  public static initialize(): UserplaneRecorder {
+  /**
+   * Initialize the SDK with options
+   *
+   * @param options - Configuration options
+   * @returns UserplaneRecorder instance
+   */
+  public static initialize(options: InitializeOptions = {}): UserplaneRecorder {
     if (!UserplaneRecorder.instance) {
       UserplaneRecorder.instance = new UserplaneRecorder();
     }
-    return UserplaneRecorder.instance;
-  }
 
-  private readWorkspaceId(): void {
-    const metaTag = document.querySelector('meta[name="userplane:workspace"]');
-    if (metaTag) {
-      this.workspaceId = metaTag.getAttribute('content');
-      console.log('[Userplane] Workspace ID:', this.workspaceId);
-    } else {
-      console.warn(
-        '[Userplane] No workspace meta tag found. Add: <meta name="userplane:workspace" content="ws_xxx" />'
-      );
+    const instance = UserplaneRecorder.instance;
+
+    if (options.recorderBaseUrl) {
+      instance.recorderBaseUrl = options.recorderBaseUrl;
     }
+
+    const openImmediately = options.openImmediately !== false;
+
+    instance.performInitialization(openImmediately);
+
+    return instance;
   }
 
-  private checkAndMountRecorder(): void {
-    const params = new URLSearchParams(window.location.search);
-    const action = params.get('userplane-action');
-    const token = params.get('userplane-token');
-
-    if (action === 'recording' && token) {
-      if (!this.workspaceId) {
-        console.error('[Userplane] Recording action detected but no workspace ID in meta tag');
-        return;
-      }
-      console.log('[Userplane] Recording action detected, mounting recorder');
-      this.mountRecorder(token, action);
-    }
-  }
-
-  private mountRecorder(token: string, action: string): void {
-    if (this.recorderFrame) {
-      console.warn('[Userplane] Recorder is already mounted');
+  /**
+   * Internal initialization logic
+   * Collects workspace IDs and URL params, optionally opens immediately
+   *
+   * @param openImmediately - Whether to auto-open when URL params are detected
+   */
+  private performInitialization(openImmediately: boolean): void {
+    if (this.isInitialized) {
+      console.warn('[Userplane] Already initialized');
       return;
     }
 
-    if (document.querySelector('iframe[data-userplane-recorder]')) {
-      throw new Error('[Userplane] Another Userplane recorder is already open');
-    }
+    console.log('[Userplane] Initializing SDK');
+    this.isInitialized = true;
 
-    console.log('[Userplane] Creating recorder iframe');
-    console.log('[Userplane] Token:', token.substring(0, 20) + '...');
-    console.log('[Userplane] Action:', action);
-    console.log('[Userplane] Workspace (from meta):', this.workspaceId);
-
-    const overlay = document.createElement('div');
-    const iframe = document.createElement('iframe');
-
-    const url = new URL(this.recorderUrl);
-    url.searchParams.set('userplane-token', token);
-    url.searchParams.set('userplane-action', action);
-    if (this.workspaceId) {
-      url.searchParams.set('userplane-workspace', this.workspaceId);
-    }
-
-    console.log('[Userplane] Iframe URL:', url.toString());
-    iframe.src = url.toString();
-
-    this.styleOverlay(overlay);
-    this.styleIframe(iframe);
-    this.configureIframe(iframe);
-
-    overlay.appendChild(iframe);
-
-    this.recorderFrame = { overlay, iframe };
-
-    this.mount();
-  }
-
-  private styleOverlay(overlay: HTMLDivElement): void {
-    overlay.style.display = 'flex';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.zIndex = '2147483647';
-    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    overlay.style.backdropFilter = 'blur(5px)';
-    overlay.style.pointerEvents = 'none';
-  }
-
-  private styleIframe(iframe: HTMLIFrameElement): void {
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.pointerEvents = 'auto';
-    iframe.style.border = 'none';
-  }
-
-  private configureIframe(iframe: HTMLIFrameElement): void {
-    iframe.dataset.userplaneRecorder = '';
-    iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups');
-    iframe.setAttribute('allow', 'microphone; camera; display-capture');
-    iframe.setAttribute('allowfullscreen', 'true');
-
-    iframe.addEventListener('error', () => {
-      console.error('[Userplane] Error loading recorder iframe');
-    });
-
-    iframe.addEventListener('load', () => {
-      console.log('[Userplane] Recorder iframe loaded successfully');
-    });
-  }
-
-  private mount(): void {
-    if (!this.recorderFrame) {
-      throw new Error('[Userplane] No recorder frame to mount');
-    }
-
-    if (document.contains(this.recorderFrame.overlay)) {
-      console.warn('[Userplane] Recorder is already in the DOM');
+    const urlParams = parseUrlParams();
+    if (!urlParams) {
+      console.log('[Userplane] No recording action in URL');
       return;
     }
 
-    const mountFn = () => {
-      if (document.readyState !== 'loading') {
-        document.body.appendChild(this.recorderFrame!.overlay);
-        document.removeEventListener('readystatechange', mountFn);
-        this.recorderFrame!.iframe.focus();
-        console.log('[Userplane] Recorder mounted to DOM');
-      }
+    console.log('[Userplane] Recording action detected');
+    console.log('[Userplane] Token:', urlParams.token.substring(0, 20) + '...');
+    console.log('[Userplane] Action:', urlParams.action);
+
+    const workspaceIds = readWorkspaceIds();
+
+    const params: RecorderParams = {
+      baseUrl: this.recorderBaseUrl,
+      workspaceIds,
+      token: urlParams.token,
+      action: urlParams.action,
     };
 
-    document.addEventListener('readystatechange', mountFn);
-    mountFn();
+    if (openImmediately) {
+      this.frameManager.tryMount(params);
+    } else {
+      console.log('[Userplane] Deferring recorder mount (openImmediately: false)');
+      this.pendingParams = params;
+    }
   }
 
+  /**
+   * Manually open the recorder with a token
+   * Useful when openImmediately is false or for programmatic control
+   *
+   * @param token - Recording token (optional, will use token from URL if not provided)
+   * @returns true if recorder was opened, false otherwise
+   */
+  public open(token?: string): boolean {
+    if (!this.isInitialized) {
+      console.error('[Userplane] Not initialized. Call initialize() first.');
+      return false;
+    }
+
+    if (this.frameManager.isMounted()) {
+      console.warn('[Userplane] Recorder is already open');
+      return false;
+    }
+
+    let params: RecorderParams;
+
+    if (token) {
+      const workspaceIds = readWorkspaceIds();
+      params = {
+        baseUrl: this.recorderBaseUrl,
+        workspaceIds,
+        token,
+        action: 'recording',
+      };
+    } else if (this.pendingParams) {
+      params = this.pendingParams;
+    } else {
+      const urlParams = parseUrlParams();
+      if (!urlParams) {
+        console.error('[Userplane] No token provided and no recording action in URL');
+        return false;
+      }
+
+      const workspaceIds = readWorkspaceIds();
+      params = {
+        baseUrl: this.recorderBaseUrl,
+        workspaceIds,
+        token: urlParams.token,
+        action: urlParams.action,
+      };
+    }
+
+    console.log('[Userplane] Opening recorder manually');
+    return this.frameManager.tryMount(params);
+  }
+
+  /**
+   * Unmount the recorder iframe
+   */
   public unmount(): void {
-    if (!this.recorderFrame) {
-      return;
-    }
-
-    if (document.contains(this.recorderFrame.overlay)) {
-      document.body.removeChild(this.recorderFrame.overlay);
-      console.log('[Userplane] Recorder unmounted from DOM');
-    }
-
-    this.recorderFrame = null;
+    this.frameManager.unmount();
+    console.log('[Userplane] Recorder unmounted');
   }
 
+  /**
+   * Check if the recorder is currently mounted
+   *
+   * @returns true if recorder is mounted and visible
+   */
   public isRecorderMounted(): boolean {
-    return this.recorderFrame !== null && document.contains(this.recorderFrame.overlay);
+    return this.frameManager.isMounted();
+  }
+
+  /**
+   * Check if the SDK has been initialized
+   *
+   * @returns true if initialized
+   */
+  public getInitializationStatus(): boolean {
+    return this.isInitialized;
+  }
+
+  /**
+   * Get the unique tab reference for this browser tab
+   * This reference persists in sessionStorage for the lifetime of the tab
+   *
+   * @returns Unique tab reference
+   */
+  public getTabRef(): string {
+    return this.tabRef;
+  }
+
+  /**
+   * Clear the tab reference from sessionStorage and window
+   * Useful for testing or when you want to generate a new tab ref
+   * Note: A new tab ref will be generated on next initialization
+   */
+  public static clearTabRef(): void {
+    clearTabRef();
+    console.log('[Userplane] Tab Ref cleared');
   }
 }
 
-// Auto-initialize when script loads
+// Auto-initialize when script loads (with default openImmediately: true)
 if (typeof window !== 'undefined') {
   UserplaneRecorder.initialize();
 }
@@ -179,16 +213,13 @@ if (typeof window !== 'undefined') {
 // Expose to window for programmatic access
 declare global {
   interface Window {
-    Userplane?: {
-      recorder?: UserplaneRecorder;
-    };
+    Userplane?: UserplaneRecorder;
+    __userplaneTabRef?: string;
   }
 }
 
 if (typeof window !== 'undefined') {
-  window.Userplane = {
-    recorder: UserplaneRecorder.initialize(),
-  };
+  window.Userplane = UserplaneRecorder.initialize();
 }
 
 export default UserplaneRecorder;
