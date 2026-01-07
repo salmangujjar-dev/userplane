@@ -3,7 +3,7 @@
  * Type definitions for postbridge communication between SDK (host) and recorder (guest)
  */
 
-import type { SerializableObject } from '../metadata';
+import type { SerializableObject } from '@workspace/metadata';
 
 /**
  * Recording state as exposed to the parent

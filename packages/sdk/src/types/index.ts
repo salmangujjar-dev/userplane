@@ -6,6 +6,14 @@
 export type { RecordingState, RecordingSessionInfo, RecordingContext } from '../bridge/types';
 
 /**
+ * Valid action types for the recorder
+ * - recording: Start a new recording session
+ * - verify: Verify/validate an existing recording
+ * - capture: Capture mode for screenshots or quick captures
+ */
+export type ActionType = 'recording' | 'verify' | 'capture';
+
+/**
  * Represents the recorder frame structure containing the overlay and iframe elements.
  */
 export interface RecorderFrame {
@@ -21,8 +29,8 @@ export interface RecorderFrame {
 export interface URLParams {
   /** Recording token */
   token: string;
-  /** Action type (e.g., 'recording') */
-  action: string;
+  /** Action type */
+  action: ActionType;
 }
 
 /**
@@ -60,16 +68,54 @@ export interface RecorderParams {
   workspaceIds: string[];
   /** Recording token from URL */
   token: string;
-  /** Action from URL (e.g., 'recording') */
-  action: string;
+  /** Action type */
+  action: ActionType;
 }
 
 /**
- * Options for initializing the recorder.
+ * Serializable data structure for URL parsing/applying
+ */
+export interface SerializableUserplaneData {
+  /** Recording token */
+  token: string | null;
+  /** Action type */
+  action: ActionType | null;
+}
+
+/**
+ * Options for initializing the SDK
  */
 export interface InitializeOptions {
-  /** Whether to automatically open the recorder when URL params are detected. Defaults to true. */
-  openImmediately?: boolean;
-  /** Base URL for the recorder app. Defaults to localhost in development. */
+  /**
+   * Workspace ID(s) for validation.
+   * Defaults to reading from <meta name="userplane:workspace"> tags.
+   * Can be a single ID or comma-separated list.
+   */
+  workspaceId?: string;
+
+  /**
+   * Base URL for the recorder app.
+   * Defaults to production CDN URL.
+   */
   recorderBaseUrl?: string;
+
+  /**
+   * Whether to auto-open recorder when URL params are detected.
+   * - true (default): Auto-open when userplane-action=recording is in URL
+   * - false: Don't auto-open, wait for manual open() call
+   * - string: Recording token to open immediately
+   */
+  openImmediately?: boolean | string;
+
+  /**
+   * Custom function to parse userplane data from URL.
+   * Default extracts userplane-action and userplane-token from query params.
+   */
+  parseUserplaneData?: (href: string) => SerializableUserplaneData | null;
+
+  /**
+   * Custom function to apply userplane data to URL.
+   * Used for cross-tab synchronization.
+   */
+  applyUserplaneData?: (data: SerializableUserplaneData) => string;
 }

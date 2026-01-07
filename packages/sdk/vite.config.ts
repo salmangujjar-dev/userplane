@@ -7,13 +7,8 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'UserplaneSDK',
-      formats: ['es', 'umd'],
-      fileName: (format) => {
-        if (format === 'umd') {
-          return 'sdk.umd.cjs';
-        }
-        return 'sdk.js';
-      },
+      formats: ['es', 'cjs'],
+      fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
       external: [],

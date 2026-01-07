@@ -266,6 +266,21 @@
         "react-email": "^5.0.5",
       },
     },
+    "packages/embed": {
+      "name": "@workspace/embed",
+      "version": "0.0.1",
+      "dependencies": {
+        "@workspace/metadata": "workspace:*",
+        "@workspace/sdk": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^22.14.1",
+        "@workspace/typescript-config": "workspace:*",
+        "typescript": "5.8.2",
+        "vite": "^6.0.7",
+        "vite-plugin-dts": "^4.4.0",
+      },
+    },
     "packages/eslint-config": {
       "name": "@workspace/eslint-config",
       "version": "0.0.0",
@@ -304,6 +319,17 @@
       "devDependencies": {
         "@workspace/typescript-config": "workspace:*",
         "typescript": "5.7.3",
+      },
+    },
+    "packages/metadata": {
+      "name": "@workspace/metadata",
+      "version": "0.0.1",
+      "devDependencies": {
+        "@types/node": "^22.14.1",
+        "@workspace/typescript-config": "workspace:*",
+        "typescript": "5.8.2",
+        "vite": "^6.0.7",
+        "vite-plugin-dts": "^4.4.0",
       },
     },
     "packages/postbridge": {
@@ -345,6 +371,7 @@
       "name": "@workspace/sdk",
       "version": "0.0.1",
       "dependencies": {
+        "@workspace/metadata": "workspace:*",
         "@workspace/postbridge": "workspace:*",
         "nanoid": "^5.1.6",
       },
@@ -1526,11 +1553,15 @@
 
     "@workspace/email": ["@workspace/email@workspace:packages/email"],
 
+    "@workspace/embed": ["@workspace/embed@workspace:packages/embed"],
+
     "@workspace/eslint-config": ["@workspace/eslint-config@workspace:packages/eslint-config"],
 
     "@workspace/logger": ["@workspace/logger@workspace:packages/logger"],
 
     "@workspace/meta": ["@workspace/meta@workspace:packages/meta"],
+
+    "@workspace/metadata": ["@workspace/metadata@workspace:packages/metadata"],
 
     "@workspace/postbridge": ["@workspace/postbridge@workspace:packages/postbridge"],
 
@@ -3828,7 +3859,11 @@
 
     "@workspace/db/typescript": ["typescript@5.9.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A=="],
 
+    "@workspace/embed/typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
+
     "@workspace/eslint-config/typescript": ["typescript@5.9.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A=="],
+
+    "@workspace/metadata/typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
 
     "@workspace/postbridge/typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
 
