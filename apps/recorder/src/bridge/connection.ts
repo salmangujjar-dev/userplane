@@ -4,7 +4,13 @@
  */
 
 import { guest, type Connection } from '@workspace/postbridge';
-import type { HostSchema, GuestSchema, RecordingState, RecordingSessionInfo } from './types';
+import type {
+  HostSchema,
+  GuestSchema,
+  RecordingState,
+  RecordingSessionInfo,
+  CustomMetadata,
+} from './types';
 
 /**
  * State tracked by the recorder for the bridge
@@ -110,6 +116,32 @@ export class RecorderBridgeConnection {
    */
   public getTabRef(): string | null {
     return this.state.tabRef;
+  }
+
+  /**
+   * Get custom metadata from the host application
+   * Returns null if not connected, no metadata registered, or call fails
+   *
+   * This fetches metadata that the host app registered via:
+   * ```
+   * Userplane.metadata(() => ({ userId: '123', plan: 'pro' }));
+   * ```
+   */
+  public async getCustomMetadata(): Promise<CustomMetadata> {
+    const remote = this.getRemote();
+    if (!remote) {
+      console.log('[RecorderBridge] Not connected, cannot get custom metadata');
+      return null;
+    }
+
+    try {
+      const metadata = await remote.getCustomMetadata();
+      console.log('[RecorderBridge] Got custom metadata from parent:', metadata);
+      return metadata;
+    } catch (error) {
+      console.error('[RecorderBridge] Failed to get custom metadata:', error);
+      return null;
+    }
   }
 
   // High-level session lifecycle methods

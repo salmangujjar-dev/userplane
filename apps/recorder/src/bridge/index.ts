@@ -9,4 +9,6 @@ export {
   type RecordingSessionInfo,
   type HostSchema,
   type GuestSchema,
+  type CustomMetadata,
+  type SerializableObject,
 } from './types';

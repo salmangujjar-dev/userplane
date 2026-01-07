@@ -168,11 +168,17 @@ export class RecordingSession {
   /**
    * STEP 1: Initialize upload and get presigned URLs
    * Returns upload state that can be stored for retry
+   *
+   * @param videoFile - The video file to upload
+   * @param thumbnailBlob - Optional thumbnail blob
+   * @param recordingDurationMs - Duration of the recording in milliseconds
+   * @param customMetadata - Optional custom metadata from the host application
    */
   async initializeUpload(
     videoFile: File,
     thumbnailBlob: Blob | null,
-    recordingDurationMs: number | null
+    recordingDurationMs: number | null,
+    customMetadata?: Record<string, unknown> | null
   ): Promise<ServerResult<UploadState>> {
     console.log('[Upload:Init] Initializing upload');
     console.log('[Upload:Init] Video file:', {
@@ -234,11 +240,14 @@ export class RecordingSession {
         files,
         metadata: {
           systemMetadata: prettySystemMetadata(systemMetadata),
-          customMetadata: {},
+          customMetadata: customMetadata ?? {},
         },
       },
     };
     console.log('[Upload:Init] Upload init payload:', uploadInitPayload);
+    if (customMetadata) {
+      console.log('[Upload:Init] Custom metadata attached:', customMetadata);
+    }
 
     const [error, response] = await this.client.session.upload.init(uploadInitPayload, {
       context: {

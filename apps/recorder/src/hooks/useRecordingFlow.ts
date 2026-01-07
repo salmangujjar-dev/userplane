@@ -56,7 +56,11 @@ export interface RecordingFlowState {
 export interface RecordingFlowActions {
   startRecording: (mode: RecordingMode) => Promise<void>;
   stopRecording: () => Promise<void>;
-  submitRecording: () => Promise<void>;
+  /**
+   * Submit the recording
+   * @param customMetadata - Optional custom metadata from host application (in embedded mode)
+   */
+  submitRecording: (customMetadata?: Record<string, unknown> | null) => Promise<void>;
   retryUpload: () => Promise<void>;
   startOver: () => Promise<void>;
 }
@@ -493,9 +497,12 @@ export function useRecordingFlow(
     stopRecordingRef.current = stopRecording;
   }, [stopRecording]);
 
-  async function submitRecording() {
+  async function submitRecording(customMetadata?: Record<string, unknown> | null) {
     setIsProcessing(true);
     console.log('[Flow] Submitting recording...');
+    if (customMetadata) {
+      console.log('[Flow] Custom metadata provided:', customMetadata);
+    }
 
     if (!recordingBlob) {
       setError({
@@ -549,7 +556,8 @@ export function useRecordingFlow(
     const initResult = await sessionRef.current.initializeUpload(
       file,
       thumbnailBlob,
-      recordingDurationMs
+      recordingDurationMs,
+      customMetadata
     );
 
     if (!initResult.ok) {
