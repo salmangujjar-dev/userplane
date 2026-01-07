@@ -1,12 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import Userplane from '@workspace/sdk';
+import * as userplane from '@workspace/sdk';
 import App from './App';
 import './index.css';
 
 // Initialize Userplane SDK
-// Auto-initializes and mounts recorder when URL contains recording parameters
-console.log('[Playground] Userplane SDK loaded:', Userplane);
+// Call initialize() manually since we're using the core SDK (no auto-init)
+userplane.initialize();
+console.log('[Playground] Userplane SDK initialized');
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

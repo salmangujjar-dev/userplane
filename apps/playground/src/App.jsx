@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { userplane } from '@workspace/sdk';
+import * as userplane from '@workspace/sdk';
 import { Header } from './components/Header';
 import { StatsGrid } from './components/StatsGrid';
 import { CustomerTable } from './components/CustomerTable';
