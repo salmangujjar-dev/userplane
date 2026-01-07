@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import CompanyDirectory from '../components/CompanyDirectory';
+---
+
+<Layout title="Startup Directory | Y Combinator">
+  <Header />
+  <CompanyDirectory client:load />
+</Layout>
