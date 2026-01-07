@@ -1,6 +1,7 @@
 /**
  * Recording App
  * Main application component that orchestrates the recording flow
+ * Handles cross-tab coordination to ensure only one recorder is active at a time
  */
 
 import { useEffect, useState, useRef } from 'react';
@@ -9,7 +10,7 @@ import {
   type RecordingFlowActions,
   type FlowState,
 } from '@/hooks/useRecordingFlow';
-import { AppModeProvider, useAppMode, useBridge } from '@/contexts/AppModeContext';
+import { AppModeProvider, useAppMode, useBridge, useCrossTabLock } from '@/contexts/AppModeContext';
 import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import PreRecordingScreen from './PreRecordingScreen';
@@ -42,6 +43,8 @@ export default function RecordingApp({}: RecordingAppProps = {}) {
 function RecordingAppContent() {
   const { mode, isEmbedded } = useAppMode();
   const bridge = useBridge();
+  const crossTabLock = useCrossTabLock();
+
   // Initialize state from URL immediately to avoid race condition
   const [linkToken, setLinkToken] = useState<string>(() => getUrlParams().token);
   const [action, setAction] = useState<string>(() => getUrlParams().action);
@@ -53,49 +56,40 @@ function RecordingAppContent() {
   const prevFlowStateRef = useRef<FlowState | null>(null);
   const sessionReportedRef = useRef(false);
 
+  // IMPORTANT: All hooks must be called unconditionally (Rules of Hooks)
+  // Initialize recording flow - this hook must always be called
+  const { state, actions, sessionInfo } = useRecordingFlow(linkToken, action, workspaceIds);
+
+  // Effect to extract URL params
   useEffect(() => {
     console.log(
       '[RecordingApp] App mode:',
       mode,
       isEmbedded ? '(running in iframe)' : '(standalone)'
     );
-    console.log('[RecordingApp] useEffect - Extracting token, action and workspace from URL');
-    console.log('[RecordingApp] Window location:', window.location.href);
-    console.log('[RecordingApp] Window search:', window.location.search);
+    console.log('[RecordingApp] Cross-tab lock status:', crossTabLock.status);
 
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get(URL_PARAMS.TOKEN);
     const urlAction = params.get(URL_PARAMS.ACTION);
     const urlWorkspace = params.get(URL_PARAMS.WORKSPACE);
 
-    console.log(
-      '[RecordingApp] URL token:',
-      urlToken ? 'Present (' + urlToken.length + ' chars)' : 'Missing'
-    );
-    console.log('[RecordingApp] URL action:', urlAction || 'Missing');
-    console.log('[RecordingApp] URL workspace:', urlWorkspace || 'Missing');
-
     if (urlToken) {
-      console.log('[RecordingApp] Setting token:', urlToken.substring(0, 50) + '...');
       setLinkToken(urlToken);
     }
-
     if (urlAction) {
-      console.log('[RecordingApp] Setting action:', urlAction);
       setAction(urlAction);
     }
-
     if (urlWorkspace) {
-      const parsedWorkspaceIds = parseWorkspaceIds(urlWorkspace);
-      console.log('[RecordingApp] Setting workspace IDs:', parsedWorkspaceIds);
-      setWorkspaceIds(parsedWorkspaceIds);
+      setWorkspaceIds(parseWorkspaceIds(urlWorkspace));
     }
-  }, [mode, isEmbedded]);
-
-  const { state, actions, sessionInfo } = useRecordingFlow(linkToken, action, workspaceIds);
+  }, [mode, isEmbedded, crossTabLock.status]);
 
   // Report state changes to parent via bridge (embedded mode only)
+  // This effect must be called unconditionally - the guard is inside the effect
   useEffect(() => {
+    // Skip if not in embedded mode or cross-tab not acquired
+    if (!isEmbedded || !crossTabLock.isAcquired) return;
     if (!bridge) return;
     if (state.state === prevFlowStateRef.current) return;
 
@@ -126,11 +120,14 @@ function RecordingAppContent() {
         }
         break;
     }
-  }, [bridge, state.state, state.recordingBlob]);
+  }, [bridge, isEmbedded, crossTabLock.isAcquired, state.state, state.recordingBlob]);
 
   // Initialize session with parent when ready (embedded mode only)
+  // This effect must be called unconditionally - the guard is inside the effect
   useEffect(() => {
-    if (!bridge || !isEmbedded || sessionReportedRef.current) return;
+    // Skip if not in embedded mode or cross-tab not acquired
+    if (!isEmbedded || !crossTabLock.isAcquired) return;
+    if (!bridge || sessionReportedRef.current) return;
 
     // Initialize session when we have session info and are in setup state
     if (sessionInfo && state.state === 'setup') {
@@ -138,7 +135,7 @@ function RecordingAppContent() {
       bridge.initSession(sessionInfo);
       sessionReportedRef.current = true;
     }
-  }, [bridge, isEmbedded, sessionInfo, state.state]);
+  }, [bridge, isEmbedded, crossTabLock.isAcquired, sessionInfo, state.state]);
 
   /**
    * Submit recording with custom metadata from host (in embedded mode)
@@ -161,11 +158,31 @@ function RecordingAppContent() {
     await actions.submitRecording(customMetadata);
   };
 
+  // === ALL HOOKS ABOVE THIS LINE ===
+  // Now we can have conditional returns
+
+  // In embedded mode, check cross-tab status before showing recording UI
+  if (isEmbedded) {
+    if (crossTabLock.isPending) {
+      console.log('[RecordingApp] Waiting for cross-tab coordination...');
+      return <PreRecordingLoadingScreen />;
+    }
+
+    if (crossTabLock.isBlocked) {
+      console.log('[RecordingApp] Blocked by another recorder:', crossTabLock.error);
+      return (
+        <ErrorScreen
+          title="Recorder Already Active"
+          subtitle={
+            crossTabLock.error ||
+            'Another recorder is currently active. Only one recorder can be active at a time across all tabs.'
+          }
+        />
+      );
+    }
+  }
+
   console.log('[RecordingApp] Current state:', state.state);
-  console.log('[RecordingApp] Error:', state.error);
-  console.log('[RecordingApp] Recording mode:', state.recordingMode);
-  console.log('[RecordingApp] Has recording blob:', !!state.recordingBlob);
-  console.log('[RecordingApp] Upload progress:', state.uploadProgress + '%');
 
   switch (state.state) {
     case 'loading':
