@@ -1,6 +1,7 @@
 /**
  * Bridge Connection Manager for Recorder
  * Manages the postbridge connection from recorder (guest) to SDK (host/parent)
+ * Syncs recording state with cross-tab coordinator for multi-tab awareness
  */
 
 import { guest, type Connection } from '@workspace/postbridge';
@@ -11,6 +12,7 @@ import type {
   RecordingSessionInfo,
   CustomMetadata,
 } from './types';
+import { type CrossTabCoordinator } from './cross-tab';
 
 /**
  * State tracked by the recorder for the bridge
@@ -24,14 +26,24 @@ interface BridgeState {
 /**
  * Manages the postbridge connection to the parent SDK
  * Only active in embedded mode (when running in iframe)
+ * Syncs state with cross-tab coordinator for multi-tab coordination
  */
 export class RecorderBridgeConnection {
   private connection: Connection | null = null;
+  private crossTab: CrossTabCoordinator | null = null;
   private state: BridgeState = {
     recordingState: 'inactive',
     sessionInfo: null,
     tabRef: null,
   };
+
+  /**
+   * Set the cross-tab coordinator for state synchronization
+   * Should be called before connect() if cross-tab coordination is needed
+   */
+  public setCrossTabCoordinator(crossTab: CrossTabCoordinator | null): void {
+    this.crossTab = crossTab;
+  }
 
   /**
    * Connect to the parent SDK
@@ -72,7 +84,7 @@ export class RecorderBridgeConnection {
     if (!remote) return;
 
     try {
-      this.state.tabRef = await remote.getTabRef();
+      this.state.tabRef = remote.getTabRef();
       console.log('[RecorderBridge] Got tab ref from parent:', this.state.tabRef);
     } catch (error) {
       console.error('[RecorderBridge] Failed to fetch tab ref:', error);
@@ -135,7 +147,7 @@ export class RecorderBridgeConnection {
     }
 
     try {
-      const metadata = await remote.getCustomMetadata();
+      const metadata = remote.getCustomMetadata();
       console.log('[RecorderBridge] Got custom metadata from parent:', metadata);
       return metadata;
     } catch (error) {
@@ -188,11 +200,32 @@ export class RecorderBridgeConnection {
   // Recording state methods
 
   /**
+   * Update cross-tab state if coordinator is available
+   */
+  private async updateCrossTabState(state: RecordingState): Promise<void> {
+    if (!this.crossTab || !this.crossTab.isRecorderOwner()) {
+      return;
+    }
+
+    try {
+      await this.crossTab.updateState(state);
+      console.log('[RecorderBridge] Updated cross-tab state:', state);
+    } catch (error) {
+      console.error('[RecorderBridge] Failed to update cross-tab state:', error);
+    }
+  }
+
+  /**
    * Notify parent that recording is active (countdown/recording in progress)
    * Parent will enable tab unload protection
+   * Also broadcasts state to other tabs via cross-tab coordinator
    */
   public recordingActive(): void {
     this.state.recordingState = 'active';
+
+    // Update cross-tab state (fire and forget)
+    this.updateCrossTabState('active');
+
     const remote = this.getRemote();
     if (!remote) {
       console.log('[RecorderBridge] Not connected, skipping recordingActive');
@@ -205,9 +238,14 @@ export class RecorderBridgeConnection {
   /**
    * Notify parent that recording is retained (review/uploading)
    * Parent will keep tab unload protection enabled
+   * Also broadcasts state to other tabs via cross-tab coordinator
    */
   public recordingRetained(): void {
     this.state.recordingState = 'retained';
+
+    // Update cross-tab state (fire and forget)
+    this.updateCrossTabState('retained');
+
     const remote = this.getRemote();
     if (!remote) {
       console.log('[RecorderBridge] Not connected, skipping recordingRetained');
@@ -220,9 +258,14 @@ export class RecorderBridgeConnection {
   /**
    * Notify parent that recording is inactive (setup/success/cancelled)
    * Parent will disable tab unload protection
+   * Also broadcasts state to other tabs via cross-tab coordinator
    */
   public recordingInactive(): void {
     this.state.recordingState = 'inactive';
+
+    // Update cross-tab state (fire and forget)
+    this.updateCrossTabState('inactive');
+
     const remote = this.getRemote();
     if (!remote) {
       console.log('[RecorderBridge] Not connected, skipping recordingInactive');

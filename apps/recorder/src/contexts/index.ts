@@ -9,6 +9,9 @@ export {
   useIsEmbedded,
   useIsStandalone,
   useBridge,
+  useCrossTab,
+  useCrossTabLock,
   type RecordingState,
   type RecordingSessionInfo,
+  type CrossTabLockStatus,
 } from './AppModeContext';
