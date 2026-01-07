@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FilterState, BatchOption } from '../types';
+import { isEnabled } from '../flags';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -80,45 +81,51 @@ export default function Sidebar({ filters, onFilterChange }: SidebarProps) {
   return (
     <aside className="sidebar">
       {/* Quick Filters */}
-      <div className="filter-section">
-        <label className="filter-checkbox">
-          <input type="checkbox" checked={localIsHiring} onChange={handleIsHiringChange} />
-          <span className="checkbox-label">Is Hiring</span>
-        </label>
-      </div>
+      {isEnabled('isHiringFilter') && (
+        <>
+          <div className="filter-section">
+            <label className="filter-checkbox">
+              <input type="checkbox" checked={localIsHiring} onChange={handleIsHiringChange} />
+              <span className="checkbox-label">Is Hiring</span>
+            </label>
+          </div>
 
-      <div className="filter-divider" />
+          <div className="filter-divider" />
+        </>
+      )}
 
       {/* Batch Filter */}
-      <div className="filter-section">
-        <h3 className="filter-title">Batch</h3>
+      {isEnabled('batchFilter') && (
+        <div className="filter-section">
+          <h3 className="filter-title">Batch</h3>
 
-        <label className="filter-checkbox">
-          <input
-            type="checkbox"
-            checked={localBatch === null}
-            onChange={() => handleBatchChange(null)}
-          />
-          <span className="checkbox-label">All batches</span>
-        </label>
-
-        {visibleBatches.map((batch) => (
-          <label key={batch.value} className="filter-checkbox">
+          <label className="filter-checkbox">
             <input
               type="checkbox"
-              checked={localBatch === batch.value}
-              onChange={() => handleBatchChange(batch.value)}
+              checked={localBatch === null}
+              onChange={() => handleBatchChange(null)}
             />
-            <span className="checkbox-label">{batch.label}</span>
+            <span className="checkbox-label">All batches</span>
           </label>
-        ))}
 
-        {batches.length > 8 && (
-          <button className="see-all-btn" onClick={() => setShowAllBatches(!showAllBatches)}>
-            {showAllBatches ? 'Show less' : 'See all options'}
-          </button>
-        )}
-      </div>
+          {visibleBatches.map((batch) => (
+            <label key={batch.value} className="filter-checkbox">
+              <input
+                type="checkbox"
+                checked={localBatch === batch.value}
+                onChange={() => handleBatchChange(batch.value)}
+              />
+              <span className="checkbox-label">{batch.label}</span>
+            </label>
+          ))}
+
+          {batches.length > 8 && (
+            <button className="see-all-btn" onClick={() => setShowAllBatches(!showAllBatches)}>
+              {showAllBatches ? 'Show less' : 'See all options'}
+            </button>
+          )}
+        </div>
+      )}
     </aside>
   );
 }

@@ -1,4 +1,5 @@
 import type { Company } from '../types';
+import { isEnabled } from '../flags';
 import './CompanyCard.css';
 
 interface CompanyCardProps {
@@ -31,34 +32,39 @@ export default function CompanyCard({ company }: CompanyCardProps) {
 
   return (
     <a href={company.url} target="_blank" rel="noopener noreferrer" className="company-card">
-      <div className="company-logo">
-        {company.smallLogoUrl ? (
-          <img src={company.smallLogoUrl} alt={`${company.name} logo`} loading="lazy" />
-        ) : (
-          <div className="logo-placeholder">{company.name.charAt(0)}</div>
-        )}
-      </div>
+      {isEnabled('companyLogo') && (
+        <div className="company-logo">
+          {company.smallLogoUrl ? (
+            <img src={company.smallLogoUrl} alt={`${company.name} logo`} loading="lazy" />
+          ) : (
+            <div className="logo-placeholder">{company.name.charAt(0)}</div>
+          )}
+        </div>
+      )}
 
       <div className="company-info">
         <div className="company-header">
           <h3 className="company-name">{company.name}</h3>
-          {location && <span className="company-location">{location}</span>}
+          {isEnabled('companyLocation') && location && (
+            <span className="company-location">{location}</span>
+          )}
         </div>
 
         <p className="company-description">{company.oneLiner}</p>
 
         <div className="company-tags">
-          {company.batch && (
+          {isEnabled('batchTag') && company.batch && (
             <span className="tag tag-batch">
               <span className="yc-icon">Y</span>
               {formatBatch(company.batch)}
             </span>
           )}
-          {company.industries.slice(0, 2).map((industry) => (
-            <span key={industry} className="tag">
-              {industry.toUpperCase()}
-            </span>
-          ))}
+          {isEnabled('industryTags') &&
+            company.industries.slice(0, 2).map((industry) => (
+              <span key={industry} className="tag">
+                {industry.toUpperCase()}
+              </span>
+            ))}
         </div>
       </div>
     </a>
