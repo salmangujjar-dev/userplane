@@ -24,6 +24,12 @@ import { parseUrlParams } from './utils/url';
 import { readWorkspaceIds } from './utils/meta';
 import { getOrCreateTabRef, clearTabRef } from './utils/tab';
 import type { BridgeCallbacks, RecordingSessionInfo } from './bridge';
+import {
+  metadata as setMetadata,
+  clearMetadata,
+  type MetadataFunction,
+  type SerializableObject,
+} from './metadata';
 
 /**
  * Event callbacks for SDK consumers
@@ -255,6 +261,61 @@ class UserplaneRecorder {
   }
 
   /**
+   * Register a metadata function for recordings (static version)
+   *
+   * The provided function will be called when a recording is being submitted,
+   * and the returned data will be attached as custom metadata to the recording.
+   *
+   * @param metadataFunction - A function that returns a serializable object
+   *
+   * @example
+   * ```typescript
+   * Userplane.metadata(() => ({
+   *   userId: getCurrentUser().id,
+   *   plan: 'enterprise',
+   *   version: APP_VERSION
+   * }));
+   *
+   * // React integration
+   * useEffect(() => {
+   *   Userplane.metadata(() => ({
+   *     userId: user?.id,
+   *     route: location.pathname
+   *   }));
+   * }, [user, location]);
+   * ```
+   */
+  public static metadata(metadataFunction: MetadataFunction): void {
+    setMetadata(metadataFunction);
+  }
+
+  /**
+   * Clear the registered metadata function (static version)
+   * Useful for cleanup or testing
+   */
+  public static clearMetadata(): void {
+    clearMetadata();
+  }
+
+  /**
+   * Register a metadata function for recordings (instance version)
+   * Delegates to static method for convenience when using window.Userplane
+   *
+   * @param metadataFunction - A function that returns a serializable object
+   */
+  public metadata(metadataFunction: MetadataFunction): void {
+    setMetadata(metadataFunction);
+  }
+
+  /**
+   * Clear the registered metadata function (instance version)
+   * Delegates to static method for convenience when using window.Userplane
+   */
+  public clearMetadata(): void {
+    clearMetadata();
+  }
+
+  /**
    * Get the current recording state
    * Returns 'inactive' if recorder is not mounted or bridge is not connected
    */
@@ -313,3 +374,9 @@ if (typeof window !== 'undefined') {
 }
 
 export default UserplaneRecorder;
+
+// Export metadata types for consumers who need them
+export type { MetadataFunction, SerializableObject };
+
+// Named export for namespace-style usage: import { userplane } from '@userplane/sdk'
+export * as userplane from './metadata';
