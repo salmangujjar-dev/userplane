@@ -21,6 +21,7 @@ interface DomainVerificationPostModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   domainUrl: string;
+  workspaceId: string;
   onReverify?: () => void;
   verified?: boolean;
 }
@@ -29,6 +30,7 @@ export function DomainVerificationPostModal({
   open,
   onOpenChange,
   domainUrl,
+  workspaceId,
   onReverify,
   verified = true,
 }: DomainVerificationPostModalProps) {
@@ -40,11 +42,11 @@ export function DomainVerificationPostModal({
   };
 
   const codeSnippet = `<!-- Lets users record their screen from your site -->
-<meta name="jam:team" content="d30c1818-9009-495e-a81b-10de2469a353" />
-<script type="module" src="https://js.jam.dev/recorder.js"></script>
+<meta name="userplane:workspace" content="${workspaceId}" />
+<script type="module" src="https://cdn.userplane.io/recorder.js"></script>
 
 <!-- Captures user events and developer logs -->
-<script type="module" src="https://js.jam.dev/capture.js"></script>`;
+<script type="module" src="https://cdn.userplane.io/capture.js"></script>`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(codeSnippet);
@@ -61,9 +63,9 @@ export function DomainVerificationPostModal({
         <div>
           <span className="text-blue-600">&lt;meta</span>{' '}
           <span className="text-purple-600">name</span>=
-          <span className="text-green-600">&quot;jam:team&quot;</span>{' '}
+          <span className="text-green-600">&quot;userplane:workspace&quot;</span>{' '}
           <span className="text-purple-600">content</span>=
-          <span className="text-green-600">&quot;d30c1818-9009-495e-a81b-10de2469a353&quot;</span>{' '}
+          <span className="text-green-600">&quot;{workspaceId}&quot;</span>{' '}
           <span className="text-blue-600">/&gt;</span>
         </div>
         <div>
@@ -71,7 +73,7 @@ export function DomainVerificationPostModal({
           <span className="text-purple-600">type</span>=
           <span className="text-green-600">&quot;module&quot;</span>{' '}
           <span className="text-purple-600">src</span>=
-          <span className="text-green-600">&quot;https://js.jam.dev/recorder.js&quot;</span>
+          <span className="text-green-600">&quot;https://cdn.userplane.io/recorder.js&quot;</span>
           <span className="text-blue-600">&gt;&lt;/script&gt;</span>
         </div>
         <div className="h-3" />
@@ -83,7 +85,7 @@ export function DomainVerificationPostModal({
           <span className="text-purple-600">type</span>=
           <span className="text-green-600">&quot;module&quot;</span>{' '}
           <span className="text-purple-600">src</span>=
-          <span className="text-green-600">&quot;https://js.jam.dev/capture.js&quot;</span>
+          <span className="text-green-600">&quot;https://cdn.userplane.io/capture.js&quot;</span>
           <span className="text-blue-600">&gt;&lt;/script&gt;</span>
         </div>
       </div>
@@ -99,7 +101,7 @@ export function DomainVerificationPostModal({
     {
       title: 'Verify script installation',
       content:
-        'Open your browser developer tools and check the Network tab. You should see requests to js.jam.dev confirming the scripts are loaded correctly.',
+        'Open your browser developer tools and check the Network tab. You should see requests to userplane.io confirming the scripts are loaded correctly.',
     },
     {
       title: 'Test log capture',

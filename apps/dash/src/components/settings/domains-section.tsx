@@ -473,6 +473,7 @@ export function DomainsSection() {
         open={verificationStep === 'pre'}
         onOpenChange={handleCloseModals}
         domainUrl={verifyingDomain?.url || ''}
+        workspaceId={workspaceId || ''}
         onVerify={handleStartVerification}
       />
 
@@ -485,6 +486,7 @@ export function DomainsSection() {
         open={verificationStep === 'post'}
         onOpenChange={handleCloseModals}
         domainUrl={verifyingDomain?.url || ''}
+        workspaceId={workspaceId || ''}
         onReverify={handleReverify}
         verified={verificationSuccess}
       />
