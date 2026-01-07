@@ -12,6 +12,7 @@ import type {
   RecordingContext,
 } from './types';
 import { URL_PARAMS } from '../constants';
+import { getCustomMetadata } from '../metadata';
 
 /**
  * Callbacks for SDK events from the recorder
@@ -74,6 +75,14 @@ export class BridgeConnection {
     // Create host schema with methods exposed to the recorder
     const schema: HostSchema = {
       getTabRef: () => this.tabRef,
+      getCustomMetadata: () => {
+        try {
+          return getCustomMetadata();
+        } catch (error) {
+          console.error('[Bridge] Error getting custom metadata:', error);
+          return null;
+        }
+      },
       initSession: this.handleInitSession.bind(this),
       finishSession: this.handleFinishSession.bind(this),
       recordingActive: this.handleRecordingActive.bind(this),

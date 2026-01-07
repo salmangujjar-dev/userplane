@@ -3,6 +3,8 @@
  * Type definitions for postbridge communication between SDK (host) and recorder (guest)
  */
 
+import type { SerializableObject } from '../metadata';
+
 /**
  * Recording state as exposed to the parent
  * Maps internal flow states to public-facing states:
@@ -30,6 +32,17 @@ export interface HostSchema {
    * Used to identify which tab the recording came from
    */
   getTabRef: () => string;
+
+  /**
+   * Get custom metadata registered by the host application
+   * Returns null if no metadata function is registered or it fails
+   *
+   * The host app can register metadata via:
+   * ```
+   * userplane.metadata(() => ({ userId: '123', plan: 'pro' }));
+   * ```
+   */
+  getCustomMetadata: () => SerializableObject | null;
 
   /**
    * Initialize the recording session
