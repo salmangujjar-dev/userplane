@@ -63,6 +63,14 @@ import {
 } from './types';
 
 /**
+ * Heartbeat Configuration
+ * ──────────────────────
+ * Configuration for detecting and cleaning up dead connections.
+ */
+const HEARTBEAT_INTERVAL_MS = 500; // Ping all tabs every 500ms
+const HEARTBEAT_TIMEOUT_MS = 500; // Tab must respond within 500ms
+
+/**
  * Tab Connection Info
  * ──────────────────
  * Stores information about a connected tab.
@@ -74,6 +82,8 @@ interface TabConnection {
   methods: string[];
   /** Channel this tab is connected to */
   channel: string;
+  /** Timestamp of last pong received (for heartbeat) */
+  lastPong: number;
 }
 
 /**
@@ -111,6 +121,55 @@ interface ChannelState {
  * - Default channel: "default" for backward compatibility
  */
 const channels: Map<string, ChannelState> = new Map();
+
+/**
+ * Heartbeat: Ping all tabs and remove dead ones
+ * ─────────────────────────────────────────────
+ * Sends PING to all connected tabs and checks for tabs that haven't
+ * responded with PONG within the timeout period.
+ */
+function runHeartbeat() {
+  const now = Date.now();
+
+  for (const [channelName, channel] of channels.entries()) {
+    const deadTabs: string[] = [];
+
+    for (const [tabID, connection] of channel.tabs.entries()) {
+      // Check if tab has timed out (no pong received in time)
+      if (now - connection.lastPong > HEARTBEAT_INTERVAL_MS + HEARTBEAT_TIMEOUT_MS) {
+        console.log(
+          `[Bridge Worker] Tab ${tabID} on "${channelName}" timed out (no pong), removing`
+        );
+        deadTabs.push(tabID);
+        continue;
+      }
+
+      // Send ping to tab
+      try {
+        connection.port.postMessage({ action: bridgeActions.BRIDGE_PING, timestamp: now });
+      } catch (error) {
+        // Port is dead (tab closed/crashed)
+        console.log(`[Bridge Worker] Tab ${tabID} on "${channelName}" has dead port, removing`);
+        deadTabs.push(tabID);
+      }
+    }
+
+    // Remove dead tabs
+    for (const tabID of deadTabs) {
+      channel.tabs.delete(tabID);
+      console.log(`[Bridge Worker] Removed dead tab ${tabID} from channel "${channelName}"`);
+    }
+
+    // Cleanup empty channels
+    if (channel.tabs.size === 0) {
+      channels.delete(channelName);
+      console.log(`[Bridge Worker] Channel "${channelName}" cleaned up (no live tabs)`);
+    }
+  }
+}
+
+// Start heartbeat interval
+setInterval(runHeartbeat, HEARTBEAT_INTERVAL_MS);
 
 /**
  * Get or Create Channel
@@ -185,6 +244,7 @@ function getOrCreateChannel(channelName: string): ChannelState {
         };
 
         // Broadcast state change to all tabs on this channel (with version)
+        const setStateDeadTabs: string[] = [];
         for (const [tabID, connection] of setStateChannel.tabs.entries()) {
           try {
             connection.port.postMessage({
@@ -194,8 +254,13 @@ function getOrCreateChannel(channelName: string): ChannelState {
               version: newVersion,
             });
           } catch (error) {
-            console.error(`[Bridge Worker] Failed to broadcast state to ${tabID}:`, error);
+            console.log(`[Bridge Worker] Tab ${tabID} has dead port during state broadcast`);
+            setStateDeadTabs.push(tabID);
           }
+        }
+        // Clean up dead tabs
+        for (const tabID of setStateDeadTabs) {
+          setStateChannel.tabs.delete(tabID);
         }
         break;
 
@@ -215,6 +280,10 @@ function getOrCreateChannel(channelName: string): ChannelState {
         break;
 
       default:
+        // Handle PONG for heartbeat (action is string, not enum)
+        if (data.action === bridgeActions.BRIDGE_PONG) {
+          handlePong(data as { action: string; tabID: string; channel: string });
+        }
         // Unknown action - ignore
         break;
     }
@@ -277,6 +346,7 @@ function handleHandshake(port: MessagePort, payload: BridgeHandshakePayload) {
     port,
     methods: methodNames,
     channel: channelName,
+    lastPong: Date.now(), // Initialize with current time
   });
 
   // Initialize versioned shared state from first tab's schema (if this is the first tab on this channel)
@@ -361,6 +431,8 @@ function handleBroadcast(payload: BridgeBroadcastPayload) {
 
   // Broadcast to all tabs on this channel except sender
   let relayCount = 0;
+  const deadTabs: string[] = [];
+
   for (const [tabID, connection] of channel.tabs.entries()) {
     // Skip sender (no echo)
     if (tabID === senderTabID) continue;
@@ -372,8 +444,18 @@ function handleBroadcast(payload: BridgeBroadcastPayload) {
       connection.port.postMessage(relayPayload);
       relayCount++;
     } catch (error) {
-      console.error(`[Bridge Worker] Failed to relay to tab ${tabID}:`, error);
+      // Port is dead - mark for removal
+      console.log(
+        `[Bridge Worker] Tab ${tabID} has dead port during broadcast, marking for removal`
+      );
+      deadTabs.push(tabID);
     }
+  }
+
+  // Clean up dead tabs immediately
+  for (const tabID of deadTabs) {
+    channel.tabs.delete(tabID);
+    console.log(`[Bridge Worker] Removed dead tab ${tabID} from channel "${channelName}"`);
   }
 
   console.log(
@@ -490,6 +572,23 @@ function handleDisconnect(payload: BridgeDisconnectPayload) {
 }
 
 /**
+ * Handle Pong (Heartbeat Response)
+ * ───────────────────────────────
+ * Updates the lastPong timestamp for a tab, indicating it's still alive.
+ *
+ * @param payload The pong payload with tabID and channel
+ */
+function handlePong(payload: { action: string; tabID: string; channel: string }) {
+  const { tabID, channel: channelName = 'default' } = payload;
+
+  const channel = channels.get(channelName);
+  if (channel && channel.tabs.has(tabID)) {
+    const connection = channel.tabs.get(tabID)!;
+    connection.lastPong = Date.now();
+  }
+}
+
+/**
  * Handle CAS (Compare-And-Swap) State
  * ───────────────────────────────────
  * Atomically updates state only if the expected version matches.
@@ -568,6 +667,7 @@ function handleCASState(port: MessagePort, payload: BridgeCASStatePayload) {
 
   // Broadcast state update to ALL tabs on this channel (including the requester)
   // All tabs need to know about the new value/version for their local caches
+  const casDeadTabs: string[] = [];
   for (const [connTabID, connection] of channel.tabs.entries()) {
     try {
       connection.port.postMessage({
@@ -577,8 +677,13 @@ function handleCASState(port: MessagePort, payload: BridgeCASStatePayload) {
         version: newVersion,
       });
     } catch (error) {
-      console.error(`[Bridge Worker] Failed to broadcast CAS update to ${connTabID}:`, error);
+      console.log(`[Bridge Worker] Tab ${connTabID} has dead port during CAS broadcast`);
+      casDeadTabs.push(connTabID);
     }
+  }
+  // Clean up dead tabs
+  for (const deadTabID of casDeadTabs) {
+    channel.tabs.delete(deadTabID);
   }
 
   console.log(

@@ -486,6 +486,10 @@ export enum bridgeActions {
   BRIDGE_CAS_STATE = 'SOCKBRIDGE/CAS_STATE',
   /** Worker responds with CAS result */
   BRIDGE_CAS_RESPONSE = 'SOCKBRIDGE/CAS_RESPONSE',
+  /** Worker pings tab (heartbeat) */
+  BRIDGE_PING = 'SOCKBRIDGE/PING',
+  /** Tab responds to ping (heartbeat) */
+  BRIDGE_PONG = 'SOCKBRIDGE/PONG',
 }
 
 /**
