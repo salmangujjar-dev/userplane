@@ -293,6 +293,8 @@ export class SessionService {
     // Extract file paths and sizes for database (only for files being uploaded)
     const filePaths = this.extractFilePaths(fileUploads);
 
+    console.log('custom metadata :', metadata.customMetadata ?? 'None');
+
     // Create recording record in database
     try {
       await this.deps.recordingRepo.create({
