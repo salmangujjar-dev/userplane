@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Custom Metadata Demo</title>
+
+    <!-- Userplane Workspace IDs -->
+    <meta name="userplane:workspace" content="ws_jUcnqdGX3hAD" />
+
+    <!-- Userplane Recorder Script -->
+    <script type="module" src="../../dist/sdk.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Custom Metadata Demo</h1>
+      <p class="subtitle">Attach custom data to your recordings</p>
+
+      <div class="demo-section">
+        <h2>Current User Context</h2>
+        <div class="user-card">
+          <div class="user-avatar">JD</div>
+          <div class="user-info">
+            <div class="user-name">Jane Developer</div>
+            <div class="user-email">jane@acme.com</div>
+            <div class="user-role">Admin</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>Application State</h2>
+        <div class="state-grid">
+          <div class="state-item">
+            <span class="state-label">App Version</span>
+            <span class="state-value" id="app-version">2.4.1</span>
+          </div>
+          <div class="state-item">
+            <span class="state-label">Environment</span>
+            <span class="state-value" id="environment">staging</span>
+          </div>
+          <div class="state-item">
+            <span class="state-label">Session ID</span>
+            <span class="state-value" id="session-id">-</span>
+          </div>
+          <div class="state-item">
+            <span class="state-label">Feature Flags</span>
+            <span class="state-value" id="feature-flags">dark_mode, beta_features</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>Metadata Preview</h2>
+        <p class="section-desc">This is the data that will be attached to recordings:</p>
+        <pre id="metadata-preview" class="code-block"></pre>
+      </div>
+
+      <div class="demo-section">
+        <h2>How It Works</h2>
+        <div class="code-example">
+          <pre class="code-block">// Register metadata callback
+Userplane.metadata(() => ({
+  user: {
+    id: 'user_123',
+    email: 'jane@acme.com',
+    role: 'admin'
+  },
+  app: {
+    version: '2.4.1',
+    environment: 'staging'
+  },
+  session: {
+    id: 'ses_abc123',
+    startedAt: new Date().toISOString()
+  },
+  featureFlags: ['dark_mode', 'beta_features']
+}));</pre>
+        </div>
+      </div>
+
+      <div class="demo-section actions">
+        <button id="update-session" class="btn">Generate New Session ID</button>
+        <button id="toggle-feature" class="btn btn-secondary">Toggle Feature Flag</button>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
+

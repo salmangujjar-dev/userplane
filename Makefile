@@ -60,6 +60,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:api$(WHITE)                       ║$(RESET) Run API only                                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:share$(WHITE)                     ║$(RESET) Run Share URL shortener only                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:email$(WHITE)                     ║$(RESET) Run Email preview server only                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:playground$(WHITE)                ║$(RESET) Run playground app only                                           $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -144,6 +145,10 @@ dev\:share: ## Run Share URL shortener only
 dev\:email: ## Run Email preview server only
 	@echo "$(MAGENTA)Starting Email preview server...$(RESET)"
 	@cd packages/email && bun dev
+
+dev\:playground: ## Run playground app only
+	@echo "$(MAGENTA)Starting Playground app...$(RESET)"
+	@cd apps/playground && bun dev
 
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
