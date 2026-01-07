@@ -140,6 +140,27 @@ function RecordingAppContent() {
     }
   }, [bridge, isEmbedded, sessionInfo, state.state]);
 
+  /**
+   * Submit recording with custom metadata from host (in embedded mode)
+   * Fetches metadata from the host application via bridge before submitting
+   */
+  const handleSubmitRecording = async () => {
+    let customMetadata: Record<string, unknown> | null = null;
+
+    // In embedded mode, fetch custom metadata from host before submitting
+    if (isEmbedded && bridge) {
+      console.log('[RecordingApp] Fetching custom metadata from host...');
+      customMetadata = await bridge.getCustomMetadata();
+      if (customMetadata) {
+        console.log('[RecordingApp] Got custom metadata:', customMetadata);
+      } else {
+        console.log('[RecordingApp] No custom metadata from host');
+      }
+    }
+
+    await actions.submitRecording(customMetadata);
+  };
+
   console.log('[RecordingApp] Current state:', state.state);
   console.log('[RecordingApp] Error:', state.error);
   console.log('[RecordingApp] Recording mode:', state.recordingMode);
@@ -223,7 +244,7 @@ function RecordingAppContent() {
         <PostRecordingReviewScreen
           videoUrl={state.videoUrl}
           preferences={state.preferences}
-          onSubmit={actions.submitRecording}
+          onSubmit={handleSubmitRecording}
           onStartOver={actions.startOver}
         />
       );

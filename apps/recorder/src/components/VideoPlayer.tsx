@@ -127,7 +127,10 @@ export default function VideoPlayer({
 
   return (
     <div className="aspect-video w-full border-2 border-gray-300 rounded-xl overflow-hidden bg-white shadow-lg p-2">
-      <div className="relative w-full h-full bg-black rounded-lg overflow-hidden group" style={{ opacity }}>
+      <div
+        className="relative w-full h-full bg-black rounded-lg overflow-hidden group"
+        style={{ opacity }}
+      >
         <video
           ref={videoRef}
           src={src}
