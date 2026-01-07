@@ -9,6 +9,27 @@ import { useState } from 'react';
 import { toast } from '@workspace/ui/components/sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 
+function ThumbnailFallback() {
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-muted to-muted/80">
+      <button
+        className="w-20 h-20 rounded-full bg-white/95 flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.15),0_4px_16px_rgba(0,0,0,0.1),0_0_0_8px_rgba(255,255,255,0.1),0_0_0_16px_rgba(255,255,255,0.05)] transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-[0_12px_40px_rgba(0,0,0,0.2),0_6px_20px_rgba(0,0,0,0.15),0_0_0_10px_rgba(255,255,255,0.15),0_0_0_20px_rgba(255,255,255,0.08)]"
+        aria-label="Recording preview not available"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <svg
+          className="w-8 h-8 text-gray-800 ml-1"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M8 5.14v14.72a1 1 0 0 0 1.5.87l11.14-7.36a1 1 0 0 0 0-1.73L9.5 4.27A1 1 0 0 0 8 5.14z" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 interface RecordingPreviewProps {
   recordingId: string;
   onClick?: () => void;
@@ -29,6 +50,7 @@ export function RecordingPreview({
   const router = useRouter();
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const formatDuration = (ms: number | null) => {
     if (!ms) return '0:00';
@@ -71,12 +93,10 @@ export function RecordingPreview({
     }
   };
 
-  const staticImageUrl =
-    thumbnailUrl ||
-    'https://jam.dev/cdn-cgi/image/width=480,quality=100,dpr=2/https://cdn-jam-screenshots.jam.dev/bba0f128dfa4507c1e4549c3b11f090e/screenshot/f310785e-327e-40c8-8728-59521d9b8176.png';
-  const animatedGifUrl = thumbnailUrl
-    ? `${thumbnailUrl}?animated=true`
-    : 'https://customer-9o3ovno0sscvd4n0.cloudflarestream.com/d9ec8ed1f01cfaa79099e83808db6540/thumbnails/thumbnail.gif?width=480&duration=4s';
+  const showFallback = !thumbnailUrl || imageError;
+  const staticImageUrl = thumbnailUrl || '';
+  // TODO: Add animated GIF URL later (don't worry about it for now)
+  const animatedGifUrl = thumbnailUrl || '';
 
   return (
     <div
@@ -87,7 +107,9 @@ export function RecordingPreview({
     >
       <div className="rounded-lg border border-transparent group-hover/card:border-border transition-all duration-300 p-3">
         <div className="aspect-video bg-muted overflow-hidden relative rounded-lg">
-          {thumbnailUrl ? (
+          {showFallback ? (
+            <ThumbnailFallback />
+          ) : (
             <Image
               src={isHovered ? animatedGifUrl : staticImageUrl}
               alt="Recording preview"
@@ -95,11 +117,8 @@ export function RecordingPreview({
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               unoptimized
+              onError={() => setImageError(true)}
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-muted">
-              <Play className="h-12 w-12 text-muted-foreground" />
-            </div>
           )}
           <Tooltip>
             <TooltipTrigger asChild>

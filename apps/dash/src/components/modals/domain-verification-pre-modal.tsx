@@ -16,6 +16,7 @@ interface DomainVerificationPreModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   domainUrl: string;
+  workspaceId: string;
   onVerify?: () => void;
 }
 
@@ -23,16 +24,17 @@ export function DomainVerificationPreModal({
   open,
   onOpenChange,
   domainUrl,
+  workspaceId,
   onVerify,
 }: DomainVerificationPreModalProps) {
   const [isCopied, setIsCopied] = useState(false);
 
   const codeSnippet = `<!-- Lets users record their screen from your site -->
-<meta name="jam:team" content="d30c1818-9009-495e-a81b-10de2469a353" />
-<script type="module" src="https://js.jam.dev/recorder.js"></script>
+<meta name="userplane:workspace" content="${workspaceId}" />
+<script type="module" src="https://cdn.userplane.io/recorder.js"></script>
 
 <!-- Captures user events and developer logs -->
-<script type="module" src="https://js.jam.dev/capture.js"></script>`;
+<script type="module" src="https://cdn.userplane.io/capture.js"></script>`;
 
   const renderSyntaxHighlightedCode = () => {
     return (
@@ -43,9 +45,9 @@ export function DomainVerificationPreModal({
         <div>
           <span className="text-blue-600">&lt;meta</span>{' '}
           <span className="text-purple-600">name</span>=
-          <span className="text-green-600">&quot;jam:team&quot;</span>{' '}
+          <span className="text-green-600">&quot;userplane:workspace&quot;</span>{' '}
           <span className="text-purple-600">content</span>=
-          <span className="text-green-600">&quot;d30c1818-9009-495e-a81b-10de2469a353&quot;</span>{' '}
+          <span className="text-green-600">&quot;{workspaceId}&quot;</span>{' '}
           <span className="text-blue-600">/&gt;</span>
         </div>
         <div>
@@ -53,7 +55,7 @@ export function DomainVerificationPreModal({
           <span className="text-purple-600">type</span>=
           <span className="text-green-600">&quot;module&quot;</span>{' '}
           <span className="text-purple-600">src</span>=
-          <span className="text-green-600">&quot;https://js.jam.dev/recorder.js&quot;</span>
+          <span className="text-green-600">&quot;https://cdn.userplane.io/recorder.js&quot;</span>
           <span className="text-blue-600">&gt;&lt;/script&gt;</span>
         </div>
         <div className="h-3" />
@@ -65,7 +67,7 @@ export function DomainVerificationPreModal({
           <span className="text-purple-600">type</span>=
           <span className="text-green-600">&quot;module&quot;</span>{' '}
           <span className="text-purple-600">src</span>=
-          <span className="text-green-600">&quot;https://js.jam.dev/capture.js&quot;</span>
+          <span className="text-green-600">&quot;https://cdn.userplane.io/capture.js&quot;</span>
           <span className="text-blue-600">&gt;&lt;/script&gt;</span>
         </div>
       </div>

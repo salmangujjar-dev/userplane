@@ -5,15 +5,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'jam.dev',
+        hostname: 'assets.userplane.io',
       },
       {
         protocol: 'https',
-        hostname: 'cdn-jam-screenshots.jam.dev',
-      },
-      {
-        protocol: 'https',
-        hostname: 'customer-9o3ovno0sscvd4n0.cloudflarestream.com',
+        hostname: 'dev.userplane.io',
       },
     ],
   },
