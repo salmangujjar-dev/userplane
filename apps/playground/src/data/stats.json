@@ -1,0 +1,6 @@
+[
+  { "label": "Total Customers", "value": "2,847", "change": "+12%", "positive": true },
+  { "label": "Active Users", "value": "1,423", "change": "+8%", "positive": true },
+  { "label": "Revenue (MTD)", "value": "$142,850", "change": "+23%", "positive": true },
+  { "label": "Churn Rate", "value": "2.4%", "change": "-0.3%", "positive": true }
+]
