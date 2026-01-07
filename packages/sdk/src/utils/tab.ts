@@ -6,6 +6,12 @@
 
 import { nanoid } from 'nanoid';
 
+declare global {
+  interface Window {
+    __userplaneTabRef?: string;
+  }
+}
+
 const STORAGE_KEY = 'userplane_tab_ref';
 
 /**

@@ -12,7 +12,7 @@ import type {
   RecordingContext,
 } from './types';
 import { URL_PARAMS } from '../constants';
-import { getCustomMetadata } from '../metadata';
+import { getCustomMetadata } from '@workspace/metadata';
 
 /**
  * Callbacks for SDK events from the recorder
