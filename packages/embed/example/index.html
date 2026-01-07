@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customer Dashboard</title>
+
+    <!-- Userplane Workspace IDs (multiple workspaces supported) -->
+    <meta name="userplane:workspace" content="ws_jUcnqdGX3hAD" />
+    <meta name="userplane:workspace" content="ws_production_123" />
+
+    <!-- Userplane Embed Script (auto-initializes) -->
+    <script type="module" src="../dist/index.es.js"></script>
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Customer Dashboard</h1>
+      <p class="subtitle">Manage your customer accounts</p>
+
+      <!-- Customer Table -->
+      <table>
+        <thead>
+          <tr>
+            <th>Customer ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Last Activity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>#1001</td>
+            <td>John Doe</td>
+            <td>john.doe@example.com</td>
+            <td><span class="badge active">Active</span></td>
+            <td>2 hours ago</td>
+          </tr>
+          <tr>
+            <td>#1002</td>
+            <td>Jane Smith</td>
+            <td>jane.smith@example.com</td>
+            <td><span class="badge active">Active</span></td>
+            <td>5 hours ago</td>
+          </tr>
+          <tr>
+            <td>#1003</td>
+            <td>Bob Johnson</td>
+            <td>bob.johnson@example.com</td>
+            <td><span class="badge pending">Pending</span></td>
+            <td>1 day ago</td>
+          </tr>
+          <tr>
+            <td>#1004</td>
+            <td>Alice Williams</td>
+            <td>alice.w@example.com</td>
+            <td><span class="badge inactive">Inactive</span></td>
+            <td>3 days ago</td>
+          </tr>
+          <tr>
+            <td>#1005</td>
+            <td>Charlie Brown</td>
+            <td>charlie.b@example.com</td>
+            <td><span class="badge active">Active</span></td>
+            <td>30 minutes ago</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
