@@ -1,82 +1,49 @@
 /**
  * Tab reference utilities
  * Generates unique references for browser tabs/windows
- * Tab refs persist in sessionStorage for the lifetime of the tab
+ *
+ * Uses window.name which:
+ * - Persists across page refreshes (same tab keeps same ID)
+ * - Is unique per tab (each tab has its own window.name)
+ * - Is NOT copied when duplicating a tab (new tab gets empty window.name)
+ * - Survives navigation within the same tab
  */
 
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 
-declare global {
-  interface Window {
-    __userplaneTabRef?: string;
-  }
-}
+const TAB_REF_PREFIX = 'userplane_tab_';
 
-const STORAGE_KEY = 'userplane_tab_ref';
-
-/**
- * Generate a unique tab reference
- * Uses nanoid for cryptographically strong random IDs
- *
- * Format: tab_[nanoid]
- * Example: tab_V1StGXR8_Z5jdHi6B
- *
- * @returns Unique tab reference
- */
-function generateTabRef(): string {
-  return `tab_${nanoid()}`;
-}
+// Alphanumeric only (A-Z, a-z, 0-9)
+const generateId = customAlphabet(
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+  21
+);
 
 /**
  * Get or create a tab reference
- * Checks in order:
- * 1. Window namespace (in-memory)
- * 2. sessionStorage (survives refresh, unique per tab)
- * 3. Generate new one and store it
+ * Uses window.name for persistence - simple and reliable
  *
- * This ensures the same tab ref persists across page refreshes within the same tab
- * and if the SDK is re-initialized within the same page load
- *
- * @returns Tab reference
+ * @returns Tab reference (format: userplane_tab_[nanoid])
  */
 export function getOrCreateTabRef(): string {
   if (typeof window === 'undefined') {
-    return generateTabRef();
+    return `${TAB_REF_PREFIX}${generateId()}`;
   }
 
-  // Check window namespace first (fastest)
-  if (window.__userplaneTabRef) {
-    return window.__userplaneTabRef;
+  // Check if we already have a tab ref in window.name
+  if (window.name.startsWith(TAB_REF_PREFIX)) {
+    return window.name;
   }
 
-  // Check sessionStorage (survives refresh, clears when tab closes)
-  try {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      window.__userplaneTabRef = stored;
-      return stored;
-    }
-  } catch (error) {
-    // sessionStorage might be disabled or unavailable
-    console.warn('[Userplane] sessionStorage unavailable:', error);
-  }
-
-  // Generate new tab ref and store it
-  const tabRef = generateTabRef();
-  window.__userplaneTabRef = tabRef;
-
-  try {
-    sessionStorage.setItem(STORAGE_KEY, tabRef);
-  } catch (error) {
-    // sessionStorage write failed (quota, disabled, etc.)
-    console.warn('[Userplane] Failed to store tab ref in sessionStorage:', error);
-  }
+  // Generate new tab ref and store in window.name
+  const tabRef = `${TAB_REF_PREFIX}${generateId()}`;
+  window.name = tabRef;
 
   return tabRef;
 }
 
 /**
- * Clear the tab reference from sessionStorage and window
+ * Clear the tab reference
  * Useful for testing or debugging
  */
 export function clearTabRef(): void {
@@ -84,11 +51,23 @@ export function clearTabRef(): void {
     return;
   }
 
-  delete window.__userplaneTabRef;
-
-  try {
-    sessionStorage.removeItem(STORAGE_KEY);
-  } catch (error) {
-    console.warn('[Userplane] Failed to clear tab ref from sessionStorage:', error);
+  if (window.name.startsWith(TAB_REF_PREFIX)) {
+    window.name = '';
   }
+}
+
+/**
+ * Get the current tab reference without creating one
+ * Returns null if no tab ref exists
+ */
+export function getTabRef(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  if (window.name.startsWith(TAB_REF_PREFIX)) {
+    return window.name;
+  }
+
+  return null;
 }
