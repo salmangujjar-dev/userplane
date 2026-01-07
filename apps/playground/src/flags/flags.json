@@ -1,0 +1,42 @@
+{
+  "search": {
+    "enabled": true,
+    "description": "Enable search bar for filtering companies"
+  },
+  "pagination": {
+    "enabled": true,
+    "description": "Enable pagination controls"
+  },
+  "sidebar": {
+    "enabled": true,
+    "description": "Enable the sidebar with filters"
+  },
+  "isHiringFilter": {
+    "enabled": true,
+    "description": "Enable 'Is Hiring' filter checkbox"
+  },
+  "batchFilter": {
+    "enabled": true,
+    "description": "Enable batch/cohort filter"
+  },
+  "companyLogo": {
+    "enabled": true,
+    "description": "Show company logos on cards"
+  },
+  "companyLocation": {
+    "enabled": true,
+    "description": "Show company location on cards"
+  },
+  "industryTags": {
+    "enabled": true,
+    "description": "Show industry tags on company cards"
+  },
+  "batchTag": {
+    "enabled": true,
+    "description": "Show YC batch tag on company cards"
+  },
+  "resultsCount": {
+    "enabled": true,
+    "description": "Show results count info"
+  }
+}

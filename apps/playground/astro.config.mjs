@@ -8,5 +8,10 @@ export default defineConfig({
   integrations: [react()],
   server: {
     port: 4444
+  },
+  vite: {
+    optimizeDeps: {
+      exclude: ['@workspace/sdk']
+    }
   }
 });

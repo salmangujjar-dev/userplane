@@ -15,6 +15,7 @@ const { title } = Astro.props;
       name="description"
       content="Y Combinator Startup Directory - Discover over 5,000 companies backed by YC"
     />
+    <!-- <meta name="userplane:workspace" content="ws_playground" /> -->
     <link rel="icon" type="image/png" href="/yc-logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,6 +27,21 @@ const { title } = Astro.props;
   </head>
   <body>
     <slot />
+    <script>
+      import * as userplane from '@workspace/sdk';
+      import { getFlagsMetadata, getUserMetadata } from '../flags/utils';
+
+      // Initialize the Userplane SDK with the workspace ID
+      userplane.initialize({
+        workspaceId: 'ws_jUcnqdGX3hAD',
+      });
+
+      // Set the metadata for the Userplane SDK
+      userplane.metadata(() => ({
+        flags: getFlagsMetadata(),
+        user: getUserMetadata(),
+      }));
+    </script>
   </body>
 </html>
 

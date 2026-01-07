@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Company, SearchResult, FilterState } from '../types';
+import { isEnabled } from '../flags';
 import Sidebar from './Sidebar';
 import SearchBar from './SearchBar';
 import CompanyCard from './CompanyCard';
@@ -119,29 +120,33 @@ export default function CompanyDirectory() {
   return (
     <div className="directory">
       <div className="directory-content">
-        <Sidebar filters={filters} onFilterChange={handleFilterChange} />
+        {isEnabled('sidebar') && <Sidebar filters={filters} onFilterChange={handleFilterChange} />}
 
         <main className="directory-main">
-          <div className="search-wrapper">
-            <SearchBar
-              value={filters.query}
-              onChange={handleSearchChange}
-              placeholder="Search..."
-            />
-          </div>
+          {isEnabled('search') && (
+            <div className="search-wrapper">
+              <SearchBar
+                value={filters.query}
+                onChange={handleSearchChange}
+                placeholder="Search..."
+              />
+            </div>
+          )}
 
-          <div className="results-info">
-            {isLoading ? (
-              <span className="results-count">Loading...</span>
-            ) : error ? (
-              <span className="results-count error">Error: {error}</span>
-            ) : (
-              <span className="results-count">
-                Showing {totalCount} of{' '}
-                {totalCompanies > 0 ? `${totalCompanies.toLocaleString()}+` : '1,000+'} companies
-              </span>
-            )}
-          </div>
+          {isEnabled('resultsCount') && (
+            <div className="results-info">
+              {isLoading ? (
+                <span className="results-count">Loading...</span>
+              ) : error ? (
+                <span className="results-count error">Error: {error}</span>
+              ) : (
+                <span className="results-count">
+                  Showing {totalCount} of{' '}
+                  {totalCompanies > 0 ? `${totalCompanies.toLocaleString()}+` : '1,000+'} companies
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="company-list">
             {isLoading ? (
@@ -172,7 +177,7 @@ export default function CompanyDirectory() {
             )}
           </div>
 
-          {data && data.totalPages > 1 && !isLoading && !error && (
+          {isEnabled('pagination') && data && data.totalPages > 1 && !isLoading && !error && (
             <Pagination
               currentPage={debouncedFilters.page + 1}
               totalPages={data.totalPages}
