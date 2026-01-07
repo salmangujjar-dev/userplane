@@ -365,6 +365,18 @@ async function connect(
             break;
 
           // BRIDGE_RELAY will be handled by the updated handler in handleHandshakeAck
+
+          case bridgeActions.BRIDGE_PING:
+            // Respond with PONG to indicate we're still alive (heartbeat)
+            port.postMessage({
+              action: bridgeActions.BRIDGE_PONG,
+              tabID,
+              channel,
+            });
+            break;
+
+          default:
+            break;
         }
       };
 
