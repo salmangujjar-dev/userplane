@@ -1,6 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
+import { JsonViewer } from '@workspace/ui/components/json-viewer';
 
 interface InfoPanelProps {
   recording: {
@@ -81,12 +82,28 @@ export function InfoPanel({ recording }: InfoPanelProps) {
         <div className="border-t pt-6">
           <h3 className="text-sm font-semibold mb-4">Custom Metadata</h3>
           <div className="space-y-3">
-            {Object.entries(meta.customMeta).map(([key, value]) => (
-              <div key={key} className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-                <span className="text-muted-foreground">{key}</span>
-                <span className="font-mono">{formatValue(value)}</span>
-              </div>
-            ))}
+            {Object.entries(meta.customMeta).map(([key, value]) => {
+              const isComplex = value !== null && typeof value === 'object';
+              return (
+                <div key={key} className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+                  <span className="text-muted-foreground">{key}</span>
+                  {isComplex ? (
+                    <JsonViewer
+                      data={value}
+                      rootName={
+                        Array.isArray(value)
+                          ? `[${(value as unknown[]).length}]`
+                          : `{${Object.keys(value).length}}`
+                      }
+                      defaultExpanded={false}
+                      className="text-xs -my-1"
+                    />
+                  ) : (
+                    <span className="font-mono">{formatValue(value)}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

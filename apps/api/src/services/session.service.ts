@@ -312,7 +312,6 @@ export class SessionService {
         systemMeta: metadata.systemMetadata,
         customMeta: {
           ...metadata.customMetadata,
-          sessionId: sessionPayload.sid,
         },
       });
     } catch (error) {
