@@ -113,11 +113,12 @@ export class LinkService {
       recordingCaptureServerLog ||
       recordingCaptureNetworkLog;
     const isCustomDomain = domainStatus === 'verified' && domainUrl && needsCustomDomain;
-    const baseUrl = isCustomDomain ? `https://${domainUrl}` : env.recorder.url;
+    // domainUrl already includes the protocol (http:// or https://)
+    const baseUrl = isCustomDomain ? domainUrl : `${env.recorder.url}/r`;
 
     // Custom domain: workspace comes from page's meta tag (SDK)
     // Default domain: workspace included in URL for direct sharing
-    const url = `${baseUrl}/r?userplane-action=recording&userplane-token=${token}`;
+    const url = `${baseUrl}?userplane-action=recording&userplane-token=${token}`;
     return isCustomDomain ? url : `${url}&userplane-workspace=${workspaceId}`;
   }
 
