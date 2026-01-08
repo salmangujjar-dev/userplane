@@ -19,19 +19,31 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
     ref
   ) => {
     const [protocol, setProtocol] = React.useState<'http' | 'https'>('https');
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
+    // Expose input ref to parent if provided
+    React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
     // Detect protocol and strip it from display value
     const processUrl = (url: string): { protocol: 'http' | 'https'; cleanUrl: string } => {
       const httpMatch = url.match(/^http:\/\//i);
       const httpsMatch = url.match(/^https:\/\//i);
 
+      let cleanUrl = url;
+      let detectedProtocol: 'http' | 'https' = 'https';
+
       if (httpMatch) {
-        return { protocol: 'http', cleanUrl: url.replace(/^http:\/\//i, '') };
+        detectedProtocol = 'http';
+        cleanUrl = url.replace(/^http:\/\//i, '');
       } else if (httpsMatch) {
-        return { protocol: 'https', cleanUrl: url.replace(/^https:\/\//i, '') };
-      } else {
-        return { protocol: 'https', cleanUrl: url };
+        detectedProtocol = 'https';
+        cleanUrl = url.replace(/^https:\/\//i, '');
       }
+
+      // Trim trailing slashes
+      cleanUrl = cleanUrl.replace(/\/+$/, '');
+
+      return { protocol: detectedProtocol, cleanUrl };
     };
 
     // Initialize protocol from value prop
@@ -44,7 +56,11 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
 
     // Handle input changes and detect protocol
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const inputValue = e.target.value;
+      let inputValue = e.target.value;
+
+      // Trim trailing slashes from input
+      inputValue = inputValue.replace(/\/+$/, '');
+
       const { protocol: detectedProtocol, cleanUrl } = processUrl(inputValue);
 
       // Update protocol state if user typed a protocol
@@ -52,11 +68,35 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
         setProtocol(detectedProtocol);
       }
 
-      // Always return the full URL with protocol
-      onChange(`${protocol}://${cleanUrl}`);
+      // Always return the full URL with protocol, without trailing slash
+      const finalUrl = `${detectedProtocol}://${cleanUrl}`;
+      onChange(finalUrl);
     };
 
     const displayValue = processUrl(value).cleanUrl;
+
+    // Toggle protocol button handler
+    const toggleProtocol = () => {
+      const newProtocol = protocol === 'https' ? 'http' : 'https';
+      setProtocol(newProtocol);
+      // Trim trailing slashes when toggling protocol
+      const finalUrl = `${newProtocol}://${displayValue}`;
+      onChange(finalUrl);
+    };
+
+    // Split URL into origin and path for styling
+    const splitUrlForDisplay = (url: string): { origin: string; path: string } => {
+      const firstSlashIndex = url.indexOf('/');
+      if (firstSlashIndex === -1) {
+        return { origin: url, path: '' };
+      }
+      return {
+        origin: url.substring(0, firstSlashIndex),
+        path: url.substring(firstSlashIndex),
+      };
+    };
+
+    const { origin, path } = splitUrlForDisplay(displayValue);
 
     return (
       <div
@@ -67,19 +107,60 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
           className
         )}
       >
-        <div className="flex items-center px-3 py-2 text-muted-foreground border-r border-border">
-          <span className="text-sm font-medium whitespace-nowrap">{protocol}://</span>
+        <button
+          type="button"
+          onClick={toggleProtocol}
+          className="flex items-center gap-2 border-r border-border pl-3 pr-3 py-2 hover:bg-accent transition-colors"
+          title={`Switch to ${protocol === 'https' ? 'http' : 'https'}`}
+        >
+          {protocol === 'https' ? (
+            <svg
+              className="h-4 w-4 text-muted-foreground"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="h-4 w-4 text-muted-foreground"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+              />
+            </svg>
+          )}
+          <span className="text-sm font-medium text-muted-foreground">{protocol}://</span>
+        </button>
+        <div className="relative flex-1">
+          <input
+            ref={inputRef}
+            id={id}
+            value={displayValue}
+            onChange={handleChange}
+            placeholder={placeholder}
+            onKeyDown={onKeyDown}
+            className="w-full px-3 py-2 bg-transparent border-0 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 text-transparent"
+            style={{ caretColor: 'var(--foreground)' }}
+            {...props}
+          />
+          <div className="absolute inset-0 px-3 py-2 pointer-events-none flex items-center overflow-hidden">
+            <span className="text-sm text-foreground">{origin}</span>
+            <span className="text-sm text-muted-foreground">{path}</span>
+          </div>
         </div>
-        <input
-          ref={ref}
-          id={id}
-          value={displayValue}
-          onChange={handleChange}
-          placeholder={placeholder}
-          onKeyDown={onKeyDown}
-          className="flex-1 px-3 py-2 bg-transparent border-0 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-          {...props}
-        />
       </div>
     );
   }
