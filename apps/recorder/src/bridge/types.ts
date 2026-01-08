@@ -32,6 +32,34 @@ type Serializable = SerializablePrimitive | SerializableArray | SerializableObje
 export type CustomMetadata = SerializableObject | null;
 
 /**
+ * Verification result data returned on success
+ */
+export interface VerificationData {
+  domainStatus: string;
+  workspaceId: string;
+  domainId: string;
+  domainUrl: string;
+}
+
+/**
+ * Verification error information
+ */
+export interface VerificationError {
+  code: string;
+  message: string;
+}
+
+/**
+ * Result of a verification request
+ * The parent SDK makes the API call and returns this to the iframe
+ */
+export interface VerificationResult {
+  success: boolean;
+  data?: VerificationData;
+  error?: VerificationError;
+}
+
+/**
  * Methods exposed by the SDK (host/parent) that the recorder can call
  */
 export interface HostSchema {
@@ -42,6 +70,11 @@ export interface HostSchema {
   recordingActive: () => void;
   recordingRetained: () => void;
   recordingInactive: () => void;
+  /**
+   * Request domain verification from parent
+   * Parent makes the API call so the request origin is the parent's domain
+   */
+  requestVerification: (token: string, workspaceIds: string[]) => Promise<VerificationResult>;
 }
 
 /**

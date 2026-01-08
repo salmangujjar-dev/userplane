@@ -30,6 +30,19 @@ app.get('/favicon.svg', serveStatic({ path: './public/favicon.svg' }));
 
 // Middleware
 app.use('*', honoLogger());
+
+// Public endpoints that allow any origin (called from customer websites)
+// These need permissive CORS since the origin is the customer's domain being verified
+app.use(
+  '/api/v1/domains/verify',
+  cors({
+    origin: '*',
+    credentials: false,
+    maxAge: env.cors.maxAge,
+  })
+);
+
+// Default CORS for authenticated endpoints
 app.use(
   '*',
   cors({
@@ -38,6 +51,7 @@ app.use(
     maxAge: env.cors.maxAge,
   })
 );
+
 app.use('*', prettyJSON());
 
 // Better Auth routes - must come before API routes

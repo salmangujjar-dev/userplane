@@ -21,4 +21,7 @@ export {
   type GuestSchema,
   type CustomMetadata,
   type SerializableObject,
+  type VerificationData,
+  type VerificationError,
+  type VerificationResult,
 } from './types';
