@@ -8,7 +8,6 @@ export {
   CrossTabCoordinator,
   getCrossTabCoordinator,
   resetCrossTabCoordinator,
-  type CrossTabRecorderState,
   type AcquireLockResult,
   type CrossTabCoordinatorCallbacks,
   type CrossTabCoordinatorConfig,
@@ -22,6 +21,6 @@ export {
   type CustomMetadata,
   type SerializableObject,
   type VerificationData,
-  type VerificationError,
-  type VerificationResult,
 } from './types';
+
+export { type VerificationResult } from './connection';

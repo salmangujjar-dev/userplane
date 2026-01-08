@@ -16,6 +16,7 @@ import { DEFAULT_RECORDING_PREFERENCES } from '@/types/session-preferences';
 import { generateVideoThumbnail } from '@/utils/video-thumbnail';
 import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
 import { type RecordingError, classifyError } from '@/types/errors';
+import { createClientError, createClientErrorWithMessage } from '@/lib/client-errors';
 
 export type FlowState =
   | 'loading'
@@ -111,50 +112,35 @@ export function useRecordingFlow(
 
     if (!linkToken || linkToken.trim() === '') {
       console.error('[Flow] Error: No link token provided');
-      setError({
-        title: 'Invalid link',
-        message: 'No link token provided',
-      });
+      setError(createClientError('CLIENT_LINK_TOKEN_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (!action || action.trim() === '') {
       console.error('[Flow] Error: No action provided');
-      setError({
-        title: 'Invalid link',
-        message: 'No action specified in the link',
-      });
+      setError(createClientError('CLIENT_LINK_ACTION_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (action !== 'recording') {
       console.error('[Flow] Error: Invalid action:', action);
-      setError({
-        title: 'Invalid action',
-        message: `Action "${action}" is not supported`,
-      });
+      setError(createClientError('CLIENT_LINK_ACTION_INVALID'));
       setFlowState('error');
       return;
     }
 
     if (!workspaceIds || workspaceIds.length === 0) {
       console.error('[Flow] Error: No workspace IDs provided');
-      setError({
-        title: 'Invalid link',
-        message: 'No workspace ID provided in the link',
-      });
+      setError(createClientError('CLIENT_LINK_WORKSPACE_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (!isScreenRecordingSupported()) {
       console.error('[Flow] Error: Screen recording not supported');
-      setError({
-        title: 'Not supported',
-        message: 'Screen recording is not supported in your browser',
-      });
+      setError(createClientError('CLIENT_BROWSER_UNSUPPORTED'));
       setFlowState('error');
       return;
     }
@@ -260,10 +246,7 @@ export function useRecordingFlow(
     // Validate workspace ID from the decoded session properties
     if (!session.workspaceId) {
       console.error('[Flow] Session missing workspace ID');
-      setError({
-        title: 'Invalid session',
-        message: 'Session is missing workspace information',
-      });
+      setError(createClientError('CLIENT_SESSION_WORKSPACE_MISSING'));
       setFlowState('error');
       return;
     }
@@ -274,10 +257,7 @@ export function useRecordingFlow(
       console.error('[Flow] Workspace ID mismatch - none of the provided IDs match');
       console.error('[Flow] Expected one of:', expectedWorkspaceIds);
       console.error('[Flow] Session contains:', session.workspaceId);
-      setError({
-        title: 'Workspace mismatch',
-        message: 'This recording link is not valid for this workspace',
-      });
+      setError(createClientError('CLIENT_LINK_WORKSPACE_MISMATCH'));
       setFlowState('error');
       return;
     }
@@ -426,11 +406,12 @@ export function useRecordingFlow(
           actual: durationMs,
           limit: maxRecordingDurationMs,
         });
-        setError({
-          title: 'Recording too long',
-          message: `Recording duration (${Math.round(durationMs / 1000)}s) exceeds the maximum allowed (${Math.round(maxRecordingDurationMs / 1000)}s)`,
-          primaryAction: { label: 'Start over', action: 'start-over' },
-        });
+        setError(
+          createClientErrorWithMessage(
+            'CLIENT_RECORDING_DURATION_EXCEEDED',
+            `Recording duration (${Math.round(durationMs / 1000)}s) exceeds the maximum allowed (${Math.round(maxRecordingDurationMs / 1000)}s)`
+          )
+        );
         setFlowState('error');
         return;
       }
@@ -440,11 +421,12 @@ export function useRecordingFlow(
           actual: blob.size,
           limit: maxRecordingSize,
         });
-        setError({
-          title: 'Recording too large',
-          message: `Recording size (${Math.round(blob.size / 1048576)}MB) exceeds the maximum allowed (${Math.round(maxRecordingSize / 1048576)}MB)`,
-          primaryAction: { label: 'Start over', action: 'start-over' },
-        });
+        setError(
+          createClientErrorWithMessage(
+            'CLIENT_RECORDING_SIZE_EXCEEDED',
+            `Recording size (${Math.round(blob.size / 1048576)}MB) exceeds the maximum allowed (${Math.round(maxRecordingSize / 1048576)}MB)`
+          )
+        );
         setFlowState('error');
         return;
       }
@@ -505,22 +487,14 @@ export function useRecordingFlow(
     }
 
     if (!recordingBlob) {
-      setError({
-        title: 'No recording',
-        message: 'No recording to submit',
-        primaryAction: { label: 'Start over', action: 'start-over' },
-      });
+      setError(createClientError('CLIENT_RECORDING_MISSING'));
       setFlowState('error');
       setIsProcessing(false);
       return;
     }
 
     if (!sessionRef.current) {
-      setError({
-        title: 'Session expired',
-        message: 'No active session',
-        primaryAction: { label: 'Start over', action: 'start-over' },
-      });
+      setError(createClientError('CLIENT_SESSION_MISSING'));
       setFlowState('error');
       setIsProcessing(false);
       return;
@@ -620,22 +594,14 @@ export function useRecordingFlow(
   async function retryUpload() {
     if (!uploadState) {
       console.error('[Flow] No upload state available for retry');
-      setError({
-        title: 'Cannot retry',
-        message: 'No upload state available. Please start over.',
-        primaryAction: { label: 'Start over', action: 'start-over' },
-      });
+      setError(createClientError('CLIENT_UPLOAD_STATE_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (!sessionRef.current) {
       console.error('[Flow] No active session');
-      setError({
-        title: 'Session expired',
-        message: 'No active session. Please start over.',
-        primaryAction: { label: 'Start over', action: 'start-over' },
-      });
+      setError(createClientError('CLIENT_SESSION_MISSING'));
       setFlowState('error');
       return;
     }

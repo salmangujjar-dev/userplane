@@ -12,4 +12,4 @@ export {
   POST_RECORDING_ERROR_COPY,
 } from './post-recording';
 export { NOT_FOUND_COPY } from './errors';
-export { VERIFICATION_COPY, VERIFICATION_ERROR_COPY } from './verification';
+export { VERIFICATION_COPY } from './verification';

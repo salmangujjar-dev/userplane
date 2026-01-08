@@ -42,21 +42,15 @@ export interface VerificationData {
 }
 
 /**
- * Verification error information
+ * Raw verification result from parent SDK (wire format)
  */
-export interface VerificationError {
-  code: string;
-  message: string;
-}
-
-/**
- * Result of a verification request
- * The parent SDK makes the API call and returns this to the iframe
- */
-export interface VerificationResult {
+export interface ParentVerificationResult {
   success: boolean;
   data?: VerificationData;
-  error?: VerificationError;
+  error?: {
+    code: string;
+    message: string;
+  };
 }
 
 /**
@@ -74,7 +68,7 @@ export interface HostSchema {
    * Request domain verification from parent
    * Parent makes the API call so the request origin is the parent's domain
    */
-  requestVerification: (token: string, workspaceIds: string[]) => Promise<VerificationResult>;
+  requestVerification: (token: string, workspaceIds: string[]) => Promise<ParentVerificationResult>;
 }
 
 /**
