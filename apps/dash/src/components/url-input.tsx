@@ -13,6 +13,37 @@ interface URLInputProps {
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
+// Detect protocol and strip it from display value
+const processUrl = (url: string): { protocol: 'http' | 'https'; cleanUrl: string } => {
+  const httpMatch = url.match(/^http:\/\//i);
+  const httpsMatch = url.match(/^https:\/\//i);
+
+  let cleanUrl = url;
+  let detectedProtocol: 'http' | 'https' = 'https';
+
+  if (httpMatch) {
+    detectedProtocol = 'http';
+    cleanUrl = url.replace(/^http:\/\//i, '');
+  } else if (httpsMatch) {
+    detectedProtocol = 'https';
+    cleanUrl = url.replace(/^https:\/\//i, '');
+  }
+
+  return { protocol: detectedProtocol, cleanUrl };
+};
+
+// Split URL into origin and path for styling
+const splitUrlForDisplay = (url: string): { origin: string; path: string } => {
+  const firstSlashIndex = url.indexOf('/');
+  if (firstSlashIndex === -1) {
+    return { origin: url, path: '' };
+  }
+  return {
+    origin: url.substring(0, firstSlashIndex),
+    path: url.substring(firstSlashIndex),
+  };
+};
+
 export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
   (
     { value, onChange, placeholder = 'example.com', className, error, id, onKeyDown, ...props },
@@ -24,28 +55,6 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
     // Expose input ref to parent if provided
     React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
-    // Detect protocol and strip it from display value
-    const processUrl = (url: string): { protocol: 'http' | 'https'; cleanUrl: string } => {
-      const httpMatch = url.match(/^http:\/\//i);
-      const httpsMatch = url.match(/^https:\/\//i);
-
-      let cleanUrl = url;
-      let detectedProtocol: 'http' | 'https' = 'https';
-
-      if (httpMatch) {
-        detectedProtocol = 'http';
-        cleanUrl = url.replace(/^http:\/\//i, '');
-      } else if (httpsMatch) {
-        detectedProtocol = 'https';
-        cleanUrl = url.replace(/^https:\/\//i, '');
-      }
-
-      // Trim trailing slashes
-      cleanUrl = cleanUrl.replace(/\/+$/, '');
-
-      return { protocol: detectedProtocol, cleanUrl };
-    };
-
     // Initialize protocol from value prop
     React.useEffect(() => {
       if (value) {
@@ -56,20 +65,24 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
 
     // Handle input changes and detect protocol
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      let inputValue = e.target.value;
+      const inputValue = e.target.value;
 
-      // Trim trailing slashes from input
-      inputValue = inputValue.replace(/\/+$/, '');
+      // Check if user explicitly typed a protocol
+      const hasProtocol = inputValue.match(/^https?:\/\//i);
 
-      const { protocol: detectedProtocol, cleanUrl } = processUrl(inputValue);
+      let finalProtocol = protocol;
+      let cleanUrl = inputValue;
 
-      // Update protocol state if user typed a protocol
-      if (inputValue.match(/^https?:\/\//i)) {
+      if (hasProtocol) {
+        // User typed a protocol, extract it
+        const { protocol: detectedProtocol, cleanUrl: extractedUrl } = processUrl(inputValue);
+        finalProtocol = detectedProtocol;
+        cleanUrl = extractedUrl;
         setProtocol(detectedProtocol);
       }
 
-      // Always return the full URL with protocol, without trailing slash
-      const finalUrl = `${detectedProtocol}://${cleanUrl}`;
+      // Return the full URL with the current protocol state
+      const finalUrl = `${finalProtocol}://${cleanUrl}`;
       onChange(finalUrl);
     };
 
@@ -79,21 +92,8 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
     const toggleProtocol = () => {
       const newProtocol = protocol === 'https' ? 'http' : 'https';
       setProtocol(newProtocol);
-      // Trim trailing slashes when toggling protocol
       const finalUrl = `${newProtocol}://${displayValue}`;
       onChange(finalUrl);
-    };
-
-    // Split URL into origin and path for styling
-    const splitUrlForDisplay = (url: string): { origin: string; path: string } => {
-      const firstSlashIndex = url.indexOf('/');
-      if (firstSlashIndex === -1) {
-        return { origin: url, path: '' };
-      }
-      return {
-        origin: url.substring(0, firstSlashIndex),
-        path: url.substring(firstSlashIndex),
-      };
     };
 
     const { origin, path } = splitUrlForDisplay(displayValue);
@@ -142,7 +142,9 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
               />
             </svg>
           )}
-          <span className="text-sm font-medium text-muted-foreground">{protocol}://</span>
+          <span className="inline-block w-[60px] text-sm font-medium text-muted-foreground">
+            {protocol}://
+          </span>
         </button>
         <div className="relative flex-1">
           <input
