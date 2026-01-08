@@ -15,6 +15,28 @@ interface VerifiedScreenProps {
   workspaceName?: string | null;
 }
 
+/**
+ * Extract clean hostname from URL
+ * Handles protocols, paths, query strings, etc.
+ * Returns just the hostname (e.g., "example.com", "app.example.com")
+ */
+function extractHostname(url: string): string {
+  try {
+    // If URL doesn't have a protocol, add one for parsing
+    const urlToParse = url.match(/^https?:\/\//) ? url : `https://${url}`;
+    const parsedUrl = new URL(urlToParse);
+    return parsedUrl.hostname;
+  } catch (error) {
+    // Fallback: if URL parsing fails, return the input cleaned up
+    console.warn('[VerifiedScreen] Failed to parse URL:', url, error);
+    return url
+      .replace(/^https?:\/\//, '')
+      .split('/')[0]
+      .split('?')[0]
+      .split('#')[0];
+  }
+}
+
 export default function VerifiedScreen({
   domainUrl,
   workspaceLogoUrl,
@@ -23,6 +45,7 @@ export default function VerifiedScreen({
   const { isEmbedded, isStandalone } = useAppMode();
   const bridge = useBridge();
   const cleanupDoneRef = useRef(false);
+  const displayUrl = extractHostname(domainUrl);
 
   // Auto-close after delay
   useEffect(() => {
@@ -59,8 +82,22 @@ export default function VerifiedScreen({
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
           Domain verified
         </h1>
-        <p className="text-sm sm:text-base text-gray-600 mb-2">
-          <span className="font-medium">{domainUrl}</span> has been successfully verified.
+        <p className="text-sm sm:text-base text-gray-600 mb-2 flex items-center justify-center gap-2">
+          <svg
+            className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+            />
+          </svg>
+          <span className="font-medium">{displayUrl}</span> has been successfully verified.
         </p>
         <p className="text-xs sm:text-sm text-gray-500">This window will close automatically</p>
       </div>

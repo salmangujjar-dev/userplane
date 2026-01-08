@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import VerificationErrorScreen from './VerificationErrorScreen';
+import { VERIFICATION_ERROR_COPY } from '@/constants/copy/verification';
 
 const meta = {
   title: 'Verification/VerificationErrorScreen',
@@ -14,39 +15,59 @@ type Story = StoryObj<typeof meta>;
 
 export const TokenInvalid: Story = {
   args: {
-    title: 'Invalid verification token',
-    subtitle:
-      'The verification token is invalid or has expired. Please request a new verification link.',
+    title: VERIFICATION_ERROR_COPY.tokenInvalid.title,
+    subtitle: VERIFICATION_ERROR_COPY.tokenInvalid.subtitle,
   },
 };
 
-export const DomainNotFound: Story = {
+export const DomainNotRegistered: Story = {
   args: {
-    title: 'Domain not found',
-    subtitle: 'This domain is not registered in your workspace. Please add the domain first.',
+    title: VERIFICATION_ERROR_COPY.domainNotRegistered.title,
+    subtitle: VERIFICATION_ERROR_COPY.domainNotRegistered.subtitle,
+  },
+};
+
+export const WorkspaceMismatch: Story = {
+  args: {
+    title: VERIFICATION_ERROR_COPY.workspaceMismatch.title,
+    subtitle: VERIFICATION_ERROR_COPY.workspaceMismatch.subtitle,
+  },
+};
+
+export const UrlInvalid: Story = {
+  args: {
+    title: VERIFICATION_ERROR_COPY.urlInvalid.title,
+    subtitle: VERIFICATION_ERROR_COPY.urlInvalid.subtitle,
+  },
+};
+
+export const OriginInvalid: Story = {
+  args: {
+    title: VERIFICATION_ERROR_COPY.originInvalid.title,
+    subtitle: VERIFICATION_ERROR_COPY.originInvalid.subtitle,
   },
 };
 
 export const OriginMismatch: Story = {
   args: {
-    title: 'Origin mismatch',
-    subtitle: 'This verification link must be opened from the registered domain.',
+    title: VERIFICATION_ERROR_COPY.originMismatch.title,
+    subtitle: VERIFICATION_ERROR_COPY.originMismatch.subtitle,
   },
 };
 
-export const WithRetryAction: Story = {
+export const VerificationFailed: Story = {
   args: {
-    title: 'Verification failed',
-    subtitle: 'Unable to verify domain ownership. Please try again.',
+    title: VERIFICATION_ERROR_COPY.verificationFailed.title,
+    subtitle: VERIFICATION_ERROR_COPY.verificationFailed.subtitle,
     primaryActionText: 'Try again',
     onPrimaryAction: () => console.log('Retry clicked'),
   },
 };
 
-export const WithSecondaryAction: Story = {
+export const NetworkError: Story = {
   args: {
-    title: 'Connection error',
-    subtitle: 'Unable to connect to the server. Please check your internet connection.',
+    title: VERIFICATION_ERROR_COPY.networkError.title,
+    subtitle: VERIFICATION_ERROR_COPY.networkError.subtitle,
     primaryActionText: 'Try again',
     onPrimaryAction: () => console.log('Retry clicked'),
     secondaryActionText: 'Cancel',
@@ -54,10 +75,17 @@ export const WithSecondaryAction: Story = {
   },
 };
 
+export const UnknownError: Story = {
+  args: {
+    title: VERIFICATION_ERROR_COPY.unknownError.title,
+    subtitle: VERIFICATION_ERROR_COPY.unknownError.subtitle,
+  },
+};
+
 export const WithBranding: Story = {
   args: {
-    title: 'Verification failed',
-    subtitle: 'Unable to verify domain ownership. Please try again.',
+    title: VERIFICATION_ERROR_COPY.verificationFailed.title,
+    subtitle: VERIFICATION_ERROR_COPY.verificationFailed.subtitle,
     workspaceName: 'Acme Inc.',
     workspaceLogoUrl: '/logo-dark.svg',
     primaryColor: '#4F46E5',

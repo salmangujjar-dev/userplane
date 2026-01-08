@@ -5,7 +5,7 @@ import {
   defaultPreferenceArgs,
   argsToPreferences,
   type PreferenceArgs,
-} from '../../.storybook/preferences-args';
+} from '@stories/preferences-args';
 
 type StoryArgs = PreferenceArgs;
 
