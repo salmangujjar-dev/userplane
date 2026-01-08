@@ -19,12 +19,20 @@ export class FrameManager {
   private bridge: BridgeConnection | null = null;
   private bridgeCallbacks: BridgeCallbacks = {};
   private tabRef: string = '';
+  private verificationBaseUrl: string = '';
 
   /**
    * Set the tab reference to be shared with the recorder
    */
   public setTabRef(tabRef: string): void {
     this.tabRef = tabRef;
+  }
+
+  /**
+   * Set the verification API base URL
+   */
+  public setVerificationBaseUrl(url: string): void {
+    this.verificationBaseUrl = url;
   }
 
   /**
@@ -84,9 +92,10 @@ export class FrameManager {
 
     console.log('[FrameManager] Establishing bridge connection');
 
-    // Create bridge with tabRef and callbacks
+    // Create bridge with tabRef, verificationBaseUrl, and callbacks
     this.bridge = new BridgeConnection({
       tabRef: this.tabRef,
+      verificationBaseUrl: this.verificationBaseUrl,
       callbacks: {
         ...this.bridgeCallbacks,
         onRequestClose: () => {

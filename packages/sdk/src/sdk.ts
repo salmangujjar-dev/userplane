@@ -47,6 +47,7 @@ import {
 // Internal state
 let frameManager: FrameManager | null = null;
 let recorderBaseUrl = 'http://localhost:4322';
+let verificationBaseUrl = 'http://localhost:3001/api/v1';
 let initialized = false;
 let pendingParams: RecorderParams | null = null;
 let tabRef: string | null = null;
@@ -178,6 +179,14 @@ export function initialize(options: InitializeOptions = {}): void {
   if (options.recorderBaseUrl) {
     recorderBaseUrl = options.recorderBaseUrl;
   }
+
+  // Set verification API base URL
+  if (options.verificationBaseUrl) {
+    verificationBaseUrl = options.verificationBaseUrl;
+  }
+
+  // Pass verification URL to frame manager for bridge connections
+  frameManager.setVerificationBaseUrl(verificationBaseUrl);
 
   // Determine open behavior
   const openImmediately = options.openImmediately;

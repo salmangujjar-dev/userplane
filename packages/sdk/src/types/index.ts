@@ -3,7 +3,14 @@
  */
 
 // Re-export bridge types for external use
-export type { RecordingState, RecordingSessionInfo, RecordingContext } from '../bridge/types';
+export type {
+  RecordingState,
+  RecordingSessionInfo,
+  RecordingContext,
+  VerificationData,
+  VerificationError,
+  VerificationResult,
+} from '../bridge/types';
 
 /**
  * Valid action types for the recorder
@@ -101,6 +108,13 @@ export interface InitializeOptions {
    * Defaults to production CDN URL.
    */
   recorderBaseUrl?: string;
+
+  /**
+   * Base URL for the verification API.
+   * Used for domain verification requests where origin validation is needed.
+   * Defaults to localhost for development.
+   */
+  verificationBaseUrl?: string;
 
   /**
    * Whether to auto-open recorder when URL params are detected.

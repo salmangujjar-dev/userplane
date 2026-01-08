@@ -10,6 +10,7 @@ import type {
   RecordingState,
   RecordingSessionInfo,
   RecordingContext,
+  VerificationResult,
 } from './types';
 import { URL_PARAMS } from '../constants';
 import { getCustomMetadata } from '@workspace/metadata';
@@ -29,6 +30,7 @@ export interface BridgeCallbacks {
 export interface BridgeConnectionOptions {
   callbacks?: BridgeCallbacks;
   tabRef: string;
+  verificationBaseUrl: string;
 }
 
 /**
@@ -40,6 +42,7 @@ export class BridgeConnection {
   private originalTitle: string = '';
   private tabRef: string;
   private callbacks: BridgeCallbacks;
+  private verificationBaseUrl: string;
 
   private context: RecordingContext = {
     state: 'inactive',
@@ -54,6 +57,7 @@ export class BridgeConnection {
   constructor(options: BridgeConnectionOptions) {
     this.tabRef = options.tabRef;
     this.callbacks = options.callbacks ?? {};
+    this.verificationBaseUrl = options.verificationBaseUrl;
   }
 
   /**
@@ -88,6 +92,7 @@ export class BridgeConnection {
       recordingActive: this.handleRecordingActive.bind(this),
       recordingRetained: this.handleRecordingRetained.bind(this),
       recordingInactive: this.handleRecordingInactive.bind(this),
+      requestVerification: this.handleRequestVerification.bind(this),
     };
 
     try {
@@ -249,6 +254,155 @@ export class BridgeConnection {
     console.log('[Bridge] Recording inactive');
     this.updateState('inactive');
     this.disableTabUnloadProtection();
+  }
+
+  /**
+   * Handle verification request from the iframe
+   * Makes the API call from the parent window so the origin header is correct
+   * This is required because the API validates the origin against registered domains
+   *
+   * API Contract (POST /domains/verify):
+   * - Request: { token: string, workspaceIds: string[] }
+   * - Success: { message: string, data: { domainStatus, workspaceId, domainId, domainUrl } }
+   * - Error: { code: string, message: string, status: number }
+   */
+  private async handleRequestVerification(
+    token: string,
+    workspaceIds: string[]
+  ): Promise<VerificationResult> {
+    console.log('[Bridge] Handling verification request');
+    console.log('[Bridge] Token:', token.substring(0, 20) + '...');
+    console.log('[Bridge] Workspace IDs:', workspaceIds);
+
+    try {
+      const response = await fetch(`${this.verificationBaseUrl}/domains/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, workspaceIds }),
+      });
+
+      // Parse response body - may fail if not valid JSON
+      const json = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        return this.parseVerificationError(json, response.status);
+      }
+
+      return this.parseVerificationSuccess(json);
+    } catch (error) {
+      console.error('[Bridge] Verification request error:', error);
+
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: error instanceof Error ? error.message : 'Network request failed',
+        },
+      };
+    }
+  }
+
+  /**
+   * Parse successful verification response
+   * Validates the response structure matches the contract
+   */
+  private parseVerificationSuccess(json: unknown): VerificationResult {
+    // Type guard for API response structure: { message: string, data: {...} }
+    if (!this.isValidApiResponse(json)) {
+      console.error('[Bridge] Invalid API response structure:', json);
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_RESPONSE',
+          message: 'Invalid response structure from API',
+        },
+      };
+    }
+
+    const { data } = json;
+
+    // Extract and validate required fields from DomainVerificationDataSchema
+    const domainStatus = this.extractString(data, 'domainStatus');
+    const workspaceId = this.extractString(data, 'workspaceId');
+    const domainId = this.extractString(data, 'domainId');
+    const domainUrl = this.extractString(data, 'domainUrl');
+
+    if (!domainStatus || !workspaceId || !domainId || !domainUrl) {
+      console.error('[Bridge] Missing required fields in verification data:', data);
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_RESPONSE',
+          message: 'Missing required fields in verification response',
+        },
+      };
+    }
+
+    console.log('[Bridge] Verification successful:', {
+      domainStatus,
+      workspaceId,
+      domainId,
+      domainUrl,
+    });
+
+    return {
+      success: true,
+      data: {
+        domainStatus,
+        workspaceId,
+        domainId,
+        domainUrl,
+      },
+    };
+  }
+
+  /**
+   * Parse verification error response
+   * Extracts error code and message from oRPC error format
+   */
+  private parseVerificationError(json: unknown, status: number): VerificationResult {
+    // oRPC error format: { code: string, message: string, status?: number }
+    const errorCode = this.extractString(json, 'code') ?? `HTTP_${status}`;
+    const errorMessage = this.extractString(json, 'message') ?? `Verification failed (${status})`;
+
+    console.error('[Bridge] Verification failed:', { errorCode, errorMessage, status });
+
+    return {
+      success: false,
+      error: {
+        code: errorCode,
+        message: errorMessage,
+      },
+    };
+  }
+
+  /**
+   * Type guard for valid API response structure
+   * Matches ApiResponseSchema: { message: string, data: object }
+   */
+  private isValidApiResponse(
+    json: unknown
+  ): json is { message: string; data: Record<string, unknown> } {
+    return (
+      typeof json === 'object' &&
+      json !== null &&
+      'message' in json &&
+      typeof (json as Record<string, unknown>).message === 'string' &&
+      'data' in json &&
+      typeof (json as Record<string, unknown>).data === 'object' &&
+      (json as Record<string, unknown>).data !== null
+    );
+  }
+
+  /**
+   * Safely extract a string property from an unknown object
+   */
+  private extractString(obj: unknown, key: string): string | undefined {
+    if (typeof obj !== 'object' || obj === null) return undefined;
+    const value = (obj as Record<string, unknown>)[key];
+    return typeof value === 'string' ? value : undefined;
   }
 
   /**
