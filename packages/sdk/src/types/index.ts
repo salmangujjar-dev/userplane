@@ -89,9 +89,12 @@ export interface InitializeOptions {
   /**
    * Workspace ID(s) for validation.
    * Defaults to reading from <meta name="userplane:workspace"> tags.
-   * Can be a single ID or comma-separated list.
+   * Accepts:
+   * - Single ID: 'ws_xxx'
+   * - Comma-separated: 'ws_xxx,ws_yyy'
+   * - Array: ['ws_xxx', 'ws_yyy']
    */
-  workspaceId?: string;
+  workspaceId?: string | string[];
 
   /**
    * Base URL for the recorder app.
