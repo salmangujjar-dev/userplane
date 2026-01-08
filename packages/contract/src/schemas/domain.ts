@@ -7,10 +7,12 @@ import { DomainStatusSchema } from './common';
 
 /**
  * Domain verification request (detailed mode)
+ * Accepts multiple workspace IDs (max 10) for SDK flexibility
  */
 export const VerifyDomainSchema = z.object({
   body: z.object({
     token: z.string().min(1),
+    workspaceIds: z.array(z.string().min(1)).min(1).max(10),
   }),
 });
 

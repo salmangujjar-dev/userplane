@@ -42,7 +42,16 @@ export const verifyDomainImpl = (domainService: DomainService) => {
       });
     }
 
-    const domain = await domainService.verifyDomain(input.body.token, originHostname);
+    console.log('[verifyDomainImpl] Origin hostname:', originHostname);
+    console.log('[verifyDomainImpl] Workspace IDs from body:', input.body.workspaceIds);
+
+    const domain = await domainService.verifyDomain(
+      input.body.token,
+      originHostname,
+      input.body.workspaceIds
+    );
+
+    console.log('[verifyDomainImpl] Domain verified:', domain);
 
     return {
       message: 'Domain verified successfully',
