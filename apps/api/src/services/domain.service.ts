@@ -253,8 +253,12 @@ export class DomainService {
    * Compares hostname and path between origin and stored domain URL
    * Returns the updated domain record
    * Throws domain-specific errors for validation errors, DOMAIN_NOT_REGISTERED if domain not registered
+   *
+   * @param token - JWT verification token
+   * @param originHostname - Hostname from the request origin header
+   * @param workspaceIds - Workspace IDs from the SDK (token's workspace must be in this list)
    */
-  async verifyDomain(token: string, originHostname: string) {
+  async verifyDomain(token: string, originHostname: string, workspaceIds: string[]) {
     // Verify JWT token
     const payload = this.deps.tokenService.verifyDomainToken(token);
 
@@ -262,6 +266,17 @@ export class DomainService {
       throw new ORPCError('DOMAIN_VERIFICATION_TOKEN_INVALID', {
         status: 401,
         message: 'Invalid verification token',
+      });
+    }
+
+    console.log('[verifyDomain] Payload:', payload);
+    console.log('[verifyDomain] Workspace IDs from SDK:', workspaceIds);
+
+    // Verify token's workspace ID is in the list from SDK
+    if (!workspaceIds.includes(payload.workspaceId)) {
+      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
+        status: 403,
+        message: 'Token workspace not in SDK workspace list',
       });
     }
 
