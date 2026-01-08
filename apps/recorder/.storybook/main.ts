@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  stories: ['../src/**/*.mdx', '../src/**/*.stories.{js,jsx,mjs,ts,tsx}'],
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y', '@chromatic-com/storybook'],
   framework: '@storybook/react-vite',
   viteFinal: async (config) => {
