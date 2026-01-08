@@ -11,6 +11,7 @@ import type {
   RecordingState,
   RecordingSessionInfo,
   CustomMetadata,
+  VerificationResult,
 } from './types';
 import { type CrossTabCoordinator } from './cross-tab';
 
@@ -84,7 +85,9 @@ export class RecorderBridgeConnection {
     if (!remote) return;
 
     try {
-      this.state.tabRef = remote.getTabRef();
+      // Remote calls via postbridge are async, must await
+      // Promise.resolve wrapper silences ts(80007) warning since TS can't infer postbridge returns a Promise
+      this.state.tabRef = await Promise.resolve(remote.getTabRef());
       console.log('[RecorderBridge] Got tab ref from parent:', this.state.tabRef);
     } catch (error) {
       console.error('[RecorderBridge] Failed to fetch tab ref:', error);
@@ -147,12 +150,56 @@ export class RecorderBridgeConnection {
     }
 
     try {
-      const metadata = remote.getCustomMetadata();
+      // Remote calls via postbridge are async, must await
+      // Promise.resolve wrapper silences ts(80007) warning since TS can't infer postbridge returns a Promise
+      const metadata = await Promise.resolve(remote.getCustomMetadata());
       console.log('[RecorderBridge] Got custom metadata from parent:', metadata);
       return metadata;
     } catch (error) {
       console.error('[RecorderBridge] Failed to get custom metadata:', error);
       return null;
+    }
+  }
+
+  /**
+   * Request domain verification from the parent SDK
+   * The parent makes the API call so the request origin is the parent's domain
+   * This is required because the API validates the origin against registered domains
+   *
+   * @param token - Verification JWT token
+   * @param workspaceIds - Workspace IDs from the SDK/meta tags
+   * @returns Verification result with success/error status
+   */
+  public async requestVerification(
+    token: string,
+    workspaceIds: string[]
+  ): Promise<VerificationResult> {
+    const remote = this.getRemote();
+    if (!remote) {
+      console.log('[RecorderBridge] Not connected, cannot request verification');
+      return {
+        success: false,
+        error: {
+          code: 'NOT_CONNECTED',
+          message: 'Bridge not connected to parent SDK',
+        },
+      };
+    }
+
+    try {
+      console.log('[RecorderBridge] Requesting verification from parent');
+      const result = await remote.requestVerification(token, workspaceIds);
+      console.log('[RecorderBridge] Verification result from parent:', result);
+      return result;
+    } catch (error) {
+      console.error('[RecorderBridge] Failed to request verification:', error);
+      return {
+        success: false,
+        error: {
+          code: 'BRIDGE_ERROR',
+          message: error instanceof Error ? error.message : 'Bridge communication failed',
+        },
+      };
     }
   }
 

@@ -38,8 +38,9 @@ function VerificationAppContent() {
     parseWorkspaceIds(getUrlParams().workspace)
   );
 
-  // Initialize verification flow
-  const { state, actions } = useVerificationFlow(token, workspaceIds);
+  // Initialize verification flow with bridge for parent communication
+  // The bridge is used to request verification from parent so the origin is correct
+  const { state, actions } = useVerificationFlow(token, workspaceIds, bridge);
 
   // Effect to extract URL params
   useEffect(() => {
