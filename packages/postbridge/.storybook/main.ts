@@ -4,9 +4,6 @@ import remarkGfm from 'remark-gfm';
 const config: StorybookConfig = {
   stories: ['../stories/**/*.mdx'],
   addons: [
-    '@storybook/addon-links',
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
     {
       name: '@storybook/addon-docs',
       options: {
@@ -17,6 +14,7 @@ const config: StorybookConfig = {
         },
       },
     },
+    '@chromatic-com/storybook',
   ],
   framework: {
     name: '@storybook/react-vite',
@@ -29,9 +27,7 @@ const config: StorybookConfig = {
     }
     return config;
   },
-  docs: {
-    autodocs: 'tag',
-  },
+  docs: {},
   core: {
     disableTelemetry: true,
   },
