@@ -46,11 +46,30 @@ import {
 
 // Internal state
 let frameManager: FrameManager | null = null;
-let recorderBaseUrl = 'http://localhost:4322/r';
+let recorderBaseUrl = 'http://localhost:4322';
 let initialized = false;
 let pendingParams: RecorderParams | null = null;
 let tabRef: string | null = null;
 let initOptions: InitializeOptions = {};
+
+/**
+ * Path mappings for different action types
+ */
+const ACTION_PATHS: Record<ActionType, string> = {
+  recording: '/r',
+  verify: '/verify',
+  capture: '/r', // Fallback to recording path
+};
+
+/**
+ * Get the full URL for a given action type
+ */
+function getActionUrl(baseUrl: string, action: ActionType): string {
+  const path = ACTION_PATHS[action] || ACTION_PATHS.recording;
+  // Remove trailing slash from baseUrl if present
+  const normalizedBase = baseUrl.replace(/\/$/, '');
+  return `${normalizedBase}${path}`;
+}
 
 /**
  * Set up bridge callbacks for internal logging
@@ -75,10 +94,17 @@ function setupBridgeCallbacks(): void {
 
 /**
  * Parse workspace IDs from options or meta tags
+ * Handles string, comma-separated string, or array of strings
  */
 function getWorkspaceIds(options: InitializeOptions): string[] {
   if (options.workspaceId) {
-    return options.workspaceId.split(',').map((id) => id.trim());
+    if (Array.isArray(options.workspaceId)) {
+      return options.workspaceId.map((id) => id.trim()).filter(Boolean);
+    }
+    return options.workspaceId
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
   }
   return readWorkspaceIds();
 }
@@ -159,34 +185,45 @@ export function initialize(options: InitializeOptions = {}): void {
   // If openImmediately is a string, it's a token to open immediately
   if (typeof openImmediately === 'string') {
     const workspaceIds = getWorkspaceIds(options);
+    const action: ActionType = 'recording';
     const params: RecorderParams = {
-      baseUrl: recorderBaseUrl,
+      baseUrl: getActionUrl(recorderBaseUrl, action),
       workspaceIds,
       token: openImmediately,
-      action: 'recording',
+      action,
     };
     frameManager.tryMount(params);
     return;
   }
 
-  // Check URL for recording params
+  // Check URL for recording/verification params
   const urlData = parseUserplaneUrl(window.location.href);
   if (!urlData || !urlData.token) {
-    console.log('[Userplane] No recording action in URL');
+    console.log('[Userplane] No userplane action in URL');
     return;
   }
 
-  console.log('[Userplane] Recording action detected');
+  const action: ActionType = urlData.action || 'recording';
+  console.log('[Userplane] Userplane action detected');
   console.log('[Userplane] Token:', urlData.token.substring(0, 20) + '...');
-  console.log('[Userplane] Action:', urlData.action);
+  console.log('[Userplane] Action:', action);
 
+  // Route to appropriate handler based on action
+  if (action === 'verify') {
+    // Verification always mounts immediately (no deferred mode)
+    console.log('[Userplane] Auto-mounting verification');
+    mountVerification(urlData.token);
+    return;
+  }
+
+  // Recording flow
   const workspaceIds = getWorkspaceIds(options);
 
   const params: RecorderParams = {
-    baseUrl: recorderBaseUrl,
+    baseUrl: getActionUrl(recorderBaseUrl, 'recording'),
     workspaceIds,
     token: urlData.token,
-    action: urlData.action || 'recording',
+    action: 'recording',
   };
 
   // Auto-open if enabled (default: true)
@@ -247,12 +284,20 @@ export function open(token?: string): boolean {
   if (token) {
     const workspaceIds = getWorkspaceIds(initOptions);
     params = {
-      baseUrl: recorderBaseUrl,
+      baseUrl: getActionUrl(recorderBaseUrl, 'recording'),
       workspaceIds,
       token,
       action: 'recording',
     };
   } else if (pendingParams) {
+    // Only allow recording from pending params
+    if (pendingParams.action !== 'recording') {
+      console.error(
+        '[Userplane] open() is only for recording. Pending action:',
+        pendingParams.action
+      );
+      return false;
+    }
     params = pendingParams;
   } else {
     const urlData = parseUserplaneUrl(window.location.href);
@@ -261,16 +306,49 @@ export function open(token?: string): boolean {
       return false;
     }
 
+    // Only allow recording via open()
+    if (urlData.action && urlData.action !== 'recording') {
+      console.error('[Userplane] open() is only for recording. URL action:', urlData.action);
+      return false;
+    }
+
     const workspaceIds = getWorkspaceIds(initOptions);
     params = {
-      baseUrl: recorderBaseUrl,
+      baseUrl: getActionUrl(recorderBaseUrl, 'recording'),
       workspaceIds,
       token: urlData.token,
-      action: urlData.action || 'recording',
+      action: 'recording',
     };
   }
 
   console.log('[Userplane] Opening recorder');
+  return frameManager.tryMount(params);
+}
+
+/**
+ * Internal: Mount verification iframe
+ * Only triggered automatically from URL params, not exposed publicly
+ */
+function mountVerification(token: string): boolean {
+  if (!initialized || !frameManager) {
+    console.error('[Userplane] Not initialized. Call initialize() first.');
+    return false;
+  }
+
+  if (frameManager.isMounted()) {
+    console.warn('[Userplane] Frame is already mounted');
+    return false;
+  }
+
+  const workspaceIds = getWorkspaceIds(initOptions);
+  const params: RecorderParams = {
+    baseUrl: getActionUrl(recorderBaseUrl, 'verify'),
+    workspaceIds,
+    token,
+    action: 'verify',
+  };
+
+  console.log('[Userplane] Mounting verification');
   return frameManager.tryMount(params);
 }
 

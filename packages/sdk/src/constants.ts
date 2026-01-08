@@ -12,10 +12,11 @@ export const URL_PARAMS = {
 } as const;
 
 /**
- * Action values for the recorder
+ * Action values for the recorder/verification
  */
 export const ACTIONS = {
   RECORDING: 'recording',
+  VERIFY: 'verify',
 } as const;
 
 /**
