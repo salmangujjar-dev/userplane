@@ -6,6 +6,7 @@ import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav
 import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
+import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { toast } from '@workspace/ui/components/sonner';
 import {
   ResizableHandle,
@@ -28,6 +29,7 @@ export default function RecordingDetailPage() {
   const workspaceId = useWorkspaceId();
   const recordingId = params.recordingId as string;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
 
   const {
     data: recordingResult,
@@ -85,59 +87,16 @@ export default function RecordingDetailPage() {
     }
   };
 
-  const handleShareLink = async () => {
+  const handleShare = () => {
     const currentUrl = window.location.href;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Share Your Screen',
-          text: 'Submit a Screen Capture',
-          url: currentUrl,
-        });
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          toast.error('Failed to share link');
-        }
-      }
-    } else {
-      await handleCopyLink();
-    }
-  };
-
-  const handleShareAtTimestamp = async () => {
-    // TODO: Get current timestamp from video player
-    const currentUrl = window.location.href;
-    const urlWithTimestamp = `${currentUrl}?t=00:00`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Share Your Screen at 00:00',
-          text: 'Submit a Screen Capture at timestamp',
-          url: urlWithTimestamp,
-        });
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          toast.error('Failed to share link');
-        }
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(urlWithTimestamp);
-        toast.success('Link with timestamp copied to clipboard');
-      } catch {
-        toast.error('Failed to copy link');
-      }
-    }
+    setShareLink(currentUrl);
   };
 
   return (
     <div className="h-screen bg-background flex flex-col">
       <RecordingDetailNav
         onCopyLink={handleCopyLink}
-        onShareLink={handleShareLink}
-        onShareAtTimestamp={handleShareAtTimestamp}
+        onShare={handleShare}
         onDelete={() => setShowDeleteModal(true)}
       />
 
@@ -170,6 +129,12 @@ export default function RecordingDetailPage() {
         itemType="recording"
         onConfirm={() => deleteRecordingMutation.mutate(recordingId)}
         isLoading={deleteRecordingMutation.isPending}
+      />
+
+      <ShareLinkModal
+        link={shareLink || ''}
+        open={!!shareLink}
+        onClose={() => setShareLink(null)}
       />
     </div>
   );
