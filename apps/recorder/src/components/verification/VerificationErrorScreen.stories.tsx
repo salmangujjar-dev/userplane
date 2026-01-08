@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import VerificationErrorScreen from './VerificationErrorScreen';
-import { VERIFICATION_ERROR_COPY } from '@/constants/copy/verification';
+import { getVerificationError } from '@/lib/verification-errors';
 
 const meta = {
   title: 'Verification/VerificationErrorScreen',
@@ -15,50 +15,43 @@ type Story = StoryObj<typeof meta>;
 
 export const TokenInvalid: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.tokenInvalid.title,
-    subtitle: VERIFICATION_ERROR_COPY.tokenInvalid.subtitle,
+    ...getVerificationError('VERIFICATION_TOKEN_INVALID'),
   },
 };
 
 export const DomainNotRegistered: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.domainNotRegistered.title,
-    subtitle: VERIFICATION_ERROR_COPY.domainNotRegistered.subtitle,
+    ...getVerificationError('VERIFICATION_DOMAIN_NOT_REGISTERED'),
   },
 };
 
 export const WorkspaceMismatch: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.workspaceMismatch.title,
-    subtitle: VERIFICATION_ERROR_COPY.workspaceMismatch.subtitle,
+    ...getVerificationError('VERIFICATION_WORKSPACE_MISMATCH'),
   },
 };
 
 export const UrlInvalid: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.urlInvalid.title,
-    subtitle: VERIFICATION_ERROR_COPY.urlInvalid.subtitle,
+    ...getVerificationError('VERIFICATION_DOMAIN_URL_INVALID'),
   },
 };
 
 export const OriginInvalid: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.originInvalid.title,
-    subtitle: VERIFICATION_ERROR_COPY.originInvalid.subtitle,
+    ...getVerificationError('VERIFICATION_ORIGIN_INVALID'),
   },
 };
 
 export const OriginMismatch: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.originMismatch.title,
-    subtitle: VERIFICATION_ERROR_COPY.originMismatch.subtitle,
+    ...getVerificationError('VERIFICATION_ORIGIN_MISMATCH'),
   },
 };
 
 export const VerificationFailed: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.verificationFailed.title,
-    subtitle: VERIFICATION_ERROR_COPY.verificationFailed.subtitle,
+    ...getVerificationError('VERIFICATION_FAILED'),
     primaryActionText: 'Try again',
     onPrimaryAction: () => console.log('Retry clicked'),
   },
@@ -66,8 +59,7 @@ export const VerificationFailed: Story = {
 
 export const NetworkError: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.networkError.title,
-    subtitle: VERIFICATION_ERROR_COPY.networkError.subtitle,
+    ...getVerificationError('VERIFICATION_NETWORK_ERROR'),
     primaryActionText: 'Try again',
     onPrimaryAction: () => console.log('Retry clicked'),
     secondaryActionText: 'Cancel',
@@ -77,15 +69,13 @@ export const NetworkError: Story = {
 
 export const UnknownError: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.unknownError.title,
-    subtitle: VERIFICATION_ERROR_COPY.unknownError.subtitle,
+    ...getVerificationError('VERIFICATION_UNKNOWN_ERROR'),
   },
 };
 
 export const WithBranding: Story = {
   args: {
-    title: VERIFICATION_ERROR_COPY.verificationFailed.title,
-    subtitle: VERIFICATION_ERROR_COPY.verificationFailed.subtitle,
+    ...getVerificationError('VERIFICATION_FAILED'),
     workspaceName: 'Acme Inc.',
     workspaceLogoUrl: '/logo-dark.svg',
     primaryColor: '#4F46E5',

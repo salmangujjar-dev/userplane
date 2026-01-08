@@ -8,11 +8,9 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { VERIFICATION_ERROR_COPY } from '@/constants';
-import type {
-  RecorderBridgeConnection,
-  VerificationResult as BridgeVerificationResult,
-} from '@/bridge';
+import type { VerificationError } from '@/types/errors';
+import { createVerificationError } from '@/lib/verification-errors';
+import type { RecorderBridgeConnection } from '@/bridge';
 
 /**
  * Verification flow states
@@ -30,15 +28,6 @@ export interface VerificationResult {
 }
 
 /**
- * Error information for verification failures
- */
-export interface VerificationError {
-  title: string;
-  subtitle: string;
-  code?: string;
-}
-
-/**
  * State for the verification flow
  */
 export interface VerificationState {
@@ -53,58 +42,6 @@ export interface VerificationState {
  */
 export interface VerificationFlowActions {
   retry: () => void;
-}
-
-/**
- * Map API error codes to user-friendly messages
- */
-function mapErrorCodeToVerificationError(code: string): VerificationError {
-  switch (code) {
-    case 'DOMAIN_VERIFICATION_TOKEN_INVALID':
-      return { ...VERIFICATION_ERROR_COPY.tokenInvalid, code };
-    case 'DOMAIN_NOT_REGISTERED':
-      return { ...VERIFICATION_ERROR_COPY.domainNotRegistered, code };
-    case 'DOMAIN_WORKSPACE_MISMATCH':
-      return { ...VERIFICATION_ERROR_COPY.workspaceMismatch, code };
-    case 'DOMAIN_URL_INVALID':
-      return { ...VERIFICATION_ERROR_COPY.urlInvalid, code };
-    case 'DOMAIN_ORIGIN_INVALID':
-      return { ...VERIFICATION_ERROR_COPY.originInvalid, code };
-    case 'DOMAIN_ORIGIN_MISMATCH':
-      return { ...VERIFICATION_ERROR_COPY.originMismatch, code };
-    case 'DOMAIN_VERIFICATION_FAILED':
-      return { ...VERIFICATION_ERROR_COPY.verificationFailed, code };
-    case 'INTERNAL_SERVER_ERROR':
-      return { ...VERIFICATION_ERROR_COPY.unknownError, code };
-    case 'NOT_CONNECTED':
-      return {
-        title: 'Connection Error',
-        subtitle: 'Unable to connect to the parent application. Please try refreshing the page.',
-        code,
-      };
-    case 'BRIDGE_ERROR':
-      return {
-        title: 'Communication Error',
-        subtitle: 'Failed to communicate with the parent application.',
-        code,
-      };
-    case 'NETWORK_ERROR':
-      return { ...VERIFICATION_ERROR_COPY.networkError, code };
-    default:
-      return { ...VERIFICATION_ERROR_COPY.unknownError, code };
-  }
-}
-
-/**
- * Map bridge verification result error to user-friendly message
- */
-function mapBridgeErrorToVerificationError(
-  error: BridgeVerificationResult['error']
-): VerificationError {
-  if (!error) {
-    return VERIFICATION_ERROR_COPY.unknownError;
-  }
-  return mapErrorCodeToVerificationError(error.code);
 }
 
 /**
@@ -126,12 +63,10 @@ export function useVerificationFlow(
   state: VerificationState;
   actions: VerificationFlowActions;
 } {
-  const [state, setState] = useState<VerificationState>({
-    state: 'loading',
-    error: null,
-    result: null,
-    domainUrl: null,
-  });
+  const [flowState, setFlowState] = useState<VerificationFlowState>('loading');
+  const [error, setError] = useState<VerificationError | null>(null);
+  const [result, setResult] = useState<VerificationResult | null>(null);
+  const [domainUrl, setDomainUrl] = useState<string | null>(null);
 
   const verificationAttemptedRef = useRef(false);
 
@@ -141,48 +76,26 @@ export function useVerificationFlow(
    */
   const verify = useCallback(async () => {
     if (!token) {
-      setState({
-        state: 'error',
-        error: VERIFICATION_ERROR_COPY.tokenInvalid,
-        result: null,
-        domainUrl: null,
-      });
+      setError(createVerificationError('VERIFICATION_TOKEN_MISSING'));
+      setFlowState('error');
       return;
     }
 
     if (workspaceIds.length === 0) {
-      setState({
-        state: 'error',
-        error: {
-          title: 'Missing workspace',
-          subtitle: 'No workspace ID provided for verification.',
-        },
-        result: null,
-        domainUrl: null,
-      });
+      setError(createVerificationError('VERIFICATION_WORKSPACE_MISSING'));
+      setFlowState('error');
       return;
     }
 
     if (!bridge) {
       console.error('[useVerificationFlow] No bridge connection available');
-      setState({
-        state: 'error',
-        error: {
-          title: 'Connection Required',
-          subtitle: 'Verification must be run from an embedded context with the SDK.',
-          code: 'NOT_EMBEDDED',
-        },
-        result: null,
-        domainUrl: null,
-      });
+      setError(createVerificationError('VERIFICATION_BRIDGE_NOT_EMBEDDED'));
+      setFlowState('error');
       return;
     }
 
-    setState((prev) => ({
-      ...prev,
-      state: 'verifying',
-      error: null,
-    }));
+    setFlowState('verifying');
+    setError(null);
 
     console.log(
       '[useVerificationFlow] Requesting verification via bridge with token and workspaceIds:',
@@ -191,27 +104,20 @@ export function useVerificationFlow(
 
     // Request verification from parent SDK
     // Parent makes the API call so the origin header is the parent's domain
-    const result = await bridge.requestVerification(token, workspaceIds);
+    const verificationResult = await bridge.requestVerification(token, workspaceIds);
 
-    if (!result.success) {
-      console.error('[useVerificationFlow] Verification error:', result.error);
-      setState({
-        state: 'error',
-        error: mapBridgeErrorToVerificationError(result.error),
-        result: null,
-        domainUrl: null,
-      });
+    if (!verificationResult.success) {
+      console.error('[useVerificationFlow] Verification error:', verificationResult.error);
+      setError(verificationResult.error ?? null);
+      setFlowState('error');
       return;
     }
 
-    console.log('[useVerificationFlow] Verification success:', result.data);
+    console.log('[useVerificationFlow] Verification success:', verificationResult.data);
 
-    setState({
-      state: 'verified',
-      error: null,
-      result: result.data as VerificationResult,
-      domainUrl: result.data?.domainUrl ?? null,
-    });
+    setResult(verificationResult.data as VerificationResult);
+    setDomainUrl(verificationResult.data?.domainUrl ?? null);
+    setFlowState('verified');
   }, [token, workspaceIds, bridge]);
 
   /**
@@ -236,7 +142,12 @@ export function useVerificationFlow(
   }, [verify, bridge]);
 
   return {
-    state,
+    state: {
+      state: flowState,
+      error,
+      result,
+      domainUrl,
+    },
     actions: { retry },
   };
 }

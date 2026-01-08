@@ -29,6 +29,15 @@ export interface RecordingError {
 }
 
 /**
+ * Verification error - what to show on verification error screen
+ */
+export interface VerificationError {
+  title: string;
+  subtitle: string;
+  code?: string;
+}
+
+/**
  * Default error for unknown issues
  */
 const DEFAULT_ERROR: RecordingError = {

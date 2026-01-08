@@ -27,7 +27,7 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   // Link token errors
   LINK_TOKEN_MISSING_ID: {
     title: 'Invalid link',
-    message: 'Looks like this link didn’t come through properly.',
+    message: "Looks like this link didn't come through properly.",
   },
   LINK_TOKEN_EXPIRED: {
     title: 'Link expired',
@@ -35,7 +35,7 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   },
   LINK_TOKEN_INVALID: {
     title: 'Invalid link',
-    message: 'This link can’t be used anymore.',
+    message: "This link can't be used anymore.",
   },
 
   // Link errors — no recovery
@@ -45,11 +45,11 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   },
   SESSION_LINK_NOT_FOUND: {
     title: 'Link not found',
-    message: 'We couldn’t find this link.',
+    message: "We couldn't find this link.",
   },
   SESSION_LINK_INVALID_TYPE: {
     title: 'Wrong link',
-    message: 'This link isn’t meant for recording.',
+    message: "This link isn't meant for recording.",
   },
   SESSION_LINK_ALREADY_USED: {
     title: 'Link already used',
@@ -64,7 +64,7 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   },
   UPLOAD_TOKEN_MISSING: {
     title: 'Upload missing',
-    message: 'Something didn’t load correctly.',
+    message: "Something didn't load correctly.",
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
 
@@ -93,7 +93,7 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   },
   SESSION_RECORDING_NOT_FOUND: {
     title: 'Recording not found',
-    message: 'We couldn’t locate it.',
+    message: "We couldn't locate it.",
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_DURATION_TOO_SHORT: {
@@ -108,19 +108,19 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   },
   SESSION_VIDEO_MISSING: {
     title: 'Video missing',
-    message: 'We didn’t receive a video file.',
+    message: "We didn't receive a video file.",
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_VIDEO_EMPTY: {
     title: 'Empty video',
-    message: 'The video didn’t contain any data.',
+    message: "The video didn't contain any data.",
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
 
   // File validation errors
   SESSION_FILE_FORMAT_UNSUPPORTED: {
     title: 'Unsupported format',
-    message: 'This file type isn’t supported.',
+    message: "This file type isn't supported.",
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_FILE_TOO_LARGE: {
@@ -132,13 +132,13 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   // Upload errors — retry
   SESSION_UPLOAD_FAILED: {
     title: 'Upload failed',
-    message: 'That didn’t go through.',
+    message: "That didn't go through.",
     primaryAction: { label: 'Retry', action: 'retry-upload' },
     secondaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_FILE_VERIFICATION_FAILED: {
     title: 'Upload issue',
-    message: 'We couldn’t verify the upload.',
+    message: "We couldn't verify the upload.",
     primaryAction: { label: 'Retry', action: 'retry-upload' },
     secondaryAction: { label: 'Start over', action: 'start-over' },
   },
@@ -146,7 +146,7 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   // Infrastructure errors — retry
   SESSION_STORAGE_ERROR: {
     title: 'Storage issue',
-    message: 'This one’s on us.',
+    message: "This one's on us.",
     primaryAction: { label: 'Retry', action: 'retry-upload' },
     secondaryAction: { label: 'Start over', action: 'start-over' },
   },

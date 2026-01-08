@@ -22,6 +22,25 @@ export const ClientErrors = {
   // Browser errors
   CLIENT_BROWSER_UNSUPPORTED: {},
   CLIENT_MEDIA_CONNECTION_FAILED: {},
+
+  // Link validation errors
+  CLIENT_LINK_TOKEN_MISSING: {},
+  CLIENT_LINK_ACTION_MISSING: {},
+  CLIENT_LINK_ACTION_INVALID: {},
+  CLIENT_LINK_WORKSPACE_MISSING: {},
+  CLIENT_LINK_WORKSPACE_MISMATCH: {},
+
+  // Session validation errors
+  CLIENT_SESSION_WORKSPACE_MISSING: {},
+  CLIENT_SESSION_MISSING: {},
+
+  // Recording validation errors
+  CLIENT_RECORDING_MISSING: {},
+  CLIENT_RECORDING_DURATION_EXCEEDED: {},
+  CLIENT_RECORDING_SIZE_EXCEEDED: {},
+
+  // Upload retry errors
+  CLIENT_UPLOAD_STATE_MISSING: {},
 } as const;
 
 type ClientErrorCode = keyof typeof ClientErrors;
@@ -157,6 +176,63 @@ const CLIENT_ERROR_CONFIG: Record<ClientErrorCode, RecordingError> = {
     message: 'Having trouble connecting to media devices',
     primaryAction: { label: 'Retry', action: 'reload' },
   },
+
+  // Link validation errors
+  CLIENT_LINK_TOKEN_MISSING: {
+    title: 'Invalid link',
+    message: 'No link token provided',
+  },
+  CLIENT_LINK_ACTION_MISSING: {
+    title: 'Invalid link',
+    message: 'No action specified in the link',
+  },
+  CLIENT_LINK_ACTION_INVALID: {
+    title: 'Invalid action',
+    message: 'This action is not supported',
+  },
+  CLIENT_LINK_WORKSPACE_MISSING: {
+    title: 'Invalid link',
+    message: 'No workspace ID provided in the link',
+  },
+  CLIENT_LINK_WORKSPACE_MISMATCH: {
+    title: 'Workspace mismatch',
+    message: 'This recording link is not valid for this workspace',
+  },
+
+  // Session validation errors
+  CLIENT_SESSION_WORKSPACE_MISSING: {
+    title: 'Invalid session',
+    message: 'Session is missing workspace information',
+  },
+  CLIENT_SESSION_MISSING: {
+    title: 'Session expired',
+    message: 'No active session',
+    primaryAction: { label: 'Start over', action: 'start-over' },
+  },
+
+  // Recording validation errors
+  CLIENT_RECORDING_MISSING: {
+    title: 'No recording',
+    message: 'No recording to submit',
+    primaryAction: { label: 'Start over', action: 'start-over' },
+  },
+  CLIENT_RECORDING_DURATION_EXCEEDED: {
+    title: 'Recording too long',
+    message: 'Recording duration exceeds the maximum allowed',
+    primaryAction: { label: 'Start over', action: 'start-over' },
+  },
+  CLIENT_RECORDING_SIZE_EXCEEDED: {
+    title: 'Recording too large',
+    message: 'Recording size exceeds the maximum allowed',
+    primaryAction: { label: 'Start over', action: 'start-over' },
+  },
+
+  // Upload retry errors
+  CLIENT_UPLOAD_STATE_MISSING: {
+    title: 'Cannot retry',
+    message: 'No upload state available. Please start over.',
+    primaryAction: { label: 'Start over', action: 'start-over' },
+  },
 };
 
 /**
@@ -171,4 +247,27 @@ export function getClientError(error: Error): RecordingError {
   // Otherwise map from browser error name
   const code = browserErrorToCode(error.name);
   return CLIENT_ERROR_CONFIG[code];
+}
+
+/**
+ * Create a client error from error code
+ * For use in validation and flow logic
+ */
+export function createClientError(code: ClientErrorCode): RecordingError {
+  return CLIENT_ERROR_CONFIG[code];
+}
+
+/**
+ * Create a client error with dynamic message
+ * For errors that need runtime values (durations, sizes, etc.)
+ */
+export function createClientErrorWithMessage(
+  code: ClientErrorCode,
+  message: string
+): RecordingError {
+  const baseError = CLIENT_ERROR_CONFIG[code];
+  return {
+    ...baseError,
+    message,
+  };
 }

@@ -7,11 +7,7 @@
  */
 
 import { bridge, type BridgeConnection } from '@workspace/postbridge';
-
-/**
- * Recorder state as tracked across tabs
- */
-export type CrossTabRecorderState = 'inactive' | 'active' | 'retained';
+import type { RecordingState } from './types';
 
 /**
  * Shared state schema for cross-tab coordination
@@ -21,17 +17,13 @@ interface CrossTabSchema {
   /** Tab ID that currently owns the recorder (null if no active recorder) */
   recorderTabId: string | null;
   /** Current recorder state across tabs */
-  recorderState: CrossTabRecorderState;
+  recorderState: RecordingState;
   /**
    * Broadcast function to sync state changes across tabs
    * Args: tabId and state are serialized and sent via postMessage
    * The `remote` arg is automatically appended by postbridge when executing
    */
-  syncRecorderState: (
-    tabId: string | null,
-    state: CrossTabRecorderState,
-    remote: CrossTabSchema
-  ) => void;
+  syncRecorderState: (tabId: string | null, state: RecordingState, remote: CrossTabSchema) => void;
 }
 
 /**
@@ -44,7 +36,7 @@ export interface AcquireLockResult {
   /** Tab ID that currently holds the lock (if not this tab) */
   currentHolderTabId?: string | null;
   /** Current recorder state */
-  currentState?: CrossTabRecorderState;
+  currentState?: RecordingState;
 }
 
 /**
@@ -56,7 +48,7 @@ export interface CrossTabCoordinatorCallbacks {
   /** Called when the recorder is released by another tab */
   onRecorderReleasedByOtherTab?: (previousTabId: string) => void;
   /** Called when recorder state changes in another tab */
-  onRecorderStateChanged?: (tabId: string | null, state: CrossTabRecorderState) => void;
+  onRecorderStateChanged?: (tabId: string | null, state: RecordingState) => void;
 }
 
 /**
@@ -114,17 +106,14 @@ export class CrossTabCoordinator {
    * Broadcast state change to all other tabs
    * Only pass serializable args (tabId, state) - postbridge auto-appends `remote`
    */
-  private async broadcastStateChange(
-    tabId: string | null,
-    state: CrossTabRecorderState
-  ): Promise<void> {
+  private async broadcastStateChange(tabId: string | null, state: RecordingState): Promise<void> {
     if (!this.connection) return;
 
     try {
       // Call syncRecorderState with only serializable args
       // Postbridge automatically appends `remote` when executing locally
       const remote = this.connection.remote as unknown as {
-        syncRecorderState: (tabId: string | null, state: CrossTabRecorderState) => Promise<void>;
+        syncRecorderState: (tabId: string | null, state: RecordingState) => Promise<void>;
       };
       await remote.syncRecorderState(tabId, state);
     } catch (error) {
@@ -156,11 +145,7 @@ export class CrossTabCoordinator {
     const schema: CrossTabSchema = {
       recorderTabId: null,
       recorderState: 'inactive',
-      syncRecorderState(
-        tabId: string | null,
-        state: CrossTabRecorderState,
-        remote: CrossTabSchema
-      ) {
+      syncRecorderState(tabId: string | null, state: RecordingState, remote: CrossTabSchema) {
         // This function runs in ALL tabs when any tab broadcasts
         // `remote` is the proxy object for accessing/setting shared state
         remote.recorderTabId = tabId;
@@ -257,9 +242,9 @@ export class CrossTabCoordinator {
   /**
    * Get the current recorder state
    */
-  public getRecorderState(): CrossTabRecorderState {
+  public getRecorderState(): RecordingState {
     if (!this.connection) return 'inactive';
-    return this.connection.getVersionedState<CrossTabRecorderState>('recorderState').value;
+    return this.connection.getVersionedState<RecordingState>('recorderState').value;
   }
 
   /**
@@ -297,7 +282,7 @@ export class CrossTabCoordinator {
         string | null
       >('recorderTabId');
       const { value: currentState, version: stateVersion } =
-        this.connection.getVersionedState<CrossTabRecorderState>('recorderState');
+        this.connection.getVersionedState<RecordingState>('recorderState');
 
       console.log(
         `[CrossTab] Acquire attempt ${retries + 1}: currentTabId=${currentTabId}, currentState=${currentState}`
@@ -412,7 +397,7 @@ export class CrossTabCoordinator {
       if (result.success) {
         // Also reset state
         const { version: stateVersion } =
-          this.connection.getVersionedState<CrossTabRecorderState>('recorderState');
+          this.connection.getVersionedState<RecordingState>('recorderState');
         await this.connection.compareAndSwap('recorderState', stateVersion, 'inactive');
 
         // Broadcast the release
@@ -437,7 +422,7 @@ export class CrossTabCoordinator {
    * Update the recorder state (only if this tab owns the lock)
    * Broadcasts the change to all tabs
    */
-  public async updateState(newState: CrossTabRecorderState): Promise<boolean> {
+  public async updateState(newState: RecordingState): Promise<boolean> {
     if (!this.connection || !this.localTabId) {
       console.warn('[CrossTab] Not connected, cannot update state');
       return false;
@@ -450,7 +435,7 @@ export class CrossTabCoordinator {
 
     let retries = 0;
     while (retries < this.config.maxRetries) {
-      const { version } = this.connection.getVersionedState<CrossTabRecorderState>('recorderState');
+      const { version } = this.connection.getVersionedState<RecordingState>('recorderState');
 
       const result = await this.connection.compareAndSwap('recorderState', version, newState);
 

@@ -11,7 +11,8 @@ import VerifyingScreen from './VerifyingScreen';
 import VerifiedScreen from './VerifiedScreen';
 import VerificationErrorScreen from './VerificationErrorScreen';
 import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
-import { URL_PARAMS, VERIFICATION_ERROR_COPY } from '@/constants';
+import { URL_PARAMS } from '@/constants';
+import { createVerificationError } from '@/lib/verification-errors';
 
 /**
  * Root component that provides app mode context
@@ -115,7 +116,7 @@ function VerificationAppContent() {
 
     case 'error':
       console.log('[VerificationApp] Rendering: VerificationErrorScreen');
-      const error = state.error ?? VERIFICATION_ERROR_COPY.unknownError;
+      const error = state.error ?? createVerificationError('VERIFICATION_UNKNOWN_ERROR');
       return (
         <VerificationErrorScreen
           title={error.title}
