@@ -4,6 +4,7 @@ import { ConsolePanel } from './console-panel';
 import { NetworkPanel } from './network-panel';
 import { ActionsPanel } from './actions-panel';
 import { BackendPanel } from './backend-panel';
+import { ComingSoonOverlay } from './coming-soon-overlay';
 
 interface RecordingLogReplayPanelProps {
   recordingId: string;
@@ -82,16 +83,36 @@ export function RecordingLogReplayPanel({ recording }: RecordingLogReplayPanelPr
             <InfoPanel recording={recording} />
           </TabsContent>
           <TabsContent value="console" className="h-full mt-0 p-0">
-            <ConsolePanel />
+            <ComingSoonOverlay
+              title="Console Logs"
+              subtitle="View browser console logs, errors, and debug messages captured during the session."
+            >
+              <ConsolePanel />
+            </ComingSoonOverlay>
           </TabsContent>
           <TabsContent value="network" className="h-full mt-0 p-0">
-            <NetworkPanel />
+            <ComingSoonOverlay
+              title="Network Activity"
+              subtitle="Inspect HTTP requests, responses, and API calls made during the recording."
+            >
+              <NetworkPanel />
+            </ComingSoonOverlay>
           </TabsContent>
           <TabsContent value="actions" className="h-full mt-0 p-0">
-            <ActionsPanel />
+            <ComingSoonOverlay
+              title="User Actions"
+              subtitle="Track clicks, inputs, and interactions to understand user behavior."
+            >
+              <ActionsPanel />
+            </ComingSoonOverlay>
           </TabsContent>
           <TabsContent value="backend" className="h-full mt-0 p-0">
-            <BackendPanel />
+            <ComingSoonOverlay
+              title="Backend Logs"
+              subtitle="Correlate frontend sessions with server-side logs and traces."
+            >
+              <BackendPanel />
+            </ComingSoonOverlay>
           </TabsContent>
         </div>
       </Tabs>
