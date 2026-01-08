@@ -18,6 +18,6 @@ export const Default: Story = {
 
 export const WithDomainUrl: Story = {
   args: {
-    domainUrl: 'https://example.com',
+    domainUrl: 'example.com',
   },
 };

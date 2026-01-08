@@ -5,53 +5,52 @@
 export const VERIFICATION_COPY = {
   verifying: {
     title: 'Verifying domain',
-    subtitle: 'This will only take a moment',
-    subtitleWithDomain: (domain: string) => `Checking ownership of ${domain}`,
+    subtitle: 'This should only take a few seconds.',
+    subtitleWithDomain: (domain: string) => `We're checking that ${domain} is yours.`,
   },
   verified: {
     title: 'Domain verified',
-    subtitle: (domain: string) => `${domain} has been successfully verified.`,
-    closeInfo: 'This window will close automatically',
+    subtitle: (domain: string) => `${domain} is ready to use.`,
+    closeInfo: 'This window will close automatically.',
   },
 } as const;
 
 export const VERIFICATION_ERROR_COPY = {
   tokenInvalid: {
-    title: 'Invalid verification token',
-    subtitle:
-      'The verification token is invalid or has expired. Please request a new verification link.',
+    title: 'This link has expired',
+    subtitle: 'Just request a new verification link to continue.',
   },
   domainNotRegistered: {
-    title: 'Domain not found',
-    subtitle: 'This domain is not registered in your workspace. Please add the domain first.',
+    title: "We can't find this domain yet",
+    subtitle: 'Once you add the domain to your workspace, you can come back and verify it.',
   },
   workspaceMismatch: {
     title: 'Workspace mismatch',
-    subtitle: 'This verification link belongs to a different workspace.',
+    subtitle:
+      'This link belongs to another workspace. Review your domain and workspace settings and try again.',
   },
   urlInvalid: {
-    title: 'Invalid URL',
-    subtitle: 'The domain URL is not valid. Please check your configuration.',
+    title: 'Invalid domain',
+    subtitle: "The domain doesn't look right, let's double check and try again.",
   },
   originInvalid: {
     title: 'Invalid origin',
-    subtitle: 'The verification must be performed from the registered domain.',
+    subtitle: 'For security reasons, this step needs to happen from the registered domain.',
   },
   originMismatch: {
     title: 'Origin mismatch',
-    subtitle: 'This verification link must be opened from the registered domain.',
+    subtitle: "Let's open this link from the domain you're trying to verify.",
   },
   verificationFailed: {
     title: 'Verification failed',
-    subtitle: 'Unable to verify domain ownership. Please try again.',
+    subtitle: 'Could not verify domain ownership. Try again, or review your domain settings.',
   },
   networkError: {
-    title: 'Connection error',
-    subtitle:
-      'Unable to connect to the server. Please check your internet connection and try again.',
+    title: 'Connection issue',
+    subtitle: "We couldn't reach the servers. Let's try again.",
   },
   unknownError: {
     title: 'Something went wrong',
-    subtitle: 'An unexpected error occurred during verification. Please try again.',
+    subtitle: "That didn't work. Let's try again.",
   },
 } as const;

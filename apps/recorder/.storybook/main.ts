@@ -15,6 +15,7 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': resolve(__dirname, '../src'),
+      '@stories': resolve(__dirname, '.'),
     };
 
     // Add Tailwind CSS plugin

@@ -24,135 +24,135 @@ export type ServerResult<T> =
  * Each error specifies exactly what to show and do.
  */
 const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
-  // Link token errors (from LinkService.verifyLinkToken)
+  // Link token errors
   LINK_TOKEN_MISSING_ID: {
     title: 'Invalid link',
-    message: 'Try requesting a new one',
+    message: 'Looks like this link didn’t come through properly.',
   },
   LINK_TOKEN_EXPIRED: {
-    title: 'Link token expired',
-    message: 'Try requesting a new one',
+    title: 'Link expired',
+    message: 'No worries — you can request a new one.',
   },
   LINK_TOKEN_INVALID: {
     title: 'Invalid link',
-    message: 'Try requesting a new one',
+    message: 'This link can’t be used anymore.',
   },
 
-  // Link errors - no recovery (need new link)
+  // Link errors — no recovery
   SESSION_LINK_GONE: {
-    title: "Link's expired",
-    message: 'Try requesting a new one',
+    title: 'Link expired',
+    message: 'This link is no longer active.',
   },
   SESSION_LINK_NOT_FOUND: {
-    title: "Link doesn't exist",
-    message: 'Try requesting a new one',
+    title: 'Link not found',
+    message: 'We couldn’t find this link.',
   },
   SESSION_LINK_INVALID_TYPE: {
-    title: "Link isn't for recording",
-    message: 'Check with the person who sent it',
+    title: 'Wrong link',
+    message: 'This link isn’t meant for recording.',
   },
   SESSION_LINK_ALREADY_USED: {
-    title: "Link's been used",
-    message: 'Grab a new one',
+    title: 'Link already used',
+    message: 'Each link can only be used once.',
   },
 
-  // Token missing errors (from route middleware)
+  // Token missing — start over
   SESSION_TOKEN_MISSING: {
-    title: 'Session token missing',
-    message: "Let's start fresh",
+    title: 'Session missing',
+    message: 'Something got interrupted along the way.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   UPLOAD_TOKEN_MISSING: {
-    title: 'Upload token missing',
-    message: "Let's start fresh",
+    title: 'Upload missing',
+    message: 'Something didn’t load correctly.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
 
-  // Token errors - start over
+  // Token expired — start over
   SESSION_TOKEN_EXPIRED: {
     title: 'Session expired',
-    message: "Let's start fresh",
+    message: 'That took a bit too long.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_UPLOAD_TOKEN_EXPIRED: {
-    title: 'Upload session expired',
-    message: 'Try uploading again',
+    title: 'Upload expired',
+    message: 'The upload timed out.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_UPLOAD_TOKEN_MISMATCH: {
-    title: 'Upload got mixed up',
-    message: "Let's try again",
+    title: 'Upload interrupted',
+    message: 'Something got mixed up.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
 
-  // Recording errors - start over
+  // Recording errors — start over
   SESSION_RECORDING_GONE: {
-    title: "Recording's expired",
-    message: 'Try starting fresh',
+    title: 'Recording expired',
+    message: 'That recording is no longer available.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_RECORDING_NOT_FOUND: {
-    title: "Can't find that recording",
-    message: 'Try again',
+    title: 'Recording not found',
+    message: 'We couldn’t locate it.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_DURATION_TOO_SHORT: {
     title: 'Recording too short',
-    message: 'Try recording a bit longer',
+    message: 'Try recording for a little longer.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_DURATION_TOO_LONG: {
     title: 'Recording too long',
-    message: 'Try keeping it shorter',
+    message: 'Try keeping it a bit shorter.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_VIDEO_MISSING: {
-    title: "Video's missing",
-    message: 'Try recording again',
+    title: 'Video missing',
+    message: 'We didn’t receive a video file.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_VIDEO_EMPTY: {
-    title: 'Video file is empty',
-    message: 'Try recording again',
+    title: 'Empty video',
+    message: 'The video didn’t contain any data.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
 
-  // File validation errors - start over
+  // File validation errors
   SESSION_FILE_FORMAT_UNSUPPORTED: {
-    title: "Format's not supported",
-    message: 'Try recording again',
+    title: 'Unsupported format',
+    message: 'This file type isn’t supported.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_FILE_TOO_LARGE: {
-    title: "File's too big",
-    message: 'Try recording something shorter',
+    title: 'File too large',
+    message: 'Try recording a shorter clip.',
     primaryAction: { label: 'Start over', action: 'start-over' },
   },
 
-  // Upload errors - retry
+  // Upload errors — retry
   SESSION_UPLOAD_FAILED: {
     title: 'Upload failed',
-    message: "Let's try again",
+    message: 'That didn’t go through.',
     primaryAction: { label: 'Retry', action: 'retry-upload' },
     secondaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_FILE_VERIFICATION_FAILED: {
-    title: "Couldn't verify files",
-    message: 'Try uploading again',
+    title: 'Upload issue',
+    message: 'We couldn’t verify the upload.',
     primaryAction: { label: 'Retry', action: 'retry-upload' },
     secondaryAction: { label: 'Start over', action: 'start-over' },
   },
 
-  // Infrastructure errors - retry
+  // Infrastructure errors — retry
   SESSION_STORAGE_ERROR: {
     title: 'Storage issue',
-    message: 'Try again in a moment',
+    message: 'This one’s on us.',
     primaryAction: { label: 'Retry', action: 'retry-upload' },
     secondaryAction: { label: 'Start over', action: 'start-over' },
   },
   SESSION_DATABASE_ERROR: {
     title: 'Server issue',
-    message: 'Try again in a moment',
+    message: 'We hit a snag.',
     primaryAction: { label: 'Retry', action: 'retry-upload' },
     secondaryAction: { label: 'Start over', action: 'start-over' },
   },
@@ -163,7 +163,7 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
  */
 const DEFAULT_SERVER_ERROR: RecordingError = {
   title: 'Something went wrong',
-  message: "Let's try again",
+  message: "Looks like we hit a snag. Let's try again.",
   primaryAction: { label: 'Retry', action: 'reload' },
 };
 
@@ -172,7 +172,7 @@ const DEFAULT_SERVER_ERROR: RecordingError = {
  */
 const NETWORK_ERROR: RecordingError = {
   title: 'Connection issue',
-  message: 'Check your connection and try again',
+  message: "We couldn't reach the servers. Let's try again.",
   primaryAction: { label: 'Retry', action: 'reload' },
 };
 
