@@ -7,7 +7,7 @@
 import { useEffect, useRef } from 'react';
 import VerificationScreenLayout from './VerificationScreenLayout';
 import { DEFAULT_COMPANY_NAME, SUCCESS_AUTO_CLOSE_DELAY_MS } from '@/constants';
-import { useAppMode, useBridge } from '@/contexts/AppModeContext';
+import { useAppMode, useVerificationBridge } from '@/contexts/AppModeContext';
 
 interface VerifiedScreenProps {
   domainUrl: string;
@@ -43,7 +43,7 @@ export default function VerifiedScreen({
   workspaceName,
 }: VerifiedScreenProps) {
   const { isEmbedded, isStandalone } = useAppMode();
-  const bridge = useBridge();
+  const verificationBridge = useVerificationBridge();
   const cleanupDoneRef = useRef(false);
   const displayUrl = extractHostname(domainUrl);
 
@@ -55,10 +55,10 @@ export default function VerifiedScreen({
     console.log(`[VerifiedScreen] Will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
 
     const timer = setTimeout(() => {
-      if (isEmbedded && bridge) {
-        // Embedded mode: finish session via bridge (host handles cleanup and close)
-        console.log('[VerifiedScreen] Finishing session (embedded)');
-        bridge.finishSession();
+      if (isEmbedded && verificationBridge) {
+        // Embedded mode: request close via verification bridge (host handles cleanup)
+        console.log('[VerifiedScreen] Requesting close (embedded)');
+        verificationBridge.requestClose();
       } else if (isStandalone) {
         // Standalone mode: close the tab directly
         console.log('[VerifiedScreen] Closing tab (standalone)');
@@ -67,7 +67,7 @@ export default function VerifiedScreen({
     }, SUCCESS_AUTO_CLOSE_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [isEmbedded, isStandalone, bridge]);
+  }, [isEmbedded, isStandalone, verificationBridge]);
 
   return (
     <VerificationScreenLayout

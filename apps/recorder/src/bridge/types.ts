@@ -75,6 +75,12 @@ export interface VerificationHostSchema {
    * Parent makes the API call so the request origin is the parent's domain
    */
   requestVerification: (token: string, workspaceIds: string[]) => Promise<ParentVerificationResult>;
+
+  /**
+   * Request the parent to close the verification iframe
+   * Called when verification is complete (success or user wants to close)
+   */
+  requestClose: () => void;
 }
 
 /**

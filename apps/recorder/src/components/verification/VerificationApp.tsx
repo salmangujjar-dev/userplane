@@ -24,7 +24,7 @@ import { createVerificationError } from '@/lib/verification-errors';
  */
 export default function VerificationApp() {
   return (
-    <AppModeProvider>
+    <AppModeProvider actionType="verification">
       <VerificationAppContent />
     </AppModeProvider>
   );

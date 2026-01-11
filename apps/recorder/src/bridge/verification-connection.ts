@@ -135,6 +135,21 @@ export class VerificationBridgeConnection {
       };
     }
   }
+
+  /**
+   * Request the parent SDK to close the verification iframe
+   * Called when verification is complete (success or user wants to close)
+   */
+  public requestClose(): void {
+    const remote = this.getRemote();
+    if (!remote) {
+      console.log('[VerificationBridge] Not connected, cannot request close');
+      return;
+    }
+
+    console.log('[VerificationBridge] Requesting close from parent');
+    remote.requestClose();
+  }
 }
 
 /**
