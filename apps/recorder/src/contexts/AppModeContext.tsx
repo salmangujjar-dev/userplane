@@ -17,8 +17,10 @@ import {
 import { detectAppMode, type AppMode } from '@/utils/browser';
 import {
   getRecorderBridge,
+  getVerificationBridge,
   getCrossTabCoordinator,
   type RecorderBridgeConnection,
+  type VerificationBridgeConnection,
   type RecordingState,
   type RecordingSessionInfo,
   type CrossTabCoordinator,
@@ -39,8 +41,10 @@ interface AppModeContextValue {
   mode: AppMode;
   isEmbedded: boolean;
   isStandalone: boolean;
-  /** Bridge connection to parent - null in standalone mode */
+  /** Recorder bridge connection to parent - null in standalone mode */
   bridge: RecorderBridgeConnection | null;
+  /** Verification bridge connection to parent - null in standalone mode */
+  verificationBridge: VerificationBridgeConnection | null;
   /** Cross-tab coordinator - null in standalone mode */
   crossTab: CrossTabCoordinator | null;
   /** Status of cross-tab lock acquisition */
@@ -65,6 +69,7 @@ interface AppModeProviderProps {
 
 export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProviderProps) {
   const bridgeRef = useRef<RecorderBridgeConnection | null>(null);
+  const verificationBridgeRef = useRef<VerificationBridgeConnection | null>(null);
   const crossTabRef = useRef<CrossTabCoordinator | null>(null);
 
   // Track cross-tab lock status
@@ -80,6 +85,9 @@ export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProvider
   useMemo(() => {
     if (isEmbedded && !bridgeRef.current) {
       bridgeRef.current = getRecorderBridge();
+    }
+    if (isEmbedded && !verificationBridgeRef.current) {
+      verificationBridgeRef.current = getVerificationBridge();
     }
     if (isEmbedded && !crossTabRef.current) {
       crossTabRef.current = getCrossTabCoordinator({
@@ -105,6 +113,7 @@ export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProvider
       isEmbedded,
       isStandalone: mode === 'standalone',
       bridge: isEmbedded ? bridgeRef.current : null,
+      verificationBridge: isEmbedded ? verificationBridgeRef.current : null,
       crossTab: isEmbedded ? crossTabRef.current : null,
       crossTabLockStatus: lockStatus,
       crossTabError: lockError,
@@ -113,7 +122,36 @@ export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProvider
     [mode, isEmbedded, lockStatus, lockError, blockingTabId]
   );
 
-  // Connect bridge first (to get tabRef from parent), then cross-tab coordinator
+  // Connect verification bridge (simple connection, no cross-tab coordination needed)
+  useEffect(() => {
+    if (!isEmbedded || !verificationBridgeRef.current) {
+      return;
+    }
+
+    const verificationBridge = verificationBridgeRef.current;
+    let mounted = true;
+
+    async function connectVerificationBridge() {
+      try {
+        console.log('[AppModeContext] Connecting verification bridge');
+        await verificationBridge.connect();
+        if (!mounted) return;
+        console.log('[AppModeContext] Verification bridge connected');
+      } catch (error) {
+        if (!mounted) return;
+        console.error('[AppModeContext] Verification bridge connection failed:', error);
+      }
+    }
+
+    connectVerificationBridge();
+
+    return () => {
+      mounted = false;
+      verificationBridge.disconnect();
+    };
+  }, [isEmbedded]);
+
+  // Connect recorder bridge (with cross-tab coordination)
   useEffect(() => {
     if (!isEmbedded || !bridgeRef.current || !crossTabRef.current) {
       return;
@@ -226,11 +264,19 @@ export function useIsStandalone(): boolean {
 }
 
 /**
- * Hook to access the bridge connection
+ * Hook to access the recorder bridge connection
  * Returns null in standalone mode
  */
 export function useBridge(): RecorderBridgeConnection | null {
   return useAppMode().bridge;
+}
+
+/**
+ * Hook to access the verification bridge connection
+ * Returns null in standalone mode
+ */
+export function useVerificationBridge(): VerificationBridgeConnection | null {
+  return useAppMode().verificationBridge;
 }
 
 /**

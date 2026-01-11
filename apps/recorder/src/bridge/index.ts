@@ -5,6 +5,13 @@
 export { RecorderBridgeConnection, getRecorderBridge, resetRecorderBridge } from './connection';
 
 export {
+  VerificationBridgeConnection,
+  getVerificationBridge,
+  resetVerificationBridge,
+  type VerificationResult,
+} from './verification-connection';
+
+export {
   CrossTabCoordinator,
   getCrossTabCoordinator,
   resetCrossTabCoordinator,
@@ -16,11 +23,10 @@ export {
 export {
   type RecordingState,
   type RecordingSessionInfo,
-  type HostSchema,
+  type RecorderHostSchema,
+  type VerificationHostSchema,
   type GuestSchema,
   type CustomMetadata,
   type SerializableObject,
   type VerificationData,
 } from './types';
-
-export { type VerificationResult } from './connection';

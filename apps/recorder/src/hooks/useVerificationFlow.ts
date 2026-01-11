@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { VerificationError } from '@/types/errors';
 import { createVerificationError } from '@/lib/verification-errors';
-import type { RecorderBridgeConnection } from '@/bridge';
+import type { VerificationBridgeConnection } from '@/bridge';
 
 /**
  * Verification flow states
@@ -52,13 +52,13 @@ export interface VerificationFlowActions {
  *
  * @param token - Verification token from URL
  * @param workspaceIds - Workspace IDs from URL
- * @param bridge - Bridge connection to parent SDK (required in embedded mode)
+ * @param bridge - Verification bridge connection to parent SDK (required in embedded mode)
  * @returns Verification state and actions
  */
 export function useVerificationFlow(
   token: string,
   workspaceIds: string[],
-  bridge: RecorderBridgeConnection | null
+  bridge: VerificationBridgeConnection | null
 ): {
   state: VerificationState;
   actions: VerificationFlowActions;

@@ -54,9 +54,9 @@ export interface ParentVerificationResult {
 }
 
 /**
- * Methods exposed by the SDK (host/parent) that the recorder can call
+ * Methods exposed by the SDK (host/parent) for recording functionality
  */
-export interface HostSchema {
+export interface RecorderHostSchema {
   getTabRef: () => string;
   getCustomMetadata: () => CustomMetadata;
   initSession: (info: RecordingSessionInfo, title: string) => void;
@@ -64,6 +64,12 @@ export interface HostSchema {
   recordingActive: () => void;
   recordingRetained: () => void;
   recordingInactive: () => void;
+}
+
+/**
+ * Methods exposed by the SDK (host/parent) for domain verification
+ */
+export interface VerificationHostSchema {
   /**
    * Request domain verification from parent
    * Parent makes the API call so the request origin is the parent's domain
