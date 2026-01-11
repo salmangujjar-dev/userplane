@@ -31,7 +31,7 @@ interface RecordingAppProps {}
  */
 export default function RecordingApp({}: RecordingAppProps = {}) {
   return (
-    <AppModeProvider>
+    <AppModeProvider actionType="recording">
       <RecordingAppContent />
     </AppModeProvider>
   );

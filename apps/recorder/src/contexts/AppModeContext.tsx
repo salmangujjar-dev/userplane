@@ -57,17 +57,29 @@ interface AppModeContextValue {
 
 const AppModeContext = createContext<AppModeContextValue | null>(null);
 
+/**
+ * Action type for the app - determines which bridges to connect
+ */
+type AppActionType = 'recording' | 'verification';
+
 interface AppModeProviderProps {
   children: ReactNode;
+  /**
+   * The action type determines which bridges to connect:
+   * - 'recording': Connects recorder bridge with cross-tab coordination
+   * - 'verification': Connects only verification bridge (lightweight)
+   */
+  actionType: AppActionType;
   /**
    * URL to the SharedWorker script for cross-tab coordination (optional)
    * If not provided, postbridge uses bundler's native worker import.
    * Vite/Astro handle this automatically - no URL needed.
+   * Only used when actionType is 'recording'.
    */
   crossTabWorkerURL?: string;
 }
 
-export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProviderProps) {
+export function AppModeProvider({ children, actionType, crossTabWorkerURL }: AppModeProviderProps) {
   const bridgeRef = useRef<RecorderBridgeConnection | null>(null);
   const verificationBridgeRef = useRef<VerificationBridgeConnection | null>(null);
   const crossTabRef = useRef<CrossTabCoordinator | null>(null);
@@ -80,16 +92,16 @@ export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProvider
   // Detect mode once (stable reference)
   const mode = useMemo(() => detectAppMode(), []);
   const isEmbedded = mode === 'embedded';
+  const isRecording = actionType === 'recording';
+  const isVerification = actionType === 'verification';
 
-  // Create instances only in embedded mode
+  // Create instances only in embedded mode, based on action type
   useMemo(() => {
-    if (isEmbedded && !bridgeRef.current) {
+    // Recording mode: create recorder bridge and cross-tab coordinator
+    if (isEmbedded && isRecording && !bridgeRef.current) {
       bridgeRef.current = getRecorderBridge();
     }
-    if (isEmbedded && !verificationBridgeRef.current) {
-      verificationBridgeRef.current = getVerificationBridge();
-    }
-    if (isEmbedded && !crossTabRef.current) {
+    if (isEmbedded && isRecording && !crossTabRef.current) {
       crossTabRef.current = getCrossTabCoordinator({
         workerURL: crossTabWorkerURL,
         callbacks: {
@@ -105,7 +117,11 @@ export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProvider
         },
       });
     }
-  }, [isEmbedded, crossTabWorkerURL]);
+    // Verification mode: create only verification bridge
+    if (isEmbedded && isVerification && !verificationBridgeRef.current) {
+      verificationBridgeRef.current = getVerificationBridge();
+    }
+  }, [isEmbedded, isRecording, isVerification, crossTabWorkerURL]);
 
   const value = useMemo<AppModeContextValue>(
     () => ({
@@ -123,8 +139,9 @@ export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProvider
   );
 
   // Connect verification bridge (simple connection, no cross-tab coordination needed)
+  // Only runs in verification mode
   useEffect(() => {
-    if (!isEmbedded || !verificationBridgeRef.current) {
+    if (!isEmbedded || !isVerification || !verificationBridgeRef.current) {
       return;
     }
 
@@ -137,9 +154,14 @@ export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProvider
         await verificationBridge.connect();
         if (!mounted) return;
         console.log('[AppModeContext] Verification bridge connected');
+        // For verification, we don't need cross-tab coordination
+        // Set lock status to acquired so UI doesn't show waiting state
+        setLockStatus('acquired');
       } catch (error) {
         if (!mounted) return;
         console.error('[AppModeContext] Verification bridge connection failed:', error);
+        setLockStatus('error');
+        setLockError('Failed to connect to parent');
       }
     }
 
@@ -149,11 +171,12 @@ export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProvider
       mounted = false;
       verificationBridge.disconnect();
     };
-  }, [isEmbedded]);
+  }, [isEmbedded, isVerification]);
 
   // Connect recorder bridge (with cross-tab coordination)
+  // Only runs in recording mode
   useEffect(() => {
-    if (!isEmbedded || !bridgeRef.current || !crossTabRef.current) {
+    if (!isEmbedded || !isRecording || !bridgeRef.current || !crossTabRef.current) {
       return;
     }
 
@@ -230,7 +253,7 @@ export function AppModeProvider({ children, crossTabWorkerURL }: AppModeProvider
         console.error('[AppModeContext] Error disconnecting cross-tab:', err);
       });
     };
-  }, [isEmbedded]);
+  }, [isEmbedded, isRecording]);
 
   return <AppModeContext.Provider value={value}>{children}</AppModeContext.Provider>;
 }

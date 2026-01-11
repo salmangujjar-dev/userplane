@@ -120,6 +120,12 @@ export interface VerificationHostSchema {
    * @returns Verification result with success/error status
    */
   requestVerification: (token: string, workspaceIds: string[]) => Promise<VerificationResult>;
+
+  /**
+   * Request the parent to close the verification iframe
+   * Called when verification is complete (success or user wants to close)
+   */
+  requestClose: () => void;
 }
 
 /**

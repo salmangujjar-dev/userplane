@@ -52,6 +52,7 @@ export class VerificationBridgeConnection {
     // Create host schema with verification methods
     const schema: VerificationHostSchema = {
       requestVerification: this.handleRequestVerification.bind(this),
+      requestClose: this.handleRequestClose.bind(this),
     };
 
     try {
@@ -85,6 +86,15 @@ export class VerificationBridgeConnection {
    */
   public isConnected(): boolean {
     return this.connection !== null;
+  }
+
+  /**
+   * Handle close request from the iframe
+   * Called when verification is complete and the iframe should be closed
+   */
+  private handleRequestClose(): void {
+    console.log('[VerificationBridge] Close requested from iframe');
+    this.callbacks.onRequestClose?.();
   }
 
   /**
