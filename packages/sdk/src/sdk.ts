@@ -33,11 +33,12 @@ import type {
   RecordingContext,
   SerializableUserplaneData,
 } from './types';
-import { FrameManager } from './frame/manager';
+import { FrameManagerFactory } from './frame/factory';
+import type { IFrameManager, IRecordingFrameManager } from './frame/types';
 import { parseUrlParams } from './utils/url';
 import { readWorkspaceIds } from './utils/meta';
 import { getOrCreateTabRef, clearTabRef as clearTabRefUtil } from './utils/tab';
-import type { BridgeCallbacks, RecordingSessionInfo } from './bridge';
+import type { RecordingSessionInfo } from './bridge';
 import {
   metadata as setMetadataFn,
   clearMetadata as clearMetadataFn,
@@ -45,7 +46,8 @@ import {
 } from '@workspace/metadata';
 
 // Internal state
-let frameManager: FrameManager | null = null;
+let factory: FrameManagerFactory | null = null;
+let currentManager: IFrameManager | null = null;
 let recorderBaseUrl = 'http://localhost:4322';
 let verificationBaseUrl = 'http://localhost:3001/api/v1';
 let initialized = false;
@@ -73,24 +75,39 @@ function getActionUrl(baseUrl: string, action: ActionType): string {
 }
 
 /**
- * Set up bridge callbacks for internal logging
+ * Handle close request from frame manager
  */
-function setupBridgeCallbacks(): void {
-  if (!frameManager) return;
+function handleCloseRequest(): void {
+  console.log('[Userplane] Frame requested close');
+  currentManager = null;
+}
 
-  const bridgeCallbacks: BridgeCallbacks = {
-    onSessionReady: (info: RecordingSessionInfo) => {
-      console.log('[Userplane] Session ready:', info);
-    },
-    onRecordingStateChange: (state: RecordingState) => {
-      console.log('[Userplane] Recording state changed:', state);
-    },
-    onRequestClose: () => {
-      console.log('[Userplane] Recorder requested close');
-    },
-  };
+/**
+ * Handle session ready event
+ */
+function handleSessionReady(info: RecordingSessionInfo): void {
+  console.log('[Userplane] Session ready:', info);
+}
 
-  frameManager.setBridgeCallbacks(bridgeCallbacks);
+/**
+ * Handle recording state change
+ */
+function handleRecordingStateChange(state: RecordingState): void {
+  console.log('[Userplane] Recording state changed:', state);
+}
+
+/**
+ * Mount a frame using the factory
+ */
+function mountWithFactory(params: RecorderParams): boolean {
+  if (!factory) {
+    console.error('[Userplane] Factory not initialized');
+    return false;
+  }
+
+  // Create the appropriate manager for this action
+  currentManager = factory.create(params.action);
+  return currentManager.tryMount(params);
 }
 
 /**
@@ -167,13 +184,9 @@ export function initialize(options: InitializeOptions = {}): void {
   initialized = true;
   initOptions = options;
 
-  // Set up frame manager
-  frameManager = new FrameManager();
+  // Set up tab reference
   tabRef = getOrCreateTabRef();
   console.log('[Userplane] Tab Ref:', tabRef);
-
-  frameManager.setTabRef(tabRef);
-  setupBridgeCallbacks();
 
   // Set recorder base URL
   if (options.recorderBaseUrl) {
@@ -185,8 +198,14 @@ export function initialize(options: InitializeOptions = {}): void {
     verificationBaseUrl = options.verificationBaseUrl;
   }
 
-  // Pass verification URL to frame manager for bridge connections
-  frameManager.setVerificationBaseUrl(verificationBaseUrl);
+  // Create frame manager factory with callbacks
+  factory = new FrameManagerFactory({
+    tabRef,
+    verificationBaseUrl,
+    onRequestClose: handleCloseRequest,
+    onSessionReady: handleSessionReady,
+    onRecordingStateChange: handleRecordingStateChange,
+  });
 
   // Determine open behavior
   const openImmediately = options.openImmediately;
@@ -201,7 +220,7 @@ export function initialize(options: InitializeOptions = {}): void {
       token: openImmediately,
       action,
     };
-    frameManager.tryMount(params);
+    mountWithFactory(params);
     return;
   }
 
@@ -237,7 +256,7 @@ export function initialize(options: InitializeOptions = {}): void {
 
   // Auto-open if enabled (default: true)
   if (openImmediately !== false) {
-    frameManager.tryMount(params);
+    mountWithFactory(params);
   } else {
     console.log('[Userplane] Deferring recorder mount (openImmediately: false)');
     pendingParams = params;
@@ -278,12 +297,12 @@ export function isInitialized(): boolean {
  * ```
  */
 export function open(token?: string): boolean {
-  if (!initialized || !frameManager) {
+  if (!initialized || !factory) {
     console.error('[Userplane] Not initialized. Call initialize() first.');
     return false;
   }
 
-  if (frameManager.isMounted()) {
+  if (currentManager?.isMounted()) {
     console.warn('[Userplane] Recorder is already open');
     return false;
   }
@@ -331,7 +350,7 @@ export function open(token?: string): boolean {
   }
 
   console.log('[Userplane] Opening recorder');
-  return frameManager.tryMount(params);
+  return mountWithFactory(params);
 }
 
 /**
@@ -339,12 +358,12 @@ export function open(token?: string): boolean {
  * Only triggered automatically from URL params, not exposed publicly
  */
 function mountVerification(token: string): boolean {
-  if (!initialized || !frameManager) {
+  if (!initialized || !factory) {
     console.error('[Userplane] Not initialized. Call initialize() first.');
     return false;
   }
 
-  if (frameManager.isMounted()) {
+  if (currentManager?.isMounted()) {
     console.warn('[Userplane] Frame is already mounted');
     return false;
   }
@@ -358,7 +377,7 @@ function mountVerification(token: string): boolean {
   };
 
   console.log('[Userplane] Mounting verification');
-  return frameManager.tryMount(params);
+  return mountWithFactory(params);
 }
 
 /**
@@ -370,9 +389,10 @@ function mountVerification(token: string): boolean {
  * ```
  */
 export function unmount(): void {
-  if (frameManager) {
-    frameManager.unmount();
-    console.log('[Userplane] Recorder unmounted');
+  if (currentManager) {
+    currentManager.unmount();
+    currentManager = null;
+    console.log('[Userplane] Frame unmounted');
   }
 }
 
@@ -382,7 +402,7 @@ export function unmount(): void {
  * @returns true if recorder is mounted
  */
 export function isRecorderMounted(): boolean {
-  return frameManager?.isMounted() ?? false;
+  return currentManager?.isMounted() ?? false;
 }
 
 /**
@@ -391,7 +411,7 @@ export function isRecorderMounted(): boolean {
  * @returns true if bridge is connected
  */
 export function isBridgeConnected(): boolean {
-  return frameManager?.isBridgeConnected() ?? false;
+  return currentManager?.isBridgeConnected() ?? false;
 }
 
 /**
@@ -400,7 +420,9 @@ export function isBridgeConnected(): boolean {
  * @returns Current recording state ('inactive', 'recording', 'paused', etc.)
  */
 export function getRecordingState(): RecordingState {
-  const context = frameManager?.getRecordingContext();
+  // Only available for recording managers
+  const recordingManager = currentManager as IRecordingFrameManager | null;
+  const context = recordingManager?.getRecordingContext?.();
   return context?.state ?? 'inactive';
 }
 
@@ -410,7 +432,9 @@ export function getRecordingState(): RecordingState {
  * @returns Recording context or null if not available
  */
 export function getRecordingContext(): RecordingContext | null {
-  return frameManager?.getRecordingContext() ?? null;
+  // Only available for recording managers
+  const recordingManager = currentManager as IRecordingFrameManager | null;
+  return recordingManager?.getRecordingContext?.() ?? null;
 }
 
 /**
@@ -419,7 +443,9 @@ export function getRecordingContext(): RecordingContext | null {
  * @returns Session ID or null if no active session
  */
 export function getSessionId(): string | null {
-  return frameManager?.getSessionId() ?? null;
+  // Only available for recording managers
+  const recordingManager = currentManager as IRecordingFrameManager | null;
+  return recordingManager?.getSessionId?.() ?? null;
 }
 
 /**
@@ -428,7 +454,9 @@ export function getSessionId(): string | null {
  * @returns Link ID or null if no active session
  */
 export function getLinkId(): string | null {
-  return frameManager?.getLinkId() ?? null;
+  // Only available for recording managers
+  const recordingManager = currentManager as IRecordingFrameManager | null;
+  return recordingManager?.getLinkId?.() ?? null;
 }
 
 /**

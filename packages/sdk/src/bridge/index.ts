@@ -2,11 +2,23 @@
  * Bridge module barrel export
  */
 
-export { BridgeConnection, type BridgeCallbacks } from './connection';
+export {
+  RecorderBridgeConnection,
+  type RecorderBridgeCallbacks,
+  type RecorderBridgeConnectionOptions,
+} from './recorder-connection';
+
+export {
+  VerificationBridgeConnection,
+  type VerificationBridgeCallbacks,
+  type VerificationBridgeConnectionOptions,
+} from './verification-connection';
+
 export type {
   RecordingState,
   RecordingSessionInfo,
   RecordingContext,
-  HostSchema,
+  RecorderHostSchema,
+  VerificationHostSchema,
   GuestSchema,
 } from './types';

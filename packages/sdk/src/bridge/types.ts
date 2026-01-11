@@ -52,9 +52,9 @@ export interface VerificationResult {
 }
 
 /**
- * Methods exposed by the SDK (host/parent) to the recorder (guest/iframe)
+ * Methods exposed by the SDK (host/parent) for recording functionality
  */
-export interface HostSchema {
+export interface RecorderHostSchema {
   /**
    * Get the unique tab reference from the parent
    * Used to identify which tab the recording came from
@@ -104,7 +104,12 @@ export interface HostSchema {
    * Parent will disable tab unload protection
    */
   recordingInactive: () => void;
+}
 
+/**
+ * Methods exposed by the SDK (host/parent) for domain verification
+ */
+export interface VerificationHostSchema {
   /**
    * Request domain verification from parent
    * Parent makes the API call so the request origin is the parent's domain
