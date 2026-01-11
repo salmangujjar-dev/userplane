@@ -5,7 +5,12 @@
  */
 
 import { useEffect, useState } from 'react';
-import { AppModeProvider, useAppMode, useBridge, useCrossTabLock } from '@/contexts/AppModeContext';
+import {
+  AppModeProvider,
+  useAppMode,
+  useVerificationBridge,
+  useCrossTabLock,
+} from '@/contexts/AppModeContext';
 import { useVerificationFlow } from '@/hooks/useVerificationFlow';
 import VerifyingScreen from './VerifyingScreen';
 import VerifiedScreen from './VerifiedScreen';
@@ -30,7 +35,7 @@ export default function VerificationApp() {
  */
 function VerificationAppContent() {
   const { mode, isEmbedded } = useAppMode();
-  const bridge = useBridge();
+  const verificationBridge = useVerificationBridge();
   const crossTabLock = useCrossTabLock();
 
   // Initialize state from URL immediately
@@ -39,9 +44,9 @@ function VerificationAppContent() {
     parseWorkspaceIds(getUrlParams().workspace)
   );
 
-  // Initialize verification flow with bridge for parent communication
+  // Initialize verification flow with verification bridge for parent communication
   // The bridge is used to request verification from parent so the origin is correct
-  const { state, actions } = useVerificationFlow(token, workspaceIds, bridge);
+  const { state, actions } = useVerificationFlow(token, workspaceIds, verificationBridge);
 
   // Effect to extract URL params
   useEffect(() => {
@@ -66,13 +71,13 @@ function VerificationAppContent() {
 
   // Report verification completion to parent via bridge (embedded mode only)
   useEffect(() => {
-    if (!isEmbedded || !bridge) return;
+    if (!isEmbedded || !verificationBridge) return;
 
     if (state.state === 'verified' && state.result) {
       console.log('[VerificationApp] Reporting verification success to parent');
-      // Bridge will handle session cleanup
+      // Verification bridge handles the flow
     }
-  }, [bridge, isEmbedded, state.state, state.result]);
+  }, [verificationBridge, isEmbedded, state.state, state.result]);
 
   // In embedded mode, check cross-tab status before showing UI
   if (isEmbedded) {
