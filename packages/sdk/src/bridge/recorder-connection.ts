@@ -1,16 +1,16 @@
 /**
- * Bridge Connection Manager
+ * Recorder Bridge Connection
  * Manages the postbridge connection between SDK (host) and recorder iframe (guest)
+ * Focused on recording functionality - session management, state tracking, tab protection
  */
 
 import { host, type Connection } from '@workspace/postbridge';
 import type {
-  HostSchema,
+  RecorderHostSchema,
   GuestSchema,
   RecordingState,
   RecordingSessionInfo,
   RecordingContext,
-  VerificationResult,
 } from './types';
 import { URL_PARAMS } from '../constants';
 import { getCustomMetadata } from '@workspace/metadata';
@@ -18,31 +18,30 @@ import { getCustomMetadata } from '@workspace/metadata';
 /**
  * Callbacks for SDK events from the recorder
  */
-export interface BridgeCallbacks {
+export interface RecorderBridgeCallbacks {
   onSessionReady?: (info: RecordingSessionInfo) => void;
   onRecordingStateChange?: (state: RecordingState) => void;
   onRequestClose?: () => void;
 }
 
 /**
- * Options for creating a bridge connection
+ * Options for creating a recorder bridge connection
  */
-export interface BridgeConnectionOptions {
-  callbacks?: BridgeCallbacks;
+export interface RecorderBridgeConnectionOptions {
+  callbacks?: RecorderBridgeCallbacks;
   tabRef: string;
-  verificationBaseUrl: string;
 }
 
 /**
  * Manages the postbridge connection to the recorder iframe
+ * Handles recording session lifecycle and tab protection
  */
-export class BridgeConnection {
+export class RecorderBridgeConnection {
   private connection: Connection | null = null;
   private beforeUnloadHandler: ((e: BeforeUnloadEvent) => void) | null = null;
   private originalTitle: string = '';
   private tabRef: string;
-  private callbacks: BridgeCallbacks;
-  private verificationBaseUrl: string;
+  private callbacks: RecorderBridgeCallbacks;
 
   private context: RecordingContext = {
     state: 'inactive',
@@ -54,10 +53,9 @@ export class BridgeConnection {
   private sessionId: string | null = null;
   private linkId: string | null = null;
 
-  constructor(options: BridgeConnectionOptions) {
+  constructor(options: RecorderBridgeConnectionOptions) {
     this.tabRef = options.tabRef;
     this.callbacks = options.callbacks ?? {};
-    this.verificationBaseUrl = options.verificationBaseUrl;
   }
 
   /**
@@ -67,23 +65,23 @@ export class BridgeConnection {
    */
   public async connect(iframe: HTMLIFrameElement): Promise<void> {
     if (this.connection) {
-      console.warn('[Bridge] Already connected');
+      console.warn('[RecorderBridge] Already connected');
       return;
     }
 
-    console.log('[Bridge] Connecting to recorder iframe');
+    console.log('[RecorderBridge] Connecting to recorder iframe');
 
     // Store original title for restoration
     this.originalTitle = document.title;
 
-    // Create host schema with methods exposed to the recorder
-    const schema: HostSchema = {
+    // Create host schema with recording methods
+    const schema: RecorderHostSchema = {
       getTabRef: () => this.tabRef,
       getCustomMetadata: () => {
         try {
           return getCustomMetadata();
         } catch (error) {
-          console.error('[Bridge] Error getting custom metadata:', error);
+          console.error('[RecorderBridge] Error getting custom metadata:', error);
           return null;
         }
       },
@@ -92,14 +90,13 @@ export class BridgeConnection {
       recordingActive: this.handleRecordingActive.bind(this),
       recordingRetained: this.handleRecordingRetained.bind(this),
       recordingInactive: this.handleRecordingInactive.bind(this),
-      requestVerification: this.handleRequestVerification.bind(this),
     };
 
     try {
       this.connection = await host.connect(iframe, schema);
-      console.log('[Bridge] Connected to recorder, connection ID:', this.connection.id);
+      console.log('[RecorderBridge] Connected to recorder, connection ID:', this.connection.id);
     } catch (error) {
-      console.error('[Bridge] Failed to connect:', error);
+      console.error('[RecorderBridge] Failed to connect:', error);
       throw error;
     }
   }
@@ -109,11 +106,11 @@ export class BridgeConnection {
    */
   public disconnect(): void {
     if (!this.connection) {
-      console.warn('[Bridge] Not connected');
+      console.warn('[RecorderBridge] Not connected');
       return;
     }
 
-    console.log('[Bridge] Disconnecting from recorder');
+    console.log('[RecorderBridge] Disconnecting from recorder');
 
     // Disable tab unload protection
     this.disableTabUnloadProtection();
@@ -182,7 +179,7 @@ export class BridgeConnection {
    * Sets title, stores session info, and notifies callbacks
    */
   private handleInitSession(info: RecordingSessionInfo, title: string): void {
-    console.log('[Bridge] Initializing session:', { info, title });
+    console.log('[RecorderBridge] Initializing session:', { info, title });
 
     // Set parent title
     document.title = title;
@@ -204,7 +201,7 @@ export class BridgeConnection {
    * Resets title, clears URL params, disables protection, and closes recorder
    */
   private handleFinishSession(): void {
-    console.log('[Bridge] Finishing session');
+    console.log('[RecorderBridge] Finishing session');
 
     // Reset title to original
     if (this.originalTitle) {
@@ -231,7 +228,7 @@ export class BridgeConnection {
    * Enables tab unload protection and updates state
    */
   private handleRecordingActive(): void {
-    console.log('[Bridge] Recording active');
+    console.log('[RecorderBridge] Recording active');
     this.updateState('active');
     this.enableTabUnloadProtection();
   }
@@ -241,7 +238,7 @@ export class BridgeConnection {
    * Keeps tab unload protection enabled and updates state
    */
   private handleRecordingRetained(): void {
-    console.log('[Bridge] Recording retained');
+    console.log('[RecorderBridge] Recording retained');
     this.updateState('retained');
     this.enableTabUnloadProtection();
   }
@@ -251,158 +248,9 @@ export class BridgeConnection {
    * Disables tab unload protection and updates state
    */
   private handleRecordingInactive(): void {
-    console.log('[Bridge] Recording inactive');
+    console.log('[RecorderBridge] Recording inactive');
     this.updateState('inactive');
     this.disableTabUnloadProtection();
-  }
-
-  /**
-   * Handle verification request from the iframe
-   * Makes the API call from the parent window so the origin header is correct
-   * This is required because the API validates the origin against registered domains
-   *
-   * API Contract (POST /domains/verify):
-   * - Request: { token: string, workspaceIds: string[] }
-   * - Success: { message: string, data: { domainStatus, workspaceId, domainId, domainUrl } }
-   * - Error: { code: string, message: string, status: number }
-   */
-  private async handleRequestVerification(
-    token: string,
-    workspaceIds: string[]
-  ): Promise<VerificationResult> {
-    console.log('[Bridge] Handling verification request');
-    console.log('[Bridge] Token:', token.substring(0, 20) + '...');
-    console.log('[Bridge] Workspace IDs:', workspaceIds);
-
-    try {
-      const response = await fetch(`${this.verificationBaseUrl}/domains/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token, workspaceIds }),
-      });
-
-      // Parse response body - may fail if not valid JSON
-      const json = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        return this.parseVerificationError(json, response.status);
-      }
-
-      return this.parseVerificationSuccess(json);
-    } catch (error) {
-      console.error('[Bridge] Verification request error:', error);
-
-      return {
-        success: false,
-        error: {
-          code: 'NETWORK_ERROR',
-          message: error instanceof Error ? error.message : 'Network request failed',
-        },
-      };
-    }
-  }
-
-  /**
-   * Parse successful verification response
-   * Validates the response structure matches the contract
-   */
-  private parseVerificationSuccess(json: unknown): VerificationResult {
-    // Type guard for API response structure: { message: string, data: {...} }
-    if (!this.isValidApiResponse(json)) {
-      console.error('[Bridge] Invalid API response structure:', json);
-      return {
-        success: false,
-        error: {
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid response structure from API',
-        },
-      };
-    }
-
-    const { data } = json;
-
-    // Extract and validate required fields from DomainVerificationDataSchema
-    const domainStatus = this.extractString(data, 'domainStatus');
-    const workspaceId = this.extractString(data, 'workspaceId');
-    const domainId = this.extractString(data, 'domainId');
-    const domainUrl = this.extractString(data, 'domainUrl');
-
-    if (!domainStatus || !workspaceId || !domainId || !domainUrl) {
-      console.error('[Bridge] Missing required fields in verification data:', data);
-      return {
-        success: false,
-        error: {
-          code: 'INVALID_RESPONSE',
-          message: 'Missing required fields in verification response',
-        },
-      };
-    }
-
-    console.log('[Bridge] Verification successful:', {
-      domainStatus,
-      workspaceId,
-      domainId,
-      domainUrl,
-    });
-
-    return {
-      success: true,
-      data: {
-        domainStatus,
-        workspaceId,
-        domainId,
-        domainUrl,
-      },
-    };
-  }
-
-  /**
-   * Parse verification error response
-   * Extracts error code and message from oRPC error format
-   */
-  private parseVerificationError(json: unknown, status: number): VerificationResult {
-    // oRPC error format: { code: string, message: string, status?: number }
-    const errorCode = this.extractString(json, 'code') ?? `HTTP_${status}`;
-    const errorMessage = this.extractString(json, 'message') ?? `Verification failed (${status})`;
-
-    console.error('[Bridge] Verification failed:', { errorCode, errorMessage, status });
-
-    return {
-      success: false,
-      error: {
-        code: errorCode,
-        message: errorMessage,
-      },
-    };
-  }
-
-  /**
-   * Type guard for valid API response structure
-   * Matches ApiResponseSchema: { message: string, data: object }
-   */
-  private isValidApiResponse(
-    json: unknown
-  ): json is { message: string; data: Record<string, unknown> } {
-    return (
-      typeof json === 'object' &&
-      json !== null &&
-      'message' in json &&
-      typeof (json as Record<string, unknown>).message === 'string' &&
-      'data' in json &&
-      typeof (json as Record<string, unknown>).data === 'object' &&
-      (json as Record<string, unknown>).data !== null
-    );
-  }
-
-  /**
-   * Safely extract a string property from an unknown object
-   */
-  private extractString(obj: unknown, key: string): string | undefined {
-    if (typeof obj !== 'object' || obj === null) return undefined;
-    const value = (obj as Record<string, unknown>)[key];
-    return typeof value === 'string' ? value : undefined;
   }
 
   /**
@@ -422,7 +270,7 @@ export class BridgeConnection {
     }
 
     this.beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      console.log('[Bridge] beforeunload triggered - preventing accidental close');
+      console.log('[RecorderBridge] beforeunload triggered - preventing accidental close');
       e.preventDefault();
     };
 
