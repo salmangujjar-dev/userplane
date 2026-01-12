@@ -10,7 +10,13 @@ import {
   type RecordingFlowActions,
   type FlowState,
 } from '@/hooks/useRecordingFlow';
-import { AppModeProvider, useAppMode, useBridge, useCrossTabLock } from '@/contexts/AppModeContext';
+import {
+  AppModeProvider,
+  useAppMode,
+  useBridge,
+  useCrossTabLock,
+  useCaptureChannel,
+} from '@/contexts/AppModeContext';
 import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import PreRecordingScreen from './PreRecordingScreen';
@@ -43,6 +49,7 @@ export default function RecordingApp({}: RecordingAppProps = {}) {
 function RecordingAppContent() {
   const { mode, isEmbedded } = useAppMode();
   const bridge = useBridge();
+  const captureChannel = useCaptureChannel();
   const crossTabLock = useCrossTabLock();
 
   // Initialize state from URL immediately to avoid race condition
@@ -138,20 +145,72 @@ function RecordingAppContent() {
   }, [bridge, isEmbedded, crossTabLock.isAcquired, sessionInfo, state.state]);
 
   /**
-   * Submit recording with custom metadata from host (in embedded mode)
-   * Fetches metadata from the host application via bridge before submitting
+   * Gather metadata from all capture iframes via scatter-gather
+   * Returns unified metadata if all tabs identical, per-tab structure otherwise
+   */
+  const gatherMetadataFromCaptureTabs = async (): Promise<Record<string, unknown> | null> => {
+    if (!captureChannel) return null;
+
+    const scatterResult = await captureChannel.scatterGatherMetadata(3000);
+    console.log('[RecordingApp] Scatter-gather complete:', {
+      respondedTabs: scatterResult.respondedTabs.length,
+      timedOutTabs: scatterResult.timedOutTabs.length,
+    });
+
+    // Build per-tab metadata map
+    const allTabsMetadata: Record<string, Record<string, unknown>> = {};
+
+    if (scatterResult.perTab) {
+      for (const [tabId, entry] of Object.entries(scatterResult.perTab)) {
+        allTabsMetadata[tabId] = entry as Record<string, unknown>;
+      }
+    } else if (scatterResult.unified && scatterResult.respondedTabs.length > 0) {
+      for (const tabId of scatterResult.respondedTabs) {
+        allTabsMetadata[tabId] = {
+          _pageUrl: '',
+          _pageTitle: '',
+          ...((scatterResult.unified as Record<string, unknown>) || {}),
+        };
+      }
+    }
+
+    if (Object.keys(allTabsMetadata).length === 0) {
+      console.log('[RecordingApp] No metadata from any tab');
+      return null;
+    }
+
+    // Extract custom metadata (everything except _pageUrl, _pageTitle)
+    const extractCustom = (entry: Record<string, unknown>) => {
+      const { _pageUrl, _pageTitle, ...custom } = entry;
+      return custom;
+    };
+
+    const allCustomMetadata = Object.values(allTabsMetadata).map(extractCustom);
+    const allIdentical = allCustomMetadata.every(
+      (m) => JSON.stringify(m) === JSON.stringify(allCustomMetadata[0])
+    );
+
+    if (allIdentical && Object.keys(allCustomMetadata[0] || {}).length > 0) {
+      console.log('[RecordingApp] All tabs identical - using unified:', allCustomMetadata[0]);
+      return allCustomMetadata[0] as Record<string, unknown>;
+    }
+
+    console.log('[RecordingApp] Tabs differ - using per-tab:', allTabsMetadata);
+    return allTabsMetadata;
+  };
+
+  /**
+   * Submit recording with metadata from capture iframes
    */
   const handleSubmitRecording = async () => {
     let customMetadata: Record<string, unknown> | null = null;
 
-    // In embedded mode, fetch custom metadata from host before submitting
-    if (isEmbedded && bridge) {
-      console.log('[RecordingApp] Fetching custom metadata from host...');
-      customMetadata = await bridge.getCustomMetadata();
-      if (customMetadata) {
-        console.log('[RecordingApp] Got custom metadata:', customMetadata);
-      } else {
-        console.log('[RecordingApp] No custom metadata from host');
+    if (isEmbedded && captureChannel) {
+      console.log('[RecordingApp] Gathering metadata from capture tabs...');
+      try {
+        customMetadata = await gatherMetadataFromCaptureTabs();
+      } catch (err) {
+        console.error('[RecordingApp] Metadata collection failed (non-fatal):', err);
       }
     }
 

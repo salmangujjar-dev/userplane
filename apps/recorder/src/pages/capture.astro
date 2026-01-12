@@ -1,0 +1,41 @@
+---
+/**
+ * Capture Page
+ * Lightweight hidden 1x1 iframe for metadata extraction
+ *
+ * This page:
+ * - Loads the CaptureApp component that connects to parent SDK
+ * - Has minimal styling (no visible UI)
+ * - Is always mounted by SDK when no recorder/verify iframe is active
+ * - Used for cross-tab coordination and scatter-gather metadata collection
+ */
+import CaptureApp from '@/components/capture/CaptureApp';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <!-- Minimal head - no favicon, no meta for hidden iframe -->
+    <title>Userplane Capture</title>
+    <style>
+      /* Minimal reset for hidden iframe */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        background: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <CaptureApp client:load />
+  </body>
+</html>
