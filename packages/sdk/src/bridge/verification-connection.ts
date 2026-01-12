@@ -6,6 +6,7 @@
 
 import { host, type Connection } from '@workspace/postbridge';
 import type { VerificationHostSchema, VerificationResult } from './types';
+import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
 
 /**
  * Callbacks for verification events
@@ -20,6 +21,8 @@ export interface VerificationBridgeCallbacks {
 export interface VerificationBridgeConnectionOptions {
   callbacks?: VerificationBridgeCallbacks;
   verificationBaseUrl: string;
+  /** Tab reference for connection ID generation */
+  tabRef: string;
 }
 
 /**
@@ -30,10 +33,23 @@ export class VerificationBridgeConnection {
   private connection: Connection | null = null;
   private verificationBaseUrl: string;
   private callbacks: VerificationBridgeCallbacks;
+  private tabRef: string;
+  private connectionId: string;
 
   constructor(options: VerificationBridgeConnectionOptions) {
     this.verificationBaseUrl = options.verificationBaseUrl;
     this.callbacks = options.callbacks ?? {};
+    this.tabRef = options.tabRef;
+    // Generate prefixed connection ID: vrd_{tabRef}
+    this.connectionId = generateConnectionId(CONNECTION_PREFIXES.VERIFICATION, this.tabRef);
+  }
+
+  /**
+   * Get the prefixed connection ID for this verification
+   * Format: vrd_{tabRef}
+   */
+  public getConnectionId(): string {
+    return this.connectionId;
   }
 
   /**

@@ -41,6 +41,7 @@ export class VerificationFrameManager
 
     this.bridge = new VerificationBridgeConnection({
       verificationBaseUrl: this.verificationConfig.verificationBaseUrl,
+      tabRef: this.verificationConfig.tabRef,
       callbacks: {
         onRequestClose: () => this.handleCloseRequest(),
       },

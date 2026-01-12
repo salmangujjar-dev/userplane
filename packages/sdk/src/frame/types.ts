@@ -5,6 +5,10 @@
 
 import type { RecorderFrame, RecorderParams } from '../types';
 import type { RecordingContext } from '../bridge';
+import type { TabMetadata, CaptureRecorderState, RecordingState } from '../bridge/types';
+
+// Re-export types used by frame managers
+export type { CaptureRecorderState, TabMetadata };
 
 /**
  * Base frame manager interface
@@ -69,6 +73,33 @@ export interface IVerificationFrameManager extends IFrameManager {
 }
 
 /**
+ * Capture-specific frame manager interface
+ * Lightweight hidden 1x1 iframe for metadata extraction
+ */
+export interface ICaptureFrameManager extends IFrameManager {
+  /**
+   * Extract metadata from the capture iframe
+   * Used during scatter-gather operation by recorder
+   */
+  extractMetadata(): Promise<TabMetadata | null>;
+
+  /**
+   * Update recorder state for cross-tab awareness
+   */
+  updateRecorderState(recorderId: string | null, state: RecordingState): void;
+
+  /**
+   * Get current recorder state being tracked
+   */
+  getRecorderState(): CaptureRecorderState;
+
+  /**
+   * Check if the capture iframe is alive/responsive
+   */
+  ping(): Promise<boolean>;
+}
+
+/**
  * Common frame manager configuration
  */
 export interface FrameManagerConfig {
@@ -94,4 +125,18 @@ export interface RecordingFrameManagerConfig extends FrameManagerConfig {
 export interface VerificationFrameManagerConfig extends FrameManagerConfig {
   /** Base URL for verification API */
   verificationBaseUrl: string;
+  /** Tab reference for connection ID generation */
+  tabRef: string;
+}
+
+/**
+ * Capture frame manager configuration
+ */
+export interface CaptureFrameManagerConfig extends FrameManagerConfig {
+  /** Tab reference for this capture */
+  tabRef: string;
+  /** Callback when capture connects */
+  onConnected?: () => void;
+  /** Callback when recorder state changes (from cross-tab) */
+  onRecorderStateChange?: (state: CaptureRecorderState) => void;
 }

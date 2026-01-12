@@ -125,6 +125,14 @@ export interface InitializeOptions {
   openImmediately?: boolean | string;
 
   /**
+   * Whether to enable the capture iframe for background metadata collection.
+   * When enabled, a hidden 1x1 iframe is mounted when no recorder/verify frame is active.
+   * This enables cross-tab awareness and scatter-gather metadata collection.
+   * @default true
+   */
+  captureEnabled?: boolean;
+
+  /**
    * Custom function to parse userplane data from URL.
    * Default extracts userplane-action and userplane-token from query params.
    */
