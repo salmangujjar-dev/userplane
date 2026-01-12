@@ -58,6 +58,7 @@ declare global {
     __userplane__?: {
       exports?: {
         metadata?: MetadataFunction;
+        staticMetadata?: SerializableObject;
       };
     };
   }
@@ -187,44 +188,162 @@ export function metadata(metadataFunction: MetadataFunction): void {
 }
 
 /**
- * Retrieves the custom metadata by executing the stored metadata function.
+ * Sets static key-value metadata as defaults that can be overridden by the metadata function.
  *
- * @returns The metadata object, or null if no metadata function is set or it fails
+ * Use this for default/fallback data that should be included unless explicitly overridden:
+ * - Default application version (can be overridden per-environment)
+ * - Fallback values
+ * - Base configuration
+ * - Static identifiers
+ *
+ * @param key - The metadata key (must be a string)
+ * @param value - Any serializable value
  *
  * @remarks
+ * **Static vs Function Metadata:**
+ * - Static metadata set via `set()` provides defaults
+ * - Function metadata (from `metadata()`) takes priority and can override static keys
+ * - This allows dynamic overrides when needed while maintaining defaults
+ *
+ * **Multiple Calls:**
+ * - Each call to `set()` adds or updates that specific key
+ * - Does not affect other keys
+ * - To remove a key, use `clearMetadata(key)`
+ *
+ * @example
+ * ```typescript
+ * import { userplane } from '@userplane/sdk';
+ *
+ * // Set static metadata as defaults
+ * userplane.set('appVersion', '2.1.0');
+ * userplane.set('environment', 'production');
+ * userplane.set('buildId', '12345');
+ *
+ * // Register a function that can override
+ * userplane.metadata(() => ({
+ *   userId: getCurrentUser().id,
+ *   appVersion: '3.0.0-beta',  // This OVERRIDES the static value
+ * }));
+ *
+ * // Result will have:
+ * // { appVersion: '3.0.0-beta', environment: 'production', buildId: '12345', userId: '...' }
+ * ```
+ */
+export function set(key: string, value: Serializable): void {
+  const userplaneExports = getUserplaneExportsObject();
+
+  // Initialize staticMetadata if it doesn't exist
+  if (!userplaneExports.staticMetadata) {
+    userplaneExports.staticMetadata = {};
+  }
+
+  const staticMetadata = userplaneExports.staticMetadata as SerializableObject;
+  staticMetadata[key] = value;
+}
+
+/**
+ * Retrieves the custom metadata by merging static key-value pairs and function results.
+ *
+ * @returns The merged metadata object, or null if no metadata is available
+ *
+ * @remarks
+ * **Merge Order:**
+ * 1. Start with static key-value pairs (defaults)
+ * 2. Overlay function metadata (function takes priority)
+ * 3. Return merged result
+ *
+ * This allows the dynamic function to override static defaults when needed.
+ *
  * This function is called internally by the SDK when the recorder requests
  * custom metadata via the bridge. It safely executes the user-provided
  * metadata function and handles any errors gracefully.
  */
 export function getCustomMetadata(): SerializableObject | null {
+  let result: SerializableObject = {};
+  let hasData = false;
+
+  // 1. Start with static metadata (defaults)
+  const staticMetadata = window.__userplane__?.exports?.staticMetadata;
+  if (staticMetadata && typeof staticMetadata === 'object') {
+    result = { ...staticMetadata };
+    hasData = true;
+  }
+
+  // 2. Overlay function metadata (takes priority)
   try {
     const metadataFn = window.__userplane__?.exports?.metadata;
 
-    if (typeof metadataFn !== 'function') {
-      return null;
+    if (typeof metadataFn === 'function') {
+      const fnResult = metadataFn();
+
+      // Validate result is an object
+      if (fnResult && typeof fnResult === 'object' && !Array.isArray(fnResult)) {
+        result = { ...result, ...fnResult };
+        hasData = true;
+      } else {
+        console.warn('[Userplane] metadata function must return an object');
+      }
     }
-
-    const result = metadataFn();
-
-    // Validate result is an object
-    if (!result || typeof result !== 'object' || Array.isArray(result)) {
-      console.warn('[Userplane] metadata function must return an object');
-      return null;
-    }
-
-    return result;
   } catch (error) {
     console.error('[Userplane] Error executing metadata function:', error);
-    return null;
   }
+
+  return hasData ? result : null;
 }
 
 /**
- * Clears the stored metadata function.
- * Useful for cleanup or testing.
+ * Clears metadata based on the provided parameter.
+ *
+ * @param keyOrType - Optional parameter to control what gets cleared:
+ *   - undefined: Clears both function and all static metadata (default)
+ *   - 'function': Clears only the metadata function
+ *   - 'static': Clears all static key-value pairs
+ *   - string key: Clears that specific static key
+ *
+ * @remarks
+ * Useful for cleanup, testing, or when user logs out.
+ *
+ * @example
+ * ```typescript
+ * // Clear everything
+ * userplane.clearMetadata();
+ *
+ * // Clear only the function
+ * userplane.clearMetadata('function');
+ *
+ * // Clear all static metadata
+ * userplane.clearMetadata('static');
+ *
+ * // Clear a specific key
+ * userplane.clearMetadata('userId');
+ * ```
  */
-export function clearMetadata(): void {
-  if (window.__userplane__?.exports) {
-    window.__userplane__.exports.metadata = undefined;
+export function clearMetadata(keyOrType?: string): void {
+  if (!window.__userplane__?.exports) return;
+
+  const exports = window.__userplane__.exports;
+
+  // No parameter - clear everything
+  if (keyOrType === undefined) {
+    exports.metadata = undefined;
+    exports.staticMetadata = undefined;
+    return;
+  }
+
+  // Clear only the function
+  if (keyOrType === 'function') {
+    exports.metadata = undefined;
+    return;
+  }
+
+  // Clear all static metadata
+  if (keyOrType === 'static') {
+    exports.staticMetadata = undefined;
+    return;
+  }
+
+  // Clear a specific static key
+  if (exports.staticMetadata && typeof exports.staticMetadata === 'object') {
+    delete exports.staticMetadata[keyOrType];
   }
 }

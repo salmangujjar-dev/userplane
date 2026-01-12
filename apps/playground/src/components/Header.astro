@@ -1,5 +1,6 @@
 ---
 import './Header.css';
+import { isEnabled } from '../flags';
 ---
 
 <header class="header">
@@ -7,7 +8,24 @@ import './Header.css';
     <a href="/" class="logo" aria-label="Y Combinator Home">
       <img src="/yc-logo.png" alt="Y Combinator" class="logo-img" />
     </a>
-    <a href="#" class="apply-btn">Apply</a>
+    <nav class="header-nav">
+      <a href="/" class="nav-link">Companies</a>
+      {
+        isEnabled('aboutPage') && (
+          <a href="/about" class="nav-link">
+            About
+          </a>
+        )
+      }
+      {
+        isEnabled('safePage') && (
+          <a href="/safe" class="nav-link">
+            Safe
+          </a>
+        )
+      }
+      <a href="https://www.ycombinator.com/apply" class="apply-btn">Apply</a>
+    </nav>
   </div>
 </header>
 <div class="header-divider"></div>

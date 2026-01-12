@@ -6,6 +6,20 @@ export interface Flag {
 }
 
 export interface Flags {
+  // About page flags
+  aboutPage: Flag;
+  aboutSidebar: Flag;
+  aboutProgram: Flag;
+  aboutAdvice: Flag;
+  aboutCommunity: Flag;
+  aboutBrand: Flag;
+  aboutHiring: Flag;
+  // Safe page flags
+  safePage: Flag;
+  safeSidebar: Flag;
+  safeDownloads: Flag;
+  safeAboutSection: Flag;
+  // Company directory flags
   search: Flag;
   pagination: Flag;
   sidebar: Flag;

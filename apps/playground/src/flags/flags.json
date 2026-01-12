@@ -1,4 +1,48 @@
 {
+  "aboutPage": {
+    "enabled": true,
+    "description": "Enable the About page and navigation link"
+  },
+  "aboutSidebar": {
+    "enabled": true,
+    "description": "Show sidebar with table of contents on About page"
+  },
+  "aboutProgram": {
+    "enabled": true,
+    "description": "Show The YC Program section on About page"
+  },
+  "aboutAdvice": {
+    "enabled": true,
+    "description": "Show Advice section on About page"
+  },
+  "aboutCommunity": {
+    "enabled": true,
+    "description": "Show Community section on About page"
+  },
+  "aboutBrand": {
+    "enabled": true,
+    "description": "Show Brand section on About page"
+  },
+  "aboutHiring": {
+    "enabled": true,
+    "description": "Show Hiring section on About page"
+  },
+  "safePage": {
+    "enabled": true,
+    "description": "Enable the Safe documents page and navigation link"
+  },
+  "safeSidebar": {
+    "enabled": true,
+    "description": "Show sidebar with table of contents on Safe page"
+  },
+  "safeDownloads": {
+    "enabled": true,
+    "description": "Show Downloads section on Safe page"
+  },
+  "safeAboutSection": {
+    "enabled": true,
+    "description": "Show About the Safe section on Safe page"
+  },
   "search": {
     "enabled": true,
     "description": "Enable search bar for filtering companies"

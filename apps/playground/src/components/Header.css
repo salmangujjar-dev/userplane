@@ -23,12 +23,31 @@
   border-radius: var(--radius-sm);
 }
 
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.nav-link {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-light);
+  font-size: 1rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--yc-orange);
+  text-decoration: none;
+}
+
 .apply-btn {
   background-color: var(--yc-orange);
   color: var(--white);
   padding: 10px 24px;
   border-radius: var(--radius-md);
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
   font-size: 1.125rem;
   text-decoration: none;
   transition: background-color 0.2s ease;
@@ -50,4 +69,23 @@
   display: block;
   height: 1px;
   background-color: var(--border);
+}
+
+@media (max-width: 640px) {
+  .header-container {
+    padding: var(--spacing-md) var(--spacing-md);
+  }
+
+  .header-nav {
+    gap: var(--spacing-sm);
+  }
+
+  .nav-link {
+    font-size: 0.875rem;
+  }
+
+  .apply-btn {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+  }
 }
