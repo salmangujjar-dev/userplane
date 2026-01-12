@@ -1,5 +1,36 @@
 import { flags, type Flags } from './index';
 
+// Page-specific flag keys
+export const DIRECTORY_FLAGS: (keyof Flags)[] = [
+  'search',
+  'pagination',
+  'sidebar',
+  'isHiringFilter',
+  'batchFilter',
+  'companyLogo',
+  'companyLocation',
+  'industryTags',
+  'batchTag',
+  'resultsCount',
+];
+
+export const ABOUT_PAGE_FLAGS: (keyof Flags)[] = [
+  'aboutPage',
+  'aboutSidebar',
+  'aboutProgram',
+  'aboutAdvice',
+  'aboutCommunity',
+  'aboutBrand',
+  'aboutHiring',
+];
+
+export const SAFE_PAGE_FLAGS: (keyof Flags)[] = [
+  'safePage',
+  'safeSidebar',
+  'safeDownloads',
+  'safeAboutSection',
+];
+
 /**
  * Converts feature flags to a flat JSON object suitable for SDK metadata
  */
@@ -11,6 +42,42 @@ export function getFlagsMetadata(): Record<string, boolean> {
   }
 
   return metadata;
+}
+
+/**
+ * Get flags metadata for a specific subset of flags
+ */
+export function getPageFlagsMetadata(flagKeys: (keyof Flags)[]): Record<string, boolean> {
+  const metadata: Record<string, boolean> = {};
+
+  for (const key of flagKeys) {
+    if (flags[key]) {
+      metadata[`flag_${key}`] = flags[key].enabled;
+    }
+  }
+
+  return metadata;
+}
+
+/**
+ * Get flags metadata for the About page
+ */
+export function getAboutPageFlagsMetadata(): Record<string, boolean> {
+  return getPageFlagsMetadata(ABOUT_PAGE_FLAGS);
+}
+
+/**
+ * Get flags metadata for the Safe page
+ */
+export function getSafePageFlagsMetadata(): Record<string, boolean> {
+  return getPageFlagsMetadata(SAFE_PAGE_FLAGS);
+}
+
+/**
+ * Get flags metadata for the Directory page
+ */
+export function getDirectoryFlagsMetadata(): Record<string, boolean> {
+  return getPageFlagsMetadata(DIRECTORY_FLAGS);
 }
 
 /**

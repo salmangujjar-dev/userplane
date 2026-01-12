@@ -1,0 +1,83 @@
+---
+import './Footer.css';
+import { isEnabled } from '../flags';
+---
+
+<footer class="footer">
+  <div class="footer-divider"></div>
+  <div class="footer-container">
+    <div class="footer-logo">
+      <a href="/" aria-label="Y Combinator Home">
+        <img src="/yc-logo.png" alt="Y Combinator" class="footer-logo-img" />
+      </a>
+    </div>
+
+    <div class="footer-columns">
+      <div class="footer-column">
+        <h4 class="footer-heading">Programs</h4>
+        <ul class="footer-links">
+          {
+            isEnabled('aboutPage') ? (
+              <li>
+                <a href="/about">YC Program</a>
+              </li>
+            ) : (
+              <li>
+                <a href="https://www.ycombinator.com/about">YC Program</a>
+              </li>
+            )
+          }
+          <li><a href="https://startupschool.org">Startup School</a></li>
+          <li><a href="https://www.ycombinator.com/jobs">Work at a Startup</a></li>
+          <li><a href="https://www.ycombinator.com/cofounder-matching">Co-Founder Matching</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4 class="footer-heading">Company</h4>
+        <ul class="footer-links">
+          <li><a href="https://www.ycombinator.com/blog">YC Blog</a></li>
+          <li><a href="https://www.ycombinator.com/contact">Contact</a></li>
+          <li><a href="https://www.ycombinator.com/press">Press</a></li>
+          <li><a href="https://www.ycombinator.com/people">People</a></li>
+          <li><a href="https://www.ycombinator.com/careers">Careers</a></li>
+          <li><a href="https://www.ycombinator.com/legal#privacy">Privacy Policy</a></li>
+          <li>
+            <a href="https://www.ycombinator.com/legal#notice-at-collection"
+              >Notice at Collection</a>
+          </li>
+          <li><a href="https://www.ycombinator.com/security">Security</a></li>
+          <li><a href="https://www.ycombinator.com/legal#tou">Terms of Use</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4 class="footer-heading">Resources</h4>
+        <ul class="footer-links">
+          <li><a href="/">Startup Directory</a></li>
+          <li><a href="https://www.ycombinator.com/library">Startup Library</a></li>
+          <li><a href="https://www.ycombinator.com/investors">Investors</a></li>
+          {
+            isEnabled('safePage') ? (
+              <li>
+                <a href="/safe">SAFE</a>
+              </li>
+            ) : (
+              <li>
+                <a href="https://www.ycombinator.com/documents">SAFE</a>
+              </li>
+            )
+          }
+          <li><a href="https://news.ycombinator.com/">Hacker News</a></li>
+          <li><a href="https://www.ycombinator.com/launches">Launch YC</a></li>
+          <li><a href="https://deals.ycombinator.com">YC Deals</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-cta">
+      <span class="footer-tagline">Make something people want.</span>
+      <a href="https://www.ycombinator.com/apply" class="footer-apply-btn">Apply</a>
+    </div>
+  </div>
+</footer>

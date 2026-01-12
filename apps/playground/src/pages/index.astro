@@ -5,6 +5,14 @@ import CompanyDirectory from '../components/CompanyDirectory';
 ---
 
 <Layout title="Startup Directory | Y Combinator">
+  <script>
+    import * as userplane from '@workspace/sdk';
+    import { getDirectoryFlagsMetadata } from '../flags/utils';
+
+    userplane.set('directoryFlags', getDirectoryFlagsMetadata());
+
+    console.log('setting directoryFlags', getDirectoryFlagsMetadata());
+  </script>
   <Header />
   <CompanyDirectory client:load />
 </Layout>
