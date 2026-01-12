@@ -2,6 +2,7 @@
 
 import { format } from 'date-fns';
 import { JsonViewer } from '@workspace/ui/components/json-viewer';
+import { BoringAvatar } from '../shared/boring-avatar';
 
 interface InfoPanelProps {
   recording: {
@@ -36,95 +37,21 @@ interface InfoPanelProps {
 }
 
 export function InfoPanel({ recording }: InfoPanelProps) {
-  const { meta, recordingDurationMs } = recording;
+  const { meta } = recording;
   const systemMeta = meta.systemMeta;
 
-  const formatDuration = (ms: number) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const formatValue = (value: unknown): string => {
-    if (typeof value === 'number') {
-      return Number.isInteger(value) ? String(value) : value.toFixed(2);
-    }
-    if (typeof value === 'object' && value !== null) {
-      return JSON.stringify(value);
-    }
-    return String(value);
-  };
+  const hasSystemMeta = systemMeta && Object.keys(systemMeta).length > 0;
+  const hasCustomMeta = meta.customMeta && Object.keys(meta.customMeta).length > 0;
 
   return (
     <div className="h-full overflow-y-auto p-6 space-y-6">
-      {/* System Metadata */}
-      {systemMeta && Object.keys(systemMeta).length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold mb-4">System Metadata</h3>
-          <div className="space-y-3">
-            {Object.entries(systemMeta).map(([key, value]) => (
-              <div key={key} className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-                <span className="text-muted-foreground">{key}</span>
-                <span className="font-mono">{formatValue(value)}</span>
-              </div>
-            ))}
-            <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-              <span className="text-muted-foreground">Duration</span>
-              <span className="font-mono">{formatDuration(recordingDurationMs)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Custom Metadata */}
-      {meta.customMeta && Object.keys(meta.customMeta).length > 0 && (
-        <div className="border-t pt-6">
-          <h3 className="text-sm font-semibold mb-4">Custom Metadata</h3>
-          <div className="space-y-3">
-            {Object.entries(meta.customMeta).map(([key, value]) => {
-              const isComplex = value !== null && typeof value === 'object';
-              return (
-                <div key={key} className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-                  <span className="text-muted-foreground">{key}</span>
-                  {isComplex ? (
-                    <JsonViewer
-                      data={value}
-                      rootName={
-                        Array.isArray(value)
-                          ? `[${(value as unknown[]).length}]`
-                          : `{${Object.keys(value).length}}`
-                      }
-                      defaultExpanded={false}
-                      className="text-xs -my-1"
-                    />
-                  ) : (
-                    <span className="font-mono">{formatValue(value)}</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Link Metadata */}
-      <div className="border-t pt-6">
-        <h3 className="text-sm font-semibold mb-4">Link Metadata</h3>
+      {/* About */}
+      <div>
+        <h3 className="text-sm font-semibold mb-4">About</h3>
         <div className="space-y-3">
           <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
             <span className="text-muted-foreground">Link Title</span>
             <span className="font-mono">{meta.link.title || 'Untitled'}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Requested By</span>
-            <span className="font-mono">{meta.creator.name}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
-            <span className="text-muted-foreground">Requested At</span>
-            <span className="font-mono">
-              {format(new Date(meta.createdAt), 'MMM dd, yyyy HH:mm:ss')}
-            </span>
           </div>
           {meta.project.title && (
             <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
@@ -136,8 +63,52 @@ export function InfoPanel({ recording }: InfoPanelProps) {
             <span className="text-muted-foreground">Domain URL</span>
             <span className="font-mono truncate">{meta.domain.url}</span>
           </div>
+          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+            <span className="text-muted-foreground">Requested By</span>
+            <div className="flex items-center gap-2">
+              <BoringAvatar size={24} name={meta.creator.name} />
+              <span className="font-mono">{meta.creator.name}</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+            <span className="text-muted-foreground">Requested At</span>
+            <span className="font-mono">
+              {format(new Date(meta.createdAt), 'MMM dd, yyyy HH:mm:ss')}
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* Metadata Section */}
+      {(hasSystemMeta || hasCustomMeta) && (
+        <div className="border-t pt-6">
+          <h3 className="text-sm font-semibold mb-4">Metadata</h3>
+          <div className="space-y-3">
+            {hasSystemMeta && (
+              <div className="grid grid-cols-[140px_1fr] gap-4 text-sm items-start">
+                <span className="text-muted-foreground">System Metadata</span>
+                <JsonViewer
+                  data={systemMeta}
+                  rootName=""
+                  defaultExpanded={false}
+                  className="text-xs"
+                />
+              </div>
+            )}
+            {hasCustomMeta && (
+              <div className="grid grid-cols-[140px_1fr] gap-4 text-sm items-start">
+                <span className="text-muted-foreground">Custom Metadata</span>
+                <JsonViewer
+                  data={meta.customMeta}
+                  rootName=""
+                  defaultExpanded={false}
+                  className="text-xs"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
