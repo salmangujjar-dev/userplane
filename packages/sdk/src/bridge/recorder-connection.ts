@@ -12,7 +12,7 @@ import type {
   RecordingSessionInfo,
   RecordingContext,
 } from './types';
-import { URL_PARAMS } from '../constants';
+import { URL_PARAMS, CONNECTION_PREFIXES, generateConnectionId } from '../constants';
 import { getCustomMetadata } from '@workspace/metadata';
 
 /**
@@ -42,6 +42,7 @@ export class RecorderBridgeConnection {
   private originalTitle: string = '';
   private tabRef: string;
   private callbacks: RecorderBridgeCallbacks;
+  private connectionId: string;
 
   private context: RecordingContext = {
     state: 'inactive',
@@ -56,6 +57,16 @@ export class RecorderBridgeConnection {
   constructor(options: RecorderBridgeConnectionOptions) {
     this.tabRef = options.tabRef;
     this.callbacks = options.callbacks ?? {};
+    // Generate prefixed connection ID: rec_{tabRef}
+    this.connectionId = generateConnectionId(CONNECTION_PREFIXES.RECORDER, this.tabRef);
+  }
+
+  /**
+   * Get the prefixed connection ID for this recorder
+   * Format: rec_{tabRef}
+   */
+  public getConnectionId(): string {
+    return this.connectionId;
   }
 
   /**
@@ -77,6 +88,14 @@ export class RecorderBridgeConnection {
     // Create host schema with recording methods
     const schema: RecorderHostSchema = {
       getTabRef: () => this.tabRef,
+      getPageUrl: () => {
+        try {
+          return window.location.href;
+        } catch (error) {
+          console.error('[RecorderBridge] Error getting page URL:', error);
+          return '';
+        }
+      },
       getCustomMetadata: () => {
         try {
           return getCustomMetadata();

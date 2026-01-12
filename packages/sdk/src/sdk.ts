@@ -41,19 +41,23 @@ import { getOrCreateTabRef, clearTabRef as clearTabRefUtil } from './utils/tab';
 import type { RecordingSessionInfo } from './bridge';
 import {
   metadata as setMetadataFn,
+  set as setMetadataValue,
   clearMetadata as clearMetadataFn,
   type MetadataFunction,
+  type Serializable,
 } from '@workspace/metadata';
 
 // Internal state
 let factory: FrameManagerFactory | null = null;
 let currentManager: IFrameManager | null = null;
+let captureManager: IFrameManager | null = null;
 let recorderBaseUrl = 'http://localhost:4322';
 let verificationBaseUrl = 'http://localhost:3001/api/v1';
 let initialized = false;
 let pendingParams: RecorderParams | null = null;
 let tabRef: string | null = null;
 let initOptions: InitializeOptions = {};
+let captureEnabled = true;
 
 /**
  * Path mappings for different action types
@@ -61,7 +65,7 @@ let initOptions: InitializeOptions = {};
 const ACTION_PATHS: Record<ActionType, string> = {
   recording: '/r',
   verify: '/verify',
-  capture: '/r', // Fallback to recording path
+  capture: '/capture',
 };
 
 /**
@@ -79,7 +83,61 @@ function getActionUrl(baseUrl: string, action: ActionType): string {
  */
 function handleCloseRequest(): void {
   console.log('[Userplane] Frame requested close');
+  currentManager?.unmount();
   currentManager = null;
+
+  // Remount capture iframe after main frame closes
+  mountCaptureIfNeeded();
+}
+
+/**
+ * Handle capture connection established
+ */
+function handleCaptureConnected(): void {
+  console.log('[Userplane] Capture iframe connected');
+}
+
+/**
+ * Mount the capture iframe if conditions are met
+ * Capture runs when no recorder/verify is active
+ */
+function mountCaptureIfNeeded(): void {
+  if (!factory || !initialized || !captureEnabled) {
+    return;
+  }
+
+  // Don't mount if main frame is already active
+  if (currentManager?.isMounted()) {
+    console.log('[Userplane] Skipping capture mount - main frame active');
+    return;
+  }
+
+  // Don't remount if already mounted
+  if (captureManager?.isMounted()) {
+    return;
+  }
+
+  const workspaceIds = getWorkspaceIds(initOptions);
+  const params: RecorderParams = {
+    baseUrl: getActionUrl(recorderBaseUrl, 'capture'),
+    workspaceIds,
+    token: '', // Capture doesn't need a token
+    action: 'capture',
+  };
+
+  console.log('[Userplane] Mounting capture iframe');
+  captureManager = factory.create('capture');
+  captureManager.tryMount(params);
+}
+
+/**
+ * Unmount the capture iframe
+ */
+function unmountCapture(): void {
+  if (captureManager?.isMounted()) {
+    console.log('[Userplane] Unmounting capture iframe');
+    captureManager.unmount();
+  }
 }
 
 /**
@@ -104,6 +162,9 @@ function mountWithFactory(params: RecorderParams): boolean {
     console.error('[Userplane] Factory not initialized');
     return false;
   }
+
+  // Unmount capture iframe before mounting main frame
+  unmountCapture();
 
   // Create the appropriate manager for this action
   currentManager = factory.create(params.action);
@@ -198,6 +259,9 @@ export function initialize(options: InitializeOptions = {}): void {
     verificationBaseUrl = options.verificationBaseUrl;
   }
 
+  // Set capture enabled (default: true)
+  captureEnabled = options.captureEnabled !== false;
+
   // Create frame manager factory with callbacks
   factory = new FrameManagerFactory({
     tabRef,
@@ -205,6 +269,7 @@ export function initialize(options: InitializeOptions = {}): void {
     onRequestClose: handleCloseRequest,
     onSessionReady: handleSessionReady,
     onRecordingStateChange: handleRecordingStateChange,
+    onCaptureConnected: handleCaptureConnected,
   });
 
   // Determine open behavior
@@ -228,6 +293,8 @@ export function initialize(options: InitializeOptions = {}): void {
   const urlData = parseUserplaneUrl(window.location.href);
   if (!urlData || !urlData.token) {
     console.log('[Userplane] No userplane action in URL');
+    // No action in URL - mount capture iframe for background metadata collection
+    mountCaptureIfNeeded();
     return;
   }
 
@@ -260,6 +327,8 @@ export function initialize(options: InitializeOptions = {}): void {
   } else {
     console.log('[Userplane] Deferring recorder mount (openImmediately: false)');
     pendingParams = params;
+    // Mount capture while waiting for manual open()
+    mountCaptureIfNeeded();
   }
 }
 
@@ -509,10 +578,69 @@ export function metadata(metadataFn: MetadataFunction): void {
 }
 
 /**
- * Clear the registered metadata function.
+ * Set static key-value metadata as defaults that can be overridden.
+ *
+ * Use this for default data that should be included unless explicitly
+ * overridden by the dynamic metadata function:
+ * - Default application version
+ * - Fallback environment name
+ * - Build number
+ * - Static configuration
+ *
+ * @param key - The metadata key
+ * @param value - Any serializable value
+ *
+ * @remarks
+ * Static metadata provides defaults that the dynamic metadata function can override.
+ * This allows flexibility while maintaining baseline data.
+ *
+ * @example
+ * ```typescript
+ * // Set static metadata as defaults
+ * userplane.set('appVersion', '2.1.0');
+ * userplane.set('environment', 'production');
+ * userplane.set('buildId', process.env.BUILD_ID);
+ *
+ * // Register a function that can override
+ * userplane.metadata(() => ({
+ *   userId: getCurrentUser().id,
+ *   appVersion: '3.0.0-beta',  // This OVERRIDES the static value
+ * }));
+ *
+ * // Result will be:
+ * // { appVersion: '3.0.0-beta', environment: 'production', buildId: '...', userId: '...' }
+ * ```
  */
-export function clearMetadata(): void {
-  clearMetadataFn();
+export function set(key: string, value: Serializable): void {
+  setMetadataValue(key, value);
+}
+
+/**
+ * Clear metadata.
+ *
+ * @param keyOrType - Optional parameter:
+ *   - undefined: Clears both function and all static metadata (default)
+ *   - 'function': Clears only the metadata function
+ *   - 'static': Clears all static key-value pairs
+ *   - string key: Clears that specific static key
+ *
+ * @example
+ * ```typescript
+ * // Clear everything
+ * userplane.clearMetadata();
+ *
+ * // Clear only the function
+ * userplane.clearMetadata('function');
+ *
+ * // Clear all static metadata
+ * userplane.clearMetadata('static');
+ *
+ * // Clear a specific key
+ * userplane.clearMetadata('userId');
+ * ```
+ */
+export function clearMetadata(keyOrType?: string): void {
+  clearMetadataFn(keyOrType);
 }
 
 // Re-export types for consumers
@@ -523,4 +651,5 @@ export type {
   RecordingContext,
   SerializableUserplaneData,
   MetadataFunction,
+  Serializable,
 };

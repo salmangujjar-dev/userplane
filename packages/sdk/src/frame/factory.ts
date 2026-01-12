@@ -8,17 +8,21 @@ import type {
   IFrameManager,
   IRecordingFrameManager,
   IVerificationFrameManager,
+  ICaptureFrameManager,
   RecordingFrameManagerConfig,
   VerificationFrameManagerConfig,
+  CaptureFrameManagerConfig,
+  CaptureRecorderState,
 } from './types';
 import { RecordingFrameManager } from './recording-manager';
 import { VerificationFrameManager } from './verification-manager';
+import { CaptureFrameManager } from './capture-manager';
 
 /**
  * Factory configuration combining all possible options
  */
 export interface FrameManagerFactoryConfig {
-  /** Tab reference for recording */
+  /** Tab reference for recording/capture */
   tabRef: string;
   /** Base URL for verification API */
   verificationBaseUrl: string;
@@ -28,6 +32,10 @@ export interface FrameManagerFactoryConfig {
   onSessionReady?: (info: { workspaceId: string; sessionId: string; linkId?: string }) => void;
   /** Callback when recording state changes */
   onRecordingStateChange?: (state: 'inactive' | 'active' | 'retained') => void;
+  /** Callback when capture connects */
+  onCaptureConnected?: () => void;
+  /** Callback when recorder state changes (for capture cross-tab) */
+  onCaptureRecorderStateChange?: (state: CaptureRecorderState) => void;
 }
 
 /**
@@ -43,15 +51,16 @@ export class FrameManagerFactory {
 
   /**
    * Create a frame manager for the given action type
-   * @param action - The action type (recording or verify)
+   * @param action - The action type (recording, verify, or capture)
    * @returns The appropriate frame manager implementation
    */
   public create(action: ActionType): IFrameManager {
     switch (action) {
       case 'verify':
         return this.createVerificationManager();
-      case 'recording':
       case 'capture':
+        return this.createCaptureManager();
+      case 'recording':
       default:
         return this.createRecordingManager();
     }
@@ -78,9 +87,24 @@ export class FrameManagerFactory {
   public createVerificationManager(): IVerificationFrameManager {
     const config: VerificationFrameManagerConfig = {
       verificationBaseUrl: this.config.verificationBaseUrl,
+      tabRef: this.config.tabRef,
       onRequestClose: this.config.onRequestClose,
     };
     return new VerificationFrameManager(config);
+  }
+
+  /**
+   * Create a capture frame manager
+   * Use this for hidden metadata extraction iframe
+   */
+  public createCaptureManager(): ICaptureFrameManager {
+    const config: CaptureFrameManagerConfig = {
+      tabRef: this.config.tabRef,
+      onRequestClose: this.config.onRequestClose,
+      onConnected: this.config.onCaptureConnected,
+      onRecorderStateChange: this.config.onCaptureRecorderStateChange,
+    };
+    return new CaptureFrameManager(config);
   }
 
   /**

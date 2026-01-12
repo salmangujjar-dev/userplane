@@ -35,6 +35,7 @@ export {
   getTabRef,
   clearTabRef,
   metadata,
+  set,
   clearMetadata,
 } from './sdk';
 

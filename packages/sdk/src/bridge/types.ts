@@ -6,6 +6,12 @@
 import type { SerializableObject } from '@workspace/metadata';
 
 /**
+ * Custom metadata from the host application
+ * Re-export for convenience
+ */
+export type CustomMetadata = SerializableObject | null;
+
+/**
  * Recording state as exposed to the parent
  * Maps internal flow states to public-facing states:
  * - inactive: No recording in progress (loading, setup, error without blob)
@@ -60,6 +66,12 @@ export interface RecorderHostSchema {
    * Used to identify which tab the recording came from
    */
   getTabRef: () => string;
+
+  /**
+   * Get the current page URL from the parent
+   * Used for metadata collection - avoids cross-origin issues
+   */
+  getPageUrl: () => string;
 
   /**
    * Get custom metadata registered by the host application
@@ -126,6 +138,83 @@ export interface VerificationHostSchema {
    * Called when verification is complete (success or user wants to close)
    */
   requestClose: () => void;
+}
+
+/**
+ * Methods exposed by the SDK (host/parent) for capture iframe
+ * The capture iframe is a lightweight hidden 1x1 iframe that:
+ * - Extracts metadata from the parent page
+ * - Tracks recorder state for cross-tab coordination
+ * - Responds to scatter-gather requests from the recorder
+ */
+export interface CaptureHostSchema {
+  /**
+   * Get the unique tab reference for this page
+   */
+  getTabRef: () => string;
+
+  /**
+   * Get the current page URL
+   */
+  getPageUrl: () => string;
+
+  /**
+   * Get the current page title
+   */
+  getPageTitle: () => string;
+
+  /**
+   * Extract custom metadata registered by the host application
+   * Returns null if no metadata registered or extraction fails
+   */
+  extractMetadata: () => SerializableObject | null;
+}
+
+/**
+ * Metadata extracted from a tab (recorder or capture iframe)
+ * Flattened structure - system keys prefixed with underscore, custom metadata keys at top level
+ */
+export interface TabMetadata {
+  /** Page URL (system key) */
+  _pageUrl: string;
+  /** Page title (system key) */
+  _pageTitle: string;
+  /** Custom metadata keys are spread at this level */
+  [key: string]: unknown;
+}
+
+/**
+ * Methods exposed by the capture iframe (guest) to the SDK (host)
+ */
+export interface CaptureGuestSchema {
+  /**
+   * Get the current recorder state being tracked
+   * Used by the capture iframe to know if a recording is active
+   */
+  getRecorderState: () => CaptureRecorderState;
+
+  /**
+   * Extract metadata from this capture
+   * Called by recorder during scatter-gather operation
+   */
+  extractMetadata: () => TabMetadata;
+
+  /**
+   * Check if this capture is alive/responsive
+   * Used for health checks during scatter-gather
+   */
+  ping: () => boolean;
+}
+
+/**
+ * Recorder state tracked by capture iframes
+ * Simpler than full RecordingState - just what captures need to know
+ */
+export interface CaptureRecorderState {
+  /** ID of the active recorder (if any) */
+  recorderId: string | null;
+  /** Current recording state */
+  state: RecordingState;
 }
 
 /**
