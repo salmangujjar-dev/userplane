@@ -59,7 +59,7 @@ export function Sidebar() {
   const { isAdmin } = useSession();
 
   const account = accountResult?.success ? accountResult.data : null;
-  const projects = projectsResult?.success ? projectsResult.data : null;
+  const projects = projectsResult?.success ? projectsResult.data.projects : null;
   const workspace = workspaceResult?.success ? workspaceResult.data : null;
   const workspacesData = workspacesResult?.success ? workspacesResult.data : null;
 

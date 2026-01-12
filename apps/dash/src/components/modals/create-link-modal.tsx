@@ -67,8 +67,8 @@ export function CreateLinkModal({
     perPage: 10,
   });
 
-  const projects = projectsResult?.success ? projectsResult.data : undefined;
-  const domains = domainsResult?.success ? domainsResult.data : undefined;
+  const projects = projectsResult?.success ? projectsResult.data.projects : undefined;
+  const domains = domainsResult?.success ? domainsResult.data.domains : undefined;
 
   const createLinkMutation = useCreateLink(workspaceId, domains);
 

@@ -158,7 +158,7 @@ export default function ProjectPage() {
   const { data: domainsResult } = useWorkspaceDomains({
     perPage: 5,
   });
-  const domains = domainsResult?.success ? domainsResult.data : null;
+  const domains = domainsResult?.success ? domainsResult.data.domains : null;
 
   const memberOptions =
     members?.map((member) => ({

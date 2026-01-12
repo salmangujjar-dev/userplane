@@ -30,7 +30,7 @@ export function useSearchableProjects(searchQuery: string, options?: { perPage?:
       return searchResults.data as SearchProject[];
     }
     if (initialProjects?.success) {
-      return initialProjects.data || [];
+      return initialProjects.data.projects || [];
     }
     return [];
   }, [searchQuery, searchResults, initialProjects]);

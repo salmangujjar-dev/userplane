@@ -41,21 +41,25 @@ export interface Project {
  * }
  * ```
  */
-export function useWorkspaceProjects(options?: { perPage?: number; enabled?: boolean }) {
+export function useWorkspaceProjects(options?: {
+  perPage?: number;
+  page?: number;
+  enabled?: boolean;
+}) {
   const workspaceId = useWorkspaceId();
-  const { perPage = DEFAULT_PROJECTS_PER_PAGE, enabled = true } = options || {};
+  const { perPage = DEFAULT_PROJECTS_PER_PAGE, page = 1, enabled = true } = options || {};
 
   return useQuery({
-    queryKey: ['projects', workspaceId, perPage],
+    queryKey: ['projects', workspaceId, perPage, page],
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
       const [error, response] = await apiClient.project.list({
         params: { workspaceId },
-        query: { page: 1, per_page: perPage },
+        query: { page, per_page: perPage },
       });
-      return handleQueryResult(error, response?.data.projects ?? null);
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000,

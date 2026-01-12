@@ -39,12 +39,16 @@ export interface WorkspaceDomain {
  * }
  * ```
  */
-export function useWorkspaceDomains(options?: { perPage?: number; enabled?: boolean }) {
+export function useWorkspaceDomains(options?: {
+  perPage?: number;
+  page?: number;
+  enabled?: boolean;
+}) {
   const workspaceId = useWorkspaceId();
-  const { perPage = DEFAULT_DOMAINS_PER_PAGE, enabled = true } = options || {};
+  const { perPage = DEFAULT_DOMAINS_PER_PAGE, page = 1, enabled = true } = options || {};
 
   return useQuery({
-    queryKey: ['domains', workspaceId, perPage],
+    queryKey: ['domains', workspaceId, perPage, page],
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
@@ -52,10 +56,10 @@ export function useWorkspaceDomains(options?: { perPage?: number; enabled?: bool
 
       const [error, response] = await apiClient.workspace.domains.list({
         params: { workspaceId },
-        query: { page: 1, per_page: perPage },
+        query: { page, per_page: perPage },
       });
 
-      return handleQueryResult(error, response?.data.domains ?? null);
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000,

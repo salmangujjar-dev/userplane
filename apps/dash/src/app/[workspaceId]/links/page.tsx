@@ -88,7 +88,7 @@ export default function LinksPage() {
     perPage: 5,
   });
   const { data: domainsResult } = useWorkspaceDomains({ perPage: 5 });
-  const domains = domainsResult?.success ? domainsResult.data : null;
+  const domains = domainsResult?.success ? domainsResult.data.domains : null;
 
   const projectOptions =
     projects?.map((project) => ({
