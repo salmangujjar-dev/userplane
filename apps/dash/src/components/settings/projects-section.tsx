@@ -55,8 +55,11 @@ export function ProjectsSection() {
     refetch,
   } = useWorkspaceProjects({
     perPage: ITEMS_PER_PAGE,
+    page: currentPage,
   });
-  const projects = projectsResult?.success ? projectsResult.data : null;
+  const projectsData = projectsResult?.success ? projectsResult.data : null;
+  const projects = projectsData?.projects ?? null;
+  const paginationMeta = projectsData?.pagination;
 
   const createProjectMutation = useCreateProject(workspaceId);
   const updateProjectMutation = useUpdateProject(workspaceId);
@@ -114,7 +117,7 @@ export function ProjectsSection() {
 
   // Calculate these before any conditional returns to avoid hook order issues
   const displayedProjects = projects || [];
-  const totalPages = 1;
+  const totalPages = paginationMeta?.totalPages ?? 1;
 
   if (isLoading) {
     return (

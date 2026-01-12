@@ -60,6 +60,7 @@ const ITEMS_PER_PAGE = 5;
 
 export function DomainsSection() {
   const workspaceId = useWorkspaceId();
+  const [currentPage, setCurrentPage] = useState(1);
   const {
     data: domainsResult,
     isLoading,
@@ -67,8 +68,11 @@ export function DomainsSection() {
     refetch,
   } = useWorkspaceDomains({
     perPage: ITEMS_PER_PAGE,
+    page: currentPage,
   });
-  const domains = domainsResult?.success ? domainsResult.data : null;
+  const domainsData = domainsResult?.success ? domainsResult.data : null;
+  const domains = domainsData?.domains ?? null;
+  const paginationMeta = domainsData?.pagination;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [verifyingDomain, setVerifyingDomain] = useState<{ id: string; url: string } | null>(null);
   const [verificationStep, setVerificationStep] = useState<VerificationStep>(null);
@@ -78,7 +82,6 @@ export function DomainsSection() {
   const [configuringDomain, setConfiguringDomain] = useState<ConfiguringDomain | null>(null);
   const [loadingConfigureId, setLoadingConfigureId] = useState<string | null>(null);
   const [deletingDomain, setDeletingDomain] = useState<{ id: string; url: string } | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -307,7 +310,7 @@ export function DomainsSection() {
 
   // Calculate these before any conditional returns to avoid hook order issues
   const displayedDomains = useMemo(() => domains || [], [domains]);
-  const totalPages = 1;
+  const totalPages = paginationMeta?.totalPages ?? 1;
 
   if (isLoading) {
     return <DomainsSectionSkeleton />;
