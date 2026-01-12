@@ -4,10 +4,33 @@
  * Ensures only one recorder can be active at a time across all tabs.
  *
  * Uses CAS (Compare-And-Swap) for atomic state updates to prevent race conditions.
+ * Also handles scatter-gather for cross-tab metadata aggregation.
  */
 
 import { bridge, type BridgeConnection } from '@workspace/postbridge';
-import type { RecordingState } from './types';
+import type {
+  RecordingState,
+  TabMetadata,
+  TabMetadataEntry,
+  AggregatedMetadata,
+  MetadataRequest,
+  MetadataResponse,
+  CustomMetadata,
+} from './types';
+import { CONNECTION_PREFIXES, generateRequestId, isCaptureTab } from './constants';
+
+/**
+ * Pending scatter-gather request
+ */
+interface PendingScatterGather {
+  requestId: string;
+  requesterTabId: string;
+  requestedAt: number;
+  expectedTabs: string[];
+  responses: Map<string, MetadataResponse>;
+  resolve: (result: AggregatedMetadata) => void;
+  timeoutId: ReturnType<typeof setTimeout>;
+}
 
 /**
  * Shared state schema for cross-tab coordination
@@ -24,6 +47,22 @@ interface CrossTabSchema {
    * The `remote` arg is automatically appended by postbridge when executing
    */
   syncRecorderState: (tabId: string | null, state: RecordingState, remote: CrossTabSchema) => void;
+
+  // ---------------------------------------------------------------------------
+  // Scatter-Gather Methods for Metadata Aggregation
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Request metadata from all capture iframes (scatter)
+   * Broadcast by recorder to initiate scatter-gather
+   */
+  requestMetadata: (request: MetadataRequest, remote: CrossTabSchema) => void;
+
+  /**
+   * Respond with metadata (gather)
+   * Called by capture iframes in response to requestMetadata
+   */
+  respondMetadata: (response: MetadataResponse, remote: CrossTabSchema) => void;
 }
 
 /**
@@ -49,6 +88,10 @@ export interface CrossTabCoordinatorCallbacks {
   onRecorderReleasedByOtherTab?: (previousTabId: string) => void;
   /** Called when recorder state changes in another tab */
   onRecorderStateChanged?: (tabId: string | null, state: RecordingState) => void;
+  /** Called when this tab (capture) receives a metadata request */
+  onMetadataRequested?: (request: MetadataRequest) => void;
+  /** Called when this tab (recorder) receives a metadata response */
+  onMetadataResponse?: (response: MetadataResponse) => void;
 }
 
 /**
@@ -76,6 +119,9 @@ const DEFAULT_CHANNEL = 'recorder';
 const DEFAULT_CAS_TIMEOUT = 1000;
 const DEFAULT_MAX_RETRIES = 3;
 
+/** Default timeout for scatter-gather operations (ms) */
+const DEFAULT_SCATTER_TIMEOUT = 2000;
+
 /**
  * Cross-Tab Recorder Coordinator
  * Coordinates recorder state across multiple browser tabs.
@@ -88,9 +134,16 @@ export class CrossTabCoordinator {
     casTimeout: number;
     maxRetries: number;
     callbacks: CrossTabCoordinatorCallbacks;
+    scatterTimeout: number;
   };
   private localTabId: string | null = null;
   private isOwner = false;
+
+  // Pending scatter-gather requests (by requestId)
+  private pendingScatterGathers: Map<string, PendingScatterGather> = new Map();
+
+  // Callback for when this capture receives a metadata request
+  private metadataExtractor: (() => TabMetadata | null) | null = null;
 
   constructor(config: CrossTabCoordinatorConfig = {}) {
     this.config = {
@@ -99,7 +152,16 @@ export class CrossTabCoordinator {
       casTimeout: config.casTimeout ?? DEFAULT_CAS_TIMEOUT,
       maxRetries: config.maxRetries ?? DEFAULT_MAX_RETRIES,
       callbacks: config.callbacks ?? {},
+      scatterTimeout: DEFAULT_SCATTER_TIMEOUT,
     };
+  }
+
+  /**
+   * Register a metadata extractor function
+   * Called by capture iframes to provide their metadata extraction logic
+   */
+  public setMetadataExtractor(extractor: () => TabMetadata | null): void {
+    this.metadataExtractor = extractor;
   }
 
   /**
@@ -162,6 +224,62 @@ export class CrossTabCoordinator {
             }
           }
           self.config.callbacks.onRecorderStateChanged?.(tabId, state);
+        }
+      },
+
+      // Scatter-gather: handle metadata request (runs in capture iframes)
+      requestMetadata(request: MetadataRequest, _remote: CrossTabSchema) {
+        // Only capture iframes should respond
+        if (!self.localTabId || !isCaptureTab(self.localTabId)) {
+          return;
+        }
+
+        // Don't respond to our own requests
+        if (request.requesterTabId === self.localTabId) {
+          return;
+        }
+
+        console.log('[CrossTab] Received metadata request:', request.requestId);
+        self.config.callbacks.onMetadataRequested?.(request);
+
+        // Extract metadata and respond
+        if (self.metadataExtractor) {
+          const metadata = self.metadataExtractor();
+          if (metadata) {
+            const response: MetadataResponse = {
+              requestId: request.requestId,
+              responderTabId: self.localTabId,
+              metadata,
+              respondedAt: Date.now(),
+            };
+            self.sendMetadataResponse(response);
+          }
+        }
+      },
+
+      // Scatter-gather: handle metadata response (runs in recorder)
+      respondMetadata(response: MetadataResponse, _remote: CrossTabSchema) {
+        // Only process if we have a pending request for this
+        const pending = self.pendingScatterGathers.get(response.requestId);
+        if (!pending) {
+          return;
+        }
+
+        const responseTime = response.respondedAt - pending.requestedAt;
+        console.log(
+          `[CrossTab] Response received: ${response.responderTabId} (${responseTime}ms) - ` +
+            `${pending.responses.size + 1}/${pending.expectedTabs.length} tabs`
+        );
+
+        self.config.callbacks.onMetadataResponse?.(response);
+
+        // Store response
+        pending.responses.set(response.responderTabId, response);
+
+        // Check if all expected responses received
+        if (pending.responses.size >= pending.expectedTabs.length) {
+          console.log('[CrossTab] All expected responses received, completing gather');
+          self.completeScatterGather(response.requestId);
         }
       },
     };
@@ -463,6 +581,279 @@ export class CrossTabCoordinator {
   public async getConnectedTabs(): Promise<string[]> {
     if (!this.connection) return [];
     return this.connection.getConnectedTabs();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Scatter-Gather Methods for Metadata Aggregation
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Scatter-gather metadata from all capture iframes
+   * Only the recorder should call this
+   *
+   * @param timeoutMs Timeout for gathering responses (default: 2000ms)
+   * @returns Aggregated metadata from all tabs
+   */
+  public async scatterGatherMetadata(timeoutMs?: number): Promise<AggregatedMetadata> {
+    if (!this.connection || !this.localTabId) {
+      throw new Error('Not connected to cross-tab coordinator');
+    }
+
+    const requestId = generateRequestId();
+    const requestedAt = Date.now();
+    const timeout = timeoutMs ?? this.config.scatterTimeout;
+
+    // Get all connected tabs and filter to capture iframes
+    const allTabs = await this.connection.getConnectedTabs();
+    const captureTabs = allTabs.filter(isCaptureTab);
+
+    console.group(`[CrossTab] Scatter-Gather Started (${requestId})`);
+    console.log('All connected tabs:', allTabs);
+    console.log('Capture tabs to query:', captureTabs);
+    console.log('Timeout:', `${timeout}ms`);
+
+    if (captureTabs.length === 0) {
+      console.log('No capture tabs found - returning empty result');
+      console.groupEnd();
+      return this.buildAggregatedMetadata(new Map(), [], [], requestedAt, Date.now());
+    }
+
+    console.log(`Expecting responses from ${captureTabs.length} tabs...`);
+    console.groupEnd();
+
+    // Create pending request
+    return new Promise<AggregatedMetadata>((resolve) => {
+      const timeoutId = setTimeout(() => {
+        console.log(`[CrossTab] Scatter-gather timeout reached (${timeout}ms)`);
+        this.completeScatterGather(requestId);
+      }, timeout);
+
+      const pending: PendingScatterGather = {
+        requestId,
+        requesterTabId: this.localTabId!,
+        requestedAt,
+        expectedTabs: captureTabs,
+        responses: new Map(),
+        resolve,
+        timeoutId,
+      };
+
+      this.pendingScatterGathers.set(requestId, pending);
+
+      // Broadcast metadata request
+      const request: MetadataRequest = {
+        requestId,
+        requesterTabId: this.localTabId!,
+        requestedAt,
+      };
+
+      console.log('[CrossTab] Broadcasting metadata request to all tabs...');
+      this.broadcastMetadataRequest(request);
+    });
+  }
+
+  /**
+   * Broadcast a metadata request to all tabs
+   */
+  private async broadcastMetadataRequest(request: MetadataRequest): Promise<void> {
+    if (!this.connection) return;
+
+    try {
+      const remote = this.connection.remote as unknown as {
+        requestMetadata: (request: MetadataRequest) => Promise<void>;
+      };
+      await remote.requestMetadata(request);
+    } catch (error) {
+      console.error('[CrossTab] Failed to broadcast metadata request:', error);
+    }
+  }
+
+  /**
+   * Send a metadata response back
+   */
+  private async sendMetadataResponse(response: MetadataResponse): Promise<void> {
+    if (!this.connection) return;
+
+    try {
+      const remote = this.connection.remote as unknown as {
+        respondMetadata: (response: MetadataResponse) => Promise<void>;
+      };
+      await remote.respondMetadata(response);
+      console.log('[CrossTab] Sent metadata response for:', response.requestId);
+    } catch (error) {
+      console.error('[CrossTab] Failed to send metadata response:', error);
+    }
+  }
+
+  /**
+   * Complete a scatter-gather operation (either all responses received or timeout)
+   */
+  private completeScatterGather(requestId: string): void {
+    const pending = this.pendingScatterGathers.get(requestId);
+    if (!pending) return;
+
+    // Clear timeout and remove from pending
+    clearTimeout(pending.timeoutId);
+    this.pendingScatterGathers.delete(requestId);
+
+    // Build list of responded and timed out tabs
+    const respondedTabs = Array.from(pending.responses.keys());
+    const timedOutTabs = pending.expectedTabs.filter((tab) => !pending.responses.has(tab));
+
+    console.group(`[CrossTab] Scatter-Gather Complete (${requestId})`);
+    console.log(`Responded: ${respondedTabs.length} tabs, Timed out: ${timedOutTabs.length} tabs`);
+
+    if (timedOutTabs.length > 0) {
+      console.warn('Timed out tabs:', timedOutTabs);
+    }
+
+    // Build aggregated result
+    const result = this.buildAggregatedMetadata(
+      pending.responses,
+      respondedTabs,
+      timedOutTabs,
+      pending.requestedAt,
+      Date.now()
+    );
+
+    console.groupEnd();
+
+    pending.resolve(result);
+  }
+
+  /**
+   * Build aggregated metadata from responses
+   * If all tabs have identical customMetadata, store in `unified`
+   * Otherwise, store per-tab in `perTab`
+   */
+  private buildAggregatedMetadata(
+    responses: Map<string, MetadataResponse>,
+    respondedTabs: string[],
+    timedOutTabs: string[],
+    requestedAt: number,
+    completedAt: number
+  ): AggregatedMetadata {
+    const durationMs = completedAt - requestedAt;
+
+    if (responses.size === 0) {
+      console.log('No responses received');
+      console.log('Final Result: Empty (no tabs responded)');
+      return {
+        unified: null,
+        perTab: null,
+        isUnified: true,
+        respondedTabs: [],
+        timedOutTabs,
+        totalTabs: timedOutTabs.length,
+        requestedAt,
+        completedAt,
+      };
+    }
+
+    // Log each tab's response
+    console.group('Responses from each tab:');
+    const perTabEntries: Record<string, TabMetadataEntry> = {};
+    const customMetadataList: CustomMetadata[] = [];
+
+    for (const [tabId, response] of responses) {
+      const { metadata } = response;
+
+      // Extract custom metadata (everything except system keys)
+      const { _pageUrl, _pageTitle, ...customMeta } = metadata;
+      const customMetadata = Object.keys(customMeta).length > 0 ? customMeta : null;
+
+      console.group(`Tab: ${tabId}`);
+      console.log('Page URL:', _pageUrl);
+      console.log('Page Title:', _pageTitle);
+      console.log('Custom Metadata:', customMetadata);
+      console.log('Response Time:', `${response.respondedAt - requestedAt}ms`);
+      console.groupEnd();
+
+      // Store flattened structure directly
+      perTabEntries[tabId] = metadata;
+      customMetadataList.push(customMetadata as CustomMetadata);
+    }
+    console.groupEnd();
+
+    // Check if all customMetadata are identical
+    const isUnified = this.areAllMetadataIdentical(customMetadataList);
+
+    // Log the decision
+    console.group('Aggregation Decision:');
+    if (isUnified) {
+      console.log('Decision: UNIFIED');
+      console.log('Reason: All tabs returned identical customMetadata');
+      console.log('Unified Metadata:', customMetadataList[0] ?? null);
+    } else {
+      console.log('Decision: PER-TAB');
+      console.log('Reason: Tabs returned different customMetadata');
+      console.log('Differences detected between tabs');
+
+      // Show what's different
+      if (customMetadataList.length > 1) {
+        const first = JSON.stringify(customMetadataList[0]);
+        for (let i = 1; i < customMetadataList.length; i++) {
+          const current = JSON.stringify(customMetadataList[i]);
+          if (current !== first) {
+            console.log(`Tab ${respondedTabs[i]} differs from Tab ${respondedTabs[0]}`);
+          }
+        }
+      }
+    }
+    console.groupEnd();
+
+    // Build and log final result
+    let result: AggregatedMetadata;
+
+    if (isUnified) {
+      result = {
+        unified: customMetadataList[0] ?? null,
+        perTab: null,
+        isUnified: true,
+        respondedTabs,
+        timedOutTabs,
+        totalTabs: respondedTabs.length + timedOutTabs.length,
+        requestedAt,
+        completedAt,
+      };
+    } else {
+      result = {
+        unified: null,
+        perTab: perTabEntries,
+        isUnified: false,
+        respondedTabs,
+        timedOutTabs,
+        totalTabs: respondedTabs.length + timedOutTabs.length,
+        requestedAt,
+        completedAt,
+      };
+    }
+
+    // Log final result summary
+    console.group('Final Aggregated Metadata:');
+    console.log('Is Unified:', result.isUnified);
+    console.log('Total Tabs:', result.totalTabs);
+    console.log('Responded:', result.respondedTabs.length);
+    console.log('Timed Out:', result.timedOutTabs.length);
+    console.log('Duration:', `${durationMs}ms`);
+    if (result.isUnified) {
+      console.log('Unified Data:', result.unified);
+    } else {
+      console.log('Per-Tab Data:', result.perTab);
+    }
+    console.groupEnd();
+
+    return result;
+  }
+
+  /**
+   * Check if all metadata objects are identical
+   */
+  private areAllMetadataIdentical(metadataList: CustomMetadata[]): boolean {
+    if (metadataList.length <= 1) return true;
+
+    const first = JSON.stringify(metadataList[0]);
+    return metadataList.every((m) => JSON.stringify(m) === first);
   }
 }
 

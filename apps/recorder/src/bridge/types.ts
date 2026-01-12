@@ -58,6 +58,7 @@ export interface ParentVerificationResult {
  */
 export interface RecorderHostSchema {
   getTabRef: () => string;
+  getPageUrl: () => string;
   getCustomMetadata: () => CustomMetadata;
   initSession: (info: RecordingSessionInfo, title: string) => void;
   finishSession: () => void;
@@ -90,4 +91,167 @@ export interface GuestSchema {
   getRecordingState: () => RecordingState;
   getSessionInfo: () => RecordingSessionInfo | null;
   getTabRef: () => string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Capture Types (for /capture page - lightweight metadata extraction)
+// ---------------------------------------------------------------------------
+
+/**
+ * Metadata collected from a tab (recorder or capture iframe)
+ * Flattened structure - system keys prefixed with underscore, custom metadata keys at top level
+ */
+export interface TabMetadata {
+  /** Page URL (system key) */
+  _pageUrl: string;
+  /** Page title (system key) */
+  _pageTitle: string;
+  /** Custom metadata keys are spread at this level */
+  [key: string]: unknown;
+}
+
+/**
+ * Recorder state tracked by the capture iframe
+ * Used for cross-tab awareness
+ */
+export interface CaptureRecorderState {
+  recorderId: string | null;
+  recorderState: RecordingState;
+  tabRef: string;
+}
+
+/**
+ * Methods exposed by the SDK (host/parent) for capture functionality
+ * Lightweight schema for the hidden 1x1 capture iframe
+ */
+export interface CaptureHostSchema {
+  /**
+   * Get the unique tab reference for this page
+   */
+  getTabRef: () => string;
+
+  /**
+   * Get the current page URL
+   */
+  getPageUrl: () => string;
+
+  /**
+   * Get the current page title
+   */
+  getPageTitle: () => string;
+
+  /**
+   * Extract custom metadata registered by the host application
+   */
+  extractMetadata: () => CustomMetadata;
+}
+
+/**
+ * Methods exposed by the capture iframe (guest) to the SDK (host)
+ * Used for scatter-gather metadata collection
+ */
+export interface CaptureGuestSchema {
+  /**
+   * Extract metadata from this capture iframe
+   * Called by recorder during scatter-gather
+   */
+  extractMetadata: () => TabMetadata;
+
+  /**
+   * Get the current recorder state being tracked
+   */
+  getRecorderState: () => CaptureRecorderState;
+
+  /**
+   * Update the recorder state (called when recorder in another tab changes state)
+   */
+  setRecorderState: (state: CaptureRecorderState) => void;
+}
+
+// ---------------------------------------------------------------------------
+// Scatter-Gather Types (for cross-tab metadata aggregation)
+// ---------------------------------------------------------------------------
+
+/**
+ * Re-export TabMetadata as TabMetadataEntry for backwards compatibility
+ * Both recorder and capture iframes use the same structure
+ */
+export type TabMetadataEntry = TabMetadata;
+
+/**
+ * Aggregated metadata from all tabs
+ * If all tabs have identical customMetadata, it's stored in `unified`
+ * Otherwise, each tab's metadata is stored separately in `perTab`
+ */
+export interface AggregatedMetadata {
+  /**
+   * Unified custom metadata (if all tabs returned the same)
+   * null if metadata differs across tabs
+   */
+  unified: CustomMetadata;
+
+  /**
+   * Per-tab metadata (if metadata differs)
+   * Keyed by tabRef for easy lookup
+   * null if all tabs returned the same (use `unified` instead)
+   */
+  perTab: Record<string, TabMetadataEntry> | null;
+
+  /**
+   * Whether all tabs had identical customMetadata
+   */
+  isUnified: boolean;
+
+  /**
+   * List of all tabs that responded
+   */
+  respondedTabs: string[];
+
+  /**
+   * Tabs that were expected but didn't respond (timed out)
+   */
+  timedOutTabs: string[];
+
+  /**
+   * Total tabs contacted
+   */
+  totalTabs: number;
+
+  /**
+   * Timestamp when scatter was initiated
+   */
+  requestedAt: number;
+
+  /**
+   * Timestamp when gather completed
+   */
+  completedAt: number;
+}
+
+/**
+ * Scatter-gather request payload
+ * Broadcast by recorder to all capture iframes
+ */
+export interface MetadataRequest {
+  /** Unique request ID for correlation */
+  requestId: string;
+  /** Tab ID of the requester (recorder) */
+  requesterTabId: string;
+  /** Timestamp of request */
+  requestedAt: number;
+}
+
+/**
+ * Scatter-gather response payload
+ * Sent by each capture iframe back to the recorder
+ */
+export interface MetadataResponse {
+  /** Request ID for correlation */
+  requestId: string;
+  /** Tab ID of the responder (capture) */
+  responderTabId: string;
+  /** The extracted metadata */
+  metadata: TabMetadata;
+  /** Timestamp of response */
+  respondedAt: number;
 }

@@ -133,6 +133,27 @@ export class RecorderBridgeConnection {
   }
 
   /**
+   * Get the page URL from the parent
+   * Returns null if not connected or call fails
+   */
+  public async getPageUrl(): Promise<string | null> {
+    const remote = this.getRemote();
+    if (!remote) {
+      console.log('[RecorderBridge] Not connected, cannot get page URL');
+      return null;
+    }
+
+    try {
+      const url = await Promise.resolve(remote.getPageUrl());
+      console.log('[RecorderBridge] Got page URL from parent:', url);
+      return url;
+    } catch (error) {
+      console.error('[RecorderBridge] Failed to get page URL:', error);
+      return null;
+    }
+  }
+
+  /**
    * Get custom metadata from the host application
    * Returns null if not connected, no metadata registered, or call fails
    *
