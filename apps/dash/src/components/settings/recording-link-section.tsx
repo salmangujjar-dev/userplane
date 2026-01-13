@@ -6,6 +6,7 @@ import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { Input } from '@workspace/ui/components/input';
 import { Button } from '@workspace/ui/components/button';
+import { cn } from '@workspace/ui/lib/utils';
 import { Upload } from 'lucide-react';
 import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
 import { useWorkspaceId } from '@/stores/workspace';
@@ -479,20 +480,31 @@ export function RecordingLinkSection() {
                     </div>
                   </div>
 
-                  {hasChanges && (
-                    <div className="flex gap-3 justify-end pt-4 mt-6">
+                  <div className="min-h-[52px] pt-4 mt-6">
+                    <div
+                      className={cn(
+                        'flex gap-3 justify-end transition-opacity',
+                        hasChanges ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                      )}
+                      aria-hidden={!hasChanges}
+                    >
                       <Button
                         variant="outline"
                         onClick={handleCancel}
                         disabled={updateAppearanceMutation.isPending}
+                        tabIndex={hasChanges ? 0 : -1}
                       >
                         Cancel
                       </Button>
-                      <Button onClick={handleUpdate} disabled={updateAppearanceMutation.isPending}>
+                      <Button
+                        onClick={handleUpdate}
+                        disabled={updateAppearanceMutation.isPending}
+                        tabIndex={hasChanges ? 0 : -1}
+                      >
                         {updateAppearanceMutation.isPending ? 'Saving...' : 'Update'}
                       </Button>
                     </div>
-                  )}
+                  </div>
                 </div>
               </>
             )}
