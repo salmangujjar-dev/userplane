@@ -18,6 +18,7 @@ import type {
   CaptureRecorderState,
   CustomMetadata,
   RecordingState,
+  BlurrState,
 } from './types';
 
 /**
@@ -69,6 +70,9 @@ export class CaptureBridgeConnection {
       getRecorderState: this.handleGetRecorderState.bind(this),
       setRecorderState: this.handleSetRecorderState.bind(this),
       ping: () => true,
+      startBlurr: this.handleStartBlurr.bind(this),
+      stopBlurr: this.handleStopBlurr.bind(this),
+      getBlurrState: this.handleGetBlurrState.bind(this),
     };
 
     try {
@@ -234,6 +238,75 @@ export class CaptureBridgeConnection {
    */
   public isInactive(): boolean {
     return this.recorderState.recorderState === 'inactive';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Privacy Blur Handlers (relay to parent SDK)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Handle start blur request - relay to parent SDK
+   */
+  private handleStartBlurr(): void {
+    const remote = this.getRemote();
+    if (!remote) {
+      console.warn('[CaptureBridge] Not connected, cannot start blur');
+      return;
+    }
+    console.log('[CaptureBridge] Relaying startBlurr to parent');
+    remote.startBlurr();
+  }
+
+  /**
+   * Handle stop blur request - relay to parent SDK
+   */
+  private handleStopBlurr(): void {
+    const remote = this.getRemote();
+    if (!remote) {
+      console.warn('[CaptureBridge] Not connected, cannot stop blur');
+      return;
+    }
+    console.log('[CaptureBridge] Relaying stopBlurr to parent');
+    remote.stopBlurr();
+  }
+
+  /**
+   * Handle get blur state request - relay to parent SDK
+   */
+  private handleGetBlurrState(): BlurrState {
+    const remote = this.getRemote();
+    if (!remote) {
+      console.warn('[CaptureBridge] Not connected, returning disabled');
+      return 'disabled';
+    }
+    return remote.getBlurrState();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public Blur Control Methods (for recorder to call)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Start privacy blur on the parent page
+   * Called by recorder when recording becomes active
+   */
+  public startBlurr(): void {
+    this.handleStartBlurr();
+  }
+
+  /**
+   * Stop privacy blur on the parent page
+   * Called by recorder when recording becomes inactive
+   */
+  public stopBlurr(): void {
+    this.handleStopBlurr();
+  }
+
+  /**
+   * Get the current blur state from the parent
+   */
+  public getBlurrState(): BlurrState {
+    return this.handleGetBlurrState();
   }
 }
 

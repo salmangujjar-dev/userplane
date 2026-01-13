@@ -124,6 +124,11 @@ export interface CaptureRecorderState {
 }
 
 /**
+ * Blurr state indicating whether privacy blur is enabled or disabled
+ */
+export type BlurrState = 'enabled' | 'disabled';
+
+/**
  * Methods exposed by the SDK (host/parent) for capture functionality
  * Lightweight schema for the hidden 1x1 capture iframe
  */
@@ -147,6 +152,24 @@ export interface CaptureHostSchema {
    * Extract custom metadata registered by the host application
    */
   extractMetadata: () => CustomMetadata;
+
+  /**
+   * Start privacy blur on the parent page
+   * Called by capture iframe when recording becomes active
+   */
+  startBlurr: () => void;
+
+  /**
+   * Stop privacy blur on the parent page
+   * Called by capture iframe when recording becomes inactive
+   */
+  stopBlurr: () => void;
+
+  /**
+   * Get the current blur state
+   * Returns 'enabled' if blur is active, 'disabled' otherwise
+   */
+  getBlurrState: () => BlurrState;
 }
 
 /**
@@ -175,6 +198,26 @@ export interface CaptureGuestSchema {
    * Used for health checks during scatter-gather
    */
   ping: () => boolean;
+
+  /**
+   * Start privacy blur on the parent page
+   * Called by recorder when recording becomes active
+   * Relays to parent SDK's startBlurr
+   */
+  startBlurr: () => void;
+
+  /**
+   * Stop privacy blur on the parent page
+   * Called by recorder when recording becomes inactive
+   * Relays to parent SDK's stopBlurr
+   */
+  stopBlurr: () => void;
+
+  /**
+   * Get the current blur state from the parent
+   * Returns 'enabled' if blur is active, 'disabled' otherwise
+   */
+  getBlurrState: () => BlurrState;
 }
 
 // ---------------------------------------------------------------------------
