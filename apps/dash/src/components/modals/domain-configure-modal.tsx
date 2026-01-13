@@ -36,7 +36,6 @@ interface DomainConfigureModalProps {
   settings: DomainSettings;
   onSave: (settings: DomainSettings) => void;
   onVerify: () => void;
-  onShowVerified: () => void;
   loading?: boolean;
 }
 
@@ -48,7 +47,6 @@ export function DomainConfigureModal({
   settings,
   onSave,
   onVerify,
-  onShowVerified,
   loading = false,
 }: DomainConfigureModalProps) {
   const [localSettings, setLocalSettings] = useState<DomainSettings>(settings);
@@ -80,11 +78,6 @@ export function DomainConfigureModal({
   const handleVerify = () => {
     onOpenChange(false);
     onVerify();
-  };
-
-  const handleShowVerified = () => {
-    onOpenChange(false);
-    onShowVerified();
   };
 
   return (
@@ -136,17 +129,12 @@ export function DomainConfigureModal({
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 ml-4">
                       {verified
-                        ? 'View verification details and settings'
+                        ? 'Re-run verification to confirm scripts are installed'
                         : 'Complete domain verification to enable recordings'}
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={verified ? handleShowVerified : handleVerify}
-                    className="ml-2"
-                  >
-                    {verified ? 'Details' : 'Verify'}
+                  <Button variant="outline" size="sm" onClick={handleVerify} className="ml-2">
+                    {verified ? 'Reverify' : 'Verify'}
                   </Button>
                 </div>
               </div>

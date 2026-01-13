@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +8,9 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
-import { HelpCircle, Copy, Check, ArrowLeftRight, Globe } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
+import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
+import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
 
 interface DomainVerificationPreModalProps {
   open: boolean;
@@ -27,61 +27,8 @@ export function DomainVerificationPreModal({
   workspaceId,
   onVerify,
 }: DomainVerificationPreModalProps) {
-  const [isCopied, setIsCopied] = useState(false);
-
-  const codeSnippet = `<!-- Lets users record their screen from your site -->
-<meta name="userplane:workspace" content="${workspaceId}" />
-<script type="module" src="https://cdn.userplane.io/recorder.js"></script>
-
-<!-- Captures user events and developer logs -->
-<script type="module" src="https://cdn.userplane.io/capture.js"></script>`;
-
-  const renderSyntaxHighlightedCode = () => {
-    return (
-      <div className="whitespace-pre-wrap break-all">
-        <div className="text-muted-foreground">
-          &lt;!-- Lets users record their screen from your site --&gt;
-        </div>
-        <div>
-          <span className="text-blue-600">&lt;meta</span>{' '}
-          <span className="text-purple-600">name</span>=
-          <span className="text-green-600">&quot;userplane:workspace&quot;</span>{' '}
-          <span className="text-purple-600">content</span>=
-          <span className="text-green-600">&quot;{workspaceId}&quot;</span>{' '}
-          <span className="text-blue-600">/&gt;</span>
-        </div>
-        <div>
-          <span className="text-blue-600">&lt;script</span>{' '}
-          <span className="text-purple-600">type</span>=
-          <span className="text-green-600">&quot;module&quot;</span>{' '}
-          <span className="text-purple-600">src</span>=
-          <span className="text-green-600">&quot;https://cdn.userplane.io/recorder.js&quot;</span>
-          <span className="text-blue-600">&gt;&lt;/script&gt;</span>
-        </div>
-        <div className="h-3" />
-        <div className="text-muted-foreground">
-          &lt;!-- Captures user events and developer logs --&gt;
-        </div>
-        <div>
-          <span className="text-blue-600">&lt;script</span>{' '}
-          <span className="text-purple-600">type</span>=
-          <span className="text-green-600">&quot;module&quot;</span>{' '}
-          <span className="text-purple-600">src</span>=
-          <span className="text-green-600">&quot;https://cdn.userplane.io/capture.js&quot;</span>
-          <span className="text-blue-600">&gt;&lt;/script&gt;</span>
-        </div>
-      </div>
-    );
-  };
-
   const handleHowItWorks = () => {
     window.open('https://docs.userplane.com/domains', '_blank');
-  };
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(codeSnippet);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
   };
 
   return (
@@ -89,13 +36,7 @@ export function DomainVerificationPreModal({
       <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
         <div className="space-y-8">
           <div className="flex flex-col items-center space-y-4">
-            <div className="flex items-center gap-4">
-              <Logo variant="tiled" size="md" showText={false} />
-              <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
-              <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
-                <Globe className="h-8 w-8" />
-              </div>
-            </div>
+            <DomainVerificationHeader />
 
             <div className="text-center space-y-1">
               <DialogTitle className="text-xl font-semibold">Verify your domain</DialogTitle>
@@ -105,35 +46,7 @@ export function DomainVerificationPreModal({
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground text-center">
-                Paste scripts into the{' '}
-                <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
-                  &lt;head&gt;
-                </code>{' '}
-                tag of <span className="font-semibold text-foreground">{domainUrl}</span>
-              </p>
-            </div>
-
-            <div className="relative">
-              <div className="p-4 pr-12 rounded-lg bg-muted overflow-hidden text-xs font-mono leading-relaxed">
-                {renderSyntaxHighlightedCode()}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-2 right-2 h-8 w-8 p-0"
-                onClick={handleCopy}
-              >
-                {isCopied ? (
-                  <Check className="h-4 w-4 text-green-600" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
+          <DomainCodeSnippet workspaceId={workspaceId} domainUrl={domainUrl} />
         </div>
 
         <DialogFooter className="mt-8">

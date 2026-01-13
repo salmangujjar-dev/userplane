@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Logo from '@workspace/ui/components/logo';
@@ -26,6 +27,8 @@ import {
   ChevronsUpDown,
   HelpCircle,
   Shield,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 import { useAccount } from '@/hooks/use-account';
@@ -35,6 +38,8 @@ import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useAuth } from '@/hooks/use-auth';
 import { useSession } from '@/hooks/use-session';
 import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
+
+const SIDEBAR_PROJECTS_PER_PAGE = 5;
 
 interface NavItem {
   label: string;
@@ -52,16 +57,25 @@ export function Sidebar() {
   const workspaceId = useWorkspaceId();
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { data: accountResult } = useAccount();
-  const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects();
+  const [projectsPage, setProjectsPage] = useState(1);
+  const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects({
+    perPage: SIDEBAR_PROJECTS_PER_PAGE,
+    page: projectsPage,
+  });
   const { data: workspaceResult } = useWorkspace();
   const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
   const { signOut } = useAuth();
   const { isAdmin } = useSession();
 
   const account = accountResult?.success ? accountResult.data : null;
-  const projects = projectsResult?.success ? projectsResult.data.projects : null;
+  const projectsData = projectsResult?.success ? projectsResult.data : null;
+  const projects = projectsData?.projects ?? null;
+  const projectsPagination = projectsData?.pagination;
   const workspace = workspaceResult?.success ? workspaceResult.data : null;
   const workspacesData = workspacesResult?.success ? workspacesResult.data : null;
+
+  const hasPrevPage = projectsPage > 1;
+  const hasNextPage = projectsPagination ? projectsPage < projectsPagination.totalPages : false;
 
   const sections: NavSection[] = [
     {
@@ -76,7 +90,7 @@ export function Sidebar() {
       title: 'Projects',
       items: isLoadingProjects
         ? []
-        : projects?.slice(0, 10).map((project) => ({
+        : projects?.map((project) => ({
             label: project.projectTitle || 'Untitled Project',
             href: `/${workspaceId}/projects/${project.projectId}`,
             icon: FolderKanban,
@@ -101,7 +115,29 @@ export function Sidebar() {
         <div className="px-6 space-y-6">
           {sections.map((section) => (
             <div key={section.title}>
-              <div className="text-sm font-semibold text-foreground mb-2">{section.title}</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-semibold text-foreground">{section.title}</div>
+                {section.title === 'Projects' && (hasPrevPage || hasNextPage) && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setProjectsPage((p) => Math.max(1, p - 1))}
+                      disabled={!hasPrevPage || isLoadingProjects}
+                      className="p-1 rounded hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      aria-label="Previous projects"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                    <button
+                      onClick={() => setProjectsPage((p) => p + 1)}
+                      disabled={!hasNextPage || isLoadingProjects}
+                      className="p-1 rounded hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      aria-label="Next projects"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="space-y-1">
                 {section.title === 'Projects' && isLoadingProjects ? (
                   <SidebarProjectsSkeleton count={3} />

@@ -18,7 +18,23 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@workspace/ui/components/pagination';
-import { ChevronRight, MoreVertical, Pencil, Trash2, Loader2 } from 'lucide-react';
+import {
+  ChevronRight,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Loader2,
+  ArrowUpDown,
+  Settings,
+} from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
+import type { DomainSortField, SortDirection } from '@/hooks/use-workspace-domains';
 import { DomainVerificationPreModal } from '@/components/modals/domain-verification-pre-modal';
 import { DomainVerificationVerifyingModal } from '@/components/modals/domain-verification-verifying-modal';
 import { DomainVerificationPostModal } from '@/components/modals/domain-verification-post-modal';
@@ -47,6 +63,14 @@ interface DomainSettings {
   captureBackendServerLogs: boolean;
 }
 
+const DEFAULT_SETTINGS: DomainSettings = {
+  hideSensitiveFields: false,
+  captureConsoleLogs: false,
+  captureClientActions: false,
+  captureNetworkLogs: false,
+  captureBackendServerLogs: false,
+};
+
 interface ConfiguringDomain {
   domainId: string;
   url: string;
@@ -58,9 +82,22 @@ type VerificationStep = 'pre' | 'verifying' | 'post' | null;
 
 const ITEMS_PER_PAGE = 5;
 
+type SortOption = 'recent' | 'oldest' | 'az' | 'za';
+
+const SORT_OPTIONS: Record<SortOption, { sortBy: DomainSortField; sortDirection: SortDirection }> =
+  {
+    recent: { sortBy: 'created_at', sortDirection: 'desc' },
+    oldest: { sortBy: 'created_at', sortDirection: 'asc' },
+    az: { sortBy: 'domain_url', sortDirection: 'asc' },
+    za: { sortBy: 'domain_url', sortDirection: 'desc' },
+  };
+
 export function DomainsSection() {
   const workspaceId = useWorkspaceId();
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortOption, setSortOption] = useState<SortOption>('recent');
+  const { sortBy, sortDirection } = SORT_OPTIONS[sortOption];
+
   const {
     data: domainsResult,
     isLoading,
@@ -69,6 +106,8 @@ export function DomainsSection() {
   } = useWorkspaceDomains({
     perPage: ITEMS_PER_PAGE,
     page: currentPage,
+    sortBy,
+    sortDirection,
   });
   const domainsData = domainsResult?.success ? domainsResult.data : null;
   const domains = domainsData?.domains ?? null;
@@ -77,6 +116,13 @@ export function DomainsSection() {
   const [verifyingDomain, setVerifyingDomain] = useState<{ id: string; url: string } | null>(null);
   const [verificationStep, setVerificationStep] = useState<VerificationStep>(null);
   const [verificationSuccess, setVerificationSuccess] = useState(true);
+  const [verifyingDomainSettings, setVerifyingDomainSettings] = useState<DomainSettings>({
+    hideSensitiveFields: false,
+    captureConsoleLogs: false,
+    captureClientActions: false,
+    captureNetworkLogs: false,
+    captureBackendServerLogs: false,
+  });
   const [editingDomain, setEditingDomain] = useState<{ id: string; url: string } | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [configuringDomain, setConfiguringDomain] = useState<ConfiguringDomain | null>(null);
@@ -91,31 +137,108 @@ export function DomainsSection() {
   const updateDomainPreferencesMutation = useUpdateDomainPreferences(
     workspaceId,
     (domainId, settings) => {
+      // Update configuring domain if it matches
       if (configuringDomain && configuringDomain.domainId === domainId) {
         setConfiguringDomain({
           ...configuringDomain,
           settings,
         });
       }
+      // Update verifying domain settings if it matches
+      if (verifyingDomain && verifyingDomain.id === domainId) {
+        setVerifyingDomainSettings(settings);
+      }
     }
   );
 
-  const handleCreateDomain = (domainUrl: string) => {
-    createDomainMutation.mutate(domainUrl, {
-      onSuccess: () => {
-        setShowCreateModal(false);
-      },
+  const handleCreateDomain = async (
+    domainUrl: string
+  ): Promise<{ domainId: string; domainUrl: string } | null> => {
+    return new Promise((resolve) => {
+      createDomainMutation.mutate(domainUrl, {
+        onSuccess: (result) => {
+          if (result.success && result.data?.domain) {
+            resolve({
+              domainId: result.data.domain.domainId,
+              domainUrl: result.data.domain.domainUrl,
+            });
+          } else {
+            resolve(null);
+          }
+        },
+        onError: () => {
+          resolve(null);
+        },
+      });
     });
+  };
+
+  const handleCreateModalStartVerification = async (domainId: string): Promise<string | null> => {
+    if (!workspaceId) return null;
+
+    try {
+      const [error, response] = await apiClient.workspace.domains.getVerificationUrl({
+        params: { workspaceId, domainId },
+      });
+
+      if (error) return null;
+      return response.data.verificationUrl;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleCreateModalPollVerification = async (domainId: string): Promise<boolean> => {
+    if (!workspaceId) return false;
+
+    try {
+      const [error, response] = await apiClient.workspace.domains.getById({
+        params: { workspaceId, domainId },
+      });
+
+      if (error) return false;
+
+      const isVerified = response.data.domain.domainStatus === 'verified';
+      if (isVerified) {
+        // Invalidate and wait for refetch to ensure UI is updated
+        await queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
+        toast.success('Domain verified successfully');
+      }
+      return isVerified;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleCreateModalFetchSettings = async (domainId: string): Promise<DomainSettings> => {
+    if (!workspaceId) return DEFAULT_SETTINGS;
+
+    try {
+      const [error, response] = await apiClient.workspace.domains.preferences.get({
+        params: { workspaceId, domainId },
+      });
+
+      if (error) return DEFAULT_SETTINGS;
+
+      return {
+        hideSensitiveFields: response.data.recordingHideSensitive,
+        captureConsoleLogs: response.data.recordingCaptureClientLog,
+        captureClientActions: response.data.recordingCaptureClientAction,
+        captureNetworkLogs: response.data.recordingCaptureNetworkLog,
+        captureBackendServerLogs: response.data.recordingCaptureServerLog,
+      };
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+  };
+
+  const handleCreateModalSaveSettings = (domainId: string, settings: DomainSettings) => {
+    updateDomainPreferencesMutation.mutate({ domainId, settings });
   };
 
   const handleVerify = (domainId: string, domainUrl: string) => {
     setVerifyingDomain({ id: domainId, url: domainUrl });
     setVerificationStep('pre');
-  };
-
-  const handleShowVerified = (domainId: string, domainUrl: string) => {
-    setVerifyingDomain({ id: domainId, url: domainUrl });
-    setVerificationStep('post');
   };
 
   const stopPolling = () => {
@@ -142,8 +265,29 @@ export function DomainsSection() {
         stopPolling();
         queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
         setVerificationSuccess(true);
-        setVerificationStep('post');
         toast.success('Domain verified successfully');
+
+        // Fetch domain settings for the post modal
+        try {
+          const [prefError, prefResponse] = await apiClient.workspace.domains.preferences.get({
+            params: { workspaceId, domainId },
+          });
+
+          if (!prefError && prefResponse) {
+            const preferences = prefResponse.data;
+            setVerifyingDomainSettings({
+              hideSensitiveFields: preferences.recordingHideSensitive,
+              captureConsoleLogs: preferences.recordingCaptureClientLog,
+              captureClientActions: preferences.recordingCaptureClientAction,
+              captureNetworkLogs: preferences.recordingCaptureNetworkLog,
+              captureBackendServerLogs: preferences.recordingCaptureServerLog,
+            });
+          }
+        } catch {
+          // Use default settings on error
+        }
+
+        setVerificationStep('post');
       } else if (attempt < 10) {
         // Continue polling with exponential backoff
         const delay = Math.min(1000 * Math.pow(1.5, attempt), 10000); // Max 10 seconds
@@ -308,6 +452,14 @@ export function DomainsSection() {
     });
   };
 
+  const handleSaveVerificationSettings = (settings: DomainSettings) => {
+    if (!verifyingDomain) return;
+    updateDomainPreferencesMutation.mutate({
+      domainId: verifyingDomain.id,
+      settings,
+    });
+  };
+
   // Calculate these before any conditional returns to avoid hook order issues
   const displayedDomains = useMemo(() => domains || [], [domains]);
   const totalPages = paginationMeta?.totalPages ?? 1;
@@ -342,9 +494,23 @@ export function DomainsSection() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Domains</h2>
-        <p className="text-sm text-muted-foreground">Configure domain and recording settings</p>
+      <div className="mb-4 flex items-start justify-between max-w-2xl">
+        <div>
+          <h2 className="text-lg font-semibold">Domains</h2>
+          <p className="text-sm text-muted-foreground">Configure domain and recording settings</p>
+        </div>
+        <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+          <SelectTrigger className="w-[160px] h-9">
+            <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recent">Recently Added</SelectItem>
+            <SelectItem value="oldest">Oldest First</SelectItem>
+            <SelectItem value="az">A to Z</SelectItem>
+            <SelectItem value="za">Z to A</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="max-w-2xl space-y-4">
@@ -397,6 +563,15 @@ export function DomainsSection() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() =>
+                        handleConfigure(domain.domainId, domain.domainUrl, domain.domainStatus)
+                      }
+                      disabled={loadingConfigureId === domain.domainId}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Configure Domain
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleEditDomain(domain.domainId, domain.domainUrl)}
                     >
@@ -492,13 +667,22 @@ export function DomainsSection() {
         workspaceId={workspaceId || ''}
         onReverify={handleReverify}
         verified={verificationSuccess}
+        settings={verifyingDomainSettings}
+        onSaveSettings={handleSaveVerificationSettings}
+        loadingSettings={updateDomainPreferencesMutation.isPending}
       />
 
       <CreateDomainModal
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
         onCreateDomain={handleCreateDomain}
+        onStartVerification={handleCreateModalStartVerification}
+        onPollVerification={handleCreateModalPollVerification}
+        onFetchSettings={handleCreateModalFetchSettings}
+        onSaveSettings={handleCreateModalSaveSettings}
+        workspaceId={workspaceId || ''}
         loading={createDomainMutation.isPending}
+        savingSettings={updateDomainPreferencesMutation.isPending}
       />
 
       <EditDomainModal
@@ -527,11 +711,6 @@ export function DomainsSection() {
         onVerify={() => {
           if (configuringDomain) {
             handleVerify(configuringDomain.domainId, configuringDomain.url);
-          }
-        }}
-        onShowVerified={() => {
-          if (configuringDomain) {
-            handleShowVerified(configuringDomain.domainId, configuringDomain.url);
           }
         }}
         loading={updateDomainPreferencesMutation.isPending}

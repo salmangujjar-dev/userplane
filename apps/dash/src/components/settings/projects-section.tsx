@@ -19,7 +19,15 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@workspace/ui/components/pagination';
-import { Folder, Trash2, MoreVertical, ChevronRight, Pencil } from 'lucide-react';
+import { Folder, Trash2, MoreVertical, ChevronRight, Pencil, ArrowUpDown } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
+import type { ProjectSortField, SortDirection } from '@/hooks/use-workspace-projects';
 import { CreateProjectModal } from '@/components/modals/create-project-modal';
 import { EditProjectModal } from '@/components/modals/edit-project-modal';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
@@ -32,6 +40,16 @@ import {
 import { SectionError } from '@/components/shared/section-error';
 
 const ITEMS_PER_PAGE = 5;
+
+type SortOption = 'recent' | 'oldest' | 'az' | 'za';
+
+const SORT_OPTIONS: Record<SortOption, { sortBy: ProjectSortField; sortDirection: SortDirection }> =
+  {
+    recent: { sortBy: 'created_at', sortDirection: 'desc' },
+    oldest: { sortBy: 'created_at', sortDirection: 'asc' },
+    az: { sortBy: 'project_title', sortDirection: 'asc' },
+    za: { sortBy: 'project_title', sortDirection: 'desc' },
+  };
 
 export function ProjectsSection() {
   const router = useRouter();
@@ -47,6 +65,8 @@ export function ProjectsSection() {
     projectTitle: string | null;
   } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortOption, setSortOption] = useState<SortOption>('recent');
+  const { sortBy, sortDirection } = SORT_OPTIONS[sortOption];
 
   const {
     data: projectsResult,
@@ -56,6 +76,8 @@ export function ProjectsSection() {
   } = useWorkspaceProjects({
     perPage: ITEMS_PER_PAGE,
     page: currentPage,
+    sortBy,
+    sortDirection,
   });
   const projectsData = projectsResult?.success ? projectsResult.data : null;
   const projects = projectsData?.projects ?? null;
@@ -176,9 +198,23 @@ export function ProjectsSection() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Projects</h2>
-        <p className="text-sm text-muted-foreground">Organize recordings by projects</p>
+      <div className="mb-4 flex items-start justify-between max-w-2xl">
+        <div>
+          <h2 className="text-lg font-semibold">Projects</h2>
+          <p className="text-sm text-muted-foreground">Organize recordings by projects</p>
+        </div>
+        <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+          <SelectTrigger className="w-[160px] h-9">
+            <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recent">Recently Added</SelectItem>
+            <SelectItem value="oldest">Oldest First</SelectItem>
+            <SelectItem value="az">A to Z</SelectItem>
+            <SelectItem value="za">Z to A</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="max-w-2xl space-y-4">
