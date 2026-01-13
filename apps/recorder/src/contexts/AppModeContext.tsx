@@ -45,10 +45,8 @@ interface AppModeContextValue {
   bridge: RecorderBridgeConnection | null;
   /** Verification bridge connection to parent - null in standalone mode */
   verificationBridge: VerificationBridgeConnection | null;
-  /** Cross-tab coordinator for lock management (recorder channel) - null in standalone mode */
+  /** Cross-tab coordinator for lock management and scatter-gather - null in standalone mode */
   crossTab: CrossTabCoordinator | null;
-  /** Cross-tab coordinator for scatter-gather (userplane channel) - null in standalone mode */
-  captureChannel: CrossTabCoordinator | null;
   /** Status of cross-tab lock acquisition */
   crossTabLockStatus: CrossTabLockStatus;
   /** Error message if blocked or failed */
@@ -85,7 +83,6 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
   const bridgeRef = useRef<RecorderBridgeConnection | null>(null);
   const verificationBridgeRef = useRef<VerificationBridgeConnection | null>(null);
   const crossTabRef = useRef<CrossTabCoordinator | null>(null);
-  const captureChannelRef = useRef<CrossTabCoordinator | null>(null);
 
   // Track cross-tab lock status
   const [lockStatus, setLockStatus] = useState<CrossTabLockStatus>('pending');
@@ -104,7 +101,7 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
     if (isEmbedded && isRecording && !bridgeRef.current) {
       bridgeRef.current = getRecorderBridge();
     }
-    // Cross-tab coordinator for lock management (recorder channel)
+    // Cross-tab coordinator for lock management and scatter-gather (single userplane channel)
     if (isEmbedded && isRecording && !crossTabRef.current) {
       crossTabRef.current = getCrossTabCoordinator({
         workerURL: crossTabWorkerURL,
@@ -118,16 +115,6 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
           onRecorderStateChanged: (tabId, state) => {
             console.log('[AppModeContext] Recorder state changed:', { tabId, state });
           },
-        },
-      });
-    }
-    // Cross-tab coordinator for scatter-gather (userplane channel - where capture iframes live)
-    if (isEmbedded && isRecording && !captureChannelRef.current) {
-      // Create a NEW instance (not singleton) for userplane channel
-      captureChannelRef.current = new CrossTabCoordinator({
-        workerURL: crossTabWorkerURL,
-        channel: 'userplane', // Same channel as capture iframes
-        callbacks: {
           onMetadataResponse: (response) => {
             console.log(
               '[AppModeContext] Got metadata response from capture tab:',
@@ -151,7 +138,6 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
       bridge: isEmbedded ? bridgeRef.current : null,
       verificationBridge: isEmbedded ? verificationBridgeRef.current : null,
       crossTab: isEmbedded ? crossTabRef.current : null,
-      captureChannel: isEmbedded ? captureChannelRef.current : null,
       crossTabLockStatus: lockStatus,
       crossTabError: lockError,
       blockingTabId,
@@ -203,7 +189,6 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
 
     const bridge = bridgeRef.current;
     const crossTab = crossTabRef.current;
-    const captureChannel = captureChannelRef.current;
     let mounted = true;
 
     async function connectAll() {
@@ -222,18 +207,11 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
 
         // Step 2: Connect cross-tab coordinator using parent's tabRef
         console.log('[AppModeContext] Connecting to cross-tab coordinator with tabRef');
-        await crossTab.connect(tabRef ?? undefined);
+        // Use rec_ prefix to identify as recorder on the userplane channel
+        const recorderTabId = tabRef ? `rec_${tabRef}` : undefined;
+        console.log('[AppModeContext] Connecting to cross-tab with ID:', recorderTabId);
+        await crossTab.connect(recorderTabId);
         if (!mounted) return;
-
-        // Step 2b: Connect to capture channel (userplane) for scatter-gather
-        // Use rec_ prefix to identify as recorder on the capture channel
-        if (captureChannel) {
-          const recorderTabId = tabRef ? `rec_${tabRef}` : undefined;
-          console.log('[AppModeContext] Connecting to capture channel with ID:', recorderTabId);
-          await captureChannel.connect(recorderTabId);
-          if (!mounted) return;
-          console.log('[AppModeContext] Connected to capture channel');
-        }
 
         // Step 3: Check if another recorder is already mounted AND alive
         const isMounted = await crossTab.isRecorderMounted();
@@ -283,9 +261,6 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
       bridge.disconnect();
       crossTab.disconnect().catch((err) => {
         console.error('[AppModeContext] Error disconnecting cross-tab:', err);
-      });
-      captureChannel?.disconnect().catch((err) => {
-        console.error('[AppModeContext] Error disconnecting capture channel:', err);
       });
     };
   }, [isEmbedded, isRecording]);
@@ -338,20 +313,12 @@ export function useVerificationBridge(): VerificationBridgeConnection | null {
 }
 
 /**
- * Hook to access the cross-tab coordinator (recorder channel)
+ * Hook to access the cross-tab coordinator (userplane channel)
+ * Used for lock management and scatter-gather
  * Returns null in standalone mode
  */
 export function useCrossTab(): CrossTabCoordinator | null {
   return useAppMode().crossTab;
-}
-
-/**
- * Hook to access the capture channel coordinator (userplane channel)
- * Used for scatter-gather from capture iframes
- * Returns null in standalone mode
- */
-export function useCaptureChannel(): CrossTabCoordinator | null {
-  return useAppMode().captureChannel;
 }
 
 /**

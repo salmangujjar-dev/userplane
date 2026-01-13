@@ -226,6 +226,7 @@ export class RecorderBridgeConnection {
 
   /**
    * Update cross-tab state if coordinator is available
+   * Broadcasts state to all tabs on the userplane channel (recorders and captures)
    */
   private async updateCrossTabState(state: RecordingState): Promise<void> {
     if (!this.crossTab || !this.crossTab.isRecorderOwner()) {

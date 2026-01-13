@@ -40,9 +40,9 @@ export default function CaptureApp() {
 
   // Track recorder state for debugging (could be exposed via context if needed)
   const [recorderState, setRecorderState] = useState<CaptureRecorderState>({
-    recorderId: null,
+    recorderTabId: null,
     recorderState: 'inactive',
-    tabRef: '',
+    lastStateUpdate: Date.now(),
   });
 
   // Metadata extractor function - called by cross-tab coordinator during scatter-gather
@@ -100,16 +100,19 @@ export default function CaptureApp() {
         const captureTabId = tabRef ? `${CONNECTION_PREFIXES.CAPTURE}_${tabRef}` : undefined;
 
         const crossTab = getCrossTabCoordinator({
-          channel: 'userplane', // Use same channel as recorder
+          channel: 'userplane', // Unified channel for recorders and captures
           callbacks: {
             onRecorderStateChanged: (tabId, state) => {
               if (mounted) {
                 console.log('[CaptureApp] Cross-tab recorder state:', { tabId, state });
-                setRecorderState((prev) => ({
-                  ...prev,
-                  recorderId: tabId,
-                  recorderState: state,
-                }));
+                // This is handled by onCaptureRecorderStateChanged now
+                // Keep for backwards compatibility but don't update state here
+              }
+            },
+            onCaptureRecorderStateChanged: (state) => {
+              if (mounted) {
+                console.log('[CaptureApp] Capture recorder state changed:', state);
+                setRecorderState(state);
               }
             },
           },
@@ -202,7 +205,7 @@ export default function CaptureApp() {
       data-userplane-capture={isConnected && isCrossTabConnected ? 'connected' : 'connecting'}
       data-tab-ref={bridgeRef.current?.getTabRef() ?? undefined}
       data-recorder-state={recorderState.recorderState}
-      data-recorder-id={recorderState.recorderId ?? undefined}
+      data-recorder-tab-id={recorderState.recorderTabId ?? undefined}
       data-cross-tab={isCrossTabConnected ? 'connected' : 'disconnected'}
     />
   );
