@@ -3,7 +3,7 @@
  * Shows countdown timer before recording starts
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
 import { lightenColor } from '@/utils';
@@ -13,12 +13,15 @@ interface PreRecordingCountdownScreenProps {
   countdownSeconds: number;
   mediaStream?: MediaStream | null;
   preferences: RecordingPreferences;
+  /** Optional element for top-right corner (e.g., settings dropdown) */
+  settingsElement?: ReactNode;
 }
 
 export default function PreRecordingCountdownScreen({
   countdownSeconds,
   mediaStream,
   preferences,
+  settingsElement,
 }: PreRecordingCountdownScreenProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -51,6 +54,7 @@ export default function PreRecordingCountdownScreen({
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
       workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
+      topRightElement={settingsElement}
     >
       <div className="flex flex-col items-center w-full">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center mb-3 sm:mb-4">

@@ -4,7 +4,7 @@
  * Handles auto-close after delay in both embedded and standalone modes
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import {
   POST_RECORDING_ACK_COPY,
@@ -16,9 +16,14 @@ import type { RecordingPreferences } from '@/types/session-preferences';
 
 interface PostRecordingAckScreenProps {
   preferences: RecordingPreferences;
+  /** Optional element for top-right corner (e.g., settings dropdown) */
+  settingsElement?: ReactNode;
 }
 
-export default function PostRecordingAckScreen({ preferences }: PostRecordingAckScreenProps) {
+export default function PostRecordingAckScreen({
+  preferences,
+  settingsElement,
+}: PostRecordingAckScreenProps) {
   const customizeLink = preferences.customizeLink;
   const { isEmbedded, isStandalone } = useAppMode();
   const bridge = useBridge();
@@ -51,6 +56,7 @@ export default function PostRecordingAckScreen({ preferences }: PostRecordingAck
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
       workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
+      topRightElement={settingsElement}
     >
       <div className="flex flex-col items-center justify-center text-center w-full">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">

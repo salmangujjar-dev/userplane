@@ -3,7 +3,7 @@
  * Lets user choose recording mode and start recording
  */
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import { PRE_RECORDING_COPY, DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
@@ -19,6 +19,8 @@ interface PreRecordingScreenProps {
   preferences: RecordingPreferences;
   /** Callback when user clicks start recording */
   onStartRecording?: (mode: RecordingMode) => void;
+  /** Optional element for top-right corner (e.g., settings dropdown) */
+  settingsElement?: ReactNode;
 }
 
 export default function PreRecordingScreen({
@@ -26,6 +28,7 @@ export default function PreRecordingScreen({
   isLoading = false,
   preferences,
   onStartRecording,
+  settingsElement,
 }: PreRecordingScreenProps) {
   const [selectedMode, setSelectedMode] = useState<'screen-voice' | 'screen-only'>('screen-only');
 
@@ -48,6 +51,7 @@ export default function PreRecordingScreen({
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
       workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
+      topRightElement={settingsElement}
     >
       <div className="flex flex-col items-center w-full">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center mb-3 sm:mb-4">

@@ -3,6 +3,7 @@
  * Shows upload progress
  */
 
+import type { ReactNode } from 'react';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import VideoPlayer from './VideoPlayer';
 import {
@@ -16,12 +17,15 @@ interface PostRecordingUploadScreenProps {
   videoUrl: string;
   progress: number;
   preferences: RecordingPreferences;
+  /** Optional element for top-right corner (e.g., settings dropdown) */
+  settingsElement?: ReactNode;
 }
 
 export default function PostRecordingUploadScreen({
   videoUrl,
   progress,
   preferences,
+  settingsElement,
 }: PostRecordingUploadScreenProps) {
   const customizeLink = preferences.customizeLink;
   const primaryColor =
@@ -32,6 +36,7 @@ export default function PostRecordingUploadScreen({
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
       workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
+      topRightElement={settingsElement}
     >
       <div className="flex flex-col items-center w-full">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center mb-3 sm:mb-4">
