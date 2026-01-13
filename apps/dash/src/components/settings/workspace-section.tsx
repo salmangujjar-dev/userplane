@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Button } from '@workspace/ui/components/button';
+import { cn } from '@workspace/ui/lib/utils';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
@@ -100,11 +101,16 @@ export function WorkspaceSection() {
                 className="max-w-md"
                 disabled={updateNameMutation.isPending}
               />
-              {hasChanges && (
-                <Button onClick={handleSave} disabled={updateNameMutation.isPending} size="default">
-                  {updateNameMutation.isPending ? 'Saving...' : 'Save'}
-                </Button>
-              )}
+              <Button
+                onClick={handleSave}
+                disabled={updateNameMutation.isPending}
+                size="default"
+                className={cn('transition-opacity', !hasChanges && 'opacity-0 pointer-events-none')}
+                aria-hidden={!hasChanges}
+                tabIndex={hasChanges ? 0 : -1}
+              >
+                {updateNameMutation.isPending ? 'Saving...' : 'Save'}
+              </Button>
             </div>
           </div>
 

@@ -26,6 +26,11 @@ interface UpdateNotificationsData {
   updated: boolean;
 }
 
+interface NotificationPreferencesData {
+  notificationPreferences: WorkspaceNotifications;
+}
+
+type NotificationsQueryData = SafeResult<NotificationPreferencesData>;
 type WorkspacesQueryData = SafeResult<WorkspacesData>;
 type QuerySnapshot = [queryKey: readonly unknown[], data: WorkspacesQueryData | undefined][];
 
@@ -35,7 +40,8 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
   return useMutation<
     SafeResult<UpdateNotificationsData>,
     Error,
-    { workspaceId: string; notifications: Partial<WorkspaceNotifications> }
+    { workspaceId: string; notifications: Partial<WorkspaceNotifications> },
+    { previousNotifications: NotificationsQueryData | undefined }
   >({
     mutationFn: async ({ workspaceId, notifications }) => {
       const [error, response] = await apiClient.workspace.notifications.update({
@@ -44,27 +50,65 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
       });
       return handleSafeResult(error, response?.data ? { updated: true } : null);
     },
-    onSuccess: (result, variables) => {
+    onMutate: async ({ workspaceId, notifications }) => {
+      await queryClient.cancelQueries({ queryKey: ['workspace-notifications', workspaceId] });
+
+      const previousNotifications = queryClient.getQueryData<NotificationsQueryData>([
+        'workspace-notifications',
+        workspaceId,
+      ]);
+
+      queryClient.setQueryData<NotificationsQueryData>(
+        ['workspace-notifications', workspaceId],
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              notificationPreferences: {
+                ...old.data.notificationPreferences,
+                ...notifications,
+              },
+            },
+          };
+        }
+      );
+
+      return { previousNotifications };
+    },
+    onSuccess: (result, variables, context) => {
       if (!result.success) {
+        // Rollback on API business error
+        if (context?.previousNotifications) {
+          queryClient.setQueryData(
+            ['workspace-notifications', variables.workspaceId],
+            context.previousNotifications
+          );
+        }
         handleApiError(result.error, 'Failed to update notifications');
-        // Invalidate to restore server state on API error
-        queryClient.invalidateQueries({
-          queryKey: ['workspace-notifications', variables.workspaceId],
-        });
         options?.onError?.();
         return;
       }
       toast.success('Notification preferences updated');
     },
-    onError: (error: unknown, variables) => {
+    onError: (error: unknown, variables, context) => {
+      // Rollback on network error
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(
+          ['workspace-notifications', variables.workspaceId],
+          context.previousNotifications
+        );
+      }
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
-      // Invalidate to restore server state on network error
+      options?.onError?.();
+    },
+    onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['workspace-notifications', variables.workspaceId],
       });
-      options?.onError?.();
     },
   });
 }

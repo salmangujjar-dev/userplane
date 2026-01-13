@@ -16,10 +16,17 @@ interface UpdateToggleData {
   updated: boolean;
 }
 
+type PreferencesQueryData = SafeResult<WorkspacePreferences>;
+
 export function useUpdateToggle(workspaceId: string | null, onError?: () => void) {
   const queryClient = useQueryClient();
 
-  return useMutation<SafeResult<UpdateToggleData>, Error, boolean>({
+  return useMutation<
+    SafeResult<UpdateToggleData>,
+    Error,
+    boolean,
+    { previousPreferences: PreferencesQueryData | undefined }
+  >({
     mutationFn: async (enabled: boolean) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.workspace.preferences.update({
@@ -28,23 +35,60 @@ export function useUpdateToggle(workspaceId: string | null, onError?: () => void
       });
       return handleSafeResult(error, response?.data ? { updated: true } : null);
     },
-    onSuccess: (result) => {
+    onMutate: async (enabled) => {
+      await queryClient.cancelQueries({ queryKey: ['workspace-preferences', workspaceId] });
+
+      const previousPreferences = queryClient.getQueryData<PreferencesQueryData>([
+        'workspace-preferences',
+        workspaceId,
+      ]);
+
+      queryClient.setQueryData<PreferencesQueryData>(
+        ['workspace-preferences', workspaceId],
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              recordingCustomizeLink: enabled,
+            },
+          };
+        }
+      );
+
+      return { previousPreferences };
+    },
+    onSuccess: (result, enabled, context) => {
       if (!result.success) {
+        // Rollback on API business error
+        if (context?.previousPreferences) {
+          queryClient.setQueryData(
+            ['workspace-preferences', workspaceId],
+            context.previousPreferences
+          );
+        }
         handleApiError(result.error, 'Failed to update customization');
-        // Invalidate to restore server state on API error
-        queryClient.invalidateQueries({ queryKey: ['workspace-preferences', workspaceId] });
         onError?.();
         return;
       }
       toast.success('Recording link customization updated');
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, enabled, context) => {
+      // Rollback on network error
+      if (context?.previousPreferences) {
+        queryClient.setQueryData(
+          ['workspace-preferences', workspaceId],
+          context.previousPreferences
+        );
+      }
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
-      // Invalidate to restore server state on network error
-      queryClient.invalidateQueries({ queryKey: ['workspace-preferences', workspaceId] });
       onError?.();
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-preferences', workspaceId] });
     },
   });
 }

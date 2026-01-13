@@ -12,6 +12,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import { cn } from '@workspace/ui/lib/utils';
 import {
   Tooltip,
   TooltipContent,
@@ -241,16 +242,25 @@ export function DomainConfigureModal({
             </div>
           </div>
 
-          {hasChanges && (
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCancel} disabled={loading}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={loading}>
-                {loading ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </DialogFooter>
-          )}
+          <DialogFooter
+            className={cn(
+              'transition-opacity',
+              hasChanges ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            )}
+            aria-hidden={!hasChanges}
+          >
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              disabled={loading}
+              tabIndex={hasChanges ? 0 : -1}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={loading} tabIndex={hasChanges ? 0 : -1}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>
