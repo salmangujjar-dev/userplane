@@ -1,0 +1,59 @@
+# Blurr
+
+Production-grade privacy blur system for screen recording and session replay.
+
+## Overview
+
+Blurr automatically applies CSS blur filters to sensitive content on your page, protecting user privacy during screen recordings and session replays. It supports 40+ third-party analytics and session replay tools out of the box.
+
+## Features
+
+- **Adaptive Blur**: Automatically calculates optimal blur radius based on text size and media dimensions
+- **Provider Compatibility**: Works with FullStory, Hotjar, Sentry, LogRocket, and 40+ more tools
+- **Dynamic Content**: Observes DOM mutations to blur dynamically added content
+- **Performance Optimized**: Uses batched mutations, requestAnimationFrame, and IntersectionObserver
+- **Zero Dependencies**: Pure TypeScript, no external dependencies
+
+## Quick Start
+
+```typescript
+import { BlurManager } from '@workspace/blurr';
+
+// Create instance
+const blurManager = new BlurManager();
+
+// Start blurring
+blurManager.start();
+
+// Stop and restore
+blurManager.stop();
+```
+
+## Marking Elements for Blur
+
+Use any of these attributes or classes:
+
+```html
+<!-- Native Blurr -->
+<div data-userplane-blur="true">Sensitive content</div>
+<div class="userplane-mask">Sensitive content</div>
+
+<!-- FullStory compatible -->
+<div class="fs-mask">Sensitive content</div>
+
+<!-- Hotjar compatible -->
+<input data-hj-suppress />
+
+<!-- Generic privacy -->
+<div data-private>Sensitive content</div>
+<div class="sensitive">Sensitive content</div>
+```
+
+## Unmask Elements
+
+Explicitly opt-out elements from blurring:
+
+```html
+<div data-userplane-blur="false">Public content</div>
+<div class="fs-unmask">Public content</div>
+```
