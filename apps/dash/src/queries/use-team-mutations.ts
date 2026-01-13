@@ -1,8 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
-import { handleApiError, handleSafeResult, isErrorCode } from '@/lib/errors';
+import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
 import type { WorkspaceMember } from '@/hooks/use-workspace-members';
+
+type MembersQueryData = SafeResult<WorkspaceMember[]>;
+type QuerySnapshot = [queryKey: readonly unknown[], data: MembersQueryData | undefined][];
 
 export function useUpdateMemberRole(workspaceId: string | null) {
   const queryClient = useQueryClient();
@@ -31,32 +34,35 @@ export function useUpdateMemberRole(workspaceId: string | null) {
     }) => {
       await queryClient.cancelQueries({ queryKey: ['workspace-members', workspaceId] });
 
-      const previousMembers = queryClient.getQueryData<WorkspaceMember[]>([
-        'workspace-members',
-        workspaceId,
-      ]);
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<MembersQueryData>({
+        queryKey: ['workspace-members', workspaceId],
+      });
 
-      queryClient.setQueryData(
-        ['workspace-members', workspaceId],
-        (old: WorkspaceMember[] | undefined) => {
-          if (!old) return old;
-          return old.map((member) =>
-            member.workspaceMemberId === workspaceMemberId
-              ? { ...member, workspaceRole: newRole }
-              : member
-          );
+      // Update ALL matching queries
+      queryClient.setQueriesData<MembersQueryData>(
+        { queryKey: ['workspace-members', workspaceId] },
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: old.data.map((member) =>
+              member.workspaceMemberId === workspaceMemberId
+                ? { ...member, workspaceRole: newRole }
+                : member
+            ),
+          };
         }
       );
 
-      return { previousMembers };
+      return { previousQueries };
     },
     onSuccess: (result, variables, context) => {
       if (!result.success) {
-        // Rollback optimistic update
-        if (context?.previousMembers) {
-          queryClient.setQueryData(['workspace-members', workspaceId], context.previousMembers);
-        }
-        // Handle specific role change errors
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         if (isErrorCode(result.error, 'WORKSPACE_MEMBER_CANNOT_CHANGE_OWN_ROLE')) {
           toast.error("Can't change your own role");
           return;
@@ -73,11 +79,10 @@ export function useUpdateMemberRole(workspaceId: string | null) {
       toast.success('Member role updated successfully');
     },
     onError: (error: unknown, variables, context) => {
-      // Rollback optimistic update for unknown errors
-      if (context?.previousMembers) {
-        queryClient.setQueryData(['workspace-members', workspaceId], context.previousMembers);
-      }
-      // Only unknown errors reach here
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -102,28 +107,31 @@ export function useRemoveMember(workspaceId: string | null) {
     onMutate: async (workspaceMemberId: string) => {
       await queryClient.cancelQueries({ queryKey: ['workspace-members', workspaceId] });
 
-      const previousMembers = queryClient.getQueryData<WorkspaceMember[]>([
-        'workspace-members',
-        workspaceId,
-      ]);
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<MembersQueryData>({
+        queryKey: ['workspace-members', workspaceId],
+      });
 
-      queryClient.setQueryData(
-        ['workspace-members', workspaceId],
-        (old: WorkspaceMember[] | undefined) => {
-          if (!old) return old;
-          return old.filter((member) => member.workspaceMemberId !== workspaceMemberId);
+      // Update ALL matching queries
+      queryClient.setQueriesData<MembersQueryData>(
+        { queryKey: ['workspace-members', workspaceId] },
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: old.data.filter((member) => member.workspaceMemberId !== workspaceMemberId),
+          };
         }
       );
 
-      return { previousMembers };
+      return { previousQueries };
     },
     onSuccess: (result, variables, context) => {
       if (!result.success) {
-        // Rollback optimistic update
-        if (context?.previousMembers) {
-          queryClient.setQueryData(['workspace-members', workspaceId], context.previousMembers);
-        }
-        // Handle specific member removal errors
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         if (isErrorCode(result.error, 'WORKSPACE_MEMBER_CANNOT_REMOVE_SELF')) {
           toast.error("Can't remove yourself", {
             description: 'Use leave workspace instead.',
@@ -140,11 +148,10 @@ export function useRemoveMember(workspaceId: string | null) {
       toast.success('Member removed successfully');
     },
     onError: (error: unknown, variables, context) => {
-      // Rollback optimistic update for unknown errors
-      if (context?.previousMembers) {
-        queryClient.setQueryData(['workspace-members', workspaceId], context.previousMembers);
-      }
-      // Only unknown errors reach here
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });

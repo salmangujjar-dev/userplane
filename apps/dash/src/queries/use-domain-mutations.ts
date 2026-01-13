@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
 import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
-import { handleApiError, handleSafeResult, isErrorCode } from '@/lib/errors';
+import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
 
 interface DomainSettings {
   hideSensitiveFields: boolean;
@@ -11,6 +11,19 @@ interface DomainSettings {
   captureNetworkLogs: boolean;
   captureBackendServerLogs: boolean;
 }
+
+interface DomainsData {
+  domains: WorkspaceDomain[];
+  pagination: {
+    page: number;
+    perPage: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+type DomainsQueryData = SafeResult<DomainsData>;
+type QuerySnapshot = [queryKey: readonly unknown[], data: DomainsQueryData | undefined][];
 
 export function useCreateDomain(workspaceId: string | null) {
   const queryClient = useQueryClient();
@@ -26,24 +39,45 @@ export function useCreateDomain(workspaceId: string | null) {
     },
     onMutate: async (url: string) => {
       await queryClient.cancelQueries({ queryKey: ['domains', workspaceId] });
-      const previousDomains = queryClient.getQueryData<WorkspaceDomain[]>(['domains', workspaceId]);
+
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<DomainsQueryData>({
+        queryKey: ['domains', workspaceId],
+      });
+
       const optimisticDomain: WorkspaceDomain = {
         domainId: `temp-${Date.now()}`,
         domainUrl: url,
         domainStatus: 'pending',
       };
-      queryClient.setQueryData(['domains', workspaceId], (old: WorkspaceDomain[] | undefined) => {
-        if (!old) return [optimisticDomain];
-        return [...old, optimisticDomain];
-      });
-      return { previousDomains };
+
+      // Update ALL matching queries
+      queryClient.setQueriesData<DomainsQueryData>(
+        { queryKey: ['domains', workspaceId] },
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              domains: [...old.data.domains, optimisticDomain],
+              pagination: {
+                ...old.data.pagination,
+                total: old.data.pagination.total + 1,
+              },
+            },
+          };
+        }
+      );
+
+      return { previousQueries };
     },
     onSuccess: (result, variables, context) => {
       if (!result.success) {
-        if (context?.previousDomains) {
-          queryClient.setQueryData(['domains', workspaceId], context.previousDomains);
-        }
-        // Handle duplicate domain error
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         if (isErrorCode(result.error, 'DOMAIN_ALREADY_EXISTS')) {
           toast.error('Domain already exists', {
             description: 'This domain has already been added to the workspace.',
@@ -56,9 +90,10 @@ export function useCreateDomain(workspaceId: string | null) {
       toast.success('Domain added successfully');
     },
     onError: (error: unknown, variables, context) => {
-      if (context?.previousDomains) {
-        queryClient.setQueryData(['domains', workspaceId], context.previousDomains);
-      }
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -83,29 +118,47 @@ export function useUpdateDomain(workspaceId: string | null) {
     },
     onMutate: async ({ domainId, url }: { domainId: string; url: string }) => {
       await queryClient.cancelQueries({ queryKey: ['domains', workspaceId] });
-      const previousDomains = queryClient.getQueryData<WorkspaceDomain[]>(['domains', workspaceId]);
-      queryClient.setQueryData(['domains', workspaceId], (old: WorkspaceDomain[] | undefined) => {
-        if (!old) return old;
-        return old.map((domain) =>
-          domain.domainId === domainId ? { ...domain, domainUrl: url } : domain
-        );
+
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<DomainsQueryData>({
+        queryKey: ['domains', workspaceId],
       });
-      return { previousDomains };
+
+      // Update ALL matching queries
+      queryClient.setQueriesData<DomainsQueryData>(
+        { queryKey: ['domains', workspaceId] },
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              domains: old.data.domains.map((domain) =>
+                domain.domainId === domainId ? { ...domain, domainUrl: url } : domain
+              ),
+            },
+          };
+        }
+      );
+
+      return { previousQueries };
     },
     onSuccess: (result, variables, context) => {
       if (!result.success) {
-        if (context?.previousDomains) {
-          queryClient.setQueryData(['domains', workspaceId], context.previousDomains);
-        }
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         handleApiError(result.error, 'Failed to update domain');
         return;
       }
       toast.success('Domain updated successfully');
     },
     onError: (error: unknown, variables, context) => {
-      if (context?.previousDomains) {
-        queryClient.setQueryData(['domains', workspaceId], context.previousDomains);
-      }
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -129,19 +182,39 @@ export function useDeleteDomain(workspaceId: string | null) {
     },
     onMutate: async (domainId: string) => {
       await queryClient.cancelQueries({ queryKey: ['domains', workspaceId] });
-      const previousDomains = queryClient.getQueryData<WorkspaceDomain[]>(['domains', workspaceId]);
-      queryClient.setQueryData(['domains', workspaceId], (old: WorkspaceDomain[] | undefined) => {
-        if (!old) return old;
-        return old.filter((domain) => domain.domainId !== domainId);
+
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<DomainsQueryData>({
+        queryKey: ['domains', workspaceId],
       });
-      return { previousDomains };
+
+      // Update ALL matching queries
+      queryClient.setQueriesData<DomainsQueryData>(
+        { queryKey: ['domains', workspaceId] },
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              domains: old.data.domains.filter((domain) => domain.domainId !== domainId),
+              pagination: {
+                ...old.data.pagination,
+                total: Math.max(0, old.data.pagination.total - 1),
+              },
+            },
+          };
+        }
+      );
+
+      return { previousQueries };
     },
     onSuccess: (result, domainId, context) => {
       if (!result.success) {
-        if (context?.previousDomains) {
-          queryClient.setQueryData(['domains', workspaceId], context.previousDomains);
-        }
-        // Handle last domain deletion error
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         if (isErrorCode(result.error, 'DOMAIN_LAST_DOMAIN_DELETE_FORBIDDEN')) {
           toast.error("Can't delete the only domain", {
             description: 'Add another domain first.',
@@ -154,9 +227,10 @@ export function useDeleteDomain(workspaceId: string | null) {
       toast.success('Domain deleted successfully');
     },
     onError: (error: unknown, domainId, context) => {
-      if (context?.previousDomains) {
-        queryClient.setQueryData(['domains', workspaceId], context.previousDomains);
-      }
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -190,20 +264,24 @@ export function useUpdateDomainPreferences(
     },
     onMutate: async ({ domainId, settings }: { domainId: string; settings: DomainSettings }) => {
       await queryClient.cancelQueries({ queryKey: ['domains', workspaceId] });
-      const previousDomains = queryClient.getQueryData<WorkspaceDomain[]>(['domains', workspaceId]);
+
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<DomainsQueryData>({
+        queryKey: ['domains', workspaceId],
+      });
 
       if (onPreferencesUpdate) {
         onPreferencesUpdate(domainId, settings);
       }
 
-      return { previousDomains };
+      return { previousQueries };
     },
     onSuccess: async (result, variables, context) => {
       if (!result.success) {
-        if (context?.previousDomains) {
-          queryClient.setQueryData(['domains', workspaceId], context.previousDomains);
-        }
-        // Handle unverified domain error
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         if (isErrorCode(result.error, 'DOMAIN_UNVERIFIED')) {
           toast.error('Domain not verified', {
             description: 'Please verify the domain first.',
@@ -239,9 +317,10 @@ export function useUpdateDomainPreferences(
       }
     },
     onError: (error: unknown, variables, context) => {
-      if (context?.previousDomains) {
-        queryClient.setQueryData(['domains', workspaceId], context.previousDomains);
-      }
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
