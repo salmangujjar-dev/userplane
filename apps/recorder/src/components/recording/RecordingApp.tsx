@@ -4,7 +4,7 @@
  * Handles cross-tab coordination to ensure only one recorder is active at a time
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   useRecordingFlow,
   type RecordingFlowActions,
@@ -25,6 +25,7 @@ import RecordingInProgressScreen from './RecordingInProgressScreen';
 import PostRecordingReviewScreen from './PostRecordingReviewScreen';
 import PostRecordingUploadScreen from './PostRecordingUploadScreen';
 import PostRecordingAckScreen from './PostRecordingAckScreen';
+import SettingsDropdown from './SettingsDropdown';
 import { classifyError, type RecordingError, type ErrorAction } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
 import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
@@ -63,9 +64,23 @@ function RecordingAppContent() {
   const prevFlowStateRef = useRef<FlowState | null>(null);
   const sessionReportedRef = useRef(false);
 
+  // User override for blur preference (null = use session preference)
+  const [blurOverride, setBlurOverride] = useState<boolean | null>(null);
+
   // IMPORTANT: All hooks must be called unconditionally (Rules of Hooks)
   // Initialize recording flow - this hook must always be called
   const { state, actions, sessionInfo } = useRecordingFlow(linkToken, action, workspaceIds);
+
+  // Effective blur state: user override if set, otherwise use session preference
+  // No effect needed - just derive directly from state
+  const effectiveBlurEnabled =
+    blurOverride !== null ? blurOverride : (state.preferences?.hideSensitive ?? false);
+
+  // Handle user blur toggle - sets override
+  const handleBlurToggle = useCallback((enabled: boolean) => {
+    console.log('[RecordingApp][Blur] User toggled:', { enabled });
+    setBlurOverride(enabled);
+  }, []);
 
   // Effect to extract URL params
   useEffect(() => {
@@ -130,6 +145,7 @@ function RecordingAppContent() {
   }, [bridge, isEmbedded, crossTabLock.isAcquired, state.state, state.recordingBlob]);
 
   // Control privacy blur via cross-tab broadcast to capture iframes (embedded mode only)
+  // Uses effectiveBlurEnabled which respects user toggle override
   // Track previous blur state to only trigger on actual changes
   const prevBlurStateRef = useRef<'active' | 'inactive' | null>(null);
 
@@ -138,10 +154,11 @@ function RecordingAppContent() {
     if (!isEmbedded || !crossTabLock.isAcquired) return;
     if (!crossTab) return;
 
-    // Determine blur state based on flow state
-    // Only blur during active recording (countdown/recording)
+    // Determine blur state based on flow state AND user preference
+    // Only blur during active recording (countdown/recording) if blur is enabled
     // Stop blur for all other states including retained (review/uploading)
-    const shouldBlur = state.state === 'countdown' || state.state === 'recording';
+    const shouldBlur =
+      effectiveBlurEnabled && (state.state === 'countdown' || state.state === 'recording');
     const blurState = shouldBlur ? 'active' : 'inactive';
 
     // Skip if blur state hasn't changed
@@ -154,10 +171,11 @@ function RecordingAppContent() {
       from: prevBlurState,
       to: blurState,
       flowState: state.state,
+      effectiveBlurEnabled,
     });
 
     if (blurState === 'active') {
-      // Start blur when recording becomes active
+      // Start blur when recording becomes active (and blur is enabled)
       console.log('[RecordingApp][Blur] Broadcasting START');
       crossTab.broadcastStartBlurr();
     } else if (blurState === 'inactive' && prevBlurState === 'active') {
@@ -165,7 +183,7 @@ function RecordingAppContent() {
       console.log('[RecordingApp][Blur] Broadcasting STOP');
       crossTab.broadcastStopBlurr();
     }
-  }, [crossTab, isEmbedded, crossTabLock.isAcquired, state.state]);
+  }, [crossTab, isEmbedded, crossTabLock.isAcquired, state.state, effectiveBlurEnabled]);
 
   // Initialize session with parent when ready (embedded mode only)
   // This effect must be called unconditionally - the guard is inside the effect
@@ -284,6 +302,15 @@ function RecordingAppContent() {
 
   console.log('[RecordingApp] Current state:', state.state);
 
+  // Settings dropdown for embedded mode (blur control, etc.)
+  // Only show when we have preferences and in embedded mode
+  // Toggle is always enabled - blur can be toggled even during recording
+  // The blur effect handles broadcasting changes to capture iframes
+  const settingsElement =
+    isEmbedded && state.preferences ? (
+      <SettingsDropdown isBlurEnabled={effectiveBlurEnabled} onBlurToggle={handleBlurToggle} />
+    ) : null;
+
   switch (state.state) {
     case 'loading':
       console.log('[RecordingApp] Rendering: PreRecordingLoadingScreen');
@@ -321,6 +348,7 @@ function RecordingAppContent() {
           requesterName={state.requesterName}
           preferences={state.preferences}
           onStartRecording={actions.startRecording}
+          settingsElement={settingsElement}
         />
       );
 
@@ -333,6 +361,7 @@ function RecordingAppContent() {
           countdownSeconds={state.countdownSeconds}
           mediaStream={state.mediaStream}
           preferences={state.preferences}
+          settingsElement={settingsElement}
         />
       );
 
@@ -345,6 +374,7 @@ function RecordingAppContent() {
           preferences={state.preferences}
           isProcessing={state.isProcessing}
           onStopRecording={actions.stopRecording}
+          settingsElement={settingsElement}
         />
       );
 
@@ -363,6 +393,7 @@ function RecordingAppContent() {
           preferences={state.preferences}
           onSubmit={handleSubmitRecording}
           onStartOver={actions.startOver}
+          settingsElement={settingsElement}
         />
       );
 
@@ -380,12 +411,15 @@ function RecordingAppContent() {
           videoUrl={state.videoUrl}
           progress={state.uploadProgress}
           preferences={state.preferences}
+          settingsElement={settingsElement}
         />
       );
 
     case 'success':
       console.log('[RecordingApp] Rendering: PostRecordingAckScreen');
-      return <PostRecordingAckScreen preferences={state.preferences} />;
+      return (
+        <PostRecordingAckScreen preferences={state.preferences} settingsElement={settingsElement} />
+      );
 
     default:
       console.log('[RecordingApp] Unknown state, rendering: PreRecordingLoadingScreen');

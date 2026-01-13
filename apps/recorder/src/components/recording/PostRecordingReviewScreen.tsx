@@ -3,6 +3,7 @@
  * Lets user review recording before submitting
  */
 
+import type { ReactNode } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import VideoPlayer from './VideoPlayer';
@@ -26,6 +27,8 @@ interface PostRecordingReviewScreenProps {
   onSubmit?: () => void;
   /** Callback when user clicks start over */
   onStartOver?: () => void;
+  /** Optional element for top-right corner (e.g., settings dropdown) */
+  settingsElement?: ReactNode;
 }
 
 export default function PostRecordingReviewScreen({
@@ -35,6 +38,7 @@ export default function PostRecordingReviewScreen({
   errorMessage,
   onSubmit,
   onStartOver,
+  settingsElement,
 }: PostRecordingReviewScreenProps) {
   const handleSubmit = () => {
     if (onSubmit && !isSubmitting) {
@@ -63,6 +67,7 @@ export default function PostRecordingReviewScreen({
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
       workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
+      topRightElement={settingsElement}
     >
       <div className="flex flex-col items-center w-full">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center mb-3 sm:mb-4">

@@ -3,7 +3,7 @@
  * Shows live preview and recording indicator
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import RecordingScreenLayout from './RecordingScreenLayout';
 import {
@@ -20,6 +20,8 @@ interface RecordingInProgressScreenProps {
   preferences: RecordingPreferences;
   isProcessing?: boolean;
   onStopRecording?: () => void;
+  /** Optional element for top-right corner (e.g., settings dropdown) */
+  settingsElement?: ReactNode;
 }
 
 export default function RecordingInProgressScreen({
@@ -29,6 +31,7 @@ export default function RecordingInProgressScreen({
   preferences,
   isProcessing = false,
   onStopRecording,
+  settingsElement,
 }: RecordingInProgressScreenProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isLocalProcessing, setIsLocalProcessing] = useState(false);
@@ -88,6 +91,7 @@ export default function RecordingInProgressScreen({
       workspaceLogoUrl={customizeLink ? preferences.companyLogoUrl : null}
       workspaceName={customizeLink ? preferences.companyName : DEFAULT_COMPANY_NAME}
       footnoteText={customizeLink ? preferences.footnoteText : null}
+      topRightElement={settingsElement}
     >
       <div className="flex flex-col items-center w-full">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center mb-3 sm:mb-4">
