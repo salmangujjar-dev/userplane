@@ -26,6 +26,9 @@ interface UpdateNotificationsData {
   updated: boolean;
 }
 
+type WorkspacesQueryData = SafeResult<WorkspacesData>;
+type QuerySnapshot = [queryKey: readonly unknown[], data: WorkspacesQueryData | undefined][];
+
 export function useUpdateNotifications(options?: { onError?: () => void }) {
   const queryClient = useQueryClient();
 
@@ -109,7 +112,7 @@ export function useDeleteWorkspace(
     SafeResult<DeleteWorkspaceData>,
     Error,
     string,
-    { previousWorkspaces: WorkspacesData | undefined }
+    { previousQueries: QuerySnapshot }
   >({
     mutationFn: async (workspaceId: string) => {
       const [error, response] = await apiClient.workspace.delete({
@@ -119,21 +122,33 @@ export function useDeleteWorkspace(
     },
     onMutate: async (workspaceId) => {
       await queryClient.cancelQueries({ queryKey: ['workspaces'] });
-      const previousWorkspaces = queryClient.getQueryData<WorkspacesData>(['workspaces']);
-      queryClient.setQueryData(['workspaces'], (old: WorkspacesData | undefined) => {
-        if (!old) return old;
+
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<WorkspacesQueryData>({
+        queryKey: ['workspaces'],
+      });
+
+      // Update ALL matching queries
+      queryClient.setQueriesData<WorkspacesQueryData>({ queryKey: ['workspaces'] }, (old) => {
+        if (!old?.success) return old;
         return {
           ...old,
-          workspaces: old.workspaces.filter((ws) => ws.workspaceId !== workspaceId),
+          data: {
+            ...old.data,
+            workspaces: old.data.workspaces.filter((ws) => ws.workspaceId !== workspaceId),
+            total: Math.max(0, old.data.total - 1),
+          },
         };
       });
-      return { previousWorkspaces };
+
+      return { previousQueries };
     },
     onSuccess: (result, deletedWorkspaceId, context) => {
       if (!result.success) {
-        if (context?.previousWorkspaces) {
-          queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
-        }
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         handleApiError(result.error, 'Failed to delete workspace');
         return;
       }
@@ -155,9 +170,10 @@ export function useDeleteWorkspace(
       }
     },
     onError: (error: unknown, workspaceId, context) => {
-      if (context?.previousWorkspaces) {
-        queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
-      }
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -184,7 +200,7 @@ export function useLeaveWorkspace(
     SafeResult<LeaveWorkspaceData>,
     Error,
     string,
-    { previousWorkspaces: WorkspacesData | undefined }
+    { previousQueries: QuerySnapshot }
   >({
     mutationFn: async (workspaceId: string) => {
       const [error, response] = await apiClient.workspace.members.leave({
@@ -194,22 +210,33 @@ export function useLeaveWorkspace(
     },
     onMutate: async (workspaceId) => {
       await queryClient.cancelQueries({ queryKey: ['workspaces'] });
-      const previousWorkspaces = queryClient.getQueryData<WorkspacesData>(['workspaces']);
-      queryClient.setQueryData(['workspaces'], (old: WorkspacesData | undefined) => {
-        if (!old) return old;
+
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<WorkspacesQueryData>({
+        queryKey: ['workspaces'],
+      });
+
+      // Update ALL matching queries
+      queryClient.setQueriesData<WorkspacesQueryData>({ queryKey: ['workspaces'] }, (old) => {
+        if (!old?.success) return old;
         return {
           ...old,
-          workspaces: old.workspaces.filter((ws) => ws.workspaceId !== workspaceId),
+          data: {
+            ...old.data,
+            workspaces: old.data.workspaces.filter((ws) => ws.workspaceId !== workspaceId),
+            total: Math.max(0, old.data.total - 1),
+          },
         };
       });
-      return { previousWorkspaces };
+
+      return { previousQueries };
     },
     onSuccess: (result, leftWorkspaceId, context) => {
       if (!result.success) {
-        if (context?.previousWorkspaces) {
-          queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
-        }
-        // Special handling for last owner trying to leave
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         if (isErrorCode(result.error, 'WORKSPACE_MEMBER_LAST_OWNER_LEAVE')) {
           toast.error("You're the last owner", {
             description: 'Transfer ownership or delete the workspace first.',
@@ -235,9 +262,10 @@ export function useLeaveWorkspace(
       }
     },
     onError: (error: unknown, workspaceId, context) => {
-      if (context?.previousWorkspaces) {
-        queryClient.setQueryData(['workspaces'], context.previousWorkspaces);
-      }
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });

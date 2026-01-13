@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
-import type { Link } from '@/hooks/use-workspace-links';
+import type { Link, LinksData } from '@/hooks/use-workspace-links';
 import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
-import { handleApiError, handleSafeResult } from '@/lib/errors';
+import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
 
 interface CreateLinkInput {
   domainId: string;
@@ -11,6 +11,9 @@ interface CreateLinkInput {
   linkReference?: string;
   linkReusable: boolean;
 }
+
+type LinksQueryData = SafeResult<LinksData>;
+type QuerySnapshot = [queryKey: readonly unknown[], data: LinksQueryData | undefined][];
 
 export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDomain[]) {
   const queryClient = useQueryClient();
@@ -27,7 +30,10 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
     onMutate: async (data: CreateLinkInput) => {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
-      const previousLinks = queryClient.getQueryData<{ links: Link[] }>(['links', workspaceId]);
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<LinksQueryData>({
+        queryKey: ['links', workspaceId],
+      });
 
       // Find domain for optimistic data
       const domain = domains?.find((d) => d.domainId === data.domainId);
@@ -41,30 +47,40 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
         createdAt: new Date().toISOString(),
       };
 
-      queryClient.setQueryData(['links', workspaceId], (old: { links: Link[] } | undefined) => {
-        if (!old) return { links: [optimisticLink as Link] };
+      // Update ALL matching queries
+      queryClient.setQueriesData<LinksQueryData>({ queryKey: ['links', workspaceId] }, (old) => {
+        if (!old?.success) return old;
         return {
           ...old,
-          links: [optimisticLink as Link, ...old.links],
+          data: {
+            ...old.data,
+            links: [optimisticLink as Link, ...old.data.links],
+            pagination: {
+              ...old.data.pagination,
+              total: old.data.pagination.total + 1,
+            },
+          },
         };
       });
 
-      return { previousLinks };
+      return { previousQueries };
     },
     onSuccess: (result, data, context) => {
       if (!result.success) {
-        if (context?.previousLinks) {
-          queryClient.setQueryData(['links', workspaceId], context.previousLinks);
-        }
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         handleApiError(result.error, 'Failed to create link');
         return;
       }
       toast.success('Link created successfully');
     },
     onError: (error: unknown, data, context) => {
-      if (context?.previousLinks) {
-        queryClient.setQueryData(['links', workspaceId], context.previousLinks);
-      }
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -101,40 +117,49 @@ export function useUpdateLink(workspaceId: string | null) {
     onMutate: async ({ linkId, title, reusable }) => {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
-      const previousLinks = queryClient.getQueryData<{ links: Link[] }>(['links', workspaceId]);
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<LinksQueryData>({
+        queryKey: ['links', workspaceId],
+      });
 
-      queryClient.setQueryData(['links', workspaceId], (old: { links: Link[] } | undefined) => {
-        if (!old) return old;
+      // Update ALL matching queries
+      queryClient.setQueriesData<LinksQueryData>({ queryKey: ['links', workspaceId] }, (old) => {
+        if (!old?.success) return old;
         return {
           ...old,
-          links: old.links.map((link) =>
-            link.linkId === linkId
-              ? {
-                  ...link,
-                  linkTitle: title || null,
-                  linkReusable: reusable,
-                }
-              : link
-          ),
+          data: {
+            ...old.data,
+            links: old.data.links.map((link) =>
+              link.linkId === linkId
+                ? {
+                    ...link,
+                    linkTitle: title || null,
+                    linkReusable: reusable,
+                  }
+                : link
+            ),
+          },
         };
       });
 
-      return { previousLinks };
+      return { previousQueries };
     },
     onSuccess: (result, variables, context) => {
       if (!result.success) {
-        if (context?.previousLinks) {
-          queryClient.setQueryData(['links', workspaceId], context.previousLinks);
-        }
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         handleApiError(result.error, 'Failed to update link');
         return;
       }
       toast.success('Link updated successfully');
     },
     onError: (error: unknown, variables, context) => {
-      if (context?.previousLinks) {
-        queryClient.setQueryData(['links', workspaceId], context.previousLinks);
-      }
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
@@ -159,32 +184,45 @@ export function useDeleteLink(workspaceId: string | null) {
     onMutate: async (linkId) => {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
-      const previousLinks = queryClient.getQueryData<{ links: Link[] }>(['links', workspaceId]);
+      // Snapshot ALL matching queries for rollback
+      const previousQueries: QuerySnapshot = queryClient.getQueriesData<LinksQueryData>({
+        queryKey: ['links', workspaceId],
+      });
 
-      queryClient.setQueryData(['links', workspaceId], (old: { links: Link[] } | undefined) => {
-        if (!old) return old;
+      // Update ALL matching queries
+      queryClient.setQueriesData<LinksQueryData>({ queryKey: ['links', workspaceId] }, (old) => {
+        if (!old?.success) return old;
         return {
           ...old,
-          links: old.links.filter((link) => link.linkId !== linkId),
+          data: {
+            ...old.data,
+            links: old.data.links.filter((link) => link.linkId !== linkId),
+            pagination: {
+              ...old.data.pagination,
+              total: Math.max(0, old.data.pagination.total - 1),
+            },
+          },
         };
       });
 
-      return { previousLinks };
+      return { previousQueries };
     },
     onSuccess: (result, variables, context) => {
       if (!result.success) {
-        if (context?.previousLinks) {
-          queryClient.setQueryData(['links', workspaceId], context.previousLinks);
-        }
+        // Rollback all queries
+        context?.previousQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         handleApiError(result.error, 'Failed to delete link');
         return;
       }
       toast.success('Link deleted successfully');
     },
     onError: (error: unknown, variables, context) => {
-      if (context?.previousLinks) {
-        queryClient.setQueryData(['links', workspaceId], context.previousLinks);
-      }
+      // Rollback all queries
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
