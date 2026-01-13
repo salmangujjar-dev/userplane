@@ -383,6 +383,7 @@
       "name": "@workspace/sdk",
       "version": "0.0.1",
       "dependencies": {
+        "@workspace/blurr": "workspace:*",
         "@workspace/metadata": "workspace:*",
         "@workspace/postbridge": "workspace:*",
         "nanoid": "^5.1.6",

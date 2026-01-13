@@ -32,4 +32,5 @@ export type {
   CaptureRecorderState,
   GuestSchema,
   CustomMetadata,
+  BlurrState,
 } from './types';
