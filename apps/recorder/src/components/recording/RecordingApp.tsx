@@ -74,7 +74,7 @@ function RecordingAppContent() {
       mode,
       isEmbedded ? '(running in iframe)' : '(standalone)'
     );
-    console.log('[RecordingApp] Cross-tab lock status:', crossTabLock.status);
+    console.log('[RecordingApp][CrossTab] Lock status:', crossTabLock.status);
 
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get(URL_PARAMS.TOKEN);
@@ -129,6 +129,44 @@ function RecordingAppContent() {
     }
   }, [bridge, isEmbedded, crossTabLock.isAcquired, state.state, state.recordingBlob]);
 
+  // Control privacy blur via cross-tab broadcast to capture iframes (embedded mode only)
+  // Track previous blur state to only trigger on actual changes
+  const prevBlurStateRef = useRef<'active' | 'inactive' | null>(null);
+
+  useEffect(() => {
+    // Skip if not in embedded mode or cross-tab not acquired
+    if (!isEmbedded || !crossTabLock.isAcquired) return;
+    if (!crossTab) return;
+
+    // Determine blur state based on flow state
+    // Only blur during active recording (countdown/recording)
+    // Stop blur for all other states including retained (review/uploading)
+    const shouldBlur = state.state === 'countdown' || state.state === 'recording';
+    const blurState = shouldBlur ? 'active' : 'inactive';
+
+    // Skip if blur state hasn't changed
+    if (blurState === prevBlurStateRef.current) return;
+
+    const prevBlurState = prevBlurStateRef.current;
+    prevBlurStateRef.current = blurState;
+
+    console.log('[RecordingApp][Blur] State changed:', {
+      from: prevBlurState,
+      to: blurState,
+      flowState: state.state,
+    });
+
+    if (blurState === 'active') {
+      // Start blur when recording becomes active
+      console.log('[RecordingApp][Blur] Broadcasting START');
+      crossTab.broadcastStartBlurr();
+    } else if (blurState === 'inactive' && prevBlurState === 'active') {
+      // Stop blur when transitioning from active to inactive
+      console.log('[RecordingApp][Blur] Broadcasting STOP');
+      crossTab.broadcastStopBlurr();
+    }
+  }, [crossTab, isEmbedded, crossTabLock.isAcquired, state.state]);
+
   // Initialize session with parent when ready (embedded mode only)
   // This effect must be called unconditionally - the guard is inside the effect
   useEffect(() => {
@@ -152,7 +190,7 @@ function RecordingAppContent() {
     if (!crossTab) return null;
 
     const scatterResult = await crossTab.scatterGatherMetadata(3000);
-    console.log('[RecordingApp] Scatter-gather complete:', {
+    console.log('[RecordingApp][Scatter] Gather complete:', {
       respondedTabs: scatterResult.respondedTabs.length,
       timedOutTabs: scatterResult.timedOutTabs.length,
     });
@@ -175,7 +213,7 @@ function RecordingAppContent() {
     }
 
     if (Object.keys(allTabsMetadata).length === 0) {
-      console.log('[RecordingApp] No metadata from any tab');
+      console.log('[RecordingApp][Scatter] No metadata from any tab');
       return null;
     }
 
@@ -191,11 +229,14 @@ function RecordingAppContent() {
     );
 
     if (allIdentical && Object.keys(allCustomMetadata[0] || {}).length > 0) {
-      console.log('[RecordingApp] All tabs identical - using unified:', allCustomMetadata[0]);
+      console.log(
+        '[RecordingApp][Scatter] All tabs identical - using unified:',
+        allCustomMetadata[0]
+      );
       return allCustomMetadata[0] as Record<string, unknown>;
     }
 
-    console.log('[RecordingApp] Tabs differ - using per-tab:', allTabsMetadata);
+    console.log('[RecordingApp][Scatter] Tabs differ - using per-tab:', allTabsMetadata);
     return allTabsMetadata;
   };
 
@@ -206,11 +247,11 @@ function RecordingAppContent() {
     let customMetadata: Record<string, unknown> | null = null;
 
     if (isEmbedded && crossTab) {
-      console.log('[RecordingApp] Gathering metadata from capture tabs...');
+      console.log('[RecordingApp][Scatter] Gathering metadata from capture tabs...');
       try {
         customMetadata = await gatherMetadataFromCaptureTabs();
       } catch (err) {
-        console.error('[RecordingApp] Metadata collection failed (non-fatal):', err);
+        console.error('[RecordingApp][Scatter] Metadata collection failed (non-fatal):', err);
       }
     }
 
@@ -223,12 +264,12 @@ function RecordingAppContent() {
   // In embedded mode, check cross-tab status before showing recording UI
   if (isEmbedded) {
     if (crossTabLock.isPending) {
-      console.log('[RecordingApp] Waiting for cross-tab coordination...');
+      console.log('[RecordingApp][CrossTab] Waiting for coordination...');
       return <PreRecordingLoadingScreen />;
     }
 
     if (crossTabLock.isBlocked) {
-      console.log('[RecordingApp] Blocked by another recorder:', crossTabLock.error);
+      console.log('[RecordingApp][CrossTab] Blocked by another recorder:', crossTabLock.error);
       return (
         <ErrorScreen
           title="Recorder Already Active"

@@ -50,7 +50,7 @@ export default function CaptureApp() {
   const extractMetadata = useCallback((): TabMetadata | null => {
     const bridge = bridgeRef.current;
     if (!bridge || !bridge.isConnected()) {
-      console.log('[CaptureApp] Cannot extract metadata - bridge not connected');
+      console.warn('[CaptureApp][Metadata] Cannot extract - bridge not connected');
       return null;
     }
 
@@ -60,7 +60,7 @@ export default function CaptureApp() {
       ...(bridge.getCustomMetadata() || {}),
     };
 
-    console.log('[CaptureApp] Extracted metadata:', metadata._pageUrl);
+    console.log('[CaptureApp][Metadata] Extracted:', { pageUrl: metadata._pageUrl });
     return metadata;
   }, []);
 
@@ -70,13 +70,13 @@ export default function CaptureApp() {
 
     async function initBridges() {
       try {
-        console.log('[CaptureApp] Initializing capture bridges');
+        console.log('[CaptureApp][Init] Starting bridge initialization');
 
         // 1. Connect to parent SDK via postbridge
         const bridge = getCaptureBridge({
           onRecorderStateChange: (state) => {
             if (mounted) {
-              console.log('[CaptureApp] Recorder state changed:', state);
+              console.log('[CaptureApp][Bridge] Recorder state changed:', state);
               setRecorderState(state);
             }
           },
@@ -88,7 +88,7 @@ export default function CaptureApp() {
 
         if (!mounted) return;
 
-        console.log('[CaptureApp] Parent bridge connected');
+        console.log('[CaptureApp][Bridge] Parent bridge connected');
         setIsConnected(true);
 
         // Initialize recorder state from bridge
@@ -99,20 +99,37 @@ export default function CaptureApp() {
         const tabRef = bridge.getTabRef();
         const captureTabId = tabRef ? `${CONNECTION_PREFIXES.CAPTURE}_${tabRef}` : undefined;
 
+        console.log('[CaptureApp][CrossTab] Initializing coordinator', { tabRef, captureTabId });
+
         const crossTab = getCrossTabCoordinator({
           channel: 'userplane', // Unified channel for recorders and captures
           callbacks: {
             onRecorderStateChanged: (tabId, state) => {
               if (mounted) {
-                console.log('[CaptureApp] Cross-tab recorder state:', { tabId, state });
+                console.debug('[CaptureApp][CrossTab] Recorder state changed:', { tabId, state });
                 // This is handled by onCaptureRecorderStateChanged now
                 // Keep for backwards compatibility but don't update state here
               }
             },
             onCaptureRecorderStateChanged: (state) => {
               if (mounted) {
-                console.log('[CaptureApp] Capture recorder state changed:', state);
+                console.log('[CaptureApp][CrossTab] Capture recorder state changed:', {
+                  recorderTabId: state.recorderTabId,
+                  recorderState: state.recorderState,
+                });
                 setRecorderState(state);
+              }
+            },
+            onBlurrStart: () => {
+              if (mounted && bridge) {
+                console.log('[CaptureApp][Blur] Received START command');
+                bridge.startBlurr();
+              }
+            },
+            onBlurrStop: () => {
+              if (mounted && bridge) {
+                console.log('[CaptureApp][Blur] Received STOP command');
+                bridge.stopBlurr();
               }
             },
           },
@@ -127,10 +144,20 @@ export default function CaptureApp() {
 
         if (!mounted) return;
 
-        console.log('[CaptureApp] Cross-tab coordinator connected with ID:', captureTabId);
+        console.log('[CaptureApp][CrossTab] Coordinator connected', {
+          captureTabId,
+          isConnected: crossTab.isConnected(),
+        });
         setIsCrossTabConnected(true);
+
+        // Check if blur is already enabled (for tabs that connect during recording)
+        const blurrEnabled = crossTab.isBlurrEnabled();
+        if (blurrEnabled) {
+          console.log('[CaptureApp][Blur] Already enabled on connect - starting privacy blur');
+          bridge.startBlurr();
+        }
       } catch (err) {
-        console.error('[CaptureApp] Failed to initialize bridges:', err);
+        console.error('[CaptureApp][Init] Failed to initialize bridges:', err);
         if (mounted) {
           setError(err instanceof Error ? err.message : 'Failed to connect');
         }
@@ -142,12 +169,13 @@ export default function CaptureApp() {
     // Cleanup on unmount
     return () => {
       mounted = false;
+      console.log('[CaptureApp][Cleanup] Unmounting capture app');
       if (bridgeRef.current) {
-        console.log('[CaptureApp] Disconnecting parent bridge');
+        console.log('[CaptureApp][Cleanup] Disconnecting parent bridge');
         bridgeRef.current.disconnect();
       }
       if (crossTabRef.current) {
-        console.log('[CaptureApp] Disconnecting cross-tab coordinator');
+        console.log('[CaptureApp][Cleanup] Disconnecting cross-tab coordinator');
         crossTabRef.current.disconnect();
       }
     };
@@ -156,11 +184,12 @@ export default function CaptureApp() {
   // Log state changes for debugging
   useEffect(() => {
     if (isConnected && isCrossTabConnected) {
-      console.log('[CaptureApp] Fully connected:', {
+      console.debug('[CaptureApp][Status] Fully connected', {
         parentBridge: isConnected,
         crossTab: isCrossTabConnected,
         tabRef: bridgeRef.current?.getTabRef(),
-        recorderState,
+        recorderState: recorderState.recorderState,
+        recorderTabId: recorderState.recorderTabId,
       });
     }
   }, [isConnected, isCrossTabConnected, recorderState]);
