@@ -1,0 +1,51 @@
+{
+  "name": "@workspace/blurr",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Production-grade privacy blur system for screen recording and session replay",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "dev": "tsc --watch",
+    "dev:all": "concurrently \"bun run dev\" \"bun run dev:storybook\" --names \"tsc,storybook\" --prefix-colors \"cyan,magenta\"",
+    "dev:storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6008",
+    "build": "rm -rf dist && tsc",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6008",
+    "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
+  },
+  "keywords": [
+    "privacy",
+    "blur",
+    "screen-recording",
+    "session-replay",
+    "gdpr",
+    "hipaa",
+    "pii",
+    "data-protection"
+  ],
+  "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.3",
+    "concurrently": "^9.2.1",
+    "@storybook/addon-docs": "^10.1.11",
+    "@storybook/html": "^10.1.11",
+    "@storybook/html-vite": "^10.1.11",
+    "@types/node": "^22.14.1",
+    "@vitest/coverage-v8": "^4.0.16",
+    "@workspace/typescript-config": "workspace:*",
+    "happy-dom": "^20.0.11",
+    "storybook": "^10.1.11",
+    "typescript": "5.8.2",
+    "vite": "^6.0.11",
+    "vitest": "^4.0.16"
+  }
+}
