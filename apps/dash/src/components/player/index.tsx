@@ -8,6 +8,7 @@ import 'videojs-hls-quality-selector';
 import './stream-player.css';
 import StreamControls from './StreamControls';
 import type { VideoMarker, Player, PlayerOptions } from './types';
+import { toast } from '@workspace/ui/components/sonner';
 
 interface StreamPlayerProps {
   options: PlayerOptions;
@@ -31,6 +32,7 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
   const [duration, setDuration] = useState<number>(durationMs ? durationMs / 1000 : 0);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<boolean>(false);
   const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -40,11 +42,15 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
       videoElement.classList.add('vjs-big-play-centered');
       videoRef.current.appendChild(videoElement);
 
+      // Suppress Video.js error logging - we handle errors ourselves
+      videojs.log.level('off');
+
       // Merge options with disabled controls and big play button
       const playerOptions: PlayerOptions = {
         ...options,
         controls: false,
         bigPlayButton: false,
+        errorDisplay: false,
         ...(poster && { poster }),
         html5: {
           vhs: {
@@ -83,6 +89,12 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
       // Track when video starts playing
       player.on('play', () => {
         setHasStarted(true);
+      });
+
+      // Track video errors
+      player.on('error', () => {
+        setHasError(true);
+        toast.error('This recording cannot be played');
       });
     } else if (playerRef.current) {
       const player = playerRef.current;
@@ -177,6 +189,7 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
         duration={duration}
         hasStarted={hasStarted}
         showControls={showControls}
+        hasError={hasError}
       />
     </div>
   );

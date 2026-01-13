@@ -42,6 +42,18 @@
   display: none !important;
 }
 
+/* Hide video.js error display - we show toast notifications instead */
+.video-js .vjs-error-display,
+.video-js .vjs-modal-dialog,
+.video-js.vjs-error .vjs-error-display,
+.video-js .vjs-modal-dialog-content,
+.vjs-error-display,
+.vjs-modal-dialog {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
 /* Video tech element - no styling, just clean video */
 .video-js .vjs-tech {
   background-color: #000;
