@@ -581,10 +581,15 @@ export const getWorkspaceDomainsImpl = (
     .handler(async ({ input }) => {
       const page = input.query.page || 1;
       const perPage = input.query.per_page || 5;
+      const sortBy = input.query.sort_by || 'created_at';
+      const sortDirection = input.query.sort_direction || 'desc';
+
       const { domains, total } = await domainService.getByWorkspaceIdPaginated(
         input.params.workspaceId,
         page,
-        perPage
+        perPage,
+        sortBy,
+        sortDirection
       );
 
       return {

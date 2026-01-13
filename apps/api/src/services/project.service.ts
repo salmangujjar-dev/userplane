@@ -4,7 +4,11 @@
  */
 
 import { generateProjectId } from '@/api/lib/id';
-import { ProjectRepository } from '@/api/repositories/projects.repository';
+import {
+  ProjectRepository,
+  type ProjectSortField,
+  type SortDirection,
+} from '@/api/repositories/projects.repository';
 import { ORPCError } from '@orpc/server';
 import type { Transaction } from '@/api/types';
 import type { RecordingService } from '@/api/services/recording.service';
@@ -115,7 +119,7 @@ export class ProjectService {
   }
 
   /**
-   * Get projects in workspace with pagination
+   * Get projects in workspace with pagination and sorting
    * If no projects found, validates workspace existence (since workspace always has at least 1 project)
    * Pagination params are validated by the contract schema
    * Throws WORKSPACE_NOT_FOUND if workspace doesn't exist when no projects found
@@ -123,7 +127,9 @@ export class ProjectService {
   async getProjectsByWorkspacePaginated(
     workspaceId: string,
     page: number = 1,
-    perPage: number = 5
+    perPage: number = 5,
+    sortBy: ProjectSortField = 'created_at',
+    sortDirection: SortDirection = 'desc'
   ) {
     const total = await this.deps.projectRepo.countByWorkspace(workspaceId);
 
@@ -139,7 +145,9 @@ export class ProjectService {
     const projects = await this.deps.projectRepo.findByWorkspacePaginated(
       workspaceId,
       perPage,
-      offset
+      offset,
+      sortBy,
+      sortDirection
     );
 
     return {

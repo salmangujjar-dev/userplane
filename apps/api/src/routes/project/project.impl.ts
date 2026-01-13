@@ -13,7 +13,7 @@ import { createPaginationMeta } from '@/api/types';
 
 /**
  * GET /workspace/:workspaceId/projects
- * List projects with pagination
+ * List projects with pagination and sorting
  * Requires workspace member
  */
 export const getProjectsImpl = (
@@ -28,11 +28,15 @@ export const getProjectsImpl = (
     .handler(async ({ input }) => {
       const page = input.query.page || 1;
       const perPage = input.query.per_page || 5;
+      const sortBy = input.query.sort_by || 'created_at';
+      const sortDirection = input.query.sort_direction || 'desc';
 
       const { projects, total } = await projectService.getProjectsByWorkspacePaginated(
         input.params.workspaceId,
         page,
-        perPage
+        perPage,
+        sortBy,
+        sortDirection
       );
 
       return {
