@@ -16,8 +16,9 @@ import type {
   MetadataRequest,
   MetadataResponse,
   CustomMetadata,
+  CaptureRecorderState,
 } from './types';
-import { CONNECTION_PREFIXES, generateRequestId, isCaptureTab } from './constants';
+import { generateRequestId, isCaptureTab } from './constants';
 
 /**
  * Pending scatter-gather request
@@ -41,12 +42,20 @@ interface CrossTabSchema {
   recorderTabId: string | null;
   /** Current recorder state across tabs */
   recorderState: RecordingState;
+  /** Timestamp of last recorder state update */
+  lastRecorderStateUpdate: number;
   /**
    * Broadcast function to sync state changes across tabs
    * Args: tabId and state are serialized and sent via postMessage
    * The `remote` arg is automatically appended by postbridge when executing
    */
   syncRecorderState: (tabId: string | null, state: RecordingState, remote: CrossTabSchema) => void;
+
+  /**
+   * Sync capture recorder state to all capture iframes
+   * Called when recorder state changes or when checking connection health
+   */
+  syncCaptureRecorderState: (state: CaptureRecorderState, remote: CrossTabSchema) => void;
 
   // ---------------------------------------------------------------------------
   // Scatter-Gather Methods for Metadata Aggregation
@@ -88,6 +97,8 @@ export interface CrossTabCoordinatorCallbacks {
   onRecorderReleasedByOtherTab?: (previousTabId: string) => void;
   /** Called when recorder state changes in another tab */
   onRecorderStateChanged?: (tabId: string | null, state: RecordingState) => void;
+  /** Called when capture recorder state changes (for capture iframes) */
+  onCaptureRecorderStateChanged?: (state: CaptureRecorderState) => void;
   /** Called when this tab (capture) receives a metadata request */
   onMetadataRequested?: (request: MetadataRequest) => void;
   /** Called when this tab (recorder) receives a metadata response */
@@ -105,7 +116,7 @@ export interface CrossTabCoordinatorConfig {
    * handle the SharedWorker bundling via `new URL()` pattern.
    */
   workerURL?: string;
-  /** Channel name for recorder coordination (default: 'recorder') */
+  /** Channel name for cross-tab coordination (default: 'userplane') */
   channel?: string;
   /** Timeout for CAS operations in ms (default: 5000) */
   casTimeout?: number;
@@ -115,7 +126,7 @@ export interface CrossTabCoordinatorConfig {
   callbacks?: CrossTabCoordinatorCallbacks;
 }
 
-const DEFAULT_CHANNEL = 'recorder';
+const DEFAULT_CHANNEL = 'userplane';
 const DEFAULT_CAS_TIMEOUT = 1000;
 const DEFAULT_MAX_RETRIES = 3;
 
@@ -144,6 +155,11 @@ export class CrossTabCoordinator {
 
   // Callback for when this capture receives a metadata request
   private metadataExtractor: (() => TabMetadata | null) | null = null;
+
+  // Health check interval for capture iframes
+  private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly HEALTH_CHECK_INTERVAL_MS = 5000; // Check every 5 seconds
+  private readonly RECORDER_TIMEOUT_MS = 10000; // Consider recorder dead after 10 seconds
 
   constructor(config: CrossTabCoordinatorConfig = {}) {
     this.config = {
@@ -184,6 +200,23 @@ export class CrossTabCoordinator {
   }
 
   /**
+   * Broadcast capture recorder state to all capture iframes
+   * This updates the capture-specific state tracking
+   */
+  private async broadcastCaptureRecorderState(state: CaptureRecorderState): Promise<void> {
+    if (!this.connection) return;
+
+    try {
+      const remote = this.connection.remote as unknown as {
+        syncCaptureRecorderState: (state: CaptureRecorderState) => Promise<void>;
+      };
+      await remote.syncCaptureRecorderState(state);
+    } catch (error) {
+      console.error('[CrossTab] Failed to broadcast capture recorder state:', error);
+    }
+  }
+
+  /**
    * Connect to the cross-tab coordinator
    * @param tabId Optional tab ID to use (e.g., from parent SDK). If not provided, postbridge generates one.
    */
@@ -207,11 +240,13 @@ export class CrossTabCoordinator {
     const schema: CrossTabSchema = {
       recorderTabId: null,
       recorderState: 'inactive',
+      lastRecorderStateUpdate: 0,
       syncRecorderState(tabId: string | null, state: RecordingState, remote: CrossTabSchema) {
         // This function runs in ALL tabs when any tab broadcasts
         // `remote` is the proxy object for accessing/setting shared state
         remote.recorderTabId = tabId;
         remote.recorderState = state;
+        remote.lastRecorderStateUpdate = Date.now();
 
         // Notify callbacks if this update came from another tab
         if (self.localTabId && tabId !== self.localTabId) {
@@ -224,6 +259,15 @@ export class CrossTabCoordinator {
             }
           }
           self.config.callbacks.onRecorderStateChanged?.(tabId, state);
+        }
+      },
+
+      syncCaptureRecorderState(state: CaptureRecorderState, _remote: CrossTabSchema) {
+        // This function runs in capture iframes when recorder state changes
+        // Only notify capture tabs (not recorder tabs)
+        if (self.localTabId && isCaptureTab(self.localTabId)) {
+          console.log('[CrossTab] Capture recorder state updated:', state);
+          self.config.callbacks.onCaptureRecorderStateChanged?.(state);
         }
       },
 
@@ -298,6 +342,11 @@ export class CrossTabCoordinator {
     this.localTabId = this.connection.id;
 
     console.log('[CrossTab] Connected with tab ID:', this.localTabId);
+
+    // Start health check for capture iframes
+    if (isCaptureTab(this.localTabId)) {
+      this.startHealthCheck();
+    }
   }
 
   /**
@@ -310,6 +359,9 @@ export class CrossTabCoordinator {
       return;
     }
 
+    // Stop health check if running
+    this.stopHealthCheck();
+
     // Release lock if we own it
     if (this.isOwner) {
       await this.releaseLock();
@@ -320,6 +372,103 @@ export class CrossTabCoordinator {
     this.connection = null;
     this.localTabId = null;
     this.isOwner = false;
+  }
+
+  /**
+   * Start periodic health check for capture iframes
+   * Checks if recorder is still alive and transitions to idle if not
+   */
+  private startHealthCheck(): void {
+    // Only start health check for capture tabs
+    if (!this.localTabId || !isCaptureTab(this.localTabId)) {
+      return;
+    }
+
+    // Clear existing interval if any
+    this.stopHealthCheck();
+
+    console.log('[CrossTab] Starting health check for capture');
+    this.healthCheckInterval = setInterval(async () => {
+      await this.performHealthCheck();
+    }, this.HEALTH_CHECK_INTERVAL_MS);
+  }
+
+  /**
+   * Stop periodic health check
+   */
+  private stopHealthCheck(): void {
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
+      console.log('[CrossTab] Stopped health check');
+    }
+  }
+
+  /**
+   * Perform a health check on the current recorder
+   * If recorder is not responsive or connection is dead, transition to idle
+   */
+  private async performHealthCheck(): Promise<void> {
+    if (!this.connection) return;
+
+    try {
+      // Get current recorder state from shared worker
+      const recorderTabId = this.getRecorderTabId();
+      const recorderState = this.getRecorderState();
+      const lastUpdate = this.connection.getVersionedState<number>('lastRecorderStateUpdate').value;
+
+      // If no active recorder, ensure we're in idle state
+      if (!recorderTabId || recorderState === 'inactive') {
+        await this.transitionToIdleIfNeeded();
+        return;
+      }
+
+      // Check if recorder tab is still connected
+      const connectedTabs = await this.getConnectedTabs();
+      const isRecorderConnected = connectedTabs.includes(recorderTabId);
+
+      if (!isRecorderConnected) {
+        console.warn(
+          `[CrossTab] Recorder ${recorderTabId} is no longer connected, transitioning to idle`
+        );
+        await this.transitionToIdleIfNeeded();
+        return;
+      }
+
+      // Check if state update is stale (recorder might be frozen)
+      const now = Date.now();
+      const timeSinceUpdate = now - (lastUpdate || 0);
+
+      if (timeSinceUpdate > this.RECORDER_TIMEOUT_MS) {
+        console.warn(
+          `[CrossTab] Recorder state is stale (${timeSinceUpdate}ms), transitioning to idle`
+        );
+        await this.transitionToIdleIfNeeded();
+        return;
+      }
+
+      console.log('[CrossTab] Health check passed', {
+        recorderTabId,
+        recorderState,
+        timeSinceUpdate,
+      });
+    } catch (error) {
+      console.error('[CrossTab] Health check failed:', error);
+    }
+  }
+
+  /**
+   * Transition capture to idle state if not already
+   */
+  private async transitionToIdleIfNeeded(): Promise<void> {
+    const captureState: CaptureRecorderState = {
+      recorderTabId: null,
+      recorderState: 'inactive',
+      lastStateUpdate: Date.now(),
+    };
+
+    // Broadcast idle state to this capture
+    await this.broadcastCaptureRecorderState(captureState);
   }
 
   /**
@@ -538,7 +687,7 @@ export class CrossTabCoordinator {
 
   /**
    * Update the recorder state (only if this tab owns the lock)
-   * Broadcasts the change to all tabs
+   * Broadcasts the change to all tabs and updates capture state
    */
   public async updateState(newState: RecordingState): Promise<boolean> {
     if (!this.connection || !this.localTabId) {
@@ -558,8 +707,16 @@ export class CrossTabCoordinator {
       const result = await this.connection.compareAndSwap('recorderState', version, newState);
 
       if (result.success) {
-        // Broadcast the change
+        // Broadcast the change to all tabs
         await this.broadcastStateChange(this.localTabId, newState);
+
+        // Also broadcast capture recorder state to capture iframes
+        const captureState: CaptureRecorderState = {
+          recorderTabId: this.localTabId,
+          recorderState: newState,
+          lastStateUpdate: Date.now(),
+        };
+        await this.broadcastCaptureRecorderState(captureState);
 
         console.log(`[CrossTab] Updated state to: ${newState}`);
         return true;

@@ -86,7 +86,7 @@ export interface ICaptureFrameManager extends IFrameManager {
   /**
    * Update recorder state for cross-tab awareness
    */
-  updateRecorderState(recorderId: string | null, state: RecordingState): void;
+  updateRecorderState(state: CaptureRecorderState): void;
 
   /**
    * Get current recorder state being tracked

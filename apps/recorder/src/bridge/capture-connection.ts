@@ -42,9 +42,9 @@ export class CaptureBridgeConnection {
 
   // Tracked recorder state (from cross-tab coordination)
   private recorderState: CaptureRecorderState = {
-    recorderId: null,
+    recorderTabId: null,
     recorderState: 'inactive',
-    tabRef: '',
+    lastStateUpdate: Date.now(),
   };
 
   constructor(callbacks: CaptureBridgeCallbacks = {}) {
@@ -68,6 +68,7 @@ export class CaptureBridgeConnection {
       extractMetadata: this.handleExtractMetadata.bind(this),
       getRecorderState: this.handleGetRecorderState.bind(this),
       setRecorderState: this.handleSetRecorderState.bind(this),
+      ping: () => true,
     };
 
     try {
@@ -125,11 +126,6 @@ export class CaptureBridgeConnection {
       // Fetch tab reference
       this.tabRef = await Promise.resolve(remote.getTabRef());
       console.log('[CaptureBridge] Tab ref:', this.tabRef);
-
-      // Update recorder state with tabRef
-      if (this.tabRef) {
-        this.recorderState.tabRef = this.tabRef;
-      }
 
       // Fetch page URL and title
       this.pageUrl = await Promise.resolve(remote.getPageUrl());
@@ -210,6 +206,34 @@ export class CaptureBridgeConnection {
     console.log('[CaptureBridge] Recorder state updated:', state);
     this.recorderState = { ...state };
     this.callbacks.onRecorderStateChange?.(state);
+  }
+
+  /**
+   * Get the current recording state
+   */
+  public getRecordingState(): RecordingState {
+    return this.recorderState.recorderState;
+  }
+
+  /**
+   * Check if this capture is currently in active recording state
+   */
+  public isRecording(): boolean {
+    return this.recorderState.recorderState === 'active';
+  }
+
+  /**
+   * Check if this capture has retained recording
+   */
+  public isRetained(): boolean {
+    return this.recorderState.recorderState === 'retained';
+  }
+
+  /**
+   * Check if this capture is inactive
+   */
+  public isInactive(): boolean {
+    return this.recorderState.recorderState === 'inactive';
   }
 }
 

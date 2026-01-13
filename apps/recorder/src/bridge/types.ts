@@ -115,9 +115,12 @@ export interface TabMetadata {
  * Used for cross-tab awareness
  */
 export interface CaptureRecorderState {
-  recorderId: string | null;
+  /** Tab ID of the active recorder (null if no recording) */
+  recorderTabId: string | null;
+  /** Current recording state: inactive/active/retained */
   recorderState: RecordingState;
-  tabRef: string;
+  /** Timestamp of last state update */
+  lastStateUpdate: number;
 }
 
 /**
@@ -166,6 +169,12 @@ export interface CaptureGuestSchema {
    * Update the recorder state (called when recorder in another tab changes state)
    */
   setRecorderState: (state: CaptureRecorderState) => void;
+
+  /**
+   * Check if this capture is alive/responsive
+   * Used for health checks during scatter-gather
+   */
+  ping: () => boolean;
 }
 
 // ---------------------------------------------------------------------------

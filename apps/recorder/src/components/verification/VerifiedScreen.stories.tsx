@@ -10,7 +10,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <AppModeProvider>
+      <AppModeProvider actionType="verification">
         <Story />
       </AppModeProvider>
     ),

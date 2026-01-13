@@ -117,15 +117,21 @@ export class CaptureFrameManager implements ICaptureFrameManager {
   /**
    * Update recorder state for cross-tab awareness
    */
-  public updateRecorderState(recorderId: string | null, state: RecordingState): void {
-    this.bridge?.updateRecorderState(recorderId, state);
+  public updateRecorderState(state: CaptureRecorderState): void {
+    this.bridge?.updateRecorderState(state);
   }
 
   /**
    * Get current recorder state being tracked
    */
   public getRecorderState(): CaptureRecorderState {
-    return this.bridge?.getRecorderState() ?? { recorderId: null, state: 'inactive' };
+    return (
+      this.bridge?.getRecorderState() ?? {
+        recorderTabId: null,
+        recorderState: 'inactive',
+        lastStateUpdate: Date.now(),
+      }
+    );
   }
 
   /**

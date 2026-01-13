@@ -58,8 +58,9 @@ export class CaptureBridgeConnection {
 
   // Recorder state tracked for cross-tab coordination
   private recorderState: CaptureRecorderState = {
-    recorderId: null,
-    state: 'inactive',
+    recorderTabId: null,
+    recorderState: 'inactive',
+    lastStateUpdate: Date.now(),
   };
 
   constructor(options: CaptureBridgeConnectionOptions) {
@@ -151,8 +152,8 @@ export class CaptureBridgeConnection {
    * Update the recorder state for cross-tab awareness
    * Called when recorder state changes (from SharedWorker)
    */
-  public updateRecorderState(recorderId: string | null, state: RecordingState): void {
-    this.recorderState = { recorderId, state };
+  public updateRecorderState(state: CaptureRecorderState): void {
+    this.recorderState = { ...state };
     console.log('[CaptureBridge] Recorder state updated:', this.recorderState);
     this.callbacks.onRecorderStateChange?.(this.recorderState);
   }
@@ -162,6 +163,34 @@ export class CaptureBridgeConnection {
    */
   public getRecorderState(): CaptureRecorderState {
     return { ...this.recorderState };
+  }
+
+  /**
+   * Get the current recording state
+   */
+  public getRecordingState(): RecordingState {
+    return this.recorderState.recorderState;
+  }
+
+  /**
+   * Check if capture is currently in active recording state
+   */
+  public isRecording(): boolean {
+    return this.recorderState.recorderState === 'active';
+  }
+
+  /**
+   * Check if capture has retained recording
+   */
+  public isRetained(): boolean {
+    return this.recorderState.recorderState === 'retained';
+  }
+
+  /**
+   * Check if capture is inactive
+   */
+  public isInactive(): boolean {
+    return this.recorderState.recorderState === 'inactive';
   }
 
   /**

@@ -15,7 +15,7 @@ import {
   useAppMode,
   useBridge,
   useCrossTabLock,
-  useCaptureChannel,
+  useCrossTab,
 } from '@/contexts/AppModeContext';
 import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
 import ErrorScreen from './ErrorScreen';
@@ -49,7 +49,7 @@ export default function RecordingApp({}: RecordingAppProps = {}) {
 function RecordingAppContent() {
   const { mode, isEmbedded } = useAppMode();
   const bridge = useBridge();
-  const captureChannel = useCaptureChannel();
+  const crossTab = useCrossTab();
   const crossTabLock = useCrossTabLock();
 
   // Initialize state from URL immediately to avoid race condition
@@ -149,9 +149,9 @@ function RecordingAppContent() {
    * Returns unified metadata if all tabs identical, per-tab structure otherwise
    */
   const gatherMetadataFromCaptureTabs = async (): Promise<Record<string, unknown> | null> => {
-    if (!captureChannel) return null;
+    if (!crossTab) return null;
 
-    const scatterResult = await captureChannel.scatterGatherMetadata(3000);
+    const scatterResult = await crossTab.scatterGatherMetadata(3000);
     console.log('[RecordingApp] Scatter-gather complete:', {
       respondedTabs: scatterResult.respondedTabs.length,
       timedOutTabs: scatterResult.timedOutTabs.length,
@@ -205,7 +205,7 @@ function RecordingAppContent() {
   const handleSubmitRecording = async () => {
     let customMetadata: Record<string, unknown> | null = null;
 
-    if (isEmbedded && captureChannel) {
+    if (isEmbedded && crossTab) {
       console.log('[RecordingApp] Gathering metadata from capture tabs...');
       try {
         customMetadata = await gatherMetadataFromCaptureTabs();

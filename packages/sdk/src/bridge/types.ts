@@ -208,13 +208,15 @@ export interface CaptureGuestSchema {
 
 /**
  * Recorder state tracked by capture iframes
- * Simpler than full RecordingState - just what captures need to know
+ * Captures use this to know if a recording is active and who owns it
  */
 export interface CaptureRecorderState {
-  /** ID of the active recorder (if any) */
-  recorderId: string | null;
-  /** Current recording state */
-  state: RecordingState;
+  /** Tab ID of the active recorder (null if no recording) */
+  recorderTabId: string | null;
+  /** Current recording state: inactive/active/retained */
+  recorderState: RecordingState;
+  /** Timestamp of last state update */
+  lastStateUpdate: number;
 }
 
 /**
