@@ -6,6 +6,7 @@
  * - Extracts metadata from the parent page on demand
  * - Tracks recorder state for cross-tab awareness
  * - Responds to scatter-gather requests from the recorder
+ * - Controls privacy blur via BlurManager
  *
  * Unlike the recorder iframe, the capture iframe:
  * - Is always present (mounted when SDK initializes)
@@ -21,9 +22,11 @@ import type {
   TabMetadata,
   CaptureRecorderState,
   RecordingState,
+  BlurrState,
 } from './types';
 import { getCustomMetadata } from '@workspace/metadata';
 import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
+import { BlurManager } from '@workspace/blurr';
 
 /**
  * Callbacks for capture bridge events
@@ -48,13 +51,16 @@ export interface CaptureBridgeConnectionOptions {
 
 /**
  * Manages the postbridge connection to the capture iframe
- * Handles metadata extraction and recorder state tracking
+ * Handles metadata extraction, recorder state tracking, and privacy blur
  */
 export class CaptureBridgeConnection {
   private connection: Connection | null = null;
   private tabRef: string;
   private callbacks: CaptureBridgeCallbacks;
   private connectionId: string;
+
+  // BlurManager instance for privacy blur
+  private blurManager: BlurManager | null = null;
 
   // Recorder state tracked for cross-tab coordination
   private recorderState: CaptureRecorderState = {
@@ -68,6 +74,16 @@ export class CaptureBridgeConnection {
     this.callbacks = options.callbacks ?? {};
     // Generate prefixed connection ID: cap_{tabRef}
     this.connectionId = generateConnectionId(CONNECTION_PREFIXES.CAPTURE, this.tabRef);
+
+    // Initialize BlurManager with meta tag selectors
+    // BlurManager reads custom selectors from <meta name="userplane-blur-selectors">
+    try {
+      this.blurManager = BlurManager.fromMetaTags();
+      console.log('[CaptureBridge] BlurManager initialized');
+    } catch (error) {
+      console.warn('[CaptureBridge] BlurManager initialization failed:', error);
+      this.blurManager = null;
+    }
   }
 
   /**
@@ -103,6 +119,15 @@ export class CaptureBridgeConnection {
           console.error('[CaptureBridge] Error extracting metadata:', error);
           return null;
         }
+      },
+      startBlurr: () => {
+        this.startBlurr();
+      },
+      stopBlurr: () => {
+        this.stopBlurr();
+      },
+      getBlurrState: () => {
+        return this.getBlurrState();
       },
     };
 
@@ -229,5 +254,58 @@ export class CaptureBridgeConnection {
     } catch {
       return false;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Privacy Blur Methods
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Start privacy blur on the parent page
+   * Called by capture iframe when recording becomes active
+   */
+  public startBlurr(): void {
+    if (!this.blurManager) {
+      console.warn('[CaptureBridge] BlurManager not available, cannot start blur');
+      return;
+    }
+
+    if (this.blurManager.isStarted) {
+      console.log('[CaptureBridge] Blur already started');
+      return;
+    }
+
+    console.log('[CaptureBridge] Starting privacy blur');
+    this.blurManager.start();
+  }
+
+  /**
+   * Stop privacy blur on the parent page
+   * Called by capture iframe when recording becomes inactive
+   */
+  public stopBlurr(): void {
+    if (!this.blurManager) {
+      console.warn('[CaptureBridge] BlurManager not available, cannot stop blur');
+      return;
+    }
+
+    if (!this.blurManager.isStarted) {
+      console.log('[CaptureBridge] Blur already stopped');
+      return;
+    }
+
+    console.log('[CaptureBridge] Stopping privacy blur');
+    this.blurManager.stop();
+  }
+
+  /**
+   * Get the current blur state
+   * Returns 'enabled' if blur is active, 'disabled' otherwise
+   */
+  public getBlurrState(): BlurrState {
+    if (!this.blurManager) {
+      return 'disabled';
+    }
+    return this.blurManager.isStarted ? 'enabled' : 'disabled';
   }
 }
