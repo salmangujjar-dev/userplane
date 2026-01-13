@@ -12,9 +12,12 @@ export interface Project {
   updatedAt: Date;
 }
 
+export type ProjectSortField = 'created_at' | 'project_title';
+export type SortDirection = 'asc' | 'desc';
+
 /**
  * Hook to fetch projects for the current workspace
- * Fetches project list from API with pagination
+ * Fetches project list from API with pagination and sorting
  *
  * Returns SafeResult - check result.success before using data
  * Known API errors won't trigger error monitoring
@@ -44,20 +47,28 @@ export interface Project {
 export function useWorkspaceProjects(options?: {
   perPage?: number;
   page?: number;
+  sortBy?: ProjectSortField;
+  sortDirection?: SortDirection;
   enabled?: boolean;
 }) {
   const workspaceId = useWorkspaceId();
-  const { perPage = DEFAULT_PROJECTS_PER_PAGE, page = 1, enabled = true } = options || {};
+  const {
+    perPage = DEFAULT_PROJECTS_PER_PAGE,
+    page = 1,
+    sortBy = 'created_at',
+    sortDirection = 'desc',
+    enabled = true,
+  } = options || {};
 
   return useQuery({
-    queryKey: ['projects', workspaceId, perPage, page],
+    queryKey: ['projects', workspaceId, perPage, page, sortBy, sortDirection],
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }
       const [error, response] = await apiClient.project.list({
         params: { workspaceId },
-        query: { page, per_page: perPage },
+        query: { page, per_page: perPage, sort_by: sortBy, sort_direction: sortDirection },
       });
       return handleQueryResult(error, response?.data ?? null);
     },

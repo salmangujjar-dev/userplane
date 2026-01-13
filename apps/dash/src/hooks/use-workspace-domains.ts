@@ -10,6 +10,9 @@ export interface WorkspaceDomain {
   domainStatus: 'pending' | 'verified' | 'revoked';
 }
 
+export type DomainSortField = 'created_at' | 'domain_url';
+export type SortDirection = 'asc' | 'desc';
+
 /**
  * Hook to fetch domains for the current workspace
  * Returns list of domains with their verification status
@@ -42,13 +45,21 @@ export interface WorkspaceDomain {
 export function useWorkspaceDomains(options?: {
   perPage?: number;
   page?: number;
+  sortBy?: DomainSortField;
+  sortDirection?: SortDirection;
   enabled?: boolean;
 }) {
   const workspaceId = useWorkspaceId();
-  const { perPage = DEFAULT_DOMAINS_PER_PAGE, page = 1, enabled = true } = options || {};
+  const {
+    perPage = DEFAULT_DOMAINS_PER_PAGE,
+    page = 1,
+    sortBy = 'created_at',
+    sortDirection = 'desc',
+    enabled = true,
+  } = options || {};
 
   return useQuery({
-    queryKey: ['domains', workspaceId, perPage, page],
+    queryKey: ['domains', workspaceId, perPage, page, sortBy, sortDirection],
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
@@ -56,7 +67,7 @@ export function useWorkspaceDomains(options?: {
 
       const [error, response] = await apiClient.workspace.domains.list({
         params: { workspaceId },
-        query: { page, per_page: perPage },
+        query: { page, per_page: perPage, sort_by: sortBy, sort_direction: sortDirection },
       });
 
       return handleQueryResult(error, response?.data ?? null);
