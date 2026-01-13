@@ -5,7 +5,11 @@
 
 import { ORPCError } from '@orpc/server';
 import { generateDomainId } from '@/api/lib/id';
-import { DomainRepository } from '@/api/repositories/domains.repository';
+import {
+  DomainRepository,
+  type DomainSortField,
+  type SortDirection,
+} from '@/api/repositories/domains.repository';
 import { cleanUrl } from '@/api/lib/url';
 import type { Transaction } from '@/api/types';
 import type { DomainStatus } from '@workspace/contract';
@@ -73,12 +77,18 @@ export class DomainService {
   }
 
   /**
-   * Get domains for a workspace with pagination
+   * Get domains for a workspace with pagination and sorting
    * If no domains found, validates workspace existence (since workspace always has at least 1 domain)
    * Pagination params are validated by the contract schema
    * Throws WORKSPACE_NOT_FOUND if workspace doesn't exist when no domains found
    */
-  async getByWorkspaceIdPaginated(workspaceId: string, page: number = 1, perPage: number = 5) {
+  async getByWorkspaceIdPaginated(
+    workspaceId: string,
+    page: number = 1,
+    perPage: number = 5,
+    sortBy: DomainSortField = 'created_at',
+    sortDirection: SortDirection = 'desc'
+  ) {
     const total = await this.deps.domainRepo.countByWorkspace(workspaceId);
 
     // If no domains exist, workspace doesn't exist (workspace always has at least 1 domain)
@@ -93,7 +103,9 @@ export class DomainService {
     const domains = await this.deps.domainRepo.findByWorkspaceIdPaginated(
       workspaceId,
       perPage,
-      offset
+      offset,
+      sortBy,
+      sortDirection
     );
 
     return {

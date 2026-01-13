@@ -3,10 +3,13 @@
  * Handles all database operations for domain entities
  */
 
-import { eq, and, ne, count, ilike } from '@workspace/db';
+import { eq, and, ne, count, ilike, asc, desc } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { domains } from '@workspace/db';
 import type { Transaction, CreateDomainInput } from '@/api/types';
+
+export type DomainSortField = 'created_at' | 'domain_url';
+export type SortDirection = 'asc' | 'desc';
 
 export class DomainRepository {
   constructor(private db: DbClient) {}
@@ -72,13 +75,23 @@ export class DomainRepository {
   }
 
   /**
-   * Find domains by workspace ID with pagination
+   * Find domains by workspace ID with pagination and sorting
    */
-  async findByWorkspaceIdPaginated(workspaceId: string, limit: number, offset: number) {
+  async findByWorkspaceIdPaginated(
+    workspaceId: string,
+    limit: number,
+    offset: number,
+    sortBy: DomainSortField = 'created_at',
+    sortDirection: SortDirection = 'desc'
+  ) {
+    const sortColumn = sortBy === 'domain_url' ? domains.domainUrl : domains.createdAt;
+    const orderFn = sortDirection === 'asc' ? asc : desc;
+
     return this.db
       .select()
       .from(domains)
       .where(and(eq(domains.workspaceId, workspaceId), eq(domains.isDeleted, false)))
+      .orderBy(orderFn(sortColumn))
       .limit(limit)
       .offset(offset);
   }

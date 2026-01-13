@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PaginationMetaSchema } from './common';
+import { PaginationMetaSchema, SortDirectionSchema } from './common';
 import { PROJECT_PAGINATION } from '../constants';
 
 /**
@@ -38,6 +38,11 @@ export const ProjectDataSchema = z.object({
 });
 
 /**
+ * Project sort fields
+ */
+export const ProjectSortFieldSchema = z.enum(['created_at', 'project_title']);
+
+/**
  * Projects list query parameters (detailed mode)
  */
 export const ListProjectsQuerySchema = z.object({
@@ -53,6 +58,8 @@ export const ListProjectsQuerySchema = z.object({
       .max(PROJECT_PAGINATION.MAX_PER_PAGE)
       .optional()
       .default(PROJECT_PAGINATION.DEFAULT_PER_PAGE),
+    sort_by: ProjectSortFieldSchema.optional().default('created_at'),
+    sort_direction: SortDirectionSchema.optional().default('desc'),
   }),
 });
 

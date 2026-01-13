@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { WorkspaceRoleSchema, DomainStatusSchema, PaginationMetaSchema } from './common';
+import {
+  WorkspaceRoleSchema,
+  DomainStatusSchema,
+  PaginationMetaSchema,
+  SortDirectionSchema,
+} from './common';
 import { PLAN_IDS, PLAN_NAME_VALUES } from '@workspace/pricing';
 import { SendWorkspaceInvitesSchema } from './invite';
 import {
@@ -342,6 +347,11 @@ export const DomainItemSchema = z.object({
 });
 
 /**
+ * Domain sort fields
+ */
+export const DomainSortFieldSchema = z.enum(['created_at', 'domain_url']);
+
+/**
  * Workspace domains query parameters (detailed mode)
  */
 export const WorkspaceDomainsQuerySchema = z.object({
@@ -357,6 +367,8 @@ export const WorkspaceDomainsQuerySchema = z.object({
       .max(DOMAIN_PAGINATION.MAX_PER_PAGE)
       .optional()
       .default(DOMAIN_PAGINATION.DEFAULT_PER_PAGE),
+    sort_by: DomainSortFieldSchema.optional().default('created_at'),
+    sort_direction: SortDirectionSchema.optional().default('desc'),
   }),
 });
 

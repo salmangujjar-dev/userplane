@@ -3,10 +3,13 @@
  * Handles all database operations for project entities
  */
 
-import { eq, and, ne, count, ilike } from '@workspace/db';
+import { eq, and, ne, count, ilike, asc, desc } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
 import { projects } from '@workspace/db';
 import type { Transaction, CreateProjectInput } from '@/api/types';
+
+export type ProjectSortField = 'created_at' | 'project_title';
+export type SortDirection = 'asc' | 'desc';
 
 export class ProjectRepository {
   constructor(private db: DbClient) {}
@@ -110,13 +113,23 @@ export class ProjectRepository {
   }
 
   /**
-   * Find projects in workspace with pagination
+   * Find projects in workspace with pagination and sorting
    */
-  async findByWorkspacePaginated(workspaceId: string, limit: number, offset: number) {
+  async findByWorkspacePaginated(
+    workspaceId: string,
+    limit: number,
+    offset: number,
+    sortBy: ProjectSortField = 'created_at',
+    sortDirection: SortDirection = 'desc'
+  ) {
+    const sortColumn = sortBy === 'project_title' ? projects.projectTitle : projects.createdAt;
+    const orderFn = sortDirection === 'asc' ? asc : desc;
+
     return this.db
       .select()
       .from(projects)
       .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)))
+      .orderBy(orderFn(sortColumn))
       .limit(limit)
       .offset(offset);
   }
