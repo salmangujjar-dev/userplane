@@ -12,10 +12,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/component
 function ThumbnailFallback() {
   return (
     <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-muted to-muted/80">
-      <button
+      <div
         className="w-20 h-20 rounded-full bg-white/95 flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.15),0_4px_16px_rgba(0,0,0,0.1),0_0_0_8px_rgba(255,255,255,0.1),0_0_0_16px_rgba(255,255,255,0.05)] transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-[0_12px_40px_rgba(0,0,0,0.2),0_6px_20px_rgba(0,0,0,0.15),0_0_0_10px_rgba(255,255,255,0.15),0_0_0_20px_rgba(255,255,255,0.08)]"
-        aria-label="Recording preview not available"
-        onClick={(e) => e.stopPropagation()}
+        aria-label="Play recording"
       >
         <svg
           className="w-8 h-8 text-gray-800 ml-1"
@@ -25,7 +24,7 @@ function ThumbnailFallback() {
         >
           <path d="M8 5.14v14.72a1 1 0 0 0 1.5.87l11.14-7.36a1 1 0 0 0 0-1.73L9.5 4.27A1 1 0 0 0 8 5.14z" />
         </svg>
-      </button>
+      </div>
     </div>
   );
 }

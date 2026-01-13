@@ -20,6 +20,7 @@ import {
   Link2,
   FolderKanban,
   Globe,
+  ChevronRight,
 } from 'lucide-react';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
@@ -29,7 +30,6 @@ import { EditLinkModal } from '@/components/modals/edit-link-modal';
 interface LinkPreviewProps {
   linkId: string;
   linkURL: string;
-  onClick?: () => void;
   title: string | null;
   createdBy: string;
   createdAt: string | Date;
@@ -45,7 +45,6 @@ interface LinkPreviewProps {
 export function LinkPreview({
   linkId,
   linkURL,
-  onClick,
   title,
   createdBy,
   createdAt,
@@ -108,14 +107,6 @@ export function LinkPreview({
     console.log('Link provider ID:', linkProviderId);
   };
 
-  const handleCardClick = () => {
-    if (onClick) {
-      onClick();
-    } else {
-      handleView({ stopPropagation: () => {} } as React.MouseEvent);
-    }
-  };
-
   const formatDate = (date: string | Date) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
@@ -142,10 +133,7 @@ export function LinkPreview({
 
   return (
     <>
-      <div
-        className="rounded-xl border border-border hover:border-foreground transition-colors p-6 cursor-pointer"
-        onClick={handleCardClick}
-      >
+      <div className="rounded-xl border border-border hover:border-foreground transition-colors p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
@@ -202,6 +190,15 @@ export function LinkPreview({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-full focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
+              onClick={handleView}
+            >
+              Recordings
+              <ChevronRight className="h-4 w-4" />
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

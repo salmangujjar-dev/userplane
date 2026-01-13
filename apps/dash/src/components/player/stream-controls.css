@@ -17,6 +17,16 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
+/* Error state overlay - no hover effects, no pointer cursor */
+.custom-video-overlay-error {
+  cursor: default;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.custom-video-overlay-error:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+
 /* Ensure controls are above overlay in initial state */
 .custom-video-controls[data-initial-state="true"] {
   pointer-events: auto;
@@ -85,6 +95,16 @@
   height: 40px;
   color: #1a1a1a;
   margin-left: 4px;
+}
+
+/* Error state button - same styling as play button but not interactive */
+.custom-big-play-button-error {
+  cursor: default;
+  pointer-events: none;
+}
+
+.custom-big-play-button-error .custom-big-play-icon {
+  margin-left: 0;
 }
 
 .custom-big-play-duration {

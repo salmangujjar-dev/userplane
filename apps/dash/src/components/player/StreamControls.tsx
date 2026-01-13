@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { PlayIcon, PauseIcon, Volume2Icon, VolumeXIcon, MaximizeIcon } from 'lucide-react';
+import {
+  PlayIcon,
+  PauseIcon,
+  Volume2Icon,
+  VolumeXIcon,
+  MaximizeIcon,
+  AlertCircleIcon,
+} from 'lucide-react';
 import type { Player } from './types';
 import type { VideoMarker } from './types';
 import './stream-controls.css';
@@ -13,6 +20,7 @@ interface StreamControlsProps {
   duration?: number;
   hasStarted?: boolean;
   showControls?: boolean;
+  hasError?: boolean;
 }
 
 interface QualityLevel {
@@ -29,6 +37,7 @@ const StreamControls: React.FC<StreamControlsProps> = ({
   duration: videoDuration = 0,
   hasStarted = false,
   showControls = false,
+  hasError = false,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -317,8 +326,26 @@ const StreamControls: React.FC<StreamControlsProps> = ({
 
   return (
     <>
-      {/* Custom Big Play Button with Overlay - shown before video starts */}
-      {!hasStarted && (
+      {/* Error state - shown when video fails to load */}
+      {hasError && (
+        <>
+          <div
+            className="custom-video-overlay custom-video-overlay-error"
+            aria-label="Video unavailable"
+          />
+          <div className="custom-big-play-container">
+            <div
+              className="custom-big-play-button custom-big-play-button-error"
+              aria-label="Video unavailable"
+            >
+              <AlertCircleIcon className="custom-big-play-icon" />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Custom Big Play Button with Overlay - shown before video starts (only if no error) */}
+      {!hasStarted && !hasError && (
         <>
           {/* Semi-transparent overlay backdrop */}
           <div
@@ -351,128 +378,160 @@ const StreamControls: React.FC<StreamControlsProps> = ({
         </>
       )}
 
-      {/* Control Bar */}
-      <div
-        className="custom-video-controls"
-        data-show-controls={showControls || !hasStarted}
-        data-initial-state={!hasStarted}
-      >
-        {/* Progress Bar */}
+      {/* Control Bar - hidden when there's an error */}
+      {!hasError && (
         <div
-          ref={progressBarRef}
-          className="custom-progress-container"
-          onClick={handleProgressClick}
-          onMouseDown={handleProgressMouseDown}
-          onMouseUp={handleProgressMouseUp}
-          onMouseEnter={handleProgressMouseEnter}
-          onMouseLeave={handleProgressMouseLeave}
-          onMouseMove={handleProgressMouseMove}
+          className="custom-video-controls"
+          data-show-controls={showControls || !hasStarted}
+          data-initial-state={!hasStarted}
         >
-          {/* Progress bar background */}
-          <div className="custom-progress-bar">
-            {/* Played progress */}
-            <div className="custom-progress-played" style={{ width: `${progress}%` }} />
+          {/* Progress Bar */}
+          <div
+            ref={progressBarRef}
+            className="custom-progress-container"
+            onClick={handleProgressClick}
+            onMouseDown={handleProgressMouseDown}
+            onMouseUp={handleProgressMouseUp}
+            onMouseEnter={handleProgressMouseEnter}
+            onMouseLeave={handleProgressMouseLeave}
+            onMouseMove={handleProgressMouseMove}
+          >
+            {/* Progress bar background */}
+            <div className="custom-progress-bar">
+              {/* Played progress */}
+              <div className="custom-progress-played" style={{ width: `${progress}%` }} />
 
-            {/* Hover tooltip */}
-            {isHovering && hoverTime !== null && hoverPosition !== null && (
-              <div className="custom-progress-tooltip" style={{ left: `${hoverPosition}px` }}>
-                {activeMarker ? (
-                  <>
-                    <div
-                      className="custom-progress-tooltip-marker"
-                      style={{ color: activeMarker.color }}
-                    >
-                      {activeMarker.label}
-                    </div>
-                    <div className="custom-progress-tooltip-time">
-                      {formatTime(activeMarker.time)}
-                    </div>
-                  </>
-                ) : (
-                  <div className="custom-progress-tooltip-time">{formatTime(hoverTime)}</div>
-                )}
-              </div>
-            )}
+              {/* Hover tooltip */}
+              {isHovering && hoverTime !== null && hoverPosition !== null && (
+                <div className="custom-progress-tooltip" style={{ left: `${hoverPosition}px` }}>
+                  {activeMarker ? (
+                    <>
+                      <div
+                        className="custom-progress-tooltip-marker"
+                        style={{ color: activeMarker.color }}
+                      >
+                        {activeMarker.label}
+                      </div>
+                      <div className="custom-progress-tooltip-time">
+                        {formatTime(activeMarker.time)}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="custom-progress-tooltip-time">{formatTime(hoverTime)}</div>
+                  )}
+                </div>
+              )}
 
-            {/* Markers */}
-            {markers.map((marker, index) => {
-              const markerPosition =
-                effectiveDuration > 0 ? (marker.time / effectiveDuration) * 100 : 0;
-              return (
-                <div
-                  key={index}
-                  className="custom-progress-marker"
-                  style={{
-                    left: `${markerPosition}%`,
-                    backgroundColor: marker.color || '#fbbf24',
-                  }}
-                  title={marker.label}
-                />
-              );
-            })}
+              {/* Markers */}
+              {markers.map((marker, index) => {
+                const markerPosition =
+                  effectiveDuration > 0 ? (marker.time / effectiveDuration) * 100 : 0;
+                return (
+                  <div
+                    key={index}
+                    className="custom-progress-marker"
+                    style={{
+                      left: `${markerPosition}%`,
+                      backgroundColor: marker.color || '#fbbf24',
+                    }}
+                    title={marker.label}
+                  />
+                );
+              })}
 
-            {/* Progress handle */}
-            <div className="custom-progress-handle" style={{ left: `${progress}%` }} />
-          </div>
-        </div>
-
-        {/* Control buttons */}
-        <div className="custom-controls-bar">
-          {/* Left side - Play and Time */}
-          <div className="custom-controls-left">
-            <button
-              className="custom-control-button"
-              onClick={togglePlay}
-              aria-label={isPlaying ? 'Pause' : 'Play'}
-              type="button"
-            >
-              {isPlaying ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
-            </button>
-
-            <div className="custom-time-display">
-              <span className="custom-time-current">{formatTime(currentTime)}</span>
-              <span className="custom-time-separator">/</span>
-              <span className="custom-time-duration">{formatTime(effectiveDuration)}</span>
+              {/* Progress handle */}
+              <div className="custom-progress-handle" style={{ left: `${progress}%` }} />
             </div>
           </div>
 
-          {/* Right side - Quality, Speed, Volume and Fullscreen */}
-          <div className="custom-controls-right">
-            {/* Quality selector */}
-            {qualities.length > 0 && (
-              <div className="custom-dropdown-container" ref={qualityMenuRef}>
-                <button
-                  className="custom-control-button custom-quality-button"
-                  onClick={toggleQualityMenu}
-                  aria-label={`Video quality: ${currentQuality}`}
-                  type="button"
-                  title={`Quality: ${currentQuality}`}
-                >
-                  <span className="custom-quality-label">{currentQuality}</span>
-                </button>
-                {showQualityMenu && (
-                  <div className="custom-dropdown-menu">
-                    <button
-                      className={`custom-dropdown-item ${currentQuality === 'Auto' ? 'active' : ''}`}
-                      onClick={() => handleQualitySelect('auto')}
-                      type="button"
-                    >
-                      Auto
-                      {currentQuality === 'Auto' && (
-                        <span className="custom-dropdown-check">✓</span>
-                      )}
-                    </button>
-                    {qualities.map((quality) => (
+          {/* Control buttons */}
+          <div className="custom-controls-bar">
+            {/* Left side - Play and Time */}
+            <div className="custom-controls-left">
+              <button
+                className="custom-control-button"
+                onClick={togglePlay}
+                aria-label={isPlaying ? 'Pause' : 'Play'}
+                type="button"
+              >
+                {isPlaying ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
+              </button>
+
+              <div className="custom-time-display">
+                <span className="custom-time-current">{formatTime(currentTime)}</span>
+                <span className="custom-time-separator">/</span>
+                <span className="custom-time-duration">{formatTime(effectiveDuration)}</span>
+              </div>
+            </div>
+
+            {/* Right side - Quality, Speed, Volume and Fullscreen */}
+            <div className="custom-controls-right">
+              {/* Quality selector */}
+              {qualities.length > 0 && (
+                <div className="custom-dropdown-container" ref={qualityMenuRef}>
+                  <button
+                    className="custom-control-button custom-quality-button"
+                    onClick={toggleQualityMenu}
+                    aria-label={`Video quality: ${currentQuality}`}
+                    type="button"
+                    title={`Quality: ${currentQuality}`}
+                  >
+                    <span className="custom-quality-label">{currentQuality}</span>
+                  </button>
+                  {showQualityMenu && (
+                    <div className="custom-dropdown-menu">
                       <button
-                        key={quality.height}
-                        className={`custom-dropdown-item ${
-                          currentQuality === `${quality.height}p` ? 'active' : ''
-                        }`}
-                        onClick={() => handleQualitySelect(quality.height)}
+                        className={`custom-dropdown-item ${currentQuality === 'Auto' ? 'active' : ''}`}
+                        onClick={() => handleQualitySelect('auto')}
                         type="button"
                       >
-                        {quality.height}p
-                        {currentQuality === `${quality.height}p` && (
+                        Auto
+                        {currentQuality === 'Auto' && (
+                          <span className="custom-dropdown-check">✓</span>
+                        )}
+                      </button>
+                      {qualities.map((quality) => (
+                        <button
+                          key={quality.height}
+                          className={`custom-dropdown-item ${
+                            currentQuality === `${quality.height}p` ? 'active' : ''
+                          }`}
+                          onClick={() => handleQualitySelect(quality.height)}
+                          type="button"
+                        >
+                          {quality.height}p
+                          {currentQuality === `${quality.height}p` && (
+                            <span className="custom-dropdown-check">✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Playback speed */}
+              <div className="custom-dropdown-container" ref={speedMenuRef}>
+                <button
+                  className="custom-control-button custom-speed-button"
+                  onClick={toggleSpeedMenu}
+                  aria-label={`Playback speed: ${playbackSpeed}x`}
+                  type="button"
+                  title={`Speed: ${playbackSpeed}x`}
+                >
+                  <span className="custom-speed-label">{playbackSpeed}x</span>
+                </button>
+                {showSpeedMenu && (
+                  <div className="custom-dropdown-menu">
+                    {SPEED_OPTIONS.map((speed) => (
+                      <button
+                        key={speed}
+                        className={`custom-dropdown-item ${playbackSpeed === speed ? 'active' : ''}`}
+                        onClick={() => handleSpeedSelect(speed)}
+                        type="button"
+                      >
+                        {speed === 1 ? 'Normal' : `${speed}x`}
+                        {playbackSpeed === speed && (
                           <span className="custom-dropdown-check">✓</span>
                         )}
                       </button>
@@ -480,76 +539,48 @@ const StreamControls: React.FC<StreamControlsProps> = ({
                   </div>
                 )}
               </div>
-            )}
 
-            {/* Playback speed */}
-            <div className="custom-dropdown-container" ref={speedMenuRef}>
-              <button
-                className="custom-control-button custom-speed-button"
-                onClick={toggleSpeedMenu}
-                aria-label={`Playback speed: ${playbackSpeed}x`}
-                type="button"
-                title={`Speed: ${playbackSpeed}x`}
-              >
-                <span className="custom-speed-label">{playbackSpeed}x</span>
-              </button>
-              {showSpeedMenu && (
-                <div className="custom-dropdown-menu">
-                  {SPEED_OPTIONS.map((speed) => (
-                    <button
-                      key={speed}
-                      className={`custom-dropdown-item ${playbackSpeed === speed ? 'active' : ''}`}
-                      onClick={() => handleSpeedSelect(speed)}
-                      type="button"
-                    >
-                      {speed === 1 ? 'Normal' : `${speed}x`}
-                      {playbackSpeed === speed && <span className="custom-dropdown-check">✓</span>}
-                    </button>
-                  ))}
-                </div>
+              {/* Volume control */}
+              <div className="custom-volume-control">
+                <button
+                  className="custom-control-button"
+                  onClick={toggleMute}
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
+                  type="button"
+                >
+                  {isMuted || volume === 0 ? (
+                    <VolumeXIcon className="w-5 h-5" />
+                  ) : (
+                    <Volume2Icon className="w-5 h-5" />
+                  )}
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="custom-volume-slider"
+                  aria-label="Volume"
+                />
+              </div>
+
+              {/* Fullscreen button */}
+              {onFullscreen && (
+                <button
+                  className="custom-control-button"
+                  onClick={onFullscreen}
+                  aria-label="Fullscreen"
+                  type="button"
+                >
+                  <MaximizeIcon className="w-5 h-5" />
+                </button>
               )}
             </div>
-
-            {/* Volume control */}
-            <div className="custom-volume-control">
-              <button
-                className="custom-control-button"
-                onClick={toggleMute}
-                aria-label={isMuted ? 'Unmute' : 'Mute'}
-                type="button"
-              >
-                {isMuted || volume === 0 ? (
-                  <VolumeXIcon className="w-5 h-5" />
-                ) : (
-                  <Volume2Icon className="w-5 h-5" />
-                )}
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChange}
-                className="custom-volume-slider"
-                aria-label="Volume"
-              />
-            </div>
-
-            {/* Fullscreen button */}
-            {onFullscreen && (
-              <button
-                className="custom-control-button"
-                onClick={onFullscreen}
-                aria-label="Fullscreen"
-                type="button"
-              >
-                <MaximizeIcon className="w-5 h-5" />
-              </button>
-            )}
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 };
