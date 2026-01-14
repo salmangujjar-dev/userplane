@@ -3,6 +3,7 @@
  * Handlers for admin user, workspace, and recording management operations
  */
 
+import { isValidRoleName } from '@workspace/auth';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
 import type { AdminService } from '@/api/services/admin.service';
@@ -94,17 +95,24 @@ function formatUserWorkspace(workspace: {
 const searchUsersImpl = (adminService: AdminService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.users.search.handler(async ({ input }) => {
+  return authorized.use(adminMiddleware).admin.users.search.handler(async ({ input, context }) => {
     const { search, limit, offset, sortBy, sortDirection, filterStatus } = input.query;
 
-    const result = await adminService.searchUsers({
-      search,
-      limit,
-      offset,
-      sortBy,
-      sortDirection,
-      filterStatus,
-    });
+    // Validate and narrow the role type
+    const userRole = context.user.role;
+    const validatedRole = userRole && isValidRoleName(userRole) ? userRole : null;
+
+    const result = await adminService.searchUsers(
+      {
+        search,
+        limit,
+        offset,
+        sortBy,
+        sortDirection,
+        filterStatus,
+      },
+      validatedRole
+    );
 
     return {
       message: 'Users retrieved successfully',

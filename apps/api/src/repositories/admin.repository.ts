@@ -60,6 +60,8 @@ export interface SearchUsersParams {
   filterStatus?: 'active' | 'banned';
   /** Admin user IDs to exclude from results */
   adminUserIds?: string[];
+  /** Role of the viewer performing the search - validated at runtime */
+  viewerRole?: string | null;
 }
 
 export class AdminRepository {
@@ -67,7 +69,9 @@ export class AdminRepository {
 
   /**
    * Search users with workspace and session counts
-   * Only returns non-admin users (excludes users with role='admin' or in adminUserIds)
+   * Filtering logic based on viewer role:
+   * - Admin: sees CSM users and regular users (excludes other admins)
+   * - CSM: sees only regular users (excludes admins and CSMs)
    */
   async searchUsers(
     params: SearchUsersParams
@@ -80,13 +84,28 @@ export class AdminRepository {
       sortDirection,
       filterStatus,
       adminUserIds = [],
+      viewerRole,
     } = params;
 
     // Build WHERE conditions
     const conditions = [];
 
-    // Always exclude admins - by role or by ID
-    conditions.push(or(sql`${user.role} IS NULL`, sql`${user.role} != 'admin'`));
+    // Filter based on viewer role
+    if (viewerRole === 'admin') {
+      // Admin can see CSM users and regular users, but not other admins
+      conditions.push(
+        or(
+          sql`${user.role} IS NULL`,
+          sql`${user.role} = 'csm'`,
+          and(sql`${user.role} != 'admin'`, sql`${user.role} != 'csm'`)
+        )
+      );
+    } else {
+      // CSM (and others) can only see regular users - exclude admins and CSMs
+      conditions.push(
+        or(sql`${user.role} IS NULL`, and(sql`${user.role} != 'admin'`, sql`${user.role} != 'csm'`))
+      );
+    }
 
     // Exclude admin user IDs if provided
     if (adminUserIds.length > 0) {

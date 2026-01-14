@@ -21,6 +21,13 @@ export interface PermissionMap {
 // Role names
 export type RoleName = 'admin' | 'csm' | 'user';
 
+/**
+ * Type guard to check if a string is a valid RoleName
+ */
+export function isValidRoleName(role: string | null | undefined): role is RoleName {
+  return role === 'admin' || role === 'csm' || role === 'user';
+}
+
 // Helper type to extract permissions from a role
 export type RolePermissions<R extends Resource> = R extends 'user'
   ? UserResource[]

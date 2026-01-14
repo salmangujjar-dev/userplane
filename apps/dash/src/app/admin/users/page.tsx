@@ -80,7 +80,7 @@ function UserCardSkeleton() {
 
 function AdminUsersPageContent() {
   const router = useRouter();
-  const { isAdmin, isPending: isSessionPending, user: currentUser } = useSession();
+  const { hasAdminAccess, isPending: isSessionPending, user: currentUser } = useSession();
   const [search, setSearch] = useQueryState('search', searchParser);
   const [currentPage, setCurrentPage] = useQueryState('page', pageParser);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -159,12 +159,12 @@ function AdminUsersPageContent() {
     sortBy: debouncedFilters.sortBy,
     sortDirection: debouncedFilters.sortDirection,
     filterStatus: debouncedFilters.status,
-    enabled: isAdmin,
+    enabled: hasAdminAccess,
   });
 
   const { data: userDetailResult, isLoading: isLoadingUserDetail } = useAdminUserDetail(
     selectedUserId,
-    isAdmin
+    hasAdminAccess
   );
 
   // Sessions for the detail sheet (fetched when a user is selected)
@@ -173,7 +173,7 @@ function AdminUsersPageContent() {
       userId: selectedUserId,
       limit: SESSIONS_PER_PAGE,
       offset: detailSessionsPage * SESSIONS_PER_PAGE,
-      enabled: isAdmin && !!selectedUserId,
+      enabled: hasAdminAccess && !!selectedUserId,
     });
 
   // Workspaces for the detail sheet (fetched when a user is selected)
@@ -182,7 +182,7 @@ function AdminUsersPageContent() {
       userId: selectedUserId,
       limit: WORKSPACES_PER_PAGE,
       offset: detailWorkspacesPage * WORKSPACES_PER_PAGE,
-      enabled: isAdmin && !!selectedUserId,
+      enabled: hasAdminAccess && !!selectedUserId,
     });
 
   // Sessions for the sessions modal (fetched when viewing sessions)
@@ -190,7 +190,7 @@ function AdminUsersPageContent() {
     userId: userForSessions?.id ?? null,
     limit: SESSIONS_PER_PAGE,
     offset: modalSessionsPage * SESSIONS_PER_PAGE,
-    enabled: isAdmin && !!userForSessions,
+    enabled: hasAdminAccess && !!userForSessions,
   });
 
   // Reset sessions and workspaces pages when user changes
@@ -203,12 +203,12 @@ function AdminUsersPageContent() {
     setModalSessionsPage(0);
   }, [userForSessions?.id]);
 
-  // Redirect non-admins
+  // Redirect users without admin access
   useEffect(() => {
-    if (!isSessionPending && !isAdmin) {
+    if (!isSessionPending && !hasAdminAccess) {
       router.replace('/');
     }
-  }, [isSessionPending, isAdmin, router]);
+  }, [isSessionPending, hasAdminAccess, router]);
 
   // Show loading while checking session
   if (isSessionPending) {
@@ -235,7 +235,7 @@ function AdminUsersPageContent() {
     );
   }
 
-  if (!isAdmin) {
+  if (!hasAdminAccess) {
     return null;
   }
 

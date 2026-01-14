@@ -71,7 +71,7 @@ function WorkspaceCardSkeleton() {
 
 function AdminRecordingsPageContent() {
   const router = useRouter();
-  const { isAdmin, isPending: isSessionPending } = useSession();
+  const { hasAdminAccess, isPending: isSessionPending } = useSession();
   const [search, setSearch] = useQueryState('search', searchParser);
   const [currentPage, setCurrentPage] = useQueryState('page', pageParser);
 
@@ -143,15 +143,15 @@ function AdminRecordingsPageContent() {
     sortBy: debouncedFilters.sortBy,
     sortDirection: debouncedFilters.sortDirection,
     filterStatus: debouncedFilters.status,
-    enabled: isAdmin,
+    enabled: hasAdminAccess,
   });
 
-  // Redirect non-admins
+  // Redirect users without admin access
   useEffect(() => {
-    if (!isSessionPending && !isAdmin) {
+    if (!isSessionPending && !hasAdminAccess) {
       router.replace('/');
     }
-  }, [isSessionPending, isAdmin, router]);
+  }, [isSessionPending, hasAdminAccess, router]);
 
   // Show loading while checking session
   if (isSessionPending) {
@@ -178,7 +178,7 @@ function AdminRecordingsPageContent() {
     );
   }
 
-  if (!isAdmin) {
+  if (!hasAdminAccess) {
     return null;
   }
 

@@ -15,20 +15,27 @@ export class AdminService {
   constructor(private deps: AdminServiceDeps) {}
 
   /**
-   * Check if a user is an admin
+   * Check if a user has admin access (admin or csm role)
+   * This grants access to the admin panel and its APIs
    */
   isAdmin(userId: string, userRole?: string | null): boolean {
-    return userRole === 'admin' || this.deps.adminUserIds.includes(userId);
+    return userRole === 'admin' || userRole === 'csm' || this.deps.adminUserIds.includes(userId);
   }
 
   /**
    * Search users with workspace and session counts
-   * Excludes admin users from results
+   * Filtering logic based on viewer role:
+   * - Admin: sees everyone except other admins
+   * - CSM: sees only regular users (excludes admins and CSMs)
    */
-  async searchUsers(params: Omit<SearchUsersParams, 'adminUserIds'>) {
+  async searchUsers(
+    params: Omit<SearchUsersParams, 'adminUserIds' | 'viewerRole'>,
+    viewerRole: string | null
+  ) {
     return this.deps.adminRepo.searchUsers({
       ...params,
       adminUserIds: this.deps.adminUserIds,
+      viewerRole,
     });
   }
 
