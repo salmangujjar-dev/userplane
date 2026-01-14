@@ -34,6 +34,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import type { AdminUserDetail, AdminUserSession, AdminUserWorkspace } from '@/hooks/use-admin-api';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface UserDetailSheetProps {
   open: boolean;
@@ -97,6 +98,7 @@ export function UserDetailSheet({
   onRevokeSession,
   isCurrentUser,
 }: UserDetailSheetProps) {
+  const { can } = usePermissions();
   const isBanned = user ? !!user.banned && !isBanExpired(user.banExpires) : false;
   const totalSessionPages = Math.ceil(sessionsTotal / sessionsPageSize);
   const totalWorkspacePages = Math.ceil(workspacesTotal / workspacesPageSize);
@@ -201,7 +203,7 @@ export function UserDetailSheet({
                             e.stopPropagation();
                             onImpersonate();
                           }}
-                          disabled={isCurrentUser || isBanned}
+                          disabled={!can.impersonateUser || isCurrentUser || isBanned}
                         >
                           <UserCog className="h-4 w-4 mr-2" />
                           Impersonate
@@ -212,6 +214,7 @@ export function UserDetailSheet({
                               e.stopPropagation();
                               onUnban();
                             }}
+                            disabled={!can.banUser}
                           >
                             <CheckCircle className="h-4 w-4 mr-2" />
                             Unban User
@@ -222,7 +225,7 @@ export function UserDetailSheet({
                               e.stopPropagation();
                               onBan();
                             }}
-                            disabled={isCurrentUser || user.role === 'admin'}
+                            disabled={!can.banUser || isCurrentUser || user.role === 'admin'}
                             className="text-red-600 focus:text-red-600"
                           >
                             <Ban className="h-4 w-4 mr-2" />
@@ -401,6 +404,7 @@ export function UserDetailSheet({
                                 e.stopPropagation();
                                 onRevokeSession(session);
                               }}
+                              disabled={!can.revokeSession}
                               className="text-red-600 focus:text-red-600"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />

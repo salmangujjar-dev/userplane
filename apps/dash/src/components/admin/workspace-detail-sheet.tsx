@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import type { AdminWorkspaceDetail, AdminWorkspaceMember } from '@/hooks/use-admin-workspace-api';
 import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface WorkspaceDetailSheetProps {
   open: boolean;
@@ -73,6 +74,7 @@ export function WorkspaceDetailSheet({
   onImpersonateUser,
   onBanUser,
 }: WorkspaceDetailSheetProps) {
+  const { can, isAdmin } = usePermissions();
   const totalPages = Math.ceil(membersTotal / membersPageSize);
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -163,23 +165,22 @@ export function WorkspaceDetailSheet({
                           e.stopPropagation();
                           onResetInviteToken();
                         }}
-                        disabled={workspace.isDeleted}
+                        disabled={!isAdmin || workspace.isDeleted}
                       >
                         <KeyRound className="h-4 w-4 mr-2" />
                         Reset Invite Token
                       </DropdownMenuItem>
-                      {!workspace.isDeleted && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeactivate();
-                          }}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <PowerOff className="h-4 w-4 mr-2" />
-                          Deactivate Workspace
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeactivate();
+                        }}
+                        disabled={!isAdmin || workspace.isDeleted}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <PowerOff className="h-4 w-4 mr-2" />
+                        Deactivate Workspace
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -306,6 +307,7 @@ export function WorkspaceDetailSheet({
                                   member.userEmail
                                 );
                               }}
+                              disabled={!can.impersonateUser}
                             >
                               <UserCog className="h-4 w-4 mr-2" />
                               Impersonate
@@ -315,6 +317,7 @@ export function WorkspaceDetailSheet({
                                 e.stopPropagation();
                                 onBanUser?.(member.userId, member.userName, member.userEmail);
                               }}
+                              disabled={!can.banUser}
                               className="text-red-600 focus:text-red-600"
                             >
                               <Ban className="h-4 w-4 mr-2" />

@@ -18,6 +18,7 @@ export type AuthContext = InitialContext & {
     email: string;
     name: string;
     image?: string | null;
+    role?: string | null;
   };
   session: {
     id: string;

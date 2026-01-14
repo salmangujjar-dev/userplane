@@ -16,7 +16,7 @@ export type AdminContext = AuthContext & {
  */
 export function createAdminMiddleware(adminService: AdminService) {
   return base.$context<AuthContext>().middleware(async ({ context, next }) => {
-    const isAdmin = adminService.isAdmin(context.user.id, undefined);
+    const isAdmin = adminService.isAdmin(context.user.id, context.user.role);
 
     if (!isAdmin) {
       throw new ORPCError('NOT_ADMIN', {

@@ -25,6 +25,7 @@ import { useAdminBanUser } from '@/hooks/use-admin-api';
 import { useImpersonation } from '@/hooks/use-impersonation';
 import { AdminBanUserModal } from '@/components/modals/admin-ban-user-modal';
 import { ImpersonateConfirmModal } from '@/components/modals/impersonate-confirm-modal';
+import { usePermissions } from '@/hooks/use-permissions';
 import { MEMBERS_PER_PAGE } from './constants';
 import type { UserToAction } from './types';
 
@@ -38,6 +39,7 @@ export function MembersTab({ workspaceId, isAdmin }: MembersTabProps) {
   const [userToImpersonate, setUserToImpersonate] = useState<UserToAction | null>(null);
   const [userToBan, setUserToBan] = useState<UserToAction | null>(null);
 
+  const { can } = usePermissions();
   const { impersonateUser, isPending: isImpersonating } = useImpersonation();
   const banMutation = useAdminBanUser();
 
@@ -158,6 +160,7 @@ export function MembersTab({ workspaceId, isAdmin }: MembersTabProps) {
                                   member.userEmail
                                 )
                               }
+                              disabled={!can.impersonateUser}
                             >
                               <UserCog className="h-4 w-4 mr-2" />
                               Impersonate
@@ -166,6 +169,7 @@ export function MembersTab({ workspaceId, isAdmin }: MembersTabProps) {
                               onClick={() =>
                                 handleBanUser(member.userId, member.userName, member.userEmail)
                               }
+                              disabled={!can.banUser}
                               className="text-red-600 focus:text-red-600"
                             >
                               <Ban className="h-4 w-4 mr-2" />
