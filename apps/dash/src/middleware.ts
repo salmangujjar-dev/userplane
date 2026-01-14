@@ -5,7 +5,7 @@ import { env } from '@/env';
 
 const logger = createBrowserLogger('middleware');
 
-const authRoutes = ['/auth', '/signin', '/signup'];
+const authRoutes = ['/auth', '/enterprise'];
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;

@@ -15,6 +15,7 @@ import {
   useAdminSearchWorkspaces,
   useAdminDeactivateWorkspace,
   useAdminResetInviteToken,
+  useAdminProvisionWorkspace,
 } from '@/hooks/use-admin-workspace-api';
 import {
   searchParser,
@@ -25,6 +26,13 @@ import {
 } from '@/lib/parsers';
 import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
+import {
+  AdminProvisionWorkspaceModal,
+  AdminProvisionSuccessModal,
+} from '@/components/modals/admin-provision-workspace-modal';
+import type { AdminProvisionWorkspaceResponse } from '@/hooks/use-admin-workspace-api';
+import { Button } from '@workspace/ui/components/button';
+import { Plus } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -98,10 +106,16 @@ function AdminRecordingsPageContent() {
   const [workspaceToResetToken, setWorkspaceToResetToken] = useState<WorkspaceToResetToken | null>(
     null
   );
+  const [showProvisionModal, setShowProvisionModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [provisionResult, setProvisionResult] = useState<AdminProvisionWorkspaceResponse | null>(
+    null
+  );
 
   // Mutations
   const deactivateMutation = useAdminDeactivateWorkspace();
   const resetTokenMutation = useAdminResetInviteToken();
+  const provisionMutation = useAdminProvisionWorkspace();
 
   // Debounce all filter changes (search, status, sort) together
   useEffect(() => {
@@ -216,6 +230,22 @@ function AdminRecordingsPageContent() {
     }
   };
 
+  const handleProvision = (data: {
+    owner: { email: string; name: string };
+    workspace: { name: string; url: string; plan: import('@workspace/pricing').PlanId };
+    members: Array<{ email: string; name: string; role: 'admin' | 'member' }>;
+  }) => {
+    provisionMutation.mutate(data, {
+      onSuccess: (result) => {
+        setShowProvisionModal(false);
+        if (result.success) {
+          setProvisionResult(result.data);
+          setShowSuccessModal(true);
+        }
+      },
+    });
+  };
+
   const getSortDirectionIcon = () => {
     if (selectedSortDirection[0] === 'asc') return ArrowUp;
     if (selectedSortDirection[0] === 'desc') return ArrowDown;
@@ -232,8 +262,16 @@ function AdminRecordingsPageContent() {
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-lg font-semibold">Workspaces</h2>
-              <p className="text-sm text-muted-foreground mt-1">Manage userplane workspaces</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold">Workspaces</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Manage userplane workspaces</p>
+                </div>
+                <Button onClick={() => setShowProvisionModal(true)} className="rounded-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Provision Workspace
+                </Button>
+              </div>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
                 <div className="relative w-80">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -342,6 +380,19 @@ function AdminRecordingsPageContent() {
         workspace={workspaceToResetToken}
         onConfirm={confirmResetInviteToken}
         isPending={resetTokenMutation.isPending}
+      />
+
+      <AdminProvisionWorkspaceModal
+        open={showProvisionModal}
+        onOpenChange={setShowProvisionModal}
+        onSubmit={handleProvision}
+        isPending={provisionMutation.isPending}
+      />
+
+      <AdminProvisionSuccessModal
+        open={showSuccessModal}
+        onOpenChange={setShowSuccessModal}
+        result={provisionResult}
       />
     </div>
   );
