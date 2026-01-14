@@ -67,6 +67,7 @@ export const adminContract = {
     resetInviteToken: admin.resetInviteToken,
     recordingStats: admin.getWorkspaceRecordingStats,
     memberRecordingStats: admin.getWorkspaceMemberRecordingStats,
+    provision: admin.provisionWorkspace,
   },
 };
 

@@ -16,10 +16,12 @@
     "@orpc/contract": "^1.0.3",
     "@orpc/zod": "^1.0.3",
     "@workspace/pricing": "workspace:*",
+    "validator": "^13.12.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.1",
+    "@types/validator": "^13.12.2",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "5.8.2"
   }

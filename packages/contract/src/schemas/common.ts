@@ -1,4 +1,17 @@
 import { z } from 'zod';
+import validator from 'validator';
+
+/**
+ * Email schema with normalization
+ * Uses validator.normalizeEmail to handle casing and other normalization
+ * This should be used for ALL email inputs to ensure consistent handling
+ */
+export const EmailSchema = z
+  .string()
+  .transform((value) => validator.normalizeEmail(value))
+  .refine((value): value is string => value !== false, {
+    message: 'Invalid email address',
+  });
 
 /**
  * Common schemas and enum constants used across multiple API contracts
