@@ -3,14 +3,7 @@ import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
 import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
 import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
-
-interface DomainSettings {
-  hideSensitiveFields: boolean;
-  captureConsoleLogs: boolean;
-  captureClientActions: boolean;
-  captureNetworkLogs: boolean;
-  captureBackendServerLogs: boolean;
-}
+import { type DomainSettings, transformApiPreferencesToSettings } from '@/lib/types/domain';
 
 interface DomainsData {
   domains: WorkspaceDomain[];
@@ -301,14 +294,7 @@ export function useUpdateDomainPreferences(
           });
 
           if (!error && onPreferencesUpdate) {
-            const preferences = response.data;
-            const updatedSettings: DomainSettings = {
-              hideSensitiveFields: preferences.recordingHideSensitive,
-              captureConsoleLogs: preferences.recordingCaptureClientLog,
-              captureClientActions: preferences.recordingCaptureClientAction,
-              captureNetworkLogs: preferences.recordingCaptureNetworkLog,
-              captureBackendServerLogs: preferences.recordingCaptureServerLog,
-            };
+            const updatedSettings = transformApiPreferencesToSettings(response.data);
             onPreferencesUpdate(variables.domainId, updatedSettings);
           }
         } catch {

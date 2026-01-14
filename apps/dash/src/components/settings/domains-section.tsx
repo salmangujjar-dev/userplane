@@ -1,32 +1,8 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button } from '@workspace/ui/components/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from '@workspace/ui/components/pagination';
-import {
-  ChevronRight,
-  MoreVertical,
-  Pencil,
-  Trash2,
-  Loader2,
-  ArrowUpDown,
-  Settings,
-} from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -34,15 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import type { DomainSortField, SortDirection } from '@/hooks/use-workspace-domains';
-import { DomainVerificationPreModal } from '@/components/modals/domain-verification-pre-modal';
-import { DomainVerificationVerifyingModal } from '@/components/modals/domain-verification-verifying-modal';
-import { DomainVerificationPostModal } from '@/components/modals/domain-verification-post-modal';
-import { EditDomainModal } from '@/components/modals/edit-domain-modal';
-import { CreateDomainModal } from '@/components/modals/create-domain-modal';
-import { DomainConfigureModal } from '@/components/modals/domain-configure-modal';
-import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { toast } from '@workspace/ui/components/sonner';
+import type { DomainSortField, SortDirection } from '@/hooks/use-workspace-domains';
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
@@ -54,31 +23,15 @@ import {
 } from '@/queries/use-domain-mutations';
 import { SectionError } from '@/components/shared/section-error';
 import { DomainsSectionSkeleton } from '@/components/skeleton';
-
-interface DomainSettings {
-  hideSensitiveFields: boolean;
-  captureConsoleLogs: boolean;
-  captureClientActions: boolean;
-  captureNetworkLogs: boolean;
-  captureBackendServerLogs: boolean;
-}
-
-const DEFAULT_SETTINGS: DomainSettings = {
-  hideSensitiveFields: false,
-  captureConsoleLogs: false,
-  captureClientActions: false,
-  captureNetworkLogs: false,
-  captureBackendServerLogs: false,
-};
-
-interface ConfiguringDomain {
-  domainId: string;
-  url: string;
-  status: 'pending' | 'verified' | 'revoked';
-  settings: DomainSettings | null;
-}
-
-type VerificationStep = 'pre' | 'verifying' | 'post' | null;
+import { DomainList } from './domain-list';
+import { DomainModalsManager } from './domain-modals-manager';
+import { useDomainSectionState } from '@/hooks/use-domain-section-state';
+import { useDomainStatusPolling } from '@/hooks/use-domain-status-polling';
+import {
+  type DomainSettings,
+  DEFAULT_DOMAIN_SETTINGS,
+  transformApiPreferencesToSettings,
+} from '@/lib/types/domain';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -94,10 +47,14 @@ const SORT_OPTIONS: Record<SortOption, { sortBy: DomainSortField; sortDirection:
 
 export function DomainsSection() {
   const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  // Pagination and sorting state
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState<SortOption>('recent');
   const { sortBy, sortDirection } = SORT_OPTIONS[sortOption];
 
+  // Fetch domains
   const {
     data: domainsResult,
     isLoading,
@@ -109,28 +66,19 @@ export function DomainsSection() {
     sortBy,
     sortDirection,
   });
-  const domainsData = domainsResult?.success ? domainsResult.data : null;
-  const domains = domainsData?.domains ?? null;
-  const paginationMeta = domainsData?.pagination;
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [verifyingDomain, setVerifyingDomain] = useState<{ id: string; url: string } | null>(null);
-  const [verificationStep, setVerificationStep] = useState<VerificationStep>(null);
-  const [verificationSuccess, setVerificationSuccess] = useState(true);
-  const [verifyingDomainSettings, setVerifyingDomainSettings] = useState<DomainSettings>({
-    hideSensitiveFields: false,
-    captureConsoleLogs: false,
-    captureClientActions: false,
-    captureNetworkLogs: false,
-    captureBackendServerLogs: false,
-  });
-  const [editingDomain, setEditingDomain] = useState<{ id: string; url: string } | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [configuringDomain, setConfiguringDomain] = useState<ConfiguringDomain | null>(null);
-  const [loadingConfigureId, setLoadingConfigureId] = useState<string | null>(null);
-  const [deletingDomain, setDeletingDomain] = useState<{ id: string; url: string } | null>(null);
-  const queryClient = useQueryClient();
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const domainsData = domainsResult?.success ? domainsResult.data : null;
+  const domains = domainsData?.domains ?? [];
+  const paginationMeta = domainsData?.pagination;
+  const totalPages = paginationMeta?.totalPages ?? 1;
+
+  // Domain section state (reducer-based)
+  const { state, actions } = useDomainSectionState();
+
+  // Polling hook for verification
+  const { pollStatus, stopPolling } = useDomainStatusPolling();
+
+  // Mutations
   const createDomainMutation = useCreateDomain(workspaceId);
   const updateDomainMutation = useUpdateDomain(workspaceId);
   const deleteDomainMutation = useDeleteDomain(workspaceId);
@@ -138,332 +86,187 @@ export function DomainsSection() {
     workspaceId,
     (domainId, settings) => {
       // Update configuring domain if it matches
-      if (configuringDomain && configuringDomain.domainId === domainId) {
-        setConfiguringDomain({
-          ...configuringDomain,
-          settings,
-        });
+      if (state.configuringDomain?.domainId === domainId) {
+        actions.updateConfigureSettings(settings);
       }
       // Update verifying domain settings if it matches
-      if (verifyingDomain && verifyingDomain.id === domainId) {
-        setVerifyingDomainSettings(settings);
+      if (state.verifyingDomain?.id === domainId) {
+        actions.updateVerifyingSettings(settings);
       }
     }
   );
 
-  const handleCreateDomain = async (
-    domainUrl: string
-  ): Promise<{ domainId: string; domainUrl: string } | null> => {
-    return new Promise((resolve) => {
-      createDomainMutation.mutate(domainUrl, {
-        onSuccess: (result) => {
-          if (result.success && result.data?.domain) {
-            resolve({
-              domainId: result.data.domain.domainId,
-              domainUrl: result.data.domain.domainUrl,
-            });
-          } else {
-            resolve(null);
-          }
-        },
-        onError: () => {
-          resolve(null);
-        },
+  // ========== Create Domain Handlers ==========
+  const handleCreateDomain = useCallback(
+    async (domainUrl: string): Promise<{ domainId: string; domainUrl: string } | null> => {
+      return new Promise((resolve) => {
+        createDomainMutation.mutate(domainUrl, {
+          onSuccess: (result) => {
+            if (result.success && result.data?.domain) {
+              resolve({
+                domainId: result.data.domain.domainId,
+                domainUrl: result.data.domain.domainUrl,
+              });
+            } else {
+              resolve(null);
+            }
+          },
+          onError: () => resolve(null),
+        });
       });
-    });
-  };
+    },
+    [createDomainMutation]
+  );
 
-  const handleCreateModalStartVerification = async (domainId: string): Promise<string | null> => {
-    if (!workspaceId) return null;
-
-    try {
-      const [error, response] = await apiClient.workspace.domains.getVerificationUrl({
-        params: { workspaceId, domainId },
-      });
-
-      if (error) return null;
-      return response.data.verificationUrl;
-    } catch {
-      return null;
-    }
-  };
-
-  const handleCreateModalPollVerification = async (domainId: string): Promise<boolean> => {
-    if (!workspaceId) return false;
-
-    try {
-      const [error, response] = await apiClient.workspace.domains.getById({
-        params: { workspaceId, domainId },
-      });
-
-      if (error) return false;
-
-      const isVerified = response.data.domain.domainStatus === 'verified';
-      if (isVerified) {
-        // Invalidate and wait for refetch to ensure UI is updated
-        await queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
-        toast.success('Domain verified successfully');
+  const handleCreateModalStartVerification = useCallback(
+    async (domainId: string): Promise<string | null> => {
+      if (!workspaceId) return null;
+      try {
+        const [error, response] = await apiClient.workspace.domains.getVerificationUrl({
+          params: { workspaceId, domainId },
+        });
+        if (error) return null;
+        return response.data.verificationUrl;
+      } catch {
+        return null;
       }
-      return isVerified;
-    } catch {
-      return false;
-    }
-  };
+    },
+    [workspaceId]
+  );
 
-  const handleCreateModalFetchSettings = async (domainId: string): Promise<DomainSettings> => {
-    if (!workspaceId) return DEFAULT_SETTINGS;
+  const handleCreateModalPollVerification = useCallback(
+    async (domainId: string): Promise<boolean> => {
+      if (!workspaceId) return false;
+      try {
+        const [error, response] = await apiClient.workspace.domains.getById({
+          params: { workspaceId, domainId },
+        });
+        if (error) return false;
+        const isVerified = response.data.domain.domainStatus === 'verified';
+        if (isVerified) {
+          await queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
+          toast.success('Domain verified successfully');
+        }
+        return isVerified;
+      } catch {
+        return false;
+      }
+    },
+    [workspaceId, queryClient]
+  );
+
+  const handleCreateModalFetchSettings = useCallback(
+    async (domainId: string): Promise<DomainSettings> => {
+      if (!workspaceId) return DEFAULT_DOMAIN_SETTINGS;
+      try {
+        const [error, response] = await apiClient.workspace.domains.preferences.get({
+          params: { workspaceId, domainId },
+        });
+        if (error) return DEFAULT_DOMAIN_SETTINGS;
+        return transformApiPreferencesToSettings(response.data);
+      } catch {
+        return DEFAULT_DOMAIN_SETTINGS;
+      }
+    },
+    [workspaceId]
+  );
+
+  const handleCreateModalSaveSettings = useCallback(
+    (domainId: string, settings: DomainSettings) => {
+      updateDomainPreferencesMutation.mutate({ domainId, settings });
+    },
+    [updateDomainPreferencesMutation]
+  );
+
+  // ========== Verification Flow Handlers ==========
+  const handleStartVerification = useCallback(async () => {
+    if (!workspaceId || !state.verifyingDomain) return;
 
     try {
-      const [error, response] = await apiClient.workspace.domains.preferences.get({
-        params: { workspaceId, domainId },
-      });
+      actions.setVerificationStep('verifying');
 
-      if (error) return DEFAULT_SETTINGS;
-
-      return {
-        hideSensitiveFields: response.data.recordingHideSensitive,
-        captureConsoleLogs: response.data.recordingCaptureClientLog,
-        captureClientActions: response.data.recordingCaptureClientAction,
-        captureNetworkLogs: response.data.recordingCaptureNetworkLog,
-        captureBackendServerLogs: response.data.recordingCaptureServerLog,
-      };
-    } catch {
-      return DEFAULT_SETTINGS;
-    }
-  };
-
-  const handleCreateModalSaveSettings = (domainId: string, settings: DomainSettings) => {
-    updateDomainPreferencesMutation.mutate({ domainId, settings });
-  };
-
-  const handleVerify = (domainId: string, domainUrl: string) => {
-    setVerifyingDomain({ id: domainId, url: domainUrl });
-    setVerificationStep('pre');
-  };
-
-  const stopPolling = () => {
-    if (pollingIntervalRef.current) {
-      clearTimeout(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-  };
-
-  const pollDomainStatus = async (domainId: string, attempt: number = 0): Promise<void> => {
-    if (!workspaceId) return;
-
-    try {
-      const [error, response] = await apiClient.workspace.domains.getById({
-        params: { workspaceId, domainId },
+      const [error, response] = await apiClient.workspace.domains.getVerificationUrl({
+        params: { workspaceId, domainId: state.verifyingDomain.id },
       });
 
       if (error) throw error;
 
-      const domain = response.data.domain;
+      window.open(response.data.verificationUrl, '_blank', 'noopener,noreferrer');
 
-      if (domain.domainStatus === 'verified') {
-        // Success! Domain is verified
-        stopPolling();
-        queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
-        setVerificationSuccess(true);
-        toast.success('Domain verified successfully');
-
-        // Fetch domain settings for the post modal
-        try {
-          const [prefError, prefResponse] = await apiClient.workspace.domains.preferences.get({
-            params: { workspaceId, domainId },
-          });
-
-          if (!prefError && prefResponse) {
-            const preferences = prefResponse.data;
-            setVerifyingDomainSettings({
-              hideSensitiveFields: preferences.recordingHideSensitive,
-              captureConsoleLogs: preferences.recordingCaptureClientLog,
-              captureClientActions: preferences.recordingCaptureClientAction,
-              captureNetworkLogs: preferences.recordingCaptureNetworkLog,
-              captureBackendServerLogs: preferences.recordingCaptureServerLog,
-            });
-          }
-        } catch {
-          // Use default settings on error
-        }
-
-        setVerificationStep('post');
-      } else if (attempt < 10) {
-        // Continue polling with exponential backoff
-        const delay = Math.min(1000 * Math.pow(1.5, attempt), 10000); // Max 10 seconds
-        pollingIntervalRef.current = setTimeout(() => {
-          pollDomainStatus(domainId, attempt + 1);
-        }, delay);
-      } else {
-        // Timeout after 10 attempts - keep modal open with reverify option
-        stopPolling();
-        setVerificationSuccess(false);
-        setVerificationStep('post');
-      }
+      pollStatus(
+        state.verifyingDomain.id,
+        (result) => actions.setVerificationSuccess(result.settings),
+        () => actions.setVerificationFailed()
+      );
     } catch {
-      // On error, stop polling and show timeout modal
-      stopPolling();
-      setVerificationSuccess(false);
-      setVerificationStep('post');
-    }
-  };
-
-  const handleStartVerification = async () => {
-    if (!workspaceId || !verifyingDomain) return;
-
-    try {
-      setVerificationSuccess(true);
-      setVerificationStep('verifying');
-
-      // Get verification URL from backend
-      const [error, response] = await apiClient.workspace.domains.getVerificationUrl({
-        params: { workspaceId, domainId: verifyingDomain.id },
-      });
-
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-
-      const verificationUrl = response.data.verificationUrl;
-
-      // Open verification URL in new tab
-      window.open(verificationUrl, '_blank', 'noopener,noreferrer');
-
-      // Start polling for verification status
-      pollDomainStatus(verifyingDomain.id);
-    } catch {
-      setVerificationStep(null);
+      actions.closeVerification();
       toast.error('Failed to start verification');
     }
-  };
+  }, [workspaceId, state.verifyingDomain, actions, pollStatus]);
 
-  const handleCloseModals = () => {
+  const handleCloseVerification = useCallback(() => {
     stopPolling();
-    setVerifyingDomain(null);
-    setVerificationStep(null);
-  };
+    actions.closeVerification();
+  }, [stopPolling, actions]);
 
-  const handleReverify = () => {
+  const handleReverify = useCallback(() => {
     stopPolling();
-    setVerificationStep('pre');
-  };
+    actions.reverify();
+  }, [stopPolling, actions]);
 
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      stopPolling();
-    };
-  }, []);
-
-  const handleEditDomain = (domainId: string, domainUrl: string) => {
-    setEditingDomain({ id: domainId, url: domainUrl });
-    setIsEditModalOpen(true);
-  };
-
-  const handleSaveEdit = (newDomainUrl: string) => {
-    if (!editingDomain) return;
-    updateDomainMutation.mutate(
-      { domainId: editingDomain.id, url: newDomainUrl },
-      {
-        onSuccess: () => {
-          setIsEditModalOpen(false);
-          setEditingDomain(null);
-        },
-      }
-    );
-  };
-
-  const handleDeleteDomain = (domainId: string, domainUrl: string) => {
-    setDeletingDomain({ id: domainId, url: domainUrl });
-  };
-
-  const handleConfirmDelete = () => {
-    if (deletingDomain) {
-      deleteDomainMutation.mutate(deletingDomain.id, {
-        onSuccess: () => {
-          setConfiguringDomain(null);
-          setDeletingDomain(null);
-        },
-      });
-    }
-  };
-
-  const handleConfigure = async (
-    domainId: string,
-    domainUrl: string,
-    status: 'pending' | 'verified' | 'revoked'
-  ) => {
-    if (!workspaceId) return;
-
-    setLoadingConfigureId(domainId);
-
-    try {
-      // Fetch current preferences
-      const [error, response] = await apiClient.workspace.domains.preferences.get({
-        params: { workspaceId, domainId },
-      });
-
-      if (error) {
-        console.log('error: ', error);
-        throw error;
-      }
-
-      const preferences = response.data;
-      const settings: DomainSettings = {
-        hideSensitiveFields: preferences.recordingHideSensitive,
-        captureConsoleLogs: preferences.recordingCaptureClientLog,
-        captureClientActions: preferences.recordingCaptureClientAction,
-        captureNetworkLogs: preferences.recordingCaptureNetworkLog,
-        captureBackendServerLogs: preferences.recordingCaptureServerLog,
-      };
-
-      setConfiguringDomain({
-        domainId,
-        url: domainUrl,
-        status,
+  const handleSaveVerificationSettings = useCallback(
+    (settings: DomainSettings) => {
+      if (!state.verifyingDomain) return;
+      updateDomainPreferencesMutation.mutate({
+        domainId: state.verifyingDomain.id,
         settings,
       });
-    } catch {
-      toast.error('Failed to load domain settings');
-      // Fallback to default settings
-      setConfiguringDomain({
-        domainId,
-        url: domainUrl,
-        status,
-        settings: {
-          hideSensitiveFields: false,
-          captureConsoleLogs: false,
-          captureClientActions: false,
-          captureNetworkLogs: false,
-          captureBackendServerLogs: false,
-        },
+    },
+    [state.verifyingDomain, updateDomainPreferencesMutation]
+  );
+
+  // ========== Edit Domain Handlers ==========
+  const handleSaveEdit = useCallback(
+    (newDomainUrl: string) => {
+      if (!state.editingDomain) return;
+      updateDomainMutation.mutate(
+        { domainId: state.editingDomain.id, url: newDomainUrl },
+        { onSuccess: () => actions.closeEditModal() }
+      );
+    },
+    [state.editingDomain, updateDomainMutation, actions]
+  );
+
+  // ========== Configure Domain Handlers ==========
+  const handleSaveConfigureSettings = useCallback(
+    (settings: DomainSettings) => {
+      if (!state.configuringDomain) return;
+      updateDomainPreferencesMutation.mutate({
+        domainId: state.configuringDomain.domainId,
+        settings,
       });
-    } finally {
-      setLoadingConfigureId(null);
+    },
+    [state.configuringDomain, updateDomainPreferencesMutation]
+  );
+
+  const handleVerifyFromConfigure = useCallback(() => {
+    if (state.configuringDomain) {
+      actions.startVerify({
+        id: state.configuringDomain.domainId,
+        url: state.configuringDomain.url,
+      });
     }
-  };
+  }, [state.configuringDomain, actions]);
 
-  const handleSaveSettings = (settings: DomainSettings) => {
-    if (!configuringDomain) return;
-    updateDomainPreferencesMutation.mutate({
-      domainId: configuringDomain.domainId,
-      settings,
+  // ========== Delete Domain Handlers ==========
+  const handleConfirmDelete = useCallback(() => {
+    if (!state.deletingDomain) return;
+    deleteDomainMutation.mutate(state.deletingDomain.id, {
+      onSuccess: () => actions.onDeleteSuccess(),
     });
-  };
+  }, [state.deletingDomain, deleteDomainMutation, actions]);
 
-  const handleSaveVerificationSettings = (settings: DomainSettings) => {
-    if (!verifyingDomain) return;
-    updateDomainPreferencesMutation.mutate({
-      domainId: verifyingDomain.id,
-      settings,
-    });
-  };
-
-  // Calculate these before any conditional returns to avoid hook order issues
-  const displayedDomains = useMemo(() => domains || [], [domains]);
-  const totalPages = paginationMeta?.totalPages ?? 1;
-
+  // ========== Render ==========
   if (isLoading) {
     return <DomainsSectionSkeleton />;
   }
@@ -494,6 +297,7 @@ export function DomainsSection() {
 
   return (
     <div>
+      {/* Header with sort control */}
       <div className="mb-4 flex items-start justify-between max-w-2xl">
         <div>
           <h2 className="text-lg font-semibold">Domains</h2>
@@ -513,216 +317,62 @@ export function DomainsSection() {
         </Select>
       </div>
 
-      <div className="max-w-2xl space-y-4">
-        {displayedDomains.map((domain) => {
-          const isVerified = domain.domainStatus === 'verified';
-
-          return (
-            <div
-              key={domain.domainId}
-              className="flex items-center justify-between p-6 rounded-xl border bg-card"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`h-2 w-2 rounded-full ${isVerified ? 'bg-green-500' : 'bg-yellow-500'}`}
-                />
-                <span className="text-sm">
-                  {domain.domainUrl.includes('/') ? (
-                    <>
-                      <span className="text-foreground">{domain.domainUrl.split('/')[0]}/</span>
-                      <span className="text-muted-foreground">
-                        {domain.domainUrl.split('/').slice(1).join('/')}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-foreground">{domain.domainUrl}</span>
-                  )}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
-                  onClick={() =>
-                    handleConfigure(domain.domainId, domain.domainUrl, domain.domainStatus)
-                  }
-                  disabled={loadingConfigureId === domain.domainId}
-                >
-                  Configure
-                  {loadingConfigureId === domain.domainId ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() =>
-                        handleConfigure(domain.domainId, domain.domainUrl, domain.domainStatus)
-                      }
-                      disabled={loadingConfigureId === domain.domainId}
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configure Domain
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleEditDomain(domain.domainId, domain.domainUrl)}
-                    >
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Edit Domain
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleDeleteDomain(domain.domainId, domain.domainUrl)}
-                      disabled={deleteDomainMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Domain
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          );
-        })}
-
-        <Button
-          variant="outline"
-          className="w-full max-w-2xl"
-          onClick={() => setShowCreateModal(true)}
-        >
-          Set up another domain
-        </Button>
-
-        {totalPages > 1 && (
-          <Pagination className="mt-4">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                />
-              </PaginationItem>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                if (
-                  page === 1 ||
-                  page === totalPages ||
-                  (page >= currentPage - 1 && page <= currentPage + 1)
-                ) {
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(page)}
-                        isActive={currentPage === page}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                } else if (page === currentPage - 2 || page === currentPage + 2) {
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  );
-                }
-                return null;
-              })}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
+      {/* Domain List */}
+      <div className="max-w-2xl">
+        <DomainList
+          domains={domains}
+          onConfigure={actions.openConfigureModal}
+          onEdit={(id, url) => actions.openEditModal({ id, url })}
+          onDelete={(id, url) => actions.openDeleteModal({ id, url })}
+          onAddDomain={actions.openCreateModal}
+          loadingConfigureId={state.loadingConfigureId}
+          isDeleteDisabled={deleteDomainMutation.isPending}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
-      <DomainVerificationPreModal
-        open={verificationStep === 'pre'}
-        onOpenChange={handleCloseModals}
-        domainUrl={verifyingDomain?.url || ''}
+      {/* All Modals */}
+      <DomainModalsManager
         workspaceId={workspaceId || ''}
-        onVerify={handleStartVerification}
-      />
-
-      <DomainVerificationVerifyingModal
-        open={verificationStep === 'verifying'}
-        onOpenChange={handleCloseModals}
-      />
-
-      <DomainVerificationPostModal
-        open={verificationStep === 'post'}
-        onOpenChange={handleCloseModals}
-        domainUrl={verifyingDomain?.url || ''}
-        workspaceId={workspaceId || ''}
+        // Verification flow
+        verifyingDomain={state.verifyingDomain}
+        verificationStep={state.verificationStep}
+        verificationSuccess={state.verificationSuccess}
+        verifyingDomainSettings={state.verifyingDomainSettings}
+        onCloseVerification={handleCloseVerification}
+        onStartVerification={handleStartVerification}
         onReverify={handleReverify}
-        verified={verificationSuccess}
-        settings={verifyingDomainSettings}
-        onSaveSettings={handleSaveVerificationSettings}
-        loadingSettings={updateDomainPreferencesMutation.isPending}
-      />
-
-      <CreateDomainModal
-        open={showCreateModal}
-        onOpenChange={setShowCreateModal}
+        onSaveVerificationSettings={handleSaveVerificationSettings}
+        verificationSettingsLoading={updateDomainPreferencesMutation.isPending}
+        // Create modal
+        showCreateModal={state.showCreateModal}
+        onCloseCreateModal={(open) => !open && actions.closeCreateModal()}
         onCreateDomain={handleCreateDomain}
-        onStartVerification={handleCreateModalStartVerification}
-        onPollVerification={handleCreateModalPollVerification}
-        onFetchSettings={handleCreateModalFetchSettings}
-        onSaveSettings={handleCreateModalSaveSettings}
-        workspaceId={workspaceId || ''}
-        loading={createDomainMutation.isPending}
+        onCreateModalStartVerification={handleCreateModalStartVerification}
+        onCreateModalPollVerification={handleCreateModalPollVerification}
+        onCreateModalFetchSettings={handleCreateModalFetchSettings}
+        onCreateModalSaveSettings={handleCreateModalSaveSettings}
+        createLoading={createDomainMutation.isPending}
         savingSettings={updateDomainPreferencesMutation.isPending}
-      />
-
-      <EditDomainModal
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
-        domainUrl={editingDomain?.url || ''}
-        onSave={handleSaveEdit}
-        loading={updateDomainMutation.isPending}
-      />
-
-      <DomainConfigureModal
-        open={!!configuringDomain}
-        onOpenChange={(open) => !open && setConfiguringDomain(null)}
-        domainUrl={configuringDomain?.url || ''}
-        verified={configuringDomain?.status === 'verified'}
-        settings={
-          configuringDomain?.settings || {
-            hideSensitiveFields: false,
-            captureConsoleLogs: false,
-            captureClientActions: false,
-            captureNetworkLogs: false,
-            captureBackendServerLogs: false,
-          }
-        }
-        onSave={handleSaveSettings}
-        onVerify={() => {
-          if (configuringDomain) {
-            handleVerify(configuringDomain.domainId, configuringDomain.url);
-          }
-        }}
-        loading={updateDomainPreferencesMutation.isPending}
-      />
-
-      <DeleteConfirmationModal
-        open={!!deletingDomain}
-        onOpenChange={(open) => !open && setDeletingDomain(null)}
-        itemName={deletingDomain?.url || ''}
-        itemType="domain"
-        onConfirm={handleConfirmDelete}
-        isLoading={deleteDomainMutation.isPending}
+        // Edit modal
+        editingDomain={state.editingDomain}
+        isEditModalOpen={state.isEditModalOpen}
+        onCloseEditModal={(open) => !open && actions.closeEditModal()}
+        onSaveEdit={handleSaveEdit}
+        editLoading={updateDomainMutation.isPending}
+        // Configure modal
+        configuringDomain={state.configuringDomain}
+        onCloseConfigureModal={(open) => !open && actions.closeConfigureModal()}
+        onSaveConfigureSettings={handleSaveConfigureSettings}
+        onVerifyFromConfigure={handleVerifyFromConfigure}
+        configureLoading={updateDomainPreferencesMutation.isPending}
+        // Delete modal
+        deletingDomain={state.deletingDomain}
+        onCloseDeleteModal={(open) => !open && actions.closeDeleteModal()}
+        onConfirmDelete={handleConfirmDelete}
+        deleteLoading={deleteDomainMutation.isPending}
       />
     </div>
   );
