@@ -19,5 +19,19 @@ export type {
 } from './types';
 
 // Email templates (server-safe exports)
-export { renderWorkspaceInvite, renderWorkspaceInviteText } from './templates.js';
-export type { WorkspaceInviteEmailProps, RenderWorkspaceInviteParams } from './templates.js';
+export {
+  renderWorkspaceInvite,
+  renderWorkspaceInviteText,
+  renderEmailVerification,
+  renderEmailVerificationText,
+  renderMagicLink,
+  renderMagicLinkText,
+} from './templates.js';
+export type {
+  WorkspaceInviteEmailProps,
+  RenderWorkspaceInviteParams,
+  EmailVerificationProps,
+  RenderEmailVerificationParams,
+  MagicLinkEmailProps,
+  RenderMagicLinkParams,
+} from './templates.js';
