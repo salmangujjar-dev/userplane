@@ -26,6 +26,8 @@ export {
   renderEmailVerificationText,
   renderMagicLink,
   renderMagicLinkText,
+  renderAccessRequest,
+  renderAccessRequestText,
 } from './templates.js';
 export type {
   WorkspaceInviteEmailProps,
@@ -34,4 +36,6 @@ export type {
   RenderEmailVerificationParams,
   MagicLinkEmailProps,
   RenderMagicLinkParams,
+  AccessRequestEmailProps,
+  RenderAccessRequestParams,
 } from './templates.js';

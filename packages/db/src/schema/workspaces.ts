@@ -9,6 +9,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { PLAN_IDS } from '@workspace/pricing';
+import { WORKSPACE_INVITE_POLICY_VALUES } from '../constants';
 import { workspaceMembers } from './workspace-members';
 import { entitlements } from './entitlements';
 import { domains } from './domains';
@@ -20,6 +21,17 @@ import { links } from './links';
  * Values derived from @workspace/pricing PLAN_IDS
  */
 export const workspacePlanEnum = pgEnum('workspace_plan', PLAN_IDS);
+
+/**
+ * Workspace invite policy enum
+ * - private: Not discoverable, only explicit invites work
+ * - whitelisted: Discoverable, matching domains can join directly
+ * - protected: Discoverable, matching domains can request access
+ */
+export const workspaceInvitePolicyEnum = pgEnum(
+  'workspace_invite_policy',
+  WORKSPACE_INVITE_POLICY_VALUES
+);
 
 export const workspaces = pgTable(
   'workspaces',
@@ -36,6 +48,15 @@ export const workspaces = pgTable(
     // Settings and configuration
     // UUID token used for invite verification, must always be set
     workspaceInviteToken: text('workspace_invite_token').notNull(),
+
+    // Workspace invite policy settings
+    // Controls how users can discover and join the workspace
+    workspaceInvitePolicy: workspaceInvitePolicyEnum('workspace_invite_policy')
+      .notNull()
+      .default('private'),
+    // Email domains allowed to join/request access (only used for whitelisted/protected policies)
+    // Stored as comma-separated values e.g. "example.com,company.org"
+    workspaceInviteDomains: text('workspace_invite_domains'),
 
     // Recording link defaults
     recordingSlug: text('recording_slug').notNull(),
