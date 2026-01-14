@@ -284,4 +284,336 @@ export class InviteService {
       inviterEmail: inviteData.ie,
     };
   }
+
+  /**
+   * Join or request access to a workspace based on invite policy
+   * - For private workspaces: throws error
+   * - For whitelisted workspaces: adds user as member if domain matches
+   * - For protected workspaces: sends access request to workspace owner
+   * Throws WORKSPACE_INVITE_POLICY_PRIVATE if workspace is private
+   * Throws WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH if domain doesn't match
+   * Throws WORKSPACE_MEMBER_ALREADY_EXISTS if user is already a member
+   */
+  async joinWorkspace(params: {
+    workspaceId: string;
+    userId: string;
+    userEmail: string;
+    userName: string;
+  }): Promise<{ workspaceId: string; workspaceName: string; status: 'joined' | 'requested' }> {
+    const { workspaceId, userId, userEmail, userName } = params;
+
+    // Get workspace with invite policy
+    const workspace = await this.deps.workspaceService.getWithInvitePolicy(workspaceId);
+
+    // Check if user is already a member
+    const existingMember = await this.deps.workspaceMemberService.getMember(userId, workspaceId);
+    if (existingMember) {
+      throw new ORPCError('WORKSPACE_MEMBER_ALREADY_EXISTS', {
+        status: 409,
+        message: 'User is already a member of this workspace',
+      });
+    }
+
+    // Private workspaces cannot be joined directly
+    if (workspace.workspaceInvitePolicy === 'private') {
+      throw new ORPCError('WORKSPACE_INVITE_POLICY_PRIVATE', {
+        status: 403,
+        message: 'This workspace is private and cannot be joined directly',
+      });
+    }
+
+    // Extract user's email domain
+    const userDomain = userEmail.split('@')[1]?.toLowerCase();
+    if (!userDomain) {
+      throw new ORPCError('WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH', {
+        status: 403,
+        message: 'Your email domain is not allowed to join this workspace',
+      });
+    }
+
+    // Check if user's domain matches workspace invite domains
+    const allowedDomains = workspace.workspaceInviteDomains || [];
+    const domainMatches = allowedDomains.some(
+      (domain: string) => domain.toLowerCase() === userDomain
+    );
+
+    if (!domainMatches) {
+      throw new ORPCError('WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH', {
+        status: 403,
+        message: 'Your email domain is not allowed to join this workspace',
+      });
+    }
+
+    // For whitelisted workspaces, add user as member directly
+    if (workspace.workspaceInvitePolicy === 'whitelisted') {
+      await this.deps.db.transaction(async (tx) => {
+        await this.deps.workspaceMemberService.addMember(
+          {
+            userId,
+            workspaceId,
+            role: 'member',
+          },
+          { tx }
+        );
+      });
+
+      return {
+        workspaceId,
+        workspaceName: workspace.workspaceName,
+        status: 'joined',
+      };
+    }
+
+    // For protected workspaces, send access request to owner
+    if (workspace.workspaceInvitePolicy === 'protected') {
+      // Get workspace owner(s)
+      const owners = await this.deps.workspaceMemberService.getOwners(workspaceId);
+      if (owners.length === 0) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          status: 500,
+          message: 'No workspace owners found to approve request',
+        });
+      }
+
+      // Send access request email to each owner with owner-specific tokens
+      // Each owner gets a unique token that only they can use
+      await Promise.all(
+        owners.map((owner) => {
+          const reviewUrl = this.deps.tokenService.generateAccessRequestUrl(
+            workspaceId,
+            owner.userId,
+            userId,
+            userEmail
+          );
+
+          return this.deps.emailService.sendAccessRequest({
+            to: owner.email,
+            workspaceName: workspace.workspaceName,
+            requesterName: userName,
+            requesterEmail: userEmail,
+            reviewUrl,
+          });
+        })
+      );
+
+      return {
+        workspaceId,
+        workspaceName: workspace.workspaceName,
+        status: 'requested',
+      };
+    }
+
+    // Fallback (should not reach here)
+    throw new ORPCError('INTERNAL_SERVER_ERROR', {
+      status: 500,
+      message: 'Invalid workspace invite policy',
+    });
+  }
+
+  /**
+   * Validate an access request token and return request details
+   * Used by dashboard to display access request review page
+   * Throws WORKSPACE_ACCESS_REQUEST_INVALID if token is invalid/expired
+   * Throws WORKSPACE_ACCESS_REQUEST_NOT_OWNER if viewer is not the designated owner
+   */
+  async validateAccessRequest(params: { token: string; viewerId: string }): Promise<{
+    workspaceId: string;
+    workspaceName: string;
+    requesterUserId: string;
+    requesterEmail: string;
+    requesterName: string | null;
+  }> {
+    const { token, viewerId } = params;
+
+    // Verify and decode access request token
+    const tokenData = this.deps.tokenService.verifyAccessRequestToken(token);
+    if (!tokenData) {
+      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_INVALID', {
+        status: 400,
+        message: 'Invalid or expired access request token',
+      });
+    }
+
+    const workspaceId = tokenData.wi;
+    const ownerId = tokenData.oi;
+    const userId = tokenData.ui;
+    const userEmail = tokenData.ue;
+
+    // Verify the viewer is the specific owner this token was generated for
+    if (viewerId !== ownerId) {
+      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
+        status: 403,
+        message: 'This access request link was sent to a different workspace owner',
+      });
+    }
+
+    // Verify viewer is still an owner of the workspace (role may have changed)
+    const viewerMember = await this.deps.workspaceMemberService.getMember(viewerId, workspaceId);
+    if (!viewerMember || viewerMember.workspaceRole !== 'owner') {
+      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
+        status: 403,
+        message: 'You are no longer an owner of this workspace',
+      });
+    }
+
+    // Get workspace name
+    const workspace = await this.deps.workspaceService.getById(workspaceId);
+
+    // Get requester's name if available
+    const requester = await this.deps.userService.getById(userId);
+
+    return {
+      workspaceId,
+      workspaceName: workspace.workspaceName,
+      requesterUserId: userId,
+      requesterEmail: userEmail,
+      requesterName: requester?.displayName || null,
+    };
+  }
+
+  /**
+   * Approve a workspace access request
+   * Adds the requesting user as a member
+   * Throws WORKSPACE_ACCESS_REQUEST_INVALID if token is invalid/expired
+   * Throws WORKSPACE_ACCESS_REQUEST_NOT_OWNER if approver is not the designated owner
+   */
+  async approveAccessRequest(params: { token: string; approverId: string }): Promise<{
+    workspaceId: string;
+    workspaceName: string;
+    userId: string;
+    userEmail: string;
+    status: 'approved';
+  }> {
+    const { token, approverId } = params;
+
+    // Verify and decode access request token
+    const tokenData = this.deps.tokenService.verifyAccessRequestToken(token);
+    if (!tokenData) {
+      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_INVALID', {
+        status: 400,
+        message: 'Invalid or expired access request token',
+      });
+    }
+
+    const workspaceId = tokenData.wi;
+    const ownerId = tokenData.oi;
+    const userId = tokenData.ui;
+    const userEmail = tokenData.ue;
+
+    // Verify the approver is the specific owner this token was generated for
+    if (approverId !== ownerId) {
+      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
+        status: 403,
+        message: 'This approval link was sent to a different workspace owner',
+      });
+    }
+
+    // Verify approver is still an owner of the workspace (role may have changed)
+    const approverMember = await this.deps.workspaceMemberService.getMember(
+      approverId,
+      workspaceId
+    );
+    if (!approverMember || approverMember.workspaceRole !== 'owner') {
+      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
+        status: 403,
+        message: 'You are no longer an owner of this workspace',
+      });
+    }
+
+    // Get workspace name
+    const workspace = await this.deps.workspaceService.getById(workspaceId);
+
+    // Check if user is already a member (might have been added by another owner)
+    const existingMember = await this.deps.workspaceMemberService.getMember(userId, workspaceId);
+    if (existingMember) {
+      return {
+        workspaceId,
+        workspaceName: workspace.workspaceName,
+        userId,
+        userEmail,
+        status: 'approved',
+      };
+    }
+
+    // Add user as member
+    await this.deps.db.transaction(async (tx) => {
+      await this.deps.workspaceMemberService.addMember(
+        {
+          userId,
+          workspaceId,
+          role: 'member',
+        },
+        { tx }
+      );
+    });
+
+    return {
+      workspaceId,
+      workspaceName: workspace.workspaceName,
+      userId,
+      userEmail,
+      status: 'approved',
+    };
+  }
+
+  /**
+   * Decline a workspace access request
+   * Does not add the user as a member
+   * Throws WORKSPACE_ACCESS_REQUEST_INVALID if token is invalid/expired
+   * Throws WORKSPACE_ACCESS_REQUEST_NOT_OWNER if decliner is not the designated owner
+   */
+  async declineAccessRequest(params: { token: string; declinerId: string }): Promise<{
+    workspaceId: string;
+    workspaceName: string;
+    userId: string;
+    userEmail: string;
+    status: 'declined';
+  }> {
+    const { token, declinerId } = params;
+
+    // Verify and decode access request token
+    const tokenData = this.deps.tokenService.verifyAccessRequestToken(token);
+    if (!tokenData) {
+      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_INVALID', {
+        status: 400,
+        message: 'Invalid or expired access request token',
+      });
+    }
+
+    const workspaceId = tokenData.wi;
+    const ownerId = tokenData.oi;
+    const userId = tokenData.ui;
+    const userEmail = tokenData.ue;
+
+    // Verify the decliner is the specific owner this token was generated for
+    if (declinerId !== ownerId) {
+      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
+        status: 403,
+        message: 'This decline link was sent to a different workspace owner',
+      });
+    }
+
+    // Verify decliner is still an owner of the workspace (role may have changed)
+    const declinerMember = await this.deps.workspaceMemberService.getMember(
+      declinerId,
+      workspaceId
+    );
+    if (!declinerMember || declinerMember.workspaceRole !== 'owner') {
+      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
+        status: 403,
+        message: 'You are no longer an owner of this workspace',
+      });
+    }
+
+    // Get workspace name
+    const workspace = await this.deps.workspaceService.getById(workspaceId);
+
+    return {
+      workspaceId,
+      workspaceName: workspace.workspaceName,
+      userId,
+      userEmail,
+      status: 'declined',
+    };
+  }
 }

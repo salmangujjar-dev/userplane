@@ -238,6 +238,15 @@ export class WorkspaceMemberService {
   }
 
   /**
+   * Get all owners of a workspace
+   * Returns array of owner members with their email addresses
+   * Used for sending notifications to workspace owners
+   */
+  async getOwners(workspaceId: string): Promise<Array<{ userId: string; email: string }>> {
+    return this.deps.memberRepo.findOwnersByWorkspace(workspaceId);
+  }
+
+  /**
    * Get team members of a workspace with user details (paginated)
    * Returns members sorted by role (owner > admin > member)
    * If no members found, validates workspace existence (since workspace always has at least 1 member)

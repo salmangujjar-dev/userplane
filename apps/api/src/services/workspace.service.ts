@@ -15,6 +15,8 @@ import type { ProjectService } from '@/api/services/project.service';
 import { ORPCError } from '@orpc/server';
 import type { Transaction, CreateWorkspaceParams } from '@/api/types';
 import type { DbClient } from '@workspace/db';
+import { isDisposableEmail, isDisposableEmailDomain } from '@/api/utils/disposable-email';
+import { MAX_EMAIL_DOMAINS } from '@workspace/contract';
 
 export interface WorkspaceServiceDeps {
   workspaceRepo: WorkspaceRepository;
@@ -458,5 +460,215 @@ export class WorkspaceService {
           message: 'Invalid search type',
         });
     }
+  }
+
+  /**
+   * Get workspace invite policy settings
+   * Throws WORKSPACE_NOT_FOUND if workspace not found
+   */
+  async getInvitePolicy(workspaceId: string) {
+    const policy = await this.deps.workspaceRepo.findInvitePolicyById(workspaceId);
+
+    if (!policy) {
+      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
+      if (isSoftDeleted === true) {
+        throw new ORPCError('WORKSPACE_GONE', {
+          status: 410,
+          message: 'Workspace has been deleted',
+        });
+      }
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
+    }
+
+    // Parse comma-separated domains into array
+    const domains = policy.workspaceInviteDomains
+      ? policy.workspaceInviteDomains.split(',').map((d: string) => d.trim().toLowerCase())
+      : null;
+
+    return {
+      workspaceId: policy.workspaceId,
+      workspaceInvitePolicy: policy.workspaceInvitePolicy,
+      workspaceInviteDomains: domains,
+    };
+  }
+
+  /**
+   * Update workspace invite policy settings
+   * Throws WORKSPACE_NOT_FOUND if workspace not found
+   * Throws WORKSPACE_INVITE_POLICY_DOMAINS_REQUIRED if whitelisted/protected without domains
+   */
+  async updateInvitePolicy(
+    workspaceId: string,
+    data: {
+      workspaceInvitePolicy: 'private' | 'whitelisted' | 'protected';
+      workspaceInviteDomains?: string[] | null;
+    },
+    options?: { tx?: Transaction }
+  ) {
+    // Verify workspace exists
+    await this.getById(workspaceId);
+
+    // Convert array of domains to comma-separated string
+    // For private policy, always set domains to null
+    let domainsString: string | null = null;
+    if (data.workspaceInvitePolicy !== 'private') {
+      if (data.workspaceInviteDomains && data.workspaceInviteDomains.length > 0) {
+        const normalizedDomains = data.workspaceInviteDomains
+          .map((d) => d.trim().toLowerCase())
+          .filter((d) => d.length > 0);
+
+        // Check max domains limit
+        if (normalizedDomains.length > MAX_EMAIL_DOMAINS) {
+          throw new ORPCError('WORKSPACE_INVITE_POLICY_TOO_MANY_DOMAINS', {
+            status: 400,
+            message: `Maximum ${MAX_EMAIL_DOMAINS} email domains allowed per workspace`,
+          });
+        }
+
+        // Check for disposable email domains
+        const disposableDomains = normalizedDomains.filter((d) => isDisposableEmailDomain(d));
+        if (disposableDomains.length > 0) {
+          throw new ORPCError('WORKSPACE_INVITE_POLICY_DISPOSABLE_DOMAIN', {
+            status: 400,
+            message: `Disposable email domains are not allowed: ${disposableDomains.join(', ')}`,
+          });
+        }
+
+        domainsString = normalizedDomains.join(',');
+      }
+      // Require at least one domain for whitelisted/protected policies
+      if (!domainsString) {
+        throw new ORPCError('WORKSPACE_INVITE_POLICY_DOMAINS_REQUIRED', {
+          status: 400,
+          message: 'At least one email domain is required for whitelisted or protected policies',
+        });
+      }
+    }
+
+    const updated = await this.deps.workspaceRepo.updateInvitePolicy(
+      workspaceId,
+      {
+        workspaceInvitePolicy: data.workspaceInvitePolicy,
+        workspaceInviteDomains: domainsString,
+      },
+      options
+    );
+
+    if (!updated) {
+      throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        status: 404,
+        message: 'Failed to update workspace invite policy',
+      });
+    }
+
+    // Parse domains back to array for response
+    const domains = updated.workspaceInviteDomains
+      ? updated.workspaceInviteDomains.split(',').map((d: string) => d.trim().toLowerCase())
+      : null;
+
+    return {
+      workspaceId: updated.workspaceId,
+      workspaceInvitePolicy: updated.workspaceInvitePolicy,
+      workspaceInviteDomains: domains,
+    };
+  }
+
+  /**
+   * Suggest workspaces for a user based on their email domain
+   * Returns workspaces with whitelisted or protected policies that match the user's domain
+   * Used when user has no workspaces
+   * Returns empty array for users with disposable email addresses
+   */
+  async suggestWorkspaces(
+    userEmail: string,
+    userId: string,
+    page: number = 1,
+    perPage: number = 5
+  ) {
+    // Don't suggest workspaces to users with disposable email addresses
+    if (isDisposableEmail(userEmail)) {
+      return {
+        workspaces: [],
+        pagination: {
+          page,
+          perPage,
+          total: 0,
+          totalPages: 0,
+          hasMore: false,
+        },
+      };
+    }
+
+    // Extract domain from email
+    const emailDomain = userEmail.split('@')[1]?.toLowerCase();
+    if (!emailDomain) {
+      return {
+        workspaces: [],
+        pagination: {
+          page,
+          perPage,
+          total: 0,
+          totalPages: 0,
+          hasMore: false,
+        },
+      };
+    }
+
+    const { workspaces, total } = await this.deps.workspaceRepo.findByEmailDomain(
+      emailDomain,
+      userId,
+      page,
+      perPage
+    );
+
+    const totalPages = Math.ceil(total / perPage);
+    const hasMore = page < totalPages;
+
+    return {
+      workspaces: workspaces.map((w) => ({
+        workspaceId: w.workspaceId,
+        workspaceName: w.workspaceName,
+        workspaceInvitePolicy: w.workspaceInvitePolicy,
+        action: (w.workspaceInvitePolicy === 'whitelisted' ? 'join' : 'request') as
+          | 'join'
+          | 'request',
+      })),
+      pagination: {
+        page,
+        perPage,
+        total,
+        totalPages,
+        hasMore,
+      },
+    };
+  }
+
+  /**
+   * Get workspace with invite policy for join flow
+   * Throws WORKSPACE_NOT_FOUND if workspace not found
+   */
+  async getWithInvitePolicy(workspaceId: string) {
+    const workspace = await this.deps.workspaceRepo.findWithInvitePolicyById(workspaceId);
+
+    if (!workspace) {
+      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
+      if (isSoftDeleted === true) {
+        throw new ORPCError('WORKSPACE_GONE', {
+          status: 410,
+          message: 'Workspace has been deleted',
+        });
+      }
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
+    }
+
+    // Parse comma-separated domains into array
+    const domains = workspace.workspaceInviteDomains
+      ? workspace.workspaceInviteDomains.split(',').map((d: string) => d.trim().toLowerCase())
+      : null;
+
+    return {
+      ...workspace,
+      workspaceInviteDomains: domains,
+    };
   }
 }

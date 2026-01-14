@@ -147,6 +147,29 @@ export class WorkspaceMemberRepository {
   }
 
   /**
+   * Find all owners of a workspace with their email addresses
+   * Used for sending notifications to workspace owners
+   */
+  async findOwnersByWorkspace(workspaceId: string) {
+    const owners = await this.db
+      .select({
+        userId: workspaceMembers.userId,
+        email: user.email,
+      })
+      .from(workspaceMembers)
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.workspaceRole, 'owner'),
+          eq(workspaceMembers.isDeleted, false)
+        )
+      );
+
+    return owners;
+  }
+
+  /**
    * Find member by ID
    */
   async findById(memberId: string) {

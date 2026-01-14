@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   WorkspaceRoleSchema,
+  WorkspaceInvitePolicySchema,
   DomainStatusSchema,
   PaginationMetaSchema,
   SortDirectionSchema,
@@ -12,6 +13,8 @@ import {
   WORKSPACE_MEMBERS_PAGINATION,
   DOMAIN_PAGINATION,
   SEARCH_PAGINATION,
+  WORKSPACE_SUGGESTIONS_PAGINATION,
+  MAX_EMAIL_DOMAINS,
 } from '../constants';
 
 /**
@@ -597,4 +600,170 @@ export const WorkspaceSearchQuerySchema = z.object({
  */
 export const WorkspaceSearchDataSchema = z.object({
   results: z.array(z.unknown()),
+});
+
+/**
+ * Workspace invite policy settings schema
+ */
+export const WorkspaceInvitePolicySettingsSchema = z.object({
+  workspaceInvitePolicy: WorkspaceInvitePolicySchema,
+  workspaceInviteDomains: z.array(z.string()).nullable(),
+});
+
+/**
+ * Get workspace invite policy request (detailed mode)
+ */
+export const GetInvitePolicySchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+});
+
+/**
+ * Get workspace invite policy response
+ */
+export const InvitePolicyDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceInvitePolicy: WorkspaceInvitePolicySchema,
+  workspaceInviteDomains: z.array(z.string()).nullable(),
+});
+
+/**
+ * Update workspace invite policy request (detailed mode)
+ */
+export const UpdateInvitePolicySchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    workspaceInvitePolicy: WorkspaceInvitePolicySchema,
+    workspaceInviteDomains: z
+      .array(z.string().toLowerCase().trim())
+      .max(MAX_EMAIL_DOMAINS, `Maximum ${MAX_EMAIL_DOMAINS} email domains allowed per workspace`)
+      .nullable()
+      .optional(),
+  }),
+});
+
+/**
+ * Update workspace invite policy response
+ */
+export const InvitePolicyUpdateDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceInvitePolicy: WorkspaceInvitePolicySchema,
+  workspaceInviteDomains: z.array(z.string()).nullable(),
+});
+
+/**
+ * Suggested workspace item for users without workspaces
+ */
+export const SuggestedWorkspaceItemSchema = z.object({
+  workspaceId: z.string(),
+  workspaceName: z.string(),
+  workspaceInvitePolicy: WorkspaceInvitePolicySchema,
+  // Action the user can take: 'join' for whitelisted, 'request' for protected
+  action: z.enum(['join', 'request']),
+});
+
+/**
+ * Suggest workspaces query parameters
+ */
+export const SuggestWorkspacesQuerySchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().positive().optional().default(1),
+    per_page: z.coerce
+      .number()
+      .int()
+      .min(WORKSPACE_SUGGESTIONS_PAGINATION.MIN_PER_PAGE)
+      .max(WORKSPACE_SUGGESTIONS_PAGINATION.MAX_PER_PAGE)
+      .optional()
+      .default(WORKSPACE_SUGGESTIONS_PAGINATION.DEFAULT_PER_PAGE),
+  }),
+});
+
+/**
+ * Suggest workspaces response
+ */
+export const SuggestWorkspacesDataSchema = z.object({
+  workspaces: z.array(SuggestedWorkspaceItemSchema),
+  pagination: PaginationMetaSchema,
+});
+
+/**
+ * Join workspace request (detailed mode)
+ */
+export const JoinWorkspaceSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+});
+
+/**
+ * Join workspace response
+ */
+export const JoinWorkspaceDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceName: z.string(),
+  // Status: 'joined' if user was added, 'requested' if access request was sent
+  status: z.enum(['joined', 'requested']),
+});
+
+/**
+ * Validate access request schema (via token in query)
+ */
+export const ValidateAccessRequestSchema = z.object({
+  query: z.object({
+    token: z.string().min(1),
+  }),
+});
+
+/**
+ * Validate access request response - contains details for the review page
+ */
+export const ValidateAccessRequestDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceName: z.string(),
+  requesterUserId: z.string(),
+  requesterEmail: z.string(),
+  requesterName: z.string().nullable(),
+});
+
+/**
+ * Approve access request schema (via token in body)
+ */
+export const ApproveAccessRequestSchema = z.object({
+  body: z.object({
+    token: z.string().min(1),
+  }),
+});
+
+/**
+ * Approve access request response
+ */
+export const ApproveAccessRequestDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceName: z.string(),
+  userId: z.string(),
+  userEmail: z.string(),
+  status: z.literal('approved'),
+});
+
+/**
+ * Decline access request schema (via token in body)
+ */
+export const DeclineAccessRequestSchema = z.object({
+  body: z.object({
+    token: z.string().min(1),
+  }),
+});
+
+/**
+ * Decline access request response
+ */
+export const DeclineAccessRequestDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceName: z.string(),
+  userId: z.string(),
+  userEmail: z.string(),
+  status: z.literal('declined'),
 });

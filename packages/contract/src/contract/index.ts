@@ -90,6 +90,8 @@ export const workspaceContract = {
   updateName: workspace.updateWorkspaceName,
   delete: workspace.deleteWorkspace,
   search: workspace.workspaceSearch,
+  suggest: workspace.suggestWorkspaces,
+  join: workspace.joinWorkspace,
 
   preferences: {
     get: workspace.getWorkspacePreferences,
@@ -113,6 +115,17 @@ export const workspaceContract = {
     rotate: workspace.rotateInviteToken,
     send: workspace.sendWorkspaceInvites,
     accept: workspace.acceptInvite,
+  },
+
+  invitePolicy: {
+    get: workspace.getInvitePolicy,
+    update: workspace.updateInvitePolicy,
+  },
+
+  accessRequest: {
+    validate: workspace.validateAccessRequest,
+    approve: workspace.approveAccessRequest,
+    decline: workspace.declineAccessRequest,
   },
 
   domains: {

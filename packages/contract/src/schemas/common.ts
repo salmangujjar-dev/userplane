@@ -39,6 +39,15 @@ export const WORKSPACE_ROLE_VALUES = ['owner', 'admin', 'member'] as const;
 export type WorkspaceRole = (typeof WORKSPACE_ROLE_VALUES)[number];
 
 /**
+ * Workspace invite policy values
+ * - private: Not discoverable, only explicit invites work
+ * - whitelisted: Discoverable, matching domains can join directly
+ * - protected: Discoverable, matching domains can request access (owner approval required)
+ */
+export const WORKSPACE_INVITE_POLICY_VALUES = ['private', 'whitelisted', 'protected'] as const;
+export type WorkspaceInvitePolicy = (typeof WORKSPACE_INVITE_POLICY_VALUES)[number];
+
+/**
  * Link provider integration values
  */
 export const LINK_PROVIDER_TYPE_VALUES = [
@@ -163,6 +172,12 @@ export const DomainStatusSchema = z.enum(DOMAIN_STATUS_VALUES);
  * Synced with database: WORKSPACE_ROLE_VALUES
  */
 export const WorkspaceRoleSchema = z.enum(WORKSPACE_ROLE_VALUES);
+
+/**
+ * Workspace invite policy enum
+ * Synced with database: WORKSPACE_INVITE_POLICY_VALUES
+ */
+export const WorkspaceInvitePolicySchema = z.enum(WORKSPACE_INVITE_POLICY_VALUES);
 
 /**
  * Link provider type enum

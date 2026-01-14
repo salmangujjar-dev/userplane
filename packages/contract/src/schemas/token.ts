@@ -80,6 +80,22 @@ export const DomainVerificationTokenPayloadSchema = z.object({
 });
 
 /**
+ * Access request token payload
+ * Used to approve/decline workspace access requests
+ * Short keys used to minimize JWT token length
+ * Token is owner-specific: only the owner who received the email can use it
+ */
+export const AccessRequestTokenPayloadSchema = z.object({
+  iss: z.string(), // Issuer
+  wi: z.string(), // workspaceId
+  oi: z.string(), // ownerId (workspace owner user id who can approve/decline)
+  ui: z.string(), // userId (requester)
+  ue: z.string(), // userEmail (requester)
+  iat: z.number(), // Issued at
+  exp: z.number(), // Expiry
+});
+
+/**
  * TypeScript types for JWT payloads
  */
 export type SessionPreferences = z.infer<typeof SessionPreferencesSchema>;
@@ -87,6 +103,7 @@ export type SessionTokenPayload = z.infer<typeof SessionTokenPayloadSchema>;
 export type UploadTokenPayload = z.infer<typeof UploadTokenPayloadSchema>;
 export type InviteTokenPayload = z.infer<typeof InviteTokenPayloadSchema>;
 export type DomainVerificationTokenPayload = z.infer<typeof DomainVerificationTokenPayloadSchema>;
+export type AccessRequestTokenPayload = z.infer<typeof AccessRequestTokenPayloadSchema>;
 
 /**
  * Presigned URL info for file uploads

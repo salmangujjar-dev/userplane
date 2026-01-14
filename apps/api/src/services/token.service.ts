@@ -5,7 +5,11 @@
 
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { env } from '@/api/env';
-import type { InviteTokenPayload, DomainVerificationTokenPayload } from '@/api/types';
+import type {
+  InviteTokenPayload,
+  DomainVerificationTokenPayload,
+  AccessRequestTokenPayload,
+} from '@/api/types';
 
 export class TokenService {
   private jwtSecret: string;
@@ -83,6 +87,56 @@ export class TokenService {
       const payload = jwt.verify(token, this.domainVerificationSecret, {
         algorithms: ['HS256'],
       }) as DomainVerificationTokenPayload;
+      // Verify issuer
+      if (payload.iss !== this.jwtIssuer) {
+        return null;
+      }
+      return payload;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Generate access request URL for workspace access requests
+   * Token expires in 7 days and contains workspace ID, owner ID, user ID, and user email
+   * Each owner gets a unique token that only they can use
+   * URL points to dashboard app where owner can review and approve/decline
+   */
+  generateAccessRequestUrl(
+    workspaceId: string,
+    ownerId: string,
+    userId: string,
+    userEmail: string
+  ): string {
+    const payload: Omit<AccessRequestTokenPayload, 'iss' | 'iat' | 'exp'> = {
+      wi: workspaceId,
+      oi: ownerId,
+      ui: userId,
+      ue: userEmail,
+    };
+
+    const fullPayload: AccessRequestTokenPayload = {
+      iss: this.jwtIssuer,
+      ...payload,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+    };
+
+    const token = jwt.sign(fullPayload, this.jwtSecret, { algorithm: 'HS256' });
+
+    return `${this.appUrl}/workspace/request?token=${token}`;
+  }
+
+  /**
+   * Verify and decode access request JWT
+   * Returns payload if valid, null if invalid or expired
+   */
+  verifyAccessRequestToken(token: string): AccessRequestTokenPayload | null {
+    try {
+      const payload = jwt.verify(token, this.jwtSecret, {
+        algorithms: ['HS256'],
+      }) as AccessRequestTokenPayload;
       // Verify issuer
       if (payload.iss !== this.jwtIssuer) {
         return null;
