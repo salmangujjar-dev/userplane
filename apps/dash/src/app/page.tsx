@@ -8,41 +8,49 @@ import { Loader2 } from 'lucide-react';
 /**
  * Root page that intelligently redirects users based on their workspace membership
  * - If user has workspaces: redirects to the first available workspace
- * - If user has no workspaces: redirects to workspace creation page
+ * - If user has no workspaces: redirects to /workspace/suggest
+ *
+ * The /workspace/suggest page handles showing suggestions and redirecting to
+ * /workspace/create if no suggestions are available
  *
  * This route is authenticated by middleware, ensuring only logged-in users reach here
  */
 export default function RootPage() {
   const router = useRouter();
+
   const {
     data: workspacesData,
-    isLoading,
-    isError,
+    isLoading: isLoadingWorkspaces,
+    isError: isWorkspacesError,
   } = useWorkspaces({
     page: 1,
     perPage: 1,
   });
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoadingWorkspaces) return;
 
-    if (isError || !workspacesData || !workspacesData.success) {
-      router.push('/workspace/create');
+    // If error or no workspaces, redirect to suggest page
+    if (isWorkspacesError || !workspacesData || !workspacesData.success) {
+      router.push('/workspace/suggest');
       return;
     }
 
+    // If user has workspaces, redirect to first one
     if (workspacesData.data.workspaces && workspacesData.data.workspaces.length > 0) {
       const firstWorkspace = workspacesData.data.workspaces[0];
       if (firstWorkspace) {
         router.push(`/${firstWorkspace.workspaceId}`);
       } else {
-        router.push('/workspace/create');
+        router.push('/workspace/suggest');
       }
     } else {
-      router.push('/workspace/create');
+      // No workspaces, redirect to suggest page
+      router.push('/workspace/suggest');
     }
-  }, [workspacesData, isLoading, isError, router]);
+  }, [workspacesData, isLoadingWorkspaces, isWorkspacesError, router]);
 
+  // Show loading while checking workspaces
   return (
     <div className="flex h-screen items-center justify-center">
       <div className="flex flex-col items-center gap-4">
