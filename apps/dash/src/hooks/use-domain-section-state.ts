@@ -1,0 +1,268 @@
+'use client';
+
+import { useReducer, useCallback } from 'react';
+import { toast } from '@workspace/ui/components/sonner';
+import { apiClient } from '@/client';
+import { useWorkspaceId } from '@/stores/workspace';
+import {
+  type DomainSettings,
+  type DomainIdentifier,
+  type ConfiguringDomain,
+  type DomainStatus,
+  DEFAULT_DOMAIN_SETTINGS,
+  transformApiPreferencesToSettings,
+} from '@/lib/types/domain';
+import type { VerificationStep } from './use-verification-flow';
+
+// Combined state for all domain section interactions
+interface DomainSectionState {
+  // Create modal
+  showCreateModal: boolean;
+
+  // Verification flow
+  verifyingDomain: DomainIdentifier | null;
+  verificationStep: VerificationStep;
+  verificationSuccess: boolean;
+  verifyingDomainSettings: DomainSettings;
+
+  // Edit modal
+  editingDomain: DomainIdentifier | null;
+  isEditModalOpen: boolean;
+
+  // Configure modal
+  configuringDomain: ConfiguringDomain | null;
+  loadingConfigureId: string | null;
+
+  // Delete modal
+  deletingDomain: DomainIdentifier | null;
+}
+
+// Action types
+type DomainSectionAction =
+  // Create modal actions
+  | { type: 'OPEN_CREATE_MODAL' }
+  | { type: 'CLOSE_CREATE_MODAL' }
+
+  // Verification flow actions
+  | { type: 'START_VERIFY'; payload: DomainIdentifier }
+  | { type: 'SET_VERIFICATION_STEP'; payload: VerificationStep }
+  | { type: 'VERIFICATION_SUCCESS'; payload: DomainSettings }
+  | { type: 'VERIFICATION_FAILED' }
+  | { type: 'UPDATE_VERIFYING_SETTINGS'; payload: DomainSettings }
+  | { type: 'CLOSE_VERIFICATION' }
+  | { type: 'REVERIFY' }
+
+  // Edit modal actions
+  | { type: 'OPEN_EDIT_MODAL'; payload: DomainIdentifier }
+  | { type: 'CLOSE_EDIT_MODAL' }
+
+  // Configure modal actions
+  | { type: 'START_CONFIGURE'; payload: string }
+  | { type: 'SET_CONFIGURING_DOMAIN'; payload: ConfiguringDomain }
+  | { type: 'UPDATE_CONFIGURE_SETTINGS'; payload: DomainSettings }
+  | { type: 'CLOSE_CONFIGURE_MODAL' }
+  | { type: 'CONFIGURE_LOADING_DONE' }
+
+  // Delete modal actions
+  | { type: 'OPEN_DELETE_MODAL'; payload: DomainIdentifier }
+  | { type: 'CLOSE_DELETE_MODAL' }
+  | { type: 'DELETE_SUCCESS' };
+
+const initialState: DomainSectionState = {
+  showCreateModal: false,
+  verifyingDomain: null,
+  verificationStep: null,
+  verificationSuccess: true,
+  verifyingDomainSettings: { ...DEFAULT_DOMAIN_SETTINGS },
+  editingDomain: null,
+  isEditModalOpen: false,
+  configuringDomain: null,
+  loadingConfigureId: null,
+  deletingDomain: null,
+};
+
+function domainSectionReducer(
+  state: DomainSectionState,
+  action: DomainSectionAction
+): DomainSectionState {
+  switch (action.type) {
+    // Create modal
+    case 'OPEN_CREATE_MODAL':
+      return { ...state, showCreateModal: true };
+    case 'CLOSE_CREATE_MODAL':
+      return { ...state, showCreateModal: false };
+
+    // Verification flow
+    case 'START_VERIFY':
+      return {
+        ...state,
+        verifyingDomain: action.payload,
+        verificationStep: 'pre',
+        verificationSuccess: true,
+      };
+    case 'SET_VERIFICATION_STEP':
+      return { ...state, verificationStep: action.payload };
+    case 'VERIFICATION_SUCCESS':
+      return {
+        ...state,
+        verificationStep: 'post',
+        verificationSuccess: true,
+        verifyingDomainSettings: action.payload,
+      };
+    case 'VERIFICATION_FAILED':
+      return {
+        ...state,
+        verificationStep: 'post',
+        verificationSuccess: false,
+      };
+    case 'UPDATE_VERIFYING_SETTINGS':
+      return { ...state, verifyingDomainSettings: action.payload };
+    case 'CLOSE_VERIFICATION':
+      return {
+        ...state,
+        verifyingDomain: null,
+        verificationStep: null,
+        verificationSuccess: true,
+        verifyingDomainSettings: { ...DEFAULT_DOMAIN_SETTINGS },
+      };
+    case 'REVERIFY':
+      return { ...state, verificationStep: 'pre' };
+
+    // Edit modal
+    case 'OPEN_EDIT_MODAL':
+      return { ...state, editingDomain: action.payload, isEditModalOpen: true };
+    case 'CLOSE_EDIT_MODAL':
+      return { ...state, editingDomain: null, isEditModalOpen: false };
+
+    // Configure modal
+    case 'START_CONFIGURE':
+      return { ...state, loadingConfigureId: action.payload };
+    case 'SET_CONFIGURING_DOMAIN':
+      return { ...state, configuringDomain: action.payload, loadingConfigureId: null };
+    case 'UPDATE_CONFIGURE_SETTINGS':
+      return state.configuringDomain
+        ? { ...state, configuringDomain: { ...state.configuringDomain, settings: action.payload } }
+        : state;
+    case 'CLOSE_CONFIGURE_MODAL':
+      return { ...state, configuringDomain: null };
+    case 'CONFIGURE_LOADING_DONE':
+      return { ...state, loadingConfigureId: null };
+
+    // Delete modal
+    case 'OPEN_DELETE_MODAL':
+      return { ...state, deletingDomain: action.payload };
+    case 'CLOSE_DELETE_MODAL':
+      return { ...state, deletingDomain: null };
+    case 'DELETE_SUCCESS':
+      return { ...state, deletingDomain: null, configuringDomain: null };
+
+    default:
+      return state;
+  }
+}
+
+export function useDomainSectionState() {
+  const workspaceId = useWorkspaceId();
+  const [state, dispatch] = useReducer(domainSectionReducer, initialState);
+
+  // Create modal handlers
+  const openCreateModal = useCallback(() => dispatch({ type: 'OPEN_CREATE_MODAL' }), []);
+  const closeCreateModal = useCallback(() => dispatch({ type: 'CLOSE_CREATE_MODAL' }), []);
+
+  // Verification flow handlers
+  const startVerify = useCallback(
+    (domain: DomainIdentifier) => dispatch({ type: 'START_VERIFY', payload: domain }),
+    []
+  );
+  const setVerificationStep = useCallback(
+    (step: VerificationStep) => dispatch({ type: 'SET_VERIFICATION_STEP', payload: step }),
+    []
+  );
+  const setVerificationSuccess = useCallback(
+    (settings: DomainSettings) => dispatch({ type: 'VERIFICATION_SUCCESS', payload: settings }),
+    []
+  );
+  const setVerificationFailed = useCallback(() => dispatch({ type: 'VERIFICATION_FAILED' }), []);
+  const updateVerifyingSettings = useCallback(
+    (settings: DomainSettings) =>
+      dispatch({ type: 'UPDATE_VERIFYING_SETTINGS', payload: settings }),
+    []
+  );
+  const closeVerification = useCallback(() => dispatch({ type: 'CLOSE_VERIFICATION' }), []);
+  const reverify = useCallback(() => dispatch({ type: 'REVERIFY' }), []);
+
+  // Edit modal handlers
+  const openEditModal = useCallback(
+    (domain: DomainIdentifier) => dispatch({ type: 'OPEN_EDIT_MODAL', payload: domain }),
+    []
+  );
+  const closeEditModal = useCallback(() => dispatch({ type: 'CLOSE_EDIT_MODAL' }), []);
+
+  // Configure modal handlers
+  const openConfigureModal = useCallback(
+    async (domainId: string, domainUrl: string, status: DomainStatus) => {
+      if (!workspaceId) return;
+
+      dispatch({ type: 'START_CONFIGURE', payload: domainId });
+
+      try {
+        const [error, response] = await apiClient.workspace.domains.preferences.get({
+          params: { workspaceId, domainId },
+        });
+
+        if (error) throw error;
+
+        const settings = transformApiPreferencesToSettings(response.data);
+        dispatch({
+          type: 'SET_CONFIGURING_DOMAIN',
+          payload: { domainId, url: domainUrl, status, settings },
+        });
+      } catch {
+        toast.error('Failed to load domain settings');
+        // Fall back to default settings
+        dispatch({
+          type: 'SET_CONFIGURING_DOMAIN',
+          payload: { domainId, url: domainUrl, status, settings: { ...DEFAULT_DOMAIN_SETTINGS } },
+        });
+      }
+    },
+    [workspaceId]
+  );
+  const updateConfigureSettings = useCallback(
+    (settings: DomainSettings) =>
+      dispatch({ type: 'UPDATE_CONFIGURE_SETTINGS', payload: settings }),
+    []
+  );
+  const closeConfigureModal = useCallback(() => dispatch({ type: 'CLOSE_CONFIGURE_MODAL' }), []);
+
+  // Delete modal handlers
+  const openDeleteModal = useCallback(
+    (domain: DomainIdentifier) => dispatch({ type: 'OPEN_DELETE_MODAL', payload: domain }),
+    []
+  );
+  const closeDeleteModal = useCallback(() => dispatch({ type: 'CLOSE_DELETE_MODAL' }), []);
+  const onDeleteSuccess = useCallback(() => dispatch({ type: 'DELETE_SUCCESS' }), []);
+
+  return {
+    state,
+    actions: {
+      openCreateModal,
+      closeCreateModal,
+      startVerify,
+      setVerificationStep,
+      setVerificationSuccess,
+      setVerificationFailed,
+      updateVerifyingSettings,
+      closeVerification,
+      reverify,
+      openEditModal,
+      closeEditModal,
+      openConfigureModal,
+      updateConfigureSettings,
+      closeConfigureModal,
+      openDeleteModal,
+      closeDeleteModal,
+      onDeleteSuccess,
+    },
+  };
+}
