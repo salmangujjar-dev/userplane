@@ -6,6 +6,7 @@ import { WorkspaceSection } from './workspace-section';
 import { RecordingLinkSection } from './recording-link-section';
 import { WorkspacePlanSection } from './workspace-plan-section';
 import { TeamSection } from './team-section';
+import { InvitePolicySection } from './invite-policy-section';
 import { IntegrationsSection } from './integrations-section';
 import { DomainsSection } from './domains-section';
 import { ProjectsSection } from './projects-section';
@@ -34,6 +35,7 @@ export function SettingsTab() {
 
         <TabsContent value="team" className="space-y-8">
           <TeamSection />
+          <InvitePolicySection />
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-8">

@@ -232,6 +232,158 @@ interface LeaveWorkspaceData {
   left: boolean;
 }
 
+type WorkspaceInvitePolicy = 'private' | 'whitelisted' | 'protected';
+
+interface InvitePolicyData {
+  workspaceId: string;
+  workspaceInvitePolicy: WorkspaceInvitePolicy;
+  workspaceInviteDomains: string[] | null;
+}
+
+type InvitePolicyQueryData = SafeResult<InvitePolicyData>;
+
+export function useUpdateInvitePolicy(options?: { onError?: () => void; onSuccess?: () => void }) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    SafeResult<InvitePolicyData>,
+    Error,
+    { workspaceId: string; policy: WorkspaceInvitePolicy; domains?: string[] | null },
+    { previousPolicy: InvitePolicyQueryData | undefined }
+  >({
+    mutationFn: async ({ workspaceId, policy, domains }) => {
+      const [error, response] = await apiClient.workspace.invitePolicy.update({
+        params: { workspaceId },
+        body: {
+          workspaceInvitePolicy: policy,
+          workspaceInviteDomains: domains,
+        },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onMutate: async ({ workspaceId, policy, domains }) => {
+      await queryClient.cancelQueries({ queryKey: ['workspace-invite-policy', workspaceId] });
+
+      const previousPolicy = queryClient.getQueryData<InvitePolicyQueryData>([
+        'workspace-invite-policy',
+        workspaceId,
+      ]);
+
+      queryClient.setQueryData<InvitePolicyQueryData>(
+        ['workspace-invite-policy', workspaceId],
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              workspaceInvitePolicy: policy,
+              workspaceInviteDomains: domains ?? old.data.workspaceInviteDomains,
+            },
+          };
+        }
+      );
+
+      return { previousPolicy };
+    },
+    onSuccess: (result, variables, context) => {
+      if (!result.success) {
+        if (context?.previousPolicy) {
+          queryClient.setQueryData(
+            ['workspace-invite-policy', variables.workspaceId],
+            context.previousPolicy
+          );
+        }
+        handleApiError(result.error, 'Failed to update invite policy');
+        options?.onError?.();
+        return;
+      }
+      toast.success('Invite policy updated');
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown, variables, context) => {
+      if (context?.previousPolicy) {
+        queryClient.setQueryData(
+          ['workspace-invite-policy', variables.workspaceId],
+          context.previousPolicy
+        );
+      }
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+      options?.onError?.();
+    },
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-invite-policy', variables.workspaceId],
+      });
+    },
+  });
+}
+
+interface JoinWorkspaceData {
+  workspaceId: string;
+  workspaceName: string;
+  status: 'joined' | 'requested';
+}
+
+export function useJoinWorkspace(options?: {
+  onSuccess?: (status: 'joined' | 'requested') => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<SafeResult<JoinWorkspaceData>, Error, string>({
+    mutationFn: async (workspaceId: string) => {
+      const [error, response] = await apiClient.workspace.join({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        if (isErrorCode(result.error, 'WORKSPACE_MEMBER_ALREADY_EXISTS')) {
+          toast.info('You are already a member of this workspace');
+          return;
+        }
+        if (isErrorCode(result.error, 'WORKSPACE_INVITE_POLICY_PRIVATE')) {
+          toast.error('This workspace is private', {
+            description: 'You need an invitation to join this workspace.',
+          });
+          return;
+        }
+        if (isErrorCode(result.error, 'WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH')) {
+          toast.error('Domain not allowed', {
+            description: 'Your email domain is not allowed to join this workspace.',
+          });
+          return;
+        }
+        handleApiError(result.error, 'Failed to join workspace');
+        return;
+      }
+
+      if (result.data.status === 'joined') {
+        toast.success('Joined workspace successfully', {
+          description: `You are now a member of ${result.data.workspaceName}`,
+        });
+        // Invalidate workspaces list to include the new workspace
+        queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      } else {
+        toast.success('Access request sent', {
+          description: 'The workspace owner will be notified of your request.',
+        });
+      }
+      // Invalidate suggestions since we've joined/requested
+      queryClient.invalidateQueries({ queryKey: ['workspace-suggestions'] });
+      options?.onSuccess?.(result.data.status);
+    },
+    onError: (error: unknown) => {
+      toast.error('An unexpected error occurred', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    },
+  });
+}
+
 export function useLeaveWorkspace(
   currentWorkspaceId: string | null,
   workspaces: Array<{ workspaceId: string; workspaceName: string }>,
