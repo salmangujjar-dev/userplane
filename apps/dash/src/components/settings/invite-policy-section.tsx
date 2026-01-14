@@ -18,6 +18,7 @@ import { SectionError } from '@/components/shared/section-error';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { AddEmailDomainModal } from '@/components/modals/add-email-domain-modal';
 import { MAX_EMAIL_DOMAINS } from '@workspace/contract';
+import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
 
 const POLICY_OPTIONS = [
   {
@@ -53,6 +54,7 @@ export function InvitePolicySection() {
   const workspaceId = useWorkspaceId();
   const { data: policyResult, isLoading, error, refetch } = useInvitePolicy();
   const updatePolicyMutation = useUpdateInvitePolicy();
+  const { canEdit, isLoading: isLoadingRole } = useCanEditWorkspace();
 
   const [policy, setPolicy] = useState<WorkspaceInvitePolicy>('private');
   const [domains, setDomains] = useState<string[]>([]);
@@ -107,7 +109,7 @@ export function InvitePolicySection() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingRole) {
     return (
       <div>
         <div className="mb-4">
@@ -168,7 +170,7 @@ export function InvitePolicySection() {
         <div className="space-y-2">
           <Label>Invite Policy</Label>
           <p className="text-sm text-muted-foreground">Manage invite policy for your workspace</p>
-          <Select value={policy} onValueChange={handlePolicyChange}>
+          <Select value={policy} onValueChange={handlePolicyChange} disabled={!canEdit}>
             <SelectTrigger className="w-full max-w-xs">
               <SelectValue placeholder="Select policy" />
             </SelectTrigger>
@@ -205,7 +207,7 @@ export function InvitePolicySection() {
             {domains.map((domain) => (
               <div
                 key={domain}
-                className="flex items-center justify-between p-6 rounded-xl border bg-card"
+                className={`flex items-center justify-between p-6 rounded-xl border bg-card ${!canEdit ? 'opacity-50' : ''}`}
               >
                 <div className="flex items-center gap-3">
                   <Globe className="h-4 w-4 text-muted-foreground" />
@@ -216,6 +218,7 @@ export function InvitePolicySection() {
                   size="sm"
                   className="h-8 w-8 p-0 hover:text-destructive"
                   onClick={() => handleRemoveDomain(domain)}
+                  disabled={!canEdit}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -223,14 +226,16 @@ export function InvitePolicySection() {
             ))}
 
             {/* Add Domain Button */}
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setShowAddDomainModal(true)}
-              disabled={isMaxDomainsReached}
-            >
-              {isMaxDomainsReached ? 'Maximum domains reached' : 'Add email domain'}
-            </Button>
+            {canEdit && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowAddDomainModal(true)}
+                disabled={isMaxDomainsReached}
+              >
+                {isMaxDomainsReached ? 'Maximum domains reached' : 'Add email domain'}
+              </Button>
+            )}
 
             <AddEmailDomainModal
               open={showAddDomainModal}
@@ -242,7 +247,7 @@ export function InvitePolicySection() {
         )}
 
         {/* Save/Cancel Buttons */}
-        {hasChanges && (
+        {hasChanges && canEdit && (
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={updatePolicyMutation.isPending || needsDomains}>
               {updatePolicyMutation.isPending ? 'Saving...' : 'Save Changes'}
