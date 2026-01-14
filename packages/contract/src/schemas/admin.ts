@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PLAN_IDS } from '@workspace/pricing';
+import { EmailSchema } from './common';
 
 /**
  * Admin schemas for user management
@@ -473,3 +474,74 @@ export type AdminWorkspaceRecordingStats = z.infer<typeof AdminWorkspaceRecordin
 export type AdminGetWorkspaceRecordingStatsInput = z.infer<
   typeof AdminGetWorkspaceRecordingStatsInputSchema
 >;
+
+// ============================================
+// ADMIN PROVISIONING SCHEMAS
+// ============================================
+
+/**
+ * Admin provision workspace member input
+ */
+export const AdminProvisionMemberSchema = z.object({
+  email: EmailSchema,
+  name: z.string().min(1, 'Name is required').max(255),
+  role: z.enum(['admin', 'member']).default('member'),
+});
+
+/**
+ * Admin provision workspace input
+ */
+export const AdminProvisionWorkspaceInputSchema = z.object({
+  body: z.object({
+    owner: z.object({
+      email: EmailSchema,
+      name: z.string().min(1, 'Name is required').max(255),
+    }),
+    workspace: z.object({
+      name: z.string().min(1, 'Workspace name is required').max(255),
+      url: z.string().url('Invalid URL'),
+      plan: z.enum(PLAN_IDS).optional().default('early_bird_monthly'),
+    }),
+    members: z.array(AdminProvisionMemberSchema).optional().default([]),
+  }),
+});
+
+/**
+ * Admin provision workspace owner response
+ */
+export const AdminProvisionOwnerSchema = z.object({
+  userId: z.string(),
+  email: z.string(),
+  name: z.string(),
+  isNew: z.boolean(),
+});
+
+/**
+ * Admin provision workspace member response
+ */
+export const AdminProvisionMemberResponseSchema = z.object({
+  userId: z.string(),
+  email: z.string(),
+  name: z.string(),
+  role: z.enum(['admin', 'member']),
+  isNew: z.boolean(),
+});
+
+/**
+ * Admin provision workspace response data
+ */
+export const AdminProvisionWorkspaceDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceName: z.string(),
+  owner: AdminProvisionOwnerSchema,
+  members: z.array(AdminProvisionMemberResponseSchema),
+});
+
+/**
+ * Types - Provisioning
+ */
+export type AdminProvisionMember = z.infer<typeof AdminProvisionMemberSchema>;
+export type AdminProvisionWorkspaceInput = z.infer<typeof AdminProvisionWorkspaceInputSchema>;
+export type AdminProvisionOwner = z.infer<typeof AdminProvisionOwnerSchema>;
+export type AdminProvisionMemberResponse = z.infer<typeof AdminProvisionMemberResponseSchema>;
+export type AdminProvisionWorkspaceData = z.infer<typeof AdminProvisionWorkspaceDataSchema>;

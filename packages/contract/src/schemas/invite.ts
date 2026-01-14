@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EmailSchema } from './common';
 
 /**
  * Invite schemas
@@ -12,7 +13,7 @@ import { z } from 'zod';
 export const SendInvitesSchema = z.object({
   body: z.object({
     workspaceId: z.string(),
-    emails: z.array(z.string().email()).min(1).max(10),
+    emails: z.array(EmailSchema).min(1).max(10),
   }),
 });
 
@@ -24,7 +25,7 @@ export const SendWorkspaceInvitesSchema = z.object({
     workspaceId: z.string(),
   }),
   body: z.object({
-    emails: z.array(z.string().email()).min(1).max(10),
+    emails: z.array(EmailSchema).min(1).max(10),
   }),
 });
 
