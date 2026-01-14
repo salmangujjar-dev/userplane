@@ -68,6 +68,7 @@ interface EnvConfig {
       notification: string;
       billing: string;
       invite: string;
+      auth: string;
     };
   };
   rateLimit: {
@@ -173,6 +174,7 @@ export function loadEnvConfig(): EnvConfig {
         notification: process.env.EMAIL_NOTIFICATION_INBOX || 'notifications@userplane.io',
         billing: process.env.EMAIL_BILLING_INBOX || 'billing@userplane.io',
         invite: process.env.EMAIL_INVITE_INBOX || 'invites@userplane.io',
+        auth: process.env.EMAIL_AUTH_INBOX || 'auth@userplane.io',
       },
     },
     rateLimit: {
@@ -311,6 +313,7 @@ export function logConfig(): void {
         notification: env.email.inboxes.notification,
         billing: env.email.inboxes.billing,
         invite: env.email.inboxes.invite,
+        auth: env.email.inboxes.auth,
       },
       storage: {
         profile: env.storage.profile,

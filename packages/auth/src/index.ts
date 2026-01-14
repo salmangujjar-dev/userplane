@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { admin } from 'better-auth/plugins';
+import { admin, magicLink } from 'better-auth/plugins';
 import type { DbClient } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
 import { ac, adminRole, csmRole, userRole } from './permissions';
@@ -22,6 +22,17 @@ export interface AdminConfig {
   impersonationSessionDuration?: number;
 }
 
+export interface EmailConfig {
+  /** Function to send verification emails */
+  sendVerificationEmail: (data: {
+    user: { email: string; name: string };
+    url: string;
+    token: string;
+  }) => Promise<void>;
+  /** Function to send magic link emails */
+  sendMagicLink: (data: { email: string; url: string; token: string }) => Promise<void>;
+}
+
 export interface AuthConfig {
   database: DbClient;
   secret: string;
@@ -34,6 +45,7 @@ export interface AuthConfig {
     redirectURI?: string;
   };
   admin?: AdminConfig;
+  email: EmailConfig;
 }
 
 export function createAuth(config: AuthConfig) {
@@ -47,6 +59,25 @@ export function createAuth(config: AuthConfig) {
     secret: config.secret,
     baseURL: config.baseURL,
     trustedOrigins: config.trustedOrigins,
+    // Enable email/password authentication
+    emailAndPassword: {
+      enabled: true,
+      autoSignIn: false, // Don't auto sign in - require email verification first
+      requireEmailVerification: true,
+    },
+    // Enable account linking with Google as trusted provider
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ['google'],
+      },
+    },
+    // Email verification config
+    emailVerification: {
+      sendVerificationEmail: async ({ user, url, token }) => {
+        await config.email.sendVerificationEmail({ user, url, token });
+      },
+    },
     plugins: [
       admin({
         adminUserIds: config.admin?.adminUserIds,
@@ -57,6 +88,12 @@ export function createAuth(config: AuthConfig) {
           csm: csmRole,
           user: userRole,
         },
+      }),
+      magicLink({
+        sendMagicLink: async ({ email, url, token }) => {
+          await config.email.sendMagicLink({ email, url, token });
+        },
+        expiresIn: 60 * 10, // 10 minutes
       }),
     ],
     socialProviders: {

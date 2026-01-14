@@ -1,5 +1,5 @@
 import { createAuthClient } from 'better-auth/client';
-import { adminClient } from 'better-auth/client/plugins';
+import { adminClient, magicLinkClient } from 'better-auth/client/plugins';
 
 // Note: Permission constants and types should be imported from '@workspace/auth/permissions-client'
 // to avoid bundling server-only code in the client
@@ -16,6 +16,7 @@ export function createAuthClientInstance(config: AuthClientConfig) {
       // Client doesn't need access control configuration
       // Permission checks happen server-side
       adminClient(),
+      magicLinkClient(),
     ],
     fetchOptions: {
       credentials: 'include',
