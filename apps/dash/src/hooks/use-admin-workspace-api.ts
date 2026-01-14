@@ -351,3 +351,89 @@ export function useAdminResetInviteToken() {
     },
   });
 }
+
+// ============================================
+// ADMIN WORKSPACE PROVISIONING
+// ============================================
+
+/**
+ * Admin provision workspace input
+ */
+export interface AdminProvisionWorkspaceInput {
+  owner: {
+    email: string;
+    name: string;
+  };
+  workspace: {
+    name: string;
+    url: string;
+    plan?: PlanId;
+  };
+  members?: Array<{
+    email: string;
+    name: string;
+    role: 'admin' | 'member';
+  }>;
+}
+
+/**
+ * Admin provision workspace response
+ */
+export interface AdminProvisionWorkspaceResponse {
+  workspaceId: string;
+  workspaceName: string;
+  owner: {
+    userId: string;
+    email: string;
+    name: string;
+    isNew: boolean;
+  };
+  members: Array<{
+    userId: string;
+    email: string;
+    name: string;
+    role: 'admin' | 'member';
+    isNew: boolean;
+  }>;
+}
+
+/**
+ * Hook for provisioning a workspace on behalf of a user (admin only)
+ * Creates users if they don't exist, creates workspace, and adds members
+ */
+export function useAdminProvisionWorkspace() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    SafeResult<AdminProvisionWorkspaceResponse>,
+    Error,
+    AdminProvisionWorkspaceInput
+  >({
+    mutationFn: async (input) => {
+      const [error, response] = await apiClient.admin.workspaces.provision({
+        body: {
+          owner: input.owner,
+          workspace: input.workspace,
+          members: input.members ?? [],
+        },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        handleApiError(result.error, 'Failed to provision workspace');
+        return;
+      }
+      toast.success('Workspace provisioned successfully', {
+        description: `Created workspace "${result.data.workspaceName}" for ${result.data.owner.email}`,
+      });
+      // Invalidate workspaces list to show the new workspace
+      queryClient.invalidateQueries({ queryKey: ['admin-search-workspaces'] });
+    },
+    onError: (error: unknown) => {
+      toast.error('Failed to provision workspace', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    },
+  });
+}

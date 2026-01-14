@@ -29,6 +29,7 @@ import {
   adminService,
   adminWorkspaceService,
   adminRecordingService,
+  adminProvisioningService,
 } from '@/api/services';
 
 // Implementations
@@ -74,7 +75,8 @@ const statusProcedures = createStatusProcedures();
 const adminProcedures = createAdminProcedures(
   adminService,
   adminWorkspaceService,
-  adminRecordingService
+  adminRecordingService,
+  adminProvisioningService
 );
 const projectProcedures = createProjectProcedures(
   projectService,

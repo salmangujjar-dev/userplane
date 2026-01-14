@@ -47,6 +47,7 @@ import { SessionService } from '@/api/services/session.service';
 import { AdminService } from '@/api/services/admin.service';
 import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import { AdminRecordingService } from '@/api/services/admin-recording.service';
+import { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
 import { env } from '@/api/env';
 
 // Initialize repositories
@@ -155,4 +156,13 @@ export const sessionService = new SessionService({
   networkLogsStorage: getNetworkLogsStorage(),
   clientActionsStorage: getClientActionsStorage(),
   linkService,
+});
+
+// Level 4: Admin services that depend on level 3
+export const adminProvisioningService = new AdminProvisioningService({
+  userRepo,
+  provisionerService,
+  workspaceMemberService,
+  workspaceService,
+  db,
 });

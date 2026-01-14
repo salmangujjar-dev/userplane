@@ -9,6 +9,7 @@ import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
 import type { AdminService } from '@/api/services/admin.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
+import type { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
 import { getPlanName, DEFAULT_PLAN_NAME } from '@workspace/pricing';
 
 /**
@@ -563,13 +564,45 @@ const getWorkspaceMemberRecordingStatsImpl = (
     });
 };
 
+// ============================================
+// WORKSPACE PROVISIONING PROCEDURES
+// ============================================
+
+/**
+ * Provision workspace implementation
+ */
+const provisionWorkspaceImpl = (
+  adminService: AdminService,
+  adminProvisioningService: AdminProvisioningService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized.use(adminMiddleware).admin.workspaces.provision.handler(async ({ input }) => {
+    const result = await adminProvisioningService.provisionWorkspace({
+      owner: input.body.owner,
+      workspace: {
+        name: input.body.workspace.name,
+        url: input.body.workspace.url,
+        plan: input.body.workspace.plan,
+      },
+      members: input.body.members,
+    });
+
+    return {
+      message: 'Workspace provisioned successfully',
+      data: result,
+    };
+  });
+};
+
 /**
  * Create admin procedures
  */
 export const createAdminProcedures = (
   adminService: AdminService,
   adminWorkspaceService: AdminWorkspaceService,
-  adminRecordingService: AdminRecordingService
+  adminRecordingService: AdminRecordingService,
+  adminProvisioningService: AdminProvisioningService
 ) => {
   return {
     users: {
@@ -602,6 +635,7 @@ export const createAdminProcedures = (
         adminService,
         adminRecordingService
       ),
+      provision: provisionWorkspaceImpl(adminService, adminProvisioningService),
     },
   };
 };
