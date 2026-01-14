@@ -1,0 +1,188 @@
+'use client';
+
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import type { VideoMarker } from '../types';
+import { formatTimeCompact } from '../utils/time-format';
+
+interface VideoProgressBarProps {
+  /** Current playback time in seconds */
+  currentTime: number;
+  /** Total duration in seconds */
+  duration: number;
+  /** Timeline markers to display */
+  markers?: VideoMarker[];
+  /** Callback when user seeks to a new time */
+  onSeek: (time: number) => void;
+}
+
+/**
+ * Video progress bar component with scrubbing, markers, and hover tooltip.
+ * Handles all progress bar interactions including drag-to-scrub.
+ */
+export function VideoProgressBar({
+  currentTime,
+  duration,
+  markers = [],
+  onSeek,
+}: VideoProgressBarProps) {
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Hover state
+  const [isHovering, setIsHovering] = useState(false);
+  const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [hoverPosition, setHoverPosition] = useState<number | null>(null);
+  const [activeMarker, setActiveMarker] = useState<VideoMarker | null>(null);
+
+  // Calculate progress percentage
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Calculate time from mouse position
+  const getTimeFromPosition = useCallback(
+    (clientX: number): number => {
+      if (!progressBarRef.current) return 0;
+      const rect = progressBarRef.current.getBoundingClientRect();
+      const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      return percent * duration;
+    },
+    [duration]
+  );
+
+  // Handle click to seek
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const newTime = getTimeFromPosition(e.clientX);
+    onSeek(newTime);
+  };
+
+  // Handle mouse move for hover tooltip
+  const handleProgressMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressBarRef.current) return;
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const time = getTimeFromPosition(e.clientX);
+    setHoverTime(time);
+    setHoverPosition(e.clientX - rect.left);
+
+    // Check if hovering over a marker
+    const hoveredMarker = markers.find((marker) => {
+      const markerPercent = marker.time / duration;
+      const markerPosition = markerPercent * rect.width;
+      return Math.abs(e.clientX - rect.left - markerPosition) < 8;
+    });
+    setActiveMarker(hoveredMarker || null);
+  };
+
+  // Handle mouse down for drag-to-scrub
+  const handleProgressMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    isDraggingRef.current = true;
+    handleProgressClick(e);
+  };
+
+  const handleProgressMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+
+  // Handle mouse enter with tooltip delay clear
+  const handleProgressMouseEnter = () => {
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+      tooltipTimeoutRef.current = null;
+    }
+    setIsHovering(true);
+  };
+
+  // Handle mouse leave with delayed tooltip hide
+  const handleProgressMouseLeave = () => {
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setIsHovering(false);
+      setHoverTime(null);
+      setHoverPosition(null);
+      setActiveMarker(null);
+      tooltipTimeoutRef.current = null;
+    }, 1500);
+  };
+
+  // Global mouse event handlers for drag-to-scrub
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingRef.current) {
+        const newTime = getTimeFromPosition(e.clientX);
+        onSeek(newTime);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isDraggingRef.current = false;
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+      }
+    };
+  }, [getTimeFromPosition, onSeek]);
+
+  return (
+    <div
+      ref={progressBarRef}
+      className="custom-progress-container"
+      onClick={handleProgressClick}
+      onMouseDown={handleProgressMouseDown}
+      onMouseUp={handleProgressMouseUp}
+      onMouseEnter={handleProgressMouseEnter}
+      onMouseLeave={handleProgressMouseLeave}
+      onMouseMove={handleProgressMouseMove}
+    >
+      {/* Progress bar background */}
+      <div className="custom-progress-bar">
+        {/* Played progress */}
+        <div className="custom-progress-played" style={{ width: `${progress}%` }} />
+
+        {/* Hover tooltip */}
+        {isHovering && hoverTime !== null && hoverPosition !== null && (
+          <div className="custom-progress-tooltip" style={{ left: `${hoverPosition}px` }}>
+            {activeMarker ? (
+              <>
+                <div
+                  className="custom-progress-tooltip-marker"
+                  style={{ color: activeMarker.color }}
+                >
+                  {activeMarker.label}
+                </div>
+                <div className="custom-progress-tooltip-time">
+                  {formatTimeCompact(activeMarker.time)}
+                </div>
+              </>
+            ) : (
+              <div className="custom-progress-tooltip-time">{formatTimeCompact(hoverTime)}</div>
+            )}
+          </div>
+        )}
+
+        {/* Markers */}
+        {markers.map((marker, index) => {
+          const markerPosition = duration > 0 ? (marker.time / duration) * 100 : 0;
+          return (
+            <div
+              key={index}
+              className="custom-progress-marker"
+              style={{
+                left: `${markerPosition}%`,
+                backgroundColor: marker.color || '#fbbf24',
+              }}
+              title={marker.label}
+            />
+          );
+        })}
+
+        {/* Progress handle */}
+        <div className="custom-progress-handle" style={{ left: `${progress}%` }} />
+      </div>
+    </div>
+  );
+}
