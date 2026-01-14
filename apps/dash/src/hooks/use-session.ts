@@ -57,6 +57,12 @@ export function useSession() {
   // on the server, but this check only looks at the role field in the user data.
   const isAdmin = user?.role === 'admin';
 
+  // Check if user has CSM role
+  const isCsm = user?.role === 'csm';
+
+  // Check if user has access to admin panel (admin or csm)
+  const hasAdminAccess = isAdmin || isCsm;
+
   // Check if the current session is an impersonation session
   // The impersonatedBy field contains the ID of the admin who started the impersonation
   const impersonatedBy = session?.impersonatedBy ?? null;
@@ -69,6 +75,8 @@ export function useSession() {
 
     // Computed properties
     isAdmin,
+    isCsm,
+    hasAdminAccess,
     isImpersonating,
     impersonatedBy,
 

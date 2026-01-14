@@ -12,13 +12,13 @@ function WorkspaceDetailPageContent() {
   const router = useRouter();
   const params = useParams();
   const workspaceId = params.workspaceId as string;
-  const { isAdmin, isPending: isSessionPending } = useSession();
+  const { hasAdminAccess, isPending: isSessionPending } = useSession();
 
   useEffect(() => {
-    if (!isSessionPending && !isAdmin) {
+    if (!isSessionPending && !hasAdminAccess) {
       router.replace('/');
     }
-  }, [isSessionPending, isAdmin, router]);
+  }, [isSessionPending, hasAdminAccess, router]);
 
   if (isSessionPending) {
     return (
@@ -42,7 +42,7 @@ function WorkspaceDetailPageContent() {
     );
   }
 
-  if (!isAdmin) {
+  if (!hasAdminAccess) {
     return null;
   }
 
@@ -59,7 +59,7 @@ function WorkspaceDetailPageContent() {
             <p className="text-sm text-muted-foreground">Manage workspace settings</p>
           </div>
 
-          <AdminWorkspaceTabs workspaceId={workspaceId} isAdmin={isAdmin} />
+          <AdminWorkspaceTabs workspaceId={workspaceId} isAdmin={hasAdminAccess} />
         </main>
       </div>
     </div>

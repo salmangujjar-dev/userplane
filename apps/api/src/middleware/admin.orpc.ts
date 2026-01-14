@@ -1,6 +1,6 @@
 /**
  * Admin middleware for oRPC procedures
- * Checks if the authenticated user has admin privileges
+ * Checks if the authenticated user has admin access (admin or csm role)
  */
 
 import { ORPCError } from '@orpc/server';
@@ -12,13 +12,14 @@ export type AdminContext = AuthContext & {
 };
 
 /**
- * Create admin middleware that checks if user is admin
+ * Create admin middleware that checks if user has admin access
+ * Grants access to users with 'admin' or 'csm' role
  */
 export function createAdminMiddleware(adminService: AdminService) {
   return base.$context<AuthContext>().middleware(async ({ context, next }) => {
-    const isAdmin = adminService.isAdmin(context.user.id, context.user.role);
+    const hasAdminAccess = adminService.isAdmin(context.user.id, context.user.role);
 
-    if (!isAdmin) {
+    if (!hasAdminAccess) {
       throw new ORPCError('NOT_ADMIN', {
         status: 403,
         message: 'Admin access required',

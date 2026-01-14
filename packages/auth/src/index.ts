@@ -8,6 +8,10 @@ import { ac, adminRole, csmRole, userRole } from './permissions';
 // Export roles for server use only
 export { adminRole, csmRole, userRole } from './permissions';
 
+// Export types and utilities for both server and client use
+export type { RoleName, PermissionMap, Resource, Action } from './types';
+export { isValidRoleName } from './types';
+
 // Note: For client-side usage, import from '@workspace/auth/permissions-client'
 // to avoid importing server-only Better Auth code
 

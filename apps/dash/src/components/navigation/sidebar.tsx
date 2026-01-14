@@ -65,7 +65,7 @@ export function Sidebar() {
   const { data: workspaceResult } = useWorkspace();
   const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
   const { signOut } = useAuth();
-  const { isAdmin } = useSession();
+  const { hasAdminAccess } = useSession();
 
   const account = accountResult?.success ? accountResult.data : null;
   const projectsData = projectsResult?.success ? projectsResult.data : null;
@@ -236,7 +236,7 @@ export function Sidebar() {
                 <Settings2 className="h-4 w-4" />
                 Account
               </Link>
-              {isAdmin && (
+              {hasAdminAccess && (
                 <Link
                   href="/admin"
                   className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
