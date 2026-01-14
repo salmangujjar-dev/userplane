@@ -12,6 +12,8 @@ import {
   WorkspacePreferencesUpdateDataSchema,
   WorkspaceTeamQuerySchema,
   WorkspaceTeamDataSchema,
+  GetWorkspaceMembershipSchema,
+  WorkspaceMembershipDataSchema,
   UpdateMemberRoleSchema,
   MemberRoleUpdateDataSchema,
   RemoveMemberSchema,
@@ -207,6 +209,30 @@ export const getWorkspaceMembers = oc
   })
   .input(WorkspaceTeamQuerySchema)
   .output(ApiResponseSchema(WorkspaceTeamDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/membership
+ * Get current user's workspace membership
+ */
+export const getWorkspaceMembership = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/membership',
+    inputStructure: 'detailed',
+    summary: 'Get workspace membership',
+    description: 'Retrieve current user membership and role in the workspace',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_MEMBER_IDS_REQUIRED: WorkspaceErrors.WORKSPACE_MEMBER_IDS_REQUIRED,
+    WORKSPACE_MEMBER_NOT_IN_WORKSPACE: WorkspaceErrors.WORKSPACE_MEMBER_NOT_IN_WORKSPACE,
+  })
+  .input(GetWorkspaceMembershipSchema)
+  .output(ApiResponseSchema(WorkspaceMembershipDataSchema));
 
 /**
  * PATCH /workspace/{workspaceId}/members/{workspaceMemberId}

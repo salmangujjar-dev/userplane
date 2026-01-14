@@ -243,6 +243,23 @@ export const WorkspaceTeamDataSchema = z.object({
 });
 
 /**
+ * Get workspace membership request (detailed mode)
+ */
+export const GetWorkspaceMembershipSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+});
+
+/**
+ * Workspace membership response
+ */
+export const WorkspaceMembershipDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceMembership: WorkspaceMembershipSchema,
+});
+
+/**
  * Update member role request (detailed mode)
  */
 export const UpdateMemberRoleSchema = z.object({
