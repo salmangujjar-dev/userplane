@@ -897,6 +897,156 @@ export const workspaceSearchImpl = (
 };
 
 /**
+ * GET /workspace/:workspaceId/invite-policy - Get workspace invite policy
+ * Requires admin or owner role
+ */
+export const getInvitePolicyImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.workspace.invitePolicy.get
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const policy = await workspaceService.getInvitePolicy(input.params.workspaceId);
+
+      return {
+        message: 'Invite policy retrieved successfully',
+        data: policy,
+      };
+    });
+};
+
+/**
+ * PATCH /workspace/:workspaceId/invite-policy - Update workspace invite policy
+ * Requires owner role
+ */
+export const updateInvitePolicyImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const requireOwner = createWorkspaceRoleMiddleware(workspaceMemberService, workspaceService, [
+    'owner',
+  ]);
+
+  return authorized.workspace.invitePolicy.update
+    .use(requireOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const policy = await workspaceService.updateInvitePolicy(input.params.workspaceId, {
+        workspaceInvitePolicy: input.body.workspaceInvitePolicy,
+        workspaceInviteDomains: input.body.workspaceInviteDomains,
+      });
+
+      return {
+        message: 'Invite policy updated successfully',
+        data: policy,
+      };
+    });
+};
+
+/**
+ * GET /workspace/suggest - Suggest workspaces based on email domain
+ * Requires authentication
+ */
+export const suggestWorkspacesImpl = (workspaceService: WorkspaceService) => {
+  return authorized.workspace.suggest.handler(async ({ input, context }) => {
+    const suggestions = await workspaceService.suggestWorkspaces(
+      context.user.email,
+      context.user.id,
+      input.query.page,
+      input.query.per_page
+    );
+
+    return {
+      message: 'Suggested workspaces retrieved successfully',
+      data: suggestions,
+    };
+  });
+};
+
+/**
+ * POST /workspace/:workspaceId/join - Join or request access to workspace
+ * Requires authentication
+ */
+export const joinWorkspaceImpl = (inviteService: InviteService) => {
+  return authorized.workspace.join.handler(async ({ input, context }) => {
+    const result = await inviteService.joinWorkspace({
+      workspaceId: input.params.workspaceId,
+      userId: context.user.id,
+      userEmail: context.user.email,
+      userName: context.user.name,
+    });
+
+    return {
+      message:
+        result.status === 'joined'
+          ? 'Successfully joined workspace'
+          : 'Access request sent to workspace owner',
+      data: result,
+    };
+  });
+};
+
+/**
+ * GET /workspace/accessRequest/validate - Validate access request token
+ * Requires authentication (owner only, validated in service)
+ */
+export const validateAccessRequestImpl = (inviteService: InviteService) => {
+  return authorized.workspace.accessRequest.validate.handler(async ({ input, context }) => {
+    const result = await inviteService.validateAccessRequest({
+      token: input.query.token,
+      viewerId: context.user.id,
+    });
+
+    return {
+      message: 'Access request validated successfully',
+      data: result,
+    };
+  });
+};
+
+/**
+ * POST /workspace/accessRequest/approve - Approve access request
+ * Requires authentication (owner only, validated in service)
+ */
+export const approveAccessRequestImpl = (inviteService: InviteService) => {
+  return authorized.workspace.accessRequest.approve.handler(async ({ input, context }) => {
+    const result = await inviteService.approveAccessRequest({
+      token: input.body.token,
+      approverId: context.user.id,
+    });
+
+    return {
+      message: 'Access request approved successfully',
+      data: result,
+    };
+  });
+};
+
+/**
+ * POST /workspace/accessRequest/decline - Decline access request
+ * Requires authentication (owner only, validated in service)
+ */
+export const declineAccessRequestImpl = (inviteService: InviteService) => {
+  return authorized.workspace.accessRequest.decline.handler(async ({ input, context }) => {
+    const result = await inviteService.declineAccessRequest({
+      token: input.body.token,
+      declinerId: context.user.id,
+    });
+
+    return {
+      message: 'Access request declined',
+      data: result,
+    };
+  });
+};
+
+/**
  * Create the workspace procedures object
  * Complete implementation with CRUD, member management, invites, and domains
  */
@@ -914,6 +1064,8 @@ export const createWorkspaceProcedures = (
     updateName: updateWorkspaceNameImpl(workspaceService, workspaceMemberService),
     delete: deleteWorkspaceImpl(workspaceService, workspaceMemberService),
     search: workspaceSearchImpl(workspaceService, workspaceMemberService),
+    suggest: suggestWorkspacesImpl(workspaceService),
+    join: joinWorkspaceImpl(inviteService),
 
     preferences: {
       get: getWorkspacePreferencesImpl(workspaceService),
@@ -941,6 +1093,17 @@ export const createWorkspaceProcedures = (
       rotate: rotateInviteTokenImpl(inviteService, workspaceMemberService, workspaceService),
       send: sendWorkspaceInvitesImpl(inviteService, workspaceMemberService, workspaceService),
       accept: acceptInviteImpl(inviteService, workspaceService),
+    },
+
+    invitePolicy: {
+      get: getInvitePolicyImpl(workspaceService, workspaceMemberService),
+      update: updateInvitePolicyImpl(workspaceService, workspaceMemberService),
+    },
+
+    accessRequest: {
+      validate: validateAccessRequestImpl(inviteService),
+      approve: approveAccessRequestImpl(inviteService),
+      decline: declineAccessRequestImpl(inviteService),
     },
 
     domains: {

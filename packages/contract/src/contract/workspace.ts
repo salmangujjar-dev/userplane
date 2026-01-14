@@ -53,6 +53,20 @@ import {
   WorkspaceDeleteDataSchema,
   WorkspaceSearchQuerySchema,
   WorkspaceSearchDataSchema,
+  GetInvitePolicySchema,
+  InvitePolicyDataSchema,
+  UpdateInvitePolicySchema,
+  InvitePolicyUpdateDataSchema,
+  SuggestWorkspacesQuerySchema,
+  SuggestWorkspacesDataSchema,
+  JoinWorkspaceSchema,
+  JoinWorkspaceDataSchema,
+  ValidateAccessRequestSchema,
+  ValidateAccessRequestDataSchema,
+  ApproveAccessRequestSchema,
+  ApproveAccessRequestDataSchema,
+  DeclineAccessRequestSchema,
+  DeclineAccessRequestDataSchema,
   ApiResponseSchema,
   WorkspaceErrors,
   InviteErrors,
@@ -729,3 +743,169 @@ export const workspaceSearch = oc
   })
   .input(WorkspaceSearchQuerySchema)
   .output(ApiResponseSchema(WorkspaceSearchDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/invite-policy
+ * Get workspace invite policy settings
+ */
+export const getInvitePolicy = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/invite-policy',
+    inputStructure: 'detailed',
+    summary: 'Get workspace invite policy',
+    description: 'Retrieve workspace invite policy and allowed domains',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(GetInvitePolicySchema)
+  .output(ApiResponseSchema(InvitePolicyDataSchema));
+
+/**
+ * PATCH /workspace/{workspaceId}/invite-policy
+ * Update workspace invite policy settings
+ */
+export const updateInvitePolicy = oc
+  .route({
+    method: 'PATCH',
+    path: '/workspace/{workspaceId}/invite-policy',
+    inputStructure: 'detailed',
+    summary: 'Update workspace invite policy',
+    description: 'Update workspace invite policy and allowed domains',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_INVITE_POLICY_DOMAINS_REQUIRED:
+      WorkspaceErrors.WORKSPACE_INVITE_POLICY_DOMAINS_REQUIRED,
+    WORKSPACE_INVITE_POLICY_DISPOSABLE_DOMAIN:
+      WorkspaceErrors.WORKSPACE_INVITE_POLICY_DISPOSABLE_DOMAIN,
+    WORKSPACE_INVITE_POLICY_TOO_MANY_DOMAINS:
+      WorkspaceErrors.WORKSPACE_INVITE_POLICY_TOO_MANY_DOMAINS,
+  })
+  .input(UpdateInvitePolicySchema)
+  .output(ApiResponseSchema(InvitePolicyUpdateDataSchema));
+
+/**
+ * GET /workspace/suggest
+ * Suggest workspaces for the current user based on email domain
+ * Returns paginated non-private workspaces that match user's email domain
+ */
+export const suggestWorkspaces = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/suggest',
+    inputStructure: 'detailed',
+    summary: 'Suggest workspaces',
+    description: 'Get suggested workspaces based on email domain',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+  })
+  .input(SuggestWorkspacesQuerySchema)
+  .output(ApiResponseSchema(SuggestWorkspacesDataSchema));
+
+/**
+ * POST /workspace/{workspaceId}/join
+ * Join or request access to a workspace
+ * For whitelisted workspaces: adds user as member if domain matches
+ * For protected workspaces: sends access request to workspace owner
+ */
+export const joinWorkspace = oc
+  .route({
+    method: 'POST',
+    path: '/workspace/{workspaceId}/join',
+    inputStructure: 'detailed',
+    summary: 'Join workspace',
+    description: 'Join or request access to a workspace based on invite policy',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_MEMBER_ALREADY_EXISTS: WorkspaceErrors.WORKSPACE_MEMBER_ALREADY_EXISTS,
+    WORKSPACE_INVITE_POLICY_PRIVATE: WorkspaceErrors.WORKSPACE_INVITE_POLICY_PRIVATE,
+    WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH:
+      WorkspaceErrors.WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH,
+  })
+  .input(JoinWorkspaceSchema)
+  .output(ApiResponseSchema(JoinWorkspaceDataSchema));
+
+/**
+ * GET /workspace/access-request/validate
+ * Validate access request token and get request details
+ * Used by dashboard to display access request review page
+ */
+export const validateAccessRequest = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/access-request/validate',
+    inputStructure: 'detailed',
+    summary: 'Validate access request',
+    description: 'Validate access request token and get request details',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_ACCESS_REQUEST_INVALID: WorkspaceErrors.WORKSPACE_ACCESS_REQUEST_INVALID,
+    WORKSPACE_ACCESS_REQUEST_NOT_OWNER: WorkspaceErrors.WORKSPACE_ACCESS_REQUEST_NOT_OWNER,
+  })
+  .input(ValidateAccessRequestSchema)
+  .output(ApiResponseSchema(ValidateAccessRequestDataSchema));
+
+/**
+ * POST /workspace/access-request/approve
+ * Approve a workspace access request (owner only)
+ * Called from dashboard after owner reviews the request
+ */
+export const approveAccessRequest = oc
+  .route({
+    method: 'POST',
+    path: '/workspace/access-request/approve',
+    inputStructure: 'detailed',
+    summary: 'Approve access request',
+    description: 'Approve a workspace access request',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_ACCESS_REQUEST_INVALID: WorkspaceErrors.WORKSPACE_ACCESS_REQUEST_INVALID,
+    WORKSPACE_ACCESS_REQUEST_NOT_OWNER: WorkspaceErrors.WORKSPACE_ACCESS_REQUEST_NOT_OWNER,
+  })
+  .input(ApproveAccessRequestSchema)
+  .output(ApiResponseSchema(ApproveAccessRequestDataSchema));
+
+/**
+ * POST /workspace/access-request/decline
+ * Decline a workspace access request (owner only)
+ * Called from dashboard after owner reviews the request
+ */
+export const declineAccessRequest = oc
+  .route({
+    method: 'POST',
+    path: '/workspace/access-request/decline',
+    inputStructure: 'detailed',
+    summary: 'Decline access request',
+    description: 'Decline a workspace access request',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_ACCESS_REQUEST_INVALID: WorkspaceErrors.WORKSPACE_ACCESS_REQUEST_INVALID,
+    WORKSPACE_ACCESS_REQUEST_NOT_OWNER: WorkspaceErrors.WORKSPACE_ACCESS_REQUEST_NOT_OWNER,
+  })
+  .input(DeclineAccessRequestSchema)
+  .output(ApiResponseSchema(DeclineAccessRequestDataSchema));

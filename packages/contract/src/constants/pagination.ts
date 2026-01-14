@@ -96,6 +96,19 @@ export const SEARCH_PAGINATION = {
 } as const;
 
 /**
+ * Workspace suggestions pagination limits
+ * List suggested workspaces based on email domain
+ */
+export const WORKSPACE_SUGGESTIONS_PAGINATION = {
+  /** Maximum items per page */
+  MAX_PER_PAGE: 5,
+  /** Default items per page */
+  DEFAULT_PER_PAGE: 5,
+  /** Minimum items per page */
+  MIN_PER_PAGE: 1,
+} as const;
+
+/**
  * Complete pagination constants
  * Export all pagination limits for easy import
  */
@@ -107,4 +120,5 @@ export const PAGINATION_CONSTANTS = {
   PROJECT: PROJECT_PAGINATION,
   LINK: LINK_PAGINATION,
   SEARCH: SEARCH_PAGINATION,
+  WORKSPACE_SUGGESTIONS: WORKSPACE_SUGGESTIONS_PAGINATION,
 } as const;

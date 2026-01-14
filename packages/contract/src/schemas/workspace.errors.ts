@@ -1,3 +1,5 @@
+import { MAX_EMAIL_DOMAINS } from '../constants';
+
 /**
  * Workspace errors
  * From WorkspaceService, WorkspaceMemberService, auth middleware, and workspace middleware
@@ -120,5 +122,35 @@ export const WorkspaceErrors = {
   WORKSPACE_MEMBER_ALREADY_EXISTS: {
     status: 409,
     message: 'User is already a member of this workspace',
+  },
+
+  // Workspace invite policy errors
+  WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH: {
+    status: 403,
+    message: 'Your email domain is not allowed to join this workspace',
+  },
+  WORKSPACE_INVITE_POLICY_PRIVATE: {
+    status: 403,
+    message: 'This workspace is private and cannot be joined directly',
+  },
+  WORKSPACE_INVITE_POLICY_DOMAINS_REQUIRED: {
+    status: 400,
+    message: 'At least one email domain is required for whitelisted or protected policies',
+  },
+  WORKSPACE_INVITE_POLICY_DISPOSABLE_DOMAIN: {
+    status: 400,
+    message: 'Disposable email domains are not allowed',
+  },
+  WORKSPACE_INVITE_POLICY_TOO_MANY_DOMAINS: {
+    status: 400,
+    message: `Maximum ${MAX_EMAIL_DOMAINS} email domains allowed per workspace`,
+  },
+  WORKSPACE_ACCESS_REQUEST_INVALID: {
+    status: 400,
+    message: 'Invalid or expired access request token',
+  },
+  WORKSPACE_ACCESS_REQUEST_NOT_OWNER: {
+    status: 403,
+    message: 'Only workspace owners can approve access requests',
   },
 } as const;

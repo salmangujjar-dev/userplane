@@ -3,8 +3,8 @@
  * Handles all database operations for workspace entities
  */
 
-import { eq, and, count, or } from '@workspace/db';
-import type { DbClient, WorkspaceRole } from '@workspace/db';
+import { eq, and, count, or, ne, ilike, notInArray, sql } from '@workspace/db';
+import type { DbClient, WorkspaceRole, WorkspaceInvitePolicy } from '@workspace/db';
 import { workspaces, workspaceMembers } from '@workspace/db';
 import type { Transaction, CreateWorkspaceInput } from '@/api/types';
 
@@ -396,5 +396,139 @@ export class WorkspaceRepository {
       .returning();
 
     return deleted || null;
+  }
+
+  /**
+   * Get workspace invite policy settings
+   */
+  async findInvitePolicyById(workspaceId: string) {
+    const [workspace] = await this.db
+      .select({
+        workspaceId: workspaces.workspaceId,
+        workspaceInvitePolicy: workspaces.workspaceInvitePolicy,
+        workspaceInviteDomains: workspaces.workspaceInviteDomains,
+      })
+      .from(workspaces)
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
+      .limit(1);
+
+    return workspace || null;
+  }
+
+  /**
+   * Update workspace invite policy settings
+   */
+  async updateInvitePolicy(
+    workspaceId: string,
+    data: {
+      workspaceInvitePolicy: WorkspaceInvitePolicy;
+      workspaceInviteDomains: string | null;
+    },
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(workspaces)
+      .set({
+        workspaceInvitePolicy: data.workspaceInvitePolicy,
+        workspaceInviteDomains: data.workspaceInviteDomains,
+      })
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
+      .returning({
+        workspaceId: workspaces.workspaceId,
+        workspaceInvitePolicy: workspaces.workspaceInvitePolicy,
+        workspaceInviteDomains: workspaces.workspaceInviteDomains,
+      });
+
+    return updated || null;
+  }
+
+  /**
+   * Find workspaces that match a user's email domain with pagination
+   * Used for suggesting workspaces to users without any workspaces
+   * Excludes private workspaces and workspaces user is already a member of
+   */
+  async findByEmailDomain(
+    emailDomain: string,
+    excludeUserId: string,
+    page: number = 1,
+    perPage: number = 5
+  ) {
+    // First, get workspaces where user is already a member
+    const existingMemberships = await this.db
+      .select({ workspaceId: workspaceMembers.workspaceId })
+      .from(workspaceMembers)
+      .where(
+        and(eq(workspaceMembers.userId, excludeUserId), eq(workspaceMembers.isDeleted, false))
+      );
+
+    const memberWorkspaceIds = existingMemberships.map((m) => m.workspaceId);
+
+    // Search for workspaces where:
+    // 1. Invite policy is not private
+    // 2. The invite domains contain the user's email domain
+    // 3. User is not already a member
+    const baseQuery = this.db
+      .select({
+        workspaceId: workspaces.workspaceId,
+        workspaceName: workspaces.workspaceName,
+        workspaceInvitePolicy: workspaces.workspaceInvitePolicy,
+      })
+      .from(workspaces)
+      .where(
+        and(
+          eq(workspaces.isDeleted, false),
+          ne(workspaces.workspaceInvitePolicy, 'private'),
+          ilike(workspaces.workspaceInviteDomains, `%${emailDomain}%`),
+          memberWorkspaceIds.length > 0
+            ? notInArray(workspaces.workspaceId, memberWorkspaceIds)
+            : undefined
+        )
+      );
+
+    // Get total count
+    const [countResult] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(workspaces)
+      .where(
+        and(
+          eq(workspaces.isDeleted, false),
+          ne(workspaces.workspaceInvitePolicy, 'private'),
+          ilike(workspaces.workspaceInviteDomains, `%${emailDomain}%`),
+          memberWorkspaceIds.length > 0
+            ? notInArray(workspaces.workspaceId, memberWorkspaceIds)
+            : undefined
+        )
+      );
+
+    const total = countResult?.count || 0;
+
+    // Get paginated results
+    const offset = (page - 1) * perPage;
+    const results = await baseQuery.limit(perPage).offset(offset);
+
+    return {
+      workspaces: results,
+      total,
+    };
+  }
+
+  /**
+   * Get workspace with invite policy by ID (for join flow)
+   */
+  async findWithInvitePolicyById(workspaceId: string) {
+    const [workspace] = await this.db
+      .select({
+        workspaceId: workspaces.workspaceId,
+        workspaceName: workspaces.workspaceName,
+        workspaceInvitePolicy: workspaces.workspaceInvitePolicy,
+        workspaceInviteDomains: workspaces.workspaceInviteDomains,
+      })
+      .from(workspaces)
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
+      .limit(1);
+
+    return workspace || null;
   }
 }
