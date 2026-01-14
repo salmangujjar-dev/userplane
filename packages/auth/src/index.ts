@@ -3,6 +3,13 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
 import type { DbClient } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
+import { ac, adminRole, csmRole, userRole } from './permissions';
+
+// Export roles for server use only
+export { adminRole, csmRole, userRole } from './permissions';
+
+// Note: For client-side usage, import from '@workspace/auth/permissions-client'
+// to avoid importing server-only Better Auth code
 
 export interface AdminConfig {
   /** User IDs that should always be treated as admins */
@@ -40,6 +47,12 @@ export function createAuth(config: AuthConfig) {
       admin({
         adminUserIds: config.admin?.adminUserIds,
         impersonationSessionDuration: config.admin?.impersonationSessionDuration ?? 60 * 60, // 1 hour default
+        ac,
+        roles: {
+          admin: adminRole,
+          csm: csmRole,
+          user: userRole,
+        },
       }),
     ],
     socialProviders: {

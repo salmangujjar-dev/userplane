@@ -20,6 +20,7 @@ import {
   KeyRound,
   Building2,
 } from 'lucide-react';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface WorkspaceCardProps {
   workspaceName: string;
@@ -48,6 +49,8 @@ export function WorkspaceCard({
   onDeactivate,
   onResetInviteToken,
 }: WorkspaceCardProps) {
+  const { isAdmin } = usePermissions();
+
   return (
     <div
       className={`rounded-xl border transition-colors p-4 cursor-pointer ${
@@ -150,26 +153,23 @@ export function WorkspaceCard({
                   e.stopPropagation();
                   onResetInviteToken?.();
                 }}
-                disabled={isDeleted}
+                disabled={!isAdmin || isDeleted}
               >
                 <KeyRound className="h-4 w-4 mr-2" />
                 Reset Invite Token
               </DropdownMenuItem>
-              {!isDeleted && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeactivate?.();
-                    }}
-                    className="text-red-600 focus:text-red-600"
-                  >
-                    <PowerOff className="h-4 w-4 mr-2" />
-                    Deactivate Workspace
-                  </DropdownMenuItem>
-                </>
-              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeactivate?.();
+                }}
+                disabled={!isAdmin || isDeleted}
+                className="text-red-600 focus:text-red-600"
+              >
+                <PowerOff className="h-4 w-4 mr-2" />
+                Deactivate Workspace
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

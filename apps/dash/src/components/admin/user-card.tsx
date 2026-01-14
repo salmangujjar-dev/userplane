@@ -20,6 +20,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface UserCardProps {
   name: string | null;
@@ -59,6 +60,7 @@ export function UserCard({
   onRevokeAllSessions,
   isCurrentUser,
 }: UserCardProps) {
+  const { can } = usePermissions();
   const displayName = name || 'No name';
   const isBanned = banned && !isBanExpired(banExpires);
   const isAdmin = role === 'admin';
@@ -126,7 +128,7 @@ export function UserCard({
                   e.stopPropagation();
                   onImpersonate?.();
                 }}
-                disabled={isCurrentUser || isBanned}
+                disabled={!can.impersonateUser || isCurrentUser || isBanned}
               >
                 <UserCog className="h-4 w-4 mr-2" />
                 Impersonate
@@ -136,6 +138,7 @@ export function UserCard({
                   e.stopPropagation();
                   onViewSessions?.();
                 }}
+                disabled={!can.listSessions}
               >
                 <MonitorSmartphone className="h-4 w-4 mr-2" />
                 View Sessions
@@ -147,6 +150,7 @@ export function UserCard({
                     e.stopPropagation();
                     onUnban?.();
                   }}
+                  disabled={!can.banUser}
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Unban User
@@ -157,7 +161,7 @@ export function UserCard({
                     e.stopPropagation();
                     onBan?.();
                   }}
-                  disabled={isCurrentUser || isAdmin}
+                  disabled={!can.banUser || isCurrentUser || isAdmin}
                   className="text-red-600 focus:text-red-600"
                 >
                   <Ban className="h-4 w-4 mr-2" />
@@ -169,6 +173,7 @@ export function UserCard({
                   e.stopPropagation();
                   onRevokeAllSessions?.();
                 }}
+                disabled={!can.revokeSession}
                 className="text-red-600 focus:text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
