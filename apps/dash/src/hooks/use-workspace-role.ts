@@ -46,20 +46,14 @@ export function useWorkspaceRole() {
         throw new Error('No workspace ID available');
       }
 
-      const [error, response] = await apiClient.workspace.members.list({
+      const [error, response] = await apiClient.workspace.members.getMembership({
         params: { workspaceId },
-        query: {
-          page: 1,
-          per_page: 1,
-          include_me: true,
-        },
       });
 
       const responseData = response?.data as
         | {
-            workspaceMembers: unknown[];
-            workspaceMembership?: WorkspaceMembership;
-            pagination: unknown;
+            workspaceId: string;
+            workspaceMembership: WorkspaceMembership;
           }
         | undefined;
 

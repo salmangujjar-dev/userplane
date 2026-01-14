@@ -467,7 +467,7 @@ export class InviteService {
       workspaceName: workspace.workspaceName,
       requesterUserId: userId,
       requesterEmail: userEmail,
-      requesterName: requester?.displayName || null,
+      requesterName: requester?.name || null,
     };
   }
 

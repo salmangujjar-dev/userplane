@@ -100,6 +100,7 @@ export const workspaceContract = {
 
   members: {
     list: workspace.getWorkspaceMembers,
+    getMembership: workspace.getWorkspaceMembership,
     updateRole: workspace.updateMemberRole,
     remove: workspace.removeMember,
     leave: workspace.leaveWorkspace,

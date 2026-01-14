@@ -238,6 +238,35 @@ export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberS
 };
 
 /**
+ * GET /workspace/:id/membership - Get current user's workspace membership
+ * Requires authentication
+ * Returns only the current user's membership and role without fetching the full members list
+ */
+export const getWorkspaceMembershipImpl = (workspaceMemberService: WorkspaceMemberService) => {
+  return authorized.workspace.members.getMembership.handler(async ({ input, context }) => {
+    const membership = await workspaceMemberService.getMember(
+      context.user.id,
+      input.params.workspaceId
+    );
+
+    if (!membership) {
+      throw new ORPCError('WORKSPACE_MEMBER_NOT_IN_WORKSPACE');
+    }
+
+    return {
+      message: 'Workspace membership retrieved successfully',
+      data: {
+        workspaceId: input.params.workspaceId,
+        workspaceMembership: {
+          workspaceMemberId: membership.workspaceMemberId,
+          workspaceRole: membership.workspaceRole,
+        },
+      },
+    };
+  });
+};
+
+/**
  * PATCH /workspace/:id/members/:workspaceMemberId - Update member role
  * Requires admin or owner role
  */
@@ -1070,6 +1099,7 @@ export const createWorkspaceProcedures = (
 
     members: {
       list: getWorkspaceMembersImpl(workspaceMemberService),
+      getMembership: getWorkspaceMembershipImpl(workspaceMemberService),
       updateRole: updateMemberRoleImpl(workspaceMemberService, workspaceService),
       remove: removeMemberImpl(workspaceMemberService, workspaceService),
       leave: leaveWorkspaceImpl(workspaceMemberService, workspaceService),
