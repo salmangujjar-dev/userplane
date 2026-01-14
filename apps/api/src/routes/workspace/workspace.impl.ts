@@ -904,14 +904,10 @@ export const getInvitePolicyImpl = (
   workspaceService: WorkspaceService,
   workspaceMemberService: WorkspaceMemberService
 ) => {
-  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
-    workspaceMemberService,
-    workspaceService,
-    ['admin', 'owner']
-  );
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.invitePolicy.get
-    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const policy = await workspaceService.getInvitePolicy(input.params.workspaceId);
 
