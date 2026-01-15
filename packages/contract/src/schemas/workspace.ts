@@ -784,3 +784,40 @@ export const DeclineAccessRequestDataSchema = z.object({
   userEmail: z.string(),
   status: z.literal('declined'),
 });
+
+/**
+ * Workspace access status values
+ * - 'member': User is already a member, can access workspace
+ * - 'can_join': User can join directly (whitelisted policy + domain match)
+ * - 'can_request': User can request access (protected policy + domain match)
+ * - 'no_access': User cannot access (private or domain mismatch)
+ */
+export const WorkspaceAccessStatusSchema = z.enum([
+  'member',
+  'can_join',
+  'can_request',
+  'no_access',
+]);
+
+/**
+ * Get workspace status request (detailed mode)
+ * Used to check access status without requiring membership
+ */
+export const GetWorkspaceStatusSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+});
+
+/**
+ * Workspace status response
+ * Returns minimal workspace info and access status for the current user
+ * Handles soft-deleted workspaces gracefully instead of throwing
+ */
+export const WorkspaceStatusDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceName: z.string(),
+  isDeleted: z.boolean(),
+  invitePolicy: WorkspaceInvitePolicySchema.nullable(),
+  accessStatus: WorkspaceAccessStatusSchema,
+});

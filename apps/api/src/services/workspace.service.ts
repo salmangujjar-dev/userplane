@@ -671,4 +671,105 @@ export class WorkspaceService {
       workspaceInviteDomains: domains,
     };
   }
+
+  /**
+   * Get workspace status and access info for a user
+   * Handles soft-deleted workspaces gracefully by returning status instead of throwing
+   * Used by frontend to determine what UI to show for workspace access gate
+   *
+   * Returns:
+   * - 'member' if user is already a member
+   * - 'can_join' if workspace is whitelisted and domain matches
+   * - 'can_request' if workspace is protected and domain matches
+   * - 'no_access' if workspace is private or domain doesn't match
+   *
+   * Throws WORKSPACE_NOT_FOUND only if workspace truly doesn't exist
+   */
+  async getStatus(workspaceId: string, userId: string, userEmail: string) {
+    // 1. Check if workspace exists at all (including soft-deleted)
+    const isDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
+
+    // Workspace doesn't exist at all
+    if (isDeleted === null) {
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
+    }
+
+    // Workspace is soft-deleted - return minimal info
+    if (isDeleted === true) {
+      return {
+        workspaceId,
+        workspaceName: 'Deleted Workspace',
+        isDeleted: true,
+        invitePolicy: null,
+        accessStatus: 'no_access' as const,
+      };
+    }
+
+    // 2. Get workspace with invite policy
+    const workspace = await this.deps.workspaceRepo.findWithInvitePolicyById(workspaceId);
+    if (!workspace) {
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
+    }
+
+    // Parse domains
+    const allowedDomains = workspace.workspaceInviteDomains
+      ? workspace.workspaceInviteDomains.split(',').map((d: string) => d.trim().toLowerCase())
+      : [];
+
+    // 3. Check membership
+    if (this.deps.workspaceMemberRepo) {
+      const member = await this.deps.workspaceMemberRepo.findByUserAndWorkspace(
+        userId,
+        workspaceId
+      );
+
+      if (member) {
+        return {
+          workspaceId: workspace.workspaceId,
+          workspaceName: workspace.workspaceName,
+          isDeleted: false,
+          invitePolicy: workspace.workspaceInvitePolicy,
+          accessStatus: 'member' as const,
+        };
+      }
+    }
+
+    // 4. Non-member - determine access based on policy
+    if (workspace.workspaceInvitePolicy === 'private') {
+      return {
+        workspaceId: workspace.workspaceId,
+        workspaceName: workspace.workspaceName,
+        isDeleted: false,
+        invitePolicy: workspace.workspaceInvitePolicy,
+        accessStatus: 'no_access' as const,
+      };
+    }
+
+    // 5. Check domain match for whitelisted/protected
+    const userDomain = userEmail.split('@')[1]?.toLowerCase();
+    const domainMatches =
+      userDomain && allowedDomains.some((d: string) => d.toLowerCase() === userDomain);
+
+    if (!domainMatches) {
+      return {
+        workspaceId: workspace.workspaceId,
+        workspaceName: workspace.workspaceName,
+        isDeleted: false,
+        invitePolicy: workspace.workspaceInvitePolicy,
+        accessStatus: 'no_access' as const,
+      };
+    }
+
+    // 6. Domain matches - return action based on policy
+    return {
+      workspaceId: workspace.workspaceId,
+      workspaceName: workspace.workspaceName,
+      isDeleted: false,
+      invitePolicy: workspace.workspaceInvitePolicy,
+      accessStatus:
+        workspace.workspaceInvitePolicy === 'whitelisted'
+          ? ('can_join' as const)
+          : ('can_request' as const),
+    };
+  }
 }

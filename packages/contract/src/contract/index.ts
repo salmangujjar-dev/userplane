@@ -87,6 +87,7 @@ export const workspaceContract = {
   list: workspace.getAllWorkspaces,
   count: workspace.countWorkspaces,
   getById: workspace.getWorkspaceById,
+  status: workspace.getWorkspaceStatus,
   updateName: workspace.updateWorkspaceName,
   delete: workspace.deleteWorkspace,
   search: workspace.workspaceSearch,

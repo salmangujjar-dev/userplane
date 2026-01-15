@@ -1072,6 +1072,26 @@ export const declineAccessRequestImpl = (inviteService: InviteService) => {
 };
 
 /**
+ * GET /workspace/:workspaceId/status - Get workspace status and access info
+ * Requires authentication but NOT workspace membership
+ * Returns access status for the current user to determine what UI to show
+ */
+export const getWorkspaceStatusImpl = (workspaceService: WorkspaceService) => {
+  return authorized.workspace.status.handler(async ({ input, context }) => {
+    const status = await workspaceService.getStatus(
+      input.params.workspaceId,
+      context.user.id,
+      context.user.email
+    );
+
+    return {
+      message: 'Workspace status retrieved successfully',
+      data: status,
+    };
+  });
+};
+
+/**
  * Create the workspace procedures object
  * Complete implementation with CRUD, member management, invites, and domains
  */
@@ -1086,6 +1106,7 @@ export const createWorkspaceProcedures = (
     list: getAllWorkspacesImpl(workspaceService),
     count: countWorkspacesImpl(workspaceService),
     getById: getWorkspaceByIdImpl(workspaceService),
+    status: getWorkspaceStatusImpl(workspaceService),
     updateName: updateWorkspaceNameImpl(workspaceService, workspaceMemberService),
     delete: deleteWorkspaceImpl(workspaceService, workspaceMemberService),
     search: workspaceSearchImpl(workspaceService, workspaceMemberService),
