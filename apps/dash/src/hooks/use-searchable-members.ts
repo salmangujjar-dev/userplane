@@ -35,7 +35,7 @@ export function useSearchableMembers(searchQuery: string, options?: { perPage?: 
       }));
     }
     if (initialMembers?.success) {
-      return initialMembers.data || [];
+      return initialMembers.data?.workspaceMembers || [];
     }
     return [];
   }, [searchQuery, searchResults, initialMembers]);

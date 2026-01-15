@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Switch } from '@workspace/ui/components/switch';
 import { Label } from '@workspace/ui/components/label';
 import { useWorkspaceId } from '@/stores/workspace';
@@ -8,6 +8,7 @@ import { useWorkspaceNotifications } from '@/hooks/use-workspace-notifications';
 import { useUpdateNotifications } from '@/queries/use-workspace-mutations';
 import { SectionError } from '@/components/shared/section-error';
 import { NotificationsSectionSkeleton } from '@/components/skeleton';
+import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
 
 interface WorkspaceNotifications {
   notifyOnLinkUsage: boolean;
@@ -17,67 +18,88 @@ interface WorkspaceNotifications {
   notifyOnInviteAccepted: boolean;
 }
 
+const NOTIFICATION_ITEMS: {
+  key: keyof WorkspaceNotifications;
+  id: string;
+  label: string;
+}[] = [
+  {
+    key: 'notifyOnLinkUsage',
+    id: 'recording-links',
+    label: 'When recording links gets used',
+  },
+  {
+    key: 'notifyOnQuotaReset',
+    id: 'quota-reset',
+    label: 'When workspace quota is reset',
+  },
+  {
+    key: 'notifyOnQuotaLimit',
+    id: 'quota-reached',
+    label: 'When workspace quota is reached',
+  },
+  {
+    key: 'notifyOnMemberJoin',
+    id: 'someone-joins',
+    label: 'When someone joins my workspace',
+  },
+  {
+    key: 'notifyOnInviteAccepted',
+    id: 'invite-accepted',
+    label: 'When someone accepts my invite',
+  },
+];
+
+function NotificationItem({
+  label,
+  id,
+  initialValue,
+  onToggle,
+}: {
+  label: string;
+  id: string;
+  initialValue: boolean;
+  onToggle: (val: boolean) => void;
+}) {
+  const { value, toggle } = useDebouncedToggle(initialValue, onToggle);
+
+  return (
+    <div className="flex items-center justify-between">
+      <Label htmlFor={id} className="text-sm font-normal cursor-pointer flex-1">
+        {label}
+      </Label>
+      <Switch id={id} checked={value} onCheckedChange={toggle} />
+    </div>
+  );
+}
+
 export function NotificationsSection() {
   const currentWorkspaceId = useWorkspaceId();
   const { data: notificationsResult, isLoading, error, refetch } = useWorkspaceNotifications();
+  const [syncVersion, setSyncVersion] = useState(0);
 
   const serverData = notificationsResult?.success
     ? notificationsResult.data.notificationPreferences
     : null;
 
-  const [localState, setLocalState] = useState<WorkspaceNotifications | null>(null);
-  const debounceTimerRef = useRef<Record<string, NodeJS.Timeout>>({});
-  const shouldSyncRef = useRef(true);
-
   const updateNotificationsMutation = useUpdateNotifications({
     onError: () => {
-      // Allow re-sync from server on next data change
-      shouldSyncRef.current = true;
+      // Force children to re-sync from server data on error by updating the key
+      setSyncVersion((v) => v + 1);
     },
   });
-
-  // Sync local state with server data only when allowed
-  // Initially true, then false after first sync, reset to true on error
-  useEffect(() => {
-    if (serverData && shouldSyncRef.current) {
-      setLocalState(serverData);
-      shouldSyncRef.current = false;
-    }
-  }, [serverData]);
-
-  useEffect(() => {
-    const timers = debounceTimerRef.current;
-    return () => {
-      Object.values(timers).forEach((timer) => clearTimeout(timer));
-    };
-  }, []);
 
   const handleNotificationToggle = useCallback(
     (key: keyof WorkspaceNotifications, value: boolean) => {
       if (!currentWorkspaceId) return;
 
-      // Immediate local state update for optimistic UI
-      setLocalState((prev) => (prev ? { ...prev, [key]: value } : prev));
-
-      // Clear existing timer for this key
-      if (debounceTimerRef.current[key]) {
-        clearTimeout(debounceTimerRef.current[key]);
-      }
-
-      // Debounce the API call
-      debounceTimerRef.current[key] = setTimeout(() => {
-        updateNotificationsMutation.mutate({
-          workspaceId: currentWorkspaceId,
-          notifications: { [key]: value },
-        });
-        delete debounceTimerRef.current[key];
-      }, 500);
+      updateNotificationsMutation.mutate({
+        workspaceId: currentWorkspaceId,
+        notifications: { [key]: value },
+      });
     },
     [currentWorkspaceId, updateNotificationsMutation]
   );
-
-  // Use local state for display (optimistic), fall back to server data
-  const notificationsData = localState ?? serverData;
 
   if (isLoading) {
     return <NotificationsSectionSkeleton />;
@@ -107,7 +129,7 @@ export function NotificationsSection() {
     );
   }
 
-  if (!notificationsData) {
+  if (!serverData) {
     return (
       <div>
         <div className="mb-4">
@@ -128,62 +150,15 @@ export function NotificationsSection() {
         <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
       </div>
       <div className="max-w-2xl space-y-4">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="recording-links" className="text-sm font-normal cursor-pointer flex-1">
-            When recording links gets used
-          </Label>
-          <Switch
-            id="recording-links"
-            checked={notificationsData.notifyOnLinkUsage}
-            onCheckedChange={(checked) => handleNotificationToggle('notifyOnLinkUsage', checked)}
+        {NOTIFICATION_ITEMS.map((item) => (
+          <NotificationItem
+            key={`${item.key}-${syncVersion}`}
+            id={item.id}
+            label={item.label}
+            initialValue={serverData[item.key]}
+            onToggle={(val) => handleNotificationToggle(item.key, val)}
           />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="quota-reset" className="text-sm font-normal cursor-pointer flex-1">
-            When workspace quota is reset
-          </Label>
-          <Switch
-            id="quota-reset"
-            checked={notificationsData.notifyOnQuotaReset}
-            onCheckedChange={(checked) => handleNotificationToggle('notifyOnQuotaReset', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="quota-reached" className="text-sm font-normal cursor-pointer flex-1">
-            When workspace quota is reached
-          </Label>
-          <Switch
-            id="quota-reached"
-            checked={notificationsData.notifyOnQuotaLimit}
-            onCheckedChange={(checked) => handleNotificationToggle('notifyOnQuotaLimit', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="someone-joins" className="text-sm font-normal cursor-pointer flex-1">
-            When someone joins my workspace
-          </Label>
-          <Switch
-            id="someone-joins"
-            checked={notificationsData.notifyOnMemberJoin}
-            onCheckedChange={(checked) => handleNotificationToggle('notifyOnMemberJoin', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="invite-accepted" className="text-sm font-normal cursor-pointer flex-1">
-            When someone accepts my invite
-          </Label>
-          <Switch
-            id="invite-accepted"
-            checked={notificationsData.notifyOnInviteAccepted}
-            onCheckedChange={(checked) =>
-              handleNotificationToggle('notifyOnInviteAccepted', checked)
-            }
-          />
-        </div>
+        ))}
       </div>
     </div>
   );
