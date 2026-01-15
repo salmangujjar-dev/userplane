@@ -43,13 +43,19 @@ export interface WorkspaceMember {
 export function useWorkspaceMembers(options?: {
   includeMe?: boolean;
   perPage?: number;
+  page?: number;
   enabled?: boolean;
 }) {
   const workspaceId = useWorkspaceId();
-  const { includeMe = false, perPage = DEFAULT_MEMBERS_PER_PAGE, enabled = true } = options || {};
+  const {
+    includeMe = false,
+    perPage = DEFAULT_MEMBERS_PER_PAGE,
+    page = 1,
+    enabled = true,
+  } = options || {};
 
   return useQuery({
-    queryKey: ['workspace-members', workspaceId, includeMe, perPage],
+    queryKey: ['workspace-members', workspaceId, includeMe, perPage, page],
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
@@ -58,16 +64,13 @@ export function useWorkspaceMembers(options?: {
       const [error, response] = await apiClient.workspace.members.list({
         params: { workspaceId },
         query: {
-          page: 1,
+          page: options?.page || 1,
           per_page: perPage,
           include_me: includeMe,
         },
       });
 
-      return handleQueryResult(
-        error,
-        (response?.data.workspaceMembers as WorkspaceMember[]) ?? null
-      );
+      return handleQueryResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000,

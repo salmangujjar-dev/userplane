@@ -39,8 +39,10 @@ export function TeamSection() {
   } = useWorkspaceMembers({
     includeMe: true,
     perPage: ITEMS_PER_PAGE,
+    page: currentPage,
   });
-  const members = membersResult?.success ? membersResult.data : null;
+  const members = membersResult?.success ? membersResult.data.workspaceMembers : null;
+  const pagination = membersResult?.success ? membersResult.data.pagination : null;
 
   const updateRoleMutation = useUpdateMemberRole(workspaceId);
   const removeMemberMutation = useRemoveMember(workspaceId);
@@ -91,7 +93,7 @@ export function TeamSection() {
   }
 
   const displayedMembers = members || [];
-  const totalPages = 1;
+  const totalPages = pagination?.totalPages || 1;
 
   return (
     <div>

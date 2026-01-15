@@ -14,7 +14,7 @@ export function TopActions({ onInviteClick, createLinkButton }: TopActionsProps)
     enabled: true,
   });
 
-  const members = membersResult?.success ? membersResult.data : undefined;
+  const members = membersResult?.success ? membersResult.data.workspaceMembers : undefined;
 
   return (
     <div className="flex items-center justify-end gap-3 px-6 py-4">

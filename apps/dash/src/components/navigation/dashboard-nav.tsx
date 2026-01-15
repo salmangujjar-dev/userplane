@@ -25,7 +25,7 @@ export function DashboardNav({
     enabled: true,
   });
 
-  const members = membersResult?.success ? membersResult.data : undefined;
+  const members = membersResult?.success ? membersResult.data.workspaceMembers : undefined;
 
   return (
     <nav>
