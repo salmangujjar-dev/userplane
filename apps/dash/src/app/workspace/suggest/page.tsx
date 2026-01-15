@@ -6,12 +6,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@workspace/ui/components/button';
 import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import Logo from '@workspace/ui/components/logo';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useWorkspaceSuggestions } from '@/hooks/use-workspace-suggestions';
 import { useJoinWorkspace } from '@/queries/use-workspace-mutations';
 import { PaginationControls } from '@/components/shared/pagination-controls';
-import { Loader2, Building2 } from 'lucide-react';
+import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { Loader2, Shield, Globe } from 'lucide-react';
 import { logger } from '@/logger';
 import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@workspace/contract';
 
@@ -95,16 +97,30 @@ function WorkspaceSuggestPageContent() {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-6 rounded-xl border bg-card">
               <div className="flex items-center gap-3">
-                <Skeleton className="h-4 w-4 rounded-full" />
-                <Skeleton className="h-4 w-4" />
-                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+                <div className="flex -space-x-2">
+                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
+                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
+                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3.5 w-3.5 rounded" />
+                </div>
               </div>
             </div>
             <div className="flex items-center justify-between p-6 rounded-xl border bg-card">
               <div className="flex items-center gap-3">
-                <Skeleton className="h-4 w-4 rounded-full" />
-                <Skeleton className="h-4 w-4" />
-                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+                <div className="flex -space-x-2">
+                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
+                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
+                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3.5 w-3.5 rounded" />
+                </div>
               </div>
             </div>
           </div>
@@ -164,6 +180,12 @@ function WorkspaceSuggestPageContent() {
 
   // Show success state when access has been requested
   if (requestedWorkspace) {
+    const avatarNames = [
+      `${requestedWorkspace.workspaceName}-member-1`,
+      `${requestedWorkspace.workspaceName}-member-2`,
+      `${requestedWorkspace.workspaceName}-member-3`,
+    ];
+
     return (
       <WorkspaceSuggestLayout>
         <div className="flex flex-col items-center gap-3">
@@ -171,10 +193,23 @@ function WorkspaceSuggestPageContent() {
           <h1 className="text-xl font-medium text-foreground">Access Requested</h1>
         </div>
 
-        <div className="flex items-center justify-center p-6 rounded-xl border bg-card">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <Building2 className="h-8 w-8 text-muted-foreground" />
-            <div className="space-y-1">
+        <div className="w-full p-6 rounded-xl border bg-card">
+          <div className="flex flex-col items-center gap-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex -space-x-2 shrink-0 cursor-default">
+                  {avatarNames.map((name, index) => (
+                    <div key={index} className="rounded-full border-2 border-card overflow-hidden">
+                      <BoringAvatar name={name} size={28} />
+                    </div>
+                  ))}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <span className="text-xs">Workspace members</span>
+              </TooltipContent>
+            </Tooltip>
+            <div className="flex flex-col items-center gap-1 text-center">
               <p className="text-sm font-medium text-foreground">
                 You&apos;ve requested access to <strong>{requestedWorkspace.workspaceName}</strong>
               </p>
@@ -202,6 +237,16 @@ function WorkspaceSuggestPageContent() {
         <div className="space-y-4">
           {suggestionsData.data.workspaces.map((workspace) => {
             const isSelected = selectedWorkspaceId === workspace.workspaceId;
+            const avatarNames = [
+              `${workspace.workspaceName}-member-1`,
+              `${workspace.workspaceName}-member-2`,
+              `${workspace.workspaceName}-member-3`,
+            ];
+            const PolicyIcon = workspace.workspaceInvitePolicy === 'protected' ? Shield : Globe;
+            const policyLabel =
+              workspace.workspaceInvitePolicy === 'protected'
+                ? 'Approval required'
+                : 'Open to your domain';
 
             return (
               <div
@@ -213,16 +258,46 @@ function WorkspaceSuggestPageContent() {
                     : 'hover:border-muted-foreground'
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                    className={`h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
                       isSelected ? 'border-foreground' : 'border-muted-foreground'
                     }`}
                   >
                     {isSelected && <div className="h-2 w-2 rounded-full bg-foreground" />}
                   </div>
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground">{workspace.workspaceName}</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex -space-x-2 shrink-0 cursor-pointer">
+                        {avatarNames.map((name, index) => (
+                          <div
+                            key={index}
+                            className="rounded-full border-2 border-card overflow-hidden"
+                          >
+                            <BoringAvatar name={name} size={24} />
+                          </div>
+                        ))}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="text-xs">Workspace members</span>
+                    </TooltipContent>
+                  </Tooltip>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {workspace.workspaceName}
+                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-pointer">
+                          <PolicyIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span className="text-xs">{policyLabel}</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
               </div>
             );

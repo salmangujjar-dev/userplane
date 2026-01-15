@@ -69,6 +69,8 @@ import {
   ApproveAccessRequestDataSchema,
   DeclineAccessRequestSchema,
   DeclineAccessRequestDataSchema,
+  GetWorkspaceStatusSchema,
+  WorkspaceStatusDataSchema,
   ApiResponseSchema,
   WorkspaceErrors,
   InviteErrors,
@@ -935,3 +937,26 @@ export const declineAccessRequest = oc
   })
   .input(DeclineAccessRequestSchema)
   .output(ApiResponseSchema(DeclineAccessRequestDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/status
+ * Get workspace status and access info for the current user
+ * Does not require membership - returns access status for access gate UI
+ * Handles soft-deleted workspaces gracefully
+ */
+export const getWorkspaceStatus = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/status',
+    inputStructure: 'detailed',
+    summary: 'Get workspace status',
+    description:
+      'Get workspace status and access info without requiring membership. Used to show appropriate UI for non-members.',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+  })
+  .input(GetWorkspaceStatusSchema)
+  .output(ApiResponseSchema(WorkspaceStatusDataSchema));
