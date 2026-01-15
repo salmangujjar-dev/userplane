@@ -8,16 +8,21 @@ import { cn } from '@workspace/ui/lib/utils';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
-import { useRotateInvite } from '@/queries/use-workspace-mutations';
 import { SectionError } from '@/components/shared/section-error';
-import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import { WorkspaceSectionSkeleton } from '@/components/skeleton';
+import { useWorkspaceBillingEmail } from '@/hooks/use-workspace-billing-email';
+import { useUpdateWorkspaceBillingEmail } from '@/queries/use-workspace-billing-email-mutations';
+import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
 
 export function WorkspaceSection() {
   const workspaceId = useWorkspaceId();
   const { data: workspaceResult, isLoading, error, refetch } = useWorkspace();
+  const { data: billingEmailResult, isLoading: isLoadingBilling } = useWorkspaceBillingEmail();
+  const { canEdit } = useCanEditWorkspace();
+
   const [workspaceName, setWorkspaceName] = useState('');
-  const [resetInviteModalOpen, setResetInviteModalOpen] = useState(false);
+  const [billingEmail, setBillingEmail] = useState('');
+  const [hasBillingEmailChanges, setHasBillingEmailChanges] = useState(false);
 
   const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const originalName = workspaceData?.workspace.workspaceName || '';
@@ -28,10 +33,19 @@ export function WorkspaceSection() {
     }
   }, [workspaceData]);
 
+  useEffect(() => {
+    if (billingEmailResult?.success) {
+      setBillingEmail(billingEmailResult.data.workspaceBillingEmail || '');
+      setHasBillingEmailChanges(false);
+    }
+  }, [billingEmailResult]);
+
   const updateNameMutation = useUpdateWorkspaceName(workspaceId, (originalName) =>
     setWorkspaceName(originalName)
   );
-  const rotateInviteMutation = useRotateInvite();
+  const updateBillingEmailMutation = useUpdateWorkspaceBillingEmail({
+    onSuccess: () => setHasBillingEmailChanges(false),
+  });
 
   const handleSave = () => {
     if (workspaceName.trim() && workspaceName !== originalName) {
@@ -39,14 +53,12 @@ export function WorkspaceSection() {
     }
   };
 
-  const handleResetInviteToken = () => {
-    setResetInviteModalOpen(true);
-  };
-
-  const handleConfirmResetInviteToken = () => {
+  const handleSaveBillingEmail = () => {
     if (!workspaceId) return;
-    rotateInviteMutation.mutate(workspaceId);
-    setResetInviteModalOpen(false);
+    updateBillingEmailMutation.mutate({
+      workspaceId,
+      email: billingEmail.trim(),
+    });
   };
 
   const hasChanges = workspaceName.trim() !== originalName && workspaceName.trim().length > 0;
@@ -99,53 +111,55 @@ export function WorkspaceSection() {
                 onChange={(e) => setWorkspaceName(e.target.value)}
                 placeholder="Enter workspace name"
                 className="max-w-md"
-                disabled={updateNameMutation.isPending}
+                disabled={!canEdit || updateNameMutation.isPending}
               />
-              <Button
-                onClick={handleSave}
-                disabled={updateNameMutation.isPending}
-                size="default"
-                className={cn('transition-opacity', !hasChanges && 'opacity-0 pointer-events-none')}
-                aria-hidden={!hasChanges}
-                tabIndex={hasChanges ? 0 : -1}
-              >
-                {updateNameMutation.isPending ? 'Saving...' : 'Save'}
-              </Button>
+              {canEdit && hasChanges && (
+                <Button onClick={handleSave} disabled={updateNameMutation.isPending} size="default">
+                  {updateNameMutation.isPending ? 'Saving...' : 'Save'}
+                </Button>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center justify-between py-3">
-            <div className="flex-1">
-              <div className="text-sm font-medium">Reset invite token for workspace</div>
+          {/* Billing Email Section */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="billing-email">Billing Email</Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Generate a new invite token and invalidate the old one
+                Invoices and billing related notifications will be sent to this email
               </p>
             </div>
-            <Button
-              onClick={handleResetInviteToken}
-              disabled={rotateInviteMutation.isPending}
-              className="ml-4"
-            >
-              {rotateInviteMutation.isPending ? 'Resetting...' : 'Reset'}
-            </Button>
+            <div className="flex gap-2 items-start">
+              <Input
+                id="billing-email"
+                type="email"
+                value={billingEmail}
+                onChange={(e) => {
+                  setBillingEmail(e.target.value);
+                  setHasBillingEmailChanges(
+                    e.target.value !==
+                      (billingEmailResult?.success
+                        ? billingEmailResult.data.workspaceBillingEmail || ''
+                        : '')
+                  );
+                }}
+                placeholder="Enter billing email"
+                className="max-w-md"
+                disabled={!canEdit || updateBillingEmailMutation.isPending}
+              />
+              {canEdit && hasBillingEmailChanges && (
+                <Button
+                  onClick={handleSaveBillingEmail}
+                  disabled={updateBillingEmailMutation.isPending}
+                  size="default"
+                >
+                  {updateBillingEmailMutation.isPending ? 'Saving...' : 'Save'}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-
-      <ResetInviteTokenModal
-        open={resetInviteModalOpen}
-        onOpenChange={setResetInviteModalOpen}
-        workspace={
-          workspaceData
-            ? {
-                workspaceId: workspaceData.workspace.workspaceId,
-                workspaceName: workspaceData.workspace.workspaceName,
-              }
-            : null
-        }
-        onConfirm={handleConfirmResetInviteToken}
-        isPending={rotateInviteMutation.isPending}
-      />
     </>
   );
 }

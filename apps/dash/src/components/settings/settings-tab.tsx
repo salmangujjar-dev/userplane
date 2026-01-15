@@ -35,7 +35,6 @@ export function SettingsTab() {
 
         <TabsContent value="team" className="space-y-8">
           <TeamSection />
-          <InvitePolicySection />
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-8">
@@ -49,6 +48,7 @@ export function SettingsTab() {
         <TabsContent value="customization" className="space-y-8">
           <RecordingLinkSection />
           <WorkspaceSection />
+          <InvitePolicySection />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-8">

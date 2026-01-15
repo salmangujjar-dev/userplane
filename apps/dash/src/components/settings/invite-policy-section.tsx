@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import { X, Globe, Lock, Shield } from 'lucide-react';
+import { X, Globe, Lock, Shield, Plus } from 'lucide-react';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useInvitePolicy, type WorkspaceInvitePolicy } from '@/hooks/use-invite-policy';
 import { useUpdateInvitePolicy } from '@/queries/use-workspace-mutations';
@@ -19,6 +19,8 @@ import { Skeleton } from '@workspace/ui/components/skeleton';
 import { AddEmailDomainModal } from '@/components/modals/add-email-domain-modal';
 import { MAX_EMAIL_DOMAINS } from '@workspace/contract';
 import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
+import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
+import { useRotateInvite } from '@/queries/use-workspace-mutations';
 
 const POLICY_OPTIONS = [
   {
@@ -53,13 +55,28 @@ function InvitePolicySkeleton() {
 export function InvitePolicySection() {
   const workspaceId = useWorkspaceId();
   const { data: policyResult, isLoading, error, refetch } = useInvitePolicy();
-  const updatePolicyMutation = useUpdateInvitePolicy();
   const { canEdit, isLoading: isLoadingRole } = useCanEditWorkspace();
 
   const [policy, setPolicy] = useState<WorkspaceInvitePolicy>('private');
   const [domains, setDomains] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [showAddDomainModal, setShowAddDomainModal] = useState(false);
+  const [resetInviteModalOpen, setResetInviteModalOpen] = useState(false);
+
+  const updatePolicyMutation = useUpdateInvitePolicy({
+    onSuccess: () => setHasChanges(false),
+  });
+  const rotateInviteMutation = useRotateInvite();
+
+  const handleResetInviteToken = () => {
+    setResetInviteModalOpen(true);
+  };
+
+  const handleConfirmResetInviteToken = () => {
+    if (!workspaceId) return;
+    rotateInviteMutation.mutate(workspaceId);
+    setResetInviteModalOpen(false);
+  };
 
   // Sync state with fetched data
   useEffect(() => {
@@ -170,21 +187,43 @@ export function InvitePolicySection() {
         <div className="space-y-2">
           <Label>Invite Policy</Label>
           <p className="text-sm text-muted-foreground">Manage invite policy for your workspace</p>
-          <Select value={policy} onValueChange={handlePolicyChange} disabled={!canEdit}>
-            <SelectTrigger className="w-full max-w-xs">
-              <SelectValue placeholder="Select policy" />
-            </SelectTrigger>
-            <SelectContent>
-              {POLICY_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  <div className="flex items-center gap-2">
-                    <option.icon className="h-4 w-4" />
-                    <span>{option.label}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+
+          <div className="flex items-center gap-4">
+            <Select value={policy} onValueChange={handlePolicyChange} disabled={!canEdit}>
+              <SelectTrigger className="w-full max-w-xs">
+                <SelectValue placeholder="Select policy" />
+              </SelectTrigger>
+              <SelectContent>
+                {POLICY_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <div className="flex items-center gap-2">
+                      <option.icon className="h-4 w-4" />
+                      <span>{option.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasChanges && canEdit && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSave}
+                  disabled={updatePolicyMutation.isPending || needsDomains}
+                >
+                  {updatePolicyMutation.isPending ? 'Saving...' : 'Save'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={updatePolicyMutation.isPending}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </div>
+
           {selectedOption && (
             <p className="text-sm text-muted-foreground">{selectedOption.description}</p>
           )}
@@ -203,39 +242,50 @@ export function InvitePolicySection() {
               </p>
             </div>
 
-            {/* Domain Cards */}
-            {domains.map((domain) => (
-              <div
-                key={domain}
-                className={`flex items-center justify-between p-6 rounded-xl border bg-card ${!canEdit ? 'opacity-50' : ''}`}
-              >
-                <div className="flex items-center gap-3">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground">{domain}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:text-destructive"
-                  onClick={() => handleRemoveDomain(domain)}
-                  disabled={!canEdit}
+            {/* Domain Input Fields */}
+            <div className="space-y-3 max-w-md">
+              {domains.map((domain) => (
+                <div
+                  key={domain}
+                  className={`flex items-center gap-2 p-3 rounded-lg border bg-background ${!canEdit ? 'opacity-50' : ''}`}
                 >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+                  <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <input
+                    type="text"
+                    value={domain}
+                    readOnly
+                    className="flex-1 bg-transparent text-sm text-foreground outline-none cursor-default"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 hover:text-destructive shrink-0"
+                    onClick={() => handleRemoveDomain(domain)}
+                    disabled={!canEdit}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
 
-            {/* Add Domain Button */}
-            {canEdit && (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowAddDomainModal(true)}
-                disabled={isMaxDomainsReached}
-              >
-                {isMaxDomainsReached ? 'Maximum domains reached' : 'Add email domain'}
-              </Button>
-            )}
+              {/* Add Domain Input */}
+              {canEdit && (
+                <button
+                  onClick={() => setShowAddDomainModal(true)}
+                  disabled={isMaxDomainsReached}
+                  className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors ${
+                    isMaxDomainsReached
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'cursor-pointer hover:border-primary/50'
+                  }`}
+                >
+                  <Plus className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {isMaxDomainsReached ? 'Maximum domains reached' : 'Add email domain'}
+                  </span>
+                </button>
+              )}
+            </div>
 
             <AddEmailDomainModal
               open={showAddDomainModal}
@@ -246,21 +296,38 @@ export function InvitePolicySection() {
           </div>
         )}
 
-        {/* Save/Cancel Buttons */}
-        {hasChanges && canEdit && (
-          <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={updatePolicyMutation.isPending || needsDomains}>
-              {updatePolicyMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </Button>
+        <div className="mt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium">Reset invite token</div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Generate a new invite token and invalidate the old one
+              </p>
+            </div>
             <Button
+              onClick={handleResetInviteToken}
+              disabled={rotateInviteMutation.isPending || !canEdit}
               variant="outline"
-              onClick={handleCancel}
-              disabled={updatePolicyMutation.isPending}
             >
-              Cancel
+              {rotateInviteMutation.isPending ? 'Resetting...' : 'Reset'}
             </Button>
           </div>
-        )}
+        </div>
+
+        <ResetInviteTokenModal
+          open={resetInviteModalOpen}
+          onOpenChange={setResetInviteModalOpen}
+          workspace={
+            workspaceId
+              ? {
+                  workspaceId: workspaceId,
+                  workspaceName: '', // Name not strictly needed for this modal context or can be fetched if required
+                }
+              : null
+          }
+          onConfirm={handleConfirmResetInviteToken}
+          isPending={rotateInviteMutation.isPending}
+        />
       </div>
     </div>
   );
