@@ -25,6 +25,7 @@ export function SettingsTab() {
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="plan-usage">Plans</TabsTrigger>
           <TabsTrigger value="customization">Customization</TabsTrigger>
+          <TabsTrigger value="workspace">Workspace</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
@@ -47,6 +48,9 @@ export function SettingsTab() {
 
         <TabsContent value="customization" className="space-y-8">
           <RecordingLinkSection />
+        </TabsContent>
+
+        <TabsContent value="workspace" className="space-y-8">
           <WorkspaceSection />
           <InvitePolicySection />
         </TabsContent>
