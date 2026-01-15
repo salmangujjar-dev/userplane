@@ -71,6 +71,10 @@ import {
   DeclineAccessRequestDataSchema,
   GetWorkspaceStatusSchema,
   WorkspaceStatusDataSchema,
+  GetWorkspaceBillingEmailSchema,
+  WorkspaceBillingEmailDataSchema,
+  UpdateWorkspaceBillingEmailSchema,
+  WorkspaceBillingEmailUpdateDataSchema,
   ApiResponseSchema,
   WorkspaceErrors,
   InviteErrors,
@@ -383,6 +387,52 @@ export const getInviteUrl = oc
   })
   .input(InviteUrlSchema)
   .output(ApiResponseSchema(InviteUrlDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/billing-email
+ * Get workspace billing email
+ * Available to all authenticated users (who can access the workspace, usually members)
+ */
+export const getWorkspaceBillingEmail = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/billing-email',
+    inputStructure: 'detailed',
+    summary: 'Get workspace billing email',
+    description: 'Retrieve workspace billing email',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(GetWorkspaceBillingEmailSchema)
+  .output(ApiResponseSchema(WorkspaceBillingEmailDataSchema));
+
+/**
+ * PATCH /workspace/{workspaceId}/billing-email
+ * Update workspace billing email
+ * Available only to workspace admin and owners
+ */
+export const updateWorkspaceBillingEmail = oc
+  .route({
+    method: 'PATCH',
+    path: '/workspace/{workspaceId}/billing-email',
+    inputStructure: 'detailed',
+    summary: 'Update workspace billing email',
+    description: 'Update workspace billing email address',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(UpdateWorkspaceBillingEmailSchema)
+  .output(ApiResponseSchema(WorkspaceBillingEmailUpdateDataSchema));
 
 /**
  * POST /workspace/{workspaceId}/invite/rotate

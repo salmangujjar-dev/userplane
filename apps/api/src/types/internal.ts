@@ -119,6 +119,7 @@ export interface CreateWorkspaceInput {
   recordingSlug: string;
   workspacePlan: WorkspacePlan;
   workspaceInviteToken: string;
+  workspaceBillingEmail?: string;
   recordingCompanyName?: string;
   recordingHeader?: string;
   recordingFootnote?: string | null;
@@ -202,4 +203,5 @@ export interface CreateWorkspaceParams {
   recordingSlug?: string;
   workspacePlan: WorkspacePlan;
   userId: string;
+  workspaceBillingEmail?: string;
 }

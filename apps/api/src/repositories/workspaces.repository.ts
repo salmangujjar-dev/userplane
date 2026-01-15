@@ -25,6 +25,7 @@ export class WorkspaceRepository {
         recordingSlug: data.recordingSlug,
         workspacePlan: data.workspacePlan,
         workspaceInviteToken: data.workspaceInviteToken,
+        workspaceBillingEmail: data.workspaceBillingEmail,
         recordingCompanyName: data.recordingCompanyName,
         recordingHeader: data.recordingHeader,
         recordingFootnote: data.recordingFootnote,
@@ -55,6 +56,44 @@ export class WorkspaceRepository {
       .limit(1);
 
     return workspace || null;
+  }
+
+  /**
+   * Find workspace billing email by ID
+   */
+  async findWorkspaceBillingEmailById(workspaceId: string) {
+    const [workspace] = await this.db
+      .select({
+        workspaceId: workspaces.workspaceId,
+        workspaceBillingEmail: workspaces.workspaceBillingEmail,
+      })
+      .from(workspaces)
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
+      .limit(1);
+
+    return workspace || null;
+  }
+
+  /**
+   * Update workspace billing email
+   */
+  async updateWorkspaceBillingEmail(
+    workspaceId: string,
+    email: string,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(workspaces)
+      .set({ workspaceBillingEmail: email })
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
+      .returning({
+        workspaceId: workspaces.workspaceId,
+        workspaceBillingEmail: workspaces.workspaceBillingEmail,
+      });
+
+    return updated || null;
   }
 
   /**

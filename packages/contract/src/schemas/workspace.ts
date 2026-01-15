@@ -5,6 +5,7 @@ import {
   DomainStatusSchema,
   PaginationMetaSchema,
   SortDirectionSchema,
+  EmailSchema,
 } from './common';
 import { PLAN_IDS, PLAN_NAME_VALUES } from '@workspace/pricing';
 import { SendWorkspaceInvitesSchema } from './invite';
@@ -798,6 +799,43 @@ export const WorkspaceAccessStatusSchema = z.enum([
   'can_request',
   'no_access',
 ]);
+
+/**
+ * Get workspace billing email request (detailed mode)
+ */
+export const GetWorkspaceBillingEmailSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+});
+
+/**
+ * Get workspace billing email response
+ */
+export const WorkspaceBillingEmailDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceBillingEmail: z.string().email(),
+});
+
+/**
+ * Update workspace billing email request (detailed mode)
+ */
+export const UpdateWorkspaceBillingEmailSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    email: EmailSchema,
+  }),
+});
+
+/**
+ * Update workspace billing email response
+ */
+export const WorkspaceBillingEmailUpdateDataSchema = z.object({
+  workspaceId: z.string(),
+  workspaceBillingEmail: z.string().email(),
+});
 
 /**
  * Get workspace status request (detailed mode)

@@ -67,6 +67,7 @@ export class WorkspaceService {
         recordingFootnote: defaultPrefs.recordingFootnote,
         recordingPrimaryColor: defaultPrefs.recordingPrimaryColor,
         recordingMaxDurationMs: defaultPrefs.recordingMaxDurationMs,
+        workspaceBillingEmail: params.workspaceBillingEmail,
       },
       options
     );
@@ -98,6 +99,55 @@ export class WorkspaceService {
       throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
     }
     return workspace;
+  }
+
+  /**
+   * Get workspace billing email
+   * Throws WORKSPACE_NOT_FOUND if workspace not found
+   */
+  async getWorkspaceBillingEmail(workspaceId: string) {
+    const result = await this.deps.workspaceRepo.findWorkspaceBillingEmailById(workspaceId);
+    if (!result) {
+      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
+      if (isSoftDeleted === true) {
+        throw new ORPCError('WORKSPACE_GONE', {
+          status: 410,
+          message: 'Workspace has been deleted',
+        });
+      }
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
+    }
+    return result.workspaceBillingEmail;
+  }
+
+  /**
+   * Update workspace billing email
+   * Throws WORKSPACE_NOT_FOUND if workspace not found or update fails
+   */
+  async updateWorkspaceBillingEmail(
+    workspaceId: string,
+    email: string,
+    options?: { tx?: Transaction }
+  ) {
+    const workspace = await this.getById(workspaceId);
+    if (!workspace) {
+      throw new ORPCError('WORKSPACE_NOT_FOUND', { status: 404, message: 'Workspace not found' });
+    }
+
+    const updated = await this.deps.workspaceRepo.updateWorkspaceBillingEmail(
+      workspaceId,
+      email,
+      options
+    );
+
+    if (!updated) {
+      throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        status: 404,
+        message: 'Failed to update workspace billing email',
+      });
+    }
+
+    return updated;
   }
 
   /**
