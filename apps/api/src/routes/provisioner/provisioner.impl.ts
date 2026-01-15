@@ -16,6 +16,7 @@ export const createWorkspaceImpl = (provisionerService: ProvisionerService) => {
       url: input.body.url,
       userId: context.user.id,
       userName: context.user.name,
+      userEmail: context.user.email,
     });
 
     return {

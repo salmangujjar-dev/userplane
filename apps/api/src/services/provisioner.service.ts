@@ -33,8 +33,9 @@ export class ProvisionerService {
     url: string;
     userId: string;
     userName?: string;
+    userEmail?: string;
   }): Promise<{ workspaceId: string }> {
-    const { url, userId, userName } = params;
+    const { url, userId, userName, userEmail } = params;
 
     // Derive workspace name from user's name
     const workspaceName = deriveWorkspaceName(url, userName);
@@ -47,6 +48,7 @@ export class ProvisionerService {
           workspaceName,
           workspacePlan: 'early_bird_monthly',
           userId,
+          workspaceBillingEmail: userEmail,
         },
         { tx }
       );

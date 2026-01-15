@@ -1092,6 +1092,63 @@ export const getWorkspaceStatusImpl = (workspaceService: WorkspaceService) => {
 };
 
 /**
+ * GET /workspace/:workspaceId/billing-email - Get workspace billing email
+ * Available to all authenticated users (who can access the workspace, usually members)
+ */
+export const getWorkspaceBillingEmailImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.getWorkspaceBillingEmail
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const email = await workspaceService.getWorkspaceBillingEmail(input.params.workspaceId);
+
+      return {
+        message: 'Workspace billing email retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          workspaceBillingEmail: email,
+        },
+      };
+    });
+};
+
+/**
+ * PATCH /workspace/:workspaceId/billing-email - Update workspace billing email
+ * Available only to workspace admin and owners
+ */
+export const updateWorkspaceBillingEmailImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.workspace.updateWorkspaceBillingEmail
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const updated = await workspaceService.updateWorkspaceBillingEmail(
+        input.params.workspaceId,
+        input.body.email
+      );
+
+      return {
+        message: 'Workspace billing email updated successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          workspaceBillingEmail: updated.workspaceBillingEmail!,
+        },
+      };
+    });
+};
+
+/**
  * Create the workspace procedures object
  * Complete implementation with CRUD, member management, invites, and domains
  */
@@ -1112,6 +1169,14 @@ export const createWorkspaceProcedures = (
     search: workspaceSearchImpl(workspaceService, workspaceMemberService),
     suggest: suggestWorkspacesImpl(workspaceService),
     join: joinWorkspaceImpl(inviteService),
+    getWorkspaceBillingEmail: getWorkspaceBillingEmailImpl(
+      workspaceService,
+      workspaceMemberService
+    ),
+    updateWorkspaceBillingEmail: updateWorkspaceBillingEmailImpl(
+      workspaceService,
+      workspaceMemberService
+    ),
 
     preferences: {
       get: getWorkspacePreferencesImpl(workspaceService),

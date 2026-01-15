@@ -58,6 +58,9 @@ export const workspaces = pgTable(
     // Stored as comma-separated values e.g. "example.com,company.org"
     workspaceInviteDomains: text('workspace_invite_domains'),
 
+    // Billing info
+    workspaceBillingEmail: text('workspace_billing_email'),
+
     // Recording link defaults
     recordingSlug: text('recording_slug').notNull(),
     recordingCustomizeLink: boolean('recording_customize_link').default(false).notNull(),
