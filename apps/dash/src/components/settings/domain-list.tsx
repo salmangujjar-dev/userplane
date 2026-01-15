@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
 import {
   Pagination,
   PaginationContent,
@@ -10,6 +9,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@workspace/ui/components/pagination';
+import { Plus } from 'lucide-react';
 import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
 import { DomainListItem } from './domain-list-item';
 
@@ -60,9 +60,13 @@ export function DomainList({
         />
       ))}
 
-      <Button variant="outline" className="w-full" onClick={onAddDomain}>
-        Set up another domain
-      </Button>
+      <button
+        onClick={onAddDomain}
+        className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors cursor-pointer hover:border-primary/50"
+      >
+        <Plus className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">Set up another domain</span>
+      </button>
 
       {totalPages > 1 && (
         <DomainListPagination

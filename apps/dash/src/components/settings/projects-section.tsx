@@ -19,7 +19,15 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@workspace/ui/components/pagination';
-import { Folder, Trash2, MoreVertical, ChevronRight, Pencil, ArrowUpDown } from 'lucide-react';
+import {
+  Folder,
+  Trash2,
+  MoreVertical,
+  ChevronRight,
+  Pencil,
+  ArrowUpDown,
+  Plus,
+} from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -270,9 +278,13 @@ export function ProjectsSection() {
           </div>
         ))}
 
-        <Button variant="outline" className="w-full max-w-2xl" onClick={() => setShowModal(true)}>
-          Add New Project
-        </Button>
+        <button
+          onClick={() => setShowModal(true)}
+          className="w-full max-w-2xl flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors cursor-pointer hover:border-primary/50"
+        >
+          <Plus className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Add New Project</span>
+        </button>
 
         {totalPages > 1 && (
           <Pagination className="mt-4">
