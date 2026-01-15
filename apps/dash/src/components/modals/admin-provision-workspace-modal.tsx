@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,32 +19,10 @@ import {
   SelectValue,
 } from '@workspace/ui/components/select';
 import Logo from '@workspace/ui/components/logo';
-import { Plus, Trash2, UserPlus, Copy, Check } from 'lucide-react';
+import { Plus, Trash2, UserPlus } from 'lucide-react';
 import type { PlanId } from '@workspace/pricing';
-
-interface Member {
-  email: string;
-  name: string;
-  role: 'admin' | 'member';
-}
-
-interface ProvisionResult {
-  workspaceId: string;
-  workspaceName: string;
-  owner: {
-    userId: string;
-    email: string;
-    name: string;
-    isNew: boolean;
-  };
-  members: Array<{
-    userId: string;
-    email: string;
-    name: string;
-    role: 'admin' | 'member';
-    isNew: boolean;
-  }>;
-}
+import { useProvisionForm, PLAN_OPTIONS, Member } from './hooks/use-provision-form';
+import { AdminProvisionSuccessModal, ProvisionResult } from './admin-provision-success-modal';
 
 interface AdminProvisionWorkspaceModalProps {
   open: boolean;
@@ -57,22 +35,42 @@ interface AdminProvisionWorkspaceModalProps {
   isPending: boolean;
 }
 
-interface AdminProvisionSuccessModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  result: ProvisionResult | null;
-}
+export { AdminProvisionSuccessModal, type ProvisionResult };
 
-const PLAN_OPTIONS: Array<{ value: PlanId; label: string }> = [
-  { value: 'early_bird_monthly', label: 'Early Bird Monthly' },
-  { value: 'tiny_bird_monthly', label: 'Tiny Bird Monthly' },
-  { value: 'starter_monthly', label: 'Starter Monthly' },
-  { value: 'starter_annual', label: 'Starter Annual' },
-  { value: 'scale_up_monthly', label: 'Scale Up Monthly' },
-  { value: 'scale_up_annual', label: 'Scale Up Annual' },
-  { value: 'enterprise_monthly', label: 'Enterprise Monthly' },
-  { value: 'enterprise_annual', label: 'Enterprise Annual' },
-];
+const FormField = ({
+  label,
+  id,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  className,
+}: {
+  label: string;
+  id?: string;
+  type?: string;
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+}) => (
+  <div className={`space-y-2 ${className}`}>
+    <Label htmlFor={id} className="text-sm">
+      {label}
+    </Label>
+    <Input
+      id={id}
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      className="rounded-lg"
+    />
+  </div>
+);
 
 /**
  * Modal for provisioning a workspace on behalf of a user.
@@ -84,69 +82,36 @@ export function AdminProvisionWorkspaceModal({
   onSubmit,
   isPending,
 }: AdminProvisionWorkspaceModalProps) {
-  // Owner fields
-  const [ownerEmail, setOwnerEmail] = useState('');
-  const [ownerName, setOwnerName] = useState('');
-
-  // Workspace fields
-  const [workspaceName, setWorkspaceName] = useState('');
-  const [workspaceUrl, setWorkspaceUrl] = useState('');
-  const [workspacePlan, setWorkspacePlan] = useState<PlanId>('early_bird_monthly');
-
-  // Members
-  const [members, setMembers] = useState<Member[]>([]);
+  const {
+    ownerEmail,
+    setOwnerEmail,
+    ownerName,
+    setOwnerName,
+    workspaceName,
+    setWorkspaceName,
+    workspaceUrl,
+    setWorkspaceUrl,
+    workspacePlan,
+    setWorkspacePlan,
+    members,
+    addMember,
+    removeMember,
+    updateMember,
+    isValid,
+    resetForm,
+    getFormData,
+  } = useProvisionForm();
 
   // Reset form when modal closes
   useEffect(() => {
     if (!open) {
-      setOwnerEmail('');
-      setOwnerName('');
-      setWorkspaceName('');
-      setWorkspaceUrl('');
-      setWorkspacePlan('early_bird_monthly');
-      setMembers([]);
+      resetForm();
     }
-  }, [open]);
-
-  const isValid =
-    ownerEmail.trim() !== '' &&
-    ownerName.trim() !== '' &&
-    workspaceName.trim() !== '' &&
-    workspaceUrl.trim() !== '' &&
-    // Validate members have email and name filled
-    members.every((m) => m.email.trim() !== '' && m.name.trim() !== '');
+  }, [open, resetForm]);
 
   const handleSubmit = () => {
     if (!isValid) return;
-
-    onSubmit({
-      owner: {
-        email: ownerEmail.trim(),
-        name: ownerName.trim(),
-      },
-      workspace: {
-        name: workspaceName.trim(),
-        url: workspaceUrl.trim(),
-        plan: workspacePlan,
-      },
-      members: members.map((m) => ({
-        email: m.email.trim(),
-        name: m.name.trim(),
-        role: m.role,
-      })),
-    });
-  };
-
-  const addMember = () => {
-    setMembers([...members, { email: '', name: '', role: 'member' }]);
-  };
-
-  const removeMember = (index: number) => {
-    setMembers(members.filter((_, i) => i !== index));
-  };
-
-  const updateMember = (index: number, field: keyof Member, value: string) => {
-    setMembers(members.map((m, i) => (i === index ? { ...m, [field]: value } : m)));
+    onSubmit(getFormData());
   };
 
   return (
@@ -171,64 +136,42 @@ export function AdminProvisionWorkspaceModal({
           <div className="space-y-6">
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="owner-email" className="text-sm">
-                    Owner Email
-                  </Label>
-                  <Input
-                    id="owner-email"
-                    type="email"
-                    placeholder="owner@example.com"
-                    value={ownerEmail}
-                    onChange={(e) => setOwnerEmail(e.target.value)}
-                    disabled={isPending}
-                    className="rounded-lg"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="owner-name" className="text-sm">
-                    Owner Name
-                  </Label>
-                  <Input
-                    id="owner-name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={ownerName}
-                    onChange={(e) => setOwnerName(e.target.value)}
-                    disabled={isPending}
-                    className="rounded-lg"
-                  />
-                </div>
+                <FormField
+                  label="Owner Email"
+                  id="owner-email"
+                  type="email"
+                  placeholder="owner@example.com"
+                  value={ownerEmail}
+                  onChange={setOwnerEmail}
+                  disabled={isPending}
+                />
+                <FormField
+                  label="Owner Name"
+                  id="owner-name"
+                  placeholder="John Doe"
+                  value={ownerName}
+                  onChange={setOwnerName}
+                  disabled={isPending}
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="workspace-name" className="text-sm">
-                    Workspace Name
-                  </Label>
-                  <Input
-                    id="workspace-name"
-                    type="text"
-                    placeholder="Acme Inc"
-                    value={workspaceName}
-                    onChange={(e) => setWorkspaceName(e.target.value)}
-                    disabled={isPending}
-                    className="rounded-lg"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="workspace-url" className="text-sm">
-                    Domain URL
-                  </Label>
-                  <Input
-                    id="workspace-url"
-                    type="url"
-                    placeholder="https://example.com"
-                    value={workspaceUrl}
-                    onChange={(e) => setWorkspaceUrl(e.target.value)}
-                    disabled={isPending}
-                    className="rounded-lg"
-                  />
-                </div>
+                <FormField
+                  label="Workspace Name"
+                  id="workspace-name"
+                  placeholder="Acme Inc"
+                  value={workspaceName}
+                  onChange={setWorkspaceName}
+                  disabled={isPending}
+                />
+                <FormField
+                  label="Domain URL"
+                  id="workspace-url"
+                  type="url"
+                  placeholder="https://example.com"
+                  value={workspaceUrl}
+                  onChange={setWorkspaceUrl}
+                  disabled={isPending}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="workspace-plan" className="text-sm">
@@ -282,29 +225,24 @@ export function AdminProvisionWorkspaceModal({
                       key={index}
                       className="flex items-end gap-2 p-3 border rounded-lg bg-muted/30"
                     >
-                      <div className="flex-1 space-y-1">
-                        <Label className="text-xs">Email</Label>
-                        <Input
-                          type="email"
-                          placeholder="member@example.com"
-                          value={member.email}
-                          onChange={(e) => updateMember(index, 'email', e.target.value)}
-                          disabled={isPending}
-                          className="rounded-lg"
-                        />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <Label className="text-xs">Name</Label>
-                        <Input
-                          type="text"
-                          placeholder="Jane Doe"
-                          value={member.name}
-                          onChange={(e) => updateMember(index, 'name', e.target.value)}
-                          disabled={isPending}
-                          className="rounded-lg"
-                        />
-                      </div>
-                      <div className="w-28 space-y-1">
+                      <FormField
+                        label="Email"
+                        type="email"
+                        placeholder="member@example.com"
+                        value={member.email}
+                        onChange={(val) => updateMember(index, 'email', val)}
+                        disabled={isPending}
+                        className="flex-1"
+                      />
+                      <FormField
+                        label="Name"
+                        placeholder="Jane Doe"
+                        value={member.name}
+                        onChange={(val) => updateMember(index, 'name', val)}
+                        disabled={isPending}
+                        className="flex-1"
+                      />
+                      <div className="w-28 space-y-2">
                         <Label className="text-xs">Role</Label>
                         <Select
                           value={member.role}
@@ -326,7 +264,7 @@ export function AdminProvisionWorkspaceModal({
                         size="icon"
                         onClick={() => removeMember(index)}
                         disabled={isPending}
-                        className="text-muted-foreground hover:text-destructive"
+                        className="text-muted-foreground hover:text-destructive mb-0.5"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -360,113 +298,6 @@ export function AdminProvisionWorkspaceModal({
               {isPending ? 'Provisioning...' : 'Provision Workspace'}
             </Button>
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-/**
- * Success modal shown after workspace is provisioned.
- * Displays workspace details and allows copying workspace ID.
- */
-export function AdminProvisionSuccessModal({
-  open,
-  onOpenChange,
-  result,
-}: AdminProvisionSuccessModalProps) {
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!open) {
-      setCopied(false);
-    }
-  }, [open]);
-
-  if (!result) return null;
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(result.workspaceId);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex items-start gap-4">
-            <Logo variant="tiled" size="md" showText={false} />
-            <div className="flex flex-col space-y-1">
-              <DialogTitle className="text-xl font-semibold">Workspace Provisioned</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                Successfully created workspace <strong>{result.workspaceName}</strong> for{' '}
-                <strong>{result.owner.email}</strong>.
-              </DialogDescription>
-            </div>
-          </div>
-
-          {/* Details */}
-          <div className="space-y-4">
-            {/* Workspace ID */}
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Workspace ID</p>
-                <p className="font-mono text-sm">{result.workspaceId}</p>
-              </div>
-              <Button variant="ghost" size="icon" onClick={handleCopy} className="h-8 w-8">
-                {copied ? (
-                  <Check className="h-4 w-4 text-green-500" />
-                ) : (
-                  <Copy className="h-4 w-4 text-muted-foreground" />
-                )}
-              </Button>
-            </div>
-
-            {/* Owner Info */}
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Owner</p>
-              <div className="flex items-center gap-2">
-                <span className="text-sm">{result.owner.name}</span>
-                <span className="text-sm text-muted-foreground">({result.owner.email})</span>
-                {result.owner.isNew && (
-                  <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded">
-                    New
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Members */}
-            {result.members.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">Members ({result.members.length})</p>
-                <div className="space-y-1">
-                  {result.members.map((member) => (
-                    <div key={member.userId} className="flex items-center gap-2 text-sm">
-                      <span>{member.name}</span>
-                      <span className="text-muted-foreground">({member.email})</span>
-                      <span className="text-xs text-muted-foreground capitalize">
-                        {member.role}
-                      </span>
-                      {member.isNew && (
-                        <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded">
-                          New
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <DialogFooter className="mt-6">
-          <Button type="button" className="rounded-full px-6" onClick={() => onOpenChange(false)}>
-            Done
-          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
