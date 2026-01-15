@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import { X, Globe, Lock, Shield, Plus } from 'lucide-react';
+import { X, Globe, Lock, Shield, Plus, RefreshCw } from 'lucide-react';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useInvitePolicy, type WorkspaceInvitePolicy } from '@/hooks/use-invite-policy';
 import { useUpdateInvitePolicy } from '@/queries/use-workspace-mutations';
@@ -131,9 +131,7 @@ export function InvitePolicySection() {
       <div>
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Access</h2>
-          <p className="text-sm text-muted-foreground">
-            Control how users can discover and join your workspace
-          </p>
+          <p className="text-sm text-muted-foreground">Manage workspace invite settings</p>
         </div>
         <div className="max-w-2xl">
           <InvitePolicySkeleton />
@@ -147,9 +145,7 @@ export function InvitePolicySection() {
       <div>
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Access</h2>
-          <p className="text-sm text-muted-foreground">
-            Control how users can discover and join your workspace
-          </p>
+          <p className="text-sm text-muted-foreground">Manage workspace invite settings</p>
         </div>
         <div className="max-w-2xl">
           <SectionError
@@ -177,16 +173,14 @@ export function InvitePolicySection() {
     <div>
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Access</h2>
-        <p className="text-sm text-muted-foreground">
-          Control how users can discover and join your workspace
-        </p>
+        <p className="text-sm text-muted-foreground">Manage workspace invite settings</p>
       </div>
 
       <div className="max-w-2xl space-y-6">
         {/* Policy Selection */}
         <div className="space-y-2">
           <Label>Invite Policy</Label>
-          <p className="text-sm text-muted-foreground">Manage invite policy for your workspace</p>
+          <p className="text-sm text-muted-foreground">Set invite policy for your workspace</p>
 
           <div className="flex items-center gap-4">
             <Select value={policy} onValueChange={handlePolicyChange} disabled={!canEdit}>
@@ -297,21 +291,28 @@ export function InvitePolicySection() {
         )}
 
         <div className="mt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium">Reset invite token</div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Generate a new invite token and invalidate the old one
-              </p>
-            </div>
-            <Button
-              onClick={handleResetInviteToken}
-              disabled={rotateInviteMutation.isPending || !canEdit}
-              variant="outline"
-            >
-              {rotateInviteMutation.isPending ? 'Resetting...' : 'Reset'}
-            </Button>
+          <div className="space-y-1 mb-3">
+            <Label>Reset invite token</Label>
+            <p className="text-sm text-muted-foreground">
+              Generate a new invite token and invalidate the old one
+            </p>
           </div>
+          <button
+            onClick={handleResetInviteToken}
+            disabled={rotateInviteMutation.isPending || !canEdit}
+            className={`w-full max-w-md flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors ${
+              rotateInviteMutation.isPending || !canEdit
+                ? 'opacity-50 cursor-not-allowed'
+                : 'cursor-pointer hover:border-primary/50'
+            }`}
+          >
+            <RefreshCw
+              className={`h-4 w-4 text-muted-foreground ${rotateInviteMutation.isPending ? 'animate-spin' : ''}`}
+            />
+            <span className="text-sm text-muted-foreground">
+              {rotateInviteMutation.isPending ? 'Rotate invite token' : 'Rotate invite token'}
+            </span>
+          </button>
         </div>
 
         <ResetInviteTokenModal
