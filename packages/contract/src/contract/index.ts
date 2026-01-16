@@ -63,11 +63,14 @@ export const adminContract = {
       list: admin.listWorkspaceMembers,
     },
     deactivate: admin.deactivateWorkspace,
-    reactivate: admin.reactivateWorkspace,
+    restore: admin.restoreWorkspace,
     resetInviteToken: admin.resetInviteToken,
     recordingStats: admin.getWorkspaceRecordingStats,
     memberRecordingStats: admin.getWorkspaceMemberRecordingStats,
     provision: admin.provisionWorkspace,
+  },
+  projects: {
+    restore: admin.restoreProject,
   },
 };
 
@@ -90,6 +93,7 @@ export const workspaceContract = {
   status: workspace.getWorkspaceStatus,
   updateName: workspace.updateWorkspaceName,
   delete: workspace.deleteWorkspace,
+  restore: workspace.restoreWorkspace,
   search: workspace.workspaceSearch,
   suggest: workspace.suggestWorkspaces,
   join: workspace.joinWorkspace,
@@ -179,6 +183,7 @@ export const projectContract = {
   update: project.updateProject,
   replace: project.replaceProject,
   delete: project.deleteProject,
+  restore: project.restoreProject,
 };
 
 /**

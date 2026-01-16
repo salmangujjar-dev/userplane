@@ -68,6 +68,32 @@ export const AdminErrors = {
     message: 'Workspace is not deactivated',
   },
 
+  WORKSPACE_RESTORE_TIME_EXPIRED: {
+    status: 410,
+    message: 'Workspace restoration window has expired',
+  },
+
+  WORKSPACE_RESTORE_FAILED: {
+    status: 500,
+    message: 'Failed to restore workspace',
+  },
+
+  // Project errors
+  PROJECT_NOT_FOUND: {
+    status: 404,
+    message: 'Project not found',
+  },
+
+  PROJECT_RESTORE_TIME_EXPIRED: {
+    status: 410,
+    message: 'Project restoration window has expired',
+  },
+
+  PROJECT_RESTORE_FAILED: {
+    status: 500,
+    message: 'Failed to restore project',
+  },
+
   // Recording errors
   RECORDING_NOT_FOUND: {
     status: 404,

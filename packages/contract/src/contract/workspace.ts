@@ -53,6 +53,8 @@ import {
   WorkspaceNameUpdateDataSchema,
   DeleteWorkspaceSchema,
   WorkspaceDeleteDataSchema,
+  RestoreWorkspaceSchema,
+  WorkspaceRestoreDataSchema,
   WorkspaceSearchQuerySchema,
   WorkspaceSearchDataSchema,
   GetInvitePolicySchema,
@@ -798,6 +800,30 @@ export const deleteWorkspace = oc
   })
   .input(DeleteWorkspaceSchema)
   .output(ApiResponseSchema(WorkspaceDeleteDataSchema));
+
+/**
+ * POST /workspace/{workspaceId}/restore
+ * Restore a soft-deleted workspace
+ */
+export const restoreWorkspace = oc
+  .route({
+    method: 'POST',
+    path: '/workspace/{workspaceId}/restore',
+    inputStructure: 'detailed',
+    summary: 'Restore workspace',
+    description:
+      'Restore a soft-deleted workspace and its associated projects and links within the grace period',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_RESTORE_TIME_EXPIRED: WorkspaceErrors.WORKSPACE_RESTORE_TIME_EXPIRED,
+    WORKSPACE_RESTORE_FAILED: WorkspaceErrors.WORKSPACE_RESTORE_FAILED,
+  })
+  .input(RestoreWorkspaceSchema)
+  .output(ApiResponseSchema(WorkspaceRestoreDataSchema));
 
 /**
  * GET /workspace/{workspaceId}/search

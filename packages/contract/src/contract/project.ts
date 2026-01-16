@@ -11,6 +11,8 @@ import {
   ReplaceProjectSchema,
   DeleteProjectSchema,
   ProjectDeleteDataSchema,
+  RestoreProjectSchema,
+  ProjectRestoreDataSchema,
   ApiResponseSchema,
   ProjectErrors,
 } from '../schemas';
@@ -152,3 +154,26 @@ export const deleteProject = oc
   })
   .input(DeleteProjectSchema)
   .output(ApiResponseSchema(ProjectDeleteDataSchema));
+
+/**
+ * POST /workspace/{workspaceId}/projects/{projectId}/restore
+ * Restore a soft-deleted project
+ */
+export const restoreProject = oc
+  .route({
+    method: 'POST',
+    path: '/workspace/{workspaceId}/projects/{projectId}/restore',
+    inputStructure: 'detailed',
+    summary: 'Restore project',
+    description: 'Restore a soft-deleted project within the grace period',
+    tags: ['Projects'],
+  })
+  .errors({
+    UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
+    FORBIDDEN: ProjectErrors.FORBIDDEN,
+    PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
+    PROJECT_RESTORE_TIME_EXPIRED: ProjectErrors.PROJECT_RESTORE_TIME_EXPIRED,
+    PROJECT_RESTORE_FAILED: ProjectErrors.PROJECT_RESTORE_FAILED,
+  })
+  .input(RestoreProjectSchema)
+  .output(ApiResponseSchema(ProjectRestoreDataSchema));
