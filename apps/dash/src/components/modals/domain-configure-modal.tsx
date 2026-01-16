@@ -33,10 +33,12 @@ interface DomainConfigureModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   domainUrl: string;
+  domainId?: string;
   verified: boolean;
   settings: DomainSettings;
   onSave: (settings: DomainSettings) => void;
   onVerify: () => void;
+  onSendInstructions: () => void;
   loading?: boolean;
 }
 
@@ -48,6 +50,7 @@ export function DomainConfigureModal({
   settings,
   onSave,
   onVerify,
+  onSendInstructions,
   loading = false,
 }: DomainConfigureModalProps) {
   const [localSettings, setLocalSettings] = useState<DomainSettings>(settings);
@@ -79,6 +82,11 @@ export function DomainConfigureModal({
   const handleVerify = () => {
     onOpenChange(false);
     onVerify();
+  };
+
+  const handleSendInstructions = () => {
+    onOpenChange(false);
+    onSendInstructions();
   };
 
   return (
@@ -134,8 +142,35 @@ export function DomainConfigureModal({
                         : 'Complete domain verification to enable recordings'}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleVerify} className="ml-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleVerify}
+                    className="ml-2 min-w-[80px]"
+                  >
                     {verified ? 'Reverify' : 'Verify'}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`h-2 w-2 rounded-full ${verified ? 'bg-green-500' : 'bg-blue-500'}`}
+                      />
+                      <div className="text-sm font-normal">Send developer instructions</div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 ml-4">
+                      Email setup instructions to your development team
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSendInstructions}
+                    className="ml-2 min-w-[80px]"
+                  >
+                    Send
                   </Button>
                 </div>
               </div>

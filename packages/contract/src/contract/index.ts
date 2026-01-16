@@ -147,6 +147,7 @@ export const workspaceContract = {
     update: workspace.updateDomain,
     delete: workspace.deleteDomain,
     getVerificationUrl: workspace.getDomainVerificationUrl,
+    sendInstructions: workspace.sendDomainInstructions,
     preferences: {
       get: workspace.getDomainRecordingPreferences,
       update: workspace.updateDomainRecordingPreferences,

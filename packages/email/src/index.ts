@@ -49,7 +49,7 @@ export {
   // Recording
   renderRecordingReceived,
   // Domain
-  renderDomainVerificationInstructions,
+  renderDomainDeveloperInstructions,
   // Billing
   renderSubscriptionActive,
   renderSubscriptionInactive,
@@ -104,7 +104,7 @@ export type {
   // Recording
   RecordingReceivedEmailProps,
   // Domain
-  DomainVerificationInstructionsEmailProps,
+  DomainDeveloperInstructionsEmailProps,
   // Billing
   SubscriptionActiveEmailProps,
   SubscriptionInactiveEmailProps,

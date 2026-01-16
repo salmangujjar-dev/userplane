@@ -76,8 +76,8 @@ import { RecordingReceivedEmail } from './emails/recording';
 import type { RecordingReceivedEmailProps } from './emails/recording';
 
 // Domain emails
-import { DomainVerificationInstructionsEmail } from './emails/domain';
-import type { DomainVerificationInstructionsEmailProps } from './emails/domain';
+import { DomainDeveloperInstructionsEmail } from './emails/domain';
+import type { DomainDeveloperInstructionsEmailProps } from './emails/domain';
 
 // Billing emails
 import {
@@ -323,10 +323,10 @@ export async function renderRecordingReceived(
 // DOMAIN EMAILS
 // ============================================================================
 
-export async function renderDomainVerificationInstructions(
-  props: DomainVerificationInstructionsEmailProps
+export async function renderDomainDeveloperInstructions(
+  props: DomainDeveloperInstructionsEmailProps
 ): Promise<RenderResult> {
-  const element = React.createElement(DomainVerificationInstructionsEmail, props);
+  const element = React.createElement(DomainDeveloperInstructionsEmail, props);
   const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
   return { html, text };
 }
@@ -507,7 +507,7 @@ export type {
   // Recording
   RecordingReceivedEmailProps,
   // Domain
-  DomainVerificationInstructionsEmailProps,
+  DomainDeveloperInstructionsEmailProps,
   // Billing
   SubscriptionActiveEmailProps,
   SubscriptionInactiveEmailProps,

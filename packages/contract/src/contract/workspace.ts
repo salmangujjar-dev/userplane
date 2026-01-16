@@ -41,6 +41,8 @@ import {
   UpdateDomainRecordingPreferencesSchema,
   DomainRecordingPreferencesUpdateDataSchema,
   ReplaceDomainRecordingPreferencesSchema,
+  SendDomainInstructionsSchema,
+  SendDomainInstructionsResultSchema,
   InviteUrlSchema,
   InviteUrlDataSchema,
   SendWorkspaceInvitesSchema,
@@ -731,6 +733,31 @@ export const replaceDomainRecordingPreferences = oc
   })
   .input(ReplaceDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesUpdateDataSchema));
+
+/**
+ * POST /workspace/{workspaceId}/domains/{domainId}/instructions
+ * Send domain developer instructions to email addresses
+ */
+export const sendDomainInstructions = oc
+  .route({
+    method: 'POST',
+    path: '/workspace/{workspaceId}/domains/{domainId}/instructions',
+    inputStructure: 'detailed',
+    summary: 'Send domain developer instructions',
+    description: 'Send setup instructions for domain configuration to developer email addresses',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    DOMAIN_NOT_FOUND: DomainErrors.DOMAIN_NOT_FOUND,
+    DOMAIN_GONE: DomainErrors.DOMAIN_GONE,
+    DOMAIN_WORKSPACE_MISMATCH: DomainErrors.DOMAIN_WORKSPACE_MISMATCH,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(SendDomainInstructionsSchema)
+  .output(ApiResponseSchema(SendDomainInstructionsResultSchema));
 
 /**
  * PUT /workspace/{workspaceId}/preferences/link

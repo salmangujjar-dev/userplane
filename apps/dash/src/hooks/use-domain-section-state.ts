@@ -33,6 +33,10 @@ interface DomainSectionState {
   configuringDomain: ConfiguringDomain | null;
   loadingConfigureId: string | null;
 
+  // Instructions flow
+  instructionsDomain: DomainIdentifier | null;
+  showInstructionsModal: boolean;
+
   // Delete modal
   deletingDomain: DomainIdentifier | null;
 }
@@ -63,6 +67,10 @@ type DomainSectionAction =
   | { type: 'CLOSE_CONFIGURE_MODAL' }
   | { type: 'CONFIGURE_LOADING_DONE' }
 
+  // Instructions flow actions
+  | { type: 'OPEN_INSTRUCTIONS'; payload: DomainIdentifier }
+  | { type: 'CLOSE_INSTRUCTIONS' }
+
   // Delete modal actions
   | { type: 'OPEN_DELETE_MODAL'; payload: DomainIdentifier }
   | { type: 'CLOSE_DELETE_MODAL' }
@@ -78,6 +86,8 @@ const initialState: DomainSectionState = {
   isEditModalOpen: false,
   configuringDomain: null,
   loadingConfigureId: null,
+  instructionsDomain: null,
+  showInstructionsModal: false,
   deletingDomain: null,
 };
 
@@ -147,6 +157,12 @@ function domainSectionReducer(
       return { ...state, configuringDomain: null };
     case 'CONFIGURE_LOADING_DONE':
       return { ...state, loadingConfigureId: null };
+
+    // Instructions flow
+    case 'OPEN_INSTRUCTIONS':
+      return { ...state, instructionsDomain: action.payload, showInstructionsModal: true };
+    case 'CLOSE_INSTRUCTIONS':
+      return { ...state, instructionsDomain: null, showInstructionsModal: false };
 
     // Delete modal
     case 'OPEN_DELETE_MODAL':
@@ -235,6 +251,13 @@ export function useDomainSectionState() {
   );
   const closeConfigureModal = useCallback(() => dispatch({ type: 'CLOSE_CONFIGURE_MODAL' }), []);
 
+  // Instructions flow handlers
+  const openInstructions = useCallback(
+    (domain: DomainIdentifier) => dispatch({ type: 'OPEN_INSTRUCTIONS', payload: domain }),
+    []
+  );
+  const closeInstructions = useCallback(() => dispatch({ type: 'CLOSE_INSTRUCTIONS' }), []);
+
   // Delete modal handlers
   const openDeleteModal = useCallback(
     (domain: DomainIdentifier) => dispatch({ type: 'OPEN_DELETE_MODAL', payload: domain }),
@@ -260,6 +283,8 @@ export function useDomainSectionState() {
       openConfigureModal,
       updateConfigureSettings,
       closeConfigureModal,
+      openInstructions,
+      closeInstructions,
       openDeleteModal,
       closeDeleteModal,
       onDeleteSuccess,

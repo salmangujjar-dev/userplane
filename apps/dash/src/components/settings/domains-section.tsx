@@ -266,6 +266,15 @@ export function DomainsSection() {
     }
   }, [state.configuringDomain, actions]);
 
+  const handleSendInstructionsFromConfigure = useCallback(() => {
+    if (state.configuringDomain) {
+      actions.openInstructions({
+        id: state.configuringDomain.domainId,
+        url: state.configuringDomain.url,
+      });
+    }
+  }, [state.configuringDomain, actions]);
+
   // ========== Delete Domain Handlers ==========
   const handleConfirmDelete = useCallback(() => {
     if (!state.deletingDomain) return;
@@ -376,7 +385,12 @@ export function DomainsSection() {
         onCloseConfigureModal={(open) => !open && actions.closeConfigureModal()}
         onSaveConfigureSettings={handleSaveConfigureSettings}
         onVerifyFromConfigure={handleVerifyFromConfigure}
+        onSendInstructionsFromConfigure={handleSendInstructionsFromConfigure}
         configureLoading={updateDomainPreferencesMutation.isPending}
+        // Instructions flow
+        instructionsDomain={state.instructionsDomain}
+        showInstructionsModal={state.showInstructionsModal}
+        onCloseInstructions={(open) => !open && actions.closeInstructions()}
         // Delete modal
         deletingDomain={state.deletingDomain}
         onCloseDeleteModal={(open) => !open && actions.closeDeleteModal()}

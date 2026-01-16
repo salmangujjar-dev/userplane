@@ -6,7 +6,9 @@ import { DomainVerificationPostModal } from '@/components/modals/domain-verifica
 import { EditDomainModal } from '@/components/modals/edit-domain-modal';
 import { CreateDomainModal } from '@/components/modals/create-domain-modal';
 import { DomainConfigureModal } from '@/components/modals/domain-configure-modal';
+import { DeveloperInstructionsModal } from '@/components/modals/developer-instructions-modal';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
+import { useSendDomainInstructions } from '@/hooks/use-domain-instructions';
 import type { VerificationStep } from '@/hooks/use-verification-flow';
 import {
   type DomainSettings,
@@ -52,7 +54,13 @@ interface DomainModalsManagerProps {
   onCloseConfigureModal: (open: boolean) => void;
   onSaveConfigureSettings: (settings: DomainSettings) => void;
   onVerifyFromConfigure: () => void;
+  onSendInstructionsFromConfigure: () => void;
   configureLoading: boolean;
+
+  // Instructions flow
+  instructionsDomain: DomainIdentifier | null;
+  showInstructionsModal: boolean;
+  onCloseInstructions: (open: boolean) => void;
 
   // Delete modal
   deletingDomain: DomainIdentifier | null;
@@ -102,7 +110,13 @@ export function DomainModalsManager({
   onCloseConfigureModal,
   onSaveConfigureSettings,
   onVerifyFromConfigure,
+  onSendInstructionsFromConfigure,
   configureLoading,
+
+  // Instructions flow
+  instructionsDomain,
+  showInstructionsModal,
+  onCloseInstructions,
 
   // Delete modal
   deletingDomain,
@@ -110,6 +124,21 @@ export function DomainModalsManager({
   onConfirmDelete,
   deleteLoading,
 }: DomainModalsManagerProps) {
+  const { mutate: sendInstructions, isPending: isSendingInstructions } =
+    useSendDomainInstructions();
+
+  const handleSendInstructions = (emails: string[]) => {
+    if (!instructionsDomain) return;
+    sendInstructions(
+      { domainId: instructionsDomain.id, emails },
+      {
+        onSuccess: () => {
+          onCloseInstructions(false);
+        },
+      }
+    );
+  };
+
   return (
     <>
       {/* Verification Flow Modals */}
@@ -166,11 +195,22 @@ export function DomainModalsManager({
         open={!!configuringDomain}
         onOpenChange={onCloseConfigureModal}
         domainUrl={configuringDomain?.url || ''}
+        domainId={configuringDomain?.domainId || ''}
         verified={configuringDomain?.status === 'verified'}
         settings={configuringDomain?.settings || DEFAULT_DOMAIN_SETTINGS}
         onSave={onSaveConfigureSettings}
         onVerify={onVerifyFromConfigure}
+        onSendInstructions={onSendInstructionsFromConfigure}
         loading={configureLoading}
+      />
+
+      {/* Developer Instructions Modal */}
+      <DeveloperInstructionsModal
+        open={showInstructionsModal}
+        onOpenChange={onCloseInstructions}
+        domainUrl={instructionsDomain?.url || ''}
+        onSend={handleSendInstructions}
+        loading={isSendingInstructions}
       />
 
       {/* Delete Confirmation Modal */}
