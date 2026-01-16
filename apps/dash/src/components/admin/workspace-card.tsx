@@ -17,6 +17,7 @@ import {
   Link2,
   Video,
   PowerOff,
+  Power,
   KeyRound,
   Building2,
 } from 'lucide-react';
@@ -33,6 +34,7 @@ interface WorkspaceCardProps {
   isSelected?: boolean;
   onClick?: () => void;
   onDeactivate?: () => void;
+  onRestore?: () => void;
   onResetInviteToken?: () => void;
 }
 
@@ -47,6 +49,7 @@ export function WorkspaceCard({
   isSelected,
   onClick,
   onDeactivate,
+  onRestore,
   onResetInviteToken,
 }: WorkspaceCardProps) {
   const { isAdmin } = usePermissions();
@@ -159,17 +162,29 @@ export function WorkspaceCard({
                 Reset Invite Token
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeactivate?.();
-                }}
-                disabled={!isAdmin || isDeleted}
-                className="text-red-600 focus:text-red-600"
-              >
-                <PowerOff className="h-4 w-4 mr-2" />
-                Deactivate Workspace
-              </DropdownMenuItem>
+              {isDeleted ? (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRestore?.();
+                  }}
+                  disabled={!isAdmin}
+                >
+                  <Power className="h-4 w-4 mr-2" />
+                  Reactivate Workspace
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeactivate?.();
+                  }}
+                  disabled={!isAdmin}
+                >
+                  <PowerOff className="h-4 w-4 mr-2" />
+                  Deactivate Workspace
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
