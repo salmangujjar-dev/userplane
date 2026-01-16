@@ -107,6 +107,10 @@ export const WorkspaceErrors = {
     message:
       'Cannot leave workspace as the last owner. Transfer ownership or delete the workspace first.',
   },
+  WORKSPACE_MEMBER_SOLE_OWNER_WITH_MEMBERS: {
+    status: 403,
+    message: 'You are the only owner. Please make someone else an owner before leaving.',
+  },
 
   // Not found errors
   WORKSPACE_MEMBER_NOT_FOUND: {

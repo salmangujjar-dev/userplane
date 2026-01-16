@@ -314,6 +314,7 @@ export const LeaveWorkspaceSchema = z.object({
  */
 export const LeaveWorkspaceDataSchema = z.object({
   workspaceId: z.string(),
+  workspaceDeleted: z.boolean().optional(),
 });
 
 /**

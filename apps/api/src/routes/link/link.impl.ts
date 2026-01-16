@@ -3,6 +3,7 @@
  * Implements the link contract defined in @workspace/contract
  */
 
+import { ORPCError } from '@orpc/server';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { LinkService } from '@/api/services/link.service';
@@ -157,7 +158,7 @@ export const updateLinkImpl = (
 
 /**
  * DELETE /workspace/:workspaceId/links/:linkId - Delete link
- * Requires workspace member
+ * Requires workspace member with admin/owner role OR creator of the link
  */
 export const deleteLinkImpl = (
   linkService: LinkService,
@@ -169,6 +170,20 @@ export const deleteLinkImpl = (
   return authorized.link.delete
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
+      // Fetch link to check creator
+      const link = await linkService.getById(input.params.linkId, input.params.workspaceId);
+
+      // Check permission: admin/owner OR creator
+      const isAdminOrOwner = context.workspaceRole === 'admin' || context.workspaceRole === 'owner';
+      const isCreator = link.creator.workspaceMemberId === context.workspaceMemberId;
+
+      if (!isAdminOrOwner && !isCreator) {
+        throw new ORPCError('FORBIDDEN', {
+          status: 403,
+          message: 'You do not have permission to delete this link',
+        });
+      }
+
       await linkService.delete(input.params.linkId, input.params.workspaceId);
 
       return {

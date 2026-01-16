@@ -288,11 +288,16 @@ export class WorkspaceMemberService {
   /**
    * Leave workspace (self-removal via soft delete)
    * Allows member to remove themselves from workspace
-   * Cannot leave if you're the last owner
+   * Cannot leave if you're the last owner with other members
+   * If sole owner with no other members, returns shouldDeleteWorkspace: true
    * Throws WORKSPACE_MEMBER_IDS_REQUIRED, WORKSPACE_MEMBER_NOT_IN_WORKSPACE,
-   *        WORKSPACE_MEMBER_LAST_OWNER_LEAVE for validation errors
+   *        WORKSPACE_MEMBER_SOLE_OWNER_WITH_MEMBERS for validation errors
    */
-  async leaveWorkspace(userId: string, workspaceId: string, options?: { tx?: Transaction }) {
+  async leaveWorkspace(
+    userId: string,
+    workspaceId: string,
+    options?: { tx?: Transaction }
+  ): Promise<{ shouldDeleteWorkspace: boolean }> {
     if (!userId || !workspaceId) {
       throw new ORPCError('WORKSPACE_MEMBER_IDS_REQUIRED', {
         status: 400,
@@ -313,15 +318,25 @@ export class WorkspaceMemberService {
       const ownerCount = await this.deps.memberRepo.countOwnersByWorkspace(workspaceId);
 
       if (ownerCount <= 1) {
-        throw new ORPCError('WORKSPACE_MEMBER_LAST_OWNER_LEAVE', {
-          status: 403,
-          message:
-            'Cannot leave workspace as the last owner. Transfer ownership or delete the workspace first.',
-        });
+        // Sole owner - check if there are other members
+        const totalMemberCount = await this.deps.memberRepo.countByWorkspace(workspaceId);
+
+        if (totalMemberCount > 1) {
+          // There are other members - user must transfer ownership first
+          throw new ORPCError('WORKSPACE_MEMBER_SOLE_OWNER_WITH_MEMBERS', {
+            status: 403,
+            message: 'You are the only owner. Please make someone else an owner before leaving.',
+          });
+        }
+
+        // Only member in workspace - soft delete and signal to delete workspace
+        await this.deps.memberRepo.softDelete(member.workspaceMemberId, options);
+        return { shouldDeleteWorkspace: true };
       }
     }
 
-    return this.deps.memberRepo.softDelete(member.workspaceMemberId, options);
+    await this.deps.memberRepo.softDelete(member.workspaceMemberId, options);
+    return { shouldDeleteWorkspace: false };
   }
 
   /**
