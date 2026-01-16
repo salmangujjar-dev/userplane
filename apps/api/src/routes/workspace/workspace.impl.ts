@@ -246,28 +246,13 @@ export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberS
       workspaceRole: member.role,
     }));
 
-    let teamData: any = {
-      workspaceId: input.params.workspaceId,
-      workspaceMembers: teamMembers,
-      pagination: createPaginationMeta(page, perPage, total),
-    };
-
-    if (input.query.include_me) {
-      const myMembership = await workspaceMemberService.getMember(
-        context.user.id,
-        input.params.workspaceId
-      );
-      if (myMembership) {
-        teamData.workspaceMembership = {
-          workspaceMemberId: myMembership.workspaceMemberId,
-          workspaceRole: myMembership.workspaceRole,
-        };
-      }
-    }
-
     return {
       message: 'Workspace members retrieved successfully',
-      data: teamData,
+      data: {
+        workspaceId: input.params.workspaceId,
+        workspaceMembers: teamMembers,
+        pagination: createPaginationMeta(page, perPage, total),
+      },
     };
   });
 };

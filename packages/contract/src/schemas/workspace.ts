@@ -229,7 +229,6 @@ export const WorkspaceTeamQuerySchema = z.object({
       .max(WORKSPACE_MEMBERS_PAGINATION.MAX_PER_PAGE)
       .optional()
       .default(WORKSPACE_MEMBERS_PAGINATION.DEFAULT_PER_PAGE),
-    include_me: z.coerce.boolean().optional().default(false),
   }),
 });
 
@@ -239,7 +238,6 @@ export const WorkspaceTeamQuerySchema = z.object({
 export const WorkspaceTeamDataSchema = z.object({
   workspaceId: z.string(),
   workspaceMembers: z.array(TeamMemberSchema),
-  workspaceMembership: WorkspaceMembershipSchema.optional(),
   pagination: PaginationMetaSchema,
 });
 

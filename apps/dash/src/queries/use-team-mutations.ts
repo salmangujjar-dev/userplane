@@ -4,7 +4,18 @@ import { apiClient } from '@/client';
 import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
 import type { WorkspaceMember } from '@/hooks/use-workspace-members';
 
-type MembersQueryData = SafeResult<WorkspaceMember[]>;
+type MembersListResponse = {
+  workspaceId: string;
+  workspaceMembers: WorkspaceMember[];
+  pagination: {
+    page: number;
+    perPage: number;
+    totalPages: number;
+    total: number;
+  };
+};
+
+type MembersQueryData = SafeResult<MembersListResponse>;
 type QuerySnapshot = [queryKey: readonly unknown[], data: MembersQueryData | undefined][];
 
 export function useUpdateMemberRole(workspaceId: string | null) {
@@ -16,7 +27,7 @@ export function useUpdateMemberRole(workspaceId: string | null) {
       newRole,
     }: {
       workspaceMemberId: string;
-      newRole: 'admin' | 'member';
+      newRole: 'owner' | 'admin' | 'member';
     }) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.workspace.members.updateRole({
@@ -30,7 +41,7 @@ export function useUpdateMemberRole(workspaceId: string | null) {
       newRole,
     }: {
       workspaceMemberId: string;
-      newRole: 'admin' | 'member';
+      newRole: 'owner' | 'admin' | 'member';
     }) => {
       await queryClient.cancelQueries({ queryKey: ['workspace-members', workspaceId] });
 
@@ -46,11 +57,14 @@ export function useUpdateMemberRole(workspaceId: string | null) {
           if (!old?.success) return old;
           return {
             ...old,
-            data: old.data.map((member) =>
-              member.workspaceMemberId === workspaceMemberId
-                ? { ...member, workspaceRole: newRole }
-                : member
-            ),
+            data: {
+              ...old.data,
+              workspaceMembers: old.data.workspaceMembers.map((member) =>
+                member.workspaceMemberId === workspaceMemberId
+                  ? { ...member, workspaceRole: newRole }
+                  : member
+              ),
+            },
           };
         }
       );
@@ -119,7 +133,12 @@ export function useRemoveMember(workspaceId: string | null) {
           if (!old?.success) return old;
           return {
             ...old,
-            data: old.data.filter((member) => member.workspaceMemberId !== workspaceMemberId),
+            data: {
+              ...old.data,
+              workspaceMembers: old.data.workspaceMembers.filter(
+                (member) => member.workspaceMemberId !== workspaceMemberId
+              ),
+            },
           };
         }
       );

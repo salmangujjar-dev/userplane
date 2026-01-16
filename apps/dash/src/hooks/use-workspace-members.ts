@@ -41,21 +41,15 @@ export interface WorkspaceMember {
  * ```
  */
 export function useWorkspaceMembers(options?: {
-  includeMe?: boolean;
   perPage?: number;
   page?: number;
   enabled?: boolean;
 }) {
   const workspaceId = useWorkspaceId();
-  const {
-    includeMe = false,
-    perPage = DEFAULT_MEMBERS_PER_PAGE,
-    page = 1,
-    enabled = true,
-  } = options || {};
+  const { perPage = DEFAULT_MEMBERS_PER_PAGE, page = 1, enabled = true } = options || {};
 
   return useQuery({
-    queryKey: ['workspace-members', workspaceId, includeMe, perPage, page],
+    queryKey: ['workspace-members', workspaceId, perPage, page],
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
@@ -66,7 +60,6 @@ export function useWorkspaceMembers(options?: {
         query: {
           page: options?.page || 1,
           per_page: perPage,
-          include_me: includeMe,
         },
       });
 
