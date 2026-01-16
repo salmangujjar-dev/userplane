@@ -1,0 +1,44 @@
+/**
+ * Userplane email templates
+ * All lifecycle and transactional emails
+ */
+
+// Auth emails (email verification, magic link, workspace invite, access request)
+export * from './auth';
+
+// Pilot emails
+export * from './pilot';
+
+// Trial emails
+export * from './trial';
+
+// Activation emails
+export * from './activation';
+
+// Highlight emails (links, recordings, screenshots)
+export * from './highlight';
+
+// Offboarding emails
+export * from './offboarding';
+
+// Workspace emails
+export * from './workspace';
+
+// Invite emails
+export * from './invite';
+
+// Recording emails
+export * from './recording';
+
+// Domain emails
+export * from './domain';
+
+// Billing emails
+export * from './billing';
+
+// Entitlement emails (seats, recordings, screenshots)
+export * from './entitlement';
+
+// Shared components
+export { EmailLayout } from '../shared/layout';
+export type { EmailLayoutProps } from '../shared/layout';

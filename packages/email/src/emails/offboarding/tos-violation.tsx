@@ -1,0 +1,52 @@
+/**
+ * Offboarding - TOS Violation Email
+ * Sent when an account is suspended for terms of service violation
+ */
+
+import * as React from 'react';
+import { Section, Text, Link } from '@react-email/components';
+import { EmailLayout } from '../../shared/layout';
+import * as styles from '../../shared/styles';
+import { copy } from '../../copy/offboarding/tos-violation';
+
+export interface TosViolationEmailProps {
+  userName?: string;
+  appealUrl?: string;
+  tosUrl?: string;
+}
+
+export const TosViolationEmail = ({
+  userName = 'there',
+  appealUrl = 'mailto:support@userplane.io?subject=Account%20Appeal',
+  tosUrl = 'https://userplane.io/terms',
+}: TosViolationEmailProps) => {
+  return (
+    <EmailLayout preview={copy.preview}>
+      <Text style={styles.title}>{copy.title}</Text>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.messageText}>{copy.greeting(userName)}</Text>
+        <Text style={styles.messageText}>{copy.body[0]}</Text>
+        <Text style={styles.messageText}>{copy.body[1]}</Text>
+      </Section>
+
+      <Section style={styles.ctaSection}>
+        <Link href={appealUrl} style={styles.ctaButton}>
+          {copy.cta}
+        </Link>
+      </Section>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.smallText}>
+          Review our{' '}
+          <Link href={tosUrl} style={styles.link}>
+            {copy.helpText}
+          </Link>
+          .
+        </Text>
+      </Section>
+    </EmailLayout>
+  );
+};
+
+export default TosViolationEmail;

@@ -1,0 +1,68 @@
+/**
+ * Domain - Verification Instructions Email
+ * Sent with instructions to verify a domain
+ */
+
+import * as React from 'react';
+import { Section, Text, Link } from '@react-email/components';
+import { EmailLayout } from '../../shared/layout';
+import * as styles from '../../shared/styles';
+import { copy } from '../../copy/domain/verification-instructions';
+
+export interface DomainVerificationInstructionsEmailProps {
+  domainName?: string;
+  txtRecord?: string;
+  settingsUrl?: string;
+  docsUrl?: string;
+}
+
+export const DomainVerificationInstructionsEmail = ({
+  domainName = 'example.com',
+  txtRecord = 'userplane-verify=abc123xyz',
+  settingsUrl = 'https://app.userplane.io/settings/domains',
+  docsUrl = 'https://docs.userplane.io/domains/verification',
+}: DomainVerificationInstructionsEmailProps) => {
+  return (
+    <EmailLayout preview={copy.preview(domainName)}>
+      <Text style={styles.title}>{copy.title}</Text>
+      <Text style={styles.subtitle}>{copy.subtitle(domainName)}</Text>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.messageText}>{copy.body[0](domainName)}</Text>
+      </Section>
+
+      <Section style={styles.highlightBox}>
+        <Text
+          style={{
+            ...styles.messageText,
+            fontFamily: 'monospace',
+            fontSize: '13px',
+            marginBottom: 0,
+          }}
+        >
+          {txtRecord}
+        </Text>
+      </Section>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.messageText}>{copy.body[1]}</Text>
+      </Section>
+
+      <Section style={styles.ctaSection}>
+        <Link href={settingsUrl} style={styles.ctaButton}>
+          {copy.cta}
+        </Link>
+      </Section>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.smallText}>
+          <Link href={docsUrl} style={styles.link}>
+            {copy.helpText}
+          </Link>
+        </Text>
+      </Section>
+    </EmailLayout>
+  );
+};
+
+export default DomainVerificationInstructionsEmail;
