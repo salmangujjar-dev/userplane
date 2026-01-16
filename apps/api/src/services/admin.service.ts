@@ -3,7 +3,7 @@
  * Handles user management, ban/unban, and session management
  */
 
-import { ORPCError } from '@orpc/server';
+import { adminError } from '@workspace/contract';
 import type { AdminRepository, SearchUsersParams } from '@/api/repositories/admin.repository';
 
 export interface AdminServiceDeps {
@@ -59,10 +59,7 @@ export class AdminService {
   async getUserDetail(userId: string) {
     const userDetail = await this.deps.adminRepo.findUserById(userId);
     if (!userDetail) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw adminError.USER_NOT_FOUND();
     }
 
     const workspaceCount = await this.deps.adminRepo.getUserWorkspaceCount(userId);
@@ -79,10 +76,7 @@ export class AdminService {
   async listUserWorkspaces(userId: string, options: { limit: number; offset: number }) {
     const targetUser = await this.deps.adminRepo.findUserById(userId);
     if (!targetUser) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw adminError.USER_NOT_FOUND();
     }
 
     const result = await this.deps.adminRepo.getUserWorkspaces(userId, options);
@@ -100,26 +94,17 @@ export class AdminService {
     // Check user exists
     const targetUser = await this.deps.adminRepo.findUserById(userId);
     if (!targetUser) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw adminError.USER_NOT_FOUND();
     }
 
     // Cannot ban self
     if (userId === adminId) {
-      throw new ORPCError('CANNOT_BAN_SELF', {
-        status: 400,
-        message: 'You cannot ban yourself',
-      });
+      throw adminError.CANNOT_BAN_SELF();
     }
 
     // Cannot ban another admin
     if (this.isAdmin(userId, targetUser.role)) {
-      throw new ORPCError('CANNOT_BAN_ADMIN', {
-        status: 400,
-        message: 'You cannot ban another admin',
-      });
+      throw adminError.CANNOT_BAN_ADMIN();
     }
 
     // Calculate expiration
@@ -131,10 +116,7 @@ export class AdminService {
     // Ban the user
     const updated = await this.deps.adminRepo.banUser(userId, options?.reason, expiresAt);
     if (!updated) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw adminError.USER_NOT_FOUND();
     }
 
     // Revoke all sessions
@@ -150,18 +132,12 @@ export class AdminService {
   async unbanUser(userId: string) {
     const targetUser = await this.deps.adminRepo.findUserById(userId);
     if (!targetUser) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw adminError.USER_NOT_FOUND();
     }
 
     const updated = await this.deps.adminRepo.unbanUser(userId);
     if (!updated) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw adminError.USER_NOT_FOUND();
     }
 
     return this.getUserDetail(userId);
@@ -173,10 +149,7 @@ export class AdminService {
   async listUserSessions(userId: string, options: { limit: number; offset: number }) {
     const targetUser = await this.deps.adminRepo.findUserById(userId);
     if (!targetUser) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw adminError.USER_NOT_FOUND();
     }
 
     const result = await this.deps.adminRepo.getActiveUserSessions(userId, options);
@@ -189,10 +162,7 @@ export class AdminService {
   async revokeSession(sessionId: string) {
     const foundSession = await this.deps.adminRepo.findSessionById(sessionId);
     if (!foundSession) {
-      throw new ORPCError('SESSION_NOT_FOUND', {
-        status: 404,
-        message: 'Session not found',
-      });
+      throw adminError.SESSION_NOT_FOUND();
     }
 
     await this.deps.adminRepo.deleteSession(sessionId);
@@ -208,10 +178,7 @@ export class AdminService {
   async revokeAllSessions(userId: string) {
     const targetUser = await this.deps.adminRepo.findUserById(userId);
     if (!targetUser) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw adminError.USER_NOT_FOUND();
     }
 
     await this.deps.adminRepo.deleteAllUserSessions(userId);

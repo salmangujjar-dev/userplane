@@ -11,8 +11,8 @@ import {
 import type { ProjectService } from '@/api/services/project.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
-import { ORPCError } from '@orpc/server';
 import { createPaginationMeta } from '@/api/types';
+import { projectError } from '@workspace/contract';
 
 /**
  * GET /workspace/:workspaceId/projects
@@ -71,10 +71,7 @@ export const getProjectByIdImpl = (
 
       // Validate project belongs to workspace
       if (project.workspaceId !== input.params.workspaceId) {
-        throw new ORPCError('BAD_REQUEST', {
-          status: 400,
-          message: 'Project does not belong to this workspace',
-        });
+        throw projectError.PROJECT_WORKSPACE_MISMATCH();
       }
 
       return {
@@ -107,10 +104,7 @@ export const createProjectImpl = (
       });
 
       if (!project) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          status: 500,
-          message: 'Failed to create project',
-        });
+        throw projectError.PROJECT_CREATE_FAILED();
       }
 
       return {
@@ -142,10 +136,7 @@ export const updateProjectImpl = (
       });
 
       if (!project) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          status: 500,
-          message: 'Failed to update project',
-        });
+        throw projectError.PROJECT_UPDATE_FAILED();
       }
 
       return {
@@ -177,10 +168,7 @@ export const replaceProjectImpl = (
       });
 
       if (!project) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          status: 500,
-          message: 'Failed to replace project',
-        });
+        throw projectError.PROJECT_UPDATE_FAILED();
       }
 
       return {

@@ -11,7 +11,7 @@ import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { ORPCError } from '@orpc/server';
+import { linkError } from '@workspace/contract';
 import { parseLinkReference } from '@/api/lib/parser';
 import type {
   LinkFilters,
@@ -131,26 +131,16 @@ export class LinkService {
     try {
       const decoded = jwt.verify(token, env.recorder.secret) as { lid: string };
       if (!decoded.lid) {
-        throw new ORPCError('LINK_TOKEN_MISSING_ID', {
-          status: 400,
-          message: 'Invalid link token: missing link ID',
-        });
+        throw linkError.LINK_TOKEN_MISSING_ID();
       }
       return decoded.lid;
     } catch (error) {
-      // Re-throw ORPC errors as-is (e.g., LINK_TOKEN_MISSING_ID)
-      if (error instanceof ORPCError) {
-        throw error;
-      }
       if (error instanceof jwt.TokenExpiredError) {
-        throw new ORPCError('LINK_TOKEN_EXPIRED', {
-          status: 401,
-          message: 'Link token has expired',
-        });
+        throw linkError.LINK_TOKEN_EXPIRED();
       }
       // JsonWebTokenError, SyntaxError (malformed/tampered token), or any other error
       // All indicate an invalid token
-      throw new ORPCError('LINK_TOKEN_INVALID', { status: 401, message: 'Invalid link token' });
+      throw linkError.LINK_TOKEN_INVALID();
     }
   }
 
@@ -166,30 +156,21 @@ export class LinkService {
     // Guard rail: Check if workspace is deleted
     const isWorkspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(params.workspaceId);
     if (isWorkspaceDeleted === null) {
-      throw new ORPCError('NOT_FOUND', { status: 404, message: 'Workspace not found' });
+      throw linkError.LINK_NOT_FOUND();
     }
     if (isWorkspaceDeleted) {
-      throw new ORPCError('LINK_WORKSPACE_DELETED', {
-        status: 410,
-        message: 'Workspace has been deleted',
-      });
+      throw linkError.LINK_WORKSPACE_DELETED();
     }
 
     // Get the workspace member with user info
     const memberWithUser = await this.deps.workspaceMemberRepo.findByIdWithUser(params.createdBy);
     if (!memberWithUser) {
-      throw new ORPCError('LINK_MEMBER_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace member not found',
-      });
+      throw linkError.LINK_MEMBER_NOT_FOUND();
     }
 
     // Verify member belongs to the workspace
     if (memberWithUser.workspaceId !== params.workspaceId) {
-      throw new ORPCError('LINK_MEMBER_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Workspace member does not belong to this workspace',
-      });
+      throw linkError.LINK_MEMBER_WORKSPACE_MISMATCH();
     }
 
     // Determine projectId - use provided or get default
@@ -197,10 +178,7 @@ export class LinkService {
     if (!projectId) {
       const defaultProject = await this.deps.projectRepo.findDefaultByWorkspace(params.workspaceId);
       if (!defaultProject) {
-        throw new ORPCError('LINK_DEFAULT_PROJECT_NOT_FOUND', {
-          status: 404,
-          message: 'No default project found for workspace',
-        });
+        throw linkError.LINK_DEFAULT_PROJECT_NOT_FOUND();
       }
       projectId = defaultProject.projectId;
     }
@@ -208,13 +186,10 @@ export class LinkService {
     // Guard rail: Check if project is deleted
     const isProjectDeleted = await this.deps.projectRepo.isSoftDeleted(projectId);
     if (isProjectDeleted === null) {
-      throw new ORPCError('NOT_FOUND', { status: 404, message: 'Project not found' });
+      throw linkError.LINK_NOT_FOUND();
     }
     if (isProjectDeleted) {
-      throw new ORPCError('LINK_PROJECT_DELETED', {
-        status: 410,
-        message: 'Project has been deleted',
-      });
+      throw linkError.LINK_PROJECT_DELETED();
     }
 
     // Determine linkReference - use provided or generate default based on user's first name
@@ -250,7 +225,7 @@ export class LinkService {
     );
 
     if (!link) {
-      throw new ORPCError('LINK_CREATE_FAILED', { status: 500, message: 'Failed to create link' });
+      throw linkError.LINK_CREATE_FAILED();
     }
 
     // Fetch domain info for linkURL generation
@@ -372,24 +347,21 @@ export class LinkService {
     if (!existingLink) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('LINK_GONE', { status: 410, message: 'Link has been deleted' });
+        throw linkError.LINK_GONE();
       }
-      throw new ORPCError('LINK_NOT_FOUND', { status: 404, message: 'Link not found' });
+      throw linkError.LINK_NOT_FOUND();
     }
 
     // Verify link belongs to the workspace
     if (existingLink.workspaceId !== workspaceId) {
-      throw new ORPCError('LINK_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Link does not belong to this workspace',
-      });
+      throw linkError.LINK_WORKSPACE_MISMATCH();
     }
 
     // Perform update
     const updated = await this.deps.linkRepo.update(linkId, params, options);
 
     if (!updated) {
-      throw new ORPCError('LINK_UPDATE_FAILED', { status: 500, message: 'Failed to update link' });
+      throw linkError.LINK_UPDATE_FAILED();
     }
 
     // Fetch domain info for linkURL generation
@@ -436,17 +408,14 @@ export class LinkService {
     if (!linkWithDetails) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('LINK_GONE', { status: 410, message: 'Link has been deleted' });
+        throw linkError.LINK_GONE();
       }
-      throw new ORPCError('LINK_NOT_FOUND', { status: 404, message: 'Link not found' });
+      throw linkError.LINK_NOT_FOUND();
     }
 
     // Verify link belongs to the workspace
     if (linkWithDetails.workspaceId !== workspaceId) {
-      throw new ORPCError('LINK_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Link does not belong to this workspace',
-      });
+      throw linkError.LINK_WORKSPACE_MISMATCH();
     }
 
     // Map to LinkItem response shape with linkURL
@@ -501,24 +470,21 @@ export class LinkService {
     if (!existingLink) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('LINK_GONE', { status: 410, message: 'Link has already been deleted' });
+        throw linkError.LINK_GONE();
       }
-      throw new ORPCError('LINK_NOT_FOUND', { status: 404, message: 'Link not found' });
+      throw linkError.LINK_NOT_FOUND();
     }
 
     // Verify link belongs to the workspace
     if (existingLink.workspaceId !== workspaceId) {
-      throw new ORPCError('LINK_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Link does not belong to this workspace',
-      });
+      throw linkError.LINK_WORKSPACE_MISMATCH();
     }
 
     // Perform soft delete
     const deleted = await this.deps.linkRepo.softDelete(linkId, options);
 
     if (!deleted) {
-      throw new ORPCError('LINK_DELETE_FAILED', { status: 500, message: 'Failed to delete link' });
+      throw linkError.LINK_DELETE_FAILED();
     }
 
     return deleted;

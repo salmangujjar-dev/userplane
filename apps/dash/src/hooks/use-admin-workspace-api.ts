@@ -251,20 +251,20 @@ export function useAdminDeactivateWorkspace() {
 }
 
 /**
- * Hook for reactivating a workspace (admin only)
+ * Hook for restoring a workspace (admin only)
  * Uses optimistic updates and targeted cache invalidation
  */
-export function useAdminReactivateWorkspace() {
+export function useAdminRestoreWorkspace() {
   const queryClient = useQueryClient();
 
   return useMutation<
-    SafeResult<AdminWorkspaceDetail>,
+    SafeResult<AdminRestoreWorkspaceResponse>,
     Error,
     { workspaceId: string },
     { previousWorkspaceDetail: SafeResult<AdminWorkspaceDetail> | undefined }
   >({
     mutationFn: async ({ workspaceId }) => {
-      const [error, response] = await apiClient.admin.workspaces.reactivate({
+      const [error, response] = await apiClient.admin.workspaces.restore({
         params: { workspaceId },
       });
       return handleSafeResult(error, response?.data ?? null);
@@ -299,10 +299,13 @@ export function useAdminReactivateWorkspace() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to reactivate workspace');
+        handleApiError(result.error, 'Failed to restore workspace');
         return;
       }
-      toast.success('Workspace reactivated successfully');
+      const { restoredProjects, restoredLinks } = result.data;
+      toast.success('Workspace restored successfully', {
+        description: `Restored ${restoredProjects} project(s) and ${restoredLinks} link(s)`,
+      });
       // Only invalidate the workspace detail to get fresh data from server
       queryClient.invalidateQueries({ queryKey: ['admin-workspace-detail', workspaceId] });
     },
@@ -314,7 +317,7 @@ export function useAdminReactivateWorkspace() {
           context.previousWorkspaceDetail
         );
       }
-      toast.error('Failed to reactivate workspace', {
+      toast.error('Failed to restore workspace', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
     },
@@ -355,6 +358,20 @@ export function useAdminResetInviteToken() {
 // ============================================
 // ADMIN WORKSPACE PROVISIONING
 // ============================================
+
+/**
+ * Admin restore workspace response
+ */
+export interface AdminRestoreWorkspaceResponse {
+  workspace: {
+    workspaceId: string;
+    workspaceName: string;
+    isDeleted: boolean;
+    deletedAt: string | null;
+  };
+  restoredProjects: number;
+  restoredLinks: number;
+}
 
 /**
  * Admin provision workspace input

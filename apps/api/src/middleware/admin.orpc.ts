@@ -3,9 +3,9 @@
  * Checks if the authenticated user has admin access (admin or csm role)
  */
 
-import { ORPCError } from '@orpc/server';
 import { base, type AuthContext } from './auth.orpc';
 import type { AdminService } from '@/api/services/admin.service';
+import { adminError } from '@workspace/contract';
 
 export type AdminContext = AuthContext & {
   isAdmin: true;
@@ -20,10 +20,7 @@ export function createAdminMiddleware(adminService: AdminService) {
     const hasAdminAccess = adminService.isAdmin(context.user.id, context.user.role);
 
     if (!hasAdminAccess) {
-      throw new ORPCError('NOT_ADMIN', {
-        status: 403,
-        message: 'Admin access required',
-      });
+      throw adminError.NOT_ADMIN();
     }
 
     return next({

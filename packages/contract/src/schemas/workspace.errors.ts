@@ -14,6 +14,10 @@ import { MAX_EMAIL_DOMAINS } from '../constants';
  */
 export const WorkspaceErrors = {
   // Validation errors
+  WORKSPACE_ID_REQUIRED: {
+    status: 400,
+    message: 'Workspace ID is required',
+  },
   WORKSPACE_NAME_REQUIRED: {
     status: 400,
     message: 'Workspace name is required',

@@ -9,7 +9,7 @@ import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { DomainService } from '@/api/services/domain.service';
 import { deriveWorkspaceName } from '@/api/lib/workspace';
-import { ORPCError } from '@orpc/server';
+import { provisionerError } from '@workspace/contract';
 
 export interface ProvisionerServiceDeps {
   workspaceService: WorkspaceService;
@@ -54,10 +54,7 @@ export class ProvisionerService {
       );
 
       if (!createdWorkspace) {
-        throw new ORPCError('PROVISIONER_WORKSPACE_CREATE_FAILED', {
-          status: 500,
-          message: 'Failed to create workspace',
-        });
+        throw provisionerError.PROVISIONER_WORKSPACE_CREATE_FAILED();
       }
 
       // Create first project (automatically becomes default)
@@ -90,10 +87,7 @@ export class ProvisionerService {
     });
 
     if (!workspace) {
-      throw new ORPCError('PROVISIONER_TRANSACTION_FAILED', {
-        status: 500,
-        message: 'Transaction failed',
-      });
+      throw provisionerError.PROVISIONER_TRANSACTION_FAILED();
     }
 
     return {

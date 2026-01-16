@@ -6,7 +6,7 @@
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import { ORPCError } from '@orpc/server';
+import { recordingError } from '@workspace/contract';
 import type {
   ThumbnailsStorageClient,
   VideoStorageClient,
@@ -139,30 +139,21 @@ export class RecordingService {
     if (!existingRecording) {
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('RECORDING_GONE', {
-          status: 410,
-          message: 'Recording has already been deleted',
-        });
+        throw recordingError.RECORDING_GONE();
       }
-      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
+      throw recordingError.RECORDING_NOT_FOUND();
     }
 
     // Verify recording belongs to the workspace
     if (existingRecording.workspaceId !== workspaceId) {
-      throw new ORPCError('RECORDING_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Recording does not belong to this workspace',
-      });
+      throw recordingError.RECORDING_WORKSPACE_MISMATCH();
     }
 
     // Perform soft delete
     const deleted = await this.deps.recordingRepo.softDelete(recordingId, options);
 
     if (!deleted) {
-      throw new ORPCError('RECORDING_DELETE_FAILED', {
-        status: 500,
-        message: 'Failed to delete recording',
-      });
+      throw recordingError.RECORDING_DELETE_FAILED();
     }
 
     // Schedule recording resource cleanup
@@ -199,16 +190,13 @@ export class RecordingService {
     if (!row) {
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('RECORDING_GONE', {
-          status: 410,
-          message: 'Recording has already been deleted',
-        });
+        throw recordingError.RECORDING_GONE();
       }
-      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
+      throw recordingError.RECORDING_NOT_FOUND();
     }
 
     if (row.workspaceId !== workspaceId) {
-      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
+      throw recordingError.RECORDING_NOT_FOUND();
     }
 
     return {
@@ -440,16 +428,13 @@ export class RecordingService {
     if (!recording) {
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('RECORDING_GONE', {
-          status: 410,
-          message: 'Recording has already been deleted',
-        });
+        throw recordingError.RECORDING_GONE();
       }
-      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
+      throw recordingError.RECORDING_NOT_FOUND();
     }
 
     if (recording.workspaceId !== workspaceId) {
-      throw new ORPCError('RECORDING_NOT_FOUND', { status: 404, message: 'Recording not found' });
+      throw recordingError.RECORDING_NOT_FOUND();
     }
 
     return recording;

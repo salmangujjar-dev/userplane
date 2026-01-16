@@ -3,11 +3,11 @@
  * Checks workspace membership and attaches workspace context
  */
 
-import { ORPCError } from '@orpc/server';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceRole } from '@workspace/contract';
 import { base, type AuthContext } from './auth.orpc';
+import { workspaceError, domainError } from '@workspace/contract';
 
 export type WorkspaceContext = {
   workspaceId: string;
@@ -25,20 +25,14 @@ export function createWorkspaceMiddleware(
       const workspaceId = input.workspaceId;
 
       if (!workspaceId) {
-        throw new ORPCError('BAD_REQUEST', {
-          status: 400,
-          message: 'Workspace ID is required',
-        });
+        throw workspaceError.WORKSPACE_ID_REQUIRED();
       }
 
       const workspace = await workspaceService.getById(workspaceId);
       const member = await workspaceMemberService.getMember(context.user.id, workspace.workspaceId);
 
       if (!member) {
-        throw new ORPCError('FORBIDDEN', {
-          status: 403,
-          message: 'You are not a member of this workspace',
-        });
+        throw domainError.FORBIDDEN();
       }
 
       return next({
@@ -62,27 +56,18 @@ export function createWorkspaceRoleMiddleware(
       const workspaceId = input.workspaceId;
 
       if (!workspaceId) {
-        throw new ORPCError('BAD_REQUEST', {
-          status: 400,
-          message: 'Workspace ID is required',
-        });
+        throw workspaceError.WORKSPACE_ID_REQUIRED();
       }
 
       const workspace = await workspaceService.getById(workspaceId);
       const member = await workspaceMemberService.getMember(context.user.id, workspace.workspaceId);
 
       if (!member) {
-        throw new ORPCError('FORBIDDEN', {
-          status: 403,
-          message: 'You are not a member of this workspace',
-        });
+        throw domainError.FORBIDDEN();
       }
 
       if (!allowedRoles.includes(member.workspaceRole)) {
-        throw new ORPCError('FORBIDDEN', {
-          status: 403,
-          message: 'You do not have permission to perform this action',
-        });
+        throw domainError.FORBIDDEN();
       }
 
       return next({

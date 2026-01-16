@@ -3,7 +3,6 @@
  * Handles creating workspaces on behalf of users with optional members
  */
 
-import { ORPCError } from '@orpc/server';
 import { auth } from '@/api/clients/auth';
 import { generateRandomPassword } from '@/api/lib/password';
 import type { UserRepository } from '@/api/repositories/users.repository';
@@ -12,6 +11,7 @@ import type { WorkspaceMemberService } from '@/api/services/workspace-member.ser
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { DbClient } from '@workspace/db';
 import type { PlanId } from '@workspace/pricing';
+import { adminError } from '@workspace/contract';
 
 export interface AdminProvisioningServiceDeps {
   userRepo: UserRepository;
@@ -94,9 +94,8 @@ export class AdminProvisioningService {
       });
 
       if (!result || !result.user || !result.user.id) {
-        throw new ORPCError('ADMIN_PROVISION_USER_CREATE_FAILED', {
-          status: 500,
-          message: `Failed to create user account for ${params.email}`,
+        throw adminError.ADMIN_PROVISION_USER_CREATE_FAILED({
+          email: params.email,
         });
       }
 
@@ -109,12 +108,9 @@ export class AdminProvisioningService {
         isNew: true,
       };
     } catch (error) {
-      if (error instanceof ORPCError) {
-        throw error;
-      }
-      throw new ORPCError('ADMIN_PROVISION_USER_CREATE_FAILED', {
-        status: 500,
-        message: `Failed to create user account for ${params.email}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      throw adminError.ADMIN_PROVISION_USER_CREATE_FAILED({
+        email: params.email,
+        cause: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -142,9 +138,8 @@ export class AdminProvisioningService {
           userEmail: ownerUser.email,
         });
       } catch (error) {
-        throw new ORPCError('ADMIN_PROVISION_WORKSPACE_CREATE_FAILED', {
-          status: 500,
-          message: `Failed to create workspace: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        throw adminError.ADMIN_PROVISION_WORKSPACE_CREATE_FAILED({
+          cause: error instanceof Error ? error.message : 'Unknown error',
         });
       }
 
@@ -181,13 +176,9 @@ export class AdminProvisioningService {
             isNew: memberIsNew,
           });
         } catch (error) {
-          // If member already exists in workspace, skip and continue
-          if (error instanceof ORPCError && error.code === 'WORKSPACE_MEMBER_ALREADY_EXISTS') {
-            continue;
-          }
-          throw new ORPCError('ADMIN_PROVISION_MEMBER_ADD_FAILED', {
-            status: 500,
-            message: `Failed to add member ${member.email}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          throw adminError.ADMIN_PROVISION_MEMBER_ADD_FAILED({
+            email: member.email,
+            cause: error instanceof Error ? error.message : 'Unknown error',
           });
         }
       }
@@ -204,12 +195,8 @@ export class AdminProvisioningService {
         members: memberResults,
       };
     } catch (error) {
-      if (error instanceof ORPCError) {
-        throw error;
-      }
-      throw new ORPCError('ADMIN_PROVISION_FAILED', {
-        status: 500,
-        message: `Workspace provisioning failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      throw adminError.ADMIN_PROVISION_FAILED({
+        cause: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }

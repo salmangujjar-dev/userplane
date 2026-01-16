@@ -3,7 +3,6 @@
  * Contains business logic for domain management
  */
 
-import { ORPCError } from '@orpc/server';
 import { generateDomainId } from '@/api/lib/id';
 import {
   DomainRepository,
@@ -14,6 +13,7 @@ import { cleanUrl } from '@/api/lib/url';
 import type { Transaction } from '@/api/types';
 import type { DomainStatus } from '@workspace/contract';
 import { TokenService } from '@/api/services/token.service';
+import { domainError, workspaceError } from '@workspace/contract';
 
 export interface DomainServiceDeps {
   domainRepo: DomainRepository;
@@ -35,10 +35,7 @@ export class DomainService {
     options?: { tx?: Transaction }
   ) {
     if (!params.url) {
-      throw new ORPCError('DOMAIN_URL_REQUIRED', {
-        status: 400,
-        message: 'Domain URL is required',
-      });
+      throw domainError.DOMAIN_URL_REQUIRED();
     }
 
     // Clean URL: remove query parameters, hash, and trailing slashes
@@ -51,10 +48,7 @@ export class DomainService {
     );
 
     if (existingDomain) {
-      throw new ORPCError('DOMAIN_ALREADY_EXISTS', {
-        status: 409,
-        message: 'This domain has already been added to the workspace',
-      });
+      throw domainError.DOMAIN_ALREADY_EXISTS();
     }
 
     return this.deps.domainRepo.create(
@@ -93,10 +87,7 @@ export class DomainService {
 
     // If no domains exist, workspace doesn't exist (workspace always has at least 1 domain)
     if (total === 0) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw workspaceError.WORKSPACE_NOT_FOUND();
     }
 
     const offset = (page - 1) * perPage;
@@ -128,10 +119,7 @@ export class DomainService {
     options?: { tx?: Transaction }
   ) {
     if (!newUrl) {
-      throw new ORPCError('DOMAIN_URL_REQUIRED', {
-        status: 400,
-        message: 'Domain URL is required',
-      });
+      throw domainError.DOMAIN_URL_REQUIRED();
     }
 
     // Get existing domain and check if it exists
@@ -140,23 +128,14 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('DOMAIN_GONE', {
-          status: 410,
-          message: 'Domain has been deleted',
-        });
+        throw domainError.DOMAIN_GONE();
       }
-      throw new ORPCError('DOMAIN_NOT_FOUND', {
-        status: 404,
-        message: 'Domain not found',
-      });
+      throw domainError.DOMAIN_NOT_FOUND();
     }
 
     // Verify domain belongs to the workspace
     if (domain.workspaceId !== workspaceId) {
-      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Domain does not belong to this workspace',
-      });
+      throw domainError.DOMAIN_WORKSPACE_MISMATCH();
     }
 
     // Clean URL: remove query parameters, hash, and trailing slashes
@@ -175,20 +154,14 @@ export class DomainService {
     );
 
     if (existingDomain) {
-      throw new ORPCError('DOMAIN_ALREADY_EXISTS', {
-        status: 409,
-        message: 'This domain has already been added to the workspace',
-      });
+      throw domainError.DOMAIN_ALREADY_EXISTS();
     }
 
     // Update the domain URL and reset status to pending
     const updated = await this.deps.domainRepo.updateUrl(domainId, normalized, options);
 
     if (!updated) {
-      throw new ORPCError('DOMAIN_UPDATE_FAILED', {
-        status: 500,
-        message: 'Failed to update domain',
-      });
+      throw domainError.DOMAIN_UPDATE_FAILED();
     }
 
     return updated;
@@ -206,41 +179,26 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('DOMAIN_GONE', {
-          status: 410,
-          message: 'Domain has been deleted',
-        });
+        throw domainError.DOMAIN_GONE();
       }
-      throw new ORPCError('DOMAIN_NOT_FOUND', {
-        status: 404,
-        message: 'Domain not found',
-      });
+      throw domainError.DOMAIN_NOT_FOUND();
     }
 
     if (domain.workspaceId !== workspaceId) {
-      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Domain does not belong to this workspace',
-      });
+      throw domainError.DOMAIN_WORKSPACE_MISMATCH();
     }
 
     // Check if this is the last domain in the workspace
     const domainCount = await this.deps.domainRepo.countByWorkspace(workspaceId);
 
     if (domainCount === 1) {
-      throw new ORPCError('DOMAIN_LAST_DOMAIN_DELETE_FORBIDDEN', {
-        status: 403,
-        message: 'Cannot delete the only domain in a workspace',
-      });
+      throw domainError.DOMAIN_LAST_DOMAIN_DELETE_FORBIDDEN();
     }
 
     const deleted = await this.deps.domainRepo.softDelete(domainId, options);
 
     if (!deleted) {
-      throw new ORPCError('DOMAIN_DELETE_FAILED', {
-        status: 500,
-        message: 'Failed to delete domain',
-      });
+      throw domainError.DOMAIN_DELETE_FAILED();
     }
 
     return deleted;
@@ -275,10 +233,7 @@ export class DomainService {
     const payload = this.deps.tokenService.verifyDomainToken(token);
 
     if (!payload) {
-      throw new ORPCError('DOMAIN_VERIFICATION_TOKEN_INVALID', {
-        status: 401,
-        message: 'Invalid verification token',
-      });
+      throw domainError.DOMAIN_VERIFICATION_TOKEN_INVALID();
     }
 
     console.log('[verifyDomain] Payload:', payload);
@@ -286,10 +241,7 @@ export class DomainService {
 
     // Verify token's workspace ID is in the list from SDK
     if (!workspaceIds.includes(payload.workspaceId)) {
-      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Token workspace not in SDK workspace list',
-      });
+      throw domainError.DOMAIN_WORKSPACE_MISMATCH();
     }
 
     // Issuer is already checked in verifyDomainToken
@@ -298,18 +250,12 @@ export class DomainService {
     const domain = await this.deps.domainRepo.findById(payload.domainId);
 
     if (!domain) {
-      throw new ORPCError('DOMAIN_NOT_REGISTERED', {
-        status: 404,
-        message: 'Domain is not registered for this workspace',
-      });
+      throw domainError.DOMAIN_NOT_REGISTERED();
     }
 
     // Verify domain belongs to the workspace from token
     if (domain.workspaceId !== payload.workspaceId) {
-      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Domain does not belong to this workspace',
-      });
+      throw domainError.DOMAIN_WORKSPACE_MISMATCH();
     }
 
     // Parse stored domain URL to get hostname and pathname
@@ -320,10 +266,7 @@ export class DomainService {
       storedHostname = storedUrl.hostname;
       storedPathname = storedUrl.pathname;
     } catch {
-      throw new ORPCError('DOMAIN_URL_INVALID', {
-        status: 400,
-        message: 'Invalid stored domain URL',
-      });
+      throw domainError.DOMAIN_URL_INVALID();
     }
 
     // Parse origin to construct full origin URL for comparison
@@ -331,18 +274,12 @@ export class DomainService {
     try {
       originUrl = new URL(`https://${originHostname}`);
     } catch {
-      throw new ORPCError('DOMAIN_ORIGIN_INVALID', {
-        status: 400,
-        message: 'Invalid origin hostname',
-      });
+      throw domainError.DOMAIN_ORIGIN_INVALID();
     }
 
     // Compare hostname
     if (storedHostname !== originUrl.hostname) {
-      throw new ORPCError('DOMAIN_ORIGIN_MISMATCH', {
-        status: 403,
-        message: 'Origin does not match registered domain',
-      });
+      throw domainError.DOMAIN_ORIGIN_MISMATCH();
     }
 
     // If stored URL has a path, check if origin path starts with it
@@ -358,10 +295,7 @@ export class DomainService {
     // Return updated domain
     const updatedDomain = await this.deps.domainRepo.findById(payload.domainId);
     if (!updatedDomain) {
-      throw new ORPCError('DOMAIN_VERIFICATION_FAILED', {
-        status: 500,
-        message: 'Failed to verify domain',
-      });
+      throw domainError.DOMAIN_VERIFICATION_FAILED();
     }
 
     return updatedDomain;
@@ -378,22 +312,13 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('DOMAIN_GONE', {
-          status: 410,
-          message: 'Domain has been deleted',
-        });
+        throw domainError.DOMAIN_GONE();
       }
-      throw new ORPCError('DOMAIN_NOT_FOUND', {
-        status: 404,
-        message: 'Domain not found',
-      });
+      throw domainError.DOMAIN_NOT_FOUND();
     }
 
     if (domain.workspaceId !== workspaceId) {
-      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Domain does not belong to this workspace',
-      });
+      throw domainError.DOMAIN_WORKSPACE_MISMATCH();
     }
 
     return domain;
@@ -409,15 +334,9 @@ export class DomainService {
     if (!preferences) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('DOMAIN_GONE', {
-          status: 410,
-          message: 'Domain has been deleted',
-        });
+        throw domainError.DOMAIN_GONE();
       }
-      throw new ORPCError('DOMAIN_NOT_FOUND', {
-        status: 404,
-        message: 'Domain not found',
-      });
+      throw domainError.DOMAIN_NOT_FOUND();
     }
     return preferences;
   }
@@ -445,30 +364,17 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('DOMAIN_GONE', {
-          status: 410,
-          message: 'Domain has been deleted',
-        });
+        throw domainError.DOMAIN_GONE();
       }
-      throw new ORPCError('DOMAIN_NOT_FOUND', {
-        status: 404,
-        message: 'Domain not found',
-      });
+      throw domainError.DOMAIN_NOT_FOUND();
     }
 
     if (domain.workspaceId !== workspaceId) {
-      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Domain does not belong to this workspace',
-      });
+      throw domainError.DOMAIN_WORKSPACE_MISMATCH();
     }
 
     if (domain.domainStatus !== 'verified') {
-      throw new ORPCError('DOMAIN_UNVERIFIED', {
-        status: 403,
-        message:
-          'Cannot update recording preferences for unverified domain. Please verify the domain first.',
-      });
+      throw domainError.DOMAIN_UNVERIFIED();
     }
 
     const updated = await this.deps.domainRepo.updateRecordingPreferences(
@@ -477,10 +383,7 @@ export class DomainService {
       options
     );
     if (!updated) {
-      throw new ORPCError('DOMAIN_PREFERENCES_UPDATE_FAILED', {
-        status: 500,
-        message: 'Failed to update domain preferences',
-      });
+      throw domainError.DOMAIN_PREFERENCES_UPDATE_FAILED();
     }
 
     return updated;
@@ -509,30 +412,17 @@ export class DomainService {
     if (!domain) {
       const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('DOMAIN_GONE', {
-          status: 410,
-          message: 'Domain has been deleted',
-        });
+        throw domainError.DOMAIN_GONE();
       }
-      throw new ORPCError('DOMAIN_NOT_FOUND', {
-        status: 404,
-        message: 'Domain not found',
-      });
+      throw domainError.DOMAIN_NOT_FOUND();
     }
 
     if (domain.workspaceId !== workspaceId) {
-      throw new ORPCError('DOMAIN_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Domain does not belong to this workspace',
-      });
+      throw domainError.DOMAIN_WORKSPACE_MISMATCH();
     }
 
     if (domain.domainStatus !== 'verified') {
-      throw new ORPCError('DOMAIN_UNVERIFIED', {
-        status: 403,
-        message:
-          'Cannot update recording preferences for unverified domain. Please verify the domain first.',
-      });
+      throw domainError.DOMAIN_UNVERIFIED();
     }
 
     const updated = await this.deps.domainRepo.updateRecordingPreferences(
@@ -541,10 +431,7 @@ export class DomainService {
       options
     );
     if (!updated) {
-      throw new ORPCError('DOMAIN_PREFERENCES_UPDATE_FAILED', {
-        status: 500,
-        message: 'Failed to update domain preferences',
-      });
+      throw domainError.DOMAIN_PREFERENCES_UPDATE_FAILED();
     }
 
     return updated;
