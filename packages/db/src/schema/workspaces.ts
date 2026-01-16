@@ -59,7 +59,7 @@ export const workspaces = pgTable(
     workspaceInviteDomains: text('workspace_invite_domains'),
 
     // Billing info
-    workspaceBillingEmail: text('workspace_billing_email'),
+    workspaceBillingEmail: text('workspace_billing_email').notNull(),
 
     // Recording link defaults
     recordingSlug: text('recording_slug').notNull(),

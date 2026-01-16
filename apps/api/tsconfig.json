@@ -5,6 +5,8 @@
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
+    "declaration": false,
+    "declarationMap": false,
     "baseUrl": "./src",
     "paths": {
       "@/api/*": ["./*"]

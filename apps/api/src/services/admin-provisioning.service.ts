@@ -139,6 +139,7 @@ export class AdminProvisioningService {
           url: params.workspace.url,
           userId: ownerUser.id,
           userName: ownerUser.name,
+          userEmail: ownerUser.email,
         });
       } catch (error) {
         throw new ORPCError('ADMIN_PROVISION_WORKSPACE_CREATE_FAILED', {
