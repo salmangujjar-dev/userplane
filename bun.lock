@@ -239,11 +239,18 @@
         "zod": "^3.24.2",
       },
       "devDependencies": {
+        "@orpc/server": "^1.12.3",
         "@types/node": "^22.14.1",
         "@types/validator": "^13.12.2",
         "@workspace/typescript-config": "workspace:*",
         "typescript": "5.8.2",
       },
+      "peerDependencies": {
+        "@orpc/server": ">=1.0.0",
+      },
+      "optionalPeers": [
+        "@orpc/server",
+      ],
     },
     "packages/db": {
       "name": "@workspace/db",

@@ -20,6 +20,10 @@ export const RecordingErrors = {
     status: 403,
     message: 'Insufficient permissions',
   },
+  RECORDING_DELETE_FORBIDDEN: {
+    status: 403,
+    message: 'You do not have permission to delete this recording',
+  },
   RECORDING_WORKSPACE_MISMATCH: {
     status: 403,
     message: 'Recording does not belong to this workspace',

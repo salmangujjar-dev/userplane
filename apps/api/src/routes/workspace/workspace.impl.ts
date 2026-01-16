@@ -5,8 +5,8 @@
  * INCREMENTAL MIGRATION: Starting with basic CRUD operations
  */
 
-import { ORPCError } from '@orpc/server';
 import { authorized } from '@/api/middleware/auth.orpc';
+import { workspaceError, inviteError, domainError } from '@workspace/contract';
 import {
   createWorkspaceMiddleware,
   createWorkspaceRoleMiddleware,
@@ -285,7 +285,7 @@ export const getWorkspaceMembershipImpl = (workspaceMemberService: WorkspaceMemb
     );
 
     if (!membership) {
-      throw new ORPCError('WORKSPACE_MEMBER_NOT_IN_WORKSPACE');
+      throw workspaceError.WORKSPACE_MEMBER_NOT_IN_WORKSPACE();
     }
 
     return {
@@ -618,10 +618,7 @@ export const acceptInviteImpl = (
 
     // Ensure the token's workspace matches the requested workspace
     if (validation.workspaceId !== input.params.workspaceId) {
-      throw new ORPCError('BAD_REQUEST', {
-        status: 400,
-        message: 'Invitation token does not match the requested workspace',
-      });
+      throw inviteError.INVITE_TOKEN_INVALID();
     }
 
     // Accept the invite
@@ -728,10 +725,7 @@ export const addDomainImpl = (
       });
 
       if (!domain) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          status: 500,
-          message: 'Failed to create domain',
-        });
+        throw domainError.DOMAIN_CREATE_FAILED();
       }
 
       return {

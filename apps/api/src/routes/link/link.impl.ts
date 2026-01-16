@@ -3,13 +3,13 @@
  * Implements the link contract defined in @workspace/contract
  */
 
-import { ORPCError } from '@orpc/server';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { LinkService } from '@/api/services/link.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import { createPaginationMeta } from '@/api/types';
+import { linkError } from '@workspace/contract';
 
 /**
  * GET /workspace/:workspaceId/links - List links
@@ -178,10 +178,7 @@ export const deleteLinkImpl = (
       const isCreator = link.creator.workspaceMemberId === context.workspaceMemberId;
 
       if (!isAdminOrOwner && !isCreator) {
-        throw new ORPCError('FORBIDDEN', {
-          status: 403,
-          message: 'You do not have permission to delete this link',
-        });
+        throw linkError.LINK_DELETE_FORBIDDEN();
       }
 
       await linkService.delete(input.params.linkId, input.params.workspaceId);

@@ -3,8 +3,8 @@
  * Contains business logic for user account management
  */
 
-import { ORPCError } from '@orpc/server';
 import { UserRepository } from '@/api/repositories/users.repository';
+import { accountError } from '@workspace/contract';
 
 export interface UserServiceDeps {
   userRepo: UserRepository;
@@ -20,10 +20,7 @@ export class UserService {
   async getById(userId: string) {
     const user = await this.deps.userRepo.findById(userId);
     if (!user) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw accountError.USER_NOT_FOUND();
     }
     return user;
   }
@@ -35,18 +32,12 @@ export class UserService {
    */
   async updateName(userId: string, name: string) {
     if (!name || name.trim().length === 0) {
-      throw new ORPCError('USER_NAME_REQUIRED', {
-        status: 400,
-        message: 'Name cannot be empty',
-      });
+      throw accountError.USER_NAME_REQUIRED();
     }
 
     const user = await this.deps.userRepo.updateName(userId, name.trim());
     if (!user) {
-      throw new ORPCError('USER_NOT_FOUND', {
-        status: 404,
-        message: 'User not found',
-      });
+      throw accountError.USER_NOT_FOUND();
     }
 
     return user;

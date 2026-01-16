@@ -3,13 +3,13 @@
  * Orchestrates sending and accepting workspace invitations
  */
 
-import { ORPCError } from '@orpc/server';
 import type { DbClient } from '@workspace/db';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { UserService } from '@/api/services/user.service';
 import { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
+import { inviteError, workspaceError, domainError } from '@workspace/contract';
 
 /**
  * Internal invite action result type for service orchestration
@@ -144,20 +144,14 @@ export class InviteService {
     const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);
 
     if (!inviteData) {
-      throw new ORPCError('INVITE_TOKEN_INVALID', {
-        status: 401,
-        message: 'Invalid or expired invite token',
-      });
+      throw inviteError.INVITE_TOKEN_INVALID();
     }
 
     const workspace = await this.deps.workspaceService.getById(inviteData.wi);
     const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
 
     if (currentInviteToken !== inviteData.wt) {
-      throw new ORPCError('INVITE_TOKEN_INVALIDATED', {
-        status: 410,
-        message: 'Invite token has been invalidated',
-      });
+      throw inviteError.INVITE_TOKEN_INVALIDATED();
     }
 
     return {
@@ -183,20 +177,14 @@ export class InviteService {
     const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);
 
     if (!inviteData) {
-      throw new ORPCError('INVITE_TOKEN_INVALID', {
-        status: 401,
-        message: 'Invalid or expired invite token',
-      });
+      throw inviteError.INVITE_TOKEN_INVALID();
     }
 
     const workspace = await this.deps.workspaceService.getById(inviteData.wi);
     const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
 
     if (currentInviteToken !== inviteData.wt) {
-      throw new ORPCError('INVITE_TOKEN_INVALIDATED', {
-        status: 410,
-        message: 'Invite token has been invalidated',
-      });
+      throw inviteError.INVITE_TOKEN_INVALIDATED();
     }
 
     await this.deps.db.transaction(async (tx) => {
@@ -237,20 +225,14 @@ export class InviteService {
     const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);
 
     if (!inviteData) {
-      throw new ORPCError('INVITE_TOKEN_INVALID', {
-        status: 401,
-        message: 'Invalid or expired invite token',
-      });
+      throw inviteError.INVITE_TOKEN_INVALID();
     }
 
     const workspace = await this.deps.workspaceService.getById(inviteData.wi);
     const currentInviteToken = await this.deps.workspaceService.getInviteToken(inviteData.wi);
 
     if (currentInviteToken !== inviteData.wt) {
-      throw new ORPCError('INVITE_TOKEN_INVALIDATED', {
-        status: 410,
-        message: 'Invite token has been invalidated',
-      });
+      throw inviteError.INVITE_TOKEN_INVALIDATED();
     }
 
     // If userId provided, accept the invite
@@ -308,27 +290,18 @@ export class InviteService {
     // Check if user is already a member
     const existingMember = await this.deps.workspaceMemberService.getMember(userId, workspaceId);
     if (existingMember) {
-      throw new ORPCError('WORKSPACE_MEMBER_ALREADY_EXISTS', {
-        status: 409,
-        message: 'User is already a member of this workspace',
-      });
+      throw workspaceError.WORKSPACE_MEMBER_ALREADY_EXISTS();
     }
 
     // Private workspaces cannot be joined directly
     if (workspace.workspaceInvitePolicy === 'private') {
-      throw new ORPCError('WORKSPACE_INVITE_POLICY_PRIVATE', {
-        status: 403,
-        message: 'This workspace is private and cannot be joined directly',
-      });
+      throw workspaceError.WORKSPACE_INVITE_POLICY_PRIVATE();
     }
 
     // Extract user's email domain
     const userDomain = userEmail.split('@')[1]?.toLowerCase();
     if (!userDomain) {
-      throw new ORPCError('WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH', {
-        status: 403,
-        message: 'Your email domain is not allowed to join this workspace',
-      });
+      throw workspaceError.WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH();
     }
 
     // Check if user's domain matches workspace invite domains
@@ -338,10 +311,7 @@ export class InviteService {
     );
 
     if (!domainMatches) {
-      throw new ORPCError('WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH', {
-        status: 403,
-        message: 'Your email domain is not allowed to join this workspace',
-      });
+      throw workspaceError.WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH();
     }
 
     // For whitelisted workspaces, add user as member directly
@@ -369,10 +339,7 @@ export class InviteService {
       // Get workspace owner(s)
       const owners = await this.deps.workspaceMemberService.getOwners(workspaceId);
       if (owners.length === 0) {
-        throw new ORPCError('INTERNAL_SERVER_ERROR', {
-          status: 500,
-          message: 'No workspace owners found to approve request',
-        });
+        throw domainError.INTERNAL_SERVER_ERROR();
       }
 
       // Send access request email to each owner with owner-specific tokens
@@ -404,10 +371,7 @@ export class InviteService {
     }
 
     // Fallback (should not reach here)
-    throw new ORPCError('INTERNAL_SERVER_ERROR', {
-      status: 500,
-      message: 'Invalid workspace invite policy',
-    });
+    throw domainError.INTERNAL_SERVER_ERROR();
   }
 
   /**
@@ -428,10 +392,7 @@ export class InviteService {
     // Verify and decode access request token
     const tokenData = this.deps.tokenService.verifyAccessRequestToken(token);
     if (!tokenData) {
-      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_INVALID', {
-        status: 400,
-        message: 'Invalid or expired access request token',
-      });
+      throw workspaceError.WORKSPACE_ACCESS_REQUEST_INVALID();
     }
 
     const workspaceId = tokenData.wi;
@@ -441,19 +402,13 @@ export class InviteService {
 
     // Verify the viewer is the specific owner this token was generated for
     if (viewerId !== ownerId) {
-      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
-        status: 403,
-        message: 'This access request link was sent to a different workspace owner',
-      });
+      throw workspaceError.WORKSPACE_ACCESS_REQUEST_NOT_OWNER();
     }
 
     // Verify viewer is still an owner of the workspace (role may have changed)
     const viewerMember = await this.deps.workspaceMemberService.getMember(viewerId, workspaceId);
     if (!viewerMember || viewerMember.workspaceRole !== 'owner') {
-      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
-        status: 403,
-        message: 'You are no longer an owner of this workspace',
-      });
+      throw workspaceError.WORKSPACE_ACCESS_REQUEST_NOT_OWNER();
     }
 
     // Get workspace name
@@ -489,10 +444,7 @@ export class InviteService {
     // Verify and decode access request token
     const tokenData = this.deps.tokenService.verifyAccessRequestToken(token);
     if (!tokenData) {
-      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_INVALID', {
-        status: 400,
-        message: 'Invalid or expired access request token',
-      });
+      throw workspaceError.WORKSPACE_ACCESS_REQUEST_INVALID();
     }
 
     const workspaceId = tokenData.wi;
@@ -502,10 +454,7 @@ export class InviteService {
 
     // Verify the approver is the specific owner this token was generated for
     if (approverId !== ownerId) {
-      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
-        status: 403,
-        message: 'This approval link was sent to a different workspace owner',
-      });
+      throw workspaceError.WORKSPACE_ACCESS_REQUEST_NOT_OWNER();
     }
 
     // Verify approver is still an owner of the workspace (role may have changed)
@@ -514,10 +463,7 @@ export class InviteService {
       workspaceId
     );
     if (!approverMember || approverMember.workspaceRole !== 'owner') {
-      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
-        status: 403,
-        message: 'You are no longer an owner of this workspace',
-      });
+      throw workspaceError.WORKSPACE_ACCESS_REQUEST_NOT_OWNER();
     }
 
     // Get workspace name
@@ -574,10 +520,7 @@ export class InviteService {
     // Verify and decode access request token
     const tokenData = this.deps.tokenService.verifyAccessRequestToken(token);
     if (!tokenData) {
-      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_INVALID', {
-        status: 400,
-        message: 'Invalid or expired access request token',
-      });
+      throw workspaceError.WORKSPACE_ACCESS_REQUEST_INVALID();
     }
 
     const workspaceId = tokenData.wi;
@@ -587,10 +530,7 @@ export class InviteService {
 
     // Verify the decliner is the specific owner this token was generated for
     if (declinerId !== ownerId) {
-      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
-        status: 403,
-        message: 'This decline link was sent to a different workspace owner',
-      });
+      throw workspaceError.WORKSPACE_ACCESS_REQUEST_NOT_OWNER();
     }
 
     // Verify decliner is still an owner of the workspace (role may have changed)
@@ -599,10 +539,7 @@ export class InviteService {
       workspaceId
     );
     if (!declinerMember || declinerMember.workspaceRole !== 'owner') {
-      throw new ORPCError('WORKSPACE_ACCESS_REQUEST_NOT_OWNER', {
-        status: 403,
-        message: 'You are no longer an owner of this workspace',
-      });
+      throw workspaceError.WORKSPACE_ACCESS_REQUEST_NOT_OWNER();
     }
 
     // Get workspace name

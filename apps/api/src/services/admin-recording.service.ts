@@ -3,7 +3,7 @@
  * Handles workspace recording stats retrieval
  */
 
-import { ORPCError } from '@orpc/server';
+import { adminError } from '@workspace/contract';
 import type {
   AdminRecordingRepository,
   GetWorkspaceRecordingStatsParams,
@@ -24,10 +24,7 @@ export class AdminRecordingService {
     const stats = await this.deps.adminRecordingRepo.getWorkspaceRecordingStats(params);
 
     if (!stats) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw adminError.WORKSPACE_NOT_FOUND();
     }
 
     return stats;
@@ -40,10 +37,7 @@ export class AdminRecordingService {
     const stats = await this.deps.adminRecordingRepo.getWorkspaceMemberRecordingStats(params);
 
     if (!stats) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw adminError.WORKSPACE_NOT_FOUND();
     }
 
     return stats;

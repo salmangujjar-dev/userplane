@@ -81,6 +81,10 @@ export const DomainErrors = {
   },
 
   // Infrastructure errors (from service and route implementations)
+  DOMAIN_CREATE_FAILED: {
+    status: 500,
+    message: 'Failed to create domain',
+  },
   DOMAIN_UPDATE_FAILED: {
     status: 500,
     message: 'Failed to update domain',

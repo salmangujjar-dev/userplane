@@ -3,7 +3,7 @@
  * Handles workspace management, deactivation, and token reset
  */
 
-import { ORPCError } from '@orpc/server';
+import { adminError } from '@workspace/contract';
 import type {
   AdminWorkspaceRepository,
   SearchWorkspacesParams,
@@ -31,10 +31,7 @@ export class AdminWorkspaceService {
   async getWorkspaceDetail(workspaceId: string) {
     const workspace = await this.deps.adminWorkspaceRepo.findWorkspaceById(workspaceId);
     if (!workspace) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw adminError.WORKSPACE_NOT_FOUND();
     }
 
     const counts = await this.deps.adminWorkspaceRepo.getWorkspaceCounts(workspaceId);
@@ -51,10 +48,7 @@ export class AdminWorkspaceService {
   async listWorkspaceMembers(workspaceId: string, options: { limit: number; offset: number }) {
     const workspace = await this.deps.adminWorkspaceRepo.findWorkspaceById(workspaceId);
     if (!workspace) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw adminError.WORKSPACE_NOT_FOUND();
     }
 
     return this.deps.adminWorkspaceRepo.getWorkspaceMembers(workspaceId, options);
@@ -66,25 +60,16 @@ export class AdminWorkspaceService {
   async deactivateWorkspace(workspaceId: string) {
     const workspace = await this.deps.adminWorkspaceRepo.findWorkspaceById(workspaceId);
     if (!workspace) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw adminError.WORKSPACE_NOT_FOUND();
     }
 
     if (workspace.isDeleted) {
-      throw new ORPCError('WORKSPACE_ALREADY_DEACTIVATED', {
-        status: 400,
-        message: 'Workspace is already deactivated',
-      });
+      throw adminError.WORKSPACE_ALREADY_DEACTIVATED();
     }
 
     const updated = await this.deps.adminWorkspaceRepo.deactivateWorkspace(workspaceId);
     if (!updated) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw adminError.WORKSPACE_NOT_FOUND();
     }
 
     // Return full detail
@@ -97,19 +82,13 @@ export class AdminWorkspaceService {
   async resetInviteToken(workspaceId: string) {
     const workspace = await this.deps.adminWorkspaceRepo.findWorkspaceById(workspaceId);
     if (!workspace) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw adminError.WORKSPACE_NOT_FOUND();
     }
 
     const newToken = generateInviteToken();
     const updated = await this.deps.adminWorkspaceRepo.resetInviteToken(workspaceId, newToken);
     if (!updated) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw adminError.WORKSPACE_NOT_FOUND();
     }
 
     // Return full detail

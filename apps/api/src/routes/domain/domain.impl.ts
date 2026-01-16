@@ -3,8 +3,8 @@
  * Implements the standalone domain contract for public domain verification
  */
 
-import { ORPCError, implement } from '@orpc/server';
-import { contract } from '@workspace/contract';
+import { implement } from '@orpc/server';
+import { contract, domainError } from '@workspace/contract';
 import type { DomainService } from '@/api/services/domain.service';
 
 /**
@@ -36,10 +36,7 @@ export const verifyDomainImpl = (domainService: DomainService) => {
       const originUrl = new URL(origin);
       originHostname = originUrl.hostname;
     } catch {
-      throw new ORPCError('BAD_REQUEST', {
-        status: 400,
-        message: 'Invalid origin header',
-      });
+      throw domainError.DOMAIN_ORIGIN_INVALID();
     }
 
     console.log('[verifyDomainImpl] Origin hostname:', originHostname);

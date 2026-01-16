@@ -3,9 +3,9 @@
  * Handles token generation, validation, and upload workflow
  */
 
-import { ORPCError } from '@orpc/server';
 import jwt from 'jsonwebtoken';
 import { env } from '@/api/env';
+import { sessionError } from '@workspace/contract';
 import { generateSessionId, generateRecordingId } from '@/api/lib/id';
 import {
   LinkRepository,
@@ -128,15 +128,9 @@ export class SessionService {
       // Check if link was deleted
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('SESSION_LINK_GONE', {
-          status: 410,
-          message: "Link's expired, try requesting a new one",
-        });
+        throw sessionError.SESSION_LINK_GONE();
       }
-      throw new ORPCError('SESSION_LINK_NOT_FOUND', {
-        status: 404,
-        message: "Link doesn't seem to exist, try requesting a new one",
-      });
+      throw sessionError.SESSION_LINK_NOT_FOUND();
     }
 
     // Guard rails: Check if related resources are deleted
@@ -146,10 +140,7 @@ export class SessionService {
 
     // Validate link type - only recording links allowed
     if (linkData.linkType !== 'recording') {
-      throw new ORPCError('SESSION_LINK_INVALID_TYPE', {
-        status: 400,
-        message: "Link isn't set up for recordings",
-      });
+      throw sessionError.SESSION_LINK_INVALID_TYPE();
     }
 
     // Check reusability - if not reusable, ensure no terminal state recordings
@@ -157,10 +148,7 @@ export class SessionService {
     if (!linkData.linkReusable) {
       const terminalCount = await this.deps.linkRepo.countTerminalRecordingsForLink(linkId);
       if (terminalCount > 0) {
-        throw new ORPCError('SESSION_LINK_ALREADY_USED', {
-          status: 403,
-          message: "Link's been used already, grab a new one",
-        });
+        throw sessionError.SESSION_LINK_ALREADY_USED();
       }
     }
 
@@ -206,10 +194,7 @@ export class SessionService {
     // Verify and decode session token
     const sessionPayload = this.verifySessionToken(sessionToken);
     if (!sessionPayload) {
-      throw new ORPCError('SESSION_TOKEN_EXPIRED', {
-        status: 401,
-        message: "Session's expired, let's start over",
-      });
+      throw sessionError.SESSION_TOKEN_EXPIRED();
     }
 
     // Re-validate link state (may have been deleted since session init)
@@ -217,23 +202,14 @@ export class SessionService {
     if (!linkData) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(sessionPayload.lid);
       if (isSoftDeleted === true) {
-        throw new ORPCError('SESSION_LINK_GONE', {
-          status: 410,
-          message: "Link's expired, try requesting a new one",
-        });
+        throw sessionError.SESSION_LINK_GONE();
       }
-      throw new ORPCError('SESSION_LINK_NOT_FOUND', {
-        status: 404,
-        message: "Link doesn't seem to exist, try requesting a new one",
-      });
+      throw sessionError.SESSION_LINK_NOT_FOUND();
     }
 
     // Validate link type again
     if (linkData.linkType !== 'recording') {
-      throw new ORPCError('SESSION_LINK_INVALID_TYPE', {
-        status: 400,
-        message: "Link isn't set up for recordings",
-      });
+      throw sessionError.SESSION_LINK_INVALID_TYPE();
     }
 
     // Check reusability again - only block if terminal state recordings exist
@@ -243,35 +219,23 @@ export class SessionService {
         sessionPayload.lid
       );
       if (terminalCount > 0) {
-        throw new ORPCError('SESSION_LINK_ALREADY_USED', {
-          status: 403,
-          message: "Link's been used already, grab a new one",
-        });
+        throw sessionError.SESSION_LINK_ALREADY_USED();
       }
     }
 
     // Validate recording duration
     if (recordingDurationMs < SESSION_CONSTRAINTS.MIN_DURATION_MS) {
-      throw new ORPCError('SESSION_DURATION_TOO_SHORT', {
-        status: 400,
-        message: 'Recording needs to be a bit longer',
-      });
+      throw sessionError.SESSION_DURATION_TOO_SHORT();
     }
 
     // Validate against workspace-specific limit (if set)
     if (sessionPayload.prefs.rmd !== null && recordingDurationMs > sessionPayload.prefs.rmd) {
-      throw new ORPCError('SESSION_DURATION_TOO_LONG', {
-        status: 400,
-        message: 'Recording ran too long, try keeping it shorter',
-      });
+      throw sessionError.SESSION_DURATION_TOO_LONG();
     }
 
     // Validate against absolute maximum
     if (recordingDurationMs > SESSION_CONSTRAINTS.DEFAULT_MAX_DURATION_MS) {
-      throw new ORPCError('SESSION_DURATION_TOO_LONG', {
-        status: 400,
-        message: 'Recording ran too long, try keeping it shorter',
-      });
+      throw sessionError.SESSION_DURATION_TOO_LONG();
     }
 
     // Validate files and get exclusions
@@ -315,13 +279,7 @@ export class SessionService {
         },
       });
     } catch (error) {
-      if (error instanceof ORPCError) {
-        throw error;
-      }
-      throw new ORPCError('SESSION_DATABASE_ERROR', {
-        status: 500,
-        message: 'Database operation failed, try again',
-      });
+      throw sessionError.SESSION_DATABASE_ERROR();
     }
 
     // Schedule stale recording check
@@ -377,18 +335,12 @@ export class SessionService {
     // Verify upload token
     const uploadPayload = this.verifyUploadToken(uploadToken);
     if (!uploadPayload) {
-      throw new ORPCError('SESSION_UPLOAD_TOKEN_EXPIRED', {
-        status: 401,
-        message: 'Upload session expired, try uploading again',
-      });
+      throw sessionError.SESSION_UPLOAD_TOKEN_EXPIRED();
     }
 
     // Validate recording ID matches token
     if (uploadPayload.rid !== recordingId) {
-      throw new ORPCError('SESSION_UPLOAD_TOKEN_MISMATCH', {
-        status: 400,
-        message: 'Upload got mixed up, try again',
-      });
+      throw sessionError.SESSION_UPLOAD_TOKEN_MISMATCH();
     }
 
     // Check if link still exists
@@ -396,15 +348,9 @@ export class SessionService {
     if (!linkExists) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(uploadPayload.lid);
       if (isSoftDeleted === true) {
-        throw new ORPCError('SESSION_LINK_GONE', {
-          status: 410,
-          message: "Link's expired, try requesting a new one",
-        });
+        throw sessionError.SESSION_LINK_GONE();
       }
-      throw new ORPCError('SESSION_LINK_NOT_FOUND', {
-        status: 404,
-        message: "Link doesn't seem to exist, try requesting a new one",
-      });
+      throw sessionError.SESSION_LINK_NOT_FOUND();
     }
 
     // Get pending recording by ID with file paths
@@ -414,23 +360,14 @@ export class SessionService {
       // Check if soft deleted
       const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('SESSION_RECORDING_GONE', {
-          status: 410,
-          message: "Recording's expired, try starting fresh",
-        });
+        throw sessionError.SESSION_RECORDING_GONE();
       }
-      throw new ORPCError('SESSION_RECORDING_NOT_FOUND', {
-        status: 404,
-        message: "Can't find that recording, try again",
-      });
+      throw sessionError.SESSION_RECORDING_NOT_FOUND();
     }
 
     // Verify recording belongs to token's link
     if (recording.recordingLinkId !== uploadPayload.lid) {
-      throw new ORPCError('SESSION_UPLOAD_TOKEN_MISMATCH', {
-        status: 400,
-        message: 'Upload got mixed up, try again',
-      });
+      throw sessionError.SESSION_UPLOAD_TOKEN_MISMATCH();
     }
 
     // Verify all requested files are uploaded and mark as available
@@ -439,10 +376,7 @@ export class SessionService {
     // Mark recording as available
     const updated = await this.deps.recordingRepo.markAsAvailable(recording.recordingId);
     if (!updated) {
-      throw new ORPCError('SESSION_UPLOAD_FAILED', {
-        status: 500,
-        message: "Couldn't finalize upload, try again",
-      });
+      throw sessionError.SESSION_UPLOAD_FAILED();
     }
 
     return {
@@ -551,16 +485,10 @@ export class SessionService {
     const thumbnailFile = files.find((f) => f.type === 'thumbnail');
 
     if (!videoFile) {
-      throw new ORPCError('SESSION_VIDEO_MISSING', {
-        status: 400,
-        message: "Video's missing, try recording again",
-      });
+      throw sessionError.SESSION_VIDEO_MISSING();
     }
     if (videoFile.size <= 0) {
-      throw new ORPCError('SESSION_VIDEO_EMPTY', {
-        status: 400,
-        message: 'Video file is empty, try recording again',
-      });
+      throw sessionError.SESSION_VIDEO_EMPTY();
     }
 
     // Process each file
@@ -608,20 +536,14 @@ export class SessionService {
       // Validate MIME type
       if (!validateFileMimeType(file.type, file.mime_type)) {
         // MIME type errors are always thrown (not silently excluded)
-        throw new ORPCError('SESSION_FILE_FORMAT_UNSUPPORTED', {
-          status: 400,
-          message: "Format's not supported, try recording again",
-        });
+        throw sessionError.SESSION_FILE_FORMAT_UNSUPPORTED();
       }
 
       // Validate file size
       const maxSize = getMaxFileSize(file.type);
       if (file.size > maxSize) {
         // Size limit errors are always thrown (not silently excluded)
-        throw new ORPCError('SESSION_FILE_TOO_LARGE', {
-          status: 400,
-          message: "File's too big, try recording something shorter",
-        });
+        throw sessionError.SESSION_FILE_TOO_LARGE();
       }
 
       // File passed all checks, include it
@@ -700,21 +622,11 @@ export class SessionService {
           });
 
         default:
-          throw new ORPCError('SESSION_FILE_FORMAT_UNSUPPORTED', {
-            status: 400,
-            message: "Format's not supported, try recording again",
-          });
+          throw sessionError.SESSION_FILE_FORMAT_UNSUPPORTED();
       }
     } catch (error) {
-      // Re-throw ORPC errors as-is
-      if (error instanceof ORPCError) {
-        throw error;
-      }
       // Convert storage/S3 errors to typed error
-      throw new ORPCError('SESSION_STORAGE_ERROR', {
-        status: 500,
-        message: 'Storage operation failed, try again',
-      });
+      throw sessionError.SESSION_STORAGE_ERROR();
     }
   }
 
@@ -820,21 +732,11 @@ export class SessionService {
       }
 
       if (errors.length > 0) {
-        throw new ORPCError('SESSION_FILE_VERIFICATION_FAILED', {
-          status: 400,
-          message: "Couldn't verify files, try uploading again",
-        });
+        throw sessionError.SESSION_FILE_VERIFICATION_FAILED();
       }
     } catch (error) {
-      // Re-throw ORPC errors as-is
-      if (error instanceof ORPCError) {
-        throw error;
-      }
       // Convert storage/S3 errors to typed error
-      throw new ORPCError('SESSION_STORAGE_ERROR', {
-        status: 500,
-        message: 'Storage operation failed, try again',
-      });
+      throw sessionError.SESSION_STORAGE_ERROR();
     }
   }
 }

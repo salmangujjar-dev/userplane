@@ -35,6 +35,10 @@ export const LinkErrors = {
     status: 403,
     message: 'Insufficient permissions',
   },
+  LINK_DELETE_FORBIDDEN: {
+    status: 403,
+    message: 'You do not have permission to delete this link',
+  },
   LINK_MEMBER_WORKSPACE_MISMATCH: {
     status: 403,
     message: 'Workspace member does not belong to this workspace',

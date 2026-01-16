@@ -59,6 +59,14 @@ export const ProjectErrors = {
   },
 
   // Infrastructure errors
+  PROJECT_CREATE_FAILED: {
+    status: 500,
+    message: 'Failed to create project',
+  },
+  PROJECT_UPDATE_FAILED: {
+    status: 500,
+    message: 'Failed to update project',
+  },
   PROJECT_DELETE_FAILED: {
     status: 500,
     message: 'Failed to delete project',

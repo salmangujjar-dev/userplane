@@ -3,10 +3,9 @@
  * Integrates with Better Auth to validate sessions and add user context
  */
 
-import { ORPCError } from '@orpc/server';
 import { auth } from '@/api/clients/auth';
 import { implement } from '@orpc/server';
-import { contract } from '@workspace/contract';
+import { contract, accountError } from '@workspace/contract';
 
 export type InitialContext = {
   headers: Headers;
@@ -35,10 +34,7 @@ export const authMiddleware = base.middleware(async ({ context, next }) => {
   });
 
   if (!sessionData?.session || !sessionData?.user) {
-    throw new ORPCError('UNAUTHORIZED', {
-      status: 401,
-      message: 'You must be logged in to access this resource',
-    });
+    throw accountError.UNAUTHORIZED();
   }
 
   return next({

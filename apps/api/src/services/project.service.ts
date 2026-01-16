@@ -9,11 +9,11 @@ import {
   type ProjectSortField,
   type SortDirection,
 } from '@/api/repositories/projects.repository';
-import { ORPCError } from '@orpc/server';
 import type { Transaction } from '@/api/types';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { LinkRepository } from '@/api/repositories/links.repository';
 import type { DbClient } from '@workspace/db';
+import { projectError, workspaceError } from '@workspace/contract';
 import { env } from '@/api/env';
 
 export interface ProjectServiceDeps {
@@ -37,10 +37,7 @@ export class ProjectService {
     options?: { tx?: Transaction }
   ) {
     if (!params.workspaceId) {
-      throw new ORPCError('PROJECT_WORKSPACE_ID_REQUIRED', {
-        status: 400,
-        message: 'Workspace ID is required',
-      });
+      throw projectError.PROJECT_WORKSPACE_ID_REQUIRED();
     }
 
     let isDefault: boolean;
@@ -89,9 +86,9 @@ export class ProjectService {
     if (!project) {
       const isSoftDeleted = await this.deps.projectRepo.isSoftDeleted(projectId);
       if (isSoftDeleted === true) {
-        throw new ORPCError('PROJECT_GONE', { status: 410, message: 'Project has been deleted' });
+        throw projectError.PROJECT_GONE();
       }
-      throw new ORPCError('PROJECT_NOT_FOUND', { status: 404, message: 'Project not found' });
+      throw projectError.PROJECT_NOT_FOUND();
     }
     return project;
   }
@@ -104,10 +101,7 @@ export class ProjectService {
   async getDefaultProject(workspaceId: string) {
     const project = await this.deps.projectRepo.findDefaultByWorkspace(workspaceId);
     if (!project) {
-      throw new ORPCError('PROJECT_DEFAULT_NOT_FOUND', {
-        status: 404,
-        message: 'No default project found for workspace',
-      });
+      throw projectError.PROJECT_DEFAULT_NOT_FOUND();
     }
     return project;
   }
@@ -136,10 +130,7 @@ export class ProjectService {
 
     // If no projects exist, workspace doesn't exist (workspace always has at least 1 project)
     if (total === 0) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
+      throw workspaceError.WORKSPACE_NOT_FOUND();
     }
 
     const offset = (page - 1) * perPage;
@@ -205,20 +196,14 @@ export class ProjectService {
     const project = await this.getById(projectId);
 
     if (project.workspaceId !== workspaceId) {
-      throw new ORPCError('PROJECT_WORKSPACE_MISMATCH', {
-        status: 403,
-        message: 'Project does not belong to this workspace',
-      });
+      throw projectError.PROJECT_WORKSPACE_MISMATCH();
     }
 
     // Check if this is the last project in the workspace
     const projectCount = await this.deps.projectRepo.countByWorkspace(workspaceId);
 
     if (projectCount === 1) {
-      throw new ORPCError('PROJECT_LAST_PROJECT_DELETE_FORBIDDEN', {
-        status: 403,
-        message: 'Cannot delete the only project in a workspace',
-      });
+      throw projectError.PROJECT_LAST_PROJECT_DELETE_FORBIDDEN();
     }
 
     // Use transaction for atomic deletion
@@ -235,10 +220,7 @@ export class ProjectService {
       const deleted = await this.deps.projectRepo.softDelete(projectId, { tx });
 
       if (!deleted) {
-        throw new ORPCError('PROJECT_DELETE_FAILED', {
-          status: 500,
-          message: 'Failed to delete project',
-        });
+        throw projectError.PROJECT_DELETE_FAILED();
       }
 
       // Soft delete all links in project (if linkRepo available)
@@ -285,10 +267,7 @@ export class ProjectService {
     const project = await this.deps.projectRepo.findByIdWithDeletionInfo(projectId);
 
     if (!project) {
-      throw new ORPCError('PROJECT_NOT_FOUND', {
-        status: 404,
-        message: 'Project not found',
-      });
+      throw projectError.PROJECT_NOT_FOUND();
     }
 
     // 2. Idempotent: If project is not deleted, it's already in the desired state
@@ -299,10 +278,7 @@ export class ProjectService {
 
     // 3. Validate restoration time (configurable grace period in days)
     if (!project.deletedAt) {
-      throw new ORPCError('PROJECT_RESTORE_FAILED', {
-        status: 500,
-        message: 'Project deletion timestamp is missing',
-      });
+      throw projectError.PROJECT_RESTORE_FAILED();
     }
 
     const restorationWindowDays = env.trigger.projectRestorationWindowDays;
@@ -311,14 +287,10 @@ export class ProjectService {
     const daysSinceDeletion = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
 
     if (daysSinceDeletion > restorationWindowDays) {
-      throw new ORPCError('PROJECT_RESTORE_TIME_EXPIRED', {
-        status: 410,
-        message: `Project cannot be restored after ${restorationWindowDays} days of deletion`,
-        data: {
-          deletedAt: deletedAt.toISOString(),
-          daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10, // Round to 1 decimal
-          restorationWindowDays,
-        },
+      throw projectError.PROJECT_RESTORE_TIME_EXPIRED({
+        deletedAt: deletedAt.toISOString(),
+        daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10, // Round to 1 decimal
+        restorationWindowDays,
       });
     }
 
@@ -326,10 +298,7 @@ export class ProjectService {
     const restored = await this.deps.projectRepo.restore(projectId, options);
 
     if (!restored) {
-      throw new ORPCError('PROJECT_RESTORE_FAILED', {
-        status: 500,
-        message: 'Failed to restore project',
-      });
+      throw projectError.PROJECT_RESTORE_FAILED();
     }
 
     return restored;
