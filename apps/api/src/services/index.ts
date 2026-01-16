@@ -103,11 +103,6 @@ export const projectService = new ProjectService({
   recordingService,
 });
 
-export const domainService = new DomainService({
-  domainRepo,
-  tokenService,
-});
-
 export const linkService = new LinkService({
   linkRepo,
   workspaceMemberRepo,
@@ -126,6 +121,15 @@ export const workspaceService = new WorkspaceService({
   domainRepo,
   linkRepo,
   projectService,
+});
+
+// Domain service - initialized after workspace and user services are available
+export const domainService = new DomainService({
+  domainRepo,
+  tokenService,
+  emailService,
+  workspaceService,
+  userService,
 });
 
 export const inviteService = new InviteService({

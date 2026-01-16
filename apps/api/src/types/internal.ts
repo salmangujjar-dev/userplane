@@ -180,6 +180,16 @@ export interface AccessRequestEmailParams {
 }
 
 /**
+ * Domain developer instructions email parameters
+ */
+export interface DomainDeveloperInstructionsEmailParams {
+  to: string;
+  domainName: string;
+  settingsUrl: string;
+  docsUrl: string;
+}
+
+/**
  * Internal invite action result for service orchestration
  */
 export interface InviteActionResult {

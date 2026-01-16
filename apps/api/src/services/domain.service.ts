@@ -14,10 +14,16 @@ import type { Transaction } from '@/api/types';
 import type { DomainStatus } from '@workspace/contract';
 import { TokenService } from '@/api/services/token.service';
 import { domainError, workspaceError } from '@workspace/contract';
+import type { EmailService } from '@/api/services/email.service';
+import type { WorkspaceService } from '@/api/services/workspace.service';
+import type { UserService } from '@/api/services/user.service';
 
 export interface DomainServiceDeps {
   domainRepo: DomainRepository;
   tokenService: TokenService;
+  emailService?: EmailService;
+  workspaceService?: WorkspaceService;
+  userService?: UserService;
 }
 
 export class DomainService {
@@ -435,5 +441,69 @@ export class DomainService {
     }
 
     return updated;
+  }
+
+  /**
+   * Send domain developer instructions to multiple emails
+   * Returns list of sent and failed emails
+   * Throws DOMAIN_NOT_FOUND if domain not found
+   * Throws DOMAIN_GONE if domain is soft-deleted
+   * Throws DOMAIN_WORKSPACE_MISMATCH if domain does not belong to workspace
+   */
+  async sendDeveloperInstructions(params: {
+    domainId: string;
+    workspaceId: string;
+    emails: string[];
+    sentBy: string;
+  }): Promise<{ sentEmails: string[]; failedEmails: Array<{ email: string; reason: string }> }> {
+    if (!this.deps.emailService || !this.deps.workspaceService || !this.deps.userService) {
+      throw new Error('Email, workspace, or user service not available');
+    }
+
+    const { domainId, workspaceId, emails, sentBy } = params;
+
+    const domain = await this.deps.domainRepo.findById(domainId);
+
+    if (!domain) {
+      const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
+      if (isSoftDeleted === true) {
+        throw domainError.DOMAIN_GONE();
+      }
+      throw domainError.DOMAIN_NOT_FOUND();
+    }
+
+    if (domain.workspaceId !== workspaceId) {
+      throw domainError.DOMAIN_WORKSPACE_MISMATCH();
+    }
+
+    const settingsUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.userplane.io'}/workspace/${workspaceId}/settings/domains`;
+    const docsUrl = 'https://userplane.com/docs/domains';
+
+    const results = await Promise.allSettled(
+      emails.map((email) =>
+        this.deps.emailService!.sendDomainDeveloperInstructions({
+          to: email,
+          domainName: domain.domainUrl,
+          settingsUrl,
+          docsUrl,
+        })
+      )
+    );
+
+    const sentEmails: string[] = [];
+    const failedEmails: Array<{ email: string; reason: string }> = [];
+
+    results.forEach((result, index) => {
+      const email = emails[index];
+      if (email) {
+        if (result.status === 'fulfilled') {
+          sentEmails.push(email);
+        } else {
+          failedEmails.push({ email, reason: result.reason.message });
+        }
+      }
+    });
+
+    return { sentEmails, failedEmails };
   }
 }
