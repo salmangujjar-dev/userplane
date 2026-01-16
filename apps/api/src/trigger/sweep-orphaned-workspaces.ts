@@ -129,29 +129,30 @@ export const cleanupOrphanedWorkspace = task({
  * sweepOrphanedWorkspaces - Background sweep job for workspaces with orphaned recordings
  *
  * Task ID: TASK_IDS.SWEEP_ORPHANED_WORKSPACES
- * Schedule: Configurable via SWEEP_CRON_SCHEDULE env var (default: every 3 days at midnight UTC)
- * Grace period: Configurable via SWEEP_GRACE_PERIOD_SECONDS env var (default: 7 days)
+ * Schedule: Configurable via WORKSPACE_SWEEP_CRON_SCHEDULE env var (default: daily at midnight UTC)
+ * Lookback period: Configurable via WORKSPACE_SWEEP_LOOKBACK_DAYS env var (default: 7 days)
  *
- * Purpose: Find deleted workspaces with orphaned recordings and trigger cleanup
+ * Purpose: Find workspaces deleted within a rolling window that have orphaned recordings and trigger cleanup
  *
  * Finds:
- * - Deleted workspaces that have at least one recording with ORPHAN status group
- * - ORPHAN status group includes: pending, available
- * - Only considers recordings older than the grace period cutoff date
+ * - Workspaces deleted between day before yesterday (N-2) and X days back
+ * - That have at least one recording with ORPHAN status group (pending, available)
+ * - Creates a rolling window based on workspace deletedAt timestamp
+ * - Grace period: excludes yesterday and today to allow for ongoing operations
  * - Triggers workspace cleanup which cascades to all resources
  */
 export const sweepOrphanedWorkspaces = schedules.task({
   id: TASK_IDS.SWEEP_ORPHANED_WORKSPACES,
   maxDuration: MAX_DURATIONS.ORPHANED_SWEEP,
-  // Cron schedule configured via SWEEP_CRON_SCHEDULE env var (default: every 3 days at midnight UTC)
+  // Cron schedule configured via WORKSPACE_SWEEP_CRON_SCHEDULE env var (default: daily at midnight UTC)
   cron: {
-    pattern: env.trigger.sweepCronSchedule,
+    pattern: env.trigger.workspaceSweepCronSchedule,
     timezone: 'UTC',
     // Only run in PRODUCTION and STAGING environments
     environments: ['PRODUCTION', 'STAGING'],
   },
   run: async (payload): Promise<SweepOrphanedWorkspacesResult> => {
-    logger.info('Starting sweep for orphaned recordings', {
+    logger.info('Starting sweep for orphaned workspace recordings', {
       timestamp: payload.timestamp,
       lastTimestamp: payload.lastTimestamp,
       timezone: payload.timezone,
@@ -162,13 +163,31 @@ export const sweepOrphanedWorkspaces = schedules.task({
 
     const recordingRepo = new RecordingRepository(db);
 
-    // Grace period in seconds, configured via SWEEP_GRACE_PERIOD_SECONDS env var (default: 7 days)
-    const gracePeriodSeconds = env.trigger.sweepGracePeriodSeconds;
-    const cutoffDate = new Date(Date.now() - gracePeriodSeconds * 1000);
+    // Lookback days configured via WORKSPACE_SWEEP_LOOKBACK_DAYS env var (default: 7 days)
+    const lookbackDays = env.trigger.workspaceSweepLookbackDays;
 
-    // Find deleted workspaces with orphaned recordings
-    const workspacesWithOrphans =
-      await recordingRepo.findWorkspacesWithOrphanedRecordings(cutoffDate);
+    // Calculate date range: day before yesterday (N-2) looking back X days
+    // endDate: Start of yesterday (00:00:00) - exclusive upper bound, so includes day before yesterday
+    // startDate: Start of (lookbackDays + 1) days ago
+    // Example with lookbackDays=7: queries workspaces deleted from 8 days ago through day before yesterday (7 full days)
+    const now = new Date();
+    const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Start of today (00:00:00)
+    endDate.setDate(endDate.getDate() - 1); // Start of yesterday (00:00:00) - day before yesterday ends here
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - lookbackDays); // lookbackDays before yesterday
+
+    logger.info('Querying workspaces deleted within date range with orphaned recordings', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      lookbackDays,
+      dateRangeDescription: `Workspaces deleted from day before yesterday through ${lookbackDays} days back`,
+    });
+
+    // Find deleted workspaces with orphaned recordings in the date range
+    const workspacesWithOrphans = await recordingRepo.findWorkspacesWithOrphanedRecordings(
+      startDate,
+      endDate
+    );
 
     logger.info('Found workspaces with orphaned recordings', {
       count: workspacesWithOrphans.length,
