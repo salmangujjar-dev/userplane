@@ -16,20 +16,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { MoreVertical, UserMinus, Shield } from 'lucide-react';
+import { MoreVertical, UserMinus, ChevronUp } from 'lucide-react';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateMemberRole, useRemoveMember } from '@/queries/use-team-mutations';
 import { SectionError } from '@/components/shared/section-error';
 import { TeamSectionSkeleton } from '@/components/skeleton';
+import { TeamMemberActionModal } from '@/components/modals/team-member-action-modal';
 
 const ITEMS_PER_PAGE = 5;
+
+type ConfirmAction = {
+  type: 'remove' | 'changeRole';
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  currentRole?: 'owner' | 'admin' | 'member';
+};
 
 export function TeamSection() {
   const workspaceId = useWorkspaceId();
   const [currentPage, setCurrentPage] = useState(1);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
 
   const {
     data: membersResult,
@@ -37,31 +47,29 @@ export function TeamSection() {
     error,
     refetch,
   } = useWorkspaceMembers({
-    includeMe: true,
     perPage: ITEMS_PER_PAGE,
     page: currentPage,
   });
   const members = membersResult?.success ? membersResult.data.workspaceMembers : null;
   const pagination = membersResult?.success ? membersResult.data.pagination : null;
 
+  const { data: roleResult } = useWorkspaceRole();
+  const myMemberId = roleResult?.success ? roleResult.data.workspaceMemberId : null;
+  const myRole = roleResult?.success ? roleResult.data.workspaceRole : null;
+
   const updateRoleMutation = useUpdateMemberRole(workspaceId);
   const removeMemberMutation = useRemoveMember(workspaceId);
 
-  const handleChangeRole = (workspaceMemberId: string, currentRole: string) => {
-    if (currentRole === 'owner') {
-      toast.error('Cannot change owner role');
-      return;
-    }
-    const newRole = currentRole === 'admin' ? 'member' : 'admin';
-    updateRoleMutation.mutate({ workspaceMemberId, newRole });
-  };
+  const handleConfirmAction = (newRole?: 'owner' | 'admin' | 'member') => {
+    if (!confirmAction) return;
 
-  const handleRemoveMember = (workspaceMemberId: string, role: string) => {
-    if (role === 'owner') {
-      toast.error('Cannot remove workspace owner');
-      return;
+    if (confirmAction.type === 'remove') {
+      removeMemberMutation.mutate(confirmAction.memberId);
+    } else if (confirmAction.type === 'changeRole' && newRole) {
+      updateRoleMutation.mutate({ workspaceMemberId: confirmAction.memberId, newRole });
     }
-    removeMemberMutation.mutate(workspaceMemberId);
+
+    setConfirmAction(null);
   };
 
   if (isLoading) {
@@ -135,38 +143,54 @@ export function TeamSection() {
                       <span className="text-sm capitalize">{member.workspaceRole}</span>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {member.workspaceRole !== 'owner' && (
+                      {/* Only show actions if current user is admin or owner, and not modifying themselves */}
+                      {(myRole === 'admin' || myRole === 'owner') &&
+                      member.workspaceMemberId !== myMemberId ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={() =>
-                                handleChangeRole(member.workspaceMemberId, member.workspaceRole)
+                                setConfirmAction({
+                                  type: 'changeRole',
+                                  memberId: member.workspaceMemberId,
+                                  memberName: member.memberName,
+                                  memberEmail: member.memberEmail,
+                                  currentRole: member.workspaceRole,
+                                })
                               }
                               disabled={updateRoleMutation.isPending}
                             >
-                              <Shield className="h-4 w-4 mr-2" />
-                              {member.workspaceRole === 'admin' ? 'Make Member' : 'Make Admin'}
+                              <ChevronUp className="h-4 w-4 mr-2" />
+                              Change Role
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() =>
-                              handleRemoveMember(member.workspaceMemberId, member.workspaceRole)
-                            }
-                            disabled={
-                              member.workspaceRole === 'owner' || removeMemberMutation.isPending
-                            }
-                          >
-                            <UserMinus className="h-4 w-4 mr-2" />
-                            Remove member
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+
+                            {/* Both admin and owner can remove members (but not owners for admin) */}
+                            {(myRole === 'owner' ||
+                              (myRole === 'admin' && member.workspaceRole !== 'owner')) && (
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() =>
+                                  setConfirmAction({
+                                    type: 'remove',
+                                    memberId: member.workspaceMemberId,
+                                    memberName: member.memberName,
+                                    memberEmail: member.memberEmail,
+                                  })
+                                }
+                                disabled={removeMemberMutation.isPending}
+                              >
+                                <UserMinus className="h-4 w-4 mr-2" />
+                                Remove member
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : null}
                     </TableCell>
                   </TableRow>
                 ))
@@ -201,6 +225,19 @@ export function TeamSection() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <TeamMemberActionModal
+        open={!!confirmAction}
+        onOpenChange={() => setConfirmAction(null)}
+        actionType={confirmAction?.type || null}
+        memberName={confirmAction?.memberName || ''}
+        memberEmail={confirmAction?.memberEmail || ''}
+        currentRole={confirmAction?.currentRole}
+        onConfirm={handleConfirmAction}
+        isPending={updateRoleMutation.isPending || removeMemberMutation.isPending}
+        canMakeOwner={myRole === 'owner'}
+      />
     </div>
   );
 }

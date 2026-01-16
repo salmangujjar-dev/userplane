@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Button } from '@workspace/ui/components/button';
-import { cn } from '@workspace/ui/lib/utils';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
@@ -129,34 +129,40 @@ export function WorkspaceSection() {
                 Invoices and billing related notifications will be sent to this email
               </p>
             </div>
-            <div className="flex gap-2 items-start">
-              <Input
-                id="billing-email"
-                type="email"
-                value={billingEmail}
-                onChange={(e) => {
-                  setBillingEmail(e.target.value);
-                  setHasBillingEmailChanges(
-                    e.target.value !==
-                      (billingEmailResult?.success
-                        ? billingEmailResult.data.workspaceBillingEmail || ''
-                        : '')
-                  );
-                }}
-                placeholder="Enter billing email"
-                className="max-w-md"
-                disabled={!canEdit || updateBillingEmailMutation.isPending}
-              />
-              {canEdit && hasBillingEmailChanges && (
-                <Button
-                  onClick={handleSaveBillingEmail}
-                  disabled={updateBillingEmailMutation.isPending}
-                  size="default"
-                >
-                  {updateBillingEmailMutation.isPending ? 'Saving...' : 'Save'}
-                </Button>
-              )}
-            </div>
+            {isLoadingBilling ? (
+              <div className="flex gap-2 items-start">
+                <Skeleton className="h-10 w-full max-w-md" />
+              </div>
+            ) : (
+              <div className="flex gap-2 items-start">
+                <Input
+                  id="billing-email"
+                  type="email"
+                  value={billingEmail}
+                  onChange={(e) => {
+                    setBillingEmail(e.target.value);
+                    setHasBillingEmailChanges(
+                      e.target.value !==
+                        (billingEmailResult?.success
+                          ? billingEmailResult.data.workspaceBillingEmail || ''
+                          : '')
+                    );
+                  }}
+                  placeholder="Enter billing email"
+                  className="max-w-md"
+                  disabled={!canEdit || updateBillingEmailMutation.isPending}
+                />
+                {canEdit && hasBillingEmailChanges && (
+                  <Button
+                    onClick={handleSaveBillingEmail}
+                    disabled={updateBillingEmailMutation.isPending}
+                    size="default"
+                  >
+                    {updateBillingEmailMutation.isPending ? 'Saving...' : 'Save'}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
