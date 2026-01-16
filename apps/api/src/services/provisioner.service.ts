@@ -33,7 +33,7 @@ export class ProvisionerService {
     url: string;
     userId: string;
     userName?: string;
-    userEmail?: string;
+    userEmail: string;
   }): Promise<{ workspaceId: string }> {
     const { url, userId, userName, userEmail } = params;
 
