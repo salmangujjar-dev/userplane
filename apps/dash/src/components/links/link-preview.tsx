@@ -36,6 +36,7 @@ interface LinkPreviewProps {
   projectName: string | null;
   isReusable: boolean;
   domainUrl: string;
+  canDelete?: boolean;
   onShare?: () => void;
   onView?: () => void;
   onEdit?: (title: string, reference: string, isReusable: boolean) => void;
@@ -51,6 +52,7 @@ export function LinkPreview({
   projectName,
   isReusable,
   domainUrl,
+  canDelete = true,
   onShare,
   onView,
   onEdit,
@@ -223,10 +225,12 @@ export function LinkPreview({
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDelete}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
+                {canDelete && (
+                  <DropdownMenuItem onClick={handleDelete}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

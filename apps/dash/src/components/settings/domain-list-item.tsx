@@ -22,6 +22,7 @@ interface DomainListItemProps {
   onDelete: (domainId: string, domainUrl: string) => void;
   isConfiguring: boolean;
   isDeleteDisabled: boolean;
+  canDelete?: boolean;
 }
 
 /**
@@ -35,6 +36,7 @@ export function DomainListItem({
   onDelete,
   isConfiguring,
   isDeleteDisabled,
+  canDelete = true,
 }: DomainListItemProps) {
   const isVerified = domain.domainStatus === 'verified';
   const { domain: domainPart, path, hasPath } = formatDomainUrl(domain.domainUrl);
@@ -91,13 +93,15 @@ export function DomainListItem({
               <Pencil className="h-4 w-4 mr-2" />
               Edit Domain
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onDelete(domain.domainId, domain.domainUrl)}
-              disabled={isDeleteDisabled}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Domain
-            </DropdownMenuItem>
+            {canDelete && (
+              <DropdownMenuItem
+                onClick={() => onDelete(domain.domainId, domain.domainUrl)}
+                disabled={isDeleteDisabled}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Domain
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -46,6 +46,7 @@ import {
   useDeleteProject,
 } from '@/queries/use-project-mutations';
 import { SectionError } from '@/components/shared/section-error';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -94,6 +95,12 @@ export function ProjectsSection() {
   const createProjectMutation = useCreateProject(workspaceId);
   const updateProjectMutation = useUpdateProject(workspaceId);
   const deleteProjectMutation = useDeleteProject(workspaceId);
+
+  // Get current user's workspace role
+  const { data: roleResult } = useWorkspaceRole();
+  const canDelete =
+    roleResult?.success &&
+    (roleResult.data.workspaceRole === 'admin' || roleResult.data.workspaceRole === 'owner');
 
   const handleCreateProject = (newProject: { title: string; isDefault: boolean }) => {
     createProjectMutation.mutate(newProject.title, {
@@ -265,13 +272,15 @@ export function ProjectsSection() {
                     <Pencil className="h-4 w-4 mr-2" />
                     Edit project
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleDeleteProject(project.projectId, project.projectTitle)}
-                    disabled={deleteProjectMutation.isPending}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete project
-                  </DropdownMenuItem>
+                  {canDelete && (
+                    <DropdownMenuItem
+                      onClick={() => handleDeleteProject(project.projectId, project.projectTitle)}
+                      disabled={deleteProjectMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete project
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

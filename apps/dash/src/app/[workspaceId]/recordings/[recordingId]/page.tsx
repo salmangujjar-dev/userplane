@@ -22,6 +22,7 @@ import {
   useRecordingThumbnail,
 } from '@/queries/use-recording-query';
 import { RecordingDetailSkeleton } from '@/components/skeleton';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 
 export default function RecordingDetailPage() {
   const params = useParams();
@@ -51,6 +52,9 @@ export default function RecordingDetailPage() {
     router.push(`/${workspaceId}/recordings`);
   });
 
+  const { data: roleResult } = useWorkspaceRole();
+  const membership = roleResult?.success ? roleResult.data : null;
+
   // Show loading state
   if (isLoadingRecording || isLoadingVideo) {
     return <RecordingDetailSkeleton />;
@@ -77,6 +81,13 @@ export default function RecordingDetailPage() {
   }
 
   const recording = recordingData.recording;
+
+  // Check permission: admin/owner OR creator can delete
+  const isAdminOrOwner =
+    membership?.workspaceRole === 'admin' || membership?.workspaceRole === 'owner';
+  const isCreator = membership?.workspaceMemberId === recording.meta.creator.workspaceMemberId;
+  const canDelete = isAdminOrOwner || isCreator;
+
   const handleCopyLink = async () => {
     try {
       const currentUrl = window.location.href;
@@ -97,7 +108,7 @@ export default function RecordingDetailPage() {
       <RecordingDetailNav
         onCopyLink={handleCopyLink}
         onShare={handleShare}
-        onDelete={() => setShowDeleteModal(true)}
+        onDelete={canDelete ? () => setShowDeleteModal(true) : undefined}
       />
 
       <main className="w-full pl-4 overflow-hidden flex-1">

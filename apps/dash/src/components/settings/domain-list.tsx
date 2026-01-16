@@ -25,6 +25,7 @@ interface DomainListProps {
   onAddDomain: () => void;
   loadingConfigureId: string | null;
   isDeleteDisabled: boolean;
+  canDelete?: boolean;
   // Pagination props
   currentPage: number;
   totalPages: number;
@@ -42,6 +43,7 @@ export function DomainList({
   onAddDomain,
   loadingConfigureId,
   isDeleteDisabled,
+  canDelete = true,
   currentPage,
   totalPages,
   onPageChange,
@@ -57,6 +59,7 @@ export function DomainList({
           onDelete={onDelete}
           isConfiguring={loadingConfigureId === domain.domainId}
           isDeleteDisabled={isDeleteDisabled}
+          canDelete={canDelete}
         />
       ))}
 

@@ -7,6 +7,7 @@ import { LinksListSkeleton } from '@/components/skeleton';
 import { LinkEmptyState, ProjectLinkEmptyState } from '@/components/shared/empty-state';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useUpdateLink, useDeleteLink } from '@/queries/use-link-mutations';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import type { Link } from '@/hooks/use-workspace-links';
 
 interface LinksListProps {
@@ -30,6 +31,17 @@ export function LinksList({
 
   const updateLinkMutation = useUpdateLink(workspaceId);
   const deleteLinkMutation = useDeleteLink(workspaceId);
+
+  // Get current user's workspace role and member ID
+  const { data: roleResult } = useWorkspaceRole();
+  const membership = roleResult?.success ? roleResult.data : null;
+  const isAdminOrOwner =
+    membership?.workspaceRole === 'admin' || membership?.workspaceRole === 'owner';
+
+  // Helper to check if user can delete a specific link
+  const canDeleteLink = (creatorId: string) => {
+    return isAdminOrOwner || membership?.workspaceMemberId === creatorId;
+  };
 
   const handleEditLink = (linkId: string, title: string, reference: string, reusable: boolean) => {
     updateLinkMutation.mutate({ linkId, title, reference, reusable });
@@ -72,6 +84,7 @@ export function LinksList({
             projectName={link.project.title}
             isReusable={link.linkReusable}
             domainUrl={link.domain.url}
+            canDelete={canDeleteLink(link.creator.workspaceMemberId)}
             onEdit={(title, reference, reusable) =>
               handleEditLink(link.linkId, title, reference, reusable)
             }
