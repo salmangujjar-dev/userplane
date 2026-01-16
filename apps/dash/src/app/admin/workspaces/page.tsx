@@ -35,8 +35,9 @@ import {
 import type { AdminProvisionWorkspaceResponse } from '@/hooks/use-admin-workspace-api';
 import { Button } from '@workspace/ui/components/button';
 import { Plus } from 'lucide-react';
+import { ADMIN_WORKSPACES_PAGINATION } from '@workspace/contract';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = ADMIN_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE;
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },

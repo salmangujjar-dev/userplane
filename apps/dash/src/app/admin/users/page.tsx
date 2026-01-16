@@ -36,10 +36,15 @@ import {
   useAdminRevokeAllSessions,
   type AdminUserSession,
 } from '@/hooks/use-admin-api';
+import {
+  ADMIN_USERS_PAGINATION,
+  ADMIN_USER_SESSIONS_PAGINATION,
+  ADMIN_USER_WORKSPACES_PAGINATION,
+} from '@workspace/contract';
 
-const ITEMS_PER_PAGE = 10;
-const SESSIONS_PER_PAGE = 5;
-const WORKSPACES_PER_PAGE = 10;
+const ITEMS_PER_PAGE = ADMIN_USERS_PAGINATION.DEFAULT_PER_PAGE;
+const SESSIONS_PER_PAGE = ADMIN_USER_SESSIONS_PAGINATION.DEFAULT_PER_PAGE;
+const WORKSPACES_PER_PAGE = ADMIN_USER_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE;
 
 interface UserToAction {
   id: string;

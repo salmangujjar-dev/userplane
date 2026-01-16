@@ -5,6 +5,21 @@ import { toast } from 'sonner';
 import { apiClient } from '@/client';
 import { handleQueryResult, handleSafeResult, handleApiError, type SafeResult } from '@/lib/errors';
 import type { PlanId } from '@workspace/pricing';
+import { ADMIN_WORKSPACE_PROJECTS_PAGINATION } from '@workspace/contract';
+
+/**
+ * Admin restore project response
+ */
+interface AdminRestoreProjectResponse {
+  workspaceId: string;
+  project: {
+    projectId: string;
+    projectTitle: string | null;
+    isDefault: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
 
 /**
  * Admin workspace list item
@@ -58,6 +73,30 @@ export interface AdminWorkspaceDetail {
  */
 export interface AdminWorkspaceMembersListResponse {
   members: AdminWorkspaceMember[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Admin workspace project
+ */
+export interface AdminWorkspaceProject {
+  projectId: string;
+  projectTitle: string | null;
+  isDefault: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  recordingCount: number;
+}
+
+/**
+ * Admin workspace projects list response
+ */
+export interface AdminWorkspaceProjectsListResponse {
+  projects: AdminWorkspaceProject[];
   total: number;
   limit: number;
   offset: number;
@@ -170,6 +209,53 @@ export function useAdminWorkspaceMembers({
       const [error, response] = await apiClient.admin.workspaces.members.list({
         params: { workspaceId },
         query: { limit, offset },
+      });
+      return handleQueryResult(error, response?.data ?? null);
+    },
+    enabled: enabled && !!workspaceId,
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+}
+
+/**
+ * Hook params for searching workspace projects
+ */
+export interface UseAdminSearchWorkspaceProjectsParams {
+  workspaceId: string | null;
+  search?: string;
+  limit?: number;
+  offset?: number;
+  sortBy?: 'created_at' | 'project_title' | 'updated_at';
+  sortDirection?: 'asc' | 'desc';
+  filterStatus?: 'all' | 'active' | 'deleted';
+  enabled?: boolean;
+}
+
+/**
+ * Hook for searching workspace projects with pagination, filtering, and sorting (admin only)
+ */
+export function useAdminSearchWorkspaceProjects({
+  workspaceId,
+  search,
+  limit = ADMIN_WORKSPACE_PROJECTS_PAGINATION.DEFAULT_PER_PAGE,
+  offset = 0,
+  sortBy = 'created_at',
+  sortDirection = 'desc',
+  filterStatus = 'active',
+  enabled = true,
+}: UseAdminSearchWorkspaceProjectsParams) {
+  return useQuery({
+    queryKey: [
+      'admin-search-workspace-projects',
+      workspaceId,
+      { search, limit, offset, sortBy, sortDirection, filterStatus },
+    ],
+    queryFn: async () => {
+      if (!workspaceId) return null;
+      const [error, response] = await apiClient.admin.workspaces.projects.list({
+        params: { workspaceId },
+        query: { search, limit, offset, sortBy, sortDirection, filterStatus },
       });
       return handleQueryResult(error, response?.data ?? null);
     },
@@ -451,6 +537,88 @@ export function useAdminProvisionWorkspace() {
     },
     onError: (error: unknown) => {
       toast.error('Failed to provision workspace', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    },
+  });
+}
+
+// ============================================
+// ADMIN PROJECT MANAGEMENT
+// ============================================
+
+/**
+ * Hook for deactivating a project (admin only)
+ * Invalidates all project search queries and workspace detail
+ */
+export function useAdminDeactivateProject(workspaceId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    SafeResult<{ workspaceId: string; projectId: string }>,
+    Error,
+    { projectId: string }
+  >({
+    mutationFn: async ({ projectId }) => {
+      const [error, response] = await apiClient.admin.projects.deactivate({
+        params: { workspaceId, projectId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        handleApiError(result.error, 'Failed to deactivate project');
+        return;
+      }
+      toast.success('Project deactivated successfully');
+      // Invalidate all search queries for this workspace's projects
+      queryClient.invalidateQueries({
+        queryKey: ['admin-search-workspace-projects', workspaceId],
+      });
+      // Also invalidate workspace detail to update project counts
+      queryClient.invalidateQueries({
+        queryKey: ['admin-workspace-detail', workspaceId],
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error('Failed to deactivate project', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    },
+  });
+}
+
+/**
+ * Hook for restoring a project (admin only)
+ * Invalidates all project search queries and workspace detail
+ */
+export function useAdminRestoreProject(workspaceId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<SafeResult<AdminRestoreProjectResponse>, Error, { projectId: string }>({
+    mutationFn: async ({ projectId }) => {
+      const [error, response] = await apiClient.admin.projects.restore({
+        params: { workspaceId, projectId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        handleApiError(result.error, 'Failed to restore project');
+        return;
+      }
+      toast.success('Project restored successfully');
+      // Invalidate all search queries for this workspace's projects
+      queryClient.invalidateQueries({
+        queryKey: ['admin-search-workspace-projects', workspaceId],
+      });
+      // Also invalidate workspace detail to update project counts
+      queryClient.invalidateQueries({
+        queryKey: ['admin-workspace-detail', workspaceId],
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error('Failed to restore project', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
     },

@@ -25,8 +25,9 @@ import { useUpdateMemberRole, useRemoveMember } from '@/queries/use-team-mutatio
 import { SectionError } from '@/components/shared/section-error';
 import { TeamSectionSkeleton } from '@/components/skeleton';
 import { TeamMemberActionModal } from '@/components/modals/team-member-action-modal';
+import { WORKSPACE_MEMBERS_PAGINATION } from '@workspace/contract';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = WORKSPACE_MEMBERS_PAGINATION.DEFAULT_PER_PAGE;
 
 type ConfirmAction = {
   type: 'remove' | 'changeRole';

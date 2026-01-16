@@ -33,8 +33,9 @@ import {
   DEFAULT_DOMAIN_SETTINGS,
   transformApiPreferencesToSettings,
 } from '@/lib/types/domain';
+import { DOMAIN_PAGINATION } from '@workspace/contract';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = DOMAIN_PAGINATION.DEFAULT_PER_PAGE;
 
 type SortOption = 'recent' | 'oldest' | 'az' | 'za';
 

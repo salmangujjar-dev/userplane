@@ -47,8 +47,9 @@ import {
 } from '@/queries/use-project-mutations';
 import { SectionError } from '@/components/shared/section-error';
 import { useWorkspaceRole } from '@/hooks/use-workspace-role';
+import { PROJECT_PAGINATION } from '@workspace/contract';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = PROJECT_PAGINATION.DEFAULT_PER_PAGE;
 
 type SortOption = 'recent' | 'oldest' | 'az' | 'za';
 

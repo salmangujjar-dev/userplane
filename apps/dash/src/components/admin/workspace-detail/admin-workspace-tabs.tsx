@@ -8,6 +8,7 @@ import { OverviewTab } from './overview-tab';
 import { StatsTab } from './stats-tab';
 import { MembersTab } from './members-tab';
 import { RecordingsTab } from './recordings-tab';
+import { ProjectsTab } from './projects-tab';
 import type { WorkspaceDetail } from './types';
 
 interface AdminWorkspaceTabsProps {
@@ -29,9 +30,10 @@ export function AdminWorkspaceTabs({ workspaceId, isAdmin }: AdminWorkspaceTabsP
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="mb-6">
         <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="stats">Workspace Stats</TabsTrigger>
+        <TabsTrigger value="stats">Stats</TabsTrigger>
         <TabsTrigger value="members">Members</TabsTrigger>
-        <TabsTrigger value="recordings">Recording Stats</TabsTrigger>
+        <TabsTrigger value="projects">Projects</TabsTrigger>
+        <TabsTrigger value="recordings">Recordings</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="space-y-8">
@@ -48,6 +50,10 @@ export function AdminWorkspaceTabs({ workspaceId, isAdmin }: AdminWorkspaceTabsP
 
       <TabsContent value="members" className="space-y-8">
         <MembersTab workspaceId={workspaceId} isAdmin={isAdmin} />
+      </TabsContent>
+
+      <TabsContent value="projects" className="space-y-8">
+        <ProjectsTab workspaceId={workspaceId} />
       </TabsContent>
 
       <TabsContent value="recordings" className="space-y-8">
