@@ -19,7 +19,10 @@ import {
   AdminGetWorkspaceInputSchema,
   AdminListWorkspaceMembersInputSchema,
   AdminDeactivateWorkspaceInputSchema,
-  AdminReactivateWorkspaceInputSchema,
+  AdminRestoreWorkspaceInputSchema,
+  AdminRestoreWorkspaceDataSchema,
+  AdminRestoreProjectInputSchema,
+  AdminRestoreProjectDataSchema,
   AdminResetInviteTokenInputSchema,
   AdminWorkspaceRecordingStatsSchema,
   AdminGetWorkspaceRecordingStatsInputSchema,
@@ -301,26 +304,51 @@ export const deactivateWorkspace = oc
   .output(ApiResponseSchema(AdminWorkspaceDetailSchema));
 
 /**
- * POST /admin/workspaces/:workspaceId/reactivate
- * Reactivate (restore) a workspace
+ * POST /admin/workspaces/:workspaceId/restore
+ * Restore a soft-deleted workspace
  */
-export const reactivateWorkspace = oc
+export const restoreWorkspace = oc
   .route({
     method: 'POST',
-    path: '/admin/workspaces/{workspaceId}/reactivate',
+    path: '/admin/workspaces/{workspaceId}/restore',
     inputStructure: 'detailed',
-    summary: 'Reactivate workspace',
-    description: 'Restore a deactivated workspace',
+    summary: 'Restore workspace',
+    description:
+      'Restore a soft-deleted workspace and its associated projects and links within the grace period',
     tags: ['Admin'],
   })
   .errors({
     UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
     NOT_ADMIN: AdminErrors.NOT_ADMIN,
     WORKSPACE_NOT_FOUND: AdminErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_NOT_DEACTIVATED: AdminErrors.WORKSPACE_NOT_DEACTIVATED,
+    WORKSPACE_RESTORE_TIME_EXPIRED: AdminErrors.WORKSPACE_RESTORE_TIME_EXPIRED,
+    WORKSPACE_RESTORE_FAILED: AdminErrors.WORKSPACE_RESTORE_FAILED,
   })
-  .input(AdminReactivateWorkspaceInputSchema)
-  .output(ApiResponseSchema(AdminWorkspaceDetailSchema));
+  .input(AdminRestoreWorkspaceInputSchema)
+  .output(ApiResponseSchema(AdminRestoreWorkspaceDataSchema));
+
+/**
+ * POST /admin/workspaces/:workspaceId/projects/:projectId/restore
+ * Restore a soft-deleted project
+ */
+export const restoreProject = oc
+  .route({
+    method: 'POST',
+    path: '/admin/workspaces/{workspaceId}/projects/{projectId}/restore',
+    inputStructure: 'detailed',
+    summary: 'Restore project',
+    description: 'Restore a soft-deleted project within the grace period',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    PROJECT_NOT_FOUND: AdminErrors.PROJECT_NOT_FOUND,
+    PROJECT_RESTORE_TIME_EXPIRED: AdminErrors.PROJECT_RESTORE_TIME_EXPIRED,
+    PROJECT_RESTORE_FAILED: AdminErrors.PROJECT_RESTORE_FAILED,
+  })
+  .input(AdminRestoreProjectInputSchema)
+  .output(ApiResponseSchema(AdminRestoreProjectDataSchema));
 
 /**
  * POST /admin/workspaces/:workspaceId/reset-invite-token

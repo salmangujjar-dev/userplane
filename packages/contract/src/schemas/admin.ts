@@ -320,11 +320,49 @@ export const AdminDeactivateWorkspaceInputSchema = z.object({
 });
 
 /**
- * Reactivate workspace input
+ * Restore workspace input
  */
-export const AdminReactivateWorkspaceInputSchema = z.object({
+export const AdminRestoreWorkspaceInputSchema = z.object({
   params: z.object({
     workspaceId: z.string().min(1),
+  }),
+});
+
+/**
+ * Restore workspace response data
+ */
+export const AdminRestoreWorkspaceDataSchema = z.object({
+  workspace: z.object({
+    workspaceId: z.string(),
+    workspaceName: z.string(),
+    isDeleted: z.boolean(),
+    deletedAt: z.string().nullable(),
+  }),
+  restoredProjects: z.number().int().nonnegative(),
+  restoredLinks: z.number().int().nonnegative(),
+});
+
+/**
+ * Restore project input
+ */
+export const AdminRestoreProjectInputSchema = z.object({
+  params: z.object({
+    workspaceId: z.string().min(1),
+    projectId: z.string().min(1),
+  }),
+});
+
+/**
+ * Restore project response data
+ */
+export const AdminRestoreProjectDataSchema = z.object({
+  workspaceId: z.string(),
+  project: z.object({
+    projectId: z.string(),
+    projectTitle: z.string().nullable(),
+    isDefault: z.boolean(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
   }),
 });
 
@@ -463,7 +501,10 @@ export type AdminSearchWorkspacesInput = z.infer<typeof AdminSearchWorkspacesInp
 export type AdminGetWorkspaceInput = z.infer<typeof AdminGetWorkspaceInputSchema>;
 export type AdminListWorkspaceMembersInput = z.infer<typeof AdminListWorkspaceMembersInputSchema>;
 export type AdminDeactivateWorkspaceInput = z.infer<typeof AdminDeactivateWorkspaceInputSchema>;
-export type AdminReactivateWorkspaceInput = z.infer<typeof AdminReactivateWorkspaceInputSchema>;
+export type AdminRestoreWorkspaceInput = z.infer<typeof AdminRestoreWorkspaceInputSchema>;
+export type AdminRestoreWorkspaceData = z.infer<typeof AdminRestoreWorkspaceDataSchema>;
+export type AdminRestoreProjectInput = z.infer<typeof AdminRestoreProjectInputSchema>;
+export type AdminRestoreProjectData = z.infer<typeof AdminRestoreProjectDataSchema>;
 export type AdminResetInviteTokenInput = z.infer<typeof AdminResetInviteTokenInputSchema>;
 
 /**

@@ -595,6 +595,29 @@ export const WorkspaceDeleteDataSchema = z.object({
 });
 
 /**
+ * Restore workspace request (detailed mode)
+ */
+export const RestoreWorkspaceSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+});
+
+/**
+ * Workspace restore response
+ */
+export const WorkspaceRestoreDataSchema = z.object({
+  workspace: z.object({
+    workspaceId: z.string(),
+    workspaceName: z.string(),
+    isDeleted: z.boolean(),
+    deletedAt: z.date().nullable(),
+  }),
+  restoredProjects: z.number().int().nonnegative(),
+  restoredLinks: z.number().int().nonnegative(),
+});
+
+/**
  * Workspace search query parameters (detailed mode)
  */
 export const WorkspaceSearchQuerySchema = z.object({

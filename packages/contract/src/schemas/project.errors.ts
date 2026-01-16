@@ -52,9 +52,19 @@ export const ProjectErrors = {
     message: 'Project has been deleted',
   },
 
+  // Restoration errors
+  PROJECT_RESTORE_TIME_EXPIRED: {
+    status: 410,
+    message: 'Project restoration window has expired',
+  },
+
   // Infrastructure errors
   PROJECT_DELETE_FAILED: {
     status: 500,
     message: 'Failed to delete project',
+  },
+  PROJECT_RESTORE_FAILED: {
+    status: 500,
+    message: 'Failed to restore project',
   },
 } as const;

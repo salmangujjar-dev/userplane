@@ -59,6 +59,12 @@ export const WorkspaceErrors = {
     message: 'Workspace has been deleted',
   },
 
+  // Restoration errors
+  WORKSPACE_RESTORE_TIME_EXPIRED: {
+    status: 410,
+    message: 'Workspace restoration window has expired',
+  },
+
   // Infrastructure errors
   WORKSPACE_SEARCH_UNAVAILABLE: {
     status: 500,
@@ -67,6 +73,10 @@ export const WorkspaceErrors = {
   WORKSPACE_DELETE_FAILED: {
     status: 500,
     message: 'Failed to delete workspace',
+  },
+  WORKSPACE_RESTORE_FAILED: {
+    status: 500,
+    message: 'Failed to restore workspace',
   },
 
   // Workspace Member errors

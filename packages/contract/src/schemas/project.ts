@@ -143,3 +143,21 @@ export const ProjectDeleteDataSchema = z.object({
   workspaceId: z.string(),
   projectId: z.string(),
 });
+
+/**
+ * Restore project request (detailed mode)
+ */
+export const RestoreProjectSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+    projectId: z.string(),
+  }),
+});
+
+/**
+ * Project restore response
+ */
+export const ProjectRestoreDataSchema = z.object({
+  workspaceId: z.string(),
+  project: ProjectItemSchema,
+});
