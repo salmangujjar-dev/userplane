@@ -209,18 +209,96 @@ export class ProjectRepository {
    * Soft delete all projects in workspace
    * Used for workspace deletion cascade
    */
-  async softDeleteByWorkspaceId(workspaceId: string, options?: { tx?: Transaction }) {
+  async softDeleteByWorkspaceId(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
     const dbClient = options?.tx || this.db;
 
     const deleted = await dbClient
       .update(projects)
       .set({
         isDeleted: true,
-        deletedAt: new Date(),
+        deletedAt: deletedAt,
       })
       .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)))
       .returning();
 
     return deleted;
+  }
+
+  /**
+   * Restore projects in workspace that were deleted at a specific timestamp
+   * Used for workspace restoration to restore associated projects
+   * Only restores projects deleted at the exact same time as the workspace
+   */
+  async restoreByWorkspaceIdAndDeletionTime(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const restored = await dbClient
+      .update(projects)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+      })
+      .where(
+        and(
+          eq(projects.workspaceId, workspaceId),
+          eq(projects.isDeleted, true),
+          eq(projects.deletedAt, deletedAt)
+        )
+      )
+      .returning();
+
+    return restored;
+  }
+
+  /**
+   * Restore a soft-deleted project
+   * Resets isDeleted to false and clears deletedAt
+   * Used for individual project restoration within grace period
+   * Does NOT restore associated links - only the project itself
+   */
+  async restore(projectId: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [restored] = await dbClient
+      .update(projects)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+      })
+      .where(and(eq(projects.projectId, projectId), eq(projects.isDeleted, true)))
+      .returning();
+
+    return restored || null;
+  }
+
+  /**
+   * Get project with deletion timestamp
+   * Used for restoration to validate grace period
+   */
+  async findByIdWithDeletionInfo(projectId: string) {
+    const [project] = await this.db
+      .select({
+        projectId: projects.projectId,
+        workspaceId: projects.workspaceId,
+        projectTitle: projects.projectTitle,
+        isDefault: projects.isDefault,
+        isDeleted: projects.isDeleted,
+        deletedAt: projects.deletedAt,
+        createdAt: projects.createdAt,
+        updatedAt: projects.updatedAt,
+      })
+      .from(projects)
+      .where(eq(projects.projectId, projectId))
+      .limit(1);
+
+    return project || null;
   }
 }

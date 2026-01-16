@@ -17,6 +17,7 @@ import type { Transaction, CreateWorkspaceParams } from '@/api/types';
 import type { DbClient } from '@workspace/db';
 import { isDisposableEmail, isDisposableEmailDomain } from '@/api/utils/disposable-email';
 import { MAX_EMAIL_DOMAINS } from '@workspace/contract';
+import { env } from '@/api/env';
 
 export interface WorkspaceServiceDeps {
   workspaceRepo: WorkspaceRepository;
@@ -76,6 +77,7 @@ export class WorkspaceService {
   /**
    * Generate unique slug for workspace recording
    * Uses centralized ID generator with rec_ prefix for consistency
+   * To be used later for public recording links slug generation
    */
   generateUniqueSlug(baseName: string): string {
     return generateRecordingId();
@@ -406,8 +408,11 @@ export class WorkspaceService {
 
     // Use transaction for atomic deletion
     const performDeletion = async (tx: Transaction) => {
+      // 0. Take the deletedAt timestamp for consistency
+      const deletedAt = new Date();
+
       // 1. Soft delete the workspace
-      const deleted = await this.deps.workspaceRepo.softDelete(workspaceId, { tx });
+      const deleted = await this.deps.workspaceRepo.softDelete(workspaceId, deletedAt, { tx });
 
       if (!deleted) {
         throw new ORPCError('WORKSPACE_DELETE_FAILED', {
@@ -418,12 +423,12 @@ export class WorkspaceService {
 
       // 2. Soft delete all projects in workspace
       if (this.deps.projectRepo) {
-        await this.deps.projectRepo.softDeleteByWorkspaceId(workspaceId, { tx });
+        await this.deps.projectRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
       }
 
       // 3. Soft delete all links in workspace
       if (this.deps.linkRepo) {
-        await this.deps.linkRepo.softDeleteByWorkspaceId(workspaceId, { tx });
+        await this.deps.linkRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
       }
 
       return deleted;
@@ -435,6 +440,137 @@ export class WorkspaceService {
     }
 
     return this.deps.db.transaction(performDeletion);
+  }
+
+  /**
+   * Restore a workspace with cascade restoration
+   *
+   * Why we can restore: When workspace/projects are deleted, recordings are NOT immediately deleted.
+   * This allows restoration within grace period by simply toggling flags back.
+   * No data loss occurs during restoration as recordings remain intact in database and storage.
+   *
+   * Transaction flow:
+   * 1. Get the to be restored workspace
+   * 2. If workspace is not deleted, return it (idempotent - already in desired state)
+   * 3. Validate restoration is within configured window (WORKSPACE_RESTORATION_WINDOW_DAYS env var, default: 2 days)
+   * 4. If beyond window, throw WORKSPACE_RESTORE_TIME_EXPIRED (410)
+   * 5. Restore workspace (isDeleted = false, deletedAt = null)
+   * 6. Use original deletedAt timestamp to find and restore associated projects
+   * 7. Use original deletedAt timestamp to find and restore associated links
+   * 8. Best effort: Don't fail if some entities can't be restored
+   * 9. If workspace restoration fails, throw WORKSPACE_RESTORE_FAILED (500)
+   *
+   * Grace period: Configurable via WORKSPACE_RESTORATION_WINDOW_DAYS (default: 2 days)
+   *
+   * Idempotent: If workspace is already active, returns 200 with workspace data
+   *
+   * Throws WORKSPACE_NOT_FOUND (404) if workspace not found
+   * Throws WORKSPACE_RESTORE_TIME_EXPIRED (410) if restoration window has expired
+   * Throws WORKSPACE_RESTORE_FAILED (500) if restoration operation fails
+   */
+  async restoreWorkspace(workspaceId: string, options?: { tx?: Transaction }) {
+    // 1. Get the workspace with deletion info
+    const workspace = await this.deps.workspaceRepo.findByIdWithDeletionInfo(workspaceId);
+
+    if (!workspace) {
+      throw new ORPCError('WORKSPACE_NOT_FOUND', {
+        status: 404,
+        message: 'Workspace not found',
+      });
+    }
+
+    // 2. Idempotent: If workspace is not deleted, it's already in the desired state
+    // Return it successfully instead of throwing an error
+    if (!workspace.isDeleted) {
+      return {
+        workspace,
+        restoredProjects: 0,
+        restoredLinks: 0,
+      };
+    }
+
+    // 3. Validate restoration time (configurable grace period in days)
+    if (!workspace.deletedAt) {
+      throw new ORPCError('WORKSPACE_RESTORE_FAILED', {
+        status: 500,
+        message: 'Workspace deletion timestamp is missing',
+      });
+    }
+
+    const restorationWindowDays = env.trigger.workspaceRestorationWindowDays;
+    const now = new Date();
+    const deletedAt = new Date(workspace.deletedAt);
+    const daysSinceDeletion = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (daysSinceDeletion > restorationWindowDays) {
+      throw new ORPCError('WORKSPACE_RESTORE_TIME_EXPIRED', {
+        status: 410,
+        message: `Workspace cannot be restored after ${restorationWindowDays} days of deletion`,
+        data: {
+          deletedAt: deletedAt.toISOString(),
+          daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10, // Round to 1 decimal
+          restorationWindowDays,
+        },
+      });
+    }
+
+    // Use transaction for atomic restoration
+    const performRestoration = async (tx: Transaction) => {
+      // 4. Restore the workspace
+      const restored = await this.deps.workspaceRepo.restore(workspaceId, { tx });
+
+      if (!restored) {
+        throw new ORPCError('WORKSPACE_RESTORE_FAILED', {
+          status: 500,
+          message: 'Failed to restore workspace',
+        });
+      }
+
+      // 5. Restore associated projects (best effort)
+      // Only restore projects that were deleted at the exact same time as the workspace
+      let restoredProjects: any[] = [];
+      if (this.deps.projectRepo) {
+        try {
+          restoredProjects = await this.deps.projectRepo.restoreByWorkspaceIdAndDeletionTime(
+            workspaceId,
+            deletedAt,
+            { tx }
+          );
+        } catch (error) {
+          // Log but don't fail - best effort
+          console.error('Error restoring workspace projects:', error);
+        }
+      }
+
+      // 6. Restore associated links (best effort)
+      // Only restore links that were deleted at the exact same time as the workspace
+      let restoredLinks: any[] = [];
+      if (this.deps.linkRepo) {
+        try {
+          restoredLinks = await this.deps.linkRepo.restoreByWorkspaceIdAndDeletionTime(
+            workspaceId,
+            deletedAt,
+            { tx }
+          );
+        } catch (error) {
+          // Log but don't fail - best effort
+          console.error('Error restoring workspace links:', error);
+        }
+      }
+
+      return {
+        workspace: restored,
+        restoredProjects: restoredProjects.length,
+        restoredLinks: restoredLinks.length,
+      };
+    };
+
+    // Execute in provided transaction or create new one
+    if (options?.tx) {
+      return performRestoration(options.tx);
+    }
+
+    return this.deps.db.transaction(performRestoration);
   }
 
   /**

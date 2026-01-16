@@ -23,6 +23,10 @@ import type {
   LinkProviderType,
 } from '@/api/types';
 import type { Transaction } from '@/api/repositories/recordings.repository';
+import { tasks } from '@trigger.dev/sdk/v3';
+import { TASK_IDS } from '@/api/trigger/constants';
+import { buildRecordingDeletionKey } from '@/api/trigger/idempotency';
+import { getPurgeDelay } from '@/api/trigger/delay-calculator';
 
 export interface RecordingServiceDeps {
   recordingRepo: RecordingRepository;
@@ -159,6 +163,24 @@ export class RecordingService {
         status: 500,
         message: 'Failed to delete recording',
       });
+    }
+
+    // Schedule recording resource cleanup
+    // Triggers background task to delete storage resources (video, thumbnail, logs, etc.)
+    // Note: Trigger.dev failures are non-blocking - recording soft delete has already succeeded
+    try {
+      await tasks.trigger(
+        TASK_IDS.DELETE_RECORDING_RESOURCES,
+        { recordingId },
+        {
+          idempotencyKey: buildRecordingDeletionKey(recordingId),
+          delay: getPurgeDelay(existingRecording.uploadStatus),
+        }
+      );
+    } catch (error) {
+      // Log but don't fail the request - cleanup is a background task
+      // The recording has been soft deleted and cleanup can be retried later
+      console.error('Error scheduling recording resource cleanup:', error);
     }
 
     return deleted;

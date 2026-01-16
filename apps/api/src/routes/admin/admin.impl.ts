@@ -460,22 +460,59 @@ const deactivateWorkspaceImpl = (
 };
 
 /**
- * Reactivate workspace implementation
+ * Restore workspace implementation
+ * Uses WorkspaceService.restoreWorkspace for consistent restoration logic
  */
-const reactivateWorkspaceImpl = (
+const restoreWorkspaceImpl = (
   adminService: AdminService,
-  adminWorkspaceService: AdminWorkspaceService
+  workspaceService: any // Will be typed as WorkspaceService
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.workspaces.reactivate.handler(async ({ input }) => {
-    const workspaceDetail = await adminWorkspaceService.reactivateWorkspace(
-      input.params.workspaceId
-    );
+  return authorized.use(adminMiddleware).admin.workspaces.restore.handler(async ({ input }) => {
+    const result = await workspaceService.restoreWorkspace(input.params.workspaceId);
 
     return {
-      message: 'Workspace reactivated successfully',
-      data: formatWorkspaceDetail(workspaceDetail),
+      message: 'Workspace restored successfully',
+      data: {
+        workspace: {
+          workspaceId: result.workspace.workspaceId,
+          workspaceName: result.workspace.workspaceName,
+          isDeleted: result.workspace.isDeleted,
+          deletedAt: result.workspace.deletedAt ? result.workspace.deletedAt.toISOString() : null,
+        },
+        restoredProjects: result.restoredProjects,
+        restoredLinks: result.restoredLinks,
+      },
+    };
+  });
+};
+
+/**
+ * Restore project implementation
+ * Uses ProjectService.restoreProject for consistent restoration logic
+ */
+const restoreProjectImpl = (
+  adminService: AdminService,
+  projectService: any // Will be typed as ProjectService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized.use(adminMiddleware).admin.projects.restore.handler(async ({ input }) => {
+    const restoredProject = await projectService.restoreProject(input.params.projectId);
+
+    return {
+      message: 'Project restored successfully',
+      data: {
+        workspaceId: input.params.workspaceId,
+        project: {
+          projectId: restoredProject.projectId,
+          projectTitle: restoredProject.projectTitle,
+          isDefault: restoredProject.isDefault,
+          createdAt: restoredProject.createdAt.toISOString(),
+          updatedAt: restoredProject.updatedAt.toISOString(),
+        },
+      },
     };
   });
 };
@@ -602,7 +639,9 @@ export const createAdminProcedures = (
   adminService: AdminService,
   adminWorkspaceService: AdminWorkspaceService,
   adminRecordingService: AdminRecordingService,
-  adminProvisioningService: AdminProvisioningService
+  adminProvisioningService: AdminProvisioningService,
+  workspaceService: any, // WorkspaceService for restoration
+  projectService: any // ProjectService for restoration
 ) => {
   return {
     users: {
@@ -628,7 +667,7 @@ export const createAdminProcedures = (
         list: listWorkspaceMembersImpl(adminService, adminWorkspaceService),
       },
       deactivate: deactivateWorkspaceImpl(adminService, adminWorkspaceService),
-      reactivate: reactivateWorkspaceImpl(adminService, adminWorkspaceService),
+      restore: restoreWorkspaceImpl(adminService, workspaceService),
       resetInviteToken: resetInviteTokenImpl(adminService, adminWorkspaceService),
       recordingStats: getWorkspaceRecordingStatsImpl(adminService, adminRecordingService),
       memberRecordingStats: getWorkspaceMemberRecordingStatsImpl(
@@ -636,6 +675,9 @@ export const createAdminProcedures = (
         adminRecordingService
       ),
       provision: provisionWorkspaceImpl(adminService, adminProvisioningService),
+    },
+    projects: {
+      restore: restoreProjectImpl(adminService, projectService),
     },
   };
 };

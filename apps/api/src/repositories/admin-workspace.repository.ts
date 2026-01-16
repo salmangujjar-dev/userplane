@@ -310,31 +310,6 @@ export class AdminWorkspaceRepository {
   }
 
   /**
-   * Reactivate (restore) workspace
-   */
-  async reactivateWorkspace(workspaceId: string): Promise<AdminWorkspaceDetail | null> {
-    const [updated] = await this.db
-      .update(workspaces)
-      .set({
-        isDeleted: false,
-        deletedAt: null,
-      })
-      .where(eq(workspaces.workspaceId, workspaceId))
-      .returning();
-
-    if (!updated) return null;
-
-    return {
-      workspaceId: updated.workspaceId,
-      workspaceName: updated.workspaceName,
-      workspacePlan: updated.workspacePlan,
-      createdAt: updated.createdAt,
-      isDeleted: updated.isDeleted,
-      deletedAt: updated.deletedAt,
-    };
-  }
-
-  /**
    * Reset invite token
    */
   async resetInviteToken(

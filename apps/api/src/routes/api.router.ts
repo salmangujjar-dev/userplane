@@ -76,7 +76,9 @@ const adminProcedures = createAdminProcedures(
   adminService,
   adminWorkspaceService,
   adminRecordingService,
-  adminProvisioningService
+  adminProvisioningService,
+  workspaceService,
+  projectService
 );
 const projectProcedures = createProjectProcedures(
   projectService,

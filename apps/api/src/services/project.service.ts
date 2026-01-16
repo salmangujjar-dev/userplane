@@ -14,6 +14,7 @@ import type { Transaction } from '@/api/types';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { LinkRepository } from '@/api/repositories/links.repository';
 import type { DbClient } from '@workspace/db';
+import { env } from '@/api/env';
 
 export interface ProjectServiceDeps {
   projectRepo: ProjectRepository;
@@ -254,5 +255,83 @@ export class ProjectService {
     }
 
     return this.deps.db.transaction(performDeletion);
+  }
+
+  /**
+   * Restore a soft-deleted project
+   *
+   * Why we can restore: When projects are deleted, recordings are NOT immediately deleted.
+   * This allows restoration within grace period by simply toggling the project flag back.
+   * No data loss occurs during restoration as recordings remain intact in database and storage.
+   *
+   * Flow:
+   * 1. Get the project with deletion info
+   * 2. If project is not deleted, return it (idempotent - already in desired state)
+   * 3. Validate restoration is within configured window (PROJECT_RESTORATION_WINDOW_DAYS env var, default: 2 days)
+   * 4. If beyond window, throw PROJECT_RESTORE_TIME_EXPIRED (410)
+   * 5. Restore project (isDeleted = false, deletedAt = null)
+   * 6. Does NOT restore associated links - only the project itself
+   *
+   * Grace period: Configurable via PROJECT_RESTORATION_WINDOW_DAYS (default: 2 days)
+   *
+   * Idempotent: If project is already active, returns 200 with project data
+   *
+   * Throws PROJECT_NOT_FOUND (404) if project not found
+   * Throws PROJECT_RESTORE_TIME_EXPIRED (410) if restoration window has expired
+   * Throws PROJECT_RESTORE_FAILED (500) if restoration operation fails
+   */
+  async restoreProject(projectId: string, options?: { tx?: Transaction }) {
+    // 1. Get the project with deletion info
+    const project = await this.deps.projectRepo.findByIdWithDeletionInfo(projectId);
+
+    if (!project) {
+      throw new ORPCError('PROJECT_NOT_FOUND', {
+        status: 404,
+        message: 'Project not found',
+      });
+    }
+
+    // 2. Idempotent: If project is not deleted, it's already in the desired state
+    // Return it successfully instead of throwing an error
+    if (!project.isDeleted) {
+      return project;
+    }
+
+    // 3. Validate restoration time (configurable grace period in days)
+    if (!project.deletedAt) {
+      throw new ORPCError('PROJECT_RESTORE_FAILED', {
+        status: 500,
+        message: 'Project deletion timestamp is missing',
+      });
+    }
+
+    const restorationWindowDays = env.trigger.projectRestorationWindowDays;
+    const now = new Date();
+    const deletedAt = new Date(project.deletedAt);
+    const daysSinceDeletion = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (daysSinceDeletion > restorationWindowDays) {
+      throw new ORPCError('PROJECT_RESTORE_TIME_EXPIRED', {
+        status: 410,
+        message: `Project cannot be restored after ${restorationWindowDays} days of deletion`,
+        data: {
+          deletedAt: deletedAt.toISOString(),
+          daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10, // Round to 1 decimal
+          restorationWindowDays,
+        },
+      });
+    }
+
+    // 4. Restore the project (no transaction needed for single operation)
+    const restored = await this.deps.projectRepo.restore(projectId, options);
+
+    if (!restored) {
+      throw new ORPCError('PROJECT_RESTORE_FAILED', {
+        status: 500,
+        message: 'Failed to restore project',
+      });
+    }
+
+    return restored;
   }
 }
