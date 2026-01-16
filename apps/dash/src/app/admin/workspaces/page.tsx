@@ -14,6 +14,7 @@ import { useSession } from '@/hooks/use-session';
 import {
   useAdminSearchWorkspaces,
   useAdminDeactivateWorkspace,
+  useAdminRestoreWorkspace,
   useAdminResetInviteToken,
   useAdminProvisionWorkspace,
 } from '@/hooks/use-admin-workspace-api';
@@ -25,6 +26,7 @@ import {
   adminSortDirectionParser,
 } from '@/lib/parsers';
 import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
+import { AdminRestoreWorkspaceModal } from '@/components/modals/admin-restore-workspace-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import {
   AdminProvisionWorkspaceModal,
@@ -53,6 +55,11 @@ const SORT_DIRECTION_OPTIONS = [
 ];
 
 interface WorkspaceToDeactivate {
+  workspaceId: string;
+  workspaceName: string;
+}
+
+interface WorkspaceToRestore {
   workspaceId: string;
   workspaceName: string;
 }
@@ -91,10 +98,10 @@ function AdminRecordingsPageContent() {
     adminSortDirectionParser
   );
 
-  // Debounced filter states for API calls
+  // Debounced filter states for API calls - default to active workspaces
   const [debouncedFilters, setDebouncedFilters] = useState({
     search: '',
-    status: selectedStatus[0] as 'active' | 'deleted' | undefined,
+    status: (selectedStatus[0] as 'active' | 'deleted' | undefined) || 'active',
     sortBy: (selectedSortBy[0] as 'createdAt' | 'name' | 'memberCount') || 'createdAt',
     sortDirection: (selectedSortDirection[0] as 'asc' | 'desc') || 'desc',
   });
@@ -103,6 +110,7 @@ function AdminRecordingsPageContent() {
   const [workspaceToDeactivate, setWorkspaceToDeactivate] = useState<WorkspaceToDeactivate | null>(
     null
   );
+  const [workspaceToRestore, setWorkspaceToRestore] = useState<WorkspaceToRestore | null>(null);
   const [workspaceToResetToken, setWorkspaceToResetToken] = useState<WorkspaceToResetToken | null>(
     null
   );
@@ -114,6 +122,7 @@ function AdminRecordingsPageContent() {
 
   // Mutations
   const deactivateMutation = useAdminDeactivateWorkspace();
+  const restoreMutation = useAdminRestoreWorkspace();
   const resetTokenMutation = useAdminResetInviteToken();
   const provisionMutation = useAdminProvisionWorkspace();
 
@@ -122,7 +131,7 @@ function AdminRecordingsPageContent() {
     const timer = setTimeout(() => {
       const newFilters = {
         search,
-        status: selectedStatus[0] as 'active' | 'deleted' | undefined,
+        status: (selectedStatus[0] as 'active' | 'deleted' | undefined) || 'active',
         sortBy: (selectedSortBy[0] as 'createdAt' | 'name' | 'memberCount') || 'createdAt',
         sortDirection: (selectedSortDirection[0] as 'asc' | 'desc') || 'desc',
       };
@@ -213,6 +222,19 @@ function AdminRecordingsPageContent() {
       deactivateMutation.mutate(
         { workspaceId: workspaceToDeactivate.workspaceId },
         { onSuccess: () => setWorkspaceToDeactivate(null) }
+      );
+    }
+  };
+
+  const handleRestore = (workspaceId: string, workspaceName: string) => {
+    setWorkspaceToRestore({ workspaceId, workspaceName });
+  };
+
+  const confirmRestore = () => {
+    if (workspaceToRestore) {
+      restoreMutation.mutate(
+        { workspaceId: workspaceToRestore.workspaceId },
+        { onSuccess: () => setWorkspaceToRestore(null) }
       );
     }
   };
@@ -346,6 +368,7 @@ function AdminRecordingsPageContent() {
                     onDeactivate={() =>
                       handleDeactivate(workspace.workspaceId, workspace.workspaceName)
                     }
+                    onRestore={() => handleRestore(workspace.workspaceId, workspace.workspaceName)}
                     onResetInviteToken={() =>
                       handleResetInviteToken(workspace.workspaceId, workspace.workspaceName)
                     }
@@ -372,6 +395,14 @@ function AdminRecordingsPageContent() {
         workspace={workspaceToDeactivate}
         onConfirm={confirmDeactivate}
         isPending={deactivateMutation.isPending}
+      />
+
+      <AdminRestoreWorkspaceModal
+        open={!!workspaceToRestore}
+        onOpenChange={(open) => !open && setWorkspaceToRestore(null)}
+        workspace={workspaceToRestore}
+        onConfirm={confirmRestore}
+        isPending={restoreMutation.isPending}
       />
 
       <ResetInviteTokenModal

@@ -232,8 +232,9 @@ export function useAdminDeactivateWorkspace() {
         return;
       }
       toast.success('Workspace deactivated successfully');
-      // Only invalidate the workspace detail to get fresh data from server
+      // Invalidate the workspace detail and search queries to update the list
       queryClient.invalidateQueries({ queryKey: ['admin-workspace-detail', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-search-workspaces'] });
     },
     onError: (error: unknown, { workspaceId }, context) => {
       // Rollback on error
@@ -306,8 +307,9 @@ export function useAdminRestoreWorkspace() {
       toast.success('Workspace restored successfully', {
         description: `Restored ${restoredProjects} project(s) and ${restoredLinks} link(s)`,
       });
-      // Only invalidate the workspace detail to get fresh data from server
+      // Invalidate the workspace detail and search queries to update the list
       queryClient.invalidateQueries({ queryKey: ['admin-workspace-detail', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-search-workspaces'] });
     },
     onError: (error: unknown, { workspaceId }, context) => {
       // Rollback on error
