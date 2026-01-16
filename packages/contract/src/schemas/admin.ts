@@ -1,6 +1,28 @@
 import { z } from 'zod';
 import { PLAN_IDS } from '@workspace/pricing';
-import { EmailSchema } from './common';
+import {
+  EmailSchema,
+  WORKSPACE_ROLE_VALUES,
+  SORT_DIRECTION_VALUES,
+  STREAMING_STATUS_VALUES,
+  UPLOAD_STATUS_VALUES,
+  ADMIN_USER_SORT_FIELDS,
+  ADMIN_USER_FILTER_STATUS_VALUES,
+  ADMIN_WORKSPACE_SORT_FIELDS,
+  ADMIN_WORKSPACE_FILTER_STATUS_VALUES,
+  ADMIN_PROJECT_SORT_FIELDS,
+  ADMIN_FILTER_STATUS_VALUES,
+  ADMIN_RECORDING_WEEKS_VALUES,
+  ADMIN_PROVISION_ROLE_VALUES,
+} from './common';
+import {
+  ADMIN_USERS_PAGINATION,
+  ADMIN_USER_SESSIONS_PAGINATION,
+  ADMIN_USER_WORKSPACES_PAGINATION,
+  ADMIN_WORKSPACES_PAGINATION,
+  ADMIN_WORKSPACE_MEMBERS_PAGINATION,
+  ADMIN_WORKSPACE_PROJECTS_PAGINATION,
+} from '../constants';
 
 /**
  * Admin schemas for user management
@@ -12,7 +34,7 @@ import { EmailSchema } from './common';
 export const AdminUserWorkspaceSchema = z.object({
   workspaceId: z.string(),
   workspaceName: z.string(),
-  workspaceRole: z.enum(['owner', 'admin', 'member']),
+  workspaceRole: z.enum(WORKSPACE_ROLE_VALUES),
   joinedAt: z.string(),
 });
 
@@ -82,11 +104,17 @@ export const AdminSearchUsersInputSchema = z.object({
   query: z
     .object({
       search: z.string().optional(),
-      limit: z.coerce.number().int().min(1).max(100).optional().default(5),
+      limit: z.coerce
+        .number()
+        .int()
+        .min(ADMIN_USERS_PAGINATION.MIN_PER_PAGE)
+        .max(ADMIN_USERS_PAGINATION.MAX_PER_PAGE)
+        .optional()
+        .default(ADMIN_USERS_PAGINATION.DEFAULT_PER_PAGE),
       offset: z.coerce.number().int().min(0).optional().default(0),
-      sortBy: z.enum(['createdAt', 'name', 'email']).optional().default('createdAt'),
-      sortDirection: z.enum(['asc', 'desc']).optional().default('desc'),
-      filterStatus: z.enum(['active', 'banned']).optional(),
+      sortBy: z.enum(ADMIN_USER_SORT_FIELDS).optional().default('createdAt'),
+      sortDirection: z.enum(SORT_DIRECTION_VALUES).optional().default('desc'),
+      filterStatus: z.enum(ADMIN_USER_FILTER_STATUS_VALUES).optional(),
     })
     .optional()
     .default({}),
@@ -132,7 +160,13 @@ export const AdminListUserSessionsInputSchema = z.object({
   }),
   query: z
     .object({
-      limit: z.coerce.number().int().min(1).max(5).optional().default(5),
+      limit: z.coerce
+        .number()
+        .int()
+        .min(ADMIN_USER_SESSIONS_PAGINATION.MIN_PER_PAGE)
+        .max(ADMIN_USER_SESSIONS_PAGINATION.MAX_PER_PAGE)
+        .optional()
+        .default(ADMIN_USER_SESSIONS_PAGINATION.DEFAULT_PER_PAGE),
       offset: z.coerce.number().int().min(0).optional().default(0),
     })
     .optional()
@@ -177,7 +211,13 @@ export const AdminListUserWorkspacesInputSchema = z.object({
   }),
   query: z
     .object({
-      limit: z.coerce.number().int().min(1).max(10).optional().default(10),
+      limit: z.coerce
+        .number()
+        .int()
+        .min(ADMIN_USER_WORKSPACES_PAGINATION.MIN_PER_PAGE)
+        .max(ADMIN_USER_WORKSPACES_PAGINATION.MAX_PER_PAGE)
+        .optional()
+        .default(ADMIN_USER_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE),
       offset: z.coerce.number().int().min(0).optional().default(0),
     })
     .optional()
@@ -206,7 +246,7 @@ export const AdminWorkspaceMemberSchema = z.object({
   userId: z.string(),
   userName: z.string(),
   userEmail: z.string(),
-  workspaceRole: z.enum(['owner', 'admin', 'member']),
+  workspaceRole: z.enum(WORKSPACE_ROLE_VALUES),
   joinedAt: z.string(),
 });
 
@@ -276,8 +316,64 @@ export const AdminListWorkspaceMembersInputSchema = z.object({
   }),
   query: z
     .object({
-      limit: z.coerce.number().int().min(1).max(10).optional().default(10),
+      limit: z.coerce
+        .number()
+        .int()
+        .min(ADMIN_WORKSPACE_MEMBERS_PAGINATION.MIN_PER_PAGE)
+        .max(ADMIN_WORKSPACE_MEMBERS_PAGINATION.MAX_PER_PAGE)
+        .optional()
+        .default(ADMIN_WORKSPACE_MEMBERS_PAGINATION.DEFAULT_PER_PAGE),
       offset: z.coerce.number().int().min(0).optional().default(0),
+    })
+    .optional()
+    .default({}),
+});
+
+/**
+ * Admin workspace project item
+ */
+export const AdminWorkspaceProjectSchema = z.object({
+  projectId: z.string(),
+  projectTitle: z.string().nullable(),
+  isDefault: z.boolean(),
+  isDeleted: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
+  recordingCount: z.number().int().nonnegative(),
+});
+
+/**
+ * Admin workspace projects list response
+ */
+export const AdminWorkspaceProjectsListDataSchema = z.object({
+  projects: z.array(AdminWorkspaceProjectSchema),
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+});
+
+/**
+ * List workspace projects input
+ */
+export const AdminListWorkspaceProjectsInputSchema = z.object({
+  params: z.object({
+    workspaceId: z.string().min(1),
+  }),
+  query: z
+    .object({
+      search: z.string().optional(),
+      limit: z.coerce
+        .number()
+        .int()
+        .min(ADMIN_WORKSPACE_PROJECTS_PAGINATION.MIN_PER_PAGE)
+        .max(ADMIN_WORKSPACE_PROJECTS_PAGINATION.MAX_PER_PAGE)
+        .optional()
+        .default(ADMIN_WORKSPACE_PROJECTS_PAGINATION.DEFAULT_PER_PAGE),
+      offset: z.coerce.number().int().min(0).optional().default(0),
+      sortBy: z.enum(ADMIN_PROJECT_SORT_FIELDS).optional().default('created_at'),
+      sortDirection: z.enum(SORT_DIRECTION_VALUES).optional().default('desc'),
+      filterStatus: z.enum(ADMIN_FILTER_STATUS_VALUES).optional().default('active'),
     })
     .optional()
     .default({}),
@@ -290,11 +386,17 @@ export const AdminSearchWorkspacesInputSchema = z.object({
   query: z
     .object({
       search: z.string().optional(),
-      limit: z.coerce.number().int().min(1).max(100).optional().default(5),
+      limit: z.coerce
+        .number()
+        .int()
+        .min(ADMIN_WORKSPACES_PAGINATION.MIN_PER_PAGE)
+        .max(ADMIN_WORKSPACES_PAGINATION.MAX_PER_PAGE)
+        .optional()
+        .default(ADMIN_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE),
       offset: z.coerce.number().int().min(0).optional().default(0),
-      sortBy: z.enum(['createdAt', 'name', 'memberCount']).optional().default('createdAt'),
-      sortDirection: z.enum(['asc', 'desc']).optional().default('desc'),
-      filterStatus: z.enum(['active', 'deleted']).optional(),
+      sortBy: z.enum(ADMIN_WORKSPACE_SORT_FIELDS).optional().default('createdAt'),
+      sortDirection: z.enum(SORT_DIRECTION_VALUES).optional().default('desc'),
+      filterStatus: z.enum(ADMIN_WORKSPACE_FILTER_STATUS_VALUES).optional(),
       filterPlan: z.enum(PLAN_IDS).optional(),
     })
     .optional()
@@ -343,6 +445,24 @@ export const AdminRestoreWorkspaceDataSchema = z.object({
 });
 
 /**
+ * Deactivate project input
+ */
+export const AdminDeactivateProjectInputSchema = z.object({
+  params: z.object({
+    workspaceId: z.string().min(1),
+    projectId: z.string().min(1),
+  }),
+});
+
+/**
+ * Deactivate project response data
+ */
+export const AdminDeactivateProjectDataSchema = z.object({
+  workspaceId: z.string(),
+  projectId: z.string(),
+});
+
+/**
  * Restore project input
  */
 export const AdminRestoreProjectInputSchema = z.object({
@@ -378,11 +498,6 @@ export const AdminResetInviteTokenInputSchema = z.object({
 // ============================================
 // ADMIN RECORDING SCHEMAS
 // ============================================
-
-/**
- * Streaming status enum matching database values
- */
-const streamingStatusEnum = z.enum(['pending', 'available', 'failed', 'expired', 'purged']);
 
 /**
  * Weekly stats for chart
@@ -426,16 +541,6 @@ export const AdminWorkspaceMemberRecordingStatsSchema = z.object({
 });
 
 /**
- * Upload status enum matching database values
- */
-const uploadStatusEnum = z.enum(['pending', 'available', 'expired', 'purged']);
-
-/**
- * Weeks to show enum for recording stats
- */
-const weeksToShowEnum = z.enum(['12', '24', '36', '48']);
-
-/**
  * Get workspace recording stats input
  */
 export const AdminGetWorkspaceRecordingStatsInputSchema = z.object({
@@ -444,10 +549,10 @@ export const AdminGetWorkspaceRecordingStatsInputSchema = z.object({
   }),
   query: z
     .object({
-      filterUploadStatus: uploadStatusEnum.optional(),
-      filterStreamingStatus: streamingStatusEnum.optional(),
-      filterDeleted: z.enum(['all', 'active', 'deleted']).optional().default('all'),
-      weeksToShow: weeksToShowEnum.optional().default('12'),
+      filterUploadStatus: z.enum(UPLOAD_STATUS_VALUES).optional(),
+      filterStreamingStatus: z.enum(STREAMING_STATUS_VALUES).optional(),
+      filterDeleted: z.enum(ADMIN_FILTER_STATUS_VALUES).optional().default('all'),
+      weeksToShow: z.enum(ADMIN_RECORDING_WEEKS_VALUES).optional().default('12'),
     })
     .optional()
     .default({}),
@@ -462,9 +567,9 @@ export const AdminGetWorkspaceMemberRecordingStatsInputSchema = z.object({
   }),
   query: z
     .object({
-      filterUploadStatus: uploadStatusEnum.optional(),
-      filterStreamingStatus: streamingStatusEnum.optional(),
-      filterDeleted: z.enum(['all', 'active', 'deleted']).optional().default('all'),
+      filterUploadStatus: z.enum(UPLOAD_STATUS_VALUES).optional(),
+      filterStreamingStatus: z.enum(STREAMING_STATUS_VALUES).optional(),
+      filterDeleted: z.enum(ADMIN_FILTER_STATUS_VALUES).optional().default('all'),
     })
     .optional()
     .default({}),
@@ -497,12 +602,17 @@ export type AdminWorkspaceListItem = z.infer<typeof AdminWorkspaceListItemSchema
 export type AdminWorkspaceDetail = z.infer<typeof AdminWorkspaceDetailSchema>;
 export type AdminWorkspacesListData = z.infer<typeof AdminWorkspacesListDataSchema>;
 export type AdminWorkspaceMembersListData = z.infer<typeof AdminWorkspaceMembersListDataSchema>;
+export type AdminWorkspaceProject = z.infer<typeof AdminWorkspaceProjectSchema>;
+export type AdminWorkspaceProjectsListData = z.infer<typeof AdminWorkspaceProjectsListDataSchema>;
 export type AdminSearchWorkspacesInput = z.infer<typeof AdminSearchWorkspacesInputSchema>;
 export type AdminGetWorkspaceInput = z.infer<typeof AdminGetWorkspaceInputSchema>;
 export type AdminListWorkspaceMembersInput = z.infer<typeof AdminListWorkspaceMembersInputSchema>;
+export type AdminListWorkspaceProjectsInput = z.infer<typeof AdminListWorkspaceProjectsInputSchema>;
 export type AdminDeactivateWorkspaceInput = z.infer<typeof AdminDeactivateWorkspaceInputSchema>;
 export type AdminRestoreWorkspaceInput = z.infer<typeof AdminRestoreWorkspaceInputSchema>;
 export type AdminRestoreWorkspaceData = z.infer<typeof AdminRestoreWorkspaceDataSchema>;
+export type AdminDeactivateProjectInput = z.infer<typeof AdminDeactivateProjectInputSchema>;
+export type AdminDeactivateProjectData = z.infer<typeof AdminDeactivateProjectDataSchema>;
 export type AdminRestoreProjectInput = z.infer<typeof AdminRestoreProjectInputSchema>;
 export type AdminRestoreProjectData = z.infer<typeof AdminRestoreProjectDataSchema>;
 export type AdminResetInviteTokenInput = z.infer<typeof AdminResetInviteTokenInputSchema>;
@@ -526,7 +636,7 @@ export type AdminGetWorkspaceRecordingStatsInput = z.infer<
 export const AdminProvisionMemberSchema = z.object({
   email: EmailSchema,
   name: z.string().min(1, 'Name is required').max(255),
-  role: z.enum(['admin', 'member']).default('member'),
+  role: z.enum(ADMIN_PROVISION_ROLE_VALUES).default('member'),
 });
 
 /**
@@ -564,7 +674,7 @@ export const AdminProvisionMemberResponseSchema = z.object({
   userId: z.string(),
   email: z.string(),
   name: z.string(),
-  role: z.enum(['admin', 'member']),
+  role: z.enum(ADMIN_PROVISION_ROLE_VALUES),
   isNew: z.boolean(),
 });
 

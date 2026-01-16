@@ -46,6 +46,30 @@ export interface AdminWorkspaceMember {
   joinedAt: Date;
 }
 
+export interface AdminWorkspaceProject {
+  projectId: string;
+  projectTitle: string | null;
+  isDefault: boolean;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  recordingCount: number;
+}
+
+export type ProjectSortField = 'created_at' | 'project_title' | 'updated_at';
+export type SortDirection = 'asc' | 'desc';
+
+export interface SearchWorkspaceProjectsParams {
+  workspaceId: string;
+  search?: string;
+  limit: number;
+  offset: number;
+  sortBy: ProjectSortField;
+  sortDirection: SortDirection;
+  filterStatus: 'all' | 'active' | 'deleted';
+}
+
 export interface SearchWorkspacesParams {
   search?: string;
   limit: number;
@@ -279,6 +303,90 @@ export class AdminWorkspaceRepository {
         userEmail: m.userEmail,
         workspaceRole: m.workspaceRole,
         joinedAt: m.joinedAt,
+      })),
+      total,
+    };
+  }
+
+  /**
+   * Search workspace projects with recording counts (paginated, filtered, sorted)
+   * Supports filtering by active/deleted status, searching by name/ID, and sorting by multiple fields
+   */
+  async searchWorkspaceProjects(
+    params: SearchWorkspaceProjectsParams
+  ): Promise<{ projects: AdminWorkspaceProject[]; total: number }> {
+    const { workspaceId, search, limit, offset, sortBy, sortDirection, filterStatus } = params;
+
+    // Build WHERE conditions
+    const conditions = [eq(projects.workspaceId, workspaceId)];
+
+    if (search) {
+      // Search by project title or project ID (case-insensitive)
+      const searchCondition = or(
+        ilike(projects.projectTitle, `%${search}%`),
+        ilike(projects.projectId, `%${search}%`)
+      );
+      if (searchCondition) {
+        conditions.push(searchCondition);
+      }
+    }
+
+    if (filterStatus === 'active') {
+      conditions.push(eq(projects.isDeleted, false));
+    } else if (filterStatus === 'deleted') {
+      conditions.push(eq(projects.isDeleted, true));
+    }
+
+    const whereClause = and(...conditions);
+
+    // Get total count
+    const [countResult] = await this.db
+      .select({ count: count() })
+      .from(projects)
+      .where(whereClause);
+
+    const total = countResult?.count ?? 0;
+
+    // Determine sort column and direction
+    const sortColumn =
+      sortBy === 'project_title'
+        ? projects.projectTitle
+        : sortBy === 'updated_at'
+          ? projects.updatedAt
+          : projects.createdAt;
+    const orderFn = sortDirection === 'asc' ? asc : desc;
+
+    // Get paginated projects with recording counts
+    const result = await this.db
+      .select({
+        projectId: projects.projectId,
+        projectTitle: projects.projectTitle,
+        isDefault: projects.isDefault,
+        isDeleted: projects.isDeleted,
+        createdAt: projects.createdAt,
+        updatedAt: projects.updatedAt,
+        deletedAt: projects.deletedAt,
+        recordingCount: sql<number>`(
+          SELECT COUNT(*)::int FROM recordings r
+          WHERE r.project_id = projects.project_id AND r.is_deleted = false
+        )`.as('recording_count'),
+      })
+      .from(projects)
+      .where(whereClause)
+      .orderBy(orderFn(sortColumn))
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      projects: result.map((p) => ({
+        projectId: p.projectId,
+        projectTitle: p.projectTitle,
+        isDefault: p.isDefault,
+        isDeleted: p.isDeleted,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        deletedAt: p.deletedAt,
+        recordingCount: p.recordingCount,
       })),
       total,
     };

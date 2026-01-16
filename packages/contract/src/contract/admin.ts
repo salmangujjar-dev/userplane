@@ -18,9 +18,13 @@ import {
   AdminSearchWorkspacesInputSchema,
   AdminGetWorkspaceInputSchema,
   AdminListWorkspaceMembersInputSchema,
+  AdminWorkspaceProjectsListDataSchema,
+  AdminListWorkspaceProjectsInputSchema,
   AdminDeactivateWorkspaceInputSchema,
   AdminRestoreWorkspaceInputSchema,
   AdminRestoreWorkspaceDataSchema,
+  AdminDeactivateProjectInputSchema,
+  AdminDeactivateProjectDataSchema,
   AdminRestoreProjectInputSchema,
   AdminRestoreProjectDataSchema,
   AdminResetInviteTokenInputSchema,
@@ -282,6 +286,27 @@ export const listWorkspaceMembers = oc
   .output(ApiResponseSchema(AdminWorkspaceMembersListDataSchema));
 
 /**
+ * GET /admin/workspaces/:workspaceId/projects
+ * List workspace projects with pagination, filtering, and sorting
+ */
+export const listWorkspaceProjects = oc
+  .route({
+    method: 'GET',
+    path: '/admin/workspaces/{workspaceId}/projects',
+    inputStructure: 'detailed',
+    summary: 'List workspace projects',
+    description: 'Get paginated list of workspace projects with filtering and sorting',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    WORKSPACE_NOT_FOUND: AdminErrors.WORKSPACE_NOT_FOUND,
+  })
+  .input(AdminListWorkspaceProjectsInputSchema)
+  .output(ApiResponseSchema(AdminWorkspaceProjectsListDataSchema));
+
+/**
  * POST /admin/workspaces/:workspaceId/deactivate
  * Deactivate (soft delete) a workspace
  */
@@ -326,6 +351,27 @@ export const restoreWorkspace = oc
   })
   .input(AdminRestoreWorkspaceInputSchema)
   .output(ApiResponseSchema(AdminRestoreWorkspaceDataSchema));
+
+/**
+ * POST /admin/workspaces/:workspaceId/projects/:projectId/deactivate
+ * Deactivate (soft delete) a project
+ */
+export const deactivateProject = oc
+  .route({
+    method: 'POST',
+    path: '/admin/workspaces/{workspaceId}/projects/{projectId}/deactivate',
+    inputStructure: 'detailed',
+    summary: 'Deactivate project',
+    description: 'Soft delete a project',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    PROJECT_NOT_FOUND: AdminErrors.PROJECT_NOT_FOUND,
+  })
+  .input(AdminDeactivateProjectInputSchema)
+  .output(ApiResponseSchema(AdminDeactivateProjectDataSchema));
 
 /**
  * POST /admin/workspaces/:workspaceId/projects/:projectId/restore

@@ -7,6 +7,7 @@ import { adminError } from '@workspace/contract';
 import type {
   AdminWorkspaceRepository,
   SearchWorkspacesParams,
+  SearchWorkspaceProjectsParams,
 } from '@/api/repositories/admin-workspace.repository';
 import { generateInviteToken } from '@/api/lib/id';
 
@@ -52,6 +53,18 @@ export class AdminWorkspaceService {
     }
 
     return this.deps.adminWorkspaceRepo.getWorkspaceMembers(workspaceId, options);
+  }
+
+  /**
+   * Search workspace projects with pagination, filtering, and sorting
+   */
+  async searchWorkspaceProjects(params: SearchWorkspaceProjectsParams) {
+    const workspace = await this.deps.adminWorkspaceRepo.findWorkspaceById(params.workspaceId);
+    if (!workspace) {
+      throw adminError.WORKSPACE_NOT_FOUND();
+    }
+
+    return this.deps.adminWorkspaceRepo.searchWorkspaceProjects(params);
   }
 
   /**
