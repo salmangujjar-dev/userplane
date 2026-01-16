@@ -15,11 +15,26 @@ export const container = {
   maxWidth: '600px',
 } as React.CSSProperties;
 
-export const logoText = {
+export const headerSection = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: '40px',
   textAlign: 'center',
+} as React.CSSProperties;
+
+export const logoImage = {
+  display: 'inline-block',
+  verticalAlign: 'middle',
+  marginRight: '8px',
+} as React.CSSProperties;
+
+export const logoText = {
+  display: 'inline-block',
+  verticalAlign: 'middle',
   fontSize: '24px',
   color: '#000',
-  marginBottom: '40px',
+  margin: '0',
 } as React.CSSProperties;
 
 export const title = {
