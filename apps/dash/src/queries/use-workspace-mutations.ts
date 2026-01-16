@@ -146,9 +146,7 @@ interface DeleteWorkspaceData {
 
 export function useDeleteWorkspace(
   currentWorkspaceId: string | null,
-  workspaces: Array<{ workspaceId: string; workspaceName: string }>,
-  onNavigate: (path: string) => void,
-  onSetWorkspace: (workspaceId: string) => void
+  onNavigate: (path: string) => void
 ) {
   const queryClient = useQueryClient();
 
@@ -199,18 +197,9 @@ export function useDeleteWorkspace(
 
       toast.success('Workspace deleted successfully');
 
+      // Redirect to root so it can handle workspace selection
       if (deletedWorkspaceId === currentWorkspaceId) {
-        const remainingWorkspaces = workspaces.filter(
-          (ws) => ws.workspaceId !== deletedWorkspaceId
-        );
-
-        if (remainingWorkspaces.length > 0 && remainingWorkspaces[0]) {
-          const nextWorkspace = remainingWorkspaces[0];
-          onSetWorkspace(nextWorkspace.workspaceId);
-          onNavigate(`/${nextWorkspace.workspaceId}/preferences`);
-        } else {
-          onNavigate('/workspace/create');
-        }
+        onNavigate('/');
       }
     },
     onError: (error: unknown, workspaceId, context) => {
@@ -229,7 +218,8 @@ export function useDeleteWorkspace(
 }
 
 interface LeaveWorkspaceData {
-  left: boolean;
+  workspaceId: string;
+  workspaceDeleted?: boolean;
 }
 
 type WorkspaceInvitePolicy = 'private' | 'whitelisted' | 'protected';
@@ -386,9 +376,7 @@ export function useJoinWorkspace(options?: {
 
 export function useLeaveWorkspace(
   currentWorkspaceId: string | null,
-  workspaces: Array<{ workspaceId: string; workspaceName: string }>,
-  onNavigate: (path: string) => void,
-  onSetWorkspace: (workspaceId: string) => void
+  onNavigate: (path: string) => void
 ) {
   const queryClient = useQueryClient();
 
@@ -402,7 +390,7 @@ export function useLeaveWorkspace(
       const [error, response] = await apiClient.workspace.members.leave({
         params: { workspaceId },
       });
-      return handleSafeResult(error, response?.data ? { left: true } : null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     onMutate: async (workspaceId) => {
       await queryClient.cancelQueries({ queryKey: ['workspaces'] });
@@ -433,9 +421,15 @@ export function useLeaveWorkspace(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        if (isErrorCode(result.error, 'WORKSPACE_MEMBER_LAST_OWNER_LEAVE')) {
-          toast.error("You're the last owner", {
-            description: 'Transfer ownership or delete the workspace first.',
+        if (isErrorCode(result.error, 'WORKSPACE_MEMBER_SOLE_OWNER_WITH_MEMBERS')) {
+          toast.error("You're the only owner", {
+            description: 'Please make someone else an owner before leaving.',
+          });
+          return;
+        }
+        if (isErrorCode(result.error, 'WORKSPACE_DELETE_FAILED')) {
+          toast.error('Failed to deactivate workspace', {
+            description: 'There was a problem deactivating the workspace. Please try again.',
           });
           return;
         }
@@ -443,18 +437,15 @@ export function useLeaveWorkspace(
         return;
       }
 
-      toast.success('Left workspace successfully');
+      if (result.data.workspaceDeleted) {
+        toast.success('Left and deactivated workspace');
+      } else {
+        toast.success('Left workspace successfully');
+      }
 
+      // Redirect to root so it can handle workspace selection
       if (leftWorkspaceId === currentWorkspaceId) {
-        const remainingWorkspaces = workspaces.filter((ws) => ws.workspaceId !== leftWorkspaceId);
-
-        if (remainingWorkspaces.length > 0 && remainingWorkspaces[0]) {
-          const nextWorkspace = remainingWorkspaces[0];
-          onSetWorkspace(nextWorkspace.workspaceId);
-          onNavigate(`/${nextWorkspace.workspaceId}/preferences`);
-        } else {
-          onNavigate('/workspace/create');
-        }
+        onNavigate('/');
       }
     },
     onError: (error: unknown, workspaceId, context) => {

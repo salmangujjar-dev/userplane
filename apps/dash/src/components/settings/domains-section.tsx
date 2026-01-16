@@ -27,6 +27,7 @@ import { DomainList } from './domain-list';
 import { DomainModalsManager } from './domain-modals-manager';
 import { useDomainSectionState } from '@/hooks/use-domain-section-state';
 import { useDomainStatusPolling } from '@/hooks/use-domain-status-polling';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import {
   type DomainSettings,
   DEFAULT_DOMAIN_SETTINGS,
@@ -77,6 +78,12 @@ export function DomainsSection() {
 
   // Polling hook for verification
   const { pollStatus, stopPolling } = useDomainStatusPolling();
+
+  // Get current user's workspace role
+  const { data: roleResult } = useWorkspaceRole();
+  const canDelete =
+    roleResult?.success &&
+    (roleResult.data.workspaceRole === 'admin' || roleResult.data.workspaceRole === 'owner');
 
   // Mutations
   const createDomainMutation = useCreateDomain(workspaceId);
@@ -327,6 +334,7 @@ export function DomainsSection() {
           onAddDomain={actions.openCreateModal}
           loadingConfigureId={state.loadingConfigureId}
           isDeleteDisabled={deleteDomainMutation.isPending}
+          canDelete={canDelete || false}
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}

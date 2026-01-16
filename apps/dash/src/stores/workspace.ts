@@ -35,4 +35,4 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 /**
  * Selector hook for optimized re-renders
  */
-export const useWorkspaceId = () => useWorkspaceStore((state) => state.workspaceId);
+export const useWorkspaceId = (): string | null => useWorkspaceStore((state) => state.workspaceId);

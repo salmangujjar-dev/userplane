@@ -77,6 +77,8 @@ export function useUpdateWorkspaceName(
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });
+      // Also invalidate workspaces list so sidebar updates
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
     },
   });
 }
