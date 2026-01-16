@@ -23,7 +23,7 @@ export const auth = createAuth({
   },
   email: {
     sendVerificationEmail: async ({ user, url }) => {
-      const html = await renderEmailVerification({
+      const { html, text } = await renderEmailVerification({
         userName: user.name || 'there',
         verificationUrl: url,
       });
@@ -34,6 +34,7 @@ export const auth = createAuth({
           to: user.email,
           subject: 'Verify your email address',
           html,
+          text,
         },
         {
           idempotencyKey: `email-verification/${user.email}`,
@@ -50,7 +51,7 @@ export const auth = createAuth({
       );
     },
     sendMagicLink: async ({ email, url }) => {
-      const html = await renderMagicLink({
+      const { html, text } = await renderMagicLink({
         magicLinkUrl: url,
       });
 
@@ -60,6 +61,7 @@ export const auth = createAuth({
           to: email,
           subject: 'Sign in to Userplane',
           html,
+          text,
         },
         {
           // Use timestamp to allow multiple magic links

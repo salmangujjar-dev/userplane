@@ -7,9 +7,9 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "dev": "email dev -p 3003 --dir src/templates",
+    "dev": "email dev -p 3003 --dir src/emails",
     "typecheck": "tsc --noEmit",
-    "dev:all": "email dev -p 3003 --dir src/templates"
+    "dev:all": "email dev -p 3003 --dir src/emails"
   },
   "dependencies": {
     "@react-email/components": "^1.0.1",

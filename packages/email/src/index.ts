@@ -18,24 +18,118 @@ export type {
   EmailClientConfig,
 } from './types';
 
-// Email templates (server-safe exports)
+// Email render utilities
 export {
-  renderWorkspaceInvite,
-  renderWorkspaceInviteText,
+  // Auth
   renderEmailVerification,
-  renderEmailVerificationText,
   renderMagicLink,
-  renderMagicLinkText,
+  renderWorkspaceInvite,
   renderAccessRequest,
-  renderAccessRequestText,
-} from './templates.js';
+  // Pilot
+  renderSandboxInvite,
+  renderSandboxExpiring,
+  renderPilotReverseTrialOffer,
+  // Trial
+  renderWelcomeMeetFounder,
+  renderTrialReverseTrialOffer,
+  // Activation
+  renderRequestFirstRecording,
+  renderDomainVerificationRequired,
+  renderHelpdeskIntegrationPrompt,
+  renderAtRiskNotEngaged,
+  // Workspace
+  renderDeletionScheduled,
+  renderRecoveryScheduled,
+  renderDeletionConfirmation,
+  renderRecoveryConfirmation,
+  renderAccessRequested,
+  renderAccessGranted,
+  // Invite
+  renderTeammateInvited,
+  // Recording
+  renderRecordingReceived,
+  // Domain
+  renderDomainVerificationInstructions,
+  // Billing
+  renderSubscriptionActive,
+  renderSubscriptionInactive,
+  renderSubscriptionPlanChange,
+  renderSubscriptionExpired,
+  renderSubscriptionReverseTrial,
+  // Entitlement - Seats
+  renderSeatsSoftLimit,
+  renderSeatsHardLimit,
+  renderSeatsRequestedUpgrade,
+  // Entitlement - Recordings
+  renderRecordingsSoftLimit,
+  renderRecordingsHardLimit,
+  renderRecordingsRequestedUpgrade,
+  // Entitlement - Screenshots
+  renderScreenshotsSoftLimit,
+  renderScreenshotsHardLimit,
+  renderScreenshotsRequestedUpgrade,
+  // Offboarding
+  renderAccountDeletion,
+  renderTosViolation,
+} from './emails.js';
+
 export type {
-  WorkspaceInviteEmailProps,
-  RenderWorkspaceInviteParams,
-  EmailVerificationProps,
-  RenderEmailVerificationParams,
+  RenderResult,
+  // Auth
+  EmailVerificationEmailProps,
   MagicLinkEmailProps,
-  RenderMagicLinkParams,
+  WorkspaceInviteEmailProps,
   AccessRequestEmailProps,
-  RenderAccessRequestParams,
-} from './templates.js';
+  // Pilot
+  SandboxInviteEmailProps,
+  SandboxExpiringEmailProps,
+  ReverseTrialOfferEmailProps,
+  // Trial
+  WelcomeMeetFounderEmailProps,
+  TrialReverseTrialOfferEmailProps,
+  // Activation
+  RequestFirstRecordingEmailProps,
+  DomainVerificationRequiredEmailProps,
+  HelpdeskIntegrationPromptEmailProps,
+  AtRiskNotEngagedEmailProps,
+  // Workspace
+  DeletionScheduledEmailProps,
+  RecoveryScheduledEmailProps,
+  DeletionConfirmationEmailProps,
+  RecoveryConfirmationEmailProps,
+  AccessRequestedEmailProps,
+  AccessGrantedEmailProps,
+  // Invite
+  TeammateInvitedEmailProps,
+  // Recording
+  RecordingReceivedEmailProps,
+  // Domain
+  DomainVerificationInstructionsEmailProps,
+  // Billing
+  SubscriptionActiveEmailProps,
+  SubscriptionInactiveEmailProps,
+  SubscriptionPlanChangeEmailProps,
+  SubscriptionExpiredEmailProps,
+  SubscriptionReverseTrialEmailProps,
+  // Entitlement - Seats
+  SeatsSoftLimitEmailProps,
+  SeatsHardLimitEmailProps,
+  SeatsRequestedUpgradeEmailProps,
+  // Entitlement - Recordings
+  RecordingsSoftLimitEmailProps,
+  RecordingsHardLimitEmailProps,
+  RecordingsRequestedUpgradeEmailProps,
+  // Entitlement - Screenshots
+  ScreenshotsSoftLimitEmailProps,
+  ScreenshotsHardLimitEmailProps,
+  ScreenshotsRequestedUpgradeEmailProps,
+  // Offboarding
+  AccountDeletionEmailProps,
+  TosViolationEmailProps,
+} from './emails.js';
+
+// Email templates (direct exports for advanced usage)
+export * from './emails';
+
+// Shared components and styles
+export * from './shared';

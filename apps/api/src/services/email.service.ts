@@ -21,9 +21,8 @@ export class EmailService {
   async sendWorkspaceInvite(params: WorkspaceInviteEmailParams): Promise<void> {
     const idempotencyKey = `workspace-invite/${params.workspaceName}/${params.to}`;
 
-    // Render React Email template to HTML
-    // Template includes inviter name and details in the email body
-    const html = await renderWorkspaceInvite({
+    // Render React Email template to HTML and text
+    const { html, text } = await renderWorkspaceInvite({
       workspaceName: params.workspaceName,
       inviterName: params.inviterName,
       inviteUrl: params.inviteUrl,
@@ -35,6 +34,7 @@ export class EmailService {
         to: params.to,
         subject: `${params.inviterName} invited you to ${params.workspaceName}`,
         html,
+        text,
       },
       {
         idempotencyKey,
@@ -62,8 +62,8 @@ export class EmailService {
   async sendAccessRequest(params: AccessRequestEmailParams): Promise<void> {
     const idempotencyKey = `access-request/${params.workspaceName}/${params.requesterEmail}/${params.to}`;
 
-    // Render React Email template to HTML
-    const html = await renderAccessRequest({
+    // Render React Email template to HTML and text
+    const { html, text } = await renderAccessRequest({
       workspaceName: params.workspaceName,
       requesterName: params.requesterName,
       requesterEmail: params.requesterEmail,
@@ -76,6 +76,7 @@ export class EmailService {
         to: params.to,
         subject: `${params.requesterName} requested to join ${params.workspaceName}`,
         html,
+        text,
       },
       {
         idempotencyKey,
