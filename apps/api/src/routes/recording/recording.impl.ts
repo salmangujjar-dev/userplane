@@ -3,6 +3,7 @@
  * Implements the recording contract defined in @workspace/contract
  */
 
+import { ORPCError } from '@orpc/server';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { RecordingService } from '@/api/services/recording.service';
@@ -89,7 +90,7 @@ export const getRecordingByIdImpl = (
 
 /**
  * DELETE /workspace/:workspaceId/recordings/:recordingId - Delete recording
- * Requires workspace member
+ * Requires workspace member with admin/owner role OR creator of the recording
  */
 export const deleteRecordingImpl = (
   recordingService: RecordingService,
@@ -101,6 +102,23 @@ export const deleteRecordingImpl = (
   return authorized.recording.delete
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
+      // Fetch recording to check creator
+      const recording = await recordingService.getById(
+        input.params.recordingId,
+        input.params.workspaceId
+      );
+
+      // Check permission: admin/owner OR creator
+      const isAdminOrOwner = context.workspaceRole === 'admin' || context.workspaceRole === 'owner';
+      const isCreator = recording.meta.creator.workspaceMemberId === context.workspaceMemberId;
+
+      if (!isAdminOrOwner && !isCreator) {
+        throw new ORPCError('FORBIDDEN', {
+          status: 403,
+          message: 'You do not have permission to delete this recording',
+        });
+      }
+
       await recordingService.delete(input.params.recordingId, input.params.workspaceId);
 
       return {

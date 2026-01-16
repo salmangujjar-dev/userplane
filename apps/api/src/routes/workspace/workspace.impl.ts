@@ -337,6 +337,7 @@ export const removeMemberImpl = (
 /**
  * POST /workspace/:workspaceId/leave - Leave workspace
  * Requires authentication, allows member to remove themselves
+ * If user is the sole owner with no other members, the workspace is deactivated
  */
 export const leaveWorkspaceImpl = (
   workspaceMemberService: WorkspaceMemberService,
@@ -347,13 +348,23 @@ export const leaveWorkspaceImpl = (
   return authorized.workspace.members.leave
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      await workspaceMemberService.leaveWorkspace(context.user.id, input.params.workspaceId);
+      const result = await workspaceMemberService.leaveWorkspace(
+        context.user.id,
+        input.params.workspaceId
+      );
+
+      // If sole owner with no other members, deactivate the workspace
+      if (result.shouldDeleteWorkspace) {
+        await workspaceService.deleteWorkspace(input.params.workspaceId);
+      }
 
       return {
-        message: 'Successfully left workspace',
+        message: result.shouldDeleteWorkspace
+          ? 'Successfully left and deactivated workspace'
+          : 'Successfully left workspace',
         data: {
           workspaceId: input.params.workspaceId,
-          success: true,
+          workspaceDeleted: result.shouldDeleteWorkspace,
         },
       };
     });
@@ -730,17 +741,21 @@ export const updateDomainImpl = (
 
 /**
  * DELETE /workspace/:id/domains/:domainId - Delete domain
- * Requires workspace member
+ * Requires admin or owner role
  */
 export const deleteDomainImpl = (
   domainService: DomainService,
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService
 ) => {
-  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
 
   return authorized.workspace.domains.delete
-    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       await domainService.deleteDomain(input.params.domainId, input.params.workspaceId);
 

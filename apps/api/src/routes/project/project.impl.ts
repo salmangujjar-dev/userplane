@@ -4,7 +4,10 @@
  */
 
 import { authorized } from '@/api/middleware/auth.orpc';
-import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
+import {
+  createWorkspaceMiddleware,
+  createWorkspaceRoleMiddleware,
+} from '@/api/middleware/workspace.orpc';
 import type { ProjectService } from '@/api/services/project.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
@@ -193,16 +196,21 @@ export const replaceProjectImpl = (
 /**
  * DELETE /workspace/:workspaceId/projects/:projectId
  * Delete a project
+ * Requires admin or owner role
  */
 export const deleteProjectImpl = (
   projectService: ProjectService,
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService
 ) => {
-  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
 
   return authorized.project.delete
-    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       await projectService.deleteProject(input.params.projectId, input.params.workspaceId);
 
