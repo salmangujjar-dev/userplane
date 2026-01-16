@@ -6,9 +6,17 @@
 
 import { createAppLogger } from '@workspace/logger';
 import { emailClient } from '@/api/clients/email';
-import { renderWorkspaceInvite, renderAccessRequest } from '@workspace/email';
+import {
+  renderWorkspaceInvite,
+  renderAccessRequest,
+  renderDomainDeveloperInstructions,
+} from '@workspace/email';
 import { env } from '@/api/env';
-import type { WorkspaceInviteEmailParams, AccessRequestEmailParams } from '@/api/types';
+import type {
+  WorkspaceInviteEmailParams,
+  AccessRequestEmailParams,
+  DomainDeveloperInstructionsEmailParams,
+} from '@/api/types';
 
 const logger = createAppLogger('email-service');
 
@@ -93,6 +101,47 @@ export class EmailService {
         provider: emailClient.getProvider(),
       },
       'Workspace access request sent'
+    );
+  }
+
+  /**
+   * Send domain developer instructions email
+   * Uses React Email template and idempotency key to prevent duplicate sends
+   * Email is sent from configured invite inbox
+   */
+  async sendDomainDeveloperInstructions(
+    params: DomainDeveloperInstructionsEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `domain-instructions/${params.domainName}/${params.to}`;
+
+    // Render React Email template to HTML and text
+    const { html, text } = await renderDomainDeveloperInstructions({
+      domainName: params.domainName,
+      settingsUrl: params.settingsUrl,
+      docsUrl: params.docsUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.invite}>`,
+        to: params.to,
+        subject: `Setup Userplane for ${params.domainName}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        domainName: params.domainName,
+        fromInbox: env.email.inboxes.invite,
+        provider: emailClient.getProvider(),
+      },
+      'Domain developer instructions sent'
     );
   }
 }

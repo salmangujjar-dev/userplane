@@ -925,6 +925,48 @@ export const replaceDomainRecordingPreferencesImpl = (
 };
 
 /**
+ * POST /workspace/:workspaceId/domains/:domainId/instructions - Send domain developer instructions
+ * Requires workspace member
+ */
+export const sendDomainInstructionsImpl = (
+  domainService: DomainService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.domains.sendInstructions
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      const result = await domainService.sendDeveloperInstructions({
+        domainId: input.params.domainId,
+        workspaceId: input.params.workspaceId,
+        emails: input.body.emails,
+        sentBy: context.user.id,
+      });
+
+      const sent = result.sentEmails.map((email) => ({
+        email,
+        success: true,
+      }));
+
+      const failed = result.failedEmails.map((item) => ({
+        email: item.email,
+        success: false,
+        error: item.reason,
+      }));
+
+      return {
+        message: 'Developer instructions processed successfully',
+        data: {
+          sent,
+          failed,
+        },
+      };
+    });
+};
+
+/**
  * GET /workspace/:workspaceId/search - Search workspace
  * Requires workspace member
  * Searches across members, projects, domains, and links
@@ -1255,6 +1297,11 @@ export const createWorkspaceProcedures = (
       update: updateDomainImpl(domainService, workspaceMemberService, workspaceService),
       delete: deleteDomainImpl(domainService, workspaceMemberService, workspaceService),
       getVerificationUrl: getDomainVerificationUrlImpl(
+        domainService,
+        workspaceMemberService,
+        workspaceService
+      ),
+      sendInstructions: sendDomainInstructionsImpl(
         domainService,
         workspaceMemberService,
         workspaceService
