@@ -98,6 +98,18 @@ export const UPLOAD_STATUS_VALUES = ['pending', 'available', 'expired', 'purged'
 export type UploadStatus = (typeof UPLOAD_STATUS_VALUES)[number];
 
 /**
+ * Recording streaming status values
+ */
+export const STREAMING_STATUS_VALUES = [
+  'pending',
+  'available',
+  'failed',
+  'expired',
+  'purged',
+] as const;
+export type StreamingStatus = (typeof STREAMING_STATUS_VALUES)[number];
+
+/**
  * File type values for recording uploads
  * Maps to recording table columns: video, thumbnail, console_log, network_log, action
  */
@@ -132,9 +144,15 @@ export const PaginationQuerySchema = z.object({
 });
 
 /**
+ * Sort direction values
+ */
+export const SORT_DIRECTION_VALUES = ['asc', 'desc'] as const;
+export type SortDirection = (typeof SORT_DIRECTION_VALUES)[number];
+
+/**
  * Sort directions
  */
-export const SortDirectionSchema = z.enum(['asc', 'desc']);
+export const SortDirectionSchema = z.enum(SORT_DIRECTION_VALUES);
 
 /**
  * API response wrapper
@@ -202,3 +220,61 @@ export const UploadStatusSchema = z.enum(UPLOAD_STATUS_VALUES);
  * Synced with database: FILE_TYPE_VALUES
  */
 export const FileTypeSchema = z.enum(FILE_TYPE_VALUES);
+
+/**
+ * Streaming status enum
+ * Synced with database: STREAMING_STATUS_VALUES
+ */
+export const StreamingStatusSchema = z.enum(STREAMING_STATUS_VALUES);
+
+// ============================================
+// ADMIN-SPECIFIC CONSTANTS
+// ============================================
+
+/**
+ * Admin user sort field values
+ */
+export const ADMIN_USER_SORT_FIELDS = ['createdAt', 'name', 'email'] as const;
+export type AdminUserSortField = (typeof ADMIN_USER_SORT_FIELDS)[number];
+
+/**
+ * Admin user filter status values
+ */
+export const ADMIN_USER_FILTER_STATUS_VALUES = ['active', 'banned'] as const;
+export type AdminUserFilterStatus = (typeof ADMIN_USER_FILTER_STATUS_VALUES)[number];
+
+/**
+ * Admin workspace sort field values
+ */
+export const ADMIN_WORKSPACE_SORT_FIELDS = ['createdAt', 'name', 'memberCount'] as const;
+export type AdminWorkspaceSortField = (typeof ADMIN_WORKSPACE_SORT_FIELDS)[number];
+
+/**
+ * Admin workspace filter status values
+ */
+export const ADMIN_WORKSPACE_FILTER_STATUS_VALUES = ['active', 'deleted'] as const;
+export type AdminWorkspaceFilterStatus = (typeof ADMIN_WORKSPACE_FILTER_STATUS_VALUES)[number];
+
+/**
+ * Admin project sort field values
+ */
+export const ADMIN_PROJECT_SORT_FIELDS = ['created_at', 'project_title', 'updated_at'] as const;
+export type AdminProjectSortField = (typeof ADMIN_PROJECT_SORT_FIELDS)[number];
+
+/**
+ * Admin filter status values (with all option)
+ */
+export const ADMIN_FILTER_STATUS_VALUES = ['all', 'active', 'deleted'] as const;
+export type AdminFilterStatus = (typeof ADMIN_FILTER_STATUS_VALUES)[number];
+
+/**
+ * Admin recording stats weeks to show values
+ */
+export const ADMIN_RECORDING_WEEKS_VALUES = ['12', '24', '36', '48'] as const;
+export type AdminRecordingWeeks = (typeof ADMIN_RECORDING_WEEKS_VALUES)[number];
+
+/**
+ * Admin provision member role values
+ */
+export const ADMIN_PROVISION_ROLE_VALUES = ['admin', 'member'] as const;
+export type AdminProvisionRole = (typeof ADMIN_PROVISION_ROLE_VALUES)[number];

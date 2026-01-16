@@ -109,6 +109,84 @@ export const WORKSPACE_SUGGESTIONS_PAGINATION = {
 } as const;
 
 /**
+ * Admin users search pagination limits
+ * Admin search and list of all users
+ */
+export const ADMIN_USERS_PAGINATION = {
+  /** Maximum items per page */
+  MAX_PER_PAGE: 100,
+  /** Default items per page */
+  DEFAULT_PER_PAGE: 10,
+  /** Minimum items per page */
+  MIN_PER_PAGE: 1,
+} as const;
+
+/**
+ * Admin user sessions pagination limits
+ * List sessions for a specific user in admin view
+ */
+export const ADMIN_USER_SESSIONS_PAGINATION = {
+  /** Maximum items per page */
+  MAX_PER_PAGE: 10,
+  /** Default items per page */
+  DEFAULT_PER_PAGE: 5,
+  /** Minimum items per page */
+  MIN_PER_PAGE: 1,
+} as const;
+
+/**
+ * Admin user workspaces pagination limits
+ * List workspaces for a specific user in admin view
+ */
+export const ADMIN_USER_WORKSPACES_PAGINATION = {
+  /** Maximum items per page */
+  MAX_PER_PAGE: 20,
+  /** Default items per page */
+  DEFAULT_PER_PAGE: 10,
+  /** Minimum items per page */
+  MIN_PER_PAGE: 1,
+} as const;
+
+/**
+ * Admin workspaces search pagination limits
+ * Admin search and list of all workspaces
+ */
+export const ADMIN_WORKSPACES_PAGINATION = {
+  /** Maximum items per page */
+  MAX_PER_PAGE: 100,
+  /** Default items per page */
+  DEFAULT_PER_PAGE: 10,
+  /** Minimum items per page */
+  MIN_PER_PAGE: 1,
+} as const;
+
+/**
+ * Admin workspace members pagination limits
+ * List members in a workspace from admin view
+ */
+export const ADMIN_WORKSPACE_MEMBERS_PAGINATION = {
+  /** Maximum items per page */
+  MAX_PER_PAGE: 20,
+  /** Default items per page */
+  DEFAULT_PER_PAGE: 10,
+  /** Minimum items per page */
+  MIN_PER_PAGE: 1,
+} as const;
+
+/**
+ * Admin workspace projects pagination limits
+ * Admin view of projects in a workspace with search and filters
+ */
+export const ADMIN_WORKSPACE_PROJECTS_PAGINATION = {
+  /** Maximum items per page */
+  MAX_PER_PAGE: 20,
+  /** Default items per page */
+  DEFAULT_PER_PAGE: 5,
+  /** Minimum items per page */
+  MIN_PER_PAGE: 1,
+} as const;
+
+/**
  * Complete pagination constants
  * Export all pagination limits for easy import
  */
@@ -121,4 +199,10 @@ export const PAGINATION_CONSTANTS = {
   LINK: LINK_PAGINATION,
   SEARCH: SEARCH_PAGINATION,
   WORKSPACE_SUGGESTIONS: WORKSPACE_SUGGESTIONS_PAGINATION,
+  ADMIN_USERS: ADMIN_USERS_PAGINATION,
+  ADMIN_USER_SESSIONS: ADMIN_USER_SESSIONS_PAGINATION,
+  ADMIN_USER_WORKSPACES: ADMIN_USER_WORKSPACES_PAGINATION,
+  ADMIN_WORKSPACES: ADMIN_WORKSPACES_PAGINATION,
+  ADMIN_WORKSPACE_MEMBERS: ADMIN_WORKSPACE_MEMBERS_PAGINATION,
+  ADMIN_WORKSPACE_PROJECTS: ADMIN_WORKSPACE_PROJECTS_PAGINATION,
 } as const;

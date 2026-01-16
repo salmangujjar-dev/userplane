@@ -439,6 +439,66 @@ const listWorkspaceMembersImpl = (
 };
 
 /**
+ * Format workspace project for response
+ */
+function formatWorkspaceProject(project: {
+  projectId: string;
+  projectTitle: string | null;
+  isDefault: boolean;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  recordingCount: number;
+}) {
+  return {
+    projectId: project.projectId,
+    projectTitle: project.projectTitle,
+    isDefault: project.isDefault,
+    isDeleted: project.isDeleted,
+    createdAt: project.createdAt.toISOString(),
+    updatedAt: project.updatedAt.toISOString(),
+    deletedAt: project.deletedAt?.toISOString() ?? null,
+    recordingCount: project.recordingCount,
+  };
+}
+
+/**
+ * Search workspace projects implementation
+ */
+const searchWorkspaceProjectsImpl = (
+  adminService: AdminService,
+  adminWorkspaceService: AdminWorkspaceService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized
+    .use(adminMiddleware)
+    .admin.workspaces.projects.list.handler(async ({ input }) => {
+      const { search, limit, offset, sortBy, sortDirection, filterStatus } = input.query;
+      const result = await adminWorkspaceService.searchWorkspaceProjects({
+        workspaceId: input.params.workspaceId,
+        search,
+        limit,
+        offset,
+        sortBy,
+        sortDirection,
+        filterStatus,
+      });
+
+      return {
+        message: 'Projects retrieved successfully',
+        data: {
+          projects: result.projects.map(formatWorkspaceProject),
+          total: result.total,
+          limit,
+          offset,
+        },
+      };
+    });
+};
+
+/**
  * Deactivate workspace implementation
  */
 const deactivateWorkspaceImpl = (
@@ -483,6 +543,29 @@ const restoreWorkspaceImpl = (
         },
         restoredProjects: result.restoredProjects,
         restoredLinks: result.restoredLinks,
+      },
+    };
+  });
+};
+
+/**
+ * Deactivate project implementation
+ * Uses ProjectService.deleteProject for consistent deletion logic
+ */
+const deactivateProjectImpl = (
+  adminService: AdminService,
+  projectService: any // Will be typed as ProjectService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized.use(adminMiddleware).admin.projects.deactivate.handler(async ({ input }) => {
+    await projectService.deleteProject(input.params.projectId, input.params.workspaceId);
+
+    return {
+      message: 'Project deactivated successfully',
+      data: {
+        workspaceId: input.params.workspaceId,
+        projectId: input.params.projectId,
       },
     };
   });
@@ -666,6 +749,9 @@ export const createAdminProcedures = (
       members: {
         list: listWorkspaceMembersImpl(adminService, adminWorkspaceService),
       },
+      projects: {
+        list: searchWorkspaceProjectsImpl(adminService, adminWorkspaceService),
+      },
       deactivate: deactivateWorkspaceImpl(adminService, adminWorkspaceService),
       restore: restoreWorkspaceImpl(adminService, workspaceService),
       resetInviteToken: resetInviteTokenImpl(adminService, adminWorkspaceService),
@@ -677,6 +763,7 @@ export const createAdminProcedures = (
       provision: provisionWorkspaceImpl(adminService, adminProvisioningService),
     },
     projects: {
+      deactivate: deactivateProjectImpl(adminService, projectService),
       restore: restoreProjectImpl(adminService, projectService),
     },
   };

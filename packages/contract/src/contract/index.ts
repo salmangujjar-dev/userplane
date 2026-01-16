@@ -62,6 +62,9 @@ export const adminContract = {
     members: {
       list: admin.listWorkspaceMembers,
     },
+    projects: {
+      list: admin.listWorkspaceProjects,
+    },
     deactivate: admin.deactivateWorkspace,
     restore: admin.restoreWorkspace,
     resetInviteToken: admin.resetInviteToken,
@@ -70,6 +73,7 @@ export const adminContract = {
     provision: admin.provisionWorkspace,
   },
   projects: {
+    deactivate: admin.deactivateProject,
     restore: admin.restoreProject,
   },
 };

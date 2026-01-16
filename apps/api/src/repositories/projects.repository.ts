@@ -177,6 +177,7 @@ export class ProjectRepository {
       .update(projects)
       .set({
         isDeleted: true,
+        isDefault: false,
         deletedAt: new Date(),
       })
       .where(and(eq(projects.projectId, projectId), eq(projects.isDeleted, false)))
