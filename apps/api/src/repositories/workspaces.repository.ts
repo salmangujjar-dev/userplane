@@ -422,19 +422,58 @@ export class WorkspaceRepository {
    * Soft delete a workspace
    * Sets isDeleted to true and updates deletedAt timestamp
    */
-  async softDelete(workspaceId: string, options?: { tx?: Transaction }) {
+  async softDelete(workspaceId: string, deletedAt: Date, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [deleted] = await dbClient
       .update(workspaces)
       .set({
         isDeleted: true,
-        deletedAt: new Date(),
+        deletedAt: deletedAt,
       })
       .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .returning();
 
     return deleted || null;
+  }
+
+  /**
+   * Restore a soft-deleted workspace
+   * Resets isDeleted to false and clears deletedAt
+   * Used for workspace restoration within grace period
+   */
+  async restore(workspaceId: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [restored] = await dbClient
+      .update(workspaces)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+      })
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, true)))
+      .returning();
+
+    return restored || null;
+  }
+
+  /**
+   * Get workspace with deletion timestamp
+   * Used for restoration to identify associated entities deleted at same time
+   */
+  async findByIdWithDeletionInfo(workspaceId: string) {
+    const [workspace] = await this.db
+      .select({
+        workspaceId: workspaces.workspaceId,
+        workspaceName: workspaces.workspaceName,
+        isDeleted: workspaces.isDeleted,
+        deletedAt: workspaces.deletedAt,
+      })
+      .from(workspaces)
+      .where(eq(workspaces.workspaceId, workspaceId))
+      .limit(1);
+
+    return workspace || null;
   }
 
   /**

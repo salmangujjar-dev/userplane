@@ -526,19 +526,53 @@ export class LinkRepository {
    * Soft delete all links in workspace
    * Used for workspace deletion cascade
    */
-  async softDeleteByWorkspaceId(workspaceId: string, options?: { tx?: Transaction }) {
+  async softDeleteByWorkspaceId(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
     const dbClient = options?.tx || this.db;
 
     const deleted = await dbClient
       .update(links)
       .set({
         isDeleted: true,
-        deletedAt: new Date(),
+        deletedAt: deletedAt,
       })
       .where(and(eq(links.workspaceId, workspaceId), eq(links.isDeleted, false)))
       .returning();
 
     return deleted;
+  }
+
+  /**
+   * Restore links in workspace that were deleted at a specific timestamp
+   * Used for workspace restoration to restore associated links
+   * Only restores links deleted at the exact same time as the workspace
+   */
+  async restoreByWorkspaceIdAndDeletionTime(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const restored = await dbClient
+      .update(links)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+      })
+      .where(
+        and(
+          eq(links.workspaceId, workspaceId),
+          eq(links.isDeleted, true),
+          eq(links.deletedAt, deletedAt)
+        )
+      )
+      .returning();
+
+    return restored;
   }
 
   /**

@@ -77,8 +77,14 @@ interface EnvConfig {
   };
   trigger: {
     secretKey?: string;
-    sweepGracePeriodSeconds: number;
-    sweepCronSchedule: string;
+    workspaceSweepLookbackDays: number;
+    workspaceSweepCronSchedule: string;
+    projectSweepLookbackDays: number;
+    projectSweepCronSchedule: string;
+    recordingSweepLookbackDays: number;
+    recordingSweepCronSchedule: string;
+    workspaceRestorationWindowDays: number;
+    projectRestorationWindowDays: number;
   };
   storage: StorageConfig;
   admin: {
@@ -183,11 +189,17 @@ export function loadEnvConfig(): EnvConfig {
     },
     trigger: {
       secretKey: process.env.TRIGGER_SECRET_KEY,
-      sweepGracePeriodSeconds: parseInteger(
-        process.env.SWEEP_GRACE_PERIOD_SECONDS,
-        7 * 24 * 60 * 60
-      ), // 7 days
-      sweepCronSchedule: process.env.SWEEP_CRON_SCHEDULE || '0 0 */3 * *', // Every 3 days at midnight UTC
+      workspaceSweepLookbackDays: parseInteger(process.env.WORKSPACE_SWEEP_LOOKBACK_DAYS, 7), // 7 days
+      workspaceSweepCronSchedule: process.env.WORKSPACE_SWEEP_CRON_SCHEDULE || '0 0 * * *', // Daily at midnight UTC
+      projectSweepLookbackDays: parseInteger(process.env.PROJECT_SWEEP_LOOKBACK_DAYS, 3), // 3 days
+      projectSweepCronSchedule: process.env.PROJECT_SWEEP_CRON_SCHEDULE || '0 0 * * *', // Daily at midnight UTC
+      recordingSweepLookbackDays: parseInteger(process.env.RECORDING_SWEEP_LOOKBACK_DAYS, 3), // 3 days
+      recordingSweepCronSchedule: process.env.RECORDING_SWEEP_CRON_SCHEDULE || '0 0 * * *', // Daily at midnight UTC
+      workspaceRestorationWindowDays: parseInteger(
+        process.env.WORKSPACE_RESTORATION_WINDOW_DAYS,
+        2
+      ), // 2 days
+      projectRestorationWindowDays: parseInteger(process.env.PROJECT_RESTORATION_WINDOW_DAYS, 2), // 2 days
     },
     storage: {
       profile: (process.env.STORAGE_PROFILE || 'development') as StorageConfig['profile'],
@@ -325,8 +337,14 @@ export function logConfig(): void {
       },
       trigger: {
         secretKey: env.trigger.secretKey ? 'Configured' : 'Not configured',
-        sweepGracePeriod: `${env.trigger.sweepGracePeriodSeconds}s`,
-        sweepCronSchedule: env.trigger.sweepCronSchedule,
+        workspaceSweepLookbackDays: `${env.trigger.workspaceSweepLookbackDays} days`,
+        workspaceSweepCronSchedule: env.trigger.workspaceSweepCronSchedule,
+        projectSweepLookbackDays: `${env.trigger.projectSweepLookbackDays} days`,
+        projectSweepCronSchedule: env.trigger.projectSweepCronSchedule,
+        recordingSweepLookbackDays: `${env.trigger.recordingSweepLookbackDays} days`,
+        recordingSweepCronSchedule: env.trigger.recordingSweepCronSchedule,
+        workspaceRestorationWindowDays: `${env.trigger.workspaceRestorationWindowDays} days`,
+        projectRestorationWindowDays: `${env.trigger.projectRestorationWindowDays} days`,
       },
     },
     'Environment configuration loaded'

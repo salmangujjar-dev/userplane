@@ -337,9 +337,10 @@ export class SessionService {
           delay: getPurgeDelay('pending'),
         }
       );
-    } catch {
+    } catch (error) {
       // Log but don't fail the request - stale check is a background task
       // The recording will still be created and can be uploaded
+      console.error('Error scheduling stale recording check:', error);
     }
 
     // Generate upload token scoped to this recording

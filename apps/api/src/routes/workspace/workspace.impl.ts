@@ -148,6 +148,41 @@ export const deleteWorkspaceImpl = (
 };
 
 /**
+ * POST /workspace/:id/restore - Restore a soft-deleted workspace
+ * Requires admin or owner role
+ */
+export const restoreWorkspaceImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const workspaceRoleMiddleware = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.workspace.restore
+    .use(workspaceRoleMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const result = await workspaceService.restoreWorkspace(input.params.workspaceId);
+
+      return {
+        message: 'Workspace restored successfully',
+        data: {
+          workspace: {
+            workspaceId: result.workspace.workspaceId,
+            workspaceName: result.workspace.workspaceName,
+            isDeleted: result.workspace.isDeleted,
+            deletedAt: result.workspace.deletedAt,
+          },
+          restoredProjects: result.restoredProjects,
+          restoredLinks: result.restoredLinks,
+        },
+      };
+    });
+};
+
+/**
  * GET /workspace/:id/preferences - Get workspace preferences
  * Requires authentication
  */
@@ -1181,6 +1216,7 @@ export const createWorkspaceProcedures = (
     status: getWorkspaceStatusImpl(workspaceService),
     updateName: updateWorkspaceNameImpl(workspaceService, workspaceMemberService),
     delete: deleteWorkspaceImpl(workspaceService, workspaceMemberService),
+    restore: restoreWorkspaceImpl(workspaceService, workspaceMemberService),
     search: workspaceSearchImpl(workspaceService, workspaceMemberService),
     suggest: suggestWorkspacesImpl(workspaceService),
     join: joinWorkspaceImpl(inviteService),

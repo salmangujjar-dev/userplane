@@ -92,37 +92,6 @@ export class AdminWorkspaceService {
   }
 
   /**
-   * Reactivate (restore) a workspace
-   */
-  async reactivateWorkspace(workspaceId: string) {
-    const workspace = await this.deps.adminWorkspaceRepo.findWorkspaceById(workspaceId);
-    if (!workspace) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
-    }
-
-    if (!workspace.isDeleted) {
-      throw new ORPCError('WORKSPACE_NOT_DEACTIVATED', {
-        status: 400,
-        message: 'Workspace is not deactivated',
-      });
-    }
-
-    const updated = await this.deps.adminWorkspaceRepo.reactivateWorkspace(workspaceId);
-    if (!updated) {
-      throw new ORPCError('WORKSPACE_NOT_FOUND', {
-        status: 404,
-        message: 'Workspace not found',
-      });
-    }
-
-    // Return full detail
-    return this.getWorkspaceDetail(workspaceId);
-  }
-
-  /**
    * Reset workspace invite token
    */
   async resetInviteToken(workspaceId: string) {

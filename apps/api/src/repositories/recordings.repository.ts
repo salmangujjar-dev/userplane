@@ -193,6 +193,7 @@ export class RecordingRepository {
    * Find recordings by workspace ID with pagination and optional filters
    * Uses JOINs to fetch creator name in a single query
    * All filtering and sorting happens at the database level
+   * Excludes recordings from deleted projects or deleted workspaces
    */
   async findByWorkspaceIdPaginated(
     workspaceId: string,
@@ -216,7 +217,9 @@ export class RecordingRepository {
       .from(recordings)
       .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.workspaceMemberId))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
-      .where(whereConditions)
+      .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
+      .where(and(whereConditions, eq(projects.isDeleted, false), eq(workspaces.isDeleted, false)))
       .orderBy(orderBy)
       .limit(limit)
       .offset(offset);
@@ -227,6 +230,7 @@ export class RecordingRepository {
   /**
    * Count recordings in a workspace with optional filters
    * Uses the same filtering logic as the paginated query
+   * Excludes recordings from deleted projects or deleted workspaces
    */
   async countByWorkspace(workspaceId: string, filters?: RecordingFilters): Promise<number> {
     const whereConditions = this.buildWhereConditions(workspaceId, filters);
@@ -234,27 +238,42 @@ export class RecordingRepository {
     const [result] = await this.db
       .select({ count: count() })
       .from(recordings)
-      .where(whereConditions);
+      .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
+      .where(and(whereConditions, eq(projects.isDeleted, false), eq(workspaces.isDeleted, false)));
 
     return Number(result?.count || 0);
   }
 
   /**
    * Find recording by ID
+   * Excludes recordings from deleted projects or deleted workspaces
    */
   async findById(recordingId: string) {
-    const [recording] = await this.db
-      .select()
+    const [result] = await this.db
+      .select({
+        recordings,
+      })
       .from(recordings)
-      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.isDeleted, false)))
+      .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
+      .where(
+        and(
+          eq(recordings.recordingId, recordingId),
+          eq(recordings.isDeleted, false),
+          eq(projects.isDeleted, false),
+          eq(workspaces.isDeleted, false)
+        )
+      )
       .limit(1);
 
-    return recording || null;
+    return result?.recordings || null;
   }
 
   /**
    * Find recording by ID with status group filter
    * Defaults to 'AVAILABLE' status group if not specified
+   * Excludes recordings from deleted projects or deleted workspaces
    */
   async findByIdWithStatusGroup(
     recordingId: string,
@@ -262,25 +281,32 @@ export class RecordingRepository {
   ) {
     const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
 
-    const [recording] = await this.db
-      .select()
+    const [result] = await this.db
+      .select({
+        recordings,
+      })
       .from(recordings)
+      .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
       .where(
         and(
           eq(recordings.recordingId, recordingId),
           eq(recordings.isDeleted, false),
-          inArray(recordings.uploadStatus, statuses)
+          inArray(recordings.uploadStatus, statuses),
+          eq(projects.isDeleted, false),
+          eq(workspaces.isDeleted, false)
         )
       )
       .limit(1);
 
-    return recording || null;
+    return result?.recordings || null;
   }
 
   /**
    * Find recording by ID with all related data joined and status group filter
    * Defaults to 'AVAILABLE' status group if not specified
    * Returns full recording details including recording link, creator, project, and domain
+   * Excludes recordings from deleted projects or deleted workspaces
    */
   async findByIdWithDetailsAndStatusGroup(
     recordingId: string,
@@ -327,12 +353,15 @@ export class RecordingRepository {
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
       .innerJoin(links, eq(recordings.recordingLinkId, links.linkId))
       .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
       .innerJoin(domains, eq(links.domainId, domains.domainId))
       .where(
         and(
           eq(recordings.recordingId, recordingId),
           eq(recordings.isDeleted, false),
-          inArray(recordings.uploadStatus, statuses)
+          inArray(recordings.uploadStatus, statuses),
+          eq(projects.isDeleted, false),
+          eq(workspaces.isDeleted, false)
         )
       )
       .limit(1);
@@ -351,6 +380,7 @@ export class RecordingRepository {
   /**
    * Find recording by ID with all related data joined
    * Returns full recording details including recording link, creator, project, and domain
+   * Excludes recordings from deleted projects or deleted workspaces
    */
   async findByIdWithDetails(recordingId: string): Promise<RecordingDetailRow | null> {
     const [result] = await this.db
@@ -392,8 +422,16 @@ export class RecordingRepository {
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
       .innerJoin(links, eq(recordings.recordingLinkId, links.linkId))
       .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
       .innerJoin(domains, eq(links.domainId, domains.domainId))
-      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.isDeleted, false)))
+      .where(
+        and(
+          eq(recordings.recordingId, recordingId),
+          eq(recordings.isDeleted, false),
+          eq(projects.isDeleted, false),
+          eq(workspaces.isDeleted, false)
+        )
+      )
       .limit(1);
 
     if (!result) {
@@ -498,6 +536,7 @@ export class RecordingRepository {
 
   /**
    * Get recording with file paths for verification
+   * Excludes recordings from deleted projects or deleted workspaces
    */
   async findByIdWithFilePaths(recordingId: string): Promise<{
     recordingId: string;
@@ -527,7 +566,16 @@ export class RecordingRepository {
         customMeta: recordings.customMeta,
       })
       .from(recordings)
-      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.isDeleted, false)))
+      .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
+      .where(
+        and(
+          eq(recordings.recordingId, recordingId),
+          eq(recordings.isDeleted, false),
+          eq(projects.isDeleted, false),
+          eq(workspaces.isDeleted, false)
+        )
+      )
       .limit(1);
 
     if (!result) return null;
@@ -735,10 +783,12 @@ export class RecordingRepository {
   /**
    * Find deleted workspaces that have orphaned recordings
    * Orphaned recordings are those with ORPHAN status group (pending, available)
+   * Filters workspaces based on when they were deleted (deletedAt between startDate and endDate)
    * Used by sweep job to trigger workspace cleanup
    */
   async findWorkspacesWithOrphanedRecordings(
-    cutoffDate: Date
+    startDate: Date,
+    endDate: Date
   ): Promise<Array<{ workspaceId: string }>> {
     const orphanStatuses = [...getUploadStatusesForGroup('ORPHAN')];
 
@@ -752,7 +802,74 @@ export class RecordingRepository {
         and(
           eq(workspaces.isDeleted, true),
           inArray(recordings.uploadStatus, orphanStatuses),
-          lt(recordings.createdAt, cutoffDate)
+          sql`${workspaces.deletedAt} >= ${startDate}`,
+          sql`${workspaces.deletedAt} < ${endDate}`
+        )
+      );
+
+    return results;
+  }
+
+  /**
+   * Find deleted projects that have orphaned recordings
+   * Orphaned recordings are those with ORPHAN status group (pending, available)
+   * Filters projects based on when they were deleted (deletedAt between startDate and endDate)
+   * Used by daily sweep job to trigger project cleanup
+   */
+  async findProjectsWithOrphanedRecordings(
+    startDate: Date,
+    endDate: Date
+  ): Promise<Array<{ projectId: string }>> {
+    const orphanStatuses = [...getUploadStatusesForGroup('ORPHAN')];
+
+    const results = await this.db
+      .selectDistinct({
+        projectId: recordings.projectId,
+      })
+      .from(recordings)
+      .innerJoin(projects, eq(projects.projectId, recordings.projectId))
+      .where(
+        and(
+          eq(projects.isDeleted, true),
+          inArray(recordings.uploadStatus, orphanStatuses),
+          sql`${projects.deletedAt} >= ${startDate}`,
+          sql`${projects.deletedAt} < ${endDate}`
+        )
+      );
+
+    return results;
+  }
+
+  /**
+   * Find deleted recordings from active workspaces and projects
+   * Returns recordings that were deleted (deletedAt between startDate and endDate)
+   * But belong to workspaces and projects that are still active (not deleted)
+   * Used by daily sweep job to trigger recording cleanup
+   */
+  async findDeletedRecordingsFromActiveEntities(
+    startDate: Date,
+    endDate: Date
+  ): Promise<
+    Array<{
+      recordingId: string;
+      uploadStatus: Recording['uploadStatus'];
+    }>
+  > {
+    const results = await this.db
+      .select({
+        recordingId: recordings.recordingId,
+        uploadStatus: recordings.uploadStatus,
+      })
+      .from(recordings)
+      .innerJoin(projects, eq(projects.projectId, recordings.projectId))
+      .innerJoin(workspaces, eq(workspaces.workspaceId, recordings.workspaceId))
+      .where(
+        and(
+          eq(recordings.isDeleted, true),
+          eq(projects.isDeleted, false),
+          eq(workspaces.isDeleted, false),
+          sql`${recordings.deletedAt} >= ${startDate}`,
+          sql`${recordings.deletedAt} < ${endDate}`
         )
       );
 

@@ -225,6 +225,43 @@ export const deleteProjectImpl = (
 };
 
 /**
+ * POST /workspace/:workspaceId/projects/:projectId/restore
+ * Restore a soft-deleted project
+ * Requires admin or owner role
+ */
+export const restoreProjectImpl = (
+  projectService: ProjectService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorized.project.restore
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const restoredProject = await projectService.restoreProject(input.params.projectId);
+
+      return {
+        message: 'Project restored successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          project: {
+            projectId: restoredProject.projectId,
+            projectTitle: restoredProject.projectTitle,
+            isDefault: restoredProject.isDefault,
+            createdAt: restoredProject.createdAt,
+            updatedAt: restoredProject.updatedAt,
+          },
+        },
+      };
+    });
+};
+
+/**
  * Create the project procedures object
  */
 export const createProjectProcedures = (
@@ -239,5 +276,6 @@ export const createProjectProcedures = (
     update: updateProjectImpl(projectService, workspaceMemberService, workspaceService),
     replace: replaceProjectImpl(projectService, workspaceMemberService, workspaceService),
     delete: deleteProjectImpl(projectService, workspaceMemberService, workspaceService),
+    restore: restoreProjectImpl(projectService, workspaceMemberService, workspaceService),
   };
 };
