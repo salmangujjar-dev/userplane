@@ -2,5 +2,5 @@
  * Domain emails
  */
 
-export { DomainVerificationInstructionsEmail } from './verification-instructions';
-export type { DomainVerificationInstructionsEmailProps } from './verification-instructions';
+export { DomainDeveloperInstructionsEmail } from './developer-instructions';
+export type { DomainDeveloperInstructionsEmailProps } from './developer-instructions';

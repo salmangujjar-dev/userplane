@@ -101,3 +101,33 @@ export const DomainRecordingPreferencesUpdateDataSchema = z.object({
   domainId: z.string(),
   workspaceId: z.string(),
 });
+
+/**
+ * Send domain developer instructions request (detailed mode)
+ */
+export const SendDomainInstructionsSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+    domainId: z.string(),
+  }),
+  body: z.object({
+    emails: z.array(z.string().email()).min(1).max(10),
+  }),
+});
+
+/**
+ * Domain instruction result item
+ */
+export const DomainInstructionResultItemSchema = z.object({
+  email: z.string().email(),
+  success: z.boolean(),
+  error: z.string().optional(),
+});
+
+/**
+ * Send domain instructions result response
+ */
+export const SendDomainInstructionsResultSchema = z.object({
+  sent: z.array(DomainInstructionResultItemSchema),
+  failed: z.array(DomainInstructionResultItemSchema),
+});

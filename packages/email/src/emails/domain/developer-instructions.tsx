@@ -1,27 +1,25 @@
 /**
- * Domain - Verification Instructions Email
- * Sent with instructions to verify a domain
+ * Domain - Developer Instructions Email
+ * Sent with instructions to integrate Userplane SDK into a domain
  */
 
 import * as React from 'react';
 import { Section, Text, Link } from '@react-email/components';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/domain/verification-instructions';
+import { copy } from '../../copy/domain/developer-instructions';
 
-export interface DomainVerificationInstructionsEmailProps {
+export interface DomainDeveloperInstructionsEmailProps {
   domainName?: string;
-  txtRecord?: string;
   settingsUrl?: string;
   docsUrl?: string;
 }
 
-export const DomainVerificationInstructionsEmail = ({
+export const DomainDeveloperInstructionsEmail = ({
   domainName = 'example.com',
-  txtRecord = 'userplane-verify=abc123xyz',
   settingsUrl = 'https://app.userplane.io/settings/domains',
-  docsUrl = 'https://docs.userplane.io/domains/verification',
-}: DomainVerificationInstructionsEmailProps) => {
+  docsUrl = 'https://docs.userplane.io/domains/integration',
+}: DomainDeveloperInstructionsEmailProps) => {
   return (
     <EmailLayout preview={copy.preview(domainName)}>
       <Text style={styles.title}>{copy.title}</Text>
@@ -29,19 +27,6 @@ export const DomainVerificationInstructionsEmail = ({
 
       <Section style={styles.messageSection}>
         <Text style={styles.messageText}>{copy.body[0](domainName)}</Text>
-      </Section>
-
-      <Section style={styles.highlightBox}>
-        <Text
-          style={{
-            ...styles.messageText,
-            fontFamily: 'monospace',
-            fontSize: '13px',
-            marginBottom: 0,
-          }}
-        >
-          {txtRecord}
-        </Text>
       </Section>
 
       <Section style={styles.messageSection}>
@@ -65,4 +50,4 @@ export const DomainVerificationInstructionsEmail = ({
   );
 };
 
-export default DomainVerificationInstructionsEmail;
+export default DomainDeveloperInstructionsEmail;
