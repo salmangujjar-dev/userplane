@@ -6,7 +6,10 @@ import {
   PaginationMetaSchema,
   SortDirectionSchema,
   EmailSchema,
+  DomainUrlSchema,
+  EmailDomainSchema,
 } from './common';
+import { FormEmailSchema } from './form';
 import { PLAN_IDS, PLAN_NAME_VALUES } from '@workspace/pricing';
 import { SendWorkspaceInvitesSchema } from './invite';
 import {
@@ -21,6 +24,61 @@ import {
 /**
  * Workspace schemas
  */
+
+// ============================================================================
+// WORKSPACE-SPECIFIC VALIDATION SCHEMAS
+// ============================================================================
+
+/**
+ * Schema for workspace name validation
+ * Trims whitespace and validates the trimmed value
+ */
+export const WorkspaceNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Workspace name is required')
+  .min(2, 'Workspace name must be at least 2 characters')
+  .max(100, 'Workspace name must be less than 100 characters');
+
+/**
+ * Schema for company name validation
+ * Trims whitespace and validates the trimmed value
+ */
+export const CompanyNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Company name is required')
+  .max(100, 'Company name must be less than 100 characters');
+
+/**
+ * Schema for recording header text
+ */
+export const RecordingHeaderSchema = z
+  .string()
+  .max(200, 'Header must be less than 200 characters')
+  .trim()
+  .optional();
+
+/**
+ * Schema for recording footnote text
+ */
+export const RecordingFootnoteSchema = z
+  .string()
+  .max(500, 'Footnote must be less than 500 characters')
+  .trim()
+  .optional();
+
+/**
+ * Schema for hex color validation
+ */
+export const HexColorSchema = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/, 'Please enter a valid hex color (e.g., #FF5733)')
+  .transform((val) => val.toUpperCase());
+
+// ============================================================================
+// WORKSPACE DATA SCHEMAS
+// ============================================================================
 
 /**
  * Workspace notification preferences
@@ -461,7 +519,7 @@ export const AddDomainSchema = z.object({
     workspaceId: z.string(),
   }),
   body: z.object({
-    url: z.string().url(),
+    url: DomainUrlSchema,
   }),
 });
 
@@ -482,7 +540,7 @@ export const UpdateDomainSchema = z.object({
     domainId: z.string(),
   }),
   body: z.object({
-    url: z.string().url(),
+    url: DomainUrlSchema,
   }),
 });
 
@@ -586,7 +644,7 @@ export const UpdateWorkspaceNameSchema = z.object({
     workspaceId: z.string(),
   }),
   body: z.object({
-    name: z.string().min(1).max(255),
+    name: WorkspaceNameSchema,
   }),
 });
 
@@ -701,7 +759,7 @@ export const UpdateInvitePolicySchema = z.object({
   body: z.object({
     workspaceInvitePolicy: WorkspaceInvitePolicySchema,
     workspaceInviteDomains: z
-      .array(z.string().toLowerCase().trim())
+      .array(EmailDomainSchema)
       .max(MAX_EMAIL_DOMAINS, `Maximum ${MAX_EMAIL_DOMAINS} email domains allowed per workspace`)
       .nullable()
       .optional(),
@@ -870,7 +928,7 @@ export const UpdateWorkspaceBillingEmailSchema = z.object({
     workspaceId: z.string(),
   }),
   body: z.object({
-    email: EmailSchema,
+    email: FormEmailSchema,
   }),
 });
 

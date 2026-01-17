@@ -13,6 +13,107 @@ export const EmailSchema = z
     message: 'Invalid email address',
   });
 
+// ============================================================================
+// URL & DOMAIN VALIDATION SCHEMAS
+// ============================================================================
+
+/**
+ * Base URL schema for validating URL strings with protocol (http/https)
+ * Example: "https://example.com" or "http://example.com"
+ *
+ * Use this as the base and chain .optional() where needed instead of creating OptionalUrlSchema
+ */
+export const URLSchema = z.string().refine(
+  (value) => {
+    // Allow localhost and local IPs
+    return validator.isURL(value, {
+      require_protocol: true,
+      require_valid_protocol: true,
+      protocols: ['http', 'https'],
+      require_host: true,
+      require_tld: false, // Allow localhost without TLD
+      allow_underscores: false,
+      allow_trailing_dot: false,
+      allow_protocol_relative_urls: false,
+    });
+  },
+  {
+    message: 'Please enter a valid URL',
+  }
+);
+
+/**
+ * Domain URL schema that validates proper domain format
+ * Builds on top of URLSchema with additional FQDN validation
+ * Accepts: https://example.com, https://subdomain.example.com, https://localhost, http://127.0.0.1
+ * Rejects: single characters, incomplete domains
+ */
+export const DomainUrlSchema = URLSchema.refine((value) => {
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+
+    // Allow localhost
+    if (hostname === 'localhost') return true;
+
+    // Allow valid IP addresses (IPv4 and IPv6)
+    if (validator.isIP(hostname)) return true;
+
+    // Allow local development domains (e.g., localhost:3000, 127.0.0.1:3000)
+    if (hostname.startsWith('127.') || hostname.startsWith('0.0.0.0')) return true;
+
+    // Validate as FQDN (fully qualified domain name)
+    // Require at least one dot for proper domains
+    return validator.isFQDN(hostname, {
+      require_tld: true,
+      allow_underscores: false,
+      allow_trailing_dot: false,
+    });
+  } catch {
+    // If URL parsing fails, return false
+    return false;
+  }
+}, 'Please enter a valid domain (e.g., https://example.com, https://localhost, http://127.0.0.1)');
+
+/**
+ * Zod schema for validating email domains (FQDNs only, no protocol required)
+ * Accepts: example.com, subdomain.example.com, mail.company.org
+ * Rejects: https://example.com, localhost, 127.0.0.1, single words
+ */
+export const EmailDomainSchema = z
+  .string()
+  .min(1, 'Email domain is required')
+  .trim()
+  .refine((value) => {
+    // Skip validation if empty (will be caught by .min())
+    if (!value || value.trim() === '') return true;
+
+    // Should not contain protocol
+    if (value.match(/^https?:\/\//i)) {
+      return false;
+    }
+
+    // Validate as FQDN (fully qualified domain name)
+    return validator.isFQDN(value, {
+      require_tld: true,
+      allow_underscores: false,
+      allow_trailing_dot: false,
+    });
+  }, 'Please enter a valid domain (e.g., example.com)');
+
+// ============================================================================
+// BACKWARD COMPATIBILITY ALIASES
+// ============================================================================
+
+/**
+ * @deprecated Use URLSchema instead
+ */
+export const UrlWithProtocolSchema = URLSchema;
+
+// ============================================================================
+// COMMON ENUMS AND CONSTANTS
+// ============================================================================
+
 /**
  * Common schemas and enum constants used across multiple API contracts
  *
