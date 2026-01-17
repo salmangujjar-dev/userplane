@@ -112,7 +112,7 @@ export class AdminWorkspaceRepository {
     }
 
     if (filterPlan) {
-      conditions.push(eq(workspaces.workspacePlan, filterPlan as any));
+      conditions.push(eq(workspaces.workspacePlan, filterPlan));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

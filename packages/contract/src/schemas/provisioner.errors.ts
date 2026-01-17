@@ -21,4 +21,18 @@ export const ProvisionerErrors = {
     status: 500,
     message: 'Transaction failed',
   },
+
+  // Invite token errors
+  PROVISIONER_INVITE_TOKEN_INVALID: {
+    status: 400,
+    message: 'Invite token is invalid or expired',
+  },
+  PROVISIONER_WORKSPACE_EXISTS: {
+    status: 409,
+    message: 'Workspace with this ID already exists',
+  },
+  PROVISIONER_URL_REQUIRED: {
+    status: 400,
+    message: 'Workspace URL is required',
+  },
 } as const;

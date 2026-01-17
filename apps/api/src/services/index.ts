@@ -146,6 +146,8 @@ export const provisionerService = new ProvisionerService({
   projectService,
   workspaceMemberService,
   domainService,
+  tokenService,
+  workspaceRepo,
   db,
 });
 
@@ -170,3 +172,6 @@ export const adminProvisioningService = new AdminProvisioningService({
   workspaceService,
   db,
 });
+
+// Export tokenService for use in routes
+export { tokenService };

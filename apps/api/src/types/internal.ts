@@ -21,6 +21,7 @@ import {
   InviteTokenPayloadSchema,
   DomainVerificationTokenPayloadSchema,
   AccessRequestTokenPayloadSchema,
+  WorkspaceCreateInviteTokenPayloadSchema,
   PresignedUrlInfoSchema,
 } from '@workspace/contract';
 
@@ -42,6 +43,9 @@ export type UploadTokenPayload = z.infer<typeof UploadTokenPayloadSchema>;
 export type InviteTokenPayload = z.infer<typeof InviteTokenPayloadSchema>;
 export type DomainVerificationTokenPayload = z.infer<typeof DomainVerificationTokenPayloadSchema>;
 export type AccessRequestTokenPayload = z.infer<typeof AccessRequestTokenPayloadSchema>;
+export type WorkspaceCreateInviteTokenPayload = z.infer<
+  typeof WorkspaceCreateInviteTokenPayloadSchema
+>;
 export type PresignedUrlInfo = z.infer<typeof PresignedUrlInfoSchema>;
 
 /**
@@ -209,6 +213,7 @@ export interface InviteActionResult {
  * Parameters for creating a workspace
  */
 export interface CreateWorkspaceParams {
+  workspaceId?: string;
   workspaceName: string;
   recordingSlug?: string;
   workspacePlan: WorkspacePlan;

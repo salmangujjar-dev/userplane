@@ -9,7 +9,9 @@ import type {
   InviteTokenPayload,
   DomainVerificationTokenPayload,
   AccessRequestTokenPayload,
+  WorkspaceCreateInviteTokenPayload,
 } from '@/api/types';
+import type { PlanId } from '@workspace/pricing';
 
 export class TokenService {
   private jwtSecret: string;
@@ -137,6 +139,53 @@ export class TokenService {
       const payload = jwt.verify(token, this.jwtSecret, {
         algorithms: ['HS256'],
       }) as AccessRequestTokenPayload;
+      // Verify issuer
+      if (payload.iss !== this.jwtIssuer) {
+        return null;
+      }
+      return payload;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Generate workspace create invite URL for admin provisioning
+   * Token expires in 7 days and contains predetermined workspace ID, URL, and plan
+   * URL points to workspace creation flow with invite token
+   */
+  generateWorkspaceCreateInviteUrl(params: {
+    workspaceId: string;
+    workspaceUrl: string;
+    workspacePlan: PlanId;
+  }): string {
+    const payload: Omit<WorkspaceCreateInviteTokenPayload, 'iss' | 'iat' | 'exp'> = {
+      wi: params.workspaceId,
+      wu: params.workspaceUrl,
+      wp: params.workspacePlan,
+    };
+
+    const fullPayload: WorkspaceCreateInviteTokenPayload = {
+      iss: this.jwtIssuer,
+      ...payload,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+    };
+
+    const token = jwt.sign(fullPayload, this.jwtSecret, { algorithm: 'HS256' });
+
+    return `${this.appUrl}/workspace/create?token=${token}`;
+  }
+
+  /**
+   * Verify and decode workspace create invite JWT
+   * Returns payload if valid, null if invalid or expired
+   */
+  verifyWorkspaceCreateInviteToken(token: string): WorkspaceCreateInviteTokenPayload | null {
+    try {
+      const payload = jwt.verify(token, this.jwtSecret, {
+        algorithms: ['HS256'],
+      }) as WorkspaceCreateInviteTokenPayload;
       // Verify issuer
       if (payload.iss !== this.jwtIssuer) {
         return null;

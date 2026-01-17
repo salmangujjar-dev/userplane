@@ -10,7 +10,11 @@ import type { AdminService } from '@/api/services/admin.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
 import type { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
-import { getPlanName, DEFAULT_PLAN_NAME } from '@workspace/pricing';
+import type { WorkspaceService } from '@/api/services/workspace.service';
+import type { ProjectService } from '@/api/services/project.service';
+import type { TokenService } from '@/api/services/token.service';
+import { getPlanName, DEFAULT_PLAN_NAME, type PlanId } from '@workspace/pricing';
+import { generateWorkspaceId } from '@/api/lib/id';
 
 /**
  * Format date to ISO string
@@ -309,7 +313,7 @@ function formatWorkspaceMember(member: {
 function formatWorkspaceDetail(workspace: {
   workspaceId: string;
   workspaceName: string;
-  workspacePlan: import('@workspace/pricing').PlanId;
+  workspacePlan: PlanId;
   createdAt: Date;
   isDeleted: boolean;
   deletedAt: Date | null;
@@ -523,10 +527,7 @@ const deactivateWorkspaceImpl = (
  * Restore workspace implementation
  * Uses WorkspaceService.restoreWorkspace for consistent restoration logic
  */
-const restoreWorkspaceImpl = (
-  adminService: AdminService,
-  workspaceService: any // Will be typed as WorkspaceService
-) => {
+const restoreWorkspaceImpl = (adminService: AdminService, workspaceService: WorkspaceService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.workspaces.restore.handler(async ({ input }) => {
@@ -552,10 +553,7 @@ const restoreWorkspaceImpl = (
  * Deactivate project implementation
  * Uses ProjectService.deleteProject for consistent deletion logic
  */
-const deactivateProjectImpl = (
-  adminService: AdminService,
-  projectService: any // Will be typed as ProjectService
-) => {
+const deactivateProjectImpl = (adminService: AdminService, projectService: ProjectService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.projects.deactivate.handler(async ({ input }) => {
@@ -575,10 +573,7 @@ const deactivateProjectImpl = (
  * Restore project implementation
  * Uses ProjectService.restoreProject for consistent restoration logic
  */
-const restoreProjectImpl = (
-  adminService: AdminService,
-  projectService: any // Will be typed as ProjectService
-) => {
+const restoreProjectImpl = (adminService: AdminService, projectService: ProjectService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.projects.restore.handler(async ({ input }) => {
@@ -716,6 +711,38 @@ const provisionWorkspaceImpl = (
 };
 
 /**
+ * Create workspace invite implementation
+ */
+const createWorkspaceInviteImpl = (adminService: AdminService, tokenService: TokenService) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized.use(adminMiddleware).admin.workspace.createInvite.handler(async ({ input }) => {
+    // Generate a predetermined workspace ID using standard ID generator
+    const workspaceId = generateWorkspaceId();
+
+    // Use provided plan or default to 'sandbox'
+    const workspacePlan = input.body.plan || 'sandbox';
+
+    // Generate workspace create invite URL
+    const inviteUrl = tokenService.generateWorkspaceCreateInviteUrl({
+      workspaceId,
+      workspaceUrl: input.body.workspaceUrl,
+      workspacePlan,
+    });
+
+    return {
+      message: 'Workspace invite generated successfully',
+      data: {
+        inviteUrl,
+        workspaceId,
+        workspaceUrl: input.body.workspaceUrl,
+        workspacePlan,
+      },
+    };
+  });
+};
+
+/**
  * Create admin procedures
  */
 export const createAdminProcedures = (
@@ -723,8 +750,9 @@ export const createAdminProcedures = (
   adminWorkspaceService: AdminWorkspaceService,
   adminRecordingService: AdminRecordingService,
   adminProvisioningService: AdminProvisioningService,
-  workspaceService: any, // WorkspaceService for restoration
-  projectService: any // ProjectService for restoration
+  workspaceService: WorkspaceService,
+  projectService: ProjectService,
+  tokenService: TokenService
 ) => {
   return {
     users: {
@@ -765,6 +793,9 @@ export const createAdminProcedures = (
     projects: {
       deactivate: deactivateProjectImpl(adminService, projectService),
       restore: restoreProjectImpl(adminService, projectService),
+    },
+    workspace: {
+      createInvite: createWorkspaceInviteImpl(adminService, tokenService),
     },
   };
 };

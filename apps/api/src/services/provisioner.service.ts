@@ -3,19 +3,25 @@
  * Orchestrates workspace creation with all related resources
  */
 
-import type { DbClient } from '@workspace/db';
+import { workspacePlanEnum, type DbClient } from '@workspace/db';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { ProjectService } from '@/api/services/project.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { DomainService } from '@/api/services/domain.service';
+import { TokenService } from '@/api/services/token.service';
+import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { deriveWorkspaceName } from '@/api/lib/workspace';
+import { extractWorkspaceDetailsFromInviteToken } from '@/api/utils/token';
 import { provisionerError } from '@workspace/contract';
+import { type PlanId } from '@workspace/pricing';
 
 export interface ProvisionerServiceDeps {
   workspaceService: WorkspaceService;
   projectService: ProjectService;
   workspaceMemberService: WorkspaceMemberService;
   domainService: DomainService;
+  tokenService: TokenService;
+  workspaceRepo: WorkspaceRepository;
   db: DbClient;
 }
 
@@ -25,28 +31,68 @@ export class ProvisionerService {
   /**
    * Create workspace with all related resources
    * Orchestrates workspace, project, member, and domain creation
-   * Accepts any valid URL format
+   * Accepts URL directly or via invite token
+   * Optionally accepts an invite token to create workspace with predetermined details
+   * Throws PROVISIONER_URL_REQUIRED if no URL provided
+   * Throws PROVISIONER_INVITE_TOKEN_INVALID if token is invalid
+   * Throws PROVISIONER_WORKSPACE_EXISTS if workspace with predetermined ID exists
    * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
    * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
    */
   async createWorkspace(params: {
-    url: string;
+    url?: string;
     userId: string;
     userName?: string;
     userEmail: string;
-  }): Promise<{ workspaceId: string }> {
-    const { url, userId, userName, userEmail } = params;
+    inviteToken?: string;
+  }): Promise<{ created: false } | { created: true; workspaceId: string; workspaceName: string }> {
+    const { url: providedUrl, userId, userName, userEmail, inviteToken } = params;
+
+    // Determine workspace details based on invite token or provided values
+    let workspacePlan: PlanId = 'early_bird_monthly';
+    let predeterminedWorkspaceId: string | undefined;
+    let workspaceUrl = providedUrl;
+
+    if (inviteToken) {
+      const workspaceDetails = extractWorkspaceDetailsFromInviteToken(
+        this.deps.tokenService,
+        inviteToken
+      );
+
+      if (!workspaceDetails) {
+        // Token is invalid or expired - return created: false instead of throwing
+        return { created: false };
+      }
+
+      // Use token values only if token is valid
+      workspacePlan = workspaceDetails.workspacePlan;
+      predeterminedWorkspaceId = workspaceDetails.workspaceId;
+      workspaceUrl = workspaceDetails.workspaceUrl;
+
+      // Check if workspace with predetermined ID already exists
+      const existingWorkspace = await this.deps.workspaceRepo.findById(predeterminedWorkspaceId);
+      if (existingWorkspace) {
+        // Workspace already exists - return created: false
+        return { created: false };
+      }
+    }
+
+    // URL is required either from token or directly provided
+    if (!workspaceUrl) {
+      throw provisionerError.PROVISIONER_URL_REQUIRED();
+    }
 
     // Derive workspace name from user's name
-    const workspaceName = deriveWorkspaceName(url, userName);
+    const workspaceName = deriveWorkspaceName(workspaceUrl, userName);
 
     const workspace = await this.deps.db.transaction(async (tx) => {
       // Create workspace with default recording preferences
       // Recording slug and defaults (company name, header, color, etc.) are set internally
       const createdWorkspace = await this.deps.workspaceService.create(
         {
+          workspaceId: predeterminedWorkspaceId,
           workspaceName,
-          workspacePlan: 'early_bird_monthly',
+          workspacePlan,
           userId,
           workspaceBillingEmail: userEmail,
         },
@@ -77,7 +123,7 @@ export class ProvisionerService {
       await this.deps.domainService.create(
         {
           workspaceId: createdWorkspace.workspaceId,
-          url: url,
+          url: workspaceUrl,
           status: 'pending',
         },
         { tx }
@@ -91,7 +137,9 @@ export class ProvisionerService {
     }
 
     return {
+      created: true,
       workspaceId: workspace.workspaceId,
+      workspaceName: workspace.workspaceName,
     };
   }
 }

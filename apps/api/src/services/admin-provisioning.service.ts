@@ -129,22 +129,24 @@ export class AdminProvisioningService {
 
       // 2. Create workspace using ProvisionerService
       // This creates workspace + project + domain + adds owner as owner member
-      let workspace: { workspaceId: string };
-      try {
-        workspace = await this.deps.provisionerService.createWorkspace({
-          url: params.workspace.url,
-          userId: ownerUser.id,
-          userName: ownerUser.name,
-          userEmail: ownerUser.email,
-        });
-      } catch (error) {
+      const result = await this.deps.provisionerService.createWorkspace({
+        url: params.workspace.url,
+        userId: ownerUser.id,
+        userName: ownerUser.name,
+        userEmail: ownerUser.email,
+      });
+
+      // Handle discriminated union: check if workspace was created
+      if (!result.created) {
         throw adminError.ADMIN_PROVISION_WORKSPACE_CREATE_FAILED({
-          cause: error instanceof Error ? error.message : 'Unknown error',
+          cause: 'Workspace creation returned created: false',
         });
       }
 
-      // Get workspace name for response
-      const workspaceDetails = await this.deps.workspaceService.getById(workspace.workspaceId);
+      const workspace = {
+        workspaceId: result.workspaceId,
+        workspaceName: result.workspaceName,
+      };
 
       // 3. Find or create members and add them to workspace
       const memberResults: ProvisionedMember[] = [];
@@ -185,7 +187,7 @@ export class AdminProvisioningService {
 
       return {
         workspaceId: workspace.workspaceId,
-        workspaceName: workspaceDetails.workspaceName,
+        workspaceName: workspace.workspaceName,
         owner: {
           userId: ownerUser.id,
           email: ownerUser.email,

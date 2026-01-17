@@ -55,16 +55,7 @@ export const WorkspaceMinimalItemSchema = z.object({
 export const WorkspaceItemSchema = z.object({
   workspaceId: z.string(),
   workspaceName: z.string(),
-  workspacePlan: z.enum([
-    'starter_monthly',
-    'starter_annual',
-    'scale_up_monthly',
-    'scale_up_annual',
-    'enterprise_monthly',
-    'enterprise_annual',
-    'early_bird_monthly',
-    'tiny_bird_monthly',
-  ]),
+  workspacePlan: z.enum(PLAN_IDS),
   createdAt: z.date(),
   updatedAt: z.date(),
   notificationPreferences: WorkspaceNotificationPreferencesSchema.optional(),
