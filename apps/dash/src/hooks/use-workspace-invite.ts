@@ -96,6 +96,7 @@ export function useSendWorkspaceInvites() {
         return;
       }
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
       toast.success(`Invites sent to ${emails.length} email${emails.length > 1 ? 's' : ''}`);
     },
     onError: (error: unknown) => {

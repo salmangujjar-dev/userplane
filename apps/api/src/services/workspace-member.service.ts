@@ -341,4 +341,12 @@ export class WorkspaceMemberService {
       options
     );
   }
+
+  /**
+   * Count members in workspace
+   * Returns the total number of active members in the workspace
+   */
+  async countByWorkspace(workspaceId: string): Promise<number> {
+    return this.deps.memberRepo.countByWorkspace(workspaceId);
+  }
 }

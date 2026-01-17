@@ -87,6 +87,7 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }
@@ -166,6 +167,7 @@ export function useUpdateLink(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }
@@ -229,6 +231,7 @@ export function useDeleteLink(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }

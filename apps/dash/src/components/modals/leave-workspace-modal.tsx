@@ -6,13 +6,12 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { AlertTriangle } from 'lucide-react';
+import Logo from '@workspace/ui/components/logo';
 
 interface LeaveWorkspaceModalProps {
   open: boolean;
@@ -47,36 +46,82 @@ export function LeaveWorkspaceModal({
 
   const isConfirmDisabled = confirmText !== workspaceName || isLoading;
 
+  const ownerConsequences = [
+    {
+      title: 'Workspace Deleted',
+      description: `${workspaceName} will be permanently deleted`,
+    },
+    {
+      title: 'All Data Lost',
+      description: 'Recordings, links, domains, and projects will be permanently removed',
+    },
+    {
+      title: 'Members Removed',
+      description: 'All team members will lose access immediately',
+    },
+    {
+      title: 'Cannot be Undone',
+      description: 'This action is permanent and cannot be reversed',
+    },
+  ];
+
+  const memberConsequences = [
+    {
+      title: 'Access Removed',
+      description: 'You will lose access to all workspace content',
+    },
+    {
+      title: 'Projects Inaccessible',
+      description: 'You will no longer be able to view or manage projects',
+    },
+    {
+      title: 'Re-invitation Required',
+      description: 'You will need to be re-invited to rejoin this workspace',
+    },
+  ];
+
+  const consequences = isOwner ? ownerConsequences : memberConsequences;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <AlertTriangle className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <DialogTitle>{isOwner ? 'Delete Workspace' : 'Leave Workspace'}</DialogTitle>
+      <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
+        <div className="space-y-6 py-4">
+          <div className="flex items-start gap-4">
+            <Logo variant="tiled" size="md" showText={false} />
+            <div className="flex flex-col space-y-1">
+              <DialogTitle className="text-xl font-semibold">
+                {isOwner ? 'Delete Workspace' : 'Leave Workspace'}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {isOwner ? (
+                  <>
+                    Permanently delete <strong>{workspaceName}</strong>
+                  </>
+                ) : (
+                  <>
+                    Leave <strong>{workspaceName}</strong>
+                  </>
+                )}
+              </DialogDescription>
             </div>
           </div>
-          <DialogDescription className="pt-2">
-            {isOwner ? (
-              <>
-                This action cannot be undone. This will permanently delete the workspace and all
-                associated data, including recordings, links, and settings.
-              </>
-            ) : (
-              <>
-                You will lose access to all workspace content and will need to be re-invited to
-                rejoin.
-              </>
-            )}
-          </DialogDescription>
-        </DialogHeader>
 
-        <div className="py-4">
+          <div className="rounded-lg bg-muted/50 p-4">
+            <div className="space-y-2.5">
+              {consequences.map((consequence) => (
+                <div key={consequence.title} className="flex gap-2">
+                  <span className="text-muted-foreground mt-0.5">•</span>
+                  <div className="space-y-0.5">
+                    <p className="font-medium text-sm">{consequence.title}</p>
+                    <p className="text-xs text-muted-foreground">{consequence.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div>
-            <Label htmlFor="confirm-name" className="mb-3 block">
+            <Label htmlFor="confirm-name" className="mb-2 block">
               Type <strong>{workspaceName}</strong> to confirm
             </Label>
             <Input
@@ -90,18 +135,26 @@ export function LeaveWorkspaceModal({
           </div>
         </div>
 
-        <DialogFooter className="gap-3">
-          <Button type="button" onClick={() => onOpenChange(false)} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleConfirm}
-            disabled={isConfirmDisabled}
-          >
-            {isLoading ? 'Processing...' : isOwner ? 'Delete Workspace' : 'Leave Workspace'}
-          </Button>
+        <DialogFooter>
+          <div className="flex gap-2 w-full justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              className="rounded-full px-6"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-full px-6"
+              onClick={handleConfirm}
+              disabled={isConfirmDisabled}
+            >
+              {isLoading ? 'Processing...' : isOwner ? 'Delete Workspace' : 'Leave Workspace'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

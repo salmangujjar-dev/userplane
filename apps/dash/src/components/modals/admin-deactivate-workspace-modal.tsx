@@ -6,13 +6,12 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { Building2 } from 'lucide-react';
+import Logo from '@workspace/ui/components/logo';
 
 interface Workspace {
   workspaceId: string;
@@ -56,25 +55,57 @@ export function AdminDeactivateWorkspaceModal({
     }
   };
 
+  const consequences = [
+    {
+      title: 'Access Blocked',
+      description: 'All members will be prevented from accessing this workspace',
+    },
+    {
+      title: 'Projects Inaccessible',
+      description: 'All projects in this workspace will become unavailable',
+    },
+    {
+      title: 'Links Disabled',
+      description: 'All recording links will stop accepting new recordings',
+    },
+    {
+      title: 'Recordings Preserved',
+      description: 'Existing recordings and data will be preserved but inaccessible',
+    },
+    {
+      title: 'Can Be Restored',
+      description: 'The workspace can be reactivated later to restore access',
+    },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <Building2 className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <DialogTitle>Deactivate Workspace</DialogTitle>
+      <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
+        <div className="space-y-6 py-4">
+          <div className="flex items-start gap-4">
+            <Logo variant="tiled" size="md" showText={false} />
+            <div className="flex flex-col space-y-1">
+              <DialogTitle className="text-xl font-semibold">Deactivate Workspace</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Deactivate <strong>{workspace.workspaceName}</strong>
+              </DialogDescription>
             </div>
           </div>
-          <DialogDescription className="pt-2">
-            Deactivate <strong>{workspace.workspaceName}</strong>. This will prevent all members
-            from accessing projects, links, domains, and recordings in this workspace.
-          </DialogDescription>
-        </DialogHeader>
 
-        <div className="py-4 space-y-4">
+          <div className="rounded-lg bg-muted/50 p-4">
+            <div className="space-y-2.5">
+              {consequences.map((consequence) => (
+                <div key={consequence.title} className="flex gap-2">
+                  <span className="text-muted-foreground mt-0.5">•</span>
+                  <div className="space-y-0.5">
+                    <p className="font-medium text-sm">{consequence.title}</p>
+                    <p className="text-xs text-muted-foreground">{consequence.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div>
             <Label htmlFor="workspace-id-confirm" className="mb-2 block">
               Type <strong>{workspace.workspaceId}</strong> to confirm
@@ -92,18 +123,26 @@ export function AdminDeactivateWorkspaceModal({
           </div>
         </div>
 
-        <DialogFooter className="gap-3">
-          <Button type="button" onClick={() => onOpenChange(false)} disabled={isPending}>
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleConfirm}
-            disabled={!isConfirmed || isPending}
-          >
-            {isPending ? 'Deactivating...' : 'Deactivate Workspace'}
-          </Button>
+        <DialogFooter>
+          <div className="flex gap-2 w-full justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              className="rounded-full px-6"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-full px-6"
+              onClick={handleConfirm}
+              disabled={!isConfirmed || isPending}
+            >
+              {isPending ? 'Deactivating...' : 'Deactivate Workspace'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

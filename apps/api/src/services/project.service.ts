@@ -303,4 +303,12 @@ export class ProjectService {
 
     return restored;
   }
+
+  /**
+   * Count projects in workspace
+   * Returns the total number of projects (not soft-deleted) in the workspace
+   */
+  async countByWorkspace(workspaceId: string): Promise<number> {
+    return this.deps.projectRepo.countByWorkspace(workspaceId);
+  }
 }

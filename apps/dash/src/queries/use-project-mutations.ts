@@ -88,6 +88,7 @@ export function useCreateProject(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }
@@ -168,6 +169,7 @@ export function useUpdateProject(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }
@@ -240,6 +242,7 @@ export function useDeleteProject(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }

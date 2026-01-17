@@ -5,11 +5,11 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import { Button } from '@workspace/ui/components/button';
-import { AlertTriangle, Loader2, MonitorSmartphone } from 'lucide-react';
+import Logo from '@workspace/ui/components/logo';
+import { MonitorSmartphone } from 'lucide-react';
 
 interface Session {
   id: string;
@@ -51,52 +51,60 @@ export function AdminRevokeSessionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
-            Revoke Session
-          </DialogTitle>
-          <DialogDescription>
-            Are you sure you want to revoke this session? The user will be logged out immediately.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
+        <div className="space-y-6 py-4">
+          <div className="flex items-start gap-4">
+            <Logo variant="tiled" size="md" showText={false} />
+            <div className="flex flex-col space-y-1">
+              <DialogTitle className="text-xl font-semibold">Revoke Session</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                The user will be logged out immediately from this device
+              </DialogDescription>
+            </div>
+          </div>
 
-        <div className="py-4 space-y-4">
-          <div className="rounded-lg bg-muted p-4 overflow-hidden">
-            <div className="flex items-start gap-3">
-              <MonitorSmartphone className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <p className="text-sm font-medium">{session.ipAddress || 'Unknown IP'}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Expires {formatDateTime(session.expiresAt)}
+          <div className="rounded-lg bg-muted/50 p-4">
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <MonitorSmartphone className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-sm font-medium">{session.ipAddress || 'Unknown IP'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Expires {formatDateTime(session.expiresAt)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                <p className="text-sm text-red-800">
+                  <strong>Warning:</strong> This action cannot be undone. The user will need to log
+                  in again to create a new session.
                 </p>
               </div>
             </div>
           </div>
-
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <p className="text-sm text-red-800">
-              <strong>Warning:</strong> This action cannot be undone. The user will need to log in
-              again to create a new session.
-            </p>
-          </div>
         </div>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={isPending}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={isPending}>
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Revoking...
-              </>
-            ) : (
-              'Revoke Session'
-            )}
-          </Button>
+          <div className="flex gap-2 w-full justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              className="rounded-full px-6"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-full px-6"
+              onClick={onConfirm}
+              disabled={isPending}
+            >
+              {isPending ? 'Revoking...' : 'Revoke Session'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

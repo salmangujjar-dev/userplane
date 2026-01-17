@@ -38,6 +38,8 @@ import {
 } from '@/hooks/use-admin-workspace-api';
 import { SectionError } from '@/components/shared/section-error';
 import { ADMIN_WORKSPACE_PROJECTS_PAGINATION } from '@workspace/contract';
+import { AdminDeactivateProjectModal } from '@/components/modals/admin-deactivate-project-modal';
+import { AdminRestoreProjectModal } from '@/components/modals/admin-restore-project-modal';
 
 const ITEMS_PER_PAGE = ADMIN_WORKSPACE_PROJECTS_PAGINATION.DEFAULT_PER_PAGE;
 
@@ -121,17 +123,40 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
   const deactivateProjectMutation = useAdminDeactivateProject(workspaceId);
   const restoreProjectMutation = useAdminRestoreProject(workspaceId);
 
+  const [projectToDeactivate, setProjectToDeactivate] = useState<{
+    projectId: string;
+    projectTitle: string | null;
+  } | null>(null);
+  const [projectToRestore, setProjectToRestore] = useState<{
+    projectId: string;
+    projectTitle: string | null;
+  } | null>(null);
+
   const projectsData = projectsResult?.success ? projectsResult.data : null;
   const projects = projectsData?.projects ?? [];
   const total = projectsData?.total ?? 0;
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
-  const handleDeactivateProject = (projectId: string) => {
-    deactivateProjectMutation.mutate({ projectId });
+  const handleDeactivateProject = (projectId: string, projectTitle: string | null) => {
+    setProjectToDeactivate({ projectId, projectTitle });
   };
 
-  const handleRestoreProject = (projectId: string) => {
-    restoreProjectMutation.mutate({ projectId });
+  const handleRestoreProject = (projectId: string, projectTitle: string | null) => {
+    setProjectToRestore({ projectId, projectTitle });
+  };
+
+  const confirmDeactivateProject = () => {
+    if (projectToDeactivate) {
+      deactivateProjectMutation.mutate({ projectId: projectToDeactivate.projectId });
+      setProjectToDeactivate(null);
+    }
+  };
+
+  const confirmRestoreProject = () => {
+    if (projectToRestore) {
+      restoreProjectMutation.mutate({ projectId: projectToRestore.projectId });
+      setProjectToRestore(null);
+    }
   };
 
   const getSortDirectionIcon = () => {
@@ -291,7 +316,9 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
                   <DropdownMenuContent align="end">
                     {project.isDeleted ? (
                       <DropdownMenuItem
-                        onClick={() => handleRestoreProject(project.projectId)}
+                        onClick={() =>
+                          handleRestoreProject(project.projectId, project.projectTitle)
+                        }
                         disabled={restoreProjectMutation.isPending}
                       >
                         <RotateCcw className="h-4 w-4 mr-2" />
@@ -299,7 +326,9 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem
-                        onClick={() => handleDeactivateProject(project.projectId)}
+                        onClick={() =>
+                          handleDeactivateProject(project.projectId, project.projectTitle)
+                        }
                         disabled={deactivateProjectMutation.isPending}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
@@ -359,6 +388,22 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
           </Pagination>
         )}
       </div>
+
+      <AdminDeactivateProjectModal
+        open={!!projectToDeactivate}
+        onOpenChange={(open) => !open && setProjectToDeactivate(null)}
+        project={projectToDeactivate}
+        onConfirm={confirmDeactivateProject}
+        isPending={deactivateProjectMutation.isPending}
+      />
+
+      <AdminRestoreProjectModal
+        open={!!projectToRestore}
+        onOpenChange={(open) => !open && setProjectToRestore(null)}
+        project={projectToRestore}
+        onConfirm={confirmRestoreProject}
+        isPending={restoreProjectMutation.isPending}
+      />
     </div>
   );
 }
