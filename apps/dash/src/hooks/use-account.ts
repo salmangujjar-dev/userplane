@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 
 /**
  * Hook to fetch current user account information
@@ -14,7 +14,7 @@ export function useAccount() {
     queryKey: ['account'],
     queryFn: async () => {
       const [error, response] = await apiClient.account.get({});
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     staleTime: 5 * 60 * 1000,
     retry: 1,

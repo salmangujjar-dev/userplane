@@ -1,24 +1,25 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
 import type { RecordingsData } from '@/hooks/use-workspace-recordings';
+import type { DeleteResponse, QueryData, QuerySnapshot } from '@/lib/types';
 
-interface DeleteRecordingData {
-  deleted: boolean;
-}
-
-type RecordingsQueryData = SafeResult<RecordingsData>;
-type QuerySnapshot = [queryKey: readonly unknown[], data: RecordingsQueryData | undefined][];
+type RecordingsQueryData = QueryData<RecordingsData>;
 
 export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation<
-    SafeResult<DeleteRecordingData>,
+    SafeResult<DeleteResponse>,
     Error,
     string,
-    { previousQueries: QuerySnapshot }
+    { previousQueries: QuerySnapshot<RecordingsQueryData> }
   >({
     mutationFn: async (recordingId: string) => {
       if (!workspaceId || !recordingId) throw new Error('Missing workspace or recording ID');
@@ -31,9 +32,10 @@ export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?:
       await queryClient.cancelQueries({ queryKey: ['recordings', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<RecordingsQueryData>({
-        queryKey: ['recordings', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<RecordingsQueryData> =
+        queryClient.getQueriesData<RecordingsQueryData>({
+          queryKey: ['recordings', workspaceId],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<RecordingsQueryData>(
@@ -62,7 +64,7 @@ export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?:
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        handleApiError(result.error, 'Failed to delete recording');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Recording deleted successfully');
@@ -75,9 +77,7 @@ export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?:
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to delete recording');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['recordings', workspaceId] });

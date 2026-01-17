@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/client';
-import { handleQueryResult, handleSafeResult, handleApiError, type SafeResult } from '@/lib/errors';
+import { handleSafeResult, showErrorToast, type SafeResult } from '@/lib/errors';
 import type { PlanId } from '@workspace/pricing';
 import { ADMIN_WORKSPACE_PROJECTS_PAGINATION } from '@workspace/contract';
 
@@ -156,7 +156,7 @@ export function useAdminSearchWorkspaces({
           filterPlan: filterPlan || undefined,
         },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled,
     staleTime: 30 * 1000,
@@ -175,7 +175,7 @@ export function useAdminWorkspaceDetail(workspaceId: string | null, enabled = tr
       const [error, response] = await apiClient.admin.workspaces.get({
         params: { workspaceId },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 30 * 1000,
@@ -210,7 +210,7 @@ export function useAdminWorkspaceMembers({
         params: { workspaceId },
         query: { limit, offset },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 30 * 1000,
@@ -257,7 +257,7 @@ export function useAdminSearchWorkspaceProjects({
         params: { workspaceId },
         query: { search, limit, offset, sortBy, sortDirection, filterStatus },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 30 * 1000,
@@ -314,7 +314,7 @@ export function useAdminDeactivateWorkspace() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to deactivate workspace');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Workspace deactivated successfully');
@@ -386,7 +386,7 @@ export function useAdminRestoreWorkspace() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to restore workspace');
+        showErrorToast(result.error);
         return;
       }
       const { restoredProjects, restoredLinks } = result.data;
@@ -428,7 +428,7 @@ export function useAdminResetInviteToken() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to reset invite token');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Invite token reset successfully');
@@ -526,7 +526,7 @@ export function useAdminProvisionWorkspace() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to provision workspace');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Workspace provisioned successfully', {
@@ -582,7 +582,7 @@ export function useAdminCreateWorkspaceInvite() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to create workspace invite');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Workspace invite created successfully', {
@@ -621,7 +621,7 @@ export function useAdminDeactivateProject(workspaceId: string) {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to deactivate project');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Project deactivated successfully');
@@ -658,7 +658,7 @@ export function useAdminRestoreProject(workspaceId: string) {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to restore project');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Project restored successfully');

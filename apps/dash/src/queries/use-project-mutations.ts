@@ -2,20 +2,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
 import type { Project } from '@/hooks/use-workspace-projects';
-import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  isErrorCode,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
+import type { ProjectsData, QueryData, QuerySnapshot } from '@/lib/types';
 
-interface ProjectsData {
-  projects: Project[];
-  pagination: {
-    page: number;
-    perPage: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-type ProjectsQueryData = SafeResult<ProjectsData>;
-type QuerySnapshot = [queryKey: readonly unknown[], data: ProjectsQueryData | undefined][];
+type ProjectsQueryData = QueryData<ProjectsData>;
 
 export function useCreateProject(workspaceId: string | null) {
   const queryClient = useQueryClient();
@@ -33,9 +29,10 @@ export function useCreateProject(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['projects', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<ProjectsQueryData>({
-        queryKey: ['projects', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<ProjectsQueryData> =
+        queryClient.getQueriesData<ProjectsQueryData>({
+          queryKey: ['projects', workspaceId],
+        });
 
       const optimisticProject: Project = {
         projectId: `temp-${Date.now()}`,
@@ -72,7 +69,7 @@ export function useCreateProject(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        handleApiError(result.error, 'Failed to create project');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Project created successfully');
@@ -82,9 +79,7 @@ export function useCreateProject(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process project operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
@@ -118,9 +113,10 @@ export function useUpdateProject(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['projects', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<ProjectsQueryData>({
-        queryKey: ['projects', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<ProjectsQueryData> =
+        queryClient.getQueriesData<ProjectsQueryData>({
+          queryKey: ['projects', workspaceId],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<ProjectsQueryData>(
@@ -153,7 +149,7 @@ export function useUpdateProject(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        handleApiError(result.error, 'Failed to update project');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Project updated successfully');
@@ -163,9 +159,7 @@ export function useUpdateProject(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process project operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
@@ -189,9 +183,10 @@ export function useDeleteProject(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['projects', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<ProjectsQueryData>({
-        queryKey: ['projects', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<ProjectsQueryData> =
+        queryClient.getQueriesData<ProjectsQueryData>({
+          queryKey: ['projects', workspaceId],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<ProjectsQueryData>(
@@ -226,7 +221,7 @@ export function useDeleteProject(workspaceId: string | null) {
           });
           return;
         }
-        handleApiError(result.error, 'Failed to delete project');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Project deleted successfully');
@@ -236,9 +231,7 @@ export function useDeleteProject(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process project operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });

@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import { handleQueryResult, handleSafeResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 
 /**
  * Hook to validate an access request token and get request details
@@ -19,7 +19,7 @@ export function useValidateAccessRequest(token: string | null) {
       const [error, response] = await apiClient.workspace.accessRequest.validate({
         query: { token },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!token,
     retry: false,

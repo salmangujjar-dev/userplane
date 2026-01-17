@@ -1,7 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
-import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
-import { handleSafeResult, handleApiError, type SafeResult } from '@/lib/errors';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
 
 interface CreateWorkspaceInput {
   url?: string;
@@ -42,14 +46,12 @@ export function useCreateWorkspace() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to create workspace');
+        showErrorToast(result.error);
         return;
       }
     },
     onError: (error: unknown) => {
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to create workspace');
     },
   });
 }

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 
 export type WorkspaceRole = 'owner' | 'admin' | 'member';
 
@@ -63,7 +63,7 @@ export function useWorkspaceRole() {
         throw new Error('Unable to retrieve workspace membership');
       }
 
-      return handleQueryResult(error, membership);
+      return handleSafeResult(error, membership);
     },
     enabled: !!workspaceId,
     staleTime: 5 * 60 * 1000,

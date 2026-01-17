@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/client';
-import { handleQueryResult, handleSafeResult, handleApiError, type SafeResult } from '@/lib/errors';
+import { handleSafeResult, showErrorToast, type SafeResult } from '@/lib/errors';
 
 /**
  * Admin user list item
@@ -122,7 +122,7 @@ export function useAdminSearchUsers({
           filterStatus,
         },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled,
     staleTime: 30 * 1000,
@@ -141,7 +141,7 @@ export function useAdminUserDetail(userId: string | null, enabled = true) {
       const [error, response] = await apiClient.admin.users.get({
         params: { userId },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!userId,
     staleTime: 30 * 1000,
@@ -187,7 +187,7 @@ export function useAdminUserSessions({
         params: { userId },
         query: { limit, offset },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!userId,
     staleTime: 30 * 1000,
@@ -233,7 +233,7 @@ export function useAdminUserWorkspaces({
         params: { userId },
         query: { limit, offset },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!userId,
     staleTime: 30 * 1000,
@@ -307,7 +307,7 @@ export function useAdminBanUser() {
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to ban user');
+        showErrorToast(result.error);
         return;
       }
       toast.success('User banned successfully');
@@ -378,7 +378,7 @@ export function useAdminUnbanUser() {
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to unban user');
+        showErrorToast(result.error);
         return;
       }
       toast.success('User unbanned successfully');
@@ -447,7 +447,7 @@ export function useAdminRevokeSession() {
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to revoke session');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Session revoked successfully');
@@ -518,7 +518,7 @@ export function useAdminRevokeAllSessions() {
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to revoke all sessions');
+        showErrorToast(result.error);
         return;
       }
       toast.success('All sessions revoked successfully');

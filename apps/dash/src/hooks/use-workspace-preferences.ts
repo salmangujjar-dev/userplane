@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 
 export interface WorkspacePreferences {
   workspaceId: string;
@@ -34,7 +34,7 @@ export function useWorkspacePreferences() {
       const [error, response] = await apiClient.workspace.preferences.get({
         params: { workspaceId },
       });
-      return handleQueryResult(error, response?.data.preferences ?? null);
+      return handleSafeResult(error, response?.data.preferences ?? null);
     },
     enabled: !!workspaceId,
     staleTime: 5 * 60 * 1000,

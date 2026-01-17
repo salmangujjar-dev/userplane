@@ -2,8 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
 import type { Link, LinksData } from '@/hooks/use-workspace-links';
-import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
-import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
+import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
+import type { QueryData, QuerySnapshot, WorkspaceDomain } from '@/lib/types';
 
 interface CreateLinkInput {
   domainId: string;
@@ -12,8 +12,7 @@ interface CreateLinkInput {
   linkReusable: boolean;
 }
 
-type LinksQueryData = SafeResult<LinksData>;
-type QuerySnapshot = [queryKey: readonly unknown[], data: LinksQueryData | undefined][];
+type LinksQueryData = QueryData<LinksData>;
 
 export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDomain[]) {
   const queryClient = useQueryClient();
@@ -31,9 +30,10 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<LinksQueryData>({
-        queryKey: ['links', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<LinksQueryData> =
+        queryClient.getQueriesData<LinksQueryData>({
+          queryKey: ['links', workspaceId],
+        });
 
       // Find domain for optimistic data
       const domain = domains?.find((d) => d.domainId === data.domainId);
@@ -71,7 +71,7 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        handleApiError(result.error, 'Failed to create link');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Link created successfully');
@@ -81,9 +81,7 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process link operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
@@ -119,9 +117,10 @@ export function useUpdateLink(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<LinksQueryData>({
-        queryKey: ['links', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<LinksQueryData> =
+        queryClient.getQueriesData<LinksQueryData>({
+          queryKey: ['links', workspaceId],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<LinksQueryData>({ queryKey: ['links', workspaceId] }, (old) => {
@@ -151,7 +150,7 @@ export function useUpdateLink(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        handleApiError(result.error, 'Failed to update link');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Link updated successfully');
@@ -161,9 +160,7 @@ export function useUpdateLink(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process link operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
@@ -187,9 +184,10 @@ export function useDeleteLink(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<LinksQueryData>({
-        queryKey: ['links', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<LinksQueryData> =
+        queryClient.getQueriesData<LinksQueryData>({
+          queryKey: ['links', workspaceId],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<LinksQueryData>({ queryKey: ['links', workspaceId] }, (old) => {
@@ -215,7 +213,7 @@ export function useDeleteLink(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        handleApiError(result.error, 'Failed to delete link');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Link deleted successfully');
@@ -225,9 +223,7 @@ export function useDeleteLink(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process link operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });

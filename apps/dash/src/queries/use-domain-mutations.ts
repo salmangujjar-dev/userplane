@@ -1,27 +1,33 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
-import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
-import type { DomainRecordingPreferences } from '@/lib/types/domain';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  isErrorCode,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
+import type {
+  DomainRecordingPreferences,
+  DomainResponse,
+  DomainsData,
+  WorkspaceDomain,
+  QueryData,
+  QuerySnapshot,
+} from '@/lib/types';
 
-interface DomainsData {
-  domains: WorkspaceDomain[];
-  pagination: {
-    page: number;
-    perPage: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-type DomainsQueryData = SafeResult<DomainsData>;
-type QuerySnapshot = [queryKey: readonly unknown[], data: DomainsQueryData | undefined][];
+type DomainsQueryData = QueryData<DomainsData>;
 
 export function useCreateDomain(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<
+    SafeResult<DomainResponse>,
+    Error,
+    string,
+    { previousQueries: QuerySnapshot<DomainsQueryData> }
+  >({
     mutationFn: async (url: string) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.workspace.domains.add({
@@ -34,9 +40,10 @@ export function useCreateDomain(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['domains', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<DomainsQueryData>({
-        queryKey: ['domains', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<DomainsQueryData> =
+        queryClient.getQueriesData<DomainsQueryData>({
+          queryKey: ['domains', workspaceId],
+        });
 
       const optimisticDomain: WorkspaceDomain = {
         domainId: `temp-${Date.now()}`,
@@ -77,7 +84,7 @@ export function useCreateDomain(workspaceId: string | null) {
           });
           return;
         }
-        handleApiError(result.error, 'Failed to add domain');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Domain added successfully');
@@ -87,9 +94,7 @@ export function useCreateDomain(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process domain operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
@@ -101,7 +106,12 @@ export function useCreateDomain(workspaceId: string | null) {
 export function useUpdateDomain(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<
+    SafeResult<DomainResponse>,
+    Error,
+    { domainId: string; url: string },
+    { previousQueries: QuerySnapshot<DomainsQueryData> }
+  >({
     mutationFn: async ({ domainId, url }: { domainId: string; url: string }) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.workspace.domains.update({
@@ -114,9 +124,10 @@ export function useUpdateDomain(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['domains', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<DomainsQueryData>({
-        queryKey: ['domains', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<DomainsQueryData> =
+        queryClient.getQueriesData<DomainsQueryData>({
+          queryKey: ['domains', workspaceId],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<DomainsQueryData>(
@@ -143,7 +154,7 @@ export function useUpdateDomain(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        handleApiError(result.error, 'Failed to update domain');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Domain updated successfully');
@@ -153,9 +164,7 @@ export function useUpdateDomain(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process domain operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
@@ -167,7 +176,12 @@ export function useUpdateDomain(workspaceId: string | null) {
 export function useDeleteDomain(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<
+    SafeResult<{ workspaceId: string; domainId: string }>,
+    Error,
+    string,
+    { previousQueries: QuerySnapshot<DomainsQueryData> }
+  >({
     mutationFn: async (domainId: string) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.workspace.domains.delete({
@@ -179,9 +193,10 @@ export function useDeleteDomain(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['domains', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<DomainsQueryData>({
-        queryKey: ['domains', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<DomainsQueryData> =
+        queryClient.getQueriesData<DomainsQueryData>({
+          queryKey: ['domains', workspaceId],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<DomainsQueryData>(
@@ -216,7 +231,7 @@ export function useDeleteDomain(workspaceId: string | null) {
           });
           return;
         }
-        handleApiError(result.error, 'Failed to delete domain');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Domain deleted successfully');
@@ -226,9 +241,7 @@ export function useDeleteDomain(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process domain operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
@@ -243,7 +256,12 @@ export function useUpdateDomainPreferences(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<
+    SafeResult<{ workspaceId: string; domainId: string }>,
+    Error,
+    { domainId: string; settings: DomainRecordingPreferences },
+    { previousQueries: QuerySnapshot<DomainsQueryData> }
+  >({
     mutationFn: async ({
       domainId,
       settings,
@@ -268,9 +286,10 @@ export function useUpdateDomainPreferences(
       await queryClient.cancelQueries({ queryKey: ['domains', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<DomainsQueryData>({
-        queryKey: ['domains', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<DomainsQueryData> =
+        queryClient.getQueriesData<DomainsQueryData>({
+          queryKey: ['domains', workspaceId],
+        });
 
       if (onPreferencesUpdate) {
         onPreferencesUpdate(domainId, settings);
@@ -290,7 +309,7 @@ export function useUpdateDomainPreferences(
           });
           return;
         }
-        handleApiError(result.error, 'Failed to update domain settings');
+        showErrorToast(result.error);
         return;
       }
 
@@ -315,9 +334,7 @@ export function useUpdateDomainPreferences(
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process domain operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });

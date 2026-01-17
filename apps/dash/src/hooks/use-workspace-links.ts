@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import type { LinkProviderType, LinkType } from '@workspace/contract';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 import { DEFAULT_LINKS_PER_PAGE } from '@/constants/pagination';
 
 export interface LinkDomain {
@@ -138,7 +138,7 @@ export function useWorkspaceLinks(options?: {
         },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes

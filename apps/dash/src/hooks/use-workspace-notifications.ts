@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 
 /**
  * Hook to fetch notification preferences for the current workspace
@@ -22,7 +22,7 @@ export function useWorkspaceNotifications() {
       const [error, response] = await apiClient.workspace.notifications.get({
         params: { workspaceId },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId,
     staleTime: 5 * 60 * 1000,

@@ -5,7 +5,7 @@ import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
 import { useWorkspaceStore } from '@/stores/workspace';
 import type { SafeResult } from '@/lib/errors';
-import { handleSafeResult, handleApiError } from '@/lib/errors';
+import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
 
 interface SendInstructionsData {
   sentCount: number;
@@ -32,15 +32,13 @@ export function useSendDomainInstructions() {
     },
     onSuccess: (result, { emails }) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to send developer instructions');
+        showErrorToast(result.error);
         return;
       }
       toast.success(`Instructions sent to ${emails.length} email${emails.length > 1 ? 's' : ''}`);
     },
     onError: (error: unknown) => {
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to send developer instructions');
     },
   });
 }

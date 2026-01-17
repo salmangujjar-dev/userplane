@@ -1,16 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
-
-interface AccountData {
-  userName: string;
-  userEmail: string;
-}
-
-interface UpdateAccountData {
-  userName: string;
-}
+import {
+  handleSafeResult,
+  handleUnknownError,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
+import type { AccountData, UpdateAccountData } from '@/lib/types';
 
 export function useUpdateAccountName(onError?: (originalName: string) => void) {
   const queryClient = useQueryClient();
@@ -48,7 +45,7 @@ export function useUpdateAccountName(onError?: (originalName: string) => void) {
             onError(originalName);
           }
         }
-        handleApiError(result.error, 'Failed to update account name');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Account name updated successfully');
@@ -61,9 +58,7 @@ export function useUpdateAccountName(onError?: (originalName: string) => void) {
           onError(originalName);
         }
       }
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to update account name');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['account'] });

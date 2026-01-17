@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 
 export type WorkspaceInvitePolicy = 'private' | 'whitelisted' | 'protected';
 export type JoinAction = 'join' | 'request';
@@ -46,7 +46,7 @@ export function useWorkspaceSuggestions(options?: {
         query: { page, per_page: perPage },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled,
     staleTime: 5 * 60 * 1000,

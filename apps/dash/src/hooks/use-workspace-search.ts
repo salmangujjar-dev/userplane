@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-import { handleQueryResult, type SafeResult } from '@/lib/errors';
+import { handleSafeResult, type SafeResult } from '@/lib/errors';
 
 type SearchType = 'members' | 'projects' | 'domains' | 'links';
 
@@ -86,7 +86,7 @@ export function useWorkspaceSearch(options: {
         },
       });
 
-      return handleQueryResult(error, (response?.data.results as SearchResult[]) ?? null);
+      return handleSafeResult(error, (response?.data.results as SearchResult[]) ?? null);
     },
     enabled: enabled && !!workspaceId && !!query && query.trim().length > 0,
     staleTime: 30 * 1000, // 30 seconds

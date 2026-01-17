@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-import { handleQueryResult, type SafeResult } from '@/lib/errors';
+import { handleSafeResult, type SafeResult } from '@/lib/errors';
 import { DEFAULT_RECORDINGS_PER_PAGE } from '@/constants/pagination';
 
 export interface RecordingCreator {
@@ -113,7 +113,7 @@ export function useWorkspaceRecordings(options?: {
         },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes

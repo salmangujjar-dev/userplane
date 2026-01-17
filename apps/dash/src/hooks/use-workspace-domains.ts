@@ -1,14 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 import { DEFAULT_DOMAINS_PER_PAGE } from '@/constants/pagination';
-
-export interface WorkspaceDomain {
-  domainId: string;
-  domainUrl: string;
-  domainStatus: 'pending' | 'verified' | 'revoked';
-}
+import type { WorkspaceDomain } from '@/lib/types';
 
 export type DomainSortField = 'created_at' | 'domain_url';
 export type SortDirection = 'asc' | 'desc';
@@ -70,7 +65,7 @@ export function useWorkspaceDomains(options?: {
         query: { page, per_page: perPage, sort_by: sortBy, sort_direction: sortDirection },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000,

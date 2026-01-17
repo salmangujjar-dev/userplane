@@ -7,7 +7,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 
 // Query keys for cache management
 export const adminRecordingKeys = {
@@ -52,7 +52,7 @@ export function useAdminWorkspaceRecordingStats(
         query: filters ?? {},
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId,
     staleTime: 30 * 1000,
@@ -80,7 +80,7 @@ export function useAdminWorkspaceMemberRecordingStats(
         query: filters ?? {},
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId,
     staleTime: 30 * 1000,
