@@ -17,6 +17,7 @@ export const PLAN_IDS = [
   'enterprise_annual',
   'early_bird_monthly',
   'tiny_bird_monthly',
+  'sandbox',
 ] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
@@ -30,6 +31,7 @@ export const PLAN_NAME_VALUES = [
   'Early Bird',
   'Lite',
   'Trial',
+  'Sandbox',
 ] as const;
 export type PlanName = (typeof PLAN_NAME_VALUES)[number];
 
@@ -45,6 +47,7 @@ export const PLAN_NAMES: Record<PlanId, PlanName> = {
   enterprise_annual: 'Enterprise',
   early_bird_monthly: 'Early Bird',
   tiny_bird_monthly: 'Lite',
+  sandbox: 'Sandbox',
 };
 
 /**
@@ -312,6 +315,37 @@ const TINY_BIRD_FEATURES: PlanFeature[] = [
 ];
 
 /**
+ * Shared features for Sandbox plan
+ * Trial environment with limited features for testing
+ */
+const SANDBOX_FEATURES: PlanFeature[] = [
+  {
+    text: 'Limited Screen Recordings',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Try out Userplane in a sandbox environment',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Capture console & network logs',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Capture browser logs',
+        included: true,
+      },
+      {
+        text: 'Capture network activity',
+        included: true,
+      },
+    ],
+  },
+];
+
+/**
  * Shared features for Enterprise plan
  */
 const ENTERPRISE_FEATURES: PlanFeature[] = [
@@ -468,6 +502,18 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planCycle: 'monthly',
     },
     features: TINY_BIRD_FEATURES,
+  },
+  // Sandbox
+  {
+    id: 'sandbox',
+    name: 'Sandbox',
+    description: 'Trial environment for testing',
+    details: {
+      planType: 'one_time',
+      planRate: 0,
+      planCycle: 'one_time',
+    },
+    features: SANDBOX_FEATURES,
   },
 ];
 

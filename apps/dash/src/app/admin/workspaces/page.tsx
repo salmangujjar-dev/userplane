@@ -17,6 +17,8 @@ import {
   useAdminRestoreWorkspace,
   useAdminResetInviteToken,
   useAdminProvisionWorkspace,
+  useAdminCreateWorkspaceInvite,
+  type AdminWorkspaceCreateInviteResponse,
 } from '@/hooks/use-admin-workspace-api';
 import {
   searchParser,
@@ -32,10 +34,15 @@ import {
   AdminProvisionWorkspaceModal,
   AdminProvisionSuccessModal,
 } from '@/components/modals/admin-provision-workspace-modal';
+import {
+  AdminCreateWorkspaceInviteModal,
+  AdminCreateWorkspaceInviteSuccessModal,
+} from '@/components/modals/admin-create-workspace-invite-modal';
 import type { AdminProvisionWorkspaceResponse } from '@/hooks/use-admin-workspace-api';
 import { Button } from '@workspace/ui/components/button';
-import { Plus } from 'lucide-react';
+import { Plus, Link as LinkIcon } from 'lucide-react';
 import { ADMIN_WORKSPACES_PAGINATION } from '@workspace/contract';
+import type { PlanId } from '@workspace/pricing';
 
 const ITEMS_PER_PAGE = ADMIN_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE;
 
@@ -120,12 +127,16 @@ function AdminRecordingsPageContent() {
   const [provisionResult, setProvisionResult] = useState<AdminProvisionWorkspaceResponse | null>(
     null
   );
+  const [showCreateInviteModal, setShowCreateInviteModal] = useState(false);
+  const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
+  const [inviteResult, setInviteResult] = useState<AdminWorkspaceCreateInviteResponse | null>(null);
 
   // Mutations
   const deactivateMutation = useAdminDeactivateWorkspace();
   const restoreMutation = useAdminRestoreWorkspace();
   const resetTokenMutation = useAdminResetInviteToken();
   const provisionMutation = useAdminProvisionWorkspace();
+  const createInviteMutation = useAdminCreateWorkspaceInvite();
 
   // Debounce all filter changes (search, status, sort) together
   useEffect(() => {
@@ -255,7 +266,7 @@ function AdminRecordingsPageContent() {
 
   const handleProvision = (data: {
     owner: { email: string; name: string };
-    workspace: { name: string; url: string; plan: import('@workspace/pricing').PlanId };
+    workspace: { name: string; url: string; plan: PlanId };
     members: Array<{ email: string; name: string; role: 'admin' | 'member' }>;
   }) => {
     provisionMutation.mutate(data, {
@@ -264,6 +275,18 @@ function AdminRecordingsPageContent() {
         if (result.success) {
           setProvisionResult(result.data);
           setShowSuccessModal(true);
+        }
+      },
+    });
+  };
+
+  const handleCreateInvite = (data: { workspaceUrl: string; plan?: PlanId }) => {
+    createInviteMutation.mutate(data, {
+      onSuccess: (result) => {
+        setShowCreateInviteModal(false);
+        if (result.success) {
+          setInviteResult(result.data);
+          setShowInviteSuccessModal(true);
         }
       },
     });
@@ -290,10 +313,20 @@ function AdminRecordingsPageContent() {
                   <h2 className="text-lg font-semibold">Workspaces</h2>
                   <p className="text-sm text-muted-foreground mt-1">Manage userplane workspaces</p>
                 </div>
-                <Button onClick={() => setShowProvisionModal(true)} className="rounded-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Provision Workspace
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => setShowCreateInviteModal(true)}
+                    variant="outline"
+                    className="rounded-full"
+                  >
+                    <LinkIcon className="h-4 w-4 mr-2" />
+                    Create Invite
+                  </Button>
+                  <Button onClick={() => setShowProvisionModal(true)} className="rounded-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Provision Workspace
+                  </Button>
+                </div>
               </div>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
                 <div className="relative w-80">
@@ -425,6 +458,19 @@ function AdminRecordingsPageContent() {
         open={showSuccessModal}
         onOpenChange={setShowSuccessModal}
         result={provisionResult}
+      />
+
+      <AdminCreateWorkspaceInviteModal
+        open={showCreateInviteModal}
+        onOpenChange={setShowCreateInviteModal}
+        onSubmit={handleCreateInvite}
+        isPending={createInviteMutation.isPending}
+      />
+
+      <AdminCreateWorkspaceInviteSuccessModal
+        open={showInviteSuccessModal}
+        onOpenChange={setShowInviteSuccessModal}
+        result={inviteResult}
       />
     </div>
   );

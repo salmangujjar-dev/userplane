@@ -543,6 +543,60 @@ export function useAdminProvisionWorkspace() {
   });
 }
 
+/**
+ * Workspace create invite response
+ */
+export interface AdminWorkspaceCreateInviteResponse {
+  inviteUrl: string;
+  workspaceId: string;
+  workspaceUrl: string;
+  workspacePlan: PlanId;
+}
+
+/**
+ * Workspace create invite input
+ */
+interface AdminWorkspaceCreateInviteInput {
+  workspaceUrl: string;
+  plan?: PlanId;
+}
+
+/**
+ * Hook for creating a workspace invite URL (admin only)
+ * Generates invite URL with predetermined workspace details
+ */
+export function useAdminCreateWorkspaceInvite() {
+  return useMutation<
+    SafeResult<AdminWorkspaceCreateInviteResponse>,
+    Error,
+    AdminWorkspaceCreateInviteInput
+  >({
+    mutationFn: async (input) => {
+      const [error, response] = await apiClient.admin.workspace.createInvite({
+        body: {
+          workspaceUrl: input.workspaceUrl,
+          plan: input.plan,
+        },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        handleApiError(result.error, 'Failed to create workspace invite');
+        return;
+      }
+      toast.success('Workspace invite created successfully', {
+        description: 'Invite URL has been generated',
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error('Failed to create workspace invite', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    },
+  });
+}
+
 // ============================================
 // ADMIN PROJECT MANAGEMENT
 // ============================================

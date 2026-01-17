@@ -4,26 +4,38 @@ import { apiClient } from '@/client';
 import { handleSafeResult, handleApiError, type SafeResult } from '@/lib/errors';
 
 interface CreateWorkspaceInput {
-  url: string;
+  url?: string;
+  inviteToken?: string;
 }
 
 interface CreateWorkspaceData {
-  workspaceId: string;
+  created: boolean;
+  workspaceId?: string;
+  workspaceName?: string;
 }
 
 /**
  * Hook to create a new workspace
+ * Supports both manual URL input and invite token flows
  * Handles API call, loading states, and error handling
  */
 export function useCreateWorkspace() {
   return useMutation<SafeResult<CreateWorkspaceData>, Error, CreateWorkspaceInput>({
     mutationFn: async (input: CreateWorkspaceInput) => {
-      const fullUrl = input.url.startsWith('http') ? input.url : `https://${input.url}`;
+      // For invite token flow, url is optional (comes from token)
+      // For manual flow, url is required
+      const body: { url?: string; inviteToken?: string } = {};
+
+      if (input.inviteToken) {
+        body.inviteToken = input.inviteToken;
+      }
+
+      if (input.url) {
+        body.url = input.url.startsWith('http') ? input.url : `https://${input.url}`;
+      }
 
       const [error, response] = await apiClient.provisioner.createWorkspace({
-        body: {
-          url: fullUrl,
-        },
+        body,
       });
 
       return handleSafeResult(error, response?.data ?? null);
@@ -35,7 +47,6 @@ export function useCreateWorkspace() {
       }
     },
     onError: (error: unknown) => {
-      // Only unknown errors reach here (will trigger Sentry)
       toast.error('An unexpected error occurred', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
