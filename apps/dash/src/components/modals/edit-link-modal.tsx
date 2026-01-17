@@ -30,7 +30,7 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { LinkReferenceInput } from '@/components/link-reference-input';
-import { optionalUrlSchema } from '@/lib/validations';
+import { URLSchema } from '@workspace/contract';
 
 interface EditLinkModalProps {
   open: boolean;
@@ -62,7 +62,7 @@ const LINK_PROVIDERS = [
 
 const editLinkFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
-  reference: optionalUrlSchema,
+  reference: URLSchema.optional(),
   linkProvider: z.string().optional(),
   providerId: z.string().optional(),
   isReusable: z.boolean(),

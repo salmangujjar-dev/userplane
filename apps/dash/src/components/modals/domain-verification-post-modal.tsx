@@ -12,10 +12,8 @@ import {
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
-import {
-  DomainRecordingSettings,
-  type DomainSettings,
-} from '@/components/domains/domain-recording-settings';
+import { DomainRecordingSettings } from '@/components/domains/domain-recording-settings';
+import type { DomainRecordingPreferences } from '@/lib/types/domain';
 
 interface DomainVerificationPostModalProps {
   open: boolean;
@@ -24,8 +22,8 @@ interface DomainVerificationPostModalProps {
   workspaceId: string;
   onReverify?: () => void;
   verified?: boolean;
-  settings: DomainSettings;
-  onSaveSettings: (settings: DomainSettings) => void;
+  settings: DomainRecordingPreferences;
+  onSaveSettings: (settings: DomainRecordingPreferences) => void;
   loadingSettings?: boolean;
 }
 
@@ -40,7 +38,7 @@ export function DomainVerificationPostModal({
   onSaveSettings,
   loadingSettings = false,
 }: DomainVerificationPostModalProps) {
-  const [localSettings, setLocalSettings] = useState<DomainSettings>(settings);
+  const [localSettings, setLocalSettings] = useState<DomainRecordingPreferences>(settings);
   const [showSettings, setShowSettings] = useState(false);
 
   // Sync local settings when props change
@@ -52,11 +50,11 @@ export function DomainVerificationPostModal({
 
   const hasChanges = useMemo(() => {
     return (
-      localSettings.hideSensitiveFields !== settings.hideSensitiveFields ||
-      localSettings.captureConsoleLogs !== settings.captureConsoleLogs ||
-      localSettings.captureClientActions !== settings.captureClientActions ||
-      localSettings.captureNetworkLogs !== settings.captureNetworkLogs ||
-      localSettings.captureBackendServerLogs !== settings.captureBackendServerLogs
+      localSettings.recordingHideSensitive !== settings.recordingHideSensitive ||
+      localSettings.recordingCaptureClientLog !== settings.recordingCaptureClientLog ||
+      localSettings.recordingCaptureClientAction !== settings.recordingCaptureClientAction ||
+      localSettings.recordingCaptureNetworkLog !== settings.recordingCaptureNetworkLog ||
+      localSettings.recordingCaptureServerLog !== settings.recordingCaptureServerLog
     );
   }, [localSettings, settings]);
 

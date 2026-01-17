@@ -18,10 +18,10 @@ import { useAccount } from '@/hooks/use-account';
 import { useAuth } from '@/hooks/use-auth';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
-import { domainUrlSchema } from '@/lib/validations';
+import { DomainUrlSchema } from '@workspace/contract';
 
 const workspaceFormSchema = z.object({
-  workspace: domainUrlSchema,
+  workspace: DomainUrlSchema,
 });
 
 export default function CreateWorkspacePage() {

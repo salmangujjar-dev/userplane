@@ -6,10 +6,9 @@ import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspaceId } from '@/stores/workspace';
 import { useDomainStatusPolling } from './use-domain-status-polling';
 import {
-  type DomainSettings,
+  type DomainRecordingPreferences,
   type DomainIdentifier,
-  DEFAULT_DOMAIN_SETTINGS,
-  transformApiPreferencesToSettings,
+  DEFAULT_DOMAIN_RECORDING_PREFERENCES,
 } from '@/lib/types/domain';
 
 // Verification step types
@@ -20,16 +19,16 @@ interface VerificationState {
   domain: DomainIdentifier | null;
   step: VerificationStep;
   success: boolean;
-  settings: DomainSettings;
+  settings: DomainRecordingPreferences;
 }
 
 // Action types
 type VerificationAction =
   | { type: 'START_VERIFICATION'; payload: DomainIdentifier }
   | { type: 'SET_STEP'; payload: VerificationStep }
-  | { type: 'VERIFICATION_SUCCESS'; payload: DomainSettings }
+  | { type: 'VERIFICATION_SUCCESS'; payload: DomainRecordingPreferences }
   | { type: 'VERIFICATION_FAILED' }
-  | { type: 'UPDATE_SETTINGS'; payload: DomainSettings }
+  | { type: 'UPDATE_SETTINGS'; payload: DomainRecordingPreferences }
   | { type: 'RESET' };
 
 // Initial state
@@ -37,7 +36,7 @@ const initialState: VerificationState = {
   domain: null,
   step: null,
   success: true,
-  settings: { ...DEFAULT_DOMAIN_SETTINGS },
+  settings: { ...DEFAULT_DOMAIN_RECORDING_PREFERENCES },
 };
 
 // Reducer function
@@ -88,7 +87,7 @@ interface UseVerificationFlowReturn {
   startVerification: (domain: DomainIdentifier) => void;
   beginVerifying: () => Promise<void>;
   reverify: () => void;
-  updateSettings: (settings: DomainSettings) => void;
+  updateSettings: (settings: DomainRecordingPreferences) => void;
   closeModals: () => void;
 }
 
@@ -147,7 +146,7 @@ export function useVerificationFlow(): UseVerificationFlowReturn {
     dispatch({ type: 'SET_STEP', payload: 'pre' });
   }, [stopPolling]);
 
-  const updateSettings = useCallback((settings: DomainSettings) => {
+  const updateSettings = useCallback((settings: DomainRecordingPreferences) => {
     dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
   }, []);
 
@@ -173,18 +172,18 @@ export function useFetchDomainSettings() {
   const workspaceId = useWorkspaceId();
 
   const fetchSettings = useCallback(
-    async (domainId: string): Promise<DomainSettings> => {
-      if (!workspaceId) return DEFAULT_DOMAIN_SETTINGS;
+    async (domainId: string): Promise<DomainRecordingPreferences> => {
+      if (!workspaceId) return DEFAULT_DOMAIN_RECORDING_PREFERENCES;
 
       try {
         const [error, response] = await apiClient.workspace.domains.preferences.get({
           params: { workspaceId, domainId },
         });
 
-        if (error) return DEFAULT_DOMAIN_SETTINGS;
-        return transformApiPreferencesToSettings(response.data);
+        if (error) return DEFAULT_DOMAIN_RECORDING_PREFERENCES;
+        return response.data;
       } catch {
-        return DEFAULT_DOMAIN_SETTINGS;
+        return DEFAULT_DOMAIN_RECORDING_PREFERENCES;
       }
     },
     [workspaceId]

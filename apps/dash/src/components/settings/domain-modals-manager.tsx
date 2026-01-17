@@ -11,10 +11,10 @@ import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation
 import { useSendDomainInstructions } from '@/hooks/use-domain-instructions';
 import type { VerificationStep } from '@/hooks/use-verification-flow';
 import {
-  type DomainSettings,
+  type DomainRecordingPreferences,
   type DomainIdentifier,
   type ConfiguringDomain,
-  DEFAULT_DOMAIN_SETTINGS,
+  DEFAULT_DOMAIN_RECORDING_PREFERENCES,
 } from '@/lib/types/domain';
 
 interface DomainModalsManagerProps {
@@ -24,11 +24,11 @@ interface DomainModalsManagerProps {
   verifyingDomain: DomainIdentifier | null;
   verificationStep: VerificationStep;
   verificationSuccess: boolean;
-  verifyingDomainSettings: DomainSettings;
+  verifyingDomainSettings: DomainRecordingPreferences;
   onCloseVerification: () => void;
   onStartVerification: () => Promise<void>;
   onReverify: () => void;
-  onSaveVerificationSettings: (settings: DomainSettings) => void;
+  onSaveVerificationSettings: (settings: DomainRecordingPreferences) => void;
   verificationSettingsLoading: boolean;
 
   // Create modal
@@ -37,8 +37,8 @@ interface DomainModalsManagerProps {
   onCreateDomain: (url: string) => Promise<{ domainId: string; domainUrl: string } | null>;
   onCreateModalStartVerification: (domainId: string) => Promise<string | null>;
   onCreateModalPollVerification: (domainId: string) => Promise<boolean>;
-  onCreateModalFetchSettings: (domainId: string) => Promise<DomainSettings>;
-  onCreateModalSaveSettings: (domainId: string, settings: DomainSettings) => void;
+  onCreateModalFetchSettings: (domainId: string) => Promise<DomainRecordingPreferences>;
+  onCreateModalSaveSettings: (domainId: string, settings: DomainRecordingPreferences) => void;
   createLoading: boolean;
   savingSettings: boolean;
 
@@ -52,7 +52,7 @@ interface DomainModalsManagerProps {
   // Configure modal
   configuringDomain: ConfiguringDomain | null;
   onCloseConfigureModal: (open: boolean) => void;
-  onSaveConfigureSettings: (settings: DomainSettings) => void;
+  onSaveConfigureSettings: (settings: DomainRecordingPreferences) => void;
   onVerifyFromConfigure: () => void;
   onSendInstructionsFromConfigure: () => void;
   configureLoading: boolean;
@@ -197,7 +197,7 @@ export function DomainModalsManager({
         domainUrl={configuringDomain?.url || ''}
         domainId={configuringDomain?.domainId || ''}
         verified={configuringDomain?.status === 'verified'}
-        settings={configuringDomain?.settings || DEFAULT_DOMAIN_SETTINGS}
+        settings={configuringDomain?.settings || DEFAULT_DOMAIN_RECORDING_PREFERENCES}
         onSave={onSaveConfigureSettings}
         onVerify={onVerifyFromConfigure}
         onSendInstructions={onSendInstructionsFromConfigure}

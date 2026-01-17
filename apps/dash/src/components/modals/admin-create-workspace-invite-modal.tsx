@@ -23,11 +23,10 @@ import {
 import Logo from '@workspace/ui/components/logo';
 import { LinkIcon, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { URLInput } from '@/components/url-input';
-import { PLAN_OPTIONS } from './hooks/use-provision-form';
+import { PLAN_OPTIONS } from '@/hooks/use-provision-form';
 import type { AdminWorkspaceCreateInviteResponse } from '@/hooks/use-admin-workspace-api';
 import { toast } from '@workspace/ui/components/sonner';
-import { domainUrlSchema } from '@/lib/validations';
-
+import { DomainUrlSchema } from '@workspace/contract';
 import type { PlanId } from '@workspace/pricing';
 
 interface AdminCreateWorkspaceInviteModalProps {
@@ -44,7 +43,7 @@ interface AdminCreateWorkspaceInviteSuccessModalProps {
 }
 
 const createWorkspaceInviteFormSchema = z.object({
-  workspaceUrl: domainUrlSchema,
+  workspaceUrl: DomainUrlSchema,
   plan: z.string() as z.ZodType<PlanId>,
 });
 

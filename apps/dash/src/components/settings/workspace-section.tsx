@@ -16,14 +16,14 @@ import { WorkspaceSectionSkeleton } from '@/components/skeleton';
 import { useWorkspaceBillingEmail } from '@/hooks/use-workspace-billing-email';
 import { useUpdateWorkspaceBillingEmail } from '@/queries/use-workspace-billing-email-mutations';
 import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
-import { workspaceNameSchema, billingEmailSchema } from '@/lib/validations';
+import { WorkspaceNameSchema, FormEmailSchema } from '@workspace/contract';
 
 const workspaceNameFormSchema = z.object({
-  name: workspaceNameSchema,
+  name: WorkspaceNameSchema,
 });
 
 const billingEmailFormSchema = z.object({
-  email: billingEmailSchema,
+  email: FormEmailSchema,
 });
 
 export function WorkspaceSection() {

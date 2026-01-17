@@ -20,3 +20,5 @@ export {
 } from './use-verification-flow';
 export { useDomainSectionState } from './use-domain-section-state';
 export { useWorkspaceResourceCounts } from './use-workspace-resource-counts';
+export { useProvisionForm, PLAN_OPTIONS } from './use-provision-form';
+export type { ProvisionFormData, ProvisionFormMember } from './use-provision-form';

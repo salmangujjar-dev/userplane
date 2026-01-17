@@ -3,7 +3,7 @@ import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
 import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
 import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
-import { type DomainSettings, transformApiPreferencesToSettings } from '@/lib/types/domain';
+import type { DomainRecordingPreferences } from '@/lib/types/domain';
 
 interface DomainsData {
   domains: WorkspaceDomain[];
@@ -239,26 +239,32 @@ export function useDeleteDomain(workspaceId: string | null) {
 
 export function useUpdateDomainPreferences(
   workspaceId: string | null,
-  onPreferencesUpdate?: (domainId: string, settings: DomainSettings) => void
+  onPreferencesUpdate?: (domainId: string, settings: DomainRecordingPreferences) => void
 ) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ domainId, settings }: { domainId: string; settings: DomainSettings }) => {
+    mutationFn: async ({
+      domainId,
+      settings,
+    }: {
+      domainId: string;
+      settings: DomainRecordingPreferences;
+    }) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.workspace.domains.preferences.update({
         params: { workspaceId, domainId },
-        body: {
-          recordingHideSensitive: settings.hideSensitiveFields,
-          recordingCaptureClientLog: settings.captureConsoleLogs,
-          recordingCaptureClientAction: settings.captureClientActions,
-          recordingCaptureNetworkLog: settings.captureNetworkLogs,
-          recordingCaptureServerLog: settings.captureBackendServerLogs,
-        },
+        body: settings,
       });
       return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async ({ domainId, settings }: { domainId: string; settings: DomainSettings }) => {
+    onMutate: async ({
+      domainId,
+      settings,
+    }: {
+      domainId: string;
+      settings: DomainRecordingPreferences;
+    }) => {
       await queryClient.cancelQueries({ queryKey: ['domains', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
@@ -297,8 +303,7 @@ export function useUpdateDomainPreferences(
           });
 
           if (!error && onPreferencesUpdate) {
-            const updatedSettings = transformApiPreferencesToSettings(response.data);
-            onPreferencesUpdate(variables.domainId, updatedSettings);
+            onPreferencesUpdate(variables.domainId, response.data);
           }
         } catch {
           // Ignore refetch errors

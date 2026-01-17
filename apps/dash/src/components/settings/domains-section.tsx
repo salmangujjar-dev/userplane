@@ -29,9 +29,8 @@ import { useDomainSectionState } from '@/hooks/use-domain-section-state';
 import { useDomainStatusPolling } from '@/hooks/use-domain-status-polling';
 import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import {
-  type DomainSettings,
-  DEFAULT_DOMAIN_SETTINGS,
-  transformApiPreferencesToSettings,
+  type DomainRecordingPreferences,
+  DEFAULT_DOMAIN_RECORDING_PREFERENCES,
 } from '@/lib/types/domain';
 import { DOMAIN_PAGINATION } from '@workspace/contract';
 
@@ -164,23 +163,23 @@ export function DomainsSection() {
   );
 
   const handleCreateModalFetchSettings = useCallback(
-    async (domainId: string): Promise<DomainSettings> => {
-      if (!workspaceId) return DEFAULT_DOMAIN_SETTINGS;
+    async (domainId: string): Promise<DomainRecordingPreferences> => {
+      if (!workspaceId) return DEFAULT_DOMAIN_RECORDING_PREFERENCES;
       try {
         const [error, response] = await apiClient.workspace.domains.preferences.get({
           params: { workspaceId, domainId },
         });
-        if (error) return DEFAULT_DOMAIN_SETTINGS;
-        return transformApiPreferencesToSettings(response.data);
+        if (error) return DEFAULT_DOMAIN_RECORDING_PREFERENCES;
+        return response.data;
       } catch {
-        return DEFAULT_DOMAIN_SETTINGS;
+        return DEFAULT_DOMAIN_RECORDING_PREFERENCES;
       }
     },
     [workspaceId]
   );
 
   const handleCreateModalSaveSettings = useCallback(
-    (domainId: string, settings: DomainSettings) => {
+    (domainId: string, settings: DomainRecordingPreferences) => {
       updateDomainPreferencesMutation.mutate({ domainId, settings });
     },
     [updateDomainPreferencesMutation]
@@ -223,7 +222,7 @@ export function DomainsSection() {
   }, [stopPolling, actions]);
 
   const handleSaveVerificationSettings = useCallback(
-    (settings: DomainSettings) => {
+    (settings: DomainRecordingPreferences) => {
       if (!state.verifyingDomain) return;
       updateDomainPreferencesMutation.mutate({
         domainId: state.verifyingDomain.id,
@@ -247,7 +246,7 @@ export function DomainsSection() {
 
   // ========== Configure Domain Handlers ==========
   const handleSaveConfigureSettings = useCallback(
-    (settings: DomainSettings) => {
+    (settings: DomainRecordingPreferences) => {
       if (!state.configuringDomain) return;
       updateDomainPreferencesMutation.mutate({
         domainId: state.configuringDomain.domainId,

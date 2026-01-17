@@ -12,10 +12,10 @@ import { useAccount } from '@/hooks/use-account';
 import { useUpdateAccountName } from '@/queries/use-account-mutations';
 import { SectionError } from '@/components/shared/section-error';
 import { AccountSettingsSectionSkeleton } from '@/components/skeleton';
-import { accountNameSchema } from '@/lib/validations';
+import { AccountNameSchema } from '@workspace/contract';
 
 const accountNameFormSchema = z.object({
-  name: accountNameSchema,
+  name: AccountNameSchema,
 });
 
 export function AccountSettingsSection() {

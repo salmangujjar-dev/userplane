@@ -1,17 +1,10 @@
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
-
-export interface DomainSettings {
-  hideSensitiveFields: boolean;
-  captureConsoleLogs: boolean;
-  captureClientActions: boolean;
-  captureNetworkLogs: boolean;
-  captureBackendServerLogs: boolean;
-}
+import type { DomainRecordingPreferences } from '@/lib/types/domain';
 
 interface DomainRecordingSettingsProps {
-  settings: DomainSettings;
-  onSettingsChange: (settings: DomainSettings) => void;
+  settings: DomainRecordingPreferences;
+  onSettingsChange: (settings: DomainRecordingPreferences) => void;
   disabled?: boolean;
   idPrefix?: string;
 }
@@ -22,7 +15,10 @@ export function DomainRecordingSettings({
   disabled = false,
   idPrefix = 'domain',
 }: DomainRecordingSettingsProps) {
-  const updateSetting = <K extends keyof DomainSettings>(key: K, value: DomainSettings[K]) => {
+  const updateSetting = <K extends keyof DomainRecordingPreferences>(
+    key: K,
+    value: DomainRecordingPreferences[K]
+  ) => {
     onSettingsChange({ ...settings, [key]: value });
   };
 
@@ -40,8 +36,8 @@ export function DomainRecordingSettings({
           </Label>
           <Switch
             id={`${idPrefix}-hide-sensitive`}
-            checked={settings.hideSensitiveFields}
-            onCheckedChange={(checked) => updateSetting('hideSensitiveFields', checked)}
+            checked={settings.recordingHideSensitive}
+            onCheckedChange={(checked) => updateSetting('recordingHideSensitive', checked)}
             disabled={disabled}
           />
         </div>
@@ -55,8 +51,8 @@ export function DomainRecordingSettings({
           </Label>
           <Switch
             id={`${idPrefix}-console-logs`}
-            checked={settings.captureConsoleLogs}
-            onCheckedChange={(checked) => updateSetting('captureConsoleLogs', checked)}
+            checked={settings.recordingCaptureClientLog}
+            onCheckedChange={(checked) => updateSetting('recordingCaptureClientLog', checked)}
             disabled={disabled}
           />
         </div>
@@ -70,8 +66,8 @@ export function DomainRecordingSettings({
           </Label>
           <Switch
             id={`${idPrefix}-client-actions`}
-            checked={settings.captureClientActions}
-            onCheckedChange={(checked) => updateSetting('captureClientActions', checked)}
+            checked={settings.recordingCaptureClientAction}
+            onCheckedChange={(checked) => updateSetting('recordingCaptureClientAction', checked)}
             disabled={disabled}
           />
         </div>
@@ -85,8 +81,8 @@ export function DomainRecordingSettings({
           </Label>
           <Switch
             id={`${idPrefix}-network-logs`}
-            checked={settings.captureNetworkLogs}
-            onCheckedChange={(checked) => updateSetting('captureNetworkLogs', checked)}
+            checked={settings.recordingCaptureNetworkLog}
+            onCheckedChange={(checked) => updateSetting('recordingCaptureNetworkLog', checked)}
             disabled={disabled}
           />
         </div>
@@ -100,8 +96,8 @@ export function DomainRecordingSettings({
           </Label>
           <Switch
             id={`${idPrefix}-backend-server`}
-            checked={settings.captureBackendServerLogs}
-            onCheckedChange={(checked) => updateSetting('captureBackendServerLogs', checked)}
+            checked={settings.recordingCaptureServerLog}
+            onCheckedChange={(checked) => updateSetting('recordingCaptureServerLog', checked)}
             disabled={disabled}
           />
         </div>

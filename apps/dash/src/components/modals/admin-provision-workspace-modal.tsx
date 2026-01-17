@@ -23,29 +23,39 @@ import {
 } from '@workspace/ui/components/select';
 import Logo from '@workspace/ui/components/logo';
 import { Plus, Trash2, UserPlus } from 'lucide-react';
-import type { PlanId } from '@workspace/pricing';
 import { URLInput } from '@/components/url-input';
-import { provisionWorkspaceSchema } from '@/lib/validations';
+import {
+  FormEmailSchema,
+  AccountNameSchema,
+  WorkspaceNameSchema,
+  FormURLSchema,
+} from '@workspace/contract';
 import { AdminProvisionSuccessModal, ProvisionResult } from './admin-provision-success-modal';
+import { PLAN_OPTIONS, type ProvisionFormMember } from '@/hooks/use-provision-form';
+import type { PlanId } from '@workspace/pricing';
+
+const provisionMemberSchema = z.object({
+  email: FormEmailSchema,
+  name: AccountNameSchema,
+  role: z.enum(['admin', 'member'], {
+    errorMap: () => ({ message: 'Please select a valid role' }),
+  }),
+});
+
+const provisionWorkspaceSchema = z.object({
+  owner: z.object({
+    email: FormEmailSchema,
+    name: AccountNameSchema,
+  }),
+  workspace: z.object({
+    name: WorkspaceNameSchema,
+    url: FormURLSchema,
+    plan: z.string().min(1, 'Please select a plan') as z.ZodType<PlanId>,
+  }),
+  members: z.array(provisionMemberSchema),
+});
 
 type ProvisionWorkspaceFormData = z.infer<typeof provisionWorkspaceSchema>;
-
-export type Member = {
-  email: string;
-  name: string;
-  role: 'admin' | 'member';
-};
-
-export const PLAN_OPTIONS: Array<{ value: PlanId; label: string }> = [
-  { value: 'early_bird_monthly', label: 'Early Bird Monthly' },
-  { value: 'tiny_bird_monthly', label: 'Tiny Bird Monthly' },
-  { value: 'starter_monthly', label: 'Starter Monthly' },
-  { value: 'starter_annual', label: 'Starter Annual' },
-  { value: 'scale_up_monthly', label: 'Scale Up Monthly' },
-  { value: 'scale_up_annual', label: 'Scale Up Annual' },
-  { value: 'enterprise_monthly', label: 'Enterprise Monthly' },
-  { value: 'enterprise_annual', label: 'Enterprise Annual' },
-];
 
 interface AdminProvisionWorkspaceModalProps {
   open: boolean;
