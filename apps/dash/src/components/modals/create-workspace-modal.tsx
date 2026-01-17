@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import { Building2 } from 'lucide-react';
-import { workspaceNameSchema } from '@/lib/validations';
+import { WorkspaceNameSchema } from '@workspace/contract';
 
 interface CreateWorkspaceModalProps {
   open: boolean;
@@ -24,7 +24,7 @@ interface CreateWorkspaceModalProps {
 }
 
 const createWorkspaceFormSchema = z.object({
-  name: workspaceNameSchema,
+  name: WorkspaceNameSchema,
 });
 
 export function CreateWorkspaceModal({

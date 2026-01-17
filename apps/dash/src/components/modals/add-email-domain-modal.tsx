@@ -15,7 +15,7 @@ import {
 } from '@workspace/ui/components/dialog';
 import { Label } from '@workspace/ui/components/label';
 import { DomainInput } from '@/components/domain-input';
-import { emailDomainSchema } from '@/lib/validations';
+import { EmailDomainSchema } from '@workspace/contract';
 
 interface AddEmailDomainModalProps {
   open: boolean;
@@ -31,7 +31,7 @@ export function AddEmailDomainModal({
   existingDomains,
 }: AddEmailDomainModalProps) {
   const addEmailDomainFormSchema = z.object({
-    domain: emailDomainSchema.refine((domain) => !existingDomains.includes(domain.toLowerCase()), {
+    domain: EmailDomainSchema.refine((domain) => !existingDomains.includes(domain.toLowerCase()), {
       message: 'This domain has already been added',
     }),
   });

@@ -6,14 +6,13 @@ import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
 import { useWorkspaceId } from '@/stores/workspace';
 import {
-  type DomainSettings,
-  DEFAULT_DOMAIN_SETTINGS,
-  transformApiPreferencesToSettings,
+  type DomainRecordingPreferences,
+  DEFAULT_DOMAIN_RECORDING_PREFERENCES,
 } from '@/lib/types/domain';
 
 interface PollingResult {
   verified: boolean;
-  settings: DomainSettings;
+  settings: DomainRecordingPreferences;
 }
 
 interface UseDomainStatusPollingOptions {
@@ -55,18 +54,18 @@ export function useDomainStatusPolling(
   }, []);
 
   const fetchSettings = useCallback(
-    async (domainId: string): Promise<DomainSettings> => {
-      if (!workspaceId) return DEFAULT_DOMAIN_SETTINGS;
+    async (domainId: string): Promise<DomainRecordingPreferences> => {
+      if (!workspaceId) return DEFAULT_DOMAIN_RECORDING_PREFERENCES;
 
       try {
         const [error, response] = await apiClient.workspace.domains.preferences.get({
           params: { workspaceId, domainId },
         });
 
-        if (error || !response) return DEFAULT_DOMAIN_SETTINGS;
-        return transformApiPreferencesToSettings(response.data);
+        if (error || !response) return DEFAULT_DOMAIN_RECORDING_PREFERENCES;
+        return response.data;
       } catch {
-        return DEFAULT_DOMAIN_SETTINGS;
+        return DEFAULT_DOMAIN_RECORDING_PREFERENCES;
       }
     },
     [workspaceId]

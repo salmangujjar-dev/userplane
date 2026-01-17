@@ -5,12 +5,11 @@ import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
 import { useWorkspaceId } from '@/stores/workspace';
 import {
-  type DomainSettings,
+  type DomainRecordingPreferences,
   type DomainIdentifier,
   type ConfiguringDomain,
   type DomainStatus,
-  DEFAULT_DOMAIN_SETTINGS,
-  transformApiPreferencesToSettings,
+  DEFAULT_DOMAIN_RECORDING_PREFERENCES,
 } from '@/lib/types/domain';
 import type { VerificationStep } from './use-verification-flow';
 
@@ -23,7 +22,7 @@ interface DomainSectionState {
   verifyingDomain: DomainIdentifier | null;
   verificationStep: VerificationStep;
   verificationSuccess: boolean;
-  verifyingDomainSettings: DomainSettings;
+  verifyingDomainSettings: DomainRecordingPreferences;
 
   // Edit modal
   editingDomain: DomainIdentifier | null;
@@ -50,9 +49,9 @@ type DomainSectionAction =
   // Verification flow actions
   | { type: 'START_VERIFY'; payload: DomainIdentifier }
   | { type: 'SET_VERIFICATION_STEP'; payload: VerificationStep }
-  | { type: 'VERIFICATION_SUCCESS'; payload: DomainSettings }
+  | { type: 'VERIFICATION_SUCCESS'; payload: DomainRecordingPreferences }
   | { type: 'VERIFICATION_FAILED' }
-  | { type: 'UPDATE_VERIFYING_SETTINGS'; payload: DomainSettings }
+  | { type: 'UPDATE_VERIFYING_SETTINGS'; payload: DomainRecordingPreferences }
   | { type: 'CLOSE_VERIFICATION' }
   | { type: 'REVERIFY' }
 
@@ -63,7 +62,7 @@ type DomainSectionAction =
   // Configure modal actions
   | { type: 'START_CONFIGURE'; payload: string }
   | { type: 'SET_CONFIGURING_DOMAIN'; payload: ConfiguringDomain }
-  | { type: 'UPDATE_CONFIGURE_SETTINGS'; payload: DomainSettings }
+  | { type: 'UPDATE_CONFIGURE_SETTINGS'; payload: DomainRecordingPreferences }
   | { type: 'CLOSE_CONFIGURE_MODAL' }
   | { type: 'CONFIGURE_LOADING_DONE' }
 
@@ -81,7 +80,7 @@ const initialState: DomainSectionState = {
   verifyingDomain: null,
   verificationStep: null,
   verificationSuccess: true,
-  verifyingDomainSettings: { ...DEFAULT_DOMAIN_SETTINGS },
+  verifyingDomainSettings: { ...DEFAULT_DOMAIN_RECORDING_PREFERENCES },
   editingDomain: null,
   isEditModalOpen: false,
   configuringDomain: null,
@@ -133,7 +132,7 @@ function domainSectionReducer(
         verifyingDomain: null,
         verificationStep: null,
         verificationSuccess: true,
-        verifyingDomainSettings: { ...DEFAULT_DOMAIN_SETTINGS },
+        verifyingDomainSettings: { ...DEFAULT_DOMAIN_RECORDING_PREFERENCES },
       };
     case 'REVERIFY':
       return { ...state, verificationStep: 'pre' };
@@ -195,12 +194,13 @@ export function useDomainSectionState() {
     []
   );
   const setVerificationSuccess = useCallback(
-    (settings: DomainSettings) => dispatch({ type: 'VERIFICATION_SUCCESS', payload: settings }),
+    (settings: DomainRecordingPreferences) =>
+      dispatch({ type: 'VERIFICATION_SUCCESS', payload: settings }),
     []
   );
   const setVerificationFailed = useCallback(() => dispatch({ type: 'VERIFICATION_FAILED' }), []);
   const updateVerifyingSettings = useCallback(
-    (settings: DomainSettings) =>
+    (settings: DomainRecordingPreferences) =>
       dispatch({ type: 'UPDATE_VERIFYING_SETTINGS', payload: settings }),
     []
   );
@@ -228,24 +228,28 @@ export function useDomainSectionState() {
 
         if (error) throw error;
 
-        const settings = transformApiPreferencesToSettings(response.data);
         dispatch({
           type: 'SET_CONFIGURING_DOMAIN',
-          payload: { domainId, url: domainUrl, status, settings },
+          payload: { domainId, url: domainUrl, status, settings: response.data },
         });
       } catch {
         toast.error('Failed to load domain settings');
         // Fall back to default settings
         dispatch({
           type: 'SET_CONFIGURING_DOMAIN',
-          payload: { domainId, url: domainUrl, status, settings: { ...DEFAULT_DOMAIN_SETTINGS } },
+          payload: {
+            domainId,
+            url: domainUrl,
+            status,
+            settings: { ...DEFAULT_DOMAIN_RECORDING_PREFERENCES },
+          },
         });
       }
     },
     [workspaceId]
   );
   const updateConfigureSettings = useCallback(
-    (settings: DomainSettings) =>
+    (settings: DomainRecordingPreferences) =>
       dispatch({ type: 'UPDATE_CONFIGURE_SETTINGS', payload: settings }),
     []
   );

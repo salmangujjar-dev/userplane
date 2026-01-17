@@ -4,6 +4,7 @@
  */
 
 import type { LinkProviderType } from '@/api/types';
+import { isValidUrl } from '@workspace/contract';
 
 /**
  * Result of parsing a link reference
@@ -197,17 +198,7 @@ const PROVIDER_PATTERNS: ProviderPattern[] = [
   },
 ];
 
-/**
- * Check if a string is a valid URL
- */
-function isValidUrl(str: string): boolean {
-  try {
-    const url = new URL(str);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
+// isValidUrl imported from @workspace/contract
 
 /**
  * Try to match URL against known provider patterns

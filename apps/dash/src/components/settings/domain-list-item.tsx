@@ -9,7 +9,7 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import { ChevronRight, MoreVertical, Pencil, Trash2, Loader2, Settings } from 'lucide-react';
 import type { WorkspaceDomain } from '@/hooks/use-workspace-domains';
-import { formatDomainUrl } from '@/lib/types/domain';
+import { formatDomainUrl } from '@/lib/url-utils';
 
 interface DomainListItemProps {
   domain: WorkspaceDomain;

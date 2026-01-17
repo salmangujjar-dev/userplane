@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { HelpCircle } from 'lucide-react';
-import { domainUrlSchema } from '@/lib/validations';
+import { DomainUrlSchema } from '@workspace/contract';
 
 interface EditDomainModalProps {
   open: boolean;
@@ -33,7 +33,7 @@ interface EditDomainModalProps {
 }
 
 const editDomainFormSchema = z.object({
-  domainUrl: domainUrlSchema,
+  domainUrl: DomainUrlSchema,
 });
 
 export function EditDomainModal({

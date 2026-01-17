@@ -20,14 +20,7 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { HelpCircle, AlertCircle } from 'lucide-react';
-
-interface DomainSettings {
-  hideSensitiveFields: boolean;
-  captureConsoleLogs: boolean;
-  captureClientActions: boolean;
-  captureNetworkLogs: boolean;
-  captureBackendServerLogs: boolean;
-}
+import type { DomainRecordingPreferences } from '@/lib/types/domain';
 
 interface DomainConfigureModalProps {
   open: boolean;
@@ -35,8 +28,8 @@ interface DomainConfigureModalProps {
   domainUrl: string;
   domainId?: string;
   verified: boolean;
-  settings: DomainSettings;
-  onSave: (settings: DomainSettings) => void;
+  settings: DomainRecordingPreferences;
+  onSave: (settings: DomainRecordingPreferences) => void;
   onVerify: () => void;
   onSendInstructions: () => void;
   loading?: boolean;
@@ -53,7 +46,7 @@ export function DomainConfigureModal({
   onSendInstructions,
   loading = false,
 }: DomainConfigureModalProps) {
-  const [localSettings, setLocalSettings] = useState<DomainSettings>(settings);
+  const [localSettings, setLocalSettings] = useState<DomainRecordingPreferences>(settings);
 
   useEffect(() => {
     if (open) {
@@ -63,11 +56,11 @@ export function DomainConfigureModal({
 
   const hasChanges = useMemo(() => {
     return (
-      localSettings.hideSensitiveFields !== settings.hideSensitiveFields ||
-      localSettings.captureConsoleLogs !== settings.captureConsoleLogs ||
-      localSettings.captureClientActions !== settings.captureClientActions ||
-      localSettings.captureNetworkLogs !== settings.captureNetworkLogs ||
-      localSettings.captureBackendServerLogs !== settings.captureBackendServerLogs
+      localSettings.recordingHideSensitive !== settings.recordingHideSensitive ||
+      localSettings.recordingCaptureClientLog !== settings.recordingCaptureClientLog ||
+      localSettings.recordingCaptureClientAction !== settings.recordingCaptureClientAction ||
+      localSettings.recordingCaptureNetworkLog !== settings.recordingCaptureNetworkLog ||
+      localSettings.recordingCaptureServerLog !== settings.recordingCaptureServerLog
     );
   }, [localSettings, settings]);
 
@@ -198,9 +191,9 @@ export function DomainConfigureModal({
                   </Label>
                   <Switch
                     id="hide-sensitive"
-                    checked={localSettings.hideSensitiveFields}
+                    checked={localSettings.recordingHideSensitive}
                     onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({ ...prev, hideSensitiveFields: checked }))
+                      setLocalSettings((prev) => ({ ...prev, recordingHideSensitive: checked }))
                     }
                     disabled={loading || !verified}
                   />
@@ -215,9 +208,9 @@ export function DomainConfigureModal({
                   </Label>
                   <Switch
                     id="console-logs"
-                    checked={localSettings.captureConsoleLogs}
+                    checked={localSettings.recordingCaptureClientLog}
                     onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({ ...prev, captureConsoleLogs: checked }))
+                      setLocalSettings((prev) => ({ ...prev, recordingCaptureClientLog: checked }))
                     }
                     disabled={loading || !verified}
                   />
@@ -232,9 +225,12 @@ export function DomainConfigureModal({
                   </Label>
                   <Switch
                     id="client-actions"
-                    checked={localSettings.captureClientActions}
+                    checked={localSettings.recordingCaptureClientAction}
                     onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({ ...prev, captureClientActions: checked }))
+                      setLocalSettings((prev) => ({
+                        ...prev,
+                        recordingCaptureClientAction: checked,
+                      }))
                     }
                     disabled={loading || !verified}
                   />
@@ -249,9 +245,9 @@ export function DomainConfigureModal({
                   </Label>
                   <Switch
                     id="network-logs"
-                    checked={localSettings.captureNetworkLogs}
+                    checked={localSettings.recordingCaptureNetworkLog}
                     onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({ ...prev, captureNetworkLogs: checked }))
+                      setLocalSettings((prev) => ({ ...prev, recordingCaptureNetworkLog: checked }))
                     }
                     disabled={loading || !verified}
                   />
@@ -266,9 +262,9 @@ export function DomainConfigureModal({
                   </Label>
                   <Switch
                     id="backend-server"
-                    checked={localSettings.captureBackendServerLogs}
+                    checked={localSettings.recordingCaptureServerLog}
                     onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({ ...prev, captureBackendServerLogs: checked }))
+                      setLocalSettings((prev) => ({ ...prev, recordingCaptureServerLog: checked }))
                     }
                     disabled={loading || !verified}
                   />

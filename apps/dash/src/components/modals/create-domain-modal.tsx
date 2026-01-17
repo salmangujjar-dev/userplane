@@ -24,11 +24,12 @@ import {
 import { HelpCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
+import { DomainRecordingSettings } from '@/components/domains/domain-recording-settings';
+import { DomainUrlSchema } from '@workspace/contract';
 import {
-  DomainRecordingSettings,
-  type DomainSettings,
-} from '@/components/domains/domain-recording-settings';
-import { domainUrlSchema } from '@/lib/validations';
+  type DomainRecordingPreferences,
+  DEFAULT_DOMAIN_RECORDING_PREFERENCES,
+} from '@/lib/types/domain';
 
 type ModalStep = 'create' | 'verify' | 'verifying' | 'success' | 'failed';
 
@@ -43,23 +44,15 @@ interface CreateDomainModalProps {
   onCreateDomain: (domainUrl: string) => Promise<CreatedDomain | null>;
   onStartVerification: (domainId: string) => Promise<string | null>;
   onPollVerification: (domainId: string) => Promise<boolean>;
-  onFetchSettings: (domainId: string) => Promise<DomainSettings>;
-  onSaveSettings: (domainId: string, settings: DomainSettings) => void;
+  onFetchSettings: (domainId: string) => Promise<DomainRecordingPreferences>;
+  onSaveSettings: (domainId: string, settings: DomainRecordingPreferences) => void;
   workspaceId: string;
   loading?: boolean;
   savingSettings?: boolean;
 }
 
-const DEFAULT_SETTINGS: DomainSettings = {
-  hideSensitiveFields: false,
-  captureConsoleLogs: false,
-  captureClientActions: false,
-  captureNetworkLogs: false,
-  captureBackendServerLogs: false,
-};
-
 const createDomainFormSchema = z.object({
-  domainUrl: domainUrlSchema,
+  domainUrl: DomainUrlSchema,
 });
 
 type CreateDomainFormData = z.infer<typeof createDomainFormSchema>;
@@ -253,10 +246,10 @@ function VerifyingDomainStep({ onSkip }: VerifyingDomainStepProps) {
 
 interface SuccessDomainStepProps {
   showSettings: boolean;
-  settings: DomainSettings;
+  settings: DomainRecordingPreferences;
   savingSettings: boolean;
   onToggleSettings: () => void;
-  onSettingsChange: (settings: DomainSettings) => void;
+  onSettingsChange: (settings: DomainRecordingPreferences) => void;
   onDone: () => void;
 }
 
@@ -348,8 +341,12 @@ export function CreateDomainModal({
   const [step, setStep] = useState<ModalStep>('create');
   const [createdDomain, setCreatedDomain] = useState<CreatedDomain | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [localSettings, setLocalSettings] = useState<DomainSettings>(DEFAULT_SETTINGS);
-  const [originalSettings, setOriginalSettings] = useState<DomainSettings>(DEFAULT_SETTINGS);
+  const [localSettings, setLocalSettings] = useState<DomainRecordingPreferences>(
+    DEFAULT_DOMAIN_RECORDING_PREFERENCES
+  );
+  const [originalSettings, setOriginalSettings] = useState<DomainRecordingPreferences>(
+    DEFAULT_DOMAIN_RECORDING_PREFERENCES
+  );
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
@@ -379,8 +376,8 @@ export function CreateDomainModal({
         setStep('create');
         setCreatedDomain(null);
         setShowSettings(false);
-        setLocalSettings(DEFAULT_SETTINGS);
-        setOriginalSettings(DEFAULT_SETTINGS);
+        setLocalSettings(DEFAULT_DOMAIN_RECORDING_PREFERENCES);
+        setOriginalSettings(DEFAULT_DOMAIN_RECORDING_PREFERENCES);
       }, 200);
       return () => clearTimeout(timeout);
     }
@@ -388,11 +385,12 @@ export function CreateDomainModal({
 
   const hasSettingsChanges = useMemo(() => {
     return (
-      localSettings.hideSensitiveFields !== originalSettings.hideSensitiveFields ||
-      localSettings.captureConsoleLogs !== originalSettings.captureConsoleLogs ||
-      localSettings.captureClientActions !== originalSettings.captureClientActions ||
-      localSettings.captureNetworkLogs !== originalSettings.captureNetworkLogs ||
-      localSettings.captureBackendServerLogs !== originalSettings.captureBackendServerLogs
+      localSettings.recordingHideSensitive !== originalSettings.recordingHideSensitive ||
+      localSettings.recordingCaptureClientLog !== originalSettings.recordingCaptureClientLog ||
+      localSettings.recordingCaptureClientAction !==
+        originalSettings.recordingCaptureClientAction ||
+      localSettings.recordingCaptureNetworkLog !== originalSettings.recordingCaptureNetworkLog ||
+      localSettings.recordingCaptureServerLog !== originalSettings.recordingCaptureServerLog
     );
   }, [localSettings, originalSettings]);
 

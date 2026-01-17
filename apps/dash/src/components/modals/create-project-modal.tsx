@@ -23,7 +23,7 @@ import {
 } from '@workspace/ui/components/tooltip';
 import { Switch } from '@workspace/ui/components/switch';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
-import { projectTitleSchema } from '@/lib/validations';
+import { ProjectTitleSchema } from '@workspace/contract';
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -33,7 +33,7 @@ interface CreateProjectModalProps {
 }
 
 const createProjectFormSchema = z.object({
-  title: projectTitleSchema,
+  title: ProjectTitleSchema,
   isDefault: z.boolean(),
 });
 
