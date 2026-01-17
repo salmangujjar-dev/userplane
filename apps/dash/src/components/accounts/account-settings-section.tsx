@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Button } from '@workspace/ui/components/button';
@@ -9,30 +12,43 @@ import { useAccount } from '@/hooks/use-account';
 import { useUpdateAccountName } from '@/queries/use-account-mutations';
 import { SectionError } from '@/components/shared/section-error';
 import { AccountSettingsSectionSkeleton } from '@/components/skeleton';
+import { accountNameSchema } from '@/lib/validations';
+
+const accountNameFormSchema = z.object({
+  name: accountNameSchema,
+});
 
 export function AccountSettingsSection() {
   const { data: accountResult, isLoading, error, refetch } = useAccount();
-  const [name, setName] = useState('');
 
   const accountData = accountResult?.success ? accountResult.data : null;
   const originalName = accountData?.userName || '';
   const email = accountData?.userEmail || '';
 
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty, isValid },
+  } = useForm({
+    resolver: zodResolver(accountNameFormSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      name: originalName,
+    },
+  });
+
   useEffect(() => {
     if (accountData?.userName) {
-      setName(accountData.userName);
+      reset({ name: accountData.userName });
     }
-  }, [accountData]);
+  }, [accountData, reset]);
 
-  const updateNameMutation = useUpdateAccountName((originalName) => setName(originalName));
+  const updateNameMutation = useUpdateAccountName((originalName) => reset({ name: originalName }));
 
-  const handleSave = () => {
-    if (name.trim() && name !== originalName) {
-      updateNameMutation.mutate(name.trim());
-    }
+  const onSaveName = (data: { name: string }) => {
+    updateNameMutation.mutate(data.name);
   };
-
-  const hasChanges = name.trim() !== originalName && name.trim().length > 0;
 
   if (isLoading) {
     return <AccountSettingsSectionSkeleton />;
@@ -59,32 +75,45 @@ export function AccountSettingsSection() {
   return (
     <div className="w-full max-w-2xl">
       <div className="space-y-6">
-        <div className="space-y-2">
+        <form onSubmit={handleSubmit(onSaveName)} className="space-y-2">
           <div>
             <Label htmlFor="account-name">Name</Label>
             <p className="text-sm text-muted-foreground mt-1">Your full name</p>
           </div>
-          <div className="flex gap-2 items-start">
-            <Input
-              id="account-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              className="max-w-md"
-              disabled={updateNameMutation.isPending}
-            />
-            <Button
-              onClick={handleSave}
-              disabled={updateNameMutation.isPending}
-              size="default"
-              className={cn('transition-opacity', !hasChanges && 'opacity-0 pointer-events-none')}
-              aria-hidden={!hasChanges}
-              tabIndex={hasChanges ? 0 : -1}
-            >
-              {updateNameMutation.isPending ? 'Saving...' : 'Save'}
-            </Button>
+          <div className="flex gap-2 items-start flex-col">
+            <div className="flex gap-2 items-start w-full">
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    id="account-name"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="Enter your name"
+                    className="max-w-md"
+                    disabled={updateNameMutation.isPending}
+                  />
+                )}
+              />
+              <Button
+                type="submit"
+                disabled={updateNameMutation.isPending || !isDirty || !isValid}
+                size="default"
+                className={cn(
+                  'transition-opacity',
+                  (!isDirty || !isValid) && 'opacity-0 pointer-events-none'
+                )}
+                aria-hidden={!isDirty || !isValid}
+                tabIndex={isDirty && isValid ? 0 : -1}
+              >
+                {updateNameMutation.isPending ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           </div>
-        </div>
+        </form>
 
         <div className="space-y-2">
           <div>

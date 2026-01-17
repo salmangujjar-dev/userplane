@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +26,7 @@ import { URLInput } from '@/components/url-input';
 import { PLAN_OPTIONS } from './hooks/use-provision-form';
 import type { AdminWorkspaceCreateInviteResponse } from '@/hooks/use-admin-workspace-api';
 import { toast } from '@workspace/ui/components/sonner';
+import { domainUrlSchema } from '@/lib/validations';
 
 import type { PlanId } from '@workspace/pricing';
 
@@ -39,6 +43,11 @@ interface AdminCreateWorkspaceInviteSuccessModalProps {
   result: AdminWorkspaceCreateInviteResponse | null;
 }
 
+const createWorkspaceInviteFormSchema = z.object({
+  workspaceUrl: domainUrlSchema,
+  plan: z.string() as z.ZodType<PlanId>,
+});
+
 /**
  * Modal for creating a workspace invite URL.
  * Allows admin to specify workspace URL and optional plan.
@@ -49,142 +58,171 @@ export function AdminCreateWorkspaceInviteModal({
   onSubmit,
   isPending,
 }: AdminCreateWorkspaceInviteModalProps) {
-  const [workspaceUrl, setWorkspaceUrl] = useState('');
-  const [workspacePlan, setWorkspacePlan] = useState<PlanId>('sandbox');
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(createWorkspaceInviteFormSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      workspaceUrl: '',
+      plan: 'sandbox' as PlanId,
+    },
+  });
 
   // Reset form when modal closes
   useEffect(() => {
     if (!open) {
-      setWorkspaceUrl('');
-      setWorkspacePlan('sandbox');
+      reset();
       setShowAdvanced(false);
     }
-  }, [open]);
+  }, [open, reset]);
 
-  const isValid = workspaceUrl.trim() !== '' && workspaceUrl.startsWith('http');
-
-  const handleSubmit = () => {
-    if (!isValid) return;
-    onSubmit({ workspaceUrl, plan: workspacePlan });
+  const onFormSubmit = (data: { workspaceUrl: string; plan: PlanId }) => {
+    onSubmit({ workspaceUrl: data.workspaceUrl, plan: data.plan });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex items-start gap-4">
-            <Logo variant="tiled" size="md" showText={false} />
-            <div className="flex flex-col space-y-1">
-              <DialogTitle className="text-xl font-semibold">Create Workspace Invite</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                Generate an invite URL for workspace creation
-              </DialogDescription>
-            </div>
-          </div>
-
-          {/* Form */}
-          <div className="space-y-5">
-            <div className="space-y-2.5">
-              <div className="space-y-0.5">
-                <Label htmlFor="workspace-url" className="text-sm font-medium">
-                  Domain URL
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  The domain URL that will be associated with the workspace
-                </p>
+        <form onSubmit={handleSubmit(onFormSubmit)}>
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-start gap-4">
+              <Logo variant="tiled" size="md" showText={false} />
+              <div className="flex flex-col space-y-1">
+                <DialogTitle className="text-xl font-semibold">Create Workspace Invite</DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">
+                  Generate an invite URL for workspace creation
+                </DialogDescription>
               </div>
-              <URLInput
-                id="workspace-url"
-                value={workspaceUrl}
-                onChange={setWorkspaceUrl}
-                placeholder="example.com"
-              />
             </div>
 
-            {showAdvanced && (
-              <div className="space-y-5 pt-5 border-t">
-                <div className="space-y-2.5">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="workspace-plan" className="text-sm font-medium">
-                      Workspace Plan
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Leave as Sandbox for trial workspaces
-                    </p>
-                  </div>
-                  <Select
-                    value={workspacePlan}
-                    onValueChange={(value) => setWorkspacePlan(value as PlanId)}
-                    disabled={isPending}
-                  >
-                    <SelectTrigger id="workspace-plan" className="rounded-lg">
-                      <SelectValue placeholder="Select a plan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sandbox">Sandbox (Default)</SelectItem>
-                      {PLAN_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {/* Form */}
+            <div className="space-y-5">
+              <div className="space-y-2.5">
+                <div className="space-y-0.5">
+                  <Label htmlFor="workspace-url" className="text-sm font-medium">
+                    Domain URL
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    The domain URL that will be associated with the workspace
+                  </p>
                 </div>
+                <Controller
+                  name="workspaceUrl"
+                  control={control}
+                  render={({ field }) => (
+                    <URLInput
+                      id="workspace-url"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder="example.com"
+                      error={!!errors.workspaceUrl}
+                      disabled={isPending}
+                    />
+                  )}
+                />
+                {errors.workspaceUrl && (
+                  <p className="text-sm text-destructive">{errors.workspaceUrl.message}</p>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Footer */}
-          <DialogFooter className="mt-8">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
-              disabled={isPending}
-            >
-              {showAdvanced ? (
-                <>
-                  <ChevronUp className="h-4 w-4" />
-                  Hide Advanced Options
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4" />
-                  Show Advanced Options
-                </>
+              {showAdvanced && (
+                <div className="space-y-5 pt-5 border-t">
+                  <div className="space-y-2.5">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="workspace-plan" className="text-sm font-medium">
+                        Workspace Plan
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Leave as Sandbox for trial workspaces
+                      </p>
+                    </div>
+                    <Controller
+                      name="plan"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isPending}
+                        >
+                          <SelectTrigger id="workspace-plan" className="rounded-lg">
+                            <SelectValue placeholder="Select a plan" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sandbox">Sandbox (Default)</SelectItem>
+                            {PLAN_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                </div>
               )}
-            </button>
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
+            </div>
+
+            {/* Footer */}
+            <DialogFooter className="mt-8">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
                 disabled={isPending}
-                className="rounded-full px-6"
               >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={!isValid || isPending}
-                className="rounded-full px-6"
-              >
-                {isPending ? (
+                {showAdvanced ? (
                   <>
-                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                    Creating...
+                    <ChevronUp className="h-4 w-4" />
+                    Hide Advanced Options
                   </>
                 ) : (
                   <>
-                    <LinkIcon className="mr-2 h-4 w-4" />
-                    Generate Invite
+                    <ChevronDown className="h-4 w-4" />
+                    Show Advanced Options
                   </>
                 )}
-              </Button>
-            </div>
-          </DialogFooter>
-        </div>
+              </button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isPending}
+                  className="rounded-full px-6"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!isValid || isPending}
+                  className="rounded-full px-6"
+                >
+                  {isPending ? (
+                    <>
+                      <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <LinkIcon className="mr-2 h-4 w-4" />
+                      Generate Invite
+                    </>
+                  )}
+                </Button>
+              </div>
+            </DialogFooter>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

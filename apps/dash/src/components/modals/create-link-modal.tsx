@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import {
@@ -27,12 +30,11 @@ import {
 } from '@workspace/ui/components/tooltip';
 import { Plus, ChevronDown, ChevronUp, HelpCircle, Globe, FolderKanban } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/workspace';
-import { UrlInputWithFavicon } from '@/components/url-input-with-favicon';
+import { LinkReferenceInput } from '@/components/link-reference-input';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { useCreateLink } from '@/queries/use-link-mutations';
 import { toast } from '@workspace/ui/components/sonner';
-
 interface CreateLinkModalProps {
   onLinkCreated?: (linkUrl: string) => void;
   open?: boolean;
@@ -40,6 +42,13 @@ interface CreateLinkModalProps {
   hideButton?: boolean;
   defaultProjectId?: string;
 }
+
+const createLinkFormSchema = z.object({
+  reference: z.string().optional(),
+  domainId: z.string().min(1, 'Please select a domain'),
+  projectId: z.string().optional(),
+  isReusable: z.boolean(),
+});
 
 export function CreateLinkModal({
   onLinkCreated,
@@ -53,11 +62,28 @@ export function CreateLinkModal({
 
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
-  const [reference, setReference] = useState('');
-  const [selectedProject, setSelectedProject] = useState<string>('');
-  const [isReusable, setIsReusable] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [selectedDomain, setSelectedDomain] = useState<string>('');
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(createLinkFormSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      reference: '',
+      domainId: '',
+      projectId: '',
+      isReusable: false,
+    },
+  });
+
+  const selectedDomain = watch('domainId');
+  const selectedProject = watch('projectId');
 
   const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects({
     perPage: 10,
@@ -79,52 +105,47 @@ export function CreateLinkModal({
       if (defaultProjectId) {
         const projectExists = projects.some((p) => p.projectId === defaultProjectId);
         if (projectExists) {
-          setSelectedProject(defaultProjectId);
+          setValue('projectId', defaultProjectId);
           return;
         }
       }
       // Fall back to default project or first project
       const defaultProject = projects.find((p) => p.isDefault) || projects[0];
       if (defaultProject) {
-        setSelectedProject(defaultProject.projectId);
+        setValue('projectId', defaultProject.projectId);
       }
     }
-  }, [open, projects, selectedProject, defaultProjectId]);
+  }, [open, projects, selectedProject, defaultProjectId, setValue]);
 
   useEffect(() => {
     if (open && domains && domains.length > 0 && !selectedDomain) {
       const verifiedDomain = domains.find((d) => d.domainStatus === 'verified') || domains[0];
       if (verifiedDomain) {
-        setSelectedDomain(verifiedDomain.domainId);
+        setValue('domainId', verifiedDomain.domainId);
       }
     }
-  }, [open, domains, selectedDomain]);
+  }, [open, domains, selectedDomain, setValue]);
 
   // Effect to reset form state when modal closes
   useEffect(() => {
     if (!open) {
-      setReference('');
-      setSelectedDomain('');
-      setSelectedProject('');
-      setIsReusable(false);
+      reset();
       setShowAdvanced(false);
     }
-  }, [open]);
+  }, [open, reset]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedDomain) {
-      toast.error('Please select a domain');
-      return;
-    }
-
+  const onSubmit = (data: {
+    reference?: string;
+    domainId: string;
+    projectId?: string;
+    isReusable: boolean;
+  }) => {
     createLinkMutation.mutate(
       {
-        domainId: selectedDomain,
-        projectId: selectedProject || undefined,
-        linkReference: reference || undefined,
-        linkReusable: isReusable,
+        domainId: data.domainId,
+        projectId: data.projectId || undefined,
+        linkReference: data.reference || undefined,
+        linkReusable: data.isReusable,
       },
       {
         onSuccess: (result) => {
@@ -151,7 +172,7 @@ export function CreateLinkModal({
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[600px]" showCloseButton={false}>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-6 py-4">
             <div className="flex items-start gap-4">
               <Logo variant="tiled" size="md" showText={false} />
@@ -191,11 +212,17 @@ export function CreateLinkModal({
                   Add a link, ticket, issue number or customer reference
                 </p>
               </div>
-              <UrlInputWithFavicon
-                id="reference"
-                value={reference}
-                onChange={setReference}
-                placeholder="e.g. https://github.com/org/repo/issues/123, JIRA-456, Customer ABC"
+              <Controller
+                name="reference"
+                control={control}
+                render={({ field }) => (
+                  <LinkReferenceInput
+                    id="reference"
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    placeholder="e.g. https://github.com/org/repo/issues/123, JIRA-456, Customer ABC"
+                  />
+                )}
               />
             </div>
 
@@ -229,7 +256,7 @@ export function CreateLinkModal({
                     {domains.map((domain) => (
                       <DropdownMenuItem
                         key={domain.domainId}
-                        onClick={() => setSelectedDomain(domain.domainId)}
+                        onClick={() => setValue('domainId', domain.domainId)}
                         className="cursor-pointer"
                       >
                         <Globe className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
@@ -280,7 +307,7 @@ export function CreateLinkModal({
                         {projects.map((project) => (
                           <DropdownMenuItem
                             key={project.projectId}
-                            onClick={() => setSelectedProject(project.projectId)}
+                            onClick={() => setValue('projectId', project.projectId)}
                             className="cursor-pointer"
                           >
                             <FolderKanban className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
@@ -304,7 +331,17 @@ export function CreateLinkModal({
                       Allow this link to be used multiple times
                     </p>
                   </div>
-                  <Switch id="reusable" checked={isReusable} onCheckedChange={setIsReusable} />
+                  <Controller
+                    name="isReusable"
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        id="reusable"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
                 </div>
               </div>
             )}
@@ -341,7 +378,7 @@ export function CreateLinkModal({
               <Button
                 type="submit"
                 className="rounded-full px-6"
-                disabled={createLinkMutation.isPending || !selectedDomain}
+                disabled={createLinkMutation.isPending || !isValid}
               >
                 {createLinkMutation.isPending ? 'Creating...' : 'Create Link'}
               </Button>

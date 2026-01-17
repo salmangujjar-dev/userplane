@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import {
@@ -19,6 +22,7 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { HelpCircle } from 'lucide-react';
+import { domainUrlSchema } from '@/lib/validations';
 
 interface EditDomainModalProps {
   open: boolean;
@@ -28,6 +32,10 @@ interface EditDomainModalProps {
   loading?: boolean;
 }
 
+const editDomainFormSchema = z.object({
+  domainUrl: domainUrlSchema,
+});
+
 export function EditDomainModal({
   open,
   onOpenChange,
@@ -35,77 +43,103 @@ export function EditDomainModal({
   onSave,
   loading = false,
 }: EditDomainModalProps) {
-  const [editDomainUrl, setEditDomainUrl] = useState(domainUrl);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(editDomainFormSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      domainUrl: domainUrl,
+    },
+  });
 
   useEffect(() => {
     if (open) {
-      setEditDomainUrl(domainUrl);
+      reset({ domainUrl });
     }
-  }, [open, domainUrl]);
+  }, [open, domainUrl, reset]);
 
-  const handleSave = () => {
-    onSave(editDomainUrl);
+  const onSubmit = (data: { domainUrl: string }) => {
+    onSave(data.domainUrl);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false}>
-        <div className="space-y-6 py-4">
-          <div className="flex items-start gap-4">
-            <Logo variant="tiled" size="md" showText={false} />
-            <div className="flex flex-col space-y-1">
-              <DialogTitle className="text-xl font-semibold">Edit Domain</DialogTitle>
-              <div className="flex items-center gap-2">
-                <DialogDescription className="text-sm text-muted-foreground">
-                  Update the domain URL
-                </DialogDescription>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <a
-                        href="https://userplane.com/docs/domains"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center"
-                      >
-                        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
-                      </a>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Learn more about domains</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-6 py-4">
+            <div className="flex items-start gap-4">
+              <Logo variant="tiled" size="md" showText={false} />
+              <div className="flex flex-col space-y-1">
+                <DialogTitle className="text-xl font-semibold">Edit Domain</DialogTitle>
+                <div className="flex items-center gap-2">
+                  <DialogDescription className="text-sm text-muted-foreground">
+                    Update the domain URL
+                  </DialogDescription>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href="https://userplane.com/docs/domains"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center"
+                        >
+                          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Learn more about domains</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="domain-url">Domain URL</Label>
+                <Controller
+                  name="domainUrl"
+                  control={control}
+                  render={({ field }) => (
+                    <URLInput
+                      id="domain-url"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder="example.com"
+                      error={!!errors.domainUrl}
+                      disabled={loading}
+                    />
+                  )}
+                />
+                {errors.domainUrl && (
+                  <p className="text-sm text-destructive">{errors.domainUrl.message}</p>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="domain-url">Domain URL</Label>
-              <URLInput
-                id="domain-url"
-                value={editDomainUrl}
-                onChange={setEditDomainUrl}
-                placeholder="example.com"
-              />
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="rounded-full px-6"
-            disabled={loading}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSave} className="rounded-full px-6" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="rounded-full px-6"
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" className="rounded-full px-6" disabled={!isValid || loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useForm, Controller, type Control, type FieldErrors } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Label } from '@workspace/ui/components/label';
@@ -25,6 +28,7 @@ import {
   DomainRecordingSettings,
   type DomainSettings,
 } from '@/components/domains/domain-recording-settings';
+import { domainUrlSchema } from '@/lib/validations';
 
 type ModalStep = 'create' | 'verify' | 'verifying' | 'success' | 'failed';
 
@@ -54,6 +58,281 @@ const DEFAULT_SETTINGS: DomainSettings = {
   captureBackendServerLogs: false,
 };
 
+const createDomainFormSchema = z.object({
+  domainUrl: domainUrlSchema,
+});
+
+type CreateDomainFormData = z.infer<typeof createDomainFormSchema>;
+
+interface CreateDomainStepProps {
+  control: Control<CreateDomainFormData>;
+  errors: FieldErrors<CreateDomainFormData>;
+  isValid: boolean;
+  loading: boolean;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  onCancel: () => void;
+}
+
+function CreateDomainStep({
+  control,
+  errors,
+  isValid,
+  loading,
+  onSubmit,
+  onCancel,
+}: CreateDomainStepProps) {
+  return (
+    <form onSubmit={onSubmit}>
+      <div className="space-y-8">
+        <div className="flex items-start gap-4">
+          <Logo variant="tiled" size="md" showText={false} />
+          <div className="flex flex-col space-y-1">
+            <DialogTitle className="text-xl font-semibold">Add New Domain</DialogTitle>
+            <div className="flex items-center gap-2">
+              <DialogDescription className="text-sm text-muted-foreground">
+                Add a new domain for recording sessions
+              </DialogDescription>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href="https://userplane.com/docs/domains"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center"
+                    >
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Learn more about domains</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="domain-url" className="text-sm">
+              Domain URL
+            </Label>
+            <Controller
+              name="domainUrl"
+              control={control}
+              render={({ field }) => (
+                <URLInput
+                  id="domain-url"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="example.com"
+                  error={!!errors.domainUrl}
+                  disabled={loading}
+                />
+              )}
+            />
+            {errors.domainUrl && (
+              <p className="text-sm text-destructive">{errors.domainUrl.message}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <DialogFooter className="mt-8">
+        <div className="flex gap-2 ml-auto">
+          <Button
+            type="button"
+            variant="secondary"
+            className="rounded-full px-6"
+            onClick={onCancel}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" className="rounded-full px-6" disabled={!isValid || loading}>
+            {loading ? 'Adding...' : 'Add Domain'}
+          </Button>
+        </div>
+      </DialogFooter>
+    </form>
+  );
+}
+
+interface VerifyDomainStepProps {
+  workspaceId: string;
+  domainUrl: string;
+  isFailed: boolean;
+  onVerify: () => void;
+  onSkip: () => void;
+}
+
+function VerifyDomainStep({
+  workspaceId,
+  domainUrl,
+  isFailed,
+  onVerify,
+  onSkip,
+}: VerifyDomainStepProps) {
+  return (
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col items-center space-y-4">
+          <DomainVerificationHeader />
+
+          <div className="text-center space-y-1">
+            <DialogTitle className="text-xl font-semibold">
+              {isFailed ? "Let's try again" : 'Verify your domain'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Add code snippet to capture logs
+            </DialogDescription>
+          </div>
+        </div>
+
+        <DomainCodeSnippet workspaceId={workspaceId} domainUrl={domainUrl} />
+      </div>
+
+      <DialogFooter className="mt-8">
+        <button
+          type="button"
+          onClick={() => window.open('https://docs.userplane.com/domains', '_blank')}
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+        >
+          <HelpCircle className="h-4 w-4" />
+          How it works
+        </button>
+        <div className="flex gap-2">
+          <Button type="button" variant="secondary" className="rounded-full px-6" onClick={onSkip}>
+            Skip
+          </Button>
+          <Button type="button" className="rounded-full px-6" onClick={onVerify}>
+            {isFailed ? 'Try Again' : 'Verify'}
+          </Button>
+        </div>
+      </DialogFooter>
+    </>
+  );
+}
+
+interface VerifyingDomainStepProps {
+  onSkip: () => void;
+}
+
+function VerifyingDomainStep({ onSkip }: VerifyingDomainStepProps) {
+  return (
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col items-center space-y-4">
+          <DomainVerificationHeader />
+
+          <div className="text-center space-y-2">
+            <DialogTitle className="text-xl font-semibold">Verifying domain...</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Please complete verification in the opened tab
+            </DialogDescription>
+          </div>
+        </div>
+
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+
+      <DialogFooter className="mt-8">
+        <div className="flex gap-2 ml-auto">
+          <Button type="button" variant="secondary" className="rounded-full px-6" onClick={onSkip}>
+            Skip
+          </Button>
+        </div>
+      </DialogFooter>
+    </>
+  );
+}
+
+interface SuccessDomainStepProps {
+  showSettings: boolean;
+  settings: DomainSettings;
+  savingSettings: boolean;
+  onToggleSettings: () => void;
+  onSettingsChange: (settings: DomainSettings) => void;
+  onDone: () => void;
+}
+
+function SuccessDomainStep({
+  showSettings,
+  settings,
+  savingSettings,
+  onToggleSettings,
+  onSettingsChange,
+  onDone,
+}: SuccessDomainStepProps) {
+  return (
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col items-center space-y-4">
+          <DomainVerificationHeader />
+
+          <div className="text-center space-y-2">
+            <DialogTitle className="text-xl font-semibold">Your domain verified</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Console and network logs capture enabled
+            </DialogDescription>
+          </div>
+        </div>
+
+        {showSettings && (
+          <DomainRecordingSettings
+            settings={settings}
+            onSettingsChange={onSettingsChange}
+            disabled={savingSettings}
+            idPrefix="create"
+          />
+        )}
+      </div>
+
+      <DialogFooter className="mt-8">
+        <button
+          type="button"
+          onClick={onToggleSettings}
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+          disabled={savingSettings}
+        >
+          {showSettings ? (
+            <>
+              <ChevronUp className="h-4 w-4" />
+              Recording Settings
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-4 w-4" />
+              Recording Settings
+            </>
+          )}
+        </button>
+        <div className="flex gap-2 ml-auto">
+          <Button
+            type="button"
+            className="rounded-full px-6"
+            onClick={onDone}
+            disabled={savingSettings}
+          >
+            {savingSettings ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Done'
+            )}
+          </Button>
+        </div>
+      </DialogFooter>
+    </>
+  );
+}
+
 export function CreateDomainModal({
   open,
   onOpenChange,
@@ -66,13 +345,25 @@ export function CreateDomainModal({
   loading = false,
   savingSettings = false,
 }: CreateDomainModalProps) {
-  const [domainUrl, setDomainUrl] = useState('');
   const [step, setStep] = useState<ModalStep>('create');
   const [createdDomain, setCreatedDomain] = useState<CreatedDomain | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [localSettings, setLocalSettings] = useState<DomainSettings>(DEFAULT_SETTINGS);
   const [originalSettings, setOriginalSettings] = useState<DomainSettings>(DEFAULT_SETTINGS);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(createDomainFormSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      domainUrl: '',
+    },
+  });
 
   // Reset state when modal closes
   useEffect(() => {
@@ -84,7 +375,7 @@ export function CreateDomainModal({
       }
       // Small delay to allow closing animation before resetting state
       const timeout = setTimeout(() => {
-        setDomainUrl('');
+        reset();
         setStep('create');
         setCreatedDomain(null);
         setShowSettings(false);
@@ -93,7 +384,7 @@ export function CreateDomainModal({
       }, 200);
       return () => clearTimeout(timeout);
     }
-  }, [open]);
+  }, [open, reset]);
 
   const hasSettingsChanges = useMemo(() => {
     return (
@@ -105,11 +396,8 @@ export function CreateDomainModal({
     );
   }, [localSettings, originalSettings]);
 
-  const handleCreate = async () => {
-    const isValid = domainUrl.trim();
-    if (!isValid) return;
-
-    const result = await onCreateDomain(domainUrl);
+  const handleCreate = async (data: { domainUrl: string }) => {
+    const result = await onCreateDomain(data.domainUrl);
     if (result) {
       setCreatedDomain(result);
       setStep('verify');
@@ -183,252 +471,61 @@ export function CreateDomainModal({
   };
 
   const handleCancel = () => {
-    setDomainUrl('');
+    reset();
     onOpenChange(false);
   };
 
-  const isFormValid = domainUrl.trim();
+  const renderStepContent = () => {
+    switch (step) {
+      case 'create':
+        return (
+          <CreateDomainStep
+            control={control}
+            errors={errors}
+            isValid={isValid}
+            loading={loading}
+            onSubmit={handleSubmit(handleCreate)}
+            onCancel={handleCancel}
+          />
+        );
 
-  // Step: Create
-  if (step === 'create') {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
-          <div className="space-y-8">
-            <div className="flex items-start gap-4">
-              <Logo variant="tiled" size="md" showText={false} />
-              <div className="flex flex-col space-y-1">
-                <DialogTitle className="text-xl font-semibold">Add New Domain</DialogTitle>
-                <div className="flex items-center gap-2">
-                  <DialogDescription className="text-sm text-muted-foreground">
-                    Add a new domain for recording sessions
-                  </DialogDescription>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <a
-                          href="https://userplane.com/docs/domains"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center"
-                        >
-                          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
-                        </a>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Learn more about domains</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-            </div>
+      case 'verify':
+      case 'failed':
+        return (
+          <VerifyDomainStep
+            workspaceId={workspaceId}
+            domainUrl={createdDomain?.domainUrl || ''}
+            isFailed={step === 'failed'}
+            onVerify={step === 'failed' ? handleTryAgain : handleVerify}
+            onSkip={handleSkip}
+          />
+        );
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="domain-url" className="text-sm">
-                  Domain URL
-                </Label>
-                <URLInput
-                  id="domain-url"
-                  value={domainUrl}
-                  onChange={setDomainUrl}
-                  placeholder="example.com"
-                />
-              </div>
-            </div>
-          </div>
+      case 'verifying':
+        return <VerifyingDomainStep onSkip={handleSkip} />;
 
-          <DialogFooter className="mt-8">
-            <div className="flex gap-2 ml-auto">
-              <Button
-                type="button"
-                variant="secondary"
-                className="rounded-full px-6"
-                onClick={handleCancel}
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                className="rounded-full px-6"
-                onClick={handleCreate}
-                disabled={!isFormValid || loading}
-              >
-                {loading ? 'Adding...' : 'Add Domain'}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+      case 'success':
+        return (
+          <SuccessDomainStep
+            showSettings={showSettings}
+            settings={localSettings}
+            savingSettings={savingSettings}
+            onToggleSettings={() => setShowSettings(!showSettings)}
+            onSettingsChange={setLocalSettings}
+            onDone={handleDone}
+          />
+        );
 
-  // Step: Verify (show code snippet)
-  if (step === 'verify' || step === 'failed') {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
-          <div className="space-y-6">
-            <div className="flex flex-col items-center space-y-4">
-              <DomainVerificationHeader />
+      default:
+        return null;
+    }
+  };
 
-              <div className="text-center space-y-1">
-                <DialogTitle className="text-xl font-semibold">
-                  {step === 'failed' ? "Let's try again" : 'Verify your domain'}
-                </DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground">
-                  Add code snippet to capture logs
-                </DialogDescription>
-              </div>
-            </div>
-
-            <DomainCodeSnippet
-              workspaceId={workspaceId}
-              domainUrl={createdDomain?.domainUrl || ''}
-            />
-          </div>
-
-          <DialogFooter className="mt-8">
-            <button
-              type="button"
-              onClick={() => window.open('https://docs.userplane.com/domains', '_blank')}
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
-            >
-              <HelpCircle className="h-4 w-4" />
-              How it works
-            </button>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                className="rounded-full px-6"
-                onClick={handleSkip}
-              >
-                Skip
-              </Button>
-              <Button
-                type="button"
-                className="rounded-full px-6"
-                onClick={step === 'failed' ? handleTryAgain : handleVerify}
-              >
-                {step === 'failed' ? 'Try Again' : 'Verify'}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Step: Verifying (loading state)
-  if (step === 'verifying') {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
-          <div className="space-y-6">
-            <div className="flex flex-col items-center space-y-4">
-              <DomainVerificationHeader />
-
-              <div className="text-center space-y-2">
-                <DialogTitle className="text-xl font-semibold">Verifying domain...</DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground">
-                  Please complete verification in the opened tab
-                </DialogDescription>
-              </div>
-            </div>
-
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          </div>
-
-          <DialogFooter className="mt-8">
-            <div className="flex gap-2 ml-auto">
-              <Button
-                type="button"
-                variant="secondary"
-                className="rounded-full px-6"
-                onClick={handleSkip}
-              >
-                Skip
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Step: Success (show recording settings)
-  if (step === 'success') {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
-          <div className="space-y-6">
-            <div className="flex flex-col items-center space-y-4">
-              <DomainVerificationHeader />
-
-              <div className="text-center space-y-2">
-                <DialogTitle className="text-xl font-semibold">Your domain verified</DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground">
-                  Console and network logs capture enabled
-                </DialogDescription>
-              </div>
-            </div>
-
-            {showSettings && (
-              <DomainRecordingSettings
-                settings={localSettings}
-                onSettingsChange={setLocalSettings}
-                disabled={savingSettings}
-                idPrefix="create"
-              />
-            )}
-          </div>
-
-          <DialogFooter className="mt-8">
-            <button
-              type="button"
-              onClick={() => setShowSettings(!showSettings)}
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
-              disabled={savingSettings}
-            >
-              {showSettings ? (
-                <>
-                  <ChevronUp className="h-4 w-4" />
-                  Recording Settings
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4" />
-                  Recording Settings
-                </>
-              )}
-            </button>
-            <div className="flex gap-2 ml-auto">
-              <Button
-                type="button"
-                className="rounded-full px-6"
-                onClick={handleDone}
-                disabled={savingSettings}
-              >
-                {savingSettings ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Done'
-                )}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  return null;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
+        {renderStepContent()}
+      </DialogContent>
+    </Dialog>
+  );
 }
