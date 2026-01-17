@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-import { handleQueryResult, type SafeResult } from '@/lib/errors';
+import { handleSafeResult, type SafeResult } from '@/lib/errors';
 
 export interface ResourceCounts {
   projects?: number;
@@ -128,7 +128,7 @@ export function useWorkspaceResourceCounts(
           include_members: includeMembers,
         },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000, // 5 minutes

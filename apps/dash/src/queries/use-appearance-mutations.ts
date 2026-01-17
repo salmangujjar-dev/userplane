@@ -1,28 +1,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
+import type { WorkspacePreferences, UpdateResponse, QueryData } from '@/lib/types';
 
-interface WorkspacePreferences {
-  recordingCustomizeLink: boolean;
-  recordingCompanyName?: string | null;
-  recordingCompanyLogoPath?: string | null;
-  recordingHeader?: string | null;
-  recordingFootnote?: string | null;
-  recordingPrimaryColor?: string | null;
-}
-
-interface UpdateToggleData {
-  updated: boolean;
-}
-
-type PreferencesQueryData = SafeResult<WorkspacePreferences>;
+type PreferencesQueryData = QueryData<WorkspacePreferences>;
 
 export function useUpdateToggle(workspaceId: string | null, onError?: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation<
-    SafeResult<UpdateToggleData>,
+    SafeResult<UpdateResponse>,
     Error,
     boolean,
     { previousPreferences: PreferencesQueryData | undefined }
@@ -68,7 +61,7 @@ export function useUpdateToggle(workspaceId: string | null, onError?: () => void
             context.previousPreferences
           );
         }
-        handleApiError(result.error, 'Failed to update customization');
+        showErrorToast(result.error);
         onError?.();
         return;
       }
@@ -82,9 +75,7 @@ export function useUpdateToggle(workspaceId: string | null, onError?: () => void
           context.previousPreferences
         );
       }
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to update appearance');
       onError?.();
     },
     onSettled: () => {
@@ -101,15 +92,11 @@ interface AppearanceUpdates {
   recordingPrimaryColor?: string | null;
 }
 
-interface UpdateAppearanceData {
-  updated: boolean;
-}
-
 export function useUpdateAppearance(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation<
-    SafeResult<UpdateAppearanceData>,
+    SafeResult<UpdateResponse>,
     Error,
     AppearanceUpdates,
     { previousPreferences: WorkspacePreferences | undefined }
@@ -148,7 +135,7 @@ export function useUpdateAppearance(workspaceId: string | null) {
             context.previousPreferences
           );
         }
-        handleApiError(result.error, 'Failed to update settings');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Appearance settings updated successfully');
@@ -160,9 +147,7 @@ export function useUpdateAppearance(workspaceId: string | null) {
           context.previousPreferences
         );
       }
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to update appearance');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-preferences', workspaceId] });

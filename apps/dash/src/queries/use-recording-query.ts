@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 
 /**
  * Hook to fetch recording details by ID
@@ -21,7 +21,7 @@ export function useRecording(workspaceId: string | null, recordingId: string) {
         params: { workspaceId, recordingId },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -48,7 +48,7 @@ export function useRecordingVideo(workspaceId: string | null, recordingId: strin
         params: { workspaceId, recordingId },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 50 * 60 * 1000, // 50 minutes (presigned URLs typically last 1 hour)
@@ -75,7 +75,7 @@ export function useRecordingThumbnail(workspaceId: string | null, recordingId: s
         params: { workspaceId, recordingId },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 50 * 60 * 1000, // 50 minutes
@@ -102,7 +102,7 @@ export function useRecordingConsoleLog(workspaceId: string | null, recordingId: 
         params: { workspaceId, recordingId },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 50 * 60 * 1000, // 50 minutes
@@ -129,7 +129,7 @@ export function useRecordingNetworkLog(workspaceId: string | null, recordingId: 
         params: { workspaceId, recordingId },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId && !!recordingId,
     staleTime: 50 * 60 * 1000, // 50 minutes

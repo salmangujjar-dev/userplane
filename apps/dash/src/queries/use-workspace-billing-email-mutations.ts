@@ -1,10 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
 import type { WorkspaceBillingEmailData } from '@/hooks/use-workspace-billing-email';
+import type { QueryData } from '@/lib/types';
 
-type BillingEmailQueryData = SafeResult<WorkspaceBillingEmailData>;
+type BillingEmailQueryData = QueryData<WorkspaceBillingEmailData>;
 
 export function useUpdateWorkspaceBillingEmail(options?: {
   onError?: () => void;
@@ -57,7 +63,7 @@ export function useUpdateWorkspaceBillingEmail(options?: {
             context.previousBillingEmail
           );
         }
-        handleApiError(result.error, 'Failed to update billing email');
+        showErrorToast(result.error);
         options?.onError?.();
         return;
       }
@@ -71,9 +77,7 @@ export function useUpdateWorkspaceBillingEmail(options?: {
           context.previousBillingEmail
         );
       }
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to update billing email');
       options?.onError?.();
     },
     onSettled: (_, __, variables) => {

@@ -1,22 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
-import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
-import type { WorkspaceMember } from '@/hooks/use-workspace-members';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  isErrorCode,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
+import type { MembersListResponse, QueryData, QuerySnapshot } from '@/lib/types';
 
-type MembersListResponse = {
-  workspaceId: string;
-  workspaceMembers: WorkspaceMember[];
-  pagination: {
-    page: number;
-    perPage: number;
-    totalPages: number;
-    total: number;
-  };
-};
-
-type MembersQueryData = SafeResult<MembersListResponse>;
-type QuerySnapshot = [queryKey: readonly unknown[], data: MembersQueryData | undefined][];
+type MembersQueryData = QueryData<MembersListResponse>;
 
 export function useUpdateMemberRole(workspaceId: string | null) {
   const queryClient = useQueryClient();
@@ -46,9 +40,10 @@ export function useUpdateMemberRole(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['workspace-members', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<MembersQueryData>({
-        queryKey: ['workspace-members', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<MembersQueryData> =
+        queryClient.getQueriesData<MembersQueryData>({
+          queryKey: ['workspace-members', workspaceId],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<MembersQueryData>(
@@ -87,7 +82,7 @@ export function useUpdateMemberRole(workspaceId: string | null) {
           });
           return;
         }
-        handleApiError(result.error, 'Failed to update member role');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Member role updated successfully');
@@ -97,9 +92,7 @@ export function useUpdateMemberRole(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process member operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
@@ -123,9 +116,10 @@ export function useRemoveMember(workspaceId: string | null) {
       await queryClient.cancelQueries({ queryKey: ['workspace-members', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<MembersQueryData>({
-        queryKey: ['workspace-members', workspaceId],
-      });
+      const previousQueries: QuerySnapshot<MembersQueryData> =
+        queryClient.getQueriesData<MembersQueryData>({
+          queryKey: ['workspace-members', workspaceId],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<MembersQueryData>(
@@ -162,7 +156,7 @@ export function useRemoveMember(workspaceId: string | null) {
           toast.error("Can't remove the last owner");
           return;
         }
-        handleApiError(result.error, 'Failed to remove member');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Member removed successfully');
@@ -172,9 +166,7 @@ export function useRemoveMember(workspaceId: string | null) {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process member operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });

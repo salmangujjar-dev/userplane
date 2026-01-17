@@ -2,13 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import {
-  handleApiError,
-  handleSafeResult,
-  handleQueryResult,
-  isDefinedError,
-  type SafeResult,
-} from '@/lib/errors';
+import { handleSafeResult, isDefinedError, showErrorToast, type SafeResult } from '@/lib/errors';
 
 /**
  * Hook to fetch the invite token for the current workspace
@@ -44,7 +38,7 @@ export function useWorkspaceInvite() {
       const [error, response] = await apiClient.workspace.invite.getUrl({
         params: { workspaceId },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId,
     staleTime: 60 * 60 * 1000, // 1 hour
@@ -92,7 +86,7 @@ export function useSendWorkspaceInvites() {
     },
     onSuccess: (result, emails) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to send invites');
+        showErrorToast(result.error);
         return;
       }
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
@@ -144,7 +138,7 @@ export function useValidateInvite(token: string | null, enabled = true) {
       const [error, response] = await apiClient.invite.validate({
         body: { token },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!token && enabled,
     retry: false,

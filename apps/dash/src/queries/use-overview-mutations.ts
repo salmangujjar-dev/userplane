@@ -1,14 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import { handleApiError, handleSafeResult, type SafeResult } from '@/lib/errors';
-
-interface WorkspaceData {
-  workspace: {
-    workspaceId: string;
-    workspaceName: string;
-  };
-}
+import {
+  handleSafeResult,
+  handleUnknownError,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
+import type { WorkspaceData } from '@/lib/types';
 
 interface UpdateWorkspaceNameData {
   workspaceName: string;
@@ -58,7 +57,7 @@ export function useUpdateWorkspaceName(
             onError(originalName);
           }
         }
-        handleApiError(result.error, 'Failed to update workspace name');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Workspace name updated successfully');
@@ -71,9 +70,7 @@ export function useUpdateWorkspaceName(
           onError(originalName);
         }
       }
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to update workspace name');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });

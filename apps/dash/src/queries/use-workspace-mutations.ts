@@ -1,44 +1,37 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import { handleApiError, handleSafeResult, isErrorCode, type SafeResult } from '@/lib/errors';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  isErrorCode,
+  showErrorToast,
+  type SafeResult,
+} from '@/lib/errors';
+import type {
+  WorkspaceNotifications,
+  WorkspacesData,
+  NotificationPreferencesData,
+  InviteUrlData,
+  JoinWorkspaceData,
+  LeaveWorkspaceData,
+  InvitePolicyData,
+  WorkspaceInvitePolicy,
+  QueryData,
+  QuerySnapshot,
+  UpdateResponse,
+  DeleteResponse,
+} from '@/lib/types';
 
-interface WorkspaceNotifications {
-  notifyOnLinkUsage?: boolean;
-  notifyOnQuotaReset?: boolean;
-  notifyOnQuotaLimit?: boolean;
-  notifyOnMemberJoin?: boolean;
-  notifyOnInviteAccepted?: boolean;
-}
-
-interface WorkspaceItem {
-  workspaceId: string;
-  workspaceName: string;
-  notificationPreferences?: WorkspaceNotifications;
-}
-
-interface WorkspacesData {
-  workspaces: WorkspaceItem[];
-  total: number;
-}
-
-interface UpdateNotificationsData {
-  updated: boolean;
-}
-
-interface NotificationPreferencesData {
-  notificationPreferences: WorkspaceNotifications;
-}
-
-type NotificationsQueryData = SafeResult<NotificationPreferencesData>;
-type WorkspacesQueryData = SafeResult<WorkspacesData>;
-type QuerySnapshot = [queryKey: readonly unknown[], data: WorkspacesQueryData | undefined][];
+type NotificationsQueryData = QueryData<NotificationPreferencesData>;
+type WorkspacesQueryData = QueryData<WorkspacesData>;
+type InvitePolicyQueryData = QueryData<InvitePolicyData>;
 
 export function useUpdateNotifications(options?: { onError?: () => void }) {
   const queryClient = useQueryClient();
 
   return useMutation<
-    SafeResult<UpdateNotificationsData>,
+    SafeResult<UpdateResponse>,
     Error,
     { workspaceId: string; notifications: Partial<WorkspaceNotifications> },
     { previousNotifications: NotificationsQueryData | undefined }
@@ -86,7 +79,7 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
             context.previousNotifications
           );
         }
-        handleApiError(result.error, 'Failed to update notifications');
+        showErrorToast(result.error);
         options?.onError?.();
         return;
       }
@@ -100,9 +93,7 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
           context.previousNotifications
         );
       }
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process operation');
       options?.onError?.();
     },
     onSettled: (_, __, variables) => {
@@ -113,12 +104,8 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
   });
 }
 
-interface RotateInviteData {
-  inviteUrl: string;
-}
-
 export function useRotateInvite() {
-  return useMutation<SafeResult<RotateInviteData>, Error, string>({
+  return useMutation<SafeResult<InviteUrlData>, Error, string>({
     mutationFn: async (workspaceId: string) => {
       const [error, response] = await apiClient.workspace.invite.rotate({
         params: { workspaceId },
@@ -127,21 +114,15 @@ export function useRotateInvite() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        handleApiError(result.error, 'Failed to reset invite token');
+        showErrorToast(result.error);
         return;
       }
       toast.success('Invite token reset successfully');
     },
     onError: (error: unknown) => {
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process operation');
     },
   });
-}
-
-interface DeleteWorkspaceData {
-  deleted: boolean;
 }
 
 export function useDeleteWorkspace(
@@ -151,10 +132,10 @@ export function useDeleteWorkspace(
   const queryClient = useQueryClient();
 
   return useMutation<
-    SafeResult<DeleteWorkspaceData>,
+    SafeResult<DeleteResponse>,
     Error,
     string,
-    { previousQueries: QuerySnapshot }
+    { previousQueries: QuerySnapshot<WorkspacesQueryData> }
   >({
     mutationFn: async (workspaceId: string) => {
       const [error, response] = await apiClient.workspace.delete({
@@ -166,9 +147,10 @@ export function useDeleteWorkspace(
       await queryClient.cancelQueries({ queryKey: ['workspaces'] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<WorkspacesQueryData>({
-        queryKey: ['workspaces'],
-      });
+      const previousQueries: QuerySnapshot<WorkspacesQueryData> =
+        queryClient.getQueriesData<WorkspacesQueryData>({
+          queryKey: ['workspaces'],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<WorkspacesQueryData>({ queryKey: ['workspaces'] }, (old) => {
@@ -191,7 +173,7 @@ export function useDeleteWorkspace(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        handleApiError(result.error, 'Failed to delete workspace');
+        showErrorToast(result.error);
         return;
       }
 
@@ -207,30 +189,13 @@ export function useDeleteWorkspace(
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
     },
   });
 }
-
-interface LeaveWorkspaceData {
-  workspaceId: string;
-  workspaceDeleted?: boolean;
-}
-
-type WorkspaceInvitePolicy = 'private' | 'whitelisted' | 'protected';
-
-interface InvitePolicyData {
-  workspaceId: string;
-  workspaceInvitePolicy: WorkspaceInvitePolicy;
-  workspaceInviteDomains: string[] | null;
-}
-
-type InvitePolicyQueryData = SafeResult<InvitePolicyData>;
 
 export function useUpdateInvitePolicy(options?: { onError?: () => void; onSuccess?: () => void }) {
   const queryClient = useQueryClient();
@@ -284,7 +249,7 @@ export function useUpdateInvitePolicy(options?: { onError?: () => void; onSucces
             context.previousPolicy
           );
         }
-        handleApiError(result.error, 'Failed to update invite policy');
+        showErrorToast(result.error);
         options?.onError?.();
         return;
       }
@@ -298,9 +263,7 @@ export function useUpdateInvitePolicy(options?: { onError?: () => void; onSucces
           context.previousPolicy
         );
       }
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process operation');
       options?.onError?.();
     },
     onSettled: (_, __, variables) => {
@@ -309,12 +272,6 @@ export function useUpdateInvitePolicy(options?: { onError?: () => void; onSucces
       });
     },
   });
-}
-
-interface JoinWorkspaceData {
-  workspaceId: string;
-  workspaceName: string;
-  status: 'joined' | 'requested';
 }
 
 export function useJoinWorkspace(options?: {
@@ -347,7 +304,7 @@ export function useJoinWorkspace(options?: {
           });
           return;
         }
-        handleApiError(result.error, 'Failed to join workspace');
+        showErrorToast(result.error);
         return;
       }
 
@@ -367,9 +324,7 @@ export function useJoinWorkspace(options?: {
       options?.onSuccess?.(result.data.status);
     },
     onError: (error: unknown) => {
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process operation');
     },
   });
 }
@@ -384,7 +339,7 @@ export function useLeaveWorkspace(
     SafeResult<LeaveWorkspaceData>,
     Error,
     string,
-    { previousQueries: QuerySnapshot }
+    { previousQueries: QuerySnapshot<WorkspacesQueryData> }
   >({
     mutationFn: async (workspaceId: string) => {
       const [error, response] = await apiClient.workspace.members.leave({
@@ -396,9 +351,10 @@ export function useLeaveWorkspace(
       await queryClient.cancelQueries({ queryKey: ['workspaces'] });
 
       // Snapshot ALL matching queries for rollback
-      const previousQueries: QuerySnapshot = queryClient.getQueriesData<WorkspacesQueryData>({
-        queryKey: ['workspaces'],
-      });
+      const previousQueries: QuerySnapshot<WorkspacesQueryData> =
+        queryClient.getQueriesData<WorkspacesQueryData>({
+          queryKey: ['workspaces'],
+        });
 
       // Update ALL matching queries
       queryClient.setQueriesData<WorkspacesQueryData>({ queryKey: ['workspaces'] }, (old) => {
@@ -433,7 +389,7 @@ export function useLeaveWorkspace(
           });
           return;
         }
-        handleApiError(result.error, 'Failed to leave workspace');
+        showErrorToast(result.error);
         return;
       }
 
@@ -453,9 +409,7 @@ export function useLeaveWorkspace(
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to process operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });

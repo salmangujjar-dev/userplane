@@ -15,6 +15,7 @@ import type { DomainSortField, SortDirection } from '@/hooks/use-workspace-domai
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
+import type { DomainResponse } from '@/lib/types';
 import {
   useCreateDomain,
   useUpdateDomain,
@@ -108,7 +109,7 @@ export function DomainsSection() {
     async (domainUrl: string): Promise<{ domainId: string; domainUrl: string } | null> => {
       return new Promise((resolve) => {
         createDomainMutation.mutate(domainUrl, {
-          onSuccess: (result) => {
+          onSuccess: (result: { success: boolean; data?: DomainResponse }) => {
             if (result.success && result.data?.domain) {
               resolve({
                 domainId: result.data.domain.domainId,

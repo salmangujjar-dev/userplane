@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 
 export type WorkspaceInvitePolicy = 'private' | 'whitelisted' | 'protected';
 export type WorkspaceAccessStatus = 'member' | 'can_join' | 'can_request' | 'no_access';
@@ -38,7 +38,7 @@ export function useWorkspaceStatus(workspaceId: string | undefined) {
         params: { workspaceId },
       });
 
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled: !!workspaceId,
     staleTime: 30 * 1000, // 30 seconds - shorter than workspace data

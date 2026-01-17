@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/client';
-import { handleQueryResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 import { DEFAULT_WORKSPACES_PER_PAGE } from '@/constants/pagination';
 
 /**
@@ -56,7 +56,7 @@ export function useWorkspaces(options?: {
           include_workspace_membership: !minimal,
         },
       });
-      return handleQueryResult(error, response?.data ?? null);
+      return handleSafeResult(error, response?.data ?? null);
     },
     enabled,
     staleTime: 5 * 60 * 1000,
