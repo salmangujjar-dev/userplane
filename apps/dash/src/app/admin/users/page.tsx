@@ -6,6 +6,7 @@ import { useQueryState } from 'nuqs';
 import { Input } from '@workspace/ui/components/input';
 import { Search, UserCheck, Clock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
+import { AdminTopActions } from '@/components/navigation/admin-top-actions';
 import { UserCard } from '@/components/admin/user-card';
 import { UserDetailSheet } from '@/components/admin/user-detail-sheet';
 import { AdminBanUserModal } from '@/components/modals/admin-ban-user-modal';
@@ -36,6 +37,21 @@ import {
   useAdminRevokeAllSessions,
   type AdminUserSession,
 } from '@/hooks/use-admin-api';
+import {
+  useAdminProvisionWorkspace,
+  useAdminCreateWorkspaceInvite,
+  type AdminProvisionWorkspaceResponse,
+  type AdminWorkspaceCreateInviteResponse,
+} from '@/hooks/use-admin-workspace-api';
+import {
+  AdminProvisionWorkspaceModal,
+  AdminProvisionSuccessModal,
+} from '@/components/modals/admin-provision-workspace-modal';
+import {
+  AdminCreateWorkspaceInviteModal,
+  AdminCreateWorkspaceInviteSuccessModal,
+} from '@/components/modals/admin-create-workspace-invite-modal';
+import type { PlanId } from '@workspace/pricing';
 import {
   ADMIN_USERS_PAGINATION,
   ADMIN_USER_SESSIONS_PAGINATION,
@@ -117,6 +133,14 @@ function AdminUsersPageContent() {
   const [userForSessions, setUserForSessions] = useState<UserToAction | null>(null);
   const [sessionToRevoke, setSessionToRevoke] = useState<AdminUserSession | null>(null);
   const [userToRevokeAllSessions, setUserToRevokeAllSessions] = useState<UserToAction | null>(null);
+  const [showProvisionModal, setShowProvisionModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [provisionResult, setProvisionResult] = useState<AdminProvisionWorkspaceResponse | null>(
+    null
+  );
+  const [showCreateInviteModal, setShowCreateInviteModal] = useState(false);
+  const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
+  const [inviteResult, setInviteResult] = useState<AdminWorkspaceCreateInviteResponse | null>(null);
 
   // Hooks
   const { impersonateUser, isPending: isImpersonating } = useImpersonation();
@@ -124,6 +148,8 @@ function AdminUsersPageContent() {
   const unbanMutation = useAdminUnbanUser();
   const revokeSessionMutation = useAdminRevokeSession();
   const revokeAllSessionsMutation = useAdminRevokeAllSessions();
+  const provisionMutation = useAdminProvisionWorkspace();
+  const createInviteMutation = useAdminCreateWorkspaceInvite();
 
   // Debounce all filter changes (search, status, sort) together
   useEffect(() => {
@@ -225,7 +251,7 @@ function AdminUsersPageContent() {
           </div>
         </div>
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-end gap-3 px-6 py-4" />
+          <AdminTopActions />
           <div className="flex-1 overflow-y-auto px-6 pb-8">
             <Skeleton className="h-6 w-32 mb-2" />
             <Skeleton className="h-4 w-48 mb-6" />
@@ -322,6 +348,34 @@ function AdminUsersPageContent() {
     }
   };
 
+  const handleProvision = (data: {
+    owner: { email: string; name: string };
+    workspace: { name: string; url: string; plan: PlanId };
+    members: Array<{ email: string; name: string; role: 'admin' | 'member' }>;
+  }) => {
+    provisionMutation.mutate(data, {
+      onSuccess: (result) => {
+        setShowProvisionModal(false);
+        if (result.success) {
+          setProvisionResult(result.data);
+          setShowSuccessModal(true);
+        }
+      },
+    });
+  };
+
+  const handleCreateInvite = (data: { workspaceUrl: string; plan?: PlanId }) => {
+    createInviteMutation.mutate(data, {
+      onSuccess: (result) => {
+        setShowCreateInviteModal(false);
+        if (result.success) {
+          setInviteResult(result.data);
+          setShowInviteSuccessModal(true);
+        }
+      },
+    });
+  };
+
   const getSortDirectionIcon = () => {
     if (selectedSortDirection[0] === 'asc') return ArrowUp;
     if (selectedSortDirection[0] === 'desc') return ArrowDown;
@@ -333,7 +387,10 @@ function AdminUsersPageContent() {
       <AdminSidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex items-center justify-end gap-3 px-6 py-4" />
+        <AdminTopActions
+          onCreateInviteClick={() => setShowCreateInviteModal(true)}
+          onProvisionWorkspaceClick={() => setShowProvisionModal(true)}
+        />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="space-y-6">
@@ -555,6 +612,32 @@ function AdminUsersPageContent() {
         user={userToRevokeAllSessions}
         onConfirm={confirmRevokeAllSessions}
         isPending={revokeAllSessionsMutation.isPending}
+      />
+
+      <AdminProvisionWorkspaceModal
+        open={showProvisionModal}
+        onOpenChange={setShowProvisionModal}
+        onSubmit={handleProvision}
+        isPending={provisionMutation.isPending}
+      />
+
+      <AdminProvisionSuccessModal
+        open={showSuccessModal}
+        onOpenChange={setShowSuccessModal}
+        result={provisionResult}
+      />
+
+      <AdminCreateWorkspaceInviteModal
+        open={showCreateInviteModal}
+        onOpenChange={setShowCreateInviteModal}
+        onSubmit={handleCreateInvite}
+        isPending={createInviteMutation.isPending}
+      />
+
+      <AdminCreateWorkspaceInviteSuccessModal
+        open={showInviteSuccessModal}
+        onOpenChange={setShowInviteSuccessModal}
+        result={inviteResult}
       />
     </div>
   );

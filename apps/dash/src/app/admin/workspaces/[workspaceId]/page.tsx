@@ -3,6 +3,7 @@
 import { useEffect, Suspense } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
+import { AdminTopActions } from '@/components/navigation/admin-top-actions';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Card, CardHeader, CardContent } from '@workspace/ui/components/card';
 import { useSession } from '@/hooks/use-session';
@@ -51,7 +52,7 @@ function WorkspaceDetailPageContent() {
       <AdminSidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex items-center justify-end gap-3 px-6 py-4" />
+        <AdminTopActions />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="mb-6">
@@ -83,7 +84,7 @@ function WorkspaceDetailPageSkeleton() {
         </div>
       </div>
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-end gap-3 px-6 py-4" />
+        <AdminTopActions />
         <div className="flex-1 overflow-y-auto px-6 pb-8">
           <Skeleton className="h-6 w-32 mb-2" />
           <Skeleton className="h-4 w-48 mb-6" />
