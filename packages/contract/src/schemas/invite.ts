@@ -81,8 +81,17 @@ export const AcceptInviteSchema = z.object({
 
 /**
  * Accept invite result response
+ * Discriminated union based on whether user was already a member
  */
-export const AcceptInviteDataSchema = z.object({
-  workspaceId: z.string(),
-  workspaceName: z.string(),
-});
+export const AcceptInviteDataSchema = z.discriminatedUnion('alreadyMember', [
+  z.object({
+    alreadyMember: z.literal(false),
+    workspaceId: z.string(),
+    workspaceName: z.string(),
+  }),
+  z.object({
+    alreadyMember: z.literal(true),
+    workspaceId: z.string(),
+    workspaceName: z.string(),
+  }),
+]);

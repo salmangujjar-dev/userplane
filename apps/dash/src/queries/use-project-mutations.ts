@@ -2,13 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
 import type { Project } from '@/hooks/use-workspace-projects';
-import {
-  handleSafeResult,
-  handleUnknownError,
-  isErrorCode,
-  showErrorToast,
-  type SafeResult,
-} from '@/lib/errors';
+import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
 import type { ProjectsData, QueryData, QuerySnapshot } from '@/lib/types';
 
 type ProjectsQueryData = QueryData<ProjectsData>;
@@ -215,12 +209,6 @@ export function useDeleteProject(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        if (isErrorCode(result.error, 'PROJECT_LAST_PROJECT_DELETE_FORBIDDEN')) {
-          toast.error("Can't delete the only project", {
-            description: 'Create another project first.',
-          });
-          return;
-        }
         showErrorToast(result.error);
         return;
       }

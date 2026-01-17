@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceStore } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
-import { handleSafeResult, isDefinedError, showErrorToast, type SafeResult } from '@/lib/errors';
+import { handleSafeResult, showErrorToast, type SafeResult } from '@/lib/errors';
 
 /**
  * Hook to fetch the invite token for the current workspace
@@ -161,7 +161,9 @@ export function useValidateInvite(token: string | null, enabled = true) {
  *       { workspaceId: 'workspace-123', token: 'invite-token' },
  *       {
  *         onSuccess: (result) => {
- *           router.push(`/${result.workspaceId}`);
+ *           if (result.success) {
+ *             router.push(`/${result.data.workspaceId}`);
+ *           }
  *         }
  *       }
  *     );
@@ -169,82 +171,39 @@ export function useValidateInvite(token: string | null, enabled = true) {
  * }
  * ```
  */
-interface AcceptInviteData {
-  workspaceId: string;
-  workspaceName: string;
-  isAlreadyMember: boolean;
-}
-
-type AcceptInviteResult =
-  | { success: true; data: AcceptInviteData; error?: never }
-  | { success: false; data?: never; error: { code: string; message: string } };
+type AcceptInviteData =
+  | {
+      alreadyMember: false;
+      workspaceId: string;
+      workspaceName: string;
+    }
+  | {
+      alreadyMember: true;
+      workspaceId: string;
+      workspaceName: string;
+    };
 
 export function useAcceptInvite() {
   const queryClient = useQueryClient();
 
-  return useMutation<AcceptInviteResult, Error, { workspaceId: string; token: string }>({
+  return useMutation<SafeResult<AcceptInviteData>, Error, { workspaceId: string; token: string }>({
     mutationFn: async ({ workspaceId, token }) => {
       const [error, response] = await apiClient.workspace.invite.accept({
         params: { workspaceId },
         body: { token },
       });
-
-      if (error) {
-        // Check if it's a CONFLICT error (already a member) - handle as success case
-        if ('status' in error && error.status === 409) {
-          return {
-            success: true,
-            data: {
-              workspaceId,
-              workspaceName: '',
-              isAlreadyMember: true,
-            },
-          };
-        }
-
-        // Known errors - return as error result
-        if (isDefinedError(error)) {
-          return {
-            success: false,
-            error: { code: error.code, message: error.message },
-          };
-        }
-
-        // Unknown error - throw for Sentry
-        throw error;
-      }
-
-      return {
-        success: true,
-        data: {
-          ...response.data,
-          isAlreadyMember: false,
-        },
-      };
+      return handleSafeResult(error, response?.data ?? null);
     },
     onSuccess: (result) => {
       if (!result.success) {
-        // Handle known errors gracefully
-        if (result.error.code === 'INVITE_TOKEN_INVALID') {
-          toast.error('Invalid invite link', {
-            description: 'This invite link is invalid or has expired.',
-          });
-          return;
-        }
-        if (result.error.code === 'INVITE_TOKEN_INVALIDATED') {
-          toast.error('Invite revoked', {
-            description: 'This invite has been revoked by the workspace owner.',
-          });
-          return;
-        }
-        toast.error(result.error.message || 'Failed to join workspace');
+        showErrorToast(result.error);
         return;
       }
 
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       queryClient.invalidateQueries({ queryKey: ['workspace', result.data.workspaceId] });
 
-      if (result.data.isAlreadyMember) {
+      if (result.data.alreadyMember) {
         // Don't show message for already member case
         return;
       }
