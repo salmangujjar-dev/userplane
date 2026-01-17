@@ -6,6 +6,7 @@ import { useQueryState } from 'nuqs';
 import { Input } from '@workspace/ui/components/input';
 import { Search, Building2, Clock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
+import { AdminTopActions } from '@/components/navigation/admin-top-actions';
 import { WorkspaceCard } from '@/components/admin/workspace-card';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
@@ -39,8 +40,6 @@ import {
   AdminCreateWorkspaceInviteSuccessModal,
 } from '@/components/modals/admin-create-workspace-invite-modal';
 import type { AdminProvisionWorkspaceResponse } from '@/hooks/use-admin-workspace-api';
-import { Button } from '@workspace/ui/components/button';
-import { Plus, Link as LinkIcon } from 'lucide-react';
 import { ADMIN_WORKSPACES_PAGINATION } from '@workspace/contract';
 import type { PlanId } from '@workspace/pricing';
 
@@ -303,30 +302,17 @@ function AdminRecordingsPageContent() {
       <AdminSidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex items-center justify-end gap-3 px-6 py-4" />
+        <AdminTopActions
+          onCreateInviteClick={() => setShowCreateInviteModal(true)}
+          onProvisionWorkspaceClick={() => setShowProvisionModal(true)}
+        />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="space-y-6">
             <div className="mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">Workspaces</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Manage userplane workspaces</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => setShowCreateInviteModal(true)}
-                    variant="outline"
-                    className="rounded-full"
-                  >
-                    <LinkIcon className="h-4 w-4 mr-2" />
-                    Create Invite
-                  </Button>
-                  <Button onClick={() => setShowProvisionModal(true)} className="rounded-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Provision Workspace
-                  </Button>
-                </div>
+              <div>
+                <h2 className="text-lg font-semibold">Workspaces</h2>
+                <p className="text-sm text-muted-foreground mt-1">Manage userplane workspaces</p>
               </div>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
                 <div className="relative w-80">
@@ -493,7 +479,7 @@ function AdminRecordingsPageSkeleton() {
         </div>
       </div>
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-end gap-3 px-6 py-4" />
+        <AdminTopActions />
         <div className="flex-1 overflow-y-auto px-6 pb-8">
           <Skeleton className="h-6 w-32 mb-2" />
           <Skeleton className="h-4 w-48 mb-6" />
