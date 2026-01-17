@@ -27,12 +27,10 @@ import {
 import {
   UPLOAD_STATUS_OPTIONS,
   STREAMING_STATUS_OPTIONS,
-  DELETED_STATUS_OPTIONS,
-  WEEKS_TO_SHOW_OPTIONS,
-  PIE_COLORS,
-  chartConfig,
-  formatWeekLabel,
-} from './constants';
+  ADMIN_FILTER_STATUS_OPTIONS,
+  ADMIN_RECORDING_WEEKS_OPTIONS,
+} from '@workspace/contract';
+import { PIE_COLORS, chartConfig, formatWeekLabel } from './utils';
 
 interface RecordingsTabProps {
   workspaceId: string;
@@ -150,7 +148,7 @@ export function RecordingsTab({ workspaceId }: RecordingsTabProps) {
       <div className="flex items-center gap-2 mt-3 mb-6 flex-wrap">
         <FilterDropdown
           label="Time Range"
-          options={WEEKS_TO_SHOW_OPTIONS}
+          options={ADMIN_RECORDING_WEEKS_OPTIONS}
           selected={selectedWeeksToShow}
           onSelectionChange={setSelectedWeeksToShow}
           placeholder="Time range..."
@@ -159,7 +157,7 @@ export function RecordingsTab({ workspaceId }: RecordingsTabProps) {
         />
         <FilterDropdown
           label="Status"
-          options={DELETED_STATUS_OPTIONS}
+          options={ADMIN_FILTER_STATUS_OPTIONS}
           selected={selectedDeletedStatus}
           onSelectionChange={setSelectedDeletedStatus}
           placeholder="Recording status..."
@@ -219,7 +217,7 @@ export function RecordingsTab({ workspaceId }: RecordingsTabProps) {
                       onClick={() => setActiveChart(chart)}
                     >
                       <span className="text-xs text-muted-foreground">
-                        {chartConfig[chart].label}
+                        {chartConfig[chart]?.label}
                       </span>
                       <span className="text-lg font-bold leading-none sm:text-3xl">
                         {key === 'recordingCount'
@@ -303,7 +301,7 @@ export function RecordingsTab({ workspaceId }: RecordingsTabProps) {
                       onClick={() => setActivePieChart(chart)}
                     >
                       <span className="text-xs text-muted-foreground">
-                        {chartConfig[chart].label}
+                        {chartConfig[chart]?.label}
                       </span>
                       <span className="text-lg font-bold leading-none sm:text-3xl">
                         {key === 'recordingCount'

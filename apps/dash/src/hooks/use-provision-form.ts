@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { PlanId } from '@workspace/pricing';
 import type { AdminProvisionRole } from '@workspace/contract';
+import { PLAN_OPTIONS } from '@workspace/contract';
 
 /**
  * Form member interface using contract types
@@ -21,18 +22,9 @@ export interface ProvisionFormData {
 }
 
 /**
- * Plan options for workspace provisioning
+ * Re-export PLAN_OPTIONS from contract for backward compatibility
  */
-export const PLAN_OPTIONS: Array<{ value: PlanId; label: string }> = [
-  { value: 'early_bird_monthly', label: 'Early Bird Monthly' },
-  { value: 'tiny_bird_monthly', label: 'Tiny Bird Monthly' },
-  { value: 'starter_monthly', label: 'Starter Monthly' },
-  { value: 'starter_annual', label: 'Starter Annual' },
-  { value: 'scale_up_monthly', label: 'Scale Up Monthly' },
-  { value: 'scale_up_annual', label: 'Scale Up Annual' },
-  { value: 'enterprise_monthly', label: 'Enterprise Monthly' },
-  { value: 'enterprise_annual', label: 'Enterprise Annual' },
-];
+export { PLAN_OPTIONS };
 
 /**
  * Hook for managing workspace provisioning form state

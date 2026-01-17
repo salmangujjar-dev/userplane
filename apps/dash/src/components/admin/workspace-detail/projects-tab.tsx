@@ -37,28 +37,16 @@ import {
   useAdminRestoreProject,
 } from '@/hooks/use-admin-workspace-api';
 import { SectionError } from '@/components/shared/section-error';
-import { ADMIN_WORKSPACE_PROJECTS_PAGINATION } from '@workspace/contract';
+import {
+  ADMIN_WORKSPACE_PROJECTS_PAGINATION,
+  ADMIN_FILTER_STATUS_OPTIONS,
+  ADMIN_PROJECT_SORT_OPTIONS,
+  SORT_DIRECTION_OPTIONS,
+} from '@workspace/contract';
 import { AdminDeactivateProjectModal } from '@/components/modals/admin-deactivate-project-modal';
 import { AdminRestoreProjectModal } from '@/components/modals/admin-restore-project-modal';
 
 const ITEMS_PER_PAGE = ADMIN_WORKSPACE_PROJECTS_PAGINATION.DEFAULT_PER_PAGE;
-
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active' },
-  { value: 'deleted', label: 'Deleted' },
-  { value: 'all', label: 'All' },
-];
-
-const SORT_BY_OPTIONS = [
-  { value: 'created_at', label: 'Created At' },
-  { value: 'updated_at', label: 'Updated At' },
-  { value: 'project_title', label: 'Name' },
-];
-
-const SORT_DIRECTION_OPTIONS = [
-  { value: 'desc', label: 'Newest First' },
-  { value: 'asc', label: 'Oldest First' },
-];
 
 interface ProjectsTabProps {
   workspaceId: string;
@@ -224,7 +212,7 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
           <div className="flex items-center gap-2 ml-2">
             <FilterDropdown
               label="Status"
-              options={STATUS_OPTIONS}
+              options={ADMIN_FILTER_STATUS_OPTIONS}
               selected={selectedStatus}
               onSelectionChange={setSelectedStatus}
               placeholder="Filter status..."
@@ -233,7 +221,7 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
             />
             <FilterDropdown
               label="Sort by"
-              options={SORT_BY_OPTIONS}
+              options={ADMIN_PROJECT_SORT_OPTIONS}
               selected={selectedSortBy}
               onSelectionChange={setSelectedSortBy}
               placeholder="Sort by..."

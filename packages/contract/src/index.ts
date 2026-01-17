@@ -41,6 +41,9 @@ export * from './schemas';
 // Export all constants
 export * from './constants';
 
+// Export UI options
+export * from './ui-options';
+
 // Export utility functions
 export * from './utils/token';
 export * from './utils/errors';

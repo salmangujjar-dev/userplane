@@ -5,4 +5,4 @@ export { MembersTab } from './members-tab';
 export { RecordingsTab } from './recordings-tab';
 export { ProjectsTab } from './projects-tab';
 export * from './types';
-export * from './constants';
+export * from './utils';

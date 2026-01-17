@@ -5,6 +5,14 @@ import {
   DomainStatusSchema,
   SortDirectionSchema,
   PaginationMetaSchema,
+  WorkspaceIdSchema,
+  LinkIdSchema,
+  ProjectIdSchema,
+  DomainIdSchema,
+  WorkspaceMemberIdSchema,
+  TitleSchema,
+  ReferenceTextSchema,
+  ProviderIdSchema,
 } from './common';
 import { LINK_PAGINATION } from '../constants';
 
@@ -22,7 +30,7 @@ export const LinkSortFieldSchema = z.enum(['created_at', 'link_title']);
  */
 export const ListLinksQuerySchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
   }),
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
@@ -33,9 +41,9 @@ export const ListLinksQuerySchema = z.object({
       .max(LINK_PAGINATION.MAX_PER_PAGE)
       .optional()
       .default(LINK_PAGINATION.DEFAULT_PER_PAGE),
-    created_by: z.array(z.string()).optional(),
-    project_id: z.array(z.string()).optional(),
-    domain_id: z.array(z.string()).optional(),
+    created_by: z.array(WorkspaceMemberIdSchema).optional(),
+    project_id: z.array(ProjectIdSchema).optional(),
+    domain_id: z.array(DomainIdSchema).optional(),
     link_provider_type: z.array(LinkProviderTypeSchema).optional(),
     link_type: LinkTypeSchema.optional(),
     sort_by: LinkSortFieldSchema.optional().default('created_at'),
@@ -47,7 +55,7 @@ export const ListLinksQuerySchema = z.object({
  * Domain info in link
  */
 export const LinkDomainSchema = z.object({
-  domainId: z.string(),
+  domainId: DomainIdSchema,
   url: z.string(),
   status: DomainStatusSchema,
 });
@@ -56,7 +64,7 @@ export const LinkDomainSchema = z.object({
  * Project info in link
  */
 export const LinkProjectSchema = z.object({
-  projectId: z.string(),
+  projectId: ProjectIdSchema,
   title: z.string().nullable(),
 });
 
@@ -73,7 +81,7 @@ export const LinkProjectSchema = z.object({
  * Link item in list
  */
 export const LinkItemSchema = z.object({
-  linkId: z.string(),
+  linkId: LinkIdSchema,
   linkTitle: z.string().nullable(),
   linkType: LinkTypeSchema,
   linkReusable: z.boolean(),
@@ -84,7 +92,7 @@ export const LinkItemSchema = z.object({
   createdAt: z.date(),
   project: LinkProjectSchema,
   creator: z.object({
-    workspaceMemberId: z.string(),
+    workspaceMemberId: WorkspaceMemberIdSchema,
     name: z.string(),
   }),
   domain: LinkDomainSchema,
@@ -100,7 +108,7 @@ export const LinkDetailsSchema = LinkItemSchema;
  * Links list response
  */
 export const LinksListDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   links: z.array(LinkItemSchema),
   pagination: PaginationMetaSchema,
 });
@@ -110,12 +118,12 @@ export const LinksListDataSchema = z.object({
  */
 export const CreateLinkSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
   }),
   body: z.object({
-    projectId: z.string().optional(),
-    domainId: z.string().min(1),
-    linkReference: z.string().max(2048).optional(),
+    projectId: ProjectIdSchema.optional(),
+    domainId: DomainIdSchema,
+    linkReference: ReferenceTextSchema.optional(),
     linkReusable: z.boolean().optional().default(false),
   }),
 });
@@ -124,7 +132,7 @@ export const CreateLinkSchema = z.object({
  * Link create response
  */
 export const LinkCreateDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   link: LinkItemSchema,
 });
 
@@ -133,15 +141,15 @@ export const LinkCreateDataSchema = z.object({
  */
 export const UpdateLinkSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    linkId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    linkId: LinkIdSchema,
   }),
   body: z.object({
-    linkTitle: z.string().max(255).nullable().optional(),
+    linkTitle: TitleSchema.nullable().optional(),
     linkReusable: z.boolean().optional(),
     linkProviderType: LinkProviderTypeSchema.optional(),
-    linkProviderId: z.string().max(255).nullable().optional(),
-    linkProviderRef: z.string().max(2048).nullable().optional(),
+    linkProviderId: ProviderIdSchema.nullable().optional(),
+    linkProviderRef: ReferenceTextSchema.nullable().optional(),
   }),
 });
 
@@ -149,7 +157,7 @@ export const UpdateLinkSchema = z.object({
  * Link update response
  */
 export const LinkUpdateDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   link: LinkItemSchema,
 });
 
@@ -157,7 +165,7 @@ export const LinkUpdateDataSchema = z.object({
  * Link get response
  */
 export const LinkGetDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   link: LinkDetailsSchema,
 });
 
@@ -166,8 +174,8 @@ export const LinkGetDataSchema = z.object({
  */
 export const LinkByIdSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    linkId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    linkId: LinkIdSchema,
   }),
 });
 
@@ -176,8 +184,8 @@ export const LinkByIdSchema = z.object({
  */
 export const DeleteLinkSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    linkId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    linkId: LinkIdSchema,
   }),
 });
 
@@ -185,6 +193,6 @@ export const DeleteLinkSchema = z.object({
  * Link delete response
  */
 export const LinkDeleteDataSchema = z.object({
-  workspaceId: z.string(),
-  linkId: z.string(),
+  workspaceId: WorkspaceIdSchema,
+  linkId: LinkIdSchema,
 });

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FileTypeSchema, UploadStatusSchema } from './common';
+import { FileTypeSchema, UploadStatusSchema, TokenSchema, RecordingIdSchema } from './common';
 import { RECORDING_DURATION_LIMITS } from '../constants/session';
 
 /**
@@ -11,7 +11,7 @@ import { RECORDING_DURATION_LIMITS } from '../constants/session';
  */
 export const GetSessionQuerySchema = z.object({
   query: z.object({
-    'userplane-token': z.string().min(1),
+    'userplane-token': TokenSchema,
   }),
 });
 
@@ -28,9 +28,9 @@ export const SessionInitDataSchema = z.object({
  */
 export const UploadFileSchema = z.object({
   type: FileTypeSchema,
-  name: z.string().min(1),
+  name: z.string().min(1, 'File name is required'),
   size: z.number().int().nonnegative(),
-  mime_type: z.string().min(1),
+  mime_type: z.string().min(1, 'MIME type is required'),
 });
 
 /**
@@ -73,7 +73,7 @@ export const PresignedUrlSchema = z.object({
  * Init upload response
  */
 export const UploadInitDataSchema = z.object({
-  recordingId: z.string(),
+  recordingId: RecordingIdSchema,
   uploadToken: z.string(),
   presignedUrls: z.array(PresignedUrlSchema),
 });
@@ -83,7 +83,7 @@ export const UploadInitDataSchema = z.object({
  */
 export const CompleteUploadSchema = z.object({
   body: z.object({
-    recording_id: z.string().min(1),
+    recording_id: RecordingIdSchema,
   }),
 });
 
@@ -92,6 +92,6 @@ export const CompleteUploadSchema = z.object({
  */
 export const UploadCompleteDataSchema = z.object({
   success: z.boolean(),
-  recordingId: z.string(),
+  recordingId: RecordingIdSchema,
   status: UploadStatusSchema,
 });

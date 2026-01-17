@@ -1,5 +1,15 @@
 import { z } from 'zod';
-import { UploadStatusSchema, SortDirectionSchema, PaginationMetaSchema } from './common';
+import {
+  UploadStatusSchema,
+  SortDirectionSchema,
+  PaginationMetaSchema,
+  WorkspaceIdSchema,
+  RecordingIdSchema,
+  WorkspaceMemberIdSchema,
+  LinkIdSchema,
+  ProjectIdSchema,
+  DomainIdSchema,
+} from './common';
 import { RECORDING_DURATION_LIMITS, RECORDING_PAGINATION } from '../constants';
 
 /**
@@ -16,7 +26,7 @@ export const RecordingSortFieldSchema = z.enum(['created_at', 'recording_duratio
  */
 export const ListRecordingsQuerySchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
   }),
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
@@ -27,9 +37,9 @@ export const ListRecordingsQuerySchema = z.object({
       .max(RECORDING_PAGINATION.MAX_PER_PAGE)
       .optional()
       .default(RECORDING_PAGINATION.DEFAULT_PER_PAGE),
-    created_by: z.array(z.string()).optional(),
-    project_id: z.array(z.string()).optional(),
-    link_id: z.array(z.string()).optional(),
+    created_by: z.array(WorkspaceMemberIdSchema).optional(),
+    project_id: z.array(ProjectIdSchema).optional(),
+    link_id: z.array(LinkIdSchema).optional(),
     sort_by: RecordingSortFieldSchema.optional().default('created_at'),
     sort_direction: SortDirectionSchema.optional().default('desc'),
   }),
@@ -49,7 +59,7 @@ export const CustomMetaSchema = z.record(z.string(), z.unknown());
  * Recording creator information
  */
 export const RecordingCreatorSchema = z.object({
-  workspaceMemberId: z.string(),
+  workspaceMemberId: WorkspaceMemberIdSchema,
   name: z.string(),
 });
 
@@ -57,7 +67,7 @@ export const RecordingCreatorSchema = z.object({
  * Recording item in list
  */
 export const RecordingItemSchema = z.object({
-  recordingId: z.string(),
+  recordingId: RecordingIdSchema,
   recordingThumbnail: z.string().nullable(),
   recordingDurationMs: z.number().int().nullable(),
   createdAt: z.date(),
@@ -68,7 +78,7 @@ export const RecordingItemSchema = z.object({
  * Recordings list response
  */
 export const RecordingsListDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   recordings: z.array(RecordingItemSchema),
   pagination: PaginationMetaSchema,
 });
@@ -97,7 +107,7 @@ export const RecordingResourceSchema = z.object({
  * Link reference in recording detail
  */
 export const LinkRefSchema = z.object({
-  linkId: z.string(),
+  linkId: LinkIdSchema,
   title: z.string().nullable(),
   providerType: z.string().nullable(),
   providerId: z.string().nullable(),
@@ -110,7 +120,7 @@ export const LinkRefSchema = z.object({
  * Project reference in recording detail
  */
 export const RecordingProjectRefSchema = z.object({
-  projectId: z.string().nullable(),
+  projectId: ProjectIdSchema.nullable(),
   title: z.string().nullable(),
 });
 
@@ -118,7 +128,7 @@ export const RecordingProjectRefSchema = z.object({
  * Domain reference in recording detail
  */
 export const RecordingDomainRefSchema = z.object({
-  domainId: z.string(),
+  domainId: DomainIdSchema,
   url: z.string(),
 });
 
@@ -130,7 +140,7 @@ export const RecordingDetailMetaSchema = z.object({
   creator: RecordingCreatorSchema,
   project: RecordingProjectRefSchema,
   domain: RecordingDomainRefSchema,
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   status: UploadStatusSchema,
   systemMeta: SystemMetaSchema.nullable(),
   customMeta: CustomMetaSchema.nullable(),
@@ -142,7 +152,7 @@ export const RecordingDetailMetaSchema = z.object({
  * Recording detail
  */
 export const RecordingDetailSchema = z.object({
-  recordingId: z.string(),
+  recordingId: RecordingIdSchema,
   recordingDurationMs: z.number().int(),
   meta: RecordingDetailMetaSchema,
 });
@@ -151,7 +161,7 @@ export const RecordingDetailSchema = z.object({
  * Recording detail response
  */
 export const RecordingDetailDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   recording: RecordingDetailSchema,
 });
 
@@ -159,7 +169,7 @@ export const RecordingDetailDataSchema = z.object({
  * Recording resource response
  */
 export const RecordingResourceDataSchema = z.object({
-  recordingId: z.string(),
+  recordingId: RecordingIdSchema,
   resource: RecordingResourceSchema,
 });
 
@@ -168,8 +178,8 @@ export const RecordingResourceDataSchema = z.object({
  */
 export const RecordingByIdSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    recordingId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    recordingId: RecordingIdSchema,
   }),
 });
 
@@ -178,8 +188,8 @@ export const RecordingByIdSchema = z.object({
  */
 export const DeleteRecordingSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    recordingId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    recordingId: RecordingIdSchema,
   }),
 });
 
@@ -187,6 +197,6 @@ export const DeleteRecordingSchema = z.object({
  * Recording delete response
  */
 export const RecordingDeleteDataSchema = z.object({
-  workspaceId: z.string(),
-  recordingId: z.string(),
+  workspaceId: WorkspaceIdSchema,
+  recordingId: RecordingIdSchema,
 });

@@ -56,6 +56,9 @@ import {
   ADMIN_USERS_PAGINATION,
   ADMIN_USER_SESSIONS_PAGINATION,
   ADMIN_USER_WORKSPACES_PAGINATION,
+  ADMIN_USER_STATUS_OPTIONS,
+  ADMIN_USER_SORT_OPTIONS,
+  SORT_DIRECTION_OPTIONS,
 } from '@workspace/contract';
 
 const ITEMS_PER_PAGE = ADMIN_USERS_PAGINATION.DEFAULT_PER_PAGE;
@@ -67,22 +70,6 @@ interface UserToAction {
   name: string;
   email: string;
 }
-
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active' },
-  { value: 'banned', label: 'Banned' },
-];
-
-const SORT_BY_OPTIONS = [
-  { value: 'createdAt', label: 'Created At' },
-  { value: 'name', label: 'Name' },
-  { value: 'email', label: 'Email' },
-];
-
-const SORT_DIRECTION_OPTIONS = [
-  { value: 'desc', label: 'Newest First' },
-  { value: 'asc', label: 'Oldest First' },
-];
 
 function UserCardSkeleton() {
   return (
@@ -411,7 +398,7 @@ function AdminUsersPageContent() {
                 <div className="flex items-center gap-2 ml-2">
                   <FilterDropdown
                     label="Status"
-                    options={STATUS_OPTIONS}
+                    options={ADMIN_USER_STATUS_OPTIONS}
                     selected={selectedStatus}
                     onSelectionChange={setSelectedStatus}
                     placeholder="Filter status..."
@@ -420,7 +407,7 @@ function AdminUsersPageContent() {
                   />
                   <FilterDropdown
                     label="Sort by"
-                    options={SORT_BY_OPTIONS}
+                    options={ADMIN_USER_SORT_OPTIONS}
                     selected={selectedSortBy}
                     onSelectionChange={setSelectedSortBy}
                     placeholder="Sort by..."
