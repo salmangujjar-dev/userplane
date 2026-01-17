@@ -9,6 +9,7 @@ import type { ProvisionerService } from '@/api/services/provisioner.service';
 /**
  * POST /workspace - Create a new workspace
  * Requires authentication
+ * Optionally accepts an invite token for workspace creation with predetermined details
  */
 export const createWorkspaceImpl = (provisionerService: ProvisionerService) => {
   return authorized.provisioner.createWorkspace.handler(async ({ input, context }) => {
@@ -17,6 +18,7 @@ export const createWorkspaceImpl = (provisionerService: ProvisionerService) => {
       userId: context.user.id,
       userName: context.user.name,
       userEmail: context.user.email,
+      inviteToken: input.body.inviteToken,
     });
 
     return {

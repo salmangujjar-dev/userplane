@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PLAN_IDS } from '@workspace/pricing';
 
 /**
  * Token and JWT payload schemas
@@ -96,6 +97,20 @@ export const AccessRequestTokenPayloadSchema = z.object({
 });
 
 /**
+ * Workspace create invite token payload
+ * Used to provision workspaces with predetermined workspace ID, URL, and plan
+ * Short keys used to minimize JWT token length
+ */
+export const WorkspaceCreateInviteTokenPayloadSchema = z.object({
+  iss: z.string(), // Issuer
+  wi: z.string(), // workspaceId (predetermined workspace ID)
+  wu: z.string(), // workspaceUrl (workspace URL)
+  wp: z.enum(PLAN_IDS), // workspacePlan (plan ID)
+  iat: z.number(), // Issued at
+  exp: z.number(), // Expiry
+});
+
+/**
  * TypeScript types for JWT payloads
  */
 export type SessionPreferences = z.infer<typeof SessionPreferencesSchema>;
@@ -104,6 +119,9 @@ export type UploadTokenPayload = z.infer<typeof UploadTokenPayloadSchema>;
 export type InviteTokenPayload = z.infer<typeof InviteTokenPayloadSchema>;
 export type DomainVerificationTokenPayload = z.infer<typeof DomainVerificationTokenPayloadSchema>;
 export type AccessRequestTokenPayload = z.infer<typeof AccessRequestTokenPayloadSchema>;
+export type WorkspaceCreateInviteTokenPayload = z.infer<
+  typeof WorkspaceCreateInviteTokenPayloadSchema
+>;
 
 /**
  * Presigned URL info for file uploads

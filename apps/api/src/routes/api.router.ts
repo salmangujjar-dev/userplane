@@ -30,6 +30,7 @@ import {
   adminWorkspaceService,
   adminRecordingService,
   adminProvisioningService,
+  tokenService,
 } from '@/api/services';
 
 // Implementations
@@ -80,7 +81,8 @@ const adminProcedures = createAdminProcedures(
   adminRecordingService,
   adminProvisioningService,
   workspaceService,
-  projectService
+  projectService,
+  tokenService
 );
 const projectProcedures = createProjectProcedures(
   projectService,

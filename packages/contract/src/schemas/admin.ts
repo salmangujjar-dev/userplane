@@ -696,3 +696,33 @@ export type AdminProvisionWorkspaceInput = z.infer<typeof AdminProvisionWorkspac
 export type AdminProvisionOwner = z.infer<typeof AdminProvisionOwnerSchema>;
 export type AdminProvisionMemberResponse = z.infer<typeof AdminProvisionMemberResponseSchema>;
 export type AdminProvisionWorkspaceData = z.infer<typeof AdminProvisionWorkspaceDataSchema>;
+
+// ============================================
+// WORKSPACE INVITE SCHEMAS
+// ============================================
+
+/**
+ * Admin create workspace invite input
+ */
+export const AdminCreateWorkspaceInviteInputSchema = z.object({
+  body: z.object({
+    workspaceUrl: z.string().url('Invalid URL'),
+    plan: z.enum(PLAN_IDS).optional().default('sandbox'),
+  }),
+});
+
+/**
+ * Admin create workspace invite response data
+ */
+export const AdminCreateWorkspaceInviteDataSchema = z.object({
+  inviteUrl: z.string(),
+  workspaceId: z.string(),
+  workspaceUrl: z.string(),
+  workspacePlan: z.enum(PLAN_IDS),
+});
+
+/**
+ * Types - Workspace Invite
+ */
+export type AdminCreateWorkspaceInviteInput = z.infer<typeof AdminCreateWorkspaceInviteInputSchema>;
+export type AdminCreateWorkspaceInviteData = z.infer<typeof AdminCreateWorkspaceInviteDataSchema>;

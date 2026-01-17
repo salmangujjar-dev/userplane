@@ -1,4 +1,5 @@
 import { oc } from '@orpc/contract';
+import { z } from 'zod';
 import {
   AdminUsersListDataSchema,
   AdminUserDetailSchema,
@@ -34,6 +35,8 @@ import {
   AdminGetWorkspaceMemberRecordingStatsInputSchema,
   AdminProvisionWorkspaceInputSchema,
   AdminProvisionWorkspaceDataSchema,
+  AdminCreateWorkspaceInviteInputSchema,
+  AdminCreateWorkspaceInviteDataSchema,
   ApiResponseSchema,
   AdminErrors,
 } from '../schemas';
@@ -491,3 +494,23 @@ export const provisionWorkspace = oc
   })
   .input(AdminProvisionWorkspaceInputSchema)
   .output(ApiResponseSchema(AdminProvisionWorkspaceDataSchema));
+
+/**
+ * POST /admin/workspace/create/invite
+ * Generate workspace create invite URL for admin provisioning
+ */
+export const createWorkspaceInvite = oc
+  .route({
+    method: 'POST',
+    path: '/admin/workspace/create/invite',
+    inputStructure: 'detailed',
+    summary: 'Create workspace invite',
+    description: 'Generate a workspace creation invite URL with predetermined workspace details',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+  })
+  .input(AdminCreateWorkspaceInviteInputSchema)
+  .output(ApiResponseSchema(AdminCreateWorkspaceInviteDataSchema));

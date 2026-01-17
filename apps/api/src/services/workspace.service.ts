@@ -36,6 +36,7 @@ export class WorkspaceService {
    * Create a new workspace
    * Generates unique recording slug internally if not provided
    * Sets default recording preferences from recorder app configuration
+   * Optionally accepts a predetermined workspace ID (for invite-based workspaces)
    * Throws WORKSPACE_NAME_REQUIRED if workspace name is missing
    */
   async create(params: CreateWorkspaceParams, options?: { tx?: Transaction }) {
@@ -54,7 +55,7 @@ export class WorkspaceService {
 
     return this.deps.workspaceRepo.create(
       {
-        workspaceId: generateWorkspaceId(),
+        workspaceId: params.workspaceId || generateWorkspaceId(),
         workspaceName: params.workspaceName,
         recordingSlug,
         workspacePlan: params.workspacePlan,

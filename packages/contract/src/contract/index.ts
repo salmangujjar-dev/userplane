@@ -76,6 +76,9 @@ export const adminContract = {
     deactivate: admin.deactivateProject,
     restore: admin.restoreProject,
   },
+  workspace: {
+    createInvite: admin.createWorkspaceInvite,
+  },
 };
 
 /**
