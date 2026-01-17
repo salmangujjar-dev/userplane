@@ -11,6 +11,8 @@ interface URLInputProps {
   error?: boolean;
   id?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 // Detect protocol and strip it from display value
@@ -46,7 +48,18 @@ const splitUrlForDisplay = (url: string): { origin: string; path: string } => {
 
 export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
   (
-    { value, onChange, placeholder = 'example.com', className, error, id, onKeyDown, ...props },
+    {
+      value,
+      onChange,
+      placeholder = 'example.com',
+      className,
+      error,
+      id,
+      onKeyDown,
+      disabled,
+      onBlur,
+      ...props
+    },
     ref
   ) => {
     const [protocol, setProtocol] = React.useState<'http' | 'https'>('https');
@@ -110,8 +123,9 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
         <button
           type="button"
           onClick={toggleProtocol}
-          className="flex items-center gap-2 border-r border-border pl-3 pr-3 py-2 hover:bg-accent transition-colors"
+          className="flex items-center gap-2 border-r border-border pl-3 pr-3 py-2 hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title={`Switch to ${protocol === 'https' ? 'http' : 'https'}`}
+          disabled={disabled}
         >
           {protocol === 'https' ? (
             <svg
@@ -154,6 +168,8 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
             onChange={handleChange}
             placeholder={placeholder}
             onKeyDown={onKeyDown}
+            onBlur={onBlur}
+            disabled={disabled}
             className="w-full px-3 py-2 bg-transparent border-0 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 text-transparent"
             style={{ caretColor: 'var(--foreground)' }}
             {...props}

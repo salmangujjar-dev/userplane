@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Button } from '@workspace/ui/components/button';
@@ -13,6 +16,15 @@ import { WorkspaceSectionSkeleton } from '@/components/skeleton';
 import { useWorkspaceBillingEmail } from '@/hooks/use-workspace-billing-email';
 import { useUpdateWorkspaceBillingEmail } from '@/queries/use-workspace-billing-email-mutations';
 import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
+import { workspaceNameSchema, billingEmailSchema } from '@/lib/validations';
+
+const workspaceNameFormSchema = z.object({
+  name: workspaceNameSchema,
+});
+
+const billingEmailFormSchema = z.object({
+  email: billingEmailSchema,
+});
 
 export function WorkspaceSection() {
   const workspaceId = useWorkspaceId();
@@ -20,48 +32,71 @@ export function WorkspaceSection() {
   const { data: billingEmailResult, isLoading: isLoadingBilling } = useWorkspaceBillingEmail();
   const { canEdit } = useCanEditWorkspace();
 
-  const [workspaceName, setWorkspaceName] = useState('');
-  const [billingEmail, setBillingEmail] = useState('');
-  const [hasBillingEmailChanges, setHasBillingEmailChanges] = useState(false);
-
   const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const originalName = workspaceData?.workspace.workspaceName || '';
+  const originalBillingEmail = billingEmailResult?.success
+    ? billingEmailResult.data.workspaceBillingEmail || ''
+    : '';
 
+  // Workspace Name Form
+  const {
+    control: nameControl,
+    handleSubmit: handleNameSubmit,
+    reset: resetName,
+    formState: { errors: nameErrors, isDirty: isNameDirty, isValid: isNameValid },
+  } = useForm({
+    resolver: zodResolver(workspaceNameFormSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      name: originalName,
+    },
+  });
+
+  // Billing Email Form
+  const {
+    control: emailControl,
+    handleSubmit: handleEmailSubmit,
+    reset: resetEmail,
+    formState: { errors: emailErrors, isDirty: isEmailDirty, isValid: isEmailValid },
+  } = useForm({
+    resolver: zodResolver(billingEmailFormSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      email: originalBillingEmail,
+    },
+  });
+
+  // Reset form when data loads
   useEffect(() => {
     if (workspaceData?.workspace.workspaceName) {
-      setWorkspaceName(workspaceData.workspace.workspaceName);
+      resetName({ name: workspaceData.workspace.workspaceName });
     }
-  }, [workspaceData]);
+  }, [workspaceData, resetName]);
 
   useEffect(() => {
     if (billingEmailResult?.success) {
-      setBillingEmail(billingEmailResult.data.workspaceBillingEmail || '');
-      setHasBillingEmailChanges(false);
+      resetEmail({ email: billingEmailResult.data.workspaceBillingEmail || '' });
     }
-  }, [billingEmailResult]);
+  }, [billingEmailResult, resetEmail]);
 
   const updateNameMutation = useUpdateWorkspaceName(workspaceId, (originalName) =>
-    setWorkspaceName(originalName)
+    resetName({ name: originalName })
   );
   const updateBillingEmailMutation = useUpdateWorkspaceBillingEmail({
-    onSuccess: () => setHasBillingEmailChanges(false),
+    onSuccess: () => resetEmail({ email: originalBillingEmail }),
   });
 
-  const handleSave = () => {
-    if (workspaceName.trim() && workspaceName !== originalName) {
-      updateNameMutation.mutate(workspaceName.trim());
-    }
+  const onSaveName = (data: { name: string }) => {
+    updateNameMutation.mutate(data.name);
   };
 
-  const handleSaveBillingEmail = () => {
+  const onSaveBillingEmail = (data: { email: string }) => {
     if (!workspaceId) return;
     updateBillingEmailMutation.mutate({
       workspaceId,
-      email: billingEmail.trim(),
+      email: data.email,
     });
   };
-
-  const hasChanges = workspaceName.trim() !== originalName && workspaceName.trim().length > 0;
 
   if (isLoading) {
     return <WorkspaceSectionSkeleton />;
@@ -99,30 +134,42 @@ export function WorkspaceSection() {
           <p className="text-sm text-muted-foreground">Manage your workspace settings</p>
         </div>
         <div className="max-w-2xl space-y-6">
-          <div className="space-y-4">
+          <form onSubmit={handleNameSubmit(onSaveName)} className="space-y-4">
             <div>
               <Label htmlFor="workspace-name">Workspace Name</Label>
               <p className="text-sm text-muted-foreground mt-1">Set the name for your workspace</p>
             </div>
-            <div className="flex gap-2 items-start">
-              <Input
-                id="workspace-name"
-                value={workspaceName}
-                onChange={(e) => setWorkspaceName(e.target.value)}
-                placeholder="Enter workspace name"
-                className="max-w-md"
-                disabled={!canEdit || updateNameMutation.isPending}
-              />
-              {canEdit && hasChanges && (
-                <Button onClick={handleSave} disabled={updateNameMutation.isPending} size="default">
-                  {updateNameMutation.isPending ? 'Saving...' : 'Save'}
-                </Button>
+            <div className="flex gap-2 items-start flex-col">
+              <div className="flex gap-2 items-start w-full">
+                <Controller
+                  name="name"
+                  control={nameControl}
+                  render={({ field }) => (
+                    <Input
+                      id="workspace-name"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder="Enter workspace name"
+                      className="max-w-md"
+                      disabled={!canEdit || updateNameMutation.isPending}
+                    />
+                  )}
+                />
+                {canEdit && isNameDirty && isNameValid && (
+                  <Button type="submit" disabled={updateNameMutation.isPending} size="default">
+                    {updateNameMutation.isPending ? 'Saving...' : 'Save'}
+                  </Button>
+                )}
+              </div>
+              {nameErrors.name && (
+                <p className="text-sm text-destructive">{nameErrors.name.message}</p>
               )}
             </div>
-          </div>
+          </form>
 
           {/* Billing Email Section */}
-          <div className="space-y-4">
+          <form onSubmit={handleEmailSubmit(onSaveBillingEmail)} className="space-y-4">
             <div>
               <Label htmlFor="billing-email">Billing Email</Label>
               <p className="text-sm text-muted-foreground mt-1">
@@ -134,36 +181,40 @@ export function WorkspaceSection() {
                 <Skeleton className="h-10 w-full max-w-md" />
               </div>
             ) : (
-              <div className="flex gap-2 items-start">
-                <Input
-                  id="billing-email"
-                  type="email"
-                  value={billingEmail}
-                  onChange={(e) => {
-                    setBillingEmail(e.target.value);
-                    setHasBillingEmailChanges(
-                      e.target.value !==
-                        (billingEmailResult?.success
-                          ? billingEmailResult.data.workspaceBillingEmail || ''
-                          : '')
-                    );
-                  }}
-                  placeholder="Enter billing email"
-                  className="max-w-md"
-                  disabled={!canEdit || updateBillingEmailMutation.isPending}
-                />
-                {canEdit && hasBillingEmailChanges && (
-                  <Button
-                    onClick={handleSaveBillingEmail}
-                    disabled={updateBillingEmailMutation.isPending}
-                    size="default"
-                  >
-                    {updateBillingEmailMutation.isPending ? 'Saving...' : 'Save'}
-                  </Button>
+              <div className="flex gap-2 items-start flex-col">
+                <div className="flex gap-2 items-start w-full">
+                  <Controller
+                    name="email"
+                    control={emailControl}
+                    render={({ field }) => (
+                      <Input
+                        id="billing-email"
+                        type="email"
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        placeholder="Enter billing email"
+                        className="max-w-md"
+                        disabled={!canEdit || updateBillingEmailMutation.isPending}
+                      />
+                    )}
+                  />
+                  {canEdit && isEmailDirty && isEmailValid && (
+                    <Button
+                      type="submit"
+                      disabled={updateBillingEmailMutation.isPending}
+                      size="default"
+                    >
+                      {updateBillingEmailMutation.isPending ? 'Saving...' : 'Save'}
+                    </Button>
+                  )}
+                </div>
+                {emailErrors.email && (
+                  <p className="text-sm text-destructive">{emailErrors.email.message}</p>
                 )}
               </div>
             )}
-          </div>
+          </form>
         </div>
       </div>
     </>
