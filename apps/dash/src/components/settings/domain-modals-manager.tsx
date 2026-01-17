@@ -15,7 +15,7 @@ import {
   type DomainIdentifier,
   type ConfiguringDomain,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
-} from '@/lib/types/domain';
+} from '@/types/domain';
 
 interface DomainModalsManagerProps {
   workspaceId: string;

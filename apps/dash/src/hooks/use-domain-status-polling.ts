@@ -8,7 +8,7 @@ import { useWorkspaceId } from '@/stores/workspace';
 import {
   type DomainRecordingPreferences,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
-} from '@/lib/types/domain';
+} from '@/types/domain';
 
 interface PollingResult {
   verified: boolean;

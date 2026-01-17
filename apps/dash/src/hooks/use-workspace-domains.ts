@@ -3,7 +3,7 @@ import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
 import { handleSafeResult } from '@/lib/errors';
 import { DEFAULT_DOMAINS_PER_PAGE } from '@/constants/pagination';
-import type { WorkspaceDomain } from '@/lib/types';
+import type { WorkspaceDomain } from '@/types';
 
 export type DomainSortField = 'created_at' | 'domain_url';
 export type SortDirection = 'asc' | 'desc';

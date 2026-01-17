@@ -29,7 +29,7 @@ import { DomainUrlSchema } from '@workspace/contract';
 import {
   type DomainRecordingPreferences,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
-} from '@/lib/types/domain';
+} from '@/types/domain';
 
 type ModalStep = 'create' | 'verify' | 'verifying' | 'success' | 'failed';
 

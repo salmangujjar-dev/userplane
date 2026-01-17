@@ -10,7 +10,7 @@ import {
   PaginationEllipsis,
 } from '@workspace/ui/components/pagination';
 import { Plus } from 'lucide-react';
-import type { WorkspaceDomain } from '@/lib/types';
+import type { WorkspaceDomain } from '@/types';
 import { DomainListItem } from './domain-list-item';
 
 interface DomainListProps {

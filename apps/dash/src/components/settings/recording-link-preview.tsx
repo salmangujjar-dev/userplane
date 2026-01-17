@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { addAlpha } from '@/lib/color-utils';
+import { addAlpha } from '@/lib/colors';
 import { useRecordingLinkPreview } from '@/hooks/use-recording-link-preview';
 import { cn } from '@workspace/ui/lib/utils';
 import { CSSProperties } from 'react';

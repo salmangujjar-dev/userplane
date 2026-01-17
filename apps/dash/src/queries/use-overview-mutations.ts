@@ -7,7 +7,7 @@ import {
   showErrorToast,
   type SafeResult,
 } from '@/lib/errors';
-import type { WorkspaceData } from '@/lib/types';
+import type { WorkspaceData } from '@/types';
 
 interface UpdateWorkspaceNameData {
   workspaceName: string;

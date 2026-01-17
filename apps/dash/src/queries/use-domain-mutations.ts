@@ -14,7 +14,7 @@ import type {
   WorkspaceDomain,
   QueryData,
   QuerySnapshot,
-} from '@/lib/types';
+} from '@/types';
 
 type DomainsQueryData = QueryData<DomainsData>;
 

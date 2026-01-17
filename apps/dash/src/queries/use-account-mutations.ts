@@ -7,7 +7,7 @@ import {
   showErrorToast,
   type SafeResult,
 } from '@/lib/errors';
-import type { AccountData, UpdateAccountData } from '@/lib/types';
+import type { AccountData, UpdateAccountData } from '@/types';
 
 export function useUpdateAccountName(onError?: (originalName: string) => void) {
   const queryClient = useQueryClient();

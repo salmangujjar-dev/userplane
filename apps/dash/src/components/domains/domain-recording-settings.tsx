@@ -1,6 +1,6 @@
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
-import type { DomainRecordingPreferences } from '@/lib/types/domain';
+import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainRecordingSettingsProps {
   settings: DomainRecordingPreferences;
