@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { Button } from '@workspace/ui/components/button';
@@ -15,14 +18,33 @@ import { useAccount } from '@/hooks/use-account';
 import { useAuth } from '@/hooks/use-auth';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
+import { domainUrlSchema } from '@/lib/validations';
+
+const workspaceFormSchema = z.object({
+  workspace: domainUrlSchema,
+});
 
 export default function CreateWorkspacePage() {
-  const [workspace, setWorkspace] = useState('');
   const [createdWorkspace, setCreatedWorkspace] = useState<{
     workspaceId: string;
     workspaceName: string;
   } | null>(null);
   const [tokenCreationFailed, setTokenCreationFailed] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(workspaceFormSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      workspace: '',
+    },
+  });
+
+  const workspace = watch('workspace');
 
   const router = useRouter();
   const [inviteToken] = useQueryState('token');
@@ -77,13 +99,9 @@ export default function CreateWorkspacePage() {
     );
   };
 
-  const handleCreateWorkspace = () => {
-    if (!workspace.trim()) {
-      return;
-    }
-
+  const handleCreateWorkspace = (data: { workspace: string }) => {
     createWorkspace(
-      { url: workspace },
+      { url: data.workspace },
       {
         onSuccess: (result) => {
           // Error already handled by mutation's onSuccess
@@ -208,26 +226,33 @@ export default function CreateWorkspacePage() {
           <h1 className="text-xl font-medium text-foreground">Let&apos;s create your workspace</h1>
         </div>
 
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit(handleCreateWorkspace)} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="workspace">Workspace</Label>
             <p className="text-xs text-muted-foreground">Enter your company domain</p>
-            <URLInput
-              id="workspace"
-              placeholder="ramp.com"
-              value={workspace}
-              onChange={setWorkspace}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && workspace.trim() && !isPending) {
-                  handleCreateWorkspace();
-                }
-              }}
+            <Controller
+              name="workspace"
+              control={control}
+              render={({ field }) => (
+                <URLInput
+                  id="workspace"
+                  placeholder="ramp.com"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={!!errors.workspace}
+                  disabled={isPending}
+                />
+              )}
             />
+            {errors.workspace && (
+              <p className="text-sm text-destructive">{errors.workspace.message}</p>
+            )}
           </div>
 
           <Button
-            onClick={handleCreateWorkspace}
-            disabled={!workspace.trim() || isPending}
+            type="submit"
+            disabled={!isValid || isPending}
             size="lg"
             className="w-full rounded-full px-7 py-6"
           >
@@ -250,7 +275,7 @@ export default function CreateWorkspacePage() {
               Connect using Intercom
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
