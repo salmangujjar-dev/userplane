@@ -6,6 +6,8 @@ import {
   WorkspaceCountDataSchema,
   WorkspaceByIdSchema,
   WorkspaceByIdDataSchema,
+  WorkspaceResourcesCountQuerySchema,
+  WorkspaceResourcesCountDataSchema,
   WorkspacePreferencesGetSchema,
   WorkspacePreferencesGetDataSchema,
   UpdateWorkspacePreferencesSchema,
@@ -152,6 +154,29 @@ export const getWorkspaceById = oc
   })
   .input(WorkspaceByIdSchema)
   .output(ApiResponseSchema(WorkspaceByIdDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/count
+ * Count workspace resources
+ */
+export const getWorkspaceResourcesCount = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/count',
+    inputStructure: 'detailed',
+    summary: 'Count workspace resources',
+    description:
+      'Get counts of various resources in a workspace (projects, recordings, links, domains, members)',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(WorkspaceResourcesCountQuerySchema)
+  .output(ApiResponseSchema(WorkspaceResourcesCountDataSchema));
 
 /**
  * GET /workspace/{workspaceId}/preferences

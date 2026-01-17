@@ -489,4 +489,12 @@ export class LinkService {
 
     return deleted;
   }
+
+  /**
+   * Count links in workspace
+   * Returns the total number of links (not soft-deleted) in the workspace
+   */
+  async countByWorkspace(workspaceId: string): Promise<number> {
+    return this.deps.linkRepo.countByWorkspace(workspaceId);
+  }
 }

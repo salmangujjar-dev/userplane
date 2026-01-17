@@ -506,4 +506,12 @@ export class DomainService {
 
     return { sentEmails, failedEmails };
   }
+
+  /**
+   * Count domains in workspace
+   * Returns the total number of domains (not soft-deleted) in the workspace
+   */
+  async countByWorkspace(workspaceId: string): Promise<number> {
+    return this.deps.domainRepo.countByWorkspace(workspaceId);
+  }
 }

@@ -103,6 +103,7 @@ export function useUpdateMemberRole(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }
@@ -177,6 +178,7 @@ export function useRemoveMember(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }

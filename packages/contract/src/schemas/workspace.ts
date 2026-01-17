@@ -139,6 +139,38 @@ export const WorkspaceByIdDataSchema = z.object({
 });
 
 /**
+ * Workspace resources count query parameters (detailed mode)
+ */
+export const WorkspaceResourcesCountQuerySchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  query: z.object({
+    include_projects: z.coerce.boolean().optional().default(false),
+    include_recordings: z.coerce.boolean().optional().default(false),
+    include_active_recordings: z.coerce.boolean().optional().default(false),
+    include_links: z.coerce.boolean().optional().default(false),
+    include_domains: z.coerce.boolean().optional().default(false),
+    include_members: z.coerce.boolean().optional().default(false),
+  }),
+});
+
+/**
+ * Workspace resources count response
+ */
+export const WorkspaceResourcesCountDataSchema = z.object({
+  workspaceId: z.string(),
+  counts: z.object({
+    projects: z.number().int().nonnegative().optional(),
+    recordings: z.number().int().nonnegative().optional(),
+    activeRecordings: z.number().int().nonnegative().optional(),
+    links: z.number().int().nonnegative().optional(),
+    domains: z.number().int().nonnegative().optional(),
+    members: z.number().int().nonnegative().optional(),
+  }),
+});
+
+/**
  * Workspace preferences
  */
 export const WorkspacePreferencesSchema = z.object({

@@ -439,4 +439,17 @@ export class RecordingService {
 
     return recording;
   }
+
+  /**
+   * Count recordings in workspace by status group
+   * Returns the total number of recordings with the specified status group in the workspace
+   */
+  async countByWorkspace(
+    workspaceId: string,
+    filters?: {
+      statusGroup?: 'AVAILABLE' | 'PENDING' | 'TERMINAL' | 'STALE' | 'ORPHAN' | 'UNAVAILABLE';
+    }
+  ): Promise<number> {
+    return this.deps.recordingRepo.countByWorkspace(workspaceId, filters);
+  }
 }

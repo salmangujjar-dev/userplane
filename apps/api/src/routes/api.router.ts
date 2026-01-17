@@ -60,7 +60,9 @@ const workspaceProcedures = createWorkspaceProcedures(
   workspaceMemberService,
   workspaceService,
   projectService,
-  domainService
+  domainService,
+  recordingService,
+  linkService
 );
 const recordingProcedures = createRecordingProcedures(
   recordingService,

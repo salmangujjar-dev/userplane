@@ -93,6 +93,7 @@ export function useCreateDomain(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }
@@ -158,6 +159,7 @@ export function useUpdateDomain(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }
@@ -230,6 +232,7 @@ export function useDeleteDomain(workspaceId: string | null) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }
@@ -313,6 +316,7 @@ export function useUpdateDomainPreferences(
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }

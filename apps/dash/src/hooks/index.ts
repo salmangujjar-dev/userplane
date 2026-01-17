@@ -19,3 +19,4 @@ export {
   usePollDomainVerification,
 } from './use-verification-flow';
 export { useDomainSectionState } from './use-domain-section-state';
+export { useWorkspaceResourceCounts } from './use-workspace-resource-counts';

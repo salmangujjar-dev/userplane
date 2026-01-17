@@ -81,6 +81,7 @@ export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?:
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['recordings', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-resource-counts', workspaceId] });
     },
   });
 }

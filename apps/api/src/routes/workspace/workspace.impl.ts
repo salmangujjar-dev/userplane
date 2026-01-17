@@ -16,6 +16,8 @@ import type { WorkspaceMemberService } from '@/api/services/workspace-member.ser
 import type { InviteService } from '@/api/services/invite.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { DomainService } from '@/api/services/domain.service';
+import type { RecordingService } from '@/api/services/recording.service';
+import type { LinkService } from '@/api/services/link.service';
 import { createPaginationMeta } from '@/api/types';
 import { getPlanName } from '@workspace/pricing';
 
@@ -84,6 +86,102 @@ export const getWorkspaceByIdImpl = (workspaceService: WorkspaceService) => {
       },
     };
   });
+};
+
+/**
+ * GET /workspace/:workspaceId/count - Count workspace resources
+ * Requires workspace membership
+ */
+export const getWorkspaceResourcesCountImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService,
+  projectService: ProjectService,
+  recordingService: RecordingService,
+  linkService: LinkService,
+  domainService: DomainService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.workspace.getResourcesCount
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const { workspaceId } = input.params;
+      const query = input.query;
+
+      const counts: {
+        projects?: number;
+        recordings?: number;
+        activeRecordings?: number;
+        links?: number;
+        domains?: number;
+        members?: number;
+      } = {};
+
+      // Fetch counts in parallel for better performance
+      const countPromises: Promise<void>[] = [];
+
+      if (query.include_projects) {
+        countPromises.push(
+          projectService.countByWorkspace(workspaceId).then((count) => {
+            counts.projects = count;
+          })
+        );
+      }
+
+      if (query.include_recordings) {
+        countPromises.push(
+          recordingService
+            .countByWorkspace(workspaceId, { statusGroup: 'AVAILABLE' })
+            .then((count) => {
+              counts.recordings = count;
+            })
+        );
+      }
+
+      if (query.include_active_recordings) {
+        countPromises.push(
+          recordingService
+            .countByWorkspace(workspaceId, { statusGroup: 'PENDING' })
+            .then((count) => {
+              counts.activeRecordings = count;
+            })
+        );
+      }
+
+      if (query.include_links) {
+        countPromises.push(
+          linkService.countByWorkspace(workspaceId).then((count) => {
+            counts.links = count;
+          })
+        );
+      }
+
+      if (query.include_domains) {
+        countPromises.push(
+          domainService.countByWorkspace(workspaceId).then((count) => {
+            counts.domains = count;
+          })
+        );
+      }
+
+      if (query.include_members) {
+        countPromises.push(
+          workspaceMemberService.countByWorkspace(workspaceId).then((count) => {
+            counts.members = count;
+          })
+        );
+      }
+
+      await Promise.all(countPromises);
+
+      return {
+        message: 'Workspace resource counts retrieved successfully',
+        data: {
+          workspaceId,
+          counts,
+        },
+      };
+    });
 };
 
 /**
@@ -1228,12 +1326,22 @@ export const createWorkspaceProcedures = (
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService,
   projectService: ProjectService,
-  domainService: DomainService
+  domainService: DomainService,
+  recordingService: RecordingService,
+  linkService: LinkService
 ) => {
   return {
     list: getAllWorkspacesImpl(workspaceService),
     count: countWorkspacesImpl(workspaceService),
     getById: getWorkspaceByIdImpl(workspaceService),
+    getResourcesCount: getWorkspaceResourcesCountImpl(
+      workspaceService,
+      workspaceMemberService,
+      projectService,
+      recordingService,
+      linkService,
+      domainService
+    ),
     status: getWorkspaceStatusImpl(workspaceService),
     updateName: updateWorkspaceNameImpl(workspaceService, workspaceMemberService),
     delete: deleteWorkspaceImpl(workspaceService, workspaceMemberService),

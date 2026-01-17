@@ -5,11 +5,10 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import { Button } from '@workspace/ui/components/button';
-import { ShieldAlert } from 'lucide-react';
+import Logo from '@workspace/ui/components/logo';
 
 interface User {
   id: string;
@@ -40,31 +39,71 @@ export function AdminRevokeAllSessionsModal({
 
   const displayName = user.name || 'this user';
 
+  const consequences = [
+    {
+      title: 'All Sessions Revoked',
+      description: 'User will be logged out from all devices immediately',
+    },
+    {
+      title: 'Sign In Required',
+      description: 'User will need to sign in again to access their account',
+    },
+    {
+      title: 'Security Action',
+      description: 'Use this to enforce logout across all active sessions',
+    },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <ShieldAlert className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <DialogTitle>Revoke All Sessions</DialogTitle>
+      <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
+        <div className="space-y-6 py-4">
+          <div className="flex items-start gap-4">
+            <Logo variant="tiled" size="md" showText={false} />
+            <div className="flex flex-col space-y-1">
+              <DialogTitle className="text-xl font-semibold">Revoke All Sessions</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Revoke all active sessions for <strong>{displayName}</strong> (
+                <strong>{user.email}</strong>)
+              </DialogDescription>
             </div>
           </div>
-          <DialogDescription className="pt-2">
-            Revoke all active sessions for <strong>{displayName}</strong> ({user.email}). The user
-            will be logged out from all devices and will need to sign in again.
-          </DialogDescription>
-        </DialogHeader>
 
-        <DialogFooter className="gap-3">
-          <Button type="button" onClick={() => onOpenChange(false)} disabled={isPending}>
-            Cancel
-          </Button>
-          <Button type="button" variant="secondary" onClick={onConfirm} disabled={isPending}>
-            {isPending ? 'Revoking...' : 'Revoke All Sessions'}
-          </Button>
+          <div className="rounded-lg bg-muted/50 p-4">
+            <div className="space-y-2.5">
+              {consequences.map((consequence) => (
+                <div key={consequence.title} className="flex gap-2">
+                  <span className="text-muted-foreground mt-0.5">•</span>
+                  <div className="space-y-0.5">
+                    <p className="font-medium text-sm">{consequence.title}</p>
+                    <p className="text-xs text-muted-foreground">{consequence.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <div className="flex gap-2 w-full justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              className="rounded-full px-6"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-full px-6"
+              onClick={onConfirm}
+              disabled={isPending}
+            >
+              {isPending ? 'Revoking...' : 'Revoke All Sessions'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
