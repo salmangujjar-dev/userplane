@@ -13,7 +13,7 @@ import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
 import { DomainRecordingSettings } from '@/components/domains/domain-recording-settings';
-import type { DomainRecordingPreferences } from '@/lib/types/domain';
+import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainVerificationPostModalProps {
   open: boolean;

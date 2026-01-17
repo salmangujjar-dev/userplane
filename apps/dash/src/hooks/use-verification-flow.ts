@@ -9,7 +9,7 @@ import {
   type DomainRecordingPreferences,
   type DomainIdentifier,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
-} from '@/lib/types/domain';
+} from '@/types/domain';
 
 // Verification step types
 export type VerificationStep = 'pre' | 'verifying' | 'post' | null;

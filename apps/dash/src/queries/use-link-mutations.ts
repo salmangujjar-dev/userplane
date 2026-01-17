@@ -3,7 +3,7 @@ import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
 import type { Link, LinksData } from '@/hooks/use-workspace-links';
 import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
-import type { QueryData, QuerySnapshot, WorkspaceDomain } from '@/lib/types';
+import type { QueryData, QuerySnapshot, WorkspaceDomain } from '@/types';
 
 interface CreateLinkInput {
   domainId: string;

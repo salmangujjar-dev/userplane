@@ -8,7 +8,7 @@ import {
   type SafeResult,
 } from '@/lib/errors';
 import type { RecordingsData } from '@/hooks/use-workspace-recordings';
-import type { DeleteResponse, QueryData, QuerySnapshot } from '@/lib/types';
+import type { DeleteResponse, QueryData, QuerySnapshot } from '@/types';
 
 type RecordingsQueryData = QueryData<RecordingsData>;
 

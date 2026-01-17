@@ -7,7 +7,7 @@ import {
   showErrorToast,
   type SafeResult,
 } from '@/lib/errors';
-import type { WorkspacePreferences, UpdateResponse, QueryData } from '@/lib/types';
+import type { WorkspacePreferences, UpdateResponse, QueryData } from '@/types';
 
 type PreferencesQueryData = QueryData<WorkspacePreferences>;
 

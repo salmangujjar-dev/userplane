@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getFaviconForUrl } from '@/lib/url-utils';
+import { getFaviconForUrl } from '@/lib/urls';
 
 interface UseFaviconOptions {
   debounceMs?: number;

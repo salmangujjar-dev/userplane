@@ -10,7 +10,7 @@ import {
   type ConfiguringDomain,
   type DomainStatus,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
-} from '@/lib/types/domain';
+} from '@/types/domain';
 import type { VerificationStep } from './use-verification-flow';
 
 // Combined state for all domain section interactions

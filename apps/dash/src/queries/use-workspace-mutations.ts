@@ -20,7 +20,7 @@ import type {
   QuerySnapshot,
   UpdateResponse,
   DeleteResponse,
-} from '@/lib/types';
+} from '@/types';
 
 type NotificationsQueryData = QueryData<NotificationPreferencesData>;
 type WorkspacesQueryData = QueryData<WorkspacesData>;

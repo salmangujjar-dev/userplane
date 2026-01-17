@@ -8,7 +8,7 @@ import {
   type SafeResult,
 } from '@/lib/errors';
 import type { WorkspaceBillingEmailData } from '@/hooks/use-workspace-billing-email';
-import type { QueryData } from '@/lib/types';
+import type { QueryData } from '@/types';
 
 type BillingEmailQueryData = QueryData<WorkspaceBillingEmailData>;
 

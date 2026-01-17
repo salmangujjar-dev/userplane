@@ -20,7 +20,7 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { HelpCircle, AlertCircle } from 'lucide-react';
-import type { DomainRecordingPreferences } from '@/lib/types/domain';
+import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainConfigureModalProps {
   open: boolean;

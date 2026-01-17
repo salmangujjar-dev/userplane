@@ -3,7 +3,7 @@ import { toast } from '@workspace/ui/components/sonner';
 import { apiClient } from '@/client';
 import type { Project } from '@/hooks/use-workspace-projects';
 import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
-import type { ProjectsData, QueryData, QuerySnapshot } from '@/lib/types';
+import type { ProjectsData, QueryData, QuerySnapshot } from '@/types';
 
 type ProjectsQueryData = QueryData<ProjectsData>;
 

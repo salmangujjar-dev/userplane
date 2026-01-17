@@ -15,7 +15,7 @@ import type { DomainSortField, SortDirection } from '@/hooks/use-workspace-domai
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { useWorkspaceId } from '@/stores/workspace';
 import { apiClient } from '@/client';
-import type { DomainResponse } from '@/lib/types';
+import type { DomainResponse } from '@/types';
 import {
   useCreateDomain,
   useUpdateDomain,
@@ -32,7 +32,7 @@ import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import {
   type DomainRecordingPreferences,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
-} from '@/lib/types/domain';
+} from '@/types/domain';
 import { DOMAIN_PAGINATION } from '@workspace/contract';
 
 const ITEMS_PER_PAGE = DOMAIN_PAGINATION.DEFAULT_PER_PAGE;
