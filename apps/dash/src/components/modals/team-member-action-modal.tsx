@@ -10,6 +10,7 @@ import {
 } from '@workspace/ui/components/dialog';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
+import { WORKSPACE_ROLE_OPTIONS } from '@workspace/contract';
 
 type ActionType = 'remove' | 'changeRole';
 type Role = 'owner' | 'admin' | 'member';
@@ -26,23 +27,7 @@ interface TeamMemberActionModalProps {
   canMakeOwner?: boolean;
 }
 
-const ROLE_OPTIONS = [
-  {
-    value: 'owner' as const,
-    label: 'Owner',
-    description: 'Full control over the workspace, including member management and settings',
-  },
-  {
-    value: 'admin' as const,
-    label: 'Admin',
-    description: 'Manage team members, workspace settings, and all workspace content',
-  },
-  {
-    value: 'member' as const,
-    label: 'Member',
-    description: 'View and create content within the workspace',
-  },
-];
+const ROLE_OPTIONS = WORKSPACE_ROLE_OPTIONS;
 
 /**
  * Modal to confirm team member role changes and removal.

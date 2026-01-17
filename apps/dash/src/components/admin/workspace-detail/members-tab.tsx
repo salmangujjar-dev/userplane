@@ -26,7 +26,7 @@ import { useImpersonation } from '@/hooks/use-impersonation';
 import { AdminBanUserModal } from '@/components/modals/admin-ban-user-modal';
 import { ImpersonateConfirmModal } from '@/components/modals/impersonate-confirm-modal';
 import { usePermissions } from '@/hooks/use-permissions';
-import { MEMBERS_PER_PAGE } from './constants';
+import { MEMBERS_PER_PAGE } from './utils';
 import type { UserToAction } from './types';
 
 interface MembersTabProps {

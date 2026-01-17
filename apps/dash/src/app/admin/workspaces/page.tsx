@@ -40,26 +40,15 @@ import {
   AdminCreateWorkspaceInviteSuccessModal,
 } from '@/components/modals/admin-create-workspace-invite-modal';
 import type { AdminProvisionWorkspaceResponse } from '@/hooks/use-admin-workspace-api';
-import { ADMIN_WORKSPACES_PAGINATION } from '@workspace/contract';
+import {
+  ADMIN_WORKSPACES_PAGINATION,
+  ADMIN_WORKSPACE_STATUS_OPTIONS,
+  ADMIN_WORKSPACE_SORT_OPTIONS,
+  SORT_DIRECTION_OPTIONS,
+} from '@workspace/contract';
 import type { PlanId } from '@workspace/pricing';
 
 const ITEMS_PER_PAGE = ADMIN_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE;
-
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active' },
-  { value: 'deleted', label: 'Deactivated' },
-];
-
-const SORT_BY_OPTIONS = [
-  { value: 'createdAt', label: 'Created At' },
-  { value: 'name', label: 'Name' },
-  { value: 'memberCount', label: 'Members' },
-];
-
-const SORT_DIRECTION_OPTIONS = [
-  { value: 'desc', label: 'Newest First' },
-  { value: 'asc', label: 'Oldest First' },
-];
 
 interface WorkspaceToDeactivate {
   workspaceId: string;
@@ -328,7 +317,7 @@ function AdminRecordingsPageContent() {
                 <div className="flex items-center gap-2">
                   <FilterDropdown
                     label="Status"
-                    options={STATUS_OPTIONS}
+                    options={ADMIN_WORKSPACE_STATUS_OPTIONS}
                     selected={selectedStatus}
                     onSelectionChange={setSelectedStatus}
                     placeholder="Filter status..."
@@ -337,7 +326,7 @@ function AdminRecordingsPageContent() {
                   />
                   <FilterDropdown
                     label="Sort by"
-                    options={SORT_BY_OPTIONS}
+                    options={ADMIN_WORKSPACE_SORT_OPTIONS}
                     selected={selectedSortBy}
                     onSelectionChange={setSelectedSortBy}
                     placeholder="Sort by..."

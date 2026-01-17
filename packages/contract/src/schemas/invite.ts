@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EmailSchema } from './common';
+import { EmailSchema, WorkspaceIdSchema, TokenSchema } from './common';
 
 /**
  * Invite schemas
@@ -12,7 +12,7 @@ import { EmailSchema } from './common';
  */
 export const SendInvitesSchema = z.object({
   body: z.object({
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
     emails: z.array(EmailSchema).min(1).max(10),
   }),
 });
@@ -22,7 +22,7 @@ export const SendInvitesSchema = z.object({
  */
 export const SendWorkspaceInvitesSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
   }),
   body: z.object({
     emails: z.array(EmailSchema).min(1).max(10),
@@ -52,7 +52,7 @@ export const SendInvitesResultSchema = z.object({
  */
 export const InviteActionQuerySchema = z.object({
   body: z.object({
-    token: z.string().min(1),
+    token: TokenSchema,
   }),
 });
 
@@ -60,7 +60,7 @@ export const InviteActionQuerySchema = z.object({
  * Validate invite result response
  */
 export const InviteActionResultSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
   invitedByName: z.string(),
   invitedByEmail: z.string(),
@@ -72,10 +72,10 @@ export const InviteActionResultSchema = z.object({
  */
 export const AcceptInviteSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
   }),
   body: z.object({
-    token: z.string().min(1),
+    token: TokenSchema,
   }),
 });
 
@@ -86,12 +86,12 @@ export const AcceptInviteSchema = z.object({
 export const AcceptInviteDataSchema = z.discriminatedUnion('alreadyMember', [
   z.object({
     alreadyMember: z.literal(false),
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
   }),
   z.object({
     alreadyMember: z.literal(true),
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
   }),
 ]);

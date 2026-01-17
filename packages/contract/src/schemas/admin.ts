@@ -4,6 +4,7 @@ import {
   EmailSchema,
   WORKSPACE_ROLE_VALUES,
   SORT_DIRECTION_VALUES,
+  SortDirectionSchema,
   STREAMING_STATUS_VALUES,
   UPLOAD_STATUS_VALUES,
   ADMIN_USER_SORT_FIELDS,
@@ -14,6 +15,12 @@ import {
   ADMIN_FILTER_STATUS_VALUES,
   ADMIN_RECORDING_WEEKS_VALUES,
   ADMIN_PROVISION_ROLE_VALUES,
+  WorkspaceIdSchema,
+  UserIdSchema,
+  SessionIdSchema,
+  ProjectIdSchema,
+  NameSchema,
+  ReasonTextSchema,
 } from './common';
 import {
   ADMIN_USERS_PAGINATION,
@@ -32,7 +39,7 @@ import {
  * Admin user workspace info
  */
 export const AdminUserWorkspaceSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
   workspaceRole: z.enum(WORKSPACE_ROLE_VALUES),
   joinedAt: z.string(),
@@ -42,12 +49,12 @@ export const AdminUserWorkspaceSchema = z.object({
  * Admin user session info
  */
 export const AdminUserSessionSchema = z.object({
-  id: z.string(),
+  id: SessionIdSchema,
   ipAddress: z.string().nullable(),
   userAgent: z.string().nullable(),
   createdAt: z.string(),
   expiresAt: z.string(),
-  impersonatedBy: z.string().nullable(),
+  impersonatedBy: UserIdSchema.nullable(),
   isCurrent: z.boolean().optional(),
 });
 
@@ -55,7 +62,7 @@ export const AdminUserSessionSchema = z.object({
  * Admin user in list view
  */
 export const AdminUserListItemSchema = z.object({
-  id: z.string(),
+  id: UserIdSchema,
   name: z.string(),
   email: z.string(),
   image: z.string().nullable(),
@@ -73,7 +80,7 @@ export const AdminUserListItemSchema = z.object({
  * Note: Sessions and workspaces are fetched separately via dedicated endpoints
  */
 export const AdminUserDetailSchema = z.object({
-  id: z.string(),
+  id: UserIdSchema,
   name: z.string(),
   email: z.string(),
   image: z.string().nullable(),
@@ -113,7 +120,7 @@ export const AdminSearchUsersInputSchema = z.object({
         .default(ADMIN_USERS_PAGINATION.DEFAULT_PER_PAGE),
       offset: z.coerce.number().int().min(0).optional().default(0),
       sortBy: z.enum(ADMIN_USER_SORT_FIELDS).optional().default('createdAt'),
-      sortDirection: z.enum(SORT_DIRECTION_VALUES).optional().default('desc'),
+      sortDirection: SortDirectionSchema.optional().default('desc'),
       filterStatus: z.enum(ADMIN_USER_FILTER_STATUS_VALUES).optional(),
     })
     .optional()
@@ -125,7 +132,7 @@ export const AdminSearchUsersInputSchema = z.object({
  */
 export const AdminGetUserInputSchema = z.object({
   params: z.object({
-    userId: z.string().min(1),
+    userId: UserIdSchema,
   }),
 });
 
@@ -134,10 +141,10 @@ export const AdminGetUserInputSchema = z.object({
  */
 export const AdminBanUserInputSchema = z.object({
   params: z.object({
-    userId: z.string().min(1),
+    userId: UserIdSchema,
   }),
   body: z.object({
-    reason: z.string().min(1, 'Ban reason is required'),
+    reason: ReasonTextSchema,
     expiresInSeconds: z.number().int().positive().optional(),
   }),
 });
@@ -147,7 +154,7 @@ export const AdminBanUserInputSchema = z.object({
  */
 export const AdminUnbanUserInputSchema = z.object({
   params: z.object({
-    userId: z.string().min(1),
+    userId: UserIdSchema,
   }),
 });
 
@@ -156,7 +163,7 @@ export const AdminUnbanUserInputSchema = z.object({
  */
 export const AdminListUserSessionsInputSchema = z.object({
   params: z.object({
-    userId: z.string().min(1),
+    userId: UserIdSchema,
   }),
   query: z
     .object({
@@ -178,7 +185,7 @@ export const AdminListUserSessionsInputSchema = z.object({
  */
 export const AdminRevokeSessionInputSchema = z.object({
   params: z.object({
-    sessionId: z.string().min(1),
+    sessionId: SessionIdSchema,
   }),
 });
 
@@ -187,7 +194,7 @@ export const AdminRevokeSessionInputSchema = z.object({
  */
 export const AdminRevokeAllSessionsInputSchema = z.object({
   params: z.object({
-    userId: z.string().min(1),
+    userId: UserIdSchema,
   }),
 });
 
@@ -196,7 +203,7 @@ export const AdminRevokeAllSessionsInputSchema = z.object({
  */
 export const AdminUserSessionsDataSchema = z.object({
   sessions: z.array(AdminUserSessionSchema),
-  userId: z.string(),
+  userId: UserIdSchema,
   total: z.number(),
   limit: z.number(),
   offset: z.number(),
@@ -207,7 +214,7 @@ export const AdminUserSessionsDataSchema = z.object({
  */
 export const AdminListUserWorkspacesInputSchema = z.object({
   params: z.object({
-    userId: z.string().min(1),
+    userId: UserIdSchema,
   }),
   query: z
     .object({
@@ -229,7 +236,7 @@ export const AdminListUserWorkspacesInputSchema = z.object({
  */
 export const AdminUserWorkspacesDataSchema = z.object({
   workspaces: z.array(AdminUserWorkspaceSchema),
-  userId: z.string(),
+  userId: UserIdSchema,
   total: z.number(),
   limit: z.number(),
   offset: z.number(),
@@ -243,7 +250,7 @@ export const AdminUserWorkspacesDataSchema = z.object({
  * Admin workspace member info (for detail view)
  */
 export const AdminWorkspaceMemberSchema = z.object({
-  userId: z.string(),
+  userId: UserIdSchema,
   userName: z.string(),
   userEmail: z.string(),
   workspaceRole: z.enum(WORKSPACE_ROLE_VALUES),
@@ -254,7 +261,7 @@ export const AdminWorkspaceMemberSchema = z.object({
  * Admin workspace in list view
  */
 export const AdminWorkspaceListItemSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
   workspacePlan: z.enum(PLAN_IDS),
   workspacePlanName: z.string(),
@@ -273,7 +280,7 @@ export const AdminWorkspaceListItemSchema = z.object({
  * Recording customization fields are intentionally excluded (not displayed in admin UI)
  */
 export const AdminWorkspaceDetailSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
   workspacePlan: z.enum(PLAN_IDS),
   workspacePlanName: z.string(),
@@ -312,7 +319,7 @@ export const AdminWorkspaceMembersListDataSchema = z.object({
  */
 export const AdminListWorkspaceMembersInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
   }),
   query: z
     .object({
@@ -333,7 +340,7 @@ export const AdminListWorkspaceMembersInputSchema = z.object({
  * Admin workspace project item
  */
 export const AdminWorkspaceProjectSchema = z.object({
-  projectId: z.string(),
+  projectId: ProjectIdSchema,
   projectTitle: z.string().nullable(),
   isDefault: z.boolean(),
   isDeleted: z.boolean(),
@@ -358,7 +365,7 @@ export const AdminWorkspaceProjectsListDataSchema = z.object({
  */
 export const AdminListWorkspaceProjectsInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
   }),
   query: z
     .object({
@@ -372,7 +379,7 @@ export const AdminListWorkspaceProjectsInputSchema = z.object({
         .default(ADMIN_WORKSPACE_PROJECTS_PAGINATION.DEFAULT_PER_PAGE),
       offset: z.coerce.number().int().min(0).optional().default(0),
       sortBy: z.enum(ADMIN_PROJECT_SORT_FIELDS).optional().default('created_at'),
-      sortDirection: z.enum(SORT_DIRECTION_VALUES).optional().default('desc'),
+      sortDirection: SortDirectionSchema.optional().default('desc'),
       filterStatus: z.enum(ADMIN_FILTER_STATUS_VALUES).optional().default('active'),
     })
     .optional()
@@ -395,7 +402,7 @@ export const AdminSearchWorkspacesInputSchema = z.object({
         .default(ADMIN_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE),
       offset: z.coerce.number().int().min(0).optional().default(0),
       sortBy: z.enum(ADMIN_WORKSPACE_SORT_FIELDS).optional().default('createdAt'),
-      sortDirection: z.enum(SORT_DIRECTION_VALUES).optional().default('desc'),
+      sortDirection: SortDirectionSchema.optional().default('desc'),
       filterStatus: z.enum(ADMIN_WORKSPACE_FILTER_STATUS_VALUES).optional(),
       filterPlan: z.enum(PLAN_IDS).optional(),
     })
@@ -408,7 +415,7 @@ export const AdminSearchWorkspacesInputSchema = z.object({
  */
 export const AdminGetWorkspaceInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
   }),
 });
 
@@ -417,7 +424,7 @@ export const AdminGetWorkspaceInputSchema = z.object({
  */
 export const AdminDeactivateWorkspaceInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
   }),
 });
 
@@ -426,7 +433,7 @@ export const AdminDeactivateWorkspaceInputSchema = z.object({
  */
 export const AdminRestoreWorkspaceInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
   }),
 });
 
@@ -435,7 +442,7 @@ export const AdminRestoreWorkspaceInputSchema = z.object({
  */
 export const AdminRestoreWorkspaceDataSchema = z.object({
   workspace: z.object({
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
     isDeleted: z.boolean(),
     deletedAt: z.string().nullable(),
@@ -449,8 +456,8 @@ export const AdminRestoreWorkspaceDataSchema = z.object({
  */
 export const AdminDeactivateProjectInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
-    projectId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema,
   }),
 });
 
@@ -458,8 +465,8 @@ export const AdminDeactivateProjectInputSchema = z.object({
  * Deactivate project response data
  */
 export const AdminDeactivateProjectDataSchema = z.object({
-  workspaceId: z.string(),
-  projectId: z.string(),
+  workspaceId: WorkspaceIdSchema,
+  projectId: ProjectIdSchema,
 });
 
 /**
@@ -467,8 +474,8 @@ export const AdminDeactivateProjectDataSchema = z.object({
  */
 export const AdminRestoreProjectInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
-    projectId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema,
   }),
 });
 
@@ -476,9 +483,9 @@ export const AdminRestoreProjectInputSchema = z.object({
  * Restore project response data
  */
 export const AdminRestoreProjectDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   project: z.object({
-    projectId: z.string(),
+    projectId: ProjectIdSchema,
     projectTitle: z.string().nullable(),
     isDefault: z.boolean(),
     createdAt: z.string(),
@@ -491,7 +498,7 @@ export const AdminRestoreProjectDataSchema = z.object({
  */
 export const AdminResetInviteTokenInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
   }),
 });
 
@@ -512,7 +519,7 @@ export const AdminRecordingWeeklyStatSchema = z.object({
  * Workspace recording stats response (for detail view charts)
  */
 export const AdminWorkspaceRecordingStatsSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
   totalRecordings: z.number(),
   totalDuration: z.number(),
@@ -525,7 +532,7 @@ export const AdminWorkspaceRecordingStatsSchema = z.object({
  * Member recording stat (for pie chart)
  */
 export const AdminMemberRecordingStatSchema = z.object({
-  memberId: z.string(),
+  memberId: UserIdSchema,
   memberName: z.string(),
   recordingCount: z.number(),
   totalDuration: z.number(),
@@ -535,7 +542,7 @@ export const AdminMemberRecordingStatSchema = z.object({
  * Workspace member recording stats response (for pie chart)
  */
 export const AdminWorkspaceMemberRecordingStatsSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
   memberStats: z.array(AdminMemberRecordingStatSchema),
 });
@@ -545,7 +552,7 @@ export const AdminWorkspaceMemberRecordingStatsSchema = z.object({
  */
 export const AdminGetWorkspaceRecordingStatsInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
   }),
   query: z
     .object({
@@ -563,7 +570,7 @@ export const AdminGetWorkspaceRecordingStatsInputSchema = z.object({
  */
 export const AdminGetWorkspaceMemberRecordingStatsInputSchema = z.object({
   params: z.object({
-    workspaceId: z.string().min(1),
+    workspaceId: WorkspaceIdSchema,
   }),
   query: z
     .object({
@@ -635,7 +642,7 @@ export type AdminGetWorkspaceRecordingStatsInput = z.infer<
  */
 export const AdminProvisionMemberSchema = z.object({
   email: EmailSchema,
-  name: z.string().min(1, 'Name is required').max(255),
+  name: NameSchema,
   role: z.enum(ADMIN_PROVISION_ROLE_VALUES).default('member'),
 });
 
@@ -646,7 +653,7 @@ export const AdminProvisionWorkspaceInputSchema = z.object({
   body: z.object({
     owner: z.object({
       email: EmailSchema,
-      name: z.string().min(1, 'Name is required').max(255),
+      name: NameSchema,
     }),
     workspace: z.object({
       name: z.string().min(1, 'Workspace name is required').max(255),
@@ -661,7 +668,7 @@ export const AdminProvisionWorkspaceInputSchema = z.object({
  * Admin provision workspace owner response
  */
 export const AdminProvisionOwnerSchema = z.object({
-  userId: z.string(),
+  userId: UserIdSchema,
   email: z.string(),
   name: z.string(),
   isNew: z.boolean(),
@@ -671,7 +678,7 @@ export const AdminProvisionOwnerSchema = z.object({
  * Admin provision workspace member response
  */
 export const AdminProvisionMemberResponseSchema = z.object({
-  userId: z.string(),
+  userId: UserIdSchema,
   email: z.string(),
   name: z.string(),
   role: z.enum(ADMIN_PROVISION_ROLE_VALUES),
@@ -682,7 +689,7 @@ export const AdminProvisionMemberResponseSchema = z.object({
  * Admin provision workspace response data
  */
 export const AdminProvisionWorkspaceDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
   owner: AdminProvisionOwnerSchema,
   members: z.array(AdminProvisionMemberResponseSchema),
@@ -716,7 +723,7 @@ export const AdminCreateWorkspaceInviteInputSchema = z.object({
  */
 export const AdminCreateWorkspaceInviteDataSchema = z.object({
   inviteUrl: z.string(),
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   workspaceUrl: z.string(),
   workspacePlan: z.enum(PLAN_IDS),
 });

@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { DomainStatusSchema, EmailSchema } from './common';
+import {
+  DomainStatusSchema,
+  EmailSchema,
+  WorkspaceIdSchema,
+  DomainIdSchema,
+  TokenSchema,
+} from './common';
 
 /**
  * Domain schemas
@@ -11,8 +17,8 @@ import { DomainStatusSchema, EmailSchema } from './common';
  */
 export const VerifyDomainSchema = z.object({
   body: z.object({
-    token: z.string().min(1),
-    workspaceIds: z.array(z.string().min(1)).min(1).max(10),
+    token: TokenSchema,
+    workspaceIds: z.array(WorkspaceIdSchema).min(1).max(10),
   }),
 });
 
@@ -21,8 +27,8 @@ export const VerifyDomainSchema = z.object({
  */
 export const DomainVerificationDataSchema = z.object({
   domainStatus: DomainStatusSchema,
-  workspaceId: z.string(),
-  domainId: z.string(),
+  workspaceId: WorkspaceIdSchema,
+  domainId: DomainIdSchema,
   domainUrl: z.string(),
 });
 
@@ -42,8 +48,8 @@ export const DomainRecordingPreferencesSchema = z.object({
  */
 export const UpdateDomainRecordingPreferencesSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    domainId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    domainId: DomainIdSchema,
   }),
   body: z.object({
     recordingHideSensitive: z.boolean().optional(),
@@ -59,8 +65,8 @@ export const UpdateDomainRecordingPreferencesSchema = z.object({
  */
 export const ReplaceDomainRecordingPreferencesSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    domainId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    domainId: DomainIdSchema,
   }),
   body: z.object({
     recordingHideSensitive: z.boolean(),
@@ -76,8 +82,8 @@ export const ReplaceDomainRecordingPreferencesSchema = z.object({
  */
 export const GetDomainRecordingPreferencesSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    domainId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    domainId: DomainIdSchema,
   }),
 });
 
@@ -85,8 +91,8 @@ export const GetDomainRecordingPreferencesSchema = z.object({
  * Domain recording preferences response
  */
 export const DomainRecordingPreferencesDataSchema = z.object({
-  domainId: z.string(),
-  workspaceId: z.string(),
+  domainId: DomainIdSchema,
+  workspaceId: WorkspaceIdSchema,
   recordingHideSensitive: z.boolean(),
   recordingCaptureClientLog: z.boolean(),
   recordingCaptureClientAction: z.boolean(),
@@ -98,8 +104,8 @@ export const DomainRecordingPreferencesDataSchema = z.object({
  * Domain recording preferences update response
  */
 export const DomainRecordingPreferencesUpdateDataSchema = z.object({
-  domainId: z.string(),
-  workspaceId: z.string(),
+  domainId: DomainIdSchema,
+  workspaceId: WorkspaceIdSchema,
 });
 
 /**
@@ -107,8 +113,8 @@ export const DomainRecordingPreferencesUpdateDataSchema = z.object({
  */
 export const SendDomainInstructionsSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    domainId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    domainId: DomainIdSchema,
   }),
   body: z.object({
     emails: z.array(EmailSchema).min(1).max(10),

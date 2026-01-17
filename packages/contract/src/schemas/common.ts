@@ -280,6 +280,117 @@ export const IdParamSchema = z.object({
   id: z.string().min(1),
 });
 
+// ============================================================================
+// DOMAIN-SPECIFIC ID SCHEMAS
+// ============================================================================
+
+/**
+ * Domain-specific ID schemas for better type safety
+ * These provide consistent validation and error messages across the codebase
+ */
+
+/**
+ * Workspace ID schema
+ */
+export const WorkspaceIdSchema = z.string().min(1, 'Workspace ID is required');
+
+/**
+ * User ID schema
+ */
+export const UserIdSchema = z.string().min(1, 'User ID is required');
+
+/**
+ * Project ID schema
+ */
+export const ProjectIdSchema = z.string().min(1, 'Project ID is required');
+
+/**
+ * Recording ID schema
+ */
+export const RecordingIdSchema = z.string().min(1, 'Recording ID is required');
+
+/**
+ * Link ID schema
+ */
+export const LinkIdSchema = z.string().min(1, 'Link ID is required');
+
+/**
+ * Domain ID schema
+ */
+export const DomainIdSchema = z.string().min(1, 'Domain ID is required');
+
+/**
+ * Workspace member ID schema
+ */
+export const WorkspaceMemberIdSchema = z.string().min(1, 'Workspace member ID is required');
+
+/**
+ * Session ID schema
+ */
+export const SessionIdSchema = z.string().min(1, 'Session ID is required');
+
+/**
+ * Generic token schema
+ * Used for invite tokens, access tokens, verification tokens, etc.
+ */
+export const TokenSchema = z.string().min(1, 'Token is required');
+
+// ============================================================================
+// NAME & STRING LENGTH SCHEMAS
+// ============================================================================
+
+/**
+ * Standard name schema for user names, member names, etc.
+ * Trims whitespace and validates length
+ */
+export const NameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Name is required')
+  .max(255, 'Name must be less than 255 characters');
+
+/**
+ * Standard search query schema
+ * Used across all search endpoints for consistency
+ */
+export const SearchQuerySchema = z
+  .string()
+  .min(1, 'Search query is required')
+  .max(100, 'Search query must be less than 100 characters');
+
+/**
+ * Standard reason text schema
+ * Used for ban reasons, error descriptions, etc.
+ */
+export const ReasonTextSchema = z
+  .string()
+  .min(1, 'Reason is required')
+  .max(500, 'Reason must be less than 500 characters');
+
+/**
+ * Standard reference text schema
+ * Used for external references, provider refs, etc.
+ */
+export const ReferenceTextSchema = z
+  .string()
+  .max(2048, 'Reference must be less than 2048 characters');
+
+/**
+ * Standard title schema for link titles, etc.
+ * Allows nullable for optional titles
+ */
+export const TitleSchema = z.string().trim().max(255, 'Title must be less than 255 characters');
+
+/**
+ * Standard provider ID schema
+ * Used for external provider IDs (Intercom, Zendesk, etc.)
+ */
+export const ProviderIdSchema = z.string().max(255, 'Provider ID must be less than 255 characters');
+
+// ============================================================================
+// ENUM SCHEMAS
+// ============================================================================
+
 /**
  * Domain status enum
  * Synced with database: DOMAIN_STATUS_VALUES

@@ -27,27 +27,13 @@ import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
 import { useWorkspace } from '@/hooks/use-workspace';
+import { WORKSPACE_INVITE_POLICY_OPTIONS } from '@workspace/contract';
 
 const POLICY_OPTIONS = [
-  {
-    value: 'private' as const,
-    label: 'Private',
-    description: 'Only explicit invites can grant access',
-    icon: Lock,
-  },
-  {
-    value: 'whitelisted' as const,
-    label: 'Whitelisted',
-    description: 'Users with matching email domains can join directly',
-    icon: Globe,
-  },
-  {
-    value: 'protected' as const,
-    label: 'Protected',
-    description: 'Users with matching domains can request access (owner approval required)',
-    icon: Shield,
-  },
-];
+  { ...WORKSPACE_INVITE_POLICY_OPTIONS[0]!, icon: Lock },
+  { ...WORKSPACE_INVITE_POLICY_OPTIONS[1]!, icon: Globe },
+  { ...WORKSPACE_INVITE_POLICY_OPTIONS[2]!, icon: Shield },
+] as const;
 
 function InvitePolicySkeleton() {
   return (

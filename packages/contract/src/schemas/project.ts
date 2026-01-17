@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { PaginationMetaSchema, SortDirectionSchema } from './common';
+import {
+  PaginationMetaSchema,
+  SortDirectionSchema,
+  WorkspaceIdSchema,
+  ProjectIdSchema,
+} from './common';
 import { PROJECT_PAGINATION } from '../constants';
 
 /**
@@ -29,7 +34,7 @@ export const ProjectTitleSchema = z
  * Project item
  */
 export const ProjectItemSchema = z.object({
-  projectId: z.string(),
+  projectId: ProjectIdSchema,
   projectTitle: z.string().nullable(),
   isDefault: z.boolean(),
   createdAt: z.date(),
@@ -41,7 +46,7 @@ export const ProjectItemSchema = z.object({
  */
 export const CreateProjectSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
   }),
   body: z.object({
     projectTitle: ProjectTitleSchema.nullable().optional(),
@@ -52,7 +57,7 @@ export const CreateProjectSchema = z.object({
  * Project create response
  */
 export const ProjectDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   project: ProjectItemSchema,
 });
 
@@ -66,7 +71,7 @@ export const ProjectSortFieldSchema = z.enum(['created_at', 'project_title']);
  */
 export const ListProjectsQuerySchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
+    workspaceId: WorkspaceIdSchema,
   }),
   query: z.object({
     page: z.coerce.number().int().positive().optional().default(1),
@@ -86,7 +91,7 @@ export const ListProjectsQuerySchema = z.object({
  * Projects list response
  */
 export const ProjectsListDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   projects: z.array(ProjectItemSchema),
   pagination: PaginationMetaSchema,
 });
@@ -96,8 +101,8 @@ export const ProjectsListDataSchema = z.object({
  */
 export const UpdateProjectSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    projectId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema,
   }),
   body: z.object({
     projectTitle: ProjectTitleSchema.nullable().optional(),
@@ -109,7 +114,7 @@ export const UpdateProjectSchema = z.object({
  * Project update response
  */
 export const ProjectUpdateDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   project: ProjectItemSchema,
 });
 
@@ -118,8 +123,8 @@ export const ProjectUpdateDataSchema = z.object({
  */
 export const ReplaceProjectSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    projectId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema,
   }),
   body: z.object({
     projectTitle: ProjectTitleSchema.nullable(),
@@ -132,8 +137,8 @@ export const ReplaceProjectSchema = z.object({
  */
 export const ProjectByIdSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    projectId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema,
   }),
 });
 
@@ -141,7 +146,7 @@ export const ProjectByIdSchema = z.object({
  * Project by ID response
  */
 export const ProjectByIdDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   project: ProjectItemSchema,
 });
 
@@ -150,8 +155,8 @@ export const ProjectByIdDataSchema = z.object({
  */
 export const DeleteProjectSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    projectId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema,
   }),
 });
 
@@ -159,8 +164,8 @@ export const DeleteProjectSchema = z.object({
  * Project delete response
  */
 export const ProjectDeleteDataSchema = z.object({
-  workspaceId: z.string(),
-  projectId: z.string(),
+  workspaceId: WorkspaceIdSchema,
+  projectId: ProjectIdSchema,
 });
 
 /**
@@ -168,8 +173,8 @@ export const ProjectDeleteDataSchema = z.object({
  */
 export const RestoreProjectSchema = z.object({
   params: z.object({
-    workspaceId: z.string(),
-    projectId: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema,
   }),
 });
 
@@ -177,6 +182,6 @@ export const RestoreProjectSchema = z.object({
  * Project restore response
  */
 export const ProjectRestoreDataSchema = z.object({
-  workspaceId: z.string(),
+  workspaceId: WorkspaceIdSchema,
   project: ProjectItemSchema,
 });
