@@ -4,7 +4,6 @@ import { toast } from '@workspace/ui/components/sonner';
 import {
   handleSafeResult,
   handleUnknownError,
-  isErrorCode,
   showErrorToast,
   type SafeResult,
 } from '@/lib/errors';
@@ -78,12 +77,6 @@ export function useCreateDomain(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        if (isErrorCode(result.error, 'DOMAIN_ALREADY_EXISTS')) {
-          toast.error('Domain already exists', {
-            description: 'This domain has already been added to the workspace.',
-          });
-          return;
-        }
         showErrorToast(result.error);
         return;
       }
@@ -225,12 +218,6 @@ export function useDeleteDomain(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        if (isErrorCode(result.error, 'DOMAIN_LAST_DOMAIN_DELETE_FORBIDDEN')) {
-          toast.error("Can't delete the only domain", {
-            description: 'Add another domain first.',
-          });
-          return;
-        }
         showErrorToast(result.error);
         return;
       }
@@ -303,12 +290,6 @@ export function useUpdateDomainPreferences(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        if (isErrorCode(result.error, 'DOMAIN_UNVERIFIED')) {
-          toast.error('Domain not verified', {
-            description: 'Please verify the domain first.',
-          });
-          return;
-        }
         showErrorToast(result.error);
         return;
       }

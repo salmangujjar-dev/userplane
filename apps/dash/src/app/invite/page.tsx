@@ -48,7 +48,7 @@ function InvitePageContent() {
           // Error already handled by mutation's onSuccess
           if (!result.success) return;
 
-          const logMessage = result.data.isAlreadyMember
+          const logMessage = result.data.alreadyMember
             ? 'User is already a member, redirecting'
             : 'Successfully joined workspace';
 

@@ -690,6 +690,7 @@ export const sendWorkspaceInvitesImpl = (
  * POST /workspace/:workspaceId/invite/accept - Accept workspace invitation
  * Requires authentication
  * Validates token matches the workspace and adds user as member
+ * Idempotent operation - returns success if user is already a member
  */
 export const acceptInviteImpl = (
   inviteService: InviteService,
@@ -710,9 +711,21 @@ export const acceptInviteImpl = (
       userId: context.user.id,
     });
 
+    if (result.alreadyMember) {
+      return {
+        message: 'You are already a member of this workspace',
+        data: {
+          alreadyMember: true as const,
+          workspaceId: result.workspace.workspaceId,
+          workspaceName: result.workspace.workspaceName,
+        },
+      };
+    }
+
     return {
       message: 'Invitation accepted successfully',
       data: {
+        alreadyMember: false as const,
         workspaceId: result.workspace.workspaceId,
         workspaceName: result.workspace.workspaceName,
       },
@@ -1166,6 +1179,7 @@ export const suggestWorkspacesImpl = (workspaceService: WorkspaceService) => {
 /**
  * POST /workspace/:workspaceId/join - Join or request access to workspace
  * Requires authentication
+ * Idempotent operation - returns success if user is already a member
  */
 export const joinWorkspaceImpl = (inviteService: InviteService) => {
   return authorized.workspace.join.handler(async ({ input, context }) => {
@@ -1176,12 +1190,29 @@ export const joinWorkspaceImpl = (inviteService: InviteService) => {
       userName: context.user.name,
     });
 
+    if (result.alreadyMember) {
+      return {
+        message: 'You are already a member of this workspace',
+        data: {
+          alreadyMember: true as const,
+          workspaceId: result.workspaceId,
+          workspaceName: result.workspaceName,
+          status: 'joined' as const,
+        },
+      };
+    }
+
     return {
       message:
         result.status === 'joined'
           ? 'Successfully joined workspace'
           : 'Access request sent to workspace owner',
-      data: result,
+      data: {
+        alreadyMember: false as const,
+        workspaceId: result.workspaceId,
+        workspaceName: result.workspaceName,
+        status: result.status,
+      },
     };
   });
 };

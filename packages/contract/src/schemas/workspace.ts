@@ -821,13 +821,23 @@ export const JoinWorkspaceSchema = z.object({
 
 /**
  * Join workspace response
+ * Discriminated union based on whether user was already a member
  */
-export const JoinWorkspaceDataSchema = z.object({
-  workspaceId: z.string(),
-  workspaceName: z.string(),
-  // Status: 'joined' if user was added, 'requested' if access request was sent
-  status: z.enum(['joined', 'requested']),
-});
+export const JoinWorkspaceDataSchema = z.discriminatedUnion('alreadyMember', [
+  z.object({
+    alreadyMember: z.literal(false),
+    workspaceId: z.string(),
+    workspaceName: z.string(),
+    // Status: 'joined' if user was added, 'requested' if access request was sent
+    status: z.enum(['joined', 'requested']),
+  }),
+  z.object({
+    alreadyMember: z.literal(true),
+    workspaceId: z.string(),
+    workspaceName: z.string(),
+    status: z.literal('joined'),
+  }),
+]);
 
 /**
  * Validate access request schema (via token in query)

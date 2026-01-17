@@ -1,4 +1,10 @@
 import { toast } from '@workspace/ui/components/sonner';
+import { isDefinedError } from '@workspace/client';
+
+/**
+ * Re-export isDefinedError from @workspace/client for convenience
+ */
+export { isDefinedError };
 
 /**
  * Type for defined API errors from oRPC
@@ -26,20 +32,6 @@ export type { ORPCDefinedError as DefinedError };
 export type SafeResult<T> =
   | { success: true; data: T; error?: never }
   | { success: false; data?: never; error: ORPCDefinedError };
-
-/**
- * Type guard to check if an error is a defined oRPC error
- */
-export function isDefinedError(error: unknown): error is ORPCDefinedError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'defined' in error &&
-    (error as ORPCDefinedError).defined === true &&
-    'code' in error &&
-    typeof (error as ORPCDefinedError).code === 'string'
-  );
-}
 
 /**
  * Process API response into SafeResult
@@ -126,32 +118,4 @@ export function handleUnknownError(error: unknown, fallbackMessage: string): voi
   } else {
     toast.error(fallbackMessage);
   }
-}
-
-/**
- * Check if error matches a specific error code
- *
- * @example
- * ```ts
- * if (isErrorCode(error, 'WORKSPACE_MEMBER_LAST_OWNER_LEAVE')) {
- *   // Show special UI for this case
- * }
- * ```
- */
-export function isErrorCode(error: unknown, code: string): boolean {
-  return isDefinedError(error) && error.code === code;
-}
-
-/**
- * Check if error matches any of the given error codes
- *
- * @example
- * ```ts
- * if (isAnyErrorCode(error, ['WORKSPACE_NOT_FOUND', 'WORKSPACE_GONE'])) {
- *   // Redirect to workspaces list
- * }
- * ```
- */
-export function isAnyErrorCode(error: unknown, codes: string[]): boolean {
-  return isDefinedError(error) && codes.includes(error.code);
 }

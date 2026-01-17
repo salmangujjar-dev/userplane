@@ -92,12 +92,21 @@ export interface InviteUrlData {
 
 /**
  * Join workspace response
+ * Discriminated union based on whether user was already a member
  */
-export interface JoinWorkspaceData {
-  workspaceId: string;
-  workspaceName: string;
-  status: 'joined' | 'requested';
-}
+export type JoinWorkspaceData =
+  | {
+      alreadyMember: false;
+      workspaceId: string;
+      workspaceName: string;
+      status: 'joined' | 'requested';
+    }
+  | {
+      alreadyMember: true;
+      workspaceId: string;
+      workspaceName: string;
+      status: 'joined';
+    };
 
 /**
  * Leave workspace response

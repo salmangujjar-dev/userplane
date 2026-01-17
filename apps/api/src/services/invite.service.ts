@@ -165,13 +165,14 @@ export class InviteService {
   /**
    * Accept workspace invitation
    * Verifies token and adds user as member
+   * Idempotent operation - returns success if user is already a member
    * Throws INVITE_TOKEN_INVALID if token is invalid or expired
    * Throws INVITE_TOKEN_INVALIDATED if token has been invalidated
    */
-  async acceptInvite(params: {
-    inviteToken: string;
-    userId: string;
-  }): Promise<{ workspace: { workspaceName: string; workspaceId: string } }> {
+  async acceptInvite(params: { inviteToken: string; userId: string }): Promise<{
+    workspace: { workspaceName: string; workspaceId: string };
+    alreadyMember: boolean;
+  }> {
     const { inviteToken, userId } = params;
 
     const inviteData = this.deps.tokenService.verifyInviteToken(inviteToken);
@@ -187,22 +188,40 @@ export class InviteService {
       throw inviteError.INVITE_TOKEN_INVALIDATED();
     }
 
-    await this.deps.db.transaction(async (tx) => {
-      await this.deps.workspaceMemberService.addMember(
-        {
-          userId,
-          workspaceId: workspace.workspaceId,
-          role: 'member',
-        },
-        { tx }
-      );
-    });
+    let alreadyMember = false;
+
+    try {
+      await this.deps.db.transaction(async (tx) => {
+        await this.deps.workspaceMemberService.addMember(
+          {
+            userId,
+            workspaceId: workspace.workspaceId,
+            role: 'member',
+          },
+          { tx }
+        );
+      });
+    } catch (error) {
+      // Check if the error is WORKSPACE_MEMBER_ALREADY_EXISTS
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'WORKSPACE_MEMBER_ALREADY_EXISTS'
+      ) {
+        alreadyMember = true;
+      } else {
+        // Re-throw any other errors
+        throw error;
+      }
+    }
 
     return {
       workspace: {
         workspaceName: workspace.workspaceName,
         workspaceId: workspace.workspaceId,
       },
+      alreadyMember,
     };
   }
 
@@ -272,16 +291,21 @@ export class InviteService {
    * - For private workspaces: throws error
    * - For whitelisted workspaces: adds user as member if domain matches
    * - For protected workspaces: sends access request to workspace owner
+   * Idempotent operation - returns success if user is already a member
    * Throws WORKSPACE_INVITE_POLICY_PRIVATE if workspace is private
    * Throws WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH if domain doesn't match
-   * Throws WORKSPACE_MEMBER_ALREADY_EXISTS if user is already a member
    */
   async joinWorkspace(params: {
     workspaceId: string;
     userId: string;
     userEmail: string;
     userName: string;
-  }): Promise<{ workspaceId: string; workspaceName: string; status: 'joined' | 'requested' }> {
+  }): Promise<{
+    workspaceId: string;
+    workspaceName: string;
+    status: 'joined' | 'requested';
+    alreadyMember: boolean;
+  }> {
     const { workspaceId, userId, userEmail, userName } = params;
 
     // Get workspace with invite policy
@@ -290,7 +314,12 @@ export class InviteService {
     // Check if user is already a member
     const existingMember = await this.deps.workspaceMemberService.getMember(userId, workspaceId);
     if (existingMember) {
-      throw workspaceError.WORKSPACE_MEMBER_ALREADY_EXISTS();
+      return {
+        workspaceId: workspace.workspaceId,
+        workspaceName: workspace.workspaceName,
+        status: 'joined',
+        alreadyMember: true,
+      };
     }
 
     // Private workspaces cannot be joined directly
@@ -331,6 +360,7 @@ export class InviteService {
         workspaceId,
         workspaceName: workspace.workspaceName,
         status: 'joined',
+        alreadyMember: false,
       };
     }
 
@@ -367,6 +397,7 @@ export class InviteService {
         workspaceId,
         workspaceName: workspace.workspaceName,
         status: 'requested',
+        alreadyMember: false,
       };
     }
 

@@ -4,7 +4,6 @@ import { toast } from '@workspace/ui/components/sonner';
 import {
   handleSafeResult,
   handleUnknownError,
-  isErrorCode,
   showErrorToast,
   type SafeResult,
 } from '@/lib/errors';
@@ -288,23 +287,15 @@ export function useJoinWorkspace(options?: {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        if (isErrorCode(result.error, 'WORKSPACE_MEMBER_ALREADY_EXISTS')) {
-          toast.info('You are already a member of this workspace');
-          return;
-        }
-        if (isErrorCode(result.error, 'WORKSPACE_INVITE_POLICY_PRIVATE')) {
-          toast.error('This workspace is private', {
-            description: 'You need an invitation to join this workspace.',
-          });
-          return;
-        }
-        if (isErrorCode(result.error, 'WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH')) {
-          toast.error('Domain not allowed', {
-            description: 'Your email domain is not allowed to join this workspace.',
-          });
-          return;
-        }
         showErrorToast(result.error);
+        return;
+      }
+
+      if (result.data.alreadyMember) {
+        // User is already a member - just invalidate queries, no toast
+        queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+        queryClient.invalidateQueries({ queryKey: ['workspace-suggestions'] });
+        options?.onSuccess?.(result.data.status);
         return;
       }
 
@@ -377,18 +368,6 @@ export function useLeaveWorkspace(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        if (isErrorCode(result.error, 'WORKSPACE_MEMBER_SOLE_OWNER_WITH_MEMBERS')) {
-          toast.error("You're the only owner", {
-            description: 'Please make someone else an owner before leaving.',
-          });
-          return;
-        }
-        if (isErrorCode(result.error, 'WORKSPACE_DELETE_FAILED')) {
-          toast.error('Failed to deactivate workspace', {
-            description: 'There was a problem deactivating the workspace. Please try again.',
-          });
-          return;
-        }
         showErrorToast(result.error);
         return;
       }
