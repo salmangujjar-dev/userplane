@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { URLSchema } from './common';
 
 /**
  * Provisioner schemas
@@ -9,7 +10,7 @@ import { z } from 'zod';
  */
 export const CreateWorkspaceSchema = z.object({
   body: z.object({
-    url: z.string().url().optional(),
+    url: URLSchema.optional(),
     inviteToken: z.string().optional(),
   }),
 });

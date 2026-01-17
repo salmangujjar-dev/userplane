@@ -6,6 +6,25 @@ import { PROJECT_PAGINATION } from '../constants';
  * Project schemas
  */
 
+// ============================================================================
+// PROJECT-SPECIFIC VALIDATION SCHEMAS
+// ============================================================================
+
+/**
+ * Schema for project title validation
+ * Trims whitespace and validates the trimmed value
+ */
+export const ProjectTitleSchema = z
+  .string()
+  .trim()
+  .min(1, 'Project title is required')
+  .min(2, 'Project title must be at least 2 characters')
+  .max(200, 'Project title must be less than 200 characters');
+
+// ============================================================================
+// PROJECT DATA SCHEMAS
+// ============================================================================
+
 /**
  * Project item
  */
@@ -25,7 +44,7 @@ export const CreateProjectSchema = z.object({
     workspaceId: z.string(),
   }),
   body: z.object({
-    projectTitle: z.string().nullable().optional(),
+    projectTitle: ProjectTitleSchema.nullable().optional(),
   }),
 });
 
@@ -81,7 +100,7 @@ export const UpdateProjectSchema = z.object({
     projectId: z.string(),
   }),
   body: z.object({
-    projectTitle: z.string().nullable().optional(),
+    projectTitle: ProjectTitleSchema.nullable().optional(),
     isDefault: z.boolean().optional(),
   }),
 });
@@ -103,7 +122,7 @@ export const ReplaceProjectSchema = z.object({
     projectId: z.string(),
   }),
   body: z.object({
-    projectTitle: z.string().nullable(),
+    projectTitle: ProjectTitleSchema.nullable(),
     isDefault: z.boolean(),
   }),
 });

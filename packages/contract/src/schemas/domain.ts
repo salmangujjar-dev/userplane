@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DomainStatusSchema } from './common';
+import { DomainStatusSchema, EmailSchema } from './common';
 
 /**
  * Domain schemas
@@ -111,7 +111,7 @@ export const SendDomainInstructionsSchema = z.object({
     domainId: z.string(),
   }),
   body: z.object({
-    emails: z.array(z.string().email()).min(1).max(10),
+    emails: z.array(EmailSchema).min(1).max(10),
   }),
 });
 
@@ -119,7 +119,7 @@ export const SendDomainInstructionsSchema = z.object({
  * Domain instruction result item
  */
 export const DomainInstructionResultItemSchema = z.object({
-  email: z.string().email(),
+  email: EmailSchema,
   success: z.boolean(),
   error: z.string().optional(),
 });

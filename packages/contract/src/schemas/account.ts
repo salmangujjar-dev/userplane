@@ -4,6 +4,25 @@ import { z } from 'zod';
  * Account schemas
  */
 
+// ============================================================================
+// ACCOUNT-SPECIFIC VALIDATION SCHEMAS
+// ============================================================================
+
+/**
+ * Schema for account name validation
+ * Trims whitespace and validates the trimmed value
+ */
+export const AccountNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Name is required')
+  .min(2, 'Name must be at least 2 characters')
+  .max(100, 'Name must be less than 100 characters');
+
+// ============================================================================
+// ACCOUNT DATA SCHEMAS
+// ============================================================================
+
 /**
  * Account data response
  */
@@ -17,7 +36,7 @@ export const AccountDataSchema = z.object({
  */
 export const UpdateAccountSchema = z.object({
   body: z.object({
-    name: z.string().min(1).trim(),
+    name: AccountNameSchema,
   }),
 });
 
