@@ -2,18 +2,12 @@
  * Workspace-related types
  */
 
-import type { WorkspaceInvitePolicy } from '@workspace/contract';
+import type { WorkspaceInvitePolicy, WorkspaceNotificationPreferences } from '@workspace/contract';
 
 /**
- * Workspace notification preferences
+ * Workspace notification preferences (re-export from contract)
  */
-export interface WorkspaceNotifications {
-  notifyOnLinkUsage?: boolean;
-  notifyOnQuotaReset?: boolean;
-  notifyOnQuotaLimit?: boolean;
-  notifyOnMemberJoin?: boolean;
-  notifyOnInviteAccepted?: boolean;
-}
+export type WorkspaceNotifications = Partial<WorkspaceNotificationPreferences>;
 
 /**
  * Workspace item in list

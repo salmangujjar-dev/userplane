@@ -89,12 +89,123 @@ export const HexColorSchema = z
  * Workspace notification preferences
  */
 export const WorkspaceNotificationPreferencesSchema = z.object({
-  notifyOnLinkUsage: z.boolean(),
-  notifyOnQuotaReset: z.boolean(),
-  notifyOnQuotaLimit: z.boolean(),
-  notifyOnInviteAccepted: z.boolean(),
-  notifyOnMemberJoin: z.boolean(),
+  notifyFeatureHighlights: z.boolean(),
+  notifyBillingEvents: z.boolean(),
+  notifyUsageEvents: z.boolean(),
+  notifyIncomingEvents: z.boolean(),
+  notifyAdminEvents: z.boolean(),
 });
+
+/**
+ * Type inference from schema
+ */
+export type WorkspaceNotificationPreferences = z.infer<
+  typeof WorkspaceNotificationPreferencesSchema
+>;
+
+/**
+ * Notification field metadata for UI rendering
+ */
+export interface NotificationFieldMetadata {
+  key: keyof WorkspaceNotificationPreferences;
+  id: string;
+  label: string;
+  description: string;
+  visibleForRoles: Array<'owner' | 'admin' | 'member'>;
+  defaultForRoles: {
+    owner: boolean;
+    admin: boolean;
+    member: boolean;
+  };
+}
+
+/**
+ * Notification configuration with metadata
+ * Single source of truth for all notification preferences
+ */
+export const NOTIFICATION_FIELDS: readonly NotificationFieldMetadata[] = [
+  {
+    key: 'notifyFeatureHighlights',
+    id: 'feature-highlights',
+    label: 'Feature highlights',
+    description: 'Get notified about new features and updates',
+    visibleForRoles: ['owner', 'admin', 'member'],
+    defaultForRoles: {
+      owner: true,
+      admin: true,
+      member: true,
+    },
+  },
+  {
+    key: 'notifyBillingEvents',
+    id: 'billing-events',
+    label: 'Billing updates',
+    description: 'Receive notifications about billing and subscription changes',
+    visibleForRoles: ['owner'],
+    defaultForRoles: {
+      owner: true,
+      admin: false,
+      member: false,
+    },
+  },
+  {
+    key: 'notifyUsageEvents',
+    id: 'usage-events',
+    label: 'Usage notifications',
+    description: 'Get alerts about workspace usage and quota limits',
+    visibleForRoles: ['owner', 'admin', 'member'],
+    defaultForRoles: {
+      owner: true,
+      admin: true,
+      member: true,
+    },
+  },
+  {
+    key: 'notifyIncomingEvents',
+    id: 'incoming-events',
+    label: 'Incoming recordings',
+    description: 'Notify about new recordings and screenshots',
+    visibleForRoles: ['owner', 'admin', 'member'],
+    defaultForRoles: {
+      owner: true,
+      admin: true,
+      member: true,
+    },
+  },
+  {
+    key: 'notifyAdminEvents',
+    id: 'admin-events',
+    label: 'Admin notifications',
+    description: 'Receive workspace administration and member activity alerts',
+    visibleForRoles: ['owner', 'admin'],
+    defaultForRoles: {
+      owner: true,
+      admin: true,
+      member: false,
+    },
+  },
+] as const;
+
+/**
+ * Helper to get default notification preferences for a role
+ */
+export function getDefaultNotificationPreferences(
+  role: 'owner' | 'admin' | 'member'
+): WorkspaceNotificationPreferences {
+  return NOTIFICATION_FIELDS.reduce((acc, field) => {
+    acc[field.key] = field.defaultForRoles[role];
+    return acc;
+  }, {} as WorkspaceNotificationPreferences);
+}
+
+/**
+ * Helper to get visible notification fields for a role
+ */
+export function getVisibleNotificationFields(
+  role: 'owner' | 'admin' | 'member'
+): readonly NotificationFieldMetadata[] {
+  return NOTIFICATION_FIELDS.filter((field) => field.visibleForRoles.includes(role));
+}
 
 /**
  * Workspace membership
@@ -426,11 +537,11 @@ export const UpdateNotificationPreferencesSchema = z.object({
     workspaceId: WorkspaceIdSchema,
   }),
   body: z.object({
-    notifyOnLinkUsage: z.boolean().optional(),
-    notifyOnQuotaReset: z.boolean().optional(),
-    notifyOnQuotaLimit: z.boolean().optional(),
-    notifyOnInviteAccepted: z.boolean().optional(),
-    notifyOnMemberJoin: z.boolean().optional(),
+    notifyFeatureHighlights: z.boolean().optional(),
+    notifyBillingEvents: z.boolean().optional(),
+    notifyUsageEvents: z.boolean().optional(),
+    notifyIncomingEvents: z.boolean().optional(),
+    notifyAdminEvents: z.boolean().optional(),
   }),
 });
 

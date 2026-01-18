@@ -23,11 +23,16 @@ export const workspaceMembers = pgTable(
     workspaceRole: workspaceRoleEnum('workspace_role').notNull().default('member'),
 
     // Notification preferences
-    notifyOnLinkUsage: boolean('notify_on_link_usage').default(true).notNull(),
-    notifyOnQuotaReset: boolean('notify_on_quota_reset').default(false).notNull(),
-    notifyOnQuotaLimit: boolean('notify_on_quota_limit').default(false).notNull(),
-    notifyOnInviteAccepted: boolean('notify_on_invite_accepted').default(true).notNull(),
-    notifyOnMemberJoin: boolean('notify_on_member_join').default(false).notNull(),
+    // For accepting feature highlights
+    notifyFeatureHighlights: boolean('notify_feature_highlights').default(true).notNull(),
+    // For accepting billing related emails
+    notifyBillingEvents: boolean('notify_billing_events').default(false).notNull(),
+    // For accepting usage related emails
+    notifyUsageEvents: boolean('notify_usage_events').default(true).notNull(),
+    // For accepting emails for incoming recordings and screenshots
+    notifyIncomingEvents: boolean('notify_incoming_events').default(true).notNull(),
+    // For accepting admin emails related to workspace
+    notifyAdminEvents: boolean('notify_admin_events').default(false).notNull(),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
