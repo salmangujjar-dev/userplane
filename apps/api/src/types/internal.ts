@@ -360,8 +360,12 @@ export type TosViolationEmailParams = TosViolationEmailProps & { to: string };
 
 /**
  * Pilot sandbox invite email parameters
+ * Includes optional scheduledAt for Resend email scheduling
  */
-export type PilotSandboxInviteEmailParams = Required<SandboxInviteEmailProps> & { to: string };
+export type PilotSandboxInviteEmailParams = Required<SandboxInviteEmailProps> & {
+  to: string;
+  scheduledAt?: string;
+};
 
 /**
  * Recording received email parameters

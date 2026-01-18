@@ -560,6 +560,8 @@ export interface AdminWorkspaceCreateInviteResponse {
 interface AdminWorkspaceCreateInviteInput {
   workspaceUrl: string;
   plan?: PlanId;
+  notify?: 'never' | 'immediate' | '5m' | '15m' | '30m' | '60m';
+  email?: string;
 }
 
 /**
@@ -577,6 +579,8 @@ export function useAdminCreateWorkspaceInvite() {
         body: {
           workspaceUrl: input.workspaceUrl,
           plan: input.plan,
+          notify: input.notify,
+          email: input.email,
         },
       });
       return handleSafeResult(error, response?.data ?? null);

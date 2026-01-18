@@ -730,7 +730,11 @@ const provisionWorkspaceImpl = (
 /**
  * Create workspace invite implementation
  */
-const createWorkspaceInviteImpl = (adminService: AdminService, tokenService: TokenService) => {
+const createWorkspaceInviteImpl = (
+  adminService: AdminService,
+  tokenService: TokenService,
+  emailService: EmailService
+) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.workspace.createInvite.handler(async ({ input }) => {
@@ -739,6 +743,7 @@ const createWorkspaceInviteImpl = (adminService: AdminService, tokenService: Tok
 
     // Use provided plan or default to 'sandbox'
     const workspacePlan = input.body.plan || 'sandbox';
+    const notify = input.body.notify || 'never';
 
     // Generate workspace create invite URL
     const inviteUrl = tokenService.generateWorkspaceCreateInviteUrl({
@@ -746,6 +751,32 @@ const createWorkspaceInviteImpl = (adminService: AdminService, tokenService: Tok
       workspaceUrl: input.body.workspaceUrl,
       workspacePlan,
     });
+
+    // Send email if notify is not 'never' and email is provided
+    const email = input.body.email;
+    if (notify !== 'never' && email) {
+      let scheduledAt: string | undefined;
+
+      // Calculate scheduled time for delayed notifications
+      if (notify !== 'immediate') {
+        const now = new Date();
+        const scheduleDate = new Date(now);
+
+        // Parse duration and add to current time
+        const minutes = Number.parseInt(notify.replace('m', ''), 10);
+        scheduleDate.setMinutes(scheduleDate.getMinutes() + minutes);
+
+        scheduledAt = scheduleDate.toISOString();
+      }
+
+      // Send sandbox invite email (immediate or scheduled)
+      await emailService.sendPilotSandboxInvite({
+        to: email,
+        sandboxUrl: inviteUrl,
+        expiresInDays: 7,
+        scheduledAt,
+      });
+    }
 
     return {
       message: 'Workspace invite generated successfully',
@@ -813,7 +844,7 @@ export const createAdminProcedures = (
       restore: restoreProjectImpl(adminService, projectService),
     },
     workspace: {
-      createInvite: createWorkspaceInviteImpl(adminService, tokenService),
+      createInvite: createWorkspaceInviteImpl(adminService, tokenService, emailService),
     },
   };
 };

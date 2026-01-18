@@ -1083,9 +1083,10 @@ export class EmailService {
 
   /**
    * Send pilot sandbox invite email
+   * Supports optional scheduling via scheduledAt field in params
    */
   async sendPilotSandboxInvite(params: PilotSandboxInviteEmailParams): Promise<void> {
-    const idempotencyKey = `pilot-sandbox-invite/${params.to}`;
+    const idempotencyKey = `pilot-sandbox-invite/${params.to}${params.scheduledAt ? `/${params.scheduledAt}` : ''}`;
 
     const { html, text } = await renderSandboxInvite({
       sandboxUrl: params.sandboxUrl,
@@ -1102,6 +1103,7 @@ export class EmailService {
       },
       {
         idempotencyKey,
+        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
       }
     );
 
@@ -1109,9 +1111,13 @@ export class EmailService {
       {
         to: params.to,
         expiresInDays: params.expiresInDays,
+        scheduled: !!params.scheduledAt,
+        scheduledAt: params.scheduledAt,
         provider: emailClient.getProvider(),
       },
-      'Pilot sandbox invite email sent'
+      params.scheduledAt
+        ? 'Pilot sandbox invite email scheduled'
+        : 'Pilot sandbox invite email sent'
     );
   }
 

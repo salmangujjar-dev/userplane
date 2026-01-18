@@ -490,3 +490,17 @@ export type AdminRecordingWeeks = (typeof ADMIN_RECORDING_WEEKS_VALUES)[number];
  */
 export const ADMIN_PROVISION_ROLE_VALUES = ['admin', 'member'] as const;
 export type AdminProvisionRole = (typeof ADMIN_PROVISION_ROLE_VALUES)[number];
+
+/**
+ * Admin workspace invite notify duration values
+ * Determines when to send the invite email
+ */
+export const ADMIN_NOTIFY_DURATION_VALUES = [
+  'never',
+  'immediate',
+  '5m',
+  '15m',
+  '30m',
+  '60m',
+] as const;
+export type AdminNotifyDuration = (typeof ADMIN_NOTIFY_DURATION_VALUES)[number];
