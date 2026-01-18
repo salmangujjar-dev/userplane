@@ -24,6 +24,7 @@ export type {
   AccessRequestEmailProps,
   // Offboarding
   AccountDeletionEmailProps,
+  AccountRestoredEmailProps,
   AtRiskNotEngagedEmailProps,
   DeletionConfirmationEmailProps,
   DeletionRequestedEmailProps,
@@ -78,11 +79,11 @@ export type {
   SubscriptionReverseTrialEmailProps,
   // Invite
   TeammateInvitedEmailProps,
+  TeammateJoinedEmailProps,
   TosViolationEmailProps,
   TrialReverseTrialOfferEmailProps,
   // Trial
   WelcomeMeetFounderEmailProps,
-  WorkspaceInviteEmailProps,
 } from './emails.js';
 export {
   renderAccessGranted,
@@ -90,6 +91,7 @@ export {
   renderAccessRequested,
   // Offboarding
   renderAccountDeletion,
+  renderAccountRestored,
   renderAtRiskNotEngaged,
   renderDeletionConfirmation,
   renderDeletionRequested,
@@ -143,11 +145,11 @@ export {
   renderSubscriptionReverseTrial,
   // Invite
   renderTeammateInvited,
+  renderTeammateJoined,
   renderTosViolation,
   renderTrialReverseTrialOffer,
   // Trial
   renderWelcomeMeetFounder,
-  renderWorkspaceInvite,
 } from './emails.js';
 
 // Email templates (direct exports for advanced usage)

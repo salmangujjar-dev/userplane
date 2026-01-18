@@ -26,6 +26,7 @@ import type {
   AccessRequestedEmailProps,
   AccessRequestEmailProps,
   AccountDeletionEmailProps,
+  AccountRestoredEmailProps,
   DeletionConfirmationEmailProps,
   DeletionRequestedEmailProps,
   DeletionScheduledEmailProps,
@@ -59,9 +60,9 @@ import type {
   SubscriptionPlanChangeEmailProps,
   SubscriptionReverseTrialEmailProps,
   TeammateInvitedEmailProps,
+  TeammateJoinedEmailProps,
   TosViolationEmailProps,
   TrialReverseTrialOfferEmailProps,
-  WorkspaceInviteEmailProps,
 } from '@workspace/email';
 import type { PlanId as WorkspacePlan } from '@workspace/pricing';
 import type { z } from 'zod';
@@ -212,14 +213,6 @@ export interface CreateDomainInput {
  */
 
 /**
- * Workspace invitation email parameters
- */
-export type WorkspaceInviteEmailParams = Required<WorkspaceInviteEmailProps> & {
-  to: string;
-  inviterEmail: string;
-};
-
-/**
  * Access request email parameters
  */
 export type AccessRequestEmailParams = Required<AccessRequestEmailProps> & { to: string };
@@ -339,14 +332,24 @@ export type ScreenshotsSoftLimitEmailParams = Required<ScreenshotsSoftLimitEmail
 export type TeammateInvitedEmailParams = Required<TeammateInvitedEmailProps> & { to: string };
 
 /**
+ * Teammate joined email parameters
+ */
+export type TeammateJoinedEmailParams = Required<TeammateJoinedEmailProps> & { to: string };
+
+/**
  * Account deletion email parameters
  */
 export type AccountDeletionEmailParams = Required<AccountDeletionEmailProps> & { to: string };
 
 /**
+ * Account restored email parameters
+ */
+export type AccountRestoredEmailParams = Required<AccountRestoredEmailProps> & { to: string };
+
+/**
  * TOS violation email parameters
  */
-export type TosViolationEmailParams = Required<TosViolationEmailProps> & { to: string };
+export type TosViolationEmailParams = TosViolationEmailProps & { to: string };
 
 /**
  * Pilot sandbox invite email parameters

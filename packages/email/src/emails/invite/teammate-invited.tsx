@@ -11,20 +11,22 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface TeammateInvitedEmailProps {
-  inviterName?: string;
-  workspaceName?: string;
-  inviteUrl?: string;
+  inviterName: string;
+  inviterEmail: string;
+  workspaceName: string;
+  inviteUrl: string;
 }
 
 export const TeammateInvitedEmail = ({
-  inviterName = 'John Doe',
-  workspaceName = 'My Workspace',
-  inviteUrl = 'https://app.userplane.io/invite/abc123',
+  inviterName,
+  inviterEmail,
+  workspaceName,
+  inviteUrl,
 }: TeammateInvitedEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview(inviterName, workspaceName)}>
+    <EmailLayout preview={copy.preview(inviterName, inviterEmail, workspaceName)}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{copy.subtitle(inviterName, workspaceName)}</Text>
+      <Text style={styles.subtitle}>{copy.subtitle(inviterName, inviterEmail, workspaceName)}</Text>
 
       <Section style={styles.messageSection}>
         <Text style={styles.messageText}>{copy.body[0]}</Text>

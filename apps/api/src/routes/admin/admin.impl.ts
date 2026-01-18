@@ -14,6 +14,7 @@ import type { AdminService } from '@/api/services/admin.service';
 import type { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
+import type { EmailService } from '@/api/services/email.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { TokenService } from '@/api/services/token.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
@@ -164,13 +165,19 @@ const getUserImpl = (adminService: AdminService) => {
 /**
  * Ban user implementation
  */
-const banUserImpl = (adminService: AdminService) => {
+const banUserImpl = (adminService: AdminService, emailService: EmailService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.users.ban.handler(async ({ input, context }) => {
     const userDetail = await adminService.banUser(input.params.userId, context.user.id, {
       reason: input.body.reason,
       expiresInSeconds: input.body.expiresInSeconds,
+    });
+
+    // Send email to suspended account
+    await emailService.sendTosViolation({
+      to: userDetail.email,
+      userName: userDetail.name,
     });
 
     return {
@@ -183,11 +190,19 @@ const banUserImpl = (adminService: AdminService) => {
 /**
  * Unban user implementation
  */
-const unbanUserImpl = (adminService: AdminService) => {
+const unbanUserImpl = (adminService: AdminService, emailService: EmailService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.users.unban.handler(async ({ input }) => {
     const userDetail = await adminService.unbanUser(input.params.userId);
+
+    // Send account restored email
+    const loginUrl = `${process.env.APP_URL}/auth`;
+    await emailService.sendAccountRestored({
+      to: userDetail.email,
+      userName: userDetail.name,
+      loginUrl,
+    });
 
     return {
       message: 'User unbanned successfully',
@@ -754,14 +769,15 @@ export const createAdminProcedures = (
   adminProvisioningService: AdminProvisioningService,
   workspaceService: WorkspaceService,
   projectService: ProjectService,
-  tokenService: TokenService
+  tokenService: TokenService,
+  emailService: EmailService
 ) => {
   return {
     users: {
       search: searchUsersImpl(adminService),
       get: getUserImpl(adminService),
-      ban: banUserImpl(adminService),
-      unban: unbanUserImpl(adminService),
+      ban: banUserImpl(adminService, emailService),
+      unban: unbanUserImpl(adminService, emailService),
       sessions: {
         list: listUserSessionsImpl(adminService),
         revokeAll: revokeAllSessionsImpl(adminService),
