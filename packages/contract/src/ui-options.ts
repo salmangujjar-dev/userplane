@@ -21,6 +21,7 @@ import { PLAN_IDS, PLAN_NAMES } from '@workspace/pricing';
 
 import type {
   AdminFilterStatus,
+  AdminNotifyDuration,
   AdminProjectSortField,
   AdminRecordingWeeks,
   AdminUserFilterStatus,
@@ -221,6 +222,18 @@ export const ADMIN_RECORDING_WEEKS_OPTIONS: SelectOption<AdminRecordingWeeks>[] 
   { value: '24', label: '24 Weeks' },
   { value: '36', label: '36 Weeks' },
   { value: '48', label: '48 Weeks' },
+] as const;
+
+/**
+ * Admin workspace invite notify duration options
+ */
+export const ADMIN_NOTIFY_DURATION_OPTIONS: SelectOption<AdminNotifyDuration>[] = [
+  { value: 'never', label: 'Never' },
+  { value: 'immediate', label: 'Immediately' },
+  { value: '5m', label: 'In 5 min' },
+  { value: '15m', label: 'In 15 min' },
+  { value: '30m', label: 'In 30 min' },
+  { value: '60m', label: 'In 60 min' },
 ] as const;
 
 // ============================================================================

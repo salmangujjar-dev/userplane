@@ -11,6 +11,7 @@ import {
 } from '../constants';
 import {
   ADMIN_FILTER_STATUS_VALUES,
+  ADMIN_NOTIFY_DURATION_VALUES,
   ADMIN_PROJECT_SORT_FIELDS,
   ADMIN_PROVISION_ROLE_VALUES,
   ADMIN_RECORDING_WEEKS_VALUES,
@@ -715,6 +716,8 @@ export const AdminCreateWorkspaceInviteInputSchema = z.object({
   body: z.object({
     workspaceUrl: z.string().url('Invalid URL'),
     plan: z.enum(PLAN_IDS).optional().default('sandbox'),
+    notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES).optional().default('never'),
+    email: EmailSchema.optional(),
   }),
 });
 

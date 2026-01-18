@@ -40,7 +40,7 @@ export const auth = createAuth({
   },
   deleteUser: {
     sendDeleteAccountVerification: async ({ user, token }) => {
-      const customUrl = `${env.invite.appUrl}/accounts/delete?token=${token}`;
+      const customUrl = `${env.invite.appUrl}/accounts/delete/confirm?token=${token}`;
       await emailService.sendAccountDeletionVerification({
         to: user.email,
         userName: user.name,

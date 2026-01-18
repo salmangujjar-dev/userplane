@@ -1065,30 +1065,53 @@ export const replaceDomainRecordingPreferencesImpl = (
 export const sendDomainInstructionsImpl = (
   domainService: DomainService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  emailService: EmailService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.domains.sendInstructions
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
-    .handler(async ({ input, context }) => {
-      const result = await domainService.sendDeveloperInstructions({
+    .handler(async ({ input }) => {
+      // Validate domain and get domain info
+      const domain = await domainService.validateDomainForInstructions({
         domainId: input.params.domainId,
         workspaceId: input.params.workspaceId,
-        emails: input.body.emails,
-        sentBy: context.user.id,
       });
 
-      const sent = result.sentEmails.map((email) => ({
-        email,
-        success: true,
-      }));
+      const settingsUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.userplane.io'}/workspace/${input.params.workspaceId}/settings/domains`;
+      const docsUrl = 'https://userplane.com/docs/domains';
 
-      const failed = result.failedEmails.map((item) => ({
-        email: item.email,
-        success: false,
-        error: item.reason,
-      }));
+      // Send emails to all provided addresses
+      const results = await Promise.allSettled(
+        input.body.emails.map((email) =>
+          emailService.sendDomainDeveloperInstructions({
+            to: email,
+            domainName: domain.domainUrl,
+            settingsUrl,
+            docsUrl,
+          })
+        )
+      );
+
+      // Process results and separate successful from failed
+      const sent: Array<{ email: string; success: true }> = [];
+      const failed: Array<{ email: string; success: false; error: string }> = [];
+
+      results.forEach((result, index) => {
+        const email = input.body.emails[index];
+        if (email) {
+          if (result.status === 'fulfilled') {
+            sent.push({ email, success: true });
+          } else {
+            failed.push({
+              email,
+              success: false,
+              error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
+            });
+          }
+        }
+      });
 
       return {
         message: 'Developer instructions processed successfully',
@@ -1468,7 +1491,8 @@ export const createWorkspaceProcedures = (
       sendInstructions: sendDomainInstructionsImpl(
         domainService,
         workspaceMemberService,
-        workspaceService
+        workspaceService,
+        emailService
       ),
       preferences: {
         get: getDomainRecordingPreferencesImpl(

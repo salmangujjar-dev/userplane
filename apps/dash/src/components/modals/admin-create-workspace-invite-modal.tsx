@@ -1,7 +1,12 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DomainUrlSchema } from '@workspace/contract';
+import {
+  ADMIN_NOTIFY_DURATION_OPTIONS,
+  type AdminNotifyDuration,
+  DomainUrlSchema,
+  EmailSchema,
+} from '@workspace/contract';
 import type { PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
@@ -11,6 +16,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
 import {
@@ -33,7 +39,12 @@ import { PLAN_OPTIONS } from '@/hooks/use-provision-form';
 interface AdminCreateWorkspaceInviteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { workspaceUrl: string; plan?: PlanId }) => void;
+  onSubmit: (data: {
+    workspaceUrl: string;
+    plan?: PlanId;
+    notify?: AdminNotifyDuration;
+    email?: string;
+  }) => void;
   isPending: boolean;
 }
 
@@ -43,10 +54,26 @@ interface AdminCreateWorkspaceInviteSuccessModalProps {
   result: AdminWorkspaceCreateInviteResponse | null;
 }
 
-const createWorkspaceInviteFormSchema = z.object({
-  workspaceUrl: DomainUrlSchema,
-  plan: z.string() as z.ZodType<PlanId>,
-});
+const createWorkspaceInviteFormSchema = z
+  .object({
+    workspaceUrl: DomainUrlSchema,
+    plan: z.string() as z.ZodType<PlanId>,
+    notify: z.string() as z.ZodType<AdminNotifyDuration>,
+    email: EmailSchema.optional(),
+  })
+  .refine(
+    (data) => {
+      // Email is required when notify is not 'never'
+      if (data.notify !== 'never' && !data.email) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'Email is required when scheduling notifications',
+      path: ['email'],
+    }
+  );
 
 /**
  * Modal for creating a workspace invite URL.
@@ -64,6 +91,8 @@ export function AdminCreateWorkspaceInviteModal({
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     resolver: zodResolver(createWorkspaceInviteFormSchema),
@@ -71,8 +100,13 @@ export function AdminCreateWorkspaceInviteModal({
     defaultValues: {
       workspaceUrl: '',
       plan: 'sandbox' as PlanId,
+      notify: 'never' as AdminNotifyDuration,
+      email: '',
     },
   });
+
+  // Watch notify field to conditionally show email field
+  const notifyValue = watch('notify');
 
   // Reset form when modal closes
   useEffect(() => {
@@ -82,8 +116,25 @@ export function AdminCreateWorkspaceInviteModal({
     }
   }, [open, reset]);
 
-  const onFormSubmit = (data: { workspaceUrl: string; plan: PlanId }) => {
-    onSubmit({ workspaceUrl: data.workspaceUrl, plan: data.plan });
+  // Clear email field when notify is set to 'never'
+  useEffect(() => {
+    if (notifyValue === 'never') {
+      setValue('email', '');
+    }
+  }, [notifyValue, setValue]);
+
+  const onFormSubmit = (data: {
+    workspaceUrl: string;
+    plan: PlanId;
+    notify: AdminNotifyDuration;
+    email?: string;
+  }) => {
+    onSubmit({
+      workspaceUrl: data.workspaceUrl,
+      plan: data.plan,
+      notify: data.notify,
+      email: data.email,
+    });
   };
 
   return (
@@ -158,7 +209,42 @@ export function AdminCreateWorkspaceInviteModal({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="sandbox">Sandbox (Default)</SelectItem>
-                            {PLAN_OPTIONS.map((option) => (
+                            {PLAN_OPTIONS.filter((option) => option.value !== 'sandbox').map(
+                              (option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="notify" className="text-sm font-medium">
+                        Notify
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Schedule when to send the invite email
+                      </p>
+                    </div>
+                    <Controller
+                      name="notify"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isPending}
+                        >
+                          <SelectTrigger id="notify" className="rounded-lg">
+                            <SelectValue placeholder="Select notification time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ADMIN_NOTIFY_DURATION_OPTIONS.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
@@ -168,6 +254,38 @@ export function AdminCreateWorkspaceInviteModal({
                       )}
                     />
                   </div>
+
+                  {notifyValue !== 'never' && (
+                    <div className="space-y-2.5">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="email" className="text-sm font-medium">
+                          Email
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Recipient email for scheduled invite
+                        </p>
+                      </div>
+                      <Controller
+                        name="email"
+                        control={control}
+                        render={({ field }) => (
+                          <Input
+                            id="email"
+                            type="email"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="user@example.com"
+                            disabled={isPending}
+                            className="rounded-lg"
+                          />
+                        )}
+                      />
+                      {errors.email && (
+                        <p className="text-sm text-destructive">{errors.email.message}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
