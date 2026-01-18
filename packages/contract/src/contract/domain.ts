@@ -1,9 +1,10 @@
 import { oc } from '@orpc/contract';
+
 import {
-  VerifyDomainSchema,
-  DomainVerificationDataSchema,
   ApiResponseSchema,
   DomainErrors,
+  DomainVerificationDataSchema,
+  VerifyDomainSchema,
 } from '../schemas';
 
 /**

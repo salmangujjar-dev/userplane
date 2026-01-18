@@ -3,19 +3,20 @@
  * Canonical Userplane email structure
  */
 
-import * as React from 'react';
 import {
-  Html,
-  Head,
-  Preview,
   Body,
   Container,
+  Head,
+  Hr,
+  Html,
+  Img,
+  Link,
+  Preview,
   Section,
   Text,
-  Hr,
-  Link,
-  Img,
 } from '@react-email/components';
+import * as React from 'react';
+
 import * as styles from './styles';
 
 export interface EmailLayoutProps {

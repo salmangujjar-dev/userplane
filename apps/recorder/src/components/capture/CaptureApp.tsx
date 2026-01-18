@@ -16,14 +16,15 @@
  * - Enables scatter-gather metadata collection from all open tabs
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import {
   CaptureBridgeConnection,
+  type CaptureRecorderState,
+  CONNECTION_PREFIXES,
+  CrossTabCoordinator,
   getCaptureBridge,
   getCrossTabCoordinator,
-  CrossTabCoordinator,
-  CONNECTION_PREFIXES,
-  type CaptureRecorderState,
   type TabMetadata,
 } from '@/bridge';
 

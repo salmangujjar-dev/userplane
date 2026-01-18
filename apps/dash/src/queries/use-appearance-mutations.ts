@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+
+import { apiClient } from '@/client';
 import {
   handleSafeResult,
   handleUnknownError,
-  showErrorToast,
   type SafeResult,
+  showErrorToast,
 } from '@/lib/errors';
-import type { WorkspacePreferences, UpdateResponse, QueryData } from '@/types';
+import type { QueryData, UpdateResponse, WorkspacePreferences } from '@/types';
 
 type PreferencesQueryData = QueryData<WorkspacePreferences>;
 

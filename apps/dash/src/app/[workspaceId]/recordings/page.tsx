@@ -1,25 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { FolderKanban, Link2, Users } from 'lucide-react';
 import { useQueryState } from 'nuqs';
+import { useEffect, useState } from 'react';
+
+import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
+import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
-import { RecordingGridSkeleton } from '@/components/skeleton';
-import { PaginationControls } from '@/components/shared/pagination-controls';
-import { RecordingEmptyState } from '@/components/shared/empty-state';
-import { FilterDropdown } from '@/components/filters/filter-dropdown';
-import { usePagination } from '@/hooks/use-pagination';
-import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
-import { useSearchableProjects } from '@/hooks/use-searchable-projects';
-import { useSearchableMembers } from '@/hooks/use-searchable-members';
-import { useSearchableLinks } from '@/hooks/use-searchable-links';
-import { FolderKanban, Link2, Users } from 'lucide-react';
-import { stringArrayParser } from '@/lib/parsers';
 import { DinoError } from '@/components/shared/dino-error';
+import { RecordingEmptyState } from '@/components/shared/empty-state';
+import { PaginationControls } from '@/components/shared/pagination-controls';
+import { RecordingGridSkeleton } from '@/components/skeleton';
+import { usePagination } from '@/hooks/use-pagination';
+import { useSearchableLinks } from '@/hooks/use-searchable-links';
+import { useSearchableMembers } from '@/hooks/use-searchable-members';
+import { useSearchableProjects } from '@/hooks/use-searchable-projects';
+import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
+import { stringArrayParser } from '@/lib/parsers';
 
 export default function RecordingsPage() {
   const [currentPage, setCurrentPage] = usePagination();

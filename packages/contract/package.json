@@ -10,6 +10,9 @@
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
     "type:check": "tsc --noEmit"
   },
   "dependencies": {
@@ -23,7 +26,9 @@
     "@orpc/server": "^1.12.3",
     "@types/node": "^22.14.1",
     "@types/validator": "^13.12.2",
+    "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9.32.0",
     "typescript": "5.8.2"
   },
   "peerDependencies": {

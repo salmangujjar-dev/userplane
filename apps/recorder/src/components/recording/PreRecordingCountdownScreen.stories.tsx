@@ -1,11 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import PreRecordingCountdownScreen from './PreRecordingCountdownScreen';
 import {
-  preferenceArgTypes,
-  defaultPreferenceArgs,
   argsToPreferences,
+  defaultPreferenceArgs,
   type PreferenceArgs,
+  preferenceArgTypes,
 } from '@stories/preferences-args';
+import type { Meta, StoryObj } from '@storybook/react';
+
+import PreRecordingCountdownScreen from './PreRecordingCountdownScreen';
 
 interface StoryArgs extends PreferenceArgs {
   countdownSeconds: number;

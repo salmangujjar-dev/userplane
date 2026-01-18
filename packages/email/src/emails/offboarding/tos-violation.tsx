@@ -3,11 +3,12 @@
  * Sent when an account is suspended for terms of service violation
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/offboarding/tos-violation';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/offboarding/tos-violation';
 
 export interface TosViolationEmailProps {
   userName?: string;

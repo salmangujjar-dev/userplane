@@ -1,22 +1,23 @@
-import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import {
-  X,
-  FileCode,
-  FileText,
-  Image,
-  FileVideo,
-  FileType,
-  Globe,
   Cable,
-  FileJson,
   File,
+  FileCode,
+  FileJson,
+  FileText,
+  FileType,
+  FileVideo,
+  Globe,
+  Image,
+  X,
 } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/components/tabs';
+import { useState } from 'react';
+
 import {
-  NetworkRequest,
   formatBytes,
   formatTime,
   getStatusColor,
+  NetworkRequest,
   ResourceType,
 } from './network-types';
 

@@ -3,10 +3,10 @@
  */
 
 export {
+  cleanUrl,
   extractHostname,
   extractMainDomain,
-  cleanUrl,
+  extractUrlFromString,
   getFaviconUrl,
   isValidUrl,
-  extractUrlFromString,
 } from '@workspace/contract';

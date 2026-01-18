@@ -1,10 +1,11 @@
 import { oc } from '@orpc/contract';
+
 import {
   AccountDataSchema,
-  UpdateAccountSchema,
+  AccountErrors,
   AccountUpdateDataSchema,
   ApiResponseSchema,
-  AccountErrors,
+  UpdateAccountSchema,
 } from '../schemas';
 
 /**

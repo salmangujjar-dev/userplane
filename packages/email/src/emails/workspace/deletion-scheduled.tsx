@@ -3,11 +3,12 @@
  * Sent when a workspace is scheduled for deletion
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/workspace/deletion-scheduled';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/workspace/deletion-scheduled';
 
 export interface DeletionScheduledEmailProps {
   workspaceName?: string;

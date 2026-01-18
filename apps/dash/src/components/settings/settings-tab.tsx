@@ -1,17 +1,19 @@
 'use client';
 
-import { useQueryState } from 'nuqs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
-import { WorkspaceSection } from './workspace-section';
-import { RecordingLinkSection } from './recording-link-section';
-import { WorkspacePlanSection } from './workspace-plan-section';
-import { TeamSection } from './team-section';
-import { InvitePolicySection } from './invite-policy-section';
-import { IntegrationsSection } from './integrations-section';
-import { DomainsSection } from './domains-section';
-import { ProjectsSection } from './projects-section';
-import { NotificationsSection } from './notifications-section';
+import { useQueryState } from 'nuqs';
+
 import { tabParser } from '@/lib/parsers';
+
+import { DomainsSection } from './domains-section';
+import { IntegrationsSection } from './integrations-section';
+import { InvitePolicySection } from './invite-policy-section';
+import { NotificationsSection } from './notifications-section';
+import { ProjectsSection } from './projects-section';
+import { RecordingLinkSection } from './recording-link-section';
+import { TeamSection } from './team-section';
+import { WorkspacePlanSection } from './workspace-plan-section';
+import { WorkspaceSection } from './workspace-section';
 
 export function SettingsTab() {
   const [activeTab, setActiveTab] = useQueryState('tab', tabParser.withDefault('general'));

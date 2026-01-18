@@ -1,25 +1,26 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+
+import { apiClient } from '@/client';
 import {
   handleSafeResult,
   handleUnknownError,
-  showErrorToast,
   type SafeResult,
+  showErrorToast,
 } from '@/lib/errors';
 import type {
-  WorkspaceNotifications,
-  WorkspacesData,
-  NotificationPreferencesData,
+  DeleteResponse,
+  InvitePolicyData,
   InviteUrlData,
   JoinWorkspaceData,
   LeaveWorkspaceData,
-  InvitePolicyData,
-  WorkspaceInvitePolicy,
+  NotificationPreferencesData,
   QueryData,
   QuerySnapshot,
   UpdateResponse,
-  DeleteResponse,
+  WorkspaceInvitePolicy,
+  WorkspaceNotifications,
+  WorkspacesData,
 } from '@/types';
 
 type NotificationsQueryData = QueryData<NotificationPreferencesData>;

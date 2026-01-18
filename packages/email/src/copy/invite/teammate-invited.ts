@@ -13,5 +13,4 @@ export const copy = {
   ],
   cta: 'Accept invitation',
   helpText: 'Or copy this link:',
-  ps: 'This invitation expires in 7 days.',
 } as const;

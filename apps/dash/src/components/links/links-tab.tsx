@@ -1,5 +1,6 @@
-import { LinksList } from './links-list';
 import type { Link } from '@/hooks/use-workspace-links';
+
+import { LinksList } from './links-list';
 
 interface LinksTabProps {
   links?: Link[];

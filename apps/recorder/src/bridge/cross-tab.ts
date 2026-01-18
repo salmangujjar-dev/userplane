@@ -8,17 +8,18 @@
  */
 
 import { bridge, type BridgeConnection } from '@workspace/postbridge';
+
+import { generateRequestId, isCaptureTab } from './constants';
 import type {
+  AggregatedMetadata,
+  CaptureRecorderState,
+  CustomMetadata,
+  MetadataRequest,
+  MetadataResponse,
   RecordingState,
   TabMetadata,
   TabMetadataEntry,
-  AggregatedMetadata,
-  MetadataRequest,
-  MetadataResponse,
-  CustomMetadata,
-  CaptureRecorderState,
 } from './types';
-import { generateRequestId, isCaptureTab } from './constants';
 
 /**
  * Pending scatter-gather request

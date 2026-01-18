@@ -1,22 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { FormEmailSchema, WorkspaceNameSchema } from '@workspace/contract';
+import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { Button } from '@workspace/ui/components/button';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { useWorkspace } from '@/hooks/use-workspace';
-import { useWorkspaceId } from '@/stores/workspace';
-import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+
 import { SectionError } from '@/components/shared/section-error';
 import { WorkspaceSectionSkeleton } from '@/components/skeleton';
+import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceBillingEmail } from '@/hooks/use-workspace-billing-email';
-import { useUpdateWorkspaceBillingEmail } from '@/queries/use-workspace-billing-email-mutations';
 import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
-import { WorkspaceNameSchema, FormEmailSchema } from '@workspace/contract';
+import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
+import { useUpdateWorkspaceBillingEmail } from '@/queries/use-workspace-billing-email-mutations';
+import { useWorkspaceId } from '@/stores/workspace';
 
 const workspaceNameFormSchema = z.object({
   name: WorkspaceNameSchema,

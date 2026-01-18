@@ -7,9 +7,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { ChevronRight, MoreVertical, Pencil, Trash2, Loader2, Settings } from 'lucide-react';
-import type { WorkspaceDomain } from '@/types';
+import { ChevronRight, Loader2, MoreVertical, Pencil, Settings, Trash2 } from 'lucide-react';
+
 import { formatDomainUrl } from '@/lib/urls';
+import type { WorkspaceDomain } from '@/types';
 
 interface DomainListItemProps {
   domain: WorkspaceDomain;

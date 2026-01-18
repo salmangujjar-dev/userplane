@@ -1,11 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { DomainUrlSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +11,7 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import { Label } from '@workspace/ui/components/label';
-import { URLInput } from '@/components/url-input';
+import Logo from '@workspace/ui/components/logo';
 import {
   Tooltip,
   TooltipContent,
@@ -22,7 +19,11 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { HelpCircle } from 'lucide-react';
-import { DomainUrlSchema } from '@workspace/contract';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+import { URLInput } from '@/components/url-input';
 
 interface EditDomainModalProps {
   open: boolean;

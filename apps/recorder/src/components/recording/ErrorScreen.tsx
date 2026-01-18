@@ -5,9 +5,11 @@
  */
 
 import { Button } from '@workspace/ui/components/button';
-import RecordingScreenLayout from './RecordingScreenLayout';
+
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
 import type { RecordingPreferences } from '@/types/session-preferences';
+
+import RecordingScreenLayout from './RecordingScreenLayout';
 
 interface ErrorScreenProps {
   /** Error title */

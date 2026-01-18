@@ -4,14 +4,14 @@
  * Only visible in embedded mode where cross-tab features work
  */
 
-import { Settings2, EyeOff } from 'lucide-react';
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
 import { Switch } from '@workspace/ui/components/switch';
+import { EyeOff, Settings2 } from 'lucide-react';
 
 interface SettingsDropdownProps {
   /** Whether blur is currently enabled */

@@ -1,13 +1,14 @@
-import { useState } from 'react';
 import {
   createPricingPlans,
   formatPlanRate,
-  PRICING_SUBTITLE,
-  PRICING_TITLE,
   type PlanCycle,
   type PlanFeature,
+  PRICING_SUBTITLE,
+  PRICING_TITLE,
   type PricingPlan,
 } from '@workspace/pricing';
+import { useState } from 'react';
+
 import { SIGNUP_URL } from '../../constants/onboarding';
 
 const ALL_PLANS = createPricingPlans({ signupUrl: SIGNUP_URL, version: 'v1' });

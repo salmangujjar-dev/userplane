@@ -4,14 +4,16 @@
  */
 
 import type { ReactNode } from 'react';
-import RecordingScreenLayout from './RecordingScreenLayout';
-import VideoPlayer from './VideoPlayer';
+
 import {
-  POST_RECORDING_UPLOAD_COPY,
   DEFAULT_COMPANY_NAME,
   DEFAULT_PRIMARY_COLOR,
+  POST_RECORDING_UPLOAD_COPY,
 } from '@/constants';
 import type { RecordingPreferences } from '@/types/session-preferences';
+
+import RecordingScreenLayout from './RecordingScreenLayout';
+import VideoPlayer from './VideoPlayer';
 
 interface PostRecordingUploadScreenProps {
   videoUrl: string;

@@ -2,17 +2,13 @@
  * Highlight - Links emails
  */
 
-export { CustomerTriggeredLinksEmail } from './customer-triggered-links';
 export type { CustomerTriggeredLinksEmailProps } from './customer-triggered-links';
-
-export { ReusableLinksEmail } from './reusable-links';
-export type { ReusableLinksEmailProps } from './reusable-links';
-
-export { LinkCustomizationEmail } from './customization';
+export { CustomerTriggeredLinksEmail } from './customer-triggered-links';
 export type { LinkCustomizationEmailProps } from './customization';
-
-export { EmbeddedLinksEmail } from './embedded';
+export { LinkCustomizationEmail } from './customization';
 export type { EmbeddedLinksEmailProps } from './embedded';
-
-export { PublicLinksEmail } from './public-links';
+export { EmbeddedLinksEmail } from './embedded';
 export type { PublicLinksEmailProps } from './public-links';
+export { PublicLinksEmail } from './public-links';
+export type { ReusableLinksEmailProps } from './reusable-links';
+export { ReusableLinksEmail } from './reusable-links';

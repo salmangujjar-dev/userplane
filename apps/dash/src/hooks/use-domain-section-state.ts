@@ -1,16 +1,18 @@
 'use client';
 
-import { useReducer, useCallback } from 'react';
 import { toast } from '@workspace/ui/components/sonner';
+import { useCallback, useReducer } from 'react';
+
 import { apiClient } from '@/client';
 import { useWorkspaceId } from '@/stores/workspace';
 import {
-  type DomainRecordingPreferences,
-  type DomainIdentifier,
   type ConfiguringDomain,
-  type DomainStatus,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
+  type DomainIdentifier,
+  type DomainRecordingPreferences,
+  type DomainStatus,
 } from '@/types/domain';
+
 import type { VerificationStep } from './use-verification-flow';
 
 // Combined state for all domain section interactions

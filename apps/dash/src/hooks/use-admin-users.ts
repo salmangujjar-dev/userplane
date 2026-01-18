@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
+
 import { authClient } from '@/client/auth';
 
 interface UseAdminUsersParams {

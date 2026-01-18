@@ -1,18 +1,19 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { AccountNameSchema } from '@workspace/contract';
+import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { Button } from '@workspace/ui/components/button';
 import { cn } from '@workspace/ui/lib/utils';
-import { useAccount } from '@/hooks/use-account';
-import { useUpdateAccountName } from '@/queries/use-account-mutations';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+
 import { SectionError } from '@/components/shared/section-error';
 import { AccountSettingsSectionSkeleton } from '@/components/skeleton';
-import { AccountNameSchema } from '@workspace/contract';
+import { useAccount } from '@/hooks/use-account';
+import { useUpdateAccountName } from '@/queries/use-account-mutations';
 
 const accountNameFormSchema = z.object({
   name: AccountNameSchema,

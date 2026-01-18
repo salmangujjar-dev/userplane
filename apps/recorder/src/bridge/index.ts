@@ -2,31 +2,13 @@
  * Bridge module barrel export
  */
 
-export { RecorderBridgeConnection, getRecorderBridge, resetRecorderBridge } from './connection';
-
 export {
-  VerificationBridgeConnection,
-  getVerificationBridge,
-  resetVerificationBridge,
-  type VerificationResult,
-} from './verification-connection';
-
-export {
+  type CaptureBridgeCallbacks,
   CaptureBridgeConnection,
   getCaptureBridge,
   resetCaptureBridge,
-  type CaptureBridgeCallbacks,
 } from './capture-connection';
-
-export {
-  CrossTabCoordinator,
-  getCrossTabCoordinator,
-  resetCrossTabCoordinator,
-  type AcquireLockResult,
-  type CrossTabCoordinatorCallbacks,
-  type CrossTabCoordinatorConfig,
-} from './cross-tab';
-
+export { getRecorderBridge, RecorderBridgeConnection, resetRecorderBridge } from './connection';
 export {
   CONNECTION_PREFIXES,
   generateRequestId,
@@ -34,22 +16,35 @@ export {
   isRecorderTab,
   isVerificationTab,
 } from './constants';
-
 export {
-  type RecordingState,
-  type RecordingSessionInfo,
-  type RecorderHostSchema,
-  type VerificationHostSchema,
-  type CaptureHostSchema,
-  type CaptureGuestSchema,
-  type TabMetadata,
-  type CaptureRecorderState,
-  type GuestSchema,
-  type CustomMetadata,
-  type SerializableObject,
-  type VerificationData,
-  type TabMetadataEntry,
+  type AcquireLockResult,
+  CrossTabCoordinator,
+  type CrossTabCoordinatorCallbacks,
+  type CrossTabCoordinatorConfig,
+  getCrossTabCoordinator,
+  resetCrossTabCoordinator,
+} from './cross-tab';
+export {
   type AggregatedMetadata,
+  type CaptureGuestSchema,
+  type CaptureHostSchema,
+  type CaptureRecorderState,
+  type CustomMetadata,
+  type GuestSchema,
   type MetadataRequest,
   type MetadataResponse,
+  type RecorderHostSchema,
+  type RecordingSessionInfo,
+  type RecordingState,
+  type SerializableObject,
+  type TabMetadata,
+  type TabMetadataEntry,
+  type VerificationData,
+  type VerificationHostSchema,
 } from './types';
+export {
+  getVerificationBridge,
+  resetVerificationBridge,
+  VerificationBridgeConnection,
+  type VerificationResult,
+} from './verification-connection';

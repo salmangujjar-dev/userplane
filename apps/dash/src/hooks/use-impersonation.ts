@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+
 import { authClient } from '@/client/auth';
 
 interface ImpersonateUserParams {

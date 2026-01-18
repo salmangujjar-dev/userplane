@@ -1,13 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { ProjectTitleSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
 import {
   Dialog,
   DialogContent,
@@ -15,15 +10,20 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import { Input } from '@workspace/ui/components/input';
+import { Label } from '@workspace/ui/components/label';
+import Logo from '@workspace/ui/components/logo';
+import { Switch } from '@workspace/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { Switch } from '@workspace/ui/components/switch';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
-import { ProjectTitleSchema } from '@workspace/contract';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 interface CreateProjectModalProps {
   open: boolean;

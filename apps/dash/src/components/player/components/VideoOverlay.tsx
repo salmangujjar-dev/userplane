@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
 import { AlertCircleIcon } from 'lucide-react';
+import React from 'react';
+
 import { formatDurationReadable } from '../utils/time-format';
 
 interface VideoOverlayProps {

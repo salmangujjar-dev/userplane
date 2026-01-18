@@ -7,10 +7,11 @@
  * required for the API's origin validation.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { VerificationError } from '@/types/errors';
-import { createVerificationError } from '@/lib/verification-errors';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import type { VerificationBridgeConnection } from '@/bridge';
+import { createVerificationError } from '@/lib/verification-errors';
+import type { VerificationError } from '@/types/errors';
 
 /**
  * Verification flow states

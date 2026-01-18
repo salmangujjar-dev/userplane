@@ -1,50 +1,51 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from '@workspace/ui/components/pagination';
+  ADMIN_FILTER_STATUS_OPTIONS,
+  ADMIN_PROJECT_SORT_OPTIONS,
+  ADMIN_WORKSPACE_PROJECTS_PAGINATION,
+  SORT_DIRECTION_OPTIONS,
+} from '@workspace/contract';
+import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
+import { Input } from '@workspace/ui/components/input';
 import {
-  Folder,
-  MoreVertical,
-  Trash2,
-  RotateCcw,
-  Search,
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@workspace/ui/components/pagination';
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   Clock,
   Filter,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
+  Folder,
+  MoreVertical,
+  RotateCcw,
+  Search,
+  Trash2,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
-import {
-  useAdminSearchWorkspaceProjects,
-  useAdminDeactivateProject,
-  useAdminRestoreProject,
-} from '@/hooks/use-admin-workspace-api';
-import { SectionError } from '@/components/shared/section-error';
-import {
-  ADMIN_WORKSPACE_PROJECTS_PAGINATION,
-  ADMIN_FILTER_STATUS_OPTIONS,
-  ADMIN_PROJECT_SORT_OPTIONS,
-  SORT_DIRECTION_OPTIONS,
-} from '@workspace/contract';
 import { AdminDeactivateProjectModal } from '@/components/modals/admin-deactivate-project-modal';
 import { AdminRestoreProjectModal } from '@/components/modals/admin-restore-project-modal';
+import { SectionError } from '@/components/shared/section-error';
+import {
+  useAdminDeactivateProject,
+  useAdminRestoreProject,
+  useAdminSearchWorkspaceProjects,
+} from '@/hooks/use-admin-workspace-api';
 
 const ITEMS_PER_PAGE = ADMIN_WORKSPACE_PROJECTS_PAGINATION.DEFAULT_PER_PAGE;
 

@@ -5,19 +5,21 @@
  */
 
 import { useEffect, useState } from 'react';
+
+import { URL_PARAMS } from '@/constants';
 import {
   AppModeProvider,
   useAppMode,
-  useVerificationBridge,
   useCrossTabLock,
+  useVerificationBridge,
 } from '@/contexts/AppModeContext';
 import { useVerificationFlow } from '@/hooks/useVerificationFlow';
-import VerifyingScreen from './VerifyingScreen';
-import VerifiedScreen from './VerifiedScreen';
-import VerificationErrorScreen from './VerificationErrorScreen';
-import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
-import { URL_PARAMS } from '@/constants';
 import { createVerificationError } from '@/lib/verification-errors';
+import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
+
+import VerificationErrorScreen from './VerificationErrorScreen';
+import VerifiedScreen from './VerifiedScreen';
+import VerifyingScreen from './VerifyingScreen';
 
 /**
  * Root component that provides app mode context

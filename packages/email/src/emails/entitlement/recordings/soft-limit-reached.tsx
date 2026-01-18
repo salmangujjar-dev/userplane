@@ -3,11 +3,12 @@
  * Sent when a workspace is approaching its recording limit
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/entitlement/recordings/soft-limit-reached';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/entitlement/recordings/soft-limit-reached';
 
 export interface RecordingsSoftLimitEmailProps {
   workspaceName?: string;

@@ -1,65 +1,66 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import {
+  ADMIN_USER_SESSIONS_PAGINATION,
+  ADMIN_USER_SORT_OPTIONS,
+  ADMIN_USER_STATUS_OPTIONS,
+  ADMIN_USER_WORKSPACES_PAGINATION,
+  ADMIN_USERS_PAGINATION,
+  SORT_DIRECTION_OPTIONS,
+} from '@workspace/contract';
+import type { PlanId } from '@workspace/pricing';
+import { Input } from '@workspace/ui/components/input';
+import { Skeleton } from '@workspace/ui/components/skeleton';
+import { ArrowDown, ArrowUp, ArrowUpDown, Clock, Search, UserCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
-import { Input } from '@workspace/ui/components/input';
-import { Search, UserCheck, Clock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { AdminSidebar } from '@/components/navigation/admin-sidebar';
-import { AdminTopActions } from '@/components/navigation/admin-top-actions';
+import { Suspense, useEffect, useState } from 'react';
+
 import { UserCard } from '@/components/admin/user-card';
 import { UserDetailSheet } from '@/components/admin/user-detail-sheet';
-import { AdminBanUserModal } from '@/components/modals/admin-ban-user-modal';
-import { AdminSessionsModal } from '@/components/modals/admin-sessions-modal';
-import { AdminRevokeSessionModal } from '@/components/modals/admin-revoke-session-modal';
-import { ImpersonateConfirmModal } from '@/components/modals/impersonate-confirm-modal';
-import { AdminRevokeAllSessionsModal } from '@/components/modals/admin-revoke-all-sessions-modal';
-import { PaginationControls } from '@/components/shared/pagination-controls';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import { useSession } from '@/hooks/use-session';
-import { useImpersonation } from '@/hooks/use-impersonation';
-import {
-  searchParser,
-  pageParser,
-  singleValueArrayParser,
-  adminUserSortByParser,
-  adminSortDirectionParser,
-} from '@/lib/parsers';
-import {
-  useAdminSearchUsers,
-  useAdminUserDetail,
-  useAdminUserSessions,
-  useAdminUserWorkspaces,
-  useAdminBanUser,
-  useAdminUnbanUser,
-  useAdminRevokeSession,
-  useAdminRevokeAllSessions,
-  type AdminUserSession,
-} from '@/hooks/use-admin-api';
-import {
-  useAdminProvisionWorkspace,
-  useAdminCreateWorkspaceInvite,
-  type AdminProvisionWorkspaceResponse,
-  type AdminWorkspaceCreateInviteResponse,
-} from '@/hooks/use-admin-workspace-api';
-import {
-  AdminProvisionWorkspaceModal,
-  AdminProvisionSuccessModal,
-} from '@/components/modals/admin-provision-workspace-modal';
+import { AdminBanUserModal } from '@/components/modals/admin-ban-user-modal';
 import {
   AdminCreateWorkspaceInviteModal,
   AdminCreateWorkspaceInviteSuccessModal,
 } from '@/components/modals/admin-create-workspace-invite-modal';
-import type { PlanId } from '@workspace/pricing';
 import {
-  ADMIN_USERS_PAGINATION,
-  ADMIN_USER_SESSIONS_PAGINATION,
-  ADMIN_USER_WORKSPACES_PAGINATION,
-  ADMIN_USER_STATUS_OPTIONS,
-  ADMIN_USER_SORT_OPTIONS,
-  SORT_DIRECTION_OPTIONS,
-} from '@workspace/contract';
+  AdminProvisionSuccessModal,
+  AdminProvisionWorkspaceModal,
+} from '@/components/modals/admin-provision-workspace-modal';
+import { AdminRevokeAllSessionsModal } from '@/components/modals/admin-revoke-all-sessions-modal';
+import { AdminRevokeSessionModal } from '@/components/modals/admin-revoke-session-modal';
+import { AdminSessionsModal } from '@/components/modals/admin-sessions-modal';
+import { ImpersonateConfirmModal } from '@/components/modals/impersonate-confirm-modal';
+import { AdminSidebar } from '@/components/navigation/admin-sidebar';
+import { AdminTopActions } from '@/components/navigation/admin-top-actions';
+import { PaginationControls } from '@/components/shared/pagination-controls';
+import {
+  type AdminUserSession,
+  useAdminBanUser,
+  useAdminRevokeAllSessions,
+  useAdminRevokeSession,
+  useAdminSearchUsers,
+  useAdminUnbanUser,
+  useAdminUserDetail,
+  useAdminUserSessions,
+  useAdminUserWorkspaces,
+} from '@/hooks/use-admin-api';
+import {
+  type AdminProvisionWorkspaceResponse,
+  type AdminWorkspaceCreateInviteResponse,
+  useAdminCreateWorkspaceInvite,
+  useAdminProvisionWorkspace,
+} from '@/hooks/use-admin-workspace-api';
+import { useImpersonation } from '@/hooks/use-impersonation';
+import { useSession } from '@/hooks/use-session';
+import {
+  adminSortDirectionParser,
+  adminUserSortByParser,
+  pageParser,
+  searchParser,
+  singleValueArrayParser,
+} from '@/lib/parsers';
 
 const ITEMS_PER_PAGE = ADMIN_USERS_PAGINATION.DEFAULT_PER_PAGE;
 const SESSIONS_PER_PAGE = ADMIN_USER_SESSIONS_PAGINATION.DEFAULT_PER_PAGE;

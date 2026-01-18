@@ -1,4 +1,4 @@
-import { config } from '@workspace/eslint-config/react-internal';
+import { astroConfig } from '@workspace/eslint-config/astro';
 
 /** @type {import("eslint").Linter.Config} */
-export default config;
+export default astroConfig;

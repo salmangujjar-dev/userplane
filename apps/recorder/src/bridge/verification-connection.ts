@@ -4,10 +4,12 @@
  * Focused solely on verification - no recording state management
  */
 
-import { guest, type Connection } from '@workspace/postbridge';
-import type { VerificationHostSchema, VerificationData, ParentVerificationResult } from './types';
+import { type Connection, guest } from '@workspace/postbridge';
+
+import { classifyVerificationApiError, createVerificationError } from '@/lib/verification-errors';
 import type { VerificationError } from '@/types/errors';
-import { createVerificationError, classifyVerificationApiError } from '@/lib/verification-errors';
+
+import type { ParentVerificationResult, VerificationData, VerificationHostSchema } from './types';
 
 /**
  * Verification result returned to app code (with VerificationError)

@@ -5,6 +5,7 @@
 
 import { isDefinedError } from '@workspace/client';
 import { SessionErrors } from '@workspace/contract';
+
 import type { RecordingError } from '@/types/errors';
 
 /**

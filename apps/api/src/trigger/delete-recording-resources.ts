@@ -1,14 +1,16 @@
-import { task, logger } from '@trigger.dev/sdk/v3';
+import { logger, task } from '@trigger.dev/sdk/v3';
+
 import { db } from '@/api/clients/db';
-import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import {
-  getVideoStorage,
-  getThumbnailsStorage,
+  getClientActionsStorage,
   getConsoleLogsStorage,
   getNetworkLogsStorage,
-  getClientActionsStorage,
+  getThumbnailsStorage,
+  getVideoStorage,
 } from '@/api/clients/storage';
-import { TASK_IDS, MAX_DURATIONS } from './constants';
+import { RecordingRepository } from '@/api/repositories/recordings.repository';
+
+import { MAX_DURATIONS, TASK_IDS } from './constants';
 
 interface DeleteRecordingResourcesPayload {
   recordingId: string;

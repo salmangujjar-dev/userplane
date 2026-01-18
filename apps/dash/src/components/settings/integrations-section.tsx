@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
 import { ChevronRight } from 'lucide-react';
-import { IntegrationPreConnectModal } from '@/components/modals/integration-pre-connect-modal';
+import Image from 'next/image';
+import { useState } from 'react';
+
 import { IntegrationPostConnectModal } from '@/components/modals/integration-post-connect-modal';
+import { IntegrationPreConnectModal } from '@/components/modals/integration-pre-connect-modal';
 
 export function IntegrationsSection() {
   const [isConnected, setIsConnected] = useState(false);

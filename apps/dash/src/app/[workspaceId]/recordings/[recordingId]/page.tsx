@@ -1,28 +1,29 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
-import { RecordingPlayer } from '@/components/recordings/recording-player';
-import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
-import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
-import { toast } from '@workspace/ui/components/sonner';
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from '@workspace/ui/components/resizable';
-import { useWorkspaceId } from '@/stores/workspace';
-import { useDeleteRecording } from '@/queries/use-recording-mutations';
+import { toast } from '@workspace/ui/components/sonner';
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
+import { ShareLinkModal } from '@/components/modals/share-link-modal';
+import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
+import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
+import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { DinoError } from '@/components/shared/dino-error';
-import {
-  useRecording,
-  useRecordingVideo,
-  useRecordingThumbnail,
-} from '@/queries/use-recording-query';
 import { RecordingDetailSkeleton } from '@/components/skeleton';
 import { useWorkspaceRole } from '@/hooks/use-workspace-role';
+import { useDeleteRecording } from '@/queries/use-recording-mutations';
+import {
+  useRecording,
+  useRecordingThumbnail,
+  useRecordingVideo,
+} from '@/queries/use-recording-query';
+import { useWorkspaceId } from '@/stores/workspace';
 
 export default function RecordingDetailPage() {
   const params = useParams();

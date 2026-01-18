@@ -1,20 +1,21 @@
 import { z } from 'zod';
+
+import { LINK_PAGINATION } from '../constants';
 import {
+  DomainIdSchema,
+  DomainStatusSchema,
+  LinkIdSchema,
   LinkProviderTypeSchema,
   LinkTypeSchema,
-  DomainStatusSchema,
-  SortDirectionSchema,
   PaginationMetaSchema,
-  WorkspaceIdSchema,
-  LinkIdSchema,
   ProjectIdSchema,
-  DomainIdSchema,
-  WorkspaceMemberIdSchema,
-  TitleSchema,
-  ReferenceTextSchema,
   ProviderIdSchema,
+  ReferenceTextSchema,
+  SortDirectionSchema,
+  TitleSchema,
+  WorkspaceIdSchema,
+  WorkspaceMemberIdSchema,
 } from './common';
-import { LINK_PAGINATION } from '../constants';
 
 /**
  * Link schemas

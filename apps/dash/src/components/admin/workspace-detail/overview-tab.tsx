@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { Label } from '@workspace/ui/components/label';
-import { Input } from '@workspace/ui/components/input';
+import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
+import { Input } from '@workspace/ui/components/input';
+import { Label } from '@workspace/ui/components/label';
 import { Skeleton } from '@workspace/ui/components/skeleton';
+import { useState } from 'react';
+
+import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
+import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import {
   useAdminDeactivateWorkspace,
   useAdminResetInviteToken,
 } from '@/hooks/use-admin-workspace-api';
-import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
-import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
-import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
+
 import type { WorkspaceDetail, WorkspaceToDeactivate, WorkspaceToResetToken } from './types';
 
 interface OverviewTabProps {

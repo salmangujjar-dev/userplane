@@ -3,7 +3,7 @@
  * Simple video player with play/pause and restart controls
  */
 
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface VideoPlayerProps {
   /** Video source URL */

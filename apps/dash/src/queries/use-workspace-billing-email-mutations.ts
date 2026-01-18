@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+
+import { apiClient } from '@/client';
+import type { WorkspaceBillingEmailData } from '@/hooks/use-workspace-billing-email';
 import {
   handleSafeResult,
   handleUnknownError,
-  showErrorToast,
   type SafeResult,
+  showErrorToast,
 } from '@/lib/errors';
-import type { WorkspaceBillingEmailData } from '@/hooks/use-workspace-billing-email';
 import type { QueryData } from '@/types';
 
 type BillingEmailQueryData = QueryData<WorkspaceBillingEmailData>;

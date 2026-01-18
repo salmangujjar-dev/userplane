@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useWorkspaces } from '@/hooks/use-workspaces';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
+import { useWorkspaces } from '@/hooks/use-workspaces';
 
 /**
  * Root page that intelligently redirects users based on their workspace membership

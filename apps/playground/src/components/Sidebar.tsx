@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import type { FilterState, BatchOption } from '../types';
-import { isEnabled } from '../flags';
 import './Sidebar.css';
+
+import { useEffect, useRef, useState } from 'react';
+
+import { isEnabled } from '../flags';
+import type { BatchOption, FilterState } from '../types';
 
 interface SidebarProps {
   filters: FilterState;

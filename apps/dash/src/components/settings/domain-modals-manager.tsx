@@ -1,20 +1,20 @@
 'use client';
 
+import { CreateDomainModal } from '@/components/modals/create-domain-modal';
+import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
+import { DeveloperInstructionsModal } from '@/components/modals/developer-instructions-modal';
+import { DomainConfigureModal } from '@/components/modals/domain-configure-modal';
+import { DomainVerificationPostModal } from '@/components/modals/domain-verification-post-modal';
 import { DomainVerificationPreModal } from '@/components/modals/domain-verification-pre-modal';
 import { DomainVerificationVerifyingModal } from '@/components/modals/domain-verification-verifying-modal';
-import { DomainVerificationPostModal } from '@/components/modals/domain-verification-post-modal';
 import { EditDomainModal } from '@/components/modals/edit-domain-modal';
-import { CreateDomainModal } from '@/components/modals/create-domain-modal';
-import { DomainConfigureModal } from '@/components/modals/domain-configure-modal';
-import { DeveloperInstructionsModal } from '@/components/modals/developer-instructions-modal';
-import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { useSendDomainInstructions } from '@/hooks/use-domain-instructions';
 import type { VerificationStep } from '@/hooks/use-verification-flow';
 import {
-  type DomainRecordingPreferences,
-  type DomainIdentifier,
   type ConfiguringDomain,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
+  type DomainIdentifier,
+  type DomainRecordingPreferences,
 } from '@/types/domain';
 
 interface DomainModalsManagerProps {

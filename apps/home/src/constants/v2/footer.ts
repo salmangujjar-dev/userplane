@@ -1,5 +1,5 @@
-import { NAV_LINKS } from '../navigation';
 import { CONTACT_EMAIL_MAILTO, TALLY_COMPLIANCE_FORM_URL } from '../contact';
+import { NAV_LINKS } from '../navigation';
 import { getMarketingUrl } from '../urls';
 
 /**

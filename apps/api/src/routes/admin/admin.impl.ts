@@ -4,17 +4,19 @@
  */
 
 import { isValidRoleName } from '@workspace/auth';
-import { authorized } from '@/api/middleware/auth.orpc';
+import type { WorkspaceRole } from '@workspace/contract';
+import { getPlanName, type PlanId } from '@workspace/pricing';
+
+import { generateWorkspaceId } from '@/api/lib/id';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
+import { authorized } from '@/api/middleware/auth.orpc';
 import type { AdminService } from '@/api/services/admin.service';
-import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
-import type { AdminRecordingService } from '@/api/services/admin-recording.service';
 import type { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
-import type { WorkspaceService } from '@/api/services/workspace.service';
+import type { AdminRecordingService } from '@/api/services/admin-recording.service';
+import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { TokenService } from '@/api/services/token.service';
-import { getPlanName, DEFAULT_PLAN_NAME, type PlanId } from '@workspace/pricing';
-import { generateWorkspaceId } from '@/api/lib/id';
+import type { WorkspaceService } from '@/api/services/workspace.service';
 
 /**
  * Format date to ISO string
@@ -83,7 +85,7 @@ function formatUserDetail(user: {
 function formatUserWorkspace(workspace: {
   workspaceId: string;
   workspaceName: string;
-  workspaceRole: 'owner' | 'admin' | 'member';
+  workspaceRole: WorkspaceRole;
   joinedAt: Date;
 }) {
   return {

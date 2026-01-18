@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useWorkspaceStore } from '@/stores/workspace';
+import { PROJECT_PAGINATION } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -13,21 +11,12 @@ import {
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-  PaginationEllipsis,
 } from '@workspace/ui/components/pagination';
-import {
-  Folder,
-  Trash2,
-  MoreVertical,
-  ChevronRight,
-  Pencil,
-  ArrowUpDown,
-  Plus,
-} from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -35,19 +24,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import type { ProjectSortField, SortDirection } from '@/hooks/use-workspace-projects';
+import {
+  ArrowUpDown,
+  ChevronRight,
+  Folder,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { CreateProjectModal } from '@/components/modals/create-project-modal';
-import { EditProjectModal } from '@/components/modals/edit-project-modal';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
+import { EditProjectModal } from '@/components/modals/edit-project-modal';
+import { SectionError } from '@/components/shared/section-error';
+import type { ProjectSortField, SortDirection } from '@/hooks/use-workspace-projects';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import {
   useCreateProject,
-  useUpdateProject,
   useDeleteProject,
+  useUpdateProject,
 } from '@/queries/use-project-mutations';
-import { SectionError } from '@/components/shared/section-error';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
-import { PROJECT_PAGINATION } from '@workspace/contract';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 const ITEMS_PER_PAGE = PROJECT_PAGINATION.DEFAULT_PER_PAGE;
 

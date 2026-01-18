@@ -1,10 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
+
 import { apiClient } from '@/client';
 import {
   handleSafeResult,
   handleUnknownError,
-  showErrorToast,
   type SafeResult,
+  showErrorToast,
 } from '@/lib/errors';
 
 interface CreateWorkspaceInput {

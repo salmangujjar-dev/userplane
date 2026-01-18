@@ -1,24 +1,25 @@
+import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
+import { relations } from 'drizzle-orm';
 import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
   pgTable,
   text,
   timestamp,
-  boolean,
-  jsonb,
-  integer,
-  index,
-  pgEnum,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
-import { links } from './links';
-import { workspaces } from './workspaces';
-import { projects } from './projects';
-import { workspaceMembers } from './workspace-members';
+
 import {
-  UPLOAD_STATUS_VALUES,
   STREAM_PROVIDER_VALUES,
   STREAMING_STATUS_VALUES,
+  UPLOAD_STATUS_VALUES,
 } from '../constants';
-import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
+import { links } from './links';
+import { projects } from './projects';
+import { workspaceMembers } from './workspace-members';
+import { workspaces } from './workspaces';
 
 export const uploadStatusEnum = pgEnum('upload_status', UPLOAD_STATUS_VALUES);
 export const streamProviderEnum = pgEnum('stream_provider', STREAM_PROVIDER_VALUES);

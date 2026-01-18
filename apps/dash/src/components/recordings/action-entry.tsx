@@ -1,4 +1,5 @@
 import { MousePointer2 } from 'lucide-react';
+
 import { ClickEvent, formatClickTarget } from './action-types';
 
 interface ActionEntryProps {

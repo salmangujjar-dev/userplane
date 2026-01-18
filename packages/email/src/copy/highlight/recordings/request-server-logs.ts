@@ -11,4 +11,5 @@ export const copy = {
     'Response bodies are not captured by default for privacy.',
   ],
   cta: 'Enable network logs',
+  helpText: 'Learn more about network logs',
 } as const;

@@ -3,27 +3,28 @@
  * Handles all database operations for recording entities
  */
 
-import { eq, and, count, desc, asc, or, inArray, lt, sql } from '@workspace/db';
 import type { DbClient, Recording } from '@workspace/db';
+import { and, asc, count, desc, eq, inArray, sql } from '@workspace/db';
 import {
-  recordings,
-  workspaceMembers,
-  user,
+  domains,
   links,
   projects,
-  domains,
+  recordings,
+  user,
+  workspaceMembers,
   workspaces,
 } from '@workspace/db';
-import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
+
 import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
 import {
-  systemMetaSchema,
+  type CustomMeta,
   customMetaSchema,
   type SystemMeta,
-  type CustomMeta,
+  systemMetaSchema,
 } from '@/api/schema/recording-meta.schema';
+import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
 
-export type { SystemMeta, CustomMeta };
+export type { CustomMeta, SystemMeta };
 
 /**
  * Shape of recording list item with joined data

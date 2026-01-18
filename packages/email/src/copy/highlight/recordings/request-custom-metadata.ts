@@ -10,5 +10,6 @@ export const copy = {
     'Pass user IDs, account names, feature flags, or any custom data when generating recording links. This metadata appears with the recording for easier debugging.',
     'Works with query parameters or the JavaScript SDK.',
   ],
-  cta: 'View metadata docs',
+  cta: 'View dashboard',
+  helpText: 'Learn more about custom metadata',
 } as const;

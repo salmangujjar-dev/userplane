@@ -40,5 +40,5 @@ export * from './billing';
 export * from './entitlement';
 
 // Shared components
-export { EmailLayout } from '../shared/layout';
 export type { EmailLayoutProps } from '../shared/layout';
+export { EmailLayout } from '../shared/layout';

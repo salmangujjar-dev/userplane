@@ -10,5 +10,6 @@ export const copy = {
     'Add a recording button or link anywhere in your application. Customers click and record their screen without opening a new tab or navigating away.',
     'Works with any web framework. No SDK required.',
   ],
-  cta: 'View embed docs',
+  cta: 'View dashboard',
+  helpText: 'Learn more about embedded links',
 } as const;

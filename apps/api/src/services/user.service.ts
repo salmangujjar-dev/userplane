@@ -3,8 +3,9 @@
  * Contains business logic for user account management
  */
 
-import { UserRepository } from '@/api/repositories/users.repository';
 import { accountError } from '@workspace/contract';
+
+import { UserRepository } from '@/api/repositories/users.repository';
 
 export interface UserServiceDeps {
   userRepo: UserRepository;

@@ -1,8 +1,9 @@
-import { pgTable, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { workspaces } from './workspaces';
+import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+
 import { links } from './links';
 import { recordings } from './recordings';
+import { workspaces } from './workspaces';
 
 export const projects = pgTable(
   'projects',

@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { useWorkspaceId } from '@/stores/workspace';
-import { apiClient } from '@/client';
 import type { LinkProviderType, LinkType } from '@workspace/contract';
-import { handleSafeResult } from '@/lib/errors';
+
+import { apiClient } from '@/client';
 import { DEFAULT_LINKS_PER_PAGE } from '@/constants/pagination';
+import { handleSafeResult } from '@/lib/errors';
+import { useWorkspaceId } from '@/stores/workspace';
 
 export interface LinkDomain {
   domainId: string;

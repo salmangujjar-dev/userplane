@@ -4,6 +4,7 @@
 
 import { DomainRecordingPreferencesSchema, type DomainStatus } from '@workspace/contract';
 import type { z } from 'zod';
+
 import type { PaginationMeta } from './common';
 
 /**

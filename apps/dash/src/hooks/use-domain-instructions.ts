@@ -2,10 +2,11 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
+
 import { apiClient } from '@/client';
-import { useWorkspaceStore } from '@/stores/workspace';
 import type { SafeResult } from '@/lib/errors';
 import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 interface SendInstructionsData {
   sentCount: number;

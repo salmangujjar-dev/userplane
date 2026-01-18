@@ -1,9 +1,8 @@
-import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import type { FieldError as RHFFieldError } from 'react-hook-form';
-
-import { cn } from '@workspace/ui/lib/utils';
 import { Label } from '@workspace/ui/components/label';
+import { cn } from '@workspace/ui/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import * as React from 'react';
+import type { FieldError as RHFFieldError } from 'react-hook-form';
 
 const fieldVariants = cva('space-y-1.5', {
   variants: {
@@ -116,11 +115,11 @@ function FieldContent({ className, ...props }: React.ComponentProps<'div'>) {
 
 export {
   Field,
-  FieldSet,
-  FieldLegend,
-  FieldGroup,
-  FieldLabel,
+  FieldContent,
   FieldDescription,
   FieldError,
-  FieldContent,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
 };

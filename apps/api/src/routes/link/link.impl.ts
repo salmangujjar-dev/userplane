@@ -3,13 +3,14 @@
  * Implements the link contract defined in @workspace/contract
  */
 
+import { linkError } from '@workspace/contract';
+
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { LinkService } from '@/api/services/link.service';
-import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
-import { createPaginationMeta } from '@/api/types';
-import { linkError } from '@workspace/contract';
+import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+import { createPaginationMeta, type LinkSortOptions } from '@/api/types';
 
 /**
  * GET /workspace/:workspaceId/links - List links
@@ -33,7 +34,7 @@ export const getLinksImpl = (
         linkType: input.query.link_type,
       };
 
-      const sort = {
+      const sort: LinkSortOptions = {
         field: input.query.sort_by || 'created_at',
         direction: input.query.sort_direction || 'desc',
       };
@@ -43,7 +44,7 @@ export const getLinksImpl = (
         input.query.page || 1,
         input.query.per_page || 10,
         filters,
-        sort as any
+        sort
       );
 
       return {

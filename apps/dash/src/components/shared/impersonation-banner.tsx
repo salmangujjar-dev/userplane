@@ -1,9 +1,10 @@
 'use client';
 
-import { AlertTriangle, X } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
-import { useSession } from '@/hooks/use-session';
+import { AlertTriangle, X } from 'lucide-react';
+
 import { useAuth } from '@/hooks/use-auth';
+import { useSession } from '@/hooks/use-session';
 
 /**
  * A banner displayed at the top of the page when an admin is impersonating another user.

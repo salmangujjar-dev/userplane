@@ -1,7 +1,8 @@
 'use client';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { Plus } from 'lucide-react';
+
+import { BoringAvatar } from '@/components/shared/boring-avatar';
 
 interface WorkspaceMember {
   workspaceMemberId: string;

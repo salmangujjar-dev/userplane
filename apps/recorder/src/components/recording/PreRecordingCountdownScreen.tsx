@@ -3,11 +3,13 @@
  * Shows countdown timer before recording starts
  */
 
-import { useEffect, useRef, type ReactNode } from 'react';
-import RecordingScreenLayout from './RecordingScreenLayout';
+import { type ReactNode, useEffect, useRef } from 'react';
+
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
-import { lightenColor } from '@/utils';
 import type { RecordingPreferences } from '@/types/session-preferences';
+import { lightenColor } from '@/utils';
+
+import RecordingScreenLayout from './RecordingScreenLayout';
 
 interface PreRecordingCountdownScreenProps {
   countdownSeconds: number;

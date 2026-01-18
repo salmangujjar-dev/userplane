@@ -1,10 +1,11 @@
 import { z } from 'zod';
+
 import {
+  DomainIdSchema,
   DomainStatusSchema,
   EmailSchema,
-  WorkspaceIdSchema,
-  DomainIdSchema,
   TokenSchema,
+  WorkspaceIdSchema,
 } from './common';
 
 /**

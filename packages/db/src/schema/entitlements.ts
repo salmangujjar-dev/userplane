@@ -1,15 +1,16 @@
+import { relations } from 'drizzle-orm';
 import {
+  boolean,
+  integer,
+  pgEnum,
   pgTable,
   text,
   timestamp,
-  boolean,
-  integer,
   uniqueIndex,
-  pgEnum,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
-import { workspaces } from './workspaces';
+
 import { RESOURCE_TYPE_VALUES } from '../constants';
+import { workspaces } from './workspaces';
 
 export const resourceTypeEnum = pgEnum('resource_type', RESOURCE_TYPE_VALUES);
 

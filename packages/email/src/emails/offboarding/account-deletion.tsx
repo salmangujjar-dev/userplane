@@ -3,11 +3,12 @@
  * Sent when a user's account has been deleted
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/offboarding/account-deletion';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/offboarding/account-deletion';
 
 export interface AccountDeletionEmailProps {
   userName?: string;

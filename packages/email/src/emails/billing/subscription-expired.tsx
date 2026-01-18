@@ -3,11 +3,12 @@
  * Sent when a subscription expires
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/billing/subscription-expired';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/billing/subscription-expired';
 
 export interface SubscriptionExpiredEmailProps {
   planName?: string;

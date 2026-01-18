@@ -1,13 +1,15 @@
-import { task, logger, schedules } from '@trigger.dev/sdk/v3';
+import { logger, schedules, task } from '@trigger.dev/sdk/v3';
+
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
-import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { ProjectRepository } from '@/api/repositories/projects.repository';
-import { deleteRecordingResources } from './delete-recording-resources';
-import { TASK_IDS, MAX_DURATIONS, BATCH_LIMITS } from './constants';
-import { buildProjectDeletionKey, buildRecordingDeletionKey } from './idempotency';
-import { getPurgeDelay } from './delay-calculator';
 import { chunkArray } from '@/api/lib/batch';
+import { ProjectRepository } from '@/api/repositories/projects.repository';
+import { RecordingRepository } from '@/api/repositories/recordings.repository';
+
+import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
+import { getPurgeDelay } from './delay-calculator';
+import { deleteRecordingResources } from './delete-recording-resources';
+import { buildProjectDeletionKey, buildRecordingDeletionKey } from './idempotency';
 
 interface CleanupOrphanedProjectPayload {
   projectId: string;

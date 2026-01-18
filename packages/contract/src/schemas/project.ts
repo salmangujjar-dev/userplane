@@ -1,11 +1,12 @@
 import { z } from 'zod';
+
+import { PROJECT_PAGINATION } from '../constants';
 import {
   PaginationMetaSchema,
+  ProjectIdSchema,
   SortDirectionSchema,
   WorkspaceIdSchema,
-  ProjectIdSchema,
 } from './common';
-import { PROJECT_PAGINATION } from '../constants';
 
 /**
  * Project schemas

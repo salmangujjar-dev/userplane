@@ -4,6 +4,7 @@
  */
 
 import { adminError } from '@workspace/contract';
+
 import type { AdminRepository, SearchUsersParams } from '@/api/repositories/admin.repository';
 
 export interface AdminServiceDeps {

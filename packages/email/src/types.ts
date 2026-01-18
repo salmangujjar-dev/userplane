@@ -9,20 +9,28 @@
 export type EmailProvider = 'localhost' | 'resend';
 
 /**
- * Email send parameters
- * Based on Resend's API format
+ * Base email parameters shared across all content types
  */
-export interface SendEmailParams {
+interface BaseEmailParams {
   from: string;
   to: string | string[];
   subject: string;
-  html?: string;
-  text?: string;
   replyTo?: string | string[];
   cc?: string | string[];
   bcc?: string | string[];
   tags?: Array<{ name: string; value: string }>;
 }
+
+/**
+ * Email send parameters
+ * Requires at least one of: html or text
+ */
+export type SendEmailParams = BaseEmailParams &
+  (
+    | { html: string; text?: string }
+    | { html?: string; text: string }
+    | { html: string; text: string }
+  );
 
 /**
  * Email send options

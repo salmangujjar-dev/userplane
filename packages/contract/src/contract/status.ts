@@ -1,5 +1,6 @@
 import { oc } from '@orpc/contract';
-import { ApiInfoDataSchema, HealthDataSchema, ApiResponseSchema } from '../schemas';
+
+import { ApiInfoDataSchema, ApiResponseSchema, HealthDataSchema } from '../schemas';
 
 /**
  * Status contract

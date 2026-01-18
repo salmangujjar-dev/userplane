@@ -1,13 +1,14 @@
-import { Hono } from 'hono';
-import { logger as honoLogger } from 'hono/logger';
-import { cors } from 'hono/cors';
-import { prettyJSON } from 'hono/pretty-json';
-import { serveStatic } from 'hono/bun';
-import { env, logConfig } from '@/api/env';
-import { auth } from '@/api/clients/auth';
-import { createAppLogger } from '@workspace/logger';
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { onError } from '@orpc/server';
+import { createAppLogger } from '@workspace/logger';
+import { Hono } from 'hono';
+import { serveStatic } from 'hono/bun';
+import { cors } from 'hono/cors';
+import { logger as honoLogger } from 'hono/logger';
+import { prettyJSON } from 'hono/pretty-json';
+
+import { auth } from '@/api/clients/auth';
+import { env, logConfig } from '@/api/env';
 import { apiRouter } from '@/api/routes/api.router';
 
 const app = new Hono();

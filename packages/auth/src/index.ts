@@ -1,15 +1,16 @@
+import type { DbClient } from '@workspace/db';
+import * as schema from '@workspace/db/schema';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, magicLink } from 'better-auth/plugins';
-import type { DbClient } from '@workspace/db';
-import * as schema from '@workspace/db/schema';
+
 import { ac, adminRole, csmRole, userRole } from './permissions';
 
 // Export roles for server use only
 export { adminRole, csmRole, userRole } from './permissions';
 
 // Export types and utilities for both server and client use
-export type { RoleName, PermissionMap, Resource, Action } from './types';
+export type { Action, PermissionMap, Resource, RoleName } from './types';
 export { isValidRoleName } from './types';
 
 // Note: For client-side usage, import from '@workspace/auth/permissions-client'

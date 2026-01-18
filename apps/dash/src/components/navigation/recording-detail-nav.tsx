@@ -1,16 +1,17 @@
 'use client';
 
-import Link from 'next/link';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
-import { Link as LinkIcon, Share2, MoreVertical, Trash2 } from 'lucide-react';
-import { useWorkspaceStore } from '@/stores/workspace';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
+import Logo from '@workspace/ui/components/logo';
+import { Link as LinkIcon, MoreVertical, Share2, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+
+import { useWorkspaceStore } from '@/stores/workspace';
 
 interface RecordingDetailNavProps {
   onCopyLink?: () => void;

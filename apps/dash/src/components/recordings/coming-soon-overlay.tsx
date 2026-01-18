@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import { toast } from '@workspace/ui/components/sonner';
 import { Bell, Check } from 'lucide-react';
+import { useState } from 'react';
 
 interface ComingSoonOverlayProps {
   title: string;

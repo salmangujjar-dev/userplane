@@ -3,12 +3,14 @@
  * Lets user choose recording mode and start recording
  */
 
-import { useState, type ReactNode } from 'react';
 import { Button } from '@workspace/ui/components/button';
-import RecordingScreenLayout from './RecordingScreenLayout';
-import { PRE_RECORDING_COPY, DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
-import type { RecordingPreferences } from '@/types/session-preferences';
+import { type ReactNode, useState } from 'react';
+
+import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR, PRE_RECORDING_COPY } from '@/constants';
 import type { RecordingMode } from '@/services/media-capture';
+import type { RecordingPreferences } from '@/types/session-preferences';
+
+import RecordingScreenLayout from './RecordingScreenLayout';
 
 interface PreRecordingScreenProps {
   /** Name of the person who requested the recording */

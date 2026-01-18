@@ -1,7 +1,8 @@
 'use client';
 
-import { WorkspaceMemberAvatars } from '../workspace/workspace-member-avatars';
 import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
+
+import { WorkspaceMemberAvatars } from '../workspace/workspace-member-avatars';
 
 interface TopActionsProps {
   onInviteClick?: () => void;

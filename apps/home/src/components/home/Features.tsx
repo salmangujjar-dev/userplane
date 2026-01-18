@@ -1,4 +1,4 @@
-import { FEATURES, FEATURES_HEADING, type Feature } from '../../constants/features';
+import { type Feature, FEATURES, FEATURES_HEADING } from '../../constants/features';
 
 function FeatureCard({ image, imageAlt, title, description }: Feature) {
   return (

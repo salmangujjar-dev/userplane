@@ -3,11 +3,12 @@
  * Educate users about screenshot capture capabilities
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/highlight/screenshots/request';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/highlight/screenshots/request';
 
 export interface RequestScreenshotEmailProps {
   dashboardUrl?: string;
@@ -32,6 +33,14 @@ export const RequestScreenshotEmail = ({
         <Link href={dashboardUrl} style={styles.ctaButton}>
           {copy.cta}
         </Link>
+      </Section>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.smallText}>
+          <Link href={docsUrl} style={styles.link}>
+            {copy.helpText}
+          </Link>
+        </Text>
       </Section>
     </EmailLayout>
   );

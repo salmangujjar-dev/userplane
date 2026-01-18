@@ -1,8 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useWorkspaceStore } from '@/stores/workspace';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -10,22 +7,26 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import {
-  Share2,
+  ChevronRight,
   ExternalLink,
-  MoreVertical,
-  Trash2,
-  Pencil,
-  Repeat,
-  Link2,
   FolderKanban,
   Globe,
-  ChevronRight,
+  Link2,
+  MoreVertical,
+  Pencil,
+  Repeat,
+  Share2,
+  Trash2,
 } from 'lucide-react';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { EditLinkModal } from '@/components/modals/edit-link-modal';
+import { ShareLinkModal } from '@/components/modals/share-link-modal';
+import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 interface LinkPreviewProps {
   linkId: string;

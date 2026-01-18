@@ -1,6 +1,4 @@
-import { AlignJustify, LogIn } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
 import {
   Drawer,
   DrawerContent,
@@ -8,8 +6,11 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@workspace/ui/components/drawer';
+import Logo from '@workspace/ui/components/logo';
+import { AlignJustify, LogIn } from 'lucide-react';
+
+import { LOGO_LINK, NAV_LINKS } from '@/constants/navigation';
 import { SIGNUP_URL } from '@/constants/onboarding';
-import { NAV_LINKS, LOGO_LINK } from '@/constants/navigation';
 
 function DrawerNavLink({
   href,

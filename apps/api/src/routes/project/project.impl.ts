@@ -3,16 +3,17 @@
  * Implements the project contract defined in @workspace/contract
  */
 
+import { projectError } from '@workspace/contract';
+
 import { authorized } from '@/api/middleware/auth.orpc';
 import {
   createWorkspaceMiddleware,
   createWorkspaceRoleMiddleware,
 } from '@/api/middleware/workspace.orpc';
 import type { ProjectService } from '@/api/services/project.service';
-import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
+import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { createPaginationMeta } from '@/api/types';
-import { projectError } from '@workspace/contract';
 
 /**
  * GET /workspace/:workspaceId/projects

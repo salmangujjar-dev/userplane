@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import VerifiedScreen from './VerifiedScreen';
+
 import { AppModeProvider } from '@/contexts/AppModeContext';
+
+import VerifiedScreen from './VerifiedScreen';
 
 const meta = {
   title: 'Verification/VerifiedScreen',

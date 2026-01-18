@@ -1,6 +1,7 @@
-import type { Company } from '../types';
-import { isEnabled } from '../flags';
 import './CompanyCard.css';
+
+import { isEnabled } from '../flags';
+import type { Company } from '../types';
 
 interface CompanyCardProps {
   company: Company;

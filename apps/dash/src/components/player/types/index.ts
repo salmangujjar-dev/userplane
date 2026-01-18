@@ -1,10 +1,10 @@
 // Re-export Video.js types for convenience
 export type {
+  ControlBarOptions,
   Player,
   PlayerOptions,
-  VideoJsSource,
   TextTrackOptions,
-  ControlBarOptions,
+  VideoJsSource,
 } from './videojs';
 
 // Video marker types for timeline annotations

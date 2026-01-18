@@ -4,6 +4,7 @@
  */
 
 import type { ReactNode } from 'react';
+
 import { DEFAULT_COMPANY_NAME } from '@/constants';
 
 interface RecordingScreenLayoutProps {

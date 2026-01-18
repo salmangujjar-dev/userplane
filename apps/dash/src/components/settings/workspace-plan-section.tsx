@@ -9,8 +9,9 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { ArrowUpRight, Info } from 'lucide-react';
-import { useWorkspace } from '@/hooks/use-workspace';
+
 import { SectionError } from '@/components/shared/section-error';
+import { useWorkspace } from '@/hooks/use-workspace';
 
 export function WorkspacePlanSection() {
   const { data: workspaceResult, isLoading, error, refetch } = useWorkspace();

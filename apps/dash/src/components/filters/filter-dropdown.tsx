@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { Check, ChevronDown, Search, X, LucideIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +7,9 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import { Input } from '@workspace/ui/components/input';
 import { cn } from '@workspace/ui/lib/utils';
+import { Check, ChevronDown, LucideIcon, Search, X } from 'lucide-react';
+import { useState } from 'react';
+
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 
 export interface FilterOption {

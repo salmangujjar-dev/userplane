@@ -1,52 +1,53 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import {
+  ADMIN_WORKSPACE_SORT_OPTIONS,
+  ADMIN_WORKSPACE_STATUS_OPTIONS,
+  ADMIN_WORKSPACES_PAGINATION,
+  SORT_DIRECTION_OPTIONS,
+} from '@workspace/contract';
+import type { PlanId } from '@workspace/pricing';
+import { Input } from '@workspace/ui/components/input';
+import { Skeleton } from '@workspace/ui/components/skeleton';
+import { ArrowDown, ArrowUp, ArrowUpDown, Building2, Clock, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
-import { Input } from '@workspace/ui/components/input';
-import { Search, Building2, Clock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { AdminSidebar } from '@/components/navigation/admin-sidebar';
-import { AdminTopActions } from '@/components/navigation/admin-top-actions';
+import { Suspense, useEffect, useState } from 'react';
+
 import { WorkspaceCard } from '@/components/admin/workspace-card';
-import { PaginationControls } from '@/components/shared/pagination-controls';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import { useSession } from '@/hooks/use-session';
-import {
-  useAdminSearchWorkspaces,
-  useAdminDeactivateWorkspace,
-  useAdminRestoreWorkspace,
-  useAdminResetInviteToken,
-  useAdminProvisionWorkspace,
-  useAdminCreateWorkspaceInvite,
-  type AdminWorkspaceCreateInviteResponse,
-} from '@/hooks/use-admin-workspace-api';
-import {
-  searchParser,
-  pageParser,
-  singleValueArrayParser,
-  adminWorkspaceSortByParser,
-  adminSortDirectionParser,
-} from '@/lib/parsers';
-import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
-import { AdminRestoreWorkspaceModal } from '@/components/modals/admin-restore-workspace-modal';
-import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
-import {
-  AdminProvisionWorkspaceModal,
-  AdminProvisionSuccessModal,
-} from '@/components/modals/admin-provision-workspace-modal';
 import {
   AdminCreateWorkspaceInviteModal,
   AdminCreateWorkspaceInviteSuccessModal,
 } from '@/components/modals/admin-create-workspace-invite-modal';
+import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
+import {
+  AdminProvisionSuccessModal,
+  AdminProvisionWorkspaceModal,
+} from '@/components/modals/admin-provision-workspace-modal';
+import { AdminRestoreWorkspaceModal } from '@/components/modals/admin-restore-workspace-modal';
+import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
+import { AdminSidebar } from '@/components/navigation/admin-sidebar';
+import { AdminTopActions } from '@/components/navigation/admin-top-actions';
+import { PaginationControls } from '@/components/shared/pagination-controls';
 import type { AdminProvisionWorkspaceResponse } from '@/hooks/use-admin-workspace-api';
 import {
-  ADMIN_WORKSPACES_PAGINATION,
-  ADMIN_WORKSPACE_STATUS_OPTIONS,
-  ADMIN_WORKSPACE_SORT_OPTIONS,
-  SORT_DIRECTION_OPTIONS,
-} from '@workspace/contract';
-import type { PlanId } from '@workspace/pricing';
+  type AdminWorkspaceCreateInviteResponse,
+  useAdminCreateWorkspaceInvite,
+  useAdminDeactivateWorkspace,
+  useAdminProvisionWorkspace,
+  useAdminResetInviteToken,
+  useAdminRestoreWorkspace,
+  useAdminSearchWorkspaces,
+} from '@/hooks/use-admin-workspace-api';
+import { useSession } from '@/hooks/use-session';
+import {
+  adminSortDirectionParser,
+  adminWorkspaceSortByParser,
+  pageParser,
+  searchParser,
+  singleValueArrayParser,
+} from '@/lib/parsers';
 
 const ITEMS_PER_PAGE = ADMIN_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE;
 

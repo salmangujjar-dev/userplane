@@ -4,16 +4,17 @@
  */
 
 import {
-  getStorage,
-  type StorageConfig,
-  type ConsoleLogsStorageClient,
-  type NetworkLogsStorageClient,
-  type ClientActionsStorageClient,
-  type VideoStorageClient,
-  type ScreenshotsStorageClient,
-  type ThumbnailsStorageClient,
   type AssetsStorageClient,
+  type ClientActionsStorageClient,
+  type ConsoleLogsStorageClient,
+  getStorage,
+  type NetworkLogsStorageClient,
+  type ScreenshotsStorageClient,
+  type StorageConfig,
+  type ThumbnailsStorageClient,
+  type VideoStorageClient,
 } from '@workspace/storage';
+
 import { env } from '@/api/env';
 
 // Singleton instances

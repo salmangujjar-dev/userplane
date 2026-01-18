@@ -2,8 +2,7 @@
  * Offboarding emails
  */
 
-export { AccountDeletionEmail } from './account-deletion';
 export type { AccountDeletionEmailProps } from './account-deletion';
-
-export { TosViolationEmail } from './tos-violation';
+export { AccountDeletionEmail } from './account-deletion';
 export type { TosViolationEmailProps } from './tos-violation';
+export { TosViolationEmail } from './tos-violation';

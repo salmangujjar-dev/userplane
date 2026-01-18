@@ -3,20 +3,21 @@
  * Contains business logic for workspace management
  */
 
-import { generateWorkspaceId, generateRecordingId, generateInviteToken } from '@/api/lib/id';
+import { MAX_EMAIL_DOMAINS, workspaceError } from '@workspace/contract';
+import type { DbClient } from '@workspace/db';
+
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
-import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import { ProjectRepository } from '@/api/repositories/projects.repository';
+import { env } from '@/api/env';
+import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@/api/lib/id';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
-import { TokenService } from '@/api/services/token.service';
+import { ProjectRepository } from '@/api/repositories/projects.repository';
+import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
+import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { ProjectService } from '@/api/services/project.service';
-import type { Transaction, CreateWorkspaceParams } from '@/api/types';
-import type { DbClient } from '@workspace/db';
+import { TokenService } from '@/api/services/token.service';
+import type { CreateWorkspaceParams, Transaction } from '@/api/types';
 import { isDisposableEmail, isDisposableEmailDomain } from '@/api/utils/disposable-email';
-import { MAX_EMAIL_DOMAINS, workspaceError } from '@workspace/contract';
-import { env } from '@/api/env';
 
 export interface WorkspaceServiceDeps {
   workspaceRepo: WorkspaceRepository;
@@ -76,7 +77,7 @@ export class WorkspaceService {
    * Uses centralized ID generator with rec_ prefix for consistency
    * To be used later for public recording links slug generation
    */
-  generateUniqueSlug(baseName: string): string {
+  generateUniqueSlug(): string {
     return generateRecordingId();
   }
 
@@ -473,6 +474,7 @@ export class WorkspaceService {
 
       // 5. Restore associated projects (best effort)
       // Only restore projects that were deleted at the exact same time as the workspace
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let restoredProjects: any[] = [];
       if (this.deps.projectRepo) {
         try {
@@ -489,6 +491,7 @@ export class WorkspaceService {
 
       // 6. Restore associated links (best effort)
       // Only restore links that were deleted at the exact same time as the workspace
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let restoredLinks: any[] = [];
       if (this.deps.linkRepo) {
         try {

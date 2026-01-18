@@ -1,6 +1,7 @@
+import { AlertCircle, AlertTriangle, Bug, ChevronRight, Info, Skull } from 'lucide-react';
 import { useState } from 'react';
-import { ChevronRight, AlertCircle, AlertTriangle, Info, Bug, Skull } from 'lucide-react';
-import { StructuredLog, LogLevel } from './backend-log-types';
+
+import { LogLevel, StructuredLog } from './backend-log-types';
 
 interface BackendLogEntryProps {
   log: StructuredLog;

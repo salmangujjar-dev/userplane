@@ -3,10 +3,11 @@
  * Handles all database operations for workspace entities
  */
 
-import { eq, and, count, or, ne, ilike, notInArray, sql } from '@workspace/db';
-import type { DbClient, WorkspaceRole, WorkspaceInvitePolicy } from '@workspace/db';
-import { workspaces, workspaceMembers } from '@workspace/db';
-import type { Transaction, CreateWorkspaceInput } from '@/api/types';
+import type { DbClient, WorkspaceInvitePolicy, WorkspaceRole } from '@workspace/db';
+import { and, count, eq, ilike, ne, notInArray, or, sql } from '@workspace/db';
+import { workspaceMembers, workspaces } from '@workspace/db';
+
+import type { CreateWorkspaceInput, Transaction } from '@/api/types';
 
 export class WorkspaceRepository {
   constructor(private db: DbClient) {}
@@ -210,6 +211,7 @@ export class WorkspaceRepository {
     const includeMembership = options?.includeWorkspaceMembership || false;
 
     // Build the select object dynamically based on options
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const selectFields: any = {
       workspaceId: workspaces.workspaceId,
       workspaceName: workspaces.workspaceName,
@@ -321,6 +323,7 @@ export class WorkspaceRepository {
     const includeMembership = options?.includeWorkspaceMembership || false;
 
     // Build the select object dynamically based on options
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const selectFields: any = {
       workspaceId: workspaces.workspaceId,
       workspaceName: workspaces.workspaceName,

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Badge } from '@workspace/ui/components/badge';
+import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -9,20 +10,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
-import { Button } from '@workspace/ui/components/button';
-import { Badge } from '@workspace/ui/components/badge';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import {
-  MonitorSmartphone,
-  Globe,
-  Clock,
-  Trash2,
-  Loader2,
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Globe,
+  Loader2,
+  MonitorSmartphone,
+  Trash2,
 } from 'lucide-react';
+import { useState } from 'react';
+
 import type { AdminUserSession } from '@/hooks/use-admin-api';
+
 import { AdminRevokeSessionModal } from './admin-revoke-session-modal';
 
 interface AdminSessionsModalProps {

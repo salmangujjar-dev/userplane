@@ -1,15 +1,17 @@
 'use client';
 
-import { useReducer, useCallback } from 'react';
-import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+import { useCallback, useReducer } from 'react';
+
+import { apiClient } from '@/client';
 import { useWorkspaceId } from '@/stores/workspace';
-import { useDomainStatusPolling } from './use-domain-status-polling';
 import {
-  type DomainRecordingPreferences,
-  type DomainIdentifier,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
+  type DomainIdentifier,
+  type DomainRecordingPreferences,
 } from '@/types/domain';
+
+import { useDomainStatusPolling } from './use-domain-status-polling';
 
 // Verification step types
 export type VerificationStep = 'pre' | 'verifying' | 'post' | null;

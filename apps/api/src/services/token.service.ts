@@ -3,15 +3,16 @@
  * Handles generation and verification of JWT tokens for invites, workspace access, and domain verification
  */
 
+import type { PlanId } from '@workspace/pricing';
 import jwt, { type SignOptions } from 'jsonwebtoken';
+
 import { env } from '@/api/env';
 import type {
-  InviteTokenPayload,
-  DomainVerificationTokenPayload,
   AccessRequestTokenPayload,
+  DomainVerificationTokenPayload,
+  InviteTokenPayload,
   WorkspaceCreateInviteTokenPayload,
 } from '@/api/types';
-import type { PlanId } from '@workspace/pricing';
 
 export class TokenService {
   private jwtSecret: string;
@@ -59,7 +60,7 @@ export class TokenService {
         return null;
       }
       return payload;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -94,7 +95,7 @@ export class TokenService {
         return null;
       }
       return payload;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -144,7 +145,7 @@ export class TokenService {
         return null;
       }
       return payload;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -191,7 +192,7 @@ export class TokenService {
         return null;
       }
       return payload;
-    } catch (error) {
+    } catch {
       return null;
     }
   }

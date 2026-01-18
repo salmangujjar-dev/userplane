@@ -1,31 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import { Globe, Link as LinkIcon, Link2, Users, Video } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useQueryState } from 'nuqs';
+import { useEffect, useState } from 'react';
+
+import { FilterDropdown } from '@/components/filters/filter-dropdown';
+import { LinksList } from '@/components/links/links-list';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
+import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
-import { RecordingGridSkeleton } from '@/components/skeleton';
-import { PaginationControls } from '@/components/shared/pagination-controls';
-import { ProjectRecordingEmptyState } from '@/components/shared/empty-state';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/components/tabs';
-import { FilterDropdown } from '@/components/filters/filter-dropdown';
-import { Video, Link as LinkIcon, Link2, Globe, Users } from 'lucide-react';
-import { usePagination } from '@/hooks/use-pagination';
 import { DinoError } from '@/components/shared/dino-error';
-import { tabParser, stringArrayParser } from '@/lib/parsers';
-import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
-import { useWorkspaceLinks } from '@/hooks/use-workspace-links';
-import { useSearchableMembers } from '@/hooks/use-searchable-members';
-import { useSearchableLinks } from '@/hooks/use-searchable-links';
-import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
+import { ProjectRecordingEmptyState } from '@/components/shared/empty-state';
+import { PaginationControls } from '@/components/shared/pagination-controls';
+import { RecordingGridSkeleton } from '@/components/skeleton';
+import { usePagination } from '@/hooks/use-pagination';
 import { useProject } from '@/hooks/use-project';
-import { LinksList } from '@/components/links/links-list';
+import { useSearchableLinks } from '@/hooks/use-searchable-links';
+import { useSearchableMembers } from '@/hooks/use-searchable-members';
+import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
+import { useWorkspaceLinks } from '@/hooks/use-workspace-links';
+import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
+import { stringArrayParser, tabParser } from '@/lib/parsers';
 
 export default function ProjectPage() {
   const params = useParams();

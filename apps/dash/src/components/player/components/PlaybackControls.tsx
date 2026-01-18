@@ -1,7 +1,8 @@
 'use client';
 
+import { PauseIcon, PlayIcon } from 'lucide-react';
 import React from 'react';
-import { PlayIcon, PauseIcon } from 'lucide-react';
+
 import { formatTimeCompact } from '../utils/time-format';
 
 interface PlaybackControlsProps {

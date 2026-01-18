@@ -11,7 +11,8 @@
     "build": "astro build",
     "preview": "astro preview --port 4322",
     "astro": "astro",
-    "lint": "astro check",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "typecheck": "astro check",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -50,6 +51,7 @@
     "@workspace/eslint-config": "workspace:^",
     "@workspace/typescript-config": "workspace:*",
     "concurrently": "^9.2.1",
+    "eslint": "^9.32.0",
     "eslint-plugin-storybook": "^10.1.11",
     "playwright": "^1.57.0",
     "storybook": "^10.1.11",

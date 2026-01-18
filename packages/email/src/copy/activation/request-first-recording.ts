@@ -12,5 +12,4 @@ export const copy = {
   ],
   cta: 'Create recording link',
   helpText: 'Read the getting started guide',
-  ps: 'Recordings include video, console logs, and network activity.',
 } as const;

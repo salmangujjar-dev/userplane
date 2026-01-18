@@ -1,24 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useRouter } from 'next/navigation';
-import { useQueryState } from 'nuqs';
+import { DomainUrlSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
-import { AuthIcons } from '@/components/auth/auth-icons';
-import { useWorkspaceStore } from '@/stores/workspace';
-import { URLInput } from '@/components/url-input';
-import { useCreateWorkspace } from '@/hooks/use-create-workspace';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useQueryState } from 'nuqs';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+import { AuthIcons } from '@/components/auth/auth-icons';
+import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { URLInput } from '@/components/url-input';
 import { useAccount } from '@/hooks/use-account';
 import { useAuth } from '@/hooks/use-auth';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
-import { DomainUrlSchema } from '@workspace/contract';
+import { useCreateWorkspace } from '@/hooks/use-create-workspace';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 const workspaceFormSchema = z.object({
   workspace: DomainUrlSchema,
@@ -34,7 +35,6 @@ export default function CreateWorkspacePage() {
   const {
     control,
     handleSubmit,
-    watch,
     formState: { errors, isValid },
   } = useForm({
     resolver: zodResolver(workspaceFormSchema),
@@ -43,8 +43,6 @@ export default function CreateWorkspacePage() {
       workspace: '',
     },
   });
-
-  const workspace = watch('workspace');
 
   const router = useRouter();
   const [inviteToken] = useQueryState('token');

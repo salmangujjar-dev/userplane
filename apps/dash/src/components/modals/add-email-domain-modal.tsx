@@ -1,11 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { EmailDomainSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
@@ -14,8 +11,12 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import { Label } from '@workspace/ui/components/label';
+import Logo from '@workspace/ui/components/logo';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+
 import { DomainInput } from '@/components/domain-input';
-import { EmailDomainSchema } from '@workspace/contract';
 
 interface AddEmailDomainModalProps {
   open: boolean;

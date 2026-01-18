@@ -1,12 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { WorkspaceNameSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
 import {
   Dialog,
   DialogContent,
@@ -14,8 +10,12 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import { Input } from '@workspace/ui/components/input';
+import { Label } from '@workspace/ui/components/label';
 import { Building2 } from 'lucide-react';
-import { WorkspaceNameSchema } from '@workspace/contract';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 interface CreateWorkspaceModalProps {
   open: boolean;

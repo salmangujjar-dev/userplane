@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
 import { Badge } from '@workspace/ui/components/badge';
+import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,14 +11,15 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import {
-  MoreVertical,
-  UserCog,
-  MonitorSmartphone,
   Ban,
-  CheckCircle,
-  Trash2,
   Building2,
+  CheckCircle,
+  MonitorSmartphone,
+  MoreVertical,
+  Trash2,
+  UserCog,
 } from 'lucide-react';
+
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { usePermissions } from '@/hooks/use-permissions';
 

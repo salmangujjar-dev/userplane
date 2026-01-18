@@ -1,7 +1,7 @@
+import { createAppLogger } from '@workspace/logger';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
-import { createAppLogger } from '@workspace/logger';
 
 const logger = createAppLogger('db-migrate');
 

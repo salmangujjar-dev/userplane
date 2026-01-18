@@ -1,10 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
-import { Switch } from '@workspace/ui/components/switch';
-import { Label } from '@workspace/ui/components/label';
 import {
   Dialog,
   DialogContent,
@@ -12,14 +8,19 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
-import { cn } from '@workspace/ui/lib/utils';
+import { Label } from '@workspace/ui/components/label';
+import Logo from '@workspace/ui/components/logo';
+import { Switch } from '@workspace/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { HelpCircle, AlertCircle } from 'lucide-react';
+import { cn } from '@workspace/ui/lib/utils';
+import { AlertCircle, HelpCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+
 import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainConfigureModalProps {

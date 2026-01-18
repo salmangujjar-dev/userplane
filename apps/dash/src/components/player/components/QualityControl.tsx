@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { ControlDropdown } from './ControlDropdown';
+import React, { useCallback, useState } from 'react';
+
 import type { QualityLevel } from '../hooks/useVideoPlayer';
+import { ControlDropdown } from './ControlDropdown';
 
 interface QualityControlProps {
   /** Available quality levels */

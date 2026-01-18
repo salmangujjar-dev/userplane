@@ -3,16 +3,18 @@
  * Lets user review recording before submitting
  */
 
-import type { ReactNode } from 'react';
 import { Button } from '@workspace/ui/components/button';
-import RecordingScreenLayout from './RecordingScreenLayout';
-import VideoPlayer from './VideoPlayer';
+import type { ReactNode } from 'react';
+
 import {
-  POST_RECORDING_REVIEW_COPY,
   DEFAULT_COMPANY_NAME,
   DEFAULT_PRIMARY_COLOR,
+  POST_RECORDING_REVIEW_COPY,
 } from '@/constants';
 import type { RecordingPreferences } from '@/types/session-preferences';
+
+import RecordingScreenLayout from './RecordingScreenLayout';
+import VideoPlayer from './VideoPlayer';
 
 interface PostRecordingReviewScreenProps {
   /** Video blob URL for preview */

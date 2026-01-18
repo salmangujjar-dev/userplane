@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Globe } from 'lucide-react';
 import { cn } from '@workspace/ui/lib/utils';
+import { Globe } from 'lucide-react';
+import React from 'react';
 
 interface DomainInputProps {
   value: string;

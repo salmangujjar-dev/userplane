@@ -1,7 +1,8 @@
 import Logo from '@workspace/ui/components/logo';
-import { AuthIcons } from '@/components/auth/auth-icons';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import Link from 'next/link';
+
+import { AuthIcons } from '@/components/auth/auth-icons';
 
 export default function AuthLoading() {
   return (

@@ -3,9 +3,11 @@
  * Checks if the authenticated user has admin access (admin or csm role)
  */
 
-import { base, type AuthContext } from './auth.orpc';
-import type { AdminService } from '@/api/services/admin.service';
 import { adminError } from '@workspace/contract';
+
+import type { AdminService } from '@/api/services/admin.service';
+
+import { type AuthContext, base } from './auth.orpc';
 
 export type AdminContext = AuthContext & {
   isAdmin: true;

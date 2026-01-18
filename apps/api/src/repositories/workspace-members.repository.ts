@@ -3,10 +3,11 @@
  * Handles all database operations for workspace member entities
  */
 
-import { eq, and, count, sql, asc, ilike } from '@workspace/db';
 import type { DbClient, WorkspaceRole } from '@workspace/db';
-import { workspaceMembers, user } from '@workspace/db';
-import type { Transaction, CreateWorkspaceMemberInput } from '@/api/types';
+import { and, asc, count, eq, ilike, sql } from '@workspace/db';
+import { user, workspaceMembers } from '@workspace/db';
+
+import type { CreateWorkspaceMemberInput, Transaction } from '@/api/types';
 
 export class WorkspaceMemberRepository {
   constructor(private db: DbClient) {}

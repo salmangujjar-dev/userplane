@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
+import Image from 'next/image';
 
 export default function GlobalError({
   error,

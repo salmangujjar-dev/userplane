@@ -1,20 +1,21 @@
+import { PLAN_IDS } from '@workspace/pricing';
+import { relations } from 'drizzle-orm';
 import {
+  boolean,
+  integer,
+  pgEnum,
   pgTable,
   text,
   timestamp,
-  boolean,
-  integer,
   uniqueIndex,
-  pgEnum,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
-import { PLAN_IDS } from '@workspace/pricing';
+
 import { WORKSPACE_INVITE_POLICY_VALUES } from '../constants';
-import { workspaceMembers } from './workspace-members';
-import { entitlements } from './entitlements';
 import { domains } from './domains';
-import { projects } from './projects';
+import { entitlements } from './entitlements';
 import { links } from './links';
+import { projects } from './projects';
+import { workspaceMembers } from './workspace-members';
 
 /**
  * Workspace plan enum

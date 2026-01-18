@@ -3,15 +3,17 @@
  * Shows live preview and recording indicator
  */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@workspace/ui/components/button';
-import RecordingScreenLayout from './RecordingScreenLayout';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+
 import {
-  RECORDING_IN_PROGRESS_COPY,
   DEFAULT_COMPANY_NAME,
   DEFAULT_PRIMARY_COLOR,
+  RECORDING_IN_PROGRESS_COPY,
 } from '@/constants';
 import type { RecordingPreferences } from '@/types/session-preferences';
+
+import RecordingScreenLayout from './RecordingScreenLayout';
 
 interface RecordingInProgressScreenProps {
   title?: string;

@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useWorkspaceStore } from '@/stores/workspace';
+import { useEffect } from 'react';
+
 import { WorkspaceAccessGate } from '@/components/workspace/workspace-access-gate';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();

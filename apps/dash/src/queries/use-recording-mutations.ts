@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+
+import { apiClient } from '@/client';
+import type { RecordingsData } from '@/hooks/use-workspace-recordings';
 import {
   handleSafeResult,
   handleUnknownError,
-  showErrorToast,
   type SafeResult,
+  showErrorToast,
 } from '@/lib/errors';
-import type { RecordingsData } from '@/hooks/use-workspace-recordings';
 import type { DeleteResponse, QueryData, QuerySnapshot } from '@/types';
 
 type RecordingsQueryData = QueryData<RecordingsData>;

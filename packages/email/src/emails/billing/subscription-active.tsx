@@ -3,11 +3,12 @@
  * Sent when a subscription is activated
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/billing/subscription-active';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/billing/subscription-active';
 
 export interface SubscriptionActiveEmailProps {
   planName?: string;

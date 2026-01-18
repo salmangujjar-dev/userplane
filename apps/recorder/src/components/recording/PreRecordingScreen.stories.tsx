@@ -1,11 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import PreRecordingScreen from './PreRecordingScreen';
 import {
-  preferenceArgTypes,
-  defaultPreferenceArgs,
   argsToPreferences,
+  defaultPreferenceArgs,
   type PreferenceArgs,
+  preferenceArgTypes,
 } from '@stories/preferences-args';
+import type { Meta, StoryObj } from '@storybook/react';
+
+import PreRecordingScreen from './PreRecordingScreen';
 
 interface StoryArgs extends PreferenceArgs {
   requesterName?: string;

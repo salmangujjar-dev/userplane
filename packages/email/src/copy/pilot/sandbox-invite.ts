@@ -11,5 +11,4 @@ export const copy = {
     (expiresInDays: number) => `Your sandbox is active for ${expiresInDays} days.`,
   ],
   cta: 'Open sandbox',
-  ps: 'Your sandbox includes 30 minutes of recordings. No credit card required.',
 } as const;

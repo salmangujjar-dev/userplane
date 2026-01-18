@@ -1,12 +1,7 @@
 'use client';
 
-import { useState, KeyboardEvent } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import validator from 'validator';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
@@ -14,16 +9,22 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import Logo from '@workspace/ui/components/logo';
+import { toast } from '@workspace/ui/components/sonner';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { Link, X, HelpCircle, AlertCircle } from 'lucide-react';
-import { toast } from '@workspace/ui/components/sonner';
+import { AlertCircle, HelpCircle, Link, X } from 'lucide-react';
+import { KeyboardEvent, useState } from 'react';
+import { useFieldArray, useForm } from 'react-hook-form';
+import validator from 'validator';
+import { z } from 'zod';
+
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { useWorkspaceInvite, useSendWorkspaceInvites } from '@/hooks/use-workspace-invite';
+import { useSendWorkspaceInvites, useWorkspaceInvite } from '@/hooks/use-workspace-invite';
 
 const inviteFormSchema = z.object({
   emails: z

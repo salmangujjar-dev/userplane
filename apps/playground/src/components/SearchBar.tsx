@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
 import './SearchBar.css';
+
+import { useCallback, useEffect, useState } from 'react';
 
 interface SearchBarProps {
   value: string;

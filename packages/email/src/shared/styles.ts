@@ -136,6 +136,7 @@ export const smallText = {
   fontSize: '13px',
   lineHeight: '1.5',
   color: '#666',
+  textAlign: 'center',
 } as React.CSSProperties;
 
 export const highlightBox = {

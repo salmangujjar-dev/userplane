@@ -3,11 +3,12 @@
  * Sent to pilot users offering them a paid trial with money-back guarantee
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/pilot/reverse-trial-offer';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/pilot/reverse-trial-offer';
 
 export interface ReverseTrialOfferEmailProps {
   upgradeUrl?: string;
@@ -21,7 +22,7 @@ export const ReverseTrialOfferEmail = ({
   trialDays = 30,
 }: ReverseTrialOfferEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview} ps={copy.ps}>
+    <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(trialDays, planName)}</Text>
 

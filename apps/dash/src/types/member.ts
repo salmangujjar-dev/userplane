@@ -3,6 +3,7 @@
  */
 
 import type { WorkspaceRole } from '@workspace/contract';
+
 import type { PaginationMeta } from './common';
 
 /**

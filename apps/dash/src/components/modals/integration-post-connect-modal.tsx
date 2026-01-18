@@ -1,20 +1,21 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
-import Logo from '@workspace/ui/components/logo';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@workspace/ui/components/collapsible';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@workspace/ui/components/collapsible';
+import Logo from '@workspace/ui/components/logo';
 import { ArrowLeftRight, ChevronDown } from 'lucide-react';
+import Image from 'next/image';
+import { useState } from 'react';
+
 import { getIntegrationConfig } from '@/constants/integration-permissions';
 
 interface IntegrationPostConnectModalProps {

@@ -3,11 +3,12 @@
  * Sent to workspace owners when a member requests more seats
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/entitlement/seats/requested-upgrade';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/entitlement/seats/requested-upgrade';
 
 export interface SeatsRequestedUpgradeEmailProps {
   workspaceName?: string;

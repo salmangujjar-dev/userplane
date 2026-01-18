@@ -3,11 +3,12 @@
  * Educate users about capturing console logs with recordings
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/highlight/recordings/request-console-logs';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/highlight/recordings/request-console-logs';
 
 export interface RequestConsoleLogsEmailProps {
   settingsUrl?: string;
@@ -32,6 +33,14 @@ export const RequestConsoleLogsEmail = ({
         <Link href={settingsUrl} style={styles.ctaButton}>
           {copy.cta}
         </Link>
+      </Section>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.smallText}>
+          <Link href={docsUrl} style={styles.link}>
+            {copy.helpText}
+          </Link>
+        </Text>
       </Section>
     </EmailLayout>
   );

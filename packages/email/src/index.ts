@@ -5,127 +5,125 @@
  */
 
 // Email clients
-export { createEmailClient } from './factory';
 export { LocalhostEmailClient } from './clients/localhost.client';
 export { ResendEmailClient } from './clients/resend.client';
-
+export { createEmailClient } from './factory';
 export type {
   EmailClient,
-  EmailProvider,
-  SendEmailParams,
-  SendEmailOptions,
-  SendEmailResponse,
   EmailClientConfig,
+  EmailProvider,
+  SendEmailOptions,
+  SendEmailParams,
+  SendEmailResponse,
 } from './types';
 
 // Email render utilities
-export {
-  // Auth
-  renderEmailVerification,
-  renderMagicLink,
-  renderWorkspaceInvite,
-  renderAccessRequest,
-  // Pilot
-  renderSandboxInvite,
-  renderSandboxExpiring,
-  renderPilotReverseTrialOffer,
-  // Trial
-  renderWelcomeMeetFounder,
-  renderTrialReverseTrialOffer,
-  // Activation
-  renderRequestFirstRecording,
-  renderDomainVerificationRequired,
-  renderHelpdeskIntegrationPrompt,
-  renderAtRiskNotEngaged,
-  // Workspace
-  renderDeletionScheduled,
-  renderRecoveryScheduled,
-  renderDeletionConfirmation,
-  renderRecoveryConfirmation,
-  renderAccessRequested,
-  renderAccessGranted,
-  // Invite
-  renderTeammateInvited,
-  // Recording
-  renderRecordingReceived,
-  // Domain
-  renderDomainDeveloperInstructions,
-  // Billing
-  renderSubscriptionActive,
-  renderSubscriptionInactive,
-  renderSubscriptionPlanChange,
-  renderSubscriptionExpired,
-  renderSubscriptionReverseTrial,
-  // Entitlement - Seats
-  renderSeatsSoftLimit,
-  renderSeatsHardLimit,
-  renderSeatsRequestedUpgrade,
-  // Entitlement - Recordings
-  renderRecordingsSoftLimit,
-  renderRecordingsHardLimit,
-  renderRecordingsRequestedUpgrade,
-  // Entitlement - Screenshots
-  renderScreenshotsSoftLimit,
-  renderScreenshotsHardLimit,
-  renderScreenshotsRequestedUpgrade,
-  // Offboarding
-  renderAccountDeletion,
-  renderTosViolation,
-} from './emails.js';
-
 export type {
-  RenderResult,
-  // Auth
-  EmailVerificationEmailProps,
-  MagicLinkEmailProps,
-  WorkspaceInviteEmailProps,
-  AccessRequestEmailProps,
-  // Pilot
-  SandboxInviteEmailProps,
-  SandboxExpiringEmailProps,
-  ReverseTrialOfferEmailProps,
-  // Trial
-  WelcomeMeetFounderEmailProps,
-  TrialReverseTrialOfferEmailProps,
-  // Activation
-  RequestFirstRecordingEmailProps,
-  DomainVerificationRequiredEmailProps,
-  HelpdeskIntegrationPromptEmailProps,
-  AtRiskNotEngagedEmailProps,
-  // Workspace
-  DeletionScheduledEmailProps,
-  RecoveryScheduledEmailProps,
-  DeletionConfirmationEmailProps,
-  RecoveryConfirmationEmailProps,
-  AccessRequestedEmailProps,
   AccessGrantedEmailProps,
-  // Invite
-  TeammateInvitedEmailProps,
-  // Recording
-  RecordingReceivedEmailProps,
-  // Domain
-  DomainDeveloperInstructionsEmailProps,
-  // Billing
-  SubscriptionActiveEmailProps,
-  SubscriptionInactiveEmailProps,
-  SubscriptionPlanChangeEmailProps,
-  SubscriptionExpiredEmailProps,
-  SubscriptionReverseTrialEmailProps,
-  // Entitlement - Seats
-  SeatsSoftLimitEmailProps,
-  SeatsHardLimitEmailProps,
-  SeatsRequestedUpgradeEmailProps,
-  // Entitlement - Recordings
-  RecordingsSoftLimitEmailProps,
-  RecordingsHardLimitEmailProps,
-  RecordingsRequestedUpgradeEmailProps,
-  // Entitlement - Screenshots
-  ScreenshotsSoftLimitEmailProps,
-  ScreenshotsHardLimitEmailProps,
-  ScreenshotsRequestedUpgradeEmailProps,
+  AccessRequestedEmailProps,
+  AccessRequestEmailProps,
   // Offboarding
   AccountDeletionEmailProps,
+  AtRiskNotEngagedEmailProps,
+  DeletionConfirmationEmailProps,
+  // Workspace
+  DeletionScheduledEmailProps,
+  // Domain
+  DomainDeveloperInstructionsEmailProps,
+  DomainVerificationRequiredEmailProps,
+  // Auth
+  EmailVerificationEmailProps,
+  HelpdeskIntegrationPromptEmailProps,
+  MagicLinkEmailProps,
+  // Recording
+  RecordingReceivedEmailProps,
+  RecordingsHardLimitEmailProps,
+  RecordingsRequestedUpgradeEmailProps,
+  // Entitlement - Recordings
+  RecordingsSoftLimitEmailProps,
+  RecoveryConfirmationEmailProps,
+  RecoveryScheduledEmailProps,
+  RenderResult,
+  // Activation
+  RequestFirstRecordingEmailProps,
+  ReverseTrialOfferEmailProps,
+  SandboxExpiringEmailProps,
+  // Pilot
+  SandboxInviteEmailProps,
+  ScreenshotsHardLimitEmailProps,
+  ScreenshotsRequestedUpgradeEmailProps,
+  // Entitlement - Screenshots
+  ScreenshotsSoftLimitEmailProps,
+  SeatsHardLimitEmailProps,
+  SeatsRequestedUpgradeEmailProps,
+  // Entitlement - Seats
+  SeatsSoftLimitEmailProps,
+  // Billing
+  SubscriptionActiveEmailProps,
+  SubscriptionExpiredEmailProps,
+  SubscriptionInactiveEmailProps,
+  SubscriptionPlanChangeEmailProps,
+  SubscriptionReverseTrialEmailProps,
+  // Invite
+  TeammateInvitedEmailProps,
   TosViolationEmailProps,
+  TrialReverseTrialOfferEmailProps,
+  // Trial
+  WelcomeMeetFounderEmailProps,
+  WorkspaceInviteEmailProps,
+} from './emails.js';
+export {
+  renderAccessGranted,
+  renderAccessRequest,
+  renderAccessRequested,
+  // Offboarding
+  renderAccountDeletion,
+  renderAtRiskNotEngaged,
+  renderDeletionConfirmation,
+  // Workspace
+  renderDeletionScheduled,
+  // Domain
+  renderDomainDeveloperInstructions,
+  renderDomainVerificationRequired,
+  // Auth
+  renderEmailVerification,
+  renderHelpdeskIntegrationPrompt,
+  renderMagicLink,
+  renderPilotReverseTrialOffer,
+  // Recording
+  renderRecordingReceived,
+  renderRecordingsHardLimit,
+  renderRecordingsRequestedUpgrade,
+  // Entitlement - Recordings
+  renderRecordingsSoftLimit,
+  renderRecoveryConfirmation,
+  renderRecoveryScheduled,
+  // Activation
+  renderRequestFirstRecording,
+  renderSandboxExpiring,
+  // Pilot
+  renderSandboxInvite,
+  renderScreenshotsHardLimit,
+  renderScreenshotsRequestedUpgrade,
+  // Entitlement - Screenshots
+  renderScreenshotsSoftLimit,
+  renderSeatsHardLimit,
+  renderSeatsRequestedUpgrade,
+  // Entitlement - Seats
+  renderSeatsSoftLimit,
+  // Billing
+  renderSubscriptionActive,
+  renderSubscriptionExpired,
+  renderSubscriptionInactive,
+  renderSubscriptionPlanChange,
+  renderSubscriptionReverseTrial,
+  // Invite
+  renderTeammateInvited,
+  renderTosViolation,
+  renderTrialReverseTrialOffer,
+  // Trial
+  renderWelcomeMeetFounder,
+  renderWorkspaceInvite,
 } from './emails.js';
 
 // Email templates (direct exports for advanced usage)

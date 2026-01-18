@@ -3,20 +3,21 @@
  * Contains business logic for domain management
  */
 
+import type { DomainStatus } from '@workspace/contract';
+import { domainError, workspaceError } from '@workspace/contract';
+
 import { generateDomainId } from '@/api/lib/id';
+import { cleanUrl } from '@/api/lib/url';
 import {
   DomainRepository,
   type DomainSortField,
   type SortDirection,
 } from '@/api/repositories/domains.repository';
-import { cleanUrl } from '@/api/lib/url';
-import type { Transaction } from '@/api/types';
-import type { DomainStatus } from '@workspace/contract';
-import { TokenService } from '@/api/services/token.service';
-import { domainError, workspaceError } from '@workspace/contract';
 import type { EmailService } from '@/api/services/email.service';
-import type { WorkspaceService } from '@/api/services/workspace.service';
+import { TokenService } from '@/api/services/token.service';
 import type { UserService } from '@/api/services/user.service';
+import type { WorkspaceService } from '@/api/services/workspace.service';
+import type { Transaction } from '@/api/types';
 
 export interface DomainServiceDeps {
   domainRepo: DomainRepository;
@@ -460,7 +461,7 @@ export class DomainService {
       throw new Error('Email, workspace, or user service not available');
     }
 
-    const { domainId, workspaceId, emails, sentBy } = params;
+    const { domainId, workspaceId, emails } = params;
 
     const domain = await this.deps.domainRepo.findById(domainId);
 

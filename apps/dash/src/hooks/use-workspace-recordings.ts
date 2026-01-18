@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { useWorkspaceId } from '@/stores/workspace';
+
 import { apiClient } from '@/client';
-import { handleSafeResult, type SafeResult } from '@/lib/errors';
 import { DEFAULT_RECORDINGS_PER_PAGE } from '@/constants/pagination';
+import { handleSafeResult, type SafeResult } from '@/lib/errors';
+import { useWorkspaceId } from '@/stores/workspace';
 
 export interface RecordingCreator {
   workspaceMemberId: string;

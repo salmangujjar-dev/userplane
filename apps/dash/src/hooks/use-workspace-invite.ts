@@ -1,8 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useWorkspaceStore } from '@/stores/workspace';
-import { apiClient } from '@/client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
-import { handleSafeResult, showErrorToast, type SafeResult } from '@/lib/errors';
+
+import { apiClient } from '@/client';
+import { handleSafeResult, type SafeResult, showErrorToast } from '@/lib/errors';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 /**
  * Hook to fetch the invite token for the current workspace

@@ -1,4 +1,5 @@
 import { Badge } from '@workspace/ui/components/badge';
+
 import { getBlogPostUrl } from '@/constants/navigation';
 
 interface BlogPost {

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import VerifyingScreen from './VerifyingScreen';
 
 const meta = {

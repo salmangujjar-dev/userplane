@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, KeyboardEvent } from 'react';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
@@ -10,14 +8,17 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import Logo from '@workspace/ui/components/logo';
+import { toast } from '@workspace/ui/components/sonner';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { X, HelpCircle } from 'lucide-react';
-import { toast } from '@workspace/ui/components/sonner';
+import { HelpCircle, X } from 'lucide-react';
+import { KeyboardEvent, useState } from 'react';
+
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 
 interface DeveloperInstructionsModalProps {

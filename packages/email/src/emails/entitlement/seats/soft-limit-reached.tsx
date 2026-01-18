@@ -3,11 +3,12 @@
  * Sent when a workspace is approaching its seat limit
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/entitlement/seats/soft-limit-reached';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/entitlement/seats/soft-limit-reached';
 
 export interface SeatsSoftLimitEmailProps {
   workspaceName?: string;

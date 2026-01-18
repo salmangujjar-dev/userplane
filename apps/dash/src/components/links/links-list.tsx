@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { LinkPreview } from './link-preview';
+
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
-import { LinksListSkeleton } from '@/components/skeleton';
 import { LinkEmptyState, ProjectLinkEmptyState } from '@/components/shared/empty-state';
-import { useWorkspaceId } from '@/stores/workspace';
-import { useUpdateLink, useDeleteLink } from '@/queries/use-link-mutations';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
+import { LinksListSkeleton } from '@/components/skeleton';
 import type { Link } from '@/hooks/use-workspace-links';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
+import { useDeleteLink, useUpdateLink } from '@/queries/use-link-mutations';
+import { useWorkspaceId } from '@/stores/workspace';
+
+import { LinkPreview } from './link-preview';
 
 interface LinksListProps {
   links?: Link[];

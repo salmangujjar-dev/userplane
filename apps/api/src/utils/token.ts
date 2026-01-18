@@ -3,9 +3,10 @@
  * Utilities for parsing and validating JWT token payloads
  */
 
-import type { WorkspaceCreateInviteTokenPayload } from '@/api/types';
-import type { TokenService } from '@/api/services/token.service';
 import type { PlanId } from '@workspace/pricing';
+
+import type { TokenService } from '@/api/services/token.service';
+import type { WorkspaceCreateInviteTokenPayload } from '@/api/types';
 
 /**
  * Parse workspace create invite token

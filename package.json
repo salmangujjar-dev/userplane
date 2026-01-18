@@ -6,8 +6,11 @@
     "build": "turbo build",
     "dev": "turbo dev --concurrency=16",
     "lint": "turbo lint",
+    "lint:fix": "turbo lint -- --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,astro}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,astro}\"",
+    "fix": "bun run lint:fix && bun run format",
+    "check:env": "node scripts/check-env-vars.js",
     "prepare": "husky"
   },
   "devDependencies": {

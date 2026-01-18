@@ -13,5 +13,4 @@ export const copy = {
       `${requesterName} (${requesterEmail}) has requested to join your workspace. Review their request and approve or decline.`,
   ],
   cta: 'Review request',
-  ps: 'This request expires in 7 days.',
 } as const;

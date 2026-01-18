@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from '@workspace/ui/components/sonner';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 import { DinoError } from '@/components/shared/dino-error';
 import { logger } from '@/logger';
 

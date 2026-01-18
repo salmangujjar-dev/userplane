@@ -1,8 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Button } from '@workspace/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@workspace/ui/components/dropdown-menu';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import {
   Table,
   TableBody,
@@ -11,23 +16,20 @@ import {
   TableHeader,
   TableRow,
 } from '@workspace/ui/components/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { UserCog, Ban, MoreVertical } from 'lucide-react';
-import { PaginationControls } from '@/components/shared/pagination-controls';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { useAdminWorkspaceMembers } from '@/hooks/use-admin-workspace-api';
-import { useAdminBanUser } from '@/hooks/use-admin-api';
-import { useImpersonation } from '@/hooks/use-impersonation';
+import { Ban, MoreVertical, UserCog } from 'lucide-react';
+import { useState } from 'react';
+
 import { AdminBanUserModal } from '@/components/modals/admin-ban-user-modal';
 import { ImpersonateConfirmModal } from '@/components/modals/impersonate-confirm-modal';
+import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { PaginationControls } from '@/components/shared/pagination-controls';
+import { useAdminBanUser } from '@/hooks/use-admin-api';
+import { useAdminWorkspaceMembers } from '@/hooks/use-admin-workspace-api';
+import { useImpersonation } from '@/hooks/use-impersonation';
 import { usePermissions } from '@/hooks/use-permissions';
-import { MEMBERS_PER_PAGE } from './utils';
+
 import type { UserToAction } from './types';
+import { MEMBERS_PER_PAGE } from './utils';
 
 interface MembersTabProps {
   workspaceId: string;

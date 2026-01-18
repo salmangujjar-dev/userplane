@@ -1,13 +1,15 @@
-import { task, logger, schedules } from '@trigger.dev/sdk/v3';
+import { logger, schedules, task } from '@trigger.dev/sdk/v3';
+
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
+import { chunkArray } from '@/api/lib/batch';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { deleteRecordingResources } from './delete-recording-resources';
-import { TASK_IDS, MAX_DURATIONS, BATCH_LIMITS } from './constants';
-import { buildWorkspaceDeletionKey, buildRecordingDeletionKey } from './idempotency';
+
+import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
 import { getPurgeDelay } from './delay-calculator';
-import { chunkArray } from '@/api/lib/batch';
+import { deleteRecordingResources } from './delete-recording-resources';
+import { buildRecordingDeletionKey, buildWorkspaceDeletionKey } from './idempotency';
 
 interface CleanupOrphanedWorkspacePayload {
   workspaceId: string;

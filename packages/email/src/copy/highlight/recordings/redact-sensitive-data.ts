@@ -11,5 +11,5 @@ export const copy = {
     'You can also add custom selectors to redact specific elements in your application.',
   ],
   cta: 'Configure redaction',
-  ps: 'Redaction happens at the source. Sensitive data never reaches our servers.',
+  helpText: 'Learn more about data redaction',
 } as const;

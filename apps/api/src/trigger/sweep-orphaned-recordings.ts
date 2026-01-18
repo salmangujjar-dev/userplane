@@ -1,12 +1,14 @@
 import { logger, schedules } from '@trigger.dev/sdk/v3';
+
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
-import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { deleteRecordingResources } from './delete-recording-resources';
-import { TASK_IDS, MAX_DURATIONS, BATCH_LIMITS } from './constants';
-import { buildRecordingDeletionKey } from './idempotency';
-import { getPurgeDelay } from './delay-calculator';
 import { chunkArray } from '@/api/lib/batch';
+import { RecordingRepository } from '@/api/repositories/recordings.repository';
+
+import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
+import { getPurgeDelay } from './delay-calculator';
+import { deleteRecordingResources } from './delete-recording-resources';
+import { buildRecordingDeletionKey } from './idempotency';
 
 interface SweepOrphanedRecordingsResult {
   recordingsTriggered: number;

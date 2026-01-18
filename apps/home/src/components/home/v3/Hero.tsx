@@ -1,14 +1,16 @@
-import { ChevronRight } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
+import { ChevronRight } from 'lucide-react';
+
+import type { HighlightColor } from '@/constants/types';
 import {
+  HERO_DESCRIPTION,
   HERO_HEADING,
   HERO_HIGHLIGHTS,
-  HERO_DESCRIPTION,
+  HERO_ICON,
   HERO_PRIMARY_BUTTON,
   HERO_SECONDARY_BUTTON,
-  HERO_ICON,
 } from '@/constants/v3/hero';
-import type { HighlightColor } from '@/constants/types';
+
 import Highlight from '../Highlight';
 
 interface WordSegment {

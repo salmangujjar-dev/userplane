@@ -1,0 +1,4 @@
+# Ignore any local test files or temporary scripts
+*.tmp
+*.temp
+test-*

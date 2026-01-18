@@ -3,8 +3,9 @@
  * Schemas for recording operations
  */
 
-import { z } from 'zod';
 import type { Recording } from '@workspace/db';
+import { z } from 'zod';
+
 import { SORT_DIRECTIONS } from './common.schema';
 
 /**

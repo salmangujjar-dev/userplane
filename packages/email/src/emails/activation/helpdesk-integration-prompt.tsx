@@ -3,11 +3,12 @@
  * Encourage users to connect their helpdesk (e.g., Intercom)
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/activation/helpdesk-integration-prompt';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/activation/helpdesk-integration-prompt';
 
 export interface HelpdeskIntegrationPromptEmailProps {
   integrationsUrl?: string;
@@ -17,7 +18,7 @@ export const HelpdeskIntegrationPromptEmail = ({
   integrationsUrl = 'https://app.userplane.io/settings/integrations',
 }: HelpdeskIntegrationPromptEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview} ps={copy.ps}>
+    <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle}</Text>
 

@@ -1,4 +1,4 @@
-import { TALLY_COMPLIANCE_FORM_URL, CONTACT_EMAIL_MAILTO } from './contact';
+import { CONTACT_EMAIL_MAILTO, TALLY_COMPLIANCE_FORM_URL } from './contact';
 import { getMarketingUrl } from './urls';
 
 /**

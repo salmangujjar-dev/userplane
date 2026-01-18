@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { Input } from '@workspace/ui/components/input';
 import { Button } from '@workspace/ui/components/button';
-import { Search, AlertCircle, AlertTriangle, Info, Bug, Skull, Filter } from 'lucide-react';
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { StructuredLog, LogLevel, createMockBackendLog } from './backend-log-types';
+import { Input } from '@workspace/ui/components/input';
+import { AlertCircle, AlertTriangle, Bug, Filter, Info, Search, Skull } from 'lucide-react';
+import { useState } from 'react';
+
 import { BackendLogEntry } from './backend-log-entry';
+import { createMockBackendLog, LogLevel, StructuredLog } from './backend-log-types';
 
 const baseTime = Date.now() - 60000;
 

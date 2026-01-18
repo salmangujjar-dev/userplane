@@ -1,8 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
 import { RefreshCw } from 'lucide-react';
+import Image from 'next/image';
 
 interface SectionErrorProps {
   title?: string;

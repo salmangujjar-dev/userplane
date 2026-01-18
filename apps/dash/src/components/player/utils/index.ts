@@ -1,2 +1,2 @@
 // Player utilities
-export { formatTimeCompact, formatDurationReadable } from './time-format';
+export { formatDurationReadable, formatTimeCompact } from './time-format';

@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { Input } from '@workspace/ui/components/input';
 import { Button } from '@workspace/ui/components/button';
+import { Input } from '@workspace/ui/components/input';
 import { Search } from 'lucide-react';
-import {
-  NetworkRequest,
-  NetworkFilterType,
-  getFilterTypeFromResourceType,
-  createMockNetworkRequest,
-} from './network-types';
+import { useState } from 'react';
+
 import { NetworkEntry } from './network-entry';
+import {
+  createMockNetworkRequest,
+  getFilterTypeFromResourceType,
+  NetworkFilterType,
+  NetworkRequest,
+} from './network-types';
 
 const baseTime = Date.now() - 60000;
 

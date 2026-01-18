@@ -1,10 +1,11 @@
-import { pgTable, text, timestamp, boolean, index, uniqueIndex, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { user } from './user';
-import { workspaces } from './workspaces';
+import { boolean, index, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+
+import { WORKSPACE_ROLE_VALUES } from '../constants';
 import { links } from './links';
 import { recordings } from './recordings';
-import { WORKSPACE_ROLE_VALUES } from '../constants';
+import { user } from './user';
+import { workspaces } from './workspaces';
 
 export const workspaceRoleEnum = pgEnum('workspace_role', WORKSPACE_ROLE_VALUES);
 
