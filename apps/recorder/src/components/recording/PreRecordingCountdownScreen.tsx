@@ -31,17 +31,18 @@ export default function PreRecordingCountdownScreen({
     console.log('[Countdown] Setting up video preview');
     console.log('[Countdown] Media stream:', mediaStream ? 'Available' : 'Not available');
 
-    if (videoRef.current && mediaStream) {
-      videoRef.current.srcObject = mediaStream;
-      videoRef.current.play().catch((err) => {
+    const video = videoRef.current;
+    if (video && mediaStream) {
+      video.srcObject = mediaStream;
+      video.play().catch((err) => {
         console.error('[Countdown] Failed to play video preview:', err);
       });
       console.log('[Countdown] Video preview started');
     }
 
     return () => {
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
+      if (video) {
+        video.srcObject = null;
       }
     };
   }, [mediaStream]);

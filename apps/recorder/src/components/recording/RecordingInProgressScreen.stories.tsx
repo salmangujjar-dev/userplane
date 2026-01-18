@@ -4,7 +4,7 @@ import {
   type PreferenceArgs,
   preferenceArgTypes,
 } from '@stories/preferences-args';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import RecordingInProgressScreen from './RecordingInProgressScreen';
 
