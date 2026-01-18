@@ -89,10 +89,10 @@ export class WorkspaceMemberRepository {
    */
   async findByWorkspaceWithUsersPaginated(workspaceId: string, limit: number, offset: number) {
     // Use CASE expression to order by role priority: owner=0, admin=1, member=2
-    const roleOrderSql = sql`CASE 
-      WHEN ${workspaceMembers.workspaceRole} = 'owner' THEN 0 
-      WHEN ${workspaceMembers.workspaceRole} = 'admin' THEN 1 
-      ELSE 2 
+    const roleOrderSql = sql`CASE
+      WHEN ${workspaceMembers.workspaceRole} = 'owner' THEN 0
+      WHEN ${workspaceMembers.workspaceRole} = 'admin' THEN 1
+      ELSE 2
     END`;
 
     const members = await this.db
@@ -211,14 +211,14 @@ export class WorkspaceMemberRepository {
   /**
    * Soft delete a workspace member
    */
-  async softDelete(memberId: string, options?: { tx?: Transaction }) {
+  async softDelete(memberId: string, deletedAt: Date, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
 
     const [deleted] = await dbClient
       .update(workspaceMembers)
       .set({
         isDeleted: true,
-        deletedAt: new Date(),
+        deletedAt: deletedAt,
       })
       .where(
         and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, false))
@@ -248,6 +248,82 @@ export class WorkspaceMemberRepository {
       .returning();
 
     return restored || null;
+  }
+
+  /**
+   * Soft delete all workspace members in a workspace
+   * Used for workspace deletion cascade
+   */
+  async softDeleteByWorkspaceId(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const deleted = await dbClient
+      .update(workspaceMembers)
+      .set({
+        isDeleted: true,
+        deletedAt: deletedAt,
+      })
+      .where(
+        and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.isDeleted, false))
+      )
+      .returning();
+
+    return deleted;
+  }
+
+  /**
+   * Restore admin and owner members in workspace that were deleted at a specific timestamp
+   * Used for workspace restoration to restore associated members
+   * Only restores admins and owners deleted at the exact same time as the workspace
+   */
+  async restoreAdminsAndOwnersByWorkspaceIdAndDeletionTime(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const restored = await dbClient
+      .update(workspaceMembers)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+      })
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.isDeleted, true),
+          eq(workspaceMembers.deletedAt, deletedAt),
+          sql`${workspaceMembers.workspaceRole} IN ('admin', 'owner')`
+        )
+      )
+      .returning();
+
+    return restored;
+  }
+
+  /**
+   * Count admin and owner members in workspace that were deleted at a specific timestamp
+   * Used for workspace restore info to show how many admins/owners will be restored
+   */
+  async countAdminsAndOwnersByWorkspaceIdAndDeletionTime(workspaceId: string, deletedAt: Date) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.isDeleted, true),
+          eq(workspaceMembers.deletedAt, deletedAt),
+          sql`${workspaceMembers.workspaceRole} IN ('admin', 'owner')`
+        )
+      );
+
+    return result?.count ?? 0;
   }
 
   /**

@@ -8,9 +8,11 @@
 import { domainError, inviteError, workspaceError } from '@workspace/contract';
 import { getPlanName } from '@workspace/pricing';
 
+import { env } from '@/api/env';
 import { authorized } from '@/api/middleware/auth.orpc';
 import {
   createWorkspaceMiddleware,
+  createWorkspaceRestoreMiddleware,
   createWorkspaceRoleMiddleware,
 } from '@/api/middleware/workspace.orpc';
 import type { DomainService } from '@/api/services/domain.service';
@@ -225,7 +227,8 @@ export const updateWorkspaceNameImpl = (
  */
 export const deleteWorkspaceImpl = (
   workspaceService: WorkspaceService,
-  workspaceMemberService: WorkspaceMemberService
+  workspaceMemberService: WorkspaceMemberService,
+  emailService: EmailService
 ) => {
   const workspaceRoleMiddleware = createWorkspaceRoleMiddleware(
     workspaceMemberService,
@@ -235,8 +238,30 @@ export const deleteWorkspaceImpl = (
 
   return authorized.workspace.delete
     .use(workspaceRoleMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
-    .handler(async ({ input }) => {
-      await workspaceService.deleteWorkspace(input.params.workspaceId);
+    .handler(async ({ input, context }) => {
+      const workspace = await workspaceService.getById(input.params.workspaceId);
+      const deletionDate = new Date();
+
+      await workspaceService.deleteWorkspace(input.params.workspaceId, deletionDate);
+
+      // Calculate deletion date (30 days from now)
+      deletionDate.setDate(deletionDate.getDate() + 30);
+      const formattedDeletionDate = deletionDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      // Construct cancel URL
+      const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
+
+      // Send deletion scheduled email
+      await emailService.sendWorkspaceDeletionScheduled({
+        to: context.user.email,
+        workspaceName: workspace.workspaceName,
+        deletionDate: formattedDeletionDate,
+        cancelUrl,
+      });
 
       return {
         message: 'Workspace deleted successfully',
@@ -249,23 +274,71 @@ export const deleteWorkspaceImpl = (
 };
 
 /**
+ * GET /workspace/:id/restore - Get restore info for a soft-deleted workspace
+ * Requires admin or owner role
+ */
+export const getWorkspaceRestoreInfoImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const workspaceRestoreMiddleware = createWorkspaceRestoreMiddleware(workspaceMemberService, [
+    'admin',
+    'owner',
+  ]);
+
+  return authorized.workspace.getRestoreInfo
+    .use(workspaceRestoreMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const result = await workspaceService.getWorkspaceRestoreInfo(input.params.workspaceId);
+
+      return {
+        message: 'Workspace restore info retrieved successfully',
+        data: result,
+      };
+    });
+};
+
+/**
  * POST /workspace/:id/restore - Restore a soft-deleted workspace
  * Requires admin or owner role
  */
 export const restoreWorkspaceImpl = (
   workspaceService: WorkspaceService,
-  workspaceMemberService: WorkspaceMemberService
+  workspaceMemberService: WorkspaceMemberService,
+  emailService: EmailService
 ) => {
-  const workspaceRoleMiddleware = createWorkspaceRoleMiddleware(
-    workspaceMemberService,
-    workspaceService,
-    ['admin', 'owner']
-  );
+  const workspaceRestoreMiddleware = createWorkspaceRestoreMiddleware(workspaceMemberService, [
+    'admin',
+    'owner',
+  ]);
 
   return authorized.workspace.restore
-    .use(workspaceRoleMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(workspaceRestoreMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const result = await workspaceService.restoreWorkspace(input.params.workspaceId);
+
+      // Calculate days since deletion
+      let deletedSince: number | null = null;
+      if (result.workspace.deletedAt) {
+        const now = new Date();
+        const deletedAt = new Date(result.workspace.deletedAt);
+        deletedSince =
+          Math.round(((now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24)) * 10) / 10;
+      }
+
+      // Send email to workspace owners that the workspace has been restored
+      const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+      const dashboardUrl = `${env.invite.appUrl}/workspace/${input.params.workspaceId}`;
+
+      await Promise.allSettled(
+        owners.map((owner) =>
+          emailService.sendWorkspaceRecoveryConfirmation({
+            to: owner.email,
+            workspaceName: result.workspace.workspaceName || 'Workspace',
+            dashboardUrl,
+          })
+        )
+      );
 
       return {
         message: 'Workspace restored successfully',
@@ -275,9 +348,12 @@ export const restoreWorkspaceImpl = (
             workspaceName: result.workspace.workspaceName,
             isDeleted: result.workspace.isDeleted,
             deletedAt: result.workspace.deletedAt,
+            deletedSince,
           },
           restoredProjects: result.restoredProjects,
           restoredLinks: result.restoredLinks,
+          restoredMembers: result.restoredMembers,
+          restoredRecordings: result.restoredRecordings,
         },
       };
     });
@@ -443,6 +519,7 @@ export const removeMemberImpl = (
         memberId: input.params.workspaceMemberId,
         workspaceId: input.params.workspaceId,
         userId: context.user.id,
+        deletedAt: new Date(),
       });
 
       return {
@@ -462,21 +539,44 @@ export const removeMemberImpl = (
  */
 export const leaveWorkspaceImpl = (
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  emailService: EmailService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorized.workspace.members.leave
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
+      const deletionDate = new Date();
       const result = await workspaceMemberService.leaveWorkspace(
         context.user.id,
-        input.params.workspaceId
+        input.params.workspaceId,
+        deletionDate
       );
 
       // If sole owner with no other members, deactivate the workspace
       if (result.shouldDeleteWorkspace) {
-        await workspaceService.deleteWorkspace(input.params.workspaceId);
+        // Fetch workspace details before deletion
+        const workspace = await workspaceService.getById(input.params.workspaceId);
+
+        await workspaceService.deleteWorkspace(input.params.workspaceId, deletionDate);
+
+        // Send deletion scheduled email
+        deletionDate.setDate(deletionDate.getDate() + 30);
+        const formattedDeletionDate = deletionDate.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+
+        const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
+
+        await emailService.sendWorkspaceDeletionScheduled({
+          to: context.user.email,
+          workspaceName: workspace.workspaceName,
+          deletionDate: formattedDeletionDate,
+          cancelUrl,
+        });
       }
 
       return {
@@ -1423,8 +1523,9 @@ export const createWorkspaceProcedures = (
     ),
     status: getWorkspaceStatusImpl(workspaceService),
     updateName: updateWorkspaceNameImpl(workspaceService, workspaceMemberService),
-    delete: deleteWorkspaceImpl(workspaceService, workspaceMemberService),
-    restore: restoreWorkspaceImpl(workspaceService, workspaceMemberService),
+    delete: deleteWorkspaceImpl(workspaceService, workspaceMemberService, emailService),
+    getRestoreInfo: getWorkspaceRestoreInfoImpl(workspaceService, workspaceMemberService),
+    restore: restoreWorkspaceImpl(workspaceService, workspaceMemberService, emailService),
     search: workspaceSearchImpl(workspaceService, workspaceMemberService),
     suggest: suggestWorkspacesImpl(workspaceService),
     join: joinWorkspaceImpl(inviteService),
@@ -1447,7 +1548,7 @@ export const createWorkspaceProcedures = (
       getMembership: getWorkspaceMembershipImpl(workspaceMemberService),
       updateRole: updateMemberRoleImpl(workspaceMemberService, workspaceService),
       remove: removeMemberImpl(workspaceMemberService, workspaceService),
-      leave: leaveWorkspaceImpl(workspaceMemberService, workspaceService),
+      leave: leaveWorkspaceImpl(workspaceMemberService, workspaceService, emailService),
     },
 
     notifications: {

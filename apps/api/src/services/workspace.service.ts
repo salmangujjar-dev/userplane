@@ -12,6 +12,7 @@ import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
+import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { ProjectService } from '@/api/services/project.service';
@@ -27,6 +28,7 @@ export interface WorkspaceServiceDeps {
   projectRepo?: ProjectRepository;
   domainRepo?: DomainRepository;
   linkRepo?: LinkRepository;
+  recordingRepo?: RecordingRepository;
   projectService?: ProjectService;
 }
 
@@ -353,15 +355,17 @@ export class WorkspaceService {
    *
    * Transaction flow:
    * 1. Mark workspace as deleted
-   * 2. Mark all projects as deleted
-   * 3. Mark all links as deleted
+   * 2. Mark all workspace members as deleted
+   * 3. Mark all projects as deleted
+   * 4. Mark all links as deleted
+   * 5. Mark all recordings as deleted
    *
    * After commit (handled by caller):
    * - Trigger deleteWorkspaceResources task
    * Throws WORKSPACE_NOT_FOUND if workspace not found
    * Throws WORKSPACE_DELETE_FAILED if deletion fails
    */
-  async deleteWorkspace(workspaceId: string, options?: { tx?: Transaction }) {
+  async deleteWorkspace(workspaceId: string, deletedAt: Date, options?: { tx?: Transaction }) {
     const workspace = await this.getById(workspaceId);
 
     if (!workspace) {
@@ -370,9 +374,6 @@ export class WorkspaceService {
 
     // Use transaction for atomic deletion
     const performDeletion = async (tx: Transaction) => {
-      // 0. Take the deletedAt timestamp for consistency
-      const deletedAt = new Date();
-
       // 1. Soft delete the workspace
       const deleted = await this.deps.workspaceRepo.softDelete(workspaceId, deletedAt, { tx });
 
@@ -380,14 +381,24 @@ export class WorkspaceService {
         throw workspaceError.WORKSPACE_DELETE_FAILED();
       }
 
-      // 2. Soft delete all projects in workspace
+      // 2. Soft delete all workspace members
+      if (this.deps.workspaceMemberRepo) {
+        await this.deps.workspaceMemberRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
+      }
+
+      // 3. Soft delete all projects in workspace
       if (this.deps.projectRepo) {
         await this.deps.projectRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
       }
 
-      // 3. Soft delete all links in workspace
+      // 4. Soft delete all links in workspace
       if (this.deps.linkRepo) {
         await this.deps.linkRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
+      }
+
+      // 5. Soft delete all recordings in workspace
+      if (this.deps.recordingRepo) {
+        await this.deps.recordingRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
       }
 
       return deleted;
@@ -399,6 +410,93 @@ export class WorkspaceService {
     }
 
     return this.deps.db.transaction(performDeletion);
+  }
+
+  /**
+   * Get restore info for a soft-deleted workspace
+   * Used to display restoration confirmation UI
+   * Throws WORKSPACE_NOT_FOUND if workspace doesn't exist
+   * Throws WORKSPACE_NOT_DELETED if workspace is active
+   * Throws WORKSPACE_RESTORE_TIME_EXPIRED if beyond grace period
+   */
+  async getWorkspaceRestoreInfo(workspaceId: string) {
+    // 1. Get the workspace with deletion info
+    const workspace = await this.deps.workspaceRepo.findByIdWithDeletionInfo(workspaceId);
+
+    if (!workspace) {
+      throw workspaceError.WORKSPACE_NOT_FOUND();
+    }
+
+    // 2. Check if workspace is deleted
+    if (!workspace.isDeleted) {
+      throw workspaceError.WORKSPACE_NOT_DELETED();
+    }
+
+    // 3. Validate restoration time (configurable grace period in days)
+    if (!workspace.deletedAt) {
+      throw workspaceError.WORKSPACE_RESTORE_FAILED();
+    }
+
+    const restorationWindowDays = env.trigger.workspaceRestorationWindowDays;
+    const now = new Date();
+    const deletedAt = new Date(workspace.deletedAt);
+    const daysSinceDeletion = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (daysSinceDeletion > restorationWindowDays) {
+      throw workspaceError.WORKSPACE_RESTORE_TIME_EXPIRED({
+        deletedAt: deletedAt.toISOString(),
+        daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10,
+        restorationWindowDays,
+      });
+    }
+
+    // 4. Count projects, links, members, and recordings that will be restored
+    let projectsToRestore = 0;
+    if (this.deps.projectRepo) {
+      projectsToRestore = await this.deps.projectRepo.countByWorkspaceIdAndDeletionTime(
+        workspaceId,
+        deletedAt
+      );
+    }
+
+    let linksToRestore = 0;
+    if (this.deps.linkRepo) {
+      linksToRestore = await this.deps.linkRepo.countByWorkspaceIdAndDeletionTime(
+        workspaceId,
+        deletedAt
+      );
+    }
+
+    let membersToRestore = 0;
+    if (this.deps.workspaceMemberRepo) {
+      membersToRestore =
+        await this.deps.workspaceMemberRepo.countAdminsAndOwnersByWorkspaceIdAndDeletionTime(
+          workspaceId,
+          deletedAt
+        );
+    }
+
+    let recordingsToRestore = 0;
+    if (this.deps.recordingRepo) {
+      recordingsToRestore = await this.deps.recordingRepo.countByWorkspaceIdAndDeletionTime(
+        workspaceId,
+        deletedAt
+      );
+    }
+
+    return {
+      workspace: {
+        workspaceId: workspace.workspaceId,
+        workspaceName: workspace.workspaceName,
+        isDeleted: workspace.isDeleted,
+        deletedAt: workspace.deletedAt ? workspace.deletedAt.toISOString() : null,
+        deletedSince: Math.round(daysSinceDeletion * 10) / 10,
+      },
+      projectsToRestore,
+      linksToRestore,
+      membersToRestore,
+      recordingsToRestore,
+    };
   }
 
   /**
@@ -436,12 +534,34 @@ export class WorkspaceService {
     }
 
     // 2. Idempotent: If workspace is not deleted, it's already in the desired state
-    // Return it successfully instead of throwing an error
+    // Return it successfully with current active resource counts
     if (!workspace.isDeleted) {
+      let activeProjects = 0;
+      if (this.deps.projectRepo) {
+        activeProjects = await this.deps.projectRepo.countByWorkspace(workspaceId);
+      }
+
+      let activeLinks = 0;
+      if (this.deps.linkRepo) {
+        activeLinks = await this.deps.linkRepo.countByWorkspace(workspaceId);
+      }
+
+      let activeMembers = 0;
+      if (this.deps.workspaceMemberRepo) {
+        activeMembers = await this.deps.workspaceMemberRepo.countByWorkspace(workspaceId);
+      }
+
+      let activeRecordings = 0;
+      if (this.deps.recordingRepo) {
+        activeRecordings = await this.deps.recordingRepo.countByWorkspace(workspaceId);
+      }
+
       return {
         workspace,
-        restoredProjects: 0,
-        restoredLinks: 0,
+        restoredProjects: activeProjects,
+        restoredLinks: activeLinks,
+        restoredMembers: activeMembers,
+        restoredRecordings: activeRecordings,
       };
     }
 
@@ -506,10 +626,47 @@ export class WorkspaceService {
         }
       }
 
+      // 7. Restore admin and owner members (best effort)
+      // Only restore admins/owners that were deleted at the exact same time as the workspace
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let restoredMembers: any[] = [];
+      if (this.deps.workspaceMemberRepo) {
+        try {
+          restoredMembers =
+            await this.deps.workspaceMemberRepo.restoreAdminsAndOwnersByWorkspaceIdAndDeletionTime(
+              workspaceId,
+              deletedAt,
+              { tx }
+            );
+        } catch (error) {
+          // Log but don't fail - best effort
+          console.error('Error restoring workspace members:', error);
+        }
+      }
+
+      // 8. Restore associated recordings (best effort)
+      // Only restore recordings that were deleted at the exact same time as the workspace
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let restoredRecordings: any[] = [];
+      if (this.deps.recordingRepo) {
+        try {
+          restoredRecordings = await this.deps.recordingRepo.restoreByWorkspaceIdAndDeletionTime(
+            workspaceId,
+            deletedAt,
+            { tx }
+          );
+        } catch (error) {
+          // Log but don't fail - best effort
+          console.error('Error restoring workspace recordings:', error);
+        }
+      }
+
       return {
         workspace: restored,
         restoredProjects: restoredProjects.length,
         restoredLinks: restoredLinks.length,
+        restoredMembers: restoredMembers.length,
+        restoredRecordings: restoredRecordings.length,
       };
     };
 

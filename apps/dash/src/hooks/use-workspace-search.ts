@@ -15,7 +15,7 @@ export interface SearchMember {
 
 export interface SearchProject {
   projectId: string;
-  projectTitle: string | null;
+  projectTitle: string;
   isDefault: boolean;
   createdAt: Date;
   updatedAt: Date;

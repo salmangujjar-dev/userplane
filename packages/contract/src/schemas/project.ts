@@ -36,7 +36,7 @@ export const ProjectTitleSchema = z
  */
 export const ProjectItemSchema = z.object({
   projectId: ProjectIdSchema,
-  projectTitle: z.string().nullable(),
+  projectTitle: z.string(),
   isDefault: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -44,6 +44,8 @@ export const ProjectItemSchema = z.object({
 
 /**
  * Create project request (detailed mode)
+ * projectTitle is optional/nullable for backwards compatibility
+ * If not provided or null, defaults to "Untitled Project"
  */
 export const CreateProjectSchema = z.object({
   params: z.object({
@@ -99,6 +101,8 @@ export const ProjectsListDataSchema = z.object({
 
 /**
  * Update project request (detailed mode)
+ * projectTitle is optional/nullable for partial updates
+ * If provided as null or empty, defaults to "Untitled Project"
  */
 export const UpdateProjectSchema = z.object({
   params: z.object({
@@ -121,6 +125,7 @@ export const ProjectUpdateDataSchema = z.object({
 
 /**
  * Replace project request (detailed mode)
+ * Replace requires all fields to be provided
  */
 export const ReplaceProjectSchema = z.object({
   params: z.object({
@@ -128,7 +133,7 @@ export const ReplaceProjectSchema = z.object({
     projectId: ProjectIdSchema,
   }),
   body: z.object({
-    projectTitle: ProjectTitleSchema.nullable(),
+    projectTitle: ProjectTitleSchema,
     isDefault: z.boolean(),
   }),
 });
@@ -170,6 +175,30 @@ export const ProjectDeleteDataSchema = z.object({
 });
 
 /**
+ * Get project restore info request (detailed mode)
+ */
+export const GetProjectRestoreInfoSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema,
+  }),
+});
+
+/**
+ * Project restore info response
+ */
+export const ProjectRestoreInfoDataSchema = z.object({
+  project: z.object({
+    projectId: ProjectIdSchema,
+    projectTitle: z.string(),
+    workspaceId: WorkspaceIdSchema,
+    isDeleted: z.boolean(),
+    deletedAt: z.string().nullable(),
+    deletedSince: z.number().nullable(),
+  }),
+});
+
+/**
  * Restore project request (detailed mode)
  */
 export const RestoreProjectSchema = z.object({
@@ -184,5 +213,14 @@ export const RestoreProjectSchema = z.object({
  */
 export const ProjectRestoreDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
-  project: ProjectItemSchema,
+  project: z.object({
+    projectId: ProjectIdSchema,
+    projectTitle: z.string(),
+    isDefault: z.boolean(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
+    isDeleted: z.boolean(),
+    deletedAt: z.date().nullable(),
+    deletedSince: z.number().nullable(),
+  }),
 });

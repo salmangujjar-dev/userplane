@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 
 interface Project {
   projectId: string;
-  projectTitle: string | null;
+  projectTitle: string;
 }
 
 interface AdminRestoreProjectModalProps {

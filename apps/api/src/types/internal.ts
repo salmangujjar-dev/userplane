@@ -192,7 +192,7 @@ export interface CreateWorkspaceMemberInput {
 export interface CreateProjectInput {
   projectId: string;
   workspaceId: string;
-  projectTitle: string | null;
+  projectTitle: string;
   isDefault: boolean;
 }
 

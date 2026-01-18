@@ -790,6 +790,32 @@ export const WorkspaceDeleteDataSchema = z.object({
 });
 
 /**
+ * Get workspace restore info request (detailed mode)
+ */
+export const GetWorkspaceRestoreInfoSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Workspace restore info response
+ */
+export const WorkspaceRestoreInfoDataSchema = z.object({
+  workspace: z.object({
+    workspaceId: WorkspaceIdSchema,
+    workspaceName: z.string(),
+    isDeleted: z.boolean(),
+    deletedAt: z.string().nullable(),
+    deletedSince: z.number().nullable(),
+  }),
+  projectsToRestore: z.number().int().nonnegative(),
+  linksToRestore: z.number().int().nonnegative(),
+  membersToRestore: z.number().int().nonnegative(),
+  recordingsToRestore: z.number().int().nonnegative(),
+});
+
+/**
  * Restore workspace request (detailed mode)
  */
 export const RestoreWorkspaceSchema = z.object({
@@ -807,9 +833,12 @@ export const WorkspaceRestoreDataSchema = z.object({
     workspaceName: z.string(),
     isDeleted: z.boolean(),
     deletedAt: z.date().nullable(),
+    deletedSince: z.number().nullable(),
   }),
   restoredProjects: z.number().int().nonnegative(),
   restoredLinks: z.number().int().nonnegative(),
+  restoredMembers: z.number().int().nonnegative(),
+  restoredRecordings: z.number().int().nonnegative(),
 });
 
 /**

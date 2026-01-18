@@ -274,6 +274,25 @@ export class ProjectRepository {
   }
 
   /**
+   * Count projects in workspace that were deleted at a specific timestamp
+   * Used for workspace restore info to show how many projects will be restored
+   */
+  async countByWorkspaceIdAndDeletionTime(workspaceId: string, deletedAt: Date) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(projects)
+      .where(
+        and(
+          eq(projects.workspaceId, workspaceId),
+          eq(projects.isDeleted, true),
+          eq(projects.deletedAt, deletedAt)
+        )
+      );
+
+    return result?.count ?? 0;
+  }
+
+  /**
    * Restore a soft-deleted project
    * Resets isDeleted to false and clears deletedAt
    * Used for individual project restoration within grace period

@@ -4,6 +4,7 @@ import {
   ApiResponseSchema,
   CreateProjectSchema,
   DeleteProjectSchema,
+  GetProjectRestoreInfoSchema,
   ListProjectsQuerySchema,
   ProjectByIdDataSchema,
   ProjectByIdSchema,
@@ -11,6 +12,7 @@ import {
   ProjectDeleteDataSchema,
   ProjectErrors,
   ProjectRestoreDataSchema,
+  ProjectRestoreInfoDataSchema,
   ProjectsListDataSchema,
   ProjectUpdateDataSchema,
   ReplaceProjectSchema,
@@ -161,6 +163,29 @@ export const deleteProject = oc
   .output(ApiResponseSchema(ProjectDeleteDataSchema));
 
 /**
+ * GET /workspace/{workspaceId}/projects/{projectId}/restore
+ * Get details of a soft-deleted project
+ */
+export const getProjectRestoreInfo = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/projects/{projectId}/restore',
+    inputStructure: 'detailed',
+    summary: 'Get project restore info',
+    description: 'Get details of a soft-deleted project to confirm restoration',
+    tags: ['Projects'],
+  })
+  .errors({
+    UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
+    FORBIDDEN: ProjectErrors.FORBIDDEN,
+    PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
+    PROJECT_NOT_DELETED: ProjectErrors.PROJECT_NOT_DELETED,
+    PROJECT_RESTORE_TIME_EXPIRED: ProjectErrors.PROJECT_RESTORE_TIME_EXPIRED,
+  })
+  .input(GetProjectRestoreInfoSchema)
+  .output(ApiResponseSchema(ProjectRestoreInfoDataSchema));
+
+/**
  * POST /workspace/{workspaceId}/projects/{projectId}/restore
  * Restore a soft-deleted project
  */
@@ -177,6 +202,7 @@ export const restoreProject = oc
     UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
+    PROJECT_NOT_DELETED: ProjectErrors.PROJECT_NOT_DELETED,
     PROJECT_RESTORE_TIME_EXPIRED: ProjectErrors.PROJECT_RESTORE_TIME_EXPIRED,
     PROJECT_RESTORE_FAILED: ProjectErrors.PROJECT_RESTORE_FAILED,
   })

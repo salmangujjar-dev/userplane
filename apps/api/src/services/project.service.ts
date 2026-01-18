@@ -32,6 +32,7 @@ export class ProjectService {
    * If isDefault not specified, auto-determines based on whether workspace has existing projects
    * If isDefault is true, unsets any current default project
    * Throws PROJECT_WORKSPACE_ID_REQUIRED if workspace ID is missing
+   * Project title defaults to "Untitled Project" if not provided or empty
    */
   async createProject(
     params: { workspaceId: string; projectTitle: string | null; isDefault?: boolean },
@@ -40,6 +41,9 @@ export class ProjectService {
     if (!params.workspaceId) {
       throw projectError.PROJECT_WORKSPACE_ID_REQUIRED();
     }
+
+    // Ensure projectTitle defaults to "Untitled Project" if null or empty
+    const projectTitle = params.projectTitle?.trim() || 'Untitled Project';
 
     let isDefault: boolean;
 
@@ -71,7 +75,7 @@ export class ProjectService {
       {
         projectId: generateProjectId(),
         workspaceId: params.workspaceId,
-        projectTitle: params.projectTitle,
+        projectTitle,
         isDefault,
       },
       options
@@ -173,16 +177,22 @@ export class ProjectService {
    */
   async updateProject(
     projectId: string,
-    updates: Partial<{ projectTitle: string | null; isDefault: boolean }>,
+    updates: Partial<{ projectTitle: string; isDefault: boolean }>,
     options?: { tx?: Transaction }
   ) {
     const project = await this.getById(projectId);
 
     const performUpdate = async (tx: Transaction) => {
-      if (updates.isDefault === true) {
+      // Ensure projectTitle defaults to "Untitled Project" if empty
+      const sanitizedUpdates = { ...updates };
+      if ('projectTitle' in sanitizedUpdates && !sanitizedUpdates.projectTitle?.trim()) {
+        sanitizedUpdates.projectTitle = 'Untitled Project';
+      }
+
+      if (sanitizedUpdates.isDefault === true) {
         await this.deps.projectRepo.unsetAllDefaultProjects(project.workspaceId, { tx });
       }
-      return this.deps.projectRepo.update(projectId, updates, { tx });
+      return this.deps.projectRepo.update(projectId, sanitizedUpdates, { tx });
     };
 
     if (options?.tx) {
@@ -251,6 +261,55 @@ export class ProjectService {
     }
 
     return this.deps.db.transaction(performDeletion);
+  }
+
+  /**
+   * Get restore info for a soft-deleted project
+   * Used to display restoration confirmation UI
+   * Throws PROJECT_NOT_FOUND if project doesn't exist
+   * Throws PROJECT_NOT_DELETED if project is active
+   * Throws PROJECT_RESTORE_TIME_EXPIRED if beyond grace period
+   */
+  async getProjectRestoreInfo(projectId: string) {
+    // 1. Get the project with deletion info
+    const project = await this.deps.projectRepo.findByIdWithDeletionInfo(projectId);
+
+    if (!project) {
+      throw projectError.PROJECT_NOT_FOUND();
+    }
+
+    // 2. Check if project is deleted
+    if (!project.isDeleted) {
+      throw projectError.PROJECT_NOT_DELETED();
+    }
+
+    // 3. Validate restoration time (configurable grace period in days)
+    if (!project.deletedAt) {
+      throw projectError.PROJECT_RESTORE_FAILED();
+    }
+
+    const restorationWindowDays = env.trigger.projectRestorationWindowDays;
+    const now = new Date();
+    const deletedAt = new Date(project.deletedAt);
+    const daysSinceDeletion = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (daysSinceDeletion > restorationWindowDays) {
+      throw projectError.PROJECT_RESTORE_TIME_EXPIRED({
+        deletedAt: deletedAt.toISOString(),
+        daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10,
+        restorationWindowDays,
+      });
+    }
+
+    // 4. Return project info
+    return {
+      projectId: project.projectId,
+      projectTitle: project.projectTitle,
+      workspaceId: project.workspaceId,
+      isDeleted: project.isDeleted,
+      deletedAt: project.deletedAt ? project.deletedAt.toISOString() : null,
+      deletedSince: Math.round(daysSinceDeletion * 10) / 10,
+    };
   }
 
   /**

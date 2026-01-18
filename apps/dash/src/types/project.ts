@@ -9,7 +9,7 @@ import type { PaginationMeta } from './common';
  */
 export interface Project {
   projectId: string;
-  projectTitle: string | null;
+  projectTitle: string;
   isDefault: boolean;
   createdAt: Date;
   updatedAt: Date;

@@ -81,3 +81,46 @@ export function createWorkspaceRoleMiddleware(
       });
     });
 }
+
+/**
+ * Workspace restore middleware
+ * Similar to createWorkspaceRoleMiddleware but allows deleted workspaces
+ * Used for restore endpoints where workspace may be soft-deleted
+ */
+export function createWorkspaceRestoreMiddleware(
+  workspaceMemberService: WorkspaceMemberService,
+  allowedRoles: WorkspaceRole[]
+) {
+  return base
+    .$context<AuthContext>()
+    .middleware(async ({ context, next }, input: { workspaceId: string }) => {
+      const workspaceId = input.workspaceId;
+
+      if (!workspaceId) {
+        throw workspaceError.WORKSPACE_ID_REQUIRED();
+      }
+
+      // Skip workspace validation for deleted workspaces
+      // Only check if user is a member with the required role (including soft-deleted members)
+      const member = await workspaceMemberService.getMemberIncludingDeleted(
+        context.user.id,
+        workspaceId
+      );
+
+      if (!member) {
+        throw workspaceError.FORBIDDEN();
+      }
+
+      if (!allowedRoles.includes(member.workspaceRole)) {
+        throw workspaceError.FORBIDDEN();
+      }
+
+      return next({
+        context: {
+          workspaceId,
+          workspaceMemberId: member.workspaceMemberId,
+          workspaceRole: member.workspaceRole,
+        },
+      });
+    });
+}

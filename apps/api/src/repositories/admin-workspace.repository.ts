@@ -40,7 +40,7 @@ export interface AdminWorkspaceMember {
 
 export interface AdminWorkspaceProject {
   projectId: string;
-  projectTitle: string | null;
+  projectTitle: string;
   isDefault: boolean;
   isDeleted: boolean;
   createdAt: Date;

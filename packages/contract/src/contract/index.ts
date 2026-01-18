@@ -101,6 +101,7 @@ export const workspaceContract = {
   status: workspace.getWorkspaceStatus,
   updateName: workspace.updateWorkspaceName,
   delete: workspace.deleteWorkspace,
+  getRestoreInfo: workspace.getWorkspaceRestoreInfo,
   restore: workspace.restoreWorkspace,
   search: workspace.workspaceSearch,
   suggest: workspace.suggestWorkspaces,
@@ -192,6 +193,7 @@ export const projectContract = {
   update: project.updateProject,
   replace: project.replaceProject,
   delete: project.deleteProject,
+  getRestoreInfo: project.getProjectRestoreInfo,
   restore: project.restoreProject,
 };
 
