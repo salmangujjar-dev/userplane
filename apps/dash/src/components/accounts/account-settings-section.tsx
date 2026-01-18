@@ -6,6 +6,7 @@ import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { cn } from '@workspace/ui/lib/utils';
+import Link from 'next/link';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -128,6 +129,18 @@ export function AccountSettingsSection() {
             disabled
             className="max-w-md bg-muted cursor-not-allowed"
           />
+        </div>
+
+        <div className="space-y-2 pt-6 border-t">
+          <div>
+            <Label>Delete Account</Label>
+            <p className="text-sm text-muted-foreground mt-1">
+              Permanently delete your account and all associated data
+            </p>
+          </div>
+          <Link href="/accounts/delete/request">
+            <Button variant="secondary">Delete Account</Button>
+          </Link>
         </div>
       </div>
     </div>

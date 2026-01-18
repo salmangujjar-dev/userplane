@@ -24,6 +24,7 @@ export type {
   AccessRequestEmailProps,
   // Offboarding
   AccountDeletionEmailProps,
+  AccountDeletionVerificationEmailProps,
   AccountRestoredEmailProps,
   AtRiskNotEngagedEmailProps,
   DeletionConfirmationEmailProps,
@@ -91,6 +92,7 @@ export {
   renderAccessRequested,
   // Offboarding
   renderAccountDeletion,
+  renderAccountDeletionVerification,
   renderAccountRestored,
   renderAtRiskNotEngaged,
   renderDeletionConfirmation,

@@ -48,12 +48,14 @@ import type { TeammateInvitedEmailProps, TeammateJoinedEmailProps } from './emai
 import { TeammateInvitedEmail, TeammateJoinedEmail } from './emails/invite';
 import type {
   AccountDeletionEmailProps,
+  AccountDeletionVerificationEmailProps,
   AccountRestoredEmailProps,
   TosViolationEmailProps,
 } from './emails/offboarding';
 // Offboarding emails
 import {
   AccountDeletionEmail,
+  AccountDeletionVerificationEmail,
   AccountRestoredEmail,
   TosViolationEmail,
 } from './emails/offboarding';
@@ -568,6 +570,14 @@ export async function renderAccountDeletion(
   return { html, text };
 }
 
+export async function renderAccountDeletionVerification(
+  props: AccountDeletionVerificationEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(AccountDeletionVerificationEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
 export async function renderAccountRestored(
   props: AccountRestoredEmailProps
 ): Promise<RenderResult> {
@@ -592,6 +602,7 @@ export type {
   AccessRequestEmailProps,
   // Offboarding
   AccountDeletionEmailProps,
+  AccountDeletionVerificationEmailProps,
   AccountRestoredEmailProps,
   AtRiskNotEngagedEmailProps,
   DeletionConfirmationEmailProps,

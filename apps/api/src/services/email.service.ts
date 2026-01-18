@@ -9,6 +9,7 @@ import {
   renderAccessRequest,
   renderAccessRequested,
   renderAccountDeletion,
+  renderAccountDeletionVerification,
   renderAccountRestored,
   renderDeletionConfirmation,
   renderDeletionRequested,
@@ -53,6 +54,7 @@ import { emailClient } from '@/api/clients/email';
 import {
   accessRequestSubject,
   accountDeletionSubject,
+  accountDeletionVerificationSubject,
   accountRestoredSubject,
   domainDeveloperInstructionsSubject,
   emailVerificationSubject,
@@ -96,6 +98,7 @@ import {
 import type {
   AccessRequestEmailParams,
   AccountDeletionEmailParams,
+  AccountDeletionVerificationEmailParams,
   AccountRestoredEmailParams,
   DomainDeveloperInstructionsEmailParams,
   EmailVerificationEmailParams,
@@ -965,6 +968,43 @@ export class EmailService {
         provider: emailClient.getProvider(),
       },
       'Account deletion email sent'
+    );
+  }
+
+  /**
+   * Send account deletion verification email
+   * Sent when a user requests to delete their account
+   */
+  async sendAccountDeletionVerification(
+    params: AccountDeletionVerificationEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `account-deletion-verification/${params.to}/${Date.now()}`;
+
+    const { html, text } = await renderAccountDeletionVerification({
+      userName: params.userName,
+      verificationUrl: params.verificationUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: authFrom(),
+        to: params.to,
+        subject: accountDeletionVerificationSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        userName: params.userName,
+        provider: emailClient.getProvider(),
+      },
+      'Account deletion verification email sent'
     );
   }
 

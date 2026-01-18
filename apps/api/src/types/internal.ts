@@ -26,6 +26,7 @@ import type {
   AccessRequestedEmailProps,
   AccessRequestEmailProps,
   AccountDeletionEmailProps,
+  AccountDeletionVerificationEmailProps,
   AccountRestoredEmailProps,
   DeletionConfirmationEmailProps,
   DeletionRequestedEmailProps,
@@ -340,6 +341,12 @@ export type TeammateJoinedEmailParams = Required<TeammateJoinedEmailProps> & { t
  * Account deletion email parameters
  */
 export type AccountDeletionEmailParams = Required<AccountDeletionEmailProps> & { to: string };
+
+/**
+ * Account deletion verification email parameters
+ */
+export type AccountDeletionVerificationEmailParams =
+  Required<AccountDeletionVerificationEmailProps> & { to: string };
 
 /**
  * Account restored email parameters

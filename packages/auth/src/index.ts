@@ -1,10 +1,13 @@
 import type { DbClient } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
-import { betterAuth } from 'better-auth';
+import { APIError, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, magicLink } from 'better-auth/plugins';
 
 import { ac, adminRole, csmRole, userRole } from './permissions';
+
+// Export APIError for use in callbacks
+export { APIError };
 
 // Export roles for server use only
 export { adminRole, csmRole, userRole } from './permissions';
@@ -34,6 +37,19 @@ export interface EmailConfig {
   sendMagicLink: (data: { email: string; url: string; token: string }) => Promise<void>;
 }
 
+export interface DeleteUserConfig {
+  /** Function to send account deletion verification email */
+  sendDeleteAccountVerification: (data: {
+    user: { id: string; email: string; name: string };
+    url: string;
+    token: string;
+  }) => Promise<void>;
+  /** Function called before user deletion to validate/block deletion */
+  beforeDelete?: (user: { id: string; email: string; name: string }) => Promise<void>;
+  /** Function called after successful user deletion */
+  afterDelete?: (user: { id: string; email: string; name: string }) => Promise<void>;
+}
+
 export interface AuthConfig {
   database: DbClient;
   secret: string;
@@ -47,6 +63,7 @@ export interface AuthConfig {
   };
   admin?: AdminConfig;
   email: EmailConfig;
+  deleteUser?: DeleteUserConfig;
 }
 
 export function createAuth(config: AuthConfig) {
@@ -79,6 +96,15 @@ export function createAuth(config: AuthConfig) {
         await config.email.sendVerificationEmail({ user, url, token });
       },
     },
+    // User deletion config
+    user: config.deleteUser
+      ? {
+          deleteUser: {
+            enabled: true,
+            ...config.deleteUser,
+          },
+        }
+      : undefined,
     plugins: [
       admin({
         adminUserIds: config.admin?.adminUserIds,
