@@ -446,8 +446,14 @@ export function useAdminRevokeSession() {
 
       return { previousSessions };
     },
-    onSuccess: (result, { userId }) => {
+    onSuccess: (result, { userId }, context) => {
       if (!result.success) {
+        // Rollback optimistic update on API error response
+        if (context?.previousSessions) {
+          context.previousSessions.forEach(([queryKey, data]) => {
+            queryClient.setQueryData(queryKey, data);
+          });
+        }
         showErrorToast(result.error);
         return;
       }
@@ -517,8 +523,14 @@ export function useAdminRevokeAllSessions() {
 
       return { previousSessions };
     },
-    onSuccess: (result, { userId }) => {
+    onSuccess: (result, { userId }, context) => {
       if (!result.success) {
+        // Rollback optimistic update on API error response
+        if (context?.previousSessions) {
+          context.previousSessions.forEach(([queryKey, data]) => {
+            queryClient.setQueryData(queryKey, data);
+          });
+        }
         showErrorToast(result.error);
         return;
       }

@@ -49,29 +49,6 @@ import {
 import type { DomainDeveloperInstructionsEmailProps } from './emails/domain';
 // Domain emails
 import { DomainDeveloperInstructionsEmail } from './emails/domain';
-import type {
-  RecordingsHardLimitEmailProps,
-  RecordingsRequestedUpgradeEmailProps,
-  RecordingsSoftLimitEmailProps,
-  ScreenshotsHardLimitEmailProps,
-  ScreenshotsRequestedUpgradeEmailProps,
-  ScreenshotsSoftLimitEmailProps,
-  SeatsHardLimitEmailProps,
-  SeatsRequestedUpgradeEmailProps,
-  SeatsSoftLimitEmailProps,
-} from './emails/entitlement';
-// Entitlement emails
-import {
-  RecordingsHardLimitEmail,
-  RecordingsRequestedUpgradeEmail,
-  RecordingsSoftLimitEmail,
-  ScreenshotsHardLimitEmail,
-  ScreenshotsRequestedUpgradeEmail,
-  ScreenshotsSoftLimitEmail,
-  SeatsHardLimitEmail,
-  SeatsRequestedUpgradeEmail,
-  SeatsSoftLimitEmail,
-} from './emails/entitlement';
 import type { TeammateInvitedEmailProps } from './emails/invite';
 // Invite emails
 import { TeammateInvitedEmail } from './emails/invite';
@@ -85,6 +62,23 @@ import type {
 } from './emails/pilot';
 // Pilot emails
 import { ReverseTrialOfferEmail, SandboxExpiringEmail, SandboxInviteEmail } from './emails/pilot';
+import type {
+  ProjectDeletionConfirmationEmailProps,
+  ProjectDeletionRequestedEmailProps,
+  ProjectDeletionScheduledEmailProps,
+  ProjectRecoveryConfirmationEmailProps,
+  ProjectRecoveryPartiallyEmailProps,
+  ProjectRecoveryScheduledEmailProps,
+} from './emails/project';
+// Project emails
+import {
+  ProjectDeletionConfirmationEmail,
+  ProjectDeletionRequestedEmail,
+  ProjectDeletionScheduledEmail,
+  ProjectRecoveryConfirmationEmail,
+  ProjectRecoveryPartiallyEmail,
+  ProjectRecoveryScheduledEmail,
+} from './emails/project';
 import type { RecordingReceivedEmailProps } from './emails/recording';
 // Recording emails
 import { RecordingReceivedEmail } from './emails/recording';
@@ -95,11 +89,40 @@ import type {
 // Trial emails
 import { TrialReverseTrialOfferEmail, WelcomeMeetFounderEmail } from './emails/trial';
 import type {
+  LinksRequestedUpgradeEmailProps,
+  LinksSoftLimitEmailProps,
+  RecordingsHardLimitEmailProps,
+  RecordingsRequestedUpgradeEmailProps,
+  RecordingsSoftLimitEmailProps,
+  ScreenshotsHardLimitEmailProps,
+  ScreenshotsRequestedUpgradeEmailProps,
+  ScreenshotsSoftLimitEmailProps,
+  SeatsHardLimitEmailProps,
+  SeatsRequestedUpgradeEmailProps,
+  SeatsSoftLimitEmailProps,
+} from './emails/usage';
+// Usage emails
+import {
+  LinksRequestedUpgradeEmail,
+  LinksSoftLimitEmail,
+  RecordingsHardLimitEmail,
+  RecordingsRequestedUpgradeEmail,
+  RecordingsSoftLimitEmail,
+  ScreenshotsHardLimitEmail,
+  ScreenshotsRequestedUpgradeEmail,
+  ScreenshotsSoftLimitEmail,
+  SeatsHardLimitEmail,
+  SeatsRequestedUpgradeEmail,
+  SeatsSoftLimitEmail,
+} from './emails/usage';
+import type {
   AccessGrantedEmailProps,
   AccessRequestedEmailProps,
   DeletionConfirmationEmailProps,
+  DeletionRequestedEmailProps,
   DeletionScheduledEmailProps,
   RecoveryConfirmationEmailProps,
+  RecoveryPartiallyEmailProps,
   RecoveryScheduledEmailProps,
 } from './emails/workspace';
 // Workspace emails
@@ -107,8 +130,10 @@ import {
   AccessGrantedEmail,
   AccessRequestedEmail,
   DeletionConfirmationEmail,
+  DeletionRequestedEmail,
   DeletionScheduledEmail,
   RecoveryConfirmationEmail,
+  RecoveryPartiallyEmail,
   RecoveryScheduledEmail,
 } from './emails/workspace';
 import { renderEmail, renderEmailText } from './render';
@@ -247,6 +272,14 @@ export async function renderDeletionScheduled(
   return { html, text };
 }
 
+export async function renderDeletionRequested(
+  props: DeletionRequestedEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(DeletionRequestedEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
 export async function renderRecoveryScheduled(
   props: RecoveryScheduledEmailProps
 ): Promise<RenderResult> {
@@ -271,6 +304,14 @@ export async function renderRecoveryConfirmation(
   return { html, text };
 }
 
+export async function renderRecoveryPartially(
+  props: RecoveryPartiallyEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(RecoveryPartiallyEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
 export async function renderAccessRequested(
   props: AccessRequestedEmailProps
 ): Promise<RenderResult> {
@@ -281,6 +322,58 @@ export async function renderAccessRequested(
 
 export async function renderAccessGranted(props: AccessGrantedEmailProps): Promise<RenderResult> {
   const element = React.createElement(AccessGrantedEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+// ============================================================================
+// PROJECT EMAILS
+// ============================================================================
+
+export async function renderProjectDeletionScheduled(
+  props: ProjectDeletionScheduledEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(ProjectDeletionScheduledEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderProjectDeletionRequested(
+  props: ProjectDeletionRequestedEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(ProjectDeletionRequestedEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderProjectRecoveryScheduled(
+  props: ProjectRecoveryScheduledEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(ProjectRecoveryScheduledEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderProjectDeletionConfirmation(
+  props: ProjectDeletionConfirmationEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(ProjectDeletionConfirmationEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderProjectRecoveryConfirmation(
+  props: ProjectRecoveryConfirmationEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(ProjectRecoveryConfirmationEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderProjectRecoveryPartially(
+  props: ProjectRecoveryPartiallyEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(ProjectRecoveryPartiallyEmail, props);
   const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
   return { html, text };
 }
@@ -366,7 +459,7 @@ export async function renderSubscriptionReverseTrial(
 }
 
 // ============================================================================
-// ENTITLEMENT - SEATS EMAILS
+// USAGE - SEATS EMAILS
 // ============================================================================
 
 export async function renderSeatsSoftLimit(props: SeatsSoftLimitEmailProps): Promise<RenderResult> {
@@ -390,7 +483,25 @@ export async function renderSeatsRequestedUpgrade(
 }
 
 // ============================================================================
-// ENTITLEMENT - RECORDINGS EMAILS
+// USAGE - LINKS EMAILS
+// ============================================================================
+
+export async function renderLinksSoftLimit(props: LinksSoftLimitEmailProps): Promise<RenderResult> {
+  const element = React.createElement(LinksSoftLimitEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderLinksRequestedUpgrade(
+  props: LinksRequestedUpgradeEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(LinksRequestedUpgradeEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+// ============================================================================
+// USAGE - RECORDINGS EMAILS
 // ============================================================================
 
 export async function renderRecordingsSoftLimit(
@@ -418,7 +529,7 @@ export async function renderRecordingsRequestedUpgrade(
 }
 
 // ============================================================================
-// ENTITLEMENT - SCREENSHOTS EMAILS
+// USAGE - SCREENSHOTS EMAILS
 // ============================================================================
 
 export async function renderScreenshotsSoftLimit(
@@ -475,6 +586,7 @@ export type {
   AccountDeletionEmailProps,
   AtRiskNotEngagedEmailProps,
   DeletionConfirmationEmailProps,
+  DeletionRequestedEmailProps,
   // Workspace
   DeletionScheduledEmailProps,
   // Domain
@@ -483,14 +595,25 @@ export type {
   // Auth
   EmailVerificationEmailProps,
   HelpdeskIntegrationPromptEmailProps,
+  LinksRequestedUpgradeEmailProps,
+  // Usage - Links
+  LinksSoftLimitEmailProps,
   MagicLinkEmailProps,
+  // Project
+  ProjectDeletionConfirmationEmailProps,
+  ProjectDeletionRequestedEmailProps,
+  ProjectDeletionScheduledEmailProps,
+  ProjectRecoveryConfirmationEmailProps,
+  ProjectRecoveryPartiallyEmailProps,
+  ProjectRecoveryScheduledEmailProps,
   // Recording
   RecordingReceivedEmailProps,
   RecordingsHardLimitEmailProps,
   RecordingsRequestedUpgradeEmailProps,
-  // Entitlement - Recordings
+  // Usage - Recordings
   RecordingsSoftLimitEmailProps,
   RecoveryConfirmationEmailProps,
+  RecoveryPartiallyEmailProps,
   RecoveryScheduledEmailProps,
   // Activation
   RequestFirstRecordingEmailProps,
@@ -500,11 +623,11 @@ export type {
   SandboxInviteEmailProps,
   ScreenshotsHardLimitEmailProps,
   ScreenshotsRequestedUpgradeEmailProps,
-  // Entitlement - Screenshots
+  // Usage - Screenshots
   ScreenshotsSoftLimitEmailProps,
   SeatsHardLimitEmailProps,
   SeatsRequestedUpgradeEmailProps,
-  // Entitlement - Seats
+  // Usage - Seats
   SeatsSoftLimitEmailProps,
   // Billing
   SubscriptionActiveEmailProps,
