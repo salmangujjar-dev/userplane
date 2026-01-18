@@ -168,15 +168,28 @@ export class ProjectService {
 
   /**
    * Update project fields
-   * Updates project title or other attributes
+   * Updates project title or default status
+   * When setting a project as default, unsets all other defaults in the workspace
    */
   async updateProject(
     projectId: string,
-    updates: Partial<{ projectTitle: string | null }>,
+    updates: Partial<{ projectTitle: string | null; isDefault: boolean }>,
     options?: { tx?: Transaction }
   ) {
-    await this.getById(projectId);
-    return this.deps.projectRepo.update(projectId, updates, options);
+    const project = await this.getById(projectId);
+
+    const performUpdate = async (tx: Transaction) => {
+      if (updates.isDefault === true) {
+        await this.deps.projectRepo.unsetAllDefaultProjects(project.workspaceId, { tx });
+      }
+      return this.deps.projectRepo.update(projectId, updates, { tx });
+    };
+
+    if (options?.tx) {
+      return performUpdate(options.tx);
+    }
+
+    return this.deps.db.transaction(performUpdate);
   }
 
   /**

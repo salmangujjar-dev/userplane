@@ -69,6 +69,7 @@ export function ProjectsSection() {
   const [editingProject, setEditingProject] = useState<{
     projectId: string;
     projectTitle: string | null;
+    isDefault: boolean;
   } | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [deletingProject, setDeletingProject] = useState<{
@@ -132,7 +133,11 @@ export function ProjectsSection() {
     }
   };
 
-  const handleEditProject = (project: { projectId: string; projectTitle: string | null }) => {
+  const handleEditProject = (project: {
+    projectId: string;
+    projectTitle: string | null;
+    isDefault: boolean;
+  }) => {
     setEditingProject(project);
     setShowEditModal(true);
   };
@@ -358,7 +363,7 @@ export function ProjectsSection() {
           project={{
             id: parseInt(editingProject.projectId),
             title: editingProject.projectTitle || '',
-            isDefault: false,
+            isDefault: editingProject.isDefault,
           }}
           onSave={(projectId, updatedProject) => handleSaveEdit(updatedProject)}
           loading={updateProjectMutation.isPending}

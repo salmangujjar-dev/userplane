@@ -122,15 +122,23 @@ export function useUpdateProject(workspaceId: string | null) {
             ...old,
             data: {
               ...old.data,
-              projects: old.data.projects.map((project) =>
-                project.projectId === projectId
-                  ? {
-                      ...project,
-                      projectTitle: title || null,
-                      ...(isDefault !== undefined && { isDefault }),
-                    }
-                  : project
-              ),
+              projects: old.data.projects.map((project) => {
+                if (project.projectId === projectId) {
+                  return {
+                    ...project,
+                    projectTitle: title || null,
+                    ...(isDefault !== undefined && { isDefault }),
+                  };
+                }
+                // When setting this project as default, unset all others
+                if (isDefault === true && project.isDefault) {
+                  return {
+                    ...project,
+                    isDefault: false,
+                  };
+                }
+                return project;
+              }),
             },
           };
         }
