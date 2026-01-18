@@ -170,5 +170,5 @@ export const adminProvisioningService = new AdminProvisioningService({
   db,
 });
 
-// Export tokenService for use in routes
-export { tokenService };
+// Export tokenService and emailService for use in routes
+export { emailService, tokenService };

@@ -7,11 +7,13 @@ import { env } from '@/env';
 const logger = createBrowserLogger('middleware');
 
 const authRoutes = ['/auth'];
+const publicRoutes = ['/accounts/delete'];
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
-  const isProtectedRoute = !isAuthRoute;
+  const isPublicRoute = publicRoutes.some((route) => path.startsWith(route));
+  const isProtectedRoute = !isAuthRoute && !isPublicRoute;
 
   const sessionCookie = request.cookies.get(`${env.auth.cookiePrefix}.session_token`);
   const hasSession = !!sessionCookie;
