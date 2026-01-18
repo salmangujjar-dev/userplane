@@ -49,17 +49,17 @@
 
 import {
   bridgeActions,
-  BridgeHandshakePayload,
-  BridgeHandshakeAckPayload,
-  BridgeHandshakeErrorPayload,
   BridgeBroadcastPayload,
-  BridgeRelayPayload,
+  BridgeCASResponsePayload,
+  BridgeCASStatePayload,
+  BridgeDirectMessagePayload,
   BridgeDisconnectPayload,
   BridgeGetTabsPayload,
+  BridgeHandshakeAckPayload,
+  BridgeHandshakeErrorPayload,
+  BridgeHandshakePayload,
+  BridgeRelayPayload,
   BridgeTabsResponsePayload,
-  BridgeDirectMessagePayload,
-  BridgeCASStatePayload,
-  BridgeCASResponsePayload,
 } from './types';
 
 /**
@@ -92,6 +92,7 @@ interface TabConnection {
  * State value with version number for CAS operations.
  */
 interface VersionedValue {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
   version: number;
 }
@@ -147,7 +148,7 @@ function runHeartbeat() {
       // Send ping to tab
       try {
         connection.port.postMessage({ action: bridgeActions.BRIDGE_PING, timestamp: now });
-      } catch (error) {
+      } catch {
         // Port is dead (tab closed/crashed)
         console.log(`[Bridge Worker] Tab ${tabID} on "${channelName}" has dead port, removing`);
         deadTabs.push(tabID);
@@ -194,6 +195,7 @@ function getOrCreateChannel(channelName: string): ChannelState {
  * Called when a new tab connects to the SharedWorker.
  * Sets up message handling for this tab's port.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (self as any).onconnect = (event: MessageEvent) => {
   const port = event.ports[0];
 
@@ -215,10 +217,11 @@ function getOrCreateChannel(channelName: string): ChannelState {
         handleDisconnect(data as BridgeDisconnectPayload);
         break;
 
-      case bridgeActions.BRIDGE_GET_STATE:
+      case bridgeActions.BRIDGE_GET_STATE: {
         // Return current shared state for a specific channel (unwrap versioned values)
         const getStateData = data as { channel: string };
         const getStateChannel = getOrCreateChannel(getStateData.channel || 'default');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const unwrappedState: Record<string, any> = {};
         for (const [key, versionedValue] of Object.entries(getStateChannel.sharedState)) {
           unwrappedState[key] = versionedValue.value;
@@ -228,9 +231,11 @@ function getOrCreateChannel(channelName: string): ChannelState {
           state: unwrappedState,
         });
         break;
+      }
 
-      case bridgeActions.BRIDGE_SET_STATE:
+      case bridgeActions.BRIDGE_SET_STATE: {
         // Update shared state (last-write-wins) and broadcast to all tabs
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const setStateData = data as { key: string; value: any; channel: string };
         const setStateChannel = getOrCreateChannel(setStateData.channel || 'default');
 
@@ -253,7 +258,7 @@ function getOrCreateChannel(channelName: string): ChannelState {
               value: setStateData.value,
               version: newVersion,
             });
-          } catch (error) {
+          } catch {
             console.log(`[Bridge Worker] Tab ${tabID} has dead port during state broadcast`);
             setStateDeadTabs.push(tabID);
           }
@@ -263,6 +268,7 @@ function getOrCreateChannel(channelName: string): ChannelState {
           setStateChannel.tabs.delete(tabID);
         }
         break;
+      }
 
       case bridgeActions.BRIDGE_CAS_STATE:
         // Atomic compare-and-swap: only update if version matches
@@ -359,6 +365,7 @@ function handleHandshake(port: MessagePort, payload: BridgeHandshakePayload) {
   }
 
   // Unwrap versioned state for handshake response (include versions for client tracking)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const unwrappedState: Record<string, any> = {};
   const stateVersions: Record<string, number> = {};
   for (const [key, versionedValue] of Object.entries(channel.sharedState)) {
@@ -443,7 +450,7 @@ function handleBroadcast(payload: BridgeBroadcastPayload) {
     try {
       connection.port.postMessage(relayPayload);
       relayCount++;
-    } catch (error) {
+    } catch {
       // Port is dead - mark for removal
       console.log(
         `[Bridge Worker] Tab ${tabID} has dead port during broadcast, marking for removal`
@@ -676,7 +683,7 @@ function handleCASState(port: MessagePort, payload: BridgeCASStatePayload) {
         value: newValue,
         version: newVersion,
       });
-    } catch (error) {
+    } catch {
       console.log(`[Bridge Worker] Tab ${connTabID} has dead port during CAS broadcast`);
       casDeadTabs.push(connTabID);
     }

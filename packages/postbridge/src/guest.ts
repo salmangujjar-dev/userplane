@@ -49,15 +49,15 @@
  */
 
 import {
+  addEventListener,
   extractMethods,
   getEventData,
   getTargetHost,
   postMessageToTarget,
-  addEventListener,
   removeEventListener,
 } from './helpers';
 import { registerLocalMethods, registerRemoteMethods } from './rpc';
-import { actions, GuestConnectOptions, events, Connection, Schema } from './types';
+import { actions, Connection, events, GuestConnectOptions, Schema } from './types';
 
 /**
  * Guest Connect
@@ -144,6 +144,7 @@ import { actions, GuestConnectOptions, events, Connection, Schema } from './type
  * @returns Promise that resolves to Connection object
  */
 function connect(schema: Schema = {}, options?: GuestConnectOptions): Promise<Connection> {
+  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve) => {
     // Extract methods from schema (separates functions from data)
     const localMethods = extractMethods(schema);
@@ -153,6 +154,7 @@ function connect(schema: Schema = {}, options?: GuestConnectOptions): Promise<Co
     const listenTo = options?.hostTarget ?? (self || window);
 
     // Handler for HANDSHAKE_REPLY from host
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function handleHandshakeResponse(event: any) {
       const eventData = getEventData(event);
 

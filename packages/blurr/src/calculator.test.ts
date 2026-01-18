@@ -2,15 +2,16 @@
  * Blur calculator tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import {
-  calculateBlurRadius,
   analyzeElement,
-  analyzeTextSize,
   analyzeMediaDimensions,
+  analyzeTextSize,
   calculateBlurForContentType,
-  isInViewport,
+  calculateBlurRadius,
   getElementDimensions,
+  isInViewport,
 } from './calculator';
 import { DEFAULTS } from './constants';
 
@@ -188,6 +189,7 @@ describe('Calculator', () => {
     });
 
     it('should return min blur for unknown content type', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const blur = calculateBlurForContentType('unknown' as any, 100);
 
       expect(blur).toBe(DEFAULTS.MIN_BLUR_RADIUS);

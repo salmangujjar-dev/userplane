@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import * as helpers from '../src/helpers';
 import { registerRemoteMethods } from '../src/rpc';
 import { actions, events } from '../src/types';
-import * as helpers from '../src/helpers';
 
 // Helper variables for mocks
 let addEventListenerSpy: any;

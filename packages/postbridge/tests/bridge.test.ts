@@ -11,7 +11,8 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+
 import bridge from '../src/bridge';
 import { bridgeActions } from '../src/types';
 

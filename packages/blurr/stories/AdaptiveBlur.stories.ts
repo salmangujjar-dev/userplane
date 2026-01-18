@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
+
 import { BlurManager } from '../src';
 
 const meta: Meta = {
@@ -84,7 +85,6 @@ export const TextSizes: Story = {
 };
 
 export const MixedContent: Story = {
-  name: 'Mixed Content',
   render: () => {
     const container = document.createElement('div');
     container.innerHTML = `

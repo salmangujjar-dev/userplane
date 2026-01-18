@@ -85,6 +85,7 @@ export function isWorker(): boolean {
  * @returns true if running in Node.js, false otherwise
  */
 export function isNodeEnv(): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return typeof process !== 'undefined' && !!(process as any).versions?.node;
 }
 
@@ -171,10 +172,13 @@ export function isIframe() {
  * @param obj The schema object to extract methods from (will be mutated!)
  * @returns A flat map of method paths to functions
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function extractMethods(obj: any) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const methods: Record<string, (...args: any) => any> = {};
 
   // Recursive inner function to traverse object tree
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (function parse(obj: any, path = '') {
     Object.keys(obj).forEach((prop) => {
       // Build dot-notation path (e.g., "math.add")
@@ -214,6 +218,7 @@ const urlRegex = /^(https?:|file:)?\/\/([^/:]+)?(:(\d+))?/;
  * Default ports for common protocols. Used to normalize origins by omitting
  * default ports (http://example.com:80 → http://example.com)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ports: any = { 'http:': '80', 'https:': '443' };
 
 /**
@@ -291,6 +296,7 @@ export function getOriginFromURL(url: string | null) {
  * @param defaultValue Value to return if path doesn't exist
  * @returns The value at the path, or defaultValue if not found
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function get(obj: any, path: string | Array<string | number>, defaultValue?: any): any {
   // Convert path to array of keys (["a", "b", "c"])
   const keys = Array.isArray(path) ? path : path.split('.').filter(Boolean);
@@ -334,6 +340,7 @@ export function get(obj: any, path: string | Array<string | number>, defaultValu
  * @param value The value to set at the path
  * @returns The modified object
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function set(obj: any, path: string | (string | number)[], value: any): any {
   if (!obj || typeof obj !== 'object') return obj;
 
@@ -417,6 +424,7 @@ export function generateId(length: number = 10): string {
  *   2. We're in Node.js main thread (not a worker)
  * - We catch these errors and leave parentPort as null
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let parentPort: any = null;
 
 if (isNodeEnv()) {
@@ -424,7 +432,7 @@ if (isNodeEnv()) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const workerThreads = require('worker_threads');
     parentPort = workerThreads.parentPort; // Will be null if not in worker thread
-  } catch (e) {
+  } catch {
     // Not in worker thread context, or worker_threads not available
   }
 }
@@ -461,6 +469,7 @@ if (isNodeEnv()) {
  * @returns The appropriate messaging target for the current environment
  * @throws Error if no valid target can be determined
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getTargetHost(): any {
   if (isNodeEnv()) {
     return parentPort;
@@ -527,6 +536,7 @@ export function getTargetHost(): any {
  */
 export function postMessageToTarget(
   target: Target,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   message: any,
   origin?: string,
   transferables?: Transferable[]
@@ -709,6 +719,7 @@ export function removeEventListener(
  * @param event The message event
  * @returns The actual message data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getEventData(event: any) {
   return event.data || event;
 }

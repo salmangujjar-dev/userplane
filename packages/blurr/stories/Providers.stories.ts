@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
+
 import { BlurManager, getSelectorStats } from '../src';
 
 const meta: Meta = {

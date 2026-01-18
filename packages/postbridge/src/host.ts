@@ -71,7 +71,7 @@ import {
   removeEventListener,
 } from './helpers';
 import { registerLocalMethods, registerRemoteMethods } from './rpc';
-import { actions, events, Guest, Connection, Connections, Schema } from './types';
+import { actions, Connection, Connections, events, Guest, Schema } from './types';
 
 /**
  * Global Connections Map
@@ -129,6 +129,7 @@ const connections: Connections = {};
  * @param event The message event to validate
  * @returns true if message is from expected guest, false otherwise
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isValidTarget(guest: Guest, event: any) {
   // Workers are trusted (browser isolation prevents message spoofing)
   if (isNodeWorker(guest) || (typeof Worker !== 'undefined' && guest instanceof Worker)) {
@@ -285,6 +286,7 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
     const connectionID = generateId();
 
     // Handler for initial HANDSHAKE_REQUEST from guest
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function handleHandshake(event: any) {
       // Determine where to send messages based on guest type
       const sendTo =
@@ -362,6 +364,7 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
     addEventListener(listenTo, events.MESSAGE, handleHandshake);
 
     // Handler for confirmation HANDSHAKE_REPLY from guest
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function handleHandshakeReply(event: any) {
       const eventData = getEventData(event);
 
