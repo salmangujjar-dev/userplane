@@ -11,4 +11,5 @@ export const copy = {
     'Toggle this per domain in your settings.',
   ],
   cta: 'Enable console logs',
+  helpText: 'Learn more about console logs',
 } as const;

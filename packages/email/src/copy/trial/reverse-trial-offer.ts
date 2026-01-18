@@ -11,5 +11,4 @@ export const copy = {
     'Keep your recordings, recording links, and workspace settings by upgrading before your trial ends.',
   ],
   cta: (planName: string) => `Upgrade to ${planName}`,
-  ps: 'Full refund within 30 days. Reply to this email to request one.',
 } as const;

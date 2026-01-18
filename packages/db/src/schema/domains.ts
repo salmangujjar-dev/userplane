@@ -1,8 +1,9 @@
-import { pgTable, text, timestamp, boolean, index, pgEnum, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { workspaces } from './workspaces';
-import { links } from './links';
+import { boolean, index, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core';
+
 import { DOMAIN_STATUS_VALUES } from '../constants';
+import { links } from './links';
+import { workspaces } from './workspaces';
 
 export const domainStatusEnum = pgEnum('domain_status', DOMAIN_STATUS_VALUES);
 

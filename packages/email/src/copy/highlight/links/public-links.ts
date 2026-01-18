@@ -11,4 +11,5 @@ export const copy = {
     'Public links are view-only and can be revoked at any time.',
   ],
   cta: 'View your recordings',
+  helpText: 'Learn more about public links',
 } as const;

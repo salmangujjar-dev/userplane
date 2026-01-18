@@ -3,11 +3,12 @@
  * Sent to workspace owners when someone requests access
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/workspace/access-requested';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/workspace/access-requested';
 
 export interface AccessRequestedEmailProps {
   workspaceName?: string;
@@ -23,7 +24,7 @@ export const AccessRequestedEmail = ({
   reviewUrl = 'https://app.userplane.io/settings/members',
 }: AccessRequestedEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview(requesterName, workspaceName)} ps={copy.ps}>
+    <EmailLayout preview={copy.preview(requesterName, workspaceName)}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(requesterName, workspaceName)}</Text>
 

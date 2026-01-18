@@ -1,5 +1,5 @@
-import Avatar from 'boring-avatars';
 import { cn } from '@workspace/ui/lib/utils';
+import Avatar from 'boring-avatars';
 
 interface BoringAvatarProps {
   name: string;

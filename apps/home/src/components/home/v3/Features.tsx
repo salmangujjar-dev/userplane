@@ -1,9 +1,10 @@
 import {
+  type Feature,
   FEATURES,
   FEATURES_HEADING,
   FEATURES_HIGHLIGHTS,
-  type Feature,
 } from '@/constants/v3/features';
+
 import Highlight from '../Highlight';
 
 function FeatureCard({ image, imageAlt, title, description }: Feature) {

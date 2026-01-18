@@ -1,4 +1,5 @@
 import { createDb, type DbClient } from '@workspace/db';
+
 import { env } from '@/api/env';
 
 export const db: DbClient = createDb({

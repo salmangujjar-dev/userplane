@@ -1,8 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import Logo from '@workspace/ui/components/logo';
 import { Badge } from '@workspace/ui/components/badge';
 import {
   DropdownMenu,
@@ -11,20 +8,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import Logo from '@workspace/ui/components/logo';
 import {
-  Users,
-  LogOut,
-  Settings2,
-  HelpCircle,
   Building2,
   ChevronsUpDown,
+  HelpCircle,
+  LogOut,
+  Settings2,
   Shield,
+  Users,
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { useAccount } from '@/hooks/use-account';
+import { useAuth } from '@/hooks/use-auth';
 import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useWorkspaceStore } from '@/stores/workspace';
-import { useAuth } from '@/hooks/use-auth';
 
 interface NavItem {
   label: string;

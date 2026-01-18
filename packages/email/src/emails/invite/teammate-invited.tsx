@@ -3,11 +3,12 @@
  * Sent when a user is invited to join a workspace
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/invite/teammate-invited';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/invite/teammate-invited';
 
 export interface TeammateInvitedEmailProps {
   inviterName?: string;
@@ -21,7 +22,7 @@ export const TeammateInvitedEmail = ({
   inviteUrl = 'https://app.userplane.io/invite/abc123',
 }: TeammateInvitedEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview(inviterName, workspaceName)} ps={copy.ps}>
+    <EmailLayout preview={copy.preview(inviterName, workspaceName)}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(inviterName, workspaceName)}</Text>
 

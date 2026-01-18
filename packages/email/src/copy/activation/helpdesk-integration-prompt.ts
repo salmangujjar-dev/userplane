@@ -11,5 +11,4 @@ export const copy = {
     'Takes 2 minutes to connect.',
   ],
   cta: 'Connect Intercom',
-  ps: 'Recordings appear directly in your Intercom conversations.',
 } as const;

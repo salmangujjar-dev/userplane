@@ -1,4 +1,5 @@
 import { createClient, createSafeClient } from '@workspace/client';
+
 import { env } from '@/env';
 
 const baseClient = createClient({

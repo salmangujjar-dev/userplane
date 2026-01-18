@@ -3,12 +3,12 @@
  * Handles screen and audio recording using MediaRecorder API
  */
 
-import {
-  isScreenRecordingSupported as checkScreenRecordingSupport,
-  getBestMimeType,
-} from '@/utils/browser';
-import { VIDEO_BITRATE_BPS, AUDIO_SAMPLE_RATE_HZ, MEDIA_RECORDER_TIMESLICE_MS } from '@/constants';
+import { AUDIO_SAMPLE_RATE_HZ, MEDIA_RECORDER_TIMESLICE_MS, VIDEO_BITRATE_BPS } from '@/constants';
 import { ClientError } from '@/lib/client-errors';
+import {
+  getBestMimeType,
+  isScreenRecordingSupported as checkScreenRecordingSupport,
+} from '@/utils/browser';
 
 export type RecordingMode = 'screen-voice' | 'screen-only';
 
@@ -75,7 +75,7 @@ export class MediaCapture {
         audio: false,
       });
 
-      let combinedStream = displayStream;
+      const combinedStream = displayStream;
 
       if (mode === 'screen-voice') {
         try {

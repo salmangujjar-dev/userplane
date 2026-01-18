@@ -3,20 +3,21 @@
  * Manages the state machine for the entire recording flow
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { RecordingSession, type UploadState } from '@/services/recording-session';
+import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { createClientError, createClientErrorWithMessage } from '@/lib/client-errors';
 import {
+  isScreenRecordingSupported,
   MediaCapture,
   type RecordingMode,
-  isScreenRecordingSupported,
 } from '@/services/media-capture';
 import type { UploadProgress } from '@/services/recording-session';
+import { RecordingSession, type UploadState } from '@/services/recording-session';
+import { classifyError, type RecordingError } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
 import { DEFAULT_RECORDING_PREFERENCES } from '@/types/session-preferences';
 import { generateVideoThumbnail } from '@/utils/video-thumbnail';
-import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
-import { type RecordingError, classifyError } from '@/types/errors';
-import { createClientError, createClientErrorWithMessage } from '@/lib/client-errors';
 
 export type FlowState =
   | 'loading'

@@ -1,8 +1,9 @@
 'use client';
 
-import { LinksList } from './links-list';
-import { PaginationControls } from '../shared/pagination-controls';
 import type { Link } from '@/hooks/use-workspace-links';
+
+import { PaginationControls } from '../shared/pagination-controls';
+import { LinksList } from './links-list';
 
 interface PaginatedLinksTabProps {
   currentPage: number;

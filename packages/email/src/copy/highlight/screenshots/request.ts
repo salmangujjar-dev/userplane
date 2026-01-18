@@ -11,4 +11,5 @@ export const copy = {
     'Thumbnails appear in your dashboard for fast issue triage.',
   ],
   cta: 'View screenshots',
+  helpText: 'Learn more about screenshots',
 } as const;

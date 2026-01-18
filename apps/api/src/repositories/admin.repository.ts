@@ -3,9 +3,9 @@
  * Handles database queries for user management with workspace and session data
  */
 
-import { eq, and, or, ilike, desc, asc, count, sql } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
-import { user, session, workspaceMembers, workspaces } from '@workspace/db';
+import { and, asc, count, desc, eq, ilike, or, sql } from '@workspace/db';
+import { session, user, workspaceMembers, workspaces } from '@workspace/db';
 
 export interface AdminUserListItem {
   id: string;

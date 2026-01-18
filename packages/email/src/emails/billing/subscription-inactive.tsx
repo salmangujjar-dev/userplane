@@ -3,11 +3,12 @@
  * Sent when a subscription becomes inactive (paused or cancelled)
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/billing/subscription-inactive';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/billing/subscription-inactive';
 
 export interface SubscriptionInactiveEmailProps {
   planName?: string;

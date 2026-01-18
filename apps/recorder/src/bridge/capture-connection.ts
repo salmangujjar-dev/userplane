@@ -10,15 +10,16 @@
  * This is the guest-side implementation (runs in the capture iframe)
  */
 
-import { guest, type Connection } from '@workspace/postbridge';
+import { type Connection, guest } from '@workspace/postbridge';
+
 import type {
-  CaptureHostSchema,
+  BlurrState,
   CaptureGuestSchema,
-  TabMetadata,
+  CaptureHostSchema,
   CaptureRecorderState,
   CustomMetadata,
   RecordingState,
-  BlurrState,
+  TabMetadata,
 } from './types';
 
 /**

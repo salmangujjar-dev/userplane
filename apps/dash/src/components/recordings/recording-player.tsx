@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import type { VideoMarker } from '@/components/player/types';
 import './recording-player.css';
+
+import dynamic from 'next/dynamic';
+import React, { useEffect, useState } from 'react';
+
+import type { VideoMarker } from '@/components/player/types';
 
 const StreamPlayer = dynamic(() => import('@/components/player'), {
   ssr: false,

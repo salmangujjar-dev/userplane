@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowUpDown } from 'lucide-react';
+import { DOMAIN_PAGINATION } from '@workspace/contract';
 import {
   Select,
   SelectContent,
@@ -11,29 +10,32 @@ import {
   SelectValue,
 } from '@workspace/ui/components/select';
 import { toast } from '@workspace/ui/components/sonner';
-import type { DomainSortField, SortDirection } from '@/hooks/use-workspace-domains';
-import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
-import { useWorkspaceId } from '@/stores/workspace';
+import { ArrowUpDown } from 'lucide-react';
+import { useCallback, useState } from 'react';
+
 import { apiClient } from '@/client';
-import type { DomainResponse } from '@/types';
-import {
-  useCreateDomain,
-  useUpdateDomain,
-  useDeleteDomain,
-  useUpdateDomainPreferences,
-} from '@/queries/use-domain-mutations';
 import { SectionError } from '@/components/shared/section-error';
 import { DomainsSectionSkeleton } from '@/components/skeleton';
-import { DomainList } from './domain-list';
-import { DomainModalsManager } from './domain-modals-manager';
 import { useDomainSectionState } from '@/hooks/use-domain-section-state';
 import { useDomainStatusPolling } from '@/hooks/use-domain-status-polling';
+import type { DomainSortField, SortDirection } from '@/hooks/use-workspace-domains';
+import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import {
-  type DomainRecordingPreferences,
+  useCreateDomain,
+  useDeleteDomain,
+  useUpdateDomain,
+  useUpdateDomainPreferences,
+} from '@/queries/use-domain-mutations';
+import { useWorkspaceId } from '@/stores/workspace';
+import type { DomainResponse } from '@/types';
+import {
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
+  type DomainRecordingPreferences,
 } from '@/types/domain';
-import { DOMAIN_PAGINATION } from '@workspace/contract';
+
+import { DomainList } from './domain-list';
+import { DomainModalsManager } from './domain-modals-manager';
 
 const ITEMS_PER_PAGE = DOMAIN_PAGINATION.DEFAULT_PER_PAGE;
 

@@ -3,8 +3,9 @@
  * Detects provider type, extracts canonical IDs, and generates titles
  */
 
-import type { LinkProviderType } from '@/api/types';
 import { isValidUrl } from '@workspace/contract';
+
+import type { LinkProviderType } from '@/api/types';
 
 /**
  * Result of parsing a link reference

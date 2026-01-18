@@ -3,11 +3,12 @@
  * Sent when a workspace has reached its recording limit
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/entitlement/recordings/hard-limit-reached';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/entitlement/recordings/hard-limit-reached';
 
 export interface RecordingsHardLimitEmailProps {
   workspaceName?: string;

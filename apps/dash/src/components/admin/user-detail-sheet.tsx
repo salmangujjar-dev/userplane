@@ -2,37 +2,39 @@
 
 import { Badge } from '@workspace/ui/components/badge';
 import { Button } from '@workspace/ui/components/button';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@workspace/ui/components/sheet';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@workspace/ui/components/sheet';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import { VisuallyHidden } from '@workspace/ui/components/visually-hidden';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
 import {
-  Building2,
-  MonitorSmartphone,
-  Ban,
-  CheckCircle,
-  UserCog,
   AlertCircle,
-  MoreVertical,
-  XCircle,
+  Ban,
+  Building2,
+  CheckCircle,
   Mail,
+  MonitorSmartphone,
+  MoreVertical,
   Trash2,
+  UserCog,
+  XCircle,
 } from 'lucide-react';
+
+import { BoringAvatar } from '@/components/shared/boring-avatar';
 import type { AdminUserDetail, AdminUserSession, AdminUserWorkspace } from '@/hooks/use-admin-api';
 import { usePermissions } from '@/hooks/use-permissions';
+
 import { DetailedListSkeleton } from './components/detailed-list-skeleton';
 import { PagedSectionHeader } from './components/paged-section-header';
 

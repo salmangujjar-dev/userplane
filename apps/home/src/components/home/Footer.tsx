@@ -1,5 +1,6 @@
-import { Separator } from '@workspace/ui/components/separator';
 import Logo from '@workspace/ui/components/logo';
+import { Separator } from '@workspace/ui/components/separator';
+
 import { FOOTER_LINKS } from '@/constants/navigation';
 
 export default function Footer() {

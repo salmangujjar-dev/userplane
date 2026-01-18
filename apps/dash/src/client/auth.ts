@@ -1,4 +1,5 @@
-import { createAuthClientInstance, type AuthClient } from '@workspace/auth/client';
+import { type AuthClient, createAuthClientInstance } from '@workspace/auth/client';
+
 import { env } from '@/env';
 
 export const authClient: AuthClient = createAuthClientInstance({

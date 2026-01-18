@@ -1,9 +1,9 @@
 'use client';
 
-import * as React from 'react';
-import { ChevronRight, ChevronDown, Copy, Check, MoreHorizontal, ChevronUp } from 'lucide-react';
-import { cn } from '@workspace/ui/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
+import { cn } from '@workspace/ui/lib/utils';
+import { Check, ChevronDown, ChevronRight, ChevronUp, Copy, MoreHorizontal } from 'lucide-react';
+import * as React from 'react';
 
 type JsonViewerProps = {
   data: unknown;

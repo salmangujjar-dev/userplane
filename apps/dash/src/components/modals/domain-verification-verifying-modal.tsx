@@ -1,12 +1,12 @@
 'use client';
 
-import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import Logo from '@workspace/ui/components/logo';
 import { Spinner } from '@workspace/ui/components/spinner';
 import { ArrowLeftRight, Globe } from 'lucide-react';
 

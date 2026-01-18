@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+
 import { apiClient } from '@/client';
-import { handleSafeResult } from '@/lib/errors';
 import { DEFAULT_WORKSPACES_PER_PAGE } from '@/constants/pagination';
+import { handleSafeResult } from '@/lib/errors';
 
 /**
  * Hook to fetch all workspaces for the current user

@@ -1,9 +1,10 @@
-import { ChevronRight } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
+import { ChevronRight } from 'lucide-react';
+
 import {
+  CTA_DESCRIPTION,
   CTA_HEADING,
   CTA_HIGHLIGHTS,
-  CTA_DESCRIPTION,
   CTA_PRIMARY_BUTTON,
   CTA_SECONDARY_BUTTON,
 } from '../../constants/cta';

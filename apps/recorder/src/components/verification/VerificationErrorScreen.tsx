@@ -5,8 +5,10 @@
  */
 
 import { Button } from '@workspace/ui/components/button';
-import VerificationScreenLayout from './VerificationScreenLayout';
+
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
+
+import VerificationScreenLayout from './VerificationScreenLayout';
 
 interface VerificationErrorScreenProps {
   /** Error title */

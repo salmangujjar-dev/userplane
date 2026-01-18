@@ -3,11 +3,12 @@
  * Educate users about customer-initiated recording links
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/highlight/links/customer-triggered-links';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/highlight/links/customer-triggered-links';
 
 export interface CustomerTriggeredLinksEmailProps {
   learnMoreUrl?: string;

@@ -10,6 +10,7 @@
 const getEnvVar = (key: string, defaultValue: string = ''): string => {
   // Check if running in browser
   if (typeof window !== 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (window as any).__ENV__?.[key] || defaultValue;
   }
 

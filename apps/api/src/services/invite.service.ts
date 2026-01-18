@@ -3,13 +3,14 @@
  * Orchestrates sending and accepting workspace invitations
  */
 
+import { domainError, inviteError, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
-import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
-import { WorkspaceService } from '@/api/services/workspace.service';
-import { UserService } from '@/api/services/user.service';
+
 import { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
-import { inviteError, workspaceError, domainError } from '@workspace/contract';
+import { UserService } from '@/api/services/user.service';
+import { WorkspaceService } from '@/api/services/workspace.service';
+import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 
 /**
  * Internal invite action result type for service orchestration

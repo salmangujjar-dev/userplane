@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import 'videojs-contrib-quality-levels';
 import 'videojs-hls-quality-selector';
 import './stream-player.css';
-import StreamControls from './StreamControls';
-import type { VideoMarker, Player, PlayerOptions } from './types';
+
 import { toast } from '@workspace/ui/components/sonner';
+import React, { useEffect, useRef, useState } from 'react';
+import videojs from 'video.js';
+
+import StreamControls from './StreamControls';
+import type { Player, PlayerOptions, VideoMarker } from './types';
 
 interface StreamPlayerProps {
   options: PlayerOptions;

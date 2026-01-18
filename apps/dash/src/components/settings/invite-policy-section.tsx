@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { MAX_EMAIL_DOMAINS } from '@workspace/contract';
+import { WORKSPACE_INVITE_POLICY_OPTIONS } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import {
@@ -11,23 +11,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import { X, Globe, Lock, Shield, Plus, RefreshCw, LogOut } from 'lucide-react';
-import { useWorkspaceId } from '@/stores/workspace';
-import { useInvitePolicy, type WorkspaceInvitePolicy } from '@/hooks/use-invite-policy';
-import {
-  useUpdateInvitePolicy,
-  useRotateInvite,
-  useLeaveWorkspace,
-} from '@/queries/use-workspace-mutations';
-import { SectionError } from '@/components/shared/section-error';
 import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Globe, Lock, LogOut, Plus, RefreshCw, Shield, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
 import { AddEmailDomainModal } from '@/components/modals/add-email-domain-modal';
-import { MAX_EMAIL_DOMAINS } from '@workspace/contract';
-import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
-import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
+import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
+import { SectionError } from '@/components/shared/section-error';
+import { useInvitePolicy, type WorkspaceInvitePolicy } from '@/hooks/use-invite-policy';
 import { useWorkspace } from '@/hooks/use-workspace';
-import { WORKSPACE_INVITE_POLICY_OPTIONS } from '@workspace/contract';
+import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
+import {
+  useLeaveWorkspace,
+  useRotateInvite,
+  useUpdateInvitePolicy,
+} from '@/queries/use-workspace-mutations';
+import { useWorkspaceId } from '@/stores/workspace';
 
 const POLICY_OPTIONS = [
   { ...WORKSPACE_INVITE_POLICY_OPTIONS[0]!, icon: Lock },

@@ -3,10 +3,11 @@
  * Handles all database operations for project entities
  */
 
-import { eq, and, ne, count, ilike, asc, desc } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
+import { and, asc, count, desc, eq, ilike, ne } from '@workspace/db';
 import { projects } from '@workspace/db';
-import type { Transaction, CreateProjectInput } from '@/api/types';
+
+import type { CreateProjectInput, Transaction } from '@/api/types';
 
 export type ProjectSortField = 'created_at' | 'project_title';
 export type SortDirection = 'asc' | 'desc';

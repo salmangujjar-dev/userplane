@@ -1,7 +1,8 @@
 'use client';
 
-import { format } from 'date-fns';
 import { JsonViewer } from '@workspace/ui/components/json-viewer';
+import { format } from 'date-fns';
+
 import { BoringAvatar } from '../shared/boring-avatar';
 
 interface InfoPanelProps {

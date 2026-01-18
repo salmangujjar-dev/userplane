@@ -1,13 +1,15 @@
-import { ChevronRight } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
+import { ChevronRight } from 'lucide-react';
+
+import type { HighlightColor } from '@/constants/types';
 import {
+  CTA_DESCRIPTION,
   CTA_HEADING,
   CTA_HIGHLIGHTS,
-  CTA_DESCRIPTION,
   CTA_PRIMARY_BUTTON,
   CTA_SECONDARY_BUTTON,
 } from '@/constants/v3/cta';
-import type { HighlightColor } from '@/constants/types';
+
 import Highlight from '../Highlight';
 
 interface WordSegment {

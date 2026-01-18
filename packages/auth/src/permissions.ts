@@ -1,4 +1,5 @@
 import { createAccessControl } from 'better-auth/plugins/access';
+
 import type { PermissionMap, RoleName } from './types';
 
 // Define access control statement with all user and session permissions

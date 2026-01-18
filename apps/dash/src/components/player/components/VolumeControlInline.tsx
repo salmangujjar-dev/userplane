@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { Volume2Icon, VolumeXIcon } from 'lucide-react';
+import React from 'react';
 
 interface VolumeControlInlineProps {
   /** Current volume level (0-1) */

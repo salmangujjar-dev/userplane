@@ -3,17 +3,9 @@
  * Handles database queries for workspace management with counts for related entities
  */
 
-import { eq, and, or, ilike, desc, asc, count, sql } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
-import {
-  workspaces,
-  workspaceMembers,
-  projects,
-  domains,
-  links,
-  recordings,
-  user,
-} from '@workspace/db';
+import { and, asc, count, desc, eq, ilike, or, sql } from '@workspace/db';
+import { projects, user, workspaceMembers, workspaces } from '@workspace/db';
 import type { PlanId } from '@workspace/pricing';
 
 export interface AdminWorkspaceListItem {

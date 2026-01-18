@@ -1,10 +1,11 @@
+import { AlertCircle, AlertTriangle, Bug, ChevronRight, Info, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
-import { AlertCircle, AlertTriangle, Info, MessageSquare, Bug, ChevronRight } from 'lucide-react';
+
 import {
-  ConsoleLogEvent,
-  RemoteObject,
-  formatRemoteObject,
   ConsoleAPIType,
+  ConsoleLogEvent,
+  formatRemoteObject,
+  RemoteObject,
 } from './console-log-types';
 
 interface ConsoleLogEntryProps {

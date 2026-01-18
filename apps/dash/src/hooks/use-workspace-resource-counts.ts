@@ -1,9 +1,10 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useWorkspaceId } from '@/stores/workspace';
+
 import { apiClient } from '@/client';
 import { handleSafeResult, type SafeResult } from '@/lib/errors';
+import { useWorkspaceId } from '@/stores/workspace';
 
 export interface ResourceCounts {
   projects?: number;

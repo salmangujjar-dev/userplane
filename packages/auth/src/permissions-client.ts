@@ -27,10 +27,10 @@ export const rolePermissionsMap: Record<RoleName, PermissionMap> = {
 
 // Re-export types
 export type {
-  PermissionMap,
-  RoleName,
-  Resource,
   Action,
-  UserResource,
+  PermissionMap,
+  Resource,
+  RoleName,
   SessionResource,
+  UserResource,
 } from './types';

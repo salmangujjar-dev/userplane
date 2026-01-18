@@ -4,14 +4,15 @@
  * Mimics Resend's API but writes to local files
  */
 
+import { createAppLogger } from '@workspace/logger';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { createAppLogger } from '@workspace/logger';
+
 import type {
   EmailClient,
   EmailProvider,
-  SendEmailParams,
   SendEmailOptions,
+  SendEmailParams,
   SendEmailResponse,
 } from '../types';
 

@@ -3,11 +3,12 @@
  * Educate users about viewing network logs with screenshots
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/highlight/screenshots/request-server-logs';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/highlight/screenshots/request-server-logs';
 
 export interface ScreenshotServerLogsEmailProps {
   settingsUrl?: string;

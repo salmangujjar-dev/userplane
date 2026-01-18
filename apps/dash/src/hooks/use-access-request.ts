@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
+
+import { apiClient } from '@/client';
 import { handleSafeResult } from '@/lib/errors';
 
 /**

@@ -1,11 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import PostRecordingReviewScreen from './PostRecordingReviewScreen';
 import {
-  preferenceArgTypes,
-  defaultPreferenceArgs,
   argsToPreferences,
+  defaultPreferenceArgs,
   type PreferenceArgs,
+  preferenceArgTypes,
 } from '@stories/preferences-args';
+import type { Meta, StoryObj } from '@storybook/react';
+
+import PostRecordingReviewScreen from './PostRecordingReviewScreen';
 
 /**
  * Sample video for stories - using a public test video

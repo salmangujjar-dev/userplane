@@ -4,6 +4,7 @@
 
 import type { PaginationMetaSchema } from '@workspace/contract';
 import type { z } from 'zod';
+
 import type { SafeResult } from '@/lib/errors';
 
 /**

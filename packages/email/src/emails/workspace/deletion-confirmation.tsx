@@ -3,11 +3,12 @@
  * Sent when a workspace has been permanently deleted
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/workspace/deletion-confirmation';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/workspace/deletion-confirmation';
 
 export interface DeletionConfirmationEmailProps {
   workspaceName?: string;

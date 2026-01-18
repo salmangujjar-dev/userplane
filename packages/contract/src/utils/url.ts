@@ -108,7 +108,7 @@ export function cleanUrl(url: string): string {
 
     return `${parsed.protocol}//${parsed.host}${pathname}`;
   } catch (error) {
-    throw new Error(`Invalid URL format: ${url}`);
+    throw new Error(`Invalid URL format: ${url}`, { cause: error });
   }
 }
 

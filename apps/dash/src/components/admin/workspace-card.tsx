@@ -10,17 +10,18 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import {
-  MoreVertical,
-  Users,
+  Building2,
   FolderKanban,
   Globe,
-  Link2,
-  Video,
-  PowerOff,
-  Power,
   KeyRound,
-  Building2,
+  Link2,
+  MoreVertical,
+  Power,
+  PowerOff,
+  Users,
+  Video,
 } from 'lucide-react';
+
 import { usePermissions } from '@/hooks/use-permissions';
 
 interface WorkspaceCardProps {

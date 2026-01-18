@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { EmailSchema, URLSchema } from './common';
+
+import { URLSchema } from './common';
 
 /**
  * Form-specific validation schemas

@@ -3,11 +3,12 @@
  * Educate users about attaching metadata to screenshots
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/highlight/screenshots/request-custom-metadata';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/highlight/screenshots/request-custom-metadata';
 
 export interface ScreenshotCustomMetadataEmailProps {
   docsUrl?: string;

@@ -32,7 +32,8 @@
     "@types/uuid": "^11.0.0",
     "@workspace/eslint-config": "workspace:^",
     "@workspace/typescript-config": "workspace:*",
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "eslint": "^9.32.0"
   },
   "exports": {
     "./routes": "./src/routes/index.ts",
@@ -48,6 +49,8 @@
     "dev:trigger": "npx trigger.dev@latest dev",
     "dev:hot": "bun run --hot src/index.ts",
     "start": "bun run dist/index.js",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit"
   },
   "type": "module",

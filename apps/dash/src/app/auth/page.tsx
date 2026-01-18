@@ -1,25 +1,26 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useForm, Controller, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useAuth } from '@/hooks';
-import { logger } from '@/logger';
 import { Button } from '@workspace/ui/components/button';
+import { Field, FieldError } from '@workspace/ui/components/field';
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
 } from '@workspace/ui/components/input-group';
-import { Field, FieldError } from '@workspace/ui/components/field';
 import Logo from '@workspace/ui/components/logo';
 import { toast } from '@workspace/ui/components/sonner';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { Controller, useForm, UseFormReturn } from 'react-hook-form';
+import * as z from 'zod';
+
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { Loader2, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/hooks';
+import { logger } from '@/logger';
 
 const magicLinkSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),

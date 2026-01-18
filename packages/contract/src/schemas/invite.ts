@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { EmailSchema, WorkspaceIdSchema, TokenSchema } from './common';
+
+import { EmailSchema, TokenSchema, WorkspaceIdSchema } from './common';
 
 /**
  * Invite schemas

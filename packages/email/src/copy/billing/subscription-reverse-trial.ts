@@ -13,6 +13,4 @@ export const copy = {
     'No questions asked.',
   ],
   cta: 'Go to dashboard',
-  ps: (trialDays: number) =>
-    `Full refund available within ${trialDays} days. Reply to request one.`,
 } as const;

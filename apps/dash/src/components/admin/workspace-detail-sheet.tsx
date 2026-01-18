@@ -1,44 +1,45 @@
 'use client';
 
+import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import { Button } from '@workspace/ui/components/button';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@workspace/ui/components/sheet';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@workspace/ui/components/sheet';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import { VisuallyHidden } from '@workspace/ui/components/visually-hidden';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
 import {
-  FolderKanban,
-  Globe,
-  Link2,
-  Video,
-  PowerOff,
-  KeyRound,
   AlertCircle,
-  Building2,
-  MoreVertical,
-  UserCog,
   Ban,
+  Building2,
   CheckCircle,
-  XCircle,
   ChevronLeft,
   ChevronRight,
+  FolderKanban,
+  Globe,
+  KeyRound,
+  Link2,
+  MoreVertical,
+  PowerOff,
+  UserCog,
   Users,
+  Video,
+  XCircle,
 } from 'lucide-react';
+
+import { BoringAvatar } from '@/components/shared/boring-avatar';
 import type { AdminWorkspaceDetail, AdminWorkspaceMember } from '@/hooks/use-admin-workspace-api';
-import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 import { usePermissions } from '@/hooks/use-permissions';
 
 interface WorkspaceDetailSheetProps {

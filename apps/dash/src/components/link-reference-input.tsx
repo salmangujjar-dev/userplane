@@ -1,6 +1,7 @@
 'use client';
 
 import NextImage from 'next/image';
+
 import { useFavicon } from '@/hooks/use-favicon';
 
 interface LinkReferenceInputProps {

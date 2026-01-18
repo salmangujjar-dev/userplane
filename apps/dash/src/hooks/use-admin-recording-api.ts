@@ -6,6 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+
 import { apiClient } from '@/client';
 import { handleSafeResult } from '@/lib/errors';
 

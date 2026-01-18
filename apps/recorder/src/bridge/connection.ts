@@ -4,15 +4,16 @@
  * Syncs recording state with cross-tab coordinator for multi-tab awareness
  */
 
-import { guest, type Connection } from '@workspace/postbridge';
-import type {
-  RecorderHostSchema,
-  GuestSchema,
-  RecordingState,
-  RecordingSessionInfo,
-  CustomMetadata,
-} from './types';
+import { type Connection, guest } from '@workspace/postbridge';
+
 import { type CrossTabCoordinator } from './cross-tab';
+import type {
+  CustomMetadata,
+  GuestSchema,
+  RecorderHostSchema,
+  RecordingSessionInfo,
+  RecordingState,
+} from './types';
 
 /**
  * State tracked by the recorder for the bridge

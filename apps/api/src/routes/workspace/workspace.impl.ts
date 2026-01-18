@@ -5,21 +5,22 @@
  * INCREMENTAL MIGRATION: Starting with basic CRUD operations
  */
 
+import { domainError, inviteError, workspaceError } from '@workspace/contract';
+import { getPlanName } from '@workspace/pricing';
+
 import { authorized } from '@/api/middleware/auth.orpc';
-import { workspaceError, inviteError, domainError } from '@workspace/contract';
 import {
   createWorkspaceMiddleware,
   createWorkspaceRoleMiddleware,
 } from '@/api/middleware/workspace.orpc';
+import type { DomainService } from '@/api/services/domain.service';
+import type { InviteService } from '@/api/services/invite.service';
+import type { LinkService } from '@/api/services/link.service';
+import type { ProjectService } from '@/api/services/project.service';
+import type { RecordingService } from '@/api/services/recording.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
-import type { InviteService } from '@/api/services/invite.service';
-import type { ProjectService } from '@/api/services/project.service';
-import type { DomainService } from '@/api/services/domain.service';
-import type { RecordingService } from '@/api/services/recording.service';
-import type { LinkService } from '@/api/services/link.service';
 import { createPaginationMeta } from '@/api/types';
-import { getPlanName } from '@workspace/pricing';
 
 /**
  * GET /workspace - List all user workspaces
@@ -44,7 +45,7 @@ export const getAllWorkspacesImpl = (workspaceService: WorkspaceService) => {
     return {
       message: 'Workspaces retrieved successfully',
       data: {
-        workspaces: workspaces as any,
+        workspaces,
         total,
         pagination: createPaginationMeta(page, perPage, total),
       },
@@ -72,7 +73,7 @@ export const countWorkspacesImpl = (workspaceService: WorkspaceService) => {
  * Requires authentication
  */
 export const getWorkspaceByIdImpl = (workspaceService: WorkspaceService) => {
-  return authorized.workspace.getById.handler(async ({ context, input }) => {
+  return authorized.workspace.getById.handler(async ({ input }) => {
     const workspace = await workspaceService.getById(input.params.workspaceId);
     const workspacePlanName = getPlanName(workspace.workspacePlan);
 
@@ -328,7 +329,7 @@ export const updateWorkspacePreferencesImpl = (
  * Requires authentication
  */
 export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberService) => {
-  return authorized.workspace.members.list.handler(async ({ input, context }) => {
+  return authorized.workspace.members.list.handler(async ({ input }) => {
     const page = input.query.page || 1;
     const perPage = input.query.per_page || 5;
     const { members, total } = await workspaceMemberService.getTeamMembers(
@@ -692,10 +693,7 @@ export const sendWorkspaceInvitesImpl = (
  * Validates token matches the workspace and adds user as member
  * Idempotent operation - returns success if user is already a member
  */
-export const acceptInviteImpl = (
-  inviteService: InviteService,
-  workspaceService: WorkspaceService
-) => {
+export const acceptInviteImpl = (inviteService: InviteService) => {
   return authorized.workspace.invite.accept.handler(async ({ input, context }) => {
     // Verify the token is for the correct workspace
     const validation = await inviteService.validateInvite(input.body.token);
@@ -1415,7 +1413,7 @@ export const createWorkspaceProcedures = (
       getUrl: getInviteUrlImpl(inviteService, workspaceMemberService, workspaceService),
       rotate: rotateInviteTokenImpl(inviteService, workspaceMemberService, workspaceService),
       send: sendWorkspaceInvitesImpl(inviteService, workspaceMemberService, workspaceService),
-      accept: acceptInviteImpl(inviteService, workspaceService),
+      accept: acceptInviteImpl(inviteService),
     },
 
     invitePolicy: {

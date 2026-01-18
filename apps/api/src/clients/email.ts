@@ -4,6 +4,7 @@
  */
 
 import { createEmailClient, type EmailClient } from '@workspace/email';
+
 import { env } from '@/api/env';
 
 export const emailClient: EmailClient = createEmailClient({

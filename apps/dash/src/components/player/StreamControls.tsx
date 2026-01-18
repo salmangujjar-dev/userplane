@@ -1,19 +1,21 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import './stream-controls.css';
+
 import { MaximizeIcon } from 'lucide-react';
-import type { Player } from './types';
-import type { VideoMarker } from './types';
-import { useVideoPlayer } from './hooks';
+import React, { useCallback, useState } from 'react';
+
 import {
-  VideoOverlay,
-  VideoProgressBar,
   PlaybackControls,
   QualityControl,
   SpeedControl,
+  VideoOverlay,
+  VideoProgressBar,
   VolumeControlInline,
 } from './components';
-import './stream-controls.css';
+import { useVideoPlayer } from './hooks';
+import type { Player } from './types';
+import type { VideoMarker } from './types';
 
 interface StreamControlsProps {
   player: Player | null;

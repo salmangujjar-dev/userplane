@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "email dev -p 3003 --dir src/emails",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "dev:all": "email dev -p 3003 --dir src/emails"
   },
@@ -23,7 +25,9 @@
     "@types/node": "^22.10.5",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9.32.0",
     "react-email": "^5.2.5"
   }
 }

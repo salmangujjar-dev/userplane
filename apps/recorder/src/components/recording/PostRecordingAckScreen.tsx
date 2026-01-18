@@ -4,15 +4,17 @@
  * Handles auto-close after delay in both embedded and standalone modes
  */
 
-import { useEffect, useRef, type ReactNode } from 'react';
-import RecordingScreenLayout from './RecordingScreenLayout';
+import { type ReactNode, useEffect, useRef } from 'react';
+
 import {
-  POST_RECORDING_ACK_COPY,
   DEFAULT_COMPANY_NAME,
+  POST_RECORDING_ACK_COPY,
   SUCCESS_AUTO_CLOSE_DELAY_MS,
 } from '@/constants';
 import { useAppMode, useBridge } from '@/contexts/AppModeContext';
 import type { RecordingPreferences } from '@/types/session-preferences';
+
+import RecordingScreenLayout from './RecordingScreenLayout';
 
 interface PostRecordingAckScreenProps {
   preferences: RecordingPreferences;

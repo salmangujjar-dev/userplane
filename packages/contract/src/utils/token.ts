@@ -4,6 +4,7 @@
  */
 
 import type { z } from 'zod';
+
 import type { SessionPreferencesSchema } from '../schemas/token';
 
 type SessionPreferences = z.infer<typeof SessionPreferencesSchema>;

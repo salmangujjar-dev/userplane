@@ -7,25 +7,26 @@
 
 import {
   createContext,
+  type ReactNode,
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from 'react';
-import { detectAppMode, type AppMode } from '@/utils/browser';
+
 import {
+  type AcquireLockResult,
+  CrossTabCoordinator,
+  getCrossTabCoordinator,
   getRecorderBridge,
   getVerificationBridge,
-  getCrossTabCoordinator,
-  CrossTabCoordinator,
   type RecorderBridgeConnection,
-  type VerificationBridgeConnection,
-  type RecordingState,
   type RecordingSessionInfo,
-  type AcquireLockResult,
+  type RecordingState,
+  type VerificationBridgeConnection,
 } from '@/bridge';
+import { type AppMode, detectAppMode } from '@/utils/browser';
 
 /**
  * Cross-tab lock status
@@ -345,4 +346,4 @@ export function useCrossTabLock(): {
 }
 
 // Re-export types for convenience
-export type { RecordingState, RecordingSessionInfo, CrossTabLockStatus };
+export type { CrossTabLockStatus, RecordingSessionInfo, RecordingState };

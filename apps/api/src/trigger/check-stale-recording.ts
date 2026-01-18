@@ -13,11 +13,13 @@
  * after the presigned URL expires, preventing orphaned pending recordings.
  */
 
-import { task, logger } from '@trigger.dev/sdk/v3';
+import { logger, task } from '@trigger.dev/sdk/v3';
+
 import { db } from '@/api/clients/db';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+
+import { MAX_DURATIONS, TASK_IDS } from './constants';
 import { deleteRecordingResources } from './delete-recording-resources';
-import { TASK_IDS, MAX_DURATIONS } from './constants';
 import { buildRecordingDeletionKey } from './idempotency';
 
 export interface CheckStaleRecordingPayload {

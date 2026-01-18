@@ -3,8 +3,8 @@
  * Handles all database operations for user entities
  */
 
-import { eq } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
+import { eq } from '@workspace/db';
 import { user } from '@workspace/db';
 
 export class UserRepository {

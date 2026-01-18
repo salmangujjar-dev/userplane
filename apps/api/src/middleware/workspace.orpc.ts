@@ -3,11 +3,13 @@
  * Checks workspace membership and attaches workspace context
  */
 
-import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
-import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceRole } from '@workspace/contract';
-import { base, type AuthContext } from './auth.orpc';
-import { workspaceError, domainError } from '@workspace/contract';
+import { domainError, workspaceError } from '@workspace/contract';
+
+import type { WorkspaceService } from '@/api/services/workspace.service';
+import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+
+import { type AuthContext, base } from './auth.orpc';
 
 export type WorkspaceContext = {
   workspaceId: string;

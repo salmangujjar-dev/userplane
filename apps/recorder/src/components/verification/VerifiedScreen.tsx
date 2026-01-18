@@ -5,9 +5,11 @@
  */
 
 import { useEffect, useRef } from 'react';
-import VerificationScreenLayout from './VerificationScreenLayout';
+
 import { DEFAULT_COMPANY_NAME, SUCCESS_AUTO_CLOSE_DELAY_MS } from '@/constants';
 import { useAppMode, useVerificationBridge } from '@/contexts/AppModeContext';
+
+import VerificationScreenLayout from './VerificationScreenLayout';
 
 interface VerifiedScreenProps {
   domainUrl: string;

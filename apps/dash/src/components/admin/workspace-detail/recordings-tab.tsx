@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useQueryState } from 'nuqs';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+import {
+  ADMIN_FILTER_STATUS_OPTIONS,
+  ADMIN_RECORDING_WEEKS_OPTIONS,
+  STREAMING_STATUS_OPTIONS,
+  UPLOAD_STATUS_OPTIONS,
+} from '@workspace/contract';
 import {
   Card,
   CardContent,
@@ -10,27 +13,26 @@ import {
   CardHeader,
   CardTitle,
 } from '@workspace/ui/components/card';
-import { FilterDropdown } from '@/components/filters/filter-dropdown';
-import { Upload, Play, Video, Calendar } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Cell } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@workspace/ui/components/chart';
+import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Calendar, Play, Upload, Video } from 'lucide-react';
+import { useQueryState } from 'nuqs';
+import { useMemo, useState } from 'react';
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis } from 'recharts';
+
+import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import {
-  useAdminWorkspaceRecordingStats,
   useAdminWorkspaceMemberRecordingStats,
+  useAdminWorkspaceRecordingStats,
 } from '@/hooks/use-admin-recording-api';
 import {
-  adminUploadStatusParser,
-  adminStreamingStatusParser,
   adminRecordingStatusParser,
   adminRecordingWeeksParser,
+  adminStreamingStatusParser,
+  adminUploadStatusParser,
 } from '@/lib/parsers';
-import {
-  UPLOAD_STATUS_OPTIONS,
-  STREAMING_STATUS_OPTIONS,
-  ADMIN_FILTER_STATUS_OPTIONS,
-  ADMIN_RECORDING_WEEKS_OPTIONS,
-} from '@workspace/contract';
-import { PIE_COLORS, chartConfig, formatWeekLabel } from './utils';
+
+import { chartConfig, formatWeekLabel, PIE_COLORS } from './utils';
 
 interface RecordingsTabProps {
   workspaceId: string;

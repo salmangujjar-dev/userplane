@@ -1,12 +1,13 @@
-import { useSession } from './use-session';
 import {
-  rolePermissionsMap,
-  type RoleName,
-  type Resource,
   type Action,
-  type UserResource,
+  type Resource,
+  type RoleName,
+  rolePermissionsMap,
   type SessionResource,
+  type UserResource,
 } from '@workspace/auth/permissions-client';
+
+import { useSession } from './use-session';
 
 /**
  * Hook to check if the current user has specific permissions

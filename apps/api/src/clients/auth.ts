@@ -1,6 +1,7 @@
 import { createAuth } from '@workspace/auth';
-import { createAppLogger } from '@workspace/logger';
 import { renderEmailVerification, renderMagicLink } from '@workspace/email';
+import { createAppLogger } from '@workspace/logger';
+
 import { db } from '@/api/clients/db';
 import { emailClient } from '@/api/clients/email';
 import { env } from '@/api/env';

@@ -1,8 +1,9 @@
 'use client';
 
-import { Label } from '@workspace/ui/components/label';
 import { Input } from '@workspace/ui/components/input';
+import { Label } from '@workspace/ui/components/label';
 import { Skeleton } from '@workspace/ui/components/skeleton';
+
 import type { WorkspaceDetail } from './types';
 
 interface StatsTabProps {

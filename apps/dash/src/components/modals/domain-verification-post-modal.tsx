@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -10,9 +9,11 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
-import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
+import { useEffect, useMemo, useState } from 'react';
+
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
 import { DomainRecordingSettings } from '@/components/domains/domain-recording-settings';
+import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
 import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainVerificationPostModalProps {

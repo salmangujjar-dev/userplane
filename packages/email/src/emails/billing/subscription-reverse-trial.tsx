@@ -3,11 +3,12 @@
  * Sent when a user enters a paid reverse trial period
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/billing/subscription-reverse-trial';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/billing/subscription-reverse-trial';
 
 export interface SubscriptionReverseTrialEmailProps {
   planName?: string;
@@ -21,7 +22,7 @@ export const SubscriptionReverseTrialEmail = ({
   dashboardUrl = 'https://app.userplane.io/dashboard',
 }: SubscriptionReverseTrialEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview(planName, trialDays)} ps={copy.ps(trialDays)}>
+    <EmailLayout preview={copy.preview(planName, trialDays)}>
       <Text style={styles.title}>{copy.title(planName)}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(trialDays)}</Text>
 

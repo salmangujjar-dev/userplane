@@ -3,11 +3,12 @@
  * Sent to users invited to try Userplane in a sandbox environment
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/pilot/sandbox-invite';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/pilot/sandbox-invite';
 
 export interface SandboxInviteEmailProps {
   sandboxUrl?: string;
@@ -19,7 +20,7 @@ export const SandboxInviteEmail = ({
   expiresInDays = 14,
 }: SandboxInviteEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview} ps={copy.ps}>
+    <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle}</Text>
 

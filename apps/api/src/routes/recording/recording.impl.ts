@@ -3,13 +3,14 @@
  * Implements the recording contract defined in @workspace/contract
  */
 
+import { recordingError } from '@workspace/contract';
+
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { RecordingService } from '@/api/services/recording.service';
-import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
-import { createPaginationMeta } from '@/api/types';
-import { recordingError } from '@workspace/contract';
+import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+import { createPaginationMeta, type RecordingSortOptions } from '@/api/types';
 
 /**
  * GET /workspace/:workspaceId/recordings - List recordings
@@ -31,7 +32,7 @@ export const getRecordingsImpl = (
         linkId: input.query.link_id,
       };
 
-      const sort = {
+      const sort: RecordingSortOptions = {
         field: input.query.sort_by || 'created_at',
         direction: input.query.sort_direction || 'desc',
       };
@@ -41,7 +42,7 @@ export const getRecordingsImpl = (
         input.query.page || 1,
         input.query.per_page || 10,
         filters,
-        sort as any
+        sort
       );
 
       return {

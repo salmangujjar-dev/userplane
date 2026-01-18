@@ -5,48 +5,48 @@
 
 // Browser detection utilities
 export {
+  type AppMode,
+  type BrowserInfo,
+  captureSystemMetadata,
+  detectAppMode,
   detectBrowser,
   detectOS,
-  captureSystemMetadata,
-  isScreenRecordingSupported,
-  isSystemAudioSupported,
-  getSupportedMimeTypes,
   getBestMimeType,
-  detectAppMode,
+  getSupportedMimeTypes,
   isEmbedded,
+  isScreenRecordingSupported,
   isStandalone,
-  type BrowserInfo,
+  isSystemAudioSupported,
   type OSInfo,
   type SystemMetadata,
-  type AppMode,
 } from './browser';
 
 // Upload utilities
 export {
-  uploadToObjectStore,
   calculateTotalProgress,
-  type UploadProgress,
   type UploadOptions,
+  type UploadProgress,
   type UploadResult,
+  uploadToObjectStore,
 } from './upload';
 
 // JWT utilities
-export { decodeJwtPayload, isJwtExpired, getJwtTimeToExpiry } from './jwt';
+export { decodeJwtPayload, getJwtTimeToExpiry, isJwtExpired } from './jwt';
 
 // Video utilities
-export { generateVideoThumbnail, blobToDataUrl } from './video-thumbnail';
+export { blobToDataUrl, generateVideoThumbnail } from './video-thumbnail';
 
 // Color utilities
-export { lightenColor, darkenColor } from './color';
+export { darkenColor, lightenColor } from './color';
 
 // Retry utilities
 export {
+  type RetryOptions,
+  retryPredicates,
+  sleep,
+  type TimeoutOptions,
   withRetry,
   withTimeout,
-  sleep,
-  retryPredicates,
-  type RetryOptions,
-  type TimeoutOptions,
 } from './retry';
 
 // URL utilities

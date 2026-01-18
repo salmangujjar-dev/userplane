@@ -1,15 +1,16 @@
 'use client';
 
-import { Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
-import { AuthIcons } from '@/components/auth/auth-icons';
-import { useWorkspaceStore } from '@/stores/workspace';
-import { useValidateInvite, useAcceptInvite } from '@/hooks/use-workspace-invite';
 import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+
+import { AuthIcons } from '@/components/auth/auth-icons';
+import { useAcceptInvite, useValidateInvite } from '@/hooks/use-workspace-invite';
 import { logger } from '@/logger';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 function InviteLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -3,10 +3,11 @@
  * Handles all database operations for domain entities
  */
 
-import { eq, and, ne, count, ilike, asc, desc } from '@workspace/db';
 import type { DbClient } from '@workspace/db';
+import { and, asc, count, desc, eq, ilike, ne } from '@workspace/db';
 import { domains } from '@workspace/db';
-import type { Transaction, CreateDomainInput } from '@/api/types';
+
+import type { CreateDomainInput, Transaction } from '@/api/types';
 
 export type DomainSortField = 'created_at' | 'domain_url';
 export type SortDirection = 'asc' | 'desc';

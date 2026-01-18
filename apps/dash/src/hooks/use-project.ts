@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { useWorkspaceId } from '@/stores/workspace';
+
 import { apiClient } from '@/client';
 import { handleSafeResult } from '@/lib/errors';
+import { useWorkspaceId } from '@/stores/workspace';
 
 /**
  * Hook to fetch a single project by ID

@@ -4,17 +4,17 @@
  */
 
 import { getRecorderClient } from '@/client/api';
-import type { SessionTokenPayload, RecordingPreferences } from '@/types/session-preferences';
-import { toRecordingPreferences } from '@/types/session-preferences';
-import { uploadToObjectStore } from '@/utils/upload';
-import { captureSystemMetadata, prettySystemMetadata, type SystemMetadata } from '@/utils/browser';
-import { decodeJwtPayload } from '@/utils/jwt';
 import {
   DEFAULT_MAX_RECORDING_DURATION_MS,
-  VIDEO_UPLOAD_CONFIG,
   THUMBNAIL_UPLOAD_CONFIG,
+  VIDEO_UPLOAD_CONFIG,
 } from '@/constants';
 import { handleServerResult, type ServerResult } from '@/lib/server-errors';
+import type { RecordingPreferences, SessionTokenPayload } from '@/types/session-preferences';
+import { toRecordingPreferences } from '@/types/session-preferences';
+import { captureSystemMetadata, prettySystemMetadata, type SystemMetadata } from '@/utils/browser';
+import { decodeJwtPayload } from '@/utils/jwt';
+import { uploadToObjectStore } from '@/utils/upload';
 
 export interface UploadProgress {
   partNumber: number;

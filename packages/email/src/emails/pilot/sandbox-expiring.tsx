@@ -3,11 +3,12 @@
  * Sent when a user's sandbox trial is about to expire
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../copy/pilot/sandbox-expiring';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
-import { copy } from '../../copy/pilot/sandbox-expiring';
 
 export interface SandboxExpiringEmailProps {
   dashboardUrl?: string;

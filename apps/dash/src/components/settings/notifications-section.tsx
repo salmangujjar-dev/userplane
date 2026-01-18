@@ -1,14 +1,15 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { Switch } from '@workspace/ui/components/switch';
 import { Label } from '@workspace/ui/components/label';
-import { useWorkspaceId } from '@/stores/workspace';
-import { useWorkspaceNotifications } from '@/hooks/use-workspace-notifications';
-import { useUpdateNotifications } from '@/queries/use-workspace-mutations';
+import { Switch } from '@workspace/ui/components/switch';
+import { useCallback, useState } from 'react';
+
 import { SectionError } from '@/components/shared/section-error';
 import { NotificationsSectionSkeleton } from '@/components/skeleton';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
+import { useWorkspaceNotifications } from '@/hooks/use-workspace-notifications';
+import { useUpdateNotifications } from '@/queries/use-workspace-mutations';
+import { useWorkspaceId } from '@/stores/workspace';
 
 interface WorkspaceNotifications {
   notifyOnLinkUsage: boolean;

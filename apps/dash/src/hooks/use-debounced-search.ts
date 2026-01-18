@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
 import { useQueryState } from 'nuqs';
+import { useEffect, useState } from 'react';
+
 import { searchParser } from '@/lib/parsers';
 
 export function useDebouncedSearch(key = 'search', delay = 300) {

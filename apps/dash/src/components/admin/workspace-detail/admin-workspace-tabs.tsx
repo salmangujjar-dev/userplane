@@ -1,14 +1,16 @@
 'use client';
 
-import { useQueryState } from 'nuqs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import { useQueryState } from 'nuqs';
+
 import { useAdminWorkspaceDetail } from '@/hooks/use-admin-workspace-api';
 import { tabParser } from '@/lib/parsers';
-import { OverviewTab } from './overview-tab';
-import { StatsTab } from './stats-tab';
+
 import { MembersTab } from './members-tab';
-import { RecordingsTab } from './recordings-tab';
+import { OverviewTab } from './overview-tab';
 import { ProjectsTab } from './projects-tab';
+import { RecordingsTab } from './recordings-tab';
+import { StatsTab } from './stats-tab';
 import type { WorkspaceDetail } from './types';
 
 interface AdminWorkspaceTabsProps {

@@ -3,22 +3,23 @@
  * Contains validation and business rules for link management
  */
 
+import { linkError } from '@workspace/contract';
 import jwt, { type SignOptions } from 'jsonwebtoken';
+
 import { env } from '@/api/env';
 import { generateLinkId } from '@/api/lib/id';
-import { LinkRepository } from '@/api/repositories/links.repository';
-import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import { ProjectRepository } from '@/api/repositories/projects.repository';
-import { DomainRepository } from '@/api/repositories/domains.repository';
-import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { linkError } from '@workspace/contract';
 import { parseLinkReference } from '@/api/lib/parser';
+import { DomainRepository } from '@/api/repositories/domains.repository';
+import { LinkRepository } from '@/api/repositories/links.repository';
+import { ProjectRepository } from '@/api/repositories/projects.repository';
+import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
+import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type {
   LinkFilters,
   LinkItem,
+  LinkProviderType,
   LinkSortOptions,
   Transaction,
-  LinkProviderType,
 } from '@/api/types';
 
 export interface LinkServiceDeps {
@@ -28,11 +29,6 @@ export interface LinkServiceDeps {
   domainRepo: DomainRepository;
   workspaceRepo: WorkspaceRepository;
 }
-
-/**
- * Maximum items per page for pagination
- */
-const MAX_PER_PAGE = 20;
 
 /**
  * Default items per page

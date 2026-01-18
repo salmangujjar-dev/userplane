@@ -4,18 +4,19 @@
  * Emails are sent from configured inboxes with sender context in content
  */
 
-import { createAppLogger } from '@workspace/logger';
-import { emailClient } from '@/api/clients/email';
 import {
-  renderWorkspaceInvite,
   renderAccessRequest,
   renderDomainDeveloperInstructions,
+  renderWorkspaceInvite,
 } from '@workspace/email';
+import { createAppLogger } from '@workspace/logger';
+
+import { emailClient } from '@/api/clients/email';
 import { env } from '@/api/env';
 import type {
-  WorkspaceInviteEmailParams,
   AccessRequestEmailParams,
   DomainDeveloperInstructionsEmailParams,
+  WorkspaceInviteEmailParams,
 } from '@/api/types';
 
 const logger = createAppLogger('email-service');

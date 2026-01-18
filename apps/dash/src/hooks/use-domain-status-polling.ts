@@ -1,13 +1,14 @@
 'use client';
 
-import { useRef, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/client';
 import { toast } from '@workspace/ui/components/sonner';
+import { useCallback, useEffect, useRef } from 'react';
+
+import { apiClient } from '@/client';
 import { useWorkspaceId } from '@/stores/workspace';
 import {
-  type DomainRecordingPreferences,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
+  type DomainRecordingPreferences,
 } from '@/types/domain';
 
 interface PollingResult {

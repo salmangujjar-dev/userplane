@@ -1,8 +1,10 @@
-import { ChevronRight } from 'lucide-react';
+import { BASE_PRICING_PLANS, formatPlanRate, type PlanFeature } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
-import { formatPlanRate, BASE_PRICING_PLANS, type PlanFeature } from '@workspace/pricing';
+import { ChevronRight } from 'lucide-react';
+
 import { SIGNUP_URL } from '@/constants/onboarding';
 import { PRICING_HEADING, PRICING_HIGHLIGHTS } from '@/constants/v2/pricing';
+
 import Highlight from '../Highlight';
 
 function PricingFeatureItem({ text, included, subFeatures }: PlanFeature) {
@@ -165,7 +167,7 @@ export default function PricingV2() {
         {/* What's Included Section */}
         <div>
           <h3 className="text-sm font-semibold text-gray-500 tracking-wider mb-8">
-            What's Included
+            What&apos;s Included
           </h3>
           <div className="space-y-8">
             {earlyBirdPlan.features.map((feature, index) => (

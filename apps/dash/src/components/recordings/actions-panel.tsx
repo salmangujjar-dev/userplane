@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { Input } from '@workspace/ui/components/input';
 import { Search } from 'lucide-react';
-import { ClickEvent, createMockClickEvent } from './action-types';
+import { useState } from 'react';
+
 import { ActionEntry } from './action-entry';
+import { ClickEvent, createMockClickEvent } from './action-types';
 
 const baseTime = Date.now() - 60000;
 

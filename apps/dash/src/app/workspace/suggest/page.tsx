@@ -1,21 +1,22 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
+import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
+import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
-import Logo from '@workspace/ui/components/logo';
+import { Globe, Loader2, Shield } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { useWorkspaceSuggestions } from '@/hooks/use-workspace-suggestions';
-import { useJoinWorkspace } from '@/queries/use-workspace-mutations';
-import { PaginationControls } from '@/components/shared/pagination-controls';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { Loader2, Shield, Globe } from 'lucide-react';
+import { PaginationControls } from '@/components/shared/pagination-controls';
+import { useWorkspaceSuggestions } from '@/hooks/use-workspace-suggestions';
 import { logger } from '@/logger';
-import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@workspace/contract';
+import { useJoinWorkspace } from '@/queries/use-workspace-mutations';
 
 const ITEMS_PER_PAGE = WORKSPACE_SUGGESTIONS_PAGINATION.DEFAULT_PER_PAGE;
 

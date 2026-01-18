@@ -1,10 +1,11 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@workspace/ui/components/tabs';
-import { InfoPanel } from './info-panel';
-import { ConsolePanel } from './console-panel';
-import { NetworkPanel } from './network-panel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+
 import { ActionsPanel } from './actions-panel';
 import { BackendPanel } from './backend-panel';
 import { ComingSoonOverlay } from './coming-soon-overlay';
+import { ConsolePanel } from './console-panel';
+import { InfoPanel } from './info-panel';
+import { NetworkPanel } from './network-panel';
 
 interface RecordingLogReplayPanelProps {
   recordingId: string;

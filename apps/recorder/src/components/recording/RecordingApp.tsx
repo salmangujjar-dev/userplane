@@ -4,32 +4,34 @@
  * Handles cross-tab coordination to ensure only one recorder is active at a time
  */
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import {
-  useRecordingFlow,
-  type RecordingFlowActions,
-  type FlowState,
-} from '@/hooks/useRecordingFlow';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { URL_PARAMS } from '@/constants';
 import {
   AppModeProvider,
   useAppMode,
   useBridge,
-  useCrossTabLock,
   useCrossTab,
+  useCrossTabLock,
 } from '@/contexts/AppModeContext';
-import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
-import ErrorScreen from './ErrorScreen';
-import PreRecordingScreen from './PreRecordingScreen';
-import PreRecordingCountdownScreen from './PreRecordingCountdownScreen';
-import RecordingInProgressScreen from './RecordingInProgressScreen';
-import PostRecordingReviewScreen from './PostRecordingReviewScreen';
-import PostRecordingUploadScreen from './PostRecordingUploadScreen';
-import PostRecordingAckScreen from './PostRecordingAckScreen';
-import SettingsDropdown from './SettingsDropdown';
-import { classifyError, type RecordingError, type ErrorAction } from '@/types/errors';
+import {
+  type FlowState,
+  type RecordingFlowActions,
+  useRecordingFlow,
+} from '@/hooks/useRecordingFlow';
+import { classifyError, type ErrorAction, type RecordingError } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
 import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
-import { URL_PARAMS } from '@/constants';
+
+import ErrorScreen from './ErrorScreen';
+import PostRecordingAckScreen from './PostRecordingAckScreen';
+import PostRecordingReviewScreen from './PostRecordingReviewScreen';
+import PostRecordingUploadScreen from './PostRecordingUploadScreen';
+import PreRecordingCountdownScreen from './PreRecordingCountdownScreen';
+import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
+import PreRecordingScreen from './PreRecordingScreen';
+import RecordingInProgressScreen from './RecordingInProgressScreen';
+import SettingsDropdown from './SettingsDropdown';
 
 interface RecordingAppProps {}
 

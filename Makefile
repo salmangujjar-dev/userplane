@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build i d b l f t c
+.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -78,7 +78,8 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)format$(WHITE)                        ║$(RESET) Format all files                                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)format:check$(WHITE)                  ║$(RESET) Check formatting                                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)typecheck$(WHITE)                     ║$(RESET) Type check all packages                                           $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)check$(WHITE)                         ║$(RESET) Run all (lint + type + format)                                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)fix$(WHITE)                           ║$(RESET) Fix all issues (lint + format)                                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)check$(WHITE)                         ║$(RESET) Run all checks (lint + type + format)                             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)TESTING$(WHITE)                                                                                           ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -216,6 +217,9 @@ test\:watch: ## Run tests in watch mode
 
 check: lint typecheck format\:check ## Run all checks
 	@echo "$(GREEN)All checks passed!$(RESET)"
+
+fix: lint\:fix format ## Fix all issues (lint + format)
+	@echo "$(GREEN)All fixes applied!$(RESET)"
 
 clean: ## Remove build outputs and caches
 	@echo "$(YELLOW)Cleaning build outputs and caches...$(RESET)"

@@ -1,6 +1,6 @@
-import type { HighlightConfig } from '../types';
 import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
+import type { HighlightConfig } from '../types';
 
 export const CTA_HEADING = 'See the bug not just a description of it';
 

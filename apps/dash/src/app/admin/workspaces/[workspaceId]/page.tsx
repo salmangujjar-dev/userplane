@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { Card, CardContent, CardHeader } from '@workspace/ui/components/card';
+import { Skeleton } from '@workspace/ui/components/skeleton';
+import { useParams, useRouter } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
+
+import { AdminWorkspaceTabs } from '@/components/admin/workspace-detail';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
 import { AdminTopActions } from '@/components/navigation/admin-top-actions';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import { Card, CardHeader, CardContent } from '@workspace/ui/components/card';
 import { useSession } from '@/hooks/use-session';
-import { AdminWorkspaceTabs } from '@/components/admin/workspace-detail';
 
 function WorkspaceDetailPageContent() {
   const router = useRouter();

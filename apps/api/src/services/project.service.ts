@@ -3,18 +3,19 @@
  * Contains business logic for project management
  */
 
+import { projectError, workspaceError } from '@workspace/contract';
+import type { DbClient } from '@workspace/db';
+
+import { env } from '@/api/env';
 import { generateProjectId } from '@/api/lib/id';
+import type { LinkRepository } from '@/api/repositories/links.repository';
 import {
   ProjectRepository,
   type ProjectSortField,
   type SortDirection,
 } from '@/api/repositories/projects.repository';
-import type { Transaction } from '@/api/types';
 import type { RecordingService } from '@/api/services/recording.service';
-import type { LinkRepository } from '@/api/repositories/links.repository';
-import type { DbClient } from '@workspace/db';
-import { projectError, workspaceError } from '@workspace/contract';
-import { env } from '@/api/env';
+import type { Transaction } from '@/api/types';
 
 export interface ProjectServiceDeps {
   projectRepo: ProjectRepository;
@@ -174,7 +175,7 @@ export class ProjectService {
     updates: Partial<{ projectTitle: string | null }>,
     options?: { tx?: Transaction }
   ) {
-    const project = await this.getById(projectId);
+    await this.getById(projectId);
     return this.deps.projectRepo.update(projectId, updates, options);
   }
 

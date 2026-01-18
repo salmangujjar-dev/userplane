@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Company, SearchResult, FilterState } from '../types';
+import './CompanyDirectory.css';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { isEnabled } from '../flags';
-import Sidebar from './Sidebar';
-import SearchBar from './SearchBar';
+import type { Company, FilterState, SearchResult } from '../types';
 import CompanyCard from './CompanyCard';
 import Pagination from './Pagination';
-import './CompanyDirectory.css';
+import SearchBar from './SearchBar';
+import Sidebar from './Sidebar';
 
 const API_BASE_URL = 'https://api.ycombinator.com/v0.1/companies';
 
@@ -71,7 +73,7 @@ export default function CompanyDirectory() {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [filters]);
+  }, [filters, debouncedFilters.page]);
 
   const fetchCompanies = useCallback(async (filters: FilterState) => {
     setIsLoading(true);

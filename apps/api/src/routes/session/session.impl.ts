@@ -5,9 +5,10 @@
 
 import { implement } from '@orpc/server';
 import { sessionContract, sessionError } from '@workspace/contract';
-import type { SessionService } from '@/api/services/session.service';
+
 import { REQUEST_HEADERS } from '@/api/constants/headers';
 import type { InitialContext } from '@/api/middleware/auth.orpc';
+import type { SessionService } from '@/api/services/session.service';
 
 /**
  * Create the implementer from the session contract with initial context

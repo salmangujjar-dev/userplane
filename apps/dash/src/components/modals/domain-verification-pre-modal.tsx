@@ -9,8 +9,9 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import { HelpCircle } from 'lucide-react';
-import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
+
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
+import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
 
 interface DomainVerificationPreModalProps {
   open: boolean;

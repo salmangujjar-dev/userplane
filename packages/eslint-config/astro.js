@@ -2,17 +2,13 @@ import { config as reactConfig } from './react-internal.js';
 
 /**
  * A custom ESLint configuration for Astro applications with React support.
+ * Note: For Astro files, use astro check instead of ESLint.
  *
  * @type {import("eslint").Linter.Config}
  * */
 export const astroConfig = [
   ...reactConfig,
   {
-    files: ['**/*.astro'],
-    parser: 'astro-eslint-parser',
-    parserOptions: {
-      parser: '@typescript-eslint/parser',
-      extraFileExtensions: ['.astro'],
-    },
+    ignores: ['**/*.astro'],
   },
 ];

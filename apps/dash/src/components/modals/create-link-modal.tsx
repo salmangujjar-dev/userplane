@@ -1,11 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
@@ -14,27 +10,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@workspace/ui/components/dialog';
-import { Label } from '@workspace/ui/components/label';
-import { Switch } from '@workspace/ui/components/switch';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
+import { Label } from '@workspace/ui/components/label';
+import Logo from '@workspace/ui/components/logo';
+import { Switch } from '@workspace/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { Plus, ChevronDown, ChevronUp, HelpCircle, Globe, FolderKanban } from 'lucide-react';
-import { useWorkspaceStore } from '@/stores/workspace';
+import { ChevronDown, ChevronUp, FolderKanban, Globe, HelpCircle, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+
 import { LinkReferenceInput } from '@/components/link-reference-input';
-import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
+import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useCreateLink } from '@/queries/use-link-mutations';
-import { toast } from '@workspace/ui/components/sonner';
+import { useWorkspaceStore } from '@/stores/workspace';
 interface CreateLinkModalProps {
   onLinkCreated?: (linkUrl: string) => void;
   open?: boolean;
@@ -70,7 +70,7 @@ export function CreateLinkModal({
     reset,
     setValue,
     watch,
-    formState: { errors, isValid },
+    formState: { isValid },
   } = useForm({
     resolver: zodResolver(createLinkFormSchema),
     mode: 'onTouched',

@@ -13,5 +13,4 @@ export const copy = {
     'No hoops. No partial credits. Just a straightforward refund.',
   ],
   cta: (planName: string) => `Start ${planName}`,
-  ps: 'Full refund within 30 days, no questions asked.',
 } as const;

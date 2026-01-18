@@ -4,124 +4,114 @@
  */
 
 import React from 'react';
-import { renderEmail, renderEmailText } from './render';
 
-// Auth emails
-import {
-  EmailVerificationEmail,
-  MagicLinkEmail,
-  WorkspaceInviteEmail,
-  AccessRequestEmail,
-} from './emails/auth';
 import type {
+  AtRiskNotEngagedEmailProps,
+  DomainVerificationRequiredEmailProps,
+  HelpdeskIntegrationPromptEmailProps,
+  RequestFirstRecordingEmailProps,
+} from './emails/activation';
+// Activation emails
+import {
+  AtRiskNotEngagedEmail,
+  DomainVerificationRequiredEmail,
+  HelpdeskIntegrationPromptEmail,
+  RequestFirstRecordingEmail,
+} from './emails/activation';
+import type {
+  AccessRequestEmailProps,
   EmailVerificationEmailProps,
   MagicLinkEmailProps,
   WorkspaceInviteEmailProps,
-  AccessRequestEmailProps,
 } from './emails/auth';
-
-// Pilot emails
-import { SandboxInviteEmail, SandboxExpiringEmail, ReverseTrialOfferEmail } from './emails/pilot';
-import type {
-  SandboxInviteEmailProps,
-  SandboxExpiringEmailProps,
-  ReverseTrialOfferEmailProps,
-} from './emails/pilot';
-
-// Trial emails
-import { WelcomeMeetFounderEmail, TrialReverseTrialOfferEmail } from './emails/trial';
-import type {
-  WelcomeMeetFounderEmailProps,
-  TrialReverseTrialOfferEmailProps,
-} from './emails/trial';
-
-// Activation emails
+// Auth emails
 import {
-  RequestFirstRecordingEmail,
-  DomainVerificationRequiredEmail,
-  HelpdeskIntegrationPromptEmail,
-  AtRiskNotEngagedEmail,
-} from './emails/activation';
+  AccessRequestEmail,
+  EmailVerificationEmail,
+  MagicLinkEmail,
+  WorkspaceInviteEmail,
+} from './emails/auth';
 import type {
-  RequestFirstRecordingEmailProps,
-  DomainVerificationRequiredEmailProps,
-  HelpdeskIntegrationPromptEmailProps,
-  AtRiskNotEngagedEmailProps,
-} from './emails/activation';
-
-// Workspace emails
-import {
-  DeletionScheduledEmail,
-  RecoveryScheduledEmail,
-  DeletionConfirmationEmail,
-  RecoveryConfirmationEmail,
-  AccessRequestedEmail,
-  AccessGrantedEmail,
-} from './emails/workspace';
-import type {
-  DeletionScheduledEmailProps,
-  RecoveryScheduledEmailProps,
-  DeletionConfirmationEmailProps,
-  RecoveryConfirmationEmailProps,
-  AccessRequestedEmailProps,
-  AccessGrantedEmailProps,
-} from './emails/workspace';
-
-// Invite emails
-import { TeammateInvitedEmail } from './emails/invite';
-import type { TeammateInvitedEmailProps } from './emails/invite';
-
-// Recording emails
-import { RecordingReceivedEmail } from './emails/recording';
-import type { RecordingReceivedEmailProps } from './emails/recording';
-
-// Domain emails
-import { DomainDeveloperInstructionsEmail } from './emails/domain';
-import type { DomainDeveloperInstructionsEmailProps } from './emails/domain';
-
+  SubscriptionActiveEmailProps,
+  SubscriptionExpiredEmailProps,
+  SubscriptionInactiveEmailProps,
+  SubscriptionPlanChangeEmailProps,
+  SubscriptionReverseTrialEmailProps,
+} from './emails/billing';
 // Billing emails
 import {
   SubscriptionActiveEmail,
+  SubscriptionExpiredEmail,
   SubscriptionInactiveEmail,
   SubscriptionPlanChangeEmail,
-  SubscriptionExpiredEmail,
   SubscriptionReverseTrialEmail,
 } from './emails/billing';
+import type { DomainDeveloperInstructionsEmailProps } from './emails/domain';
+// Domain emails
+import { DomainDeveloperInstructionsEmail } from './emails/domain';
 import type {
-  SubscriptionActiveEmailProps,
-  SubscriptionInactiveEmailProps,
-  SubscriptionPlanChangeEmailProps,
-  SubscriptionExpiredEmailProps,
-  SubscriptionReverseTrialEmailProps,
-} from './emails/billing';
-
-// Entitlement emails
-import {
-  SeatsSoftLimitEmail,
-  SeatsHardLimitEmail,
-  SeatsRequestedUpgradeEmail,
-  RecordingsSoftLimitEmail,
-  RecordingsHardLimitEmail,
-  RecordingsRequestedUpgradeEmail,
-  ScreenshotsSoftLimitEmail,
-  ScreenshotsHardLimitEmail,
-  ScreenshotsRequestedUpgradeEmail,
-} from './emails/entitlement';
-import type {
-  SeatsSoftLimitEmailProps,
-  SeatsHardLimitEmailProps,
-  SeatsRequestedUpgradeEmailProps,
-  RecordingsSoftLimitEmailProps,
   RecordingsHardLimitEmailProps,
   RecordingsRequestedUpgradeEmailProps,
-  ScreenshotsSoftLimitEmailProps,
+  RecordingsSoftLimitEmailProps,
   ScreenshotsHardLimitEmailProps,
   ScreenshotsRequestedUpgradeEmailProps,
+  ScreenshotsSoftLimitEmailProps,
+  SeatsHardLimitEmailProps,
+  SeatsRequestedUpgradeEmailProps,
+  SeatsSoftLimitEmailProps,
 } from './emails/entitlement';
-
+// Entitlement emails
+import {
+  RecordingsHardLimitEmail,
+  RecordingsRequestedUpgradeEmail,
+  RecordingsSoftLimitEmail,
+  ScreenshotsHardLimitEmail,
+  ScreenshotsRequestedUpgradeEmail,
+  ScreenshotsSoftLimitEmail,
+  SeatsHardLimitEmail,
+  SeatsRequestedUpgradeEmail,
+  SeatsSoftLimitEmail,
+} from './emails/entitlement';
+import type { TeammateInvitedEmailProps } from './emails/invite';
+// Invite emails
+import { TeammateInvitedEmail } from './emails/invite';
+import type { AccountDeletionEmailProps, TosViolationEmailProps } from './emails/offboarding';
 // Offboarding emails
 import { AccountDeletionEmail, TosViolationEmail } from './emails/offboarding';
-import type { AccountDeletionEmailProps, TosViolationEmailProps } from './emails/offboarding';
+import type {
+  ReverseTrialOfferEmailProps,
+  SandboxExpiringEmailProps,
+  SandboxInviteEmailProps,
+} from './emails/pilot';
+// Pilot emails
+import { ReverseTrialOfferEmail, SandboxExpiringEmail, SandboxInviteEmail } from './emails/pilot';
+import type { RecordingReceivedEmailProps } from './emails/recording';
+// Recording emails
+import { RecordingReceivedEmail } from './emails/recording';
+import type {
+  TrialReverseTrialOfferEmailProps,
+  WelcomeMeetFounderEmailProps,
+} from './emails/trial';
+// Trial emails
+import { TrialReverseTrialOfferEmail, WelcomeMeetFounderEmail } from './emails/trial';
+import type {
+  AccessGrantedEmailProps,
+  AccessRequestedEmailProps,
+  DeletionConfirmationEmailProps,
+  DeletionScheduledEmailProps,
+  RecoveryConfirmationEmailProps,
+  RecoveryScheduledEmailProps,
+} from './emails/workspace';
+// Workspace emails
+import {
+  AccessGrantedEmail,
+  AccessRequestedEmail,
+  DeletionConfirmationEmail,
+  DeletionScheduledEmail,
+  RecoveryConfirmationEmail,
+  RecoveryScheduledEmail,
+} from './emails/workspace';
+import { renderEmail, renderEmailText } from './render';
 
 /**
  * Render result with both HTML and plain text
@@ -478,55 +468,55 @@ export async function renderTosViolation(props: TosViolationEmailProps): Promise
 // ============================================================================
 
 export type {
-  // Auth
-  EmailVerificationEmailProps,
-  MagicLinkEmailProps,
-  WorkspaceInviteEmailProps,
-  AccessRequestEmailProps,
-  // Pilot
-  SandboxInviteEmailProps,
-  SandboxExpiringEmailProps,
-  ReverseTrialOfferEmailProps,
-  // Trial
-  WelcomeMeetFounderEmailProps,
-  TrialReverseTrialOfferEmailProps,
-  // Activation
-  RequestFirstRecordingEmailProps,
-  DomainVerificationRequiredEmailProps,
-  HelpdeskIntegrationPromptEmailProps,
-  AtRiskNotEngagedEmailProps,
-  // Workspace
-  DeletionScheduledEmailProps,
-  RecoveryScheduledEmailProps,
-  DeletionConfirmationEmailProps,
-  RecoveryConfirmationEmailProps,
-  AccessRequestedEmailProps,
   AccessGrantedEmailProps,
-  // Invite
-  TeammateInvitedEmailProps,
-  // Recording
-  RecordingReceivedEmailProps,
-  // Domain
-  DomainDeveloperInstructionsEmailProps,
-  // Billing
-  SubscriptionActiveEmailProps,
-  SubscriptionInactiveEmailProps,
-  SubscriptionPlanChangeEmailProps,
-  SubscriptionExpiredEmailProps,
-  SubscriptionReverseTrialEmailProps,
-  // Entitlement - Seats
-  SeatsSoftLimitEmailProps,
-  SeatsHardLimitEmailProps,
-  SeatsRequestedUpgradeEmailProps,
-  // Entitlement - Recordings
-  RecordingsSoftLimitEmailProps,
-  RecordingsHardLimitEmailProps,
-  RecordingsRequestedUpgradeEmailProps,
-  // Entitlement - Screenshots
-  ScreenshotsSoftLimitEmailProps,
-  ScreenshotsHardLimitEmailProps,
-  ScreenshotsRequestedUpgradeEmailProps,
+  AccessRequestedEmailProps,
+  AccessRequestEmailProps,
   // Offboarding
   AccountDeletionEmailProps,
+  AtRiskNotEngagedEmailProps,
+  DeletionConfirmationEmailProps,
+  // Workspace
+  DeletionScheduledEmailProps,
+  // Domain
+  DomainDeveloperInstructionsEmailProps,
+  DomainVerificationRequiredEmailProps,
+  // Auth
+  EmailVerificationEmailProps,
+  HelpdeskIntegrationPromptEmailProps,
+  MagicLinkEmailProps,
+  // Recording
+  RecordingReceivedEmailProps,
+  RecordingsHardLimitEmailProps,
+  RecordingsRequestedUpgradeEmailProps,
+  // Entitlement - Recordings
+  RecordingsSoftLimitEmailProps,
+  RecoveryConfirmationEmailProps,
+  RecoveryScheduledEmailProps,
+  // Activation
+  RequestFirstRecordingEmailProps,
+  ReverseTrialOfferEmailProps,
+  SandboxExpiringEmailProps,
+  // Pilot
+  SandboxInviteEmailProps,
+  ScreenshotsHardLimitEmailProps,
+  ScreenshotsRequestedUpgradeEmailProps,
+  // Entitlement - Screenshots
+  ScreenshotsSoftLimitEmailProps,
+  SeatsHardLimitEmailProps,
+  SeatsRequestedUpgradeEmailProps,
+  // Entitlement - Seats
+  SeatsSoftLimitEmailProps,
+  // Billing
+  SubscriptionActiveEmailProps,
+  SubscriptionExpiredEmailProps,
+  SubscriptionInactiveEmailProps,
+  SubscriptionPlanChangeEmailProps,
+  SubscriptionReverseTrialEmailProps,
+  // Invite
+  TeammateInvitedEmailProps,
   TosViolationEmailProps,
+  TrialReverseTrialOfferEmailProps,
+  // Trial
+  WelcomeMeetFounderEmailProps,
+  WorkspaceInviteEmailProps,
 };

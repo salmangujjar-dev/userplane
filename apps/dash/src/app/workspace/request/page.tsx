@@ -1,21 +1,22 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
-import { Skeleton } from '@workspace/ui/components/skeleton';
 import Logo from '@workspace/ui/components/logo';
+import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Check, Loader2, X } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
+
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import {
-  useValidateAccessRequest,
   useApproveAccessRequest,
   useDeclineAccessRequest,
+  useValidateAccessRequest,
 } from '@/hooks/use-access-request';
-import { Loader2, Check, X } from 'lucide-react';
 import { logger } from '@/logger';
-import Link from 'next/link';
 
 function AccessRequestLayout({ children }: { children: React.ReactNode }) {
   return (

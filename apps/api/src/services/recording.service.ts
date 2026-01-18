@@ -3,30 +3,31 @@
  * Contains validation and business rules for recording management
  */
 
-import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { LinkRepository } from '@/api/repositories/links.repository';
-import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
+import { tasks } from '@trigger.dev/sdk/v3';
 import { recordingError } from '@workspace/contract';
 import type {
-  ThumbnailsStorageClient,
-  VideoStorageClient,
+  ClientActionsStorageClient,
   ConsoleLogsStorageClient,
   NetworkLogsStorageClient,
-  ClientActionsStorageClient,
+  ThumbnailsStorageClient,
+  VideoStorageClient,
 } from '@workspace/storage';
+
+import { LinkRepository } from '@/api/repositories/links.repository';
+import type { Transaction } from '@/api/repositories/recordings.repository';
+import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
+import { TASK_IDS } from '@/api/trigger/constants';
+import { getPurgeDelay } from '@/api/trigger/delay-calculator';
+import { buildRecordingDeletionKey } from '@/api/trigger/idempotency';
 import type {
+  LinkProviderType,
+  RecordingDetail,
   RecordingFilters,
   RecordingItem,
   RecordingSortOptions,
-  RecordingDetail,
   ResourceResponse,
-  LinkProviderType,
 } from '@/api/types';
-import type { Transaction } from '@/api/repositories/recordings.repository';
-import { tasks } from '@trigger.dev/sdk/v3';
-import { TASK_IDS } from '@/api/trigger/constants';
-import { buildRecordingDeletionKey } from '@/api/trigger/idempotency';
-import { getPurgeDelay } from '@/api/trigger/delay-calculator';
 
 export interface RecordingServiceDeps {
   recordingRepo: RecordingRepository;
@@ -38,11 +39,6 @@ export interface RecordingServiceDeps {
   networkLogsStorage: NetworkLogsStorageClient;
   clientActionsStorage: ClientActionsStorageClient;
 }
-
-/**
- * Maximum items per page for pagination
- */
-const MAX_PER_PAGE = 20;
 
 /**
  * Default items per page

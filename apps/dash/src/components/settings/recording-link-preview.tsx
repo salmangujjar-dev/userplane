@@ -1,8 +1,9 @@
-import Image from 'next/image';
-import { addAlpha } from '@/lib/colors';
-import { useRecordingLinkPreview } from '@/hooks/use-recording-link-preview';
 import { cn } from '@workspace/ui/lib/utils';
+import Image from 'next/image';
 import { CSSProperties } from 'react';
+
+import { useRecordingLinkPreview } from '@/hooks/use-recording-link-preview';
+import { addAlpha } from '@/lib/colors';
 
 interface RecordingLinkPreviewProps {
   customizeRecordingLink: boolean;

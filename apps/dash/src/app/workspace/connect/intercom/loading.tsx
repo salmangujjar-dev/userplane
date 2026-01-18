@@ -1,5 +1,6 @@
-import { AuthIcons } from '@/components/auth/auth-icons';
 import { Skeleton } from '@workspace/ui/components/skeleton';
+
+import { AuthIcons } from '@/components/auth/auth-icons';
 
 export default function ConnectIntercomLoading() {
   return (

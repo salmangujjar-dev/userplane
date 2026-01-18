@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import RecordingScreenLayout from './RecordingScreenLayout';
 
 const meta: Meta<typeof RecordingScreenLayout> = {

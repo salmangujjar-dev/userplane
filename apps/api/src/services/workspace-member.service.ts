@@ -3,11 +3,12 @@
  * Contains business logic for workspace membership management
  */
 
+import type { WorkspaceRole } from '@workspace/contract';
+import { workspaceError } from '@workspace/contract';
+
 import { generateWorkspaceMemberId } from '@/api/lib/id';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { Transaction } from '@/api/types';
-import type { WorkspaceRole } from '@workspace/contract';
-import { workspaceError } from '@workspace/contract';
 
 export interface WorkspaceMemberServiceDeps {
   memberRepo: WorkspaceMemberRepository;

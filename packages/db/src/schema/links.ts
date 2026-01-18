@@ -1,11 +1,12 @@
-import { pgTable, text, timestamp, boolean, jsonb, index, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { workspaces } from './workspaces';
-import { projects } from './projects';
-import { workspaceMembers } from './workspace-members';
-import { recordings } from './recordings';
+import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+
+import { LINK_PROVIDER_TYPE_VALUES, LINK_TYPE_VALUES } from '../constants';
 import { domains } from './domains';
-import { LINK_TYPE_VALUES, LINK_PROVIDER_TYPE_VALUES } from '../constants';
+import { projects } from './projects';
+import { recordings } from './recordings';
+import { workspaceMembers } from './workspace-members';
+import { workspaces } from './workspaces';
 
 // FTS Index Requirement for Link Search
 // The link search feature uses PostgreSQL Full-Text Search (FTS) with to_tsvector/to_tsquery

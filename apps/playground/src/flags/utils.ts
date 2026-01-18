@@ -1,4 +1,4 @@
-import { flags, type Flags } from './index';
+import { type Flags, flags } from './index';
 
 // Page-specific flag keys
 export const DIRECTORY_FLAGS: (keyof Flags)[] = [

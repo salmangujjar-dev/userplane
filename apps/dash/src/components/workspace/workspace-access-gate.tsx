@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Logo from '@workspace/ui/components/logo';
 import { Button } from '@workspace/ui/components/button';
-import { Loader2, ArrowLeft, Shield, Globe } from 'lucide-react';
+import Logo from '@workspace/ui/components/logo';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
+import { ArrowLeft, Globe, Loader2, Shield } from 'lucide-react';
+import Image from 'next/image';
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { useWorkspaceStatus, type WorkspaceInvitePolicy } from '@/hooks/use-workspace-status';
 import { useJoinWorkspace } from '@/queries/use-workspace-mutations';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
 
 interface WorkspaceAccessGateProps {
   children: React.ReactNode;

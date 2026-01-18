@@ -11,4 +11,5 @@ export const copy = {
     'Useful for: bug report forms, support ticket templates, and documentation.',
   ],
   cta: 'Create reusable link',
+  helpText: 'Learn more about reusable links',
 } as const;

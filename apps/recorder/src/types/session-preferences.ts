@@ -4,17 +4,18 @@
  */
 
 import {
-  DEFAULT_MAX_RECORDING_DURATION_MS,
-  DEFAULT_PRIMARY_COLOR,
-  DEFAULT_COMPANY_NAME,
-  DEFAULT_RECORDING_HEADER,
-} from '@/constants';
-import {
-  toRecordingPreferences as contractToRecordingPreferences,
   type RecordingPreferences,
   type SessionPreferences,
   type SessionTokenPayload,
+  toRecordingPreferences as contractToRecordingPreferences,
 } from '@workspace/contract';
+
+import {
+  DEFAULT_COMPANY_NAME,
+  DEFAULT_MAX_RECORDING_DURATION_MS,
+  DEFAULT_PRIMARY_COLOR,
+  DEFAULT_RECORDING_HEADER,
+} from '@/constants';
 
 /**
  * Re-export types from contract for convenience

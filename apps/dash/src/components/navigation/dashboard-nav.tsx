@@ -1,10 +1,12 @@
 'use client';
 
-import Link from 'next/link';
 import { Badge } from '@workspace/ui/components/badge';
 import Logo from '@workspace/ui/components/logo';
-import { WorkspaceMemberAvatars } from '../workspace/workspace-member-avatars';
+import Link from 'next/link';
+
 import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
+
+import { WorkspaceMemberAvatars } from '../workspace/workspace-member-avatars';
 
 interface DashboardNavProps {
   workspaceName: string;

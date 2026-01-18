@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
-import { useWorkspaceMembers } from './use-workspace-members';
-import { useWorkspaceSearch, type SearchMember } from './use-workspace-search';
-import { useDebouncedValue } from './use-debounced-value';
+
 import { DEFAULT_SEARCHABLE_MEMBERS_PER_PAGE } from '@/constants/pagination';
+
+import { useDebouncedValue } from './use-debounced-value';
+import { useWorkspaceMembers } from './use-workspace-members';
+import { type SearchMember, useWorkspaceSearch } from './use-workspace-search';
 
 /**
  * Hook that combines initial member list with server-side search

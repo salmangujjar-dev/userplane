@@ -1,11 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import RecordingInProgressScreen from './RecordingInProgressScreen';
 import {
-  preferenceArgTypes,
-  defaultPreferenceArgs,
   argsToPreferences,
+  defaultPreferenceArgs,
   type PreferenceArgs,
+  preferenceArgTypes,
 } from '@stories/preferences-args';
+import type { Meta, StoryObj } from '@storybook/react';
+
+import RecordingInProgressScreen from './RecordingInProgressScreen';
 
 interface StoryArgs extends PreferenceArgs {
   title?: string;

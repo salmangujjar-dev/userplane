@@ -3,9 +3,10 @@
  * Integrates with Better Auth to validate sessions and add user context
  */
 
-import { auth } from '@/api/clients/auth';
 import { implement } from '@orpc/server';
-import { contract, accountError } from '@workspace/contract';
+import { accountError, contract } from '@workspace/contract';
+
+import { auth } from '@/api/clients/auth';
 
 export type InitialContext = {
   headers: Headers;

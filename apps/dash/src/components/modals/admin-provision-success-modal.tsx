@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -8,9 +8,9 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
-import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
-import { Copy, Check } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export interface ProvisionResult {
   workspaceId: string;

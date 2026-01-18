@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import VerificationErrorScreen from './VerificationErrorScreen';
+
 import { getVerificationError } from '@/lib/verification-errors';
+
+import VerificationErrorScreen from './VerificationErrorScreen';
 
 const meta = {
   title: 'Verification/VerificationErrorScreen',

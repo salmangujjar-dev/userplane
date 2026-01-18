@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import validator from 'validator';
+import { z } from 'zod';
 
 /**
  * Email schema with normalization

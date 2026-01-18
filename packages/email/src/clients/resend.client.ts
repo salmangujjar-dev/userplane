@@ -3,13 +3,15 @@
  * Official Resend API integration
  */
 
-import { Resend } from 'resend';
 import { createAppLogger } from '@workspace/logger';
+import type { CreateEmailOptions, CreateEmailRequestOptions } from 'resend';
+import { Resend } from 'resend';
+
 import type {
   EmailClient,
   EmailProvider,
-  SendEmailParams,
   SendEmailOptions,
+  SendEmailParams,
   SendEmailResponse,
 } from '../types';
 
@@ -27,37 +29,34 @@ export class ResendEmailClient implements EmailClient {
 
   async send(params: SendEmailParams, options?: SendEmailOptions): Promise<SendEmailResponse> {
     try {
-      // Build Resend request
-      const resendParams: any = {
+      // Build Resend request with proper typing
+      // SendEmailParams union type guarantees at least one of html or text exists
+      const contentFields = params.html
+        ? ({ html: params.html, ...(params.text && { text: params.text }) } as const)
+        : ({ text: params.text as string } as const);
+
+      const resendParams: CreateEmailOptions = {
         from: params.from,
         to: Array.isArray(params.to) ? params.to : [params.to],
         subject: params.subject,
+        ...contentFields,
+        ...(params.replyTo && {
+          replyTo: Array.isArray(params.replyTo) ? params.replyTo : [params.replyTo],
+        }),
+        ...(params.cc && {
+          cc: Array.isArray(params.cc) ? params.cc : [params.cc],
+        }),
+        ...(params.bcc && {
+          bcc: Array.isArray(params.bcc) ? params.bcc : [params.bcc],
+        }),
+        ...(params.tags && { tags: params.tags }),
+        ...(options?.scheduledAt && { scheduledAt: options.scheduledAt }),
       };
 
-      // Add optional fields
-      if (params.html) resendParams.html = params.html;
-      if (params.text) resendParams.text = params.text;
-      if (params.replyTo) {
-        resendParams.reply_to = Array.isArray(params.replyTo) ? params.replyTo : [params.replyTo];
-      }
-      if (params.cc) {
-        resendParams.cc = Array.isArray(params.cc) ? params.cc : [params.cc];
-      }
-      if (params.bcc) {
-        resendParams.bcc = Array.isArray(params.bcc) ? params.bcc : [params.bcc];
-      }
-      if (params.tags) resendParams.tags = params.tags;
-
-      // Add scheduling if specified
-      if (options?.scheduledAt) {
-        resendParams.scheduled_at = options.scheduledAt;
-      }
-
       // Build Resend options
-      const resendOptions: any = {};
-      if (options?.idempotencyKey) {
-        resendOptions.idempotencyKey = options.idempotencyKey;
-      }
+      const resendOptions: CreateEmailRequestOptions = {
+        ...(options?.idempotencyKey && { idempotencyKey: options.idempotencyKey }),
+      };
 
       // Send email via Resend
       const response = await this.client.emails.send(resendParams, resendOptions);

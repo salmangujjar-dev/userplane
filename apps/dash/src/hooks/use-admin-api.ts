@@ -1,9 +1,10 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { type QueryKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+
 import { apiClient } from '@/client';
-import { handleSafeResult, showErrorToast, type SafeResult } from '@/lib/errors';
+import { handleSafeResult, type SafeResult, showErrorToast } from '@/lib/errors';
 
 /**
  * Admin user list item

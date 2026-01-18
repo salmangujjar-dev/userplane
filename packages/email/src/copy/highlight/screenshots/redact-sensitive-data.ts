@@ -11,5 +11,5 @@ export const copy = {
     'Configure custom selectors to extend redaction to specific elements in your application.',
   ],
   cta: 'Configure redaction',
-  ps: 'Redaction applies to both screenshots and recordings.',
+  helpText: 'Learn more about screenshot redaction',
 } as const;

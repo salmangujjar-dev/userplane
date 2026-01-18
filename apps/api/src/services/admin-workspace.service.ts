@@ -4,12 +4,13 @@
  */
 
 import { adminError } from '@workspace/contract';
+
+import { generateInviteToken } from '@/api/lib/id';
 import type {
   AdminWorkspaceRepository,
-  SearchWorkspacesParams,
   SearchWorkspaceProjectsParams,
+  SearchWorkspacesParams,
 } from '@/api/repositories/admin-workspace.repository';
-import { generateInviteToken } from '@/api/lib/id';
 
 export interface AdminWorkspaceServiceDeps {
   adminWorkspaceRepo: AdminWorkspaceRepository;

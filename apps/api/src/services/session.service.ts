@@ -3,43 +3,44 @@
  * Handles token generation, validation, and upload workflow
  */
 
-import jwt from 'jsonwebtoken';
-import { env } from '@/api/env';
+import { tasks } from '@trigger.dev/sdk/v3';
 import { sessionError } from '@workspace/contract';
-import { generateSessionId, generateRecordingId } from '@/api/lib/id';
+import type {
+  ClientActionsStorageClient,
+  ConsoleLogsStorageClient,
+  NetworkLogsStorageClient,
+  ThumbnailsStorageClient,
+  VideoStorageClient,
+} from '@workspace/storage';
+import jwt from 'jsonwebtoken';
+
+import { env } from '@/api/env';
+import { generateRecordingId, generateSessionId } from '@/api/lib/id';
 import {
   LinkRepository,
   type LinkWithWorkspacePrefsRow,
 } from '@/api/repositories/links.repository';
-import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
+import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import type { LinkService } from '@/api/services/link.service';
 import {
-  SESSION_CONSTRAINTS,
-  validateFileMimeType,
   getMaxFileSize,
-  isTerminalState,
-  type UploadFile,
   type RecordingMetaInput,
+  SESSION_CONSTRAINTS,
+  type UploadFile,
+  validateFileMimeType,
 } from '@/api/schema/session.schema';
-import type {
-  SessionTokenPayload,
-  UploadTokenPayload,
-  SessionPreferences,
-  PresignedUrlInfo,
-  UploadFileType,
-} from '@/api/types';
-import type {
-  VideoStorageClient,
-  ThumbnailsStorageClient,
-  ConsoleLogsStorageClient,
-  NetworkLogsStorageClient,
-  ClientActionsStorageClient,
-} from '@workspace/storage';
-import { tasks } from '@trigger.dev/sdk/v3';
+import type { LinkService } from '@/api/services/link.service';
 import { TASK_IDS } from '@/api/trigger/constants';
 import { buildStaleRecordingCheckKey } from '@/api/trigger/idempotency';
+import type {
+  PresignedUrlInfo,
+  SessionPreferences,
+  SessionTokenPayload,
+  UploadFileType,
+  UploadTokenPayload,
+} from '@/api/types';
+
 import { getPurgeDelay } from '../trigger/delay-calculator';
 
 export interface SessionServiceDeps {
@@ -278,7 +279,7 @@ export class SessionService {
           ...metadata.customMetadata,
         },
       });
-    } catch (error) {
+    } catch {
       throw sessionError.SESSION_DATABASE_ERROR();
     }
 
@@ -482,7 +483,6 @@ export class SessionService {
 
     // Check for required files with size > 0
     const videoFile = files.find((f) => f.type === 'video');
-    const thumbnailFile = files.find((f) => f.type === 'thumbnail');
 
     if (!videoFile) {
       throw sessionError.SESSION_VIDEO_MISSING();
@@ -624,7 +624,7 @@ export class SessionService {
         default:
           throw sessionError.SESSION_FILE_FORMAT_UNSUPPORTED();
       }
-    } catch (error) {
+    } catch {
       // Convert storage/S3 errors to typed error
       throw sessionError.SESSION_STORAGE_ERROR();
     }
@@ -734,7 +734,7 @@ export class SessionService {
       if (errors.length > 0) {
         throw sessionError.SESSION_FILE_VERIFICATION_FAILED();
       }
-    } catch (error) {
+    } catch {
       // Convert storage/S3 errors to typed error
       throw sessionError.SESSION_STORAGE_ERROR();
     }

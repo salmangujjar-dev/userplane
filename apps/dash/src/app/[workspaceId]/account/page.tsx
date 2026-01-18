@@ -1,7 +1,7 @@
 'use client';
 
-import { Sidebar } from '@/components/navigation/sidebar';
 import { AccountSettingsSection } from '@/components/accounts/account-settings-section';
+import { Sidebar } from '@/components/navigation/sidebar';
 
 export default function PreferencesPage() {
   return (

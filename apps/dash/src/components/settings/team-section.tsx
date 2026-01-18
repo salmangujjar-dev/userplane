@@ -1,7 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { WORKSPACE_MEMBERS_PAGINATION } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@workspace/ui/components/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -10,22 +16,17 @@ import {
   TableHeader,
   TableRow,
 } from '@workspace/ui/components/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { MoreVertical, UserMinus, ChevronUp } from 'lucide-react';
+import { ChevronUp, MoreVertical, UserMinus } from 'lucide-react';
+import { useState } from 'react';
+
+import { TeamMemberActionModal } from '@/components/modals/team-member-action-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
-import { useWorkspaceId } from '@/stores/workspace';
-import { useUpdateMemberRole, useRemoveMember } from '@/queries/use-team-mutations';
 import { SectionError } from '@/components/shared/section-error';
 import { TeamSectionSkeleton } from '@/components/skeleton';
-import { TeamMemberActionModal } from '@/components/modals/team-member-action-modal';
-import { WORKSPACE_MEMBERS_PAGINATION } from '@workspace/contract';
+import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
+import { useRemoveMember, useUpdateMemberRole } from '@/queries/use-team-mutations';
+import { useWorkspaceId } from '@/stores/workspace';
 
 const ITEMS_PER_PAGE = WORKSPACE_MEMBERS_PAGINATION.DEFAULT_PER_PAGE;
 

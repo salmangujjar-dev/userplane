@@ -1,22 +1,22 @@
-export { createDb, getDb, type DbClient, type DbConfig } from './client';
-export * from './schema';
+export { createDb, type DbClient, type DbConfig, getDb } from './client';
 export * from './constants';
+export * from './schema';
 export {
-  eq,
   and,
-  or,
-  ne,
-  not,
-  sql,
-  count,
   asc,
+  count,
   desc,
-  inArray,
-  notInArray,
-  ilike,
-  lt,
-  lte,
+  eq,
+  exists,
   gt,
   gte,
-  exists,
+  ilike,
+  inArray,
+  lt,
+  lte,
+  ne,
+  not,
+  notInArray,
+  or,
+  sql,
 } from 'drizzle-orm';

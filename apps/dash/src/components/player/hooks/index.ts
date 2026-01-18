@@ -1,3 +1,3 @@
 // Player hooks
+export type { QualityLevel, VideoPlayerActions, VideoPlayerState } from './useVideoPlayer';
 export { useVideoPlayer } from './useVideoPlayer';
-export type { VideoPlayerState, VideoPlayerActions, QualityLevel } from './useVideoPlayer';

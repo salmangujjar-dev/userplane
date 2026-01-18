@@ -1,9 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +8,11 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import Logo from '@workspace/ui/components/logo';
 import { ArrowLeftRight, CheckCircle2, HelpCircle } from 'lucide-react';
+import Image from 'next/image';
+import { useState } from 'react';
+
 import { getIntegrationConfig } from '@/constants/integration-permissions';
 
 interface IntegrationPreConnectModalProps {

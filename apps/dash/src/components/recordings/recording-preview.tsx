@@ -1,13 +1,14 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { useWorkspaceStore } from '@/stores/workspace';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { Play, Link2 } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from '@workspace/ui/components/sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
+import { Link2, Play } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 function ThumbnailFallback() {
   return (

@@ -1,20 +1,22 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
-import Image from 'next/image';
+import { Button } from '@workspace/ui/components/button';
+import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
-import { Input } from '@workspace/ui/components/input';
-import { Button } from '@workspace/ui/components/button';
 import { cn } from '@workspace/ui/lib/utils';
 import { Upload } from 'lucide-react';
-import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
-import { useWorkspaceId } from '@/stores/workspace';
-import { useUpdateToggle, useUpdateAppearance } from '@/queries/use-appearance-mutations';
+import Image from 'next/image';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
 import { SectionError } from '@/components/shared/section-error';
 import { RecordingLinkSectionSkeleton } from '@/components/skeleton';
-import { RecordingLinkPreview } from './recording-link-preview';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
+import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
+import { useUpdateAppearance, useUpdateToggle } from '@/queries/use-appearance-mutations';
+import { useWorkspaceId } from '@/stores/workspace';
+
+import { RecordingLinkPreview } from './recording-link-preview';
 
 export function RecordingLinkSection() {
   const workspaceId = useWorkspaceId();

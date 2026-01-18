@@ -4,6 +4,7 @@
  */
 
 import { ORPCError } from '@orpc/server';
+
 import { AccountErrors } from '../schemas/account.errors';
 import { AdminErrors } from '../schemas/admin.errors';
 import { DomainErrors } from '../schemas/domain.errors';
@@ -47,11 +48,13 @@ function createErrors<T extends ErrorMap>(definitions: T): ErrorFactory<T> {
   const factory = {} as ErrorFactory<T>;
 
   for (const key of Object.keys(definitions) as (keyof T & string)[]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     factory[key] = ((data?: any) => {
       if (data !== undefined) {
         return new ORPCError(key, { ...definitions[key], data });
       }
       return new ORPCError(key, definitions[key]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }) as any;
   }
 

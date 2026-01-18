@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+
 import type { VideoMarker } from '../types';
 import { formatTimeCompact } from '../utils/time-format';
 

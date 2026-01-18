@@ -3,11 +3,12 @@
  * Educate users about link and recording page customization
  */
 
+import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import { Section, Text, Link } from '@react-email/components';
+
+import { copy } from '../../../copy/highlight/links/customization';
 import { EmailLayout } from '../../../shared/layout';
 import * as styles from '../../../shared/styles';
-import { copy } from '../../../copy/highlight/links/customization';
 
 export interface LinkCustomizationEmailProps {
   settingsUrl?: string;

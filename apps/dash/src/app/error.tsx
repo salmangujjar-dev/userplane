@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
 import { toast } from '@workspace/ui/components/sonner';
+import { useEffect } from 'react';
+
 import { DinoError } from '@/components/shared/dino-error';
 import { logger } from '@/logger';
 

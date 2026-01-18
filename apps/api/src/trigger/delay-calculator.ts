@@ -3,8 +3,9 @@
  * Calculates appropriate delays based on upload status to allow pending operations to complete
  */
 
-import { env } from '@/api/env';
 import type { Recording } from '@workspace/db';
+
+import { env } from '@/api/env';
 import { RECORDING_STATUS_GROUPS } from '@/api/schema/recording.schema';
 
 /**

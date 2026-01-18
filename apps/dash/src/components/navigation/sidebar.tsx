@@ -1,9 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import Logo from '@workspace/ui/components/logo';
+import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
   DropdownMenu,
@@ -12,32 +9,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { SidebarProjectsSkeleton } from '@/components/skeleton';
+import Logo from '@workspace/ui/components/logo';
 import {
-  Video,
-  Link as LinkIcon,
-  Settings,
-  Settings2,
-  FolderKanban,
-  LogOut,
   Building2,
   Check,
-  Plus,
-  ChevronsUpDown,
-  HelpCircle,
-  Shield,
   ChevronLeft,
   ChevronRight,
+  ChevronsUpDown,
+  FolderKanban,
+  HelpCircle,
+  Link as LinkIcon,
+  LogOut,
+  Plus,
+  Settings,
+  Settings2,
+  Shield,
+  Video,
 } from 'lucide-react';
-import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { SidebarProjectsSkeleton } from '@/components/skeleton';
 import { useAccount } from '@/hooks/use-account';
-import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
-import { useWorkspace } from '@/hooks/use-workspace';
-import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useAuth } from '@/hooks/use-auth';
 import { useSession } from '@/hooks/use-session';
-import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
+import { useWorkspace } from '@/hooks/use-workspace';
+import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
+import { useWorkspaces } from '@/hooks/use-workspaces';
+import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 
 const SIDEBAR_PROJECTS_PER_PAGE = 5;
 

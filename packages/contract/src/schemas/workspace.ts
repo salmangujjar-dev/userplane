@@ -1,31 +1,30 @@
+import { PLAN_IDS, PLAN_NAME_VALUES } from '@workspace/pricing';
 import { z } from 'zod';
+
 import {
-  WorkspaceRoleSchema,
-  WorkspaceInvitePolicySchema,
+  DOMAIN_PAGINATION,
+  MAX_EMAIL_DOMAINS,
+  SEARCH_PAGINATION,
+  WORKSPACE_MEMBERS_PAGINATION,
+  WORKSPACE_PAGINATION,
+  WORKSPACE_SUGGESTIONS_PAGINATION,
+} from '../constants';
+import {
+  DomainIdSchema,
   DomainStatusSchema,
-  PaginationMetaSchema,
-  SortDirectionSchema,
-  EmailSchema,
   DomainUrlSchema,
   EmailDomainSchema,
-  WorkspaceIdSchema,
-  WorkspaceMemberIdSchema,
-  DomainIdSchema,
-  TokenSchema,
+  PaginationMetaSchema,
   SearchQuerySchema,
+  SortDirectionSchema,
+  TokenSchema,
   UserIdSchema,
+  WorkspaceIdSchema,
+  WorkspaceInvitePolicySchema,
+  WorkspaceMemberIdSchema,
+  WorkspaceRoleSchema,
 } from './common';
 import { FormEmailSchema } from './form';
-import { PLAN_IDS, PLAN_NAME_VALUES } from '@workspace/pricing';
-import { SendWorkspaceInvitesSchema } from './invite';
-import {
-  WORKSPACE_PAGINATION,
-  WORKSPACE_MEMBERS_PAGINATION,
-  DOMAIN_PAGINATION,
-  SEARCH_PAGINATION,
-  WORKSPACE_SUGGESTIONS_PAGINATION,
-  MAX_EMAIL_DOMAINS,
-} from '../constants';
 
 /**
  * Workspace schemas

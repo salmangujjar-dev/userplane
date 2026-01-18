@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
-import { ArrowLeftRight } from 'lucide-react';
 import { toast } from '@workspace/ui/components/sonner';
+import { ArrowLeftRight } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useWorkspaceStore } from '@/stores/workspace';
 

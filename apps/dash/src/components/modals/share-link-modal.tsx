@@ -1,23 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
-  DialogFooter,
   DialogDescription,
+  DialogFooter,
+  DialogTitle,
 } from '@workspace/ui/components/dialog';
+import Logo from '@workspace/ui/components/logo';
+import { toast } from '@workspace/ui/components/sonner';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { toast } from '@workspace/ui/components/sonner';
 import { Copy, HelpCircle } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface ShareLinkModalProps {
   link: string;

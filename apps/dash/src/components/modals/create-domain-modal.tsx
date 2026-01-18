@@ -1,13 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useForm, Controller, type Control, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { DomainUrlSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
-import { Label } from '@workspace/ui/components/label';
-import { URLInput } from '@/components/url-input';
 import {
   Dialog,
   DialogContent,
@@ -15,20 +10,26 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import { Label } from '@workspace/ui/components/label';
+import Logo from '@workspace/ui/components/logo';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { HelpCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
-import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
+import { ChevronDown, ChevronUp, HelpCircle, Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { type Control, Controller, type FieldErrors, useForm } from 'react-hook-form';
+import { z } from 'zod';
+
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
 import { DomainRecordingSettings } from '@/components/domains/domain-recording-settings';
-import { DomainUrlSchema } from '@workspace/contract';
+import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
+import { URLInput } from '@/components/url-input';
 import {
-  type DomainRecordingPreferences,
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
+  type DomainRecordingPreferences,
 } from '@/types/domain';
 
 type ModalStep = 'create' | 'verify' | 'verifying' | 'success' | 'failed';

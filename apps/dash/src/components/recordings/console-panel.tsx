@@ -1,22 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { Input } from '@workspace/ui/components/input';
 import { Button } from '@workspace/ui/components/button';
-import { Search, AlertCircle, AlertTriangle, Info, MessageSquare, Bug, Filter } from 'lucide-react';
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
+import { Input } from '@workspace/ui/components/input';
+import { AlertCircle, AlertTriangle, Bug, Filter, Info, MessageSquare, Search } from 'lucide-react';
+import { useState } from 'react';
+
+import { ConsoleLogEntry } from './console-log-entry';
 import {
   ConsoleLogEvent,
-  LogLevel,
   createMockLogEvent,
   formatTimestamp,
+  LogLevel,
 } from './console-log-types';
-import { ConsoleLogEntry } from './console-log-entry';
 
 const baseTime = Date.now() - 60000;
 
