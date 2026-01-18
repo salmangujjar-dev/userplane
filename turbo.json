@@ -21,6 +21,7 @@
         "GOOGLE_CLIENT_SECRET",
         "GOOGLE_REDIRECT_URI",
         "INVITE_TOKEN_SECRET",
+        "APP_URL",
         "INVITE_APP_URL",
         "INVITE_TOKEN_EXPIRES_IN",
         "SESSION_TOKEN_SECRET",

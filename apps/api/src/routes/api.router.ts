@@ -21,6 +21,7 @@ import {
   adminService,
   adminWorkspaceService,
   domainService,
+  emailService,
   inviteService,
   linkService,
   projectService,
@@ -63,7 +64,9 @@ const workspaceProcedures = createWorkspaceProcedures(
   projectService,
   domainService,
   recordingService,
-  linkService
+  linkService,
+  emailService,
+  userService
 );
 const recordingProcedures = createRecordingProcedures(
   recordingService,
@@ -82,7 +85,8 @@ const adminProcedures = createAdminProcedures(
   adminProvisioningService,
   workspaceService,
   projectService,
-  tokenService
+  tokenService,
+  emailService
 );
 const projectProcedures = createProjectProcedures(
   projectService,

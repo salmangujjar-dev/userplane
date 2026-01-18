@@ -322,39 +322,22 @@ export class WorkspaceRepository {
     const includeNotifications = options?.includeNotificationPreferences || false;
     const includeMembership = options?.includeWorkspaceMembership || false;
 
-    // Build the select object dynamically based on options
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const selectFields: any = {
-      workspaceId: workspaces.workspaceId,
-      workspaceName: workspaces.workspaceName,
-    };
-
-    // Only add extra fields if not in minimal mode
-    if (!isMinimal) {
-      selectFields.workspacePlan = workspaces.workspacePlan;
-      selectFields.createdAt = workspaces.createdAt;
-      selectFields.updatedAt = workspaces.updatedAt;
-
-      if (includeNotifications) {
-        selectFields.notificationPreferences = {
-          notifyFeatureHighlights: workspaceMembers.notifyFeatureHighlights,
-          notifyBillingEvents: workspaceMembers.notifyBillingEvents,
-          notifyUsageEvents: workspaceMembers.notifyUsageEvents,
-          notifyIncomingEvents: workspaceMembers.notifyIncomingEvents,
-          notifyAdminEvents: workspaceMembers.notifyAdminEvents,
-        };
-      }
-
-      if (includeMembership) {
-        selectFields.workspaceMembership = {
-          workspaceMemberId: workspaceMembers.workspaceMemberId,
-          workspaceRole: workspaceMembers.workspaceRole,
-        };
-      }
-    }
-
+    // Select all needed fields from both tables
     const result = await this.db
-      .select(selectFields)
+      .select({
+        workspaceId: workspaces.workspaceId,
+        workspaceName: workspaces.workspaceName,
+        workspacePlan: workspaces.workspacePlan,
+        createdAt: workspaces.createdAt,
+        updatedAt: workspaces.updatedAt,
+        workspaceMemberId: workspaceMembers.workspaceMemberId,
+        workspaceRole: workspaceMembers.workspaceRole,
+        notifyFeatureHighlights: workspaceMembers.notifyFeatureHighlights,
+        notifyBillingEvents: workspaceMembers.notifyBillingEvents,
+        notifyUsageEvents: workspaceMembers.notifyUsageEvents,
+        notifyIncomingEvents: workspaceMembers.notifyIncomingEvents,
+        notifyAdminEvents: workspaceMembers.notifyAdminEvents,
+      })
       .from(workspaces)
       .innerJoin(workspaceMembers, eq(workspaces.workspaceId, workspaceMembers.workspaceId))
       .where(
@@ -367,7 +350,43 @@ export class WorkspaceRepository {
       .limit(limit)
       .offset(offset);
 
-    return result;
+    // Map the result to the expected structure based on options
+    return result.map((row) => {
+      if (isMinimal) {
+        return {
+          workspaceId: row.workspaceId,
+          workspaceName: row.workspaceName,
+        };
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const workspace: any = {
+        workspaceId: row.workspaceId,
+        workspaceName: row.workspaceName,
+        workspacePlan: row.workspacePlan,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      };
+
+      if (includeNotifications) {
+        workspace.notificationPreferences = {
+          notifyFeatureHighlights: row.notifyFeatureHighlights,
+          notifyBillingEvents: row.notifyBillingEvents,
+          notifyUsageEvents: row.notifyUsageEvents,
+          notifyIncomingEvents: row.notifyIncomingEvents,
+          notifyAdminEvents: row.notifyAdminEvents,
+        };
+      }
+
+      if (includeMembership) {
+        workspace.workspaceMembership = {
+          workspaceMemberId: row.workspaceMemberId,
+          workspaceRole: row.workspaceRole,
+        };
+      }
+
+      return workspace;
+    });
   }
 
   /**

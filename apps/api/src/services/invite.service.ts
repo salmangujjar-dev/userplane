@@ -103,7 +103,7 @@ export class InviteService {
 
     const results = await Promise.allSettled(
       emails.map((email) =>
-        this.deps.emailService.sendWorkspaceInvite({
+        this.deps.emailService.sendTeammateInvited({
           to: email,
           workspaceName: workspace.workspaceName,
           inviteUrl,

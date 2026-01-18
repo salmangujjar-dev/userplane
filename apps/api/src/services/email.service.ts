@@ -9,6 +9,7 @@ import {
   renderAccessRequest,
   renderAccessRequested,
   renderAccountDeletion,
+  renderAccountRestored,
   renderDeletionConfirmation,
   renderDeletionRequested,
   renderDeletionScheduled,
@@ -42,9 +43,9 @@ import {
   renderSubscriptionPlanChange,
   renderSubscriptionReverseTrial,
   renderTeammateInvited,
+  renderTeammateJoined,
   renderTosViolation,
   renderTrialReverseTrialOffer,
-  renderWorkspaceInvite,
 } from '@workspace/email';
 import { createAppLogger } from '@workspace/logger';
 
@@ -52,6 +53,7 @@ import { emailClient } from '@/api/clients/email';
 import {
   accessRequestSubject,
   accountDeletionSubject,
+  accountRestoredSubject,
   domainDeveloperInstructionsSubject,
   emailVerificationSubject,
   linksRequestedUpgradeSubject,
@@ -79,6 +81,7 @@ import {
   subscriptionPlanChangeSubject,
   subscriptionReverseTrialSubject,
   teammateInvitedSubject,
+  teammateJoinedSubject,
   tosViolationSubject,
   trialReverseTrialOfferSubject,
   workspaceAccessGrantedSubject,
@@ -86,7 +89,6 @@ import {
   workspaceDeletionConfirmationSubject,
   workspaceDeletionRequestedSubject,
   workspaceDeletionScheduledSubject,
-  workspaceInviteSubject,
   workspaceRecoveryConfirmationSubject,
   workspaceRecoveryPartiallySubject,
   workspaceRecoveryScheduledSubject,
@@ -94,6 +96,7 @@ import {
 import type {
   AccessRequestEmailParams,
   AccountDeletionEmailParams,
+  AccountRestoredEmailParams,
   DomainDeveloperInstructionsEmailParams,
   EmailVerificationEmailParams,
   LinksRequestedUpgradeEmailParams,
@@ -121,6 +124,7 @@ import type {
   SubscriptionPlanChangeEmailParams,
   SubscriptionReverseTrialEmailParams,
   TeammateInvitedEmailParams,
+  TeammateJoinedEmailParams,
   TosViolationEmailParams,
   TrialReverseTrialOfferEmailParams,
   WorkspaceAccessGrantedEmailParams,
@@ -128,7 +132,6 @@ import type {
   WorkspaceDeletionConfirmationEmailParams,
   WorkspaceDeletionRequestedEmailParams,
   WorkspaceDeletionScheduledEmailParams,
-  WorkspaceInviteEmailParams,
   WorkspaceRecoveryConfirmationEmailParams,
   WorkspaceRecoveryPartiallyEmailParams,
   WorkspaceRecoveryScheduledEmailParams,
@@ -211,48 +214,6 @@ export class EmailService {
         provider: emailClient.getProvider(),
       },
       'Magic link sent'
-    );
-  }
-
-  /**
-   * Send workspace invitation email
-   * Uses React Email template and idempotency key to prevent duplicate invites
-   * Email is sent from configured invite inbox with inviter details in content
-   */
-  async sendWorkspaceInvite(params: WorkspaceInviteEmailParams): Promise<void> {
-    const idempotencyKey = `workspace-invite/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderWorkspaceInvite({
-      workspaceName: params.workspaceName,
-      inviterName: params.inviterName,
-      inviteUrl: params.inviteUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: inviteFrom(params.workspaceName),
-        to: params.to,
-        subject: workspaceInviteSubject({
-          inviterName: params.inviterName,
-          workspaceName: params.workspaceName,
-        }),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspace: params.workspaceName,
-        inviterName: params.inviterName,
-        inviterEmail: params.inviterEmail,
-        provider: emailClient.getProvider(),
-      },
-      'Workspace invitation sent'
     );
   }
 
@@ -893,6 +854,7 @@ export class EmailService {
 
     const { html, text } = await renderTeammateInvited({
       inviterName: params.inviterName,
+      inviterEmail: params.inviterEmail,
       workspaceName: params.workspaceName,
       inviteUrl: params.inviteUrl,
     });
@@ -903,6 +865,7 @@ export class EmailService {
         to: params.to,
         subject: teammateInvitedSubject({
           inviterName: params.inviterName,
+          inviterEmail: params.inviterEmail,
           workspaceName: params.workspaceName,
         }),
         html,
@@ -921,6 +884,49 @@ export class EmailService {
         provider: emailClient.getProvider(),
       },
       'Teammate invited email sent'
+    );
+  }
+
+  /**
+   * Send teammate joined email
+   * Sent to workspace owners when someone joins
+   */
+  async sendTeammateJoined(params: TeammateJoinedEmailParams): Promise<void> {
+    const idempotencyKey = `teammate-joined/${params.workspaceName}/${params.to}/${params.memberEmail}`;
+
+    const { html, text } = await renderTeammateJoined({
+      memberName: params.memberName,
+      memberEmail: params.memberEmail,
+      workspaceName: params.workspaceName,
+      workspaceUrl: params.workspaceUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: params.to,
+        subject: teammateJoinedSubject({
+          memberName: params.memberName,
+          memberEmail: params.memberEmail,
+          workspaceName: params.workspaceName,
+        }),
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        memberName: params.memberName,
+        memberEmail: params.memberEmail,
+        provider: emailClient.getProvider(),
+      },
+      'Teammate joined email sent'
     );
   }
 
@@ -959,6 +965,40 @@ export class EmailService {
         provider: emailClient.getProvider(),
       },
       'Account deletion email sent'
+    );
+  }
+
+  /**
+   * Send account restored email
+   */
+  async sendAccountRestored(params: AccountRestoredEmailParams): Promise<void> {
+    const idempotencyKey = `account-restored/${params.to}`;
+
+    const { html, text } = await renderAccountRestored({
+      userName: params.userName,
+      loginUrl: params.loginUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: params.to,
+        subject: accountRestoredSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        userName: params.userName,
+        provider: emailClient.getProvider(),
+      },
+      'Account restored email sent'
     );
   }
 

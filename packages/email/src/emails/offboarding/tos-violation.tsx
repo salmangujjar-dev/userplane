@@ -11,13 +11,13 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface TosViolationEmailProps {
-  userName?: string;
+  userName: string;
   appealUrl?: string;
   tosUrl?: string;
 }
 
 export const TosViolationEmail = ({
-  userName = 'there',
+  userName,
   appealUrl = 'mailto:support@userplane.io?subject=Account%20Appeal',
   tosUrl = 'https://userplane.io/terms',
 }: TosViolationEmailProps) => {

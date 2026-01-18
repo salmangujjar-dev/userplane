@@ -14,10 +14,12 @@ import {
   createWorkspaceRoleMiddleware,
 } from '@/api/middleware/workspace.orpc';
 import type { DomainService } from '@/api/services/domain.service';
+import type { EmailService } from '@/api/services/email.service';
 import type { InviteService } from '@/api/services/invite.service';
 import type { LinkService } from '@/api/services/link.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { RecordingService } from '@/api/services/recording.service';
+import type { UserService } from '@/api/services/user.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { createPaginationMeta } from '@/api/types';
@@ -693,7 +695,12 @@ export const sendWorkspaceInvitesImpl = (
  * Validates token matches the workspace and adds user as member
  * Idempotent operation - returns success if user is already a member
  */
-export const acceptInviteImpl = (inviteService: InviteService) => {
+export const acceptInviteImpl = (
+  inviteService: InviteService,
+  emailService: EmailService,
+  workspaceMemberService: WorkspaceMemberService,
+  userService: UserService
+) => {
   return authorized.workspace.invite.accept.handler(async ({ input, context }) => {
     // Verify the token is for the correct workspace
     const validation = await inviteService.validateInvite(input.body.token);
@@ -719,6 +726,24 @@ export const acceptInviteImpl = (inviteService: InviteService) => {
         },
       };
     }
+
+    // Send email to owner(s) of the workspace
+    const newMember = await userService.getById(context.user.id);
+    const owners = await workspaceMemberService.getOwners(result.workspace.workspaceId);
+    const workspaceUrl = `${process.env.PUBLIC_DASH_URL}/workspace/${result.workspace.workspaceId}`;
+
+    await Promise.allSettled(
+      owners.map(async (owner: { userId: string; email: string }) => {
+        const ownerUser = await userService.getById(owner.userId);
+        return emailService.sendTeammateJoined({
+          to: ownerUser.email,
+          memberName: newMember.name,
+          memberEmail: newMember.email,
+          workspaceName: result.workspace.workspaceName,
+          workspaceUrl,
+        });
+      })
+    );
 
     return {
       message: 'Invitation accepted successfully',
@@ -1357,7 +1382,9 @@ export const createWorkspaceProcedures = (
   projectService: ProjectService,
   domainService: DomainService,
   recordingService: RecordingService,
-  linkService: LinkService
+  linkService: LinkService,
+  emailService: EmailService,
+  userService: UserService
 ) => {
   return {
     list: getAllWorkspacesImpl(workspaceService),
@@ -1413,7 +1440,7 @@ export const createWorkspaceProcedures = (
       getUrl: getInviteUrlImpl(inviteService, workspaceMemberService, workspaceService),
       rotate: rotateInviteTokenImpl(inviteService, workspaceMemberService, workspaceService),
       send: sendWorkspaceInvitesImpl(inviteService, workspaceMemberService, workspaceService),
-      accept: acceptInviteImpl(inviteService),
+      accept: acceptInviteImpl(inviteService, emailService, workspaceMemberService, userService),
     },
 
     invitePolicy: {

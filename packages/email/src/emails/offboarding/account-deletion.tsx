@@ -11,14 +11,11 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface AccountDeletionEmailProps {
-  userName?: string;
+  userName: string;
   feedbackUrl?: string;
 }
 
-export const AccountDeletionEmail = ({
-  userName = 'there',
-  feedbackUrl = 'https://userplane.io/feedback',
-}: AccountDeletionEmailProps) => {
+export const AccountDeletionEmail = ({ userName, feedbackUrl }: AccountDeletionEmailProps) => {
   return (
     <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
@@ -29,11 +26,13 @@ export const AccountDeletionEmail = ({
         <Text style={styles.messageText}>{copy.body[1]}</Text>
       </Section>
 
-      <Section style={styles.ctaSection}>
-        <Link href={feedbackUrl} style={styles.secondaryButton}>
-          {copy.cta}
-        </Link>
-      </Section>
+      {feedbackUrl && (
+        <Section style={styles.ctaSection}>
+          <Link href={feedbackUrl} style={styles.secondaryButton}>
+            {copy.cta}
+          </Link>
+        </Section>
+      )}
     </EmailLayout>
   );
 };
