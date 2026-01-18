@@ -134,6 +134,7 @@ export const updateProjectImpl = (
     .handler(async ({ input }) => {
       const project = await projectService.updateProject(input.params.projectId, {
         projectTitle: input.body.projectTitle,
+        isDefault: input.body.isDefault,
       });
 
       if (!project) {
@@ -166,6 +167,7 @@ export const replaceProjectImpl = (
     .handler(async ({ input }) => {
       const project = await projectService.updateProject(input.params.projectId, {
         projectTitle: input.body.projectTitle,
+        isDefault: input.body.isDefault,
       });
 
       if (!project) {

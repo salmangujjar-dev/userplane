@@ -130,7 +130,7 @@ function WorkspaceAccessLoading() {
         <div className="h-6 w-48 animate-pulse rounded bg-muted" />
         <div className="h-4 w-64 animate-pulse rounded bg-muted" />
       </div>
-      <div className="w-full p-6 rounded-xl border bg-card">
+      <div className="w-full p-6 rounded-xl bg-card">
         <div className="flex flex-col items-center gap-3">
           <div className="flex -space-x-2">
             <div className="h-7 w-7 animate-pulse rounded-full bg-muted border-2 border-card" />
@@ -179,7 +179,7 @@ function WorkspaceCard({
   const policyInfo = getPolicyLabel();
 
   return (
-    <div className="w-full p-6 rounded-xl border bg-card">
+    <div className="w-full p-6 rounded-xl bg-card">
       <div className="flex flex-col items-center gap-3">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -370,7 +370,7 @@ function WorkspaceAccessRequested({ workspaceName }: { workspaceName: string }) 
         <h1 className="text-xl font-medium text-foreground">Access Requested</h1>
       </div>
 
-      <div className="w-full p-6 rounded-xl border bg-card">
+      <div className="w-full p-6 rounded-xl bg-card">
         <div className="flex flex-col items-center gap-3">
           <Tooltip>
             <TooltipTrigger asChild>

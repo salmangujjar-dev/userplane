@@ -61,6 +61,7 @@ export const createProject = oc
     UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_WORKSPACE_ID_REQUIRED: ProjectErrors.PROJECT_WORKSPACE_ID_REQUIRED,
+    PROJECT_CREATE_FAILED: ProjectErrors.PROJECT_CREATE_FAILED,
   })
   .input(CreateProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));
@@ -83,6 +84,7 @@ export const getProjectById = oc
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
+    PROJECT_WORKSPACE_MISMATCH: ProjectErrors.PROJECT_WORKSPACE_MISMATCH,
   })
   .input(ProjectByIdSchema)
   .output(ApiResponseSchema(ProjectByIdDataSchema));
@@ -105,6 +107,7 @@ export const updateProject = oc
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
+    PROJECT_UPDATE_FAILED: ProjectErrors.PROJECT_UPDATE_FAILED,
   })
   .input(UpdateProjectSchema)
   .output(ApiResponseSchema(ProjectUpdateDataSchema));
@@ -127,6 +130,7 @@ export const replaceProject = oc
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
+    PROJECT_UPDATE_FAILED: ProjectErrors.PROJECT_UPDATE_FAILED,
   })
   .input(ReplaceProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));

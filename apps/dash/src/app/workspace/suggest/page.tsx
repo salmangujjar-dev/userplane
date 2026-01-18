@@ -96,13 +96,13 @@ function WorkspaceSuggestPageContent() {
 
         <div className="space-y-4">
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-6 rounded-xl border bg-card">
+            <div className="flex items-center justify-between p-6 rounded-xl bg-card">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-4 w-4 rounded-full shrink-0" />
                 <div className="flex -space-x-2">
-                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
-                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
-                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                  <Skeleton className="h-6 w-6 rounded-full" />
                 </div>
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-4 w-32" />
@@ -110,13 +110,13 @@ function WorkspaceSuggestPageContent() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-6 rounded-xl border bg-card">
+            <div className="flex items-center justify-between p-6 rounded-xl bg-card">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-4 w-4 rounded-full shrink-0" />
                 <div className="flex -space-x-2">
-                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
-                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
-                  <Skeleton className="h-6 w-6 rounded-full border-2 border-card" />
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                  <Skeleton className="h-6 w-6 rounded-full" />
                 </div>
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-4 w-40" />
@@ -194,7 +194,7 @@ function WorkspaceSuggestPageContent() {
           <h1 className="text-xl font-medium text-foreground">Access Requested</h1>
         </div>
 
-        <div className="w-full p-6 rounded-xl border bg-card">
+        <div className="w-full p-6 rounded-xl bg-card">
           <div className="flex flex-col items-center gap-3">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -253,10 +253,8 @@ function WorkspaceSuggestPageContent() {
               <div
                 key={workspace.workspaceId}
                 onClick={() => setSelectedWorkspaceId(workspace.workspaceId)}
-                className={`flex items-center justify-between p-6 rounded-xl border bg-card cursor-pointer transition-all ${
-                  isSelected
-                    ? 'border-foreground ring-1 ring-foreground'
-                    : 'hover:border-muted-foreground'
+                className={`flex items-center justify-between p-6 rounded-xl bg-card cursor-pointer transition-all ${
+                  isSelected ? 'ring-1 ring-foreground' : 'hover:bg-accent'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">

@@ -85,6 +85,19 @@ export class ProjectRepository {
   }
 
   /**
+   * Unset all default projects in a workspace
+   * Used when setting a new project as default to ensure only one default exists
+   */
+  async unsetAllDefaultProjects(workspaceId: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    await dbClient
+      .update(projects)
+      .set({ isDefault: false })
+      .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDefault, true)));
+  }
+
+  /**
    * Update project
    */
   async update(

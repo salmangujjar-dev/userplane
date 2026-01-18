@@ -4,7 +4,7 @@
  */
 
 import type { WorkspaceRole } from '@workspace/contract';
-import { domainError, workspaceError } from '@workspace/contract';
+import { workspaceError } from '@workspace/contract';
 
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
@@ -34,7 +34,7 @@ export function createWorkspaceMiddleware(
       const member = await workspaceMemberService.getMember(context.user.id, workspace.workspaceId);
 
       if (!member) {
-        throw domainError.FORBIDDEN();
+        throw workspaceError.FORBIDDEN();
       }
 
       return next({
@@ -65,11 +65,11 @@ export function createWorkspaceRoleMiddleware(
       const member = await workspaceMemberService.getMember(context.user.id, workspace.workspaceId);
 
       if (!member) {
-        throw domainError.FORBIDDEN();
+        throw workspaceError.FORBIDDEN();
       }
 
       if (!allowedRoles.includes(member.workspaceRole)) {
-        throw domainError.FORBIDDEN();
+        throw workspaceError.FORBIDDEN();
       }
 
       return next({
