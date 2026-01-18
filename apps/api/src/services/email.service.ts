@@ -5,8 +5,44 @@
  */
 
 import {
+  renderAccessGranted,
   renderAccessRequest,
+  renderAccessRequested,
+  renderAccountDeletion,
+  renderDeletionConfirmation,
+  renderDeletionRequested,
+  renderDeletionScheduled,
   renderDomainDeveloperInstructions,
+  renderLinksRequestedUpgrade,
+  renderLinksSoftLimit,
+  renderMagicLink,
+  renderPilotReverseTrialOffer,
+  renderProjectDeletionConfirmation,
+  renderProjectDeletionRequested,
+  renderProjectDeletionScheduled,
+  renderProjectRecoveryConfirmation,
+  renderProjectRecoveryPartially,
+  renderProjectRecoveryScheduled,
+  renderRecordingReceived,
+  renderRecordingsHardLimit,
+  renderRecordingsRequestedUpgrade,
+  renderRecordingsSoftLimit,
+  renderRecoveryConfirmation,
+  renderRecoveryPartially,
+  renderRecoveryScheduled,
+  renderSandboxInvite,
+  renderScreenshotsSoftLimit,
+  renderSeatsHardLimit,
+  renderSeatsRequestedUpgrade,
+  renderSeatsSoftLimit,
+  renderSubscriptionActive,
+  renderSubscriptionExpired,
+  renderSubscriptionInactive,
+  renderSubscriptionPlanChange,
+  renderSubscriptionReverseTrial,
+  renderTeammateInvited,
+  renderTosViolation,
+  renderTrialReverseTrialOffer,
   renderWorkspaceInvite,
 } from '@workspace/email';
 import { createAppLogger } from '@workspace/logger';
@@ -15,13 +51,86 @@ import { emailClient } from '@/api/clients/email';
 import { env } from '@/api/env';
 import type {
   AccessRequestEmailParams,
+  AccountDeletionEmailParams,
   DomainDeveloperInstructionsEmailParams,
+  LinksRequestedUpgradeEmailParams,
+  LinksSoftLimitEmailParams,
+  MagicLinkEmailParams,
+  PilotReverseTrialOfferEmailParams,
+  PilotSandboxInviteEmailParams,
+  ProjectDeletionConfirmationEmailParams,
+  ProjectDeletionRequestedEmailParams,
+  ProjectDeletionScheduledEmailParams,
+  ProjectRecoveryConfirmationEmailParams,
+  ProjectRecoveryPartiallyEmailParams,
+  ProjectRecoveryScheduledEmailParams,
+  RecordingReceivedEmailParams,
+  RecordingsHardLimitEmailParams,
+  RecordingsRequestedUpgradeEmailParams,
+  RecordingsSoftLimitEmailParams,
+  ScreenshotsSoftLimitEmailParams,
+  SeatsHardLimitEmailParams,
+  SeatsRequestedUpgradeEmailParams,
+  SeatsSoftLimitEmailParams,
+  SubscriptionActiveEmailParams,
+  SubscriptionExpiredEmailParams,
+  SubscriptionInactiveEmailParams,
+  SubscriptionPlanChangeEmailParams,
+  SubscriptionReverseTrialEmailParams,
+  TeammateInvitedEmailParams,
+  TosViolationEmailParams,
+  TrialReverseTrialOfferEmailParams,
+  WorkspaceAccessGrantedEmailParams,
+  WorkspaceAccessRequestedEmailParams,
+  WorkspaceDeletionConfirmationEmailParams,
+  WorkspaceDeletionRequestedEmailParams,
+  WorkspaceDeletionScheduledEmailParams,
   WorkspaceInviteEmailParams,
+  WorkspaceRecoveryConfirmationEmailParams,
+  WorkspaceRecoveryPartiallyEmailParams,
+  WorkspaceRecoveryScheduledEmailParams,
 } from '@/api/types';
 
 const logger = createAppLogger('email-service');
 
 export class EmailService {
+  // ============================================================================
+  // AUTH EMAILS
+  // ============================================================================
+
+  /**
+   * Send magic link email for passwordless sign in
+   */
+  async sendMagicLink(params: MagicLinkEmailParams): Promise<void> {
+    const idempotencyKey = `magic-link/${params.to}/${Date.now()}`;
+
+    const { html, text } = await renderMagicLink({
+      magicLinkUrl: params.magicLinkUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.auth}>`,
+        to: params.to,
+        subject: 'Sign in to Userplane',
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        fromInbox: env.email.inboxes.auth,
+        provider: emailClient.getProvider(),
+      },
+      'Magic link sent'
+    );
+  }
+
   /**
    * Send workspace invitation email
    * Uses React Email template and idempotency key to prevent duplicate invites
@@ -30,7 +139,6 @@ export class EmailService {
   async sendWorkspaceInvite(params: WorkspaceInviteEmailParams): Promise<void> {
     const idempotencyKey = `workspace-invite/${params.workspaceName}/${params.to}`;
 
-    // Render React Email template to HTML and text
     const { html, text } = await renderWorkspaceInvite({
       workspaceName: params.workspaceName,
       inviterName: params.inviterName,
@@ -71,7 +179,6 @@ export class EmailService {
   async sendAccessRequest(params: AccessRequestEmailParams): Promise<void> {
     const idempotencyKey = `access-request/${params.workspaceName}/${params.requesterEmail}/${params.to}`;
 
-    // Render React Email template to HTML and text
     const { html, text } = await renderAccessRequest({
       workspaceName: params.workspaceName,
       requesterName: params.requesterName,
@@ -105,6 +212,195 @@ export class EmailService {
     );
   }
 
+  // ============================================================================
+  // BILLING EMAILS
+  // ============================================================================
+
+  /**
+   * Send subscription active email
+   */
+  async sendSubscriptionActive(params: SubscriptionActiveEmailParams): Promise<void> {
+    const idempotencyKey = `subscription-active/${params.to}/${params.planName}`;
+
+    const { html, text } = await renderSubscriptionActive({
+      planName: params.planName,
+      dashboardUrl: params.dashboardUrl,
+      billingUrl: params.billingUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `Your ${params.planName} subscription is now active`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        planName: params.planName,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Subscription active email sent'
+    );
+  }
+
+  /**
+   * Send subscription expired email
+   */
+  async sendSubscriptionExpired(params: SubscriptionExpiredEmailParams): Promise<void> {
+    const idempotencyKey = `subscription-expired/${params.to}/${params.planName}`;
+
+    const { html, text } = await renderSubscriptionExpired({
+      planName: params.planName,
+      renewUrl: params.renewUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `Your ${params.planName} subscription has expired`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        planName: params.planName,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Subscription expired email sent'
+    );
+  }
+
+  /**
+   * Send subscription inactive email
+   */
+  async sendSubscriptionInactive(params: SubscriptionInactiveEmailParams): Promise<void> {
+    const idempotencyKey = `subscription-inactive/${params.to}/${params.planName}`;
+
+    const { html, text } = await renderSubscriptionInactive({
+      planName: params.planName,
+      reactivateUrl: params.reactivateUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `Your ${params.planName} subscription is inactive`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        planName: params.planName,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Subscription inactive email sent'
+    );
+  }
+
+  /**
+   * Send subscription plan change email
+   */
+  async sendSubscriptionPlanChange(params: SubscriptionPlanChangeEmailParams): Promise<void> {
+    const idempotencyKey = `subscription-plan-change/${params.to}/${params.newPlan}`;
+
+    const { html, text } = await renderSubscriptionPlanChange({
+      previousPlan: params.previousPlan,
+      newPlan: params.newPlan,
+      effectiveDate: params.effectiveDate,
+      billingUrl: params.billingUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `Your subscription has been changed to ${params.newPlan}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        previousPlan: params.previousPlan,
+        newPlan: params.newPlan,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Subscription plan change email sent'
+    );
+  }
+
+  /**
+   * Send subscription reverse trial email
+   */
+  async sendSubscriptionReverseTrial(params: SubscriptionReverseTrialEmailParams): Promise<void> {
+    const idempotencyKey = `subscription-reverse-trial/${params.to}`;
+
+    const { html, text } = await renderSubscriptionReverseTrial({
+      planName: params.planName,
+      trialDays: params.trialDays,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `Your ${params.planName} reverse trial has started`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        planName: params.planName,
+        trialDays: params.trialDays,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Subscription reverse trial email sent'
+    );
+  }
+
+  // ============================================================================
+  // DOMAIN EMAILS
+  // ============================================================================
+
   /**
    * Send domain developer instructions email
    * Uses React Email template and idempotency key to prevent duplicate sends
@@ -115,7 +411,6 @@ export class EmailService {
   ): Promise<void> {
     const idempotencyKey = `domain-instructions/${params.domainName}/${params.to}`;
 
-    // Render React Email template to HTML and text
     const { html, text } = await renderDomainDeveloperInstructions({
       domainName: params.domainName,
       settingsUrl: params.settingsUrl,
@@ -143,6 +438,1172 @@ export class EmailService {
         provider: emailClient.getProvider(),
       },
       'Domain developer instructions sent'
+    );
+  }
+
+  // ============================================================================
+  // USAGE - RECORDINGS EMAILS
+  // ============================================================================
+
+  /**
+   * Send recordings soft limit reached email
+   */
+  async sendRecordingsSoftLimit(params: RecordingsSoftLimitEmailParams): Promise<void> {
+    const idempotencyKey = `recordings-soft-limit/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderRecordingsSoftLimit({
+      workspaceName: params.workspaceName,
+      usedMinutes: params.usedMinutes,
+      totalMinutes: params.totalMinutes,
+      upgradeUrl: params.upgradeUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.workspaceName} is approaching its recording limit`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        usedMinutes: params.usedMinutes,
+        totalMinutes: params.totalMinutes,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Recordings soft limit email sent'
+    );
+  }
+
+  /**
+   * Send recordings hard limit reached email
+   */
+  async sendRecordingsHardLimit(params: RecordingsHardLimitEmailParams): Promise<void> {
+    const idempotencyKey = `recordings-hard-limit/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderRecordingsHardLimit({
+      workspaceName: params.workspaceName,
+      totalMinutes: params.totalMinutes,
+      upgradeUrl: params.upgradeUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.workspaceName} has reached its recording limit`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        totalMinutes: params.totalMinutes,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Recordings hard limit email sent'
+    );
+  }
+
+  /**
+   * Send recordings requested upgrade email
+   */
+  async sendRecordingsRequestedUpgrade(
+    params: RecordingsRequestedUpgradeEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `recordings-requested-upgrade/${params.workspaceName}/${params.requesterName}`;
+
+    const { html, text } = await renderRecordingsRequestedUpgrade({
+      workspaceName: params.workspaceName,
+      requesterName: params.requesterName,
+      billingUrl: params.billingUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.requesterName} requested more recordings for ${params.workspaceName}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        requesterName: params.requesterName,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Recordings requested upgrade email sent'
+    );
+  }
+
+  // ============================================================================
+  // USAGE - SEATS EMAILS
+  // ============================================================================
+
+  /**
+   * Send seats soft limit reached email
+   */
+  async sendSeatsSoftLimit(params: SeatsSoftLimitEmailParams): Promise<void> {
+    const idempotencyKey = `seats-soft-limit/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderSeatsSoftLimit({
+      workspaceName: params.workspaceName,
+      usedSeats: params.usedSeats,
+      totalSeats: params.totalSeats,
+      upgradeUrl: params.upgradeUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.workspaceName} is approaching its seat limit`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        usedSeats: params.usedSeats,
+        totalSeats: params.totalSeats,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Seats soft limit email sent'
+    );
+  }
+
+  /**
+   * Send seats hard limit reached email
+   */
+  async sendSeatsHardLimit(params: SeatsHardLimitEmailParams): Promise<void> {
+    const idempotencyKey = `seats-hard-limit/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderSeatsHardLimit({
+      workspaceName: params.workspaceName,
+      totalSeats: params.totalSeats,
+      upgradeUrl: params.upgradeUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.workspaceName} has reached its seat limit`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        totalSeats: params.totalSeats,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Seats hard limit email sent'
+    );
+  }
+
+  /**
+   * Send seats requested upgrade email
+   */
+  async sendSeatsRequestedUpgrade(params: SeatsRequestedUpgradeEmailParams): Promise<void> {
+    const idempotencyKey = `seats-requested-upgrade/${params.workspaceName}/${params.requesterName}`;
+
+    const { html, text } = await renderSeatsRequestedUpgrade({
+      workspaceName: params.workspaceName,
+      requesterName: params.requesterName,
+      billingUrl: params.billingUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.requesterName} requested more seats for ${params.workspaceName}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        requesterName: params.requesterName,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Seats requested upgrade email sent'
+    );
+  }
+
+  // ============================================================================
+  // USAGE - LINKS EMAILS
+  // ============================================================================
+
+  /**
+   * Send links soft limit reached email
+   */
+  async sendLinksSoftLimit(params: LinksSoftLimitEmailParams): Promise<void> {
+    const idempotencyKey = `links-soft-limit/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderLinksSoftLimit({
+      workspaceName: params.workspaceName,
+      usedLinks: params.usedLinks,
+      totalLinks: params.totalLinks,
+      upgradeUrl: params.upgradeUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.workspaceName} is approaching its links limit`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        usedLinks: params.usedLinks,
+        totalLinks: params.totalLinks,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Links soft limit email sent'
+    );
+  }
+
+  /**
+   * Send links requested upgrade email
+   */
+  async sendLinksRequestedUpgrade(params: LinksRequestedUpgradeEmailParams): Promise<void> {
+    const idempotencyKey = `links-requested-upgrade/${params.workspaceName}/${params.requesterName}`;
+
+    const { html, text } = await renderLinksRequestedUpgrade({
+      workspaceName: params.workspaceName,
+      requesterName: params.requesterName,
+      billingUrl: params.billingUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.requesterName} requested more links for ${params.workspaceName}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        requesterName: params.requesterName,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Links requested upgrade email sent'
+    );
+  }
+
+  // ============================================================================
+  // USAGE - SCREENSHOTS EMAILS
+  // ============================================================================
+
+  /**
+   * Send screenshots soft limit reached email
+   */
+  async sendScreenshotsSoftLimit(params: ScreenshotsSoftLimitEmailParams): Promise<void> {
+    const idempotencyKey = `screenshots-soft-limit/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderScreenshotsSoftLimit({
+      workspaceName: params.workspaceName,
+      usedScreenshots: params.usedScreenshots,
+      totalScreenshots: params.totalScreenshots,
+      upgradeUrl: params.upgradeUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.workspaceName} is approaching its screenshots limit`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        usedScreenshots: params.usedScreenshots,
+        totalScreenshots: params.totalScreenshots,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Screenshots soft limit email sent'
+    );
+  }
+
+  // ============================================================================
+  // INVITE EMAILS
+  // ============================================================================
+
+  /**
+   * Send teammate invited email
+   */
+  async sendTeammateInvited(params: TeammateInvitedEmailParams): Promise<void> {
+    const idempotencyKey = `teammate-invited/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderTeammateInvited({
+      inviterName: params.inviterName,
+      workspaceName: params.workspaceName,
+      inviteUrl: params.inviteUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `${params.workspaceName} (via Userplane) <${env.email.inboxes.invite}>`,
+        to: params.to,
+        subject: `${params.inviterName} invited you to ${params.workspaceName}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        inviterName: params.inviterName,
+        fromInbox: env.email.inboxes.invite,
+        provider: emailClient.getProvider(),
+      },
+      'Teammate invited email sent'
+    );
+  }
+
+  // ============================================================================
+  // OFFBOARDING EMAILS
+  // ============================================================================
+
+  /**
+   * Send account deletion email
+   */
+  async sendAccountDeletion(params: AccountDeletionEmailParams): Promise<void> {
+    const idempotencyKey = `account-deletion/${params.to}`;
+
+    const { html, text } = await renderAccountDeletion({
+      userName: params.userName,
+      feedbackUrl: params.feedbackUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: 'Your Userplane account has been deleted',
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        userName: params.userName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Account deletion email sent'
+    );
+  }
+
+  /**
+   * Send TOS violation email
+   */
+  async sendTosViolation(params: TosViolationEmailParams): Promise<void> {
+    const idempotencyKey = `tos-violation/${params.to}`;
+
+    const { html, text } = await renderTosViolation({
+      userName: params.userName,
+      appealUrl: params.appealUrl,
+      tosUrl: params.tosUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: 'Terms of Service violation notice',
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        userName: params.userName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'TOS violation email sent'
+    );
+  }
+
+  // ============================================================================
+  // PILOT EMAILS
+  // ============================================================================
+
+  /**
+   * Send pilot sandbox invite email
+   */
+  async sendPilotSandboxInvite(params: PilotSandboxInviteEmailParams): Promise<void> {
+    const idempotencyKey = `pilot-sandbox-invite/${params.to}`;
+
+    const { html, text } = await renderSandboxInvite({
+      sandboxUrl: params.sandboxUrl,
+      expiresInDays: params.expiresInDays,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: 'Your Userplane sandbox is ready',
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        expiresInDays: params.expiresInDays,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Pilot sandbox invite email sent'
+    );
+  }
+
+  /**
+   * Send pilot reverse trial offer email
+   */
+  async sendPilotReverseTrialOffer(params: PilotReverseTrialOfferEmailParams): Promise<void> {
+    const idempotencyKey = `pilot-reverse-trial-offer/${params.to}`;
+
+    const { html, text } = await renderPilotReverseTrialOffer({
+      upgradeUrl: params.upgradeUrl,
+      planName: params.planName,
+      trialDays: params.trialDays,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: 'Try premium features with our money-back guarantee',
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        planName: params.planName,
+        trialDays: params.trialDays,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Pilot reverse trial offer email sent'
+    );
+  }
+
+  // ============================================================================
+  // RECORDING EMAILS
+  // ============================================================================
+
+  /**
+   * Send recording received email
+   */
+  async sendRecordingReceived(params: RecordingReceivedEmailParams): Promise<void> {
+    const idempotencyKey = `recording-received/${params.to}/${params.recordingUrl}`;
+
+    const { html, text } = await renderRecordingReceived({
+      recordingTitle: params.recordingTitle,
+      recordingUrl: params.recordingUrl,
+      submittedAt: params.submittedAt,
+      duration: params.duration,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `New recording: ${params.recordingTitle}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        recordingTitle: params.recordingTitle,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Recording received email sent'
+    );
+  }
+
+  // ============================================================================
+  // TRIAL EMAILS
+  // ============================================================================
+
+  /**
+   * Send trial reverse trial offer email
+   */
+  async sendTrialReverseTrialOffer(params: TrialReverseTrialOfferEmailParams): Promise<void> {
+    const idempotencyKey = `trial-reverse-trial-offer/${params.to}`;
+
+    const { html, text } = await renderTrialReverseTrialOffer({
+      upgradeUrl: params.upgradeUrl,
+      planName: params.planName,
+      trialDays: params.trialDays,
+      remainingDays: params.remainingDays,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.billing}>`,
+        to: params.to,
+        subject: `${params.remainingDays} days left in your trial`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        planName: params.planName,
+        remainingDays: params.remainingDays,
+        fromInbox: env.email.inboxes.billing,
+        provider: emailClient.getProvider(),
+      },
+      'Trial reverse trial offer email sent'
+    );
+  }
+
+  // ============================================================================
+  // WORKSPACE EMAILS
+  // ============================================================================
+
+  /**
+   * Send workspace access granted email
+   */
+  async sendWorkspaceAccessGranted(params: WorkspaceAccessGrantedEmailParams): Promise<void> {
+    const idempotencyKey = `workspace-access-granted/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderAccessGranted({
+      workspaceName: params.workspaceName,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `${params.workspaceName} (via Userplane) <${env.email.inboxes.invite}>`,
+        to: params.to,
+        subject: `You now have access to ${params.workspaceName}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        fromInbox: env.email.inboxes.invite,
+        provider: emailClient.getProvider(),
+      },
+      'Workspace access granted email sent'
+    );
+  }
+
+  /**
+   * Send workspace access requested email
+   */
+  async sendWorkspaceAccessRequested(params: WorkspaceAccessRequestedEmailParams): Promise<void> {
+    const idempotencyKey = `workspace-access-requested/${params.workspaceName}/${params.requesterEmail}`;
+
+    const { html, text } = await renderAccessRequested({
+      workspaceName: params.workspaceName,
+      requesterName: params.requesterName,
+      requesterEmail: params.requesterEmail,
+      reviewUrl: params.reviewUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `${params.workspaceName} (via Userplane) <${env.email.inboxes.invite}>`,
+        to: params.to,
+        subject: `${params.requesterName} requested access to ${params.workspaceName}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        requesterName: params.requesterName,
+        requesterEmail: params.requesterEmail,
+        fromInbox: env.email.inboxes.invite,
+        provider: emailClient.getProvider(),
+      },
+      'Workspace access requested email sent'
+    );
+  }
+
+  /**
+   * Send workspace deletion scheduled email
+   */
+  async sendWorkspaceDeletionScheduled(
+    params: WorkspaceDeletionScheduledEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `workspace-deletion-scheduled/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderDeletionScheduled({
+      workspaceName: params.workspaceName,
+      deletionDate: params.deletionDate,
+      cancelUrl: params.cancelUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.workspaceName} scheduled for deletion on ${params.deletionDate}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        deletionDate: params.deletionDate,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Workspace deletion scheduled email sent'
+    );
+  }
+
+  /**
+   * Send workspace deletion requested email
+   */
+  async sendWorkspaceDeletionRequested(
+    params: WorkspaceDeletionRequestedEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `workspace-deletion-requested/${params.workspaceName}/${params.requesterEmail}/${params.to}`;
+
+    const { html, text } = await renderDeletionRequested({
+      workspaceName: params.workspaceName,
+      requesterName: params.requesterName,
+      requesterEmail: params.requesterEmail,
+      deletionDate: params.deletionDate,
+      cancelUrl: params.cancelUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.requesterName} requested to delete ${params.workspaceName}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        requesterName: params.requesterName,
+        requesterEmail: params.requesterEmail,
+        deletionDate: params.deletionDate,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Workspace deletion requested email sent'
+    );
+  }
+
+  /**
+   * Send workspace deletion confirmation email
+   */
+  async sendWorkspaceDeletionConfirmation(
+    params: WorkspaceDeletionConfirmationEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `workspace-deletion-confirmation/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderDeletionConfirmation({
+      workspaceName: params.workspaceName,
+      feedbackUrl: params.feedbackUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.workspaceName} has been deleted`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Workspace deletion confirmation email sent'
+    );
+  }
+
+  /**
+   * Send workspace recovery scheduled email
+   */
+  async sendWorkspaceRecoveryScheduled(
+    params: WorkspaceRecoveryScheduledEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `workspace-recovery-scheduled/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderRecoveryScheduled({
+      workspaceName: params.workspaceName,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.workspaceName} recovery scheduled`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Workspace recovery scheduled email sent'
+    );
+  }
+
+  /**
+   * Send workspace recovery confirmation email
+   */
+  async sendWorkspaceRecoveryConfirmation(
+    params: WorkspaceRecoveryConfirmationEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `workspace-recovery-confirmation/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderRecoveryConfirmation({
+      workspaceName: params.workspaceName,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.workspaceName} has been recovered`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Workspace recovery confirmation email sent'
+    );
+  }
+
+  /**
+   * Send workspace recovery partially email
+   */
+  async sendWorkspaceRecoveryPartially(
+    params: WorkspaceRecoveryPartiallyEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `workspace-recovery-partially/${params.workspaceName}/${params.to}`;
+
+    const { html, text } = await renderRecoveryPartially({
+      workspaceName: params.workspaceName,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.workspaceName} has been partially restored`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Workspace recovery partially email sent'
+    );
+  }
+
+  // ============================================================================
+  // PROJECT EMAILS
+  // ============================================================================
+
+  /**
+   * Send project deletion scheduled email
+   */
+  async sendProjectDeletionScheduled(params: ProjectDeletionScheduledEmailParams): Promise<void> {
+    const idempotencyKey = `project-deletion-scheduled/${params.projectName}/${params.to}`;
+
+    const { html, text } = await renderProjectDeletionScheduled({
+      projectName: params.projectName,
+      deletionDate: params.deletionDate,
+      cancelUrl: params.cancelUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.projectName} scheduled for deletion on ${params.deletionDate}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        projectName: params.projectName,
+        deletionDate: params.deletionDate,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Project deletion scheduled email sent'
+    );
+  }
+
+  /**
+   * Send project deletion requested email
+   */
+  async sendProjectDeletionRequested(params: ProjectDeletionRequestedEmailParams): Promise<void> {
+    const idempotencyKey = `project-deletion-requested/${params.projectName}/${params.requesterEmail}/${params.to}`;
+
+    const { html, text } = await renderProjectDeletionRequested({
+      projectName: params.projectName,
+      requesterName: params.requesterName,
+      requesterEmail: params.requesterEmail,
+      deletionDate: params.deletionDate,
+      cancelUrl: params.cancelUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.requesterName} requested to delete ${params.projectName}`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        projectName: params.projectName,
+        requesterName: params.requesterName,
+        requesterEmail: params.requesterEmail,
+        deletionDate: params.deletionDate,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Project deletion requested email sent'
+    );
+  }
+
+  /**
+   * Send project deletion confirmation email
+   */
+  async sendProjectDeletionConfirmation(
+    params: ProjectDeletionConfirmationEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `project-deletion-confirmation/${params.projectName}/${params.to}`;
+
+    const { html, text } = await renderProjectDeletionConfirmation({
+      projectName: params.projectName,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.projectName} has been deleted`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        projectName: params.projectName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Project deletion confirmation email sent'
+    );
+  }
+
+  /**
+   * Send project recovery scheduled email
+   */
+  async sendProjectRecoveryScheduled(params: ProjectRecoveryScheduledEmailParams): Promise<void> {
+    const idempotencyKey = `project-recovery-scheduled/${params.projectName}/${params.to}`;
+
+    const { html, text } = await renderProjectRecoveryScheduled({
+      projectName: params.projectName,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.projectName} recovery scheduled`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        projectName: params.projectName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Project recovery scheduled email sent'
+    );
+  }
+
+  /**
+   * Send project recovery confirmation email
+   */
+  async sendProjectRecoveryConfirmation(
+    params: ProjectRecoveryConfirmationEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `project-recovery-confirmation/${params.projectName}/${params.to}`;
+
+    const { html, text } = await renderProjectRecoveryConfirmation({
+      projectName: params.projectName,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.projectName} has been recovered`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        projectName: params.projectName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Project recovery confirmation email sent'
+    );
+  }
+
+  /**
+   * Send project recovery partially email
+   */
+  async sendProjectRecoveryPartially(params: ProjectRecoveryPartiallyEmailParams): Promise<void> {
+    const idempotencyKey = `project-recovery-partially/${params.projectName}/${params.to}`;
+
+    const { html, text } = await renderProjectRecoveryPartially({
+      projectName: params.projectName,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: `Userplane <${env.email.inboxes.notification}>`,
+        to: params.to,
+        subject: `${params.projectName} has been partially restored`,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        projectName: params.projectName,
+        fromInbox: env.email.inboxes.notification,
+        provider: emailClient.getProvider(),
+      },
+      'Project recovery partially email sent'
     );
   }
 }

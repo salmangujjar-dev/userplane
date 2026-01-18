@@ -26,6 +26,7 @@ export type {
   AccountDeletionEmailProps,
   AtRiskNotEngagedEmailProps,
   DeletionConfirmationEmailProps,
+  DeletionRequestedEmailProps,
   // Workspace
   DeletionScheduledEmailProps,
   // Domain
@@ -34,14 +35,25 @@ export type {
   // Auth
   EmailVerificationEmailProps,
   HelpdeskIntegrationPromptEmailProps,
+  LinksRequestedUpgradeEmailProps,
+  // Usage - Links
+  LinksSoftLimitEmailProps,
   MagicLinkEmailProps,
+  // Project
+  ProjectDeletionConfirmationEmailProps,
+  ProjectDeletionRequestedEmailProps,
+  ProjectDeletionScheduledEmailProps,
+  ProjectRecoveryConfirmationEmailProps,
+  ProjectRecoveryPartiallyEmailProps,
+  ProjectRecoveryScheduledEmailProps,
   // Recording
   RecordingReceivedEmailProps,
   RecordingsHardLimitEmailProps,
   RecordingsRequestedUpgradeEmailProps,
-  // Entitlement - Recordings
+  // Usage - Recordings
   RecordingsSoftLimitEmailProps,
   RecoveryConfirmationEmailProps,
+  RecoveryPartiallyEmailProps,
   RecoveryScheduledEmailProps,
   RenderResult,
   // Activation
@@ -52,11 +64,11 @@ export type {
   SandboxInviteEmailProps,
   ScreenshotsHardLimitEmailProps,
   ScreenshotsRequestedUpgradeEmailProps,
-  // Entitlement - Screenshots
+  // Usage - Screenshots
   ScreenshotsSoftLimitEmailProps,
   SeatsHardLimitEmailProps,
   SeatsRequestedUpgradeEmailProps,
-  // Entitlement - Seats
+  // Usage - Seats
   SeatsSoftLimitEmailProps,
   // Billing
   SubscriptionActiveEmailProps,
@@ -80,6 +92,7 @@ export {
   renderAccountDeletion,
   renderAtRiskNotEngaged,
   renderDeletionConfirmation,
+  renderDeletionRequested,
   // Workspace
   renderDeletionScheduled,
   // Domain
@@ -88,15 +101,26 @@ export {
   // Auth
   renderEmailVerification,
   renderHelpdeskIntegrationPrompt,
+  renderLinksRequestedUpgrade,
+  // Usage - Links
+  renderLinksSoftLimit,
   renderMagicLink,
   renderPilotReverseTrialOffer,
+  // Project
+  renderProjectDeletionConfirmation,
+  renderProjectDeletionRequested,
+  renderProjectDeletionScheduled,
+  renderProjectRecoveryConfirmation,
+  renderProjectRecoveryPartially,
+  renderProjectRecoveryScheduled,
   // Recording
   renderRecordingReceived,
   renderRecordingsHardLimit,
   renderRecordingsRequestedUpgrade,
-  // Entitlement - Recordings
+  // Usage - Recordings
   renderRecordingsSoftLimit,
   renderRecoveryConfirmation,
+  renderRecoveryPartially,
   renderRecoveryScheduled,
   // Activation
   renderRequestFirstRecording,
@@ -105,11 +129,11 @@ export {
   renderSandboxInvite,
   renderScreenshotsHardLimit,
   renderScreenshotsRequestedUpgrade,
-  // Entitlement - Screenshots
+  // Usage - Screenshots
   renderScreenshotsSoftLimit,
   renderSeatsHardLimit,
   renderSeatsRequestedUpgrade,
-  // Entitlement - Seats
+  // Usage - Seats
   renderSeatsSoftLimit,
   // Billing
   renderSubscriptionActive,

@@ -36,8 +36,11 @@ export * from './domain';
 // Billing emails
 export * from './billing';
 
-// Entitlement emails (seats, recordings, screenshots)
-export * from './entitlement';
+// Project emails
+export * from './project';
+
+// Usage emails (seats, recordings, screenshots, links)
+export * from './usage';
 
 // Shared components
 export type { EmailLayoutProps } from '../shared/layout';

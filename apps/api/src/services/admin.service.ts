@@ -166,7 +166,10 @@ export class AdminService {
       throw adminError.SESSION_NOT_FOUND();
     }
 
-    await this.deps.adminRepo.deleteSession(sessionId);
+    const deleted = await this.deps.adminRepo.deleteSession(sessionId);
+    if (!deleted) {
+      throw adminError.SESSION_NOT_FOUND();
+    }
 
     // Return remaining sessions
     const result = await this.deps.adminRepo.getActiveUserSessions(foundSession.userId);
