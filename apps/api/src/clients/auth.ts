@@ -1,12 +1,8 @@
 import { createAuth } from '@workspace/auth';
-import { renderEmailVerification, renderMagicLink } from '@workspace/email';
-import { createAppLogger } from '@workspace/logger';
 
 import { db } from '@/api/clients/db';
-import { emailClient } from '@/api/clients/email';
 import { env } from '@/api/env';
-
-const logger = createAppLogger('auth-client');
+import { emailService } from '@/api/services/email.service';
 
 export const auth = createAuth({
   database: db,
@@ -24,60 +20,17 @@ export const auth = createAuth({
   },
   email: {
     sendVerificationEmail: async ({ user, url }) => {
-      const { html, text } = await renderEmailVerification({
-        userName: user.name || 'there',
+      await emailService.sendEmailVerification({
+        to: user.email,
+        userName: user.name,
         verificationUrl: url,
       });
-
-      await emailClient.send(
-        {
-          from: `Userplane <${env.email.inboxes.auth}>`,
-          to: user.email,
-          subject: 'Verify your email address',
-          html,
-          text,
-        },
-        {
-          idempotencyKey: `email-verification/${user.email}`,
-        }
-      );
-
-      logger.info(
-        {
-          to: user.email,
-          fromInbox: env.email.inboxes.auth,
-          provider: emailClient.getProvider(),
-        },
-        'Verification email sent'
-      );
     },
     sendMagicLink: async ({ email, url }) => {
-      const { html, text } = await renderMagicLink({
+      await emailService.sendMagicLink({
+        to: email,
         magicLinkUrl: url,
       });
-
-      await emailClient.send(
-        {
-          from: `Userplane <${env.email.inboxes.auth}>`,
-          to: email,
-          subject: 'Sign in to Userplane',
-          html,
-          text,
-        },
-        {
-          // Use timestamp to allow multiple magic links
-          idempotencyKey: `magic-link/${email}/${Date.now()}`,
-        }
-      );
-
-      logger.info(
-        {
-          to: email,
-          fromInbox: env.email.inboxes.auth,
-          provider: emailClient.getProvider(),
-        },
-        'Magic link email sent'
-      );
     },
   },
 });

@@ -21,6 +21,48 @@ import {
   WorkspaceCreateInviteTokenPayloadSchema,
 } from '@workspace/contract';
 import type { Link } from '@workspace/db';
+import type {
+  AccessGrantedEmailProps,
+  AccessRequestedEmailProps,
+  AccessRequestEmailProps,
+  AccountDeletionEmailProps,
+  DeletionConfirmationEmailProps,
+  DeletionRequestedEmailProps,
+  DeletionScheduledEmailProps,
+  DomainDeveloperInstructionsEmailProps,
+  EmailVerificationEmailProps,
+  LinksRequestedUpgradeEmailProps,
+  LinksSoftLimitEmailProps,
+  MagicLinkEmailProps,
+  ProjectDeletionConfirmationEmailProps,
+  ProjectDeletionRequestedEmailProps,
+  ProjectDeletionScheduledEmailProps,
+  ProjectRecoveryConfirmationEmailProps,
+  ProjectRecoveryPartiallyEmailProps,
+  ProjectRecoveryScheduledEmailProps,
+  RecordingReceivedEmailProps,
+  RecordingsHardLimitEmailProps,
+  RecordingsRequestedUpgradeEmailProps,
+  RecordingsSoftLimitEmailProps,
+  RecoveryConfirmationEmailProps,
+  RecoveryPartiallyEmailProps,
+  RecoveryScheduledEmailProps,
+  ReverseTrialOfferEmailProps,
+  SandboxInviteEmailProps,
+  ScreenshotsSoftLimitEmailProps,
+  SeatsHardLimitEmailProps,
+  SeatsRequestedUpgradeEmailProps,
+  SeatsSoftLimitEmailProps,
+  SubscriptionActiveEmailProps,
+  SubscriptionExpiredEmailProps,
+  SubscriptionInactiveEmailProps,
+  SubscriptionPlanChangeEmailProps,
+  SubscriptionReverseTrialEmailProps,
+  TeammateInvitedEmailProps,
+  TosViolationEmailProps,
+  TrialReverseTrialOfferEmailProps,
+  WorkspaceInviteEmailProps,
+} from '@workspace/email';
 import type { PlanId as WorkspacePlan } from '@workspace/pricing';
 import type { z } from 'zod';
 
@@ -163,391 +205,270 @@ export interface CreateDomainInput {
 }
 
 /**
+ * Email parameters extend the email props from @workspace/email and add recipient
+ * This ensures single source of truth - email template parameters stay in sync
+ * We use Required<> to make all optional template props required for our service layer
+ * Additional fields may be added for logging or routing purposes
+ */
+
+/**
  * Workspace invitation email parameters
  */
-export interface WorkspaceInviteEmailParams {
+export type WorkspaceInviteEmailParams = Required<WorkspaceInviteEmailProps> & {
   to: string;
-  workspaceName: string;
-  inviteUrl: string;
-  inviterName: string;
   inviterEmail: string;
-}
+};
 
 /**
  * Access request email parameters
  */
-export interface AccessRequestEmailParams {
-  to: string;
-  workspaceName: string;
-  requesterName: string;
-  requesterEmail: string;
-  reviewUrl: string;
-}
+export type AccessRequestEmailParams = Required<AccessRequestEmailProps> & { to: string };
 
 /**
  * Domain developer instructions email parameters
  */
-export interface DomainDeveloperInstructionsEmailParams {
-  to: string;
-  domainName: string;
-  settingsUrl: string;
-  docsUrl: string;
-}
+export type DomainDeveloperInstructionsEmailParams =
+  Required<DomainDeveloperInstructionsEmailProps> & {
+    to: string;
+  };
+
+/**
+ * Email verification email parameters
+ */
+export type EmailVerificationEmailParams = EmailVerificationEmailProps & { to: string };
 
 /**
  * Magic link email parameters
  */
-export interface MagicLinkEmailParams {
-  to: string;
-  magicLinkUrl: string;
-}
+export type MagicLinkEmailParams = Required<MagicLinkEmailProps> & { to: string };
 
 /**
  * Subscription active email parameters
  */
-export interface SubscriptionActiveEmailParams {
-  to: string;
-  planName: string;
-  dashboardUrl: string;
-  billingUrl: string;
-}
+export type SubscriptionActiveEmailParams = Required<SubscriptionActiveEmailProps> & { to: string };
 
 /**
  * Subscription expired email parameters
  */
-export interface SubscriptionExpiredEmailParams {
+export type SubscriptionExpiredEmailParams = Required<SubscriptionExpiredEmailProps> & {
   to: string;
-  planName: string;
-  renewUrl: string;
-}
+};
 
 /**
  * Subscription inactive email parameters
  */
-export interface SubscriptionInactiveEmailParams {
+export type SubscriptionInactiveEmailParams = Required<SubscriptionInactiveEmailProps> & {
   to: string;
-  planName: string;
-  reactivateUrl: string;
-}
+};
 
 /**
  * Subscription plan change email parameters
  */
-export interface SubscriptionPlanChangeEmailParams {
+export type SubscriptionPlanChangeEmailParams = Required<SubscriptionPlanChangeEmailProps> & {
   to: string;
-  previousPlan: string;
-  newPlan: string;
-  effectiveDate: string;
-  billingUrl: string;
-}
+};
 
 /**
  * Subscription reverse trial email parameters
  */
-export interface SubscriptionReverseTrialEmailParams {
+export type SubscriptionReverseTrialEmailParams = Required<SubscriptionReverseTrialEmailProps> & {
   to: string;
-  planName: string;
-  trialDays: number;
-  dashboardUrl: string;
-}
+};
 
 /**
  * Recordings soft limit reached email parameters
  */
-export interface RecordingsSoftLimitEmailParams {
+export type RecordingsSoftLimitEmailParams = Required<RecordingsSoftLimitEmailProps> & {
   to: string;
-  workspaceName: string;
-  usedMinutes: number;
-  totalMinutes: number;
-  upgradeUrl: string;
-}
+};
 
 /**
  * Recordings hard limit reached email parameters
  */
-export interface RecordingsHardLimitEmailParams {
+export type RecordingsHardLimitEmailParams = Required<RecordingsHardLimitEmailProps> & {
   to: string;
-  workspaceName: string;
-  totalMinutes: number;
-  upgradeUrl: string;
-}
+};
 
 /**
  * Recordings requested upgrade email parameters
  */
-export interface RecordingsRequestedUpgradeEmailParams {
-  to: string;
-  workspaceName: string;
-  requesterName: string;
-  billingUrl: string;
-}
+export type RecordingsRequestedUpgradeEmailParams =
+  Required<RecordingsRequestedUpgradeEmailProps> & {
+    to: string;
+  };
 
 /**
  * Seats soft limit reached email parameters
  */
-export interface SeatsSoftLimitEmailParams {
-  to: string;
-  workspaceName: string;
-  usedSeats: number;
-  totalSeats: number;
-  upgradeUrl: string;
-}
+export type SeatsSoftLimitEmailParams = Required<SeatsSoftLimitEmailProps> & { to: string };
 
 /**
  * Seats hard limit reached email parameters
  */
-export interface SeatsHardLimitEmailParams {
-  to: string;
-  workspaceName: string;
-  totalSeats: number;
-  upgradeUrl: string;
-}
+export type SeatsHardLimitEmailParams = Required<SeatsHardLimitEmailProps> & { to: string };
 
 /**
  * Seats requested upgrade email parameters
  */
-export interface SeatsRequestedUpgradeEmailParams {
+export type SeatsRequestedUpgradeEmailParams = Required<SeatsRequestedUpgradeEmailProps> & {
   to: string;
-  workspaceName: string;
-  requesterName: string;
-  billingUrl: string;
-}
+};
 
 /**
  * Links soft limit reached email parameters
  */
-export interface LinksSoftLimitEmailParams {
-  to: string;
-  workspaceName: string;
-  usedLinks: number;
-  totalLinks: number;
-  upgradeUrl: string;
-}
+export type LinksSoftLimitEmailParams = Required<LinksSoftLimitEmailProps> & { to: string };
 
 /**
  * Links requested upgrade email parameters
  */
-export interface LinksRequestedUpgradeEmailParams {
+export type LinksRequestedUpgradeEmailParams = Required<LinksRequestedUpgradeEmailProps> & {
   to: string;
-  workspaceName: string;
-  requesterName: string;
-  billingUrl: string;
-}
+};
 
 /**
  * Screenshots soft limit reached email parameters
  */
-export interface ScreenshotsSoftLimitEmailParams {
+export type ScreenshotsSoftLimitEmailParams = Required<ScreenshotsSoftLimitEmailProps> & {
   to: string;
-  workspaceName: string;
-  usedScreenshots: number;
-  totalScreenshots: number;
-  upgradeUrl: string;
-}
+};
 
 /**
  * Teammate invited email parameters
  */
-export interface TeammateInvitedEmailParams {
-  to: string;
-  inviterName: string;
-  workspaceName: string;
-  inviteUrl: string;
-}
+export type TeammateInvitedEmailParams = Required<TeammateInvitedEmailProps> & { to: string };
 
 /**
  * Account deletion email parameters
  */
-export interface AccountDeletionEmailParams {
-  to: string;
-  userName: string;
-  feedbackUrl: string;
-}
+export type AccountDeletionEmailParams = Required<AccountDeletionEmailProps> & { to: string };
 
 /**
  * TOS violation email parameters
  */
-export interface TosViolationEmailParams {
-  to: string;
-  userName: string;
-  appealUrl: string;
-  tosUrl: string;
-}
+export type TosViolationEmailParams = Required<TosViolationEmailProps> & { to: string };
 
 /**
  * Pilot sandbox invite email parameters
  */
-export interface PilotSandboxInviteEmailParams {
-  to: string;
-  sandboxUrl: string;
-  expiresInDays: number;
-}
+export type PilotSandboxInviteEmailParams = Required<SandboxInviteEmailProps> & { to: string };
 
 /**
  * Recording received email parameters
  */
-export interface RecordingReceivedEmailParams {
-  to: string;
-  recordingTitle: string;
-  recordingUrl: string;
-  submittedAt: string;
-  duration: string;
-}
+export type RecordingReceivedEmailParams = Required<RecordingReceivedEmailProps> & { to: string };
 
 /**
  * Trial reverse trial offer email parameters
  */
-export interface TrialReverseTrialOfferEmailParams {
+export type TrialReverseTrialOfferEmailParams = Required<TrialReverseTrialOfferEmailProps> & {
   to: string;
-  upgradeUrl: string;
-  planName: string;
-  trialDays: number;
-  remainingDays: number;
-}
+};
 
 /**
  * Pilot reverse trial offer email parameters
  */
-export interface PilotReverseTrialOfferEmailParams {
+export type PilotReverseTrialOfferEmailParams = Required<ReverseTrialOfferEmailProps> & {
   to: string;
-  upgradeUrl: string;
-  planName: string;
-  trialDays: number;
-}
+};
 
 /**
  * Workspace access granted email parameters
  */
-export interface WorkspaceAccessGrantedEmailParams {
-  to: string;
-  workspaceName: string;
-  dashboardUrl: string;
-}
+export type WorkspaceAccessGrantedEmailParams = Required<AccessGrantedEmailProps> & { to: string };
 
 /**
  * Workspace access requested email parameters
  */
-export interface WorkspaceAccessRequestedEmailParams {
+export type WorkspaceAccessRequestedEmailParams = Required<AccessRequestedEmailProps> & {
   to: string;
-  workspaceName: string;
-  requesterName: string;
-  requesterEmail: string;
-  reviewUrl: string;
-}
+};
 
 /**
  * Workspace deletion scheduled email parameters
  */
-export interface WorkspaceDeletionScheduledEmailParams {
+export type WorkspaceDeletionScheduledEmailParams = Required<DeletionScheduledEmailProps> & {
   to: string;
-  workspaceName: string;
-  deletionDate: string;
-  cancelUrl: string;
-}
+};
 
 /**
  * Workspace deletion confirmation email parameters
  */
-export interface WorkspaceDeletionConfirmationEmailParams {
+export type WorkspaceDeletionConfirmationEmailParams = Required<DeletionConfirmationEmailProps> & {
   to: string;
-  workspaceName: string;
-  feedbackUrl: string;
-}
+};
 
 /**
  * Workspace recovery scheduled email parameters
  */
-export interface WorkspaceRecoveryScheduledEmailParams {
+export type WorkspaceRecoveryScheduledEmailParams = Required<RecoveryScheduledEmailProps> & {
   to: string;
-  workspaceName: string;
-  dashboardUrl: string;
-}
+};
 
 /**
  * Workspace recovery confirmation email parameters
  */
-export interface WorkspaceRecoveryConfirmationEmailParams {
+export type WorkspaceRecoveryConfirmationEmailParams = Required<RecoveryConfirmationEmailProps> & {
   to: string;
-  workspaceName: string;
-  dashboardUrl: string;
-}
+};
 
 /**
  * Workspace deletion requested email parameters
  */
-export interface WorkspaceDeletionRequestedEmailParams {
+export type WorkspaceDeletionRequestedEmailParams = Required<DeletionRequestedEmailProps> & {
   to: string;
-  workspaceName: string;
-  requesterName: string;
-  requesterEmail: string;
-  deletionDate: string;
-  cancelUrl: string;
-}
+};
 
 /**
  * Workspace recovery partially email parameters
  */
-export interface WorkspaceRecoveryPartiallyEmailParams {
+export type WorkspaceRecoveryPartiallyEmailParams = Required<RecoveryPartiallyEmailProps> & {
   to: string;
-  workspaceName: string;
-  dashboardUrl: string;
-}
+};
 
 /**
  * Project deletion scheduled email parameters
  */
-export interface ProjectDeletionScheduledEmailParams {
+export type ProjectDeletionScheduledEmailParams = Required<ProjectDeletionScheduledEmailProps> & {
   to: string;
-  projectName: string;
-  deletionDate: string;
-  cancelUrl: string;
-}
+};
 
 /**
  * Project deletion confirmation email parameters
  */
-export interface ProjectDeletionConfirmationEmailParams {
-  to: string;
-  projectName: string;
-}
+export type ProjectDeletionConfirmationEmailParams =
+  Required<ProjectDeletionConfirmationEmailProps> & {
+    to: string;
+  };
 
 /**
  * Project recovery scheduled email parameters
  */
-export interface ProjectRecoveryScheduledEmailParams {
+export type ProjectRecoveryScheduledEmailParams = Required<ProjectRecoveryScheduledEmailProps> & {
   to: string;
-  projectName: string;
-}
+};
 
 /**
  * Project recovery confirmation email parameters
  */
-export interface ProjectRecoveryConfirmationEmailParams {
-  to: string;
-  projectName: string;
-  dashboardUrl: string;
-}
+export type ProjectRecoveryConfirmationEmailParams =
+  Required<ProjectRecoveryConfirmationEmailProps> & {
+    to: string;
+  };
 
 /**
  * Project deletion requested email parameters
  */
-export interface ProjectDeletionRequestedEmailParams {
+export type ProjectDeletionRequestedEmailParams = Required<ProjectDeletionRequestedEmailProps> & {
   to: string;
-  projectName: string;
-  requesterName: string;
-  requesterEmail: string;
-  deletionDate: string;
-  cancelUrl: string;
-}
+};
 
 /**
  * Project recovery partially email parameters
  */
-export interface ProjectRecoveryPartiallyEmailParams {
+export type ProjectRecoveryPartiallyEmailParams = Required<ProjectRecoveryPartiallyEmailProps> & {
   to: string;
-  projectName: string;
-  dashboardUrl: string;
-}
+};
 
 /**
  * Internal invite action result for service orchestration

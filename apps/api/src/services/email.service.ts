@@ -13,6 +13,7 @@ import {
   renderDeletionRequested,
   renderDeletionScheduled,
   renderDomainDeveloperInstructions,
+  renderEmailVerification,
   renderLinksRequestedUpgrade,
   renderLinksSoftLimit,
   renderMagicLink,
@@ -48,11 +49,53 @@ import {
 import { createAppLogger } from '@workspace/logger';
 
 import { emailClient } from '@/api/clients/email';
-import { env } from '@/api/env';
+import {
+  accessRequestSubject,
+  accountDeletionSubject,
+  domainDeveloperInstructionsSubject,
+  emailVerificationSubject,
+  linksRequestedUpgradeSubject,
+  linksSoftLimitSubject,
+  magicLinkSubject,
+  pilotReverseTrialOfferSubject,
+  pilotSandboxInviteSubject,
+  projectDeletionConfirmationSubject,
+  projectDeletionRequestedSubject,
+  projectDeletionScheduledSubject,
+  projectRecoveryConfirmationSubject,
+  projectRecoveryPartiallySubject,
+  projectRecoveryScheduledSubject,
+  recordingReceivedSubject,
+  recordingsHardLimitSubject,
+  recordingsRequestedUpgradeSubject,
+  recordingsSoftLimitSubject,
+  screenshotsSoftLimitSubject,
+  seatsHardLimitSubject,
+  seatsRequestedUpgradeSubject,
+  seatsSoftLimitSubject,
+  subscriptionActiveSubject,
+  subscriptionExpiredSubject,
+  subscriptionInactiveSubject,
+  subscriptionPlanChangeSubject,
+  subscriptionReverseTrialSubject,
+  teammateInvitedSubject,
+  tosViolationSubject,
+  trialReverseTrialOfferSubject,
+  workspaceAccessGrantedSubject,
+  workspaceAccessRequestedSubject,
+  workspaceDeletionConfirmationSubject,
+  workspaceDeletionRequestedSubject,
+  workspaceDeletionScheduledSubject,
+  workspaceInviteSubject,
+  workspaceRecoveryConfirmationSubject,
+  workspaceRecoveryPartiallySubject,
+  workspaceRecoveryScheduledSubject,
+} from '@/api/subjects';
 import type {
   AccessRequestEmailParams,
   AccountDeletionEmailParams,
   DomainDeveloperInstructionsEmailParams,
+  EmailVerificationEmailParams,
   LinksRequestedUpgradeEmailParams,
   LinksSoftLimitEmailParams,
   MagicLinkEmailParams,
@@ -90,6 +133,13 @@ import type {
   WorkspaceRecoveryPartiallyEmailParams,
   WorkspaceRecoveryScheduledEmailParams,
 } from '@/api/types';
+import {
+  authFrom,
+  billingFrom,
+  domainFrom,
+  inviteFrom,
+  notificationFrom,
+} from '@/api/utils/email-from';
 
 const logger = createAppLogger('email-service');
 
@@ -97,6 +147,40 @@ export class EmailService {
   // ============================================================================
   // AUTH EMAILS
   // ============================================================================
+
+  /**
+   * Send email verification email
+   * Sent when a user needs to verify their email address
+   */
+  async sendEmailVerification(params: EmailVerificationEmailParams): Promise<void> {
+    const idempotencyKey = `email-verification/${params.to}/${Date.now()}`;
+
+    const { html, text } = await renderEmailVerification({
+      userName: params.userName,
+      verificationUrl: params.verificationUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: authFrom(),
+        to: params.to,
+        subject: emailVerificationSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        provider: emailClient.getProvider(),
+      },
+      'Email verification sent'
+    );
+  }
 
   /**
    * Send magic link email for passwordless sign in
@@ -110,9 +194,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.auth}>`,
+        from: authFrom(),
         to: params.to,
-        subject: 'Sign in to Userplane',
+        subject: magicLinkSubject,
         html,
         text,
       },
@@ -124,7 +208,6 @@ export class EmailService {
     logger.info(
       {
         to: params.to,
-        fromInbox: env.email.inboxes.auth,
         provider: emailClient.getProvider(),
       },
       'Magic link sent'
@@ -147,9 +230,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `${params.workspaceName} (via Userplane) <${env.email.inboxes.invite}>`,
+        from: inviteFrom(params.workspaceName),
         to: params.to,
-        subject: `${params.inviterName} invited you to ${params.workspaceName}`,
+        subject: workspaceInviteSubject({
+          inviterName: params.inviterName,
+          workspaceName: params.workspaceName,
+        }),
         html,
         text,
       },
@@ -164,7 +250,6 @@ export class EmailService {
         workspace: params.workspaceName,
         inviterName: params.inviterName,
         inviterEmail: params.inviterEmail,
-        fromInbox: env.email.inboxes.invite,
         provider: emailClient.getProvider(),
       },
       'Workspace invitation sent'
@@ -188,9 +273,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `${params.workspaceName} (via Userplane) <${env.email.inboxes.invite}>`,
+        from: inviteFrom(params.workspaceName),
         to: params.to,
-        subject: `${params.requesterName} requested to join ${params.workspaceName}`,
+        subject: accessRequestSubject({
+          requesterName: params.requesterName,
+          workspaceName: params.workspaceName,
+        }),
         html,
         text,
       },
@@ -205,7 +293,6 @@ export class EmailService {
         workspace: params.workspaceName,
         requesterName: params.requesterName,
         requesterEmail: params.requesterEmail,
-        fromInbox: env.email.inboxes.invite,
         provider: emailClient.getProvider(),
       },
       'Workspace access request sent'
@@ -230,9 +317,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `Your ${params.planName} subscription is now active`,
+        subject: subscriptionActiveSubject(params.planName),
         html,
         text,
       },
@@ -245,7 +332,6 @@ export class EmailService {
       {
         to: params.to,
         planName: params.planName,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Subscription active email sent'
@@ -265,9 +351,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `Your ${params.planName} subscription has expired`,
+        subject: subscriptionExpiredSubject(params.planName),
         html,
         text,
       },
@@ -280,7 +366,6 @@ export class EmailService {
       {
         to: params.to,
         planName: params.planName,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Subscription expired email sent'
@@ -300,9 +385,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `Your ${params.planName} subscription is inactive`,
+        subject: subscriptionInactiveSubject(params.planName),
         html,
         text,
       },
@@ -315,7 +400,6 @@ export class EmailService {
       {
         to: params.to,
         planName: params.planName,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Subscription inactive email sent'
@@ -337,9 +421,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `Your subscription has been changed to ${params.newPlan}`,
+        subject: subscriptionPlanChangeSubject(params.newPlan),
         html,
         text,
       },
@@ -353,7 +437,6 @@ export class EmailService {
         to: params.to,
         previousPlan: params.previousPlan,
         newPlan: params.newPlan,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Subscription plan change email sent'
@@ -374,9 +457,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `Your ${params.planName} reverse trial has started`,
+        subject: subscriptionReverseTrialSubject(params.planName),
         html,
         text,
       },
@@ -390,7 +473,6 @@ export class EmailService {
         to: params.to,
         planName: params.planName,
         trialDays: params.trialDays,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Subscription reverse trial email sent'
@@ -419,9 +501,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.invite}>`,
+        from: domainFrom(),
         to: params.to,
-        subject: `Setup Userplane for ${params.domainName}`,
+        subject: domainDeveloperInstructionsSubject(params.domainName),
         html,
         text,
       },
@@ -434,7 +516,6 @@ export class EmailService {
       {
         to: params.to,
         domainName: params.domainName,
-        fromInbox: env.email.inboxes.invite,
         provider: emailClient.getProvider(),
       },
       'Domain developer instructions sent'
@@ -460,9 +541,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.workspaceName} is approaching its recording limit`,
+        subject: recordingsSoftLimitSubject(params.workspaceName),
         html,
         text,
       },
@@ -477,7 +558,6 @@ export class EmailService {
         workspaceName: params.workspaceName,
         usedMinutes: params.usedMinutes,
         totalMinutes: params.totalMinutes,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Recordings soft limit email sent'
@@ -498,9 +578,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.workspaceName} has reached its recording limit`,
+        subject: recordingsHardLimitSubject(params.workspaceName),
         html,
         text,
       },
@@ -514,7 +594,6 @@ export class EmailService {
         to: params.to,
         workspaceName: params.workspaceName,
         totalMinutes: params.totalMinutes,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Recordings hard limit email sent'
@@ -537,9 +616,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.requesterName} requested more recordings for ${params.workspaceName}`,
+        subject: recordingsRequestedUpgradeSubject({
+          requesterName: params.requesterName,
+          workspaceName: params.workspaceName,
+        }),
         html,
         text,
       },
@@ -553,7 +635,6 @@ export class EmailService {
         to: params.to,
         workspaceName: params.workspaceName,
         requesterName: params.requesterName,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Recordings requested upgrade email sent'
@@ -579,9 +660,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.workspaceName} is approaching its seat limit`,
+        subject: seatsSoftLimitSubject(params.workspaceName),
         html,
         text,
       },
@@ -596,7 +677,6 @@ export class EmailService {
         workspaceName: params.workspaceName,
         usedSeats: params.usedSeats,
         totalSeats: params.totalSeats,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Seats soft limit email sent'
@@ -617,9 +697,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.workspaceName} has reached its seat limit`,
+        subject: seatsHardLimitSubject(params.workspaceName),
         html,
         text,
       },
@@ -633,7 +713,6 @@ export class EmailService {
         to: params.to,
         workspaceName: params.workspaceName,
         totalSeats: params.totalSeats,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Seats hard limit email sent'
@@ -654,9 +733,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.requesterName} requested more seats for ${params.workspaceName}`,
+        subject: seatsRequestedUpgradeSubject({
+          requesterName: params.requesterName,
+          workspaceName: params.workspaceName,
+        }),
         html,
         text,
       },
@@ -670,7 +752,6 @@ export class EmailService {
         to: params.to,
         workspaceName: params.workspaceName,
         requesterName: params.requesterName,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Seats requested upgrade email sent'
@@ -696,9 +777,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.workspaceName} is approaching its links limit`,
+        subject: linksSoftLimitSubject(params.workspaceName),
         html,
         text,
       },
@@ -713,7 +794,6 @@ export class EmailService {
         workspaceName: params.workspaceName,
         usedLinks: params.usedLinks,
         totalLinks: params.totalLinks,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Links soft limit email sent'
@@ -734,9 +814,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.requesterName} requested more links for ${params.workspaceName}`,
+        subject: linksRequestedUpgradeSubject({
+          requesterName: params.requesterName,
+          workspaceName: params.workspaceName,
+        }),
         html,
         text,
       },
@@ -750,7 +833,6 @@ export class EmailService {
         to: params.to,
         workspaceName: params.workspaceName,
         requesterName: params.requesterName,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Links requested upgrade email sent'
@@ -776,9 +858,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.workspaceName} is approaching its screenshots limit`,
+        subject: screenshotsSoftLimitSubject(params.workspaceName),
         html,
         text,
       },
@@ -793,7 +875,6 @@ export class EmailService {
         workspaceName: params.workspaceName,
         usedScreenshots: params.usedScreenshots,
         totalScreenshots: params.totalScreenshots,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Screenshots soft limit email sent'
@@ -818,9 +899,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `${params.workspaceName} (via Userplane) <${env.email.inboxes.invite}>`,
+        from: inviteFrom(params.workspaceName),
         to: params.to,
-        subject: `${params.inviterName} invited you to ${params.workspaceName}`,
+        subject: teammateInvitedSubject({
+          inviterName: params.inviterName,
+          workspaceName: params.workspaceName,
+        }),
         html,
         text,
       },
@@ -834,7 +918,6 @@ export class EmailService {
         to: params.to,
         workspaceName: params.workspaceName,
         inviterName: params.inviterName,
-        fromInbox: env.email.inboxes.invite,
         provider: emailClient.getProvider(),
       },
       'Teammate invited email sent'
@@ -858,9 +941,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: 'Your Userplane account has been deleted',
+        subject: accountDeletionSubject,
         html,
         text,
       },
@@ -873,7 +956,6 @@ export class EmailService {
       {
         to: params.to,
         userName: params.userName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Account deletion email sent'
@@ -894,9 +976,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: 'Terms of Service violation notice',
+        subject: tosViolationSubject,
         html,
         text,
       },
@@ -909,7 +991,6 @@ export class EmailService {
       {
         to: params.to,
         userName: params.userName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'TOS violation email sent'
@@ -933,9 +1014,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: 'Your Userplane sandbox is ready',
+        subject: pilotSandboxInviteSubject,
         html,
         text,
       },
@@ -948,7 +1029,6 @@ export class EmailService {
       {
         to: params.to,
         expiresInDays: params.expiresInDays,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Pilot sandbox invite email sent'
@@ -969,9 +1049,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: 'Try premium features with our money-back guarantee',
+        subject: pilotReverseTrialOfferSubject,
         html,
         text,
       },
@@ -985,7 +1065,6 @@ export class EmailService {
         to: params.to,
         planName: params.planName,
         trialDays: params.trialDays,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Pilot reverse trial offer email sent'
@@ -1011,9 +1090,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `New recording: ${params.recordingTitle}`,
+        subject: recordingReceivedSubject(params.recordingTitle),
         html,
         text,
       },
@@ -1026,7 +1105,6 @@ export class EmailService {
       {
         to: params.to,
         recordingTitle: params.recordingTitle,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Recording received email sent'
@@ -1052,9 +1130,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.billing}>`,
+        from: billingFrom(),
         to: params.to,
-        subject: `${params.remainingDays} days left in your trial`,
+        subject: trialReverseTrialOfferSubject(params.remainingDays),
         html,
         text,
       },
@@ -1068,7 +1146,6 @@ export class EmailService {
         to: params.to,
         planName: params.planName,
         remainingDays: params.remainingDays,
-        fromInbox: env.email.inboxes.billing,
         provider: emailClient.getProvider(),
       },
       'Trial reverse trial offer email sent'
@@ -1092,9 +1169,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `${params.workspaceName} (via Userplane) <${env.email.inboxes.invite}>`,
+        from: inviteFrom(params.workspaceName),
         to: params.to,
-        subject: `You now have access to ${params.workspaceName}`,
+        subject: workspaceAccessGrantedSubject(params.workspaceName),
         html,
         text,
       },
@@ -1107,7 +1184,6 @@ export class EmailService {
       {
         to: params.to,
         workspaceName: params.workspaceName,
-        fromInbox: env.email.inboxes.invite,
         provider: emailClient.getProvider(),
       },
       'Workspace access granted email sent'
@@ -1129,9 +1205,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `${params.workspaceName} (via Userplane) <${env.email.inboxes.invite}>`,
+        from: inviteFrom(params.workspaceName),
         to: params.to,
-        subject: `${params.requesterName} requested access to ${params.workspaceName}`,
+        subject: workspaceAccessRequestedSubject({
+          requesterName: params.requesterName,
+          workspaceName: params.workspaceName,
+        }),
         html,
         text,
       },
@@ -1146,7 +1225,6 @@ export class EmailService {
         workspaceName: params.workspaceName,
         requesterName: params.requesterName,
         requesterEmail: params.requesterEmail,
-        fromInbox: env.email.inboxes.invite,
         provider: emailClient.getProvider(),
       },
       'Workspace access requested email sent'
@@ -1169,9 +1247,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.workspaceName} scheduled for deletion on ${params.deletionDate}`,
+        subject: workspaceDeletionScheduledSubject({
+          workspaceName: params.workspaceName,
+          deletionDate: params.deletionDate,
+        }),
         html,
         text,
       },
@@ -1185,7 +1266,6 @@ export class EmailService {
         to: params.to,
         workspaceName: params.workspaceName,
         deletionDate: params.deletionDate,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Workspace deletion scheduled email sent'
@@ -1210,9 +1290,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.requesterName} requested to delete ${params.workspaceName}`,
+        subject: workspaceDeletionRequestedSubject({
+          requesterName: params.requesterName,
+          workspaceName: params.workspaceName,
+        }),
         html,
         text,
       },
@@ -1228,7 +1311,6 @@ export class EmailService {
         requesterName: params.requesterName,
         requesterEmail: params.requesterEmail,
         deletionDate: params.deletionDate,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Workspace deletion requested email sent'
@@ -1250,9 +1332,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.workspaceName} has been deleted`,
+        subject: workspaceDeletionConfirmationSubject(params.workspaceName),
         html,
         text,
       },
@@ -1265,7 +1347,6 @@ export class EmailService {
       {
         to: params.to,
         workspaceName: params.workspaceName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Workspace deletion confirmation email sent'
@@ -1287,9 +1368,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.workspaceName} recovery scheduled`,
+        subject: workspaceRecoveryScheduledSubject(params.workspaceName),
         html,
         text,
       },
@@ -1302,7 +1383,6 @@ export class EmailService {
       {
         to: params.to,
         workspaceName: params.workspaceName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Workspace recovery scheduled email sent'
@@ -1324,9 +1404,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.workspaceName} has been recovered`,
+        subject: workspaceRecoveryConfirmationSubject(params.workspaceName),
         html,
         text,
       },
@@ -1339,7 +1419,6 @@ export class EmailService {
       {
         to: params.to,
         workspaceName: params.workspaceName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Workspace recovery confirmation email sent'
@@ -1361,9 +1440,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.workspaceName} has been partially restored`,
+        subject: workspaceRecoveryPartiallySubject(params.workspaceName),
         html,
         text,
       },
@@ -1376,7 +1455,6 @@ export class EmailService {
       {
         to: params.to,
         workspaceName: params.workspaceName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Workspace recovery partially email sent'
@@ -1401,9 +1479,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.projectName} scheduled for deletion on ${params.deletionDate}`,
+        subject: projectDeletionScheduledSubject({
+          projectName: params.projectName,
+          deletionDate: params.deletionDate,
+        }),
         html,
         text,
       },
@@ -1417,7 +1498,6 @@ export class EmailService {
         to: params.to,
         projectName: params.projectName,
         deletionDate: params.deletionDate,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Project deletion scheduled email sent'
@@ -1440,9 +1520,12 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.requesterName} requested to delete ${params.projectName}`,
+        subject: projectDeletionRequestedSubject({
+          requesterName: params.requesterName,
+          projectName: params.projectName,
+        }),
         html,
         text,
       },
@@ -1458,7 +1541,6 @@ export class EmailService {
         requesterName: params.requesterName,
         requesterEmail: params.requesterEmail,
         deletionDate: params.deletionDate,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Project deletion requested email sent'
@@ -1479,9 +1561,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.projectName} has been deleted`,
+        subject: projectDeletionConfirmationSubject(params.projectName),
         html,
         text,
       },
@@ -1494,7 +1576,6 @@ export class EmailService {
       {
         to: params.to,
         projectName: params.projectName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Project deletion confirmation email sent'
@@ -1513,9 +1594,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.projectName} recovery scheduled`,
+        subject: projectRecoveryScheduledSubject(params.projectName),
         html,
         text,
       },
@@ -1528,7 +1609,6 @@ export class EmailService {
       {
         to: params.to,
         projectName: params.projectName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Project recovery scheduled email sent'
@@ -1550,9 +1630,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.projectName} has been recovered`,
+        subject: projectRecoveryConfirmationSubject(params.projectName),
         html,
         text,
       },
@@ -1565,7 +1645,6 @@ export class EmailService {
       {
         to: params.to,
         projectName: params.projectName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Project recovery confirmation email sent'
@@ -1585,9 +1664,9 @@ export class EmailService {
 
     await emailClient.send(
       {
-        from: `Userplane <${env.email.inboxes.notification}>`,
+        from: notificationFrom(),
         to: params.to,
-        subject: `${params.projectName} has been partially restored`,
+        subject: projectRecoveryPartiallySubject(params.projectName),
         html,
         text,
       },
@@ -1600,7 +1679,6 @@ export class EmailService {
       {
         to: params.to,
         projectName: params.projectName,
-        fromInbox: env.email.inboxes.notification,
         provider: emailClient.getProvider(),
       },
       'Project recovery partially email sent'
