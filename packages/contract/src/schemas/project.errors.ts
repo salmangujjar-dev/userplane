@@ -53,6 +53,10 @@ export const ProjectErrors = {
   },
 
   // Restoration errors
+  PROJECT_NOT_DELETED: {
+    status: 400,
+    message: 'Project is not deleted and cannot be restored',
+  },
   PROJECT_RESTORE_TIME_EXPIRED: {
     status: 410,
     message: 'Project restoration window has expired',

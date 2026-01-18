@@ -114,11 +114,11 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
 
   const [projectToDeactivate, setProjectToDeactivate] = useState<{
     projectId: string;
-    projectTitle: string | null;
+    projectTitle: string;
   } | null>(null);
   const [projectToRestore, setProjectToRestore] = useState<{
     projectId: string;
-    projectTitle: string | null;
+    projectTitle: string;
   } | null>(null);
 
   const projectsData = projectsResult?.success ? projectsResult.data : null;
@@ -126,11 +126,11 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
   const total = projectsData?.total ?? 0;
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
-  const handleDeactivateProject = (projectId: string, projectTitle: string | null) => {
+  const handleDeactivateProject = (projectId: string, projectTitle: string) => {
     setProjectToDeactivate({ projectId, projectTitle });
   };
 
-  const handleRestoreProject = (projectId: string, projectTitle: string | null) => {
+  const handleRestoreProject = (projectId: string, projectTitle: string) => {
     setProjectToRestore({ projectId, projectTitle });
   };
 

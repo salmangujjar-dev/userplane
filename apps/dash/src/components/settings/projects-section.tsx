@@ -68,13 +68,13 @@ export function ProjectsSection() {
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState<{
     projectId: string;
-    projectTitle: string | null;
+    projectTitle: string;
     isDefault: boolean;
   } | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [deletingProject, setDeletingProject] = useState<{
     projectId: string;
-    projectTitle: string | null;
+    projectTitle: string;
   } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState<SortOption>('recent');
@@ -113,7 +113,7 @@ export function ProjectsSection() {
     });
   };
 
-  const handleDeleteProject = (projectId: string, projectTitle: string | null) => {
+  const handleDeleteProject = (projectId: string, projectTitle: string) => {
     setDeletingProject({ projectId, projectTitle });
   };
 
@@ -135,7 +135,7 @@ export function ProjectsSection() {
 
   const handleEditProject = (project: {
     projectId: string;
-    projectTitle: string | null;
+    projectTitle: string;
     isDefault: boolean;
   }) => {
     setEditingProject(project);

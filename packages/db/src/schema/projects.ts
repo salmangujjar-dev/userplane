@@ -15,7 +15,7 @@ export const projects = pgTable(
     workspaceId: text('workspace_id').notNull(),
 
     // Project configuration
-    projectTitle: text('project_title'),
+    projectTitle: text('project_title').notNull(),
     isDefault: boolean('is_default').default(false).notNull(),
 
     // Timestamps

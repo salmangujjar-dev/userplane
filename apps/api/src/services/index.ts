@@ -117,6 +117,7 @@ export const workspaceService = new WorkspaceService({
   projectRepo,
   domainRepo,
   linkRepo,
+  recordingRepo,
   projectService,
 });
 

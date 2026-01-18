@@ -38,7 +38,7 @@ export interface LinkListRow {
   createdAt: Date;
   workspaceId: string;
   projectId: string;
-  projectTitle: string | null;
+  projectTitle: string;
   creatorId: string;
   creatorName: string;
   domainId: string;
@@ -574,6 +574,25 @@ export class LinkRepository {
       .returning();
 
     return restored;
+  }
+
+  /**
+   * Count links in workspace that were deleted at a specific timestamp
+   * Used for workspace restore info to show how many links will be restored
+   */
+  async countByWorkspaceIdAndDeletionTime(workspaceId: string, deletedAt: Date) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(links)
+      .where(
+        and(
+          eq(links.workspaceId, workspaceId),
+          eq(links.isDeleted, true),
+          eq(links.deletedAt, deletedAt)
+        )
+      );
+
+    return result?.count ?? 0;
   }
 
   /**

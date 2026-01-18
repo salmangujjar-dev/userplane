@@ -15,7 +15,7 @@ interface AdminRestoreProjectResponse {
   workspaceId: string;
   project: {
     projectId: string;
-    projectTitle: string | null;
+    projectTitle: string;
     isDefault: boolean;
     createdAt: string;
     updatedAt: string;
@@ -84,7 +84,7 @@ export interface AdminWorkspaceMembersListResponse {
  */
 export interface AdminWorkspaceProject {
   projectId: string;
-  projectTitle: string | null;
+  projectTitle: string;
   isDefault: boolean;
   isDeleted: boolean;
   createdAt: string;

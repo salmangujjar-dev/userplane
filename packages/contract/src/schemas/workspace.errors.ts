@@ -64,6 +64,10 @@ export const WorkspaceErrors = {
   },
 
   // Restoration errors
+  WORKSPACE_NOT_DELETED: {
+    status: 400,
+    message: 'Workspace is not deleted and cannot be restored',
+  },
   WORKSPACE_RESTORE_TIME_EXPIRED: {
     status: 410,
     message: 'Workspace restoration window has expired',

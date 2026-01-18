@@ -342,7 +342,7 @@ export const AdminListWorkspaceMembersInputSchema = z.object({
  */
 export const AdminWorkspaceProjectSchema = z.object({
   projectId: ProjectIdSchema,
-  projectTitle: z.string().nullable(),
+  projectTitle: z.string(),
   isDefault: z.boolean(),
   isDeleted: z.boolean(),
   createdAt: z.string(),
@@ -487,7 +487,7 @@ export const AdminRestoreProjectDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   project: z.object({
     projectId: ProjectIdSchema,
-    projectTitle: z.string().nullable(),
+    projectTitle: z.string(),
     isDefault: z.boolean(),
     createdAt: z.string(),
     updatedAt: z.string(),

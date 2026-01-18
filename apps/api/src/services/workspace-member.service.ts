@@ -159,7 +159,7 @@ export class WorkspaceMemberService {
    *        WORKSPACE_MEMBER_LAST_OWNER_REMOVE for validation errors
    */
   async removeMember(
-    params: { memberId: string; workspaceId: string; userId: string },
+    params: { memberId: string; workspaceId: string; userId: string; deletedAt: Date },
     options?: { tx?: Transaction }
   ) {
     if (!params.memberId) {
@@ -189,7 +189,7 @@ export class WorkspaceMemberService {
       }
     }
 
-    return this.deps.memberRepo.softDelete(params.memberId, options);
+    return this.deps.memberRepo.softDelete(params.memberId, params.deletedAt, options);
   }
 
   /**
@@ -197,6 +197,14 @@ export class WorkspaceMemberService {
    */
   async getMember(userId: string, workspaceId: string) {
     return this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
+  }
+
+  /**
+   * Get member including soft-deleted ones
+   * Used for restore operations where workspace/members may be soft-deleted
+   */
+  async getMemberIncludingDeleted(userId: string, workspaceId: string) {
+    return this.deps.memberRepo.findByUserAndWorkspaceIncludingDeleted(userId, workspaceId);
   }
 
   /**
@@ -252,6 +260,7 @@ export class WorkspaceMemberService {
   async leaveWorkspace(
     userId: string,
     workspaceId: string,
+    deletedAt: Date,
     options?: { tx?: Transaction }
   ): Promise<{ shouldDeleteWorkspace: boolean }> {
     if (!userId || !workspaceId) {
@@ -277,12 +286,12 @@ export class WorkspaceMemberService {
         }
 
         // Only member in workspace - soft delete and signal to delete workspace
-        await this.deps.memberRepo.softDelete(member.workspaceMemberId, options);
+        await this.deps.memberRepo.softDelete(member.workspaceMemberId, deletedAt, options);
         return { shouldDeleteWorkspace: true };
       }
     }
 
-    await this.deps.memberRepo.softDelete(member.workspaceMemberId, options);
+    await this.deps.memberRepo.softDelete(member.workspaceMemberId, deletedAt, options);
     return { shouldDeleteWorkspace: false };
   }
 

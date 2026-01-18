@@ -84,6 +84,7 @@ const adminProcedures = createAdminProcedures(
   adminRecordingService,
   adminProvisioningService,
   workspaceService,
+  workspaceMemberService,
   projectService,
   tokenService,
   emailService
@@ -91,7 +92,8 @@ const adminProcedures = createAdminProcedures(
 const projectProcedures = createProjectProcedures(
   projectService,
   workspaceMemberService,
-  workspaceService
+  workspaceService,
+  emailService
 );
 
 /**

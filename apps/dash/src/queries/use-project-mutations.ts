@@ -31,7 +31,7 @@ export function useCreateProject(workspaceId: string | null) {
 
       const optimisticProject: Project = {
         projectId: `temp-${Date.now()}`,
-        projectTitle: title || null,
+        projectTitle: title || 'Untitled Project',
         isDefault: false,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -98,7 +98,7 @@ export function useUpdateProject(workspaceId: string | null) {
       const [error, response] = await apiClient.project.update({
         params: { workspaceId, projectId },
         body: {
-          projectTitle: title || null,
+          projectTitle: title || 'Untitled Project',
           isDefault,
         },
       });
@@ -126,7 +126,7 @@ export function useUpdateProject(workspaceId: string | null) {
                 if (project.projectId === projectId) {
                   return {
                     ...project,
-                    projectTitle: title || null,
+                    projectTitle: title || 'Untitled Project',
                     ...(isDefault !== undefined && { isDefault }),
                   };
                 }

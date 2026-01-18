@@ -11,13 +11,13 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface ProjectRecoveryConfirmationEmailProps {
-  projectName?: string;
-  dashboardUrl?: string;
+  projectName: string;
+  dashboardUrl: string;
 }
 
 export const ProjectRecoveryConfirmationEmail = ({
-  projectName = 'My Project',
-  dashboardUrl = 'https://app.userplane.io/dashboard',
+  projectName,
+  dashboardUrl,
 }: ProjectRecoveryConfirmationEmailProps) => {
   return (
     <EmailLayout preview={copy.preview(projectName)}>

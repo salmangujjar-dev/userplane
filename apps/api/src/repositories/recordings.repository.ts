@@ -69,7 +69,7 @@ export interface RecordingDetailRow {
   linkProviderData: unknown;
   linkCreatedAt: Date;
   // Project info
-  projectTitle: string | null;
+  projectTitle: string;
   // Domain info
   domainId: string;
   domainUrl: string;
@@ -480,6 +480,78 @@ export class RecordingRepository {
       .returning();
 
     return deleted || null;
+  }
+
+  /**
+   * Soft delete all recordings in workspace
+   * Used for workspace deletion cascade
+   */
+  async softDeleteByWorkspaceId(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const deleted = await dbClient
+      .update(recordings)
+      .set({
+        isDeleted: true,
+        deletedAt: deletedAt,
+      })
+      .where(and(eq(recordings.workspaceId, workspaceId), eq(recordings.isDeleted, false)))
+      .returning();
+
+    return deleted;
+  }
+
+  /**
+   * Restore recordings in workspace that were deleted at a specific timestamp
+   * Used for workspace restoration to restore associated recordings
+   * Only restores recordings deleted at the exact same time as the workspace
+   */
+  async restoreByWorkspaceIdAndDeletionTime(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const restored = await dbClient
+      .update(recordings)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+      })
+      .where(
+        and(
+          eq(recordings.workspaceId, workspaceId),
+          eq(recordings.isDeleted, true),
+          eq(recordings.deletedAt, deletedAt)
+        )
+      )
+      .returning();
+
+    return restored;
+  }
+
+  /**
+   * Count recordings in workspace that were deleted at a specific timestamp
+   * Used for workspace restore info to show how many recordings will be restored
+   */
+  async countByWorkspaceIdAndDeletionTime(workspaceId: string, deletedAt: Date) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(recordings)
+      .where(
+        and(
+          eq(recordings.workspaceId, workspaceId),
+          eq(recordings.isDeleted, true),
+          eq(recordings.deletedAt, deletedAt)
+        )
+      );
+
+    return result?.count ?? 0;
   }
 
   /**

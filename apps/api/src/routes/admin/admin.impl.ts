@@ -7,6 +7,7 @@ import { isValidRoleName } from '@workspace/auth';
 import type { WorkspaceRole } from '@workspace/contract';
 import { getPlanName, type PlanId } from '@workspace/pricing';
 
+import { env } from '@/api/env';
 import { generateWorkspaceId } from '@/api/lib/id';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
 import { authorized } from '@/api/middleware/auth.orpc';
@@ -18,6 +19,7 @@ import type { EmailService } from '@/api/services/email.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { TokenService } from '@/api/services/token.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
+import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 
 /**
  * Format date to ISO string
@@ -464,7 +466,7 @@ const listWorkspaceMembersImpl = (
  */
 function formatWorkspaceProject(project: {
   projectId: string;
-  projectTitle: string | null;
+  projectTitle: string;
   isDefault: boolean;
   isDeleted: boolean;
   createdAt: Date;
@@ -544,11 +546,30 @@ const deactivateWorkspaceImpl = (
  * Restore workspace implementation
  * Uses WorkspaceService.restoreWorkspace for consistent restoration logic
  */
-const restoreWorkspaceImpl = (adminService: AdminService, workspaceService: WorkspaceService) => {
+const restoreWorkspaceImpl = (
+  adminService: AdminService,
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService,
+  emailService: EmailService
+) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.workspaces.restore.handler(async ({ input }) => {
     const result = await workspaceService.restoreWorkspace(input.params.workspaceId);
+
+    // Send email to workspace owners that the workspace has been restored
+    const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+    const dashboardUrl = `${env.invite.appUrl}/workspace/${input.params.workspaceId}`;
+
+    await Promise.allSettled(
+      owners.map((owner) =>
+        emailService.sendWorkspaceRecoveryConfirmation({
+          to: owner.email,
+          workspaceName: result.workspace.workspaceName,
+          dashboardUrl,
+        })
+      )
+    );
 
     return {
       message: 'Workspace restored successfully',
@@ -590,11 +611,31 @@ const deactivateProjectImpl = (adminService: AdminService, projectService: Proje
  * Restore project implementation
  * Uses ProjectService.restoreProject for consistent restoration logic
  */
-const restoreProjectImpl = (adminService: AdminService, projectService: ProjectService) => {
+const restoreProjectImpl = (
+  adminService: AdminService,
+  projectService: ProjectService,
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService,
+  emailService: EmailService
+) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.projects.restore.handler(async ({ input }) => {
     const restoredProject = await projectService.restoreProject(input.params.projectId);
+
+    // Send email to workspace owners that the project has been restored
+    const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+    const dashboardUrl = `${env.invite.appUrl}/workspace/${input.params.workspaceId}`;
+
+    await Promise.allSettled(
+      owners.map((owner) =>
+        emailService.sendProjectRecoveryConfirmation({
+          to: owner.email,
+          projectName: restoredProject.projectTitle,
+          dashboardUrl,
+        })
+      )
+    );
 
     return {
       message: 'Project restored successfully',
@@ -799,6 +840,7 @@ export const createAdminProcedures = (
   adminRecordingService: AdminRecordingService,
   adminProvisioningService: AdminProvisioningService,
   workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService,
   projectService: ProjectService,
   tokenService: TokenService,
   emailService: EmailService
@@ -830,7 +872,12 @@ export const createAdminProcedures = (
         list: searchWorkspaceProjectsImpl(adminService, adminWorkspaceService),
       },
       deactivate: deactivateWorkspaceImpl(adminService, adminWorkspaceService),
-      restore: restoreWorkspaceImpl(adminService, workspaceService),
+      restore: restoreWorkspaceImpl(
+        adminService,
+        workspaceService,
+        workspaceMemberService,
+        emailService
+      ),
       resetInviteToken: resetInviteTokenImpl(adminService, adminWorkspaceService),
       recordingStats: getWorkspaceRecordingStatsImpl(adminService, adminRecordingService),
       memberRecordingStats: getWorkspaceMemberRecordingStatsImpl(
@@ -841,7 +888,13 @@ export const createAdminProcedures = (
     },
     projects: {
       deactivate: deactivateProjectImpl(adminService, projectService),
-      restore: restoreProjectImpl(adminService, projectService),
+      restore: restoreProjectImpl(
+        adminService,
+        projectService,
+        workspaceService,
+        workspaceMemberService,
+        emailService
+      ),
     },
     workspace: {
       createInvite: createWorkspaceInviteImpl(adminService, tokenService, emailService),

@@ -27,6 +27,7 @@ import {
   GetNotificationPreferencesSchema,
   GetWorkspaceBillingEmailSchema,
   GetWorkspaceMembershipSchema,
+  GetWorkspaceRestoreInfoSchema,
   GetWorkspaceStatusSchema,
   InviteErrors,
   InvitePolicyDataSchema,
@@ -80,6 +81,7 @@ import {
   WorkspaceResourcesCountDataSchema,
   WorkspaceResourcesCountQuerySchema,
   WorkspaceRestoreDataSchema,
+  WorkspaceRestoreInfoDataSchema,
   WorkspaceSearchDataSchema,
   WorkspaceSearchQuerySchema,
   WorkspacesListDataSchema,
@@ -855,6 +857,29 @@ export const deleteWorkspace = oc
   .output(ApiResponseSchema(WorkspaceDeleteDataSchema));
 
 /**
+ * GET /workspace/{workspaceId}/restore
+ * Get details of a soft-deleted workspace
+ */
+export const getWorkspaceRestoreInfo = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/restore',
+    inputStructure: 'detailed',
+    summary: 'Get workspace restore info',
+    description: 'Get details of a soft-deleted workspace to confirm restoration',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_NOT_DELETED: WorkspaceErrors.WORKSPACE_NOT_DELETED,
+    WORKSPACE_RESTORE_TIME_EXPIRED: WorkspaceErrors.WORKSPACE_RESTORE_TIME_EXPIRED,
+  })
+  .input(GetWorkspaceRestoreInfoSchema)
+  .output(ApiResponseSchema(WorkspaceRestoreInfoDataSchema));
+
+/**
  * POST /workspace/{workspaceId}/restore
  * Restore a soft-deleted workspace
  */
@@ -872,6 +897,7 @@ export const restoreWorkspace = oc
     UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
     FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_NOT_DELETED: WorkspaceErrors.WORKSPACE_NOT_DELETED,
     WORKSPACE_RESTORE_TIME_EXPIRED: WorkspaceErrors.WORKSPACE_RESTORE_TIME_EXPIRED,
     WORKSPACE_RESTORE_FAILED: WorkspaceErrors.WORKSPACE_RESTORE_FAILED,
   })
