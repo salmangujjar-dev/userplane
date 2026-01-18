@@ -110,23 +110,82 @@ export class LocalhostEmailClient implements EmailClient {
 
   /**
    * Write email to local inbox
-   * Creates separate files per recipient and a master log
+   * Creates folder structure: inbox/<recipient>/<timestamp>/email.{html,txt,json}
    */
   private async writeToInbox(email: EmailRecord): Promise<void> {
     await fs.mkdir(this.inboxDir, { recursive: true });
 
-    // Write to recipient-specific files
+    // Use timestamp as folder name (milliseconds since epoch)
+    const timestamp = Date.now().toString();
+
+    // Write to recipient-specific folders
     const recipients = Array.isArray(email.to) ? email.to : [email.to];
     for (const recipient of recipients) {
-      const recipientFile = join(this.inboxDir, `${recipient}.ndjson`);
-      const line = JSON.stringify(email) + '\n';
-      await fs.appendFile(recipientFile, line);
+      // Create recipient inbox folder
+      const recipientFolder = join(this.inboxDir, recipient);
+      await fs.mkdir(recipientFolder, { recursive: true });
+
+      // Create email folder with timestamp
+      const emailFolder = join(recipientFolder, timestamp);
+      await fs.mkdir(emailFolder, { recursive: true });
+
+      // Write email.html
+      if (email.html) {
+        const htmlPath = join(emailFolder, 'email.html');
+        await fs.writeFile(htmlPath, email.html, 'utf-8');
+      }
+
+      // Write email.txt
+      if (email.text) {
+        const txtPath = join(emailFolder, 'email.txt');
+        await fs.writeFile(txtPath, email.text, 'utf-8');
+      }
+
+      // Write email.json with metadata (everything except html and text)
+      const metadata = {
+        id: email.id,
+        from: email.from,
+        to: email.to,
+        subject: email.subject,
+        replyTo: email.replyTo,
+        cc: email.cc,
+        bcc: email.bcc,
+        tags: email.tags,
+        idempotencyKey: email.idempotencyKey,
+        scheduledAt: email.scheduledAt,
+        timestamp: email.timestamp,
+      };
+      const jsonPath = join(emailFolder, 'email.json');
+      await fs.writeFile(jsonPath, JSON.stringify(metadata, null, 2), 'utf-8');
     }
 
-    // Write to master log
-    const masterLog = join(this.inboxDir, '_all.ndjson');
-    const line = JSON.stringify(email) + '\n';
-    await fs.appendFile(masterLog, line);
+    // Also write to _all folder for easy access to all emails
+    const allFolder = join(this.inboxDir, '_all');
+    await fs.mkdir(allFolder, { recursive: true });
+    const emailFolder = join(allFolder, timestamp);
+    await fs.mkdir(emailFolder, { recursive: true });
+
+    if (email.html) {
+      await fs.writeFile(join(emailFolder, 'email.html'), email.html, 'utf-8');
+    }
+    if (email.text) {
+      await fs.writeFile(join(emailFolder, 'email.txt'), email.text, 'utf-8');
+    }
+
+    const metadata = {
+      id: email.id,
+      from: email.from,
+      to: email.to,
+      subject: email.subject,
+      replyTo: email.replyTo,
+      cc: email.cc,
+      bcc: email.bcc,
+      tags: email.tags,
+      idempotencyKey: email.idempotencyKey,
+      scheduledAt: email.scheduledAt,
+      timestamp: email.timestamp,
+    };
+    await fs.writeFile(join(emailFolder, 'email.json'), JSON.stringify(metadata, null, 2), 'utf-8');
   }
 
   /**
