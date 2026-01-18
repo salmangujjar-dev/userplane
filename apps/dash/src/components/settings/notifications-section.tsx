@@ -1,75 +1,42 @@
 'use client';
 
+import type {
+  NotificationFieldMetadata,
+  WorkspaceNotificationPreferences,
+} from '@workspace/contract';
+import { getVisibleNotificationFields } from '@workspace/contract';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { SectionError } from '@/components/shared/section-error';
 import { NotificationsSectionSkeleton } from '@/components/skeleton';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
 import { useWorkspaceNotifications } from '@/hooks/use-workspace-notifications';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import { useUpdateNotifications } from '@/queries/use-workspace-mutations';
 import { useWorkspaceId } from '@/stores/workspace';
 
-interface WorkspaceNotifications {
-  notifyOnLinkUsage: boolean;
-  notifyOnQuotaReset: boolean;
-  notifyOnQuotaLimit: boolean;
-  notifyOnMemberJoin: boolean;
-  notifyOnInviteAccepted: boolean;
-}
-
-const NOTIFICATION_ITEMS: {
-  key: keyof WorkspaceNotifications;
-  id: string;
-  label: string;
-}[] = [
-  {
-    key: 'notifyOnLinkUsage',
-    id: 'recording-links',
-    label: 'When recording links gets used',
-  },
-  {
-    key: 'notifyOnQuotaReset',
-    id: 'quota-reset',
-    label: 'When workspace quota is reset',
-  },
-  {
-    key: 'notifyOnQuotaLimit',
-    id: 'quota-reached',
-    label: 'When workspace quota is reached',
-  },
-  {
-    key: 'notifyOnMemberJoin',
-    id: 'someone-joins',
-    label: 'When someone joins my workspace',
-  },
-  {
-    key: 'notifyOnInviteAccepted',
-    id: 'invite-accepted',
-    label: 'When someone accepts my invite',
-  },
-];
-
 function NotificationItem({
-  label,
-  id,
+  field,
   initialValue,
   onToggle,
 }: {
-  label: string;
-  id: string;
+  field: NotificationFieldMetadata;
   initialValue: boolean;
   onToggle: (val: boolean) => void;
 }) {
   const { value, toggle } = useDebouncedToggle(initialValue, onToggle);
 
   return (
-    <div className="flex items-center justify-between">
-      <Label htmlFor={id} className="text-sm font-normal cursor-pointer flex-1">
-        {label}
-      </Label>
-      <Switch id={id} checked={value} onCheckedChange={toggle} />
+    <div className="flex items-start justify-between gap-4">
+      <div className="flex-1 space-y-1">
+        <Label htmlFor={field.id} className="text-sm font-medium cursor-pointer">
+          {field.label}
+        </Label>
+        <p className="text-sm text-muted-foreground">{field.description}</p>
+      </div>
+      <Switch id={field.id} checked={value} onCheckedChange={toggle} />
     </div>
   );
 }
@@ -77,21 +44,28 @@ function NotificationItem({
 export function NotificationsSection() {
   const currentWorkspaceId = useWorkspaceId();
   const { data: notificationsResult, isLoading, error, refetch } = useWorkspaceNotifications();
+  const { data: roleResult, isLoading: isLoadingRole } = useWorkspaceRole();
   const [syncVersion, setSyncVersion] = useState(0);
 
   const serverData = notificationsResult?.success
     ? notificationsResult.data.notificationPreferences
     : null;
 
+  const userRole = roleResult?.success ? roleResult.data.workspaceRole : null;
+
+  const visibleNotifications = useMemo(() => {
+    if (!userRole) return [];
+    return getVisibleNotificationFields(userRole);
+  }, [userRole]);
+
   const updateNotificationsMutation = useUpdateNotifications({
     onError: () => {
-      // Force children to re-sync from server data on error by updating the key
       setSyncVersion((v) => v + 1);
     },
   });
 
   const handleNotificationToggle = useCallback(
-    (key: keyof WorkspaceNotifications, value: boolean) => {
+    (key: keyof WorkspaceNotificationPreferences, value: boolean) => {
       if (!currentWorkspaceId) return;
 
       updateNotificationsMutation.mutate({
@@ -102,7 +76,7 @@ export function NotificationsSection() {
     [currentWorkspaceId, updateNotificationsMutation]
   );
 
-  if (isLoading) {
+  if (isLoading || isLoadingRole) {
     return <NotificationsSectionSkeleton />;
   }
 
@@ -147,17 +121,18 @@ export function NotificationsSection() {
   return (
     <div>
       <div className="mb-4">
-        <h2 className="text-lg font-semibold">Notification</h2>
-        <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
+        <h2 className="text-lg font-semibold">Notifications</h2>
+        <p className="text-sm text-muted-foreground">
+          Manage your email notification preferences for this workspace
+        </p>
       </div>
-      <div className="max-w-2xl space-y-4">
-        {NOTIFICATION_ITEMS.map((item) => (
+      <div className="max-w-2xl space-y-6">
+        {visibleNotifications.map((field) => (
           <NotificationItem
-            key={`${item.key}-${syncVersion}`}
-            id={item.id}
-            label={item.label}
-            initialValue={serverData[item.key]}
-            onToggle={(val) => handleNotificationToggle(item.key, val)}
+            key={`${field.key}-${syncVersion}`}
+            field={field}
+            initialValue={serverData[field.key]}
+            onToggle={(val) => handleNotificationToggle(field.key, val)}
           />
         ))}
       </div>

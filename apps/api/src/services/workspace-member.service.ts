@@ -302,11 +302,11 @@ export class WorkspaceMemberService {
     }
 
     return {
-      notifyOnLinkUsage: member.notifyOnLinkUsage,
-      notifyOnQuotaReset: member.notifyOnQuotaReset,
-      notifyOnQuotaLimit: member.notifyOnQuotaLimit,
-      notifyOnInviteAccepted: member.notifyOnInviteAccepted,
-      notifyOnMemberJoin: member.notifyOnMemberJoin,
+      notifyFeatureHighlights: member.notifyFeatureHighlights,
+      notifyBillingEvents: member.notifyBillingEvents,
+      notifyUsageEvents: member.notifyUsageEvents,
+      notifyIncomingEvents: member.notifyIncomingEvents,
+      notifyAdminEvents: member.notifyAdminEvents,
     };
   }
 
@@ -319,11 +319,11 @@ export class WorkspaceMemberService {
     userId: string,
     workspaceId: string,
     preferences: Partial<{
-      notifyOnLinkUsage: boolean;
-      notifyOnQuotaReset: boolean;
-      notifyOnQuotaLimit: boolean;
-      notifyOnInviteAccepted: boolean;
-      notifyOnMemberJoin: boolean;
+      notifyFeatureHighlights: boolean;
+      notifyBillingEvents: boolean;
+      notifyUsageEvents: boolean;
+      notifyIncomingEvents: boolean;
+      notifyAdminEvents: boolean;
     }>,
     options?: { tx?: Transaction }
   ) {

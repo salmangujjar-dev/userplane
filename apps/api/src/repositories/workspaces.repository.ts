@@ -222,11 +222,11 @@ export class WorkspaceRepository {
 
     if (includeNotifications) {
       selectFields.notificationPreferences = {
-        notifyOnLinkUsage: workspaceMembers.notifyOnLinkUsage,
-        notifyOnQuotaReset: workspaceMembers.notifyOnQuotaReset,
-        notifyOnQuotaLimit: workspaceMembers.notifyOnQuotaLimit,
-        notifyOnInviteAccepted: workspaceMembers.notifyOnInviteAccepted,
-        notifyOnMemberJoin: workspaceMembers.notifyOnMemberJoin,
+        notifyFeatureHighlights: workspaceMembers.notifyFeatureHighlights,
+        notifyBillingEvents: workspaceMembers.notifyBillingEvents,
+        notifyUsageEvents: workspaceMembers.notifyUsageEvents,
+        notifyIncomingEvents: workspaceMembers.notifyIncomingEvents,
+        notifyAdminEvents: workspaceMembers.notifyAdminEvents,
       };
     }
 
@@ -337,11 +337,11 @@ export class WorkspaceRepository {
 
       if (includeNotifications) {
         selectFields.notificationPreferences = {
-          notifyOnLinkUsage: workspaceMembers.notifyOnLinkUsage,
-          notifyOnQuotaReset: workspaceMembers.notifyOnQuotaReset,
-          notifyOnQuotaLimit: workspaceMembers.notifyOnQuotaLimit,
-          notifyOnInviteAccepted: workspaceMembers.notifyOnInviteAccepted,
-          notifyOnMemberJoin: workspaceMembers.notifyOnMemberJoin,
+          notifyFeatureHighlights: workspaceMembers.notifyFeatureHighlights,
+          notifyBillingEvents: workspaceMembers.notifyBillingEvents,
+          notifyUsageEvents: workspaceMembers.notifyUsageEvents,
+          notifyIncomingEvents: workspaceMembers.notifyIncomingEvents,
+          notifyAdminEvents: workspaceMembers.notifyAdminEvents,
         };
       }
 

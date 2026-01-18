@@ -256,11 +256,11 @@ export class WorkspaceMemberRepository {
   async updateNotificationPreferences(
     memberId: string,
     preferences: Partial<{
-      notifyOnLinkUsage: boolean;
-      notifyOnQuotaReset: boolean;
-      notifyOnQuotaLimit: boolean;
-      notifyOnInviteAccepted: boolean;
-      notifyOnMemberJoin: boolean;
+      notifyFeatureHighlights: boolean;
+      notifyBillingEvents: boolean;
+      notifyUsageEvents: boolean;
+      notifyIncomingEvents: boolean;
+      notifyAdminEvents: boolean;
     }>,
     options?: { tx?: Transaction }
   ) {
