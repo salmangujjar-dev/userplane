@@ -121,7 +121,7 @@ function VerificationAppContent() {
       }
       return <VerifiedScreen domainUrl={state.result.domainUrl} />;
 
-    case 'error':
+    case 'error': {
       console.log('[VerificationApp] Rendering: VerificationErrorScreen');
       const error = state.error ?? createVerificationError('VERIFICATION_UNKNOWN_ERROR');
       return (
@@ -132,6 +132,7 @@ function VerificationAppContent() {
           onPrimaryAction={actions.retry}
         />
       );
+    }
 
     default:
       console.log('[VerificationApp] Unknown state, rendering: VerifyingScreen');

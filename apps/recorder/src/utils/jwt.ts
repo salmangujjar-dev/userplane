@@ -34,7 +34,7 @@ export function decodeJwtPayload<T extends BaseJwtPayload = BaseJwtPayload>(toke
     const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
     const decoded = atob(base64);
     return JSON.parse(decoded) as T;
-  } catch (error) {
+  } catch {
     throw new Error('Invalid JWT: failed to decode payload');
   }
 }

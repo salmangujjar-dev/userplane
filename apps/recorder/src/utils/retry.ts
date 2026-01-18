@@ -194,6 +194,7 @@ export const retryPredicates = {
   },
 
   /** Retry on specific HTTP status codes */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onHttpStatus: (statusCodes: number[]) => (error: any) => {
     if ('status' in error) {
       return statusCodes.includes(error.status);
@@ -202,6 +203,7 @@ export const retryPredicates = {
   },
 
   /** Retry on server errors (5xx) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onServerError: (error: any) => {
     if ('status' in error) {
       return error.status >= 500 && error.status < 600;
@@ -210,6 +212,7 @@ export const retryPredicates = {
   },
 
   /** Retry on rate limit (429) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRateLimit: (error: any) => {
     if ('status' in error) {
       return error.status === 429;

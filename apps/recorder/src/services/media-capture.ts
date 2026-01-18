@@ -71,6 +71,7 @@ export class MediaCapture {
         video: {
           cursor: 'always',
           displaySurface: 'monitor',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
         audio: false,
       });
@@ -144,6 +145,8 @@ export class MediaCapture {
         }
       };
 
+      // MediaRecorder error event type is not well-defined in TypeScript
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.mediaRecorder.onerror = (event: any) => {
         const error = new ClientError('CLIENT_MEDIA_CONNECTION_FAILED', event.error);
         console.error('[MediaCapture] Error:', error.code);

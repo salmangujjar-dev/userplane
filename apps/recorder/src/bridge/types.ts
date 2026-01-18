@@ -23,6 +23,7 @@ export interface RecordingSessionInfo {
  */
 type SerializablePrimitive = string | number | boolean | null | undefined;
 type SerializableArray = Serializable[];
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SerializableObject extends Record<string | number, Serializable> {}
 type Serializable = SerializablePrimitive | SerializableArray | SerializableObject;
 

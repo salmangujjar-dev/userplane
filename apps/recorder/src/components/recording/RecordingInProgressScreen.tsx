@@ -50,9 +50,10 @@ export default function RecordingInProgressScreen({
       console.log('[RecordingInProgress] Video preview started');
     }
 
+    const video = videoRef.current;
     return () => {
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
+      if (video) {
+        video.srcObject = null;
       }
     };
   }, [mediaStream]);

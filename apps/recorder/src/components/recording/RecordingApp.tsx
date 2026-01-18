@@ -33,11 +33,13 @@ import PreRecordingScreen from './PreRecordingScreen';
 import RecordingInProgressScreen from './RecordingInProgressScreen';
 import SettingsDropdown from './SettingsDropdown';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface RecordingAppProps {}
 
 /**
  * Root component that provides app mode context
  */
+// eslint-disable-next-line no-empty-pattern
 export default function RecordingApp({}: RecordingAppProps = {}) {
   return (
     <AppModeProvider actionType="recording">
@@ -239,6 +241,7 @@ function RecordingAppContent() {
 
     // Extract custom metadata (everything except _pageUrl, _pageTitle)
     const extractCustom = (entry: Record<string, unknown>) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { _pageUrl, _pageTitle, ...custom } = entry;
       return custom;
     };
@@ -318,7 +321,7 @@ function RecordingAppContent() {
       console.log('[RecordingApp] Rendering: PreRecordingLoadingScreen');
       return <PreRecordingLoadingScreen />;
 
-    case 'error':
+    case 'error': {
       const classifiedError = classifyError(state.error);
 
       console.log('[RecordingApp] Rendering: ErrorScreen');
@@ -328,6 +331,7 @@ function RecordingAppContent() {
       console.log('[RecordingApp] Error message:', classifiedError.message);
 
       return renderErrorScreen(classifiedError, state.preferences, actions);
+    }
 
     case 'setup':
       console.log('[RecordingApp] Rendering: PreRecordingScreen');

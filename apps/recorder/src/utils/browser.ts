@@ -147,6 +147,8 @@ export function detectOS(): OSInfo {
 
   // Fallback: check userAgentData if available (modern browsers)
   if ('userAgentData' in navigator) {
+    // userAgentData is not yet in TypeScript's Navigator type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const uaData = (navigator as any).userAgentData;
     if (uaData?.platform) {
       return { name: uaData.platform, version: null };

@@ -266,6 +266,7 @@ export class CrossTabCoordinator {
     );
 
     // Reference to this for use in schema callbacks
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     // Schema for cross-tab state synchronization
@@ -297,6 +298,8 @@ export class CrossTabCoordinator {
         }
       },
 
+      // postbridge automatically appends _remote as the last parameter
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       syncCaptureRecorderState(state: CaptureRecorderState, _remote: CrossTabSchema) {
         // This function runs in capture iframes when recorder state changes
         // Only notify capture tabs (not recorder tabs)
@@ -311,6 +314,8 @@ export class CrossTabCoordinator {
       },
 
       // Scatter-gather: handle metadata request (runs in capture iframes)
+      // postbridge automatically appends _remote as the last parameter
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       requestMetadata(request: MetadataRequest, _remote: CrossTabSchema) {
         // Only capture iframes should respond
         if (!self.localTabId || !isCaptureTab(self.localTabId)) {
@@ -345,6 +350,8 @@ export class CrossTabCoordinator {
       },
 
       // Scatter-gather: handle metadata response (runs in recorder)
+      // postbridge automatically appends _remote as the last parameter
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       respondMetadata(response: MetadataResponse, _remote: CrossTabSchema) {
         // Only process if we have a pending request for this
         const pending = self.pendingScatterGathers.get(response.requestId);

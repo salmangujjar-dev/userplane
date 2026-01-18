@@ -24,6 +24,7 @@ export interface VerificationResult {
  * Guest schema exposed by verification bridge to parent
  * Minimal - verification doesn't need to expose state to parent
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface VerificationGuestSchema {
   // No methods needed - verification is a one-way request
 }
