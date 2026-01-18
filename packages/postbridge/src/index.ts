@@ -133,13 +133,13 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
+import Bridge from './bridge';
 import guest from './guest';
 import host from './host';
 import { withTransferable } from './rpc';
-import Bridge from './bridge';
 
 // Export main APIs
-export { host, guest, withTransferable, Bridge as bridge };
+export { Bridge as bridge, guest, host, withTransferable };
 
 // Export all types (Connection, Schema, etc.)
 export * from './types';

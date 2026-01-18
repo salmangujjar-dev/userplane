@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
+
 import { BlurManager } from '../src';
 
 const meta: Meta = {
@@ -241,6 +242,7 @@ export const Events: Story = {
 
     blurManager.on('start', () => log('EVENT: start'));
     blurManager.on('stop', () => log('EVENT: stop'));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     blurManager.on('blur', (data: any) => log(`EVENT: blur (radius: ${data?.blurRadius}px)`));
     blurManager.on('unblur', () => log('EVENT: unblur'));
 

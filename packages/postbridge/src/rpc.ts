@@ -130,6 +130,7 @@ const SYM_TRANSFERABLES = Symbol();
  * @returns Cleanup function that removes all event listeners
  */
 export function registerLocalMethods(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   methods: Record<string, (...args: any[]) => any> = {},
   rpcConnectionID: string,
   listenTo: Environment,
@@ -137,11 +138,13 @@ export function registerLocalMethods(
   remote: Schema
 ) {
   // Store cleanup functions for all listeners
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listeners: any[] = [];
 
   // Register a handler for each local method
   for (const [methodName, method] of Object.entries(methods)) {
     // Handler that executes when remote calls this method
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function handleCall(event: any) {
       const eventData = getEventData(event);
       const { action, callID, connectionID, callName, args = [] } = eventData as RPCRequestPayload;
@@ -259,12 +262,14 @@ export function createRPC(
   sendTo: Target
 ) {
   // Return a proxy function that can be called like a normal function
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (...args: any[]) => {
     return new Promise((resolve, reject) => {
       // Generate unique ID for this specific call
       const requestID = generateId();
 
       // Handler for RPC response
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       function handleResponse(event: any) {
         const eventData = getEventData(event);
         const { callID, connectionID, callName, result, error, action } =

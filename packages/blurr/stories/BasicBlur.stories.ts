@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
+
 import { BlurManager } from '../src';
 
 type BlurDemoArgs = {
@@ -164,7 +165,6 @@ export const CSSClass: Story = {
 };
 
 export const FormInputs: Story = {
-  name: 'Form Inputs',
   args: {
     autoStart: true,
   },

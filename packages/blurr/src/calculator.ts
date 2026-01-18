@@ -3,8 +3,8 @@
  * Implements adaptive blur based on text size and media dimensions
  */
 
-import { TEXT_NODE_XPATH, MEDIA_SELECTORS, DEFAULTS } from './constants';
-import type { ElementAnalysis, BlurManagerOptions } from './types';
+import { DEFAULTS, MEDIA_SELECTORS, TEXT_NODE_XPATH } from './constants';
+import type { BlurManagerOptions, ElementAnalysis } from './types';
 
 /**
  * Calculate blur radius for an element

@@ -2,8 +2,8 @@
  * State management for blur tracking and restoration
  */
 
-import { DATA_ATTRIBUTES, DATA_ATTR_SELECTORS } from './types';
 import type { BlurState } from './types';
+import { DATA_ATTR_SELECTORS, DATA_ATTRIBUTES } from './types';
 
 /**
  * Save blur state to element

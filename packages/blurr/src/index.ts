@@ -10,92 +10,92 @@ export { BlurManager } from './BlurManager';
 
 // Types
 export type {
-  Logger,
+  BlurManagerEvent,
+  BlurManagerEventListener,
   BlurManagerOptions,
   BlurState,
   ElementAnalysis,
+  Logger,
   MutationBatch,
   PerformanceMetrics,
-  BlurManagerEvent,
-  BlurManagerEventListener,
-  SelectorType,
   SelectorSource,
+  SelectorType,
 } from './types';
 
 // Constants
 export {
-  DEFAULTS,
-  TEXT_NODE_XPATH,
-  MEDIA_SELECTORS,
   CUSTOM_SELECTOR_META_NAME,
   DATA_ATTRIBUTE_PREFIX,
+  DEFAULTS,
+  MEDIA_SELECTORS,
   MUTATION_OBSERVER_CONFIG,
   PERFORMANCE_MARKS,
+  TEXT_NODE_XPATH,
 } from './constants';
 
 // Selectors
 export {
-  UNMASK_SELECTORS,
-  MASK_SELECTORS,
   getMaskSelectorsString,
-  getUnmaskSelectorsString,
-  readCustomSelectorsFromMeta,
   getSelectorStats,
+  getUnmaskSelectorsString,
+  MASK_SELECTORS,
+  readCustomSelectorsFromMeta,
+  UNMASK_SELECTORS,
 } from './selectors';
 
 // Calculator
 export {
-  calculateBlurRadius,
   analyzeElement,
-  analyzeTextSize,
   analyzeMediaDimensions,
+  analyzeTextSize,
   calculateBlurForContentType,
-  isInViewport,
+  calculateBlurRadius,
   getElementDimensions,
+  isInViewport,
 } from './calculator';
 
 // State management
 export {
-  saveBlurState,
-  loadBlurState,
-  hasBlurState,
-  clearBlurState,
   applyBlurFilter,
-  removeBlurFilter,
-  restoreOriginalFilter,
-  getCurrentFilter,
-  isElementBlurred,
+  clearBlurState,
   extractBlurRadius,
   findAllBlurredElements,
   getBlurStats,
+  getCurrentFilter,
+  hasBlurState,
+  isElementBlurred,
+  loadBlurState,
+  removeBlurFilter,
+  restoreOriginalFilter,
+  saveBlurState,
 } from './state';
 
 // Observer utilities
 export {
   createBatchedObserver,
-  processMutationBatch,
-  observe,
-  disconnect,
   createIntersectionObserver,
   debounce,
+  disconnect,
+  observe,
+  processMutationBatch,
   throttle,
 } from './observer';
 
 // Utils
 export {
-  createLogger,
-  isBrowser,
   checkBrowserSupport,
-  matchesSelector,
-  querySelectorAllSafe,
-  isElementVisible,
-  getAttributeValue,
-  parseBoolean,
-  measurePerformance,
-  measurePerformanceAsync,
+  createLogger,
   createUniqueId,
   deepClone,
+  getAttributeValue,
+  isBrowser,
+  isElementVisible,
+  matchesSelector,
+  measurePerformance,
+  measurePerformanceAsync,
   merge,
+  parseBoolean,
+  querySelectorAllSafe,
 } from './utils';
 
 // Version

@@ -2,20 +2,21 @@
  * State management tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import {
-  saveBlurState,
-  loadBlurState,
-  hasBlurState,
-  clearBlurState,
   applyBlurFilter,
-  removeBlurFilter,
-  restoreOriginalFilter,
-  getCurrentFilter,
-  isElementBlurred,
+  clearBlurState,
   extractBlurRadius,
   findAllBlurredElements,
   getBlurStats,
+  getCurrentFilter,
+  hasBlurState,
+  isElementBlurred,
+  loadBlurState,
+  removeBlurFilter,
+  restoreOriginalFilter,
+  saveBlurState,
 } from './state';
 
 describe('State Management', () => {

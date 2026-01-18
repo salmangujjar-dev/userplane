@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { host, guest } from '../src/index';
-import * as helpers from '../src/helpers';
 import { EventEmitter } from 'events';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import * as helpers from '../src/helpers';
+import { guest, host } from '../src/index';
 
 class MockPort extends EventEmitter {
   partner?: MockPort;

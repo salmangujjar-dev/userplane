@@ -31,6 +31,16 @@ export const config = [
     },
   },
   {
-    ignores: ['dist/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.next/**',
+      '**/.astro/**',
+      '**/.cache/**',
+      '**/build/**',
+      '**/coverage/**',
+      '**/.turbo/**',
+      '**/storybook-static/**',
+    ],
   },
 ];

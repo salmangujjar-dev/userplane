@@ -80,20 +80,20 @@
 
 import { extractMethods, generateId, set } from './helpers';
 import {
-  Schema,
+  bridgeActions,
+  BridgeBroadcastPayload,
+  BridgeCASResponsePayload,
+  BridgeCASStatePayload,
   BridgeConnection,
   BridgeConnectOptions,
-  bridgeActions,
-  BridgeHandshakePayload,
+  BridgeDirectMessagePayload,
+  BridgeGetTabsPayload,
   BridgeHandshakeAckPayload,
   BridgeHandshakeErrorPayload,
-  BridgeBroadcastPayload,
+  BridgeHandshakePayload,
   BridgeRelayPayload,
-  BridgeGetTabsPayload,
-  BridgeDirectMessagePayload,
-  BridgeCASStatePayload,
-  BridgeCASResponsePayload,
   CASResult,
+  Schema,
   VersionedValue,
 } from './types';
 
@@ -152,16 +152,21 @@ function createSharedWorker(workerURL?: string): SharedWorker {
  * @param remote The remote object (for PostBridge-style bidirectional access)
  * @returns A proxy function that broadcasts when called
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createBroadcastProxy(
   methodName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   methodFn: (...args: any[]) => any,
   tabID: string,
   port: MessagePort,
   remote: Schema,
   channel: string
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (...args: any[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let error: any;
 
     // Step 1: Execute locally with remote as last arg (PostBridge pattern!)
@@ -212,6 +217,7 @@ function createBroadcastProxy(
  */
 function createDirectMessageProxy(
   methodName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   methodFn: (...args: any[]) => any,
   tabID: string,
   targetTabID: string,
@@ -219,8 +225,11 @@ function createDirectMessageProxy(
   remote: Schema,
   channel: string
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (...args: any[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let error: any;
 
     // Step 1: Execute locally with remote as last arg (PostBridge pattern!)
@@ -317,6 +326,7 @@ async function connect(
       const port = worker.port;
 
       // Step 4: Set up message handler for handshake and state updates from worker
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sharedStateCache: Record<string, any> = {};
       const stateVersionCache: Record<string, number> = {};
 
@@ -335,12 +345,13 @@ async function connect(
             handleHandshakeAck(data as BridgeHandshakeAckPayload);
             break;
 
-          case bridgeActions.BRIDGE_HANDSHAKE_ERROR:
+          case bridgeActions.BRIDGE_HANDSHAKE_ERROR: {
             // Handshake failed - reject connection
             const errorPayload = data as BridgeHandshakeErrorPayload;
             console.error(`[Bridge] Handshake error (${errorPayload.code}):`, errorPayload.error);
             reject(new Error(`Bridge handshake failed: ${errorPayload.error}`));
             break;
+          }
 
           case bridgeActions.BRIDGE_STATE_UPDATE:
             // Worker broadcasted a state change - update our cache with value and version
@@ -350,7 +361,7 @@ async function connect(
             }
             break;
 
-          case bridgeActions.BRIDGE_CAS_RESPONSE:
+          case bridgeActions.BRIDGE_CAS_RESPONSE: {
             // CAS operation completed - resolve the pending promise
             const casResponse = data as BridgeCASResponsePayload;
             const pendingCAS = pendingCASRequests.get(casResponse.requestID);
@@ -363,6 +374,7 @@ async function connect(
               });
             }
             break;
+          }
 
           // BRIDGE_RELAY will be handled by the updated handler in handleHandshakeAck
 
@@ -578,6 +590,7 @@ async function connect(
          */
         const CAS_TIMEOUT_MS = options?.casTimeout ?? 5000;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         function compareAndSwap<T = any>(
           key: string,
           expectedVersion: number,
@@ -622,6 +635,7 @@ async function connect(
          * @param key State key to read
          * @returns VersionedValue { value, version }
          */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         function getVersionedState<T = any>(key: string): VersionedValue<T> {
           return {
             value: sharedStateCache[key] as T,

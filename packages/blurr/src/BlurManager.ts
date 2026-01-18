@@ -2,38 +2,38 @@
  * BlurManager - Main class for managing privacy blur
  */
 
+import { calculateBlurRadius, isInViewport } from './calculator';
+import { CUSTOM_SELECTOR_META_NAME, DEFAULTS } from './constants';
+import { createBatchedObserver, createIntersectionObserver, disconnect, observe } from './observer';
 import {
   getMaskSelectorsString,
   getUnmaskSelectorsString,
   readCustomSelectorsFromMeta,
 } from './selectors';
-import { calculateBlurRadius, isInViewport } from './calculator';
 import {
-  saveBlurState,
-  hasBlurState,
   applyBlurFilter,
-  restoreOriginalFilter,
   findAllBlurredElements,
+  hasBlurState,
+  restoreOriginalFilter,
+  saveBlurState,
 } from './state';
-import { createBatchedObserver, observe, disconnect, createIntersectionObserver } from './observer';
-import {
-  createLogger,
-  checkBrowserSupport,
-  matchesSelector,
-  querySelectorAllSafe,
-  isElementVisible,
-  measurePerformance,
-  setGlobalDebug,
-} from './utils';
-import { DEFAULTS, CUSTOM_SELECTOR_META_NAME } from './constants';
 import type {
-  BlurManagerOptions,
   BlurManagerEvent,
   BlurManagerEventListener,
-  PerformanceMetrics,
-  MutationBatch,
+  BlurManagerOptions,
   Logger,
+  MutationBatch,
+  PerformanceMetrics,
 } from './types';
+import {
+  checkBrowserSupport,
+  createLogger,
+  isElementVisible,
+  matchesSelector,
+  measurePerformance,
+  querySelectorAllSafe,
+  setGlobalDebug,
+} from './utils';
 
 /**
  * BlurManager class
@@ -363,6 +363,7 @@ export class BlurManager {
     }
 
     // Skip if not visible (optimization) - only in real browsers
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== 'undefined' && (window as any).happyDOM === undefined) {
       if (!isElementVisible(element)) {
         return;

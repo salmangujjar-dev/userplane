@@ -2,14 +2,15 @@
  * Selectors tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import {
-  MASK_SELECTORS,
-  UNMASK_SELECTORS,
   getMaskSelectorsString,
-  getUnmaskSelectorsString,
-  readCustomSelectorsFromMeta,
   getSelectorStats,
+  getUnmaskSelectorsString,
+  MASK_SELECTORS,
+  readCustomSelectorsFromMeta,
+  UNMASK_SELECTORS,
 } from './selectors';
 
 describe('Selectors', () => {

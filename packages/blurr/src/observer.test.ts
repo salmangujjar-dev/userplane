@@ -2,14 +2,15 @@
  * Observer tests
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   createBatchedObserver,
-  processMutationBatch,
-  observe,
-  disconnect,
   createIntersectionObserver,
   debounce,
+  disconnect,
+  observe,
+  processMutationBatch,
   throttle,
 } from './observer';
 
@@ -44,6 +45,7 @@ describe('Observer', () => {
     });
 
     it('should include added elements in batch', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let receivedBatch: any = null;
       const callback = vi.fn((batch) => {
         receivedBatch = batch;

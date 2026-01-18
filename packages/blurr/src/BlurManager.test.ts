@@ -2,9 +2,10 @@
  * BlurManager tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { BlurManager } from './BlurManager';
-import { hasBlurState, getBlurStats } from './state';
+import { hasBlurState } from './state';
 
 describe('BlurManager', () => {
   let blurManager: BlurManager;
@@ -53,7 +54,7 @@ describe('BlurManager', () => {
     });
 
     it('should not start twice', () => {
-      const consoleSpy = vi.spyOn(console, 'warn');
+      vi.spyOn(console, 'warn');
 
       blurManager.start();
       blurManager.start(); // Second call

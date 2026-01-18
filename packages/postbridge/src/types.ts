@@ -43,6 +43,9 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
+// This file intentionally uses any types for flexible API design
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * NodeWorker Interface
  * ────────────────────
@@ -57,10 +60,13 @@
  */
 export interface NodeWorker {
   /** Subscribe to events (Node.js style) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   on(event: string, handler: any): void;
   /** Unsubscribe from events (Node.js style) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   off(event: string, handler: any): void;
   /** Send a message to the worker */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postMessage(message: any): void;
   /** Terminate the worker thread */
   terminate(): void;
@@ -146,6 +152,7 @@ export enum actions {
  * - remote.add(1, 2) → executes on the other side, returns 3
  * - remote.math.multiply(3, 4) → executes on the other side, returns 12
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Schema = Record<string, any>;
 
 /**
