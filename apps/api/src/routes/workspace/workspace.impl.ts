@@ -326,11 +326,17 @@ export const restoreWorkspaceImpl = (
 
       // Send email to workspace owners that the workspace has been restored
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const dashboardUrl = `${env.invite.appUrl}/workspace/${input.params.workspaceId}`;
+      const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
+
+      // Send appropriate email based on restoration status
+      const emailMethod =
+        result.restorationStatus === 'partial'
+          ? emailService.sendWorkspaceRecoveryPartially
+          : emailService.sendWorkspaceRecoveryConfirmation;
 
       await Promise.allSettled(
         owners.map((owner) =>
-          emailService.sendWorkspaceRecoveryConfirmation({
+          emailMethod.call(emailService, {
             to: owner.email,
             workspaceName: result.workspace.workspaceName || 'Workspace',
             dashboardUrl,
@@ -829,7 +835,7 @@ export const acceptInviteImpl = (
     // Send email to owner(s) of the workspace
     const newMember = await userService.getById(context.user.id);
     const owners = await workspaceMemberService.getOwners(result.workspace.workspaceId);
-    const workspaceUrl = `${process.env.PUBLIC_DASH_URL}/workspace/${result.workspace.workspaceId}`;
+    const workspaceUrl = `${process.env.PUBLIC_DASH_URL}/${result.workspace.workspaceId}`;
 
     await Promise.allSettled(
       owners.map(async (owner: { userId: string; email: string }) => {
@@ -843,6 +849,21 @@ export const acceptInviteImpl = (
         });
       })
     );
+
+    // Send welcome email to the new member
+    // This is non-blocking - if it fails, the invite acceptance still succeeds
+    try {
+      const dashboardUrl = `${env.invite.appUrl}/${result.workspace.workspaceId}`;
+      await emailService.sendWelcomeEmailMember({
+        to: newMember.email,
+        userName: newMember.name,
+        workspaceName: result.workspace.workspaceName,
+        dashboardUrl,
+      });
+    } catch (error) {
+      // Log error but don't fail the request
+      console.error('Failed to send welcome email to member:', error);
+    }
 
     return {
       message: 'Invitation accepted successfully',
@@ -1178,7 +1199,7 @@ export const sendDomainInstructionsImpl = (
         workspaceId: input.params.workspaceId,
       });
 
-      const settingsUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.userplane.io'}/workspace/${input.params.workspaceId}/settings/domains`;
+      const settingsUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.userplane.io'}/${input.params.workspaceId}/settings/domains`;
       const docsUrl = 'https://userplane.com/docs/domains';
 
       // Send emails to all provided addresses
@@ -1325,8 +1346,9 @@ export const suggestWorkspacesImpl = (workspaceService: WorkspaceService) => {
  * POST /workspace/:workspaceId/join - Join or request access to workspace
  * Requires authentication
  * Idempotent operation - returns success if user is already a member
+ * Sends confirmation email to requester when access is requested
  */
-export const joinWorkspaceImpl = (inviteService: InviteService) => {
+export const joinWorkspaceImpl = (inviteService: InviteService, emailService: EmailService) => {
   return authorized.workspace.join.handler(async ({ input, context }) => {
     const result = await inviteService.joinWorkspace({
       workspaceId: input.params.workspaceId,
@@ -1345,6 +1367,23 @@ export const joinWorkspaceImpl = (inviteService: InviteService) => {
           status: 'joined' as const,
         },
       };
+    }
+
+    // Send welcome email to new member if they joined successfully
+    // This is non-blocking - if it fails, the request still succeeds
+    if (result.status === 'joined') {
+      try {
+        const dashboardUrl = `${env.invite.appUrl}/${result.workspaceId}`;
+        await emailService.sendWelcomeEmailMember({
+          to: context.user.email,
+          userName: context.user.name,
+          workspaceName: result.workspaceName,
+          dashboardUrl,
+        });
+      } catch (error) {
+        // Log error but don't fail the request
+        console.error('Failed to send welcome email to member:', error);
+      }
     }
 
     return {
@@ -1383,6 +1422,7 @@ export const validateAccessRequestImpl = (inviteService: InviteService) => {
 /**
  * POST /workspace/accessRequest/approve - Approve access request
  * Requires authentication (owner only, validated in service)
+ * Welcome email is sent to requester by the invite service
  */
 export const approveAccessRequestImpl = (inviteService: InviteService) => {
   return authorized.workspace.accessRequest.approve.handler(async ({ input, context }) => {
@@ -1467,7 +1507,8 @@ export const getWorkspaceBillingEmailImpl = (
  */
 export const updateWorkspaceBillingEmailImpl = (
   workspaceService: WorkspaceService,
-  workspaceMemberService: WorkspaceMemberService
+  workspaceMemberService: WorkspaceMemberService,
+  emailService: EmailService
 ) => {
   const requireAdminOrOwner = createWorkspaceRoleMiddleware(
     workspaceMemberService,
@@ -1478,10 +1519,43 @@ export const updateWorkspaceBillingEmailImpl = (
   return authorized.workspace.updateWorkspaceBillingEmail
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
+      // Get current billing email before update
+      const previousEmail = await workspaceService.getWorkspaceBillingEmail(
+        input.params.workspaceId
+      );
+
       const updated = await workspaceService.updateWorkspaceBillingEmail(
         input.params.workspaceId,
         input.body.email
       );
+
+      // Send notification emails to both old and new billing emails
+      // This is non-blocking - if it fails, the update still succeeds
+      try {
+        const billingUrl = `${env.invite.appUrl}/${input.params.workspaceId}/settings?tab=workspace`;
+        const newEmail = updated.workspaceBillingEmail!;
+
+        // Send to the new email address
+        await emailService.sendBillingEmailUpdated({
+          to: newEmail,
+          previousEmail: previousEmail || 'Not set',
+          newEmail: newEmail,
+          billingUrl,
+        });
+
+        // Send to the previous email address if it exists and is different
+        if (previousEmail && previousEmail !== newEmail) {
+          await emailService.sendBillingEmailUpdated({
+            to: previousEmail,
+            previousEmail: previousEmail,
+            newEmail: newEmail,
+            billingUrl,
+          });
+        }
+      } catch (error) {
+        // Log error but don't fail the request
+        console.error('Failed to send billing email updated notification:', error);
+      }
 
       return {
         message: 'Workspace billing email updated successfully',
@@ -1527,14 +1601,15 @@ export const createWorkspaceProcedures = (
     restore: restoreWorkspaceImpl(workspaceService, workspaceMemberService, emailService),
     search: workspaceSearchImpl(workspaceService, workspaceMemberService),
     suggest: suggestWorkspacesImpl(workspaceService),
-    join: joinWorkspaceImpl(inviteService),
+    join: joinWorkspaceImpl(inviteService, emailService),
     getWorkspaceBillingEmail: getWorkspaceBillingEmailImpl(
       workspaceService,
       workspaceMemberService
     ),
     updateWorkspaceBillingEmail: updateWorkspaceBillingEmailImpl(
       workspaceService,
-      workspaceMemberService
+      workspaceMemberService,
+      emailService
     ),
 
     preferences: {

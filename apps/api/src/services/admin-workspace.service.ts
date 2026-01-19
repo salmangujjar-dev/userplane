@@ -11,9 +11,11 @@ import type {
   SearchWorkspaceProjectsParams,
   SearchWorkspacesParams,
 } from '@/api/repositories/admin-workspace.repository';
+import type { WorkspaceService } from '@/api/services/workspace.service';
 
 export interface AdminWorkspaceServiceDeps {
   adminWorkspaceRepo: AdminWorkspaceRepository;
+  workspaceService: WorkspaceService;
 }
 
 export class AdminWorkspaceService {
@@ -70,6 +72,7 @@ export class AdminWorkspaceService {
 
   /**
    * Deactivate (soft delete) a workspace
+   * Delegates to WorkspaceService.deleteWorkspace for consistent deletion logic
    */
   async deactivateWorkspace(workspaceId: string) {
     const workspace = await this.deps.adminWorkspaceRepo.findWorkspaceById(workspaceId);
@@ -81,13 +84,24 @@ export class AdminWorkspaceService {
       throw adminError.WORKSPACE_ALREADY_DEACTIVATED();
     }
 
-    const updated = await this.deps.adminWorkspaceRepo.deactivateWorkspace(workspaceId);
-    if (!updated) {
-      throw adminError.WORKSPACE_NOT_FOUND();
-    }
+    // Use workspace service for deletion to ensure all related entities are properly soft-deleted
+    const deletedAt = new Date();
+    await this.deps.workspaceService.deleteWorkspace(workspaceId, deletedAt);
 
     // Return full detail
     return this.getWorkspaceDetail(workspaceId);
+  }
+
+  /**
+   * Restore a soft-deleted workspace
+   * Delegates to WorkspaceService.restoreWorkspace for consistent restoration logic
+   */
+  async restoreWorkspace(workspaceId: string) {
+    // Use workspace service for restoration to ensure all related entities are properly restored
+    const result = await this.deps.workspaceService.restoreWorkspace(workspaceId);
+
+    // Return the restoration result with full details
+    return result;
   }
 
   /**

@@ -28,6 +28,7 @@ import type {
   AccountDeletionEmailProps,
   AccountDeletionVerificationEmailProps,
   AccountRestoredEmailProps,
+  BillingEmailUpdatedEmailProps,
   DeletionConfirmationEmailProps,
   DeletionRequestedEmailProps,
   DeletionScheduledEmailProps,
@@ -64,6 +65,11 @@ import type {
   TeammateJoinedEmailProps,
   TosViolationEmailProps,
   TrialReverseTrialOfferEmailProps,
+  WelcomeEmailMemberProps,
+  WelcomeEmailPilotProps,
+  WelcomeEmailRequesterProps,
+  WelcomeEmailSubscriptionProps,
+  WelcomeMeetFounderEmailProps,
 } from '@workspace/email';
 import type { PlanId as WorkspacePlan } from '@workspace/pricing';
 import type { z } from 'zod';
@@ -242,6 +248,13 @@ export type MagicLinkEmailParams = Required<MagicLinkEmailProps> & { to: string 
 export type SubscriptionActiveEmailParams = Required<SubscriptionActiveEmailProps> & { to: string };
 
 /**
+ * Billing email updated email parameters
+ */
+export type BillingEmailUpdatedEmailParams = Required<BillingEmailUpdatedEmailProps> & {
+  to: string;
+};
+
+/**
  * Subscription expired email parameters
  */
 export type SubscriptionExpiredEmailParams = Required<SubscriptionExpiredEmailProps> & {
@@ -370,12 +383,49 @@ export type PilotSandboxInviteEmailParams = Required<SandboxInviteEmailProps> & 
 /**
  * Recording received email parameters
  */
-export type RecordingReceivedEmailParams = Required<RecordingReceivedEmailProps> & { to: string };
+export type RecordingReceivedEmailParams = Required<RecordingReceivedEmailProps> & {
+  to: string;
+};
 
 /**
  * Trial reverse trial offer email parameters
  */
 export type TrialReverseTrialOfferEmailParams = Required<TrialReverseTrialOfferEmailProps> & {
+  to: string;
+};
+
+/**
+ * Welcome meet founder email parameters
+ */
+export type WelcomeMeetFounderEmailParams = Required<WelcomeMeetFounderEmailProps> & {
+  to: string;
+};
+
+/**
+ * Welcome email member parameters
+ */
+export type WelcomeEmailMemberParams = Required<WelcomeEmailMemberProps> & {
+  to: string;
+};
+
+/**
+ * Welcome email subscription parameters
+ */
+export type WelcomeEmailSubscriptionParams = Required<WelcomeEmailSubscriptionProps> & {
+  to: string;
+};
+
+/**
+ * Welcome email pilot parameters
+ */
+export type WelcomeEmailPilotParams = Required<WelcomeEmailPilotProps> & {
+  to: string;
+};
+
+/**
+ * Welcome email requester parameters
+ */
+export type WelcomeEmailRequesterParams = Required<WelcomeEmailRequesterProps> & {
   to: string;
 };
 
@@ -403,6 +453,7 @@ export type WorkspaceAccessRequestedEmailParams = Required<AccessRequestedEmailP
  */
 export type WorkspaceDeletionScheduledEmailParams = Required<DeletionScheduledEmailProps> & {
   to: string;
+  scheduledAt?: string;
 };
 
 /**
@@ -424,6 +475,7 @@ export type WorkspaceRecoveryScheduledEmailParams = Required<RecoveryScheduledEm
  */
 export type WorkspaceRecoveryConfirmationEmailParams = Required<RecoveryConfirmationEmailProps> & {
   to: string;
+  scheduledAt?: string;
 };
 
 /**
@@ -438,6 +490,7 @@ export type WorkspaceDeletionRequestedEmailParams = Required<DeletionRequestedEm
  */
 export type WorkspaceRecoveryPartiallyEmailParams = Required<RecoveryPartiallyEmailProps> & {
   to: string;
+  scheduledAt?: string;
 };
 
 /**
@@ -445,6 +498,7 @@ export type WorkspaceRecoveryPartiallyEmailParams = Required<RecoveryPartiallyEm
  */
 export type ProjectDeletionScheduledEmailParams = Required<ProjectDeletionScheduledEmailProps> & {
   to: string;
+  scheduledAt?: string;
 };
 
 /**
@@ -468,6 +522,7 @@ export type ProjectRecoveryScheduledEmailParams = Required<ProjectRecoverySchedu
 export type ProjectRecoveryConfirmationEmailParams =
   Required<ProjectRecoveryConfirmationEmailProps> & {
     to: string;
+    scheduledAt?: string;
   };
 
 /**
@@ -482,6 +537,7 @@ export type ProjectDeletionRequestedEmailParams = Required<ProjectDeletionReques
  */
 export type ProjectRecoveryPartiallyEmailParams = Required<ProjectRecoveryPartiallyEmailProps> & {
   to: string;
+  scheduledAt?: string;
 };
 
 /**

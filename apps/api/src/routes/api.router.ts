@@ -14,8 +14,9 @@
  * defined in the contract (e.g., GET /api/v1/session)
  */
 
-// Services
+// Services and Repositories
 import {
+  adminProjectService,
   adminProvisioningService,
   adminRecordingService,
   adminService,
@@ -26,10 +27,12 @@ import {
   linkService,
   projectService,
   provisionerService,
+  recordingRepo,
   recordingService,
   sessionService,
   tokenService,
   userService,
+  workspaceMemberRepo,
   workspaceMemberService,
   workspaceService,
 } from '@/api/services';
@@ -55,7 +58,12 @@ export type { WorkspaceContext } from '@/api/middleware/workspace.orpc';
  * Implemented procedures
  * Add new implementations here as endpoints are migrated to v2
  */
-const sessionProcedures = createSessionProcedures(sessionService);
+const sessionProcedures = createSessionProcedures(
+  sessionService,
+  recordingRepo,
+  workspaceMemberRepo,
+  emailService
+);
 const accountProcedures = createAccountProcedures(userService);
 const workspaceProcedures = createWorkspaceProcedures(
   inviteService,
@@ -76,11 +84,12 @@ const recordingProcedures = createRecordingProcedures(
 const linkProcedures = createLinkProcedures(linkService, workspaceMemberService, workspaceService);
 const domainProcedures = createDomainProcedures(domainService);
 const inviteProcedures = createInviteProcedures(inviteService);
-const provisionerProcedures = createProvisionerProcedures(provisionerService);
+const provisionerProcedures = createProvisionerProcedures(provisionerService, emailService);
 const statusProcedures = createStatusProcedures();
 const adminProcedures = createAdminProcedures(
   adminService,
   adminWorkspaceService,
+  adminProjectService,
   adminRecordingService,
   adminProvisioningService,
   workspaceService,
