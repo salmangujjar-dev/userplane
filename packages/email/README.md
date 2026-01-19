@@ -8,7 +8,9 @@ Unified email package with clients and React Email templates.
 - React Email templates with server-safe rendering
 - Idempotency keys for safe retries
 - Email scheduling capabilities
+- Batch sending for multiple recipients (up to 100 emails at once)
 - Type-safe API
+- Consistent response format (always returns array of IDs)
 
 ## Usage
 
@@ -22,19 +24,30 @@ const client = createEmailClient({
   apiKey: process.env.RESEND_API_KEY,
 });
 
-// Send email
-await client.send({
+// Send single email
+const response = await client.send({
   from: 'noreply@example.com',
-  to: ['user@example.com'],
+  to: 'user@example.com',
   subject: 'Welcome!',
   html: '<p>Hello world</p>',
 });
+console.log(response.ids); // ['email-id-123']
+
+// Send to multiple recipients using batch mode
+const response = await client.send({
+  from: 'noreply@example.com',
+  to: ['user1@example.com', 'user2@example.com', 'user3@example.com'],
+  subject: 'Welcome!',
+  html: '<p>Hello world</p>',
+  batch: true, // Triggers efficient batch sending
+});
+console.log(response.ids); // ['email-id-1', 'email-id-2', 'email-id-3']
 
 // With idempotency key
 await client.send(
   {
     from: 'noreply@example.com',
-    to: ['user@example.com'],
+    to: 'user@example.com',
     subject: 'Welcome!',
     html: '<p>Hello world</p>',
   },
@@ -43,19 +56,51 @@ await client.send(
   }
 );
 
-// Schedule email
+// Schedule email (not supported in batch mode)
 await client.send(
   {
     from: 'noreply@example.com',
-    to: ['user@example.com'],
+    to: 'user@example.com',
     subject: 'Scheduled',
     html: '<p>Future email</p>',
   },
   {
-    scheduledAt: new Date(Date.now() + 3600000), // 1 hour from now
+    scheduledAt: '2026-02-01T10:00:00Z',
   }
 );
 ```
+
+### Batch Sending
+
+Batch sending is more efficient than sending individual emails when you need to send the same content to multiple recipients:
+
+```typescript
+// Instead of this (slow, multiple API calls)
+for (const email of emails) {
+  await client.send({
+    from: 'noreply@example.com',
+    to: email,
+    subject: 'Update',
+    html: '<p>News</p>',
+  });
+}
+
+// Do this (fast, single API call)
+const response = await client.send({
+  from: 'noreply@example.com',
+  to: emails, // Array of email addresses
+  batch: true, // Enable batch mode
+  subject: 'Update',
+  html: '<p>News</p>',
+});
+console.log(`Sent ${response.ids.length} emails`);
+```
+
+**Batch Limitations:**
+
+- Maximum 100 recipients per batch
+- `scheduledAt` is not supported in batch mode
+- Each recipient gets a separate email with individual tracking
 
 ### Email Templates
 

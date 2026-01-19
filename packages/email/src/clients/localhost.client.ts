@@ -11,6 +11,7 @@ import { join } from 'path';
 import type {
   EmailClient,
   EmailProvider,
+  SendBatchEmailResponse,
   SendEmailOptions,
   SendEmailParams,
   SendEmailResponse,
@@ -43,6 +44,39 @@ export class LocalhostEmailClient implements EmailClient {
   }
 
   async send(params: SendEmailParams, options?: SendEmailOptions): Promise<SendEmailResponse> {
+    // Use batch send if batch is true and to has multiple recipients
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    if (params.batch && recipients.length > 1) {
+      if (options?.scheduledAt) {
+        logger.warn('scheduledAt is not supported in batch mode, falling back to regular send');
+      } else {
+        // Create batch emails with same content, different recipients
+        const batchEmails = recipients.map((recipient) => ({
+          ...params,
+          to: recipient,
+          batch: false,
+        }));
+
+        const batchResponse = await this.sendBatch(batchEmails, options);
+
+        const emailIds = batchResponse.data.map((item) => item.id);
+
+        logger.info(
+          {
+            emailIds,
+            count: recipients.length,
+            subject: params.subject,
+          },
+          'Batch emails written to local inbox'
+        );
+
+        // Return all email IDs
+        return {
+          ids: emailIds,
+        };
+      }
+    }
+
     // Handle idempotency - check if we've sent this email in the last 24h
     if (options?.idempotencyKey) {
       const cachedId = this.idempotencyCache.get(options.idempotencyKey);
@@ -51,7 +85,7 @@ export class LocalhostEmailClient implements EmailClient {
           { idempotencyKey: options.idempotencyKey, emailId: cachedId },
           'Returning cached email ID (idempotency)'
         );
-        return { id: cachedId };
+        return { ids: [cachedId] };
       }
     }
 
@@ -101,7 +135,43 @@ export class LocalhostEmailClient implements EmailClient {
       'Email written to local inbox'
     );
 
-    return { id: emailId };
+    // Return as array for consistency
+    return { ids: [emailId] };
+  }
+
+  async sendBatch(
+    emails: Array<SendEmailParams>,
+    options?: Omit<SendEmailOptions, 'scheduledAt'>
+  ): Promise<SendBatchEmailResponse> {
+    if (emails.length === 0) {
+      throw new Error('Batch send requires at least one email');
+    }
+
+    if (emails.length > 100) {
+      throw new Error('Batch send supports up to 100 emails at once');
+    }
+
+    // Send all emails and collect IDs
+    const results = await Promise.all(
+      emails.map((params) =>
+        this.send(params, {
+          ...options,
+          idempotencyKey: undefined,
+        })
+      )
+    );
+
+    logger.info(
+      {
+        emailIds: results.flatMap((r) => r.ids),
+        count: emails.length,
+      },
+      'Batch emails written to local inbox'
+    );
+
+    return {
+      data: results.flatMap((result) => result.ids.map((id) => ({ id }))),
+    };
   }
 
   getProvider(): EmailProvider {

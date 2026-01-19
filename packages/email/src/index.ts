@@ -12,6 +12,7 @@ export type {
   EmailClient,
   EmailClientConfig,
   EmailProvider,
+  SendBatchEmailResponse,
   SendEmailOptions,
   SendEmailParams,
   SendEmailResponse,

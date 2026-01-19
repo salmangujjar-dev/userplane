@@ -19,6 +19,13 @@ interface BaseEmailParams {
   cc?: string | string[];
   bcc?: string | string[];
   tags?: Array<{ name: string; value: string }>;
+  /**
+   * Use batch sending for multiple recipients
+   * When true and to contains multiple recipients, uses Resend's batch API (more efficient)
+   * Note: scheduledAt is not supported in batch mode
+   * Each recipient gets their own email with individual tracking
+   */
+  batch?: boolean;
 }
 
 /**
@@ -53,9 +60,19 @@ export interface SendEmailOptions {
 
 /**
  * Email send response
+ * Always returns an array of IDs for consistency
+ * Single recipient returns array with 1 ID
+ * Batch recipients return array with multiple IDs
  */
 export interface SendEmailResponse {
-  id: string;
+  ids: string[];
+}
+
+/**
+ * Batch email send response
+ */
+export interface SendBatchEmailResponse {
+  data: Array<{ id: string }>;
 }
 
 /**
@@ -76,6 +93,16 @@ export interface EmailClient {
    * Send a single email
    */
   send(params: SendEmailParams, options?: SendEmailOptions): Promise<SendEmailResponse>;
+
+  /**
+   * Send batch emails (up to 100 emails at once)
+   * More efficient than sending individual emails via Promise.allSettled
+   * Note: attachments and scheduledAt are not supported in batch mode
+   */
+  sendBatch(
+    emails: Array<SendEmailParams>,
+    options?: Omit<SendEmailOptions, 'scheduledAt'>
+  ): Promise<SendBatchEmailResponse>;
 
   /**
    * Get provider name

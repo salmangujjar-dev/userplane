@@ -305,21 +305,19 @@ export const restoreProjectImpl = (
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
       const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
 
-      // Send appropriate email based on restoration status
+      // Send appropriate email based on restoration status using batch
+      const ownerEmails = owners.map((owner) => owner.email);
       const emailMethod =
         result.restorationStatus === 'partial'
           ? emailService.sendSafeProjectRecoveryPartially
           : emailService.sendSafeProjectRecoveryConfirmation;
 
-      await Promise.allSettled(
-        owners.map((owner) =>
-          emailMethod.call(emailService, {
-            to: owner.email,
-            projectName: result.projectTitle,
-            dashboardUrl,
-          })
-        )
-      );
+      await emailMethod.call(emailService, {
+        to: ownerEmails,
+        batch: ownerEmails.length > 1,
+        projectName: result.projectTitle,
+        dashboardUrl,
+      });
 
       return {
         message: 'Project restored successfully',

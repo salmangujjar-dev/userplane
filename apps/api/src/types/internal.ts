@@ -214,7 +214,8 @@ export type AccessRequestEmailParams = Required<AccessRequestEmailProps> & { to:
  */
 export type DomainDeveloperInstructionsEmailParams =
   Required<DomainDeveloperInstructionsEmailProps> & {
-    to: string;
+    to: string | string[];
+    batch?: boolean;
   };
 
 /**
@@ -277,12 +278,18 @@ export type SubscriptionReverseTrialEmailParams = Required<SubscriptionReverseTr
 /**
  * Teammate invited email parameters
  */
-export type TeammateInvitedEmailParams = Required<TeammateInvitedEmailProps> & { to: string };
+export type TeammateInvitedEmailParams = Required<TeammateInvitedEmailProps> & {
+  to: string | string[];
+  batch?: boolean;
+};
 
 /**
  * Teammate joined email parameters
  */
-export type TeammateJoinedEmailParams = Required<TeammateJoinedEmailProps> & { to: string };
+export type TeammateJoinedEmailParams = Required<TeammateJoinedEmailProps> & {
+  to: string | string[];
+  batch?: boolean;
+};
 
 /**
  * Account deletion email parameters
@@ -353,7 +360,8 @@ export type WelcomeEmailRequesterParams = Required<WelcomeEmailRequesterProps> &
  * Workspace deletion scheduled email parameters
  */
 export type WorkspaceDeletionScheduledEmailParams = Required<DeletionScheduledEmailProps> & {
-  to: string;
+  to: string | string[];
+  batch?: boolean;
   scheduledAt?: string;
 };
 
@@ -361,7 +369,8 @@ export type WorkspaceDeletionScheduledEmailParams = Required<DeletionScheduledEm
  * Workspace recovery confirmation email parameters
  */
 export type WorkspaceRecoveryConfirmationEmailParams = Required<RecoveryConfirmationEmailProps> & {
-  to: string;
+  to: string | string[];
+  batch?: boolean;
   scheduledAt?: string;
 };
 
@@ -369,7 +378,8 @@ export type WorkspaceRecoveryConfirmationEmailParams = Required<RecoveryConfirma
  * Workspace recovery partially email parameters
  */
 export type WorkspaceRecoveryPartiallyEmailParams = Required<RecoveryPartiallyEmailProps> & {
-  to: string;
+  to: string | string[];
+  batch?: boolean;
   scheduledAt?: string;
 };
 
@@ -377,7 +387,8 @@ export type WorkspaceRecoveryPartiallyEmailParams = Required<RecoveryPartiallyEm
  * Project deletion scheduled email parameters
  */
 export type ProjectDeletionScheduledEmailParams = Required<ProjectDeletionScheduledEmailProps> & {
-  to: string;
+  to: string | string[];
+  batch?: boolean;
   scheduledAt?: string;
 };
 
@@ -386,7 +397,8 @@ export type ProjectDeletionScheduledEmailParams = Required<ProjectDeletionSchedu
  */
 export type ProjectRecoveryConfirmationEmailParams =
   Required<ProjectRecoveryConfirmationEmailProps> & {
-    to: string;
+    to: string | string[];
+    batch?: boolean;
     scheduledAt?: string;
   };
 
@@ -394,7 +406,8 @@ export type ProjectRecoveryConfirmationEmailParams =
  * Project recovery partially email parameters
  */
 export type ProjectRecoveryPartiallyEmailParams = Required<ProjectRecoveryPartiallyEmailProps> & {
-  to: string;
+  to: string | string[];
+  batch?: boolean;
   scheduledAt?: string;
 };
 

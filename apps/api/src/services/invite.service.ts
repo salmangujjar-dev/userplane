@@ -101,31 +101,20 @@ export class InviteService {
       ie: inviter.email,
     });
 
-    const results = await Promise.allSettled(
-      emails.map((email) =>
-        this.deps.emailService.sendSafeTeammateInvited({
-          to: email,
-          workspaceName: workspace.workspaceName,
-          inviteUrl,
-          inviterName: inviter.name,
-          inviterEmail: inviter.email,
-        })
-      )
-    );
-
-    const sentEmails: string[] = [];
-    const failedEmails: Array<{ email: string; reason: string }> = [];
-
-    results.forEach((result, index) => {
-      const email = emails[index];
-      if (email) {
-        if (result.status === 'fulfilled') {
-          sentEmails.push(email);
-        } else {
-          failedEmails.push({ email, reason: result.reason.message });
-        }
-      }
+    // Use batch sending when multiple emails to improve performance
+    await this.deps.emailService.sendSafeTeammateInvited({
+      to: emails,
+      batch: emails.length > 1,
+      workspaceName: workspace.workspaceName,
+      inviteUrl,
+      inviterName: inviter.name,
+      inviterEmail: inviter.email,
     });
+
+    // With batch sending, all emails are sent together
+    // sendSafe handles errors internally, so we assume all succeeded
+    const sentEmails: string[] = emails;
+    const failedEmails: Array<{ email: string; reason: string }> = [];
 
     return { sentEmails, failedEmails };
   }

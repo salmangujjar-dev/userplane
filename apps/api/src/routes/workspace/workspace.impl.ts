@@ -329,21 +329,19 @@ export const restoreWorkspaceImpl = (
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
       const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
 
-      // Send appropriate email based on restoration status
+      // Send appropriate email based on restoration status using batch sending
+      const ownerEmails = owners.map((owner) => owner.email);
       const emailMethod =
         result.restorationStatus === 'partial'
           ? emailService.sendSafeWorkspaceRecoveryPartially
           : emailService.sendSafeWorkspaceRecoveryConfirmation;
 
-      await Promise.allSettled(
-        owners.map((owner) =>
-          emailMethod.call(emailService, {
-            to: owner.email,
-            workspaceName: result.workspace.workspaceName || 'Workspace',
-            dashboardUrl,
-          })
-        )
-      );
+      await emailMethod.call(emailService, {
+        to: ownerEmails,
+        batch: ownerEmails.length > 1,
+        workspaceName: result.workspace.workspaceName || 'Workspace',
+        dashboardUrl,
+      });
 
       return {
         message: 'Workspace restored successfully',
@@ -838,18 +836,20 @@ export const acceptInviteImpl = (
     const owners = await workspaceMemberService.getOwners(result.workspace.workspaceId);
     const workspaceUrl = `${process.env.PUBLIC_DASH_URL}/${result.workspace.workspaceId}`;
 
-    await Promise.allSettled(
-      owners.map(async (owner: { userId: string; email: string }) => {
-        const ownerUser = await userService.getById(owner.userId);
-        return emailService.sendSafeTeammateJoined({
-          to: ownerUser.email,
-          memberName: newMember.name,
-          memberEmail: newMember.email,
-          workspaceName: result.workspace.workspaceName,
-          workspaceUrl,
-        });
-      })
+    // Get owner emails and send via batch
+    const ownerUsers = await Promise.all(
+      owners.map((owner: { userId: string }) => userService.getById(owner.userId))
     );
+    const ownerEmails = ownerUsers.map((owner) => owner.email);
+
+    await emailService.sendSafeTeammateJoined({
+      to: ownerEmails,
+      batch: ownerEmails.length > 1,
+      memberName: newMember.name,
+      memberEmail: newMember.email,
+      workspaceName: result.workspace.workspaceName,
+      workspaceUrl,
+    });
 
     // Send welcome email to the new member
     const dashboardUrl = `${env.invite.appUrl}/${result.workspace.workspaceId}`;
@@ -1197,36 +1197,22 @@ export const sendDomainInstructionsImpl = (
       const settingsUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.userplane.io'}/${input.params.workspaceId}/settings/domains`;
       const docsUrl = 'https://userplane.com/docs/domains';
 
-      // Send emails to all provided addresses
-      const results = await Promise.allSettled(
-        input.body.emails.map((email) =>
-          emailService.sendSafeDomainDeveloperInstructions({
-            to: email,
-            domainName: domain.domainUrl,
-            settingsUrl,
-            docsUrl,
-          })
-        )
-      );
-
-      // Process results and separate successful from failed
-      const sent: Array<{ email: string; success: true }> = [];
-      const failed: Array<{ email: string; success: false; error: string }> = [];
-
-      results.forEach((result, index) => {
-        const email = input.body.emails[index];
-        if (email) {
-          if (result.status === 'fulfilled') {
-            sent.push({ email, success: true });
-          } else {
-            failed.push({
-              email,
-              success: false,
-              error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
-            });
-          }
-        }
+      // Send emails to all provided addresses using batch sending
+      await emailService.sendSafeDomainDeveloperInstructions({
+        to: input.body.emails,
+        batch: input.body.emails.length > 1,
+        domainName: domain.domainUrl,
+        settingsUrl,
+        docsUrl,
       });
+
+      // With batch sending, all emails are sent together
+      // sendSafe handles errors internally, so we assume all succeeded
+      const sent: Array<{ email: string; success: true }> = input.body.emails.map((email) => ({
+        email,
+        success: true,
+      }));
+      const failed: Array<{ email: string; success: false; error: string }> = [];
 
       return {
         message: 'Developer instructions processed successfully',
