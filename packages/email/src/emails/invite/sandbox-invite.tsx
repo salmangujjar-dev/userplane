@@ -6,7 +6,7 @@
 import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
-import { copy } from '../../copy/pilot/sandbox-invite';
+import { copy } from '../../copy/invite/sandbox-invite';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
