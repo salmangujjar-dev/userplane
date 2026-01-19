@@ -98,6 +98,9 @@ export const projectService = new ProjectService({
   projectRepo,
   db,
   recordingService,
+  linkRepo,
+  recordingRepo,
+  workspaceRepo,
 });
 
 export const linkService = new LinkService({

@@ -2,6 +2,19 @@ import validator from 'validator';
 import { z } from 'zod';
 
 /**
+ * Restoration status enum for soft-deleted resources
+ * - possible: Full restoration available (within grace period)
+ * - partial: Partial restoration available (beyond grace period but within max window)
+ * - impossible: Restoration not available (beyond max window or not deleted)
+ */
+export const RestorationStatusSchema = z.enum(['possible', 'partial', 'impossible']);
+
+/**
+ * Type inference from RestorationStatusSchema
+ */
+export type RestorationStatus = z.infer<typeof RestorationStatusSchema>;
+
+/**
  * Email schema with normalization
  * Uses validator.normalizeEmail to handle casing and other normalization
  * This should be used for ALL email inputs to ensure consistent handling

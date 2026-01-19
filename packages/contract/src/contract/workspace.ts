@@ -859,6 +859,7 @@ export const deleteWorkspace = oc
 /**
  * GET /workspace/{workspaceId}/restore
  * Get details of a soft-deleted workspace
+ * Returns restoration status: possible (0-3 days), partial (3-30 days), or impossible (30+ days or not deleted)
  */
 export const getWorkspaceRestoreInfo = oc
   .route({
@@ -866,15 +867,14 @@ export const getWorkspaceRestoreInfo = oc
     path: '/workspace/{workspaceId}/restore',
     inputStructure: 'detailed',
     summary: 'Get workspace restore info',
-    description: 'Get details of a soft-deleted workspace to confirm restoration',
+    description:
+      'Get details of a workspace to confirm restoration. Returns restoration status based on deletion date.',
     tags: ['Workspaces'],
   })
   .errors({
     UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
     FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_NOT_DELETED: WorkspaceErrors.WORKSPACE_NOT_DELETED,
-    WORKSPACE_RESTORE_TIME_EXPIRED: WorkspaceErrors.WORKSPACE_RESTORE_TIME_EXPIRED,
   })
   .input(GetWorkspaceRestoreInfoSchema)
   .output(ApiResponseSchema(WorkspaceRestoreInfoDataSchema));

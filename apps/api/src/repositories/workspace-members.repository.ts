@@ -276,9 +276,40 @@ export class WorkspaceMemberRepository {
   }
 
   /**
+   * Restore all members in workspace that were deleted at a specific timestamp
+   * Used for workspace restoration to restore all associated members
+   * Only restores members deleted at the exact same time as the workspace
+   */
+  async restoreByWorkspaceIdAndDeletionTime(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const restored = await dbClient
+      .update(workspaceMembers)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+      })
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.isDeleted, true),
+          eq(workspaceMembers.deletedAt, deletedAt)
+        )
+      )
+      .returning();
+
+    return restored;
+  }
+
+  /**
    * Restore admin and owner members in workspace that were deleted at a specific timestamp
    * Used for workspace restoration to restore associated members
    * Only restores admins and owners deleted at the exact same time as the workspace
+   * @deprecated Use restoreByWorkspaceIdAndDeletionTime instead to restore all members
    */
   async restoreAdminsAndOwnersByWorkspaceIdAndDeletionTime(
     workspaceId: string,
@@ -307,8 +338,28 @@ export class WorkspaceMemberRepository {
   }
 
   /**
+   * Count all members in workspace that were deleted at a specific timestamp
+   * Used for workspace restore info to show how many members will be restored
+   */
+  async countByWorkspaceIdAndDeletionTime(workspaceId: string, deletedAt: Date) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.isDeleted, true),
+          eq(workspaceMembers.deletedAt, deletedAt)
+        )
+      );
+
+    return result?.count ?? 0;
+  }
+
+  /**
    * Count admin and owner members in workspace that were deleted at a specific timestamp
    * Used for workspace restore info to show how many admins/owners will be restored
+   * @deprecated Use countByWorkspaceIdAndDeletionTime instead to count all members
    */
   async countAdminsAndOwnersByWorkspaceIdAndDeletionTime(workspaceId: string, deletedAt: Date) {
     const [result] = await this.db

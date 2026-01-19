@@ -165,6 +165,7 @@ export const deleteProject = oc
 /**
  * GET /workspace/{workspaceId}/projects/{projectId}/restore
  * Get details of a soft-deleted project
+ * Returns restoration status: possible (0-3 days), partial (3-30 days), or impossible (30+ days or not deleted)
  */
 export const getProjectRestoreInfo = oc
   .route({
@@ -172,15 +173,14 @@ export const getProjectRestoreInfo = oc
     path: '/workspace/{workspaceId}/projects/{projectId}/restore',
     inputStructure: 'detailed',
     summary: 'Get project restore info',
-    description: 'Get details of a soft-deleted project to confirm restoration',
+    description:
+      'Get details of a project to confirm restoration. Returns restoration status based on deletion date.',
     tags: ['Projects'],
   })
   .errors({
     UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
-    PROJECT_NOT_DELETED: ProjectErrors.PROJECT_NOT_DELETED,
-    PROJECT_RESTORE_TIME_EXPIRED: ProjectErrors.PROJECT_RESTORE_TIME_EXPIRED,
   })
   .input(GetProjectRestoreInfoSchema)
   .output(ApiResponseSchema(ProjectRestoreInfoDataSchema));

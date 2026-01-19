@@ -15,6 +15,7 @@ import {
   DomainUrlSchema,
   EmailDomainSchema,
   PaginationMetaSchema,
+  RestorationStatusSchema,
   SearchQuerySchema,
   SortDirectionSchema,
   TokenSchema,
@@ -802,6 +803,8 @@ export const GetWorkspaceRestoreInfoSchema = z.object({
  * Workspace restore info response
  */
 export const WorkspaceRestoreInfoDataSchema = z.object({
+  restoration: RestorationStatusSchema,
+  reason: z.string().optional(),
   workspace: z.object({
     workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
@@ -816,6 +819,11 @@ export const WorkspaceRestoreInfoDataSchema = z.object({
 });
 
 /**
+ * Type inference from WorkspaceRestoreInfoDataSchema
+ */
+export type WorkspaceRestoreInfoData = z.infer<typeof WorkspaceRestoreInfoDataSchema>;
+
+/**
  * Restore workspace request (detailed mode)
  */
 export const RestoreWorkspaceSchema = z.object({
@@ -828,6 +836,7 @@ export const RestoreWorkspaceSchema = z.object({
  * Workspace restore response
  */
 export const WorkspaceRestoreDataSchema = z.object({
+  restorationStatus: RestorationStatusSchema,
   workspace: z.object({
     workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
@@ -840,6 +849,11 @@ export const WorkspaceRestoreDataSchema = z.object({
   restoredMembers: z.number().int().nonnegative(),
   restoredRecordings: z.number().int().nonnegative(),
 });
+
+/**
+ * Type inference from WorkspaceRestoreDataSchema
+ */
+export type WorkspaceRestoreData = z.infer<typeof WorkspaceRestoreDataSchema>;
 
 /**
  * Workspace search query parameters (detailed mode)

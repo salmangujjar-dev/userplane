@@ -1,32 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+import type { ProjectRestoreInfoData, WorkspaceRestoreInfoData } from '@workspace/contract';
 
 import { apiClient } from '@/client';
 import { handleSafeResult } from '@/lib/errors';
-
-interface WorkspaceRestoreInfo {
-  workspace: {
-    workspaceId: string;
-    workspaceName: string;
-    isDeleted: boolean;
-    deletedAt: string | null;
-    deletedSince: number | null;
-  };
-  projectsToRestore: number;
-  linksToRestore: number;
-  membersToRestore: number;
-  recordingsToRestore: number;
-}
-
-interface ProjectRestoreInfo {
-  project: {
-    projectId: string;
-    projectTitle: string;
-    workspaceId: string;
-    isDeleted: boolean;
-    deletedAt: string | null;
-    deletedSince: number | null;
-  };
-}
 
 /**
  * Hook to fetch workspace restore information
@@ -70,4 +46,5 @@ export function useProjectRestoreInfo(workspaceId: string | null, projectId: str
   });
 }
 
-export type { ProjectRestoreInfo, WorkspaceRestoreInfo };
+// Re-export types from contract for convenience
+export type { ProjectRestoreInfoData, WorkspaceRestoreInfoData };

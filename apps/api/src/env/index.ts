@@ -86,6 +86,10 @@ interface EnvConfig {
     workspaceRestorationWindowDays: number;
     projectRestorationWindowDays: number;
   };
+  restoration: {
+    gracePeriodDays: number;
+    maxWindowDays: number;
+  };
   storage: StorageConfig;
   admin: {
     userIds: string[];
@@ -200,6 +204,10 @@ export function loadEnvConfig(): EnvConfig {
         2
       ), // 2 days
       projectRestorationWindowDays: parseInteger(process.env.PROJECT_RESTORATION_WINDOW_DAYS, 2), // 2 days
+    },
+    restoration: {
+      gracePeriodDays: parseInteger(process.env.RESTORATION_GRACE_PERIOD_DAYS, 3), // Full restoration within 3 days
+      maxWindowDays: parseInteger(process.env.RESTORATION_MAX_WINDOW_DAYS, 30), // Partial restoration until 30 days
     },
     storage: {
       profile: (process.env.STORAGE_PROFILE || 'development') as StorageConfig['profile'],

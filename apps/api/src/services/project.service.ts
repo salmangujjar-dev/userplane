@@ -6,7 +6,6 @@
 import { projectError, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 
-import { env } from '@/api/env';
 import { generateProjectId } from '@/api/lib/id';
 import type { LinkRepository } from '@/api/repositories/links.repository';
 import {
@@ -14,14 +13,24 @@ import {
   type ProjectSortField,
   type SortDirection,
 } from '@/api/repositories/projects.repository';
+import type { RecordingRepository } from '@/api/repositories/recordings.repository';
+import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { Transaction } from '@/api/types';
+import {
+  calculateDaysSince,
+  getRestorationMaxWindowDays,
+  getRestorationReason,
+  getRestorationStatus,
+} from '@/api/utils/date';
 
 export interface ProjectServiceDeps {
   projectRepo: ProjectRepository;
   db: DbClient;
   recordingService?: RecordingService;
   linkRepo?: LinkRepository;
+  recordingRepo?: RecordingRepository;
+  workspaceRepo?: WorkspaceRepository;
 }
 
 export class ProjectService {
@@ -266,9 +275,13 @@ export class ProjectService {
   /**
    * Get restore info for a soft-deleted project
    * Used to display restoration confirmation UI
-   * Throws PROJECT_NOT_FOUND if project doesn't exist
-   * Throws PROJECT_NOT_DELETED if project is active
-   * Throws PROJECT_RESTORE_TIME_EXPIRED if beyond grace period
+   * Returns restoration status based on configured grace period and max window:
+   * - "possible": within grace period (full restoration, default 3 days)
+   * - "partial": beyond grace period but within max window (partial restoration, default 30 days)
+   * - "impossible": beyond max window, workspace deleted, or not deleted
+   *
+   * Does NOT throw errors for validation issues - returns descriptive status and reason
+   * Only throws PROJECT_NOT_FOUND if project doesn't exist
    */
   async getProjectRestoreInfo(projectId: string) {
     // 1. Get the project with deletion info
@@ -278,37 +291,100 @@ export class ProjectService {
       throw projectError.PROJECT_NOT_FOUND();
     }
 
-    // 2. Check if project is deleted
+    // 2. Check if workspace is deleted - cannot restore project if workspace is deleted
+    if (this.deps.workspaceRepo) {
+      const workspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(project.workspaceId);
+      if (workspaceDeleted) {
+        return {
+          restoration: 'impossible' as const,
+          reason: 'Cannot restore project because its workspace is deleted',
+          project: {
+            projectId: project.projectId,
+            projectTitle: project.projectTitle,
+            workspaceId: project.workspaceId,
+            isDeleted: project.isDeleted,
+            deletedAt: project.deletedAt ? project.deletedAt.toISOString() : null,
+            deletedSince: project.deletedAt
+              ? calculateDaysSince(new Date(project.deletedAt))
+              : null,
+          },
+          linksToRestore: 0,
+          recordingsToRestore: 0,
+        };
+      }
+    }
+
+    // 3. Check if project is deleted
     if (!project.isDeleted) {
-      throw projectError.PROJECT_NOT_DELETED();
+      return {
+        restoration: 'impossible' as const,
+        reason: 'Project is not deleted',
+        project: {
+          projectId: project.projectId,
+          projectTitle: project.projectTitle,
+          workspaceId: project.workspaceId,
+          isDeleted: project.isDeleted,
+          deletedAt: null,
+          deletedSince: null,
+        },
+        linksToRestore: 0,
+        recordingsToRestore: 0,
+      };
     }
 
-    // 3. Validate restoration time (configurable grace period in days)
+    // 4. Validate restoration time and determine restoration status
     if (!project.deletedAt) {
-      throw projectError.PROJECT_RESTORE_FAILED();
+      return {
+        restoration: 'impossible' as const,
+        reason: 'Project deletion date not found',
+        project: {
+          projectId: project.projectId,
+          projectTitle: project.projectTitle,
+          workspaceId: project.workspaceId,
+          isDeleted: project.isDeleted,
+          deletedAt: null,
+          deletedSince: null,
+        },
+        linksToRestore: 0,
+        recordingsToRestore: 0,
+      };
     }
 
-    const restorationWindowDays = env.trigger.projectRestorationWindowDays;
-    const now = new Date();
     const deletedAt = new Date(project.deletedAt);
-    const daysSinceDeletion = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+    const daysSinceDeletion = calculateDaysSince(deletedAt);
+    const restoration = getRestorationStatus(daysSinceDeletion);
+    const reason = getRestorationReason(restoration);
 
-    if (daysSinceDeletion > restorationWindowDays) {
-      throw projectError.PROJECT_RESTORE_TIME_EXPIRED({
-        deletedAt: deletedAt.toISOString(),
-        daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10,
-        restorationWindowDays,
-      });
+    // 5. Count links and recordings that will be restored
+    // Only count if restoration is not impossible
+    let linksToRestore = 0;
+    let recordingsToRestore = 0;
+
+    if (restoration !== 'impossible') {
+      // Count active (non-deleted) links for this project
+      if (this.deps.linkRepo) {
+        linksToRestore = await this.deps.linkRepo.countByProject(projectId);
+      }
+
+      // Count active (non-deleted) recordings for this project
+      if (this.deps.recordingRepo) {
+        recordingsToRestore = await this.deps.recordingRepo.countByProject(projectId);
+      }
     }
 
-    // 4. Return project info
     return {
-      projectId: project.projectId,
-      projectTitle: project.projectTitle,
-      workspaceId: project.workspaceId,
-      isDeleted: project.isDeleted,
-      deletedAt: project.deletedAt ? project.deletedAt.toISOString() : null,
-      deletedSince: Math.round(daysSinceDeletion * 10) / 10,
+      restoration,
+      reason,
+      project: {
+        projectId: project.projectId,
+        projectTitle: project.projectTitle,
+        workspaceId: project.workspaceId,
+        isDeleted: project.isDeleted,
+        deletedAt: project.deletedAt ? project.deletedAt.toISOString() : null,
+        deletedSince: Math.round(daysSinceDeletion * 10) / 10,
+      },
+      linksToRestore,
+      recordingsToRestore,
     };
   }
 
@@ -321,17 +397,20 @@ export class ProjectService {
    *
    * Flow:
    * 1. Get the project with deletion info
-   * 2. If project is not deleted, return it (idempotent - already in desired state)
-   * 3. Validate restoration is within configured window (PROJECT_RESTORATION_WINDOW_DAYS env var, default: 2 days)
-   * 4. If beyond window, throw PROJECT_RESTORE_TIME_EXPIRED (410)
-   * 5. Restore project (isDeleted = false, deletedAt = null)
-   * 6. Does NOT restore associated links - only the project itself
+   * 2. Check if workspace is deleted - cannot restore project if workspace is deleted
+   * 3. If project is not deleted, return it (idempotent - already in desired state)
+   * 4. Validate restoration is within configured max window
+   * 5. If beyond max window, throw PROJECT_RESTORE_TIME_EXPIRED (410)
+   * 6. Restore project (isDeleted = false, deletedAt = null)
+   * 7. Does NOT restore associated links - only the project itself
    *
-   * Grace period: Configurable via PROJECT_RESTORATION_WINDOW_DAYS (default: 2 days)
+   * Restoration status is determined by grace period (full) vs beyond grace (partial)
+   * Window configured via RESTORATION_GRACE_PERIOD_DAYS and RESTORATION_MAX_WINDOW_DAYS env vars
    *
    * Idempotent: If project is already active, returns 200 with project data
    *
    * Throws PROJECT_NOT_FOUND (404) if project not found
+   * Throws PROJECT_RESTORE_WORKSPACE_DELETED (410) if workspace is deleted
    * Throws PROJECT_RESTORE_TIME_EXPIRED (410) if restoration window has expired
    * Throws PROJECT_RESTORE_FAILED (500) if restoration operation fails
    */
@@ -343,38 +422,94 @@ export class ProjectService {
       throw projectError.PROJECT_NOT_FOUND();
     }
 
-    // 2. Idempotent: If project is not deleted, it's already in the desired state
-    // Return it successfully instead of throwing an error
-    if (!project.isDeleted) {
-      return project;
+    // 2. Check if workspace is deleted - cannot restore project if workspace is deleted
+    if (this.deps.workspaceRepo) {
+      const workspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(project.workspaceId);
+      if (workspaceDeleted) {
+        throw projectError.PROJECT_RESTORE_WORKSPACE_DELETED();
+      }
     }
 
-    // 3. Validate restoration time (configurable grace period in days)
+    // 3. Idempotent: If project is not deleted, it's already in the desired state
+    // Return it successfully instead of throwing an error
+    if (!project.isDeleted) {
+      // Count active resources for already restored project
+      let restoredLinks = 0;
+      let restoredRecordings = 0;
+
+      if (this.deps.linkRepo) {
+        restoredLinks = await this.deps.linkRepo.countByProject(projectId);
+      }
+
+      if (this.deps.recordingRepo) {
+        restoredRecordings = await this.deps.recordingRepo.countByProject(projectId);
+      }
+
+      return {
+        restorationStatus: 'possible' as const,
+        projectId: project.projectId,
+        workspaceId: project.workspaceId,
+        projectTitle: project.projectTitle,
+        isDefault: project.isDefault,
+        isDeleted: project.isDeleted,
+        deletedAt: project.deletedAt,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+        restoredLinks,
+        restoredRecordings,
+      };
+    }
+
+    // 4. Validate restoration time (configured maximum window)
     if (!project.deletedAt) {
       throw projectError.PROJECT_RESTORE_FAILED();
     }
 
-    const restorationWindowDays = env.trigger.projectRestorationWindowDays;
-    const now = new Date();
     const deletedAt = new Date(project.deletedAt);
-    const daysSinceDeletion = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+    const daysSinceDeletion = calculateDaysSince(deletedAt);
+    const restorationStatus = getRestorationStatus(daysSinceDeletion);
+    const maxWindowDays = getRestorationMaxWindowDays();
 
-    if (daysSinceDeletion > restorationWindowDays) {
+    if (restorationStatus === 'impossible') {
       throw projectError.PROJECT_RESTORE_TIME_EXPIRED({
         deletedAt: deletedAt.toISOString(),
-        daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10, // Round to 1 decimal
-        restorationWindowDays,
+        daysSinceDeletion,
+        restorationWindowDays: maxWindowDays,
       });
     }
 
-    // 4. Restore the project (no transaction needed for single operation)
+    // 5. Restore the project (no transaction needed for single operation)
     const restored = await this.deps.projectRepo.restore(projectId, options);
 
     if (!restored) {
       throw projectError.PROJECT_RESTORE_FAILED();
     }
 
-    return restored;
+    // 6. Count restored resources (active links and recordings)
+    let restoredLinks = 0;
+    let restoredRecordings = 0;
+
+    if (this.deps.linkRepo) {
+      restoredLinks = await this.deps.linkRepo.countByProject(projectId);
+    }
+
+    if (this.deps.recordingRepo) {
+      restoredRecordings = await this.deps.recordingRepo.countByProject(projectId);
+    }
+
+    return {
+      restorationStatus,
+      projectId: restored.projectId,
+      workspaceId: restored.workspaceId,
+      projectTitle: restored.projectTitle,
+      isDefault: restored.isDefault,
+      isDeleted: restored.isDeleted,
+      deletedAt: restored.deletedAt,
+      createdAt: restored.createdAt,
+      updatedAt: restored.updatedAt,
+      restoredLinks,
+      restoredRecordings,
+    };
   }
 
   /**

@@ -247,6 +247,18 @@ export class RecordingRepository {
   }
 
   /**
+   * Count active (non-deleted) recordings in a project
+   */
+  async countByProject(projectId: string): Promise<number> {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(recordings)
+      .where(and(eq(recordings.projectId, projectId), eq(recordings.isDeleted, false)));
+
+    return Number(result?.count || 0);
+  }
+
+  /**
    * Find recording by ID
    * Excludes recordings from deleted projects or deleted workspaces
    */
