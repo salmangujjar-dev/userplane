@@ -179,7 +179,7 @@ const banUserImpl = (adminService: AdminService, emailService: EmailService) => 
     });
 
     // Send email to suspended account
-    await emailService.sendTosViolation({
+    await emailService.sendSafeTosViolation({
       to: userDetail.email,
       userName: userDetail.name,
     });
@@ -202,7 +202,7 @@ const unbanUserImpl = (adminService: AdminService, emailService: EmailService) =
 
     // Send account restored email
     const loginUrl = `${process.env.APP_URL}/auth`;
-    await emailService.sendAccountRestored({
+    await emailService.sendSafeAccountRestored({
       to: userDetail.email,
       userName: userDetail.name,
       loginUrl,
@@ -564,7 +564,7 @@ const deactivateWorkspaceImpl = (
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
       await Promise.allSettled(
         owners.map((owner) =>
-          emailService.sendWorkspaceDeletionScheduled({
+          emailService.sendSafeWorkspaceDeletionScheduled({
             to: owner.email,
             workspaceName: workspaceInfo.workspaceName,
             deletionDate: formattedDeletionDate,
@@ -610,8 +610,8 @@ const restoreWorkspaceImpl = (
       // Send appropriate email based on restoration status
       const emailMethod =
         result.restorationStatus === 'partial'
-          ? emailService.sendWorkspaceRecoveryPartially
-          : emailService.sendWorkspaceRecoveryConfirmation;
+          ? emailService.sendSafeWorkspaceRecoveryPartially
+          : emailService.sendSafeWorkspaceRecoveryConfirmation;
 
       await Promise.allSettled(
         owners.map((owner) =>
@@ -682,7 +682,7 @@ const deactivateProjectImpl = (
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
       await Promise.allSettled(
         owners.map((owner) =>
-          emailService.sendProjectDeletionScheduled({
+          emailService.sendSafeProjectDeletionScheduled({
             to: owner.email,
             projectName: project.projectTitle || 'Untitled Project',
             deletionDate: formattedDeletionDate,
@@ -731,8 +731,8 @@ const restoreProjectImpl = (
       // Send appropriate email based on restoration status
       const emailMethod =
         restoredProject.restorationStatus === 'partial'
-          ? emailService.sendProjectRecoveryPartially
-          : emailService.sendProjectRecoveryConfirmation;
+          ? emailService.sendSafeProjectRecoveryPartially
+          : emailService.sendSafeProjectRecoveryConfirmation;
 
       await Promise.allSettled(
         owners.map((owner) =>
@@ -909,7 +909,7 @@ const createWorkspaceInviteImpl = (
       const scheduledAt = calculateScheduledTime(notify);
 
       // Send sandbox invite email (immediate or scheduled)
-      await emailService.sendPilotSandboxInvite({
+      await emailService.sendSafePilotSandboxInvite({
         to: email,
         sandboxUrl: inviteUrl,
         expiresInDays: 7,

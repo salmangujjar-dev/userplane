@@ -257,7 +257,7 @@ export const deleteWorkspaceImpl = (
       const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
 
       // Send deletion scheduled email
-      await emailService.sendWorkspaceDeletionScheduled({
+      await emailService.sendSafeWorkspaceDeletionScheduled({
         to: context.user.email,
         workspaceName: workspace.workspaceName,
         deletionDate: formattedDeletionDate,
@@ -331,8 +331,8 @@ export const restoreWorkspaceImpl = (
       // Send appropriate email based on restoration status
       const emailMethod =
         result.restorationStatus === 'partial'
-          ? emailService.sendWorkspaceRecoveryPartially
-          : emailService.sendWorkspaceRecoveryConfirmation;
+          ? emailService.sendSafeWorkspaceRecoveryPartially
+          : emailService.sendSafeWorkspaceRecoveryConfirmation;
 
       await Promise.allSettled(
         owners.map((owner) =>
@@ -576,7 +576,7 @@ export const leaveWorkspaceImpl = (
 
         const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
 
-        await emailService.sendWorkspaceDeletionScheduled({
+        await emailService.sendSafeWorkspaceDeletionScheduled({
           to: context.user.email,
           workspaceName: workspace.workspaceName,
           deletionDate: formattedDeletionDate,
@@ -840,7 +840,7 @@ export const acceptInviteImpl = (
     await Promise.allSettled(
       owners.map(async (owner: { userId: string; email: string }) => {
         const ownerUser = await userService.getById(owner.userId);
-        return emailService.sendTeammateJoined({
+        return emailService.sendSafeTeammateJoined({
           to: ownerUser.email,
           memberName: newMember.name,
           memberEmail: newMember.email,
@@ -851,19 +851,13 @@ export const acceptInviteImpl = (
     );
 
     // Send welcome email to the new member
-    // This is non-blocking - if it fails, the invite acceptance still succeeds
-    try {
-      const dashboardUrl = `${env.invite.appUrl}/${result.workspace.workspaceId}`;
-      await emailService.sendWelcomeEmailMember({
-        to: newMember.email,
-        userName: newMember.name,
-        workspaceName: result.workspace.workspaceName,
-        dashboardUrl,
-      });
-    } catch (error) {
-      // Log error but don't fail the request
-      console.error('Failed to send welcome email to member:', error);
-    }
+    const dashboardUrl = `${env.invite.appUrl}/${result.workspace.workspaceId}`;
+    await emailService.sendSafeWelcomeEmailMember({
+      to: newMember.email,
+      userName: newMember.name,
+      workspaceName: result.workspace.workspaceName,
+      dashboardUrl,
+    });
 
     return {
       message: 'Invitation accepted successfully',
@@ -1205,7 +1199,7 @@ export const sendDomainInstructionsImpl = (
       // Send emails to all provided addresses
       const results = await Promise.allSettled(
         input.body.emails.map((email) =>
-          emailService.sendDomainDeveloperInstructions({
+          emailService.sendSafeDomainDeveloperInstructions({
             to: email,
             domainName: domain.domainUrl,
             settingsUrl,
@@ -1370,20 +1364,14 @@ export const joinWorkspaceImpl = (inviteService: InviteService, emailService: Em
     }
 
     // Send welcome email to new member if they joined successfully
-    // This is non-blocking - if it fails, the request still succeeds
     if (result.status === 'joined') {
-      try {
-        const dashboardUrl = `${env.invite.appUrl}/${result.workspaceId}`;
-        await emailService.sendWelcomeEmailMember({
-          to: context.user.email,
-          userName: context.user.name,
-          workspaceName: result.workspaceName,
-          dashboardUrl,
-        });
-      } catch (error) {
-        // Log error but don't fail the request
-        console.error('Failed to send welcome email to member:', error);
-      }
+      const dashboardUrl = `${env.invite.appUrl}/${result.workspaceId}`;
+      await emailService.sendSafeWelcomeEmailMember({
+        to: context.user.email,
+        userName: context.user.name,
+        workspaceName: result.workspaceName,
+        dashboardUrl,
+      });
     }
 
     return {
@@ -1530,31 +1518,25 @@ export const updateWorkspaceBillingEmailImpl = (
       );
 
       // Send notification emails to both old and new billing emails
-      // This is non-blocking - if it fails, the update still succeeds
-      try {
-        const billingUrl = `${env.invite.appUrl}/${input.params.workspaceId}/settings?tab=workspace`;
-        const newEmail = updated.workspaceBillingEmail!;
+      const billingUrl = `${env.invite.appUrl}/${input.params.workspaceId}/settings?tab=workspace`;
+      const newEmail = updated.workspaceBillingEmail!;
 
-        // Send to the new email address
-        await emailService.sendBillingEmailUpdated({
-          to: newEmail,
-          previousEmail: previousEmail || 'Not set',
+      // Send to the new email address
+      await emailService.sendSafeBillingEmailUpdated({
+        to: newEmail,
+        previousEmail: previousEmail || 'Not set',
+        newEmail: newEmail,
+        billingUrl,
+      });
+
+      // Send to the previous email address if it exists and is different
+      if (previousEmail && previousEmail !== newEmail) {
+        await emailService.sendSafeBillingEmailUpdated({
+          to: previousEmail,
+          previousEmail: previousEmail,
           newEmail: newEmail,
           billingUrl,
         });
-
-        // Send to the previous email address if it exists and is different
-        if (previousEmail && previousEmail !== newEmail) {
-          await emailService.sendBillingEmailUpdated({
-            to: previousEmail,
-            previousEmail: previousEmail,
-            newEmail: newEmail,
-            billingUrl,
-          });
-        }
-      } catch (error) {
-        // Log error but don't fail the request
-        console.error('Failed to send billing email updated notification:', error);
       }
 
       return {

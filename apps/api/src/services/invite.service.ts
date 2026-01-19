@@ -103,7 +103,7 @@ export class InviteService {
 
     const results = await Promise.allSettled(
       emails.map((email) =>
-        this.deps.emailService.sendTeammateInvited({
+        this.deps.emailService.sendSafeTeammateInvited({
           to: email,
           workspaceName: workspace.workspaceName,
           inviteUrl,
@@ -384,7 +384,7 @@ export class InviteService {
             userEmail
           );
 
-          return this.deps.emailService.sendAccessRequest({
+          return this.deps.emailService.sendSafeAccessRequest({
             to: owner.email,
             workspaceName: workspace.workspaceName,
             requesterName: userName,
@@ -527,19 +527,13 @@ export class InviteService {
     });
 
     // Send welcome email to the requester
-    // This is non-blocking - if it fails, the approval still succeeds
-    try {
-      const dashboardUrl = `${process.env.PUBLIC_DASH_URL}/${workspaceId}`;
-      await this.deps.emailService.sendWelcomeEmailRequester({
-        to: userEmail,
-        userName: user.name,
-        workspaceName: workspace.workspaceName,
-        dashboardUrl,
-      });
-    } catch (error) {
-      // Log error but don't fail the request
-      console.error('Failed to send welcome email to requester:', error);
-    }
+    const dashboardUrl = `${process.env.PUBLIC_DASH_URL}/${workspaceId}`;
+    await this.deps.emailService.sendSafeWelcomeEmailRequester({
+      to: userEmail,
+      userName: user.name,
+      workspaceName: workspace.workspaceName,
+      dashboardUrl,
+    });
 
     return {
       workspaceId,
