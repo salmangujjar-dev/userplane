@@ -7,7 +7,6 @@ import { MAX_EMAIL_DOMAINS, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
-import { env } from '@/api/env';
 import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@/api/lib/id';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
@@ -18,6 +17,12 @@ import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { ProjectService } from '@/api/services/project.service';
 import { TokenService } from '@/api/services/token.service';
 import type { CreateWorkspaceParams, Transaction } from '@/api/types';
+import {
+  calculateDaysSince,
+  getRestorationMaxWindowDays,
+  getRestorationReason,
+  getRestorationStatus,
+} from '@/api/utils/date';
 import { isDisposableEmail, isDisposableEmailDomain } from '@/api/utils/disposable-email';
 
 export interface WorkspaceServiceDeps {
@@ -415,9 +420,13 @@ export class WorkspaceService {
   /**
    * Get restore info for a soft-deleted workspace
    * Used to display restoration confirmation UI
-   * Throws WORKSPACE_NOT_FOUND if workspace doesn't exist
-   * Throws WORKSPACE_NOT_DELETED if workspace is active
-   * Throws WORKSPACE_RESTORE_TIME_EXPIRED if beyond grace period
+   * Returns restoration status based on configured grace period and max window:
+   * - "possible": within grace period (full restoration, default 3 days)
+   * - "partial": beyond grace period but within max window (partial restoration, default 30 days)
+   * - "impossible": beyond max window or not deleted
+   *
+   * Does NOT throw errors for validation issues - returns descriptive status and reason
+   * Only throws WORKSPACE_NOT_FOUND if workspace doesn't exist
    */
   async getWorkspaceRestoreInfo(workspaceId: string) {
     // 1. Get the workspace with deletion info
@@ -429,62 +438,87 @@ export class WorkspaceService {
 
     // 2. Check if workspace is deleted
     if (!workspace.isDeleted) {
-      throw workspaceError.WORKSPACE_NOT_DELETED();
+      return {
+        restoration: 'impossible' as const,
+        reason: 'Workspace is not deleted',
+        workspace: {
+          workspaceId: workspace.workspaceId,
+          workspaceName: workspace.workspaceName,
+          isDeleted: workspace.isDeleted,
+          deletedAt: null,
+          deletedSince: null,
+        },
+        projectsToRestore: 0,
+        linksToRestore: 0,
+        membersToRestore: 0,
+        recordingsToRestore: 0,
+      };
     }
 
-    // 3. Validate restoration time (configurable grace period in days)
+    // 3. Validate restoration time and determine restoration status
     if (!workspace.deletedAt) {
-      throw workspaceError.WORKSPACE_RESTORE_FAILED();
+      return {
+        restoration: 'impossible' as const,
+        reason: 'Workspace deletion date not found',
+        workspace: {
+          workspaceId: workspace.workspaceId,
+          workspaceName: workspace.workspaceName,
+          isDeleted: workspace.isDeleted,
+          deletedAt: null,
+          deletedSince: null,
+        },
+        projectsToRestore: 0,
+        linksToRestore: 0,
+        membersToRestore: 0,
+        recordingsToRestore: 0,
+      };
     }
 
-    const restorationWindowDays = env.trigger.workspaceRestorationWindowDays;
-    const now = new Date();
     const deletedAt = new Date(workspace.deletedAt);
-    const daysSinceDeletion = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
-
-    if (daysSinceDeletion > restorationWindowDays) {
-      throw workspaceError.WORKSPACE_RESTORE_TIME_EXPIRED({
-        deletedAt: deletedAt.toISOString(),
-        daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10,
-        restorationWindowDays,
-      });
-    }
+    const daysSinceDeletion = calculateDaysSince(deletedAt);
+    const restoration = getRestorationStatus(daysSinceDeletion);
+    const reason = getRestorationReason(restoration);
 
     // 4. Count projects, links, members, and recordings that will be restored
+    // Only count if restoration is not impossible
     let projectsToRestore = 0;
-    if (this.deps.projectRepo) {
-      projectsToRestore = await this.deps.projectRepo.countByWorkspaceIdAndDeletionTime(
-        workspaceId,
-        deletedAt
-      );
-    }
-
     let linksToRestore = 0;
-    if (this.deps.linkRepo) {
-      linksToRestore = await this.deps.linkRepo.countByWorkspaceIdAndDeletionTime(
-        workspaceId,
-        deletedAt
-      );
-    }
-
     let membersToRestore = 0;
-    if (this.deps.workspaceMemberRepo) {
-      membersToRestore =
-        await this.deps.workspaceMemberRepo.countAdminsAndOwnersByWorkspaceIdAndDeletionTime(
+    let recordingsToRestore = 0;
+
+    if (restoration !== 'impossible') {
+      if (this.deps.projectRepo) {
+        projectsToRestore = await this.deps.projectRepo.countByWorkspaceIdAndDeletionTime(
           workspaceId,
           deletedAt
         );
-    }
+      }
 
-    let recordingsToRestore = 0;
-    if (this.deps.recordingRepo) {
-      recordingsToRestore = await this.deps.recordingRepo.countByWorkspaceIdAndDeletionTime(
-        workspaceId,
-        deletedAt
-      );
+      if (this.deps.linkRepo) {
+        linksToRestore = await this.deps.linkRepo.countByWorkspaceIdAndDeletionTime(
+          workspaceId,
+          deletedAt
+        );
+      }
+
+      if (this.deps.workspaceMemberRepo) {
+        membersToRestore = await this.deps.workspaceMemberRepo.countByWorkspaceIdAndDeletionTime(
+          workspaceId,
+          deletedAt
+        );
+      }
+
+      if (this.deps.recordingRepo) {
+        recordingsToRestore = await this.deps.recordingRepo.countByWorkspaceIdAndDeletionTime(
+          workspaceId,
+          deletedAt
+        );
+      }
     }
 
     return {
+      restoration,
+      reason,
       workspace: {
         workspaceId: workspace.workspaceId,
         workspaceName: workspace.workspaceName,
@@ -509,15 +543,16 @@ export class WorkspaceService {
    * Transaction flow:
    * 1. Get the to be restored workspace
    * 2. If workspace is not deleted, return it (idempotent - already in desired state)
-   * 3. Validate restoration is within configured window (WORKSPACE_RESTORATION_WINDOW_DAYS env var, default: 2 days)
-   * 4. If beyond window, throw WORKSPACE_RESTORE_TIME_EXPIRED (410)
+   * 3. Validate restoration is within configured max window
+   * 4. If beyond max window, throw WORKSPACE_RESTORE_TIME_EXPIRED (410)
    * 5. Restore workspace (isDeleted = false, deletedAt = null)
    * 6. Use original deletedAt timestamp to find and restore associated projects
    * 7. Use original deletedAt timestamp to find and restore associated links
    * 8. Best effort: Don't fail if some entities can't be restored
    * 9. If workspace restoration fails, throw WORKSPACE_RESTORE_FAILED (500)
    *
-   * Grace period: Configurable via WORKSPACE_RESTORATION_WINDOW_DAYS (default: 2 days)
+   * Restoration status is determined by grace period (full) vs beyond grace (partial)
+   * Window configured via RESTORATION_GRACE_PERIOD_DAYS and RESTORATION_MAX_WINDOW_DAYS env vars
    *
    * Idempotent: If workspace is already active, returns 200 with workspace data
    *
@@ -557,6 +592,7 @@ export class WorkspaceService {
       }
 
       return {
+        restorationStatus: 'possible' as const,
         workspace,
         restoredProjects: activeProjects,
         restoredLinks: activeLinks,
@@ -565,21 +601,21 @@ export class WorkspaceService {
       };
     }
 
-    // 3. Validate restoration time (configurable grace period in days)
+    // 3. Validate restoration time (configured maximum window)
     if (!workspace.deletedAt) {
       throw workspaceError.WORKSPACE_RESTORE_FAILED();
     }
 
-    const restorationWindowDays = env.trigger.workspaceRestorationWindowDays;
-    const now = new Date();
     const deletedAt = new Date(workspace.deletedAt);
-    const daysSinceDeletion = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+    const daysSinceDeletion = calculateDaysSince(deletedAt);
+    const restorationStatus = getRestorationStatus(daysSinceDeletion);
+    const maxWindowDays = getRestorationMaxWindowDays();
 
-    if (daysSinceDeletion > restorationWindowDays) {
+    if (restorationStatus === 'impossible') {
       throw workspaceError.WORKSPACE_RESTORE_TIME_EXPIRED({
         deletedAt: deletedAt.toISOString(),
-        daysSinceDeletion: Math.round(daysSinceDeletion * 10) / 10, // Round to 1 decimal
-        restorationWindowDays,
+        daysSinceDeletion,
+        restorationWindowDays: maxWindowDays,
       });
     }
 
@@ -626,18 +662,17 @@ export class WorkspaceService {
         }
       }
 
-      // 7. Restore admin and owner members (best effort)
-      // Only restore admins/owners that were deleted at the exact same time as the workspace
+      // 7. Restore all workspace members (best effort)
+      // Only restore members that were deleted at the exact same time as the workspace
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let restoredMembers: any[] = [];
       if (this.deps.workspaceMemberRepo) {
         try {
-          restoredMembers =
-            await this.deps.workspaceMemberRepo.restoreAdminsAndOwnersByWorkspaceIdAndDeletionTime(
-              workspaceId,
-              deletedAt,
-              { tx }
-            );
+          restoredMembers = await this.deps.workspaceMemberRepo.restoreByWorkspaceIdAndDeletionTime(
+            workspaceId,
+            deletedAt,
+            { tx }
+          );
         } catch (error) {
           // Log but don't fail - best effort
           console.error('Error restoring workspace members:', error);
@@ -662,6 +697,7 @@ export class WorkspaceService {
       }
 
       return {
+        restorationStatus,
         workspace: restored,
         restoredProjects: restoredProjects.length,
         restoredLinks: restoredLinks.length,

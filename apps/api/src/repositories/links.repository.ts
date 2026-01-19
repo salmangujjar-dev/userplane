@@ -252,6 +252,18 @@ export class LinkRepository {
   }
 
   /**
+   * Count active (non-deleted) links in a project
+   */
+  async countByProject(projectId: string): Promise<number> {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(links)
+      .where(and(eq(links.projectId, projectId), eq(links.isDeleted, false)));
+
+    return Number(result?.count || 0);
+  }
+
+  /**
    * Find link by ID
    */
   async findById(linkId: string) {

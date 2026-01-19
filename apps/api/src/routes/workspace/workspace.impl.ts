@@ -25,6 +25,7 @@ import type { UserService } from '@/api/services/user.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { createPaginationMeta } from '@/api/types';
+import { calculateDaysSince } from '@/api/utils/date';
 
 /**
  * GET /workspace - List all user workspaces
@@ -320,10 +321,7 @@ export const restoreWorkspaceImpl = (
       // Calculate days since deletion
       let deletedSince: number | null = null;
       if (result.workspace.deletedAt) {
-        const now = new Date();
-        const deletedAt = new Date(result.workspace.deletedAt);
-        deletedSince =
-          Math.round(((now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24)) * 10) / 10;
+        deletedSince = calculateDaysSince(new Date(result.workspace.deletedAt));
       }
 
       // Send email to workspace owners that the workspace has been restored
@@ -343,6 +341,7 @@ export const restoreWorkspaceImpl = (
       return {
         message: 'Workspace restored successfully',
         data: {
+          restorationStatus: result.restorationStatus,
           workspace: {
             workspaceId: result.workspace.workspaceId,
             workspaceName: result.workspace.workspaceName,

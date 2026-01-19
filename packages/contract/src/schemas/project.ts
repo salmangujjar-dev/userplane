@@ -4,6 +4,7 @@ import { PROJECT_PAGINATION } from '../constants';
 import {
   PaginationMetaSchema,
   ProjectIdSchema,
+  RestorationStatusSchema,
   SortDirectionSchema,
   WorkspaceIdSchema,
 } from './common';
@@ -188,6 +189,8 @@ export const GetProjectRestoreInfoSchema = z.object({
  * Project restore info response
  */
 export const ProjectRestoreInfoDataSchema = z.object({
+  restoration: RestorationStatusSchema,
+  reason: z.string().optional(),
   project: z.object({
     projectId: ProjectIdSchema,
     projectTitle: z.string(),
@@ -196,7 +199,14 @@ export const ProjectRestoreInfoDataSchema = z.object({
     deletedAt: z.string().nullable(),
     deletedSince: z.number().nullable(),
   }),
+  linksToRestore: z.number().int().nonnegative(),
+  recordingsToRestore: z.number().int().nonnegative(),
 });
+
+/**
+ * Type inference from ProjectRestoreInfoDataSchema
+ */
+export type ProjectRestoreInfoData = z.infer<typeof ProjectRestoreInfoDataSchema>;
 
 /**
  * Restore project request (detailed mode)
@@ -212,6 +222,7 @@ export const RestoreProjectSchema = z.object({
  * Project restore response
  */
 export const ProjectRestoreDataSchema = z.object({
+  restorationStatus: RestorationStatusSchema,
   workspaceId: WorkspaceIdSchema,
   project: z.object({
     projectId: ProjectIdSchema,
@@ -223,4 +234,11 @@ export const ProjectRestoreDataSchema = z.object({
     deletedAt: z.date().nullable(),
     deletedSince: z.number().nullable(),
   }),
+  restoredLinks: z.number().int().nonnegative(),
+  restoredRecordings: z.number().int().nonnegative(),
 });
+
+/**
+ * Type inference from ProjectRestoreDataSchema
+ */
+export type ProjectRestoreData = z.infer<typeof ProjectRestoreDataSchema>;

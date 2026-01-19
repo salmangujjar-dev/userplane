@@ -17,6 +17,7 @@ import type { ProjectService } from '@/api/services/project.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { createPaginationMeta } from '@/api/types';
+import { calculateDaysSince } from '@/api/utils/date';
 
 /**
  * GET /workspace/:workspaceId/projects
@@ -268,9 +269,7 @@ export const getProjectRestoreInfoImpl = (
 
       return {
         message: 'Project restore info retrieved successfully',
-        data: {
-          project: result,
-        },
+        data: result,
       };
     });
 };
@@ -294,15 +293,12 @@ export const restoreProjectImpl = (
   return authorized.project.restore
     .use(workspaceRestoreMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      const restoredProject = await projectService.restoreProject(input.params.projectId);
+      const result = await projectService.restoreProject(input.params.projectId);
 
       // Calculate days since deletion
       let deletedSince: number | null = null;
-      if (restoredProject.deletedAt) {
-        const now = new Date();
-        const deletedAt = new Date(restoredProject.deletedAt);
-        deletedSince =
-          Math.round(((now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24)) * 10) / 10;
+      if (result.deletedAt) {
+        deletedSince = calculateDaysSince(new Date(result.deletedAt));
       }
 
       // Send email to workspace owners that the project has been restored
@@ -313,7 +309,7 @@ export const restoreProjectImpl = (
         owners.map((owner) =>
           emailService.sendProjectRecoveryConfirmation({
             to: owner.email,
-            projectName: restoredProject.projectTitle || 'Project',
+            projectName: result.projectTitle,
             dashboardUrl,
           })
         )
@@ -322,17 +318,20 @@ export const restoreProjectImpl = (
       return {
         message: 'Project restored successfully',
         data: {
+          restorationStatus: result.restorationStatus,
           workspaceId: input.params.workspaceId,
           project: {
-            projectId: restoredProject.projectId,
-            projectTitle: restoredProject.projectTitle,
-            isDefault: restoredProject.isDefault,
-            createdAt: restoredProject.createdAt,
-            updatedAt: restoredProject.updatedAt,
-            isDeleted: restoredProject.isDeleted,
-            deletedAt: restoredProject.deletedAt,
+            projectId: result.projectId,
+            projectTitle: result.projectTitle,
+            isDefault: result.isDefault,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            isDeleted: result.isDeleted,
+            deletedAt: result.deletedAt,
             deletedSince,
           },
+          restoredLinks: result.restoredLinks,
+          restoredRecordings: result.restoredRecordings,
         },
       };
     });

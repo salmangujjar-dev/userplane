@@ -1,4 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
+import type {
+  ProjectRestoreData,
+  RestorationStatus,
+  WorkspaceRestoreData,
+} from '@workspace/contract';
 
 import { apiClient } from '@/client';
 import {
@@ -12,45 +17,32 @@ interface RestoreWorkspaceInput {
   workspaceId: string;
 }
 
-interface RestoreWorkspaceData {
-  workspace: {
-    workspaceId: string;
-    workspaceName: string;
-    isDeleted: boolean;
-    deletedAt: string | null;
-    deletedSince: number | null;
-  };
-  restoredProjects: number;
-  restoredLinks: number;
-  restoredMembers: number;
-  restoredRecordings: number;
-}
-
 interface RestoreProjectInput {
   workspaceId: string;
   projectId: string;
 }
 
-interface RestoreProjectData {
-  workspaceId: string;
-  project: {
-    projectId: string;
-    projectTitle: string;
-    isDefault: boolean;
+// Client-side types with dates as strings (after JSON serialization)
+type WorkspaceRestoreDataClient = Omit<WorkspaceRestoreData, 'workspace'> & {
+  workspace: Omit<WorkspaceRestoreData['workspace'], 'deletedAt'> & {
+    deletedAt: string | null;
+  };
+};
+
+type ProjectRestoreDataClient = Omit<ProjectRestoreData, 'project'> & {
+  project: Omit<ProjectRestoreData['project'], 'deletedAt' | 'createdAt' | 'updatedAt'> & {
+    deletedAt: string | null;
     createdAt: string;
     updatedAt: string;
-    isDeleted: boolean;
-    deletedAt: string | null;
-    deletedSince: number | null;
   };
-}
+};
 
 /**
  * Hook to restore a deleted workspace
  * Restores workspace and associated projects/links
  */
 export function useRestoreWorkspace() {
-  return useMutation<SafeResult<RestoreWorkspaceData>, Error, RestoreWorkspaceInput>({
+  return useMutation<SafeResult<WorkspaceRestoreDataClient>, Error, RestoreWorkspaceInput>({
     mutationFn: async (input: RestoreWorkspaceInput) => {
       const [error, response] = await apiClient.workspace.restore({
         params: { workspaceId: input.workspaceId },
@@ -75,7 +67,7 @@ export function useRestoreWorkspace() {
  * Restores project within its workspace
  */
 export function useRestoreProject() {
-  return useMutation<SafeResult<RestoreProjectData>, Error, RestoreProjectInput>({
+  return useMutation<SafeResult<ProjectRestoreDataClient>, Error, RestoreProjectInput>({
     mutationFn: async (input: RestoreProjectInput) => {
       const [error, response] = await apiClient.project.restore({
         params: { workspaceId: input.workspaceId, projectId: input.projectId },
@@ -95,4 +87,5 @@ export function useRestoreProject() {
   });
 }
 
-export type { RestoreProjectData, RestoreWorkspaceData };
+// Re-export types from contract and client-side types
+export type { ProjectRestoreDataClient, RestorationStatus, WorkspaceRestoreDataClient };

@@ -57,6 +57,10 @@ export const ProjectErrors = {
     status: 400,
     message: 'Project is not deleted and cannot be restored',
   },
+  PROJECT_RESTORE_WORKSPACE_DELETED: {
+    status: 410,
+    message: 'Cannot restore project because its workspace is deleted',
+  },
   PROJECT_RESTORE_TIME_EXPIRED: {
     status: 410,
     message: 'Project restoration window has expired',
