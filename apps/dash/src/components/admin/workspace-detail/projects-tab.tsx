@@ -4,6 +4,7 @@ import {
   ADMIN_FILTER_STATUS_OPTIONS,
   ADMIN_PROJECT_SORT_OPTIONS,
   ADMIN_WORKSPACE_PROJECTS_PAGINATION,
+  type AdminNotifyDuration,
   SORT_DIRECTION_OPTIONS,
 } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
@@ -134,16 +135,16 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
     setProjectToRestore({ projectId, projectTitle });
   };
 
-  const confirmDeactivateProject = () => {
+  const confirmDeactivateProject = (notify?: AdminNotifyDuration) => {
     if (projectToDeactivate) {
-      deactivateProjectMutation.mutate({ projectId: projectToDeactivate.projectId });
+      deactivateProjectMutation.mutate({ projectId: projectToDeactivate.projectId, notify });
       setProjectToDeactivate(null);
     }
   };
 
-  const confirmRestoreProject = () => {
+  const confirmRestoreProject = (notify?: AdminNotifyDuration) => {
     if (projectToRestore) {
-      restoreProjectMutation.mutate({ projectId: projectToRestore.projectId });
+      restoreProjectMutation.mutate({ projectId: projectToRestore.projectId, notify });
       setProjectToRestore(null);
     }
   };

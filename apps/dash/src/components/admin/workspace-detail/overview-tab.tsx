@@ -1,5 +1,6 @@
 'use client';
 
+import type { AdminNotifyDuration } from '@workspace/contract';
 import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
@@ -39,10 +40,10 @@ export function OverviewTab({ workspaceId, workspaceDetail, isLoading }: Overvie
     }
   };
 
-  const confirmDeactivate = () => {
+  const confirmDeactivate = (notify?: AdminNotifyDuration) => {
     if (workspaceToDeactivate) {
       deactivateMutation.mutate(
-        { workspaceId: workspaceToDeactivate.workspaceId },
+        { workspaceId: workspaceToDeactivate.workspaceId, notify },
         { onSuccess: () => setWorkspaceToDeactivate(null) }
       );
     }

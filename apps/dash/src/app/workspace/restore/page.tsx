@@ -9,7 +9,7 @@ import { AlertTriangle, FolderKanban, Link2, Loader2, Users, Video } from 'lucid
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
@@ -344,7 +344,7 @@ function ConfirmationState({
   );
 }
 
-export default function RestorePage() {
+function RestorePageContent() {
   const [type] = useQueryState('type');
   const [id] = useQueryState('id'); // For workspace restore
   const [workspaceId] = useQueryState('workspaceId'); // For project restore
@@ -698,5 +698,13 @@ function ProjectCard({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RestorePage() {
+  return (
+    <Suspense fallback={<LoadingState restoreType="workspace" />}>
+      <RestorePageContent />
+    </Suspense>
   );
 }

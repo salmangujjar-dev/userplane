@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ADMIN_WORKSPACE_PROJECTS_PAGINATION } from '@workspace/contract';
+import { ADMIN_WORKSPACE_PROJECTS_PAGINATION, type AdminNotifyDuration } from '@workspace/contract';
 import type { PlanId } from '@workspace/pricing';
 import { toast } from 'sonner';
 
@@ -276,12 +276,13 @@ export function useAdminDeactivateWorkspace() {
   return useMutation<
     SafeResult<AdminWorkspaceDetail>,
     Error,
-    { workspaceId: string },
+    { workspaceId: string; notify?: AdminNotifyDuration },
     { previousWorkspaceDetail: SafeResult<AdminWorkspaceDetail> | undefined }
   >({
-    mutationFn: async ({ workspaceId }) => {
+    mutationFn: async ({ workspaceId, notify }) => {
       const [error, response] = await apiClient.admin.workspaces.deactivate({
         params: { workspaceId },
+        body: notify ? { notify } : undefined,
       });
       return handleSafeResult(error, response?.data ?? null);
     },
@@ -348,12 +349,13 @@ export function useAdminRestoreWorkspace() {
   return useMutation<
     SafeResult<AdminRestoreWorkspaceResponse>,
     Error,
-    { workspaceId: string },
+    { workspaceId: string; notify?: AdminNotifyDuration },
     { previousWorkspaceDetail: SafeResult<AdminWorkspaceDetail> | undefined }
   >({
-    mutationFn: async ({ workspaceId }) => {
+    mutationFn: async ({ workspaceId, notify }) => {
       const [error, response] = await apiClient.admin.workspaces.restore({
         params: { workspaceId },
+        body: notify ? { notify } : undefined,
       });
       return handleSafeResult(error, response?.data ?? null);
     },
@@ -616,11 +618,12 @@ export function useAdminDeactivateProject(workspaceId: string) {
   return useMutation<
     SafeResult<{ workspaceId: string; projectId: string }>,
     Error,
-    { projectId: string }
+    { projectId: string; notify?: AdminNotifyDuration }
   >({
-    mutationFn: async ({ projectId }) => {
+    mutationFn: async ({ projectId, notify }) => {
       const [error, response] = await apiClient.admin.projects.deactivate({
         params: { workspaceId, projectId },
+        body: notify ? { notify } : undefined,
       });
       return handleSafeResult(error, response?.data ?? null);
     },
@@ -654,10 +657,15 @@ export function useAdminDeactivateProject(workspaceId: string) {
 export function useAdminRestoreProject(workspaceId: string) {
   const queryClient = useQueryClient();
 
-  return useMutation<SafeResult<AdminRestoreProjectResponse>, Error, { projectId: string }>({
-    mutationFn: async ({ projectId }) => {
+  return useMutation<
+    SafeResult<AdminRestoreProjectResponse>,
+    Error,
+    { projectId: string; notify?: AdminNotifyDuration }
+  >({
+    mutationFn: async ({ projectId, notify }) => {
       const [error, response] = await apiClient.admin.projects.restore({
         params: { workspaceId, projectId },
+        body: notify ? { notify } : undefined,
       });
       return handleSafeResult(error, response?.data ?? null);
     },
