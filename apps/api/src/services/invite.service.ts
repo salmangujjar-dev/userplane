@@ -460,7 +460,7 @@ export class InviteService {
 
   /**
    * Approve a workspace access request
-   * Adds the requesting user as a member
+   * Adds the requesting user as a member and sends welcome email
    * Throws WORKSPACE_ACCESS_REQUEST_INVALID if token is invalid/expired
    * Throws WORKSPACE_ACCESS_REQUEST_NOT_OWNER if approver is not the designated owner
    */
@@ -498,8 +498,9 @@ export class InviteService {
       throw workspaceError.WORKSPACE_ACCESS_REQUEST_NOT_OWNER();
     }
 
-    // Get workspace name
+    // Get workspace name and user details
     const workspace = await this.deps.workspaceService.getById(workspaceId);
+    const user = await this.deps.userService.getById(userId);
 
     // Check if user is already a member (might have been added by another owner)
     const existingMember = await this.deps.workspaceMemberService.getMember(userId, workspaceId);
@@ -524,6 +525,21 @@ export class InviteService {
         { tx }
       );
     });
+
+    // Send welcome email to the requester
+    // This is non-blocking - if it fails, the approval still succeeds
+    try {
+      const dashboardUrl = `${process.env.PUBLIC_DASH_URL}/${workspaceId}`;
+      await this.deps.emailService.sendWelcomeEmailRequester({
+        to: userEmail,
+        userName: user.name,
+        workspaceName: workspace.workspaceName,
+        dashboardUrl,
+      });
+    } catch (error) {
+      // Log error but don't fail the request
+      console.error('Failed to send welcome email to requester:', error);
+    }
 
     return {
       workspaceId,

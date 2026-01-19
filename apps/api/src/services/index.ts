@@ -30,6 +30,7 @@ import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.
 // Repositories
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { AdminService } from '@/api/services/admin.service';
+import { AdminProjectService } from '@/api/services/admin-project.service';
 import { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
 import { AdminRecordingService } from '@/api/services/admin-recording.service';
 import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
@@ -74,10 +75,6 @@ export const adminService = new AdminService({
   adminUserIds: env.admin.userIds,
 });
 
-export const adminWorkspaceService = new AdminWorkspaceService({
-  adminWorkspaceRepo,
-});
-
 export const adminRecordingService = new AdminRecordingService({
   adminRecordingRepo,
 });
@@ -103,6 +100,11 @@ export const projectService = new ProjectService({
   workspaceRepo,
 });
 
+// Admin project service - initialized after project service is available
+export const adminProjectService = new AdminProjectService({
+  projectService,
+});
+
 export const linkService = new LinkService({
   linkRepo,
   workspaceMemberRepo,
@@ -122,6 +124,12 @@ export const workspaceService = new WorkspaceService({
   linkRepo,
   recordingRepo,
   projectService,
+});
+
+// Admin workspace service - initialized after workspace service is available
+export const adminWorkspaceService = new AdminWorkspaceService({
+  adminWorkspaceRepo,
+  workspaceService,
 });
 
 // Domain service - initialized after workspace and user services are available
@@ -174,5 +182,6 @@ export const adminProvisioningService = new AdminProvisioningService({
   db,
 });
 
-// Export tokenService and emailService for use in routes
+// Export tokenService, emailService, and repositories for use in routes
 export { emailService, tokenService };
+export { recordingRepo, workspaceMemberRepo };

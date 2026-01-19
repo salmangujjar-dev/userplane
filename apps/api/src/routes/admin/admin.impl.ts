@@ -12,6 +12,7 @@ import { generateWorkspaceId } from '@/api/lib/id';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
 import { authorized } from '@/api/middleware/auth.orpc';
 import type { AdminService } from '@/api/services/admin.service';
+import type { AdminProjectService } from '@/api/services/admin-project.service';
 import type { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
@@ -20,6 +21,7 @@ import type { ProjectService } from '@/api/services/project.service';
 import type { TokenService } from '@/api/services/token.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+import { calculateScheduledTime } from '@/api/utils/date';
 
 /**
  * Format date to ISO string
@@ -526,14 +528,52 @@ const searchWorkspaceProjectsImpl = (
  */
 const deactivateWorkspaceImpl = (
   adminService: AdminService,
-  adminWorkspaceService: AdminWorkspaceService
+  adminWorkspaceService: AdminWorkspaceService,
+  workspaceMemberService: WorkspaceMemberService,
+  emailService: EmailService
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.workspaces.deactivate.handler(async ({ input }) => {
+    // Get workspace info before deactivation for email
+    const workspaceInfo = await adminWorkspaceService.getWorkspaceDetail(input.params.workspaceId);
+
     const workspaceDetail = await adminWorkspaceService.deactivateWorkspace(
       input.params.workspaceId
     );
+
+    // Check if notifications are enabled
+    const notify = input.body?.notify;
+    if (notify && notify !== 'never') {
+      // Calculate deletion date (30 days from now)
+      const deletionDate = new Date();
+      deletionDate.setDate(deletionDate.getDate() + 30);
+      const formattedDeletionDate = deletionDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      // Construct cancel URL
+      const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
+
+      // Calculate scheduled time based on notify duration
+      const scheduledAt = calculateScheduledTime(notify);
+
+      // Send deletion scheduled email to workspace owners
+      const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+      await Promise.allSettled(
+        owners.map((owner) =>
+          emailService.sendWorkspaceDeletionScheduled({
+            to: owner.email,
+            workspaceName: workspaceInfo.workspaceName,
+            deletionDate: formattedDeletionDate,
+            cancelUrl,
+            scheduledAt,
+          })
+        )
+      );
+    }
 
     return {
       message: 'Workspace deactivated successfully',
@@ -548,28 +588,42 @@ const deactivateWorkspaceImpl = (
  */
 const restoreWorkspaceImpl = (
   adminService: AdminService,
-  workspaceService: WorkspaceService,
+  adminWorkspaceService: AdminWorkspaceService,
   workspaceMemberService: WorkspaceMemberService,
   emailService: EmailService
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.workspaces.restore.handler(async ({ input }) => {
-    const result = await workspaceService.restoreWorkspace(input.params.workspaceId);
+    const result = await adminWorkspaceService.restoreWorkspace(input.params.workspaceId);
 
-    // Send email to workspace owners that the workspace has been restored
-    const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-    const dashboardUrl = `${env.invite.appUrl}/workspace/${input.params.workspaceId}`;
+    // Check if notifications are enabled
+    const notify = input.body?.notify;
+    if (notify && notify !== 'never') {
+      // Calculate scheduled time based on notify duration
+      const scheduledAt = calculateScheduledTime(notify);
 
-    await Promise.allSettled(
-      owners.map((owner) =>
-        emailService.sendWorkspaceRecoveryConfirmation({
-          to: owner.email,
-          workspaceName: result.workspace.workspaceName,
-          dashboardUrl,
-        })
-      )
-    );
+      // Send email to workspace owners that the workspace has been restored
+      const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+      const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
+
+      // Send appropriate email based on restoration status
+      const emailMethod =
+        result.restorationStatus === 'partial'
+          ? emailService.sendWorkspaceRecoveryPartially
+          : emailService.sendWorkspaceRecoveryConfirmation;
+
+      await Promise.allSettled(
+        owners.map((owner) =>
+          emailMethod.call(emailService, {
+            to: owner.email,
+            workspaceName: result.workspace.workspaceName,
+            dashboardUrl,
+            scheduledAt,
+          })
+        )
+      );
+    }
 
     return {
       message: 'Workspace restored successfully',
@@ -589,13 +643,55 @@ const restoreWorkspaceImpl = (
 
 /**
  * Deactivate project implementation
- * Uses ProjectService.deleteProject for consistent deletion logic
+ * Uses AdminProjectService.deactivateProject for consistent deletion logic
  */
-const deactivateProjectImpl = (adminService: AdminService, projectService: ProjectService) => {
+const deactivateProjectImpl = (
+  adminService: AdminService,
+  adminProjectService: AdminProjectService,
+  projectService: ProjectService,
+  workspaceMemberService: WorkspaceMemberService,
+  emailService: EmailService
+) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.projects.deactivate.handler(async ({ input }) => {
-    await projectService.deleteProject(input.params.projectId, input.params.workspaceId);
+    // Get project info before deletion for email
+    const project = await projectService.getById(input.params.projectId);
+
+    await adminProjectService.deactivateProject(input.params.projectId, input.params.workspaceId);
+
+    // Check if notifications are enabled
+    const notify = input.body?.notify;
+    if (notify && notify !== 'never') {
+      // Calculate deletion date (30 days from now)
+      const deletionDate = new Date();
+      deletionDate.setDate(deletionDate.getDate() + 30);
+      const formattedDeletionDate = deletionDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      // Construct cancel URL
+      const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=project&workspaceId=${input.params.workspaceId}&projectId=${input.params.projectId}`;
+
+      // Calculate scheduled time based on notify duration
+      const scheduledAt = calculateScheduledTime(notify);
+
+      // Send deletion scheduled email to workspace owners
+      const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+      await Promise.allSettled(
+        owners.map((owner) =>
+          emailService.sendProjectDeletionScheduled({
+            to: owner.email,
+            projectName: project.projectTitle || 'Untitled Project',
+            deletionDate: formattedDeletionDate,
+            cancelUrl,
+            scheduledAt,
+          })
+        )
+      );
+    }
 
     return {
       message: 'Project deactivated successfully',
@@ -609,33 +705,46 @@ const deactivateProjectImpl = (adminService: AdminService, projectService: Proje
 
 /**
  * Restore project implementation
- * Uses ProjectService.restoreProject for consistent restoration logic
+ * Uses AdminProjectService.restoreProject for consistent restoration logic
  */
 const restoreProjectImpl = (
   adminService: AdminService,
-  projectService: ProjectService,
-  workspaceService: WorkspaceService,
+  adminProjectService: AdminProjectService,
   workspaceMemberService: WorkspaceMemberService,
   emailService: EmailService
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.projects.restore.handler(async ({ input }) => {
-    const restoredProject = await projectService.restoreProject(input.params.projectId);
+    const restoredProject = await adminProjectService.restoreProject(input.params.projectId);
 
-    // Send email to workspace owners that the project has been restored
-    const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-    const dashboardUrl = `${env.invite.appUrl}/workspace/${input.params.workspaceId}`;
+    // Check if notifications are enabled
+    const notify = input.body?.notify;
+    if (notify && notify !== 'never') {
+      // Calculate scheduled time based on notify duration
+      const scheduledAt = calculateScheduledTime(notify);
 
-    await Promise.allSettled(
-      owners.map((owner) =>
-        emailService.sendProjectRecoveryConfirmation({
-          to: owner.email,
-          projectName: restoredProject.projectTitle,
-          dashboardUrl,
-        })
-      )
-    );
+      // Send email to workspace owners that the project has been restored
+      const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+      const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
+
+      // Send appropriate email based on restoration status
+      const emailMethod =
+        restoredProject.restorationStatus === 'partial'
+          ? emailService.sendProjectRecoveryPartially
+          : emailService.sendProjectRecoveryConfirmation;
+
+      await Promise.allSettled(
+        owners.map((owner) =>
+          emailMethod.call(emailService, {
+            to: owner.email,
+            projectName: restoredProject.projectTitle,
+            dashboardUrl,
+            scheduledAt,
+          })
+        )
+      );
+    }
 
     return {
       message: 'Project restored successfully',
@@ -796,19 +905,8 @@ const createWorkspaceInviteImpl = (
     // Send email if notify is not 'never' and email is provided
     const email = input.body.email;
     if (notify !== 'never' && email) {
-      let scheduledAt: string | undefined;
-
-      // Calculate scheduled time for delayed notifications
-      if (notify !== 'immediate') {
-        const now = new Date();
-        const scheduleDate = new Date(now);
-
-        // Parse duration and add to current time
-        const minutes = Number.parseInt(notify.replace('m', ''), 10);
-        scheduleDate.setMinutes(scheduleDate.getMinutes() + minutes);
-
-        scheduledAt = scheduleDate.toISOString();
-      }
+      // Calculate scheduled time based on notify duration
+      const scheduledAt = calculateScheduledTime(notify);
 
       // Send sandbox invite email (immediate or scheduled)
       await emailService.sendPilotSandboxInvite({
@@ -837,6 +935,7 @@ const createWorkspaceInviteImpl = (
 export const createAdminProcedures = (
   adminService: AdminService,
   adminWorkspaceService: AdminWorkspaceService,
+  adminProjectService: AdminProjectService,
   adminRecordingService: AdminRecordingService,
   adminProvisioningService: AdminProvisioningService,
   workspaceService: WorkspaceService,
@@ -871,10 +970,15 @@ export const createAdminProcedures = (
       projects: {
         list: searchWorkspaceProjectsImpl(adminService, adminWorkspaceService),
       },
-      deactivate: deactivateWorkspaceImpl(adminService, adminWorkspaceService),
+      deactivate: deactivateWorkspaceImpl(
+        adminService,
+        adminWorkspaceService,
+        workspaceMemberService,
+        emailService
+      ),
       restore: restoreWorkspaceImpl(
         adminService,
-        workspaceService,
+        adminWorkspaceService,
         workspaceMemberService,
         emailService
       ),
@@ -887,11 +991,16 @@ export const createAdminProcedures = (
       provision: provisionWorkspaceImpl(adminService, adminProvisioningService),
     },
     projects: {
-      deactivate: deactivateProjectImpl(adminService, projectService),
+      deactivate: deactivateProjectImpl(
+        adminService,
+        adminProjectService,
+        projectService,
+        workspaceMemberService,
+        emailService
+      ),
       restore: restoreProjectImpl(
         adminService,
-        projectService,
-        workspaceService,
+        adminProjectService,
         workspaceMemberService,
         emailService
       ),

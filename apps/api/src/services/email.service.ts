@@ -11,6 +11,7 @@ import {
   renderAccountDeletion,
   renderAccountDeletionVerification,
   renderAccountRestored,
+  renderBillingEmailUpdated,
   renderDeletionConfirmation,
   renderDeletionRequested,
   renderDeletionScheduled,
@@ -47,6 +48,11 @@ import {
   renderTeammateJoined,
   renderTosViolation,
   renderTrialReverseTrialOffer,
+  renderWelcomeEmailMember,
+  renderWelcomeEmailPilot,
+  renderWelcomeEmailRequester,
+  renderWelcomeEmailSubscription,
+  renderWelcomeMeetFounder,
 } from '@workspace/email';
 import { createAppLogger } from '@workspace/logger';
 
@@ -56,6 +62,7 @@ import {
   accountDeletionSubject,
   accountDeletionVerificationSubject,
   accountRestoredSubject,
+  billingEmailUpdatedSubject,
   domainDeveloperInstructionsSubject,
   emailVerificationSubject,
   linksRequestedUpgradeSubject,
@@ -86,6 +93,11 @@ import {
   teammateJoinedSubject,
   tosViolationSubject,
   trialReverseTrialOfferSubject,
+  welcomeEmailMemberSubject,
+  welcomeEmailPilotSubject,
+  welcomeEmailRequesterSubject,
+  welcomeEmailSubscriptionSubject,
+  welcomeMeetFounderSubject,
   workspaceAccessGrantedSubject,
   workspaceAccessRequestedSubject,
   workspaceDeletionConfirmationSubject,
@@ -100,6 +112,7 @@ import type {
   AccountDeletionEmailParams,
   AccountDeletionVerificationEmailParams,
   AccountRestoredEmailParams,
+  BillingEmailUpdatedEmailParams,
   DomainDeveloperInstructionsEmailParams,
   EmailVerificationEmailParams,
   LinksRequestedUpgradeEmailParams,
@@ -130,6 +143,11 @@ import type {
   TeammateJoinedEmailParams,
   TosViolationEmailParams,
   TrialReverseTrialOfferEmailParams,
+  WelcomeEmailMemberParams,
+  WelcomeEmailPilotParams,
+  WelcomeEmailRequesterParams,
+  WelcomeEmailSubscriptionParams,
+  WelcomeMeetFounderEmailParams,
   WorkspaceAccessGrantedEmailParams,
   WorkspaceAccessRequestedEmailParams,
   WorkspaceDeletionConfirmationEmailParams,
@@ -266,6 +284,43 @@ export class EmailService {
   // ============================================================================
   // BILLING EMAILS
   // ============================================================================
+
+  /**
+   * Send billing email updated notification
+   * Sent when workspace billing email address is changed
+   */
+  async sendBillingEmailUpdated(params: BillingEmailUpdatedEmailParams): Promise<void> {
+    const idempotencyKey = `billing-email-updated/${params.to}/${params.newEmail}`;
+
+    const { html, text } = await renderBillingEmailUpdated({
+      previousEmail: params.previousEmail,
+      newEmail: params.newEmail,
+      billingUrl: params.billingUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: billingFrom(),
+        to: params.to,
+        subject: billingEmailUpdatedSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        previousEmail: params.previousEmail,
+        newEmail: params.newEmail,
+        provider: emailClient.getProvider(),
+      },
+      'Billing email updated notification sent'
+    );
+  }
 
   /**
    * Send subscription active email
@@ -1168,17 +1223,14 @@ export class EmailService {
     const idempotencyKey = `recording-received/${params.to}/${params.recordingUrl}`;
 
     const { html, text } = await renderRecordingReceived({
-      recordingTitle: params.recordingTitle,
       recordingUrl: params.recordingUrl,
-      submittedAt: params.submittedAt,
-      duration: params.duration,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
         to: params.to,
-        subject: recordingReceivedSubject(params.recordingTitle),
+        subject: recordingReceivedSubject,
         html,
         text,
       },
@@ -1190,7 +1242,6 @@ export class EmailService {
     logger.info(
       {
         to: params.to,
-        recordingTitle: params.recordingTitle,
         provider: emailClient.getProvider(),
       },
       'Recording received email sent'
@@ -1235,6 +1286,195 @@ export class EmailService {
         provider: emailClient.getProvider(),
       },
       'Trial reverse trial offer email sent'
+    );
+  }
+
+  /**
+   * Send welcome meet founder email
+   * Sent to new users when they create their first workspace
+   */
+  async sendWelcomeMeetFounder(params: WelcomeMeetFounderEmailParams): Promise<void> {
+    const idempotencyKey = `welcome-meet-founder/${params.to}`;
+
+    const { html, text } = await renderWelcomeMeetFounder({
+      userName: params.userName,
+      calendarUrl: params.calendarUrl,
+      founderEmail: params.founderEmail,
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: params.to,
+        subject: welcomeMeetFounderSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        userName: params.userName,
+        provider: emailClient.getProvider(),
+      },
+      'Welcome meet founder email sent'
+    );
+  }
+
+  // ============================================================================
+  // ONBOARDING EMAILS
+  // ============================================================================
+
+  /**
+   * Send welcome email for members joining a workspace
+   * Sent to users when they join a workspace as a member
+   */
+  async sendWelcomeEmailMember(params: WelcomeEmailMemberParams): Promise<void> {
+    const idempotencyKey = `welcome-email-member/${params.to}/${params.workspaceName}`;
+
+    const { html, text } = await renderWelcomeEmailMember({
+      userName: params.userName,
+      workspaceName: params.workspaceName,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: params.to,
+        subject: welcomeEmailMemberSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        userName: params.userName,
+        workspaceName: params.workspaceName,
+        provider: emailClient.getProvider(),
+      },
+      'Welcome email member sent'
+    );
+  }
+
+  /**
+   * Send welcome email for subscription users
+   * Sent to users who create a workspace without an invite token (organic signup)
+   */
+  async sendWelcomeEmailSubscription(params: WelcomeEmailSubscriptionParams): Promise<void> {
+    const idempotencyKey = `welcome-email-subscription/${params.to}`;
+
+    const { html, text } = await renderWelcomeEmailSubscription({
+      userName: params.userName,
+      workspaceName: params.workspaceName,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: params.to,
+        subject: welcomeEmailSubscriptionSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        userName: params.userName,
+        workspaceName: params.workspaceName,
+        provider: emailClient.getProvider(),
+      },
+      'Welcome email subscription sent'
+    );
+  }
+
+  /**
+   * Send welcome email for pilot users
+   * Sent to users who create a workspace with an invite token (invited/pilot users)
+   */
+  async sendWelcomeEmailPilot(params: WelcomeEmailPilotParams): Promise<void> {
+    const idempotencyKey = `welcome-email-pilot/${params.to}`;
+
+    const { html, text } = await renderWelcomeEmailPilot({
+      userName: params.userName,
+      workspaceName: params.workspaceName,
+      dashboardUrl: params.dashboardUrl,
+      calendarUrl: params.calendarUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: params.to,
+        subject: welcomeEmailPilotSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        userName: params.userName,
+        workspaceName: params.workspaceName,
+        provider: emailClient.getProvider(),
+      },
+      'Welcome email pilot sent'
+    );
+  }
+
+  /**
+   * Send welcome email for requesters whose access was approved
+   * Sent to users when their access request is approved
+   */
+  async sendWelcomeEmailRequester(params: WelcomeEmailRequesterParams): Promise<void> {
+    const idempotencyKey = `welcome-email-requester/${params.to}/${params.workspaceName}`;
+
+    const { html, text } = await renderWelcomeEmailRequester({
+      userName: params.userName,
+      workspaceName: params.workspaceName,
+      dashboardUrl: params.dashboardUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: params.to,
+        subject: welcomeEmailRequesterSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        userName: params.userName,
+        workspaceName: params.workspaceName,
+        provider: emailClient.getProvider(),
+      },
+      'Welcome email requester sent'
     );
   }
 
@@ -1344,6 +1584,7 @@ export class EmailService {
       },
       {
         idempotencyKey,
+        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
       }
     );
 
@@ -1498,6 +1739,7 @@ export class EmailService {
       },
       {
         idempotencyKey,
+        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
       }
     );
 
@@ -1534,6 +1776,7 @@ export class EmailService {
       },
       {
         idempotencyKey,
+        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
       }
     );
 
@@ -1576,6 +1819,7 @@ export class EmailService {
       },
       {
         idempotencyKey,
+        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
       }
     );
 
@@ -1724,6 +1968,7 @@ export class EmailService {
       },
       {
         idempotencyKey,
+        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
       }
     );
 
@@ -1758,6 +2003,7 @@ export class EmailService {
       },
       {
         idempotencyKey,
+        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
       }
     );
 

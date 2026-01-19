@@ -7,7 +7,11 @@ import { implement } from '@orpc/server';
 import { sessionContract, sessionError } from '@workspace/contract';
 
 import { REQUEST_HEADERS } from '@/api/constants/headers';
+import { env } from '@/api/env';
 import type { InitialContext } from '@/api/middleware/auth.orpc';
+import type { RecordingRepository } from '@/api/repositories/recordings.repository';
+import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
+import type { EmailService } from '@/api/services/email.service';
 import type { SessionService } from '@/api/services/session.service';
 
 /**
@@ -109,13 +113,40 @@ export const initUploadImpl = (sessionService: SessionService) => {
  * PATCH /session - Mark upload as available
  * Requires upload token from initUpload
  * Service throws ORPCError directly, no error mapping needed
+ * Sends email notification to the recording creator if they are an active workspace member
  */
-export const completeUploadImpl = (sessionService: SessionService) => {
+export const completeUploadImpl = (
+  sessionService: SessionService,
+  recordingRepo: RecordingRepository,
+  workspaceMemberRepo: WorkspaceMemberRepository,
+  emailService: EmailService
+) => {
   return os.upload.complete.use(requireUploadToken).handler(async ({ input, context }) => {
     const result = await sessionService.markAsAvailable(
       context.uploadToken,
       input.body.recording_id
     );
+
+    // Send email notification to the recording creator
+    // This is non-blocking - if it fails, the recording is still marked as available
+    try {
+      const recording = await recordingRepo.findById(result.recordingId);
+      if (recording) {
+        const creator = await workspaceMemberRepo.findByIdWithUser(recording.createdBy);
+        if (creator) {
+          const recordingUrl = `${env.invite.appUrl}/${recording.workspaceId}/recordings/${recording.recordingId}`;
+
+          await emailService.sendRecordingReceived({
+            to: creator.userEmail,
+            recordingUrl,
+          });
+        }
+      }
+    } catch (error) {
+      // Log error but don't fail the request
+      // The recording is already marked as available
+      console.error('Failed to send recording received email:', error);
+    }
 
     return {
       message: 'Recording available',
@@ -133,12 +164,22 @@ export const completeUploadImpl = (sessionService: SessionService) => {
  * This exports the implemented procedures for the session endpoints
  * These can be combined with other implementations to form the complete API router
  */
-export const createSessionProcedures = (sessionService: SessionService) => {
+export const createSessionProcedures = (
+  sessionService: SessionService,
+  recordingRepo: RecordingRepository,
+  workspaceMemberRepo: WorkspaceMemberRepository,
+  emailService: EmailService
+) => {
   return {
     init: getSessionImpl(sessionService),
     upload: {
       init: initUploadImpl(sessionService),
-      complete: completeUploadImpl(sessionService),
+      complete: completeUploadImpl(
+        sessionService,
+        recordingRepo,
+        workspaceMemberRepo,
+        emailService
+      ),
     },
   };
 };

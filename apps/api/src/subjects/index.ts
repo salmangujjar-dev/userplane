@@ -8,6 +8,7 @@ export * from './billing';
 export * from './domain';
 export * from './invite';
 export * from './offboarding';
+export * from './onboarding';
 export * from './pilot';
 export * from './project';
 export * from './recording';
