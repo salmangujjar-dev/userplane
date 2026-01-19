@@ -1,30 +1,28 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormEmailSchema, WorkspaceNameSchema } from '@workspace/contract';
+import { WorkspaceNameSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { useEffect } from 'react';
+import { Mail } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { BillingEmailVerificationModal } from '@/components/modals/billing-email-verification-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { WorkspaceSectionSkeleton } from '@/components/skeleton';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceBillingEmail } from '@/hooks/use-workspace-billing-email';
 import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
+import { useRequestBillingEmailChange } from '@/queries/use-billing-email-verification-mutations';
 import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
-import { useUpdateWorkspaceBillingEmail } from '@/queries/use-workspace-billing-email-mutations';
 import { useWorkspaceId } from '@/stores/workspace';
 
 const workspaceNameFormSchema = z.object({
   name: WorkspaceNameSchema,
-});
-
-const billingEmailFormSchema = z.object({
-  email: FormEmailSchema,
 });
 
 export function WorkspaceSection() {
@@ -32,6 +30,7 @@ export function WorkspaceSection() {
   const { data: workspaceResult, isLoading, error, refetch } = useWorkspace();
   const { data: billingEmailResult, isLoading: isLoadingBilling } = useWorkspaceBillingEmail();
   const { canEdit } = useCanEditWorkspace();
+  const [showBillingModal, setShowBillingModal] = useState(false);
 
   const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const originalName = workspaceData?.workspace.workspaceName || '';
@@ -53,20 +52,6 @@ export function WorkspaceSection() {
     },
   });
 
-  // Billing Email Form
-  const {
-    control: emailControl,
-    handleSubmit: handleEmailSubmit,
-    reset: resetEmail,
-    formState: { errors: emailErrors, isDirty: isEmailDirty, isValid: isEmailValid },
-  } = useForm({
-    resolver: zodResolver(billingEmailFormSchema),
-    mode: 'onTouched',
-    defaultValues: {
-      email: originalBillingEmail,
-    },
-  });
-
   // Reset form when data loads
   useEffect(() => {
     if (workspaceData?.workspace.workspaceName) {
@@ -74,29 +59,31 @@ export function WorkspaceSection() {
     }
   }, [workspaceData, resetName]);
 
-  useEffect(() => {
-    if (billingEmailResult?.success) {
-      resetEmail({ email: billingEmailResult.data.workspaceBillingEmail || '' });
-    }
-  }, [billingEmailResult, resetEmail]);
-
   const updateNameMutation = useUpdateWorkspaceName(workspaceId, (originalName) =>
     resetName({ name: originalName })
   );
-  const updateBillingEmailMutation = useUpdateWorkspaceBillingEmail({
-    onSuccess: () => resetEmail({ email: originalBillingEmail }),
+
+  const requestBillingEmailChangeMutation = useRequestBillingEmailChange({
+    onSuccess: () => {
+      // Keep modal open to show success message
+    },
   });
 
   const onSaveName = (data: { name: string }) => {
     updateNameMutation.mutate(data.name);
   };
 
-  const onSaveBillingEmail = (data: { email: string }) => {
+  const handleRequestBillingEmailChange = async (email: string) => {
     if (!workspaceId) return;
-    updateBillingEmailMutation.mutate({
+
+    const result = await requestBillingEmailChangeMutation.mutateAsync({
       workspaceId,
-      email: data.email,
+      email,
     });
+
+    if (!result.success) {
+      throw new Error('Failed to send verification email');
+    }
   };
 
   if (isLoading) {
@@ -170,7 +157,7 @@ export function WorkspaceSection() {
           </form>
 
           {/* Billing Email Section */}
-          <form onSubmit={handleEmailSubmit(onSaveBillingEmail)} className="space-y-4">
+          <div className="space-y-4">
             <div>
               <Label htmlFor="billing-email">Billing Email</Label>
               <p className="text-sm text-muted-foreground mt-1">
@@ -178,44 +165,44 @@ export function WorkspaceSection() {
               </p>
             </div>
             {isLoadingBilling ? (
-              <div className="flex gap-2 items-start">
+              <div className="flex flex-col gap-3">
                 <Skeleton className="h-10 w-full max-w-md" />
+                <Skeleton className="h-16 w-full max-w-md" />
               </div>
             ) : (
-              <div className="flex gap-2 items-start flex-col">
-                <div className="flex gap-2 items-start w-full">
-                  <Controller
-                    name="email"
-                    control={emailControl}
-                    render={({ field }) => (
-                      <Input
-                        id="billing-email"
-                        type="email"
-                        value={field.value}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        placeholder="Enter billing email"
-                        className="max-w-md"
-                        disabled={!canEdit || updateBillingEmailMutation.isPending}
-                      />
-                    )}
-                  />
-                  {canEdit && isEmailDirty && isEmailValid && (
-                    <Button
-                      type="submit"
-                      disabled={updateBillingEmailMutation.isPending}
-                      size="default"
-                    >
-                      {updateBillingEmailMutation.isPending ? 'Saving...' : 'Save'}
-                    </Button>
-                  )}
-                </div>
-                {emailErrors.email && (
-                  <p className="text-sm text-destructive">{emailErrors.email.message}</p>
+              <div className="space-y-3">
+                <Input
+                  id="billing-email"
+                  type="email"
+                  value={originalBillingEmail || 'Not set'}
+                  className="max-w-md bg-muted"
+                  disabled
+                />
+                {canEdit && (
+                  <button
+                    onClick={() => setShowBillingModal(true)}
+                    disabled={requestBillingEmailChangeMutation.isPending}
+                    className={`w-full max-w-md flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors ${
+                      requestBillingEmailChangeMutation.isPending
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'cursor-pointer hover:border-primary/50'
+                    }`}
+                  >
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Update billing email</span>
+                  </button>
                 )}
               </div>
             )}
-          </form>
+          </div>
+
+          <BillingEmailVerificationModal
+            open={showBillingModal}
+            onOpenChange={setShowBillingModal}
+            currentEmail={originalBillingEmail}
+            onRequestChange={handleRequestBillingEmailChange}
+            isLoading={requestBillingEmailChangeMutation.isPending}
+          />
         </div>
       </div>
     </>

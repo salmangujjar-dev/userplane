@@ -74,7 +74,8 @@ const workspaceProcedures = createWorkspaceProcedures(
   recordingService,
   linkService,
   emailService,
-  userService
+  userService,
+  tokenService
 );
 const recordingProcedures = createRecordingProcedures(
   recordingService,

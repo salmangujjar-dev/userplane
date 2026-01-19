@@ -45,6 +45,12 @@ interface EnvConfig {
     appUrl: string;
     expiresIn: number;
   };
+  token: {
+    domainVerificationExpiresIn: number;
+    accessRequestExpiresIn: number;
+    workspaceCreateInviteExpiresIn: number;
+    billingEmailVerificationExpiresIn: number;
+  };
   session: {
     tokenSecret: string;
     uploadTokenSecret: string;
@@ -159,6 +165,24 @@ export function loadEnvConfig(): EnvConfig {
       secret: process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-in-production',
       appUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',
       expiresIn: parseInteger(process.env.INVITE_TOKEN_EXPIRES_IN, 30 * 24 * 60 * 60), // 30 days
+    },
+    token: {
+      domainVerificationExpiresIn: parseInteger(
+        process.env.DOMAIN_VERIFICATION_TOKEN_EXPIRES_IN,
+        300
+      ), // 5 minutes
+      accessRequestExpiresIn: parseInteger(
+        process.env.ACCESS_REQUEST_TOKEN_EXPIRES_IN,
+        7 * 24 * 60 * 60
+      ), // 7 days
+      workspaceCreateInviteExpiresIn: parseInteger(
+        process.env.WORKSPACE_CREATE_INVITE_TOKEN_EXPIRES_IN,
+        7 * 24 * 60 * 60
+      ), // 7 days
+      billingEmailVerificationExpiresIn: parseInteger(
+        process.env.BILLING_EMAIL_VERIFICATION_TOKEN_EXPIRES_IN,
+        10 * 60
+      ), // 10 minutes
     },
     session: {
       tokenSecret: process.env.SESSION_TOKEN_SECRET || 'dev-session-secret-change-in-production',
@@ -317,6 +341,12 @@ export function logConfig(): void {
       authCookiePrefix: env.auth.cookiePrefix,
       inviteAppUrl: env.invite.appUrl,
       inviteTokenExpiry: `${env.invite.expiresIn}s`,
+      token: {
+        domainVerificationExpiry: `${env.token.domainVerificationExpiresIn}s`,
+        accessRequestExpiry: `${env.token.accessRequestExpiresIn}s`,
+        workspaceCreateInviteExpiry: `${env.token.workspaceCreateInviteExpiresIn}s`,
+        billingEmailVerificationExpiry: `${env.token.billingEmailVerificationExpiresIn}s`,
+      },
       recorderUrl: env.recorder.url,
       recorderTokenExpiry: `${env.recorder.expiresIn}s`,
       session: {
