@@ -27,6 +27,8 @@ export type {
   AccountDeletionVerificationEmailProps,
   AccountRestoredEmailProps,
   AtRiskNotEngagedEmailProps,
+  // Billing
+  BillingEmailUpdatedEmailProps,
   DeletionConfirmationEmailProps,
   DeletionRequestedEmailProps,
   // Workspace
@@ -72,7 +74,6 @@ export type {
   SeatsRequestedUpgradeEmailProps,
   // Usage - Seats
   SeatsSoftLimitEmailProps,
-  // Billing
   SubscriptionActiveEmailProps,
   SubscriptionExpiredEmailProps,
   SubscriptionInactiveEmailProps,
@@ -84,6 +85,11 @@ export type {
   TosViolationEmailProps,
   TrialReverseTrialOfferEmailProps,
   // Trial
+  WelcomeEmailMemberProps,
+  // Onboarding
+  WelcomeEmailPilotProps,
+  WelcomeEmailRequesterProps,
+  WelcomeEmailSubscriptionProps,
   WelcomeMeetFounderEmailProps,
 } from './emails.js';
 export {
@@ -95,6 +101,8 @@ export {
   renderAccountDeletionVerification,
   renderAccountRestored,
   renderAtRiskNotEngaged,
+  // Billing
+  renderBillingEmailUpdated,
   renderDeletionConfirmation,
   renderDeletionRequested,
   // Workspace
@@ -139,7 +147,6 @@ export {
   renderSeatsRequestedUpgrade,
   // Usage - Seats
   renderSeatsSoftLimit,
-  // Billing
   renderSubscriptionActive,
   renderSubscriptionExpired,
   renderSubscriptionInactive,
@@ -151,6 +158,11 @@ export {
   renderTosViolation,
   renderTrialReverseTrialOffer,
   // Trial
+  renderWelcomeEmailMember,
+  // Onboarding
+  renderWelcomeEmailPilot,
+  renderWelcomeEmailRequester,
+  renderWelcomeEmailSubscription,
   renderWelcomeMeetFounder,
 } from './emails.js';
 

@@ -3,11 +3,8 @@
  */
 
 export const copy = {
-  preview: (recordingTitle: string) => `New recording received: ${recordingTitle}`,
+  preview: 'New recording received',
   title: 'New recording received',
-  body: [
-    (duration: string, submittedAt: string) =>
-      `A customer submitted a screen recording. Duration: ${duration}. Submitted on ${submittedAt}.`,
-  ],
+  body: ['A customer submitted a new screen recording.'],
   cta: 'View recording',
 } as const;

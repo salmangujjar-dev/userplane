@@ -12,24 +12,17 @@ import * as styles from '../../shared/styles';
 
 export interface RecordingReceivedEmailProps {
   recordingUrl?: string;
-  recordingTitle?: string;
-  submittedAt?: string;
-  duration?: string;
 }
 
 export const RecordingReceivedEmail = ({
   recordingUrl = 'https://app.userplane.io/recordings/abc123',
-  recordingTitle = 'Recording from customer',
-  submittedAt = 'January 15, 2025 at 2:30 PM',
-  duration = '1:24',
 }: RecordingReceivedEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview(recordingTitle)}>
+    <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{recordingTitle}</Text>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.messageText}>{copy.body[0](duration, submittedAt)}</Text>
+        <Text style={styles.messageText}>{copy.body[0]}</Text>
       </Section>
 
       <Section style={styles.ctaSection}>
