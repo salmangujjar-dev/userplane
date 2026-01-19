@@ -26,6 +26,7 @@ import type {
 // Auth emails
 import { AccessRequestEmail, EmailVerificationEmail, MagicLinkEmail } from './emails/auth';
 import type {
+  BillingEmailUpdatedEmailProps,
   SubscriptionActiveEmailProps,
   SubscriptionExpiredEmailProps,
   SubscriptionInactiveEmailProps,
@@ -34,6 +35,7 @@ import type {
 } from './emails/billing';
 // Billing emails
 import {
+  BillingEmailUpdatedEmail,
   SubscriptionActiveEmail,
   SubscriptionExpiredEmail,
   SubscriptionInactiveEmail,
@@ -59,6 +61,19 @@ import {
   AccountRestoredEmail,
   TosViolationEmail,
 } from './emails/offboarding';
+import type {
+  WelcomeEmailMemberProps,
+  WelcomeEmailPilotProps,
+  WelcomeEmailRequesterProps,
+  WelcomeEmailSubscriptionProps,
+} from './emails/onboarding';
+// Onboarding emails
+import {
+  WelcomeEmailMemberEmail,
+  WelcomeEmailPilotEmail,
+  WelcomeEmailRequesterEmail,
+  WelcomeEmailSubscriptionEmail,
+} from './emails/onboarding';
 import type {
   ReverseTrialOfferEmailProps,
   SandboxExpiringEmailProps,
@@ -216,6 +231,42 @@ export async function renderTrialReverseTrialOffer(
   props: TrialReverseTrialOfferEmailProps
 ): Promise<RenderResult> {
   const element = React.createElement(TrialReverseTrialOfferEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+// ============================================================================
+// ONBOARDING EMAILS
+// ============================================================================
+
+export async function renderWelcomeEmailMember(
+  props: WelcomeEmailMemberProps
+): Promise<RenderResult> {
+  const element = React.createElement(WelcomeEmailMemberEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderWelcomeEmailSubscription(
+  props: WelcomeEmailSubscriptionProps
+): Promise<RenderResult> {
+  const element = React.createElement(WelcomeEmailSubscriptionEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderWelcomeEmailPilot(
+  props: WelcomeEmailPilotProps
+): Promise<RenderResult> {
+  const element = React.createElement(WelcomeEmailPilotEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderWelcomeEmailRequester(
+  props: WelcomeEmailRequesterProps
+): Promise<RenderResult> {
+  const element = React.createElement(WelcomeEmailRequesterEmail, props);
   const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
   return { html, text };
 }
@@ -420,6 +471,14 @@ export async function renderDomainDeveloperInstructions(
 // BILLING EMAILS
 // ============================================================================
 
+export async function renderBillingEmailUpdated(
+  props: BillingEmailUpdatedEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(BillingEmailUpdatedEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
 export async function renderSubscriptionActive(
   props: SubscriptionActiveEmailProps
 ): Promise<RenderResult> {
@@ -605,6 +664,8 @@ export type {
   AccountDeletionVerificationEmailProps,
   AccountRestoredEmailProps,
   AtRiskNotEngagedEmailProps,
+  // Billing
+  BillingEmailUpdatedEmailProps,
   DeletionConfirmationEmailProps,
   DeletionRequestedEmailProps,
   // Workspace
@@ -649,7 +710,6 @@ export type {
   SeatsRequestedUpgradeEmailProps,
   // Usage - Seats
   SeatsSoftLimitEmailProps,
-  // Billing
   SubscriptionActiveEmailProps,
   SubscriptionExpiredEmailProps,
   SubscriptionInactiveEmailProps,
@@ -661,5 +721,10 @@ export type {
   TosViolationEmailProps,
   TrialReverseTrialOfferEmailProps,
   // Trial
+  WelcomeEmailMemberProps,
+  // Onboarding
+  WelcomeEmailPilotProps,
+  WelcomeEmailRequesterProps,
+  WelcomeEmailSubscriptionProps,
   WelcomeMeetFounderEmailProps,
 };
