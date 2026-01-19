@@ -560,19 +560,17 @@ const deactivateWorkspaceImpl = (
       // Calculate scheduled time based on notify duration
       const scheduledAt = calculateScheduledTime(notify);
 
-      // Send deletion scheduled email to workspace owners
+      // Send deletion scheduled email to workspace owners using batch
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      await Promise.allSettled(
-        owners.map((owner) =>
-          emailService.sendSafeWorkspaceDeletionScheduled({
-            to: owner.email,
-            workspaceName: workspaceInfo.workspaceName,
-            deletionDate: formattedDeletionDate,
-            cancelUrl,
-            scheduledAt,
-          })
-        )
-      );
+      const ownerEmails = owners.map((owner) => owner.email);
+      await emailService.sendSafeWorkspaceDeletionScheduled({
+        to: ownerEmails,
+        batch: ownerEmails.length > 1,
+        workspaceName: workspaceInfo.workspaceName,
+        deletionDate: formattedDeletionDate,
+        cancelUrl,
+        scheduledAt,
+      });
     }
 
     return {
@@ -607,22 +605,20 @@ const restoreWorkspaceImpl = (
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
       const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
 
-      // Send appropriate email based on restoration status
+      // Send appropriate email based on restoration status using batch
+      const ownerEmails = owners.map((owner) => owner.email);
       const emailMethod =
         result.restorationStatus === 'partial'
           ? emailService.sendSafeWorkspaceRecoveryPartially
           : emailService.sendSafeWorkspaceRecoveryConfirmation;
 
-      await Promise.allSettled(
-        owners.map((owner) =>
-          emailMethod.call(emailService, {
-            to: owner.email,
-            workspaceName: result.workspace.workspaceName,
-            dashboardUrl,
-            scheduledAt,
-          })
-        )
-      );
+      await emailMethod.call(emailService, {
+        to: ownerEmails,
+        batch: ownerEmails.length > 1,
+        workspaceName: result.workspace.workspaceName,
+        dashboardUrl,
+        scheduledAt,
+      });
     }
 
     return {
@@ -678,19 +674,17 @@ const deactivateProjectImpl = (
       // Calculate scheduled time based on notify duration
       const scheduledAt = calculateScheduledTime(notify);
 
-      // Send deletion scheduled email to workspace owners
+      // Send deletion scheduled email to workspace owners using batch
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      await Promise.allSettled(
-        owners.map((owner) =>
-          emailService.sendSafeProjectDeletionScheduled({
-            to: owner.email,
-            projectName: project.projectTitle || 'Untitled Project',
-            deletionDate: formattedDeletionDate,
-            cancelUrl,
-            scheduledAt,
-          })
-        )
-      );
+      const ownerEmails = owners.map((owner) => owner.email);
+      await emailService.sendSafeProjectDeletionScheduled({
+        to: ownerEmails,
+        batch: ownerEmails.length > 1,
+        projectName: project.projectTitle || 'Untitled Project',
+        deletionDate: formattedDeletionDate,
+        cancelUrl,
+        scheduledAt,
+      });
     }
 
     return {
@@ -729,21 +723,19 @@ const restoreProjectImpl = (
       const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
 
       // Send appropriate email based on restoration status
+      const ownerEmails = owners.map((owner) => owner.email);
       const emailMethod =
         restoredProject.restorationStatus === 'partial'
           ? emailService.sendSafeProjectRecoveryPartially
           : emailService.sendSafeProjectRecoveryConfirmation;
 
-      await Promise.allSettled(
-        owners.map((owner) =>
-          emailMethod.call(emailService, {
-            to: owner.email,
-            projectName: restoredProject.projectTitle,
-            dashboardUrl,
-            scheduledAt,
-          })
-        )
-      );
+      await emailMethod.call(emailService, {
+        to: ownerEmails,
+        batch: ownerEmails.length > 1,
+        projectName: restoredProject.projectTitle,
+        dashboardUrl,
+        scheduledAt,
+      });
     }
 
     return {

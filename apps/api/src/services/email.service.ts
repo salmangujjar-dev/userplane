@@ -107,6 +107,37 @@ import {
   inviteFrom,
   notificationFrom,
 } from '@/api/utils/email-from';
+import {
+  accessRequestKey,
+  accountDeletionKey,
+  accountDeletionVerificationKey,
+  accountRestoredKey,
+  billingEmailUpdatedKey,
+  billingEmailVerificationKey,
+  domainInstructionsKey,
+  emailVerificationKey,
+  magicLinkKey,
+  pilotSandboxInviteKey,
+  projectDeletionScheduledKey,
+  projectRecoveryConfirmationKey,
+  projectRecoveryPartiallyKey,
+  recordingReceivedKey,
+  subscriptionActiveKey,
+  subscriptionExpiredKey,
+  subscriptionInactiveKey,
+  subscriptionPlanChangeKey,
+  subscriptionReverseTrialKey,
+  teammateInvitedKey,
+  teammateJoinedKey,
+  tosViolationKey,
+  welcomeEmailMemberKey,
+  welcomeEmailPilotKey,
+  welcomeEmailRequesterKey,
+  welcomeEmailSubscriptionKey,
+  workspaceDeletionScheduledKey,
+  workspaceRecoveryConfirmationKey,
+  workspaceRecoveryPartiallyKey,
+} from '@/api/utils/idempotency-key';
 
 const logger = createAppLogger('email-service');
 
@@ -152,7 +183,10 @@ export class EmailService {
    * @private Use sendSafeEmailVerification instead
    */
   private async sendEmailVerification(params: EmailVerificationEmailParams): Promise<void> {
-    const idempotencyKey = `email-verification/${params.to}/${Date.now()}`;
+    const idempotencyKey = emailVerificationKey({
+      to: params.to,
+      timestamp: Date.now(),
+    });
 
     const { html, text } = await renderEmailVerification({
       userName: params.userName,
@@ -196,7 +230,10 @@ export class EmailService {
    * @private Use sendSafeMagicLink instead
    */
   private async sendMagicLink(params: MagicLinkEmailParams): Promise<void> {
-    const idempotencyKey = `magic-link/${params.to}/${Date.now()}`;
+    const idempotencyKey = magicLinkKey({
+      to: params.to,
+      timestamp: Date.now(),
+    });
 
     const { html, text } = await renderMagicLink({
       magicLinkUrl: params.magicLinkUrl,
@@ -239,7 +276,11 @@ export class EmailService {
    * @private Use sendSafeAccessRequest instead
    */
   private async sendAccessRequest(params: AccessRequestEmailParams): Promise<void> {
-    const idempotencyKey = `access-request/${params.workspaceName}/${params.requesterEmail}/${params.to}`;
+    const idempotencyKey = accessRequestKey({
+      workspaceName: params.workspaceName,
+      requesterEmail: params.requesterEmail,
+      to: params.to,
+    });
 
     const { html, text } = await renderAccessRequest({
       workspaceName: params.workspaceName,
@@ -294,7 +335,10 @@ export class EmailService {
    * @private Use sendSafeBillingEmailUpdated instead
    */
   private async sendBillingEmailUpdated(params: BillingEmailUpdatedEmailParams): Promise<void> {
-    const idempotencyKey = `billing-email-updated/${params.to}/${params.newEmail}`;
+    const idempotencyKey = billingEmailUpdatedKey({
+      to: params.to,
+      newEmail: params.newEmail,
+    });
 
     const { html, text } = await renderBillingEmailUpdated({
       previousEmail: params.previousEmail,
@@ -344,7 +388,10 @@ export class EmailService {
   private async sendBillingEmailVerification(
     params: BillingEmailVerificationEmailParams
   ): Promise<void> {
-    const idempotencyKey = `billing-email-verification/${params.to}/${Date.now()}`;
+    const idempotencyKey = billingEmailVerificationKey({
+      to: params.to,
+      timestamp: Date.now(),
+    });
 
     const { html, text } = await renderBillingEmailVerification({
       workspaceName: params.workspaceName,
@@ -391,7 +438,10 @@ export class EmailService {
    * @private Use sendSafeSubscriptionActive instead
    */
   private async sendSubscriptionActive(params: SubscriptionActiveEmailParams): Promise<void> {
-    const idempotencyKey = `subscription-active/${params.to}/${params.planName}`;
+    const idempotencyKey = subscriptionActiveKey({
+      to: params.to,
+      planName: params.planName,
+    });
 
     const { html, text } = await renderSubscriptionActive({
       planName: params.planName,
@@ -437,7 +487,10 @@ export class EmailService {
    * @private Use sendSafeSubscriptionExpired instead
    */
   private async sendSubscriptionExpired(params: SubscriptionExpiredEmailParams): Promise<void> {
-    const idempotencyKey = `subscription-expired/${params.to}/${params.planName}`;
+    const idempotencyKey = subscriptionExpiredKey({
+      to: params.to,
+      planName: params.planName,
+    });
 
     const { html, text } = await renderSubscriptionExpired({
       planName: params.planName,
@@ -482,7 +535,10 @@ export class EmailService {
    * @private Use sendSafeSubscriptionInactive instead
    */
   private async sendSubscriptionInactive(params: SubscriptionInactiveEmailParams): Promise<void> {
-    const idempotencyKey = `subscription-inactive/${params.to}/${params.planName}`;
+    const idempotencyKey = subscriptionInactiveKey({
+      to: params.to,
+      planName: params.planName,
+    });
 
     const { html, text } = await renderSubscriptionInactive({
       planName: params.planName,
@@ -529,7 +585,10 @@ export class EmailService {
   private async sendSubscriptionPlanChange(
     params: SubscriptionPlanChangeEmailParams
   ): Promise<void> {
-    const idempotencyKey = `subscription-plan-change/${params.to}/${params.newPlan}`;
+    const idempotencyKey = subscriptionPlanChangeKey({
+      to: params.to,
+      newPlan: params.newPlan,
+    });
 
     const { html, text } = await renderSubscriptionPlanChange({
       previousPlan: params.previousPlan,
@@ -579,7 +638,9 @@ export class EmailService {
   private async sendSubscriptionReverseTrial(
     params: SubscriptionReverseTrialEmailParams
   ): Promise<void> {
-    const idempotencyKey = `subscription-reverse-trial/${params.to}`;
+    const idempotencyKey = subscriptionReverseTrialKey({
+      to: params.to,
+    });
 
     const { html, text } = await renderSubscriptionReverseTrial({
       planName: params.planName,
@@ -636,7 +697,11 @@ export class EmailService {
   private async sendDomainDeveloperInstructions(
     params: DomainDeveloperInstructionsEmailParams
   ): Promise<void> {
-    const idempotencyKey = `domain-instructions/${params.domainName}/${params.to}`;
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const idempotencyKey = domainInstructionsKey({
+      domainName: params.domainName,
+      recipients,
+    });
 
     const { html, text } = await renderDomainDeveloperInstructions({
       domainName: params.domainName,
@@ -651,6 +716,7 @@ export class EmailService {
         subject: domainDeveloperInstructionsSubject(params.domainName),
         html,
         text,
+        batch: params.batch,
       },
       {
         idempotencyKey,
@@ -662,8 +728,11 @@ export class EmailService {
         to: params.to,
         domainName: params.domainName,
         provider: emailClient.getProvider(),
+        batch: params.batch && recipients.length > 1,
       },
-      'Domain developer instructions sent'
+      params.batch && recipients.length > 1
+        ? 'Domain developer instructions sent via batch'
+        : 'Domain developer instructions sent'
     );
   }
 
@@ -688,7 +757,11 @@ export class EmailService {
    * @private Use sendSafeTeammateInvited instead
    */
   private async sendTeammateInvited(params: TeammateInvitedEmailParams): Promise<void> {
-    const idempotencyKey = `teammate-invited/${params.workspaceName}/${params.to}`;
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const idempotencyKey = teammateInvitedKey({
+      workspaceName: params.workspaceName,
+      recipients,
+    });
 
     const { html, text } = await renderTeammateInvited({
       inviterName: params.inviterName,
@@ -708,6 +781,7 @@ export class EmailService {
         }),
         html,
         text,
+        batch: params.batch,
       },
       {
         idempotencyKey,
@@ -720,8 +794,11 @@ export class EmailService {
         workspaceName: params.workspaceName,
         inviterName: params.inviterName,
         provider: emailClient.getProvider(),
+        batch: params.batch && recipients.length > 1,
       },
-      'Teammate invited email sent'
+      params.batch && recipients.length > 1
+        ? 'Teammate invited emails sent via batch'
+        : 'Teammate invited email sent'
     );
   }
 
@@ -739,7 +816,12 @@ export class EmailService {
    * @private Use sendSafeTeammateJoined instead
    */
   private async sendTeammateJoined(params: TeammateJoinedEmailParams): Promise<void> {
-    const idempotencyKey = `teammate-joined/${params.workspaceName}/${params.to}/${params.memberEmail}`;
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const idempotencyKey = teammateJoinedKey({
+      workspaceName: params.workspaceName,
+      recipients,
+      memberEmail: params.memberEmail,
+    });
 
     const { html, text } = await renderTeammateJoined({
       memberName: params.memberName,
@@ -759,6 +841,7 @@ export class EmailService {
         }),
         html,
         text,
+        batch: params.batch,
       },
       {
         idempotencyKey,
@@ -772,8 +855,11 @@ export class EmailService {
         memberName: params.memberName,
         memberEmail: params.memberEmail,
         provider: emailClient.getProvider(),
+        batch: params.batch && recipients.length > 1,
       },
-      'Teammate joined email sent'
+      params.batch && recipients.length > 1
+        ? 'Teammate joined emails sent via batch'
+        : 'Teammate joined email sent'
     );
   }
 
@@ -794,7 +880,9 @@ export class EmailService {
    * @private Use sendSafeAccountDeletion instead
    */
   private async sendAccountDeletion(params: AccountDeletionEmailParams): Promise<void> {
-    const idempotencyKey = `account-deletion/${params.to}`;
+    const idempotencyKey = accountDeletionKey({
+      to: params.to,
+    });
 
     const { html, text } = await renderAccountDeletion({
       userName: params.userName,
@@ -840,7 +928,10 @@ export class EmailService {
   private async sendAccountDeletionVerification(
     params: AccountDeletionVerificationEmailParams
   ): Promise<void> {
-    const idempotencyKey = `account-deletion-verification/${params.to}/${Date.now()}`;
+    const idempotencyKey = accountDeletionVerificationKey({
+      to: params.to,
+      timestamp: Date.now(),
+    });
 
     const { html, text } = await renderAccountDeletionVerification({
       userName: params.userName,
@@ -887,7 +978,9 @@ export class EmailService {
    * @private Use sendSafeAccountRestored instead
    */
   private async sendAccountRestored(params: AccountRestoredEmailParams): Promise<void> {
-    const idempotencyKey = `account-restored/${params.to}`;
+    const idempotencyKey = accountRestoredKey({
+      to: params.to,
+    });
 
     const { html, text } = await renderAccountRestored({
       userName: params.userName,
@@ -930,7 +1023,9 @@ export class EmailService {
    * @private Use sendSafeTosViolation instead
    */
   private async sendTosViolation(params: TosViolationEmailParams): Promise<void> {
-    const idempotencyKey = `tos-violation/${params.to}`;
+    const idempotencyKey = tosViolationKey({
+      to: params.to,
+    });
 
     const { html, text } = await renderTosViolation({
       userName: params.userName,
@@ -979,7 +1074,10 @@ export class EmailService {
    * @private Use sendSafePilotSandboxInvite instead
    */
   private async sendPilotSandboxInvite(params: PilotSandboxInviteEmailParams): Promise<void> {
-    const idempotencyKey = `pilot-sandbox-invite/${params.to}${params.scheduledAt ? `/${params.scheduledAt}` : ''}`;
+    const idempotencyKey = pilotSandboxInviteKey({
+      to: params.to,
+      scheduledAt: params.scheduledAt,
+    });
 
     const { html, text } = await renderSandboxInvite({
       sandboxUrl: params.sandboxUrl,
@@ -1033,7 +1131,10 @@ export class EmailService {
    * @private Use sendSafeRecordingReceived instead
    */
   private async sendRecordingReceived(params: RecordingReceivedEmailParams): Promise<void> {
-    const idempotencyKey = `recording-received/${params.to}/${params.recordingUrl}`;
+    const idempotencyKey = recordingReceivedKey({
+      to: params.to,
+      recordingUrl: params.recordingUrl,
+    });
 
     const { html, text } = await renderRecordingReceived({
       recordingUrl: params.recordingUrl,
@@ -1081,7 +1182,10 @@ export class EmailService {
    * @private Use sendSafeWelcomeEmailMember instead
    */
   private async sendWelcomeEmailMember(params: WelcomeEmailMemberParams): Promise<void> {
-    const idempotencyKey = `welcome-email-member/${params.to}/${params.workspaceName}`;
+    const idempotencyKey = welcomeEmailMemberKey({
+      to: params.to,
+      workspaceName: params.workspaceName,
+    });
 
     const { html, text } = await renderWelcomeEmailMember({
       userName: params.userName,
@@ -1131,7 +1235,9 @@ export class EmailService {
   private async sendWelcomeEmailSubscription(
     params: WelcomeEmailSubscriptionParams
   ): Promise<void> {
-    const idempotencyKey = `welcome-email-subscription/${params.to}`;
+    const idempotencyKey = welcomeEmailSubscriptionKey({
+      to: params.to,
+    });
 
     const { html, text } = await renderWelcomeEmailSubscription({
       userName: params.userName,
@@ -1179,7 +1285,9 @@ export class EmailService {
    * @private Use sendSafeWelcomeEmailPilot instead
    */
   private async sendWelcomeEmailPilot(params: WelcomeEmailPilotParams): Promise<void> {
-    const idempotencyKey = `welcome-email-pilot/${params.to}`;
+    const idempotencyKey = welcomeEmailPilotKey({
+      to: params.to,
+    });
 
     const { html, text } = await renderWelcomeEmailPilot({
       userName: params.userName,
@@ -1228,7 +1336,10 @@ export class EmailService {
    * @private Use sendSafeWelcomeEmailRequester instead
    */
   private async sendWelcomeEmailRequester(params: WelcomeEmailRequesterParams): Promise<void> {
-    const idempotencyKey = `welcome-email-requester/${params.to}/${params.workspaceName}`;
+    const idempotencyKey = welcomeEmailRequesterKey({
+      to: params.to,
+      workspaceName: params.workspaceName,
+    });
 
     const { html, text } = await renderWelcomeEmailRequester({
       userName: params.userName,
@@ -1281,7 +1392,11 @@ export class EmailService {
   private async sendWorkspaceDeletionScheduled(
     params: WorkspaceDeletionScheduledEmailParams
   ): Promise<void> {
-    const idempotencyKey = `workspace-deletion-scheduled/${params.workspaceName}/${params.to}`;
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const idempotencyKey = workspaceDeletionScheduledKey({
+      workspaceName: params.workspaceName,
+      recipients,
+    });
 
     const { html, text } = await renderDeletionScheduled({
       workspaceName: params.workspaceName,
@@ -1299,6 +1414,7 @@ export class EmailService {
         }),
         html,
         text,
+        batch: params.batch,
       },
       {
         idempotencyKey,
@@ -1312,8 +1428,11 @@ export class EmailService {
         workspaceName: params.workspaceName,
         deletionDate: params.deletionDate,
         provider: emailClient.getProvider(),
+        batch: params.batch && recipients.length > 1,
       },
-      'Workspace deletion scheduled email sent'
+      params.batch && recipients.length > 1
+        ? 'Workspace deletion scheduled emails sent via batch'
+        : 'Workspace deletion scheduled email sent'
     );
   }
 
@@ -1336,7 +1455,11 @@ export class EmailService {
   private async sendWorkspaceRecoveryConfirmation(
     params: WorkspaceRecoveryConfirmationEmailParams
   ): Promise<void> {
-    const idempotencyKey = `workspace-recovery-confirmation/${params.workspaceName}/${params.to}`;
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const idempotencyKey = workspaceRecoveryConfirmationKey({
+      workspaceName: params.workspaceName,
+      recipients,
+    });
 
     const { html, text } = await renderRecoveryConfirmation({
       workspaceName: params.workspaceName,
@@ -1350,6 +1473,7 @@ export class EmailService {
         subject: workspaceRecoveryConfirmationSubject(params.workspaceName),
         html,
         text,
+        batch: params.batch,
       },
       {
         idempotencyKey,
@@ -1362,8 +1486,11 @@ export class EmailService {
         to: params.to,
         workspaceName: params.workspaceName,
         provider: emailClient.getProvider(),
+        batch: params.batch && recipients.length > 1,
       },
-      'Workspace recovery confirmation email sent'
+      params.batch && recipients.length > 1
+        ? 'Workspace recovery confirmation emails sent via batch'
+        : 'Workspace recovery confirmation email sent'
     );
   }
 
@@ -1386,7 +1513,11 @@ export class EmailService {
   private async sendWorkspaceRecoveryPartially(
     params: WorkspaceRecoveryPartiallyEmailParams
   ): Promise<void> {
-    const idempotencyKey = `workspace-recovery-partially/${params.workspaceName}/${params.to}`;
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const idempotencyKey = workspaceRecoveryPartiallyKey({
+      workspaceName: params.workspaceName,
+      recipients,
+    });
 
     const { html, text } = await renderRecoveryPartially({
       workspaceName: params.workspaceName,
@@ -1400,6 +1531,7 @@ export class EmailService {
         subject: workspaceRecoveryPartiallySubject(params.workspaceName),
         html,
         text,
+        batch: params.batch,
       },
       {
         idempotencyKey,
@@ -1412,8 +1544,11 @@ export class EmailService {
         to: params.to,
         workspaceName: params.workspaceName,
         provider: emailClient.getProvider(),
+        batch: params.batch && recipients.length > 1,
       },
-      'Workspace recovery partially email sent'
+      params.batch && recipients.length > 1
+        ? 'Workspace recovery partially emails sent via batch'
+        : 'Workspace recovery partially email sent'
     );
   }
 
@@ -1440,7 +1575,11 @@ export class EmailService {
   private async sendProjectDeletionScheduled(
     params: ProjectDeletionScheduledEmailParams
   ): Promise<void> {
-    const idempotencyKey = `project-deletion-scheduled/${params.projectName}/${params.to}`;
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const idempotencyKey = projectDeletionScheduledKey({
+      projectName: params.projectName,
+      recipients,
+    });
 
     const { html, text } = await renderProjectDeletionScheduled({
       projectName: params.projectName,
@@ -1458,6 +1597,7 @@ export class EmailService {
         }),
         html,
         text,
+        batch: params.batch,
       },
       {
         idempotencyKey,
@@ -1471,8 +1611,11 @@ export class EmailService {
         projectName: params.projectName,
         deletionDate: params.deletionDate,
         provider: emailClient.getProvider(),
+        batch: params.batch && recipients.length > 1,
       },
-      'Project deletion scheduled email sent'
+      params.batch && recipients.length > 1
+        ? 'Project deletion scheduled emails sent via batch'
+        : 'Project deletion scheduled email sent'
     );
   }
 
@@ -1495,7 +1638,11 @@ export class EmailService {
   private async sendProjectRecoveryConfirmation(
     params: ProjectRecoveryConfirmationEmailParams
   ): Promise<void> {
-    const idempotencyKey = `project-recovery-confirmation/${params.projectName}/${params.to}`;
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const idempotencyKey = projectRecoveryConfirmationKey({
+      projectName: params.projectName,
+      recipients,
+    });
 
     const { html, text } = await renderProjectRecoveryConfirmation({
       projectName: params.projectName,
@@ -1509,6 +1656,7 @@ export class EmailService {
         subject: projectRecoveryConfirmationSubject(params.projectName),
         html,
         text,
+        batch: params.batch,
       },
       {
         idempotencyKey,
@@ -1521,8 +1669,11 @@ export class EmailService {
         to: params.to,
         projectName: params.projectName,
         provider: emailClient.getProvider(),
+        batch: params.batch && recipients.length > 1,
       },
-      'Project recovery confirmation email sent'
+      params.batch && recipients.length > 1
+        ? 'Project recovery confirmation emails sent via batch'
+        : 'Project recovery confirmation email sent'
     );
   }
 
@@ -1545,7 +1696,11 @@ export class EmailService {
   private async sendProjectRecoveryPartially(
     params: ProjectRecoveryPartiallyEmailParams
   ): Promise<void> {
-    const idempotencyKey = `project-recovery-partially/${params.projectName}/${params.to}`;
+    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const idempotencyKey = projectRecoveryPartiallyKey({
+      projectName: params.projectName,
+      recipients,
+    });
 
     const { html, text } = await renderProjectRecoveryPartially({
       projectName: params.projectName,
@@ -1559,6 +1714,7 @@ export class EmailService {
         subject: projectRecoveryPartiallySubject(params.projectName),
         html,
         text,
+        batch: params.batch,
       },
       {
         idempotencyKey,
@@ -1571,8 +1727,11 @@ export class EmailService {
         to: params.to,
         projectName: params.projectName,
         provider: emailClient.getProvider(),
+        batch: params.batch && recipients.length > 1,
       },
-      'Project recovery partially email sent'
+      params.batch && recipients.length > 1
+        ? 'Project recovery partially emails sent via batch'
+        : 'Project recovery partially email sent'
     );
   }
 
