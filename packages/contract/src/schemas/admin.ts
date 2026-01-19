@@ -427,6 +427,11 @@ export const AdminDeactivateWorkspaceInputSchema = z.object({
   params: z.object({
     workspaceId: WorkspaceIdSchema,
   }),
+  body: z
+    .object({
+      notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES).optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -436,6 +441,11 @@ export const AdminRestoreWorkspaceInputSchema = z.object({
   params: z.object({
     workspaceId: WorkspaceIdSchema,
   }),
+  body: z
+    .object({
+      notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES).optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -460,6 +470,11 @@ export const AdminDeactivateProjectInputSchema = z.object({
     workspaceId: WorkspaceIdSchema,
     projectId: ProjectIdSchema,
   }),
+  body: z
+    .object({
+      notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES).optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -478,6 +493,11 @@ export const AdminRestoreProjectInputSchema = z.object({
     workspaceId: WorkspaceIdSchema,
     projectId: ProjectIdSchema,
   }),
+  body: z
+    .object({
+      notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES).optional(),
+    })
+    .optional(),
 });
 
 /**

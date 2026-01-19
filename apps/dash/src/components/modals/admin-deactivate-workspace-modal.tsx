@@ -1,5 +1,6 @@
 'use client';
 
+import { ADMIN_NOTIFY_DURATION_OPTIONS, type AdminNotifyDuration } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -11,6 +12,13 @@ import {
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
 import { useEffect, useState } from 'react';
 
 interface Workspace {
@@ -22,7 +30,7 @@ interface AdminDeactivateWorkspaceModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workspace: Workspace | null;
-  onConfirm: () => void;
+  onConfirm: (notify?: AdminNotifyDuration) => void;
   isPending: boolean;
 }
 
@@ -38,10 +46,12 @@ export function AdminDeactivateWorkspaceModal({
   isPending,
 }: AdminDeactivateWorkspaceModalProps) {
   const [confirmationInput, setConfirmationInput] = useState('');
+  const [notify, setNotify] = useState<AdminNotifyDuration>('never');
 
   useEffect(() => {
     if (!open) {
       setConfirmationInput('');
+      setNotify('never');
     }
   }, [open]);
 
@@ -51,7 +61,7 @@ export function AdminDeactivateWorkspaceModal({
 
   const handleConfirm = () => {
     if (isConfirmed) {
-      onConfirm();
+      onConfirm(notify);
     }
   };
 
@@ -106,20 +116,44 @@ export function AdminDeactivateWorkspaceModal({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="workspace-id-confirm" className="mb-2 block">
-              Type <strong>{workspace.workspaceId}</strong> to confirm
-            </Label>
-            <Input
-              id="workspace-id-confirm"
-              type="text"
-              placeholder="Enter workspace ID"
-              value={confirmationInput}
-              onChange={(e) => setConfirmationInput(e.target.value)}
-              disabled={isPending}
-              className="font-mono"
-              autoComplete="off"
-            />
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="notify" className="mb-2 block">
+                Notify workspace owners
+              </Label>
+              <Select
+                value={notify}
+                onValueChange={(value) => setNotify(value as AdminNotifyDuration)}
+                disabled={isPending}
+              >
+                <SelectTrigger id="notify" className="rounded-lg">
+                  <SelectValue placeholder="Select notification option" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ADMIN_NOTIFY_DURATION_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="workspace-id-confirm" className="mb-2 block">
+                Type <strong>{workspace.workspaceId}</strong> to confirm
+              </Label>
+              <Input
+                id="workspace-id-confirm"
+                type="text"
+                placeholder="Enter workspace ID"
+                value={confirmationInput}
+                onChange={(e) => setConfirmationInput(e.target.value)}
+                disabled={isPending}
+                className="font-mono"
+                autoComplete="off"
+              />
+            </div>
           </div>
         </div>
 

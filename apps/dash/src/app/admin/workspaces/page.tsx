@@ -4,6 +4,7 @@ import {
   ADMIN_WORKSPACE_SORT_OPTIONS,
   ADMIN_WORKSPACE_STATUS_OPTIONS,
   ADMIN_WORKSPACES_PAGINATION,
+  type AdminNotifyDuration,
   SORT_DIRECTION_OPTIONS,
 } from '@workspace/contract';
 import type { PlanId } from '@workspace/pricing';
@@ -218,10 +219,10 @@ function AdminRecordingsPageContent() {
     setWorkspaceToDeactivate({ workspaceId, workspaceName });
   };
 
-  const confirmDeactivate = () => {
+  const confirmDeactivate = (notify?: AdminNotifyDuration) => {
     if (workspaceToDeactivate) {
       deactivateMutation.mutate(
-        { workspaceId: workspaceToDeactivate.workspaceId },
+        { workspaceId: workspaceToDeactivate.workspaceId, notify },
         { onSuccess: () => setWorkspaceToDeactivate(null) }
       );
     }
@@ -231,10 +232,10 @@ function AdminRecordingsPageContent() {
     setWorkspaceToRestore({ workspaceId, workspaceName });
   };
 
-  const confirmRestore = () => {
+  const confirmRestore = (notify?: AdminNotifyDuration) => {
     if (workspaceToRestore) {
       restoreMutation.mutate(
-        { workspaceId: workspaceToRestore.workspaceId },
+        { workspaceId: workspaceToRestore.workspaceId, notify },
         { onSuccess: () => setWorkspaceToRestore(null) }
       );
     }
