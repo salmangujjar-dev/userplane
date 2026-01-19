@@ -10,6 +10,7 @@ import {
   renderAccountDeletionVerification,
   renderAccountRestored,
   renderBillingEmailUpdated,
+  renderBillingEmailVerification,
   renderDeletionScheduled,
   renderDomainDeveloperInstructions,
   renderEmailVerification,
@@ -43,6 +44,7 @@ import {
   accountDeletionVerificationSubject,
   accountRestoredSubject,
   billingEmailUpdatedSubject,
+  billingEmailVerificationSubject,
   domainDeveloperInstructionsSubject,
   emailVerificationSubject,
   magicLinkSubject,
@@ -73,6 +75,7 @@ import type {
   AccountDeletionVerificationEmailParams,
   AccountRestoredEmailParams,
   BillingEmailUpdatedEmailParams,
+  BillingEmailVerificationEmailParams,
   DomainDeveloperInstructionsEmailParams,
   EmailVerificationEmailParams,
   MagicLinkEmailParams,
@@ -330,6 +333,56 @@ export class EmailService {
   async sendSafeBillingEmailUpdated(params: BillingEmailUpdatedEmailParams): Promise<void> {
     await this.executeSafely('sendBillingEmailUpdated', params, () =>
       this.sendBillingEmailUpdated(params)
+    );
+  }
+
+  /**
+   * Send billing email verification request
+   * Sent when workspace billing email change is requested
+   * @private Use sendSafeBillingEmailVerification instead
+   */
+  private async sendBillingEmailVerification(
+    params: BillingEmailVerificationEmailParams
+  ): Promise<void> {
+    const idempotencyKey = `billing-email-verification/${params.to}/${Date.now()}`;
+
+    const { html, text } = await renderBillingEmailVerification({
+      workspaceName: params.workspaceName,
+      verificationUrl: params.verificationUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: billingFrom(),
+        to: params.to,
+        subject: billingEmailVerificationSubject,
+        html,
+        text,
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: params.to,
+        workspaceName: params.workspaceName,
+        provider: emailClient.getProvider(),
+      },
+      'Billing email verification sent'
+    );
+  }
+
+  /**
+   * Safe version: Send billing email verification request
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeBillingEmailVerification(
+    params: BillingEmailVerificationEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendBillingEmailVerification', params, () =>
+      this.sendBillingEmailVerification(params)
     );
   }
 

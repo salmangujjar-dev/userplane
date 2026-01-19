@@ -9,6 +9,7 @@ import jwt, { type SignOptions } from 'jsonwebtoken';
 import { env } from '@/api/env';
 import type {
   AccessRequestTokenPayload,
+  BillingEmailVerificationTokenPayload,
   DomainVerificationTokenPayload,
   InviteTokenPayload,
   WorkspaceCreateInviteTokenPayload,
@@ -20,6 +21,10 @@ export class TokenService {
   private expiresIn: number;
   private domainVerificationSecret: string;
   private jwtIssuer: string;
+  private domainVerificationExpiresIn: number;
+  private accessRequestExpiresIn: number;
+  private workspaceCreateInviteExpiresIn: number;
+  private billingEmailVerificationExpiresIn: number;
 
   constructor(config: {
     jwtSecret: string;
@@ -27,12 +32,20 @@ export class TokenService {
     expiresIn: number;
     domainVerificationSecret: string;
     jwtIssuer: string;
+    domainVerificationExpiresIn: number;
+    accessRequestExpiresIn: number;
+    workspaceCreateInviteExpiresIn: number;
+    billingEmailVerificationExpiresIn: number;
   }) {
     this.jwtSecret = config.jwtSecret;
     this.appUrl = config.appUrl;
     this.expiresIn = config.expiresIn;
     this.domainVerificationSecret = config.domainVerificationSecret;
     this.jwtIssuer = config.jwtIssuer;
+    this.domainVerificationExpiresIn = config.domainVerificationExpiresIn;
+    this.accessRequestExpiresIn = config.accessRequestExpiresIn;
+    this.workspaceCreateInviteExpiresIn = config.workspaceCreateInviteExpiresIn;
+    this.billingEmailVerificationExpiresIn = config.billingEmailVerificationExpiresIn;
   }
 
   /**
@@ -67,7 +80,8 @@ export class TokenService {
 
   /**
    * Generate domain verification token for recorder script
-   * Token expires in 5 minutes and contains workspace ID, domain ID, and domain URL
+   * Token expires based on domainVerificationExpiresIn config (default 5 minutes)
+   * Contains workspace ID, domain ID, and domain URL
    */
   generateDomainVerificationToken(workspaceId: string, domainId: string, url: string): string {
     const payload: DomainVerificationTokenPayload = {
@@ -76,7 +90,7 @@ export class TokenService {
       domainId,
       url,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 300, // 5 minutes
+      exp: Math.floor(Date.now() / 1000) + this.domainVerificationExpiresIn,
     };
     return jwt.sign(payload, this.domainVerificationSecret, { algorithm: 'HS256' });
   }
@@ -102,7 +116,8 @@ export class TokenService {
 
   /**
    * Generate access request URL for workspace access requests
-   * Token expires in 7 days and contains workspace ID, owner ID, user ID, and user email
+   * Token expires based on accessRequestExpiresIn config (default 7 days)
+   * Contains workspace ID, owner ID, user ID, and user email
    * Each owner gets a unique token that only they can use
    * URL points to dashboard app where owner can review and approve/decline
    */
@@ -123,7 +138,7 @@ export class TokenService {
       iss: this.jwtIssuer,
       ...payload,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+      exp: Math.floor(Date.now() / 1000) + this.accessRequestExpiresIn,
     };
 
     const token = jwt.sign(fullPayload, this.jwtSecret, { algorithm: 'HS256' });
@@ -152,7 +167,8 @@ export class TokenService {
 
   /**
    * Generate workspace create invite URL for admin provisioning
-   * Token expires in 7 days and contains predetermined workspace ID, URL, and plan
+   * Token expires based on workspaceCreateInviteExpiresIn config (default 7 days)
+   * Contains predetermined workspace ID, URL, and plan
    * URL points to workspace creation flow with invite token
    */
   generateWorkspaceCreateInviteUrl(params: {
@@ -170,7 +186,7 @@ export class TokenService {
       iss: this.jwtIssuer,
       ...payload,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+      exp: Math.floor(Date.now() / 1000) + this.workspaceCreateInviteExpiresIn,
     };
 
     const token = jwt.sign(fullPayload, this.jwtSecret, { algorithm: 'HS256' });
@@ -196,6 +212,54 @@ export class TokenService {
       return null;
     }
   }
+
+  /**
+   * Generate billing email verification URL
+   * Token expires based on billingEmailVerificationExpiresIn config (default 10 minutes)
+   * Contains workspace ID, member ID, and new billing email
+   * URL points to dashboard app where the verification will be processed
+   */
+  generateBillingEmailVerificationUrl(
+    workspaceId: string,
+    memberId: string,
+    billingEmail: string
+  ): string {
+    const payload: Omit<BillingEmailVerificationTokenPayload, 'iss' | 'iat' | 'exp'> = {
+      wi: workspaceId,
+      mi: memberId,
+      be: billingEmail,
+    };
+
+    const fullPayload: BillingEmailVerificationTokenPayload = {
+      iss: this.jwtIssuer,
+      ...payload,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + this.billingEmailVerificationExpiresIn,
+    };
+
+    const token = jwt.sign(fullPayload, this.jwtSecret, { algorithm: 'HS256' });
+
+    return `${this.appUrl}/billing-email/verify?token=${token}`;
+  }
+
+  /**
+   * Verify and decode billing email verification JWT
+   * Returns payload if valid, null if invalid or expired
+   */
+  verifyBillingEmailVerificationToken(token: string): BillingEmailVerificationTokenPayload | null {
+    try {
+      const payload = jwt.verify(token, this.jwtSecret, {
+        algorithms: ['HS256'],
+      }) as BillingEmailVerificationTokenPayload;
+      // Verify issuer
+      if (payload.iss !== this.jwtIssuer) {
+        return null;
+      }
+      return payload;
+    } catch {
+      return null;
+    }
+  }
 }
 
 export const tokenService = new TokenService({
@@ -204,4 +268,8 @@ export const tokenService = new TokenService({
   expiresIn: env.invite.expiresIn,
   domainVerificationSecret: env.recorder.secret,
   jwtIssuer: env.jwtIssuer,
+  domainVerificationExpiresIn: env.token.domainVerificationExpiresIn,
+  accessRequestExpiresIn: env.token.accessRequestExpiresIn,
+  workspaceCreateInviteExpiresIn: env.token.workspaceCreateInviteExpiresIn,
+  billingEmailVerificationExpiresIn: env.token.billingEmailVerificationExpiresIn,
 });

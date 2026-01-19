@@ -26,6 +26,7 @@ export type {
   AccountRestoredEmailProps,
   // Billing
   BillingEmailUpdatedEmailProps,
+  BillingEmailVerificationEmailProps,
   // Workspace
   DeletionScheduledEmailProps,
   // Domain
@@ -68,6 +69,7 @@ export {
   renderAccountRestored,
   // Billing
   renderBillingEmailUpdated,
+  renderBillingEmailVerification,
   // Workspace
   renderDeletionScheduled,
   // Domain

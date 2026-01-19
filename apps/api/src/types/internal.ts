@@ -7,6 +7,7 @@
 import type { DomainStatus, WorkspaceRole } from '@workspace/contract';
 import {
   AccessRequestTokenPayloadSchema,
+  BillingEmailVerificationTokenPayloadSchema,
   DomainVerificationTokenPayloadSchema,
   InviteTokenPayloadSchema,
   LinkItemSchema,
@@ -27,6 +28,7 @@ import type {
   AccountDeletionVerificationEmailProps,
   AccountRestoredEmailProps,
   BillingEmailUpdatedEmailProps,
+  BillingEmailVerificationEmailProps,
   DeletionScheduledEmailProps,
   DomainDeveloperInstructionsEmailProps,
   EmailVerificationEmailProps,
@@ -76,6 +78,9 @@ export type DomainVerificationTokenPayload = z.infer<typeof DomainVerificationTo
 export type AccessRequestTokenPayload = z.infer<typeof AccessRequestTokenPayloadSchema>;
 export type WorkspaceCreateInviteTokenPayload = z.infer<
   typeof WorkspaceCreateInviteTokenPayloadSchema
+>;
+export type BillingEmailVerificationTokenPayload = z.infer<
+  typeof BillingEmailVerificationTokenPayloadSchema
 >;
 export type PresignedUrlInfo = z.infer<typeof PresignedUrlInfoSchema>;
 
@@ -231,6 +236,13 @@ export type SubscriptionActiveEmailParams = Required<SubscriptionActiveEmailProp
  * Billing email updated email parameters
  */
 export type BillingEmailUpdatedEmailParams = Required<BillingEmailUpdatedEmailProps> & {
+  to: string;
+};
+
+/**
+ * Billing email verification email parameters
+ */
+export type BillingEmailVerificationEmailParams = Required<BillingEmailVerificationEmailProps> & {
   to: string;
 };
 

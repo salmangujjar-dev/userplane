@@ -1110,6 +1110,43 @@ export const WorkspaceBillingEmailUpdateDataSchema = z.object({
 });
 
 /**
+ * Request billing email change request (detailed mode)
+ */
+export const RequestBillingEmailChangeSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  body: z.object({
+    email: FormEmailSchema,
+  }),
+});
+
+/**
+ * Request billing email change response
+ */
+export const RequestBillingEmailChangeDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  message: z.string(),
+});
+
+/**
+ * Verify billing email change request (detailed mode)
+ */
+export const VerifyBillingEmailChangeSchema = z.object({
+  body: z.object({
+    token: z.string(),
+  }),
+});
+
+/**
+ * Verify billing email change response
+ */
+export const VerifyBillingEmailChangeDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  workspaceBillingEmail: z.string().email(),
+});
+
+/**
  * Get workspace status request (detailed mode)
  * Used to check access status without requiring membership
  */

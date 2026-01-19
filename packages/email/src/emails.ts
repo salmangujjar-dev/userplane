@@ -15,6 +15,7 @@ import type {
 import { AccessRequestEmail, EmailVerificationEmail, MagicLinkEmail } from './emails/auth';
 import type {
   BillingEmailUpdatedEmailProps,
+  BillingEmailVerificationEmailProps,
   SubscriptionActiveEmailProps,
   SubscriptionExpiredEmailProps,
   SubscriptionInactiveEmailProps,
@@ -24,6 +25,7 @@ import type {
 // Billing emails
 import {
   BillingEmailUpdatedEmail,
+  BillingEmailVerificationEmail,
   SubscriptionActiveEmail,
   SubscriptionExpiredEmail,
   SubscriptionInactiveEmail,
@@ -280,6 +282,14 @@ export async function renderBillingEmailUpdated(
   return { html, text };
 }
 
+export async function renderBillingEmailVerification(
+  props: BillingEmailVerificationEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(BillingEmailVerificationEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
 export async function renderSubscriptionActive(
   props: SubscriptionActiveEmailProps
 ): Promise<RenderResult> {
@@ -366,6 +376,7 @@ export type {
   AccountRestoredEmailProps,
   // Billing
   BillingEmailUpdatedEmailProps,
+  BillingEmailVerificationEmailProps,
   // Workspace
   DeletionScheduledEmailProps,
   // Domain

@@ -111,6 +111,20 @@ export const WorkspaceCreateInviteTokenPayloadSchema = z.object({
 });
 
 /**
+ * Billing email verification token payload
+ * Used to verify and update workspace billing email
+ * Short keys used to minimize JWT token length
+ */
+export const BillingEmailVerificationTokenPayloadSchema = z.object({
+  iss: z.string(), // Issuer
+  wi: z.string(), // workspaceId
+  mi: z.string(), // memberId (user who requested the change)
+  be: z.string(), // billingEmail (new billing email to set)
+  iat: z.number(), // Issued at
+  exp: z.number(), // Expiry
+});
+
+/**
  * TypeScript types for JWT payloads
  */
 export type SessionPreferences = z.infer<typeof SessionPreferencesSchema>;
@@ -121,6 +135,9 @@ export type DomainVerificationTokenPayload = z.infer<typeof DomainVerificationTo
 export type AccessRequestTokenPayload = z.infer<typeof AccessRequestTokenPayloadSchema>;
 export type WorkspaceCreateInviteTokenPayload = z.infer<
   typeof WorkspaceCreateInviteTokenPayloadSchema
+>;
+export type BillingEmailVerificationTokenPayload = z.infer<
+  typeof BillingEmailVerificationTokenPayloadSchema
 >;
 
 /**
