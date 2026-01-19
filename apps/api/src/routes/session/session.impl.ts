@@ -128,24 +128,17 @@ export const completeUploadImpl = (
     );
 
     // Send email notification to the recording creator
-    // This is non-blocking - if it fails, the recording is still marked as available
-    try {
-      const recording = await recordingRepo.findById(result.recordingId);
-      if (recording) {
-        const creator = await workspaceMemberRepo.findByIdWithUser(recording.createdBy);
-        if (creator) {
-          const recordingUrl = `${env.invite.appUrl}/${recording.workspaceId}/recordings/${recording.recordingId}`;
+    const recording = await recordingRepo.findById(result.recordingId);
+    if (recording) {
+      const creator = await workspaceMemberRepo.findByIdWithUser(recording.createdBy);
+      if (creator) {
+        const recordingUrl = `${env.invite.appUrl}/${recording.workspaceId}/recordings/${recording.recordingId}`;
 
-          await emailService.sendRecordingReceived({
-            to: creator.userEmail,
-            recordingUrl,
-          });
-        }
+        await emailService.sendSafeRecordingReceived({
+          to: creator.userEmail,
+          recordingUrl,
+        });
       }
-    } catch (error) {
-      // Log error but don't fail the request
-      // The recording is already marked as available
-      console.error('Failed to send recording received email:', error);
     }
 
     return {

@@ -22,40 +22,22 @@ import {
 } from '@workspace/contract';
 import type { Link } from '@workspace/db';
 import type {
-  AccessGrantedEmailProps,
-  AccessRequestedEmailProps,
   AccessRequestEmailProps,
   AccountDeletionEmailProps,
   AccountDeletionVerificationEmailProps,
   AccountRestoredEmailProps,
   BillingEmailUpdatedEmailProps,
-  DeletionConfirmationEmailProps,
-  DeletionRequestedEmailProps,
   DeletionScheduledEmailProps,
   DomainDeveloperInstructionsEmailProps,
   EmailVerificationEmailProps,
-  LinksRequestedUpgradeEmailProps,
-  LinksSoftLimitEmailProps,
   MagicLinkEmailProps,
-  ProjectDeletionConfirmationEmailProps,
-  ProjectDeletionRequestedEmailProps,
   ProjectDeletionScheduledEmailProps,
   ProjectRecoveryConfirmationEmailProps,
   ProjectRecoveryPartiallyEmailProps,
-  ProjectRecoveryScheduledEmailProps,
   RecordingReceivedEmailProps,
-  RecordingsHardLimitEmailProps,
-  RecordingsRequestedUpgradeEmailProps,
-  RecordingsSoftLimitEmailProps,
   RecoveryConfirmationEmailProps,
   RecoveryPartiallyEmailProps,
-  RecoveryScheduledEmailProps,
-  ReverseTrialOfferEmailProps,
   SandboxInviteEmailProps,
-  ScreenshotsSoftLimitEmailProps,
-  SeatsHardLimitEmailProps,
-  SeatsRequestedUpgradeEmailProps,
-  SeatsSoftLimitEmailProps,
   SubscriptionActiveEmailProps,
   SubscriptionExpiredEmailProps,
   SubscriptionInactiveEmailProps,
@@ -64,12 +46,10 @@ import type {
   TeammateInvitedEmailProps,
   TeammateJoinedEmailProps,
   TosViolationEmailProps,
-  TrialReverseTrialOfferEmailProps,
   WelcomeEmailMemberProps,
   WelcomeEmailPilotProps,
   WelcomeEmailRequesterProps,
   WelcomeEmailSubscriptionProps,
-  WelcomeMeetFounderEmailProps,
 } from '@workspace/email';
 import type { PlanId as WorkspacePlan } from '@workspace/pricing';
 import type { z } from 'zod';
@@ -283,64 +263,6 @@ export type SubscriptionReverseTrialEmailParams = Required<SubscriptionReverseTr
 };
 
 /**
- * Recordings soft limit reached email parameters
- */
-export type RecordingsSoftLimitEmailParams = Required<RecordingsSoftLimitEmailProps> & {
-  to: string;
-};
-
-/**
- * Recordings hard limit reached email parameters
- */
-export type RecordingsHardLimitEmailParams = Required<RecordingsHardLimitEmailProps> & {
-  to: string;
-};
-
-/**
- * Recordings requested upgrade email parameters
- */
-export type RecordingsRequestedUpgradeEmailParams =
-  Required<RecordingsRequestedUpgradeEmailProps> & {
-    to: string;
-  };
-
-/**
- * Seats soft limit reached email parameters
- */
-export type SeatsSoftLimitEmailParams = Required<SeatsSoftLimitEmailProps> & { to: string };
-
-/**
- * Seats hard limit reached email parameters
- */
-export type SeatsHardLimitEmailParams = Required<SeatsHardLimitEmailProps> & { to: string };
-
-/**
- * Seats requested upgrade email parameters
- */
-export type SeatsRequestedUpgradeEmailParams = Required<SeatsRequestedUpgradeEmailProps> & {
-  to: string;
-};
-
-/**
- * Links soft limit reached email parameters
- */
-export type LinksSoftLimitEmailParams = Required<LinksSoftLimitEmailProps> & { to: string };
-
-/**
- * Links requested upgrade email parameters
- */
-export type LinksRequestedUpgradeEmailParams = Required<LinksRequestedUpgradeEmailProps> & {
-  to: string;
-};
-
-/**
- * Screenshots soft limit reached email parameters
- */
-export type ScreenshotsSoftLimitEmailParams = Required<ScreenshotsSoftLimitEmailProps> & {
-  to: string;
-};
-
-/**
  * Teammate invited email parameters
  */
 export type TeammateInvitedEmailParams = Required<TeammateInvitedEmailProps> & { to: string };
@@ -388,20 +310,6 @@ export type RecordingReceivedEmailParams = Required<RecordingReceivedEmailProps>
 };
 
 /**
- * Trial reverse trial offer email parameters
- */
-export type TrialReverseTrialOfferEmailParams = Required<TrialReverseTrialOfferEmailProps> & {
-  to: string;
-};
-
-/**
- * Welcome meet founder email parameters
- */
-export type WelcomeMeetFounderEmailParams = Required<WelcomeMeetFounderEmailProps> & {
-  to: string;
-};
-
-/**
  * Welcome email member parameters
  */
 export type WelcomeEmailMemberParams = Required<WelcomeEmailMemberProps> & {
@@ -430,25 +338,6 @@ export type WelcomeEmailRequesterParams = Required<WelcomeEmailRequesterProps> &
 };
 
 /**
- * Pilot reverse trial offer email parameters
- */
-export type PilotReverseTrialOfferEmailParams = Required<ReverseTrialOfferEmailProps> & {
-  to: string;
-};
-
-/**
- * Workspace access granted email parameters
- */
-export type WorkspaceAccessGrantedEmailParams = Required<AccessGrantedEmailProps> & { to: string };
-
-/**
- * Workspace access requested email parameters
- */
-export type WorkspaceAccessRequestedEmailParams = Required<AccessRequestedEmailProps> & {
-  to: string;
-};
-
-/**
  * Workspace deletion scheduled email parameters
  */
 export type WorkspaceDeletionScheduledEmailParams = Required<DeletionScheduledEmailProps> & {
@@ -457,32 +346,11 @@ export type WorkspaceDeletionScheduledEmailParams = Required<DeletionScheduledEm
 };
 
 /**
- * Workspace deletion confirmation email parameters
- */
-export type WorkspaceDeletionConfirmationEmailParams = Required<DeletionConfirmationEmailProps> & {
-  to: string;
-};
-
-/**
- * Workspace recovery scheduled email parameters
- */
-export type WorkspaceRecoveryScheduledEmailParams = Required<RecoveryScheduledEmailProps> & {
-  to: string;
-};
-
-/**
  * Workspace recovery confirmation email parameters
  */
 export type WorkspaceRecoveryConfirmationEmailParams = Required<RecoveryConfirmationEmailProps> & {
   to: string;
   scheduledAt?: string;
-};
-
-/**
- * Workspace deletion requested email parameters
- */
-export type WorkspaceDeletionRequestedEmailParams = Required<DeletionRequestedEmailProps> & {
-  to: string;
 };
 
 /**
@@ -502,21 +370,6 @@ export type ProjectDeletionScheduledEmailParams = Required<ProjectDeletionSchedu
 };
 
 /**
- * Project deletion confirmation email parameters
- */
-export type ProjectDeletionConfirmationEmailParams =
-  Required<ProjectDeletionConfirmationEmailProps> & {
-    to: string;
-  };
-
-/**
- * Project recovery scheduled email parameters
- */
-export type ProjectRecoveryScheduledEmailParams = Required<ProjectRecoveryScheduledEmailProps> & {
-  to: string;
-};
-
-/**
  * Project recovery confirmation email parameters
  */
 export type ProjectRecoveryConfirmationEmailParams =
@@ -524,13 +377,6 @@ export type ProjectRecoveryConfirmationEmailParams =
     to: string;
     scheduledAt?: string;
   };
-
-/**
- * Project deletion requested email parameters
- */
-export type ProjectDeletionRequestedEmailParams = Required<ProjectDeletionRequestedEmailProps> & {
-  to: string;
-};
 
 /**
  * Project recovery partially email parameters

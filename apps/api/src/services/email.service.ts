@@ -5,40 +5,22 @@
  */
 
 import {
-  renderAccessGranted,
   renderAccessRequest,
-  renderAccessRequested,
   renderAccountDeletion,
   renderAccountDeletionVerification,
   renderAccountRestored,
   renderBillingEmailUpdated,
-  renderDeletionConfirmation,
-  renderDeletionRequested,
   renderDeletionScheduled,
   renderDomainDeveloperInstructions,
   renderEmailVerification,
-  renderLinksRequestedUpgrade,
-  renderLinksSoftLimit,
   renderMagicLink,
-  renderPilotReverseTrialOffer,
-  renderProjectDeletionConfirmation,
-  renderProjectDeletionRequested,
   renderProjectDeletionScheduled,
   renderProjectRecoveryConfirmation,
   renderProjectRecoveryPartially,
-  renderProjectRecoveryScheduled,
   renderRecordingReceived,
-  renderRecordingsHardLimit,
-  renderRecordingsRequestedUpgrade,
-  renderRecordingsSoftLimit,
   renderRecoveryConfirmation,
   renderRecoveryPartially,
-  renderRecoveryScheduled,
   renderSandboxInvite,
-  renderScreenshotsSoftLimit,
-  renderSeatsHardLimit,
-  renderSeatsRequestedUpgrade,
-  renderSeatsSoftLimit,
   renderSubscriptionActive,
   renderSubscriptionExpired,
   renderSubscriptionInactive,
@@ -47,12 +29,10 @@ import {
   renderTeammateInvited,
   renderTeammateJoined,
   renderTosViolation,
-  renderTrialReverseTrialOffer,
   renderWelcomeEmailMember,
   renderWelcomeEmailPilot,
   renderWelcomeEmailRequester,
   renderWelcomeEmailSubscription,
-  renderWelcomeMeetFounder,
 } from '@workspace/email';
 import { createAppLogger } from '@workspace/logger';
 
@@ -65,25 +45,12 @@ import {
   billingEmailUpdatedSubject,
   domainDeveloperInstructionsSubject,
   emailVerificationSubject,
-  linksRequestedUpgradeSubject,
-  linksSoftLimitSubject,
   magicLinkSubject,
-  pilotReverseTrialOfferSubject,
-  pilotSandboxInviteSubject,
-  projectDeletionConfirmationSubject,
-  projectDeletionRequestedSubject,
   projectDeletionScheduledSubject,
   projectRecoveryConfirmationSubject,
   projectRecoveryPartiallySubject,
-  projectRecoveryScheduledSubject,
   recordingReceivedSubject,
-  recordingsHardLimitSubject,
-  recordingsRequestedUpgradeSubject,
-  recordingsSoftLimitSubject,
-  screenshotsSoftLimitSubject,
-  seatsHardLimitSubject,
-  seatsRequestedUpgradeSubject,
-  seatsSoftLimitSubject,
+  sandboxInviteSubject,
   subscriptionActiveSubject,
   subscriptionExpiredSubject,
   subscriptionInactiveSubject,
@@ -92,20 +59,13 @@ import {
   teammateInvitedSubject,
   teammateJoinedSubject,
   tosViolationSubject,
-  trialReverseTrialOfferSubject,
   welcomeEmailMemberSubject,
   welcomeEmailPilotSubject,
   welcomeEmailRequesterSubject,
   welcomeEmailSubscriptionSubject,
-  welcomeMeetFounderSubject,
-  workspaceAccessGrantedSubject,
-  workspaceAccessRequestedSubject,
-  workspaceDeletionConfirmationSubject,
-  workspaceDeletionRequestedSubject,
   workspaceDeletionScheduledSubject,
   workspaceRecoveryConfirmationSubject,
   workspaceRecoveryPartiallySubject,
-  workspaceRecoveryScheduledSubject,
 } from '@/api/subjects';
 import type {
   AccessRequestEmailParams,
@@ -115,25 +75,12 @@ import type {
   BillingEmailUpdatedEmailParams,
   DomainDeveloperInstructionsEmailParams,
   EmailVerificationEmailParams,
-  LinksRequestedUpgradeEmailParams,
-  LinksSoftLimitEmailParams,
   MagicLinkEmailParams,
-  PilotReverseTrialOfferEmailParams,
   PilotSandboxInviteEmailParams,
-  ProjectDeletionConfirmationEmailParams,
-  ProjectDeletionRequestedEmailParams,
   ProjectDeletionScheduledEmailParams,
   ProjectRecoveryConfirmationEmailParams,
   ProjectRecoveryPartiallyEmailParams,
-  ProjectRecoveryScheduledEmailParams,
   RecordingReceivedEmailParams,
-  RecordingsHardLimitEmailParams,
-  RecordingsRequestedUpgradeEmailParams,
-  RecordingsSoftLimitEmailParams,
-  ScreenshotsSoftLimitEmailParams,
-  SeatsHardLimitEmailParams,
-  SeatsRequestedUpgradeEmailParams,
-  SeatsSoftLimitEmailParams,
   SubscriptionActiveEmailParams,
   SubscriptionExpiredEmailParams,
   SubscriptionInactiveEmailParams,
@@ -142,20 +89,13 @@ import type {
   TeammateInvitedEmailParams,
   TeammateJoinedEmailParams,
   TosViolationEmailParams,
-  TrialReverseTrialOfferEmailParams,
   WelcomeEmailMemberParams,
   WelcomeEmailPilotParams,
   WelcomeEmailRequesterParams,
   WelcomeEmailSubscriptionParams,
-  WelcomeMeetFounderEmailParams,
-  WorkspaceAccessGrantedEmailParams,
-  WorkspaceAccessRequestedEmailParams,
-  WorkspaceDeletionConfirmationEmailParams,
-  WorkspaceDeletionRequestedEmailParams,
   WorkspaceDeletionScheduledEmailParams,
   WorkspaceRecoveryConfirmationEmailParams,
   WorkspaceRecoveryPartiallyEmailParams,
-  WorkspaceRecoveryScheduledEmailParams,
 } from '@/api/types';
 import {
   authFrom,
@@ -167,7 +107,38 @@ import {
 
 const logger = createAppLogger('email-service');
 
+type ErrorHandler = (error: unknown, context: { method: string; params: unknown }) => void;
+
 export class EmailService {
+  private readonly errorHandler: ErrorHandler;
+
+  constructor(errorHandler?: ErrorHandler) {
+    this.errorHandler =
+      errorHandler ||
+      ((error, context) => {
+        console.warn('Email service error:', {
+          method: context.method,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+  }
+
+  /**
+   * Wraps an async email operation with error handling
+   * Catches errors and passes them to the configured error handler
+   */
+  private async executeSafely<T>(
+    method: string,
+    params: unknown,
+    operation: () => Promise<T>
+  ): Promise<void> {
+    try {
+      await operation();
+    } catch (error) {
+      this.errorHandler(error, { method, params });
+    }
+  }
+
   // ============================================================================
   // AUTH EMAILS
   // ============================================================================
@@ -175,8 +146,9 @@ export class EmailService {
   /**
    * Send email verification email
    * Sent when a user needs to verify their email address
+   * @private Use sendSafeEmailVerification instead
    */
-  async sendEmailVerification(params: EmailVerificationEmailParams): Promise<void> {
+  private async sendEmailVerification(params: EmailVerificationEmailParams): Promise<void> {
     const idempotencyKey = `email-verification/${params.to}/${Date.now()}`;
 
     const { html, text } = await renderEmailVerification({
@@ -207,9 +179,20 @@ export class EmailService {
   }
 
   /**
-   * Send magic link email for passwordless sign in
+   * Safe version: Send email verification email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendMagicLink(params: MagicLinkEmailParams): Promise<void> {
+  async sendSafeEmailVerification(params: EmailVerificationEmailParams): Promise<void> {
+    await this.executeSafely('sendEmailVerification', params, () =>
+      this.sendEmailVerification(params)
+    );
+  }
+
+  /**
+   * Send magic link email for passwordless sign in
+   * @private Use sendSafeMagicLink instead
+   */
+  private async sendMagicLink(params: MagicLinkEmailParams): Promise<void> {
     const idempotencyKey = `magic-link/${params.to}/${Date.now()}`;
 
     const { html, text } = await renderMagicLink({
@@ -239,11 +222,20 @@ export class EmailService {
   }
 
   /**
+   * Safe version: Send magic link email for passwordless sign in
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeMagicLink(params: MagicLinkEmailParams): Promise<void> {
+    await this.executeSafely('sendMagicLink', params, () => this.sendMagicLink(params));
+  }
+
+  /**
    * Send workspace access request email to owner
    * Uses React Email template
    * Email is sent from configured invite inbox with requester details in content
+   * @private Use sendSafeAccessRequest instead
    */
-  async sendAccessRequest(params: AccessRequestEmailParams): Promise<void> {
+  private async sendAccessRequest(params: AccessRequestEmailParams): Promise<void> {
     const idempotencyKey = `access-request/${params.workspaceName}/${params.requesterEmail}/${params.to}`;
 
     const { html, text } = await renderAccessRequest({
@@ -281,6 +273,14 @@ export class EmailService {
     );
   }
 
+  /**
+   * Safe version: Send workspace access request email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeAccessRequest(params: AccessRequestEmailParams): Promise<void> {
+    await this.executeSafely('sendAccessRequest', params, () => this.sendAccessRequest(params));
+  }
+
   // ============================================================================
   // BILLING EMAILS
   // ============================================================================
@@ -288,8 +288,9 @@ export class EmailService {
   /**
    * Send billing email updated notification
    * Sent when workspace billing email address is changed
+   * @private Use sendSafeBillingEmailUpdated instead
    */
-  async sendBillingEmailUpdated(params: BillingEmailUpdatedEmailParams): Promise<void> {
+  private async sendBillingEmailUpdated(params: BillingEmailUpdatedEmailParams): Promise<void> {
     const idempotencyKey = `billing-email-updated/${params.to}/${params.newEmail}`;
 
     const { html, text } = await renderBillingEmailUpdated({
@@ -323,9 +324,20 @@ export class EmailService {
   }
 
   /**
-   * Send subscription active email
+   * Safe version: Send billing email updated notification
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSubscriptionActive(params: SubscriptionActiveEmailParams): Promise<void> {
+  async sendSafeBillingEmailUpdated(params: BillingEmailUpdatedEmailParams): Promise<void> {
+    await this.executeSafely('sendBillingEmailUpdated', params, () =>
+      this.sendBillingEmailUpdated(params)
+    );
+  }
+
+  /**
+   * Send subscription active email
+   * @private Use sendSafeSubscriptionActive instead
+   */
+  private async sendSubscriptionActive(params: SubscriptionActiveEmailParams): Promise<void> {
     const idempotencyKey = `subscription-active/${params.to}/${params.planName}`;
 
     const { html, text } = await renderSubscriptionActive({
@@ -358,9 +370,20 @@ export class EmailService {
   }
 
   /**
-   * Send subscription expired email
+   * Safe version: Send subscription active email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSubscriptionExpired(params: SubscriptionExpiredEmailParams): Promise<void> {
+  async sendSafeSubscriptionActive(params: SubscriptionActiveEmailParams): Promise<void> {
+    await this.executeSafely('sendSubscriptionActive', params, () =>
+      this.sendSubscriptionActive(params)
+    );
+  }
+
+  /**
+   * Send subscription expired email
+   * @private Use sendSafeSubscriptionExpired instead
+   */
+  private async sendSubscriptionExpired(params: SubscriptionExpiredEmailParams): Promise<void> {
     const idempotencyKey = `subscription-expired/${params.to}/${params.planName}`;
 
     const { html, text } = await renderSubscriptionExpired({
@@ -392,9 +415,20 @@ export class EmailService {
   }
 
   /**
-   * Send subscription inactive email
+   * Safe version: Send subscription expired email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSubscriptionInactive(params: SubscriptionInactiveEmailParams): Promise<void> {
+  async sendSafeSubscriptionExpired(params: SubscriptionExpiredEmailParams): Promise<void> {
+    await this.executeSafely('sendSubscriptionExpired', params, () =>
+      this.sendSubscriptionExpired(params)
+    );
+  }
+
+  /**
+   * Send subscription inactive email
+   * @private Use sendSafeSubscriptionInactive instead
+   */
+  private async sendSubscriptionInactive(params: SubscriptionInactiveEmailParams): Promise<void> {
     const idempotencyKey = `subscription-inactive/${params.to}/${params.planName}`;
 
     const { html, text } = await renderSubscriptionInactive({
@@ -426,9 +460,22 @@ export class EmailService {
   }
 
   /**
-   * Send subscription plan change email
+   * Safe version: Send subscription inactive email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSubscriptionPlanChange(params: SubscriptionPlanChangeEmailParams): Promise<void> {
+  async sendSafeSubscriptionInactive(params: SubscriptionInactiveEmailParams): Promise<void> {
+    await this.executeSafely('sendSubscriptionInactive', params, () =>
+      this.sendSubscriptionInactive(params)
+    );
+  }
+
+  /**
+   * Send subscription plan change email
+   * @private Use sendSafeSubscriptionPlanChange instead
+   */
+  private async sendSubscriptionPlanChange(
+    params: SubscriptionPlanChangeEmailParams
+  ): Promise<void> {
     const idempotencyKey = `subscription-plan-change/${params.to}/${params.newPlan}`;
 
     const { html, text } = await renderSubscriptionPlanChange({
@@ -463,9 +510,22 @@ export class EmailService {
   }
 
   /**
-   * Send subscription reverse trial email
+   * Safe version: Send subscription plan change email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSubscriptionReverseTrial(params: SubscriptionReverseTrialEmailParams): Promise<void> {
+  async sendSafeSubscriptionPlanChange(params: SubscriptionPlanChangeEmailParams): Promise<void> {
+    await this.executeSafely('sendSubscriptionPlanChange', params, () =>
+      this.sendSubscriptionPlanChange(params)
+    );
+  }
+
+  /**
+   * Send subscription reverse trial email
+   * @private Use sendSafeSubscriptionReverseTrial instead
+   */
+  private async sendSubscriptionReverseTrial(
+    params: SubscriptionReverseTrialEmailParams
+  ): Promise<void> {
     const idempotencyKey = `subscription-reverse-trial/${params.to}`;
 
     const { html, text } = await renderSubscriptionReverseTrial({
@@ -498,6 +558,18 @@ export class EmailService {
     );
   }
 
+  /**
+   * Safe version: Send subscription reverse trial email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeSubscriptionReverseTrial(
+    params: SubscriptionReverseTrialEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendSubscriptionReverseTrial', params, () =>
+      this.sendSubscriptionReverseTrial(params)
+    );
+  }
+
   // ============================================================================
   // DOMAIN EMAILS
   // ============================================================================
@@ -506,8 +578,9 @@ export class EmailService {
    * Send domain developer instructions email
    * Uses React Email template and idempotency key to prevent duplicate sends
    * Email is sent from configured invite inbox
+   * @private Use sendSafeDomainDeveloperInstructions instead
    */
-  async sendDomainDeveloperInstructions(
+  private async sendDomainDeveloperInstructions(
     params: DomainDeveloperInstructionsEmailParams
   ): Promise<void> {
     const idempotencyKey = `domain-instructions/${params.domainName}/${params.to}`;
@@ -541,362 +614,15 @@ export class EmailService {
     );
   }
 
-  // ============================================================================
-  // USAGE - RECORDINGS EMAILS
-  // ============================================================================
-
   /**
-   * Send recordings soft limit reached email
+   * Safe version: Send domain developer instructions email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendRecordingsSoftLimit(params: RecordingsSoftLimitEmailParams): Promise<void> {
-    const idempotencyKey = `recordings-soft-limit/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderRecordingsSoftLimit({
-      workspaceName: params.workspaceName,
-      usedMinutes: params.usedMinutes,
-      totalMinutes: params.totalMinutes,
-      upgradeUrl: params.upgradeUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: recordingsSoftLimitSubject(params.workspaceName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        usedMinutes: params.usedMinutes,
-        totalMinutes: params.totalMinutes,
-        provider: emailClient.getProvider(),
-      },
-      'Recordings soft limit email sent'
-    );
-  }
-
-  /**
-   * Send recordings hard limit reached email
-   */
-  async sendRecordingsHardLimit(params: RecordingsHardLimitEmailParams): Promise<void> {
-    const idempotencyKey = `recordings-hard-limit/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderRecordingsHardLimit({
-      workspaceName: params.workspaceName,
-      totalMinutes: params.totalMinutes,
-      upgradeUrl: params.upgradeUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: recordingsHardLimitSubject(params.workspaceName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        totalMinutes: params.totalMinutes,
-        provider: emailClient.getProvider(),
-      },
-      'Recordings hard limit email sent'
-    );
-  }
-
-  /**
-   * Send recordings requested upgrade email
-   */
-  async sendRecordingsRequestedUpgrade(
-    params: RecordingsRequestedUpgradeEmailParams
+  async sendSafeDomainDeveloperInstructions(
+    params: DomainDeveloperInstructionsEmailParams
   ): Promise<void> {
-    const idempotencyKey = `recordings-requested-upgrade/${params.workspaceName}/${params.requesterName}`;
-
-    const { html, text } = await renderRecordingsRequestedUpgrade({
-      workspaceName: params.workspaceName,
-      requesterName: params.requesterName,
-      billingUrl: params.billingUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: recordingsRequestedUpgradeSubject({
-          requesterName: params.requesterName,
-          workspaceName: params.workspaceName,
-        }),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        requesterName: params.requesterName,
-        provider: emailClient.getProvider(),
-      },
-      'Recordings requested upgrade email sent'
-    );
-  }
-
-  // ============================================================================
-  // USAGE - SEATS EMAILS
-  // ============================================================================
-
-  /**
-   * Send seats soft limit reached email
-   */
-  async sendSeatsSoftLimit(params: SeatsSoftLimitEmailParams): Promise<void> {
-    const idempotencyKey = `seats-soft-limit/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderSeatsSoftLimit({
-      workspaceName: params.workspaceName,
-      usedSeats: params.usedSeats,
-      totalSeats: params.totalSeats,
-      upgradeUrl: params.upgradeUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: seatsSoftLimitSubject(params.workspaceName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        usedSeats: params.usedSeats,
-        totalSeats: params.totalSeats,
-        provider: emailClient.getProvider(),
-      },
-      'Seats soft limit email sent'
-    );
-  }
-
-  /**
-   * Send seats hard limit reached email
-   */
-  async sendSeatsHardLimit(params: SeatsHardLimitEmailParams): Promise<void> {
-    const idempotencyKey = `seats-hard-limit/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderSeatsHardLimit({
-      workspaceName: params.workspaceName,
-      totalSeats: params.totalSeats,
-      upgradeUrl: params.upgradeUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: seatsHardLimitSubject(params.workspaceName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        totalSeats: params.totalSeats,
-        provider: emailClient.getProvider(),
-      },
-      'Seats hard limit email sent'
-    );
-  }
-
-  /**
-   * Send seats requested upgrade email
-   */
-  async sendSeatsRequestedUpgrade(params: SeatsRequestedUpgradeEmailParams): Promise<void> {
-    const idempotencyKey = `seats-requested-upgrade/${params.workspaceName}/${params.requesterName}`;
-
-    const { html, text } = await renderSeatsRequestedUpgrade({
-      workspaceName: params.workspaceName,
-      requesterName: params.requesterName,
-      billingUrl: params.billingUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: seatsRequestedUpgradeSubject({
-          requesterName: params.requesterName,
-          workspaceName: params.workspaceName,
-        }),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        requesterName: params.requesterName,
-        provider: emailClient.getProvider(),
-      },
-      'Seats requested upgrade email sent'
-    );
-  }
-
-  // ============================================================================
-  // USAGE - LINKS EMAILS
-  // ============================================================================
-
-  /**
-   * Send links soft limit reached email
-   */
-  async sendLinksSoftLimit(params: LinksSoftLimitEmailParams): Promise<void> {
-    const idempotencyKey = `links-soft-limit/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderLinksSoftLimit({
-      workspaceName: params.workspaceName,
-      usedLinks: params.usedLinks,
-      totalLinks: params.totalLinks,
-      upgradeUrl: params.upgradeUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: linksSoftLimitSubject(params.workspaceName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        usedLinks: params.usedLinks,
-        totalLinks: params.totalLinks,
-        provider: emailClient.getProvider(),
-      },
-      'Links soft limit email sent'
-    );
-  }
-
-  /**
-   * Send links requested upgrade email
-   */
-  async sendLinksRequestedUpgrade(params: LinksRequestedUpgradeEmailParams): Promise<void> {
-    const idempotencyKey = `links-requested-upgrade/${params.workspaceName}/${params.requesterName}`;
-
-    const { html, text } = await renderLinksRequestedUpgrade({
-      workspaceName: params.workspaceName,
-      requesterName: params.requesterName,
-      billingUrl: params.billingUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: linksRequestedUpgradeSubject({
-          requesterName: params.requesterName,
-          workspaceName: params.workspaceName,
-        }),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        requesterName: params.requesterName,
-        provider: emailClient.getProvider(),
-      },
-      'Links requested upgrade email sent'
-    );
-  }
-
-  // ============================================================================
-  // USAGE - SCREENSHOTS EMAILS
-  // ============================================================================
-
-  /**
-   * Send screenshots soft limit reached email
-   */
-  async sendScreenshotsSoftLimit(params: ScreenshotsSoftLimitEmailParams): Promise<void> {
-    const idempotencyKey = `screenshots-soft-limit/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderScreenshotsSoftLimit({
-      workspaceName: params.workspaceName,
-      usedScreenshots: params.usedScreenshots,
-      totalScreenshots: params.totalScreenshots,
-      upgradeUrl: params.upgradeUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: screenshotsSoftLimitSubject(params.workspaceName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        usedScreenshots: params.usedScreenshots,
-        totalScreenshots: params.totalScreenshots,
-        provider: emailClient.getProvider(),
-      },
-      'Screenshots soft limit email sent'
+    await this.executeSafely('sendDomainDeveloperInstructions', params, () =>
+      this.sendDomainDeveloperInstructions(params)
     );
   }
 
@@ -906,8 +632,9 @@ export class EmailService {
 
   /**
    * Send teammate invited email
+   * @private Use sendSafeTeammateInvited instead
    */
-  async sendTeammateInvited(params: TeammateInvitedEmailParams): Promise<void> {
+  private async sendTeammateInvited(params: TeammateInvitedEmailParams): Promise<void> {
     const idempotencyKey = `teammate-invited/${params.workspaceName}/${params.to}`;
 
     const { html, text } = await renderTeammateInvited({
@@ -946,10 +673,19 @@ export class EmailService {
   }
 
   /**
+   * Safe version: Send teammate invited email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeTeammateInvited(params: TeammateInvitedEmailParams): Promise<void> {
+    await this.executeSafely('sendTeammateInvited', params, () => this.sendTeammateInvited(params));
+  }
+
+  /**
    * Send teammate joined email
    * Sent to workspace owners when someone joins
+   * @private Use sendSafeTeammateJoined instead
    */
-  async sendTeammateJoined(params: TeammateJoinedEmailParams): Promise<void> {
+  private async sendTeammateJoined(params: TeammateJoinedEmailParams): Promise<void> {
     const idempotencyKey = `teammate-joined/${params.workspaceName}/${params.to}/${params.memberEmail}`;
 
     const { html, text } = await renderTeammateJoined({
@@ -988,14 +724,23 @@ export class EmailService {
     );
   }
 
+  /**
+   * Safe version: Send teammate joined email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeTeammateJoined(params: TeammateJoinedEmailParams): Promise<void> {
+    await this.executeSafely('sendTeammateJoined', params, () => this.sendTeammateJoined(params));
+  }
+
   // ============================================================================
   // OFFBOARDING EMAILS
   // ============================================================================
 
   /**
    * Send account deletion email
+   * @private Use sendSafeAccountDeletion instead
    */
-  async sendAccountDeletion(params: AccountDeletionEmailParams): Promise<void> {
+  private async sendAccountDeletion(params: AccountDeletionEmailParams): Promise<void> {
     const idempotencyKey = `account-deletion/${params.to}`;
 
     const { html, text } = await renderAccountDeletion({
@@ -1027,10 +772,19 @@ export class EmailService {
   }
 
   /**
+   * Safe version: Send account deletion email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeAccountDeletion(params: AccountDeletionEmailParams): Promise<void> {
+    await this.executeSafely('sendAccountDeletion', params, () => this.sendAccountDeletion(params));
+  }
+
+  /**
    * Send account deletion verification email
    * Sent when a user requests to delete their account
+   * @private Use sendSafeAccountDeletionVerification instead
    */
-  async sendAccountDeletionVerification(
+  private async sendAccountDeletionVerification(
     params: AccountDeletionVerificationEmailParams
   ): Promise<void> {
     const idempotencyKey = `account-deletion-verification/${params.to}/${Date.now()}`;
@@ -1064,9 +818,22 @@ export class EmailService {
   }
 
   /**
-   * Send account restored email
+   * Safe version: Send account deletion verification email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendAccountRestored(params: AccountRestoredEmailParams): Promise<void> {
+  async sendSafeAccountDeletionVerification(
+    params: AccountDeletionVerificationEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendAccountDeletionVerification', params, () =>
+      this.sendAccountDeletionVerification(params)
+    );
+  }
+
+  /**
+   * Send account restored email
+   * @private Use sendSafeAccountRestored instead
+   */
+  private async sendAccountRestored(params: AccountRestoredEmailParams): Promise<void> {
     const idempotencyKey = `account-restored/${params.to}`;
 
     const { html, text } = await renderAccountRestored({
@@ -1098,9 +865,18 @@ export class EmailService {
   }
 
   /**
-   * Send TOS violation email
+   * Safe version: Send account restored email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendTosViolation(params: TosViolationEmailParams): Promise<void> {
+  async sendSafeAccountRestored(params: AccountRestoredEmailParams): Promise<void> {
+    await this.executeSafely('sendAccountRestored', params, () => this.sendAccountRestored(params));
+  }
+
+  /**
+   * Send TOS violation email
+   * @private Use sendSafeTosViolation instead
+   */
+  private async sendTosViolation(params: TosViolationEmailParams): Promise<void> {
     const idempotencyKey = `tos-violation/${params.to}`;
 
     const { html, text } = await renderTosViolation({
@@ -1132,6 +908,14 @@ export class EmailService {
     );
   }
 
+  /**
+   * Safe version: Send TOS violation email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeTosViolation(params: TosViolationEmailParams): Promise<void> {
+    await this.executeSafely('sendTosViolation', params, () => this.sendTosViolation(params));
+  }
+
   // ============================================================================
   // PILOT EMAILS
   // ============================================================================
@@ -1139,8 +923,9 @@ export class EmailService {
   /**
    * Send pilot sandbox invite email
    * Supports optional scheduling via scheduledAt field in params
+   * @private Use sendSafePilotSandboxInvite instead
    */
-  async sendPilotSandboxInvite(params: PilotSandboxInviteEmailParams): Promise<void> {
+  private async sendPilotSandboxInvite(params: PilotSandboxInviteEmailParams): Promise<void> {
     const idempotencyKey = `pilot-sandbox-invite/${params.to}${params.scheduledAt ? `/${params.scheduledAt}` : ''}`;
 
     const { html, text } = await renderSandboxInvite({
@@ -1152,7 +937,7 @@ export class EmailService {
       {
         from: notificationFrom(),
         to: params.to,
-        subject: pilotSandboxInviteSubject,
+        subject: sandboxInviteSubject,
         html,
         text,
       },
@@ -1177,38 +962,12 @@ export class EmailService {
   }
 
   /**
-   * Send pilot reverse trial offer email
+   * Safe version: Send pilot sandbox invite email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendPilotReverseTrialOffer(params: PilotReverseTrialOfferEmailParams): Promise<void> {
-    const idempotencyKey = `pilot-reverse-trial-offer/${params.to}`;
-
-    const { html, text } = await renderPilotReverseTrialOffer({
-      upgradeUrl: params.upgradeUrl,
-      planName: params.planName,
-      trialDays: params.trialDays,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: pilotReverseTrialOfferSubject,
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        planName: params.planName,
-        trialDays: params.trialDays,
-        provider: emailClient.getProvider(),
-      },
-      'Pilot reverse trial offer email sent'
+  async sendSafePilotSandboxInvite(params: PilotSandboxInviteEmailParams): Promise<void> {
+    await this.executeSafely('sendPilotSandboxInvite', params, () =>
+      this.sendPilotSandboxInvite(params)
     );
   }
 
@@ -1218,8 +977,9 @@ export class EmailService {
 
   /**
    * Send recording received email
+   * @private Use sendSafeRecordingReceived instead
    */
-  async sendRecordingReceived(params: RecordingReceivedEmailParams): Promise<void> {
+  private async sendRecordingReceived(params: RecordingReceivedEmailParams): Promise<void> {
     const idempotencyKey = `recording-received/${params.to}/${params.recordingUrl}`;
 
     const { html, text } = await renderRecordingReceived({
@@ -1248,80 +1008,13 @@ export class EmailService {
     );
   }
 
-  // ============================================================================
-  // TRIAL EMAILS
-  // ============================================================================
-
   /**
-   * Send trial reverse trial offer email
+   * Safe version: Send recording received email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendTrialReverseTrialOffer(params: TrialReverseTrialOfferEmailParams): Promise<void> {
-    const idempotencyKey = `trial-reverse-trial-offer/${params.to}`;
-
-    const { html, text } = await renderTrialReverseTrialOffer({
-      upgradeUrl: params.upgradeUrl,
-      planName: params.planName,
-      trialDays: params.trialDays,
-      remainingDays: params.remainingDays,
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: params.to,
-        subject: trialReverseTrialOfferSubject(params.remainingDays),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        planName: params.planName,
-        remainingDays: params.remainingDays,
-        provider: emailClient.getProvider(),
-      },
-      'Trial reverse trial offer email sent'
-    );
-  }
-
-  /**
-   * Send welcome meet founder email
-   * Sent to new users when they create their first workspace
-   */
-  async sendWelcomeMeetFounder(params: WelcomeMeetFounderEmailParams): Promise<void> {
-    const idempotencyKey = `welcome-meet-founder/${params.to}`;
-
-    const { html, text } = await renderWelcomeMeetFounder({
-      userName: params.userName,
-      calendarUrl: params.calendarUrl,
-      founderEmail: params.founderEmail,
-    });
-
-    await emailClient.send(
-      {
-        from: notificationFrom(),
-        to: params.to,
-        subject: welcomeMeetFounderSubject,
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        userName: params.userName,
-        provider: emailClient.getProvider(),
-      },
-      'Welcome meet founder email sent'
+  async sendSafeRecordingReceived(params: RecordingReceivedEmailParams): Promise<void> {
+    await this.executeSafely('sendRecordingReceived', params, () =>
+      this.sendRecordingReceived(params)
     );
   }
 
@@ -1332,8 +1025,9 @@ export class EmailService {
   /**
    * Send welcome email for members joining a workspace
    * Sent to users when they join a workspace as a member
+   * @private Use sendSafeWelcomeEmailMember instead
    */
-  async sendWelcomeEmailMember(params: WelcomeEmailMemberParams): Promise<void> {
+  private async sendWelcomeEmailMember(params: WelcomeEmailMemberParams): Promise<void> {
     const idempotencyKey = `welcome-email-member/${params.to}/${params.workspaceName}`;
 
     const { html, text } = await renderWelcomeEmailMember({
@@ -1367,10 +1061,23 @@ export class EmailService {
   }
 
   /**
+   * Safe version: Send welcome email for members
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeWelcomeEmailMember(params: WelcomeEmailMemberParams): Promise<void> {
+    await this.executeSafely('sendWelcomeEmailMember', params, () =>
+      this.sendWelcomeEmailMember(params)
+    );
+  }
+
+  /**
    * Send welcome email for subscription users
    * Sent to users who create a workspace without an invite token (organic signup)
+   * @private Use sendSafeWelcomeEmailSubscription instead
    */
-  async sendWelcomeEmailSubscription(params: WelcomeEmailSubscriptionParams): Promise<void> {
+  private async sendWelcomeEmailSubscription(
+    params: WelcomeEmailSubscriptionParams
+  ): Promise<void> {
     const idempotencyKey = `welcome-email-subscription/${params.to}`;
 
     const { html, text } = await renderWelcomeEmailSubscription({
@@ -1404,10 +1111,21 @@ export class EmailService {
   }
 
   /**
+   * Safe version: Send welcome email for subscription users
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeWelcomeEmailSubscription(params: WelcomeEmailSubscriptionParams): Promise<void> {
+    await this.executeSafely('sendWelcomeEmailSubscription', params, () =>
+      this.sendWelcomeEmailSubscription(params)
+    );
+  }
+
+  /**
    * Send welcome email for pilot users
    * Sent to users who create a workspace with an invite token (invited/pilot users)
+   * @private Use sendSafeWelcomeEmailPilot instead
    */
-  async sendWelcomeEmailPilot(params: WelcomeEmailPilotParams): Promise<void> {
+  private async sendWelcomeEmailPilot(params: WelcomeEmailPilotParams): Promise<void> {
     const idempotencyKey = `welcome-email-pilot/${params.to}`;
 
     const { html, text } = await renderWelcomeEmailPilot({
@@ -1442,10 +1160,21 @@ export class EmailService {
   }
 
   /**
+   * Safe version: Send welcome email for pilot users
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeWelcomeEmailPilot(params: WelcomeEmailPilotParams): Promise<void> {
+    await this.executeSafely('sendWelcomeEmailPilot', params, () =>
+      this.sendWelcomeEmailPilot(params)
+    );
+  }
+
+  /**
    * Send welcome email for requesters whose access was approved
    * Sent to users when their access request is approved
+   * @private Use sendSafeWelcomeEmailRequester instead
    */
-  async sendWelcomeEmailRequester(params: WelcomeEmailRequesterParams): Promise<void> {
+  private async sendWelcomeEmailRequester(params: WelcomeEmailRequesterParams): Promise<void> {
     const idempotencyKey = `welcome-email-requester/${params.to}/${params.workspaceName}`;
 
     const { html, text } = await renderWelcomeEmailRequester({
@@ -1478,89 +1207,25 @@ export class EmailService {
     );
   }
 
+  /**
+   * Safe version: Send welcome email for requesters
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeWelcomeEmailRequester(params: WelcomeEmailRequesterParams): Promise<void> {
+    await this.executeSafely('sendWelcomeEmailRequester', params, () =>
+      this.sendWelcomeEmailRequester(params)
+    );
+  }
+
   // ============================================================================
   // WORKSPACE EMAILS
   // ============================================================================
 
   /**
-   * Send workspace access granted email
-   */
-  async sendWorkspaceAccessGranted(params: WorkspaceAccessGrantedEmailParams): Promise<void> {
-    const idempotencyKey = `workspace-access-granted/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderAccessGranted({
-      workspaceName: params.workspaceName,
-      dashboardUrl: params.dashboardUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: inviteFrom(params.workspaceName),
-        to: params.to,
-        subject: workspaceAccessGrantedSubject(params.workspaceName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        provider: emailClient.getProvider(),
-      },
-      'Workspace access granted email sent'
-    );
-  }
-
-  /**
-   * Send workspace access requested email
-   */
-  async sendWorkspaceAccessRequested(params: WorkspaceAccessRequestedEmailParams): Promise<void> {
-    const idempotencyKey = `workspace-access-requested/${params.workspaceName}/${params.requesterEmail}`;
-
-    const { html, text } = await renderAccessRequested({
-      workspaceName: params.workspaceName,
-      requesterName: params.requesterName,
-      requesterEmail: params.requesterEmail,
-      reviewUrl: params.reviewUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: inviteFrom(params.workspaceName),
-        to: params.to,
-        subject: workspaceAccessRequestedSubject({
-          requesterName: params.requesterName,
-          workspaceName: params.workspaceName,
-        }),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        requesterName: params.requesterName,
-        requesterEmail: params.requesterEmail,
-        provider: emailClient.getProvider(),
-      },
-      'Workspace access requested email sent'
-    );
-  }
-
-  /**
    * Send workspace deletion scheduled email
+   * @private Use sendSafeWorkspaceDeletionScheduled instead
    */
-  async sendWorkspaceDeletionScheduled(
+  private async sendWorkspaceDeletionScheduled(
     params: WorkspaceDeletionScheduledEmailParams
   ): Promise<void> {
     const idempotencyKey = `workspace-deletion-scheduled/${params.workspaceName}/${params.to}`;
@@ -1600,126 +1265,22 @@ export class EmailService {
   }
 
   /**
-   * Send workspace deletion requested email
+   * Safe version: Send workspace deletion scheduled email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendWorkspaceDeletionRequested(
-    params: WorkspaceDeletionRequestedEmailParams
+  async sendSafeWorkspaceDeletionScheduled(
+    params: WorkspaceDeletionScheduledEmailParams
   ): Promise<void> {
-    const idempotencyKey = `workspace-deletion-requested/${params.workspaceName}/${params.requesterEmail}/${params.to}`;
-
-    const { html, text } = await renderDeletionRequested({
-      workspaceName: params.workspaceName,
-      requesterName: params.requesterName,
-      requesterEmail: params.requesterEmail,
-      deletionDate: params.deletionDate,
-      cancelUrl: params.cancelUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: notificationFrom(),
-        to: params.to,
-        subject: workspaceDeletionRequestedSubject({
-          requesterName: params.requesterName,
-          workspaceName: params.workspaceName,
-        }),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        requesterName: params.requesterName,
-        requesterEmail: params.requesterEmail,
-        deletionDate: params.deletionDate,
-        provider: emailClient.getProvider(),
-      },
-      'Workspace deletion requested email sent'
-    );
-  }
-
-  /**
-   * Send workspace deletion confirmation email
-   */
-  async sendWorkspaceDeletionConfirmation(
-    params: WorkspaceDeletionConfirmationEmailParams
-  ): Promise<void> {
-    const idempotencyKey = `workspace-deletion-confirmation/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderDeletionConfirmation({
-      workspaceName: params.workspaceName,
-      feedbackUrl: params.feedbackUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: notificationFrom(),
-        to: params.to,
-        subject: workspaceDeletionConfirmationSubject(params.workspaceName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        provider: emailClient.getProvider(),
-      },
-      'Workspace deletion confirmation email sent'
-    );
-  }
-
-  /**
-   * Send workspace recovery scheduled email
-   */
-  async sendWorkspaceRecoveryScheduled(
-    params: WorkspaceRecoveryScheduledEmailParams
-  ): Promise<void> {
-    const idempotencyKey = `workspace-recovery-scheduled/${params.workspaceName}/${params.to}`;
-
-    const { html, text } = await renderRecoveryScheduled({
-      workspaceName: params.workspaceName,
-      dashboardUrl: params.dashboardUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: notificationFrom(),
-        to: params.to,
-        subject: workspaceRecoveryScheduledSubject(params.workspaceName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        provider: emailClient.getProvider(),
-      },
-      'Workspace recovery scheduled email sent'
+    await this.executeSafely('sendWorkspaceDeletionScheduled', params, () =>
+      this.sendWorkspaceDeletionScheduled(params)
     );
   }
 
   /**
    * Send workspace recovery confirmation email
+   * @private Use sendSafeWorkspaceRecoveryConfirmation instead
    */
-  async sendWorkspaceRecoveryConfirmation(
+  private async sendWorkspaceRecoveryConfirmation(
     params: WorkspaceRecoveryConfirmationEmailParams
   ): Promise<void> {
     const idempotencyKey = `workspace-recovery-confirmation/${params.workspaceName}/${params.to}`;
@@ -1754,9 +1315,22 @@ export class EmailService {
   }
 
   /**
-   * Send workspace recovery partially email
+   * Safe version: Send workspace recovery confirmation email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendWorkspaceRecoveryPartially(
+  async sendSafeWorkspaceRecoveryConfirmation(
+    params: WorkspaceRecoveryConfirmationEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendWorkspaceRecoveryConfirmation', params, () =>
+      this.sendWorkspaceRecoveryConfirmation(params)
+    );
+  }
+
+  /**
+   * Send workspace recovery partially email
+   * @private Use sendSafeWorkspaceRecoveryPartially instead
+   */
+  private async sendWorkspaceRecoveryPartially(
     params: WorkspaceRecoveryPartiallyEmailParams
   ): Promise<void> {
     const idempotencyKey = `workspace-recovery-partially/${params.workspaceName}/${params.to}`;
@@ -1790,14 +1364,29 @@ export class EmailService {
     );
   }
 
+  /**
+   * Safe version: Send workspace recovery partially email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeWorkspaceRecoveryPartially(
+    params: WorkspaceRecoveryPartiallyEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendWorkspaceRecoveryPartially', params, () =>
+      this.sendWorkspaceRecoveryPartially(params)
+    );
+  }
+
   // ============================================================================
   // PROJECT EMAILS
   // ============================================================================
 
   /**
    * Send project deletion scheduled email
+   * @private Use sendSafeProjectDeletionScheduled instead
    */
-  async sendProjectDeletionScheduled(params: ProjectDeletionScheduledEmailParams): Promise<void> {
+  private async sendProjectDeletionScheduled(
+    params: ProjectDeletionScheduledEmailParams
+  ): Promise<void> {
     const idempotencyKey = `project-deletion-scheduled/${params.projectName}/${params.to}`;
 
     const { html, text } = await renderProjectDeletionScheduled({
@@ -1835,120 +1424,22 @@ export class EmailService {
   }
 
   /**
-   * Send project deletion requested email
+   * Safe version: Send project deletion scheduled email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendProjectDeletionRequested(params: ProjectDeletionRequestedEmailParams): Promise<void> {
-    const idempotencyKey = `project-deletion-requested/${params.projectName}/${params.requesterEmail}/${params.to}`;
-
-    const { html, text } = await renderProjectDeletionRequested({
-      projectName: params.projectName,
-      requesterName: params.requesterName,
-      requesterEmail: params.requesterEmail,
-      deletionDate: params.deletionDate,
-      cancelUrl: params.cancelUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: notificationFrom(),
-        to: params.to,
-        subject: projectDeletionRequestedSubject({
-          requesterName: params.requesterName,
-          projectName: params.projectName,
-        }),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        projectName: params.projectName,
-        requesterName: params.requesterName,
-        requesterEmail: params.requesterEmail,
-        deletionDate: params.deletionDate,
-        provider: emailClient.getProvider(),
-      },
-      'Project deletion requested email sent'
-    );
-  }
-
-  /**
-   * Send project deletion confirmation email
-   */
-  async sendProjectDeletionConfirmation(
-    params: ProjectDeletionConfirmationEmailParams
+  async sendSafeProjectDeletionScheduled(
+    params: ProjectDeletionScheduledEmailParams
   ): Promise<void> {
-    const idempotencyKey = `project-deletion-confirmation/${params.projectName}/${params.to}`;
-
-    const { html, text } = await renderProjectDeletionConfirmation({
-      projectName: params.projectName,
-    });
-
-    await emailClient.send(
-      {
-        from: notificationFrom(),
-        to: params.to,
-        subject: projectDeletionConfirmationSubject(params.projectName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        projectName: params.projectName,
-        provider: emailClient.getProvider(),
-      },
-      'Project deletion confirmation email sent'
-    );
-  }
-
-  /**
-   * Send project recovery scheduled email
-   */
-  async sendProjectRecoveryScheduled(params: ProjectRecoveryScheduledEmailParams): Promise<void> {
-    const idempotencyKey = `project-recovery-scheduled/${params.projectName}/${params.to}`;
-
-    const { html, text } = await renderProjectRecoveryScheduled({
-      projectName: params.projectName,
-    });
-
-    await emailClient.send(
-      {
-        from: notificationFrom(),
-        to: params.to,
-        subject: projectRecoveryScheduledSubject(params.projectName),
-        html,
-        text,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: params.to,
-        projectName: params.projectName,
-        provider: emailClient.getProvider(),
-      },
-      'Project recovery scheduled email sent'
+    await this.executeSafely('sendProjectDeletionScheduled', params, () =>
+      this.sendProjectDeletionScheduled(params)
     );
   }
 
   /**
    * Send project recovery confirmation email
+   * @private Use sendSafeProjectRecoveryConfirmation instead
    */
-  async sendProjectRecoveryConfirmation(
+  private async sendProjectRecoveryConfirmation(
     params: ProjectRecoveryConfirmationEmailParams
   ): Promise<void> {
     const idempotencyKey = `project-recovery-confirmation/${params.projectName}/${params.to}`;
@@ -1983,9 +1474,24 @@ export class EmailService {
   }
 
   /**
-   * Send project recovery partially email
+   * Safe version: Send project recovery confirmation email
+   * Errors are handled by the configured error handler instead of throwing
    */
-  async sendProjectRecoveryPartially(params: ProjectRecoveryPartiallyEmailParams): Promise<void> {
+  async sendSafeProjectRecoveryConfirmation(
+    params: ProjectRecoveryConfirmationEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendProjectRecoveryConfirmation', params, () =>
+      this.sendProjectRecoveryConfirmation(params)
+    );
+  }
+
+  /**
+   * Send project recovery partially email
+   * @private Use sendSafeProjectRecoveryPartially instead
+   */
+  private async sendProjectRecoveryPartially(
+    params: ProjectRecoveryPartiallyEmailParams
+  ): Promise<void> {
     const idempotencyKey = `project-recovery-partially/${params.projectName}/${params.to}`;
 
     const { html, text } = await renderProjectRecoveryPartially({
@@ -2014,6 +1520,18 @@ export class EmailService {
         provider: emailClient.getProvider(),
       },
       'Project recovery partially email sent'
+    );
+  }
+
+  /**
+   * Safe version: Send project recovery partially email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeProjectRecoveryPartially(
+    params: ProjectRecoveryPartiallyEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendProjectRecoveryPartially', params, () =>
+      this.sendProjectRecoveryPartially(params)
     );
   }
 }

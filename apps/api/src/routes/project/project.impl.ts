@@ -231,7 +231,7 @@ export const deleteProjectImpl = (
       const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=project&workspaceId=${input.params.workspaceId}&projectId=${input.params.projectId}`;
 
       // Send deletion scheduled email
-      await emailService.sendProjectDeletionScheduled({
+      await emailService.sendSafeProjectDeletionScheduled({
         to: context.user.email,
         projectName: project.projectTitle || 'Untitled Project',
         deletionDate: formattedDeletionDate,
@@ -308,8 +308,8 @@ export const restoreProjectImpl = (
       // Send appropriate email based on restoration status
       const emailMethod =
         result.restorationStatus === 'partial'
-          ? emailService.sendProjectRecoveryPartially
-          : emailService.sendProjectRecoveryConfirmation;
+          ? emailService.sendSafeProjectRecoveryPartially
+          : emailService.sendSafeProjectRecoveryConfirmation;
 
       await Promise.allSettled(
         owners.map((owner) =>

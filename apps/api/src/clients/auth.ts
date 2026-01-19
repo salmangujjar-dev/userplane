@@ -25,14 +25,14 @@ export const auth = createAuth({
   },
   email: {
     sendVerificationEmail: async ({ user, url }) => {
-      await emailService.sendEmailVerification({
+      await emailService.sendSafeEmailVerification({
         to: user.email,
         userName: user.name,
         verificationUrl: url,
       });
     },
     sendMagicLink: async ({ email, url }) => {
-      await emailService.sendMagicLink({
+      await emailService.sendSafeMagicLink({
         to: email,
         magicLinkUrl: url,
       });
@@ -41,7 +41,7 @@ export const auth = createAuth({
   deleteUser: {
     sendDeleteAccountVerification: async ({ user, token }) => {
       const customUrl = `${env.invite.appUrl}/accounts/delete/confirm?token=${token}`;
-      await emailService.sendAccountDeletionVerification({
+      await emailService.sendSafeAccountDeletionVerification({
         to: user.email,
         userName: user.name,
         verificationUrl: customUrl,
@@ -67,7 +67,7 @@ export const auth = createAuth({
       }
 
       // Send account deletion confirmation email
-      await emailService.sendAccountDeletion({
+      await emailService.sendSafeAccountDeletion({
         to: user.email,
         userName: user.name,
         feedbackUrl: `${env.invite.appUrl}/feedback`,
