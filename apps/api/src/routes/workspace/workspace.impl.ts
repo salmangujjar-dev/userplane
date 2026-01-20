@@ -8,7 +8,6 @@
 import { domainError, inviteError, workspaceError } from '@workspace/contract';
 import { getPlanName } from '@workspace/pricing';
 
-import { env } from '@/api/env';
 import { authorized } from '@/api/middleware/auth.orpc';
 import {
   createWorkspaceMiddleware,
@@ -254,16 +253,15 @@ export const deleteWorkspaceImpl = (
         day: 'numeric',
       });
 
-      // Construct cancel URL
-      const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
-
       // Send deletion scheduled email
-      await emailService.sendSafeWorkspaceDeletionScheduled({
-        to: context.user.email,
-        workspaceName: workspace.workspaceName,
-        deletionDate: formattedDeletionDate,
-        cancelUrl,
-      });
+      await emailService.sendSafeWorkspaceDeletionScheduled(
+        { to: context.user.email },
+        {
+          workspaceName: workspace.workspaceName,
+          deletionDate: formattedDeletionDate,
+          workspaceId: input.params.workspaceId,
+        }
+      );
 
       return {
         message: 'Workspace deleted successfully',
@@ -327,7 +325,6 @@ export const restoreWorkspaceImpl = (
 
       // Send email to workspace owners that the workspace has been restored
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const dashboardUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}`;
 
       // Send appropriate email based on restoration status using batch sending
       const ownerEmails = owners.map((owner) => owner.email);
@@ -336,14 +333,13 @@ export const restoreWorkspaceImpl = (
           ? emailService.sendSafeWorkspaceRecoveryPartially
           : emailService.sendSafeWorkspaceRecoveryConfirmation;
 
-      await Promise.allSettled(
-        ownerEmails.map((email) =>
-          emailMethod({
-            to: email,
-            workspaceName: result.workspace.workspaceName,
-            dashboardUrl,
-          })
-        )
+      // Use batch sending via Resend's batch API for multiple recipients
+      await emailMethod(
+        { to: ownerEmails },
+        {
+          workspaceName: result.workspace.workspaceName,
+          workspaceId: input.params.workspaceId,
+        }
       );
 
       return {
@@ -576,14 +572,14 @@ export const leaveWorkspaceImpl = (
           day: 'numeric',
         });
 
-        const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
-
-        await emailService.sendSafeWorkspaceDeletionScheduled({
-          to: context.user.email,
-          workspaceName: workspace.workspaceName,
-          deletionDate: formattedDeletionDate,
-          cancelUrl,
-        });
+        await emailService.sendSafeWorkspaceDeletionScheduled(
+          { to: context.user.email },
+          {
+            workspaceName: workspace.workspaceName,
+            deletionDate: formattedDeletionDate,
+            workspaceId: input.params.workspaceId,
+          }
+        );
       }
 
       return {
@@ -837,7 +833,6 @@ export const acceptInviteImpl = (
     // Send email to owner(s) of the workspace
     const newMember = await userService.getById(context.user.id);
     const owners = await workspaceMemberService.getOwners(result.workspace.workspaceId);
-    const workspaceUrl = `${env.dashboard.baseUrl}/${result.workspace.workspaceId}`;
 
     // Get owner emails and send via batch
     const ownerUsers = await Promise.all(
@@ -845,26 +840,26 @@ export const acceptInviteImpl = (
     );
     const ownerEmails = ownerUsers.map((owner) => owner.email);
 
-    await Promise.allSettled(
-      ownerEmails.map((email) =>
-        emailService.sendSafeTeammateJoined({
-          to: email,
-          memberName: newMember.name,
-          memberEmail: newMember.email,
-          workspaceName: result.workspace.workspaceName,
-          workspaceUrl,
-        })
-      )
+    // Use batch sending via Resend's batch API for multiple recipients
+    await emailService.sendSafeTeammateJoined(
+      { to: ownerEmails },
+      {
+        memberName: newMember.name,
+        memberEmail: newMember.email,
+        workspaceName: result.workspace.workspaceName,
+        workspaceId: result.workspace.workspaceId,
+      }
     );
 
     // Send welcome email to the new member
-    const dashboardUrl = `${env.dashboard.baseUrl}/${result.workspace.workspaceId}`;
-    await emailService.sendSafeWelcomeEmailMember({
-      to: newMember.email,
-      userName: newMember.name,
-      workspaceName: result.workspace.workspaceName,
-      dashboardUrl,
-    });
+    await emailService.sendSafeWelcomeEmailMember(
+      { to: newMember.email },
+      {
+        userName: newMember.name,
+        workspaceName: result.workspace.workspaceName,
+        workspaceId: result.workspace.workspaceId,
+      }
+    );
 
     return {
       message: 'Invitation accepted successfully',
@@ -1193,26 +1188,29 @@ export const sendDomainInstructionsImpl = (
 
   return authorized.workspace.domains.sendInstructions
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input, context }) => {
       // Validate domain and get domain info
       const domain = await domainService.validateDomainForInstructions({
         domainId: input.params.domainId,
         workspaceId: input.params.workspaceId,
       });
 
-      const settingsUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}/settings/domains`;
-      const docsUrl = `${env.support.docsUrl}/domains`;
+      // Create verification token
+      const userplaneToken = domainService.generateVerificationToken(
+        input.params.workspaceId,
+        input.params.domainId,
+        domain.domainUrl
+      );
 
-      // Send emails to all provided addresses using batch sending
-      await Promise.allSettled(
-        input.body.emails.map((email) =>
-          emailService.sendSafeDomainDeveloperInstructions({
-            to: email,
-            domainName: domain.domainUrl,
-            settingsUrl,
-            docsUrl,
-          })
-        )
+      // Send emails to all provided addresses using batch sending via Resend's batch API
+      await emailService.sendSafeDomainDeveloperInstructions(
+        { to: input.body.emails },
+        {
+          userName: context.user.name,
+          domainUrl: domain.domainUrl,
+          workspaceId: input.params.workspaceId,
+          verificationToken: userplaneToken,
+        }
       );
 
       // With batch sending, all emails are sent together
@@ -1361,13 +1359,14 @@ export const joinWorkspaceImpl = (inviteService: InviteService, emailService: Em
 
     // Send welcome email to new member if they joined successfully
     if (result.status === 'joined') {
-      const dashboardUrl = `${env.dashboard.baseUrl}/${result.workspaceId}`;
-      await emailService.sendSafeWelcomeEmailMember({
-        to: context.user.email,
-        userName: context.user.name,
-        workspaceName: result.workspaceName,
-        dashboardUrl,
-      });
+      await emailService.sendSafeWelcomeEmailMember(
+        { to: context.user.email },
+        {
+          userName: context.user.name,
+          workspaceName: result.workspaceName,
+          workspaceId: result.workspaceId,
+        }
+      );
     }
 
     return {
@@ -1514,25 +1513,28 @@ export const updateWorkspaceBillingEmailImpl = (
       );
 
       // Send notification emails to both old and new billing emails
-      const billingUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}/settings?tab=workspace`;
       const newEmail = updated.workspaceBillingEmail!;
 
       // Send to the new email address
-      await emailService.sendSafeBillingEmailUpdated({
-        to: newEmail,
-        previousEmail: previousEmail || 'Not set',
-        newEmail: newEmail,
-        billingUrl,
-      });
+      await emailService.sendSafeBillingEmailUpdated(
+        { to: newEmail },
+        {
+          previousEmail: previousEmail || 'Not set',
+          newEmail: newEmail,
+          workspaceId: input.params.workspaceId,
+        }
+      );
 
       // Send to the previous email address if it exists and is different
       if (previousEmail && previousEmail !== newEmail) {
-        await emailService.sendSafeBillingEmailUpdated({
-          to: previousEmail,
-          previousEmail: previousEmail,
-          newEmail: newEmail,
-          billingUrl,
-        });
+        await emailService.sendSafeBillingEmailUpdated(
+          { to: previousEmail },
+          {
+            previousEmail: previousEmail,
+            newEmail: newEmail,
+            workspaceId: input.params.workspaceId,
+          }
+        );
       }
 
       return {
@@ -1584,11 +1586,13 @@ export const requestBillingEmailChangeImpl = (
         input.body.email
       );
 
-      await emailService.sendSafeBillingEmailVerification({
-        to: input.body.email,
-        workspaceName: workspace.workspaceName,
-        verificationUrl,
-      });
+      await emailService.sendSafeBillingEmailVerification(
+        { to: input.body.email },
+        {
+          workspaceName: workspace.workspaceName,
+          verificationUrl,
+        }
+      );
 
       return {
         message:
@@ -1641,26 +1645,28 @@ export const verifyBillingEmailChangeImpl = (
 
     const updated = await workspaceService.updateWorkspaceBillingEmail(workspaceId, newEmail);
 
-    const billingUrl = `${env.dashboard.baseUrl}/${workspaceId}/settings?tab=workspace`;
-
     const owners = await workspaceMemberService.getOwners(workspaceId);
 
     for (const owner of owners) {
-      await emailService.sendSafeBillingEmailUpdated({
-        to: owner.email,
-        previousEmail: previousEmail || 'Not set',
-        newEmail: newEmail,
-        billingUrl,
-      });
+      await emailService.sendSafeBillingEmailUpdated(
+        { to: owner.email },
+        {
+          previousEmail: previousEmail || 'Not set',
+          newEmail: newEmail,
+          workspaceId,
+        }
+      );
     }
 
     if (previousEmail && previousEmail !== newEmail) {
-      await emailService.sendSafeBillingEmailUpdated({
-        to: previousEmail,
-        previousEmail: previousEmail,
-        newEmail: newEmail,
-        billingUrl,
-      });
+      await emailService.sendSafeBillingEmailUpdated(
+        { to: previousEmail },
+        {
+          previousEmail: previousEmail,
+          newEmail: newEmail,
+          workspaceId,
+        }
+      );
     }
 
     return {

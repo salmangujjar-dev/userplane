@@ -38,10 +38,9 @@ export const EmailVerificationEmail = ({
       </Section>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.smallText}>{copy.fallbackText}</Text>
         <Text style={styles.smallText}>
           <Link href={verificationUrl} style={styles.link}>
-            {verificationUrl}
+            {copy.fallbackText}
           </Link>
         </Text>
       </Section>

@@ -7,7 +7,6 @@ import { isValidRoleName } from '@workspace/auth';
 import type { WorkspaceRole } from '@workspace/contract';
 import { getPlanName, type PlanId } from '@workspace/pricing';
 
-import { env } from '@/api/env';
 import { generateWorkspaceId } from '@/api/lib/id';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
 import { authorized } from '@/api/middleware/auth.orpc';
@@ -179,10 +178,12 @@ const banUserImpl = (adminService: AdminService, emailService: EmailService) => 
     });
 
     // Send email to suspended account
-    await emailService.sendSafeTosViolation({
-      to: userDetail.email,
-      userName: userDetail.name,
-    });
+    await emailService.sendSafeTosViolation(
+      { to: userDetail.email },
+      {
+        userName: userDetail.name,
+      }
+    );
 
     return {
       message: 'User banned successfully',
@@ -201,10 +202,12 @@ const unbanUserImpl = (adminService: AdminService, emailService: EmailService) =
     const userDetail = await adminService.unbanUser(input.params.userId);
 
     // Send account restored email
-    await emailService.sendSafeAccountRestored({
-      to: userDetail.email,
-      userName: userDetail.name,
-    });
+    await emailService.sendSafeAccountRestored(
+      { to: userDetail.email },
+      {
+        userName: userDetail.name,
+      }
+    );
 
     return {
       message: 'User unbanned successfully',
@@ -552,25 +555,20 @@ const deactivateWorkspaceImpl = (
         day: 'numeric',
       });
 
-      // Construct cancel URL
-      const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
-
       // Calculate scheduled time based on notify duration
       const scheduledAt = calculateScheduledTime(notify);
 
-      // Send deletion scheduled email to workspace owners using batch
+      // Send deletion scheduled email to workspace owners using batch API
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
       const ownerEmails = owners.map((owner) => owner.email);
-      await Promise.allSettled(
-        ownerEmails.map((email) =>
-          emailService.sendSafeWorkspaceDeletionScheduled({
-            to: email,
-            workspaceName: workspaceInfo.workspaceName,
-            deletionDate: formattedDeletionDate,
-            cancelUrl,
-            scheduledAt,
-          })
-        )
+      await emailService.sendSafeWorkspaceDeletionScheduled(
+        { to: ownerEmails },
+        {
+          workspaceName: workspaceInfo.workspaceName,
+          deletionDate: formattedDeletionDate,
+          workspaceId: input.params.workspaceId,
+          scheduledAt,
+        }
       );
     }
 
@@ -604,7 +602,6 @@ const restoreWorkspaceImpl = (
 
       // Send email to workspace owners that the workspace has been restored
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const dashboardUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}`;
 
       // Send appropriate email based on restoration status using batch
       const ownerEmails = owners.map((owner) => owner.email);
@@ -613,15 +610,14 @@ const restoreWorkspaceImpl = (
           ? emailService.sendSafeWorkspaceRecoveryPartially
           : emailService.sendSafeWorkspaceRecoveryConfirmation;
 
-      await Promise.allSettled(
-        ownerEmails.map((email) =>
-          emailMethod({
-            to: email,
-            workspaceName: result.workspace.workspaceName,
-            dashboardUrl,
-            scheduledAt,
-          })
-        )
+      // Use batch sending via Resend's batch API for multiple recipients
+      await emailMethod(
+        { to: ownerEmails },
+        {
+          workspaceName: result.workspace.workspaceName,
+          workspaceId: input.params.workspaceId,
+          scheduledAt,
+        }
       );
     }
 
@@ -672,9 +668,6 @@ const deactivateProjectImpl = (
         day: 'numeric',
       });
 
-      // Construct cancel URL
-      const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=project&workspaceId=${input.params.workspaceId}&projectId=${input.params.projectId}`;
-
       // Calculate scheduled time based on notify duration
       const scheduledAt = calculateScheduledTime(notify);
 
@@ -682,16 +675,16 @@ const deactivateProjectImpl = (
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
       const ownerEmails = owners.map((owner) => owner.email);
 
-      await Promise.allSettled(
-        ownerEmails.map((email) =>
-          emailService.sendSafeProjectDeletionScheduled({
-            to: email,
-            projectName: project.projectTitle || 'Untitled Project',
-            deletionDate: formattedDeletionDate,
-            cancelUrl,
-            scheduledAt,
-          })
-        )
+      // Use batch sending via Resend's batch API for multiple recipients
+      await emailService.sendSafeProjectDeletionScheduled(
+        { to: ownerEmails },
+        {
+          projectName: project.projectTitle || 'Untitled Project',
+          deletionDate: formattedDeletionDate,
+          workspaceId: input.params.workspaceId,
+          projectId: input.params.projectId,
+          scheduledAt,
+        }
       );
     }
 
@@ -728,7 +721,6 @@ const restoreProjectImpl = (
 
       // Send email to workspace owners that the project has been restored
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const dashboardUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}`;
 
       // Send appropriate email based on restoration status
       const ownerEmails = owners.map((owner) => owner.email);
@@ -737,15 +729,14 @@ const restoreProjectImpl = (
           ? emailService.sendSafeProjectRecoveryPartially
           : emailService.sendSafeProjectRecoveryConfirmation;
 
-      await Promise.allSettled(
-        ownerEmails.map((email) =>
-          emailMethod({
-            to: email,
-            projectName: restoredProject.projectTitle,
-            dashboardUrl,
-            scheduledAt,
-          })
-        )
+      // Use batch sending via Resend's batch API for multiple recipients
+      await emailMethod(
+        { to: ownerEmails },
+        {
+          projectName: restoredProject.projectTitle,
+          workspaceId: input.params.workspaceId,
+          scheduledAt,
+        }
       );
     }
 
@@ -912,12 +903,14 @@ const createWorkspaceInviteImpl = (
       const scheduledAt = calculateScheduledTime(notify);
 
       // Send sandbox invite email (immediate or scheduled)
-      await emailService.sendSafePilotSandboxInvite({
-        to: email,
-        sandboxUrl: inviteUrl,
-        expiresInDays: 7,
-        scheduledAt,
-      });
+      await emailService.sendSafePilotSandboxInvite(
+        { to: email },
+        {
+          sandboxUrl: inviteUrl,
+          expiresInDays: 7,
+          scheduledAt,
+        }
+      );
     }
 
     return {

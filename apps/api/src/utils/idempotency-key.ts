@@ -5,57 +5,57 @@
  */
 
 type EmailVerificationKeyParams = {
-  to: string;
+  to: string | string[];
   timestamp: number;
 };
 
 type MagicLinkKeyParams = {
-  to: string;
+  to: string | string[];
   timestamp: number;
 };
 
 type AccessRequestKeyParams = {
   workspaceName: string;
   requesterEmail: string;
-  to: string;
+  to: string | string[];
 };
 
 type BillingEmailUpdatedKeyParams = {
-  to: string;
+  to: string | string[];
   newEmail: string;
 };
 
 type BillingEmailVerificationKeyParams = {
-  to: string;
+  to: string | string[];
   timestamp: number;
 };
 
 type SubscriptionActiveKeyParams = {
-  to: string;
+  to: string | string[];
   planName: string;
 };
 
 type SubscriptionExpiredKeyParams = {
-  to: string;
+  to: string | string[];
   planName: string;
 };
 
 type SubscriptionInactiveKeyParams = {
-  to: string;
+  to: string | string[];
   planName: string;
 };
 
 type SubscriptionPlanChangeKeyParams = {
-  to: string;
+  to: string | string[];
   newPlan: string;
 };
 
 type SubscriptionReverseTrialKeyParams = {
-  to: string;
+  to: string | string[];
 };
 
 type DomainInstructionsKeyParams = {
-  domainName: string;
+  domainUrl: string;
   recipients: string[];
 };
 
@@ -71,47 +71,47 @@ type TeammateJoinedKeyParams = {
 };
 
 type AccountDeletionKeyParams = {
-  to: string;
+  to: string | string[];
 };
 
 type AccountDeletionVerificationKeyParams = {
-  to: string;
+  to: string | string[];
   timestamp: number;
 };
 
 type AccountRestoredKeyParams = {
-  to: string;
+  to: string | string[];
 };
 
 type TosViolationKeyParams = {
-  to: string;
+  to: string | string[];
 };
 
 type PilotSandboxInviteKeyParams = {
-  to: string;
+  to: string | string[];
   scheduledAt?: string;
 };
 
 type RecordingReceivedKeyParams = {
-  to: string;
+  to: string | string[];
   recordingUrl: string;
 };
 
 type WelcomeEmailMemberKeyParams = {
-  to: string;
+  to: string | string[];
   workspaceName: string;
 };
 
 type WelcomeEmailSubscriptionKeyParams = {
-  to: string;
+  to: string | string[];
 };
 
 type WelcomeEmailPilotKeyParams = {
-  to: string;
+  to: string | string[];
 };
 
 type WelcomeEmailRequesterKeyParams = {
-  to: string;
+  to: string | string[];
   workspaceName: string;
 };
 
@@ -156,77 +156,87 @@ function formatRecipients(recipients: string[]): string {
  * Generate idempotency key for email verification
  */
 export function emailVerificationKey(params: EmailVerificationKeyParams): string {
-  return `email-verification/${params.to}/${params.timestamp}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `email-verification/${recipients}/${params.timestamp}`;
 }
 
 /**
  * Generate idempotency key for magic link
  */
 export function magicLinkKey(params: MagicLinkKeyParams): string {
-  return `magic-link/${params.to}/${params.timestamp}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `magic-link/${recipients}/${params.timestamp}`;
 }
 
 /**
  * Generate idempotency key for access request
  */
 export function accessRequestKey(params: AccessRequestKeyParams): string {
-  return `access-request/${params.workspaceName}/${params.requesterEmail}/${params.to}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `access-request/${params.workspaceName}/${params.requesterEmail}/${recipients}`;
 }
 
 /**
  * Generate idempotency key for billing email updated
  */
 export function billingEmailUpdatedKey(params: BillingEmailUpdatedKeyParams): string {
-  return `billing-email-updated/${params.to}/${params.newEmail}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `billing-email-updated/${recipients}/${params.newEmail}`;
 }
 
 /**
  * Generate idempotency key for billing email verification
  */
 export function billingEmailVerificationKey(params: BillingEmailVerificationKeyParams): string {
-  return `billing-email-verification/${params.to}/${params.timestamp}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `billing-email-verification/${recipients}/${params.timestamp}`;
 }
 
 /**
  * Generate idempotency key for subscription active
  */
 export function subscriptionActiveKey(params: SubscriptionActiveKeyParams): string {
-  return `subscription-active/${params.to}/${params.planName}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `subscription-active/${recipients}/${params.planName}`;
 }
 
 /**
  * Generate idempotency key for subscription expired
  */
 export function subscriptionExpiredKey(params: SubscriptionExpiredKeyParams): string {
-  return `subscription-expired/${params.to}/${params.planName}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `subscription-expired/${recipients}/${params.planName}`;
 }
 
 /**
  * Generate idempotency key for subscription inactive
  */
 export function subscriptionInactiveKey(params: SubscriptionInactiveKeyParams): string {
-  return `subscription-inactive/${params.to}/${params.planName}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `subscription-inactive/${recipients}/${params.planName}`;
 }
 
 /**
  * Generate idempotency key for subscription plan change
  */
 export function subscriptionPlanChangeKey(params: SubscriptionPlanChangeKeyParams): string {
-  return `subscription-plan-change/${params.to}/${params.newPlan}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `subscription-plan-change/${recipients}/${params.newPlan}`;
 }
 
 /**
  * Generate idempotency key for subscription reverse trial
  */
 export function subscriptionReverseTrialKey(params: SubscriptionReverseTrialKeyParams): string {
-  return `subscription-reverse-trial/${params.to}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `subscription-reverse-trial/${recipients}`;
 }
 
 /**
  * Generate idempotency key for domain developer instructions
  */
 export function domainInstructionsKey(params: DomainInstructionsKeyParams): string {
-  return `domain-instructions/${params.domainName}/${formatRecipients(params.recipients)}`;
+  return `domain-instructions/${params.domainUrl}/${formatRecipients(params.recipients)}`;
 }
 
 /**
@@ -247,7 +257,8 @@ export function teammateJoinedKey(params: TeammateJoinedKeyParams): string {
  * Generate idempotency key for account deletion
  */
 export function accountDeletionKey(params: AccountDeletionKeyParams): string {
-  return `account-deletion/${params.to}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `account-deletion/${recipients}`;
 }
 
 /**
@@ -256,63 +267,72 @@ export function accountDeletionKey(params: AccountDeletionKeyParams): string {
 export function accountDeletionVerificationKey(
   params: AccountDeletionVerificationKeyParams
 ): string {
-  return `account-deletion-verification/${params.to}/${params.timestamp}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `account-deletion-verification/${recipients}/${params.timestamp}`;
 }
 
 /**
  * Generate idempotency key for account restored
  */
 export function accountRestoredKey(params: AccountRestoredKeyParams): string {
-  return `account-restored/${params.to}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `account-restored/${recipients}`;
 }
 
 /**
  * Generate idempotency key for TOS violation
  */
 export function tosViolationKey(params: TosViolationKeyParams): string {
-  return `tos-violation/${params.to}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `tos-violation/${recipients}`;
 }
 
 /**
  * Generate idempotency key for pilot sandbox invite
  */
 export function pilotSandboxInviteKey(params: PilotSandboxInviteKeyParams): string {
-  return `pilot-sandbox-invite/${params.to}${params.scheduledAt ? `/${params.scheduledAt}` : ''}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `pilot-sandbox-invite/${recipients}${params.scheduledAt ? `/${params.scheduledAt}` : ''}`;
 }
 
 /**
  * Generate idempotency key for recording received
  */
 export function recordingReceivedKey(params: RecordingReceivedKeyParams): string {
-  return `recording-received/${params.to}/${params.recordingUrl}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `recording-received/${recipients}/${params.recordingUrl}`;
 }
 
 /**
  * Generate idempotency key for welcome email member
  */
 export function welcomeEmailMemberKey(params: WelcomeEmailMemberKeyParams): string {
-  return `welcome-email-member/${params.to}/${params.workspaceName}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `welcome-email-member/${recipients}/${params.workspaceName}`;
 }
 
 /**
  * Generate idempotency key for welcome email subscription
  */
 export function welcomeEmailSubscriptionKey(params: WelcomeEmailSubscriptionKeyParams): string {
-  return `welcome-email-subscription/${params.to}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `welcome-email-subscription/${recipients}`;
 }
 
 /**
  * Generate idempotency key for welcome email pilot
  */
 export function welcomeEmailPilotKey(params: WelcomeEmailPilotKeyParams): string {
-  return `welcome-email-pilot/${params.to}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `welcome-email-pilot/${recipients}`;
 }
 
 /**
  * Generate idempotency key for welcome email requester
  */
 export function welcomeEmailRequesterKey(params: WelcomeEmailRequesterKeyParams): string {
-  return `welcome-email-requester/${params.to}/${params.workspaceName}`;
+  const recipients = Array.isArray(params.to) ? formatRecipients(params.to) : params.to;
+  return `welcome-email-requester/${recipients}/${params.workspaceName}`;
 }
 
 /**

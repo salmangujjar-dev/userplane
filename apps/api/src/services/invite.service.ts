@@ -6,7 +6,6 @@
 import { domainError, inviteError, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 
-import { env } from '@/api/env';
 import { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
 import { UserService } from '@/api/services/user.service';
@@ -102,17 +101,16 @@ export class InviteService {
       ie: inviter.email,
     });
 
-    // Use batch sending when multiple emails to improve performance
-    await Promise.allSettled(
-      emails.map((email) =>
-        this.deps.emailService.sendSafeTeammateInvited({
-          to: email,
-          workspaceName: workspace.workspaceName,
-          inviteUrl,
-          inviterName: inviter.name,
-          inviterEmail: inviter.email,
-        })
-      )
+    // Use batch sending via Resend's batch API when multiple emails
+    // Send all emails at once using the batch parameter
+    await this.deps.emailService.sendSafeTeammateInvited(
+      { to: emails },
+      {
+        workspaceName: workspace.workspaceName,
+        inviteUrl,
+        inviterName: inviter.name,
+        inviterEmail: inviter.email,
+      }
     );
 
     // With batch sending, all emails are sent together
@@ -378,13 +376,15 @@ export class InviteService {
             userEmail
           );
 
-          return this.deps.emailService.sendSafeAccessRequest({
-            to: owner.email,
-            workspaceName: workspace.workspaceName,
-            requesterName: userName,
-            requesterEmail: userEmail,
-            reviewUrl,
-          });
+          return this.deps.emailService.sendSafeAccessRequest(
+            { to: owner.email },
+            {
+              workspaceName: workspace.workspaceName,
+              requesterName: userName,
+              requesterEmail: userEmail,
+              reviewUrl,
+            }
+          );
         })
       );
 
@@ -527,13 +527,14 @@ export class InviteService {
     });
 
     // Send welcome email to the requester
-    const dashboardUrl = `${env.dashboard.baseUrl}/${workspaceId}`;
-    await this.deps.emailService.sendSafeWelcomeEmailRequester({
-      to: userEmail,
-      userName: user.name,
-      workspaceName: workspace.workspaceName,
-      dashboardUrl,
-    });
+    await this.deps.emailService.sendSafeWelcomeEmailRequester(
+      { to: userEmail },
+      {
+        userName: user.name,
+        workspaceName: workspace.workspaceName,
+        workspaceId,
+      }
+    );
 
     return {
       workspaceId,
