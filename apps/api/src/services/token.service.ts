@@ -260,6 +260,13 @@ export class TokenService {
       return null;
     }
   }
+
+  /**
+   * Get access request expiry duration in seconds
+   */
+  getAccessRequestExpiresIn(): number {
+    return this.accessRequestExpiresIn;
+  }
 }
 
 export const tokenService = new TokenService({

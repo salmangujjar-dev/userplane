@@ -8,8 +8,8 @@ export const copy = {
   title: 'Workspace partially restored',
   subtitle: (workspaceName: string) => `${workspaceName} has been partially restored`,
   body: [
-    'Your workspace has been partially restored. You can now request recordings and create new recording links.',
-    'Some features may still be limited. Contact support if you need full restoration.',
+    'Your workspace has been partially restored with limited archival access.',
+    'Recording requests and recording links should now be available.',
   ],
   cta: 'Go to dashboard',
 } as const;

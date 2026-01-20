@@ -1,5 +1,5 @@
 /**
- * Subject for Auth - Access Request Email
+ * Subject for Workspace - Access Request Email
  */
 
 export const subject = (params: { requesterName: string; workspaceName: string }) =>

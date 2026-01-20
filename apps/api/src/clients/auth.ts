@@ -47,7 +47,6 @@ export const auth = createAuth({
       await emailService.sendSafeAccountDeletionVerification(
         { to: user.email },
         {
-          userName: user.name,
           deletionToken: token,
         }
       );
@@ -72,12 +71,7 @@ export const auth = createAuth({
       }
 
       // Send account deletion confirmation email
-      await emailService.sendSafeAccountDeletion(
-        { to: user.email },
-        {
-          userName: user.name,
-        }
-      );
+      await emailService.sendSafeAccountDeletion({ to: user.email });
     },
   },
 });

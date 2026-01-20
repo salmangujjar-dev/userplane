@@ -8,8 +8,8 @@ export const copy = {
   title: 'Project partially restored',
   subtitle: (projectName: string) => `${projectName} has been partially restored`,
   body: [
-    'Your project has been partially restored. You can now request recordings and create new recording links.',
-    'Some features may still be limited. Contact support if you need full restoration.',
+    'Your project has been partially restored with limited archival access.',
+    'Recording requests and recording links should now be available.',
   ],
   cta: 'Go to dashboard',
 } as const;

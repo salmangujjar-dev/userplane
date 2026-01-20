@@ -12,10 +12,10 @@ import * as styles from '../../shared/styles';
 
 export interface SandboxInviteEmailProps {
   sandboxUrl: string;
-  expiresInDays: number;
+  calendarUrl: string;
 }
 
-export const SandboxInviteEmail = ({ sandboxUrl, expiresInDays }: SandboxInviteEmailProps) => {
+export const SandboxInviteEmail = ({ sandboxUrl, calendarUrl }: SandboxInviteEmailProps) => {
   return (
     <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
@@ -23,13 +23,23 @@ export const SandboxInviteEmail = ({ sandboxUrl, expiresInDays }: SandboxInviteE
 
       <Section style={styles.messageSection}>
         <Text style={styles.messageText}>{copy.body[0]}</Text>
-        <Text style={styles.messageText}>{copy.body[1](expiresInDays)}</Text>
+        <Text style={styles.messageText}>{copy.body[1]}</Text>
       </Section>
 
       <Section style={styles.ctaSection}>
         <Link href={sandboxUrl} style={styles.ctaButton}>
           {copy.cta}
         </Link>
+      </Section>
+
+      <Section style={styles.ctaSection}>
+        <Link href={calendarUrl} style={styles.secondaryButton}>
+          {copy.secondaryCta}
+        </Link>
+      </Section>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.smallText}>{copy.footer}</Text>
       </Section>
     </EmailLayout>
   );

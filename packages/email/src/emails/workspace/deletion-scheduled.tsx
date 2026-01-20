@@ -33,7 +33,7 @@ export const DeletionScheduledEmail = ({
       </Text>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.messageText}>{copy.body[0](formattedDeletionDate)}</Text>
+        <Text style={styles.messageText}>{copy.body[0]}</Text>
         <Text style={styles.messageText}>{copy.body[1]}</Text>
       </Section>
 

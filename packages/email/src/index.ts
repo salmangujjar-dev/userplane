@@ -53,7 +53,6 @@ export type {
   SubscriptionReverseTrialEmailProps,
   // Invite
   TeammateInvitedEmailProps,
-  TeammateJoinedEmailProps,
   TosViolationEmailProps,
   // Trial
   WelcomeEmailMemberProps,
@@ -95,7 +94,6 @@ export {
   renderSubscriptionReverseTrial,
   // Invite
   renderTeammateInvited,
-  renderTeammateJoined,
   renderTosViolation,
   // Trial
   renderWelcomeEmailMember,

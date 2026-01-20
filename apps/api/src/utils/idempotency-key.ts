@@ -64,12 +64,6 @@ type TeammateInvitedKeyParams = {
   recipients: string[];
 };
 
-type TeammateJoinedKeyParams = {
-  workspaceName: string;
-  recipients: string[];
-  memberEmail: string;
-};
-
 type AccountDeletionKeyParams = {
   to: string | string[];
 };
@@ -244,13 +238,6 @@ export function domainInstructionsKey(params: DomainInstructionsKeyParams): stri
  */
 export function teammateInvitedKey(params: TeammateInvitedKeyParams): string {
   return `teammate-invited/${params.workspaceName}/${formatRecipients(params.recipients)}`;
-}
-
-/**
- * Generate idempotency key for teammate joined
- */
-export function teammateJoinedKey(params: TeammateJoinedKeyParams): string {
-  return `teammate-joined/${params.workspaceName}/${formatRecipients(params.recipients)}/${params.memberEmail}`;
 }
 
 /**

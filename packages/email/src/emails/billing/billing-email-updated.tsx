@@ -21,14 +21,16 @@ export const BillingEmailUpdatedEmail = ({
   newEmail,
   billingUrl,
 }: BillingEmailUpdatedEmailProps) => {
+  const bodyText = copy.body(previousEmail, newEmail);
+
   return (
     <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{copy.subtitle(previousEmail, newEmail)}</Text>
+      <Text style={styles.subtitle}>{copy.subtitle}</Text>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.messageText}>{copy.body[0]}</Text>
-        <Text style={styles.messageText}>{copy.body[1]}</Text>
+        <Text style={styles.messageText}>{bodyText[0]}</Text>
+        <Text style={styles.messageText}>{bodyText[1]}</Text>
       </Section>
 
       <Section style={styles.ctaSection}>

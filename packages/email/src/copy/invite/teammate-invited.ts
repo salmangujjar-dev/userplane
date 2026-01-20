@@ -2,25 +2,20 @@
  * Copy for Invite - Teammate Invited Email
  */
 
-const formatInviter = (name: string, email: string) => {
-  const trimmedName = name?.trim();
-  return trimmedName || email;
-};
-
 const formatWorkspaceName = (workspaceName: string) => {
   const trimmedWorkspace = workspaceName?.trim();
-  return trimmedWorkspace || 'workspace';
+  return trimmedWorkspace || 'Userplane workspace';
 };
 
 export const copy = {
-  preview: (inviterName: string, inviterEmail: string, workspaceName: string) =>
-    `${formatInviter(inviterName, inviterEmail)} invited you to ${formatWorkspaceName(workspaceName)}`,
+  preview: (workspaceName: string) =>
+    `You have been invited to ${formatWorkspaceName(workspaceName)}`,
   title: 'You have been invited',
-  subtitle: (inviterName: string, inviterEmail: string, workspaceName: string) =>
-    `${formatInviter(inviterName, inviterEmail)} invited you to join ${formatWorkspaceName(workspaceName)}`,
+  subtitle: (workspaceName: string) =>
+    `You have been invited to ${formatWorkspaceName(workspaceName)}`,
   body: [
-    'Accept this invitation to start viewing recordings, creating recording links, and collaborating with your team.',
+    'Request and replay customer issues without the back-and-forth. Join your team and get started with Userplane immediately.',
   ],
   cta: 'Accept invitation',
-  helpText: 'Or copy this link:',
+  fallbackText: 'Or copy this link:',
 } as const;

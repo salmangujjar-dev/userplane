@@ -20,7 +20,8 @@ import type { ProjectService } from '@/api/services/project.service';
 import type { TokenService } from '@/api/services/token.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
-import { calculateScheduledTime } from '@/api/utils/date';
+import { calculateScheduledTime, getRestorationMaxWindowDays } from '@/api/utils/date';
+import { formatDeletionDate } from '@/api/utils/format';
 
 /**
  * Format date to ISO string
@@ -178,12 +179,7 @@ const banUserImpl = (adminService: AdminService, emailService: EmailService) => 
     });
 
     // Send email to suspended account
-    await emailService.sendSafeTosViolation(
-      { to: userDetail.email },
-      {
-        userName: userDetail.name,
-      }
-    );
+    await emailService.sendSafeTosViolation({ to: userDetail.email });
 
     return {
       message: 'User banned successfully',
@@ -202,12 +198,7 @@ const unbanUserImpl = (adminService: AdminService, emailService: EmailService) =
     const userDetail = await adminService.unbanUser(input.params.userId);
 
     // Send account restored email
-    await emailService.sendSafeAccountRestored(
-      { to: userDetail.email },
-      {
-        userName: userDetail.name,
-      }
-    );
+    await emailService.sendSafeAccountRestored({ to: userDetail.email });
 
     return {
       message: 'User unbanned successfully',
@@ -546,14 +537,11 @@ const deactivateWorkspaceImpl = (
     // Check if notifications are enabled
     const notify = input.body?.notify;
     if (notify && notify !== 'never') {
-      // Calculate deletion date (30 days from now)
+      // Calculate deletion date using restoration max window
       const deletionDate = new Date();
-      deletionDate.setDate(deletionDate.getDate() + 30);
-      const formattedDeletionDate = deletionDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+      const maxWindow = getRestorationMaxWindowDays();
+      deletionDate.setDate(deletionDate.getDate() + maxWindow);
+      const formattedDeletionDate = formatDeletionDate(deletionDate);
 
       // Calculate scheduled time based on notify duration
       const scheduledAt = calculateScheduledTime(notify);
@@ -659,14 +647,11 @@ const deactivateProjectImpl = (
     // Check if notifications are enabled
     const notify = input.body?.notify;
     if (notify && notify !== 'never') {
-      // Calculate deletion date (30 days from now)
+      // Calculate deletion date using restoration max window
       const deletionDate = new Date();
-      deletionDate.setDate(deletionDate.getDate() + 30);
-      const formattedDeletionDate = deletionDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+      const maxWindow = getRestorationMaxWindowDays();
+      deletionDate.setDate(deletionDate.getDate() + maxWindow);
+      const formattedDeletionDate = formatDeletionDate(deletionDate);
 
       // Calculate scheduled time based on notify duration
       const scheduledAt = calculateScheduledTime(notify);
@@ -907,7 +892,6 @@ const createWorkspaceInviteImpl = (
         { to: email },
         {
           sandboxUrl: inviteUrl,
-          expiresInDays: 7,
           scheduledAt,
         }
       );

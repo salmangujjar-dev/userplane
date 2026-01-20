@@ -2,19 +2,10 @@
  * Subject for Invite - Teammate Invited Email
  */
 
-const formatInviter = (name: string, email: string) => {
-  const trimmedName = name?.trim();
-  return trimmedName || email;
-};
-
 const formatWorkspaceName = (workspaceName: string) => {
   const trimmedWorkspace = workspaceName?.trim();
-  return trimmedWorkspace || 'workspace';
+  return trimmedWorkspace || 'Userplane workspace';
 };
 
-export const subject = (params: {
-  inviterName: string;
-  inviterEmail: string;
-  workspaceName: string;
-}) =>
-  `${formatInviter(params.inviterName, params.inviterEmail)} invited you to ${formatWorkspaceName(params.workspaceName)}`;
+export const subject = (params: { workspaceName: string }) =>
+  `You have been invited to ${formatWorkspaceName(params.workspaceName)}`;

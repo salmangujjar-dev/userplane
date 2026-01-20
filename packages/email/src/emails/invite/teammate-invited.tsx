@@ -7,32 +7,22 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/invite/teammate-invited';
-import { getUserName, getWorkspaceName } from '../../shared/fallback';
+import { getWorkspaceName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface TeammateInvitedEmailProps {
-  inviterName: string;
-  inviterEmail: string;
   workspaceName: string;
   inviteUrl: string;
 }
 
-export const TeammateInvitedEmail = ({
-  inviterName,
-  inviterEmail,
-  workspaceName,
-  inviteUrl,
-}: TeammateInvitedEmailProps) => {
-  const formattedInviterName = getUserName(inviterName);
+export const TeammateInvitedEmail = ({ workspaceName, inviteUrl }: TeammateInvitedEmailProps) => {
   const formattedWorkspaceName = getWorkspaceName(workspaceName);
 
   return (
-    <EmailLayout preview={copy.preview(formattedInviterName, inviterEmail, formattedWorkspaceName)}>
+    <EmailLayout preview={copy.preview(formattedWorkspaceName)}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>
-        {copy.subtitle(formattedInviterName, inviterEmail, formattedWorkspaceName)}
-      </Text>
+      <Text style={styles.subtitle}>{copy.subtitle(formattedWorkspaceName)}</Text>
 
       <Section style={styles.messageSection}>
         <Text style={styles.messageText}>{copy.body[0]}</Text>
@@ -46,9 +36,8 @@ export const TeammateInvitedEmail = ({
 
       <Section style={styles.messageSection}>
         <Text style={styles.smallText}>
-          {copy.helpText}{' '}
           <Link href={inviteUrl} style={styles.link}>
-            {inviteUrl}
+            {copy.fallbackText}
           </Link>
         </Text>
       </Section>

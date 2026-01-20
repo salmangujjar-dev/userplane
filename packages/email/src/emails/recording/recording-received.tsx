@@ -28,6 +28,14 @@ export const RecordingReceivedEmail = ({ recordingUrl }: RecordingReceivedEmailP
           {copy.cta}
         </Link>
       </Section>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.smallText}>
+          <Link href={recordingUrl} style={styles.link}>
+            {copy.fallbackText}
+          </Link>
+        </Text>
+      </Section>
     </EmailLayout>
   );
 };

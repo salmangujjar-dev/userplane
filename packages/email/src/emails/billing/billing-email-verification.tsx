@@ -7,29 +7,30 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/billing/billing-email-verification';
-import { getWorkspaceName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface BillingEmailVerificationEmailProps {
-  workspaceName: string;
   verificationUrl: string;
+  previousEmail: string;
+  newEmail: string;
 }
 
 export const BillingEmailVerificationEmail = ({
-  workspaceName,
   verificationUrl,
+  previousEmail,
+  newEmail,
 }: BillingEmailVerificationEmailProps) => {
-  const formattedWorkspaceName = getWorkspaceName(workspaceName);
+  const bodyText = copy.body(previousEmail, newEmail);
 
   return (
     <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{copy.subtitle(formattedWorkspaceName)}</Text>
+      <Text style={styles.subtitle}>{copy.subtitle}</Text>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.messageText}>{copy.body[0]}</Text>
-        <Text style={styles.messageText}>{copy.body[1]}</Text>
+        <Text style={styles.messageText}>{bodyText[0]}</Text>
+        <Text style={styles.messageText}>{bodyText[1]}</Text>
       </Section>
 
       <Section style={styles.ctaSection}>

@@ -11,6 +11,7 @@ import { TokenService } from '@/api/services/token.service';
 import { UserService } from '@/api/services/user.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+import { formatDeletionDate } from '@/api/utils/format';
 
 /**
  * Internal invite action result type for service orchestration
@@ -108,8 +109,6 @@ export class InviteService {
       {
         workspaceName: workspace.workspaceName,
         inviteUrl,
-        inviterName: inviter.name,
-        inviterEmail: inviter.email,
       }
     );
 
@@ -364,6 +363,12 @@ export class InviteService {
         throw domainError.INTERNAL_SERVER_ERROR();
       }
 
+      // Calculate access request expiry date
+      const expirySeconds = this.deps.tokenService.getAccessRequestExpiresIn();
+      const expiryDate = new Date();
+      expiryDate.setSeconds(expiryDate.getSeconds() + expirySeconds);
+      const formattedExpiryDate = formatDeletionDate(expiryDate);
+
       // Send access request email to each owner with owner-specific tokens
       // Each owner gets a unique token that only they can use
       // Use allSettled to ensure all emails are attempted even if some fail
@@ -383,6 +388,7 @@ export class InviteService {
               requesterName: userName,
               requesterEmail: userEmail,
               reviewUrl,
+              expiryDate: formattedExpiryDate,
             }
           );
         })
@@ -530,7 +536,6 @@ export class InviteService {
     await this.deps.emailService.sendSafeWelcomeEmailRequester(
       { to: userEmail },
       {
-        userName: user.name,
         workspaceName: workspace.workspaceName,
         workspaceId,
       }

@@ -6,13 +6,9 @@
 import React from 'react';
 
 // Activation emails removed - no longer used
-import type {
-  AccessRequestEmailProps,
-  EmailVerificationEmailProps,
-  MagicLinkEmailProps,
-} from './emails/auth';
+import type { EmailVerificationEmailProps, MagicLinkEmailProps } from './emails/auth';
 // Auth emails
-import { AccessRequestEmail, EmailVerificationEmail, MagicLinkEmail } from './emails/auth';
+import { EmailVerificationEmail, MagicLinkEmail } from './emails/auth';
 import type {
   BillingEmailUpdatedEmailProps,
   BillingEmailVerificationEmailProps,
@@ -35,10 +31,10 @@ import {
 import type { DomainDeveloperInstructionsEmailProps } from './emails/domain';
 // Domain emails
 import { DomainDeveloperInstructionsEmail } from './emails/domain';
-import type { TeammateInvitedEmailProps, TeammateJoinedEmailProps } from './emails/invite';
+import type { TeammateInvitedEmailProps } from './emails/invite';
 import type { SandboxInviteEmailProps } from './emails/invite';
 // Invite emails
-import { TeammateInvitedEmail, TeammateJoinedEmail } from './emails/invite';
+import { TeammateInvitedEmail } from './emails/invite';
 // Pilot emails
 import { SandboxInviteEmail } from './emails/invite';
 import type {
@@ -82,12 +78,14 @@ import type { RecordingReceivedEmailProps } from './emails/recording';
 // Recording emails
 import { RecordingReceivedEmail } from './emails/recording';
 import type {
+  AccessRequestEmailProps,
   DeletionScheduledEmailProps,
   RecoveryConfirmationEmailProps,
   RecoveryPartiallyEmailProps,
 } from './emails/workspace';
 // Workspace emails
 import {
+  AccessRequestEmail,
   DeletionScheduledEmail,
   RecoveryConfirmationEmail,
   RecoveryPartiallyEmail,
@@ -116,12 +114,6 @@ export async function renderEmailVerification(
 
 export async function renderMagicLink(props: MagicLinkEmailProps): Promise<RenderResult> {
   const element = React.createElement(MagicLinkEmail, props);
-  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
-  return { html, text };
-}
-
-export async function renderAccessRequest(props: AccessRequestEmailProps): Promise<RenderResult> {
-  const element = React.createElement(AccessRequestEmail, props);
   const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
   return { html, text };
 }
@@ -175,6 +167,12 @@ export async function renderWelcomeEmailRequester(
 // ============================================================================
 // WORKSPACE EMAILS
 // ============================================================================
+
+export async function renderAccessRequest(props: AccessRequestEmailProps): Promise<RenderResult> {
+  const element = React.createElement(AccessRequestEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
 
 export async function renderDeletionScheduled(
   props: DeletionScheduledEmailProps
@@ -236,12 +234,6 @@ export async function renderTeammateInvited(
   props: TeammateInvitedEmailProps
 ): Promise<RenderResult> {
   const element = React.createElement(TeammateInvitedEmail, props);
-  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
-  return { html, text };
-}
-
-export async function renderTeammateJoined(props: TeammateJoinedEmailProps): Promise<RenderResult> {
-  const element = React.createElement(TeammateJoinedEmail, props);
   const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
   return { html, text };
 }
@@ -401,7 +393,6 @@ export type {
   SubscriptionReverseTrialEmailProps,
   // Invite
   TeammateInvitedEmailProps,
-  TeammateJoinedEmailProps,
   TosViolationEmailProps,
   // Onboarding
   WelcomeEmailMemberProps,
