@@ -26,7 +26,7 @@ export function DomainCodeSnippet({ workspaceId, domainUrl }: DomainCodeSnippetP
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-sm text-muted-foreground">
           Paste scripts into the{' '}
           <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
             &lt;head&gt;

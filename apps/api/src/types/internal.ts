@@ -30,7 +30,6 @@ import type {
   BillingEmailUpdatedEmailProps,
   BillingEmailVerificationEmailProps,
   DeletionScheduledEmailProps,
-  DomainDeveloperInstructionsEmailProps,
   EmailVerificationEmailProps,
   MagicLinkEmailProps,
   ProjectDeletionScheduledEmailProps,
@@ -210,11 +209,9 @@ export interface BaseEmailParams {
   to: string;
 }
 
-/**
- * Email parameters for batch sending
- */
-export interface BatchEmailParams {
-  batch: boolean;
+export interface ReceipientEmailParams {
+  to: string | string[];
+  replyTo?: string;
 }
 
 /**
@@ -225,204 +222,245 @@ export interface ScheduledEmailParams {
 }
 
 /**
- * Email parameters for reply-to address
- */
-export interface ReplyToEmailParams {
-  replyTo: string;
-}
-
-/**
  * Access request email parameters
  */
-export type AccessRequestEmailParams = AccessRequestEmailProps & BaseEmailParams;
+export type AccessRequestEmailParams = AccessRequestEmailProps;
 
 /**
  * Domain developer instructions email parameters
+ * Service accepts workspaceId, domainUrl, verificationToken, and optional userName
+ * Builds verificationUrl internally
  */
-export type DomainDeveloperInstructionsEmailParams = DomainDeveloperInstructionsEmailProps &
-  BaseEmailParams &
-  Partial<BatchEmailParams> &
-  Partial<ReplyToEmailParams>;
+export interface DomainDeveloperInstructionsEmailParams {
+  domainUrl: string;
+  workspaceId: string;
+  verificationToken: string;
+  userName?: string;
+}
 
 /**
  * Email verification email parameters
  */
-export type EmailVerificationEmailParams = EmailVerificationEmailProps & BaseEmailParams;
+export type EmailVerificationEmailParams = EmailVerificationEmailProps;
 
 /**
  * Magic link email parameters
  */
-export type MagicLinkEmailParams = MagicLinkEmailProps & BaseEmailParams;
+export type MagicLinkEmailParams = MagicLinkEmailProps;
 
 /**
  * Subscription active email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type SubscriptionActiveEmailParams = SubscriptionActiveEmailProps &
-  BaseEmailParams &
-  Partial<ReplyToEmailParams>;
+export type SubscriptionActiveEmailParams = Omit<
+  SubscriptionActiveEmailProps,
+  'dashboardUrl' | 'billingUrl'
+> & {
+  workspaceId: string;
+};
 
 /**
  * Billing email updated email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type BillingEmailUpdatedEmailParams = BillingEmailUpdatedEmailProps & BaseEmailParams;
+export type BillingEmailUpdatedEmailParams = Omit<BillingEmailUpdatedEmailProps, 'billingUrl'> & {
+  workspaceId: string;
+};
 
 /**
  * Billing email verification email parameters
  */
-export type BillingEmailVerificationEmailParams = BillingEmailVerificationEmailProps &
-  BaseEmailParams;
+export type BillingEmailVerificationEmailParams = BillingEmailVerificationEmailProps;
 
 /**
  * Subscription expired email parameters
  */
-export type SubscriptionExpiredEmailParams = SubscriptionExpiredEmailProps & BaseEmailParams;
+export type SubscriptionExpiredEmailParams = SubscriptionExpiredEmailProps;
 
 /**
  * Subscription inactive email parameters
  */
-export type SubscriptionInactiveEmailParams = SubscriptionInactiveEmailProps & BaseEmailParams;
+export type SubscriptionInactiveEmailParams = SubscriptionInactiveEmailProps;
 
 /**
  * Subscription plan change email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type SubscriptionPlanChangeEmailParams = SubscriptionPlanChangeEmailProps & BaseEmailParams;
+export type SubscriptionPlanChangeEmailParams = Omit<
+  SubscriptionPlanChangeEmailProps,
+  'billingUrl'
+> & {
+  workspaceId: string;
+};
 
 /**
  * Subscription reverse trial email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type SubscriptionReverseTrialEmailParams = SubscriptionReverseTrialEmailProps &
-  BaseEmailParams;
+export type SubscriptionReverseTrialEmailParams = Omit<
+  SubscriptionReverseTrialEmailProps,
+  'dashboardUrl'
+> & {
+  workspaceId: string;
+};
 
 /**
  * Teammate invited email parameters
  */
-export type TeammateInvitedEmailParams = TeammateInvitedEmailProps &
-  BaseEmailParams &
-  Partial<BatchEmailParams>;
+export type TeammateInvitedEmailParams = TeammateInvitedEmailProps;
 
 /**
  * Teammate joined email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type TeammateJoinedEmailParams = TeammateJoinedEmailProps &
-  BaseEmailParams &
-  Partial<BatchEmailParams>;
+export type TeammateJoinedEmailParams = Omit<TeammateJoinedEmailProps, 'workspaceUrl'> & {
+  workspaceId: string;
+};
 
 /**
  * Account deletion email parameters
+ * Service builds feedback URL internally
  */
-export type AccountDeletionEmailParams = AccountDeletionEmailProps &
-  BaseEmailParams &
-  Partial<ReplyToEmailParams>;
+export type AccountDeletionEmailParams = Omit<AccountDeletionEmailProps, 'feedbackUrl'>;
 
 /**
  * Account deletion verification email parameters
+ * Service accepts deletionToken and builds URL internally
  */
-export type AccountDeletionVerificationEmailParams = AccountDeletionVerificationEmailProps &
-  BaseEmailParams &
-  Partial<ReplyToEmailParams>;
+export type AccountDeletionVerificationEmailParams = Omit<
+  AccountDeletionVerificationEmailProps,
+  'verificationUrl'
+> & {
+  deletionToken: string;
+};
 
 /**
  * Account restored email parameters
+ * Service builds login URL internally
  */
-export type AccountRestoredEmailParams = AccountRestoredEmailProps & BaseEmailParams;
+export type AccountRestoredEmailParams = Omit<AccountRestoredEmailProps, 'loginUrl'>;
 
 /**
  * TOS violation email parameters
+ * Service builds appeal and ToS URLs internally
  */
-export type TosViolationEmailParams = TosViolationEmailProps &
-  BaseEmailParams &
-  Partial<ReplyToEmailParams>;
+export type TosViolationEmailParams = Omit<TosViolationEmailProps, 'appealUrl' | 'tosUrl'>;
 
 /**
  * Pilot sandbox invite email parameters
  */
-export type PilotSandboxInviteEmailParams = SandboxInviteEmailProps &
-  BaseEmailParams &
-  Partial<ScheduledEmailParams> &
-  Partial<ReplyToEmailParams>;
+export type PilotSandboxInviteEmailParams = SandboxInviteEmailProps & Partial<ScheduledEmailParams>;
 
 /**
  * Recording received email parameters
+ * Service accepts workspaceId and recordingId and builds URL internally
  */
-export type RecordingReceivedEmailParams = RecordingReceivedEmailProps & BaseEmailParams;
+export type RecordingReceivedEmailParams = Omit<RecordingReceivedEmailProps, 'recordingUrl'> & {
+  workspaceId: string;
+  recordingId: string;
+};
 
 /**
  * Welcome email member parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type WelcomeEmailMemberParams = WelcomeEmailMemberProps &
-  BaseEmailParams &
-  Partial<ReplyToEmailParams>;
+export type WelcomeEmailMemberParams = Omit<WelcomeEmailMemberProps, 'dashboardUrl'> & {
+  workspaceId: string;
+};
 
 /**
  * Welcome email subscription parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type WelcomeEmailSubscriptionParams = WelcomeEmailSubscriptionProps &
-  BaseEmailParams &
-  Partial<ReplyToEmailParams>;
+export type WelcomeEmailSubscriptionParams = Omit<WelcomeEmailSubscriptionProps, 'dashboardUrl'> & {
+  workspaceId: string;
+};
 
 /**
  * Welcome email pilot parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type WelcomeEmailPilotParams = WelcomeEmailPilotProps &
-  BaseEmailParams &
-  Partial<ReplyToEmailParams>;
+export type WelcomeEmailPilotParams = Omit<
+  WelcomeEmailPilotProps,
+  'dashboardUrl' | 'calendarUrl'
+> & {
+  workspaceId: string;
+};
 
 /**
  * Welcome email requester parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type WelcomeEmailRequesterParams = WelcomeEmailRequesterProps &
-  BaseEmailParams &
-  Partial<ReplyToEmailParams>;
+export type WelcomeEmailRequesterParams = Omit<WelcomeEmailRequesterProps, 'dashboardUrl'> & {
+  workspaceId: string;
+};
 
 /**
  * Workspace deletion scheduled email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type WorkspaceDeletionScheduledEmailParams = DeletionScheduledEmailProps &
-  BaseEmailParams &
-  Partial<BatchEmailParams> &
-  Partial<ScheduledEmailParams> &
-  Partial<ReplyToEmailParams>;
+export type WorkspaceDeletionScheduledEmailParams = Omit<
+  DeletionScheduledEmailProps,
+  'cancelUrl'
+> & {
+  workspaceId: string;
+} & Partial<ScheduledEmailParams>;
 
 /**
  * Workspace recovery confirmation email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type WorkspaceRecoveryConfirmationEmailParams = RecoveryConfirmationEmailProps &
-  BaseEmailParams &
-  Partial<BatchEmailParams> &
-  Partial<ScheduledEmailParams>;
+export type WorkspaceRecoveryConfirmationEmailParams = Omit<
+  RecoveryConfirmationEmailProps,
+  'dashboardUrl'
+> & {
+  workspaceId: string;
+} & Partial<ScheduledEmailParams>;
 
 /**
  * Workspace recovery partially email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type WorkspaceRecoveryPartiallyEmailParams = RecoveryPartiallyEmailProps &
-  BaseEmailParams &
-  Partial<BatchEmailParams> &
-  Partial<ScheduledEmailParams>;
+export type WorkspaceRecoveryPartiallyEmailParams = Omit<
+  RecoveryPartiallyEmailProps,
+  'dashboardUrl'
+> & {
+  workspaceId: string;
+} & Partial<ScheduledEmailParams>;
 
 /**
  * Project deletion scheduled email parameters
+ * Service accepts workspaceId and projectId and builds URLs internally
  */
-export type ProjectDeletionScheduledEmailParams = ProjectDeletionScheduledEmailProps &
-  BaseEmailParams &
-  Partial<BatchEmailParams> &
-  Partial<ScheduledEmailParams> &
-  Partial<ReplyToEmailParams>;
+export type ProjectDeletionScheduledEmailParams = Omit<
+  ProjectDeletionScheduledEmailProps,
+  'cancelUrl'
+> & {
+  workspaceId: string;
+  projectId: string;
+} & Partial<ScheduledEmailParams>;
 
 /**
  * Project recovery confirmation email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type ProjectRecoveryConfirmationEmailParams = ProjectRecoveryConfirmationEmailProps &
-  BaseEmailParams &
-  Partial<BatchEmailParams> &
-  Partial<ScheduledEmailParams>;
+export type ProjectRecoveryConfirmationEmailParams = Omit<
+  ProjectRecoveryConfirmationEmailProps,
+  'dashboardUrl'
+> & {
+  workspaceId: string;
+} & Partial<ScheduledEmailParams>;
 
 /**
  * Project recovery partially email parameters
+ * Service accepts workspaceId and builds URLs internally
  */
-export type ProjectRecoveryPartiallyEmailParams = ProjectRecoveryPartiallyEmailProps &
-  BaseEmailParams &
-  Partial<BatchEmailParams> &
-  Partial<ScheduledEmailParams>;
+export type ProjectRecoveryPartiallyEmailParams = Omit<
+  ProjectRecoveryPartiallyEmailProps,
+  'dashboardUrl'
+> & {
+  workspaceId: string;
+} & Partial<ScheduledEmailParams>;
 
 /**
  * Internal invite action result for service orchestration

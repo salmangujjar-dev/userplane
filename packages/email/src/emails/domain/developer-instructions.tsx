@@ -7,48 +7,53 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/domain/developer-instructions';
-import { getDomainName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface DomainDeveloperInstructionsEmailProps {
-  domainName: string;
-  settingsUrl: string;
-  docsUrl: string;
+  domainUrl: string;
+  verificationUrl: string;
+  userName?: string;
 }
 
 export const DomainDeveloperInstructionsEmail = ({
-  domainName,
-  settingsUrl,
-  docsUrl,
+  domainUrl,
+  verificationUrl,
+  userName,
 }: DomainDeveloperInstructionsEmailProps) => {
-  const formattedDomainName = getDomainName(domainName);
+  const greeting = copy.greeting(userName, domainUrl);
 
   return (
-    <EmailLayout preview={copy.preview(formattedDomainName)}>
+    <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{copy.subtitle(formattedDomainName)}</Text>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.messageText}>{copy.body[0](formattedDomainName)}</Text>
-      </Section>
-
-      <Section style={styles.messageSection}>
-        <Text style={styles.messageText}>{copy.body[1]}</Text>
+        <Text style={styles.messageText}>
+          {greeting.prefix}
+          <Link href={verificationUrl} style={styles.link}>
+            {greeting.linkText}
+          </Link>
+          {greeting.suffix}
+        </Text>
+        <Text style={styles.messageText}>{copy.body}</Text>
       </Section>
 
       <Section style={styles.ctaSection}>
-        <Link href={settingsUrl} style={styles.ctaButton}>
+        <Link href={verificationUrl} style={styles.ctaButton}>
           {copy.cta}
         </Link>
       </Section>
 
       <Section style={styles.messageSection}>
         <Text style={styles.smallText}>
-          <Link href={docsUrl} style={styles.link}>
-            {copy.helpText}
+          <Link href={verificationUrl} style={styles.link}>
+            {copy.fallbackText}
           </Link>
         </Text>
+      </Section>
+
+      <Section style={styles.messageSection}>
+        <Text style={styles.smallText}>{copy.footer}</Text>
       </Section>
     </EmailLayout>
   );

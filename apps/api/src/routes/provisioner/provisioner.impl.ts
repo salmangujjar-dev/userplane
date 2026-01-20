@@ -3,7 +3,6 @@
  * Implements workspace creation and provisioning
  */
 
-import { env } from '@/api/env';
 import { authorized } from '@/api/middleware/auth.orpc';
 import type { EmailService } from '@/api/services/email.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
@@ -30,25 +29,26 @@ export const createWorkspaceImpl = (
     // Send welcome email based on whether invite token was used
     // Only send if workspace was created (not if it already existed)
     if (result.created) {
-      const dashboardUrl = `${env.dashboard.baseUrl}/${result.workspaceId}`;
-
       if (input.body.inviteToken) {
         // Pilot user - invited with token
-        await emailService.sendSafeWelcomeEmailPilot({
-          to: context.user.email,
-          userName: context.user.name,
-          workspaceName: result.workspaceName,
-          dashboardUrl,
-          calendarUrl: env.support.calendarUrl,
-        });
+        await emailService.sendSafeWelcomeEmailPilot(
+          { to: context.user.email },
+          {
+            userName: context.user.name,
+            workspaceName: result.workspaceName,
+            workspaceId: result.workspaceId,
+          }
+        );
       } else {
         // Subscription user - organic signup without invite token
-        await emailService.sendSafeWelcomeEmailSubscription({
-          to: context.user.email,
-          userName: context.user.name,
-          workspaceName: result.workspaceName,
-          dashboardUrl,
-        });
+        await emailService.sendSafeWelcomeEmailSubscription(
+          { to: context.user.email },
+          {
+            userName: context.user.name,
+            workspaceName: result.workspaceName,
+            workspaceId: result.workspaceId,
+          }
+        );
       }
     }
 

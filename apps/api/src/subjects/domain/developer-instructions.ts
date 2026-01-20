@@ -2,4 +2,4 @@
  * Subject for Domain - Developer Instructions Email
  */
 
-export const subject = (domainName: string) => `Setup Userplane for ${domainName}`;
+export const subject = () => 'Install Userplane on your app';

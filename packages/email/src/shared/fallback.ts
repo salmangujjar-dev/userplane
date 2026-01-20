@@ -1,6 +1,9 @@
 /**
  * Shared fallback utilities for email templates
  * Provides consistent default values and formatting across all email templates
+ *
+ * NOTE: URL building is handled by the email service layer, not by templates.
+ * Templates should receive pre-built URLs as props.
  */
 
 /**
@@ -30,33 +33,6 @@ export const getDeletionDate = (deletionDate?: string): string => {
     month: 'long',
     day: 'numeric',
   });
-};
-
-/**
- * Formats appeal URL by trimming and applying defaults
- * Returns support email with account appeal subject if not provided
- */
-export const getAppealUrl = (appealUrl?: string): string => {
-  const trimmed = appealUrl?.trim();
-  return trimmed || 'mailto:support@userplane.io?subject=Account%20Appeal';
-};
-
-/**
- * Formats terms of service URL by trimming and applying defaults
- * Returns userplane.io terms page if not provided
- */
-export const getTosUrl = (tosUrl?: string): string => {
-  const trimmed = tosUrl?.trim();
-  return trimmed || 'https://userplane.io/terms';
-};
-
-/**
- * Formats login URL by trimming and applying defaults
- * Returns userplane.io login page if not provided
- */
-export const getLoginUrl = (loginUrl?: string): string => {
-  const trimmed = loginUrl?.trim();
-  return trimmed || 'https://app.userplane.io/auth';
 };
 
 /**

@@ -30,10 +30,9 @@ export const MagicLinkEmail = ({ magicLinkUrl }: MagicLinkEmailProps) => {
       </Section>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.smallText}>{copy.fallbackText}</Text>
         <Text style={styles.smallText}>
           <Link href={magicLinkUrl} style={styles.link}>
-            {magicLinkUrl}
+            {copy.fallbackText}
           </Link>
         </Text>
       </Section>

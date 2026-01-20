@@ -5,7 +5,6 @@
 
 import { projectError } from '@workspace/contract';
 
-import { env } from '@/api/env';
 import { authorized } from '@/api/middleware/auth.orpc';
 import {
   createWorkspaceMiddleware,
@@ -227,16 +226,16 @@ export const deleteProjectImpl = (
         day: 'numeric',
       });
 
-      // Construct cancel URL with both workspaceId and projectId
-      const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=project&workspaceId=${input.params.workspaceId}&projectId=${input.params.projectId}`;
-
       // Send deletion scheduled email
-      await emailService.sendSafeProjectDeletionScheduled({
-        to: context.user.email,
-        projectName: project.projectTitle || 'Untitled Project',
-        deletionDate: formattedDeletionDate,
-        cancelUrl,
-      });
+      await emailService.sendSafeProjectDeletionScheduled(
+        { to: context.user.email },
+        {
+          projectName: project.projectTitle || 'Untitled Project',
+          deletionDate: formattedDeletionDate,
+          workspaceId: input.params.workspaceId,
+          projectId: input.params.projectId,
+        }
+      );
 
       return {
         message: 'Project deleted successfully',
@@ -303,7 +302,6 @@ export const restoreProjectImpl = (
 
       // Send email to workspace owners that the project has been restored
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const dashboardUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}`;
 
       // Send appropriate email based on restoration status using batch
       const ownerEmails = owners.map((owner) => owner.email);
@@ -312,14 +310,13 @@ export const restoreProjectImpl = (
           ? emailService.sendSafeProjectRecoveryPartially
           : emailService.sendSafeProjectRecoveryConfirmation;
 
-      await Promise.allSettled(
-        ownerEmails.map((email) =>
-          emailMethod({
-            to: email,
-            projectName: result.projectTitle,
-            dashboardUrl,
-          })
-        )
+      // Use batch sending via Resend's batch API for multiple recipients
+      await emailMethod(
+        { to: ownerEmails },
+        {
+          projectName: result.projectTitle,
+          workspaceId: input.params.workspaceId,
+        }
       );
 
       return {

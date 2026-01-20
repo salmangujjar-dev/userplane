@@ -7,7 +7,6 @@ import { implement } from '@orpc/server';
 import { sessionContract, sessionError } from '@workspace/contract';
 
 import { REQUEST_HEADERS } from '@/api/constants/headers';
-import { env } from '@/api/env';
 import type { InitialContext } from '@/api/middleware/auth.orpc';
 import type { RecordingRepository } from '@/api/repositories/recordings.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
@@ -132,12 +131,13 @@ export const completeUploadImpl = (
     if (recording) {
       const creator = await workspaceMemberRepo.findByIdWithUser(recording.createdBy);
       if (creator) {
-        const recordingUrl = `${env.dashboard.baseUrl}/${recording.workspaceId}/recordings/${recording.recordingId}`;
-
-        await emailService.sendSafeRecordingReceived({
-          to: creator.userEmail,
-          recordingUrl,
-        });
+        await emailService.sendSafeRecordingReceived(
+          { to: creator.userEmail },
+          {
+            workspaceId: recording.workspaceId,
+            recordingId: recording.recordingId,
+          }
+        );
       }
     }
 

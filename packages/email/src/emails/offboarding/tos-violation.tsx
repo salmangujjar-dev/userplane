@@ -7,18 +7,18 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/offboarding/tos-violation';
-import { getAppealUrl, getTosUrl, getUserName } from '../../shared/fallback';
+import { getUserName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface TosViolationEmailProps {
   userName: string;
+  appealUrl: string;
+  tosUrl: string;
 }
 
-export const TosViolationEmail = ({ userName }: TosViolationEmailProps) => {
+export const TosViolationEmail = ({ userName, appealUrl, tosUrl }: TosViolationEmailProps) => {
   const formattedUserName = getUserName(userName);
-  const appealUrl = getAppealUrl();
-  const tosUrl = getTosUrl();
 
   return (
     <EmailLayout preview={copy.preview}>

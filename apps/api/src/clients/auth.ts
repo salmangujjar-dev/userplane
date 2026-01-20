@@ -25,27 +25,32 @@ export const auth = createAuth({
   },
   email: {
     sendVerificationEmail: async ({ user, url }) => {
-      await emailService.sendSafeEmailVerification({
-        to: user.email,
-        userName: user.name,
-        verificationUrl: url,
-      });
+      await emailService.sendSafeEmailVerification(
+        { to: user.email },
+        {
+          userName: user.name,
+          verificationUrl: url,
+        }
+      );
     },
     sendMagicLink: async ({ email, url }) => {
-      await emailService.sendSafeMagicLink({
-        to: email,
-        magicLinkUrl: url,
-      });
+      await emailService.sendSafeMagicLink(
+        { to: email },
+        {
+          magicLinkUrl: url,
+        }
+      );
     },
   },
   deleteUser: {
     sendDeleteAccountVerification: async ({ user, token }) => {
-      const customUrl = `${env.dashboard.baseUrl}/accounts/delete/confirm?token=${token}`;
-      await emailService.sendSafeAccountDeletionVerification({
-        to: user.email,
-        userName: user.name,
-        verificationUrl: customUrl,
-      });
+      await emailService.sendSafeAccountDeletionVerification(
+        { to: user.email },
+        {
+          userName: user.name,
+          deletionToken: token,
+        }
+      );
     },
     beforeDelete: async (user) => {
       // Check if user is a member of any active workspaces
@@ -67,11 +72,12 @@ export const auth = createAuth({
       }
 
       // Send account deletion confirmation email
-      await emailService.sendSafeAccountDeletion({
-        to: user.email,
-        userName: user.name,
-        feedbackUrl: `${env.dashboard.baseUrl}/feedback`,
-      });
+      await emailService.sendSafeAccountDeletion(
+        { to: user.email },
+        {
+          userName: user.name,
+        }
+      );
     },
   },
 });

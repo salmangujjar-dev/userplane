@@ -7,17 +7,17 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/offboarding/account-restored';
-import { getLoginUrl, getUserName } from '../../shared/fallback';
+import { getUserName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface AccountRestoredEmailProps {
   userName: string;
+  loginUrl: string;
 }
 
-export const AccountRestoredEmail = ({ userName }: AccountRestoredEmailProps) => {
+export const AccountRestoredEmail = ({ userName, loginUrl }: AccountRestoredEmailProps) => {
   const formattedUserName = getUserName(userName);
-  const loginUrl = getLoginUrl();
 
   return (
     <EmailLayout preview={copy.preview}>

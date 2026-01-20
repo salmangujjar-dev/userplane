@@ -83,6 +83,7 @@ import type {
   ProjectDeletionScheduledEmailParams,
   ProjectRecoveryConfirmationEmailParams,
   ProjectRecoveryPartiallyEmailParams,
+  ReceipientEmailParams,
   RecordingReceivedEmailParams,
   SubscriptionActiveEmailParams,
   SubscriptionExpiredEmailParams,
@@ -107,6 +108,7 @@ import {
   inviteFrom,
   notificationFrom,
 } from '@/api/utils/email-from';
+import { emailUrls } from '@/api/utils/email-urls';
 import {
   accessRequestKey,
   accountDeletionKey,
@@ -158,6 +160,16 @@ export class EmailService {
   }
 
   /**
+   * Ensures replyTo is set, defaults to support email if not provided
+   */
+  private ensureReplyTo(receipientParams: ReceipientEmailParams): Required<ReceipientEmailParams> {
+    return {
+      ...receipientParams,
+      replyTo: receipientParams.replyTo || emailUrls.support.email(),
+    };
+  }
+
+  /**
    * Wraps an async email operation with error handling
    * Catches errors and passes them to the configured error handler
    */
@@ -180,26 +192,36 @@ export class EmailService {
   /**
    * Send email verification email
    * Sent when a user needs to verify their email address
+   * Supports batch sending for multiple recipients
    * @private Use sendSafeEmailVerification instead
    */
-  private async sendEmailVerification(params: EmailVerificationEmailParams): Promise<void> {
+  private async sendEmailVerification(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: EmailVerificationEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = emailVerificationKey({
-      to: params.to,
+      to: receipientParams.to,
       timestamp: Date.now(),
     });
 
     const { html, text } = await renderEmailVerification({
-      userName: params.userName,
-      verificationUrl: params.verificationUrl,
+      userName: emailContentParams.userName,
+      verificationUrl: emailContentParams.verificationUrl,
     });
 
     await emailClient.send(
       {
         from: authFrom(),
-        to: params.to,
+        to: receipientParams.to,
         subject: emailVerificationSubject,
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -208,7 +230,9 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
         provider: emailClient.getProvider(),
       },
       'Email verification sent'
@@ -219,33 +243,48 @@ export class EmailService {
    * Safe version: Send email verification email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeEmailVerification(params: EmailVerificationEmailParams): Promise<void> {
-    await this.executeSafely('sendEmailVerification', params, () =>
-      this.sendEmailVerification(params)
+  async sendSafeEmailVerification(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: EmailVerificationEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendEmailVerification',
+      { receipientParams, emailContentParams },
+      () => this.sendEmailVerification(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send magic link email for passwordless sign in
+   * Supports batch sending for multiple recipients
    * @private Use sendSafeMagicLink instead
    */
-  private async sendMagicLink(params: MagicLinkEmailParams): Promise<void> {
+  private async sendMagicLink(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: MagicLinkEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = magicLinkKey({
-      to: params.to,
+      to: receipientParams.to,
       timestamp: Date.now(),
     });
 
     const { html, text } = await renderMagicLink({
-      magicLinkUrl: params.magicLinkUrl,
+      magicLinkUrl: emailContentParams.magicLinkUrl,
     });
 
     await emailClient.send(
       {
         from: authFrom(),
-        to: params.to,
+        to: receipientParams.to,
         subject: magicLinkSubject,
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -254,7 +293,9 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
         provider: emailClient.getProvider(),
       },
       'Magic link sent'
@@ -265,40 +306,55 @@ export class EmailService {
    * Safe version: Send magic link email for passwordless sign in
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeMagicLink(params: MagicLinkEmailParams): Promise<void> {
-    await this.executeSafely('sendMagicLink', params, () => this.sendMagicLink(params));
+  async sendSafeMagicLink(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: MagicLinkEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendMagicLink', { receipientParams, emailContentParams }, () =>
+      this.sendMagicLink(receipientParams, emailContentParams)
+    );
   }
 
   /**
    * Send workspace access request email to owner
    * Uses React Email template
    * Email is sent from configured invite inbox with requester details in content
+   * Supports batch sending for multiple recipients
    * @private Use sendSafeAccessRequest instead
    */
-  private async sendAccessRequest(params: AccessRequestEmailParams): Promise<void> {
+  private async sendAccessRequest(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: AccessRequestEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = accessRequestKey({
-      workspaceName: params.workspaceName,
-      requesterEmail: params.requesterEmail,
-      to: params.to,
+      workspaceName: emailContentParams.workspaceName,
+      requesterEmail: emailContentParams.requesterEmail,
+      to: receipientParams.to,
     });
 
     const { html, text } = await renderAccessRequest({
-      workspaceName: params.workspaceName,
-      requesterName: params.requesterName,
-      requesterEmail: params.requesterEmail,
-      reviewUrl: params.reviewUrl,
+      workspaceName: emailContentParams.workspaceName,
+      requesterName: emailContentParams.requesterName,
+      requesterEmail: emailContentParams.requesterEmail,
+      reviewUrl: emailContentParams.reviewUrl,
     });
 
     await emailClient.send(
       {
-        from: inviteFrom(params.workspaceName),
-        to: params.to,
+        from: inviteFrom(emailContentParams.workspaceName),
+        to: receipientParams.to,
         subject: accessRequestSubject({
-          requesterName: params.requesterName,
-          workspaceName: params.workspaceName,
+          requesterName: emailContentParams.requesterName,
+          workspaceName: emailContentParams.workspaceName,
         }),
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -307,10 +363,12 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        workspace: params.workspaceName,
-        requesterName: params.requesterName,
-        requesterEmail: params.requesterEmail,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspace: emailContentParams.workspaceName,
+        requesterName: emailContentParams.requesterName,
+        requesterEmail: emailContentParams.requesterEmail,
         provider: emailClient.getProvider(),
       },
       'Workspace access request sent'
@@ -321,8 +379,13 @@ export class EmailService {
    * Safe version: Send workspace access request email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeAccessRequest(params: AccessRequestEmailParams): Promise<void> {
-    await this.executeSafely('sendAccessRequest', params, () => this.sendAccessRequest(params));
+  async sendSafeAccessRequest(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: AccessRequestEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendAccessRequest', { receipientParams, emailContentParams }, () =>
+      this.sendAccessRequest(receipientParams, emailContentParams)
+    );
   }
 
   // ============================================================================
@@ -332,27 +395,39 @@ export class EmailService {
   /**
    * Send billing email updated notification
    * Sent when workspace billing email address is changed
+   * URLs are built internally from workspaceId
    * @private Use sendSafeBillingEmailUpdated instead
    */
-  private async sendBillingEmailUpdated(params: BillingEmailUpdatedEmailParams): Promise<void> {
+  private async sendBillingEmailUpdated(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: BillingEmailUpdatedEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = billingEmailUpdatedKey({
-      to: params.to,
-      newEmail: params.newEmail,
+      to: receipientParams.to,
+      newEmail: emailContentParams.newEmail,
     });
 
+    const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
+
     const { html, text } = await renderBillingEmailUpdated({
-      previousEmail: params.previousEmail,
-      newEmail: params.newEmail,
-      billingUrl: params.billingUrl,
+      previousEmail: emailContentParams.previousEmail,
+      newEmail: emailContentParams.newEmail,
+      billingUrl,
     });
 
     await emailClient.send(
       {
         from: billingFrom(),
-        to: params.to,
+        to: receipientParams.to,
         subject: billingEmailUpdatedSubject,
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -361,9 +436,12 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        previousEmail: params.previousEmail,
-        newEmail: params.newEmail,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        previousEmail: emailContentParams.previousEmail,
+        newEmail: emailContentParams.newEmail,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
       },
       'Billing email updated notification sent'
@@ -374,9 +452,14 @@ export class EmailService {
    * Safe version: Send billing email updated notification
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeBillingEmailUpdated(params: BillingEmailUpdatedEmailParams): Promise<void> {
-    await this.executeSafely('sendBillingEmailUpdated', params, () =>
-      this.sendBillingEmailUpdated(params)
+  async sendSafeBillingEmailUpdated(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: BillingEmailUpdatedEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendBillingEmailUpdated',
+      { receipientParams, emailContentParams },
+      () => this.sendBillingEmailUpdated(receipientParams, emailContentParams)
     );
   }
 
@@ -386,25 +469,32 @@ export class EmailService {
    * @private Use sendSafeBillingEmailVerification instead
    */
   private async sendBillingEmailVerification(
-    params: BillingEmailVerificationEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: BillingEmailVerificationEmailParams
   ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = billingEmailVerificationKey({
-      to: params.to,
+      to: receipientParams.to,
       timestamp: Date.now(),
     });
 
     const { html, text } = await renderBillingEmailVerification({
-      workspaceName: params.workspaceName,
-      verificationUrl: params.verificationUrl,
+      workspaceName: emailContentParams.workspaceName,
+      verificationUrl: emailContentParams.verificationUrl,
     });
 
     await emailClient.send(
       {
         from: billingFrom(),
-        to: params.to,
+        to: receipientParams.to,
         subject: billingEmailVerificationSubject,
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -413,8 +503,10 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        workspaceName: params.workspaceName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceName: emailContentParams.workspaceName,
         provider: emailClient.getProvider(),
       },
       'Billing email verification sent'
@@ -426,36 +518,52 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeBillingEmailVerification(
-    params: BillingEmailVerificationEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: BillingEmailVerificationEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendBillingEmailVerification', params, () =>
-      this.sendBillingEmailVerification(params)
+    await this.executeSafely(
+      'sendBillingEmailVerification',
+      { receipientParams, emailContentParams },
+      () => this.sendBillingEmailVerification(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send subscription active email
+   * URLs are built internally from workspaceId
    * @private Use sendSafeSubscriptionActive instead
    */
-  private async sendSubscriptionActive(params: SubscriptionActiveEmailParams): Promise<void> {
+  private async sendSubscriptionActive(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionActiveEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = subscriptionActiveKey({
-      to: params.to,
-      planName: params.planName,
+      to: receipientParams.to,
+      planName: emailContentParams.planName,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+    const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
+
     const { html, text } = await renderSubscriptionActive({
-      planName: params.planName,
-      dashboardUrl: params.dashboardUrl,
-      billingUrl: params.billingUrl,
+      planName: emailContentParams.planName,
+      dashboardUrl,
+      billingUrl,
     });
 
     await emailClient.send(
       {
         from: billingFrom(),
-        to: params.to,
-        subject: subscriptionActiveSubject(params.planName),
+        to: receipientParams.to,
+        subject: subscriptionActiveSubject(emailContentParams.planName),
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -464,8 +572,11 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        planName: params.planName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        planName: emailContentParams.planName,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
       },
       'Subscription active email sent'
@@ -476,9 +587,14 @@ export class EmailService {
    * Safe version: Send subscription active email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeSubscriptionActive(params: SubscriptionActiveEmailParams): Promise<void> {
-    await this.executeSafely('sendSubscriptionActive', params, () =>
-      this.sendSubscriptionActive(params)
+  async sendSafeSubscriptionActive(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionActiveEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendSubscriptionActive',
+      { receipientParams, emailContentParams },
+      () => this.sendSubscriptionActive(receipientParams, emailContentParams)
     );
   }
 
@@ -486,24 +602,33 @@ export class EmailService {
    * Send subscription expired email
    * @private Use sendSafeSubscriptionExpired instead
    */
-  private async sendSubscriptionExpired(params: SubscriptionExpiredEmailParams): Promise<void> {
+  private async sendSubscriptionExpired(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionExpiredEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = subscriptionExpiredKey({
-      to: params.to,
-      planName: params.planName,
+      to: receipientParams.to,
+      planName: emailContentParams.planName,
     });
 
     const { html, text } = await renderSubscriptionExpired({
-      planName: params.planName,
-      renewUrl: params.renewUrl,
+      planName: emailContentParams.planName,
+      renewUrl: emailContentParams.renewUrl,
     });
 
     await emailClient.send(
       {
         from: billingFrom(),
-        to: params.to,
-        subject: subscriptionExpiredSubject(params.planName),
+        to: receipientParams.to,
+        subject: subscriptionExpiredSubject(emailContentParams.planName),
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -512,8 +637,10 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        planName: params.planName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        planName: emailContentParams.planName,
         provider: emailClient.getProvider(),
       },
       'Subscription expired email sent'
@@ -524,9 +651,14 @@ export class EmailService {
    * Safe version: Send subscription expired email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeSubscriptionExpired(params: SubscriptionExpiredEmailParams): Promise<void> {
-    await this.executeSafely('sendSubscriptionExpired', params, () =>
-      this.sendSubscriptionExpired(params)
+  async sendSafeSubscriptionExpired(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionExpiredEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendSubscriptionExpired',
+      { receipientParams, emailContentParams },
+      () => this.sendSubscriptionExpired(receipientParams, emailContentParams)
     );
   }
 
@@ -534,24 +666,33 @@ export class EmailService {
    * Send subscription inactive email
    * @private Use sendSafeSubscriptionInactive instead
    */
-  private async sendSubscriptionInactive(params: SubscriptionInactiveEmailParams): Promise<void> {
+  private async sendSubscriptionInactive(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionInactiveEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = subscriptionInactiveKey({
-      to: params.to,
-      planName: params.planName,
+      to: receipientParams.to,
+      planName: emailContentParams.planName,
     });
 
     const { html, text } = await renderSubscriptionInactive({
-      planName: params.planName,
-      reactivateUrl: params.reactivateUrl,
+      planName: emailContentParams.planName,
+      reactivateUrl: emailContentParams.reactivateUrl,
     });
 
     await emailClient.send(
       {
         from: billingFrom(),
-        to: params.to,
-        subject: subscriptionInactiveSubject(params.planName),
+        to: receipientParams.to,
+        subject: subscriptionInactiveSubject(emailContentParams.planName),
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -560,8 +701,10 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        planName: params.planName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        planName: emailContentParams.planName,
         provider: emailClient.getProvider(),
       },
       'Subscription inactive email sent'
@@ -572,38 +715,53 @@ export class EmailService {
    * Safe version: Send subscription inactive email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeSubscriptionInactive(params: SubscriptionInactiveEmailParams): Promise<void> {
-    await this.executeSafely('sendSubscriptionInactive', params, () =>
-      this.sendSubscriptionInactive(params)
+  async sendSafeSubscriptionInactive(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionInactiveEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendSubscriptionInactive',
+      { receipientParams, emailContentParams },
+      () => this.sendSubscriptionInactive(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send subscription plan change email
+   * URLs are built internally from workspaceId
    * @private Use sendSafeSubscriptionPlanChange instead
    */
   private async sendSubscriptionPlanChange(
-    params: SubscriptionPlanChangeEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionPlanChangeEmailParams
   ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = subscriptionPlanChangeKey({
-      to: params.to,
-      newPlan: params.newPlan,
+      to: receipientParams.to,
+      newPlan: emailContentParams.newPlan,
     });
 
+    const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
+
     const { html, text } = await renderSubscriptionPlanChange({
-      previousPlan: params.previousPlan,
-      newPlan: params.newPlan,
-      effectiveDate: params.effectiveDate,
-      billingUrl: params.billingUrl,
+      previousPlan: emailContentParams.previousPlan,
+      newPlan: emailContentParams.newPlan,
+      effectiveDate: emailContentParams.effectiveDate,
+      billingUrl,
     });
 
     await emailClient.send(
       {
         from: billingFrom(),
-        to: params.to,
-        subject: subscriptionPlanChangeSubject(params.newPlan),
+        to: receipientParams.to,
+        subject: subscriptionPlanChangeSubject(emailContentParams.newPlan),
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -612,9 +770,12 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        previousPlan: params.previousPlan,
-        newPlan: params.newPlan,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        previousPlan: emailContentParams.previousPlan,
+        newPlan: emailContentParams.newPlan,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
       },
       'Subscription plan change email sent'
@@ -625,36 +786,51 @@ export class EmailService {
    * Safe version: Send subscription plan change email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeSubscriptionPlanChange(params: SubscriptionPlanChangeEmailParams): Promise<void> {
-    await this.executeSafely('sendSubscriptionPlanChange', params, () =>
-      this.sendSubscriptionPlanChange(params)
+  async sendSafeSubscriptionPlanChange(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionPlanChangeEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendSubscriptionPlanChange',
+      { receipientParams, emailContentParams },
+      () => this.sendSubscriptionPlanChange(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send subscription reverse trial email
+   * URLs are built internally from workspaceId
    * @private Use sendSafeSubscriptionReverseTrial instead
    */
   private async sendSubscriptionReverseTrial(
-    params: SubscriptionReverseTrialEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionReverseTrialEmailParams
   ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = subscriptionReverseTrialKey({
-      to: params.to,
+      to: receipientParams.to,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+
     const { html, text } = await renderSubscriptionReverseTrial({
-      planName: params.planName,
-      trialDays: params.trialDays,
-      dashboardUrl: params.dashboardUrl,
+      planName: emailContentParams.planName,
+      trialDays: emailContentParams.trialDays,
+      dashboardUrl,
     });
 
     await emailClient.send(
       {
         from: billingFrom(),
-        to: params.to,
-        subject: subscriptionReverseTrialSubject(params.planName),
+        to: receipientParams.to,
+        subject: subscriptionReverseTrialSubject(emailContentParams.planName),
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -663,9 +839,12 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        planName: params.planName,
-        trialDays: params.trialDays,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        planName: emailContentParams.planName,
+        trialDays: emailContentParams.trialDays,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
       },
       'Subscription reverse trial email sent'
@@ -677,10 +856,13 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeSubscriptionReverseTrial(
-    params: SubscriptionReverseTrialEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: SubscriptionReverseTrialEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendSubscriptionReverseTrial', params, () =>
-      this.sendSubscriptionReverseTrial(params)
+    await this.executeSafely(
+      'sendSubscriptionReverseTrial',
+      { receipientParams, emailContentParams },
+      () => this.sendSubscriptionReverseTrial(receipientParams, emailContentParams)
     );
   }
 
@@ -692,31 +874,45 @@ export class EmailService {
    * Send domain developer instructions email
    * Uses React Email template and idempotency key to prevent duplicate sends
    * Email is sent from configured invite inbox
+   * URLs are built internally from workspaceId, domainUrl, and verificationToken
    * @private Use sendSafeDomainDeveloperInstructions instead
    */
   private async sendDomainDeveloperInstructions(
-    params: DomainDeveloperInstructionsEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: DomainDeveloperInstructionsEmailParams
   ): Promise<void> {
-    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = domainInstructionsKey({
-      domainName: params.domainName,
+      domainUrl: emailContentParams.domainUrl,
       recipients,
     });
 
+    const verificationUrl = emailUrls.verification.developer(
+      emailContentParams.workspaceId,
+      emailContentParams.domainUrl,
+      emailContentParams.verificationToken
+    );
+
     const { html, text } = await renderDomainDeveloperInstructions({
-      domainName: params.domainName,
-      settingsUrl: params.settingsUrl,
-      docsUrl: params.docsUrl,
+      domainUrl: emailContentParams.domainUrl,
+      verificationUrl,
+      userName: emailContentParams.userName,
     });
 
     await emailClient.send(
       {
         from: domainFrom(),
-        to: params.to,
-        subject: domainDeveloperInstructionsSubject(params.domainName),
+        to: finalParams.to,
+        subject: domainDeveloperInstructionsSubject(),
         html,
         text,
-        batch: params.batch,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
@@ -725,14 +921,14 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        domainName: params.domainName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        domainUrl: emailContentParams.domainUrl,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
-        batch: params.batch && recipients.length > 1,
       },
-      params.batch && recipients.length > 1
-        ? 'Domain developer instructions sent via batch'
-        : 'Domain developer instructions sent'
+      'Domain developer instructions sent'
     );
   }
 
@@ -741,10 +937,13 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeDomainDeveloperInstructions(
-    params: DomainDeveloperInstructionsEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: DomainDeveloperInstructionsEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendDomainDeveloperInstructions', params, () =>
-      this.sendDomainDeveloperInstructions(params)
+    await this.executeSafely(
+      'sendDomainDeveloperInstructions',
+      { receipientParams, emailContentParams },
+      () => this.sendDomainDeveloperInstructions(receipientParams, emailContentParams)
     );
   }
 
@@ -756,32 +955,39 @@ export class EmailService {
    * Send teammate invited email
    * @private Use sendSafeTeammateInvited instead
    */
-  private async sendTeammateInvited(params: TeammateInvitedEmailParams): Promise<void> {
-    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+  private async sendTeammateInvited(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: TeammateInvitedEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = teammateInvitedKey({
-      workspaceName: params.workspaceName,
+      workspaceName: emailContentParams.workspaceName,
       recipients,
     });
 
     const { html, text } = await renderTeammateInvited({
-      inviterName: params.inviterName,
-      inviterEmail: params.inviterEmail,
-      workspaceName: params.workspaceName,
-      inviteUrl: params.inviteUrl,
+      inviterName: emailContentParams.inviterName,
+      inviterEmail: emailContentParams.inviterEmail,
+      workspaceName: emailContentParams.workspaceName,
+      inviteUrl: emailContentParams.inviteUrl,
     });
 
     await emailClient.send(
       {
-        from: inviteFrom(params.workspaceName),
-        to: params.to,
+        from: inviteFrom(emailContentParams.workspaceName),
+        to: receipientParams.to,
         subject: teammateInvitedSubject({
-          inviterName: params.inviterName,
-          inviterEmail: params.inviterEmail,
-          workspaceName: params.workspaceName,
+          inviterName: emailContentParams.inviterName,
+          inviterEmail: emailContentParams.inviterEmail,
+          workspaceName: emailContentParams.workspaceName,
         }),
         html,
         text,
-        batch: params.batch,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -790,15 +996,14 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        inviterName: params.inviterName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceName: emailContentParams.workspaceName,
+        inviterName: emailContentParams.inviterName,
         provider: emailClient.getProvider(),
-        batch: params.batch && recipients.length > 1,
       },
-      params.batch && recipients.length > 1
-        ? 'Teammate invited emails sent via batch'
-        : 'Teammate invited email sent'
+      'Teammate invited email sent'
     );
   }
 
@@ -806,42 +1011,57 @@ export class EmailService {
    * Safe version: Send teammate invited email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeTeammateInvited(params: TeammateInvitedEmailParams): Promise<void> {
-    await this.executeSafely('sendTeammateInvited', params, () => this.sendTeammateInvited(params));
+  async sendSafeTeammateInvited(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: TeammateInvitedEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendTeammateInvited', { receipientParams, emailContentParams }, () =>
+      this.sendTeammateInvited(receipientParams, emailContentParams)
+    );
   }
 
   /**
    * Send teammate joined email
    * Sent to workspace owners when someone joins
+   * URLs are built internally from workspaceId
    * @private Use sendSafeTeammateJoined instead
    */
-  private async sendTeammateJoined(params: TeammateJoinedEmailParams): Promise<void> {
-    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+  private async sendTeammateJoined(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: TeammateJoinedEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = teammateJoinedKey({
-      workspaceName: params.workspaceName,
+      workspaceName: emailContentParams.workspaceName,
       recipients,
-      memberEmail: params.memberEmail,
+      memberEmail: emailContentParams.memberEmail,
     });
 
+    const workspaceUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+
     const { html, text } = await renderTeammateJoined({
-      memberName: params.memberName,
-      memberEmail: params.memberEmail,
-      workspaceName: params.workspaceName,
-      workspaceUrl: params.workspaceUrl,
+      memberName: emailContentParams.memberName,
+      memberEmail: emailContentParams.memberEmail,
+      workspaceName: emailContentParams.workspaceName,
+      workspaceUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: receipientParams.to,
         subject: teammateJoinedSubject({
-          memberName: params.memberName,
-          memberEmail: params.memberEmail,
-          workspaceName: params.workspaceName,
+          memberName: emailContentParams.memberName,
+          memberEmail: emailContentParams.memberEmail,
+          workspaceName: emailContentParams.workspaceName,
         }),
         html,
         text,
-        batch: params.batch,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -850,16 +1070,16 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        memberName: params.memberName,
-        memberEmail: params.memberEmail,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceName: emailContentParams.workspaceName,
+        memberName: emailContentParams.memberName,
+        memberEmail: emailContentParams.memberEmail,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
-        batch: params.batch && recipients.length > 1,
       },
-      params.batch && recipients.length > 1
-        ? 'Teammate joined emails sent via batch'
-        : 'Teammate joined email sent'
+      'Teammate joined email sent'
     );
   }
 
@@ -867,8 +1087,13 @@ export class EmailService {
    * Safe version: Send teammate joined email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeTeammateJoined(params: TeammateJoinedEmailParams): Promise<void> {
-    await this.executeSafely('sendTeammateJoined', params, () => this.sendTeammateJoined(params));
+  async sendSafeTeammateJoined(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: TeammateJoinedEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendTeammateJoined', { receipientParams, emailContentParams }, () =>
+      this.sendTeammateJoined(receipientParams, emailContentParams)
+    );
   }
 
   // ============================================================================
@@ -877,25 +1102,39 @@ export class EmailService {
 
   /**
    * Send account deletion email
+   * URLs are built internally from static sources
    * @private Use sendSafeAccountDeletion instead
    */
-  private async sendAccountDeletion(params: AccountDeletionEmailParams): Promise<void> {
+  private async sendAccountDeletion(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: AccountDeletionEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = accountDeletionKey({
-      to: params.to,
+      to: receipientParams.to,
     });
 
+    const feedbackUrl = emailUrls.account.feedback();
+
     const { html, text } = await renderAccountDeletion({
-      userName: params.userName,
-      feedbackUrl: params.feedbackUrl,
+      userName: emailContentParams.userName,
+      feedbackUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: finalParams.to,
         subject: accountDeletionSubject,
         html,
         text,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
@@ -904,8 +1143,10 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        userName: params.userName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        userName: emailContentParams.userName,
         provider: emailClient.getProvider(),
       },
       'Account deletion email sent'
@@ -916,35 +1157,52 @@ export class EmailService {
    * Safe version: Send account deletion email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeAccountDeletion(params: AccountDeletionEmailParams): Promise<void> {
-    await this.executeSafely('sendAccountDeletion', params, () => this.sendAccountDeletion(params));
+  async sendSafeAccountDeletion(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: AccountDeletionEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendAccountDeletion', { receipientParams, emailContentParams }, () =>
+      this.sendAccountDeletion(receipientParams, emailContentParams)
+    );
   }
 
   /**
    * Send account deletion verification email
    * Sent when a user requests to delete their account
+   * URLs are built internally from deletionToken
    * @private Use sendSafeAccountDeletionVerification instead
    */
   private async sendAccountDeletionVerification(
-    params: AccountDeletionVerificationEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: AccountDeletionVerificationEmailParams
   ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = accountDeletionVerificationKey({
-      to: params.to,
+      to: receipientParams.to,
       timestamp: Date.now(),
     });
 
+    const verificationUrl = emailUrls.account.deleteConfirmation(emailContentParams.deletionToken);
+
     const { html, text } = await renderAccountDeletionVerification({
-      userName: params.userName,
-      verificationUrl: params.verificationUrl,
+      userName: emailContentParams.userName,
+      verificationUrl,
     });
 
     await emailClient.send(
       {
         from: authFrom(),
-        to: params.to,
+        to: finalParams.to,
         subject: accountDeletionVerificationSubject,
         html,
         text,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
@@ -953,8 +1211,10 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        userName: params.userName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        userName: emailContentParams.userName,
         provider: emailClient.getProvider(),
       },
       'Account deletion verification email sent'
@@ -966,33 +1226,49 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeAccountDeletionVerification(
-    params: AccountDeletionVerificationEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: AccountDeletionVerificationEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendAccountDeletionVerification', params, () =>
-      this.sendAccountDeletionVerification(params)
+    await this.executeSafely(
+      'sendAccountDeletionVerification',
+      { receipientParams, emailContentParams },
+      () => this.sendAccountDeletionVerification(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send account restored email
+   * URLs are built internally from static sources
    * @private Use sendSafeAccountRestored instead
    */
-  private async sendAccountRestored(params: AccountRestoredEmailParams): Promise<void> {
+  private async sendAccountRestored(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: AccountRestoredEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = accountRestoredKey({
-      to: params.to,
+      to: receipientParams.to,
     });
 
+    const loginUrl = emailUrls.external.login();
+
     const { html, text } = await renderAccountRestored({
-      userName: params.userName,
+      userName: emailContentParams.userName,
+      loginUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: receipientParams.to,
         subject: accountRestoredSubject,
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -1001,8 +1277,10 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        userName: params.userName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        userName: emailContentParams.userName,
         provider: emailClient.getProvider(),
       },
       'Account restored email sent'
@@ -1013,30 +1291,52 @@ export class EmailService {
    * Safe version: Send account restored email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeAccountRestored(params: AccountRestoredEmailParams): Promise<void> {
-    await this.executeSafely('sendAccountRestored', params, () => this.sendAccountRestored(params));
+  async sendSafeAccountRestored(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: AccountRestoredEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendAccountRestored', { receipientParams, emailContentParams }, () =>
+      this.sendAccountRestored(receipientParams, emailContentParams)
+    );
   }
 
   /**
    * Send TOS violation email
+   * URLs are built internally from static sources
    * @private Use sendSafeTosViolation instead
    */
-  private async sendTosViolation(params: TosViolationEmailParams): Promise<void> {
+  private async sendTosViolation(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: TosViolationEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = tosViolationKey({
-      to: params.to,
+      to: receipientParams.to,
     });
 
+    const appealUrl = emailUrls.external.appeal();
+    const tosUrl = emailUrls.external.terms();
+
     const { html, text } = await renderTosViolation({
-      userName: params.userName,
+      userName: emailContentParams.userName,
+      appealUrl,
+      tosUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: finalParams.to,
         subject: tosViolationSubject,
         html,
         text,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
@@ -1045,8 +1345,10 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        userName: params.userName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        userName: emailContentParams.userName,
         provider: emailClient.getProvider(),
       },
       'TOS violation email sent'
@@ -1057,8 +1359,13 @@ export class EmailService {
    * Safe version: Send TOS violation email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeTosViolation(params: TosViolationEmailParams): Promise<void> {
-    await this.executeSafely('sendTosViolation', params, () => this.sendTosViolation(params));
+  async sendSafeTosViolation(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: TosViolationEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendTosViolation', { receipientParams, emailContentParams }, () =>
+      this.sendTosViolation(receipientParams, emailContentParams)
+    );
   }
 
   // ============================================================================
@@ -1070,40 +1377,52 @@ export class EmailService {
    * Supports optional scheduling via scheduledAt field in params
    * @private Use sendSafePilotSandboxInvite instead
    */
-  private async sendPilotSandboxInvite(params: PilotSandboxInviteEmailParams): Promise<void> {
+  private async sendPilotSandboxInvite(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: PilotSandboxInviteEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = pilotSandboxInviteKey({
-      to: params.to,
-      scheduledAt: params.scheduledAt,
+      to: receipientParams.to,
+      scheduledAt: emailContentParams.scheduledAt,
     });
 
     const { html, text } = await renderSandboxInvite({
-      sandboxUrl: params.sandboxUrl,
-      expiresInDays: params.expiresInDays,
+      sandboxUrl: emailContentParams.sandboxUrl,
+      expiresInDays: emailContentParams.expiresInDays,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: receipientParams.to,
         subject: sandboxInviteSubject,
         html,
         text,
+        batch: useBatch,
+        ...(receipientParams.replyTo && { replyTo: receipientParams.replyTo }),
       },
       {
         idempotencyKey,
-        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
+        ...(emailContentParams.scheduledAt && { scheduledAt: emailContentParams.scheduledAt }),
       }
     );
 
     logger.info(
       {
-        to: params.to,
-        expiresInDays: params.expiresInDays,
-        scheduled: !!params.scheduledAt,
-        scheduledAt: params.scheduledAt,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        expiresInDays: emailContentParams.expiresInDays,
+        scheduled: !!emailContentParams.scheduledAt,
+        scheduledAt: emailContentParams.scheduledAt,
         provider: emailClient.getProvider(),
       },
-      params.scheduledAt
+      emailContentParams.scheduledAt
         ? 'Pilot sandbox invite email scheduled'
         : 'Pilot sandbox invite email sent'
     );
@@ -1113,9 +1432,14 @@ export class EmailService {
    * Safe version: Send pilot sandbox invite email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafePilotSandboxInvite(params: PilotSandboxInviteEmailParams): Promise<void> {
-    await this.executeSafely('sendPilotSandboxInvite', params, () =>
-      this.sendPilotSandboxInvite(params)
+  async sendSafePilotSandboxInvite(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: PilotSandboxInviteEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendPilotSandboxInvite',
+      { receipientParams, emailContentParams },
+      () => this.sendPilotSandboxInvite(receipientParams, emailContentParams)
     );
   }
 
@@ -1125,25 +1449,40 @@ export class EmailService {
 
   /**
    * Send recording received email
+   * URLs are built internally from workspaceId and recordingId
    * @private Use sendSafeRecordingReceived instead
    */
-  private async sendRecordingReceived(params: RecordingReceivedEmailParams): Promise<void> {
+  private async sendRecordingReceived(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: RecordingReceivedEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
+    const recordingUrl = emailUrls.recording.view(
+      emailContentParams.workspaceId,
+      emailContentParams.recordingId
+    );
+
     const idempotencyKey = recordingReceivedKey({
-      to: params.to,
-      recordingUrl: params.recordingUrl,
+      to: receipientParams.to,
+      recordingUrl,
     });
 
     const { html, text } = await renderRecordingReceived({
-      recordingUrl: params.recordingUrl,
+      recordingUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: receipientParams.to,
         subject: recordingReceivedSubject,
         html,
         text,
+        batch: useBatch,
       },
       {
         idempotencyKey,
@@ -1152,7 +1491,11 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceId: emailContentParams.workspaceId,
+        recordingId: emailContentParams.recordingId,
         provider: emailClient.getProvider(),
       },
       'Recording received email sent'
@@ -1163,9 +1506,14 @@ export class EmailService {
    * Safe version: Send recording received email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeRecordingReceived(params: RecordingReceivedEmailParams): Promise<void> {
-    await this.executeSafely('sendRecordingReceived', params, () =>
-      this.sendRecordingReceived(params)
+  async sendSafeRecordingReceived(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: RecordingReceivedEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendRecordingReceived',
+      { receipientParams, emailContentParams },
+      () => this.sendRecordingReceived(receipientParams, emailContentParams)
     );
   }
 
@@ -1176,27 +1524,41 @@ export class EmailService {
   /**
    * Send welcome email for members joining a workspace
    * Sent to users when they join a workspace as a member
+   * URLs are built internally from workspaceId
    * @private Use sendSafeWelcomeEmailMember instead
    */
-  private async sendWelcomeEmailMember(params: WelcomeEmailMemberParams): Promise<void> {
+  private async sendWelcomeEmailMember(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailMemberParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = welcomeEmailMemberKey({
-      to: params.to,
-      workspaceName: params.workspaceName,
+      to: receipientParams.to,
+      workspaceName: emailContentParams.workspaceName,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+
     const { html, text } = await renderWelcomeEmailMember({
-      userName: params.userName,
-      workspaceName: params.workspaceName,
-      dashboardUrl: params.dashboardUrl,
+      userName: emailContentParams.userName,
+      workspaceName: emailContentParams.workspaceName,
+      dashboardUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: finalParams.to,
         subject: welcomeEmailMemberSubject,
         html,
         text,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
@@ -1205,9 +1567,12 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        userName: params.userName,
-        workspaceName: params.workspaceName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        userName: emailContentParams.userName,
+        workspaceName: emailContentParams.workspaceName,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
       },
       'Welcome email member sent'
@@ -1218,37 +1583,54 @@ export class EmailService {
    * Safe version: Send welcome email for members
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeWelcomeEmailMember(params: WelcomeEmailMemberParams): Promise<void> {
-    await this.executeSafely('sendWelcomeEmailMember', params, () =>
-      this.sendWelcomeEmailMember(params)
+  async sendSafeWelcomeEmailMember(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailMemberParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendWelcomeEmailMember',
+      { receipientParams, emailContentParams },
+      () => this.sendWelcomeEmailMember(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send welcome email for subscription users
    * Sent to users who create a workspace without an invite token (organic signup)
+   * URLs are built internally from workspaceId
    * @private Use sendSafeWelcomeEmailSubscription instead
    */
   private async sendWelcomeEmailSubscription(
-    params: WelcomeEmailSubscriptionParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailSubscriptionParams
   ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = welcomeEmailSubscriptionKey({
-      to: params.to,
+      to: receipientParams.to,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+
     const { html, text } = await renderWelcomeEmailSubscription({
-      userName: params.userName,
-      workspaceName: params.workspaceName,
-      dashboardUrl: params.dashboardUrl,
+      userName: emailContentParams.userName,
+      workspaceName: emailContentParams.workspaceName,
+      dashboardUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: finalParams.to,
         subject: welcomeEmailSubscriptionSubject,
         html,
         text,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
@@ -1257,9 +1639,12 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        userName: params.userName,
-        workspaceName: params.workspaceName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        userName: emailContentParams.userName,
+        workspaceName: emailContentParams.workspaceName,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
       },
       'Welcome email subscription sent'
@@ -1270,36 +1655,56 @@ export class EmailService {
    * Safe version: Send welcome email for subscription users
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeWelcomeEmailSubscription(params: WelcomeEmailSubscriptionParams): Promise<void> {
-    await this.executeSafely('sendWelcomeEmailSubscription', params, () =>
-      this.sendWelcomeEmailSubscription(params)
+  async sendSafeWelcomeEmailSubscription(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailSubscriptionParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendWelcomeEmailSubscription',
+      { receipientParams, emailContentParams },
+      () => this.sendWelcomeEmailSubscription(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send welcome email for pilot users
    * Sent to users who create a workspace with an invite token (invited/pilot users)
+   * URLs are built internally from workspaceId and support config
    * @private Use sendSafeWelcomeEmailPilot instead
    */
-  private async sendWelcomeEmailPilot(params: WelcomeEmailPilotParams): Promise<void> {
+  private async sendWelcomeEmailPilot(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailPilotParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = welcomeEmailPilotKey({
-      to: params.to,
+      to: receipientParams.to,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+    const calendarUrl = emailUrls.support.calendar();
+
     const { html, text } = await renderWelcomeEmailPilot({
-      userName: params.userName,
-      workspaceName: params.workspaceName,
-      dashboardUrl: params.dashboardUrl,
-      calendarUrl: params.calendarUrl,
+      userName: emailContentParams.userName,
+      workspaceName: emailContentParams.workspaceName,
+      dashboardUrl,
+      calendarUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: finalParams.to,
         subject: welcomeEmailPilotSubject,
         html,
         text,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
@@ -1308,9 +1713,12 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        userName: params.userName,
-        workspaceName: params.workspaceName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        userName: emailContentParams.userName,
+        workspaceName: emailContentParams.workspaceName,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
       },
       'Welcome email pilot sent'
@@ -1321,36 +1729,55 @@ export class EmailService {
    * Safe version: Send welcome email for pilot users
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeWelcomeEmailPilot(params: WelcomeEmailPilotParams): Promise<void> {
-    await this.executeSafely('sendWelcomeEmailPilot', params, () =>
-      this.sendWelcomeEmailPilot(params)
+  async sendSafeWelcomeEmailPilot(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailPilotParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendWelcomeEmailPilot',
+      { receipientParams, emailContentParams },
+      () => this.sendWelcomeEmailPilot(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send welcome email for requesters whose access was approved
    * Sent to users when their access request is approved
+   * URLs are built internally from workspaceId
    * @private Use sendSafeWelcomeEmailRequester instead
    */
-  private async sendWelcomeEmailRequester(params: WelcomeEmailRequesterParams): Promise<void> {
+  private async sendWelcomeEmailRequester(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailRequesterParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = welcomeEmailRequesterKey({
-      to: params.to,
-      workspaceName: params.workspaceName,
+      to: receipientParams.to,
+      workspaceName: emailContentParams.workspaceName,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+
     const { html, text } = await renderWelcomeEmailRequester({
-      userName: params.userName,
-      workspaceName: params.workspaceName,
-      dashboardUrl: params.dashboardUrl,
+      userName: emailContentParams.userName,
+      workspaceName: emailContentParams.workspaceName,
+      dashboardUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: finalParams.to,
         subject: welcomeEmailRequesterSubject,
         html,
         text,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
@@ -1359,9 +1786,12 @@ export class EmailService {
 
     logger.info(
       {
-        to: params.to,
-        userName: params.userName,
-        workspaceName: params.workspaceName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        userName: emailContentParams.userName,
+        workspaceName: emailContentParams.workspaceName,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
       },
       'Welcome email requester sent'
@@ -1372,9 +1802,14 @@ export class EmailService {
    * Safe version: Send welcome email for requesters
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeWelcomeEmailRequester(params: WelcomeEmailRequesterParams): Promise<void> {
-    await this.executeSafely('sendWelcomeEmailRequester', params, () =>
-      this.sendWelcomeEmailRequester(params)
+  async sendSafeWelcomeEmailRequester(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailRequesterParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendWelcomeEmailRequester',
+      { receipientParams, emailContentParams },
+      () => this.sendWelcomeEmailRequester(receipientParams, emailContentParams)
     );
   }
 
@@ -1384,52 +1819,62 @@ export class EmailService {
 
   /**
    * Send workspace deletion scheduled email
+   * URLs are built internally from workspaceId
    * @private Use sendSafeWorkspaceDeletionScheduled instead
    */
   private async sendWorkspaceDeletionScheduled(
-    params: WorkspaceDeletionScheduledEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WorkspaceDeletionScheduledEmailParams
   ): Promise<void> {
-    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = workspaceDeletionScheduledKey({
-      workspaceName: params.workspaceName,
+      workspaceName: emailContentParams.workspaceName,
       recipients,
     });
 
+    const cancelUrl = emailUrls.workspace.restore(emailContentParams.workspaceId);
+
     const { html, text } = await renderDeletionScheduled({
-      workspaceName: params.workspaceName,
-      deletionDate: params.deletionDate,
-      cancelUrl: params.cancelUrl,
+      workspaceName: emailContentParams.workspaceName,
+      deletionDate: emailContentParams.deletionDate,
+      cancelUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: finalParams.to,
         subject: workspaceDeletionScheduledSubject({
-          workspaceName: params.workspaceName,
-          deletionDate: params.deletionDate,
+          workspaceName: emailContentParams.workspaceName,
+          deletionDate: emailContentParams.deletionDate,
         }),
         html,
         text,
-        batch: params.batch,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
-        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
+        ...(emailContentParams.scheduledAt && { scheduledAt: emailContentParams.scheduledAt }),
       }
     );
 
     logger.info(
       {
-        to: params.to,
-        workspaceName: params.workspaceName,
-        deletionDate: params.deletionDate,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceName: emailContentParams.workspaceName,
+        workspaceId: emailContentParams.workspaceId,
+        deletionDate: emailContentParams.deletionDate,
         provider: emailClient.getProvider(),
-        batch: params.batch && recipients.length > 1,
       },
-      params.batch && recipients.length > 1
-        ? 'Workspace deletion scheduled emails sent via batch'
-        : 'Workspace deletion scheduled email sent'
+      'Workspace deletion scheduled email sent'
     );
   }
 
@@ -1438,56 +1883,67 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeWorkspaceDeletionScheduled(
-    params: WorkspaceDeletionScheduledEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WorkspaceDeletionScheduledEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendWorkspaceDeletionScheduled', params, () =>
-      this.sendWorkspaceDeletionScheduled(params)
+    await this.executeSafely(
+      'sendWorkspaceDeletionScheduled',
+      { receipientParams, emailContentParams },
+      () => this.sendWorkspaceDeletionScheduled(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send workspace recovery confirmation email
+   * URLs are built internally from workspaceId
    * @private Use sendSafeWorkspaceRecoveryConfirmation instead
    */
   private async sendWorkspaceRecoveryConfirmation(
-    params: WorkspaceRecoveryConfirmationEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WorkspaceRecoveryConfirmationEmailParams
   ): Promise<void> {
-    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = workspaceRecoveryConfirmationKey({
-      workspaceName: params.workspaceName,
+      workspaceName: emailContentParams.workspaceName,
       recipients,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+
     const { html, text } = await renderRecoveryConfirmation({
-      workspaceName: params.workspaceName,
-      dashboardUrl: params.dashboardUrl,
+      workspaceName: emailContentParams.workspaceName,
+      dashboardUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
-        subject: workspaceRecoveryConfirmationSubject(params.workspaceName),
+        to: receipientParams.to,
+        subject: workspaceRecoveryConfirmationSubject(emailContentParams.workspaceName),
         html,
         text,
-        batch: params.batch,
+        batch: useBatch,
       },
       {
         idempotencyKey,
-        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
+        ...(emailContentParams.scheduledAt && { scheduledAt: emailContentParams.scheduledAt }),
       }
     );
 
     logger.info(
       {
-        to: params.to,
-        workspaceName: params.workspaceName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceName: emailContentParams.workspaceName,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
-        batch: params.batch && recipients.length > 1,
       },
-      params.batch && recipients.length > 1
-        ? 'Workspace recovery confirmation emails sent via batch'
-        : 'Workspace recovery confirmation email sent'
+      'Workspace recovery confirmation email sent'
     );
   }
 
@@ -1496,56 +1952,67 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeWorkspaceRecoveryConfirmation(
-    params: WorkspaceRecoveryConfirmationEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WorkspaceRecoveryConfirmationEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendWorkspaceRecoveryConfirmation', params, () =>
-      this.sendWorkspaceRecoveryConfirmation(params)
+    await this.executeSafely(
+      'sendWorkspaceRecoveryConfirmation',
+      { receipientParams, emailContentParams },
+      () => this.sendWorkspaceRecoveryConfirmation(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send workspace recovery partially email
+   * URLs are built internally from workspaceId
    * @private Use sendSafeWorkspaceRecoveryPartially instead
    */
   private async sendWorkspaceRecoveryPartially(
-    params: WorkspaceRecoveryPartiallyEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WorkspaceRecoveryPartiallyEmailParams
   ): Promise<void> {
-    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = workspaceRecoveryPartiallyKey({
-      workspaceName: params.workspaceName,
+      workspaceName: emailContentParams.workspaceName,
       recipients,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+
     const { html, text } = await renderRecoveryPartially({
-      workspaceName: params.workspaceName,
-      dashboardUrl: params.dashboardUrl,
+      workspaceName: emailContentParams.workspaceName,
+      dashboardUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
-        subject: workspaceRecoveryPartiallySubject(params.workspaceName),
+        to: receipientParams.to,
+        subject: workspaceRecoveryPartiallySubject(emailContentParams.workspaceName),
         html,
         text,
-        batch: params.batch,
+        batch: useBatch,
       },
       {
         idempotencyKey,
-        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
+        ...(emailContentParams.scheduledAt && { scheduledAt: emailContentParams.scheduledAt }),
       }
     );
 
     logger.info(
       {
-        to: params.to,
-        workspaceName: params.workspaceName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceName: emailContentParams.workspaceName,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
-        batch: params.batch && recipients.length > 1,
       },
-      params.batch && recipients.length > 1
-        ? 'Workspace recovery partially emails sent via batch'
-        : 'Workspace recovery partially email sent'
+      'Workspace recovery partially email sent'
     );
   }
 
@@ -1554,10 +2021,13 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeWorkspaceRecoveryPartially(
-    params: WorkspaceRecoveryPartiallyEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WorkspaceRecoveryPartiallyEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendWorkspaceRecoveryPartially', params, () =>
-      this.sendWorkspaceRecoveryPartially(params)
+    await this.executeSafely(
+      'sendWorkspaceRecoveryPartially',
+      { receipientParams, emailContentParams },
+      () => this.sendWorkspaceRecoveryPartially(receipientParams, emailContentParams)
     );
   }
 
@@ -1567,52 +2037,66 @@ export class EmailService {
 
   /**
    * Send project deletion scheduled email
+   * URLs are built internally from workspaceId and projectId
    * @private Use sendSafeProjectDeletionScheduled instead
    */
   private async sendProjectDeletionScheduled(
-    params: ProjectDeletionScheduledEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ProjectDeletionScheduledEmailParams
   ): Promise<void> {
-    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
     const idempotencyKey = projectDeletionScheduledKey({
-      projectName: params.projectName,
+      projectName: emailContentParams.projectName,
       recipients,
     });
 
+    const cancelUrl = emailUrls.project.restore(
+      emailContentParams.workspaceId,
+      emailContentParams.projectId
+    );
+
     const { html, text } = await renderProjectDeletionScheduled({
-      projectName: params.projectName,
-      deletionDate: params.deletionDate,
-      cancelUrl: params.cancelUrl,
+      projectName: emailContentParams.projectName,
+      deletionDate: emailContentParams.deletionDate,
+      cancelUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
+        to: finalParams.to,
         subject: projectDeletionScheduledSubject({
-          projectName: params.projectName,
-          deletionDate: params.deletionDate,
+          projectName: emailContentParams.projectName,
+          deletionDate: emailContentParams.deletionDate,
         }),
         html,
         text,
-        batch: params.batch,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
       },
       {
         idempotencyKey,
-        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
+        ...(emailContentParams.scheduledAt && { scheduledAt: emailContentParams.scheduledAt }),
       }
     );
 
     logger.info(
       {
-        to: params.to,
-        projectName: params.projectName,
-        deletionDate: params.deletionDate,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        projectName: emailContentParams.projectName,
+        workspaceId: emailContentParams.workspaceId,
+        projectId: emailContentParams.projectId,
+        deletionDate: emailContentParams.deletionDate,
         provider: emailClient.getProvider(),
-        batch: params.batch && recipients.length > 1,
       },
-      params.batch && recipients.length > 1
-        ? 'Project deletion scheduled emails sent via batch'
-        : 'Project deletion scheduled email sent'
+      'Project deletion scheduled email sent'
     );
   }
 
@@ -1621,56 +2105,67 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeProjectDeletionScheduled(
-    params: ProjectDeletionScheduledEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ProjectDeletionScheduledEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendProjectDeletionScheduled', params, () =>
-      this.sendProjectDeletionScheduled(params)
+    await this.executeSafely(
+      'sendProjectDeletionScheduled',
+      { receipientParams, emailContentParams },
+      () => this.sendProjectDeletionScheduled(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send project recovery confirmation email
+   * URLs are built internally from workspaceId
    * @private Use sendSafeProjectRecoveryConfirmation instead
    */
   private async sendProjectRecoveryConfirmation(
-    params: ProjectRecoveryConfirmationEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ProjectRecoveryConfirmationEmailParams
   ): Promise<void> {
-    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = projectRecoveryConfirmationKey({
-      projectName: params.projectName,
+      projectName: emailContentParams.projectName,
       recipients,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+
     const { html, text } = await renderProjectRecoveryConfirmation({
-      projectName: params.projectName,
-      dashboardUrl: params.dashboardUrl,
+      projectName: emailContentParams.projectName,
+      dashboardUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
-        subject: projectRecoveryConfirmationSubject(params.projectName),
+        to: receipientParams.to,
+        subject: projectRecoveryConfirmationSubject(emailContentParams.projectName),
         html,
         text,
-        batch: params.batch,
+        batch: useBatch,
       },
       {
         idempotencyKey,
-        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
+        ...(emailContentParams.scheduledAt && { scheduledAt: emailContentParams.scheduledAt }),
       }
     );
 
     logger.info(
       {
-        to: params.to,
-        projectName: params.projectName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        projectName: emailContentParams.projectName,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
-        batch: params.batch && recipients.length > 1,
       },
-      params.batch && recipients.length > 1
-        ? 'Project recovery confirmation emails sent via batch'
-        : 'Project recovery confirmation email sent'
+      'Project recovery confirmation email sent'
     );
   }
 
@@ -1679,56 +2174,67 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeProjectRecoveryConfirmation(
-    params: ProjectRecoveryConfirmationEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ProjectRecoveryConfirmationEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendProjectRecoveryConfirmation', params, () =>
-      this.sendProjectRecoveryConfirmation(params)
+    await this.executeSafely(
+      'sendProjectRecoveryConfirmation',
+      { receipientParams, emailContentParams },
+      () => this.sendProjectRecoveryConfirmation(receipientParams, emailContentParams)
     );
   }
 
   /**
    * Send project recovery partially email
+   * URLs are built internally from workspaceId
    * @private Use sendSafeProjectRecoveryPartially instead
    */
   private async sendProjectRecoveryPartially(
-    params: ProjectRecoveryPartiallyEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ProjectRecoveryPartiallyEmailParams
   ): Promise<void> {
-    const recipients = Array.isArray(params.to) ? params.to : [params.to];
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
     const idempotencyKey = projectRecoveryPartiallyKey({
-      projectName: params.projectName,
+      projectName: emailContentParams.projectName,
       recipients,
     });
 
+    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
+
     const { html, text } = await renderProjectRecoveryPartially({
-      projectName: params.projectName,
-      dashboardUrl: params.dashboardUrl,
+      projectName: emailContentParams.projectName,
+      dashboardUrl,
     });
 
     await emailClient.send(
       {
         from: notificationFrom(),
-        to: params.to,
-        subject: projectRecoveryPartiallySubject(params.projectName),
+        to: receipientParams.to,
+        subject: projectRecoveryPartiallySubject(emailContentParams.projectName),
         html,
         text,
-        batch: params.batch,
+        batch: useBatch,
       },
       {
         idempotencyKey,
-        ...(params.scheduledAt && { scheduledAt: params.scheduledAt }),
+        ...(emailContentParams.scheduledAt && { scheduledAt: emailContentParams.scheduledAt }),
       }
     );
 
     logger.info(
       {
-        to: params.to,
-        projectName: params.projectName,
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        projectName: emailContentParams.projectName,
+        workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
-        batch: params.batch && recipients.length > 1,
       },
-      params.batch && recipients.length > 1
-        ? 'Project recovery partially emails sent via batch'
-        : 'Project recovery partially email sent'
+      'Project recovery partially email sent'
     );
   }
 
@@ -1737,10 +2243,13 @@ export class EmailService {
    * Errors are handled by the configured error handler instead of throwing
    */
   async sendSafeProjectRecoveryPartially(
-    params: ProjectRecoveryPartiallyEmailParams
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ProjectRecoveryPartiallyEmailParams
   ): Promise<void> {
-    await this.executeSafely('sendProjectRecoveryPartially', params, () =>
-      this.sendProjectRecoveryPartially(params)
+    await this.executeSafely(
+      'sendProjectRecoveryPartially',
+      { receipientParams, emailContentParams },
+      () => this.sendProjectRecoveryPartially(receipientParams, emailContentParams)
     );
   }
 }
