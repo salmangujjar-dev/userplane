@@ -1,5 +1,7 @@
 'use client';
 
+import { Suspense } from 'react';
+
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { useQueryState } from 'nuqs';
@@ -75,5 +77,11 @@ function DomainSetupContent() {
 }
 
 export default function DomainSetupPage() {
-  return <DomainSetupContent />;
+  return (
+    <Suspense
+      fallback={<div className="flex min-h-svh items-center justify-center">Loading...</div>}
+    >
+      <DomainSetupContent />
+    </Suspense>
+  );
 }

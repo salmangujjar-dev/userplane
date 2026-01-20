@@ -24,9 +24,7 @@ import {
 import type { Link } from '@workspace/db';
 import type {
   AccessRequestEmailProps,
-  AccountDeletionEmailProps,
   AccountDeletionVerificationEmailProps,
-  AccountRestoredEmailProps,
   BillingEmailUpdatedEmailProps,
   BillingEmailVerificationEmailProps,
   DeletionScheduledEmailProps,
@@ -45,8 +43,6 @@ import type {
   SubscriptionPlanChangeEmailProps,
   SubscriptionReverseTrialEmailProps,
   TeammateInvitedEmailProps,
-  TeammateJoinedEmailProps,
-  TosViolationEmailProps,
   WelcomeEmailMemberProps,
   WelcomeEmailPilotProps,
   WelcomeEmailRequesterProps,
@@ -310,20 +306,6 @@ export type SubscriptionReverseTrialEmailParams = Omit<
 export type TeammateInvitedEmailParams = TeammateInvitedEmailProps;
 
 /**
- * Teammate joined email parameters
- * Service accepts workspaceId and builds URLs internally
- */
-export type TeammateJoinedEmailParams = Omit<TeammateJoinedEmailProps, 'workspaceUrl'> & {
-  workspaceId: string;
-};
-
-/**
- * Account deletion email parameters
- * Service builds feedback URL internally
- */
-export type AccountDeletionEmailParams = Omit<AccountDeletionEmailProps, 'feedbackUrl'>;
-
-/**
  * Account deletion verification email parameters
  * Service accepts deletionToken and builds URL internally
  */
@@ -335,21 +317,11 @@ export type AccountDeletionVerificationEmailParams = Omit<
 };
 
 /**
- * Account restored email parameters
- * Service builds login URL internally
- */
-export type AccountRestoredEmailParams = Omit<AccountRestoredEmailProps, 'loginUrl'>;
-
-/**
- * TOS violation email parameters
- * Service builds appeal and ToS URLs internally
- */
-export type TosViolationEmailParams = Omit<TosViolationEmailProps, 'appealUrl' | 'tosUrl'>;
-
-/**
  * Pilot sandbox invite email parameters
+ * Service builds calendar URL internally
  */
-export type PilotSandboxInviteEmailParams = SandboxInviteEmailProps & Partial<ScheduledEmailParams>;
+export type PilotSandboxInviteEmailParams = Omit<SandboxInviteEmailProps, 'calendarUrl'> &
+  Partial<ScheduledEmailParams>;
 
 /**
  * Recording received email parameters

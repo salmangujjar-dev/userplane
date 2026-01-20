@@ -16,7 +16,8 @@ import type { ProjectService } from '@/api/services/project.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { createPaginationMeta } from '@/api/types';
-import { calculateDaysSince } from '@/api/utils/date';
+import { calculateDaysSince, getRestorationMaxWindowDays } from '@/api/utils/date';
+import { formatDeletionDate } from '@/api/utils/format';
 
 /**
  * GET /workspace/:workspaceId/projects
@@ -217,14 +218,11 @@ export const deleteProjectImpl = (
 
       await projectService.deleteProject(input.params.projectId, input.params.workspaceId);
 
-      // Calculate deletion date (30 days from now)
+      // Calculate deletion date using restoration max window
       const deletionDate = new Date();
-      deletionDate.setDate(deletionDate.getDate() + 30);
-      const formattedDeletionDate = deletionDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+      const maxWindow = getRestorationMaxWindowDays();
+      deletionDate.setDate(deletionDate.getDate() + maxWindow);
+      const formattedDeletionDate = formatDeletionDate(deletionDate);
 
       // Send deletion scheduled email
       await emailService.sendSafeProjectDeletionScheduled(

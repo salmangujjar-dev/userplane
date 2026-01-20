@@ -9,8 +9,7 @@ export const copy = {
   subtitle: (projectName: string, deletionDate: string) =>
     `${projectName} will be deleted on ${deletionDate}`,
   body: [
-    (deletionDate: string) =>
-      `Your project and all associated data will be permanently deleted on ${deletionDate}. This includes recordings, recording links, and project settings.`,
+    'This will permanently delete all project data, including recordings, recording links and project settings.',
     'You can cancel this deletion before the scheduled date.',
   ],
   cta: 'Cancel deletion',

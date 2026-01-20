@@ -12,7 +12,7 @@
  */
 export const getWorkspaceName = (workspaceName?: string): string => {
   const trimmed = workspaceName?.trim();
-  return trimmed || 'Your workspace';
+  return trimmed || 'Userplane';
 };
 
 /**
@@ -69,4 +69,28 @@ export const getMemberName = (memberName?: string): string => {
 export const getDomainName = (domainName?: string): string => {
   const trimmed = domainName?.trim();
   return trimmed || 'your domain';
+};
+
+/**
+ * Formats requester name by trimming and applying defaults
+ * If both name and email are present, returns 'Name (email)'
+ * Falls back to email if name is empty, and to 'Someone' if both are empty
+ */
+export const getRequesterName = (requesterName?: string, requesterEmail?: string): string => {
+  const trimmedName = requesterName?.trim();
+  const trimmedEmail = requesterEmail?.trim();
+
+  if (trimmedName && trimmedEmail) {
+    return `${trimmedName} (${trimmedEmail})`;
+  }
+
+  if (trimmedName) {
+    return trimmedName;
+  }
+
+  if (trimmedEmail) {
+    return trimmedEmail;
+  }
+
+  return 'Someone';
 };

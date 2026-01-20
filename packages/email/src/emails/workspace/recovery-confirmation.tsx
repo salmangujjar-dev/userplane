@@ -29,6 +29,7 @@ export const RecoveryConfirmationEmail = ({
 
       <Section style={styles.messageSection}>
         <Text style={styles.messageText}>{copy.body[0]}</Text>
+        <Text style={styles.messageText}>{copy.body[1]}</Text>
       </Section>
 
       <Section style={styles.ctaSection}>

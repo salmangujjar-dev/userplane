@@ -25,7 +25,8 @@ import type { UserService } from '@/api/services/user.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { createPaginationMeta } from '@/api/types';
-import { calculateDaysSince } from '@/api/utils/date';
+import { calculateDaysSince, getRestorationMaxWindowDays } from '@/api/utils/date';
+import { formatDeletionDate } from '@/api/utils/format';
 
 /**
  * GET /workspace - List all user workspaces
@@ -245,13 +246,10 @@ export const deleteWorkspaceImpl = (
 
       await workspaceService.deleteWorkspace(input.params.workspaceId, deletionDate);
 
-      // Calculate deletion date (30 days from now)
-      deletionDate.setDate(deletionDate.getDate() + 30);
-      const formattedDeletionDate = deletionDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+      // Calculate deletion date using restoration max window
+      const maxWindow = getRestorationMaxWindowDays();
+      deletionDate.setDate(deletionDate.getDate() + maxWindow);
+      const formattedDeletionDate = formatDeletionDate(deletionDate);
 
       // Send deletion scheduled email
       await emailService.sendSafeWorkspaceDeletionScheduled(
@@ -565,12 +563,9 @@ export const leaveWorkspaceImpl = (
         await workspaceService.deleteWorkspace(input.params.workspaceId, deletionDate);
 
         // Send deletion scheduled email
-        deletionDate.setDate(deletionDate.getDate() + 30);
-        const formattedDeletionDate = deletionDate.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        });
+        const maxWindow = getRestorationMaxWindowDays();
+        deletionDate.setDate(deletionDate.getDate() + maxWindow);
+        const formattedDeletionDate = formatDeletionDate(deletionDate);
 
         await emailService.sendSafeWorkspaceDeletionScheduled(
           { to: context.user.email },
@@ -830,32 +825,11 @@ export const acceptInviteImpl = (
       };
     }
 
-    // Send email to owner(s) of the workspace
-    const newMember = await userService.getById(context.user.id);
-    const owners = await workspaceMemberService.getOwners(result.workspace.workspaceId);
-
-    // Get owner emails and send via batch
-    const ownerUsers = await Promise.all(
-      owners.map((owner: { userId: string }) => userService.getById(owner.userId))
-    );
-    const ownerEmails = ownerUsers.map((owner) => owner.email);
-
-    // Use batch sending via Resend's batch API for multiple recipients
-    await emailService.sendSafeTeammateJoined(
-      { to: ownerEmails },
-      {
-        memberName: newMember.name,
-        memberEmail: newMember.email,
-        workspaceName: result.workspace.workspaceName,
-        workspaceId: result.workspace.workspaceId,
-      }
-    );
-
     // Send welcome email to the new member
+    const newMember = await userService.getById(context.user.id);
     await emailService.sendSafeWelcomeEmailMember(
       { to: newMember.email },
       {
-        userName: newMember.name,
         workspaceName: result.workspace.workspaceName,
         workspaceId: result.workspace.workspaceId,
       }
@@ -1362,7 +1336,6 @@ export const joinWorkspaceImpl = (inviteService: InviteService, emailService: Em
       await emailService.sendSafeWelcomeEmailMember(
         { to: context.user.email },
         {
-          userName: context.user.name,
           workspaceName: result.workspaceName,
           workspaceId: result.workspaceId,
         }
@@ -1580,6 +1553,10 @@ export const requestBillingEmailChangeImpl = (
         throw workspaceError.FORBIDDEN();
       }
 
+      const previousEmail = await workspaceService.getWorkspaceBillingEmail(
+        input.params.workspaceId
+      );
+
       const verificationUrl = tokenService.generateBillingEmailVerificationUrl(
         input.params.workspaceId,
         member.workspaceMemberId,
@@ -1589,8 +1566,9 @@ export const requestBillingEmailChangeImpl = (
       await emailService.sendSafeBillingEmailVerification(
         { to: input.body.email },
         {
-          workspaceName: workspace.workspaceName,
           verificationUrl,
+          previousEmail: previousEmail,
+          newEmail: input.body.email,
         }
       );
 

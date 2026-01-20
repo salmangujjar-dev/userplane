@@ -9,8 +9,7 @@ export const copy = {
   subtitle: (workspaceName: string, deletionDate: string) =>
     `${workspaceName} will be deleted on ${deletionDate}`,
   body: [
-    (deletionDate: string) =>
-      `Your workspace and all associated data will be permanently deleted on ${deletionDate}. This includes recordings, recording links, and member data.`,
+    'This will permanently delete all workspace data, including active recordings, projects, domains and recording links.',
     'You can cancel this deletion before the scheduled date.',
   ],
   cta: 'Cancel deletion',

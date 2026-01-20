@@ -5,6 +5,7 @@
 export const copy = {
   preview: 'New recording received',
   title: 'New recording received',
-  body: ['A customer submitted a new screen recording.'],
+  body: ["You've got a new screen recording from a customer"],
   cta: 'View recording',
+  fallbackText: 'Or copy this link:',
 } as const;

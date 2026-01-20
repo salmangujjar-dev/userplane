@@ -182,8 +182,8 @@ export function loadEnvConfig(): EnvConfig {
       ), // 7 days
       workspaceCreateInviteExpiresIn: parseInteger(
         process.env.WORKSPACE_CREATE_INVITE_TOKEN_EXPIRES_IN,
-        7 * 24 * 60 * 60
-      ), // 7 days
+        90 * 24 * 60 * 60
+      ), // 90 days
       billingEmailVerificationExpiresIn: parseInteger(
         process.env.BILLING_EMAIL_VERIFICATION_TOKEN_EXPIRES_IN,
         10 * 60

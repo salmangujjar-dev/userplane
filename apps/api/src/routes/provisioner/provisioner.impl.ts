@@ -34,7 +34,6 @@ export const createWorkspaceImpl = (
         await emailService.sendSafeWelcomeEmailPilot(
           { to: context.user.email },
           {
-            userName: context.user.name,
             workspaceName: result.workspaceName,
             workspaceId: result.workspaceId,
           }
@@ -44,7 +43,6 @@ export const createWorkspaceImpl = (
         await emailService.sendSafeWelcomeEmailSubscription(
           { to: context.user.email },
           {
-            userName: context.user.name,
             workspaceName: result.workspaceName,
             workspaceId: result.workspaceId,
           }

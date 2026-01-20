@@ -28,7 +28,6 @@ import {
   renderSubscriptionPlanChange,
   renderSubscriptionReverseTrial,
   renderTeammateInvited,
-  renderTeammateJoined,
   renderTosViolation,
   renderWelcomeEmailMember,
   renderWelcomeEmailPilot,
@@ -59,7 +58,6 @@ import {
   subscriptionPlanChangeSubject,
   subscriptionReverseTrialSubject,
   teammateInvitedSubject,
-  teammateJoinedSubject,
   tosViolationSubject,
   welcomeEmailMemberSubject,
   welcomeEmailPilotSubject,
@@ -71,9 +69,7 @@ import {
 } from '@/api/subjects';
 import type {
   AccessRequestEmailParams,
-  AccountDeletionEmailParams,
   AccountDeletionVerificationEmailParams,
-  AccountRestoredEmailParams,
   BillingEmailUpdatedEmailParams,
   BillingEmailVerificationEmailParams,
   DomainDeveloperInstructionsEmailParams,
@@ -91,8 +87,6 @@ import type {
   SubscriptionPlanChangeEmailParams,
   SubscriptionReverseTrialEmailParams,
   TeammateInvitedEmailParams,
-  TeammateJoinedEmailParams,
-  TosViolationEmailParams,
   WelcomeEmailMemberParams,
   WelcomeEmailPilotParams,
   WelcomeEmailRequesterParams,
@@ -130,7 +124,6 @@ import {
   subscriptionPlanChangeKey,
   subscriptionReverseTrialKey,
   teammateInvitedKey,
-  teammateJoinedKey,
   tosViolationKey,
   welcomeEmailMemberKey,
   welcomeEmailPilotKey,
@@ -342,6 +335,7 @@ export class EmailService {
       requesterName: emailContentParams.requesterName,
       requesterEmail: emailContentParams.requesterEmail,
       reviewUrl: emailContentParams.reviewUrl,
+      expiryDate: emailContentParams.expiryDate,
     });
 
     await emailClient.send(
@@ -483,8 +477,9 @@ export class EmailService {
     });
 
     const { html, text } = await renderBillingEmailVerification({
-      workspaceName: emailContentParams.workspaceName,
       verificationUrl: emailContentParams.verificationUrl,
+      previousEmail: emailContentParams.previousEmail,
+      newEmail: emailContentParams.newEmail,
     });
 
     await emailClient.send(
@@ -506,7 +501,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        workspaceName: emailContentParams.workspaceName,
         provider: emailClient.getProvider(),
       },
       'Billing email verification sent'
@@ -970,8 +964,6 @@ export class EmailService {
     });
 
     const { html, text } = await renderTeammateInvited({
-      inviterName: emailContentParams.inviterName,
-      inviterEmail: emailContentParams.inviterEmail,
       workspaceName: emailContentParams.workspaceName,
       inviteUrl: emailContentParams.inviteUrl,
     });
@@ -981,8 +973,6 @@ export class EmailService {
         from: inviteFrom(emailContentParams.workspaceName),
         to: receipientParams.to,
         subject: teammateInvitedSubject({
-          inviterName: emailContentParams.inviterName,
-          inviterEmail: emailContentParams.inviterEmail,
           workspaceName: emailContentParams.workspaceName,
         }),
         html,
@@ -1000,7 +990,6 @@ export class EmailService {
         batch: useBatch,
         count: recipients.length,
         workspaceName: emailContentParams.workspaceName,
-        inviterName: emailContentParams.inviterName,
         provider: emailClient.getProvider(),
       },
       'Teammate invited email sent'
@@ -1020,82 +1009,6 @@ export class EmailService {
     );
   }
 
-  /**
-   * Send teammate joined email
-   * Sent to workspace owners when someone joins
-   * URLs are built internally from workspaceId
-   * @private Use sendSafeTeammateJoined instead
-   */
-  private async sendTeammateJoined(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: TeammateJoinedEmailParams
-  ): Promise<void> {
-    const recipients = Array.isArray(receipientParams.to)
-      ? receipientParams.to
-      : [receipientParams.to];
-    const useBatch = recipients.length > 1;
-
-    const idempotencyKey = teammateJoinedKey({
-      workspaceName: emailContentParams.workspaceName,
-      recipients,
-      memberEmail: emailContentParams.memberEmail,
-    });
-
-    const workspaceUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
-
-    const { html, text } = await renderTeammateJoined({
-      memberName: emailContentParams.memberName,
-      memberEmail: emailContentParams.memberEmail,
-      workspaceName: emailContentParams.workspaceName,
-      workspaceUrl,
-    });
-
-    await emailClient.send(
-      {
-        from: notificationFrom(),
-        to: receipientParams.to,
-        subject: teammateJoinedSubject({
-          memberName: emailContentParams.memberName,
-          memberEmail: emailContentParams.memberEmail,
-          workspaceName: emailContentParams.workspaceName,
-        }),
-        html,
-        text,
-        batch: useBatch,
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: receipientParams.to,
-        batch: useBatch,
-        count: recipients.length,
-        workspaceName: emailContentParams.workspaceName,
-        memberName: emailContentParams.memberName,
-        memberEmail: emailContentParams.memberEmail,
-        workspaceId: emailContentParams.workspaceId,
-        provider: emailClient.getProvider(),
-      },
-      'Teammate joined email sent'
-    );
-  }
-
-  /**
-   * Safe version: Send teammate joined email
-   * Errors are handled by the configured error handler instead of throwing
-   */
-  async sendSafeTeammateJoined(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: TeammateJoinedEmailParams
-  ): Promise<void> {
-    await this.executeSafely('sendTeammateJoined', { receipientParams, emailContentParams }, () =>
-      this.sendTeammateJoined(receipientParams, emailContentParams)
-    );
-  }
-
   // ============================================================================
   // OFFBOARDING EMAILS
   // ============================================================================
@@ -1105,10 +1018,7 @@ export class EmailService {
    * URLs are built internally from static sources
    * @private Use sendSafeAccountDeletion instead
    */
-  private async sendAccountDeletion(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: AccountDeletionEmailParams
-  ): Promise<void> {
+  private async sendAccountDeletion(receipientParams: ReceipientEmailParams): Promise<void> {
     const recipients = Array.isArray(receipientParams.to)
       ? receipientParams.to
       : [receipientParams.to];
@@ -1122,7 +1032,6 @@ export class EmailService {
     const feedbackUrl = emailUrls.account.feedback();
 
     const { html, text } = await renderAccountDeletion({
-      userName: emailContentParams.userName,
       feedbackUrl,
     });
 
@@ -1146,7 +1055,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        userName: emailContentParams.userName,
         provider: emailClient.getProvider(),
       },
       'Account deletion email sent'
@@ -1157,12 +1065,9 @@ export class EmailService {
    * Safe version: Send account deletion email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeAccountDeletion(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: AccountDeletionEmailParams
-  ): Promise<void> {
-    await this.executeSafely('sendAccountDeletion', { receipientParams, emailContentParams }, () =>
-      this.sendAccountDeletion(receipientParams, emailContentParams)
+  async sendSafeAccountDeletion(receipientParams: ReceipientEmailParams): Promise<void> {
+    await this.executeSafely('sendAccountDeletion', { receipientParams }, () =>
+      this.sendAccountDeletion(receipientParams)
     );
   }
 
@@ -1190,7 +1095,6 @@ export class EmailService {
     const verificationUrl = emailUrls.account.deleteConfirmation(emailContentParams.deletionToken);
 
     const { html, text } = await renderAccountDeletionVerification({
-      userName: emailContentParams.userName,
       verificationUrl,
     });
 
@@ -1214,7 +1118,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        userName: emailContentParams.userName,
         provider: emailClient.getProvider(),
       },
       'Account deletion verification email sent'
@@ -1241,10 +1144,7 @@ export class EmailService {
    * URLs are built internally from static sources
    * @private Use sendSafeAccountRestored instead
    */
-  private async sendAccountRestored(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: AccountRestoredEmailParams
-  ): Promise<void> {
+  private async sendAccountRestored(receipientParams: ReceipientEmailParams): Promise<void> {
     const recipients = Array.isArray(receipientParams.to)
       ? receipientParams.to
       : [receipientParams.to];
@@ -1257,7 +1157,6 @@ export class EmailService {
     const loginUrl = emailUrls.external.login();
 
     const { html, text } = await renderAccountRestored({
-      userName: emailContentParams.userName,
       loginUrl,
     });
 
@@ -1280,7 +1179,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        userName: emailContentParams.userName,
         provider: emailClient.getProvider(),
       },
       'Account restored email sent'
@@ -1291,12 +1189,9 @@ export class EmailService {
    * Safe version: Send account restored email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeAccountRestored(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: AccountRestoredEmailParams
-  ): Promise<void> {
-    await this.executeSafely('sendAccountRestored', { receipientParams, emailContentParams }, () =>
-      this.sendAccountRestored(receipientParams, emailContentParams)
+  async sendSafeAccountRestored(receipientParams: ReceipientEmailParams): Promise<void> {
+    await this.executeSafely('sendAccountRestored', { receipientParams }, () =>
+      this.sendAccountRestored(receipientParams)
     );
   }
 
@@ -1305,10 +1200,7 @@ export class EmailService {
    * URLs are built internally from static sources
    * @private Use sendSafeTosViolation instead
    */
-  private async sendTosViolation(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: TosViolationEmailParams
-  ): Promise<void> {
+  private async sendTosViolation(receipientParams: ReceipientEmailParams): Promise<void> {
     const recipients = Array.isArray(receipientParams.to)
       ? receipientParams.to
       : [receipientParams.to];
@@ -1323,7 +1215,6 @@ export class EmailService {
     const tosUrl = emailUrls.external.terms();
 
     const { html, text } = await renderTosViolation({
-      userName: emailContentParams.userName,
       appealUrl,
       tosUrl,
     });
@@ -1348,7 +1239,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        userName: emailContentParams.userName,
         provider: emailClient.getProvider(),
       },
       'TOS violation email sent'
@@ -1359,12 +1249,9 @@ export class EmailService {
    * Safe version: Send TOS violation email
    * Errors are handled by the configured error handler instead of throwing
    */
-  async sendSafeTosViolation(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: TosViolationEmailParams
-  ): Promise<void> {
-    await this.executeSafely('sendTosViolation', { receipientParams, emailContentParams }, () =>
-      this.sendTosViolation(receipientParams, emailContentParams)
+  async sendSafeTosViolation(receipientParams: ReceipientEmailParams): Promise<void> {
+    await this.executeSafely('sendTosViolation', { receipientParams }, () =>
+      this.sendTosViolation(receipientParams)
     );
   }
 
@@ -1391,9 +1278,11 @@ export class EmailService {
       scheduledAt: emailContentParams.scheduledAt,
     });
 
+    const calendarUrl = emailUrls.support.calendar();
+
     const { html, text } = await renderSandboxInvite({
       sandboxUrl: emailContentParams.sandboxUrl,
-      expiresInDays: emailContentParams.expiresInDays,
+      calendarUrl,
     });
 
     await emailClient.send(
@@ -1417,7 +1306,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        expiresInDays: emailContentParams.expiresInDays,
         scheduled: !!emailContentParams.scheduledAt,
         scheduledAt: emailContentParams.scheduledAt,
         provider: emailClient.getProvider(),
@@ -1545,7 +1433,6 @@ export class EmailService {
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
 
     const { html, text } = await renderWelcomeEmailMember({
-      userName: emailContentParams.userName,
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
     });
@@ -1570,7 +1457,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        userName: emailContentParams.userName,
         workspaceName: emailContentParams.workspaceName,
         workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
@@ -1617,7 +1503,6 @@ export class EmailService {
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
 
     const { html, text } = await renderWelcomeEmailSubscription({
-      userName: emailContentParams.userName,
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
     });
@@ -1642,7 +1527,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        userName: emailContentParams.userName,
         workspaceName: emailContentParams.workspaceName,
         workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
@@ -1690,7 +1574,6 @@ export class EmailService {
     const calendarUrl = emailUrls.support.calendar();
 
     const { html, text } = await renderWelcomeEmailPilot({
-      userName: emailContentParams.userName,
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
       calendarUrl,
@@ -1716,7 +1599,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        userName: emailContentParams.userName,
         workspaceName: emailContentParams.workspaceName,
         workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),
@@ -1764,7 +1646,6 @@ export class EmailService {
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
 
     const { html, text } = await renderWelcomeEmailRequester({
-      userName: emailContentParams.userName,
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
     });
@@ -1789,7 +1670,6 @@ export class EmailService {
         to: receipientParams.to,
         batch: useBatch,
         count: recipients.length,
-        userName: emailContentParams.userName,
         workspaceName: emailContentParams.workspaceName,
         workspaceId: emailContentParams.workspaceId,
         provider: emailClient.getProvider(),

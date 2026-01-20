@@ -29,3 +29,16 @@ export function formatSubmittedAt(date: Date): string {
     hour12: true,
   });
 }
+
+/**
+ * Format deletion date for email notifications
+ * @param date - Date to format
+ * @returns Formatted date string (e.g., "January 19, 2026")
+ */
+export function formatDeletionDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
