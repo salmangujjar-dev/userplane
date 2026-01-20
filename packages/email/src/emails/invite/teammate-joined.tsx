@@ -7,6 +7,7 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/invite/teammate-joined';
+import { getMemberName, getWorkspaceName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
@@ -23,10 +24,15 @@ export const TeammateJoinedEmail = ({
   workspaceName,
   workspaceUrl,
 }: TeammateJoinedEmailProps) => {
+  const formattedMemberName = getMemberName(memberName);
+  const formattedWorkspaceName = getWorkspaceName(workspaceName);
+
   return (
-    <EmailLayout preview={copy.preview(memberName, memberEmail, workspaceName)}>
+    <EmailLayout preview={copy.preview(formattedMemberName, memberEmail, formattedWorkspaceName)}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{copy.subtitle(memberName, memberEmail, workspaceName)}</Text>
+      <Text style={styles.subtitle}>
+        {copy.subtitle(formattedMemberName, memberEmail, formattedWorkspaceName)}
+      </Text>
 
       <Section style={styles.messageSection}>
         <Text style={styles.messageText}>{copy.body[0]}</Text>

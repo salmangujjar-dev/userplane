@@ -255,7 +255,7 @@ export const deleteWorkspaceImpl = (
       });
 
       // Construct cancel URL
-      const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
+      const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
 
       // Send deletion scheduled email
       await emailService.sendSafeWorkspaceDeletionScheduled({
@@ -327,7 +327,7 @@ export const restoreWorkspaceImpl = (
 
       // Send email to workspace owners that the workspace has been restored
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
+      const dashboardUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}`;
 
       // Send appropriate email based on restoration status using batch sending
       const ownerEmails = owners.map((owner) => owner.email);
@@ -336,12 +336,15 @@ export const restoreWorkspaceImpl = (
           ? emailService.sendSafeWorkspaceRecoveryPartially
           : emailService.sendSafeWorkspaceRecoveryConfirmation;
 
-      await emailMethod.call(emailService, {
-        to: ownerEmails,
-        batch: ownerEmails.length > 1,
-        workspaceName: result.workspace.workspaceName || 'Workspace',
-        dashboardUrl,
-      });
+      await Promise.allSettled(
+        ownerEmails.map((email) =>
+          emailMethod({
+            to: email,
+            workspaceName: result.workspace.workspaceName,
+            dashboardUrl,
+          })
+        )
+      );
 
       return {
         message: 'Workspace restored successfully',
@@ -573,7 +576,7 @@ export const leaveWorkspaceImpl = (
           day: 'numeric',
         });
 
-        const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
+        const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
 
         await emailService.sendSafeWorkspaceDeletionScheduled({
           to: context.user.email,
@@ -834,7 +837,7 @@ export const acceptInviteImpl = (
     // Send email to owner(s) of the workspace
     const newMember = await userService.getById(context.user.id);
     const owners = await workspaceMemberService.getOwners(result.workspace.workspaceId);
-    const workspaceUrl = `${process.env.PUBLIC_DASH_URL}/${result.workspace.workspaceId}`;
+    const workspaceUrl = `${env.dashboard.baseUrl}/${result.workspace.workspaceId}`;
 
     // Get owner emails and send via batch
     const ownerUsers = await Promise.all(
@@ -842,17 +845,20 @@ export const acceptInviteImpl = (
     );
     const ownerEmails = ownerUsers.map((owner) => owner.email);
 
-    await emailService.sendSafeTeammateJoined({
-      to: ownerEmails,
-      batch: ownerEmails.length > 1,
-      memberName: newMember.name,
-      memberEmail: newMember.email,
-      workspaceName: result.workspace.workspaceName,
-      workspaceUrl,
-    });
+    await Promise.allSettled(
+      ownerEmails.map((email) =>
+        emailService.sendSafeTeammateJoined({
+          to: email,
+          memberName: newMember.name,
+          memberEmail: newMember.email,
+          workspaceName: result.workspace.workspaceName,
+          workspaceUrl,
+        })
+      )
+    );
 
     // Send welcome email to the new member
-    const dashboardUrl = `${env.invite.appUrl}/${result.workspace.workspaceId}`;
+    const dashboardUrl = `${env.dashboard.baseUrl}/${result.workspace.workspaceId}`;
     await emailService.sendSafeWelcomeEmailMember({
       to: newMember.email,
       userName: newMember.name,
@@ -1194,17 +1200,20 @@ export const sendDomainInstructionsImpl = (
         workspaceId: input.params.workspaceId,
       });
 
-      const settingsUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.userplane.io'}/${input.params.workspaceId}/settings/domains`;
-      const docsUrl = 'https://userplane.com/docs/domains';
+      const settingsUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}/settings/domains`;
+      const docsUrl = `${env.support.docsUrl}/domains`;
 
       // Send emails to all provided addresses using batch sending
-      await emailService.sendSafeDomainDeveloperInstructions({
-        to: input.body.emails,
-        batch: input.body.emails.length > 1,
-        domainName: domain.domainUrl,
-        settingsUrl,
-        docsUrl,
-      });
+      await Promise.allSettled(
+        input.body.emails.map((email) =>
+          emailService.sendSafeDomainDeveloperInstructions({
+            to: email,
+            domainName: domain.domainUrl,
+            settingsUrl,
+            docsUrl,
+          })
+        )
+      );
 
       // With batch sending, all emails are sent together
       // sendSafe handles errors internally, so we assume all succeeded
@@ -1352,7 +1361,7 @@ export const joinWorkspaceImpl = (inviteService: InviteService, emailService: Em
 
     // Send welcome email to new member if they joined successfully
     if (result.status === 'joined') {
-      const dashboardUrl = `${env.invite.appUrl}/${result.workspaceId}`;
+      const dashboardUrl = `${env.dashboard.baseUrl}/${result.workspaceId}`;
       await emailService.sendSafeWelcomeEmailMember({
         to: context.user.email,
         userName: context.user.name,
@@ -1505,7 +1514,7 @@ export const updateWorkspaceBillingEmailImpl = (
       );
 
       // Send notification emails to both old and new billing emails
-      const billingUrl = `${env.invite.appUrl}/${input.params.workspaceId}/settings?tab=workspace`;
+      const billingUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}/settings?tab=workspace`;
       const newEmail = updated.workspaceBillingEmail!;
 
       // Send to the new email address
@@ -1632,7 +1641,7 @@ export const verifyBillingEmailChangeImpl = (
 
     const updated = await workspaceService.updateWorkspaceBillingEmail(workspaceId, newEmail);
 
-    const billingUrl = `${env.invite.appUrl}/${workspaceId}/settings?tab=workspace`;
+    const billingUrl = `${env.dashboard.baseUrl}/${workspaceId}/settings?tab=workspace`;
 
     const owners = await workspaceMemberService.getOwners(workspaceId);
 

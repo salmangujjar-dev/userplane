@@ -30,7 +30,7 @@ export const createWorkspaceImpl = (
     // Send welcome email based on whether invite token was used
     // Only send if workspace was created (not if it already existed)
     if (result.created) {
-      const dashboardUrl = `${env.invite.appUrl}/${result.workspaceId}`;
+      const dashboardUrl = `${env.dashboard.baseUrl}/${result.workspaceId}`;
 
       if (input.body.inviteToken) {
         // Pilot user - invited with token
@@ -39,7 +39,7 @@ export const createWorkspaceImpl = (
           userName: context.user.name,
           workspaceName: result.workspaceName,
           dashboardUrl,
-          calendarUrl: 'https://cal.com/userplane/intro',
+          calendarUrl: env.support.calendarUrl,
         });
       } else {
         // Subscription user - organic signup without invite token

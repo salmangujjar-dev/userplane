@@ -984,7 +984,6 @@ export class EmailService {
 
     const { html, text } = await renderAccountRestored({
       userName: params.userName,
-      loginUrl: params.loginUrl,
     });
 
     await emailClient.send(
@@ -1029,8 +1028,6 @@ export class EmailService {
 
     const { html, text } = await renderTosViolation({
       userName: params.userName,
-      appealUrl: params.appealUrl,
-      tosUrl: params.tosUrl,
     });
 
     await emailClient.send(

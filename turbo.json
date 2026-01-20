@@ -82,7 +82,10 @@
         "NEXT_PUBLIC_HOME_URL",
         "PUBLIC_HOME_URL",
         "PUBLIC_DASH_URL",
-        "PUBLIC_API_URL"
+        "PUBLIC_API_URL",
+        "DOCS_URL",
+        "SUPPORT_EMAIL",
+        "CALENDAR_URL"
       ]
     },
     "lint": {

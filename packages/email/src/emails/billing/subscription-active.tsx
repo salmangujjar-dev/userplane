@@ -11,15 +11,15 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface SubscriptionActiveEmailProps {
-  planName?: string;
-  dashboardUrl?: string;
-  billingUrl?: string;
+  planName: string;
+  dashboardUrl: string;
+  billingUrl: string;
 }
 
 export const SubscriptionActiveEmail = ({
-  planName = 'Starter',
-  dashboardUrl = 'https://app.userplane.io/dashboard',
-  billingUrl = 'https://app.userplane.io/billing',
+  planName,
+  dashboardUrl,
+  billingUrl,
 }: SubscriptionActiveEmailProps) => {
   return (
     <EmailLayout preview={copy.preview(planName)}>

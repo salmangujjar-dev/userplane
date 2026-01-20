@@ -11,15 +11,15 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface SubscriptionReverseTrialEmailProps {
-  planName?: string;
-  trialDays?: number;
-  dashboardUrl?: string;
+  planName: string;
+  trialDays: number;
+  dashboardUrl: string;
 }
 
 export const SubscriptionReverseTrialEmail = ({
-  planName = 'Starter',
-  trialDays = 30,
-  dashboardUrl = 'https://app.userplane.io/dashboard',
+  planName,
+  trialDays,
+  dashboardUrl,
 }: SubscriptionReverseTrialEmailProps) => {
   return (
     <EmailLayout preview={copy.preview(planName, trialDays)}>

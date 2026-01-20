@@ -94,9 +94,9 @@ export class LinkService {
     };
 
     const options: SignOptions = {
-      expiresIn: env.recorder.expiresIn,
+      expiresIn: env.token.recordingTokenExpiresIn,
     };
-    const token = jwt.sign(payload, env.recorder.secret, options);
+    const token = jwt.sign(payload, env.token.recordingSecret, options);
 
     // Use custom domain only if:
     // 1. Domain is verified
@@ -110,7 +110,7 @@ export class LinkService {
       recordingCaptureNetworkLog;
     const isCustomDomain = domainStatus === 'verified' && domainUrl && needsCustomDomain;
     // domainUrl already includes the protocol (http:// or https://)
-    const baseUrl = isCustomDomain ? domainUrl : `${env.recorder.url}/r`;
+    const baseUrl = isCustomDomain ? domainUrl : `${env.recorder.baseUrl}/r`;
 
     // Custom domain: workspace comes from page's meta tag (SDK)
     // Default domain: workspace included in URL for direct sharing
@@ -125,7 +125,7 @@ export class LinkService {
    */
   verifyLinkToken(token: string): string {
     try {
-      const decoded = jwt.verify(token, env.recorder.secret) as { lid: string };
+      const decoded = jwt.verify(token, env.token.recordingSecret) as { lid: string };
       if (!decoded.lid) {
         throw linkError.LINK_TOKEN_MISSING_ID();
       }

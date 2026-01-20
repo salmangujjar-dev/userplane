@@ -6,6 +6,7 @@
 import { domainError, inviteError, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 
+import { env } from '@/api/env';
 import { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
 import { UserService } from '@/api/services/user.service';
@@ -102,14 +103,17 @@ export class InviteService {
     });
 
     // Use batch sending when multiple emails to improve performance
-    await this.deps.emailService.sendSafeTeammateInvited({
-      to: emails,
-      batch: emails.length > 1,
-      workspaceName: workspace.workspaceName,
-      inviteUrl,
-      inviterName: inviter.name,
-      inviterEmail: inviter.email,
-    });
+    await Promise.allSettled(
+      emails.map((email) =>
+        this.deps.emailService.sendSafeTeammateInvited({
+          to: email,
+          workspaceName: workspace.workspaceName,
+          inviteUrl,
+          inviterName: inviter.name,
+          inviterEmail: inviter.email,
+        })
+      )
+    );
 
     // With batch sending, all emails are sent together
     // sendSafe handles errors internally, so we assume all succeeded
@@ -364,7 +368,8 @@ export class InviteService {
 
       // Send access request email to each owner with owner-specific tokens
       // Each owner gets a unique token that only they can use
-      await Promise.all(
+      // Use allSettled to ensure all emails are attempted even if some fail
+      const results = await Promise.allSettled(
         owners.map((owner) => {
           const reviewUrl = this.deps.tokenService.generateAccessRequestUrl(
             workspaceId,
@@ -382,6 +387,12 @@ export class InviteService {
           });
         })
       );
+
+      // Log any failed email sends but don't throw
+      const failedCount = results.filter((r) => r.status === 'rejected').length;
+      if (failedCount > 0) {
+        console.warn(`Failed to send ${failedCount} access request emails to workspace owners`);
+      }
 
       return {
         workspaceId,
@@ -516,7 +527,7 @@ export class InviteService {
     });
 
     // Send welcome email to the requester
-    const dashboardUrl = `${process.env.PUBLIC_DASH_URL}/${workspaceId}`;
+    const dashboardUrl = `${env.dashboard.baseUrl}/${workspaceId}`;
     await this.deps.emailService.sendSafeWelcomeEmailRequester({
       to: userEmail,
       userName: user.name,

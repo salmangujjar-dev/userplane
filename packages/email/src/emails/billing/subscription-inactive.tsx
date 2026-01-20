@@ -11,13 +11,13 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface SubscriptionInactiveEmailProps {
-  planName?: string;
-  reactivateUrl?: string;
+  planName: string;
+  reactivateUrl: string;
 }
 
 export const SubscriptionInactiveEmail = ({
-  planName = 'Starter',
-  reactivateUrl = 'https://app.userplane.io/billing',
+  planName,
+  reactivateUrl,
 }: SubscriptionInactiveEmailProps) => {
   return (
     <EmailLayout preview={copy.preview}>

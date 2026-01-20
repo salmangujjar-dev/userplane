@@ -7,22 +7,25 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/billing/billing-email-verification';
+import { getWorkspaceName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface BillingEmailVerificationEmailProps {
-  workspaceName?: string;
-  verificationUrl?: string;
+  workspaceName: string;
+  verificationUrl: string;
 }
 
 export const BillingEmailVerificationEmail = ({
-  workspaceName = 'Your Workspace',
-  verificationUrl = 'https://app.userplane.io/billing-email/verify?token=abc123',
+  workspaceName,
+  verificationUrl,
 }: BillingEmailVerificationEmailProps) => {
+  const formattedWorkspaceName = getWorkspaceName(workspaceName);
+
   return (
     <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{copy.subtitle(workspaceName)}</Text>
+      <Text style={styles.subtitle}>{copy.subtitle(formattedWorkspaceName)}</Text>
 
       <Section style={styles.messageSection}>
         <Text style={styles.messageText}>{copy.body[0]}</Text>

@@ -40,16 +40,18 @@ interface EnvConfig {
     clientSecret: string;
     redirectUri: string;
   };
-  invite: {
-    secret: string;
-    appUrl: string;
-    expiresIn: number;
+  dashboard: {
+    baseUrl: string;
   };
   token: {
+    inviteSecret: string;
+    inviteExpiresIn: number;
     domainVerificationExpiresIn: number;
     accessRequestExpiresIn: number;
     workspaceCreateInviteExpiresIn: number;
     billingEmailVerificationExpiresIn: number;
+    recordingSecret: string;
+    recordingTokenExpiresIn: number;
   };
   session: {
     tokenSecret: string;
@@ -62,9 +64,12 @@ interface EnvConfig {
     url: string;
   };
   recorder: {
-    url: string;
-    secret: string;
-    expiresIn: number;
+    baseUrl: string;
+  };
+  support: {
+    docsUrl: string;
+    supportEmail: string;
+    calendarUrl: string;
   };
   email: {
     provider: 'localhost' | 'resend';
@@ -161,12 +166,12 @@ export function loadEnvConfig(): EnvConfig {
       redirectUri:
         process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/callback/google',
     },
-    invite: {
-      secret: process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-in-production',
-      appUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',
-      expiresIn: parseInteger(process.env.INVITE_TOKEN_EXPIRES_IN, 30 * 24 * 60 * 60), // 30 days
+    dashboard: {
+      baseUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',
     },
     token: {
+      inviteSecret: process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-in-production',
+      inviteExpiresIn: parseInteger(process.env.INVITE_TOKEN_EXPIRES_IN, 30 * 24 * 60 * 60), // 30 days
       domainVerificationExpiresIn: parseInteger(
         process.env.DOMAIN_VERIFICATION_TOKEN_EXPIRES_IN,
         300
@@ -183,6 +188,12 @@ export function loadEnvConfig(): EnvConfig {
         process.env.BILLING_EMAIL_VERIFICATION_TOKEN_EXPIRES_IN,
         10 * 60
       ), // 10 minutes
+      recordingSecret:
+        process.env.RECORDER_TOKEN_SECRET || 'dev-recorder-secret-change-in-production',
+      recordingTokenExpiresIn: parseInteger(
+        process.env.RECORDER_TOKEN_EXPIRES_IN,
+        180 * 24 * 60 * 60
+      ), // 180 days
     },
     session: {
       tokenSecret: process.env.SESSION_TOKEN_SECRET || 'dev-session-secret-change-in-production',
@@ -196,9 +207,12 @@ export function loadEnvConfig(): EnvConfig {
       url: process.env.DATABASE_URL || '',
     },
     recorder: {
-      url: process.env.RECORDER_URL || 'http://localhost:4322',
-      secret: process.env.RECORDER_TOKEN_SECRET || 'dev-recorder-secret-change-in-production',
-      expiresIn: parseInteger(process.env.RECORDER_TOKEN_EXPIRES_IN, 180 * 24 * 60 * 60), // 180 days
+      baseUrl: process.env.RECORDER_URL || 'http://localhost:4322',
+    },
+    support: {
+      docsUrl: process.env.DOCS_URL || 'https://userplane.com/docs',
+      supportEmail: process.env.SUPPORT_EMAIL || 'support@userplane.io',
+      calendarUrl: process.env.CALENDAR_URL || 'https://cal.com/userplane/intro',
     },
     email: {
       provider: (process.env.EMAIL_PROVIDER as 'localhost' | 'resend') || 'localhost',
@@ -292,7 +306,7 @@ if (env.nodeEnv === 'production') {
   if (env.auth.secret === 'dev-auth-secret-change-in-production') {
     throw new Error('BETTER_AUTH_SECRET must be set in production');
   }
-  if (env.invite.secret === 'dev-invite-secret-change-in-production') {
+  if (env.token.inviteSecret === 'dev-invite-secret-change-in-production') {
     throw new Error('INVITE_TOKEN_SECRET must be set in production');
   }
   if (env.session.tokenSecret === 'dev-session-secret-change-in-production') {
@@ -301,7 +315,7 @@ if (env.nodeEnv === 'production') {
   if (env.session.uploadTokenSecret === 'dev-upload-secret-change-in-production') {
     throw new Error('UPLOAD_TOKEN_SECRET must be set in production');
   }
-  if (env.recorder.secret === 'dev-recorder-secret-change-in-production') {
+  if (env.token.recordingSecret === 'dev-recorder-secret-change-in-production') {
     throw new Error('RECORDER_TOKEN_SECRET must be set in production');
   }
   if (!env.database.url) {
@@ -339,16 +353,21 @@ export function logConfig(): void {
       corsCredentials: env.cors.credentials,
       authUrl: env.auth.url,
       authCookiePrefix: env.auth.cookiePrefix,
-      inviteAppUrl: env.invite.appUrl,
-      inviteTokenExpiry: `${env.invite.expiresIn}s`,
+      dashboardBaseUrl: env.dashboard.baseUrl,
       token: {
+        inviteExpiry: `${env.token.inviteExpiresIn}s`,
         domainVerificationExpiry: `${env.token.domainVerificationExpiresIn}s`,
         accessRequestExpiry: `${env.token.accessRequestExpiresIn}s`,
         workspaceCreateInviteExpiry: `${env.token.workspaceCreateInviteExpiresIn}s`,
         billingEmailVerificationExpiry: `${env.token.billingEmailVerificationExpiresIn}s`,
+        recordingTokenExpiry: `${env.token.recordingTokenExpiresIn}s`,
       },
-      recorderUrl: env.recorder.url,
-      recorderTokenExpiry: `${env.recorder.expiresIn}s`,
+      recorderBaseUrl: env.recorder.baseUrl,
+      support: {
+        docsUrl: env.support.docsUrl,
+        supportEmail: env.support.supportEmail,
+        calendarUrl: env.support.calendarUrl,
+      },
       session: {
         tokenExpiry: `${env.session.tokenExpiry}s`,
         uploadTokenExpiry: `${env.session.uploadTokenExpiry}s`,

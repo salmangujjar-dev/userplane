@@ -11,12 +11,10 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface RecordingReceivedEmailProps {
-  recordingUrl?: string;
+  recordingUrl: string;
 }
 
-export const RecordingReceivedEmail = ({
-  recordingUrl = 'https://app.userplane.io/recordings/abc123',
-}: RecordingReceivedEmailProps) => {
+export const RecordingReceivedEmail = ({ recordingUrl }: RecordingReceivedEmailProps) => {
   return (
     <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
