@@ -84,6 +84,7 @@ export class ResendEmailClient implements EmailClient {
           bcc: Array.isArray(params.bcc) ? params.bcc : [params.bcc],
         }),
         ...(params.tags && { tags: params.tags }),
+        ...(params.headers && { headers: params.headers }),
         ...(options?.scheduledAt && { scheduledAt: options.scheduledAt }),
       };
 
@@ -152,6 +153,7 @@ export class ResendEmailClient implements EmailClient {
             bcc: Array.isArray(params.bcc) ? params.bcc : [params.bcc],
           }),
           ...(params.tags && { tags: params.tags }),
+          ...(params.headers && { headers: params.headers }),
         };
 
         return resendParams;

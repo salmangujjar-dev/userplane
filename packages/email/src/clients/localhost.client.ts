@@ -30,6 +30,7 @@ interface EmailRecord {
   cc?: string | string[];
   bcc?: string | string[];
   tags?: Array<{ name: string; value: string }>;
+  headers?: Record<string, string>;
   idempotencyKey?: string;
   scheduledAt?: string;
   timestamp: string;
@@ -104,6 +105,7 @@ export class LocalhostEmailClient implements EmailClient {
       cc: params.cc,
       bcc: params.bcc,
       tags: params.tags,
+      headers: params.headers,
       idempotencyKey: options?.idempotencyKey,
       scheduledAt: options?.scheduledAt,
       timestamp: new Date().toISOString(),
@@ -221,6 +223,7 @@ export class LocalhostEmailClient implements EmailClient {
         cc: email.cc,
         bcc: email.bcc,
         tags: email.tags,
+        headers: email.headers,
         idempotencyKey: email.idempotencyKey,
         scheduledAt: email.scheduledAt,
         timestamp: email.timestamp,
@@ -251,6 +254,7 @@ export class LocalhostEmailClient implements EmailClient {
       cc: email.cc,
       bcc: email.bcc,
       tags: email.tags,
+      headers: email.headers,
       idempotencyKey: email.idempotencyKey,
       scheduledAt: email.scheduledAt,
       timestamp: email.timestamp,

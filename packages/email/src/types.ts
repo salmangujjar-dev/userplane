@@ -20,6 +20,11 @@ interface BaseEmailParams {
   bcc?: string | string[];
   tags?: Array<{ name: string; value: string }>;
   /**
+   * Custom email headers
+   * Useful for anti-threading (X-Entity-Ref-ID) and tracking
+   */
+  headers?: Record<string, string>;
+  /**
    * Use batch sending for multiple recipients
    * When true and to contains multiple recipients, uses Resend's batch API (more efficient)
    * Note: scheduledAt is not supported in batch mode

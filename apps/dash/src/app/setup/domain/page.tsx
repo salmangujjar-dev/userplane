@@ -1,10 +1,9 @@
 'use client';
 
-import { Suspense } from 'react';
-
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { useQueryState } from 'nuqs';
+import { Suspense } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';

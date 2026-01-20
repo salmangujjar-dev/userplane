@@ -102,6 +102,7 @@ import {
   inviteFrom,
   notificationFrom,
 } from '@/api/utils/email-from';
+import { antiThreadingHeaders } from '@/api/utils/email-headers';
 import { emailUrls } from '@/api/utils/email-urls';
 import {
   accessRequestKey,
@@ -199,7 +200,7 @@ export class EmailService {
 
     const idempotencyKey = emailVerificationKey({
       to: receipientParams.to,
-      timestamp: Date.now(),
+      verificationUrl: emailContentParams.verificationUrl,
     });
 
     const { html, text } = await renderEmailVerification({
@@ -215,6 +216,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -263,7 +265,7 @@ export class EmailService {
 
     const idempotencyKey = magicLinkKey({
       to: receipientParams.to,
-      timestamp: Date.now(),
+      magicLinkUrl: emailContentParams.magicLinkUrl,
     });
 
     const { html, text } = await renderMagicLink({
@@ -278,6 +280,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -328,6 +331,7 @@ export class EmailService {
       workspaceName: emailContentParams.workspaceName,
       requesterEmail: emailContentParams.requesterEmail,
       to: receipientParams.to,
+      requestId: emailContentParams.reviewUrl, // reviewUrl contains unique token for the request
     });
 
     const { html, text } = await renderAccessRequest({
@@ -349,6 +353,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -404,6 +409,7 @@ export class EmailService {
     const idempotencyKey = billingEmailUpdatedKey({
       to: receipientParams.to,
       newEmail: emailContentParams.newEmail,
+      previousEmail: emailContentParams.previousEmail,
     });
 
     const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
@@ -422,6 +428,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -473,7 +480,7 @@ export class EmailService {
 
     const idempotencyKey = billingEmailVerificationKey({
       to: receipientParams.to,
-      timestamp: Date.now(),
+      verificationUrl: emailContentParams.verificationUrl,
     });
 
     const { html, text } = await renderBillingEmailVerification({
@@ -490,6 +497,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -539,6 +547,7 @@ export class EmailService {
     const idempotencyKey = subscriptionActiveKey({
       to: receipientParams.to,
       planName: emailContentParams.planName,
+      subscriptionId: emailContentParams.workspaceId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -558,6 +567,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -608,6 +618,7 @@ export class EmailService {
     const idempotencyKey = subscriptionExpiredKey({
       to: receipientParams.to,
       planName: emailContentParams.planName,
+      subscriptionId: emailContentParams.renewUrl, // renewUrl contains workspace identifier
     });
 
     const { html, text } = await renderSubscriptionExpired({
@@ -623,6 +634,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -672,6 +684,7 @@ export class EmailService {
     const idempotencyKey = subscriptionInactiveKey({
       to: receipientParams.to,
       planName: emailContentParams.planName,
+      subscriptionId: emailContentParams.reactivateUrl, // reactivateUrl contains workspace identifier
     });
 
     const { html, text } = await renderSubscriptionInactive({
@@ -687,6 +700,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -737,6 +751,8 @@ export class EmailService {
     const idempotencyKey = subscriptionPlanChangeKey({
       to: receipientParams.to,
       newPlan: emailContentParams.newPlan,
+      previousPlan: emailContentParams.previousPlan,
+      subscriptionId: emailContentParams.workspaceId,
     });
 
     const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
@@ -756,6 +772,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -807,6 +824,7 @@ export class EmailService {
 
     const idempotencyKey = subscriptionReverseTrialKey({
       to: receipientParams.to,
+      subscriptionId: emailContentParams.workspaceId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -825,6 +843,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -884,6 +903,7 @@ export class EmailService {
     const idempotencyKey = domainInstructionsKey({
       domainUrl: emailContentParams.domainUrl,
       recipients,
+      verificationToken: emailContentParams.verificationToken,
     });
 
     const verificationUrl = emailUrls.verification.developer(
@@ -907,6 +927,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -961,6 +982,7 @@ export class EmailService {
     const idempotencyKey = teammateInvitedKey({
       workspaceName: emailContentParams.workspaceName,
       recipients,
+      inviteUrl: emailContentParams.inviteUrl,
     });
 
     const { html, text } = await renderTeammateInvited({
@@ -978,6 +1000,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1025,8 +1048,13 @@ export class EmailService {
     const useBatch = recipients.length > 1;
     const finalParams = this.ensureReplyTo(receipientParams);
 
+    // Use recipient email as user identifier since this function only has recipient params
+    const userIdentifier = Array.isArray(receipientParams.to)
+      ? receipientParams.to.join(',')
+      : receipientParams.to;
     const idempotencyKey = accountDeletionKey({
       to: receipientParams.to,
+      userId: userIdentifier,
     });
 
     const feedbackUrl = emailUrls.account.feedback();
@@ -1044,6 +1072,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1089,7 +1118,7 @@ export class EmailService {
 
     const idempotencyKey = accountDeletionVerificationKey({
       to: receipientParams.to,
-      timestamp: Date.now(),
+      deletionToken: emailContentParams.deletionToken,
     });
 
     const verificationUrl = emailUrls.account.deleteConfirmation(emailContentParams.deletionToken);
@@ -1107,6 +1136,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1150,8 +1180,13 @@ export class EmailService {
       : [receipientParams.to];
     const useBatch = recipients.length > 1;
 
+    // Use recipient email as user identifier since this function only has recipient params
+    const userIdentifier = Array.isArray(receipientParams.to)
+      ? receipientParams.to.join(',')
+      : receipientParams.to;
     const idempotencyKey = accountRestoredKey({
       to: receipientParams.to,
+      userId: userIdentifier,
     });
 
     const loginUrl = emailUrls.external.login();
@@ -1168,6 +1203,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1207,8 +1243,13 @@ export class EmailService {
     const useBatch = recipients.length > 1;
     const finalParams = this.ensureReplyTo(receipientParams);
 
+    // Use recipient email as user identifier since this function only has recipient params
+    const userIdentifier = Array.isArray(receipientParams.to)
+      ? receipientParams.to.join(',')
+      : receipientParams.to;
     const idempotencyKey = tosViolationKey({
       to: receipientParams.to,
+      userId: userIdentifier,
     });
 
     const appealUrl = emailUrls.external.appeal();
@@ -1228,6 +1269,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1275,6 +1317,7 @@ export class EmailService {
 
     const idempotencyKey = pilotSandboxInviteKey({
       to: receipientParams.to,
+      sandboxUrl: emailContentParams.sandboxUrl,
       scheduledAt: emailContentParams.scheduledAt,
     });
 
@@ -1293,6 +1336,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
         ...(receipientParams.replyTo && { replyTo: receipientParams.replyTo }),
       },
       {
@@ -1356,7 +1400,7 @@ export class EmailService {
 
     const idempotencyKey = recordingReceivedKey({
       to: receipientParams.to,
-      recordingUrl,
+      recordingId: emailContentParams.recordingId,
     });
 
     const { html, text } = await renderRecordingReceived({
@@ -1371,6 +1415,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1428,6 +1473,7 @@ export class EmailService {
     const idempotencyKey = welcomeEmailMemberKey({
       to: receipientParams.to,
       workspaceName: emailContentParams.workspaceName,
+      workspaceId: emailContentParams.workspaceId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -1446,6 +1492,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1498,6 +1545,7 @@ export class EmailService {
 
     const idempotencyKey = welcomeEmailSubscriptionKey({
       to: receipientParams.to,
+      workspaceId: emailContentParams.workspaceId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -1516,6 +1564,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1568,6 +1617,7 @@ export class EmailService {
 
     const idempotencyKey = welcomeEmailPilotKey({
       to: receipientParams.to,
+      workspaceId: emailContentParams.workspaceId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -1588,6 +1638,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1641,6 +1692,7 @@ export class EmailService {
     const idempotencyKey = welcomeEmailRequesterKey({
       to: receipientParams.to,
       workspaceName: emailContentParams.workspaceName,
+      workspaceId: emailContentParams.workspaceId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -1659,6 +1711,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1715,6 +1768,7 @@ export class EmailService {
     const idempotencyKey = workspaceDeletionScheduledKey({
       workspaceName: emailContentParams.workspaceName,
       recipients,
+      workspaceId: emailContentParams.workspaceId,
     });
 
     const cancelUrl = emailUrls.workspace.restore(emailContentParams.workspaceId);
@@ -1737,6 +1791,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1790,6 +1845,7 @@ export class EmailService {
     const idempotencyKey = workspaceRecoveryConfirmationKey({
       workspaceName: emailContentParams.workspaceName,
       recipients,
+      workspaceId: emailContentParams.workspaceId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -1807,6 +1863,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1859,6 +1916,7 @@ export class EmailService {
     const idempotencyKey = workspaceRecoveryPartiallyKey({
       workspaceName: emailContentParams.workspaceName,
       recipients,
+      workspaceId: emailContentParams.workspaceId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -1876,6 +1934,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -1933,6 +1992,7 @@ export class EmailService {
     const idempotencyKey = projectDeletionScheduledKey({
       projectName: emailContentParams.projectName,
       recipients,
+      projectId: emailContentParams.projectId,
     });
 
     const cancelUrl = emailUrls.project.restore(
@@ -1958,6 +2018,7 @@ export class EmailService {
         text,
         batch: useBatch,
         replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -2009,9 +2070,12 @@ export class EmailService {
       : [receipientParams.to];
     const useBatch = recipients.length > 1;
 
+    // Use workspaceId + projectName as composite identifier since projectId isn't available
+    const projectId = `${emailContentParams.workspaceId}/${emailContentParams.projectName}`;
     const idempotencyKey = projectRecoveryConfirmationKey({
       projectName: emailContentParams.projectName,
       recipients,
+      projectId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -2029,6 +2093,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
@@ -2078,9 +2143,12 @@ export class EmailService {
       : [receipientParams.to];
     const useBatch = recipients.length > 1;
 
+    // Use workspaceId + projectName as composite identifier since projectId isn't available
+    const projectId = `${emailContentParams.workspaceId}/${emailContentParams.projectName}`;
     const idempotencyKey = projectRecoveryPartiallyKey({
       projectName: emailContentParams.projectName,
       recipients,
+      projectId,
     });
 
     const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
@@ -2098,6 +2166,7 @@ export class EmailService {
         html,
         text,
         batch: useBatch,
+        headers: antiThreadingHeaders(),
       },
       {
         idempotencyKey,
