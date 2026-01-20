@@ -506,7 +506,6 @@ export class InviteService {
 
     // Get workspace name and user details
     const workspace = await this.deps.workspaceService.getById(workspaceId);
-    const user = await this.deps.userService.getById(userId);
 
     // Check if user is already a member (might have been added by another owner)
     const existingMember = await this.deps.workspaceMemberService.getMember(userId, workspaceId);
