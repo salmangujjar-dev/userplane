@@ -228,7 +228,7 @@ export const deleteProjectImpl = (
       });
 
       // Construct cancel URL with both workspaceId and projectId
-      const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=project&workspaceId=${input.params.workspaceId}&projectId=${input.params.projectId}`;
+      const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=project&workspaceId=${input.params.workspaceId}&projectId=${input.params.projectId}`;
 
       // Send deletion scheduled email
       await emailService.sendSafeProjectDeletionScheduled({
@@ -303,7 +303,7 @@ export const restoreProjectImpl = (
 
       // Send email to workspace owners that the project has been restored
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
+      const dashboardUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}`;
 
       // Send appropriate email based on restoration status using batch
       const ownerEmails = owners.map((owner) => owner.email);
@@ -312,12 +312,15 @@ export const restoreProjectImpl = (
           ? emailService.sendSafeProjectRecoveryPartially
           : emailService.sendSafeProjectRecoveryConfirmation;
 
-      await emailMethod.call(emailService, {
-        to: ownerEmails,
-        batch: ownerEmails.length > 1,
-        projectName: result.projectTitle,
-        dashboardUrl,
-      });
+      await Promise.allSettled(
+        ownerEmails.map((email) =>
+          emailMethod({
+            to: email,
+            projectName: result.projectTitle,
+            dashboardUrl,
+          })
+        )
+      );
 
       return {
         message: 'Project restored successfully',

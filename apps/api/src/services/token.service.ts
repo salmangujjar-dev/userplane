@@ -17,7 +17,7 @@ import type {
 
 export class TokenService {
   private jwtSecret: string;
-  private appUrl: string;
+  private dashboardUrl: string;
   private expiresIn: number;
   private domainVerificationSecret: string;
   private jwtIssuer: string;
@@ -28,7 +28,7 @@ export class TokenService {
 
   constructor(config: {
     jwtSecret: string;
-    appUrl: string;
+    dashboardUrl: string;
     expiresIn: number;
     domainVerificationSecret: string;
     jwtIssuer: string;
@@ -38,7 +38,7 @@ export class TokenService {
     billingEmailVerificationExpiresIn: number;
   }) {
     this.jwtSecret = config.jwtSecret;
-    this.appUrl = config.appUrl;
+    this.dashboardUrl = config.dashboardUrl;
     this.expiresIn = config.expiresIn;
     this.domainVerificationSecret = config.domainVerificationSecret;
     this.jwtIssuer = config.jwtIssuer;
@@ -59,7 +59,7 @@ export class TokenService {
     };
     const options: SignOptions = { expiresIn: this.expiresIn };
     const token = jwt.sign(fullPayload, this.jwtSecret, options);
-    return `${this.appUrl}/invite?token=${token}`;
+    return `${this.dashboardUrl}/invite?token=${token}`;
   }
 
   /**
@@ -143,7 +143,7 @@ export class TokenService {
 
     const token = jwt.sign(fullPayload, this.jwtSecret, { algorithm: 'HS256' });
 
-    return `${this.appUrl}/workspace/request?token=${token}`;
+    return `${this.dashboardUrl}/workspace/request?token=${token}`;
   }
 
   /**
@@ -191,7 +191,7 @@ export class TokenService {
 
     const token = jwt.sign(fullPayload, this.jwtSecret, { algorithm: 'HS256' });
 
-    return `${this.appUrl}/workspace/create?token=${token}`;
+    return `${this.dashboardUrl}/workspace/create?token=${token}`;
   }
 
   /**
@@ -239,7 +239,7 @@ export class TokenService {
 
     const token = jwt.sign(fullPayload, this.jwtSecret, { algorithm: 'HS256' });
 
-    return `${this.appUrl}/billing-email/verify?token=${token}`;
+    return `${this.dashboardUrl}/billing-email/verify?token=${token}`;
   }
 
   /**
@@ -263,10 +263,10 @@ export class TokenService {
 }
 
 export const tokenService = new TokenService({
-  jwtSecret: env.invite.secret,
-  appUrl: env.invite.appUrl,
-  expiresIn: env.invite.expiresIn,
-  domainVerificationSecret: env.recorder.secret,
+  jwtSecret: env.token.inviteSecret,
+  dashboardUrl: env.dashboard.baseUrl,
+  expiresIn: env.token.inviteExpiresIn,
+  domainVerificationSecret: env.token.recordingSecret,
   jwtIssuer: env.jwtIssuer,
   domainVerificationExpiresIn: env.token.domainVerificationExpiresIn,
   accessRequestExpiresIn: env.token.accessRequestExpiresIn,

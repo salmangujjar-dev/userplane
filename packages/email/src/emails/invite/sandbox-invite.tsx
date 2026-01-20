@@ -11,14 +11,11 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface SandboxInviteEmailProps {
-  sandboxUrl?: string;
-  expiresInDays?: number;
+  sandboxUrl: string;
+  expiresInDays: number;
 }
 
-export const SandboxInviteEmail = ({
-  sandboxUrl = 'https://app.userplane.io/sandbox',
-  expiresInDays = 14,
-}: SandboxInviteEmailProps) => {
+export const SandboxInviteEmail = ({ sandboxUrl, expiresInDays }: SandboxInviteEmailProps) => {
   return (
     <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>

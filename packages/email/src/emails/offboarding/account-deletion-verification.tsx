@@ -8,6 +8,7 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/offboarding/account-deletion-verification';
+import { getUserName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
@@ -20,12 +21,14 @@ export const AccountDeletionVerificationEmail = ({
   userName,
   verificationUrl,
 }: AccountDeletionVerificationEmailProps) => {
+  const formattedUserName = getUserName(userName);
+
   return (
     <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.messageText}>{copy.greeting(userName)}</Text>
+        <Text style={styles.messageText}>{copy.greeting(formattedUserName)}</Text>
         <Text style={styles.messageText}>{copy.body[0]}</Text>
         <Text style={styles.messageText}>{copy.body[1]}</Text>
       </Section>

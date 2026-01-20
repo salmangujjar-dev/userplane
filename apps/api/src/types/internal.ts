@@ -200,216 +200,229 @@ export interface CreateDomainInput {
 /**
  * Email parameters extend the email props from @workspace/email and add recipient
  * This ensures single source of truth - email template parameters stay in sync
- * We use Required<> to make all optional template props required for our service layer
  * Additional fields may be added for logging or routing purposes
  */
 
 /**
+ * Base email parameters that all emails require
+ */
+export interface BaseEmailParams {
+  to: string;
+}
+
+/**
+ * Email parameters for batch sending
+ */
+export interface BatchEmailParams {
+  batch: boolean;
+}
+
+/**
+ * Email parameters for scheduled sending
+ */
+export interface ScheduledEmailParams {
+  scheduledAt: string;
+}
+
+/**
+ * Email parameters for reply-to address
+ */
+export interface ReplyToEmailParams {
+  replyTo: string;
+}
+
+/**
  * Access request email parameters
  */
-export type AccessRequestEmailParams = Required<AccessRequestEmailProps> & { to: string };
+export type AccessRequestEmailParams = AccessRequestEmailProps & BaseEmailParams;
 
 /**
  * Domain developer instructions email parameters
  */
-export type DomainDeveloperInstructionsEmailParams =
-  Required<DomainDeveloperInstructionsEmailProps> & {
-    to: string | string[];
-    batch?: boolean;
-  };
+export type DomainDeveloperInstructionsEmailParams = DomainDeveloperInstructionsEmailProps &
+  BaseEmailParams &
+  Partial<BatchEmailParams> &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Email verification email parameters
  */
-export type EmailVerificationEmailParams = EmailVerificationEmailProps & { to: string };
+export type EmailVerificationEmailParams = EmailVerificationEmailProps & BaseEmailParams;
 
 /**
  * Magic link email parameters
  */
-export type MagicLinkEmailParams = Required<MagicLinkEmailProps> & { to: string };
+export type MagicLinkEmailParams = MagicLinkEmailProps & BaseEmailParams;
 
 /**
  * Subscription active email parameters
  */
-export type SubscriptionActiveEmailParams = Required<SubscriptionActiveEmailProps> & { to: string };
+export type SubscriptionActiveEmailParams = SubscriptionActiveEmailProps &
+  BaseEmailParams &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Billing email updated email parameters
  */
-export type BillingEmailUpdatedEmailParams = Required<BillingEmailUpdatedEmailProps> & {
-  to: string;
-};
+export type BillingEmailUpdatedEmailParams = BillingEmailUpdatedEmailProps & BaseEmailParams;
 
 /**
  * Billing email verification email parameters
  */
-export type BillingEmailVerificationEmailParams = Required<BillingEmailVerificationEmailProps> & {
-  to: string;
-};
+export type BillingEmailVerificationEmailParams = BillingEmailVerificationEmailProps &
+  BaseEmailParams;
 
 /**
  * Subscription expired email parameters
  */
-export type SubscriptionExpiredEmailParams = Required<SubscriptionExpiredEmailProps> & {
-  to: string;
-};
+export type SubscriptionExpiredEmailParams = SubscriptionExpiredEmailProps & BaseEmailParams;
 
 /**
  * Subscription inactive email parameters
  */
-export type SubscriptionInactiveEmailParams = Required<SubscriptionInactiveEmailProps> & {
-  to: string;
-};
+export type SubscriptionInactiveEmailParams = SubscriptionInactiveEmailProps & BaseEmailParams;
 
 /**
  * Subscription plan change email parameters
  */
-export type SubscriptionPlanChangeEmailParams = Required<SubscriptionPlanChangeEmailProps> & {
-  to: string;
-};
+export type SubscriptionPlanChangeEmailParams = SubscriptionPlanChangeEmailProps & BaseEmailParams;
 
 /**
  * Subscription reverse trial email parameters
  */
-export type SubscriptionReverseTrialEmailParams = Required<SubscriptionReverseTrialEmailProps> & {
-  to: string;
-};
+export type SubscriptionReverseTrialEmailParams = SubscriptionReverseTrialEmailProps &
+  BaseEmailParams;
 
 /**
  * Teammate invited email parameters
  */
-export type TeammateInvitedEmailParams = Required<TeammateInvitedEmailProps> & {
-  to: string | string[];
-  batch?: boolean;
-};
+export type TeammateInvitedEmailParams = TeammateInvitedEmailProps &
+  BaseEmailParams &
+  Partial<BatchEmailParams>;
 
 /**
  * Teammate joined email parameters
  */
-export type TeammateJoinedEmailParams = Required<TeammateJoinedEmailProps> & {
-  to: string | string[];
-  batch?: boolean;
-};
+export type TeammateJoinedEmailParams = TeammateJoinedEmailProps &
+  BaseEmailParams &
+  Partial<BatchEmailParams>;
 
 /**
  * Account deletion email parameters
  */
-export type AccountDeletionEmailParams = Required<AccountDeletionEmailProps> & { to: string };
+export type AccountDeletionEmailParams = AccountDeletionEmailProps &
+  BaseEmailParams &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Account deletion verification email parameters
  */
-export type AccountDeletionVerificationEmailParams =
-  Required<AccountDeletionVerificationEmailProps> & { to: string };
+export type AccountDeletionVerificationEmailParams = AccountDeletionVerificationEmailProps &
+  BaseEmailParams &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Account restored email parameters
  */
-export type AccountRestoredEmailParams = Required<AccountRestoredEmailProps> & { to: string };
+export type AccountRestoredEmailParams = AccountRestoredEmailProps & BaseEmailParams;
 
 /**
  * TOS violation email parameters
  */
-export type TosViolationEmailParams = TosViolationEmailProps & { to: string };
+export type TosViolationEmailParams = TosViolationEmailProps &
+  BaseEmailParams &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Pilot sandbox invite email parameters
- * Includes optional scheduledAt for Resend email scheduling
  */
-export type PilotSandboxInviteEmailParams = Required<SandboxInviteEmailProps> & {
-  to: string;
-  scheduledAt?: string;
-};
+export type PilotSandboxInviteEmailParams = SandboxInviteEmailProps &
+  BaseEmailParams &
+  Partial<ScheduledEmailParams> &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Recording received email parameters
  */
-export type RecordingReceivedEmailParams = Required<RecordingReceivedEmailProps> & {
-  to: string;
-};
+export type RecordingReceivedEmailParams = RecordingReceivedEmailProps & BaseEmailParams;
 
 /**
  * Welcome email member parameters
  */
-export type WelcomeEmailMemberParams = Required<WelcomeEmailMemberProps> & {
-  to: string;
-};
+export type WelcomeEmailMemberParams = WelcomeEmailMemberProps &
+  BaseEmailParams &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Welcome email subscription parameters
  */
-export type WelcomeEmailSubscriptionParams = Required<WelcomeEmailSubscriptionProps> & {
-  to: string;
-};
+export type WelcomeEmailSubscriptionParams = WelcomeEmailSubscriptionProps &
+  BaseEmailParams &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Welcome email pilot parameters
  */
-export type WelcomeEmailPilotParams = Required<WelcomeEmailPilotProps> & {
-  to: string;
-};
+export type WelcomeEmailPilotParams = WelcomeEmailPilotProps &
+  BaseEmailParams &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Welcome email requester parameters
  */
-export type WelcomeEmailRequesterParams = Required<WelcomeEmailRequesterProps> & {
-  to: string;
-};
+export type WelcomeEmailRequesterParams = WelcomeEmailRequesterProps &
+  BaseEmailParams &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Workspace deletion scheduled email parameters
  */
-export type WorkspaceDeletionScheduledEmailParams = Required<DeletionScheduledEmailProps> & {
-  to: string | string[];
-  batch?: boolean;
-  scheduledAt?: string;
-};
+export type WorkspaceDeletionScheduledEmailParams = DeletionScheduledEmailProps &
+  BaseEmailParams &
+  Partial<BatchEmailParams> &
+  Partial<ScheduledEmailParams> &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Workspace recovery confirmation email parameters
  */
-export type WorkspaceRecoveryConfirmationEmailParams = Required<RecoveryConfirmationEmailProps> & {
-  to: string | string[];
-  batch?: boolean;
-  scheduledAt?: string;
-};
+export type WorkspaceRecoveryConfirmationEmailParams = RecoveryConfirmationEmailProps &
+  BaseEmailParams &
+  Partial<BatchEmailParams> &
+  Partial<ScheduledEmailParams>;
 
 /**
  * Workspace recovery partially email parameters
  */
-export type WorkspaceRecoveryPartiallyEmailParams = Required<RecoveryPartiallyEmailProps> & {
-  to: string | string[];
-  batch?: boolean;
-  scheduledAt?: string;
-};
+export type WorkspaceRecoveryPartiallyEmailParams = RecoveryPartiallyEmailProps &
+  BaseEmailParams &
+  Partial<BatchEmailParams> &
+  Partial<ScheduledEmailParams>;
 
 /**
  * Project deletion scheduled email parameters
  */
-export type ProjectDeletionScheduledEmailParams = Required<ProjectDeletionScheduledEmailProps> & {
-  to: string | string[];
-  batch?: boolean;
-  scheduledAt?: string;
-};
+export type ProjectDeletionScheduledEmailParams = ProjectDeletionScheduledEmailProps &
+  BaseEmailParams &
+  Partial<BatchEmailParams> &
+  Partial<ScheduledEmailParams> &
+  Partial<ReplyToEmailParams>;
 
 /**
  * Project recovery confirmation email parameters
  */
-export type ProjectRecoveryConfirmationEmailParams =
-  Required<ProjectRecoveryConfirmationEmailProps> & {
-    to: string | string[];
-    batch?: boolean;
-    scheduledAt?: string;
-  };
+export type ProjectRecoveryConfirmationEmailParams = ProjectRecoveryConfirmationEmailProps &
+  BaseEmailParams &
+  Partial<BatchEmailParams> &
+  Partial<ScheduledEmailParams>;
 
 /**
  * Project recovery partially email parameters
  */
-export type ProjectRecoveryPartiallyEmailParams = Required<ProjectRecoveryPartiallyEmailProps> & {
-  to: string | string[];
-  batch?: boolean;
-  scheduledAt?: string;
-};
+export type ProjectRecoveryPartiallyEmailParams = ProjectRecoveryPartiallyEmailProps &
+  BaseEmailParams &
+  Partial<BatchEmailParams> &
+  Partial<ScheduledEmailParams>;
 
 /**
  * Internal invite action result for service orchestration

@@ -7,22 +7,25 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/project/recovery-partially';
+import { getProjectName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface ProjectRecoveryPartiallyEmailProps {
-  projectName?: string;
-  dashboardUrl?: string;
+  projectName: string;
+  dashboardUrl: string;
 }
 
 export const ProjectRecoveryPartiallyEmail = ({
-  projectName = 'My Project',
-  dashboardUrl = 'https://app.userplane.io/dashboard',
+  projectName,
+  dashboardUrl,
 }: ProjectRecoveryPartiallyEmailProps) => {
+  const formattedProjectName = getProjectName(projectName);
+
   return (
-    <EmailLayout preview={copy.preview(projectName)}>
+    <EmailLayout preview={copy.preview(formattedProjectName)}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{copy.subtitle(projectName)}</Text>
+      <Text style={styles.subtitle}>{copy.subtitle(formattedProjectName)}</Text>
 
       <Section style={styles.messageSection}>
         <Text style={styles.messageText}>{copy.body[0]}</Text>

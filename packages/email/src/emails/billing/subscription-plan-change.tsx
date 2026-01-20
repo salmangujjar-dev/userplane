@@ -11,17 +11,17 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface SubscriptionPlanChangeEmailProps {
-  previousPlan?: string;
-  newPlan?: string;
-  effectiveDate?: string;
-  billingUrl?: string;
+  previousPlan: string;
+  newPlan: string;
+  effectiveDate: string;
+  billingUrl: string;
 }
 
 export const SubscriptionPlanChangeEmail = ({
-  previousPlan = 'Starter',
-  newPlan = 'Scale Up',
-  effectiveDate = 'January 15, 2025',
-  billingUrl = 'https://app.userplane.io/billing',
+  previousPlan,
+  newPlan,
+  effectiveDate,
+  billingUrl,
 }: SubscriptionPlanChangeEmailProps) => {
   return (
     <EmailLayout preview={copy.preview(previousPlan, newPlan)}>

@@ -201,11 +201,9 @@ const unbanUserImpl = (adminService: AdminService, emailService: EmailService) =
     const userDetail = await adminService.unbanUser(input.params.userId);
 
     // Send account restored email
-    const loginUrl = `${process.env.APP_URL}/auth`;
     await emailService.sendSafeAccountRestored({
       to: userDetail.email,
       userName: userDetail.name,
-      loginUrl,
     });
 
     return {
@@ -555,7 +553,7 @@ const deactivateWorkspaceImpl = (
       });
 
       // Construct cancel URL
-      const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
+      const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=workspace&id=${input.params.workspaceId}`;
 
       // Calculate scheduled time based on notify duration
       const scheduledAt = calculateScheduledTime(notify);
@@ -563,14 +561,17 @@ const deactivateWorkspaceImpl = (
       // Send deletion scheduled email to workspace owners using batch
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
       const ownerEmails = owners.map((owner) => owner.email);
-      await emailService.sendSafeWorkspaceDeletionScheduled({
-        to: ownerEmails,
-        batch: ownerEmails.length > 1,
-        workspaceName: workspaceInfo.workspaceName,
-        deletionDate: formattedDeletionDate,
-        cancelUrl,
-        scheduledAt,
-      });
+      await Promise.allSettled(
+        ownerEmails.map((email) =>
+          emailService.sendSafeWorkspaceDeletionScheduled({
+            to: email,
+            workspaceName: workspaceInfo.workspaceName,
+            deletionDate: formattedDeletionDate,
+            cancelUrl,
+            scheduledAt,
+          })
+        )
+      );
     }
 
     return {
@@ -603,7 +604,7 @@ const restoreWorkspaceImpl = (
 
       // Send email to workspace owners that the workspace has been restored
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
+      const dashboardUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}`;
 
       // Send appropriate email based on restoration status using batch
       const ownerEmails = owners.map((owner) => owner.email);
@@ -612,13 +613,16 @@ const restoreWorkspaceImpl = (
           ? emailService.sendSafeWorkspaceRecoveryPartially
           : emailService.sendSafeWorkspaceRecoveryConfirmation;
 
-      await emailMethod.call(emailService, {
-        to: ownerEmails,
-        batch: ownerEmails.length > 1,
-        workspaceName: result.workspace.workspaceName,
-        dashboardUrl,
-        scheduledAt,
-      });
+      await Promise.allSettled(
+        ownerEmails.map((email) =>
+          emailMethod({
+            to: email,
+            workspaceName: result.workspace.workspaceName,
+            dashboardUrl,
+            scheduledAt,
+          })
+        )
+      );
     }
 
     return {
@@ -669,7 +673,7 @@ const deactivateProjectImpl = (
       });
 
       // Construct cancel URL
-      const cancelUrl = `${env.invite.appUrl}/workspace/restore?type=project&workspaceId=${input.params.workspaceId}&projectId=${input.params.projectId}`;
+      const cancelUrl = `${env.dashboard.baseUrl}/workspace/restore?type=project&workspaceId=${input.params.workspaceId}&projectId=${input.params.projectId}`;
 
       // Calculate scheduled time based on notify duration
       const scheduledAt = calculateScheduledTime(notify);
@@ -677,14 +681,18 @@ const deactivateProjectImpl = (
       // Send deletion scheduled email to workspace owners using batch
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
       const ownerEmails = owners.map((owner) => owner.email);
-      await emailService.sendSafeProjectDeletionScheduled({
-        to: ownerEmails,
-        batch: ownerEmails.length > 1,
-        projectName: project.projectTitle || 'Untitled Project',
-        deletionDate: formattedDeletionDate,
-        cancelUrl,
-        scheduledAt,
-      });
+
+      await Promise.allSettled(
+        ownerEmails.map((email) =>
+          emailService.sendSafeProjectDeletionScheduled({
+            to: email,
+            projectName: project.projectTitle || 'Untitled Project',
+            deletionDate: formattedDeletionDate,
+            cancelUrl,
+            scheduledAt,
+          })
+        )
+      );
     }
 
     return {
@@ -720,7 +728,7 @@ const restoreProjectImpl = (
 
       // Send email to workspace owners that the project has been restored
       const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const dashboardUrl = `${env.invite.appUrl}/${input.params.workspaceId}`;
+      const dashboardUrl = `${env.dashboard.baseUrl}/${input.params.workspaceId}`;
 
       // Send appropriate email based on restoration status
       const ownerEmails = owners.map((owner) => owner.email);
@@ -729,13 +737,16 @@ const restoreProjectImpl = (
           ? emailService.sendSafeProjectRecoveryPartially
           : emailService.sendSafeProjectRecoveryConfirmation;
 
-      await emailMethod.call(emailService, {
-        to: ownerEmails,
-        batch: ownerEmails.length > 1,
-        projectName: restoredProject.projectTitle,
-        dashboardUrl,
-        scheduledAt,
-      });
+      await Promise.allSettled(
+        ownerEmails.map((email) =>
+          emailMethod({
+            to: email,
+            projectName: restoredProject.projectTitle,
+            dashboardUrl,
+            scheduledAt,
+          })
+        )
+      );
     }
 
     return {

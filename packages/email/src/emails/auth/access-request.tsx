@@ -7,6 +7,7 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/auth/access-request';
+import { getUserName, getWorkspaceName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
@@ -23,13 +24,19 @@ export const AccessRequestEmail = ({
   requesterEmail,
   reviewUrl,
 }: AccessRequestEmailProps) => {
+  const formattedWorkspaceName = getWorkspaceName(workspaceName);
+  const formattedRequesterName = getUserName(requesterName);
+
   return (
-    <EmailLayout preview={copy.preview(requesterName, workspaceName)} showSupport={false}>
+    <EmailLayout
+      preview={copy.preview(formattedRequesterName, formattedWorkspaceName)}
+      showSupport={false}
+    >
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>
         <Text style={styles.messageText}>
-          {copy.body[0](requesterName, requesterEmail, workspaceName)}
+          {copy.body[0](formattedRequesterName, requesterEmail, formattedWorkspaceName)}
         </Text>
         <Text style={styles.messageText}>{copy.body[1]}</Text>
       </Section>

@@ -11,15 +11,15 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface BillingEmailUpdatedEmailProps {
-  previousEmail?: string;
-  newEmail?: string;
-  billingUrl?: string;
+  previousEmail: string;
+  newEmail: string;
+  billingUrl: string;
 }
 
 export const BillingEmailUpdatedEmail = ({
-  previousEmail = 'old@company.com',
-  newEmail = 'new@company.com',
-  billingUrl = 'https://app.userplane.io/billing',
+  previousEmail,
+  newEmail,
+  billingUrl,
 }: BillingEmailUpdatedEmailProps) => {
   return (
     <EmailLayout preview={copy.preview}>

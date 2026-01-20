@@ -7,27 +7,33 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/workspace/deletion-scheduled';
+import { getDeletionDate, getWorkspaceName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface DeletionScheduledEmailProps {
-  workspaceName?: string;
-  deletionDate?: string;
-  cancelUrl?: string;
+  workspaceName: string;
+  deletionDate: string;
+  cancelUrl: string;
 }
 
 export const DeletionScheduledEmail = ({
-  workspaceName = 'My Workspace',
-  deletionDate = 'January 30, 2025',
-  cancelUrl = 'https://app.userplane.io/settings/workspace',
+  workspaceName,
+  deletionDate,
+  cancelUrl,
 }: DeletionScheduledEmailProps) => {
+  const formattedWorkspaceName = getWorkspaceName(workspaceName);
+  const formattedDeletionDate = getDeletionDate(deletionDate);
+
   return (
-    <EmailLayout preview={copy.preview(workspaceName, deletionDate)}>
+    <EmailLayout preview={copy.preview(formattedWorkspaceName, formattedDeletionDate)}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{copy.subtitle(workspaceName, deletionDate)}</Text>
+      <Text style={styles.subtitle}>
+        {copy.subtitle(formattedWorkspaceName, formattedDeletionDate)}
+      </Text>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.messageText}>{copy.body[0](deletionDate)}</Text>
+        <Text style={styles.messageText}>{copy.body[0](formattedDeletionDate)}</Text>
         <Text style={styles.messageText}>{copy.body[1]}</Text>
       </Section>
 

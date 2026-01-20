@@ -132,7 +132,7 @@ export const completeUploadImpl = (
     if (recording) {
       const creator = await workspaceMemberRepo.findByIdWithUser(recording.createdBy);
       if (creator) {
-        const recordingUrl = `${env.invite.appUrl}/${recording.workspaceId}/recordings/${recording.recordingId}`;
+        const recordingUrl = `${env.dashboard.baseUrl}/${recording.workspaceId}/recordings/${recording.recordingId}`;
 
         await emailService.sendSafeRecordingReceived({
           to: creator.userEmail,

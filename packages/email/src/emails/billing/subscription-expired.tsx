@@ -11,14 +11,11 @@ import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface SubscriptionExpiredEmailProps {
-  planName?: string;
-  renewUrl?: string;
+  planName: string;
+  renewUrl: string;
 }
 
-export const SubscriptionExpiredEmail = ({
-  planName = 'Starter',
-  renewUrl = 'https://app.userplane.io/billing',
-}: SubscriptionExpiredEmailProps) => {
+export const SubscriptionExpiredEmail = ({ planName, renewUrl }: SubscriptionExpiredEmailProps) => {
   return (
     <EmailLayout preview={copy.preview}>
       <Text style={styles.title}>{copy.title}</Text>

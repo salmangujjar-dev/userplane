@@ -7,27 +7,30 @@ import { Link, Section, Text } from '@react-email/components';
 import * as React from 'react';
 
 import { copy } from '../../copy/domain/developer-instructions';
+import { getDomainName } from '../../shared/fallback';
 import { EmailLayout } from '../../shared/layout';
 import * as styles from '../../shared/styles';
 
 export interface DomainDeveloperInstructionsEmailProps {
-  domainName?: string;
-  settingsUrl?: string;
-  docsUrl?: string;
+  domainName: string;
+  settingsUrl: string;
+  docsUrl: string;
 }
 
 export const DomainDeveloperInstructionsEmail = ({
-  domainName = 'example.com',
-  settingsUrl = 'https://app.userplane.io/settings/domains',
-  docsUrl = 'https://docs.userplane.io/domains/integration',
+  domainName,
+  settingsUrl,
+  docsUrl,
 }: DomainDeveloperInstructionsEmailProps) => {
+  const formattedDomainName = getDomainName(domainName);
+
   return (
-    <EmailLayout preview={copy.preview(domainName)}>
+    <EmailLayout preview={copy.preview(formattedDomainName)}>
       <Text style={styles.title}>{copy.title}</Text>
-      <Text style={styles.subtitle}>{copy.subtitle(domainName)}</Text>
+      <Text style={styles.subtitle}>{copy.subtitle(formattedDomainName)}</Text>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.messageText}>{copy.body[0](domainName)}</Text>
+        <Text style={styles.messageText}>{copy.body[0](formattedDomainName)}</Text>
       </Section>
 
       <Section style={styles.messageSection}>
