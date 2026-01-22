@@ -25,6 +25,7 @@ import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { UserRepository } from '@/api/repositories/users.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 // Repositories
@@ -34,6 +35,7 @@ import { AdminProjectService } from '@/api/services/admin-project.service';
 import { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
 import { AdminRecordingService } from '@/api/services/admin-recording.service';
 import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
+import { BillingService } from '@/api/services/billing.service';
 import { DomainService } from '@/api/services/domain.service';
 import { emailService } from '@/api/services/email.service';
 import { InviteService } from '@/api/services/invite.service';
@@ -56,6 +58,7 @@ const projectRepo = new ProjectRepository(db);
 const domainRepo = new DomainRepository(db);
 const linkRepo = new LinkRepository(db);
 const recordingRepo = new RecordingRepository(db);
+const subscriptionRepo = new SubscriptionRepository(db);
 const adminRepo = new AdminRepository(db);
 const adminWorkspaceRepo = new AdminWorkspaceRepository(db);
 const adminRecordingRepo = new AdminRecordingRepository(db);
@@ -182,6 +185,13 @@ export const adminProvisioningService = new AdminProvisioningService({
   db,
 });
 
+// Level 5: Billing service (depends on workspace repo)
+export const billingService = new BillingService({
+  subscriptionRepo,
+  workspaceRepo,
+  db,
+});
+
 // Export tokenService, emailService, and repositories for use in routes
 export { emailService, tokenService };
-export { recordingRepo, workspaceMemberRepo };
+export { recordingRepo, subscriptionRepo, workspaceMemberRepo };

@@ -21,6 +21,7 @@ import {
   adminRecordingService,
   adminService,
   adminWorkspaceService,
+  billingService,
   domainService,
   emailService,
   inviteService,
@@ -39,6 +40,7 @@ import {
 
 import { createAccountProcedures } from './account/account.impl';
 import { createAdminProcedures } from './admin/admin.impl';
+import { createBillingProcedures } from './billing/billing.impl';
 import { createDomainProcedures } from './domain/domain.impl';
 import { createInviteProcedures } from './invite/invite.impl';
 import { createLinkProcedures } from './link/link.impl';
@@ -105,6 +107,11 @@ const projectProcedures = createProjectProcedures(
   workspaceService,
   emailService
 );
+const billingProcedures = createBillingProcedures(
+  billingService,
+  workspaceMemberService,
+  workspaceService
+);
 
 /**
  * Complete router export
@@ -120,12 +127,14 @@ const projectProcedures = createProjectProcedures(
  * - link: Recording link management
  * - domain: Public domain verification
  * - invite: Public invite validation and acceptance
+ * - billing: Subscription management and billing operations
  */
 export const apiRouter = {
   status: statusProcedures,
   session: sessionProcedures,
   account: accountProcedures,
   admin: adminProcedures,
+  billing: billingProcedures,
   provisioner: provisionerProcedures,
   workspace: workspaceProcedures,
   project: projectProcedures,

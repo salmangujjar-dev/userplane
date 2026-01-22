@@ -20,6 +20,12 @@ interface StorageConfig {
   reports?: BucketCredentials;
 }
 
+interface DodoPaymentsConfig {
+  apiKey?: string;
+  webhookSecret?: string;
+  environment: 'test_mode' | 'live_mode';
+}
+
 interface EnvConfig {
   port: number;
   host: string;
@@ -43,6 +49,7 @@ interface EnvConfig {
   dashboard: {
     baseUrl: string;
   };
+  dodoPayments: DodoPaymentsConfig;
   token: {
     inviteSecret: string;
     inviteExpiresIn: number;
@@ -168,6 +175,13 @@ export function loadEnvConfig(): EnvConfig {
     },
     dashboard: {
       baseUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',
+    },
+    dodoPayments: {
+      apiKey: process.env.DODO_PAYMENTS_API_KEY,
+      webhookSecret: process.env.DODO_PAYMENTS_WEBHOOK_SECRET,
+      environment: (process.env.DODO_PAYMENTS_ENVIRONMENT || 'test_mode') as
+        | 'test_mode'
+        | 'live_mode',
     },
     token: {
       inviteSecret: process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-in-production',
@@ -375,6 +389,11 @@ export function logConfig(): void {
       },
       database: env.database.url ? 'Connected' : 'Not configured',
       googleOAuth: env.google.clientId ? 'Configured' : 'Not configured',
+      dodoPayments: {
+        apiKey: env.dodoPayments.apiKey ? 'Configured' : 'Not configured',
+        webhookSecret: env.dodoPayments.webhookSecret ? 'Configured' : 'Not configured',
+        environment: env.dodoPayments.environment,
+      },
       emailProvider: env.email.provider,
       emailProviderApiKey: env.email.provider !== 'localhost' ? !!env.email.providerApiKey : 'N/A',
       emailInboxes: {
