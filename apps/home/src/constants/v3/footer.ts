@@ -1,4 +1,5 @@
 import { CONTACT_EMAIL_MAILTO, TALLY_COMPLIANCE_FORM_URL } from '../contact';
+import { getPricingUrl } from '../feature-flags';
 import { NAV_LINKS } from '../navigation';
 import { getMarketingUrl } from '../urls';
 
@@ -21,7 +22,7 @@ export const FOOTER_COPYRIGHT = 'Userplane. All rights reserved.';
 export const FOOTER_LINKS = {
   product: [
     { label: 'Features', href: '/#features' },
-    { label: 'Pricing', href: '/#pricing' },
+    { label: 'Pricing', href: getPricingUrl() },
     { label: 'FAQ', href: '/#faq' },
   ],
   company: [

@@ -1,0 +1,14 @@
+---
+import HomepageLayout from '../layouts/HomepageLayout.astro';
+import PricingPage from '../components/home/v3/PricingPage';
+---
+
+<HomepageLayout
+  title="Pricing - Userplane"
+  description="Simple, transparent pricing for teams of all sizes. Choose the plan that fits your needs with no hidden fees."
+  keywords="pricing, plans, screen recording, customer support, debugging, Userplane pricing"
+>
+  <main class="flex flex-col items-center">
+    <PricingPage client:load />
+  </main>
+</HomepageLayout>

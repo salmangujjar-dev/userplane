@@ -1,4 +1,5 @@
 import { CONTACT_EMAIL_MAILTO, TALLY_COMPLIANCE_FORM_URL } from './contact';
+import { getPricingUrl } from './feature-flags';
 import { getMarketingUrl } from './urls';
 
 /**
@@ -20,7 +21,7 @@ export const LOGO_LINK = {
 export const NAV_LINKS = {
   home: getMarketingUrl('/'),
   features: getMarketingUrl('/#features'),
-  pricing: getMarketingUrl('/#pricing'),
+  pricing: getMarketingUrl(getPricingUrl()),
   integrations: getMarketingUrl('/#integrations'),
   roadmap: getMarketingUrl('/roadmap'),
   blog: getMarketingUrl('/blog'),

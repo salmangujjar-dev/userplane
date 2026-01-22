@@ -42,7 +42,7 @@ export const FAQ_ITEMS: FAQItem[] = [
   {
     question: 'How does Userplane handle sensitive data?',
     answer:
-      'Userplane automatically blurs sensitive fields and redacts data at source. This means passwords, credit cards, and confidential information never reach our servers.',
+      'Userplane automatically blurs sensitive fields and redacts data at source. This means passwords, credit cards, or any other confidential information never reach our servers.',
   },
   {
     question: 'Do my customers need to install anything?',
