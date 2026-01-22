@@ -89,6 +89,22 @@ export function generateSessionId(): string {
 }
 
 /**
+ * Generate a unique subscription ID
+ * @returns ID with 'sub_' prefix + 12-character alphanumeric ID
+ */
+export function generateSubscriptionId(): string {
+  return `sub_${nanoid()}`;
+}
+
+/**
+ * Generate a unique entitlement ID
+ * @returns ID with 'ent_' prefix + 12-character alphanumeric ID
+ */
+export function generateEntitlementId(): string {
+  return `ent_${nanoid()}`;
+}
+
+/**
  * Export the raw nanoid generator for cases where custom prefixes are needed
  */
 export { nanoid };
