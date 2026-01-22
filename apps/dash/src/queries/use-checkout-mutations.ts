@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
 
-import { env } from '@/env';
+import { authClient } from '@/client/auth';
 
 interface CheckoutParams {
   planSlug: string;
@@ -12,24 +12,9 @@ interface CheckoutResult {
   url: string;
 }
 
-interface CheckoutResponse {
-  url?: string;
-  error?: {
-    message?: string;
-  };
-}
-
-interface PortalResponse {
-  url?: string;
-  redirect?: boolean;
-  error?: {
-    message?: string;
-  };
-}
-
 /**
  * Hook to create a DodoPayments checkout session
- * Calls the Better Auth DodoPayments plugin checkout endpoint directly
+ * Uses the Better Auth DodoPayments plugin
  */
 export function useCreateCheckout(options?: {
   onError?: (error: Error) => void;
@@ -37,32 +22,22 @@ export function useCreateCheckout(options?: {
 }) {
   return useMutation<CheckoutResult, Error, CheckoutParams>({
     mutationFn: async ({ planSlug, workspaceId }) => {
-      const response = await fetch(`${env.api.url}/api/auth/dodopayments/checkout`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
+      const result = await authClient.dodopayments.checkout({
+        slug: planSlug,
+        metadata: {
+          workspace_id: workspaceId,
         },
-        body: JSON.stringify({
-          slug: planSlug,
-          metadata: {
-            workspace_id: workspaceId,
-          },
-        }),
       });
 
-      if (!response.ok) {
-        const errorData = (await response.json().catch(() => ({}))) as CheckoutResponse;
-        throw new Error(errorData.error?.message || 'Failed to create checkout session');
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to create checkout session');
       }
 
-      const result = (await response.json()) as CheckoutResponse;
-
-      if (!result.url) {
+      if (!result.data?.url) {
         throw new Error('No checkout URL returned');
       }
 
-      return { url: result.url };
+      return { url: result.data.url };
     },
     onSuccess: (result) => {
       options?.onSuccess?.(result);
@@ -85,20 +60,14 @@ export function useOpenCustomerPortal(options?: {
 }) {
   return useMutation<void, Error, void>({
     mutationFn: async () => {
-      const response = await fetch(`${env.api.url}/api/auth/dodopayments/portal`, {
-        method: 'GET',
-        credentials: 'include',
-      });
+      const result = await authClient.dodopayments.customer.portal();
 
-      if (!response.ok) {
-        const errorData = (await response.json().catch(() => ({}))) as PortalResponse;
-        throw new Error(errorData.error?.message || 'Failed to open customer portal');
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to open customer portal');
       }
 
-      const result = (await response.json()) as PortalResponse;
-
-      if (result.redirect && result.url) {
-        window.location.href = result.url;
+      if (result.data?.redirect && result.data?.url) {
+        window.location.href = result.data.url;
       }
     },
     onSuccess: () => {

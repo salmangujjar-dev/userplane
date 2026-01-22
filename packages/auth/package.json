@@ -16,11 +16,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "better-auth": "^1.0.7",
+    "better-auth": "^1.4.17",
     "@dodopayments/better-auth": "^1.4.2",
     "dodopayments": "^0.24.0",
+    "@workspace/contract": "workspace:*",
     "@workspace/db": "workspace:*",
-    "@workspace/payments": "workspace:*"
+    "@workspace/payments": "workspace:*",
+    "@workspace/shared": "workspace:*"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",

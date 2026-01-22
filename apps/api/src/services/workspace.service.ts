@@ -5,6 +5,7 @@
 
 import { MAX_EMAIL_DOMAINS, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
+import { isDisposableEmail, isDisposableEmailDomain } from '@workspace/shared';
 
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
 import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@/api/lib/id';
@@ -23,7 +24,6 @@ import {
   getRestorationReason,
   getRestorationStatus,
 } from '@/api/utils/date';
-import { isDisposableEmail, isDisposableEmailDomain } from '@/api/utils/disposable-email';
 
 export interface WorkspaceServiceDeps {
   workspaceRepo: WorkspaceRepository;

@@ -2,8 +2,9 @@ import type { DbClient } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
 import { APIError, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { admin, magicLink } from 'better-auth/plugins';
+import { admin, magicLink, openAPI } from 'better-auth/plugins';
 
+import { authMiddlewareHook, userCreateHook } from './hooks';
 import { ac, adminRole, csmRole, userRole } from './permissions';
 
 // Export APIError for use in callbacks
@@ -15,6 +16,9 @@ export { adminRole, csmRole, userRole } from './permissions';
 // Export types and utilities for both server and client use
 export type { Action, PermissionMap, Resource, RoleName } from './types';
 export { isValidRoleName } from './types';
+
+// Export feature flag utilities for composable hook configuration
+export * from './flags';
 
 // Note: For client-side usage, import from '@workspace/auth/permissions-client'
 // to avoid importing server-only Better Auth code
@@ -56,6 +60,8 @@ export interface AuthConfig {
   baseURL: string;
   trustedOrigins: string[];
   cookiePrefix?: string;
+  /** Node environment - defaults to process.env.NODE_ENV */
+  nodeEnv?: 'development' | 'production' | 'test';
   google: {
     clientId: string;
     clientSecret: string;
@@ -67,7 +73,9 @@ export interface AuthConfig {
 }
 
 export function createAuth(config: AuthConfig) {
-  const isDevelopment = process.env.NODE_ENV !== 'production';
+  const nodeEnv = config.nodeEnv || (process.env.NODE_ENV as typeof config.nodeEnv);
+  const isProduction = nodeEnv === 'production';
+  const isDevelopment = !isProduction;
 
   return betterAuth({
     database: drizzleAdapter(config.database, {
@@ -122,6 +130,8 @@ export function createAuth(config: AuthConfig) {
         },
         expiresIn: 60 * 10, // 10 minutes
       }),
+      // Only include openAPI plugin in non-production environments
+      ...(isProduction ? [] : [openAPI()]),
     ],
     socialProviders: {
       google: {
@@ -153,6 +163,14 @@ export function createAuth(config: AuthConfig) {
             sameSite: 'lax',
             secure: true,
           },
+    },
+    databaseHooks: {
+      user: {
+        create: userCreateHook,
+      },
+    },
+    hooks: {
+      before: authMiddlewareHook,
     },
   });
 }
