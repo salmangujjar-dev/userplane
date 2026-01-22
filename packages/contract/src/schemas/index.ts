@@ -7,6 +7,8 @@ export * from './account';
 export * from './account.errors';
 export * from './admin';
 export * from './admin.errors';
+export * from './billing';
+export * from './billing.errors';
 export * from './common';
 export * from './domain';
 export * from './domain.errors';
