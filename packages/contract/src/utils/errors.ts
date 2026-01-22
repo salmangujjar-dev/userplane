@@ -7,6 +7,7 @@ import { ORPCError } from '@orpc/server';
 
 import { AccountErrors } from '../schemas/account.errors';
 import { AdminErrors } from '../schemas/admin.errors';
+import { BillingErrors } from '../schemas/billing.errors';
 import { DomainErrors } from '../schemas/domain.errors';
 import { InviteErrors } from '../schemas/invite.errors';
 import { LinkErrors } from '../schemas/link.errors';
@@ -81,6 +82,7 @@ function createErrors<T extends ErrorMap>(definitions: T): ErrorFactory<T> {
  */
 export const accountError = createErrors(AccountErrors);
 export const adminError = createErrors(AdminErrors);
+export const billingError = createErrors(BillingErrors);
 export const domainError = createErrors(DomainErrors);
 export const inviteError = createErrors(InviteErrors);
 export const linkError = createErrors(LinkErrors);

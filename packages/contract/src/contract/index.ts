@@ -7,6 +7,7 @@
 
 import * as account from './account';
 import * as admin from './admin';
+import * as billing from './billing';
 import * as domain from './domain';
 import * as invite from './invite';
 import * as link from './link';
@@ -241,6 +242,12 @@ export const sessionContract = {
 };
 
 /**
+ * Billing contract
+ * Subscription management and billing operations
+ */
+export const billingContract = billing.billingContract;
+
+/**
  * Complete API contract
  * Combines all domain contracts for full API implementation
  */
@@ -248,6 +255,7 @@ export const contract = {
   status: statusContract,
   account: accountContract,
   admin: adminContract,
+  billing: billingContract,
   provisioner: provisionerContract,
   workspace: workspaceContract,
   invite: inviteContract,
@@ -264,6 +272,7 @@ export const contract = {
 export type StatusContract = typeof statusContract;
 export type AccountContract = typeof accountContract;
 export type AdminContract = typeof adminContract;
+export type BillingContract = typeof billingContract;
 export type ProvisionerContract = typeof provisionerContract;
 export type WorkspaceContract = typeof workspaceContract;
 export type InviteContract = typeof inviteContract;

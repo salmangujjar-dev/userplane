@@ -54,6 +54,8 @@ export const workspaces = pgTable(
 
     // Billing info
     workspaceBillingEmail: text('workspace_billing_email').notNull(),
+    // DodoPayments customer ID (set when first checkout is completed)
+    dodoCustomerId: text('dodo_customer_id'),
 
     // Recording link defaults
     recordingSlug: text('recording_slug').notNull(),

@@ -6,6 +6,7 @@ export * from './projects';
 export * from './recordings';
 export * from './relations';
 export * from './session';
+export * from './subscriptions';
 export * from './user';
 export * from './verification';
 export * from './workspace-members';
@@ -18,6 +19,7 @@ import { links } from './links';
 import { projects } from './projects';
 import { recordings } from './recordings';
 import { session } from './session';
+import { subscriptions } from './subscriptions';
 import { user } from './user';
 import { verification } from './verification';
 import { workspaceMembers } from './workspace-members';
@@ -55,3 +57,6 @@ export type NewLink = typeof links.$inferInsert;
 
 export type Recording = typeof recordings.$inferSelect;
 export type NewRecording = typeof recordings.$inferInsert;
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type NewSubscription = typeof subscriptions.$inferInsert;
