@@ -9,7 +9,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
-import { RESOURCE_TYPE_VALUES } from '../constants';
+import { RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 import { workspaces } from './workspaces';
 
 export const resourceTypeEnum = pgEnum('resource_type', RESOURCE_TYPE_VALUES);
@@ -25,7 +25,14 @@ export const entitlements = pgTable(
 
     // Resource configuration
     resourceType: resourceTypeEnum('resource_type').notNull(),
-    resourceCap: integer('resource_cap').notNull(),
+
+    // Plan-specific limits
+    // quotedLimit: The advertised/displayed limit (what customers see)
+    // softLimit: Warning threshold - usage alerts triggered here
+    // hardLimit: Absolute maximum - requests blocked beyond this
+    quotedLimit: integer('quoted_limit').notNull(),
+    softLimit: integer('soft_limit').notNull(),
+    hardLimit: integer('hard_limit').notNull(),
 
     // Resource tracking (use atomic increment for consumption)
     resourceCredited: integer('resource_credited').notNull().default(0),

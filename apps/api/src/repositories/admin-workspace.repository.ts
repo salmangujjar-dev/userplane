@@ -172,7 +172,7 @@ export class AdminWorkspaceRepository {
       workspaces: workspacesResult.map((w) => ({
         workspaceId: w.workspaceId,
         workspaceName: w.workspaceName,
-        workspacePlan: w.workspacePlan,
+        workspacePlan: w.workspacePlan as PlanId,
         createdAt: w.createdAt,
         memberCount: w.memberCount,
         projectCount: w.projectCount,
@@ -202,7 +202,12 @@ export class AdminWorkspaceRepository {
       .where(eq(workspaces.workspaceId, workspaceId))
       .limit(1);
 
-    return foundWorkspace || null;
+    if (!foundWorkspace) return null;
+
+    return {
+      ...foundWorkspace,
+      workspacePlan: foundWorkspace.workspacePlan as PlanId,
+    };
   }
 
   /**
@@ -402,7 +407,7 @@ export class AdminWorkspaceRepository {
     return {
       workspaceId: updated.workspaceId,
       workspaceName: updated.workspaceName,
-      workspacePlan: updated.workspacePlan,
+      workspacePlan: updated.workspacePlan as PlanId,
       createdAt: updated.createdAt,
       isDeleted: updated.isDeleted,
       deletedAt: updated.deletedAt,
@@ -429,7 +434,7 @@ export class AdminWorkspaceRepository {
     return {
       workspaceId: updated.workspaceId,
       workspaceName: updated.workspaceName,
-      workspacePlan: updated.workspacePlan,
+      workspacePlan: updated.workspacePlan as PlanId,
       createdAt: updated.createdAt,
       isDeleted: updated.isDeleted,
       deletedAt: updated.deletedAt,

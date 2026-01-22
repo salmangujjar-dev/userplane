@@ -38,7 +38,7 @@ export function useProvisionForm() {
   // Workspace fields
   const [workspaceName, setWorkspaceName] = useState('');
   const [workspaceUrl, setWorkspaceUrl] = useState('');
-  const [workspacePlan, setWorkspacePlan] = useState<PlanId>('early_bird_monthly');
+  const [workspacePlan, setWorkspacePlan] = useState<PlanId>('starter_monthly');
 
   // Members
   const [members, setMembers] = useState<ProvisionFormMember[]>([]);
@@ -48,7 +48,7 @@ export function useProvisionForm() {
     setOwnerName('');
     setWorkspaceName('');
     setWorkspaceUrl('');
-    setWorkspacePlan('early_bird_monthly');
+    setWorkspacePlan('starter_monthly');
     setMembers([]);
   }, []);
 

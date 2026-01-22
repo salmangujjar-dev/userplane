@@ -208,14 +208,14 @@ export function AdminCreateWorkspaceInviteModal({
                             <SelectValue placeholder="Select a plan" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="sandbox">Sandbox (Default)</SelectItem>
-                            {PLAN_OPTIONS.filter((option) => option.value !== 'sandbox').map(
-                              (option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              )
-                            )}
+                            <SelectItem value="sandbox_monthly">Sandbox (Default)</SelectItem>
+                            {PLAN_OPTIONS.filter(
+                              (option) => option.value !== 'sandbox_monthly'
+                            ).map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       )}

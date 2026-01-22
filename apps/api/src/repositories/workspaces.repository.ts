@@ -6,6 +6,7 @@
 import type { DbClient, WorkspaceInvitePolicy, WorkspaceRole } from '@workspace/db';
 import { and, count, eq, ilike, ne, notInArray, or, sql } from '@workspace/db';
 import { workspaceMembers, workspaces } from '@workspace/db';
+import type { PlanId } from '@workspace/pricing';
 
 import type { CreateWorkspaceInput, Transaction } from '@/api/types';
 
@@ -36,7 +37,14 @@ export class WorkspaceRepository {
       })
       .returning();
 
-    return workspace;
+    if (!workspace) {
+      throw new Error('Failed to create workspace');
+    }
+
+    return {
+      ...workspace,
+      workspacePlan: workspace.workspacePlan as PlanId,
+    };
   }
 
   /**
@@ -56,7 +64,12 @@ export class WorkspaceRepository {
       .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .limit(1);
 
-    return workspace || null;
+    if (!workspace) return null;
+
+    return {
+      ...workspace,
+      workspacePlan: workspace.workspacePlan as PlanId,
+    };
   }
 
   /**
@@ -249,7 +262,11 @@ export class WorkspaceRepository {
         )
       );
 
-    return result;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return result.map((r: any) => ({
+      ...r,
+      workspacePlan: r.workspacePlan as PlanId,
+    }));
   }
 
   /**
@@ -363,7 +380,7 @@ export class WorkspaceRepository {
       const workspace: any = {
         workspaceId: row.workspaceId,
         workspaceName: row.workspaceName,
-        workspacePlan: row.workspacePlan,
+        workspacePlan: row.workspacePlan as PlanId,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
       };
@@ -437,7 +454,12 @@ export class WorkspaceRepository {
         updatedAt: workspaces.updatedAt,
       });
 
-    return updated || null;
+    if (!updated) return null;
+
+    return {
+      ...updated,
+      workspacePlan: updated.workspacePlan as PlanId,
+    };
   }
 
   /**

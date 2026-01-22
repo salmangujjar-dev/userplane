@@ -48,14 +48,8 @@ export const STREAMING_STATUS_VALUES = [
 export type StreamingStatus = (typeof STREAMING_STATUS_VALUES)[number];
 
 /**
- * Resource types for entitlements
+ * Re-export pricing-related constants for database schema
+ * Source of truth: @workspace/pricing
+ * These are used to create PostgreSQL enum types and maintain consistency
  */
-export const RESOURCE_TYPE_VALUES = [
-  'seats',
-  'links',
-  'recordings',
-  'recording_links',
-  'logs',
-  'screenshots',
-] as const;
-export type ResourceType = (typeof RESOURCE_TYPE_VALUES)[number];
+export { RESOURCE_TYPE_VALUES, type ResourceType } from '@workspace/pricing';

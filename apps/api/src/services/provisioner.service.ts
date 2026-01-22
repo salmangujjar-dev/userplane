@@ -50,7 +50,7 @@ export class ProvisionerService {
     const { url: providedUrl, userId, userName, userEmail, inviteToken } = params;
 
     // Determine workspace details based on invite token or provided values
-    let workspacePlan: PlanId = 'early_bird_monthly';
+    let workspacePlan: PlanId = 'starter_monthly';
     let predeterminedWorkspaceId: string | undefined;
     let workspaceUrl = providedUrl;
 
@@ -107,7 +107,7 @@ export class ProvisionerService {
       // Create first project (automatically becomes default)
       await this.deps.projectService.createProject(
         {
-          workspaceId: createdWorkspace.workspaceId,
+          workspaceId: createdWorkspace.workspaceId!,
           projectTitle: workspaceName,
         },
         { tx }
@@ -116,14 +116,14 @@ export class ProvisionerService {
       await this.deps.workspaceMemberService.addOwner(
         {
           userId,
-          workspaceId: createdWorkspace.workspaceId,
+          workspaceId: createdWorkspace.workspaceId!,
         },
         { tx }
       );
 
       await this.deps.domainService.create(
         {
-          workspaceId: createdWorkspace.workspaceId,
+          workspaceId: createdWorkspace.workspaceId!,
           url: workspaceUrl,
           status: 'pending',
         },
@@ -139,8 +139,8 @@ export class ProvisionerService {
 
     return {
       created: true,
-      workspaceId: workspace.workspaceId,
-      workspaceName: workspace.workspaceName,
+      workspaceId: workspace.workspaceId!,
+      workspaceName: workspace.workspaceName!,
     };
   }
 }

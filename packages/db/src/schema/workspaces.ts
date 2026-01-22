@@ -1,4 +1,3 @@
-import { PLAN_IDS } from '@workspace/pricing';
 import { relations } from 'drizzle-orm';
 import {
   boolean,
@@ -16,12 +15,6 @@ import { entitlements } from './entitlements';
 import { links } from './links';
 import { projects } from './projects';
 import { workspaceMembers } from './workspace-members';
-
-/**
- * Workspace plan enum
- * Values derived from @workspace/pricing PLAN_IDS
- */
-export const workspacePlanEnum = pgEnum('workspace_plan', PLAN_IDS);
 
 /**
  * Workspace invite policy enum
@@ -43,8 +36,8 @@ export const workspaces = pgTable(
     // Workspace identity and branding
     workspaceName: text('workspace_name').notNull(),
 
-    // Subscription and plan
-    workspacePlan: workspacePlanEnum('workspace_plan').notNull().default('early_bird_monthly'),
+    // Subscription and plan (plain text for flexibility - no enum migrations needed)
+    workspacePlan: text('workspace_plan').notNull().default('trial_monthly'),
 
     // Settings and configuration
     // UUID token used for invite verification, must always be set
