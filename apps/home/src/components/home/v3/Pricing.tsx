@@ -39,14 +39,14 @@ function PricingFeatureItem({ text, included, subFeatures }: PlanFeature) {
 }
 
 export default function PricingV3() {
-  // Get the tiny bird plan
-  const tinyBirdPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'tiny_bird_monthly');
+  // Get the early bird plan (annual) - legacy plan for home page
+  const earlyBirdPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'early_bird_annual');
 
-  if (!tinyBirdPlan) {
+  if (!earlyBirdPlan) {
     return null;
   }
 
-  const displayRate = formatPlanRate(tinyBirdPlan);
+  const displayRate = formatPlanRate(earlyBirdPlan);
 
   const words = PRICING_HEADING.title.split(' ');
   const highlightMap = new Map(PRICING_HIGHLIGHTS.map((h) => [h.wordIndex, h.color]));
@@ -170,7 +170,7 @@ export default function PricingV3() {
             What&apos;s Included
           </h3>
           <div className="space-y-8">
-            {tinyBirdPlan.features.map((feature, index) => (
+            {earlyBirdPlan.features.map((feature, index) => (
               <PricingFeatureItem key={index} {...feature} />
             ))}
           </div>

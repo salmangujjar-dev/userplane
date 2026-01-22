@@ -679,7 +679,7 @@ export const AdminProvisionWorkspaceInputSchema = z.object({
     workspace: z.object({
       name: z.string().min(1, 'Workspace name is required').max(255),
       url: z.string().url('Invalid URL'),
-      plan: z.enum(PLAN_IDS).optional().default('early_bird_monthly'),
+      plan: z.enum(PLAN_IDS).optional().default('starter_monthly'),
     }),
     members: z.array(AdminProvisionMemberSchema).optional().default([]),
   }),
@@ -735,7 +735,7 @@ export type AdminProvisionWorkspaceData = z.infer<typeof AdminProvisionWorkspace
 export const AdminCreateWorkspaceInviteInputSchema = z.object({
   body: z.object({
     workspaceUrl: z.string().url('Invalid URL'),
-    plan: z.enum(PLAN_IDS).optional().default('sandbox'),
+    plan: z.enum(PLAN_IDS).optional().default('sandbox_monthly'),
     notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES).optional().default('never'),
     email: EmailSchema.optional(),
   }),
