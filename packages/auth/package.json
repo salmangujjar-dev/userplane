@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./permissions-client": "./src/permissions-client.ts"
+    "./permissions-client": "./src/permissions-client.ts",
+    "./dodopayments": "./src/dodopayments.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
@@ -16,7 +17,10 @@
   },
   "dependencies": {
     "better-auth": "^1.0.7",
-    "@workspace/db": "workspace:*"
+    "@dodopayments/better-auth": "^1.4.2",
+    "dodopayments": "^0.24.0",
+    "@workspace/db": "workspace:*",
+    "@workspace/payments": "workspace:*"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
