@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ADMIN_WORKSPACE_PROJECTS_PAGINATION, type AdminNotifyDuration } from '@workspace/contract';
-import type { PlanId } from '@workspace/pricing';
+import type { PlanId, UserSelectablePlanId } from '@workspace/pricing';
 import { toast } from 'sonner';
 
 import { apiClient } from '@/client';
@@ -475,7 +475,7 @@ export interface AdminProvisionWorkspaceInput {
   workspace: {
     name: string;
     url: string;
-    plan?: PlanId;
+    plan: UserSelectablePlanId;
   };
   members?: Array<{
     email: string;

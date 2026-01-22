@@ -8,7 +8,10 @@ import {
   ADMIN_USERS_PAGINATION,
   SORT_DIRECTION_OPTIONS,
 } from '@workspace/contract';
-import type { PlanId } from '@workspace/pricing';
+import type {
+  PlanId, // Used for create invite (includes all plans including sandbox/free)
+  UserSelectablePlanId, // Used for provisioner (excludes admin-only plans)
+} from '@workspace/pricing';
 import { Input } from '@workspace/ui/components/input';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { ArrowDown, ArrowUp, ArrowUpDown, Clock, Search, UserCheck } from 'lucide-react';
@@ -336,9 +339,13 @@ function AdminUsersPageContent() {
     }
   };
 
+  /**
+   * Handle workspace provisioning
+   * Uses UserSelectablePlanId - excludes admin-only plans (sandbox, free)
+   */
   const handleProvision = (data: {
     owner: { email: string; name: string };
-    workspace: { name: string; url: string; plan: PlanId };
+    workspace: { name: string; url: string; plan: UserSelectablePlanId };
     members: Array<{ email: string; name: string; role: 'admin' | 'member' }>;
   }) => {
     provisionMutation.mutate(data, {
@@ -352,6 +359,10 @@ function AdminUsersPageContent() {
     });
   };
 
+  /**
+   * Handle workspace invite creation
+   * Uses PlanId - includes all plans (sandbox, free, user-selectable)
+   */
   const handleCreateInvite = (data: { workspaceUrl: string; plan?: PlanId }) => {
     createInviteMutation.mutate(data, {
       onSuccess: (result) => {

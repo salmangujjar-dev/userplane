@@ -7,6 +7,7 @@ import {
   type AdminNotifyDuration,
   DomainUrlSchema,
   EmailSchema,
+  PLAN_OPTIONS,
 } from '@workspace/contract';
 import { PLAN_IDS, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
@@ -35,7 +36,6 @@ import { z } from 'zod';
 
 import { URLInput } from '@/components/url-input';
 import type { AdminWorkspaceCreateInviteResponse } from '@/hooks/use-admin-workspace-api';
-import { PLAN_OPTIONS } from '@/hooks/use-provision-form';
 
 interface AdminCreateWorkspaceInviteModalProps {
   open: boolean;

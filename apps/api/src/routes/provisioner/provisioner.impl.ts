@@ -3,8 +3,6 @@
  * Implements workspace creation and provisioning
  */
 
-import type { PlanId } from '@workspace/pricing';
-
 import { authorized } from '@/api/middleware/auth.orpc';
 import type { EmailService } from '@/api/services/email.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
@@ -20,16 +18,24 @@ export const createWorkspaceImpl = (
   emailService: EmailService
 ) => {
   return authorized.provisioner.createWorkspace.handler(async ({ input, context }) => {
-    const result = await provisionerService.createWorkspace({
-      url: input.body.type === 'manual' ? input.body.url : undefined,
-      userId: context.user.id,
-      userName: context.user.name,
-      userEmail: context.user.email,
-      inviteToken: input.body.type === 'invite' ? input.body.inviteToken : undefined,
-      plan: input.body.type === 'manual' ? (input.body.plan as PlanId) : undefined,
-    });
+    // Call the appropriate method based on the discriminated union type
+    const result =
+      input.body.type === 'invite'
+        ? await provisionerService.createWorkspaceByInviteToken({
+            inviteToken: input.body.inviteToken,
+            userId: context.user.id,
+            userName: context.user.name,
+            userEmail: context.user.email,
+          })
+        : await provisionerService.createWorkspaceByURL({
+            url: input.body.url,
+            plan: input.body.plan,
+            userId: context.user.id,
+            userName: context.user.name,
+            userEmail: context.user.email,
+          });
 
-    // Send welcome email based on whether invite token was used
+    // Send welcome email based on creation type
     // Only send if workspace was created (not if it already existed)
     if (result.created) {
       if (input.body.type === 'invite') {

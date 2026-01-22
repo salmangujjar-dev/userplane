@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import type { UserSelectablePlanId } from '@workspace/pricing';
+import type { PlanName, UserSelectablePlanId } from '@workspace/pricing';
 
 import { apiClient } from '@/client';
 import {
@@ -20,11 +20,19 @@ type CreateWorkspaceInput =
       inviteToken: string;
     };
 
-interface CreateWorkspaceData {
-  created: boolean;
-  workspaceId?: string;
-  workspaceName?: string;
-}
+type CreateWorkspaceData =
+  | {
+      created: false;
+      workspaceUrl?: string;
+      workspacePlan?: UserSelectablePlanId;
+      planName?: PlanName;
+      planCycle?: 'monthly' | 'annual';
+    }
+  | {
+      created: true;
+      workspaceId: string;
+      workspaceName: string;
+    };
 
 /**
  * Hook to create a new workspace

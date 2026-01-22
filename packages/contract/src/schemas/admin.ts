@@ -1,4 +1,4 @@
-import { PLAN_IDS } from '@workspace/pricing';
+import { PLAN_IDS, USER_SELECTABLE_PLAN_IDS } from '@workspace/pricing';
 import { z } from 'zod';
 
 import {
@@ -669,6 +669,7 @@ export const AdminProvisionMemberSchema = z.object({
 
 /**
  * Admin provision workspace input
+ * Plan is required and must be user-selectable (no admin-only plans like sandbox/free)
  */
 export const AdminProvisionWorkspaceInputSchema = z.object({
   body: z.object({
@@ -679,7 +680,7 @@ export const AdminProvisionWorkspaceInputSchema = z.object({
     workspace: z.object({
       name: z.string().min(1, 'Workspace name is required').max(255),
       url: z.string().url('Invalid URL'),
-      plan: z.enum(PLAN_IDS).optional().default('starter_monthly'),
+      plan: z.enum(USER_SELECTABLE_PLAN_IDS),
     }),
     members: z.array(AdminProvisionMemberSchema).optional().default([]),
   }),
