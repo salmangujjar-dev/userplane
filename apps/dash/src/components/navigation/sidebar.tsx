@@ -1,6 +1,6 @@
 'use client';
 
-import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
+import { DEFAULT_PLAN_NAME, type PlanName } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
   DropdownMenu,
@@ -30,6 +30,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { PlanUpgradeModal } from '@/components/modals/plan-upgrade-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { SidebarProjectsSkeleton } from '@/components/skeleton';
 import { useAccount } from '@/hooks/use-account';
@@ -59,6 +60,7 @@ export function Sidebar() {
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { data: accountResult } = useAccount();
   const [projectsPage, setProjectsPage] = useState(1);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects({
     perPage: SIDEBAR_PROJECTS_PER_PAGE,
     page: projectsPage,
@@ -106,11 +108,22 @@ export function Sidebar() {
           <Link href={`/${workspaceId}/recordings`}>
             <Logo size="sm" />
           </Link>
-          <Badge variant="secondary" className="rounded-md text-xs">
-            {workspace?.workspace.workspacePlanName || DEFAULT_PLAN_NAME}
-          </Badge>
+          <button onClick={() => setIsPlanModalOpen(true)}>
+            <Badge
+              variant="secondary"
+              className="rounded-md text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
+            >
+              {workspace?.workspace.workspacePlanName || DEFAULT_PLAN_NAME}
+            </Badge>
+          </button>
         </div>
       </div>
+
+      <PlanUpgradeModal
+        open={isPlanModalOpen}
+        onOpenChange={setIsPlanModalOpen}
+        currentPlanName={(workspace?.workspace.workspacePlanName || DEFAULT_PLAN_NAME) as PlanName}
+      />
 
       <nav className="flex-1 overflow-y-auto">
         <div className="px-6 space-y-6">

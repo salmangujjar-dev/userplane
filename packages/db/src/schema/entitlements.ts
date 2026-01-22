@@ -1,3 +1,4 @@
+import { RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 import { relations } from 'drizzle-orm';
 import {
   boolean,
@@ -9,7 +10,6 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
-import { RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 import { workspaces } from './workspaces';
 
 export const resourceTypeEnum = pgEnum('resource_type', RESOURCE_TYPE_VALUES);

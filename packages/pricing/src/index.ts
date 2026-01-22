@@ -275,13 +275,429 @@ export interface PlanDetails {
 }
 
 /**
- * Plan feature with optional sub-features
+ * Plan feature with optional sub-features (legacy format for homepage)
  */
 export interface PlanFeature {
   text: string;
   included?: boolean;
   subFeatures?: PlanFeature[];
 }
+
+// ============================================================================
+// Category-based Feature System
+// ============================================================================
+
+/**
+ * Feature categories for pricing comparison
+ */
+export const FEATURE_CATEGORIES = [
+  'workspace',
+  'screenRecordings',
+  'screenshotsFiles',
+  'logsDebugging',
+  'customization',
+  'privacyCompliance',
+  'integrations',
+  'support',
+] as const;
+export type FeatureCategory = (typeof FEATURE_CATEGORIES)[number];
+
+/**
+ * Human-readable category labels
+ */
+export const FEATURE_CATEGORY_LABELS: Record<FeatureCategory, string> = {
+  workspace: 'Workspace',
+  screenRecordings: 'Screen Recordings',
+  screenshotsFiles: 'Screenshots & Files',
+  logsDebugging: 'Logs & Debugging',
+  customization: 'Customization',
+  privacyCompliance: 'Privacy & Compliance',
+  integrations: 'Integrations',
+  support: 'Support',
+};
+
+/**
+ * Feature value can be boolean (included/not), string (limit text), or number
+ */
+export type FeatureValue = boolean | string | number;
+
+/**
+ * Single feature item within a category
+ */
+export interface CategoryFeatureItem {
+  name: string;
+  key: string;
+  tooltip?: string;
+}
+
+/**
+ * Feature values for a specific plan within a category
+ */
+export type PlanCategoryFeatures = Record<string, FeatureValue>;
+
+/**
+ * All category features for a plan
+ */
+export type PlanAllCategoryFeatures = Record<FeatureCategory, PlanCategoryFeatures>;
+
+/**
+ * Feature definitions for each category
+ */
+export const CATEGORY_FEATURE_DEFINITIONS: Record<FeatureCategory, CategoryFeatureItem[]> = {
+  workspace: [
+    { name: 'Seats included', key: 'seatsIncluded' },
+    { name: 'Maximum seats', key: 'maxSeats' },
+    { name: 'Request additional seats', key: 'additionalSeats' },
+  ],
+  screenRecordings: [
+    { name: 'Recording links', key: 'recordingLinks' },
+    { name: 'Recordings per month', key: 'recordingsPerMonth' },
+    { name: 'Replay recordings', key: 'replayRecordings' },
+    { name: 'Auto-blur sensitive data', key: 'autoBlur' },
+  ],
+  screenshotsFiles: [
+    { name: 'Screenshots', key: 'screenshots' },
+    { name: 'Screenshot annotation', key: 'screenshotAnnotation' },
+    { name: 'File uploads', key: 'fileUploads' },
+    { name: 'Max per file size', key: 'maxFileSize' },
+    { name: 'Bring your own storage (BYOS)', key: 'byos' },
+  ],
+  logsDebugging: [
+    { name: 'Console logs', key: 'consoleLogs' },
+    { name: 'Network activity', key: 'networkActivity' },
+    { name: 'Server-side logs', key: 'serverLogs' },
+    { name: 'User action replay', key: 'actionReplay' },
+  ],
+  customization: [
+    { name: 'Custom logo', key: 'customLogo' },
+    { name: 'Remove Userplane branding', key: 'removeBranding' },
+  ],
+  privacyCompliance: [
+    { name: 'Auto-blur sensitive data', key: 'autoBlurPrivacy' },
+    { name: 'Enterprise-grade compliance', key: 'enterpriseCompliance' },
+    { name: 'Custom data retention', key: 'customRetention' },
+    { name: 'Data residency (US/EU)', key: 'dataResidency' },
+  ],
+  integrations: [
+    { name: 'Helpdesks (Intercom, Zendesk)', key: 'helpdesks' },
+    { name: 'CRMs (Salesforce, HubSpot)', key: 'crms' },
+    { name: 'Issue trackers (Jira, Linear)', key: 'issueTrackers' },
+    { name: 'Automation (Zapier, n8n)', key: 'automation' },
+    { name: 'API access', key: 'apiAccess' },
+  ],
+  support: [
+    { name: 'Email support', key: 'emailSupport' },
+    { name: 'Priority support', key: 'prioritySupport' },
+    { name: 'Dedicated support', key: 'dedicatedSupport' },
+  ],
+};
+
+/**
+ * Category features for Essential plan
+ */
+const ESSENTIAL_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
+  workspace: {
+    seatsIncluded: 'Up to 5',
+    maxSeats: 'Up to 15',
+    additionalSeats: true,
+  },
+  screenRecordings: {
+    recordingLinks: 'Unlimited',
+    recordingsPerMonth: '25',
+    replayRecordings: true,
+    autoBlur: true,
+  },
+  screenshotsFiles: {
+    screenshots: 'Unlimited',
+    screenshotAnnotation: true,
+    fileUploads: false,
+    maxFileSize: '-',
+    byos: false,
+  },
+  logsDebugging: {
+    consoleLogs: false,
+    networkActivity: false,
+    serverLogs: false,
+    actionReplay: false,
+  },
+  customization: {
+    customLogo: false,
+    removeBranding: false,
+  },
+  privacyCompliance: {
+    autoBlurPrivacy: true,
+    enterpriseCompliance: true,
+    customRetention: true,
+    dataResidency: false,
+  },
+  integrations: {
+    helpdesks: true,
+    crms: true,
+    issueTrackers: true,
+    automation: true,
+    apiAccess: true,
+  },
+  support: {
+    emailSupport: true,
+    prioritySupport: false,
+    dedicatedSupport: false,
+  },
+};
+
+/**
+ * Category features for Starter plan
+ */
+const STARTER_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
+  workspace: {
+    seatsIncluded: 'Up to 10',
+    maxSeats: 'Up to 20',
+    additionalSeats: true,
+  },
+  screenRecordings: {
+    recordingLinks: 'Unlimited',
+    recordingsPerMonth: 'Unlimited',
+    replayRecordings: true,
+    autoBlur: true,
+  },
+  screenshotsFiles: {
+    screenshots: 'Unlimited',
+    screenshotAnnotation: true,
+    fileUploads: true,
+    maxFileSize: '100 GB',
+    byos: true,
+  },
+  logsDebugging: {
+    consoleLogs: true,
+    networkActivity: true,
+    serverLogs: false,
+    actionReplay: true,
+  },
+  customization: {
+    customLogo: true,
+    removeBranding: true,
+  },
+  privacyCompliance: {
+    autoBlurPrivacy: true,
+    enterpriseCompliance: true,
+    customRetention: true,
+    dataResidency: false,
+  },
+  integrations: {
+    helpdesks: true,
+    crms: true,
+    issueTrackers: true,
+    automation: true,
+    apiAccess: true,
+  },
+  support: {
+    emailSupport: true,
+    prioritySupport: false,
+    dedicatedSupport: false,
+  },
+};
+
+/**
+ * Category features for Scale Up plan
+ */
+const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
+  workspace: {
+    seatsIncluded: 'Up to 15',
+    maxSeats: 'Up to 30',
+    additionalSeats: true,
+  },
+  screenRecordings: {
+    recordingLinks: 'Unlimited',
+    recordingsPerMonth: 'Unlimited',
+    replayRecordings: true,
+    autoBlur: true,
+  },
+  screenshotsFiles: {
+    screenshots: 'Unlimited',
+    screenshotAnnotation: true,
+    fileUploads: true,
+    maxFileSize: '100 GB',
+    byos: true,
+  },
+  logsDebugging: {
+    consoleLogs: true,
+    networkActivity: true,
+    serverLogs: true,
+    actionReplay: true,
+  },
+  customization: {
+    customLogo: true,
+    removeBranding: true,
+  },
+  privacyCompliance: {
+    autoBlurPrivacy: true,
+    enterpriseCompliance: true,
+    customRetention: true,
+    dataResidency: false,
+  },
+  integrations: {
+    helpdesks: true,
+    crms: true,
+    issueTrackers: true,
+    automation: true,
+    apiAccess: true,
+  },
+  support: {
+    emailSupport: true,
+    prioritySupport: true,
+    dedicatedSupport: false,
+  },
+};
+
+/**
+ * Category features for Enterprise plan
+ */
+const ENTERPRISE_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
+  workspace: {
+    seatsIncluded: 'Up to 30',
+    maxSeats: 'Up to 45',
+    additionalSeats: true,
+  },
+  screenRecordings: {
+    recordingLinks: 'Unlimited',
+    recordingsPerMonth: 'Unlimited',
+    replayRecordings: true,
+    autoBlur: true,
+  },
+  screenshotsFiles: {
+    screenshots: 'Unlimited',
+    screenshotAnnotation: true,
+    fileUploads: true,
+    maxFileSize: '100 GB',
+    byos: true,
+  },
+  logsDebugging: {
+    consoleLogs: true,
+    networkActivity: true,
+    serverLogs: true,
+    actionReplay: true,
+  },
+  customization: {
+    customLogo: true,
+    removeBranding: true,
+  },
+  privacyCompliance: {
+    autoBlurPrivacy: true,
+    enterpriseCompliance: true,
+    customRetention: true,
+    dataResidency: true,
+  },
+  integrations: {
+    helpdesks: true,
+    crms: true,
+    issueTrackers: true,
+    automation: true,
+    apiAccess: true,
+  },
+  support: {
+    emailSupport: true,
+    prioritySupport: true,
+    dedicatedSupport: true,
+  },
+};
+
+/**
+ * Category features by plan name
+ */
+export const PLAN_CATEGORY_FEATURES: Record<string, PlanAllCategoryFeatures> = {
+  Essential: ESSENTIAL_CATEGORY_FEATURES,
+  Starter: STARTER_CATEGORY_FEATURES,
+  'Scale Up': SCALE_UP_CATEGORY_FEATURES,
+  Enterprise: ENTERPRISE_CATEGORY_FEATURES,
+};
+
+/**
+ * Get category features for a plan
+ */
+export function getPlanCategoryFeatures(planName: string): PlanAllCategoryFeatures | undefined {
+  return PLAN_CATEGORY_FEATURES[planName];
+}
+
+/**
+ * Plan card highlights (short feature list for cards)
+ */
+export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
+  Essential: [
+    'Up to 15 seats in workspace',
+    'Up to 25 recordings per month',
+    'Request unlimited screenshots',
+    'Basic integrations',
+  ],
+  Starter: [
+    'Up to 20 seats in workspace',
+    'Request unlimited recordings',
+    'Capture console logs',
+    'Custom branding',
+    'File uploads (100GB)',
+    'Everything in Essential',
+  ],
+  'Scale Up': [
+    'Up to 30 seats in workspace',
+    'Request unlimited recordings',
+    'Capture console logs',
+    'Capture server logs',
+    'Priority support',
+    'Advanced integrations',
+    'Everything in Starter',
+  ],
+  Enterprise: [
+    'Unlimited seats in workspace',
+    'Request unlimited recordings',
+    'Capture console logs',
+    'Bring your own storage (BYOS)',
+    'Data residency (US/EU)',
+    'Dedicated support',
+    'Everything in Scale Up',
+  ],
+};
+
+// ============================================================================
+// Legacy Feature System (for homepage pricing section)
+// ============================================================================
+
+/**
+ * Features for Early Bird plan (homepage display)
+ */
+const EARLY_BIRD_FEATURES: PlanFeature[] = [
+  {
+    text: 'Unlimited Screen Recordings',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Request unlimited recordings to spot and solve issues',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Replay Customer Issues',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Know exactly what happened, without the back and forth',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Redact Confidential Data',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Mask confidential fields and sensitive data from recordings',
+        included: true,
+      },
+    ],
+  },
+];
+
+// ============================================================================
+// Base Pricing Plans
+// ============================================================================
 
 /**
  * Base pricing plan structure (without CTA URLs)
@@ -292,6 +708,7 @@ export interface BasePricingPlan {
   description: string;
   details: PlanDetails;
   features: PlanFeature[];
+  categoryFeatures?: PlanAllCategoryFeatures;
   isPopular?: boolean;
   isEnterprise?: boolean;
 }
@@ -356,577 +773,9 @@ export const ADDITIONAL_SEATS_OPTIONS: SeatsOption[] = [
 export const SALES_FORM_URL = 'https://tally.so/r/xXX7Er';
 
 /**
- * Features for Sandbox plan
- * Free tier for testing and evaluation
- */
-const SANDBOX_FEATURES: PlanFeature[] = [
-  {
-    text: 'Request Screen Recordings',
-    included: true,
-    subFeatures: [
-      { text: 'Create unlimited recording links to capture customer issues', included: true },
-      { text: 'Request screen recordings to spot and solve issues', included: true },
-      { text: 'Replay customer issues without the back and forth', included: true },
-      { text: 'Auto-blur sensitive fields and associated data', included: true },
-    ],
-  },
-  {
-    text: 'Up to 20 members per workspace',
-    included: true,
-    subFeatures: [
-      { text: '20 seats included per month', included: true },
-      { text: 'Request additional seats', included: true },
-    ],
-  },
-  {
-    text: 'Capture console & network logs',
-    included: true,
-    subFeatures: [
-      { text: 'Capture browser logs', included: true },
-      { text: 'Capture network activity', included: true },
-      { text: 'Replay user actions', included: true },
-      { text: 'Hide sensitive data', included: true },
-    ],
-  },
-  {
-    text: 'Request Screenshots & Files',
-    included: true,
-    subFeatures: [
-      { text: 'Request unlimited screenshots to understand customer issues', included: true },
-      { text: 'Annotate, blur or mask sensitive data in incoming screenshots', included: true },
-      { text: 'Request unlimited files from customers into your workspace', included: false },
-      { text: 'Accept upto 100 GB per file', included: false },
-      {
-        text: 'Bring your own storage (BYOS) with encrypted storage credentials (AWS KMS)',
-        included: false,
-      },
-    ],
-  },
-  {
-    text: 'Customize Recording Links',
-    included: true,
-    subFeatures: [
-      { text: 'Customize with your logo', included: true },
-      { text: 'Remove userplane branding', included: true },
-    ],
-  },
-  {
-    text: 'Privacy & compliance',
-    included: true,
-    subFeatures: [
-      { text: 'Auto-blur sensitive data', included: true },
-      { text: 'Enterprise-grade compliance', included: true },
-      { text: 'Custom data retention policy', included: true },
-      { text: 'Bring your own storage (BYOS)', included: false },
-      { text: 'Data Residency Controls (US/EU)', included: false },
-    ],
-  },
-  {
-    text: 'Workspace Integrations',
-    included: true,
-    subFeatures: [
-      { text: 'Integrate with Helpdesks such as Intercom, Zendesk and more', included: true },
-      { text: 'Integrate with CRMs such as Salesforce, Hubspot and more', included: true },
-      { text: 'Integrate with issue trackers such as Jira, Linear and more', included: true },
-      {
-        text: 'Integrate with workflow automation tools such as Zapier, n8n and more',
-        included: true,
-      },
-      { text: 'Custom integrations and API access', included: true },
-    ],
-  },
-];
-
-/**
- * Features for Essential plan
- * Entry-level paid plan for small teams
- */
-const ESSENTIAL_FEATURES: PlanFeature[] = [
-  {
-    text: 'Request Screen Recordings',
-    included: true,
-    subFeatures: [
-      { text: 'Create unlimited recording links to capture customer issues', included: true },
-      {
-        text: 'Request upto 25 screen recordings per month to spot and solve issues',
-        included: true,
-      },
-      { text: 'Replay customer issues without the back and forth', included: true },
-      { text: 'Auto-blur sensitive fields and associated data', included: true },
-    ],
-  },
-  {
-    text: 'Up to 15 members per workspace',
-    included: true,
-    subFeatures: [
-      { text: '5 seats included per month', included: true },
-      { text: 'Request additional seats', included: true },
-    ],
-  },
-  {
-    text: 'Capture console & network logs',
-    included: false,
-    subFeatures: [
-      { text: 'Capture browser logs', included: false },
-      { text: 'Capture network activity', included: false },
-      { text: 'Capture server-side logs', included: false },
-      { text: 'Replay user actions', included: false },
-    ],
-  },
-  {
-    text: 'Request Screenshots & Files',
-    included: true,
-    subFeatures: [
-      { text: 'Request unlimited screenshots to understand customer issues', included: true },
-      { text: 'Annotate, blur or mask sensitive data in incoming screenshots', included: true },
-      { text: 'Request unlimited files from customers into your workspace', included: false },
-      { text: 'Accept upto 100 GB per file', included: false },
-      {
-        text: 'Bring your own storage (BYOS) with encrypted storage credentials (AWS KMS)',
-        included: false,
-      },
-    ],
-  },
-  {
-    text: 'Customize Recording Links',
-    included: false,
-    subFeatures: [
-      { text: 'Customize with your logo', included: false },
-      { text: 'Remove userplane branding', included: false },
-    ],
-  },
-  {
-    text: 'Privacy & compliance',
-    included: false,
-    subFeatures: [
-      { text: 'Auto-blur sensitive data', included: true },
-      { text: 'Enterprise-grade compliance', included: true },
-      { text: 'Custom data retention policy', included: true },
-      { text: 'Bring your own storage (BYOS)', included: false },
-      { text: 'Data Residency Controls (US/EU)', included: false },
-    ],
-  },
-  {
-    text: 'Workspace Integrations',
-    included: true,
-    subFeatures: [
-      { text: 'Integrate with Helpdesks such as Intercom, Zendesk and more', included: true },
-      { text: 'Integrate with CRMs such as Salesforce, Hubspot and more', included: true },
-      { text: 'Integrate with issue trackers such as Jira, Linear and more', included: true },
-      {
-        text: 'Integrate with workflow automation tools such as Zapier, n8n and more',
-        included: true,
-      },
-      { text: 'Custom integrations and API access', included: true },
-    ],
-  },
-];
-
-/**
- * Features for Starter plan
- * For growing teams with more recording needs
- */
-const STARTER_FEATURES: PlanFeature[] = [
-  {
-    text: 'Request Screen Recordings',
-    included: true,
-    subFeatures: [
-      { text: 'Create unlimited recording links to capture customer issues', included: true },
-      {
-        text: 'Request unlimited screen recordings per month to spot and solve issues',
-        included: true,
-      },
-      { text: 'Replay customer issues without the back and forth', included: true },
-      { text: 'Auto-blur sensitive fields and associated data', included: true },
-    ],
-  },
-  {
-    text: 'Up to 20 members per workspace',
-    included: true,
-    subFeatures: [
-      { text: '10 seats included per month', included: true },
-      { text: 'Request additional seats', included: true },
-    ],
-  },
-  {
-    text: 'Capture console & network logs',
-    included: true,
-    subFeatures: [
-      { text: 'Capture browser logs', included: true },
-      { text: 'Capture network activity', included: true },
-      { text: 'Capture server-side logs', included: false },
-      { text: 'Replay user actions', included: true },
-    ],
-  },
-  {
-    text: 'Request Screenshots & Files',
-    included: true,
-    subFeatures: [
-      { text: 'Request unlimited screenshots to understand customer issues', included: true },
-      { text: 'Annotate, blur or mask sensitive data in incoming screenshots', included: true },
-      { text: 'Request unlimited files from customers into your workspace', included: true },
-      { text: 'Accept upto 100 GB per file', included: true },
-      {
-        text: 'Bring your own storage (BYOS) with encrypted storage credentials (AWS KMS)',
-        included: true,
-      },
-    ],
-  },
-  {
-    text: 'Customize Recording Links',
-    included: true,
-    subFeatures: [
-      { text: 'Customize with your logo', included: true },
-      { text: 'Remove userplane branding', included: true },
-    ],
-  },
-  {
-    text: 'Privacy & compliance',
-    included: false,
-    subFeatures: [
-      { text: 'Auto-blur sensitive data', included: true },
-      { text: 'Enterprise-grade compliance', included: true },
-      { text: 'Custom data retention policy', included: true },
-      { text: 'Bring your own storage (BYOS)', included: false },
-      { text: 'Data Residency Controls (US/EU)', included: false },
-    ],
-  },
-  {
-    text: 'Workspace Integrations',
-    included: true,
-    subFeatures: [
-      { text: 'Integrate with Helpdesks such as Intercom, Zendesk and more', included: true },
-      { text: 'Integrate with CRMs such as Salesforce, Hubspot and more', included: true },
-      { text: 'Integrate with issue trackers such as Jira, Linear and more', included: true },
-      {
-        text: 'Integrate with workflow automation tools such as Zapier, n8n and more',
-        included: true,
-      },
-      { text: 'Custom integrations and API access', included: true },
-    ],
-  },
-];
-
-/**
- * Features for Scale Up plan
- * For larger teams with advanced needs
- */
-const SCALE_UP_FEATURES: PlanFeature[] = [
-  {
-    text: 'Request Screen Recordings',
-    included: true,
-    subFeatures: [
-      { text: 'Create unlimited recording links to capture customer issues', included: true },
-      {
-        text: 'Request unlimited screen recordings per month to spot and solve issues',
-        included: true,
-      },
-      { text: 'Replay customer issues without the back and forth', included: true },
-      { text: 'Auto-blur sensitive fields and associated data', included: true },
-    ],
-  },
-  {
-    text: 'Up to 30 members per workspace',
-    included: true,
-    subFeatures: [
-      { text: '15 seats included per month', included: true },
-      { text: 'Request additional seats', included: true },
-    ],
-  },
-  {
-    text: 'Capture console & network logs',
-    included: true,
-    subFeatures: [
-      { text: 'Capture browser logs', included: true },
-      { text: 'Capture network activity', included: true },
-      { text: 'Capture server-side logs', included: true },
-      { text: 'Replay user actions', included: true },
-    ],
-  },
-  {
-    text: 'Request Screenshots & Files',
-    included: true,
-    subFeatures: [
-      { text: 'Request unlimited screenshots to understand customer issues', included: true },
-      { text: 'Annotate, blur or mask sensitive data in incoming screenshots', included: true },
-      { text: 'Request unlimited files from customers into your workspace', included: true },
-      { text: 'Accept upto 100 GB per file', included: true },
-      {
-        text: 'Bring your own storage (BYOS) with encrypted storage credentials (AWS KMS)',
-        included: true,
-      },
-    ],
-  },
-  {
-    text: 'Customize Recording Links',
-    included: true,
-    subFeatures: [
-      { text: 'Customize with your logo', included: true },
-      { text: 'Remove userplane branding', included: true },
-    ],
-  },
-  {
-    text: 'Privacy & compliance',
-    included: false,
-    subFeatures: [
-      { text: 'Auto-blur sensitive data', included: true },
-      { text: 'Enterprise-grade compliance', included: true },
-      { text: 'Custom data retention policy', included: true },
-      { text: 'Bring your own storage (BYOS)', included: false },
-      { text: 'Data Residency Controls (US/EU)', included: false },
-    ],
-  },
-  {
-    text: 'Workspace Integrations',
-    included: true,
-    subFeatures: [
-      { text: 'Integrate with Helpdesks such as Intercom, Zendesk and more', included: true },
-      { text: 'Integrate with CRMs such as Salesforce, Hubspot and more', included: true },
-      { text: 'Integrate with issue trackers such as Jira, Linear and more', included: true },
-      {
-        text: 'Integrate with workflow automation tools such as Zapier, n8n and more',
-        included: true,
-      },
-      { text: 'Custom integrations and API access', included: true },
-    ],
-  },
-];
-
-/**
- * Features for Trial plan
- * Limited free tier for evaluation
- */
-const TRIAL_FEATURES: PlanFeature[] = [
-  {
-    text: 'Request Screen Recordings',
-    included: true,
-    subFeatures: [
-      { text: 'Create unlimited recording links to capture customer issues', included: true },
-      {
-        text: 'Request upto 3 screen recordings per month to spot and solve issues',
-        included: true,
-      },
-      { text: 'Replay customer issues without the back and forth', included: true },
-      { text: 'Auto-blur sensitive fields and associated data', included: true },
-    ],
-  },
-  {
-    text: 'Up to 15 members per workspace',
-    included: true,
-    subFeatures: [
-      { text: '5 seats included per month', included: true },
-      { text: 'Request additional seats', included: true },
-    ],
-  },
-  {
-    text: 'Capture console & network logs',
-    included: false,
-    subFeatures: [
-      { text: 'Capture browser logs', included: false },
-      { text: 'Capture network activity', included: false },
-      { text: 'Capture server-side logs', included: false },
-      { text: 'Replay user actions', included: false },
-    ],
-  },
-  {
-    text: 'Request Screenshots & Files',
-    included: true,
-    subFeatures: [
-      { text: 'Request unlimited screenshots to understand customer issues', included: true },
-      { text: 'Annotate, blur or mask sensitive data in incoming screenshots', included: true },
-      { text: 'Request unlimited files from customers into your workspace', included: false },
-      { text: 'Accept upto 100 GB per file', included: false },
-      {
-        text: 'Bring your own storage (BYOS) with encrypted storage credentials (AWS KMS)',
-        included: false,
-      },
-    ],
-  },
-  {
-    text: 'Customize Recording Links',
-    included: true,
-    subFeatures: [
-      { text: 'Customize with your logo', included: true },
-      { text: 'Remove userplane branding', included: true },
-    ],
-  },
-  {
-    text: 'Privacy & compliance',
-    included: true,
-    subFeatures: [
-      { text: 'Auto-blur sensitive data', included: true },
-      { text: 'Enterprise-grade compliance', included: true },
-      { text: 'Custom data retention policy', included: true },
-      { text: 'Bring your own storage (BYOS)', included: false },
-      { text: 'Data Residency Controls (US/EU)', included: false },
-    ],
-  },
-  {
-    text: 'Workspace Integrations',
-    included: true,
-    subFeatures: [
-      { text: 'Integrate with Helpdesks such as Intercom, Zendesk and more', included: true },
-      { text: 'Integrate with CRMs such as Salesforce, Hubspot and more', included: true },
-      { text: 'Integrate with issue trackers such as Jira, Linear and more', included: true },
-      {
-        text: 'Integrate with workflow automation tools such as Zapier, n8n and more',
-        included: true,
-      },
-      { text: 'Custom integrations and API access', included: true },
-    ],
-  },
-];
-
-/**
- * Features for Enterprise plan
- * Full-featured plan for large organizations
- */
-const ENTERPRISE_FEATURES: PlanFeature[] = [
-  {
-    text: 'Request Screen Recordings',
-    included: true,
-    subFeatures: [
-      { text: 'Create unlimited recording links to capture customer issues', included: true },
-      {
-        text: 'Request unlimited screen recordings per month to spot and solve issues',
-        included: true,
-      },
-      { text: 'Replay customer issues without the back and forth', included: true },
-      { text: 'Auto-blur sensitive fields and associated data', included: true },
-    ],
-  },
-  {
-    text: 'Up to 45 members per workspace',
-    included: true,
-    subFeatures: [
-      { text: '30 seats included per month', included: true },
-      { text: 'Request additional seats', included: true },
-    ],
-  },
-  {
-    text: 'Capture console & network logs',
-    included: true,
-    subFeatures: [
-      { text: 'Capture browser logs', included: true },
-      { text: 'Capture network activity', included: true },
-      { text: 'Capture server-side logs', included: true },
-      { text: 'Replay user actions', included: true },
-    ],
-  },
-  {
-    text: 'Request Screenshots & Files',
-    included: true,
-    subFeatures: [
-      { text: 'Request unlimited screenshots to understand customer issues', included: true },
-      { text: 'Annotate, blur or mask sensitive data in incoming screenshots', included: true },
-      { text: 'Request unlimited files from customers into your workspace', included: true },
-      { text: 'Accept upto 100 GB per file', included: true },
-      {
-        text: 'Bring your own storage (BYOS) with encrypted storage credentials (AWS KMS)',
-        included: true,
-      },
-    ],
-  },
-  {
-    text: 'Customize Recording Links',
-    included: true,
-    subFeatures: [
-      { text: 'Customize with your logo', included: true },
-      { text: 'Remove userplane branding', included: true },
-    ],
-  },
-  {
-    text: 'Privacy & compliance',
-    included: true,
-    subFeatures: [
-      { text: 'Auto-blur sensitive data', included: true },
-      { text: 'Enterprise-grade compliance', included: true },
-      { text: 'Custom data retention policy', included: true },
-      { text: 'Bring your own storage (BYOS)', included: true },
-      { text: 'Data Residency Controls (US/EU)', included: true },
-    ],
-  },
-  {
-    text: 'Workspace Integrations',
-    included: true,
-    subFeatures: [
-      { text: 'Integrate with Helpdesks such as Intercom, Zendesk and more', included: true },
-      { text: 'Integrate with CRMs such as Salesforce, Hubspot and more', included: true },
-      { text: 'Integrate with issue trackers such as Jira, Linear and more', included: true },
-      {
-        text: 'Integrate with workflow automation tools such as Zapier, n8n and more',
-        included: true,
-      },
-      { text: 'Custom integrations and API access', included: true },
-    ],
-  },
-];
-
-/**
- * Features for Early Bird plan
- * Legacy plan for early customers (displayed on home page)
- */
-const EARLY_BIRD_FEATURES: PlanFeature[] = [
-  {
-    text: 'Unlimited Screen Recordings',
-    included: true,
-    subFeatures: [
-      {
-        text: 'Request unlimited recordings to spot and solve issues',
-        included: true,
-      },
-    ],
-  },
-  {
-    text: 'Replay Customer Issues',
-    included: true,
-    subFeatures: [
-      {
-        text: 'Know exactly what happened, without the back and forth',
-        included: true,
-      },
-    ],
-  },
-  {
-    text: 'Redact Confidential Data',
-    included: true,
-    subFeatures: [
-      {
-        text: 'Mask confidential fields and sensitive data from recordings',
-        included: true,
-      },
-    ],
-  },
-];
-
-/**
  * All pricing plans with monthly and annual variants
  */
 export const BASE_PRICING_PLANS: BasePricingPlan[] = [
-  // Sandbox Monthly
-  {
-    id: 'sandbox_monthly',
-    name: 'Sandbox',
-    description: 'Free tier for testing and evaluation',
-    details: {
-      planType: 'one_time',
-      planRate: 0,
-      planCycle: 'monthly',
-    },
-    features: SANDBOX_FEATURES,
-  },
-  // Sandbox Annual
-  {
-    id: 'sandbox_annual',
-    name: 'Sandbox',
-    description: 'Free tier for testing and evaluation',
-    details: {
-      planType: 'one_time',
-      planRate: 0,
-      planCycle: 'annual',
-    },
-    features: SANDBOX_FEATURES,
-  },
   // Essential Monthly
   {
     id: 'essential_monthly',
@@ -937,7 +786,8 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 59,
       planCycle: 'monthly',
     },
-    features: ESSENTIAL_FEATURES,
+    features: [],
+    categoryFeatures: ESSENTIAL_CATEGORY_FEATURES,
   },
   // Essential Annual
   {
@@ -949,7 +799,8 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 47,
       planCycle: 'annual',
     },
-    features: ESSENTIAL_FEATURES,
+    features: [],
+    categoryFeatures: ESSENTIAL_CATEGORY_FEATURES,
   },
   // Starter Monthly
   {
@@ -961,7 +812,8 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 99,
       planCycle: 'monthly',
     },
-    features: STARTER_FEATURES,
+    features: [],
+    categoryFeatures: STARTER_CATEGORY_FEATURES,
   },
   // Starter Annual
   {
@@ -973,7 +825,8 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 79,
       planCycle: 'annual',
     },
-    features: STARTER_FEATURES,
+    features: [],
+    categoryFeatures: STARTER_CATEGORY_FEATURES,
   },
   // Scale Up Monthly
   {
@@ -985,7 +838,8 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 249,
       planCycle: 'monthly',
     },
-    features: SCALE_UP_FEATURES,
+    features: [],
+    categoryFeatures: SCALE_UP_CATEGORY_FEATURES,
     isPopular: true,
   },
   // Scale Up Annual
@@ -998,8 +852,37 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 199,
       planCycle: 'annual',
     },
-    features: SCALE_UP_FEATURES,
+    features: [],
+    categoryFeatures: SCALE_UP_CATEGORY_FEATURES,
     isPopular: true,
+  },
+  // Enterprise Monthly
+  {
+    id: 'enterprise_monthly',
+    name: 'Enterprise',
+    description: 'For large teams and organizations',
+    details: {
+      planType: 'custom',
+      planRate: null,
+      planCycle: 'monthly',
+    },
+    features: [],
+    categoryFeatures: ENTERPRISE_CATEGORY_FEATURES,
+    isEnterprise: true,
+  },
+  // Enterprise Annual
+  {
+    id: 'enterprise_annual',
+    name: 'Enterprise',
+    description: 'For large teams and organizations',
+    details: {
+      planType: 'custom',
+      planRate: null,
+      planCycle: 'annual',
+    },
+    features: [],
+    categoryFeatures: ENTERPRISE_CATEGORY_FEATURES,
+    isEnterprise: true,
   },
   // Trial Monthly
   {
@@ -1011,7 +894,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 0,
       planCycle: 'monthly',
     },
-    features: TRIAL_FEATURES,
+    features: [],
   },
   // Trial Annual
   {
@@ -1023,35 +906,33 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 0,
       planCycle: 'annual',
     },
-    features: TRIAL_FEATURES,
+    features: [],
   },
-  // Enterprise Monthly
+  // Sandbox Monthly
   {
-    id: 'enterprise_monthly',
-    name: 'Enterprise',
-    description: 'For large teams and organizations',
+    id: 'sandbox_monthly',
+    name: 'Sandbox',
+    description: 'Free tier for testing and evaluation',
     details: {
-      planType: 'subscription',
-      planRate: 650,
+      planType: 'one_time',
+      planRate: 0,
       planCycle: 'monthly',
     },
-    features: ENTERPRISE_FEATURES,
-    isEnterprise: true,
+    features: [],
   },
-  // Enterprise Annual
+  // Sandbox Annual
   {
-    id: 'enterprise_annual',
-    name: 'Enterprise',
-    description: 'For large teams and organizations',
+    id: 'sandbox_annual',
+    name: 'Sandbox',
+    description: 'Free tier for testing and evaluation',
     details: {
-      planType: 'subscription',
-      planRate: 520,
+      planType: 'one_time',
+      planRate: 0,
       planCycle: 'annual',
     },
-    features: ENTERPRISE_FEATURES,
-    isEnterprise: true,
+    features: [],
   },
-  // Early Bird Monthly
+  // Early Bird Monthly (legacy for homepage)
   {
     id: 'early_bird_monthly',
     name: 'Early Bird',
@@ -1063,7 +944,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
     },
     features: EARLY_BIRD_FEATURES,
   },
-  // Early Bird Annual
+  // Early Bird Annual (legacy for homepage)
   {
     id: 'early_bird_annual',
     name: 'Early Bird',
