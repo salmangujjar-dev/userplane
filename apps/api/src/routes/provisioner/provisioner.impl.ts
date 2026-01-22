@@ -3,6 +3,8 @@
  * Implements workspace creation and provisioning
  */
 
+import type { PlanId } from '@workspace/pricing';
+
 import { authorized } from '@/api/middleware/auth.orpc';
 import type { EmailService } from '@/api/services/email.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
@@ -19,17 +21,18 @@ export const createWorkspaceImpl = (
 ) => {
   return authorized.provisioner.createWorkspace.handler(async ({ input, context }) => {
     const result = await provisionerService.createWorkspace({
-      url: input.body.url,
+      url: input.body.type === 'manual' ? input.body.url : undefined,
       userId: context.user.id,
       userName: context.user.name,
       userEmail: context.user.email,
-      inviteToken: input.body.inviteToken,
+      inviteToken: input.body.type === 'invite' ? input.body.inviteToken : undefined,
+      plan: input.body.type === 'manual' ? (input.body.plan as PlanId) : undefined,
     });
 
     // Send welcome email based on whether invite token was used
     // Only send if workspace was created (not if it already existed)
     if (result.created) {
-      if (input.body.inviteToken) {
+      if (input.body.type === 'invite') {
         // Pilot user - invited with token
         await emailService.sendSafeWelcomeEmailPilot(
           { to: context.user.email },

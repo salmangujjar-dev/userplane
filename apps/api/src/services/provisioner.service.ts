@@ -34,6 +34,7 @@ export class ProvisionerService {
    * Orchestrates workspace, project, member, and domain creation
    * Accepts URL directly or via invite token
    * Optionally accepts an invite token to create workspace with predetermined details
+   * Optionally accepts a plan parameter (defaults to starter_monthly)
    * Throws PROVISIONER_URL_REQUIRED if no URL provided
    * Throws PROVISIONER_INVITE_TOKEN_INVALID if token is invalid
    * Throws PROVISIONER_WORKSPACE_EXISTS if workspace with predetermined ID exists
@@ -46,11 +47,19 @@ export class ProvisionerService {
     userName?: string;
     userEmail: string;
     inviteToken?: string;
+    plan?: PlanId;
   }): Promise<{ created: false } | { created: true; workspaceId: string; workspaceName: string }> {
-    const { url: providedUrl, userId, userName, userEmail, inviteToken } = params;
+    const {
+      url: providedUrl,
+      userId,
+      userName,
+      userEmail,
+      inviteToken,
+      plan: providedPlan,
+    } = params;
 
     // Determine workspace details based on invite token or provided values
-    let workspacePlan: PlanId = 'starter_monthly';
+    let workspacePlan: PlanId = providedPlan ?? 'starter_monthly';
     let predeterminedWorkspaceId: string | undefined;
     let workspaceUrl = providedUrl;
 
@@ -66,6 +75,7 @@ export class ProvisionerService {
       }
 
       // Use token values only if token is valid
+      // Invite token plan takes precedence over provided plan
       workspacePlan = workspaceDetails.workspacePlan;
       predeterminedWorkspaceId = workspaceDetails.workspaceId;
       workspaceUrl = workspaceDetails.workspaceUrl;

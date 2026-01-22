@@ -3,11 +3,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ADMIN_NOTIFY_DURATION_OPTIONS,
+  ADMIN_NOTIFY_DURATION_VALUES,
   type AdminNotifyDuration,
   DomainUrlSchema,
   EmailSchema,
 } from '@workspace/contract';
-import type { PlanId } from '@workspace/pricing';
+import { PLAN_IDS, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -57,8 +58,8 @@ interface AdminCreateWorkspaceInviteSuccessModalProps {
 const createWorkspaceInviteFormSchema = z
   .object({
     workspaceUrl: DomainUrlSchema,
-    plan: z.string() as z.ZodType<PlanId>,
-    notify: z.string() as z.ZodType<AdminNotifyDuration>,
+    plan: z.enum(PLAN_IDS),
+    notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES),
     email: EmailSchema.optional(),
   })
   .refine(
@@ -74,6 +75,8 @@ const createWorkspaceInviteFormSchema = z
       path: ['email'],
     }
   );
+
+type CreateWorkspaceInviteFormData = z.infer<typeof createWorkspaceInviteFormSchema>;
 
 /**
  * Modal for creating a workspace invite URL.
@@ -94,13 +97,13 @@ export function AdminCreateWorkspaceInviteModal({
     watch,
     setValue,
     formState: { errors, isValid },
-  } = useForm({
+  } = useForm<CreateWorkspaceInviteFormData>({
     resolver: zodResolver(createWorkspaceInviteFormSchema),
     mode: 'onTouched',
     defaultValues: {
       workspaceUrl: '',
-      plan: 'sandbox' as PlanId,
-      notify: 'never' as AdminNotifyDuration,
+      plan: 'sandbox',
+      notify: 'never',
       email: '',
     },
   });
@@ -123,12 +126,7 @@ export function AdminCreateWorkspaceInviteModal({
     }
   }, [notifyValue, setValue]);
 
-  const onFormSubmit = (data: {
-    workspaceUrl: string;
-    plan: PlanId;
-    notify: AdminNotifyDuration;
-    email?: string;
-  }) => {
+  const onFormSubmit = (data: CreateWorkspaceInviteFormData) => {
     onSubmit({
       workspaceUrl: data.workspaceUrl,
       plan: data.plan,
@@ -208,14 +206,14 @@ export function AdminCreateWorkspaceInviteModal({
                             <SelectValue placeholder="Select a plan" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="sandbox_monthly">Sandbox (Default)</SelectItem>
-                            {PLAN_OPTIONS.filter(
-                              (option) => option.value !== 'sandbox_monthly'
-                            ).map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="sandbox">Sandbox (Default)</SelectItem>
+                            {PLAN_OPTIONS.filter((option) => option.value !== 'sandbox').map(
+                              (option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              )
+                            )}
                           </SelectContent>
                         </Select>
                       )}

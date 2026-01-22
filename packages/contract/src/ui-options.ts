@@ -16,8 +16,8 @@
  * ```
  */
 
-import type { PlanId } from '@workspace/pricing';
-import { PLAN_IDS, PLAN_NAMES } from '@workspace/pricing';
+import type { PlanId, UserSelectablePlanId } from '@workspace/pricing';
+import { PLAN_IDS, PLAN_NAMES, USER_SELECTABLE_PLAN_IDS } from '@workspace/pricing';
 
 import type {
   AdminFilterStatus,
@@ -241,13 +241,25 @@ export const ADMIN_NOTIFY_DURATION_OPTIONS: SelectOption<AdminNotifyDuration>[] 
 // ============================================================================
 
 /**
- * Plan options for workspace provisioning and billing
+ * Plan options for workspace provisioning and billing (admin-only)
+ * Includes all plans including sandbox and free
  * Dynamically generated from pricing package
  */
 export const PLAN_OPTIONS: SelectOption<PlanId>[] = PLAN_IDS.map((planId) => ({
   value: planId,
   label: PLAN_NAMES[planId],
 }));
+
+/**
+ * User-selectable plan options (excludes admin-only plans like sandbox and free)
+ * Use this for user-facing workspace creation forms
+ * Dynamically generated from pricing package
+ */
+export const USER_SELECTABLE_PLAN_OPTIONS: SelectOption<UserSelectablePlanId>[] =
+  USER_SELECTABLE_PLAN_IDS.map((planId) => ({
+    value: planId,
+    label: PLAN_NAMES[planId],
+  }));
 
 // ============================================================================
 // HELPER FUNCTIONS
