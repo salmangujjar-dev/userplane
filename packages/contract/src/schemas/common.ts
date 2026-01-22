@@ -16,12 +16,20 @@ export type RestorationStatus = z.infer<typeof RestorationStatusSchema>;
 
 /**
  * Email schema with normalization
- * Uses validator.normalizeEmail to handle casing and other normalization
+ * Lowercases and trims email addresses but preserves dots and subaddresses
  * This should be used for ALL email inputs to ensure consistent handling
  */
 export const EmailSchema = z
   .string()
-  .transform((value) => validator.normalizeEmail(value))
+  .transform((value) =>
+    validator.normalizeEmail(value, {
+      gmail_remove_dots: false,
+      gmail_remove_subaddress: false,
+      outlookdotcom_remove_subaddress: false,
+      yahoo_remove_subaddress: false,
+      icloud_remove_subaddress: false,
+    })
+  )
   .refine((value): value is string => value !== false, {
     message: 'Invalid email address',
   });

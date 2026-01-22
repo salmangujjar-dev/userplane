@@ -39,6 +39,8 @@ type CreateWorkspaceStep = 'url' | 'plan';
 export default function CreateWorkspacePage() {
   const [step, setStep] = useState<CreateWorkspaceStep>('url');
   const [workspaceUrl, setWorkspaceUrl] = useState('');
+  const [prefilledPlanName, setPrefilledPlanName] = useState<string | null>(null);
+  const [prefilledPlanCycle, setPrefilledPlanCycle] = useState<PlanCycle | null>(null);
   const [createdWorkspace, setCreatedWorkspace] = useState<{
     workspaceId: string;
     workspaceName: string;
@@ -48,6 +50,7 @@ export default function CreateWorkspacePage() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     resolver: zodResolver(workspaceFormSchema),
@@ -88,17 +91,23 @@ export default function CreateWorkspacePage() {
 
           // Check if workspace was created
           if (!result.data.created) {
-            // Token invalid or workspace exists - silently fall back to manual flow
+            // Token invalid or workspace exists - fall back to manual flow with prefilled data
             setTokenCreationFailed(true);
+
+            // Auto-populate form with data from token if available
+            if (result.data.workspaceUrl) {
+              setValue('workspace', result.data.workspaceUrl, { shouldValidate: true });
+            }
+            if (result.data.planName) {
+              setPrefilledPlanName(result.data.planName);
+            }
+            if (result.data.planCycle) {
+              setPrefilledPlanCycle(result.data.planCycle);
+            }
             return;
           }
 
           const { workspaceId, workspaceName } = result.data;
-          if (!workspaceId || !workspaceName) {
-            // Missing data - fall back to manual flow
-            setTokenCreationFailed(true);
-            return;
-          }
 
           setWorkspaceStore(workspaceId);
           setCreatedWorkspace({
@@ -203,6 +212,8 @@ export default function CreateWorkspacePage() {
         onBack={() => setStep('url')}
         onPlanSelect={handlePlanSelect}
         isPending={isPending}
+        prefilledPlanName={prefilledPlanName}
+        prefilledPlanCycle={prefilledPlanCycle}
       />
     );
   }
@@ -410,13 +421,17 @@ function PlanSelectionStep({
   onBack,
   onPlanSelect,
   isPending,
+  prefilledPlanName,
+  prefilledPlanCycle,
 }: {
   onBack: () => void;
   onPlanSelect: (planId: string) => void;
   isPending: boolean;
+  prefilledPlanName: string | null;
+  prefilledPlanCycle: PlanCycle | null;
 }) {
-  const [billingCycle, setBillingCycle] = useState<PlanCycle>('annual');
-  const [selectedPlanName, setSelectedPlanName] = useState<string>('Starter');
+  const [billingCycle, setBillingCycle] = useState<PlanCycle>(prefilledPlanCycle ?? 'annual');
+  const [selectedPlanName, setSelectedPlanName] = useState<string>(prefilledPlanName ?? 'Starter');
 
   // Get user-selectable plans only
   const userSelectablePlans = BASE_PRICING_PLANS.filter((plan) =>

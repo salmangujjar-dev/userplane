@@ -5,7 +5,12 @@
 
 import { provisionerError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
-import type { PlanId } from '@workspace/pricing';
+import {
+  getPlanName,
+  type PlanId,
+  type PlanName,
+  type UserSelectablePlanId,
+} from '@workspace/pricing';
 
 import { deriveWorkspaceName } from '@/api/lib/workspace';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
@@ -26,75 +31,137 @@ export interface ProvisionerServiceDeps {
   db: DbClient;
 }
 
+type WorkspaceCreationResult =
+  | {
+      created: false;
+      workspaceUrl?: string;
+      workspacePlan?: UserSelectablePlanId;
+      planName?: PlanName;
+      planCycle?: 'monthly' | 'annual';
+    }
+  | { created: true; workspaceId: string; workspaceName: string };
+
 export class ProvisionerService {
   constructor(private deps: ProvisionerServiceDeps) {}
 
   /**
-   * Create workspace with all related resources
-   * Orchestrates workspace, project, member, and domain creation
-   * Accepts URL directly or via invite token
-   * Optionally accepts an invite token to create workspace with predetermined details
-   * Optionally accepts a plan parameter (defaults to starter_monthly)
-   * Throws PROVISIONER_URL_REQUIRED if no URL provided
-   * Throws PROVISIONER_INVITE_TOKEN_INVALID if token is invalid
-   * Throws PROVISIONER_WORKSPACE_EXISTS if workspace with predetermined ID exists
+   * Create workspace using an invite token
+   * Extracts workspace details (URL, plan, ID) from the token
+   * Returns created: false with workspaceUrl and workspacePlan if token is invalid or workspace already exists
+   * This allows UI to auto-populate the manual creation form
    * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
    * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
    */
-  async createWorkspace(params: {
-    url?: string;
+  async createWorkspaceByInviteToken(params: {
+    inviteToken: string;
     userId: string;
     userName?: string;
     userEmail: string;
-    inviteToken?: string;
-    plan?: PlanId;
-  }): Promise<{ created: false } | { created: true; workspaceId: string; workspaceName: string }> {
-    const {
-      url: providedUrl,
+  }): Promise<WorkspaceCreationResult> {
+    const { inviteToken, userId, userName, userEmail } = params;
+
+    const workspaceDetails = extractWorkspaceDetailsFromInviteToken(
+      this.deps.tokenService,
+      inviteToken
+    );
+
+    if (!workspaceDetails) {
+      // Token is invalid or expired - return created: false without details
+      return { created: false };
+    }
+
+    // If the workspace plan is not sandbox, trigger the manual flow
+    if (workspaceDetails.workspacePlan !== 'sandbox') {
+      return {
+        created: false,
+        workspaceUrl: workspaceDetails.workspaceUrl,
+        // If the workspace plan is free, default to starter_annual
+        workspacePlan:
+          workspaceDetails.workspacePlan === 'free'
+            ? 'starter_annual'
+            : workspaceDetails.workspacePlan,
+        // Get the plan name from the workspace plan
+        planName: getPlanName(
+          workspaceDetails.workspacePlan === 'free'
+            ? 'starter_annual'
+            : workspaceDetails.workspacePlan
+        ),
+        // Get the plan cycle from the workspace plan
+        planCycle: workspaceDetails.workspacePlan.endsWith('_monthly') ? 'monthly' : 'annual',
+      };
+    }
+
+    // Check if workspace with predetermined ID already exists
+    const existingWorkspace = await this.deps.workspaceRepo.findById(workspaceDetails.workspaceId);
+    if (existingWorkspace) {
+      // Workspace already exists - return created: false with details for manual flow
+      const planName = getPlanName(workspaceDetails.workspacePlan);
+      const planCycle = workspaceDetails.workspacePlan.endsWith('_monthly')
+        ? ('monthly' as const)
+        : ('annual' as const);
+
+      return {
+        created: false,
+        workspaceUrl: workspaceDetails.workspaceUrl,
+        workspacePlan: workspaceDetails.workspacePlan as UserSelectablePlanId,
+        planName,
+        planCycle,
+      };
+    }
+
+    return this.provisionWorkspace({
+      url: workspaceDetails.workspaceUrl,
+      plan: workspaceDetails.workspacePlan,
+      predeterminedWorkspaceId: workspaceDetails.workspaceId,
       userId,
       userName,
       userEmail,
-      inviteToken,
-      plan: providedPlan,
-    } = params;
+    });
+  }
 
-    // Determine workspace details based on invite token or provided values
-    let workspacePlan: PlanId = providedPlan ?? 'starter_monthly';
-    let predeterminedWorkspaceId: string | undefined;
-    let workspaceUrl = providedUrl;
+  /**
+   * Create workspace manually with URL and plan
+   * User provides workspace URL and selects a plan
+   * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
+   * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
+   */
+  async createWorkspaceByURL(params: {
+    url: string;
+    plan: UserSelectablePlanId;
+    userId: string;
+    userName?: string;
+    userEmail: string;
+  }): Promise<WorkspaceCreationResult> {
+    const { url, plan, userId, userName, userEmail } = params;
 
-    if (inviteToken) {
-      const workspaceDetails = extractWorkspaceDetailsFromInviteToken(
-        this.deps.tokenService,
-        inviteToken
-      );
+    return this.provisionWorkspace({
+      url,
+      plan,
+      predeterminedWorkspaceId: undefined,
+      userId,
+      userName,
+      userEmail,
+    });
+  }
 
-      if (!workspaceDetails) {
-        // Token is invalid or expired - return created: false instead of throwing
-        return { created: false };
-      }
+  /**
+   * Private method that does the actual workspace provisioning
+   * Creates workspace, project, member, and domain in a transaction
+   * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
+   * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
+   */
+  private async provisionWorkspace(params: {
+    url: string;
+    plan: PlanId;
+    predeterminedWorkspaceId: string | undefined;
+    userId: string;
+    userName?: string;
+    userEmail: string;
+  }): Promise<WorkspaceCreationResult> {
+    const { url, plan, predeterminedWorkspaceId, userId, userName, userEmail } = params;
 
-      // Use token values only if token is valid
-      // Invite token plan takes precedence over provided plan
-      workspacePlan = workspaceDetails.workspacePlan;
-      predeterminedWorkspaceId = workspaceDetails.workspaceId;
-      workspaceUrl = workspaceDetails.workspaceUrl;
-
-      // Check if workspace with predetermined ID already exists
-      const existingWorkspace = await this.deps.workspaceRepo.findById(predeterminedWorkspaceId);
-      if (existingWorkspace) {
-        // Workspace already exists - return created: false
-        return { created: false };
-      }
-    }
-
-    // URL is required either from token or directly provided
-    if (!workspaceUrl) {
-      throw provisionerError.PROVISIONER_URL_REQUIRED();
-    }
-
-    // Derive workspace name from user's name
-    const workspaceName = deriveWorkspaceName(workspaceUrl, userName);
+    // Derive workspace name from URL
+    const workspaceName = deriveWorkspaceName(url, userName);
 
     const workspace = await this.deps.db.transaction(async (tx) => {
       // Create workspace with default recording preferences
@@ -103,7 +170,7 @@ export class ProvisionerService {
         {
           workspaceId: predeterminedWorkspaceId,
           workspaceName,
-          workspacePlan,
+          workspacePlan: plan,
           userId,
           workspaceBillingEmail: userEmail,
         },
@@ -134,7 +201,7 @@ export class ProvisionerService {
       await this.deps.domainService.create(
         {
           workspaceId: createdWorkspace.workspaceId!,
-          url: workspaceUrl,
+          url,
           status: 'pending',
         },
         { tx }

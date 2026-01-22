@@ -88,3 +88,9 @@ apps/api/localhost
 
 *storybook.log
 storybook-static
+
+# Agent files
+.agent/
+.claude/
+.cursor/
+.gemini/

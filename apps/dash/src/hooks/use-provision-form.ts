@@ -1,6 +1,6 @@
 import type { AdminProvisionRole } from '@workspace/contract';
-import { PLAN_OPTIONS } from '@workspace/contract';
-import type { PlanId } from '@workspace/pricing';
+import { USER_SELECTABLE_PLAN_OPTIONS } from '@workspace/contract';
+import type { UserSelectablePlanId } from '@workspace/pricing';
 import { useCallback, useState } from 'react';
 
 /**
@@ -17,14 +17,14 @@ export interface ProvisionFormMember {
  */
 export interface ProvisionFormData {
   owner: { email: string; name: string };
-  workspace: { name: string; url: string; plan: PlanId };
+  workspace: { name: string; url: string; plan: UserSelectablePlanId };
   members: ProvisionFormMember[];
 }
 
 /**
- * Re-export PLAN_OPTIONS from contract for backward compatibility
+ * Re-export USER_SELECTABLE_PLAN_OPTIONS from contract
  */
-export { PLAN_OPTIONS };
+export { USER_SELECTABLE_PLAN_OPTIONS };
 
 /**
  * Hook for managing workspace provisioning form state
@@ -38,7 +38,7 @@ export function useProvisionForm() {
   // Workspace fields
   const [workspaceName, setWorkspaceName] = useState('');
   const [workspaceUrl, setWorkspaceUrl] = useState('');
-  const [workspacePlan, setWorkspacePlan] = useState<PlanId>('starter_monthly');
+  const [workspacePlan, setWorkspacePlan] = useState<UserSelectablePlanId>('starter_annual');
 
   // Members
   const [members, setMembers] = useState<ProvisionFormMember[]>([]);
@@ -48,7 +48,7 @@ export function useProvisionForm() {
     setOwnerName('');
     setWorkspaceName('');
     setWorkspaceUrl('');
-    setWorkspacePlan('starter_monthly');
+    setWorkspacePlan('starter_annual');
     setMembers([]);
   }, []);
 

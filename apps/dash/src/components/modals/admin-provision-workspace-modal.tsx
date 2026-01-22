@@ -7,7 +7,7 @@ import {
   FormURLSchema,
   WorkspaceNameSchema,
 } from '@workspace/contract';
-import type { PlanId } from '@workspace/pricing';
+import type { UserSelectablePlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -32,7 +32,7 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { URLInput } from '@/components/url-input';
-import { PLAN_OPTIONS } from '@/hooks/use-provision-form';
+import { USER_SELECTABLE_PLAN_OPTIONS } from '@/hooks/use-provision-form';
 
 import { AdminProvisionSuccessModal, ProvisionResult } from './admin-provision-success-modal';
 
@@ -52,7 +52,7 @@ const provisionWorkspaceSchema = z.object({
   workspace: z.object({
     name: WorkspaceNameSchema,
     url: FormURLSchema,
-    plan: z.string().min(1, 'Please select a plan') as z.ZodType<PlanId>,
+    plan: z.string().min(1, 'Please select a plan') as z.ZodType<UserSelectablePlanId>,
   }),
   members: z.array(provisionMemberSchema),
 });
@@ -89,7 +89,7 @@ export function AdminProvisionWorkspaceModal({
       workspace: {
         name: '',
         url: '',
-        plan: 'early_bird_monthly',
+        plan: 'starter_annual',
       },
       members: [],
     },
@@ -208,7 +208,7 @@ export function AdminProvisionWorkspaceModal({
                             <SelectValue placeholder="Select a plan" />
                           </SelectTrigger>
                           <SelectContent>
-                            {PLAN_OPTIONS.map((option) => (
+                            {USER_SELECTABLE_PLAN_OPTIONS.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
