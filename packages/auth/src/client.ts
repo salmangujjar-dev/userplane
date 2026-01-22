@@ -1,3 +1,4 @@
+import { dodopaymentsClient } from '@dodopayments/better-auth';
 import { createAuthClient } from 'better-auth/client';
 import { adminClient, magicLinkClient } from 'better-auth/client/plugins';
 
@@ -17,6 +18,7 @@ export function createAuthClientInstance(config: AuthClientConfig) {
       // Permission checks happen server-side
       adminClient(),
       magicLinkClient(),
+      dodopaymentsClient(),
     ],
     fetchOptions: {
       credentials: 'include',

@@ -1,4 +1,4 @@
-import disposableEmailDomains from '../data/email.json';
+import disposableEmailDomains from './data/email.json';
 
 // Type assertion for the imported JSON
 const disposableDomains = disposableEmailDomains as Record<string, boolean>;
