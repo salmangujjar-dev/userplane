@@ -158,3 +158,7 @@ export function createAuth(config: AuthConfig) {
 }
 
 export type Auth = ReturnType<typeof createAuth>;
+
+// Re-export DodoPayments types for convenience
+export type { DodoPaymentsAuthConfig } from './dodopayments';
+export { createDodoPaymentsPlugin } from './dodopayments';

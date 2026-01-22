@@ -1,5 +1,7 @@
 'use client';
 
+import { getSlugFromPlanId } from '@workspace/payments';
+import type { PlanId, PlanName } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import { Progress } from '@workspace/ui/components/progress';
 import {
@@ -8,15 +10,37 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { ArrowUpRight, Info } from 'lucide-react';
+import { ArrowUpRight, Info, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
+import { PlanUpgradeModal } from '@/components/modals/plan-upgrade-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { useWorkspace } from '@/hooks/use-workspace';
+import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 
 export function WorkspacePlanSection() {
   const { data: workspaceResult, isLoading, error, refetch } = useWorkspace();
   const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
-  const planName = workspaceData?.workspace.workspacePlanName || 'Free';
+  const planName = (workspaceData?.workspace.workspacePlanName || 'Free') as PlanName;
+  const workspaceId = workspaceData?.workspace.workspaceId;
+
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const { mutate: createCheckout, isPending: isCheckoutPending } = useCreateCheckout();
+
+  const handleUpgrade = (planId: string) => {
+    if (!workspaceId) return;
+
+    const slug = getSlugFromPlanId(planId as PlanId);
+    if (!slug) {
+      console.error('No slug found for plan ID:', planId);
+      return;
+    }
+
+    createCheckout({
+      planSlug: slug,
+      workspaceId,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -118,12 +142,34 @@ export function WorkspacePlanSection() {
             <p className="text-xs text-muted-foreground">
               Upgrade your team to get instant access to more links
             </p>
-            <Button variant="ghost" size="sm" className="shrink-0 h-8">
-              Upgrade
-              <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0 h-8"
+              onClick={() => setIsUpgradeModalOpen(true)}
+              disabled={isCheckoutPending}
+            >
+              {isCheckoutPending ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Upgrade
+                  <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
+                </>
+              )}
             </Button>
           </div>
         </div>
+
+        <PlanUpgradeModal
+          open={isUpgradeModalOpen}
+          onOpenChange={setIsUpgradeModalOpen}
+          currentPlanName={planName}
+          onUpgrade={handleUpgrade}
+        />
       </div>
     </TooltipProvider>
   );
