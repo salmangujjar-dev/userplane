@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
+import type { UserSelectablePlanId } from '@workspace/pricing';
 
 import { apiClient } from '@/client';
 import {
@@ -8,10 +9,16 @@ import {
   showErrorToast,
 } from '@/lib/errors';
 
-interface CreateWorkspaceInput {
-  url?: string;
-  inviteToken?: string;
-}
+type CreateWorkspaceInput =
+  | {
+      type: 'manual';
+      url: string;
+      plan: UserSelectablePlanId;
+    }
+  | {
+      type: 'invite';
+      inviteToken: string;
+    };
 
 interface CreateWorkspaceData {
   created: boolean;
@@ -21,23 +28,23 @@ interface CreateWorkspaceData {
 
 /**
  * Hook to create a new workspace
- * Supports both manual URL input and invite token flows
+ * Supports both manual URL input (with plan) and invite token flows
  * Handles API call, loading states, and error handling
  */
 export function useCreateWorkspace() {
   return useMutation<SafeResult<CreateWorkspaceData>, Error, CreateWorkspaceInput>({
     mutationFn: async (input: CreateWorkspaceInput) => {
-      // For invite token flow, url is optional (comes from token)
-      // For manual flow, url is required
-      const body: { url?: string; inviteToken?: string } = {};
-
-      if (input.inviteToken) {
-        body.inviteToken = input.inviteToken;
-      }
-
-      if (input.url) {
-        body.url = input.url.startsWith('http') ? input.url : `https://${input.url}`;
-      }
+      const body =
+        input.type === 'manual'
+          ? {
+              type: 'manual' as const,
+              url: input.url.startsWith('http') ? input.url : `https://${input.url}`,
+              plan: input.plan,
+            }
+          : {
+              type: 'invite' as const,
+              inviteToken: input.inviteToken,
+            };
 
       const [error, response] = await apiClient.provisioner.createWorkspace({
         body,

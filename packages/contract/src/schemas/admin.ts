@@ -735,7 +735,7 @@ export type AdminProvisionWorkspaceData = z.infer<typeof AdminProvisionWorkspace
 export const AdminCreateWorkspaceInviteInputSchema = z.object({
   body: z.object({
     workspaceUrl: z.string().url('Invalid URL'),
-    plan: z.enum(PLAN_IDS).optional().default('sandbox_monthly'),
+    plan: z.enum(PLAN_IDS).optional().default('sandbox'),
     notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES).optional().default('never'),
     email: EmailSchema.optional(),
   }),

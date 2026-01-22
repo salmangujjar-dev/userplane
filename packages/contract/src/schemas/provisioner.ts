@@ -1,3 +1,4 @@
+import { USER_SELECTABLE_PLAN_IDS } from '@workspace/pricing';
 import { z } from 'zod';
 
 import { URLSchema } from './common';
@@ -8,12 +9,21 @@ import { URLSchema } from './common';
 
 /**
  * Create workspace request (detailed mode)
+ * Discriminated union between manual workspace creation (url + plan) or invite token
+ * Plan selection excludes admin-only plans (sandbox, free)
  */
 export const CreateWorkspaceSchema = z.object({
-  body: z.object({
-    url: URLSchema.optional(),
-    inviteToken: z.string().optional(),
-  }),
+  body: z.discriminatedUnion('type', [
+    z.object({
+      type: z.literal('manual'),
+      url: URLSchema,
+      plan: z.enum(USER_SELECTABLE_PLAN_IDS),
+    }),
+    z.object({
+      type: z.literal('invite'),
+      inviteToken: z.string(),
+    }),
+  ]),
 });
 
 /**

@@ -9,22 +9,38 @@
  * Plan identifiers - source of truth for database and pricing
  */
 export const PLAN_IDS = [
-  'sandbox_monthly',
-  'sandbox_annual',
+  'sandbox',
   'essential_monthly',
   'essential_annual',
   'starter_monthly',
   'starter_annual',
   'scale_up_monthly',
   'scale_up_annual',
-  'trial_monthly',
-  'trial_annual',
+  'free',
   'enterprise_monthly',
   'enterprise_annual',
   'early_bird_monthly',
   'early_bird_annual',
 ] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
+
+/**
+ * User-selectable plan identifiers (excludes admin-only plans like sandbox and free)
+ * Used for workspace creation forms and user-facing plan selection
+ */
+export const USER_SELECTABLE_PLAN_IDS = [
+  'essential_monthly',
+  'essential_annual',
+  'starter_monthly',
+  'starter_annual',
+  'scale_up_monthly',
+  'scale_up_annual',
+  'enterprise_monthly',
+  'enterprise_annual',
+  'early_bird_monthly',
+  'early_bird_annual',
+] as const;
+export type UserSelectablePlanId = (typeof USER_SELECTABLE_PLAN_IDS)[number];
 
 /**
  * Resource types for entitlements
@@ -69,16 +85,7 @@ export type PlanEntitlements = Record<ResourceType, ResourceLimits>;
  */
 export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   // Sandbox: Free tier for testing
-  sandbox_monthly: {
-    seats: { quotedLimit: 20, softLimit: 20, hardLimit: 25, upgradeLimit: 0 },
-    recordings: { quotedLimit: 10, softLimit: 10, hardLimit: 15, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 10, softLimit: 10, hardLimit: 10, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-  },
-  sandbox_annual: {
+  sandbox: {
     seats: { quotedLimit: 20, softLimit: 20, hardLimit: 25, upgradeLimit: 0 },
     recordings: { quotedLimit: 10, softLimit: 10, hardLimit: 15, upgradeLimit: 0 },
     recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -148,17 +155,8 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
     files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
   },
 
-  // Trial: Free evaluation tier
-  trial_monthly: {
-    seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
-    recordings: { quotedLimit: 3, softLimit: 3, hardLimit: 3, upgradeLimit: 0 },
-    recording_links: { quotedLimit: 5, softLimit: 5, hardLimit: 5, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 3, softLimit: 3, hardLimit: 3, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-  },
-  trial_annual: {
+  // Free: Free evaluation tier
+  free: {
     seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
     recordings: { quotedLimit: 3, softLimit: 3, hardLimit: 3, upgradeLimit: 0 },
     recording_links: { quotedLimit: 5, softLimit: 5, hardLimit: 5, upgradeLimit: 0 },
@@ -224,7 +222,7 @@ export const PLAN_NAME_VALUES = [
   'Essential',
   'Starter',
   'Scale Up',
-  'Trial',
+  'Free',
   'Enterprise',
   'Early Bird',
 ] as const;
@@ -234,16 +232,14 @@ export type PlanName = (typeof PLAN_NAME_VALUES)[number];
  * User-friendly plan names - source of truth for display names
  */
 export const PLAN_NAMES: Record<PlanId, PlanName> = {
-  sandbox_monthly: 'Sandbox',
-  sandbox_annual: 'Sandbox',
+  sandbox: 'Sandbox',
   essential_monthly: 'Essential',
   essential_annual: 'Essential',
   starter_monthly: 'Starter',
   starter_annual: 'Starter',
   scale_up_monthly: 'Scale Up',
   scale_up_annual: 'Scale Up',
-  trial_monthly: 'Trial',
-  trial_annual: 'Trial',
+  free: 'Free',
   enterprise_monthly: 'Enterprise',
   enterprise_annual: 'Enterprise',
   early_bird_monthly: 'Early Bird',
@@ -253,7 +249,7 @@ export const PLAN_NAMES: Record<PlanId, PlanName> = {
 /**
  * Default plan name for fallback
  */
-export const DEFAULT_PLAN_NAME: PlanName = 'Trial';
+export const DEFAULT_PLAN_NAME: PlanName = 'Free';
 
 /**
  * Billing cycle for plans
@@ -884,51 +880,27 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
     categoryFeatures: ENTERPRISE_CATEGORY_FEATURES,
     isEnterprise: true,
   },
-  // Trial Monthly
+  // Free
   {
-    id: 'trial_monthly',
-    name: 'Trial',
+    id: 'free',
+    name: 'Free',
     description: 'Try Userplane for free',
     details: {
       planType: 'one_time',
       planRate: 0,
-      planCycle: 'monthly',
+      planCycle: 'one_time',
     },
     features: [],
   },
-  // Trial Annual
+  // Sandbox
   {
-    id: 'trial_annual',
-    name: 'Trial',
-    description: 'Try Userplane for free',
-    details: {
-      planType: 'one_time',
-      planRate: 0,
-      planCycle: 'annual',
-    },
-    features: [],
-  },
-  // Sandbox Monthly
-  {
-    id: 'sandbox_monthly',
+    id: 'sandbox',
     name: 'Sandbox',
     description: 'Free tier for testing and evaluation',
     details: {
       planType: 'one_time',
       planRate: 0,
-      planCycle: 'monthly',
-    },
-    features: [],
-  },
-  // Sandbox Annual
-  {
-    id: 'sandbox_annual',
-    name: 'Sandbox',
-    description: 'Free tier for testing and evaluation',
-    details: {
-      planType: 'one_time',
-      planRate: 0,
-      planCycle: 'annual',
+      planCycle: 'one_time',
     },
     features: [],
   },
