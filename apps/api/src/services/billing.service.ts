@@ -4,7 +4,12 @@
  */
 
 import type { DbClient } from '@workspace/db';
-import type { ProrationBillingMode, SubscriptionStatus } from '@workspace/payments';
+import type {
+  DodoPayments,
+  ProrationBillingMode,
+  SubscriptionPreviewChangePlanResponse,
+  SubscriptionStatus,
+} from '@workspace/payments';
 import type { PlanId } from '@workspace/pricing';
 import { PLAN_IDS, PLAN_NAMES } from '@workspace/pricing';
 
@@ -401,27 +406,62 @@ export class BillingService {
   }
 
   /**
+   * Preview subscription plan change (upgrade/downgrade)
+   * Shows proration details without committing the change
+   * Useful for displaying cost breakdown to users before they confirm
+   */
+  async previewPlanChange(
+    workspaceId: string,
+    newProductId: string,
+    dodoClient: DodoPayments
+  ): Promise<
+    | { alreadyOnPlan: true; currentProductId: string; newProductId: string }
+    | { alreadyOnPlan: false; preview: SubscriptionPreviewChangePlanResponse }
+  > {
+    // Find the existing subscription for the workspace
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+
+    if (!subscription) {
+      throw new Error('No active subscription found for workspace');
+    }
+
+    if (subscription.status !== 'active') {
+      throw new Error('Subscription is not active');
+    }
+
+    // Idempotency check: If already on this plan, return early
+    if (subscription.productId === newProductId) {
+      return {
+        alreadyOnPlan: true,
+        currentProductId: subscription.productId,
+        newProductId,
+      };
+    }
+
+    // Call DodoPayments to preview the plan change
+    const preview = await dodoClient.subscriptions.previewChangePlan(subscription.subscriptionId, {
+      product_id: newProductId,
+      proration_billing_mode: DEFAULT_PRORATION_MODE,
+      quantity: 1,
+    });
+
+    return {
+      alreadyOnPlan: false,
+      preview,
+    };
+  }
+
+  /**
    * Change subscription plan (upgrade/downgrade)
    * Uses DodoPayments subscriptions.changePlan API
    * Proration mode is controlled server-side via DEFAULT_PRORATION_MODE
+   * Includes idempotency check to prevent unnecessary API calls
    */
   async changePlan(
     workspaceId: string,
     newProductId: string,
     newPlanId: PlanId,
-    dodoClient: {
-      subscriptions: {
-        changePlan: (
-          subscriptionId: string,
-          params: {
-            product_id: string;
-            proration_billing_mode: ProrationBillingMode;
-            quantity: number;
-            metadata?: Record<string, string>;
-          }
-        ) => Promise<void>;
-      };
-    }
+    dodoClient: DodoPayments
   ) {
     // Find the existing subscription for the workspace
     const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
@@ -435,6 +475,15 @@ export class BillingService {
     }
 
     const previousPlanId = subscription.planId;
+
+    // Idempotency check: If already on this plan, return success without API call
+    if (subscription.productId === newProductId) {
+      return {
+        previousPlanId,
+        newPlanId,
+        alreadyOnPlan: true,
+      };
+    }
 
     // Call DodoPayments to change the plan
     // Proration mode is a business decision controlled server-side
@@ -453,6 +502,7 @@ export class BillingService {
     return {
       previousPlanId,
       newPlanId,
+      alreadyOnPlan: false,
     };
   }
 }

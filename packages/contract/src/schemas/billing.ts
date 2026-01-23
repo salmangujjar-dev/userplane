@@ -2,6 +2,7 @@
  * Billing schemas for API contracts
  */
 
+import type { SubscriptionPreviewChangePlanResponse } from '@workspace/payments';
 import { SUBSCRIPTION_STATUSES } from '@workspace/payments';
 import { z } from 'zod';
 
@@ -121,12 +122,51 @@ export const ChangePlanDataSchema = z.object({
   success: z.boolean(),
   previousPlanId: z.string().nullable(),
   newPlanId: z.string(),
+  alreadyOnPlan: z.boolean().optional(),
 });
 
 /**
  * Change plan response
  */
 export const ChangePlanResponseSchema = ApiResponseSchema(ChangePlanDataSchema);
+
+// ============================================================================
+// Preview Plan Change
+// ============================================================================
+
+/**
+ * Preview plan change input
+ */
+export const PreviewPlanChangeSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    planSlug: z.string(),
+  }),
+});
+
+/**
+ * Preview plan change response data
+ * The preview field contains the official SubscriptionPreviewChangePlanResponse from DodoPayments
+ * We use z.any() here as the type is complex and validated by TypeScript at compile time
+ */
+export const PreviewPlanChangeDataSchema: z.ZodType<{
+  alreadyOnPlan: boolean;
+  currentProductId?: string;
+  newProductId?: string;
+  preview?: SubscriptionPreviewChangePlanResponse;
+}> = z.object({
+  alreadyOnPlan: z.boolean(),
+  currentProductId: z.string().optional(),
+  newProductId: z.string().optional(),
+  preview: z.any().optional(),
+});
+
+/**
+ * Preview plan change response
+ */
+export const PreviewPlanChangeResponseSchema = ApiResponseSchema(PreviewPlanChangeDataSchema);
 
 // ============================================================================
 // Type exports
@@ -137,3 +177,4 @@ export type SubscriptionStatusData = z.infer<typeof SubscriptionStatusDataSchema
 export type CheckoutSessionData = z.infer<typeof CheckoutSessionDataSchema>;
 export type CustomerPortalData = z.infer<typeof CustomerPortalDataSchema>;
 export type ChangePlanData = z.infer<typeof ChangePlanDataSchema>;
+export type PreviewPlanChangeData = z.infer<typeof PreviewPlanChangeDataSchema>;

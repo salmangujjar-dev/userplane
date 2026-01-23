@@ -49,6 +49,7 @@ export type {
   ProductConfig,
   ProrationBillingMode,
   SubscriptionChangePlanParams,
+  SubscriptionPreviewChangePlanResponse,
   SubscriptionRecord,
   SubscriptionStatus,
   UpdateSubscriptionInput,

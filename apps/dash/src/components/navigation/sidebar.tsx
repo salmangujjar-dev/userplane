@@ -158,6 +158,9 @@ export function Sidebar() {
         onOpenChange={setIsPlanModalOpen}
         currentPlanName={(workspace?.workspace.workspacePlanName || DEFAULT_PLAN_NAME) as PlanName}
         onUpgrade={handleUpgrade}
+        hasActiveSubscription={
+          subscriptionData?.hasSubscription && subscriptionData?.status === 'active'
+        }
       />
 
       <nav className="flex-1 overflow-y-auto">

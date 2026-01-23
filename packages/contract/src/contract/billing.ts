@@ -15,6 +15,8 @@ import {
   CustomerPortalResponseSchema,
   GetCustomerPortalSchema,
   GetSubscriptionStatusSchema,
+  PreviewPlanChangeResponseSchema,
+  PreviewPlanChangeSchema,
   SubscriptionStatusResponseSchema,
 } from '../schemas';
 
@@ -68,6 +70,23 @@ export const billingContract = oc.router({
     })
     .input(GetCustomerPortalSchema)
     .output(CustomerPortalResponseSchema)
+    .errors(BillingErrors),
+
+  /**
+   * POST /billing/:workspaceId/preview-plan-change
+   * Preview the cost of changing subscription plan
+   * Shows proration details before committing the change
+   * Requires workspace admin role
+   */
+  previewPlanChange: oc
+    .route({
+      method: 'POST',
+      path: '/billing/{workspaceId}/preview-plan-change',
+      summary: 'Preview subscription plan change',
+      description: 'Preview proration and cost details for a plan change without committing',
+    })
+    .input(PreviewPlanChangeSchema)
+    .output(PreviewPlanChangeResponseSchema)
     .errors(BillingErrors),
 
   /**

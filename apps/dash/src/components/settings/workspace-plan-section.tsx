@@ -187,6 +187,9 @@ export function WorkspacePlanSection() {
           onOpenChange={setIsUpgradeModalOpen}
           currentPlanName={planName}
           onUpgrade={handleUpgrade}
+          hasActiveSubscription={
+            subscriptionData?.hasSubscription && subscriptionData?.status === 'active'
+          }
         />
       </div>
     </TooltipProvider>
