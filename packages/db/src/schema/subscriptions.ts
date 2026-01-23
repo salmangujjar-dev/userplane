@@ -1,19 +1,14 @@
+import { SUBSCRIPTION_STATUSES } from '@workspace/payments';
 import { relations } from 'drizzle-orm';
 import { boolean, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 import { workspaces } from './workspaces';
 
 /**
- * Subscription status enum matching DodoPayments statuses
+ * Subscription status enum from DodoPayments
+ * Uses official subscription status values from the dodopayments package
  */
-export const subscriptionStatusEnum = pgEnum('subscription_status', [
-  'pending',
-  'active',
-  'on_hold',
-  'cancelled',
-  'failed',
-  'expired',
-]);
+export const subscriptionStatusEnum = pgEnum('subscription_status', SUBSCRIPTION_STATUSES);
 
 /**
  * Subscriptions table for tracking DodoPayments subscriptions

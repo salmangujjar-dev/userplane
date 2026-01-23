@@ -4,6 +4,7 @@
  */
 
 import type { DbClient } from '@workspace/db';
+import type { SubscriptionStatus } from '@workspace/payments';
 import type { PlanId } from '@workspace/pricing';
 import { PLAN_IDS, PLAN_NAMES } from '@workspace/pricing';
 
@@ -37,7 +38,7 @@ export interface SubscriptionWebhookData {
   subscriptionId: string;
   customerId: string;
   productId: string;
-  status: 'pending' | 'active' | 'on_hold' | 'cancelled' | 'failed' | 'expired';
+  status: SubscriptionStatus;
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   cancelledAt?: Date | null;
