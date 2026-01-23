@@ -39,6 +39,30 @@ const workspaceFormSchema = z.object({
 
 type CreateWorkspaceStep = 'url' | 'plan';
 
+type PendingWorkspace = { workspaceId: string; workspaceName: string };
+
+const pendingWorkspaceStorage = {
+  key: 'pendingWorkspace',
+
+  save(workspace: PendingWorkspace): void {
+    sessionStorage.setItem(this.key, JSON.stringify(workspace));
+  },
+
+  retrieve(): PendingWorkspace | null {
+    try {
+      const stored = sessionStorage.getItem(this.key);
+      if (!stored) return null;
+      return JSON.parse(stored) as PendingWorkspace;
+    } catch {
+      return null;
+    }
+  },
+
+  clear(): void {
+    sessionStorage.removeItem(this.key);
+  },
+};
+
 export default function CreateWorkspacePage() {
   const [step, setStep] = useState<CreateWorkspaceStep>('url');
   const [workspaceUrl, setWorkspaceUrl] = useState('');
@@ -65,6 +89,7 @@ export default function CreateWorkspacePage() {
 
   const router = useRouter();
   const [inviteToken] = useQueryState('token');
+  const [stepParam] = useQueryState('step');
 
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { mutate: createWorkspace, isPending } = useCreateWorkspace();
@@ -73,6 +98,20 @@ export default function CreateWorkspacePage() {
   const { signOut } = useAuth();
 
   const account = accountResult?.success ? accountResult.data : null;
+
+  // Handle post-checkout completion - restore workspace from sessionStorage
+  useEffect(() => {
+    if (stepParam === 'complete') {
+      const workspace = pendingWorkspaceStorage.retrieve();
+      if (workspace) {
+        pendingWorkspaceStorage.clear();
+        setWorkspaceStore(workspace.workspaceId);
+        setCreatedWorkspace(workspace);
+      } else {
+        router.replace('/');
+      }
+    }
+  }, [stepParam, setWorkspaceStore, router]);
 
   // Auto-trigger workspace creation if invite token is present
   useEffect(() => {
@@ -148,6 +187,9 @@ export default function CreateWorkspacePage() {
           // Get the checkout slug for the selected plan
           const slug = getSlugFromPlanId(planId as PlanId);
           if (slug) {
+            // Store workspace info for post-checkout redirect
+            pendingWorkspaceStorage.save({ workspaceId, workspaceName });
+
             // Trigger checkout - this will redirect to the payment page
             createCheckout({
               planSlug: slug,
@@ -181,6 +223,26 @@ export default function CreateWorkspacePage() {
           router.push(`/${createdWorkspace.workspaceId}/settings?tab=team`)
         }
       />
+    );
+  }
+
+  // Show loading state when processing post-checkout completion
+  if (stepParam === 'complete') {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12 bg-background">
+        <AuthIcons />
+
+        <div className="flex flex-col items-center gap-6 w-full max-w-md relative z-10">
+          <div className="flex flex-col items-center gap-3">
+            <Logo />
+            <h1 className="text-xl font-medium text-foreground">Completing setup</h1>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Finalizing your workspace...</span>
+          </div>
+        </div>
+      </div>
     );
   }
 

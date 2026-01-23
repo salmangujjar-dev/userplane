@@ -4,7 +4,7 @@ export default [
   ...config,
   {
     rules: {
-      'turbo/no-undeclared-env-vars': 'off',
+      'turbo/no-undeclared-env-vars': 'warn',
     },
   },
 ];

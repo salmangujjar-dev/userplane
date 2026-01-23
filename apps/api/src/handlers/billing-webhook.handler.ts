@@ -10,7 +10,6 @@ import {
   getPlanIdFromProductId,
   isSubscriptionEvent,
   parseSubscriptionDates,
-  type SubscriptionWebhookEvent,
   type WebhookPayload,
 } from '@workspace/payments';
 
@@ -30,14 +29,14 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
 
   return async (payload: unknown): Promise<void> => {
     const webhookPayload = payload as WebhookPayload;
-    const { event_type, data } = webhookPayload;
+    const { type: eventType, data } = webhookPayload;
 
-    if (!isSubscriptionEvent(event_type)) {
-      console.log(`[Billing Webhook] Ignoring non-subscription event: ${event_type}`);
+    if (!isSubscriptionEvent(eventType)) {
+      console.log(`[Billing Webhook] Ignoring non-subscription event: ${eventType}`);
       return;
     }
 
-    console.log(`[Billing Webhook] Processing event: ${event_type}`);
+    console.log(`[Billing Webhook] Processing event: ${eventType}`);
 
     const subscription = data as DodoSubscription;
     const dates = parseSubscriptionDates(subscription);
@@ -55,7 +54,7 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
     };
 
     try {
-      switch (event_type as SubscriptionWebhookEvent) {
+      switch (eventType) {
         case 'subscription.active':
           if (!planId) {
             console.error(`[Billing Webhook] Unknown product ID: ${subscription.product_id}`);
@@ -115,10 +114,10 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
           break;
 
         default:
-          console.log(`[Billing Webhook] Unhandled event type: ${event_type}`);
+          console.log(`[Billing Webhook] Unhandled event type: ${eventType}`);
       }
     } catch (error) {
-      console.error(`[Billing Webhook] Error processing ${event_type}:`, error);
+      console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
       throw error;
     }
   };
