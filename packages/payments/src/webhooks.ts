@@ -2,19 +2,17 @@
  * Webhook utilities for DodoPayments
  *
  * Handles webhook signature verification and payload parsing.
+ * Uses official types from the dodopayments package.
  */
 
-import type {
-  DodoSubscription,
-  SubscriptionStatus,
-  SubscriptionWebhookEvent,
-  WebhookPayload,
-} from './types';
+import type DodoPayments from 'dodopayments';
+
+import type { DodoSubscription, SubscriptionStatus, WebhookPayload } from './types';
 
 /**
- * Subscription webhook event types
+ * Subscription webhook event types from DodoPayments
  */
-export const SUBSCRIPTION_EVENTS: SubscriptionWebhookEvent[] = [
+const SUBSCRIPTION_EVENTS = [
   'subscription.active',
   'subscription.updated',
   'subscription.on_hold',
@@ -23,13 +21,24 @@ export const SUBSCRIPTION_EVENTS: SubscriptionWebhookEvent[] = [
   'subscription.cancelled',
   'subscription.failed',
   'subscription.expired',
-];
+] as const;
+
+type SubscriptionEventType = (typeof SUBSCRIPTION_EVENTS)[number];
 
 /**
  * Check if an event type is a subscription event
  */
-export function isSubscriptionEvent(eventType: string): eventType is SubscriptionWebhookEvent {
-  return SUBSCRIPTION_EVENTS.includes(eventType as SubscriptionWebhookEvent);
+export function isSubscriptionEvent(eventType: string): eventType is SubscriptionEventType {
+  return SUBSCRIPTION_EVENTS.includes(eventType as SubscriptionEventType);
+}
+
+/**
+ * Type guard to check if a webhook payload is a subscription event
+ */
+export function isSubscriptionWebhook(
+  payload: WebhookPayload
+): payload is WebhookPayload & { data: DodoSubscription } {
+  return isSubscriptionEvent(payload.type);
 }
 
 /**
@@ -63,9 +72,7 @@ export function parseSubscriptionDates(subscription: DodoSubscription): {
   createdAt: Date;
 } {
   return {
-    currentPeriodStart: subscription.previous_billing_date
-      ? new Date(subscription.previous_billing_date)
-      : new Date(subscription.created_at),
+    currentPeriodStart: new Date(subscription.previous_billing_date),
     currentPeriodEnd: new Date(subscription.next_billing_date),
     cancelledAt: subscription.cancelled_at ? new Date(subscription.cancelled_at) : null,
     createdAt: new Date(subscription.created_at),
@@ -98,15 +105,25 @@ export interface WebhookHandlers {
 }
 
 /**
+ * Subscription webhook payload type (for subscription events only)
+ */
+export type SubscriptionWebhookPayload = WebhookPayload & { data: DodoSubscription };
+
+/**
  * Process a webhook payload and route to appropriate handler
  */
 export async function processWebhookPayload(
   payload: WebhookPayload,
   handlers: WebhookHandlers
 ): Promise<void> {
-  const { event_type, data } = payload;
+  if (!isSubscriptionWebhook(payload)) {
+    console.warn(`Ignoring non-subscription webhook event: ${payload.type}`);
+    return;
+  }
 
-  switch (event_type) {
+  const { type: eventType, data } = payload;
+
+  switch (eventType) {
     case 'subscription.active':
       await handlers.onSubscriptionActive?.(data);
       break;
@@ -132,7 +149,6 @@ export async function processWebhookPayload(
       await handlers.onSubscriptionExpired?.(data);
       break;
     default:
-      // Unknown event type - log and ignore
-      console.warn(`Unknown webhook event type: ${event_type}`);
+      console.warn(`Unknown subscription webhook event type: ${eventType}`);
   }
 }

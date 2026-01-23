@@ -1,79 +1,19 @@
 /**
  * DodoPayments type definitions for Userplane billing
+ *
+ * Re-exports official types from 'dodopayments' package and defines
+ * Userplane-specific types for billing integration.
  */
 
 import type { PlanId } from '@workspace/pricing';
+import type DodoPayments from 'dodopayments';
 
-/**
- * Subscription status from DodoPayments
- */
-export type SubscriptionStatus =
-  | 'pending'
-  | 'active'
-  | 'on_hold'
-  | 'cancelled'
-  | 'failed'
-  | 'expired';
-
-/**
- * Payment frequency interval
- */
-export type PaymentInterval = 'Day' | 'Week' | 'Month' | 'Year';
-
-/**
- * DodoPayments customer information
- */
-export interface DodoCustomer {
-  customer_id: string;
-  email: string;
-  name: string;
-  phone_number?: string | null;
-}
-
-/**
- * DodoPayments subscription data from webhooks
- */
-export interface DodoSubscription {
-  subscription_id: string;
-  customer: DodoCustomer;
-  product_id: string;
-  status: SubscriptionStatus;
-  currency: string;
-  recurring_pre_tax_amount: number;
-  next_billing_date: string;
-  previous_billing_date?: string;
-  payment_frequency_interval: PaymentInterval;
-  payment_frequency_count: number;
-  subscription_period_interval: PaymentInterval;
-  subscription_period_count: number;
-  trial_period_days?: number;
-  metadata?: Record<string, string>;
-  cancelled_at?: string | null;
-  expires_at?: string | null;
-  created_at: string;
-}
-
-/**
- * Webhook event types for subscriptions
- */
-export type SubscriptionWebhookEvent =
-  | 'subscription.active'
-  | 'subscription.updated'
-  | 'subscription.on_hold'
-  | 'subscription.renewed'
-  | 'subscription.plan_changed'
-  | 'subscription.cancelled'
-  | 'subscription.failed'
-  | 'subscription.expired';
-
-/**
- * Webhook payload structure
- */
-export interface WebhookPayload {
-  event_type: SubscriptionWebhookEvent;
-  data: DodoSubscription;
-  timestamp: string;
-}
+// Re-export official DodoPayments types
+export type DodoSubscription = DodoPayments.Subscription;
+export type SubscriptionStatus = DodoPayments.SubscriptionStatus;
+export type PaymentInterval = DodoPayments.TimeInterval;
+export type DodoCustomer = DodoPayments.CustomerLimitedDetails;
+export type WebhookPayload = DodoPayments.UnwrapWebhookEvent;
 
 /**
  * Configuration for DodoPayments client

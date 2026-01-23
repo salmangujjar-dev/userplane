@@ -28,14 +28,14 @@ export {
 } from './products';
 
 // Webhooks
-export type { WebhookHandlers } from './webhooks';
+export type { SubscriptionWebhookPayload, WebhookHandlers } from './webhooks';
 export {
   extractWorkspaceIdFromMetadata,
   isSubscriptionEvent,
+  isSubscriptionWebhook,
   mapSubscriptionStatus,
   parseSubscriptionDates,
   processWebhookPayload,
-  SUBSCRIPTION_EVENTS,
 } from './webhooks';
 
 // Types
@@ -49,7 +49,6 @@ export type {
   ProductConfig,
   SubscriptionRecord,
   SubscriptionStatus,
-  SubscriptionWebhookEvent,
   UpdateSubscriptionInput,
   WebhookPayload,
 } from './types';

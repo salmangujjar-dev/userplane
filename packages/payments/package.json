@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@dodopayments/better-auth": "^1.4.2",
-    "dodopayments": "^0.24.0",
+    "dodopayments": "^2.16.0",
     "@workspace/pricing": "workspace:*"
   },
   "devDependencies": {
