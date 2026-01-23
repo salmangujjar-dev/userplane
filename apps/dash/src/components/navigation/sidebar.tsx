@@ -40,6 +40,7 @@ import { useSession } from '@/hooks/use-session';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspaces } from '@/hooks/use-workspaces';
+import { useChangePlan, useSubscriptionStatus } from '@/queries/use-billing-queries';
 import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 
@@ -68,16 +69,23 @@ export function Sidebar() {
     page: projectsPage,
   });
   const { data: workspaceResult } = useWorkspace();
+  const { data: subscriptionResult } = useSubscriptionStatus();
   const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
   const { signOut } = useAuth();
   const { hasAdminAccess } = useSession();
   const { mutate: createCheckout } = useCreateCheckout();
+  const { mutate: changePlan } = useChangePlan({
+    onSuccess: () => {
+      setIsPlanModalOpen(false);
+    },
+  });
 
   const account = accountResult?.success ? accountResult.data : null;
   const projectsData = projectsResult?.success ? projectsResult.data : null;
   const projects = projectsData?.projects ?? null;
   const projectsPagination = projectsData?.pagination;
   const workspace = workspaceResult?.success ? workspaceResult.data : null;
+  const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
   const workspacesData = workspacesResult?.success ? workspacesResult.data : null;
 
   const hasPrevPage = projectsPage > 1;
@@ -92,10 +100,18 @@ export function Sidebar() {
       return;
     }
 
-    createCheckout({
-      planSlug: slug,
-      workspaceId,
-    });
+    // Check if there's an active subscription - use changePlan for upgrades/downgrades
+    if (subscriptionData?.hasSubscription && subscriptionData?.status === 'active') {
+      changePlan({
+        planSlug: slug,
+      });
+    } else {
+      // No active subscription - use checkout for new subscription
+      createCheckout({
+        planSlug: slug,
+        workspaceId,
+      });
+    }
   };
 
   const sections: NavSection[] = [

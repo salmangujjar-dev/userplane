@@ -4,7 +4,7 @@
  */
 
 import type { DbClient } from '@workspace/db';
-import type { SubscriptionStatus } from '@workspace/payments';
+import type { ProrationBillingMode, SubscriptionStatus } from '@workspace/payments';
 import type { PlanId } from '@workspace/pricing';
 import { PLAN_IDS, PLAN_NAMES } from '@workspace/pricing';
 
@@ -17,6 +17,12 @@ import type { WorkspaceRepository } from '@/api/repositories/workspaces.reposito
 import type { Transaction } from '@/api/types';
 
 import { generateSubscriptionId } from '../lib/id';
+
+/**
+ * Default proration billing mode for plan changes
+ * This is a business decision controlled server-side
+ */
+const DEFAULT_PRORATION_MODE: ProrationBillingMode = 'prorated_immediately';
 
 export interface BillingServiceDeps {
   subscriptionRepo: SubscriptionRepository;
@@ -391,6 +397,62 @@ export class BillingService {
       planName: PLAN_NAMES[planId] || 'Unknown',
       currentPeriodEnd: subscription.currentPeriodEnd,
       cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    };
+  }
+
+  /**
+   * Change subscription plan (upgrade/downgrade)
+   * Uses DodoPayments subscriptions.changePlan API
+   * Proration mode is controlled server-side via DEFAULT_PRORATION_MODE
+   */
+  async changePlan(
+    workspaceId: string,
+    newProductId: string,
+    newPlanId: PlanId,
+    dodoClient: {
+      subscriptions: {
+        changePlan: (
+          subscriptionId: string,
+          params: {
+            product_id: string;
+            proration_billing_mode: ProrationBillingMode;
+            quantity: number;
+            metadata?: Record<string, string>;
+          }
+        ) => Promise<void>;
+      };
+    }
+  ) {
+    // Find the existing subscription for the workspace
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+
+    if (!subscription) {
+      throw new Error('No active subscription found for workspace');
+    }
+
+    if (subscription.status !== 'active') {
+      throw new Error('Subscription is not active');
+    }
+
+    const previousPlanId = subscription.planId;
+
+    // Call DodoPayments to change the plan
+    // Proration mode is a business decision controlled server-side
+    await dodoClient.subscriptions.changePlan(subscription.subscriptionId, {
+      product_id: newProductId,
+      proration_billing_mode: DEFAULT_PRORATION_MODE,
+      quantity: 1,
+      metadata: {
+        workspace_id: workspaceId,
+      },
+    });
+
+    // Note: The actual plan update in our database will happen via webhook
+    // when we receive the subscription.plan_changed event from DodoPayments
+
+    return {
+      previousPlanId,
+      newPlanId,
     };
   }
 }

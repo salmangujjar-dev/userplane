@@ -98,6 +98,37 @@ export const CustomerPortalDataSchema = z.object({
 export const CustomerPortalResponseSchema = ApiResponseSchema(CustomerPortalDataSchema);
 
 // ============================================================================
+// Change Plan
+// ============================================================================
+
+/**
+ * Change subscription plan input
+ * Note: Proration mode is controlled server-side as a business decision
+ */
+export const ChangePlanSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    planSlug: z.string(),
+  }),
+});
+
+/**
+ * Change plan response data
+ */
+export const ChangePlanDataSchema = z.object({
+  success: z.boolean(),
+  previousPlanId: z.string().nullable(),
+  newPlanId: z.string(),
+});
+
+/**
+ * Change plan response
+ */
+export const ChangePlanResponseSchema = ApiResponseSchema(ChangePlanDataSchema);
+
+// ============================================================================
 // Type exports
 // ============================================================================
 
@@ -105,3 +136,4 @@ export type SubscriptionStatus = z.infer<typeof SubscriptionStatusSchema>;
 export type SubscriptionStatusData = z.infer<typeof SubscriptionStatusDataSchema>;
 export type CheckoutSessionData = z.infer<typeof CheckoutSessionDataSchema>;
 export type CustomerPortalData = z.infer<typeof CustomerPortalDataSchema>;
+export type ChangePlanData = z.infer<typeof ChangePlanDataSchema>;

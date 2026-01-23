@@ -16,16 +16,24 @@ import { useState } from 'react';
 import { PlanUpgradeModal } from '@/components/modals/plan-upgrade-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { useWorkspace } from '@/hooks/use-workspace';
+import { useChangePlan, useSubscriptionStatus } from '@/queries/use-billing-queries';
 import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 
 export function WorkspacePlanSection() {
   const { data: workspaceResult, isLoading, error, refetch } = useWorkspace();
+  const { data: subscriptionResult } = useSubscriptionStatus();
   const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
+  const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
   const planName = (workspaceData?.workspace.workspacePlanName || 'Free') as PlanName;
   const workspaceId = workspaceData?.workspace.workspaceId;
 
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const { mutate: createCheckout, isPending: isCheckoutPending } = useCreateCheckout();
+  const { mutate: changePlan, isPending: isChangePlanPending } = useChangePlan({
+    onSuccess: () => {
+      setIsUpgradeModalOpen(false);
+    },
+  });
 
   const handleUpgrade = (planId: string) => {
     if (!workspaceId) return;
@@ -36,11 +44,21 @@ export function WorkspacePlanSection() {
       return;
     }
 
-    createCheckout({
-      planSlug: slug,
-      workspaceId,
-    });
+    // Check if there's an active subscription - use changePlan for upgrades/downgrades
+    if (subscriptionData?.hasSubscription && subscriptionData?.status === 'active') {
+      changePlan({
+        planSlug: slug,
+      });
+    } else {
+      // No active subscription - use checkout for new subscription
+      createCheckout({
+        planSlug: slug,
+        workspaceId,
+      });
+    }
   };
+
+  const isPending = isCheckoutPending || isChangePlanPending;
 
   if (isLoading) {
     return (
@@ -147,9 +165,9 @@ export function WorkspacePlanSection() {
               size="sm"
               className="shrink-0 h-8"
               onClick={() => setIsUpgradeModalOpen(true)}
-              disabled={isCheckoutPending}
+              disabled={isPending}
             >
-              {isCheckoutPending ? (
+              {isPending ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
                   Processing...

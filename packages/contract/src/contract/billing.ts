@@ -8,6 +8,8 @@ import { oc } from '@orpc/contract';
 
 import {
   BillingErrors,
+  ChangePlanResponseSchema,
+  ChangePlanSchema,
   CheckoutSessionResponseSchema,
   CreateCheckoutSessionSchema,
   CustomerPortalResponseSchema,
@@ -66,6 +68,23 @@ export const billingContract = oc.router({
     })
     .input(GetCustomerPortalSchema)
     .output(CustomerPortalResponseSchema)
+    .errors(BillingErrors),
+
+  /**
+   * POST /billing/:workspaceId/change-plan
+   * Change the subscription plan for a workspace
+   * For upgrading/downgrading existing subscriptions
+   * Requires workspace admin role
+   */
+  changePlan: oc
+    .route({
+      method: 'POST',
+      path: '/billing/{workspaceId}/change-plan',
+      summary: 'Change subscription plan',
+      description: 'Upgrade or downgrade an existing subscription to a different plan',
+    })
+    .input(ChangePlanSchema)
+    .output(ChangePlanResponseSchema)
     .errors(BillingErrors),
 });
 
