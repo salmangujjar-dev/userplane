@@ -1,6 +1,6 @@
 import type { DbClient } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
-import { APIError, betterAuth } from 'better-auth';
+import { APIError, betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, magicLink, openAPI } from 'better-auth/plugins';
 
@@ -70,6 +70,8 @@ export interface AuthConfig {
   admin?: AdminConfig;
   email: EmailConfig;
   deleteUser?: DeleteUserConfig;
+  /** Additional plugins to include (e.g., DodoPayments) */
+  plugins?: BetterAuthPlugin[];
 }
 
 export function createAuth(config: AuthConfig) {
@@ -132,6 +134,8 @@ export function createAuth(config: AuthConfig) {
       }),
       // Only include openAPI plugin in non-production environments
       ...(isProduction ? [] : [openAPI()]),
+      // Include any additional plugins (e.g., DodoPayments)
+      ...(config.plugins ?? []),
     ],
     socialProviders: {
       google: {

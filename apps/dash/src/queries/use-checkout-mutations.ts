@@ -14,7 +14,9 @@ interface CheckoutResult {
 
 /**
  * Hook to create a DodoPayments checkout session
- * Uses the Better Auth DodoPayments plugin
+ * Uses the Better Auth DodoPayments plugin with checkoutSession method
+ * Customer info is automatically pulled from the Better Auth session
+ * Billing info can be collected on the checkout page
  */
 export function useCreateCheckout(options?: {
   onError?: (error: Error) => void;
@@ -22,8 +24,11 @@ export function useCreateCheckout(options?: {
 }) {
   return useMutation<CheckoutResult, Error, CheckoutParams>({
     mutationFn: async ({ planSlug, workspaceId }) => {
-      const result = await authClient.dodopayments.checkout({
+      // Use checkoutSession which auto-pulls customer from session
+      // and collects billing on checkout page
+      const result = await authClient.dodopayments.checkoutSession({
         slug: planSlug,
+        referenceId: workspaceId,
         metadata: {
           workspace_id: workspaceId,
         },

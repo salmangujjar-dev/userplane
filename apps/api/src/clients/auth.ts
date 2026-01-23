@@ -1,13 +1,54 @@
-import { APIError, createAuth } from '@workspace/auth';
+import { APIError, createAuth, createDodoPaymentsPlugin } from '@workspace/auth';
 import { eq } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
+import {
+  CHECKOUT_PRODUCTS,
+  type DodoPaymentsConfig,
+  getDodoPaymentsClient,
+} from '@workspace/payments';
 
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
+import { createBillingWebhookHandler } from '@/api/handlers/billing-webhook.handler';
+import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import { BillingService } from '@/api/services/billing.service';
 import { emailService } from '@/api/services/email.service';
 
 const workspaceRepository = new WorkspaceRepository(db);
+
+// DodoPayments configuration
+const dodoConfig: DodoPaymentsConfig = {
+  apiKey: env.dodoPayments.apiKey || '',
+  webhookSecret: env.dodoPayments.webhookSecret || '',
+  environment: env.dodoPayments.environment,
+};
+
+// Get singleton DodoPayments client
+const dodoClient = getDodoPaymentsClient(dodoConfig);
+
+// Create billing service and webhook handler for DodoPayments
+const subscriptionRepo = new SubscriptionRepository(db);
+const billingService = new BillingService({
+  subscriptionRepo,
+  workspaceRepo: workspaceRepository,
+  db,
+});
+const handleBillingWebhook = createBillingWebhookHandler({
+  billingService,
+  emailService,
+});
+
+// Create DodoPayments plugin for Better Auth
+const dodoPaymentsPlugin = createDodoPaymentsPlugin({
+  client: dodoClient,
+  createCustomerOnSignUp: true,
+  products: CHECKOUT_PRODUCTS,
+  successUrl: `${env.dashboard.baseUrl}/workspace/create?step=complete`,
+  webhookSecret: dodoConfig.webhookSecret,
+  authenticatedUsersOnly: true,
+  onWebhookPayload: handleBillingWebhook,
+});
 
 export const auth = createAuth({
   database: db,
@@ -24,6 +65,7 @@ export const auth = createAuth({
   admin: {
     adminUserIds: env.admin.userIds,
   },
+  plugins: [dodoPaymentsPlugin],
   email: {
     sendVerificationEmail: async ({ user, url }) => {
       await emailService.sendSafeEmailVerification(
