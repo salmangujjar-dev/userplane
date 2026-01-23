@@ -14,6 +14,21 @@ export type SubscriptionStatus = DodoPayments.SubscriptionStatus;
 export type PaymentInterval = DodoPayments.TimeInterval;
 export type DodoCustomer = DodoPayments.CustomerLimitedDetails;
 export type WebhookPayload = DodoPayments.UnwrapWebhookEvent;
+export type WebhookEventType = DodoPayments.WebhookEventType;
+
+/**
+ * Subscription status values as a readonly array
+ * Derived from the official DodoPayments.SubscriptionStatus type
+ * Use this array to create database enums and validation schemas
+ */
+export const SUBSCRIPTION_STATUSES = [
+  'pending',
+  'active',
+  'on_hold',
+  'cancelled',
+  'failed',
+  'expired',
+] as const satisfies readonly SubscriptionStatus[];
 
 /**
  * Configuration for DodoPayments client

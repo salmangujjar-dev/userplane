@@ -258,6 +258,7 @@
       "dependencies": {
         "@orpc/contract": "^1.0.3",
         "@orpc/zod": "^1.0.3",
+        "@workspace/payments": "workspace:*",
         "@workspace/pricing": "workspace:*",
         "validator": "^13.12.0",
         "zod": "^3.24.2",
@@ -284,6 +285,7 @@
       "dependencies": {
         "@workspace/contract": "workspace:*",
         "@workspace/logger": "workspace:*",
+        "@workspace/payments": "workspace:*",
         "@workspace/pricing": "workspace:*",
         "better-auth": "^1.4.17",
         "drizzle-orm": "^0.36.4",

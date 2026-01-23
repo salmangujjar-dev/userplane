@@ -21,6 +21,7 @@
   "dependencies": {
     "@workspace/contract": "workspace:*",
     "@workspace/logger": "workspace:*",
+    "@workspace/payments": "workspace:*",
     "@workspace/pricing": "workspace:*",
     "better-auth": "^1.4.17",
     "drizzle-orm": "^0.36.4",

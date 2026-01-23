@@ -50,5 +50,7 @@ export type {
   SubscriptionRecord,
   SubscriptionStatus,
   UpdateSubscriptionInput,
+  WebhookEventType,
   WebhookPayload,
 } from './types';
+export { SUBSCRIPTION_STATUSES } from './types';

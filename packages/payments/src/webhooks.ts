@@ -12,7 +12,7 @@ import type { DodoSubscription, SubscriptionStatus, WebhookPayload } from './typ
 /**
  * Subscription webhook event types from DodoPayments
  */
-const SUBSCRIPTION_EVENTS = [
+const SUBSCRIPTION_EVENTS: readonly DodoPayments.WebhookEventType[] = [
   'subscription.active',
   'subscription.updated',
   'subscription.on_hold',
@@ -23,7 +23,17 @@ const SUBSCRIPTION_EVENTS = [
   'subscription.expired',
 ] as const;
 
-type SubscriptionEventType = (typeof SUBSCRIPTION_EVENTS)[number];
+type SubscriptionEventType = Extract<
+  DodoPayments.WebhookEventType,
+  | 'subscription.active'
+  | 'subscription.updated'
+  | 'subscription.on_hold'
+  | 'subscription.renewed'
+  | 'subscription.plan_changed'
+  | 'subscription.cancelled'
+  | 'subscription.failed'
+  | 'subscription.expired'
+>;
 
 /**
  * Check if an event type is a subscription event

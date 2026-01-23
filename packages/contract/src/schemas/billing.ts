@@ -2,6 +2,7 @@
  * Billing schemas for API contracts
  */
 
+import { SUBSCRIPTION_STATUSES } from '@workspace/payments';
 import { z } from 'zod';
 
 import { ApiResponseSchema } from './common';
@@ -11,16 +12,10 @@ import { ApiResponseSchema } from './common';
 // ============================================================================
 
 /**
- * Subscription status values
+ * Subscription status values from DodoPayments
+ * Uses official subscription status values from the dodopayments package
  */
-export const SubscriptionStatusSchema = z.enum([
-  'pending',
-  'active',
-  'on_hold',
-  'cancelled',
-  'failed',
-  'expired',
-]);
+export const SubscriptionStatusSchema = z.enum(SUBSCRIPTION_STATUSES);
 
 /**
  * Subscription status response data
