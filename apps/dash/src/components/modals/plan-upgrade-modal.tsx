@@ -1,5 +1,6 @@
 'use client';
 
+import { getSlugFromPlanId, type SubscriptionPreviewChangePlanResponse } from '@workspace/payments';
 import {
   BASE_PRICING_PLANS,
   type BasePricingPlan,
@@ -7,19 +8,22 @@ import {
   formatPlanRate,
   PLAN_CARD_HIGHLIGHTS,
   type PlanCycle,
+  type PlanId,
   type PlanName,
 } from '@workspace/pricing';
 import { Dialog, DialogContent, DialogTitle } from '@workspace/ui/components/dialog';
-import { Check } from 'lucide-react';
-import { useState } from 'react';
+import { Check, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { env } from '@/env';
+import { usePreviewPlanChange } from '@/queries/use-billing-queries';
 
 interface PlanUpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentPlanName: PlanName;
   onUpgrade?: (planId: string) => void;
+  hasActiveSubscription?: boolean;
 }
 
 interface PlanHighlightProps {
@@ -177,6 +181,226 @@ function PlanCard({
   );
 }
 
+function formatCurrency(amount: number, currency: string): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+  }).format(amount / 100);
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+interface PreviewViewProps {
+  preview: SubscriptionPreviewChangePlanResponse;
+  planName: string;
+  onConfirm: () => void;
+  onBack: () => void;
+  isConfirming: boolean;
+}
+
+function PreviewView({ preview, planName, onConfirm, onBack, isConfirming }: PreviewViewProps) {
+  const { immediate_charge, new_plan } = preview;
+  const { summary, line_items } = immediate_charge;
+
+  // Use summary.currency as fallback if new_plan.currency is not available
+  const currency = new_plan.currency || summary.currency;
+
+  const getLineItemAmount = (item: (typeof line_items)[number]): number => {
+    if (item.type === 'meter') {
+      return item.subtotal;
+    }
+    return item.unit_price * item.quantity * item.proration_factor;
+  };
+
+  const getLineItemName = (item: (typeof line_items)[number]): string => {
+    if ('name' in item && item.name) return item.name;
+    if ('description' in item && item.description) return item.description;
+    return 'Subscription';
+  };
+
+  return (
+    <div className="px-6 pb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Left Panel */}
+        <div className="flex flex-col h-full md:col-span-1">
+          {/* Header with Back Button */}
+          <div className="flex items-center gap-2 mb-8 pt-6">
+            <button
+              onClick={onBack}
+              disabled={isConfirming}
+              className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+              aria-label="Go back"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+            </button>
+            <h3 className="text-base font-semibold text-foreground">Review your upgrade</h3>
+          </div>
+
+          {/* Plan & Billing Info */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-zinc-600">Plan</span>
+              <span className="text-sm text-foreground font-semibold">{planName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-zinc-600">Billing</span>
+              <span className="text-sm text-foreground font-semibold capitalize">
+                {new_plan.payment_frequency_interval || 'monthly'}
+              </span>
+            </div>
+          </div>
+
+          {/* Spacer to push content to bottom */}
+          <div className="flex-1" />
+
+          {/* How Your Upgrade Works */}
+          <div className="pb-6">
+            <h4 className="text-base font-semibold text-foreground mb-4">How your upgrade works</h4>
+
+            <div className="relative space-y-4">
+              {/* Timeline connector line */}
+              <div className="absolute left-1.5 top-6 bottom-6 w-px bg-zinc-200" />
+
+              {/* Today */}
+              <div className="relative flex items-start gap-3">
+                <div className="relative z-10 w-3 h-3 rounded-full bg-foreground shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-foreground mb-1">Today</div>
+                  <div className="text-xs text-zinc-600 leading-relaxed">
+                    Your plan changes immediately. You&apos;ll be charged a prorated amount based on
+                    your remaining billing period.
+                  </div>
+                </div>
+              </div>
+
+              {/* Next Billing Date */}
+              <div className="relative flex items-start gap-3">
+                <div className="relative z-10 w-3 h-3 rounded-full bg-foreground shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-foreground mb-1">
+                    Next Billing Date
+                  </div>
+                  <div className="text-xs text-zinc-600 leading-relaxed">
+                    Starting{' '}
+                    <span className="font-semibold text-foreground">
+                      {formatDate(new_plan.next_billing_date)}
+                    </span>
+                    , you&apos;ll be charged{' '}
+                    <span className="font-semibold text-foreground">
+                      {formatCurrency(new_plan.recurring_pre_tax_amount, currency)}
+                    </span>{' '}
+                    per {(new_plan.payment_frequency_interval || 'month').toLowerCase()}.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel */}
+        <div className="flex flex-col pt-6 md:col-span-2">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 flex flex-col h-full">
+            {/* Amount Due Today */}
+            <div className="text-center pb-6 mb-6 border-b border-zinc-100">
+              <div className="text-sm text-zinc-600 mb-3">Amount due today</div>
+              <div className="text-4xl font-bold text-foreground">
+                {formatCurrency(summary.total_amount, summary.currency)}
+              </div>
+            </div>
+
+            {/* Proration Details */}
+            <div className="mb-6">
+              <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
+                Proration Details
+              </div>
+              <div className="space-y-3">
+                {line_items.map((item, i) => (
+                  <div key={i} className="flex justify-between items-start">
+                    <span className="text-sm text-zinc-700">{getLineItemName(item)}</span>
+                    <span className="text-sm font-semibold text-foreground ml-4 text-right">
+                      {formatCurrency(getLineItemAmount(item), summary.currency)}
+                    </span>
+                  </div>
+                ))}
+                {summary.tax !== null && summary.tax !== undefined && summary.tax > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-zinc-700">Tax</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {formatCurrency(summary.tax, summary.currency)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Separator */}
+            <div className="border-t border-zinc-100 my-6" />
+
+            {/* New Subscription */}
+            <div className="mb-6">
+              <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
+                New Subscription
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-zinc-700">Recurring Amount</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {formatCurrency(new_plan.recurring_pre_tax_amount, currency)}/
+                    {(new_plan.payment_frequency_interval || 'month').toLowerCase()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-zinc-700">Next Billing Date</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {formatDate(new_plan.next_billing_date)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Spacer to push button to bottom */}
+            <div className="flex-1" />
+
+            {/* Confirm Button */}
+            <button
+              onClick={onConfirm}
+              disabled={isConfirming}
+              className="w-full rounded-full px-6 py-3 font-medium transition-colors bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            >
+              {isConfirming ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </span>
+              ) : (
+                'Confirm'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function getPlansToShow(currentPlanName: PlanName, cycle: PlanCycle) {
   const plans = filterPlansByCycle(BASE_PRICING_PLANS, cycle);
   const getPlan = (name: PlanName) => plans.find((p) => p.name === name);
@@ -206,10 +430,30 @@ export function PlanUpgradeModal({
   onOpenChange,
   currentPlanName,
   onUpgrade,
+  hasActiveSubscription = false,
 }: PlanUpgradeModalProps) {
   const [billingCycle, setBillingCycle] = useState<PlanCycle>('annual');
   const defaultSelection = currentPlanName === 'Starter' ? 'left' : 'right';
   const [selectedPlan, setSelectedPlan] = useState<'left' | 'right'>(defaultSelection);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewData, setPreviewData] = useState<SubscriptionPreviewChangePlanResponse | null>(
+    null
+  );
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const { mutate: previewChange, isPending: isPreviewLoading } = usePreviewPlanChange();
+
+  // Reset state when modal opens or closes
+  useEffect(() => {
+    if (!open) {
+      // Reset all states when modal closes
+      setShowPreview(false);
+      setPreviewData(null);
+      setSelectedPlanId(null);
+      setIsConfirming(false);
+    }
+  }, [open]);
 
   const config = getPlansToShow(currentPlanName, billingCycle);
   if (!config) return null;
@@ -222,53 +466,139 @@ export function PlanUpgradeModal({
   const rightHighlights = PLAN_CARD_HIGHLIGHTS[right.name] || [];
   const maxHighlights = Math.max(leftHighlights.length, rightHighlights.length);
 
+  const handlePlanUpgrade = (planId: string) => {
+    if (!hasActiveSubscription) {
+      // No active subscription, go directly to checkout
+      onUpgrade?.(planId);
+      return;
+    }
+
+    // Active subscription exists, show preview first
+    const slug = getSlugFromPlanId(planId as PlanId);
+    if (!slug) {
+      console.error('No slug found for plan ID:', planId);
+      return;
+    }
+
+    setSelectedPlanId(planId);
+    previewChange(
+      { planSlug: slug },
+      {
+        onSuccess: (result) => {
+          if (result.alreadyOnPlan) {
+            // Already on this plan, just close
+            onOpenChange(false);
+          } else if (result.preview) {
+            // Show preview
+            setPreviewData(result.preview);
+            setShowPreview(true);
+          }
+        },
+      }
+    );
+  };
+
+  const handleConfirmChange = () => {
+    if (!selectedPlanId) return;
+
+    setIsConfirming(true);
+    onUpgrade?.(selectedPlanId);
+  };
+
+  const handleBackToPlans = () => {
+    setShowPreview(false);
+    setPreviewData(null);
+    setSelectedPlanId(null);
+  };
+
+  const handleClose = (open: boolean) => {
+    if (!open) {
+      // Reset state when closing
+      setShowPreview(false);
+      setPreviewData(null);
+      setSelectedPlanId(null);
+      setIsConfirming(false);
+    }
+    onOpenChange(open);
+  };
+
+  const selectedPlanName =
+    selectedPlanId === left.id ? left.name : selectedPlanId === right.id ? right.name : '';
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] p-0 gap-0 overflow-hidden" showCloseButton={false}>
-        <DialogTitle className="sr-only">Upgrade Plan</DialogTitle>
-        <div className="p-6 pb-4">
-          <BillingToggle cycle={billingCycle} onCycleChange={setBillingCycle} />
-        </div>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent
+        className={`p-0 gap-0 overflow-hidden ${showPreview ? 'sm:max-w-[900px]' : 'sm:max-w-[800px]'}`}
+        showCloseButton={!isPreviewLoading && !isConfirming && !showPreview}
+      >
+        <DialogTitle className="sr-only">
+          {showPreview ? 'Review Plan Change' : 'Upgrade Plan'}
+        </DialogTitle>
 
-        <div className="px-6 pb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PlanCard
-              plan={left}
-              highlights={leftHighlights}
-              isCurrent={leftIsCurrent}
-              isSelected={isSelectable ? selectedPlan === 'left' : !leftIsCurrent}
-              isSelectable={isSelectable}
-              showCheckoutButton={isSelectable ? selectedPlan === 'left' : !leftIsCurrent}
-              isAnnual={isAnnual}
-              minHighlights={maxHighlights}
-              onSelect={() => setSelectedPlan('left')}
-              onUpgrade={onUpgrade}
-            />
-            <PlanCard
-              plan={right}
-              highlights={rightHighlights}
-              isCurrent={rightIsCurrent}
-              isSelected={isSelectable ? selectedPlan === 'right' : !rightIsCurrent}
-              isSelectable={isSelectable}
-              showCheckoutButton={isSelectable ? selectedPlan === 'right' : !rightIsCurrent}
-              isAnnual={isAnnual}
-              minHighlights={maxHighlights}
-              onSelect={() => setSelectedPlan('right')}
-              onUpgrade={onUpgrade}
-            />
+        {showPreview && previewData ? (
+          <PreviewView
+            preview={previewData}
+            planName={selectedPlanName}
+            onConfirm={handleConfirmChange}
+            onBack={handleBackToPlans}
+            isConfirming={isConfirming}
+          />
+        ) : (
+          <>
+            <div className="p-6 pb-4">
+              <BillingToggle cycle={billingCycle} onCycleChange={setBillingCycle} />
+            </div>
+
+            <div className="px-6 pb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <PlanCard
+                  plan={left}
+                  highlights={leftHighlights}
+                  isCurrent={leftIsCurrent}
+                  isSelected={isSelectable ? selectedPlan === 'left' : !leftIsCurrent}
+                  isSelectable={isSelectable}
+                  showCheckoutButton={isSelectable ? selectedPlan === 'left' : !leftIsCurrent}
+                  isAnnual={isAnnual}
+                  minHighlights={maxHighlights}
+                  onSelect={() => setSelectedPlan('left')}
+                  onUpgrade={handlePlanUpgrade}
+                />
+                <PlanCard
+                  plan={right}
+                  highlights={rightHighlights}
+                  isCurrent={rightIsCurrent}
+                  isSelected={isSelectable ? selectedPlan === 'right' : !rightIsCurrent}
+                  isSelectable={isSelectable}
+                  showCheckoutButton={isSelectable ? selectedPlan === 'right' : !rightIsCurrent}
+                  isAnnual={isAnnual}
+                  minHighlights={maxHighlights}
+                  onSelect={() => setSelectedPlan('right')}
+                  onUpgrade={handlePlanUpgrade}
+                />
+              </div>
+            </div>
+
+            <div className="px-6 pb-6">
+              <a
+                href={`${env.home.url}/pricing`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-foreground hover:underline font-medium block text-center"
+              >
+                See all plans
+              </a>
+            </div>
+          </>
+        )}
+
+        {isPreviewLoading && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="w-8 h-8 animate-spin text-foreground" />
+              <p className="text-sm text-muted-foreground">Loading preview...</p>
+            </div>
           </div>
-        </div>
-
-        <div className="px-6 pb-6">
-          <a
-            href={`${env.home.url}/pricing`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-foreground hover:underline font-medium block text-center"
-          >
-            See all plans
-          </a>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

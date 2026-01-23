@@ -119,6 +119,63 @@ export const getCustomerPortalImpl = (
 };
 
 /**
+ * POST /billing/:workspaceId/preview-plan-change
+ * Preview subscription plan change for a workspace
+ * Shows proration details without committing the change
+ * Requires workspace admin role and active subscription
+ */
+export const previewPlanChangeImpl = (
+  billingService: BillingService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.billing.previewPlanChange
+    .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      const { workspaceId } = input.params;
+      const { planSlug } = input.body;
+
+      // Check if user is owner or admin
+      if (context.workspaceRole !== 'owner' && context.workspaceRole !== 'admin') {
+        throw billingError.PORTAL_UNAVAILABLE();
+      }
+
+      // Find the product by slug
+      const product = getProductBySlug(planSlug);
+      if (!product) {
+        throw billingError.INVALID_PLAN();
+      }
+
+      try {
+        // Get the DodoPayments client
+        const dodoClient = getDodoClient();
+
+        // Preview the plan change
+        const result = await billingService.previewPlanChange(
+          workspaceId,
+          product.productId,
+          dodoClient
+        );
+
+        return {
+          message: result.alreadyOnPlan ? 'Already on this plan' : 'Plan change preview retrieved',
+          data: result,
+        };
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('No active subscription')) {
+          throw billingError.NO_ACTIVE_SUBSCRIPTION();
+        }
+        if (error instanceof Error && error.message.includes('not active')) {
+          throw billingError.NO_ACTIVE_SUBSCRIPTION();
+        }
+        throw billingError.PLAN_CHANGE_FAILED();
+      }
+    });
+};
+
+/**
  * POST /billing/:workspaceId/change-plan
  * Change subscription plan for a workspace (upgrade/downgrade)
  * Requires workspace admin role and active subscription
@@ -160,11 +217,14 @@ export const changePlanImpl = (
         );
 
         return {
-          message: 'Subscription plan change initiated',
+          message: result.alreadyOnPlan
+            ? 'Already on this plan'
+            : 'Subscription plan change initiated',
           data: {
             success: true,
             previousPlanId: result.previousPlanId,
             newPlanId: result.newPlanId,
+            alreadyOnPlan: result.alreadyOnPlan,
           },
         };
       } catch (error) {
@@ -191,6 +251,11 @@ export function createBillingProcedures(
     getStatus: getSubscriptionStatusImpl(billingService, workspaceMemberService, workspaceService),
     createCheckout: createCheckoutSessionImpl(billingService, workspaceMemberService),
     getPortal: getCustomerPortalImpl(billingService, workspaceMemberService, workspaceService),
+    previewPlanChange: previewPlanChangeImpl(
+      billingService,
+      workspaceMemberService,
+      workspaceService
+    ),
     changePlan: changePlanImpl(billingService, workspaceMemberService, workspaceService),
   };
 }

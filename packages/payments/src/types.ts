@@ -16,6 +16,8 @@ export type DodoCustomer = DodoPayments.CustomerLimitedDetails;
 export type WebhookPayload = DodoPayments.UnwrapWebhookEvent;
 export type WebhookEventType = DodoPayments.WebhookEventType;
 export type SubscriptionChangePlanParams = DodoPayments.SubscriptionChangePlanParams;
+export type SubscriptionPreviewChangePlanResponse =
+  DodoPayments.SubscriptionPreviewChangePlanResponse;
 
 /**
  * Proration billing mode type from DodoPayments
