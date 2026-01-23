@@ -29,6 +29,7 @@
     "next": "^15.4.5",
     "nuqs": "^2.8.1",
     "react": "^19.1.1",
+    "react-confetti": "^6.4.0",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.71.1",
     "recharts": "2.15.4",

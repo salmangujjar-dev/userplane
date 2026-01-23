@@ -61,7 +61,9 @@ export function usePreviewPlanChange() {
       });
 
       if (error) {
-        throw new Error(error.message || 'Failed to preview plan change');
+        // Extract user-friendly error message
+        const errorMessage = error.message || 'Failed to preview plan change';
+        throw new Error(errorMessage);
       }
 
       if (!response?.data) {
@@ -70,6 +72,20 @@ export function usePreviewPlanChange() {
 
       // Type assertion is safe here because the API returns properly typed data from DodoPayments
       return response.data as PreviewPlanChangeResult;
+    },
+    onError: (error: Error) => {
+      // Show user-friendly toast messages for specific errors
+      const errorMessage = error.message || 'Failed to preview plan change';
+
+      if (errorMessage.includes('payment is pending') || errorMessage.includes('payment method')) {
+        toast.error(
+          'Please update your payment method or wait for the current payment to complete before changing plans.'
+        );
+      } else if (errorMessage.includes('No active subscription')) {
+        toast.error('You need an active subscription to change plans.');
+      } else {
+        toast.error(errorMessage);
+      }
     },
   });
 }
@@ -131,7 +147,19 @@ export function useChangePlan(options?: {
       options?.onSuccess?.(result);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to change subscription plan');
+      // Show user-friendly toast messages for specific errors
+      const errorMessage = error.message || 'Failed to change subscription plan';
+
+      if (errorMessage.includes('payment is pending') || errorMessage.includes('payment method')) {
+        toast.error(
+          'Please update your payment method or wait for the current payment to complete before changing plans.'
+        );
+      } else if (errorMessage.includes('No active subscription')) {
+        toast.error('You need an active subscription to change plans.');
+      } else {
+        toast.error(errorMessage);
+      }
+
       options?.onError?.(error);
     },
   });
