@@ -14,6 +14,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from '@workspace/ui/components/dialog';
 import { Check, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import Confetti from 'react-confetti';
 
 import { env } from '@/env';
 import { usePreviewPlanChange } from '@/queries/use-billing-queries';
@@ -23,6 +24,7 @@ interface PlanUpgradeModalProps {
   onOpenChange: (open: boolean) => void;
   currentPlanName: PlanName;
   onUpgrade?: (planId: string) => void;
+  onUpgradeSuccess?: () => void;
   hasActiveSubscription?: boolean;
 }
 
@@ -202,6 +204,113 @@ interface PreviewViewProps {
   onConfirm: () => void;
   onBack: () => void;
   isConfirming: boolean;
+}
+
+interface SuccessViewProps {
+  planName: string;
+  recurringAmount: string;
+  nextBillingDate: string;
+  billingFrequency: string;
+  onClose: () => void;
+}
+
+function SuccessView({
+  planName,
+  recurringAmount,
+  nextBillingDate,
+  billingFrequency,
+  onClose,
+}: SuccessViewProps) {
+  const [showConfetti, setShowConfetti] = useState(true);
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    // Set initial window size
+    setWindowSize({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+
+    // Update on resize
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Stop confetti after 3 seconds
+    const timer = setTimeout(() => {
+      setShowConfetti(false);
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  return (
+    <>
+      {showConfetti && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={500}
+          gravity={0.3}
+        />
+      )}
+      <div className="px-6 pb-6 pt-12">
+        <div className="max-w-md mx-auto text-center space-y-8">
+          {/* Success Icon */}
+          <div className="flex justify-center">
+            <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
+              <Check className="w-10 h-10 text-green-600" />
+            </div>
+          </div>
+
+          {/* Success Message */}
+          <div className="space-y-3">
+            <h3 className="text-2xl font-bold text-foreground">Upgrade Complete!</h3>
+            <p className="text-base text-muted-foreground">
+              Your workspace has been successfully upgraded to{' '}
+              <span className="font-semibold text-foreground">{planName}</span>
+            </p>
+          </div>
+
+          {/* Plan Details Card */}
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 text-left space-y-4">
+            <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+              Your New Subscription
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-zinc-700">Recurring Amount</span>
+                <span className="text-sm font-semibold text-foreground">
+                  {recurringAmount}/{billingFrequency}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-zinc-700">Next Billing Date</span>
+                <span className="text-sm font-semibold text-foreground">{nextBillingDate}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="w-full rounded-full px-6 py-3 font-medium transition-colors bg-foreground text-background hover:bg-foreground/90"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </>
+  );
 }
 
 function PreviewView({ preview, planName, onConfirm, onBack, isConfirming }: PreviewViewProps) {
@@ -430,8 +539,10 @@ export function PlanUpgradeModal({
   onOpenChange,
   currentPlanName,
   onUpgrade,
+  onUpgradeSuccess,
   hasActiveSubscription = false,
 }: PlanUpgradeModalProps) {
+  const [showSuccess, setShowSuccess] = useState(false);
   const [billingCycle, setBillingCycle] = useState<PlanCycle>('annual');
   const defaultSelection = currentPlanName === 'Starter' ? 'left' : 'right';
   const [selectedPlan, setSelectedPlan] = useState<'left' | 'right'>(defaultSelection);
@@ -487,6 +598,8 @@ export function PlanUpgradeModal({
         onSuccess: (result) => {
           if (result.alreadyOnPlan) {
             // Already on this plan, just close
+            // Error handling is done by the mutation hook (usePreviewPlanChange)
+            // which shows appropriate toast messages based on error type
             onOpenChange(false);
           } else if (result.preview) {
             // Show preview
@@ -496,6 +609,14 @@ export function PlanUpgradeModal({
         },
       }
     );
+
+    // Show success view after a brief delay to simulate processing
+    setTimeout(() => {
+      setIsConfirming(false);
+      setShowPreview(false);
+      setShowSuccess(true);
+      onUpgradeSuccess?.();
+    }, 1500);
   };
 
   const handleConfirmChange = () => {
@@ -508,7 +629,12 @@ export function PlanUpgradeModal({
   const handleBackToPlans = () => {
     setShowPreview(false);
     setPreviewData(null);
+    setShowSuccess(false);
     setSelectedPlanId(null);
+  };
+
+  const handleSuccessClose = () => {
+    onOpenChange(false);
   };
 
   const handleClose = (open: boolean) => {
@@ -522,20 +648,41 @@ export function PlanUpgradeModal({
     onOpenChange(open);
   };
 
+  const getSuccessDetails = () => {
+    if (!previewData) return null;
+    const { new_plan } = previewData;
+    const currency = new_plan.currency || 'USD';
+    return {
+      recurringAmount: formatCurrency(new_plan.recurring_pre_tax_amount, currency),
+      nextBillingDate: formatDate(new_plan.next_billing_date),
+      billingFrequency: (new_plan.payment_frequency_interval || 'month').toLowerCase(),
+    };
+  };
+
+  const successDetails = getSuccessDetails();
+
   const selectedPlanName =
     selectedPlanId === left.id ? left.name : selectedPlanId === right.id ? right.name : '';
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className={`p-0 gap-0 overflow-hidden ${showPreview ? 'sm:max-w-[900px]' : 'sm:max-w-[800px]'}`}
-        showCloseButton={!isPreviewLoading && !isConfirming && !showPreview}
+        className={`p-0 gap-0 overflow-hidden ${showPreview || showSuccess ? 'sm:max-w-[900px]' : 'sm:max-w-[800px]'}`}
+        showCloseButton={!isPreviewLoading && !isConfirming && !showPreview && !showSuccess}
       >
         <DialogTitle className="sr-only">
-          {showPreview ? 'Review Plan Change' : 'Upgrade Plan'}
+          {showSuccess ? 'Upgrade Complete' : showPreview ? 'Review Plan Change' : 'Upgrade Plan'}
         </DialogTitle>
 
-        {showPreview && previewData ? (
+        {showSuccess && successDetails ? (
+          <SuccessView
+            planName={selectedPlanName}
+            recurringAmount={successDetails.recurringAmount}
+            nextBillingDate={successDetails.nextBillingDate}
+            billingFrequency={successDetails.billingFrequency}
+            onClose={handleSuccessClose}
+          />
+        ) : showPreview && previewData ? (
           <PreviewView
             preview={previewData}
             planName={selectedPlanName}

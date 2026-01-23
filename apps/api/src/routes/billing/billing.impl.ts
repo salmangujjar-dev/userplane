@@ -1,10 +1,15 @@
 /**
  * Billing contract implementation using oRPC
  * Implements the billing contract defined in @workspace/contract
+ *
+ * Error Handling:
+ * Uses type-safe DodoPayments error classes (ConflictError, NotFoundError, etc.)
+ * instead of checking status codes or parsing error messages.
+ * See: https://docs.dodopayments.com/developer-resources/subscription-upgrade-downgrade.md
  */
 
 import { billingError } from '@workspace/contract';
-import { getProductBySlug } from '@workspace/payments';
+import { ConflictError, getProductBySlug } from '@workspace/payments';
 
 import { getDodoClient } from '@/api/clients/dodo';
 import { authorized } from '@/api/middleware/auth.orpc';
@@ -164,12 +169,25 @@ export const previewPlanChangeImpl = (
           data: result,
         };
       } catch (error) {
-        if (error instanceof Error && error.message.includes('No active subscription')) {
-          throw billingError.NO_ACTIVE_SUBSCRIPTION();
+        // Handle DodoPayments-specific errors using type-safe error classes
+        // See: https://docs.dodopayments.com/developer-resources/subscription-upgrade-downgrade.md#subscription-on-hold-after-plan-change
+
+        // 409 Conflict - subscription on hold or pending payment
+        if (error instanceof ConflictError) {
+          throw billingError.PENDING_PAYMENT();
         }
-        if (error instanceof Error && error.message.includes('not active')) {
-          throw billingError.NO_ACTIVE_SUBSCRIPTION();
+
+        // Check for subscription state errors
+        if (error instanceof Error) {
+          if (
+            error.message.includes('No active subscription') ||
+            error.message.includes('not active')
+          ) {
+            throw billingError.NO_ACTIVE_SUBSCRIPTION();
+          }
         }
+
+        // Generic plan change failure
         throw billingError.PLAN_CHANGE_FAILED();
       }
     });
@@ -228,12 +246,25 @@ export const changePlanImpl = (
           },
         };
       } catch (error) {
-        if (error instanceof Error && error.message.includes('No active subscription')) {
-          throw billingError.NO_ACTIVE_SUBSCRIPTION();
+        // Handle DodoPayments-specific errors using type-safe error classes
+        // See: https://docs.dodopayments.com/developer-resources/subscription-upgrade-downgrade.md#subscription-on-hold-after-plan-change
+
+        // 409 Conflict - subscription on hold or pending payment
+        if (error instanceof ConflictError) {
+          throw billingError.PENDING_PAYMENT();
         }
-        if (error instanceof Error && error.message.includes('not active')) {
-          throw billingError.NO_ACTIVE_SUBSCRIPTION();
+
+        // Check for subscription state errors
+        if (error instanceof Error) {
+          if (
+            error.message.includes('No active subscription') ||
+            error.message.includes('not active')
+          ) {
+            throw billingError.NO_ACTIVE_SUBSCRIPTION();
+          }
         }
+
+        // Generic plan change failure
         throw billingError.PLAN_CHANGE_FAILED();
       }
     });

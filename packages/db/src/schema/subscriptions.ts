@@ -1,6 +1,6 @@
 import { SUBSCRIPTION_STATUSES } from '@workspace/payments';
 import { relations } from 'drizzle-orm';
-import { boolean, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { boolean, index, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 import { workspaces } from './workspaces';
 
@@ -55,8 +55,8 @@ export const subscriptions = pgTable(
     uniqueIndex('subscriptions_workspace_id_idx').on(table.workspaceId),
     // Index for looking up by DodoPayments subscription ID
     uniqueIndex('subscriptions_subscription_id_idx').on(table.subscriptionId),
-    // Index for customer lookups
-    uniqueIndex('subscriptions_customer_id_idx').on(table.customerId),
+    // Index for customer lookups (NOT unique - customers can have multiple subscriptions)
+    index('subscriptions_customer_id_idx').on(table.customerId),
   ]
 );
 

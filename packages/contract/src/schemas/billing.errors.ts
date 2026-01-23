@@ -42,4 +42,9 @@ export const BillingErrors = {
     message: 'Workspace does not have an active subscription to change',
     status: 400,
   },
+  PENDING_PAYMENT: {
+    message:
+      'Cannot change plan while a payment is pending. Please update your payment method or wait for the current payment to complete.',
+    status: 409,
+  },
 } as const;

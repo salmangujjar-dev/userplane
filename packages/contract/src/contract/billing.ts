@@ -33,6 +33,7 @@ export const billingContract = oc.router({
     .route({
       method: 'GET',
       path: '/billing/{workspaceId}/status',
+      inputStructure: 'detailed',
       summary: 'Get subscription status',
       description: 'Get the current subscription status for a workspace',
     })
@@ -65,6 +66,7 @@ export const billingContract = oc.router({
     .route({
       method: 'GET',
       path: '/billing/{workspaceId}/portal',
+      inputStructure: 'detailed',
       summary: 'Get customer portal URL',
       description: 'Get the DodoPayments customer portal URL for a workspace',
     })
@@ -82,6 +84,7 @@ export const billingContract = oc.router({
     .route({
       method: 'POST',
       path: '/billing/{workspaceId}/preview-plan-change',
+      inputStructure: 'detailed',
       summary: 'Preview subscription plan change',
       description: 'Preview proration and cost details for a plan change without committing',
     })
@@ -99,6 +102,7 @@ export const billingContract = oc.router({
     .route({
       method: 'POST',
       path: '/billing/{workspaceId}/change-plan',
+      inputStructure: 'detailed',
       summary: 'Change subscription plan',
       description: 'Upgrade or downgrade an existing subscription to a different plan',
     })

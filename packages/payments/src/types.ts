@@ -20,6 +20,47 @@ export type SubscriptionPreviewChangePlanResponse =
   DodoPayments.SubscriptionPreviewChangePlanResponse;
 
 /**
+ * Re-export DodoPayments error classes for type-safe error handling
+ *
+ * Use these error classes with instanceof checks instead of parsing status codes:
+ *
+ * @example
+ * ```typescript
+ * import { ConflictError } from '@workspace/payments';
+ *
+ * try {
+ *   await dodoClient.subscriptions.changePlan(subscriptionId, params);
+ * } catch (error) {
+ *   if (error instanceof ConflictError) {
+ *     // Handle 409 Conflict (e.g., pending payment)
+ *   }
+ * }
+ * ```
+ *
+ * Available error classes:
+ * - ConflictError (409): Subscription on hold, pending payment
+ * - NotFoundError (404): Resource not found
+ * - BadRequestError (400): Invalid request
+ * - UnprocessableEntityError (422): Validation failed
+ * - AuthenticationError (401): Invalid credentials
+ * - PermissionDeniedError (403): Insufficient permissions
+ * - RateLimitError (429): Too many requests
+ * - InternalServerError (500): Server error
+ */
+export {
+  APIError,
+  AuthenticationError,
+  BadRequestError,
+  ConflictError,
+  DodoPaymentsError,
+  InternalServerError,
+  NotFoundError,
+  PermissionDeniedError,
+  RateLimitError,
+  UnprocessableEntityError,
+} from 'dodopayments';
+
+/**
  * Proration billing mode type from DodoPayments
  * Extracted from SubscriptionChangePlanParams
  */
