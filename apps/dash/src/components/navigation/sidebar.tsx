@@ -1,6 +1,7 @@
 'use client';
 
-import { DEFAULT_PLAN_NAME, type PlanName } from '@workspace/pricing';
+import { getSlugFromPlanId } from '@workspace/payments';
+import { DEFAULT_PLAN_NAME, type PlanId, type PlanName } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
   DropdownMenu,
@@ -39,6 +40,7 @@ import { useSession } from '@/hooks/use-session';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspaces } from '@/hooks/use-workspaces';
+import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 
 const SIDEBAR_PROJECTS_PER_PAGE = 5;
@@ -69,6 +71,7 @@ export function Sidebar() {
   const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
   const { signOut } = useAuth();
   const { hasAdminAccess } = useSession();
+  const { mutate: createCheckout } = useCreateCheckout();
 
   const account = accountResult?.success ? accountResult.data : null;
   const projectsData = projectsResult?.success ? projectsResult.data : null;
@@ -79,6 +82,21 @@ export function Sidebar() {
 
   const hasPrevPage = projectsPage > 1;
   const hasNextPage = projectsPagination ? projectsPage < projectsPagination.totalPages : false;
+
+  const handleUpgrade = (planId: string) => {
+    if (!workspaceId) return;
+
+    const slug = getSlugFromPlanId(planId as PlanId);
+    if (!slug) {
+      console.error('No slug found for plan ID:', planId);
+      return;
+    }
+
+    createCheckout({
+      planSlug: slug,
+      workspaceId,
+    });
+  };
 
   const sections: NavSection[] = [
     {
@@ -123,6 +141,7 @@ export function Sidebar() {
         open={isPlanModalOpen}
         onOpenChange={setIsPlanModalOpen}
         currentPlanName={(workspace?.workspace.workspacePlanName || DEFAULT_PLAN_NAME) as PlanName}
+        onUpgrade={handleUpgrade}
       />
 
       <nav className="flex-1 overflow-y-auto">

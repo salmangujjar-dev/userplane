@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { DomainUrlSchema } from '@workspace/contract';
+import { getSlugFromPlanId } from '@workspace/payments';
 import {
   BASE_PRICING_PLANS,
   type BasePricingPlan,
@@ -9,6 +10,7 @@ import {
   formatPlanRate,
   PLAN_CARD_HIGHLIGHTS,
   type PlanCycle,
+  type PlanId,
   USER_SELECTABLE_PLAN_IDS,
 } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
@@ -28,6 +30,7 @@ import { URLInput } from '@/components/url-input';
 import { useAccount } from '@/hooks/use-account';
 import { useAuth } from '@/hooks/use-auth';
 import { useCreateWorkspace } from '@/hooks/use-create-workspace';
+import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 const workspaceFormSchema = z.object({
@@ -65,6 +68,7 @@ export default function CreateWorkspacePage() {
 
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { mutate: createWorkspace, isPending } = useCreateWorkspace();
+  const { mutate: createCheckout, isPending: isCheckoutPending } = useCreateCheckout();
   const { data: accountResult } = useAccount();
   const { signOut } = useAuth();
 
@@ -140,10 +144,22 @@ export default function CreateWorkspacePage() {
           if (!workspaceId || !workspaceName) return;
 
           setWorkspaceStore(workspaceId);
-          setCreatedWorkspace({
-            workspaceId,
-            workspaceName,
-          });
+
+          // Get the checkout slug for the selected plan
+          const slug = getSlugFromPlanId(planId as PlanId);
+          if (slug) {
+            // Trigger checkout - this will redirect to the payment page
+            createCheckout({
+              planSlug: slug,
+              workspaceId,
+            });
+          } else {
+            // No checkout needed (e.g., enterprise/custom plans) - go to workspace
+            setCreatedWorkspace({
+              workspaceId,
+              workspaceName,
+            });
+          }
         },
       }
     );
@@ -211,7 +227,7 @@ export default function CreateWorkspacePage() {
       <PlanSelectionStep
         onBack={() => setStep('url')}
         onPlanSelect={handlePlanSelect}
-        isPending={isPending}
+        isPending={isPending || isCheckoutPending}
         prefilledPlanName={prefilledPlanName}
         prefilledPlanCycle={prefilledPlanCycle}
       />
@@ -466,7 +482,7 @@ function PlanSelectionStep({
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Setting up workspace...</span>
+            <span>Setting up workspace and preparing checkout...</span>
           </div>
         </div>
       </div>
