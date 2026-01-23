@@ -34,4 +34,12 @@ export const BillingErrors = {
     message: 'Workspace does not have a billing customer ID',
     status: 400,
   },
+  PLAN_CHANGE_FAILED: {
+    message: 'Failed to change subscription plan',
+    status: 500,
+  },
+  NO_ACTIVE_SUBSCRIPTION: {
+    message: 'Workspace does not have an active subscription to change',
+    status: 400,
+  },
 } as const;

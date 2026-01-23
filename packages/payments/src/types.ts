@@ -15,6 +15,14 @@ export type PaymentInterval = DodoPayments.TimeInterval;
 export type DodoCustomer = DodoPayments.CustomerLimitedDetails;
 export type WebhookPayload = DodoPayments.UnwrapWebhookEvent;
 export type WebhookEventType = DodoPayments.WebhookEventType;
+export type SubscriptionChangePlanParams = DodoPayments.SubscriptionChangePlanParams;
+
+/**
+ * Proration billing mode type from DodoPayments
+ * Extracted from SubscriptionChangePlanParams
+ */
+export type ProrationBillingMode =
+  DodoPayments.SubscriptionChangePlanParams['proration_billing_mode'];
 
 /**
  * Subscription status values as a readonly array
@@ -29,6 +37,17 @@ export const SUBSCRIPTION_STATUSES = [
   'failed',
   'expired',
 ] as const satisfies readonly SubscriptionStatus[];
+
+/**
+ * Proration billing mode values as a readonly array
+ * Derived from the official DodoPayments.SubscriptionChangePlanParams type
+ * Use this array to create validation schemas
+ */
+export const PRORATION_BILLING_MODES = [
+  'prorated_immediately',
+  'full_immediately',
+  'difference_immediately',
+] as const satisfies readonly ProrationBillingMode[];
 
 /**
  * Configuration for DodoPayments client

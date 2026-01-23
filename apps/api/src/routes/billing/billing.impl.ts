@@ -6,6 +6,7 @@
 import { billingError } from '@workspace/contract';
 import { getProductBySlug } from '@workspace/payments';
 
+import { getDodoClient } from '@/api/clients/dodo';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { BillingService } from '@/api/services/billing.service';
@@ -118,6 +119,67 @@ export const getCustomerPortalImpl = (
 };
 
 /**
+ * POST /billing/:workspaceId/change-plan
+ * Change subscription plan for a workspace (upgrade/downgrade)
+ * Requires workspace admin role and active subscription
+ */
+export const changePlanImpl = (
+  billingService: BillingService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.billing.changePlan
+    .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      const { workspaceId } = input.params;
+      const { planSlug } = input.body;
+
+      // Check if user is owner or admin
+      if (context.workspaceRole !== 'owner' && context.workspaceRole !== 'admin') {
+        throw billingError.PORTAL_UNAVAILABLE();
+      }
+
+      // Find the product by slug
+      const product = getProductBySlug(planSlug);
+      if (!product) {
+        throw billingError.INVALID_PLAN();
+      }
+
+      try {
+        // Get the DodoPayments client
+        const dodoClient = getDodoClient();
+
+        // Change the plan (proration mode is controlled server-side)
+        const result = await billingService.changePlan(
+          workspaceId,
+          product.productId,
+          product.planId,
+          dodoClient
+        );
+
+        return {
+          message: 'Subscription plan change initiated',
+          data: {
+            success: true,
+            previousPlanId: result.previousPlanId,
+            newPlanId: result.newPlanId,
+          },
+        };
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('No active subscription')) {
+          throw billingError.NO_ACTIVE_SUBSCRIPTION();
+        }
+        if (error instanceof Error && error.message.includes('not active')) {
+          throw billingError.NO_ACTIVE_SUBSCRIPTION();
+        }
+        throw billingError.PLAN_CHANGE_FAILED();
+      }
+    });
+};
+
+/**
  * Create all billing procedures
  */
 export function createBillingProcedures(
@@ -129,5 +191,6 @@ export function createBillingProcedures(
     getStatus: getSubscriptionStatusImpl(billingService, workspaceMemberService, workspaceService),
     createCheckout: createCheckoutSessionImpl(billingService, workspaceMemberService),
     getPortal: getCustomerPortalImpl(billingService, workspaceMemberService, workspaceService),
+    changePlan: changePlanImpl(billingService, workspaceMemberService, workspaceService),
   };
 }

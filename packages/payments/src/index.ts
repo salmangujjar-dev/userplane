@@ -47,10 +47,12 @@ export type {
   DodoSubscription,
   PaymentInterval,
   ProductConfig,
+  ProrationBillingMode,
+  SubscriptionChangePlanParams,
   SubscriptionRecord,
   SubscriptionStatus,
   UpdateSubscriptionInput,
   WebhookEventType,
   WebhookPayload,
 } from './types';
-export { SUBSCRIPTION_STATUSES } from './types';
+export { PRORATION_BILLING_MODES, SUBSCRIPTION_STATUSES } from './types';
