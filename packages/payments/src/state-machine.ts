@@ -13,24 +13,7 @@
  * - expired   → (terminal)
  */
 
-import type DodoPayments from 'dodopayments';
-
 import type { SubscriptionStatus } from './types';
-
-/**
- * Subscription webhook event types that trigger status changes
- * Typed to DodoPayments.WebhookEventType for compile-time safety
- */
-export type SubscriptionWebhookEventType = Extract<
-  DodoPayments.WebhookEventType,
-  | 'subscription.active'
-  | 'subscription.renewed'
-  | 'subscription.plan_changed'
-  | 'subscription.on_hold'
-  | 'subscription.cancelled'
-  | 'subscription.failed'
-  | 'subscription.expired'
->;
 
 /**
  * Valid state transitions for subscription statuses
@@ -83,49 +66,6 @@ export function isValidTransition(from: SubscriptionStatus, to: SubscriptionStat
  */
 export function isCancelledToExpiredValid(cancelAtPeriodEnd: boolean): boolean {
   return cancelAtPeriodEnd;
-}
-
-/**
- * Map webhook event types to target subscription statuses
- * Keys are type-locked to DodoPayments.WebhookEventType
- */
-export const EVENT_TO_STATUS: Record<SubscriptionWebhookEventType, SubscriptionStatus> = {
-  'subscription.active': 'active',
-  'subscription.renewed': 'active',
-  'subscription.plan_changed': 'active',
-  'subscription.on_hold': 'on_hold',
-  'subscription.cancelled': 'cancelled',
-  'subscription.failed': 'failed',
-  'subscription.expired': 'expired',
-} as const;
-
-/**
- * Check if an event type is a subscription webhook event that triggers status change
- */
-export function isSubscriptionWebhookEvent(
-  eventType: string
-): eventType is SubscriptionWebhookEventType {
-  const isStatusEvent = eventType in EVENT_TO_STATUS;
-  console.log(`[StateMachine] isSubscriptionWebhookEvent: ${eventType} → ${isStatusEvent}`);
-  return isStatusEvent;
-}
-
-/**
- * Get the target status for a webhook event type
- *
- * @param eventType - The webhook event type
- * @returns The target status, or undefined if not a status-changing event
- */
-export function getTargetStatusForEvent(eventType: string): SubscriptionStatus | undefined {
-  if (isSubscriptionWebhookEvent(eventType)) {
-    const targetStatus = EVENT_TO_STATUS[eventType];
-    console.log(`[StateMachine] getTargetStatusForEvent: ${eventType} → ${targetStatus}`);
-    return targetStatus;
-  }
-  console.log(
-    `[StateMachine] getTargetStatusForEvent: ${eventType} → undefined (not a status event)`
-  );
-  return undefined;
 }
 
 /**

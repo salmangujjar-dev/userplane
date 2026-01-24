@@ -14,7 +14,6 @@ import {
   type DodoSubscription,
   getDodoPaymentsClient,
   getPlanIdFromProductId,
-  getTargetStatusForEvent,
   isSubscriptionEvent,
   parseSubscriptionDates,
   type SubscriptionStatus,
@@ -197,28 +196,21 @@ export class WebhookProcessorService {
       };
     }
 
-    // 5. Determine target status
-    console.log(`[WebhookProcessor] Determining target status for event: ${eventType}`);
-    let targetStatus = getTargetStatusForEvent(eventType);
-
-    // For subscription.updated, use status from payload
-    if (eventType === 'subscription.updated') {
-      targetStatus = subscription.status;
-      console.log(
-        `[WebhookProcessor] subscription.updated: using payload status = ${targetStatus}`
-      );
-    }
+    // 5. Determine target status from subscription payload
+    // The subscription object always contains the current status, so we read it directly
+    console.log(`[WebhookProcessor] Reading target status from subscription payload`);
+    let targetStatus = subscription.status;
 
     if (!targetStatus) {
-      console.log(`[WebhookProcessor] SKIP: Unknown event type ${eventType}`);
+      console.log(`[WebhookProcessor] SKIP: No status in subscription payload`);
       await this.deps.webhookEventsRepo.markSkipped(webhookId, {
         previousStatus: current.status,
-        skipReason: `Unknown event type: ${eventType}`,
+        skipReason: 'No status in subscription payload',
       });
       return {
         processed: false,
         skipped: true,
-        skipReason: `Unknown event type: ${eventType}`,
+        skipReason: 'No status in subscription payload',
         previousStatus: current.status,
         subscriptionId,
       };

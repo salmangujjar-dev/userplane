@@ -39,12 +39,9 @@ export {
 } from './webhooks';
 
 // State Machine
-export type { SubscriptionWebhookEventType, TransitionValidationResult } from './state-machine';
+export type { TransitionValidationResult } from './state-machine';
 export {
-  EVENT_TO_STATUS,
-  getTargetStatusForEvent,
   isCancelledToExpiredValid,
-  isSubscriptionWebhookEvent,
   isTerminalState,
   isValidTransition,
   TERMINAL_STATES,
