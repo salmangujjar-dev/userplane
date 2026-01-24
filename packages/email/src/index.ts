@@ -60,6 +60,7 @@ export type {
   WelcomeEmailPilotProps,
   WelcomeEmailRequesterProps,
   WelcomeEmailSubscriptionProps,
+  WorkspaceInviteEmailProps,
 } from './emails.js';
 export {
   renderAccessRequest,
@@ -101,6 +102,7 @@ export {
   renderWelcomeEmailPilot,
   renderWelcomeEmailRequester,
   renderWelcomeEmailSubscription,
+  renderWorkspaceInvite,
 } from './emails.js';
 
 // Email templates (direct exports for advanced usage)

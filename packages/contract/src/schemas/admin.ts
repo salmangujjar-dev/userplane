@@ -1,4 +1,3 @@
-import { PLAN_IDS, USER_SELECTABLE_PLAN_IDS } from '@workspace/pricing';
 import { z } from 'zod';
 
 import {
@@ -264,8 +263,6 @@ export const AdminWorkspaceMemberSchema = z.object({
 export const AdminWorkspaceListItemSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
-  workspacePlan: z.enum(PLAN_IDS),
-  workspacePlanName: z.string(),
   createdAt: z.string(),
   memberCount: z.number(),
   projectCount: z.number(),
@@ -283,8 +280,6 @@ export const AdminWorkspaceListItemSchema = z.object({
 export const AdminWorkspaceDetailSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
-  workspacePlan: z.enum(PLAN_IDS),
-  workspacePlanName: z.string(),
   createdAt: z.string(),
   isDeleted: z.boolean(),
   deletedAt: z.string().nullable(),
@@ -405,7 +400,6 @@ export const AdminSearchWorkspacesInputSchema = z.object({
       sortBy: z.enum(ADMIN_WORKSPACE_SORT_FIELDS).optional().default('createdAt'),
       sortDirection: SortDirectionSchema.optional().default('desc'),
       filterStatus: z.enum(ADMIN_WORKSPACE_FILTER_STATUS_VALUES).optional(),
-      filterPlan: z.enum(PLAN_IDS).optional(),
     })
     .optional()
     .default({}),
@@ -669,7 +663,7 @@ export const AdminProvisionMemberSchema = z.object({
 
 /**
  * Admin provision workspace input
- * Plan is required and must be user-selectable (no admin-only plans like sandbox/free)
+ * Workspaces start on free plan - users upgrade via subscription
  */
 export const AdminProvisionWorkspaceInputSchema = z.object({
   body: z.object({
@@ -680,7 +674,6 @@ export const AdminProvisionWorkspaceInputSchema = z.object({
     workspace: z.object({
       name: z.string().min(1, 'Workspace name is required').max(255),
       url: z.string().url('Invalid URL'),
-      plan: z.enum(USER_SELECTABLE_PLAN_IDS),
     }),
     members: z.array(AdminProvisionMemberSchema).optional().default([]),
   }),
@@ -732,11 +725,11 @@ export type AdminProvisionWorkspaceData = z.infer<typeof AdminProvisionWorkspace
 
 /**
  * Admin create workspace invite input
+ * Workspaces start on free plan - no plan selection needed
  */
 export const AdminCreateWorkspaceInviteInputSchema = z.object({
   body: z.object({
     workspaceUrl: z.string().url('Invalid URL'),
-    plan: z.enum(PLAN_IDS).optional().default('sandbox'),
     notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES).optional().default('never'),
     email: EmailSchema.optional(),
   }),
@@ -749,7 +742,6 @@ export const AdminCreateWorkspaceInviteDataSchema = z.object({
   inviteUrl: z.string(),
   workspaceId: WorkspaceIdSchema,
   workspaceUrl: z.string(),
-  workspacePlan: z.enum(PLAN_IDS),
 });
 
 /**

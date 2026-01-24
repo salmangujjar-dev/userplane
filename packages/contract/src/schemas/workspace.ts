@@ -1,4 +1,3 @@
-import { PLAN_IDS, PLAN_NAME_VALUES } from '@workspace/pricing';
 import { z } from 'zod';
 
 import {
@@ -230,7 +229,6 @@ export const WorkspaceMinimalItemSchema = z.object({
 export const WorkspaceItemSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
-  workspacePlan: z.enum(PLAN_IDS),
   createdAt: z.date(),
   updatedAt: z.date(),
   notificationPreferences: WorkspaceNotificationPreferencesSchema.optional(),
@@ -297,8 +295,6 @@ export const WorkspaceByIdDataSchema = z.object({
   workspace: z.object({
     workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
-    workspacePlan: z.enum(PLAN_IDS),
-    workspacePlanName: z.enum(PLAN_NAME_VALUES),
     createdAt: z.date(),
     updatedAt: z.date(),
   }),

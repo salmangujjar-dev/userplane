@@ -9,7 +9,6 @@
  * Plan identifiers - source of truth for database and pricing
  */
 export const PLAN_IDS = [
-  'sandbox',
   'essential_monthly',
   'essential_annual',
   'starter_monthly',
@@ -25,7 +24,7 @@ export const PLAN_IDS = [
 export type PlanId = (typeof PLAN_IDS)[number];
 
 /**
- * User-selectable plan identifiers (excludes admin-only plans like sandbox and free)
+ * User-selectable plan identifiers (excludes free plan)
  * Used for workspace creation forms and user-facing plan selection
  */
 export const USER_SELECTABLE_PLAN_IDS = [
@@ -84,17 +83,6 @@ export type PlanEntitlements = Record<ResourceType, ResourceLimits>;
  * Use -1 for unlimited
  */
 export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
-  // Sandbox: Free tier for testing
-  sandbox: {
-    seats: { quotedLimit: 20, softLimit: 20, hardLimit: 25, upgradeLimit: 0 },
-    recordings: { quotedLimit: 10, softLimit: 10, hardLimit: 15, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 10, softLimit: 10, hardLimit: 10, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-  },
-
   // Essential: $59/mo - Entry-level paid plan
   essential_monthly: {
     seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
@@ -218,7 +206,6 @@ export function getPlanEntitlements(planId: PlanId): PlanEntitlements {
  * Unique plan name values for type safety
  */
 export const PLAN_NAME_VALUES = [
-  'Sandbox',
   'Essential',
   'Starter',
   'Scale Up',
@@ -232,7 +219,6 @@ export type PlanName = (typeof PLAN_NAME_VALUES)[number];
  * User-friendly plan names - source of truth for display names
  */
 export const PLAN_NAMES: Record<PlanId, PlanName> = {
-  sandbox: 'Sandbox',
   essential_monthly: 'Essential',
   essential_annual: 'Essential',
   starter_monthly: 'Starter',
@@ -885,18 +871,6 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
     id: 'free',
     name: 'Free',
     description: 'Try Userplane for free',
-    details: {
-      planType: 'one_time',
-      planRate: 0,
-      planCycle: 'one_time',
-    },
-    features: [],
-  },
-  // Sandbox
-  {
-    id: 'sandbox',
-    name: 'Sandbox',
-    description: 'Free tier for testing and evaluation',
     details: {
       planType: 'one_time',
       planRate: 0,
