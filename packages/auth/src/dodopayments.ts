@@ -10,6 +10,14 @@ import type { ProductConfig } from '@workspace/payments';
 import type DodoPayments from 'dodopayments';
 
 /**
+ * Webhook headers from DodoPayments
+ */
+export interface WebhookHeaders {
+  webhookId: string;
+  webhookTimestamp: string;
+}
+
+/**
  * Configuration for DodoPayments Better Auth plugin
  */
 export interface DodoPaymentsAuthConfig {
@@ -25,8 +33,8 @@ export interface DodoPaymentsAuthConfig {
   webhookSecret: string;
   /** Only allow authenticated users to create checkout sessions */
   authenticatedUsersOnly?: boolean;
-  /** Callback for webhook payloads */
-  onWebhookPayload?: (payload: unknown) => Promise<void>;
+  /** Callback for webhook payloads (with optional headers for idempotency) */
+  onWebhookPayload?: (payload: unknown, headers?: WebhookHeaders) => Promise<void>;
 }
 
 /**
@@ -63,7 +71,44 @@ export function createDodoPaymentsPlugin(config: DodoPaymentsAuthConfig) {
         webhookKey: webhookSecret,
         onPayload: onWebhookPayload
           ? async (payload) => {
-              await onWebhookPayload(payload);
+              // Note: DodoPayments sends webhook-id and webhook-timestamp headers,
+              // but the @dodopayments/better-auth plugin doesn't expose them to this callback.
+              // It uses them internally for signature verification.
+              //
+              // We generate a deterministic webhook ID from the payload fields:
+              // - business_id: identifies the merchant
+              // - timestamp: when the event occurred (matches webhook-timestamp header)
+              // - type: the event type
+              //
+              // This combination is unique per webhook event and provides idempotency.
+              let headers: WebhookHeaders | undefined;
+              try {
+                const webhookPayload = payload as {
+                  business_id?: string;
+                  timestamp?: Date | string;
+                  type?: string;
+                };
+
+                if (webhookPayload.business_id && webhookPayload.timestamp) {
+                  const timestamp =
+                    typeof webhookPayload.timestamp === 'string'
+                      ? webhookPayload.timestamp
+                      : webhookPayload.timestamp.toISOString();
+
+                  // Create deterministic webhook ID from payload fields
+                  // Format: {business_id}-{ISO timestamp}-{event_type}
+                  const webhookId = `${webhookPayload.business_id}-${timestamp}-${webhookPayload.type || 'unknown'}`;
+
+                  headers = {
+                    webhookId,
+                    webhookTimestamp: timestamp,
+                  };
+                }
+              } catch {
+                // Payload parsing failed, continue without headers
+              }
+
+              await onWebhookPayload(payload, headers);
             }
           : undefined,
       }),

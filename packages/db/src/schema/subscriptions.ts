@@ -43,6 +43,10 @@ export const subscriptions = pgTable(
     cancelledAt: timestamp('cancelled_at'),
     cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
 
+    // Webhook tracking for out-of-order detection
+    lastWebhookId: text('last_webhook_id'),
+    lastWebhookTimestamp: timestamp('last_webhook_timestamp'),
+
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')

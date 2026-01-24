@@ -9,6 +9,7 @@ export * from './session';
 export * from './subscriptions';
 export * from './user';
 export * from './verification';
+export * from './webhook-events';
 export * from './workspace-members';
 export * from './workspaces';
 
