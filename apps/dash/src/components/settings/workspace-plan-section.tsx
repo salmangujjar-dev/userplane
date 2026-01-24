@@ -2,7 +2,6 @@
 
 import { getSlugFromPlanId } from '@workspace/payments';
 import type { PlanId, PlanName } from '@workspace/pricing';
-import { Button } from '@workspace/ui/components/button';
 import { Progress } from '@workspace/ui/components/progress';
 import {
   Tooltip,
@@ -10,13 +9,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { ArrowUpRight, Info, Loader2 } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { useState } from 'react';
 
-import { PlanUpgradeModal } from '@/components/modals/plan-upgrade-modal';
+import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { useWorkspace } from '@/hooks/use-workspace';
-import { useChangePlan, useSubscriptionStatus } from '@/queries/use-billing-queries';
+import { useSubscriptionStatus } from '@/queries/use-billing-queries';
 import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 
 export function WorkspacePlanSection() {
@@ -27,15 +26,14 @@ export function WorkspacePlanSection() {
   const planName = (workspaceData?.workspace.workspacePlanName || 'Free') as PlanName;
   const workspaceId = workspaceData?.workspace.workspaceId;
 
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  const { mutate: createCheckout, isPending: isCheckoutPending } = useCreateCheckout();
-  const { mutate: changePlan, isPending: isChangePlanPending } = useChangePlan({
-    onSuccess: () => {
-      setIsUpgradeModalOpen(false);
-    },
-  });
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
-  const handleUpgrade = (planId: string) => {
+  const { mutate: createCheckout, isPending: isCheckoutPending } = useCreateCheckout();
+
+  const hasActiveSubscription =
+    subscriptionData?.hasSubscription && subscriptionData?.status === 'active';
+
+  const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
 
     const slug = getSlugFromPlanId(planId as PlanId);
@@ -44,21 +42,14 @@ export function WorkspacePlanSection() {
       return;
     }
 
-    // Check if there's an active subscription - use changePlan for upgrades/downgrades
-    if (subscriptionData?.hasSubscription && subscriptionData?.status === 'active') {
-      changePlan({
-        planSlug: slug,
-      });
-    } else {
-      // No active subscription - use checkout for new subscription
-      createCheckout({
-        planSlug: slug,
-        workspaceId,
-      });
-    }
-  };
+    // Create checkout with selected plan
+    createCheckout({
+      planSlug: slug,
+      workspaceId,
+    });
 
-  const isPending = isCheckoutPending || isChangePlanPending;
+    setShowPlanModal(false);
+  };
 
   if (isLoading) {
     return (
@@ -156,40 +147,12 @@ export function WorkspacePlanSection() {
               <Progress value={0} className="h-2" />
             </div>
           </div>
-          <div className="p-3 rounded-lg bg-muted/50 border border-border flex items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">
-              Upgrade your team to get instant access to more links
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="shrink-0 h-8"
-              onClick={() => setIsUpgradeModalOpen(true)}
-              disabled={isPending}
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  Upgrade
-                  <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
-                </>
-              )}
-            </Button>
-          </div>
         </div>
 
-        <PlanUpgradeModal
-          open={isUpgradeModalOpen}
-          onOpenChange={setIsUpgradeModalOpen}
-          currentPlanName={planName}
-          onUpgrade={handleUpgrade}
-          hasActiveSubscription={
-            subscriptionData?.hasSubscription && subscriptionData?.status === 'active'
-          }
+        <PlanSelectionModal
+          open={showPlanModal}
+          onOpenChange={setShowPlanModal}
+          onPlanSelect={handlePlanSelect}
         />
       </div>
     </TooltipProvider>

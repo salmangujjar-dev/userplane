@@ -5,20 +5,19 @@ import { WorkspaceNameSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import { Mail } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { BillingEmailVerificationModal } from '@/components/modals/billing-email-verification-modal';
+import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { WorkspaceSectionSkeleton } from '@/components/skeleton';
 import { useWorkspace } from '@/hooks/use-workspace';
-import { useWorkspaceBillingEmail } from '@/hooks/use-workspace-billing-email';
 import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
-import { useRequestBillingEmailChange } from '@/queries/use-billing-email-verification-mutations';
 import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
+import { useLeaveWorkspace } from '@/queries/use-workspace-mutations';
 import { useWorkspaceId } from '@/stores/workspace';
 
 const workspaceNameFormSchema = z.object({
@@ -26,17 +25,18 @@ const workspaceNameFormSchema = z.object({
 });
 
 export function WorkspaceSection() {
+  const router = useRouter();
   const workspaceId = useWorkspaceId();
   const { data: workspaceResult, isLoading, error, refetch } = useWorkspace();
-  const { data: billingEmailResult, isLoading: isLoadingBilling } = useWorkspaceBillingEmail();
-  const { canEdit } = useCanEditWorkspace();
-  const [showBillingModal, setShowBillingModal] = useState(false);
+  const { canEdit, role } = useCanEditWorkspace();
+  const [leaveWorkspaceModalOpen, setLeaveWorkspaceModalOpen] = useState(false);
 
   const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const originalName = workspaceData?.workspace.workspaceName || '';
-  const originalBillingEmail = billingEmailResult?.success
-    ? billingEmailResult.data.workspaceBillingEmail || ''
-    : '';
+  const workspaceName = workspaceData?.workspace.workspaceName || '';
+  const isOwner = role === 'owner';
+
+  const leaveWorkspaceMutation = useLeaveWorkspace(workspaceId, (path) => router.push(path));
 
   // Workspace Name Form
   const {
@@ -63,27 +63,18 @@ export function WorkspaceSection() {
     resetName({ name: originalName })
   );
 
-  const requestBillingEmailChangeMutation = useRequestBillingEmailChange({
-    onSuccess: () => {
-      // Keep modal open to show success message
-    },
-  });
-
   const onSaveName = (data: { name: string }) => {
     updateNameMutation.mutate(data.name);
   };
 
-  const handleRequestBillingEmailChange = async (email: string) => {
+  const handleLeaveWorkspace = () => {
+    setLeaveWorkspaceModalOpen(true);
+  };
+
+  const handleConfirmLeaveWorkspace = () => {
     if (!workspaceId) return;
-
-    const result = await requestBillingEmailChangeMutation.mutateAsync({
-      workspaceId,
-      email,
-    });
-
-    if (!result.success) {
-      throw new Error('Failed to send verification email');
-    }
+    leaveWorkspaceMutation.mutate(workspaceId);
+    setLeaveWorkspaceModalOpen(false);
   };
 
   if (isLoading) {
@@ -156,52 +147,39 @@ export function WorkspaceSection() {
             </div>
           </form>
 
-          {/* Billing Email Section */}
-          <div className="space-y-4">
+          {/* Leave Workspace */}
+          <div className="space-y-3">
             <div>
-              <Label htmlFor="billing-email">Billing Email</Label>
+              <Label>Leave workspace</Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Invoices and billing related notifications will be sent to this email
+                {isOwner
+                  ? 'Leave and deactivate this workspace if you are the only member'
+                  : 'Remove yourself from this workspace'}
               </p>
             </div>
-            {isLoadingBilling ? (
-              <div className="flex flex-col gap-3">
-                <Skeleton className="h-10 w-full max-w-md" />
-                <Skeleton className="h-16 w-full max-w-md" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <Input
-                  id="billing-email"
-                  type="email"
-                  value={originalBillingEmail || 'Not set'}
-                  className="max-w-md bg-muted"
-                  disabled
-                />
-                {canEdit && (
-                  <button
-                    onClick={() => setShowBillingModal(true)}
-                    disabled={requestBillingEmailChangeMutation.isPending}
-                    className={`w-full max-w-md flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors ${
-                      requestBillingEmailChangeMutation.isPending
-                        ? 'opacity-50 cursor-not-allowed'
-                        : 'cursor-pointer hover:border-primary/50'
-                    }`}
-                  >
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Update billing email</span>
-                  </button>
-                )}
-              </div>
-            )}
+            <button
+              onClick={handleLeaveWorkspace}
+              disabled={leaveWorkspaceMutation.isPending}
+              className={`w-full max-w-md flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors ${
+                leaveWorkspaceMutation.isPending
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'cursor-pointer hover:border-destructive/50'
+              }`}
+            >
+              <LogOut className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {leaveWorkspaceMutation.isPending ? 'Leaving...' : 'Leave workspace'}
+              </span>
+            </button>
           </div>
 
-          <BillingEmailVerificationModal
-            open={showBillingModal}
-            onOpenChange={setShowBillingModal}
-            currentEmail={originalBillingEmail}
-            onRequestChange={handleRequestBillingEmailChange}
-            isLoading={requestBillingEmailChangeMutation.isPending}
+          <LeaveWorkspaceModal
+            open={leaveWorkspaceModalOpen}
+            onOpenChange={setLeaveWorkspaceModalOpen}
+            workspaceName={workspaceName}
+            isOwner={isOwner}
+            onConfirm={handleConfirmLeaveWorkspace}
+            isLoading={leaveWorkspaceMutation.isPending}
           />
         </div>
       </div>

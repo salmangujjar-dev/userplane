@@ -12,22 +12,15 @@ import {
   SelectValue,
 } from '@workspace/ui/components/select';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { Globe, Lock, LogOut, Plus, RefreshCw, Shield, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Globe, Lock, Plus, RefreshCw, Shield, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { AddEmailDomainModal } from '@/components/modals/add-email-domain-modal';
-import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { useInvitePolicy, type WorkspaceInvitePolicy } from '@/hooks/use-invite-policy';
-import { useWorkspace } from '@/hooks/use-workspace';
 import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
-import {
-  useLeaveWorkspace,
-  useRotateInvite,
-  useUpdateInvitePolicy,
-} from '@/queries/use-workspace-mutations';
+import { useRotateInvite, useUpdateInvitePolicy } from '@/queries/use-workspace-mutations';
 import { useWorkspaceId } from '@/stores/workspace';
 
 const POLICY_OPTIONS = [
@@ -46,30 +39,20 @@ function InvitePolicySkeleton() {
 }
 
 export function InvitePolicySection() {
-  const router = useRouter();
   const workspaceId = useWorkspaceId();
   const { data: policyResult, isLoading, error, refetch } = useInvitePolicy();
-  const { canEdit, isLoading: isLoadingRole, role } = useCanEditWorkspace();
-  const { data: workspaceResult } = useWorkspace();
+  const { canEdit, isLoading: isLoadingRole } = useCanEditWorkspace();
 
   const [policy, setPolicy] = useState<WorkspaceInvitePolicy>('private');
   const [domains, setDomains] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [showAddDomainModal, setShowAddDomainModal] = useState(false);
   const [resetInviteModalOpen, setResetInviteModalOpen] = useState(false);
-  const [leaveWorkspaceModalOpen, setLeaveWorkspaceModalOpen] = useState(false);
 
   const updatePolicyMutation = useUpdateInvitePolicy({
     onSuccess: () => setHasChanges(false),
   });
   const rotateInviteMutation = useRotateInvite();
-
-  const leaveWorkspaceMutation = useLeaveWorkspace(workspaceId, (path) => router.push(path));
-
-  const isOwner = role === 'owner';
-  const workspaceName = workspaceResult?.success
-    ? workspaceResult.data.workspace.workspaceName
-    : '';
 
   const handleResetInviteToken = () => {
     setResetInviteModalOpen(true);
@@ -79,16 +62,6 @@ export function InvitePolicySection() {
     if (!workspaceId) return;
     rotateInviteMutation.mutate(workspaceId);
     setResetInviteModalOpen(false);
-  };
-
-  const handleLeaveWorkspace = () => {
-    setLeaveWorkspaceModalOpen(true);
-  };
-
-  const handleConfirmLeaveWorkspace = () => {
-    if (!workspaceId) return;
-    leaveWorkspaceMutation.mutate(workspaceId);
-    setLeaveWorkspaceModalOpen(false);
   };
 
   // Sync state with fetched data
@@ -341,41 +314,6 @@ export function InvitePolicySection() {
           }
           onConfirm={handleConfirmResetInviteToken}
           isPending={rotateInviteMutation.isPending}
-        />
-
-        {/* Leave Workspace */}
-        <div className="mt-6">
-          <div className="space-y-1 mb-3">
-            <Label>Leave workspace</Label>
-            <p className="text-sm text-muted-foreground">
-              {isOwner
-                ? 'Leave and deactivate this workspace if you are the only member'
-                : 'Remove yourself from this workspace'}
-            </p>
-          </div>
-          <button
-            onClick={handleLeaveWorkspace}
-            disabled={leaveWorkspaceMutation.isPending}
-            className={`w-full max-w-md flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors ${
-              leaveWorkspaceMutation.isPending
-                ? 'opacity-50 cursor-not-allowed'
-                : 'cursor-pointer hover:border-destructive/50'
-            }`}
-          >
-            <LogOut className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {leaveWorkspaceMutation.isPending ? 'Leaving...' : 'Leave workspace'}
-            </span>
-          </button>
-        </div>
-
-        <LeaveWorkspaceModal
-          open={leaveWorkspaceModalOpen}
-          onOpenChange={setLeaveWorkspaceModalOpen}
-          workspaceName={workspaceName}
-          isOwner={isOwner}
-          onConfirm={handleConfirmLeaveWorkspace}
-          isLoading={leaveWorkspaceMutation.isPending}
         />
       </div>
     </div>

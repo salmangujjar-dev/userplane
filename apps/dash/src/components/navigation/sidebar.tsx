@@ -1,7 +1,7 @@
 'use client';
 
 import { getSlugFromPlanId } from '@workspace/payments';
-import { DEFAULT_PLAN_NAME, type PlanId, type PlanName } from '@workspace/pricing';
+import { DEFAULT_PLAN_NAME, type PlanId } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
   DropdownMenu,
@@ -31,7 +31,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { PlanUpgradeModal } from '@/components/modals/plan-upgrade-modal';
+import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { SidebarProjectsSkeleton } from '@/components/skeleton';
 import { useAccount } from '@/hooks/use-account';
@@ -40,8 +40,8 @@ import { useSession } from '@/hooks/use-session';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspaces } from '@/hooks/use-workspaces';
-import { useChangePlan, useSubscriptionStatus } from '@/queries/use-billing-queries';
-import { useCreateCheckout } from '@/queries/use-checkout-mutations';
+import { useSubscriptionStatus } from '@/queries/use-billing-queries';
+import { useCreateCheckout, useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 
 const SIDEBAR_PROJECTS_PER_PAGE = 5;
@@ -63,7 +63,7 @@ export function Sidebar() {
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { data: accountResult } = useAccount();
   const [projectsPage, setProjectsPage] = useState(1);
-  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
   const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects({
     perPage: SIDEBAR_PROJECTS_PER_PAGE,
     page: projectsPage,
@@ -74,11 +74,7 @@ export function Sidebar() {
   const { signOut } = useAuth();
   const { hasAdminAccess } = useSession();
   const { mutate: createCheckout } = useCreateCheckout();
-  const { mutate: changePlan } = useChangePlan({
-    onSuccess: () => {
-      setIsPlanModalOpen(false);
-    },
-  });
+  const { mutate: openCustomerPortal } = useOpenCustomerPortal();
 
   const account = accountResult?.success ? accountResult.data : null;
   const projectsData = projectsResult?.success ? projectsResult.data : null;
@@ -91,7 +87,24 @@ export function Sidebar() {
   const hasPrevPage = projectsPage > 1;
   const hasNextPage = projectsPagination ? projectsPage < projectsPagination.totalPages : false;
 
-  const handleUpgrade = (planId: string) => {
+  const hasActiveSubscription =
+    subscriptionData?.hasSubscription && subscriptionData?.status === 'active';
+
+  /**
+   * Handle plan badge click - redirects to workspace tab for existing subscribers
+   * or shows plan selection modal for new subscribers
+   */
+  const handlePlanClick = () => {
+    if (hasActiveSubscription) {
+      // Redirect to workspace tab for existing subscribers
+      router.push(`/${workspaceId}/settings?tab=workspace`);
+    } else {
+      // Show plan selection modal for new subscribers
+      setShowPlanModal(true);
+    }
+  };
+
+  const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
 
     const slug = getSlugFromPlanId(planId as PlanId);
@@ -100,18 +113,13 @@ export function Sidebar() {
       return;
     }
 
-    // Check if there's an active subscription - use changePlan for upgrades/downgrades
-    if (subscriptionData?.hasSubscription && subscriptionData?.status === 'active') {
-      changePlan({
-        planSlug: slug,
-      });
-    } else {
-      // No active subscription - use checkout for new subscription
-      createCheckout({
-        planSlug: slug,
-        workspaceId,
-      });
-    }
+    // Create checkout with selected plan
+    createCheckout({
+      planSlug: slug,
+      workspaceId,
+    });
+
+    setShowPlanModal(false);
   };
 
   const sections: NavSection[] = [
@@ -142,7 +150,7 @@ export function Sidebar() {
           <Link href={`/${workspaceId}/recordings`}>
             <Logo size="sm" />
           </Link>
-          <button onClick={() => setIsPlanModalOpen(true)}>
+          <button onClick={handlePlanClick}>
             <Badge
               variant="secondary"
               className="rounded-md text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
@@ -152,16 +160,6 @@ export function Sidebar() {
           </button>
         </div>
       </div>
-
-      <PlanUpgradeModal
-        open={isPlanModalOpen}
-        onOpenChange={setIsPlanModalOpen}
-        currentPlanName={(workspace?.workspace.workspacePlanName || DEFAULT_PLAN_NAME) as PlanName}
-        onUpgrade={handleUpgrade}
-        hasActiveSubscription={
-          subscriptionData?.hasSubscription && subscriptionData?.status === 'active'
-        }
-      />
 
       <nav className="flex-1 overflow-y-auto">
         <div className="px-6 space-y-6">
@@ -318,6 +316,12 @@ export function Sidebar() {
           </DropdownMenu>
         </div>
       )}
+
+      <PlanSelectionModal
+        open={showPlanModal}
+        onOpenChange={setShowPlanModal}
+        onPlanSelect={handlePlanSelect}
+      />
     </aside>
   );
 }
