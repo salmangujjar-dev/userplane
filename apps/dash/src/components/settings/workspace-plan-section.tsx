@@ -9,12 +9,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { Info } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowUpRight, Info } from 'lucide-react';
+import { useQueryState } from 'nuqs';
 
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { useWorkspace } from '@/hooks/use-workspace';
+import { planModalParser } from '@/lib/parsers';
 import { useSubscriptionStatus } from '@/queries/use-billing-queries';
 import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 
@@ -26,7 +27,7 @@ export function WorkspacePlanSection() {
   const planName = (subscriptionData?.planName || 'Free') as PlanName;
   const workspaceId = workspaceData?.workspace.workspaceId;
 
-  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
 
   const { mutate: createCheckout } = useCreateCheckout();
 
@@ -45,7 +46,7 @@ export function WorkspacePlanSection() {
       workspaceId,
     });
 
-    setShowPlanModal(false);
+    setPlanModal(null);
   };
 
   if (isLoading) {
@@ -104,7 +105,16 @@ export function WorkspacePlanSection() {
           </p>
         </div>
         <div className="max-w-2xl rounded-xl border bg-card p-6">
-          <h4 className="text-xl font-semibold mb-4">{planName}</h4>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-xl font-semibold">{planName}</h4>
+            <button
+              onClick={() => setPlanModal('suggested')}
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center gap-2"
+            >
+              Upgrade
+              <ArrowUpRight className="h-4 w-4" />
+            </button>
+          </div>
           <div className="space-y-3 mb-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -146,11 +156,7 @@ export function WorkspacePlanSection() {
           </div>
         </div>
 
-        <PlanSelectionModal
-          open={showPlanModal}
-          onOpenChange={setShowPlanModal}
-          onPlanSelect={handlePlanSelect}
-        />
+        <PlanSelectionModal onPlanSelect={handlePlanSelect} />
       </div>
     </TooltipProvider>
   );

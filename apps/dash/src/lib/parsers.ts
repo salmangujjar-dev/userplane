@@ -101,3 +101,16 @@ export const adminRecordingStatusParser = createParser({
   },
   serialize: (value) => value[0] || '',
 }).withDefault([]);
+
+export const booleanParser = createParser({
+  parse: (value) => value === 'true',
+  serialize: (value) => (value ? 'true' : ''),
+}).withDefault(false);
+
+export const planModalParser = createParser<'suggested' | 'detailed' | null>({
+  parse: (value) => {
+    if (value === 'suggested' || value === 'detailed') return value;
+    return null;
+  },
+  serialize: (value) => value || '',
+});
