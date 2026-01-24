@@ -36,9 +36,6 @@ export const workspaces = pgTable(
     // Workspace identity and branding
     workspaceName: text('workspace_name').notNull(),
 
-    // Subscription and plan (plain text for flexibility - no enum migrations needed)
-    workspacePlan: text('workspace_plan').notNull().default('free'),
-
     // Settings and configuration
     // UUID token used for invite verification, must always be set
     workspaceInviteToken: text('workspace_invite_token').notNull(),

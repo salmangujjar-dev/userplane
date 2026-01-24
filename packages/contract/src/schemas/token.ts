@@ -1,4 +1,3 @@
-import { PLAN_IDS } from '@workspace/pricing';
 import { z } from 'zod';
 
 /**
@@ -98,14 +97,13 @@ export const AccessRequestTokenPayloadSchema = z.object({
 
 /**
  * Workspace create invite token payload
- * Used to provision workspaces with predetermined workspace ID, URL, and plan
+ * Used to provision workspaces with predetermined workspace ID and URL
  * Short keys used to minimize JWT token length
  */
 export const WorkspaceCreateInviteTokenPayloadSchema = z.object({
   iss: z.string(), // Issuer
   wi: z.string(), // workspaceId (predetermined workspace ID)
   wu: z.string(), // workspaceUrl (workspace URL)
-  wp: z.enum(PLAN_IDS), // workspacePlan (plan ID)
   iat: z.number(), // Issued at
   exp: z.number(), // Expiry
 });

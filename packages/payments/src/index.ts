@@ -56,9 +56,7 @@ export type {
   WebhookEventType,
   WebhookPayload,
 } from './types';
-export { PRORATION_BILLING_MODES, SUBSCRIPTION_STATUSES } from './types';
-
-// Error classes for type-safe error handling
+export { PRORATION_BILLING_MODES, SUBSCRIPTION_STATUSES } from './types'; // Error classes for type-safe error handling
 export {
   APIError,
   AuthenticationError,

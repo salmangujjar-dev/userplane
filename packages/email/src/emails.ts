@@ -31,11 +31,11 @@ import {
 import type { DomainDeveloperInstructionsEmailProps } from './emails/domain';
 // Domain emails
 import { DomainDeveloperInstructionsEmail } from './emails/domain';
-import type { TeammateInvitedEmailProps } from './emails/invite';
+import type { TeammateInvitedEmailProps, WorkspaceInviteEmailProps } from './emails/invite';
 import type { SandboxInviteEmailProps } from './emails/invite';
 // Invite emails
-import { TeammateInvitedEmail } from './emails/invite';
-// Pilot emails
+import { TeammateInvitedEmail, WorkspaceInviteEmail } from './emails/invite';
+// Pilot emails (legacy)
 import { SandboxInviteEmail } from './emails/invite';
 import type {
   AccountDeletionEmailProps,
@@ -238,6 +238,14 @@ export async function renderTeammateInvited(
   return { html, text };
 }
 
+export async function renderWorkspaceInvite(
+  props: WorkspaceInviteEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(WorkspaceInviteEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
 // ============================================================================
 // RECORDING EMAILS
 // ============================================================================
@@ -399,4 +407,5 @@ export type {
   WelcomeEmailPilotProps,
   WelcomeEmailRequesterProps,
   WelcomeEmailSubscriptionProps,
+  WorkspaceInviteEmailProps,
 };
