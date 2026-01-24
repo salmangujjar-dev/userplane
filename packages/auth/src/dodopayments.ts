@@ -55,8 +55,8 @@ export function createDodoPaymentsPlugin(config: DodoPaymentsAuthConfig) {
     use: [
       checkout({
         products: checkoutProducts,
-        successUrl,
         authenticatedUsersOnly,
+        successUrl,
       }),
       portal(),
       webhooks({

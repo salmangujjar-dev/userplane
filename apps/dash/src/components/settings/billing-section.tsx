@@ -26,8 +26,7 @@ export function BillingSection() {
     : '';
 
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const hasActiveSubscription =
-    subscriptionData?.hasSubscription && subscriptionData?.status === 'active';
+  const hasSubscription = subscriptionData?.hasSubscription;
 
   const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
 
@@ -62,7 +61,7 @@ export function BillingSection() {
       </div>
       <div className="max-w-2xl space-y-6">
         {/* Manage Billing Section */}
-        {hasActiveSubscription && canEdit && (
+        {hasSubscription && canEdit && (
           <div className="space-y-3">
             <div>
               <Label>Manage billing</Label>
