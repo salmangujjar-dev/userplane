@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from '@workspace/ui/components/sonner';
 
 import { authClient } from '@/client/auth';
+import { env } from '@/env';
 
 interface CheckoutParams {
   planSlug: string;
@@ -32,6 +33,12 @@ export function useCreateCheckout(options?: {
         metadata: {
           workspace_id: workspaceId,
         },
+        customization: {
+          theme: 'light',
+          show_order_details: true,
+          show_on_demand_tag: false,
+        },
+        return_url: `${env.dashboard.url}/${workspaceId || ''}/settings?tab=plan-usage`,
       });
 
       if (result.error) {

@@ -44,7 +44,7 @@ const dodoPaymentsPlugin = createDodoPaymentsPlugin({
   client: dodoClient,
   createCustomerOnSignUp: true,
   products: CHECKOUT_PRODUCTS,
-  successUrl: `${env.dashboard.baseUrl}/workspace/create?step=complete`,
+  successUrl: `${env.dashboard.baseUrl}/`,
   webhookSecret: dodoConfig.webhookSecret,
   authenticatedUsersOnly: true,
   onWebhookPayload: handleBillingWebhook,

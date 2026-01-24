@@ -9,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { ArrowUpRight, Info } from 'lucide-react';
+import { ArrowUpRight, CreditCard, Info, Loader2 } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
@@ -17,7 +17,7 @@ import { SectionError } from '@/components/shared/section-error';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { planModalParser } from '@/lib/parsers';
 import { useSubscriptionStatus } from '@/queries/use-billing-queries';
-import { useCreateCheckout } from '@/queries/use-checkout-mutations';
+import { useCreateCheckout, useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
 
 export function WorkspacePlanSection() {
   const { data: workspaceResult, isLoading, error, refetch } = useWorkspace();
@@ -30,6 +30,9 @@ export function WorkspacePlanSection() {
   const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
 
   const { mutate: createCheckout } = useCreateCheckout();
+  const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
+
+  const hasSubscription = subscriptionData?.hasSubscription;
 
   const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
@@ -47,6 +50,10 @@ export function WorkspacePlanSection() {
     });
 
     setPlanModal(null);
+  };
+
+  const handleManageBilling = () => {
+    openCustomerPortal();
   };
 
   if (isLoading) {
@@ -107,13 +114,35 @@ export function WorkspacePlanSection() {
         <div className="max-w-2xl rounded-xl border bg-card p-6">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-xl font-semibold">{planName}</h4>
-            <button
-              onClick={() => setPlanModal('suggested')}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center gap-2"
-            >
-              Upgrade
-              <ArrowUpRight className="h-4 w-4" />
-            </button>
+            {hasSubscription ? (
+              <button
+                onClick={handleManageBilling}
+                disabled={isPortalPending}
+                className={`px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center gap-2 ${
+                  isPortalPending ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isPortalPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4" />
+                    Manage
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={() => setPlanModal('suggested')}
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center gap-2"
+              >
+                Upgrade
+                <ArrowUpRight className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <div className="space-y-3 mb-4">
             <div className="space-y-2">

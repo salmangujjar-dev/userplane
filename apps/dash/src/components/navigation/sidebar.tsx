@@ -65,7 +65,7 @@ export function Sidebar() {
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { data: accountResult } = useAccount();
   const [projectsPage, setProjectsPage] = useState(1);
-  const [planModal, setPlanModal] = useQueryState('plan-modal', planModalParser);
+  const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
   const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects({
     perPage: SIDEBAR_PROJECTS_PER_PAGE,
     page: projectsPage,
@@ -88,17 +88,16 @@ export function Sidebar() {
   const hasPrevPage = projectsPage > 1;
   const hasNextPage = projectsPagination ? projectsPage < projectsPagination.totalPages : false;
 
-  const hasActiveSubscription =
-    subscriptionData?.hasSubscription && subscriptionData?.status === 'active';
+  const hasSubscription = subscriptionData?.hasSubscription;
 
   /**
-   * Handle plan badge click - redirects to workspace tab for existing subscribers
+   * Handle plan badge click - redirects to plan-usage tab for existing subscribers
    * or shows plan selection modal for new subscribers
    */
   const handlePlanClick = () => {
-    if (hasActiveSubscription) {
-      // Redirect to workspace tab for existing subscribers
-      router.push(`/${workspaceId}/settings?tab=workspace`);
+    if (hasSubscription) {
+      // Redirect to plan-usage tab for existing subscribers
+      router.push(`/${workspaceId}/settings?tab=plan-usage`);
     } else {
       // Show plan selection modal for new subscribers (suggested plans)
       setPlanModal('suggested');
