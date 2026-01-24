@@ -30,6 +30,8 @@ export interface UpdateSubscriptionData {
   currentPeriodEnd?: Date;
   cancelledAt?: Date | null;
   cancelAtPeriodEnd?: boolean;
+  lastWebhookId?: string;
+  lastWebhookTimestamp?: Date;
 }
 
 export class SubscriptionRepository {
@@ -79,8 +81,10 @@ export class SubscriptionRepository {
   /**
    * Find subscription by DodoPayments subscription ID
    */
-  async findBySubscriptionId(subscriptionId: string) {
-    const [subscription] = await this.db
+  async findBySubscriptionId(subscriptionId: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [subscription] = await dbClient
       .select()
       .from(subscriptions)
       .where(eq(subscriptions.subscriptionId, subscriptionId))

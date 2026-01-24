@@ -185,11 +185,9 @@ export const adminProvisioningService = new AdminProvisioningService({
   db,
 });
 
-// Level 5: Billing service (depends on workspace repo)
+// Level 5: Billing service (read-only subscription status)
 export const billingService = new BillingService({
   subscriptionRepo,
-  workspaceRepo,
-  db,
 });
 
 // Export tokenService, emailService, and repositories for use in routes

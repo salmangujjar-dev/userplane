@@ -1,120 +1,68 @@
 /**
  * Billing Webhook Handler
  *
- * Processes DodoPayments webhook events and updates the database accordingly.
- * This handler is called by the Better Auth DodoPayments plugin.
+ * Processes DodoPayments webhook events using the WebhookProcessorService.
+ * Provides production-ready handling with:
+ * - Idempotency (duplicate detection)
+ * - State machine validation
+ * - Out-of-order protection
+ * - Upstream verification
+ * - Audit trail
  */
 
-import {
-  type DodoSubscription,
-  getPlanIdFromProductId,
-  isSubscriptionEvent,
-  parseSubscriptionDates,
-  type WebhookPayload,
-} from '@workspace/payments';
+import { isSubscriptionEvent, type WebhookPayload } from '@workspace/payments';
 
-import type { BillingService } from '@/api/services/billing.service';
-import type { EmailService } from '@/api/services/email.service';
+import type {
+  WebhookHeaders,
+  WebhookProcessorService,
+} from '@/api/services/webhook-processor.service';
 
 export interface BillingWebhookHandlerDeps {
-  billingService: BillingService;
-  emailService: EmailService;
+  webhookProcessor: WebhookProcessorService;
 }
 
 /**
  * Create the webhook handler function for DodoPayments
+ *
+ * @param deps - Dependencies including the webhook processor
+ * @returns Handler function that accepts payload and headers
  */
 export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
-  const { billingService } = deps;
+  const { webhookProcessor } = deps;
 
-  return async (payload: unknown): Promise<void> => {
+  return async (payload: unknown, headers?: WebhookHeaders): Promise<void> => {
     const webhookPayload = payload as WebhookPayload;
-    const { type: eventType, data } = webhookPayload;
+    const { type: eventType } = webhookPayload;
 
+    // Skip non-subscription events early
     if (!isSubscriptionEvent(eventType)) {
       console.log(`[Billing Webhook] Ignoring non-subscription event: ${eventType}`);
       return;
     }
 
-    console.log(`[Billing Webhook] Processing event: ${eventType}`);
-
-    const subscription = data as DodoSubscription;
-    const dates = parseSubscriptionDates(subscription);
-    const planId = getPlanIdFromProductId(subscription.product_id);
-
-    const webhookData = {
-      subscriptionId: subscription.subscription_id,
-      customerId: subscription.customer.customer_id,
-      productId: subscription.product_id,
-      status: subscription.status,
-      currentPeriodStart: dates.currentPeriodStart,
-      currentPeriodEnd: dates.currentPeriodEnd,
-      cancelledAt: dates.cancelledAt,
-      metadata: subscription.metadata,
+    // If no headers provided, generate fallback (for backward compatibility)
+    const webhookHeaders: WebhookHeaders = headers || {
+      webhookId: `fallback-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      webhookTimestamp: new Date().toISOString(),
     };
 
+    console.log(
+      `[Billing Webhook] Processing event: ${eventType} (webhook: ${webhookHeaders.webhookId})`
+    );
+
     try {
-      switch (eventType) {
-        case 'subscription.active':
-          if (!planId) {
-            console.error(`[Billing Webhook] Unknown product ID: ${subscription.product_id}`);
-            return;
-          }
-          await billingService.handleSubscriptionActive(webhookData, planId);
-          console.log(`[Billing Webhook] Subscription activated: ${subscription.subscription_id}`);
-          // TODO: Send subscription active email
-          break;
+      const result = await webhookProcessor.processWebhook(webhookHeaders, webhookPayload);
 
-        case 'subscription.updated':
-          await billingService.handleSubscriptionUpdated(webhookData, planId);
-          console.log(`[Billing Webhook] Subscription updated: ${subscription.subscription_id}`);
-          break;
-
-        case 'subscription.renewed':
-          await billingService.handleSubscriptionRenewed(webhookData);
-          console.log(`[Billing Webhook] Subscription renewed: ${subscription.subscription_id}`);
-          // TODO: Send subscription renewed email
-          break;
-
-        case 'subscription.plan_changed':
-          if (!planId) {
-            console.error(
-              `[Billing Webhook] Unknown product ID for plan change: ${subscription.product_id}`
-            );
-            return;
-          }
-          await billingService.handleSubscriptionPlanChanged(webhookData, planId);
-          console.log(
-            `[Billing Webhook] Subscription plan changed: ${subscription.subscription_id}`
-          );
-          // TODO: Send plan change email
-          break;
-
-        case 'subscription.cancelled':
-          await billingService.handleSubscriptionCancelled(webhookData);
-          console.log(`[Billing Webhook] Subscription cancelled: ${subscription.subscription_id}`);
-          // TODO: Send cancellation email
-          break;
-
-        case 'subscription.on_hold':
-          await billingService.handleSubscriptionOnHold(webhookData);
-          console.log(`[Billing Webhook] Subscription on hold: ${subscription.subscription_id}`);
-          // TODO: Send payment failed email
-          break;
-
-        case 'subscription.failed':
-          await billingService.handleSubscriptionFailed(webhookData);
-          console.log(`[Billing Webhook] Subscription failed: ${subscription.subscription_id}`);
-          break;
-
-        case 'subscription.expired':
-          await billingService.handleSubscriptionExpired(webhookData);
-          console.log(`[Billing Webhook] Subscription expired: ${subscription.subscription_id}`);
-          // TODO: Send expiration email
-          break;
-
-        default:
-          console.log(`[Billing Webhook] Unhandled event type: ${eventType}`);
+      if (result.skipped) {
+        console.log(
+          `[Billing Webhook] Skipped ${eventType}: ${result.skipReason}` +
+            (result.subscriptionId ? ` (subscription: ${result.subscriptionId})` : '')
+        );
+      } else if (result.processed) {
+        console.log(
+          `[Billing Webhook] Processed ${eventType}: ${result.previousStatus || 'new'} → ${result.newStatus}` +
+            (result.subscriptionId ? ` (subscription: ${result.subscriptionId})` : '')
+        );
       }
     } catch (error) {
       console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
