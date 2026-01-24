@@ -1,16 +1,11 @@
 /**
  * ProvisionerService - Facade service for workspace provisioning
  * Orchestrates workspace creation with all related resources
+ * All new workspaces start on free plan - users upgrade via subscription
  */
 
 import { provisionerError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
-import {
-  getPlanName,
-  type PlanId,
-  type PlanName,
-  type UserSelectablePlanId,
-} from '@workspace/pricing';
 
 import { deriveWorkspaceName } from '@/api/lib/workspace';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
@@ -35,9 +30,6 @@ type WorkspaceCreationResult =
   | {
       created: false;
       workspaceUrl?: string;
-      workspacePlan?: UserSelectablePlanId;
-      planName?: PlanName;
-      planCycle?: 'monthly' | 'annual';
     }
   | { created: true; workspaceId: string; workspaceName: string };
 
@@ -46,8 +38,8 @@ export class ProvisionerService {
 
   /**
    * Create workspace using an invite token
-   * Extracts workspace details (URL, plan, ID) from the token
-   * Returns created: false with workspaceUrl and workspacePlan if token is invalid or workspace already exists
+   * Extracts workspace details (URL, ID) from the token
+   * Returns created: false with workspaceUrl if token is invalid or workspace already exists
    * This allows UI to auto-populate the manual creation form
    * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
    * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
@@ -70,48 +62,18 @@ export class ProvisionerService {
       return { created: false };
     }
 
-    // If the workspace plan is not sandbox, trigger the manual flow
-    if (workspaceDetails.workspacePlan !== 'sandbox') {
-      return {
-        created: false,
-        workspaceUrl: workspaceDetails.workspaceUrl,
-        // If the workspace plan is free, default to starter_annual
-        workspacePlan:
-          workspaceDetails.workspacePlan === 'free'
-            ? 'starter_annual'
-            : workspaceDetails.workspacePlan,
-        // Get the plan name from the workspace plan
-        planName: getPlanName(
-          workspaceDetails.workspacePlan === 'free'
-            ? 'starter_annual'
-            : workspaceDetails.workspacePlan
-        ),
-        // Get the plan cycle from the workspace plan
-        planCycle: workspaceDetails.workspacePlan.endsWith('_monthly') ? 'monthly' : 'annual',
-      };
-    }
-
     // Check if workspace with predetermined ID already exists
     const existingWorkspace = await this.deps.workspaceRepo.findById(workspaceDetails.workspaceId);
     if (existingWorkspace) {
-      // Workspace already exists - return created: false with details for manual flow
-      const planName = getPlanName(workspaceDetails.workspacePlan);
-      const planCycle = workspaceDetails.workspacePlan.endsWith('_monthly')
-        ? ('monthly' as const)
-        : ('annual' as const);
-
+      // Workspace already exists - return created: false with URL for manual flow
       return {
         created: false,
         workspaceUrl: workspaceDetails.workspaceUrl,
-        workspacePlan: workspaceDetails.workspacePlan as UserSelectablePlanId,
-        planName,
-        planCycle,
       };
     }
 
     return this.provisionWorkspace({
       url: workspaceDetails.workspaceUrl,
-      plan: workspaceDetails.workspacePlan,
       predeterminedWorkspaceId: workspaceDetails.workspaceId,
       userId,
       userName,
@@ -120,23 +82,21 @@ export class ProvisionerService {
   }
 
   /**
-   * Create workspace manually with URL and plan
-   * User provides workspace URL and selects a plan
+   * Create workspace manually with URL
+   * User provides workspace URL, workspace starts on free plan
    * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
    * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
    */
   async createWorkspaceByURL(params: {
     url: string;
-    plan: UserSelectablePlanId;
     userId: string;
     userName?: string;
     userEmail: string;
   }): Promise<WorkspaceCreationResult> {
-    const { url, plan, userId, userName, userEmail } = params;
+    const { url, userId, userName, userEmail } = params;
 
     return this.provisionWorkspace({
       url,
-      plan,
       predeterminedWorkspaceId: undefined,
       userId,
       userName,
@@ -147,18 +107,18 @@ export class ProvisionerService {
   /**
    * Private method that does the actual workspace provisioning
    * Creates workspace, project, member, and domain in a transaction
+   * All workspaces start on free plan
    * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
    * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
    */
   private async provisionWorkspace(params: {
     url: string;
-    plan: PlanId;
     predeterminedWorkspaceId: string | undefined;
     userId: string;
     userName?: string;
     userEmail: string;
   }): Promise<WorkspaceCreationResult> {
-    const { url, plan, predeterminedWorkspaceId, userId, userName, userEmail } = params;
+    const { url, predeterminedWorkspaceId, userId, userName, userEmail } = params;
 
     // Derive workspace name from URL
     const workspaceName = deriveWorkspaceName(url, userName);
@@ -166,11 +126,11 @@ export class ProvisionerService {
     const workspace = await this.deps.db.transaction(async (tx) => {
       // Create workspace with default recording preferences
       // Recording slug and defaults (company name, header, color, etc.) are set internally
+      // Workspace starts on free plan - users upgrade via subscription
       const createdWorkspace = await this.deps.workspaceService.create(
         {
           workspaceId: predeterminedWorkspaceId,
           workspaceName,
-          workspacePlan: plan,
           userId,
           workspaceBillingEmail: userEmail,
         },

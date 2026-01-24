@@ -5,7 +5,6 @@
 
 import { adminError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
-import type { UserSelectablePlanId } from '@workspace/pricing';
 
 import { auth } from '@/api/clients/auth';
 import { generateRandomPassword } from '@/api/lib/password';
@@ -30,7 +29,6 @@ interface ProvisionWorkspaceParams {
   workspace: {
     name: string;
     url: string;
-    plan: UserSelectablePlanId;
   };
   members: Array<{
     email: string;
@@ -132,7 +130,6 @@ export class AdminProvisioningService {
       // This creates workspace + project + domain + adds owner as owner member
       const result = await this.deps.provisionerService.createWorkspaceByURL({
         url: params.workspace.url,
-        plan: params.workspace.plan,
         userId: ownerUser.id,
         userName: ownerUser.name,
         userEmail: ownerUser.email,

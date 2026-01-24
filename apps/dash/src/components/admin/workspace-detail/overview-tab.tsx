@@ -1,7 +1,6 @@
 'use client';
 
 import type { AdminNotifyDuration } from '@workspace/contract';
-import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
@@ -89,20 +88,6 @@ export function OverviewTab({ workspaceId, workspaceDetail, isLoading }: Overvie
           <Input
             id="workspace-name"
             value={workspaceDetail.workspaceName}
-            readOnly
-            disabled
-            className="max-w-md bg-muted cursor-not-allowed"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div>
-            <Label htmlFor="pricing-plan">Pricing Plan</Label>
-            <p className="text-sm text-muted-foreground mt-1">The current pricing plan</p>
-          </div>
-          <Input
-            id="pricing-plan"
-            value={workspaceDetail.workspacePlanName || DEFAULT_PLAN_NAME}
             readOnly
             disabled
             className="max-w-md bg-muted cursor-not-allowed"

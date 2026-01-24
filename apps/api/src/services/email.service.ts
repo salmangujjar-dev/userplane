@@ -33,6 +33,7 @@ import {
   renderWelcomeEmailPilot,
   renderWelcomeEmailRequester,
   renderWelcomeEmailSubscription,
+  renderWorkspaceInvite,
 } from '@workspace/email';
 import { createAppLogger } from '@workspace/logger';
 
@@ -64,6 +65,7 @@ import {
   welcomeEmailRequesterSubject,
   welcomeEmailSubscriptionSubject,
   workspaceDeletionScheduledSubject,
+  workspaceInviteSubject,
   workspaceRecoveryConfirmationSubject,
   workspaceRecoveryPartiallySubject,
 } from '@/api/subjects';
@@ -92,6 +94,7 @@ import type {
   WelcomeEmailRequesterParams,
   WelcomeEmailSubscriptionParams,
   WorkspaceDeletionScheduledEmailParams,
+  WorkspaceInviteEmailParams,
   WorkspaceRecoveryConfirmationEmailParams,
   WorkspaceRecoveryPartiallyEmailParams,
 } from '@/api/types';
@@ -131,6 +134,7 @@ import {
   welcomeEmailRequesterKey,
   welcomeEmailSubscriptionKey,
   workspaceDeletionScheduledKey,
+  workspaceInviteKey,
   workspaceRecoveryConfirmationKey,
   workspaceRecoveryPartiallyKey,
 } from '@/api/utils/idempotency-key';
@@ -1372,6 +1376,63 @@ export class EmailService {
       'sendPilotSandboxInvite',
       { receipientParams, emailContentParams },
       () => this.sendPilotSandboxInvite(receipientParams, emailContentParams)
+    );
+  }
+
+  /**
+   * Send workspace invite email
+   * Supports optional scheduling via scheduledAt field in params
+   * @private Use sendSafeWorkspaceInvite instead
+   */
+  private async sendWorkspaceInvite(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WorkspaceInviteEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
+    const idempotencyKey = workspaceInviteKey({
+      to: receipientParams.to,
+      inviteUrl: emailContentParams.inviteUrl,
+      scheduledAt: emailContentParams.scheduledAt,
+    });
+
+    const calendarUrl = emailUrls.support.calendar();
+    const { html, text } = await renderWorkspaceInvite({
+      inviteUrl: emailContentParams.inviteUrl,
+      calendarUrl,
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: receipientParams.to,
+        subject: workspaceInviteSubject,
+        html,
+        text,
+        batch: useBatch,
+        headers: antiThreadingHeaders(),
+        ...(receipientParams.replyTo && { replyTo: receipientParams.replyTo }),
+      },
+      {
+        idempotencyKey,
+        ...(emailContentParams.scheduledAt && { scheduledAt: emailContentParams.scheduledAt }),
+      }
+    );
+  }
+
+  /**
+   * Safe version: Send workspace invite email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeWorkspaceInvite(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WorkspaceInviteEmailParams
+  ): Promise<void> {
+    await this.executeSafely('sendWorkspaceInvite', { receipientParams, emailContentParams }, () =>
+      this.sendWorkspaceInvite(receipientParams, emailContentParams)
     );
   }
 

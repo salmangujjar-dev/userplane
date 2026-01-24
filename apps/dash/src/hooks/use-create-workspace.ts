@@ -1,5 +1,4 @@
 import { useMutation } from '@tanstack/react-query';
-import type { PlanName, UserSelectablePlanId } from '@workspace/pricing';
 
 import { apiClient } from '@/client';
 import {
@@ -13,7 +12,6 @@ type CreateWorkspaceInput =
   | {
       type: 'manual';
       url: string;
-      plan: UserSelectablePlanId;
     }
   | {
       type: 'invite';
@@ -24,9 +22,6 @@ type CreateWorkspaceData =
   | {
       created: false;
       workspaceUrl?: string;
-      workspacePlan?: UserSelectablePlanId;
-      planName?: PlanName;
-      planCycle?: 'monthly' | 'annual';
     }
   | {
       created: true;
@@ -36,7 +31,8 @@ type CreateWorkspaceData =
 
 /**
  * Hook to create a new workspace
- * Supports both manual URL input (with plan) and invite token flows
+ * Supports both manual URL input and invite token flows
+ * All workspaces start on free plan - users upgrade via subscription
  * Handles API call, loading states, and error handling
  */
 export function useCreateWorkspace() {
@@ -47,7 +43,6 @@ export function useCreateWorkspace() {
           ? {
               type: 'manual' as const,
               url: input.url.startsWith('http') ? input.url : `https://${input.url}`,
-              plan: input.plan,
             }
           : {
               type: 'invite' as const,

@@ -14,7 +14,7 @@ import { billingError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 import type { SubscriptionStatus } from '@workspace/payments';
 import type { PlanId } from '@workspace/pricing';
-import { PLAN_IDS, PLAN_NAMES } from '@workspace/pricing';
+import { PLAN_NAMES } from '@workspace/pricing';
 
 import type {
   CreateSubscriptionData,
@@ -194,11 +194,6 @@ export class BillingService {
       throw billingError.SUBSCRIPTION_NOT_FOUND();
     }
 
-    // Update workspace plan
-    await this.updateWorkspacePlan(subscription.workspaceId, planId, {
-      tx: dbClient as Transaction,
-    });
-
     // Update workspace dodoCustomerId if not set
     await this.updateWorkspaceCustomerId(subscription.workspaceId, webhookData.customerId, {
       tx: dbClient as Transaction,
@@ -298,13 +293,6 @@ export class BillingService {
       { tx: dbClient as Transaction }
     );
 
-    if (subscription) {
-      // Update workspace plan
-      await this.updateWorkspacePlan(subscription.workspaceId, newPlanId, {
-        tx: dbClient as Transaction,
-      });
-    }
-
     return subscription;
   }
 
@@ -325,13 +313,6 @@ export class BillingService {
       },
       { tx: dbClient as Transaction }
     );
-
-    // Downgrade workspace to free plan
-    if (subscription) {
-      await this.updateWorkspacePlan(subscription.workspaceId, 'free', {
-        tx: dbClient as Transaction,
-      });
-    }
 
     return subscription;
   }
@@ -385,43 +366,7 @@ export class BillingService {
       { tx: dbClient as Transaction }
     );
 
-    // Downgrade workspace to free plan
-    if (subscription) {
-      await this.updateWorkspacePlan(subscription.workspaceId, 'free', {
-        tx: dbClient as Transaction,
-      });
-    }
-
     return subscription;
-  }
-
-  /**
-   * Update workspace plan
-   * Also updates entitlements based on new plan
-   */
-  private async updateWorkspacePlan(
-    workspaceId: string,
-    planId: PlanId,
-    options?: { tx?: Transaction }
-  ) {
-    const dbClient = options?.tx || this.deps.db;
-
-    // Validate plan ID
-    if (!PLAN_IDS.includes(planId)) {
-      throw new Error(`Invalid plan ID: ${planId}`);
-    }
-
-    // Update workspace plan directly via raw query since workspaceRepo
-    // doesn't have a dedicated method for this
-    const { workspaces } = await import('@workspace/db');
-    const { eq } = await import('@workspace/db');
-
-    await (dbClient as DbClient)
-      .update(workspaces)
-      .set({ workspacePlan: planId })
-      .where(eq(workspaces.workspaceId, workspaceId));
-
-    return { workspaceId, planId };
   }
 
   /**

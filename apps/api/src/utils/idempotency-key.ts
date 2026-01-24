@@ -186,6 +186,13 @@ type PilotSandboxInviteKeyParams = {
   scheduledAt?: string;
 };
 
+type WorkspaceInviteKeyParams = {
+  to: string | string[];
+  /** Invite URL contains unique identifier */
+  inviteUrl: string;
+  scheduledAt?: string;
+};
+
 type RecordingReceivedKeyParams = {
   to: string | string[];
   /** Recording ID - unique per recording, no timestamp needed */
@@ -434,6 +441,17 @@ export function pilotSandboxInviteKey(params: PilotSandboxInviteKeyParams): stri
   const sandboxHash = hashValue(params.sandboxUrl);
   const scheduleHash = params.scheduledAt ? `/${hashValue(params.scheduledAt)}` : '';
   return ensureKeyLength(`pilot-sandbox-invite/${recipients}/${sandboxHash}${scheduleHash}`);
+}
+
+/**
+ * Generate idempotency key for workspace invite
+ * Uses inviteUrl hash - unique per invite
+ */
+export function workspaceInviteKey(params: WorkspaceInviteKeyParams): string {
+  const recipients = formatRecipients(params.to);
+  const inviteHash = hashValue(params.inviteUrl);
+  const scheduleHash = params.scheduledAt ? `/${hashValue(params.scheduledAt)}` : '';
+  return ensureKeyLength(`workspace-invite/${recipients}/${inviteHash}${scheduleHash}`);
 }
 
 /**

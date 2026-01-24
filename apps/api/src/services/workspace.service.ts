@@ -66,7 +66,6 @@ export class WorkspaceService {
         workspaceId: params.workspaceId || generateWorkspaceId(),
         workspaceName: params.workspaceName,
         recordingSlug,
-        workspacePlan: params.workspacePlan,
         workspaceInviteToken: inviteToken,
         recordingCompanyName: defaultPrefs.recordingCompanyName,
         recordingHeader: defaultPrefs.recordingHeader,

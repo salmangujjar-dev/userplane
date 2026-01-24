@@ -6,12 +6,10 @@
 import type { DbClient } from '@workspace/db';
 import { and, asc, count, desc, eq, ilike, or, sql } from '@workspace/db';
 import { projects, user, workspaceMembers, workspaces } from '@workspace/db';
-import type { PlanId } from '@workspace/pricing';
 
 export interface AdminWorkspaceListItem {
   workspaceId: string;
   workspaceName: string;
-  workspacePlan: PlanId;
   createdAt: Date;
   memberCount: number;
   projectCount: number;
@@ -24,7 +22,6 @@ export interface AdminWorkspaceListItem {
 export interface AdminWorkspaceDetail {
   workspaceId: string;
   workspaceName: string;
-  workspacePlan: PlanId;
   createdAt: Date;
   isDeleted: boolean;
   deletedAt: Date | null;
@@ -69,7 +66,6 @@ export interface SearchWorkspacesParams {
   sortBy: 'createdAt' | 'name' | 'memberCount';
   sortDirection: 'asc' | 'desc';
   filterStatus?: 'active' | 'deleted';
-  filterPlan?: PlanId;
 }
 
 export class AdminWorkspaceRepository {
@@ -82,7 +78,7 @@ export class AdminWorkspaceRepository {
   async searchWorkspaces(
     params: SearchWorkspacesParams
   ): Promise<{ workspaces: AdminWorkspaceListItem[]; total: number }> {
-    const { search, limit, offset, sortBy, sortDirection, filterStatus, filterPlan } = params;
+    const { search, limit, offset, sortBy, sortDirection, filterStatus } = params;
 
     // Build WHERE conditions
     const conditions = [];
@@ -101,10 +97,6 @@ export class AdminWorkspaceRepository {
       conditions.push(eq(workspaces.isDeleted, false));
     } else if (filterStatus === 'deleted') {
       conditions.push(eq(workspaces.isDeleted, true));
-    }
-
-    if (filterPlan) {
-      conditions.push(eq(workspaces.workspacePlan, filterPlan));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -138,7 +130,6 @@ export class AdminWorkspaceRepository {
       .select({
         workspaceId: workspaces.workspaceId,
         workspaceName: workspaces.workspaceName,
-        workspacePlan: workspaces.workspacePlan,
         createdAt: workspaces.createdAt,
         isDeleted: workspaces.isDeleted,
         memberCount: sql<number>`(
@@ -172,7 +163,6 @@ export class AdminWorkspaceRepository {
       workspaces: workspacesResult.map((w) => ({
         workspaceId: w.workspaceId,
         workspaceName: w.workspaceName,
-        workspacePlan: w.workspacePlan as PlanId,
         createdAt: w.createdAt,
         memberCount: w.memberCount,
         projectCount: w.projectCount,
@@ -193,7 +183,6 @@ export class AdminWorkspaceRepository {
       .select({
         workspaceId: workspaces.workspaceId,
         workspaceName: workspaces.workspaceName,
-        workspacePlan: workspaces.workspacePlan,
         createdAt: workspaces.createdAt,
         isDeleted: workspaces.isDeleted,
         deletedAt: workspaces.deletedAt,
@@ -202,12 +191,7 @@ export class AdminWorkspaceRepository {
       .where(eq(workspaces.workspaceId, workspaceId))
       .limit(1);
 
-    if (!foundWorkspace) return null;
-
-    return {
-      ...foundWorkspace,
-      workspacePlan: foundWorkspace.workspacePlan as PlanId,
-    };
+    return foundWorkspace || null;
   }
 
   /**
@@ -407,7 +391,6 @@ export class AdminWorkspaceRepository {
     return {
       workspaceId: updated.workspaceId,
       workspaceName: updated.workspaceName,
-      workspacePlan: updated.workspacePlan as PlanId,
       createdAt: updated.createdAt,
       isDeleted: updated.isDeleted,
       deletedAt: updated.deletedAt,
@@ -434,7 +417,6 @@ export class AdminWorkspaceRepository {
     return {
       workspaceId: updated.workspaceId,
       workspaceName: updated.workspaceName,
-      workspacePlan: updated.workspacePlan as PlanId,
       createdAt: updated.createdAt,
       isDeleted: updated.isDeleted,
       deletedAt: updated.deletedAt,

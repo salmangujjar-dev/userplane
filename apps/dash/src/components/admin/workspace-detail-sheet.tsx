@@ -1,6 +1,5 @@
 'use client';
 
-import { DEFAULT_PLAN_NAME } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import { Button } from '@workspace/ui/components/button';
 import {
@@ -126,9 +125,6 @@ export function WorkspaceDetailSheet({
                 <div className="flex items-center gap-3">
                   <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
                   <SheetTitle className="text-base">{workspace.workspaceName}</SheetTitle>
-                  <Badge variant="secondary" className="rounded-md text-xs">
-                    {workspace.workspacePlanName || DEFAULT_PLAN_NAME}
-                  </Badge>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Badge

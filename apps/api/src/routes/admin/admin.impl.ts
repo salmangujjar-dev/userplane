@@ -5,7 +5,6 @@
 
 import { isValidRoleName } from '@workspace/auth';
 import type { WorkspaceRole } from '@workspace/contract';
-import { getPlanName, type PlanId } from '@workspace/pricing';
 
 import { generateWorkspaceId } from '@/api/lib/id';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
@@ -322,11 +321,11 @@ function formatWorkspaceMember(member: {
 /**
  * Format workspace detail for response
  * Note: Members are fetched separately via listWorkspaceMembers endpoint
+ * Plan is derived from subscription status, not stored on workspace
  */
 function formatWorkspaceDetail(workspace: {
   workspaceId: string;
   workspaceName: string;
-  workspacePlan: PlanId;
   createdAt: Date;
   isDeleted: boolean;
   deletedAt: Date | null;
@@ -336,13 +335,9 @@ function formatWorkspaceDetail(workspace: {
   linkCount: number;
   recordingCount: number;
 }) {
-  const workspacePlanName = getPlanName(workspace.workspacePlan);
-
   return {
     workspaceId: workspace.workspaceId,
     workspaceName: workspace.workspaceName,
-    workspacePlan: workspace.workspacePlan,
-    workspacePlanName,
     createdAt: workspace.createdAt.toISOString(),
     isDeleted: workspace.isDeleted,
     deletedAt: formatDate(workspace.deletedAt),
@@ -368,7 +363,7 @@ const searchWorkspacesImpl = (
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authorized.use(adminMiddleware).admin.workspaces.search.handler(async ({ input }) => {
-    const { search, limit, offset, sortBy, sortDirection, filterStatus, filterPlan } = input.query;
+    const { search, limit, offset, sortBy, sortDirection, filterStatus } = input.query;
 
     const result = await adminWorkspaceService.searchWorkspaces({
       search,
@@ -377,7 +372,6 @@ const searchWorkspacesImpl = (
       sortBy,
       sortDirection,
       filterStatus,
-      filterPlan,
     });
 
     return {
@@ -386,8 +380,6 @@ const searchWorkspacesImpl = (
         workspaces: result.workspaces.map((w) => ({
           workspaceId: w.workspaceId,
           workspaceName: w.workspaceName,
-          workspacePlan: w.workspacePlan,
-          workspacePlanName: getPlanName(w.workspacePlan),
           createdAt: w.createdAt.toISOString(),
           memberCount: w.memberCount,
           projectCount: w.projectCount,
@@ -844,7 +836,6 @@ const provisionWorkspaceImpl = (
       workspace: {
         name: input.body.workspace.name,
         url: input.body.workspace.url,
-        plan: input.body.workspace.plan,
       },
       members: input.body.members,
     });
@@ -869,16 +860,13 @@ const createWorkspaceInviteImpl = (
   return authorized.use(adminMiddleware).admin.workspace.createInvite.handler(async ({ input }) => {
     // Generate a predetermined workspace ID using standard ID generator
     const workspaceId = generateWorkspaceId();
-
-    // Use provided plan or default to 'sandbox'
-    const workspacePlan = input.body.plan || 'sandbox';
     const notify = input.body.notify || 'never';
 
     // Generate workspace create invite URL
+    // Workspaces start on free plan - users upgrade via subscription
     const inviteUrl = tokenService.generateWorkspaceCreateInviteUrl({
       workspaceId,
       workspaceUrl: input.body.workspaceUrl,
-      workspacePlan,
     });
 
     // Send email if notify is not 'never' and email is provided
@@ -887,11 +875,11 @@ const createWorkspaceInviteImpl = (
       // Calculate scheduled time based on notify duration
       const scheduledAt = calculateScheduledTime(notify);
 
-      // Send sandbox invite email (immediate or scheduled)
-      await emailService.sendSafePilotSandboxInvite(
+      // Send workspace invite email (immediate or scheduled)
+      await emailService.sendSafeWorkspaceInvite(
         { to: email },
         {
-          sandboxUrl: inviteUrl,
+          inviteUrl,
           scheduledAt,
         }
       );
@@ -903,7 +891,6 @@ const createWorkspaceInviteImpl = (
         inviteUrl,
         workspaceId,
         workspaceUrl: input.body.workspaceUrl,
-        workspacePlan,
       },
     };
   });

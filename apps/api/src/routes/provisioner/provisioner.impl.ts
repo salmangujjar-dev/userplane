@@ -19,6 +19,7 @@ export const createWorkspaceImpl = (
 ) => {
   return authorized.provisioner.createWorkspace.handler(async ({ input, context }) => {
     // Call the appropriate method based on the discriminated union type
+    // All workspaces start on free plan - users upgrade via subscription
     const result =
       input.body.type === 'invite'
         ? await provisionerService.createWorkspaceByInviteToken({
@@ -29,7 +30,6 @@ export const createWorkspaceImpl = (
           })
         : await provisionerService.createWorkspaceByURL({
             url: input.body.url,
-            plan: input.body.plan,
             userId: context.user.id,
             userName: context.user.name,
             userEmail: context.user.email,

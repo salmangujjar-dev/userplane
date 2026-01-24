@@ -47,15 +47,14 @@ import type {
   WelcomeEmailPilotProps,
   WelcomeEmailRequesterProps,
   WelcomeEmailSubscriptionProps,
+  WorkspaceInviteEmailProps,
 } from '@workspace/email';
-import type { PlanId as WorkspacePlan } from '@workspace/pricing';
 import type { z } from 'zod';
 
 import type { RecordingStatusGroup } from '../schema/recording.schema';
 
 // Re-export types from contract for convenience
 export type { DomainStatus, UploadFileType, WorkspaceRole } from '@workspace/contract';
-export type { PlanId as WorkspacePlan } from '@workspace/pricing';
 
 /**
  * Types inferred from contract schemas
@@ -147,12 +146,12 @@ export interface RecordingFilters {
 
 /**
  * Workspace creation input for repository
+ * Note: workspacePlan is no longer stored on workspace - derived from subscription
  */
 export interface CreateWorkspaceInput {
   workspaceId: string;
   workspaceName: string;
   recordingSlug: string;
-  workspacePlan: WorkspacePlan;
   workspaceInviteToken: string;
   workspaceBillingEmail: string;
   recordingCompanyName?: string;
@@ -317,10 +316,17 @@ export type AccountDeletionVerificationEmailParams = Omit<
 };
 
 /**
- * Pilot sandbox invite email parameters
+ * Pilot sandbox invite email parameters (legacy)
  * Service builds calendar URL internally
  */
 export type PilotSandboxInviteEmailParams = Omit<SandboxInviteEmailProps, 'calendarUrl'> &
+  Partial<ScheduledEmailParams>;
+
+/**
+ * Workspace invite email parameters
+ * Service builds calendar URL internally
+ */
+export type WorkspaceInviteEmailParams = Omit<WorkspaceInviteEmailProps, 'calendarUrl'> &
   Partial<ScheduledEmailParams>;
 
 /**
@@ -452,12 +458,12 @@ export interface InviteActionResult {
 
 /**
  * Parameters for creating a workspace
+ * Note: workspacePlan is no longer stored on workspace - derived from subscription
  */
 export interface CreateWorkspaceParams {
   workspaceId?: string;
   workspaceName: string;
   recordingSlug?: string;
-  workspacePlan: WorkspacePlan;
   userId: string;
   workspaceBillingEmail: string;
 }
