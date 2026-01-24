@@ -5,6 +5,7 @@ import { useQueryState } from 'nuqs';
 
 import { tabParser } from '@/lib/parsers';
 
+import { BillingSection } from './billing-section';
 import { DomainsSection } from './domains-section';
 import { IntegrationsSection } from './integrations-section';
 import { InvitePolicySection } from './invite-policy-section';
@@ -54,6 +55,7 @@ export function SettingsTab() {
 
         <TabsContent value="workspace" className="space-y-8">
           <WorkspaceSection />
+          <BillingSection />
           <InvitePolicySection />
         </TabsContent>
 

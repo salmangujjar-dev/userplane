@@ -8,15 +8,11 @@ import { oc } from '@orpc/contract';
 
 import {
   BillingErrors,
-  ChangePlanResponseSchema,
-  ChangePlanSchema,
   CheckoutSessionResponseSchema,
   CreateCheckoutSessionSchema,
   CustomerPortalResponseSchema,
   GetCustomerPortalSchema,
   GetSubscriptionStatusSchema,
-  PreviewPlanChangeResponseSchema,
-  PreviewPlanChangeSchema,
   SubscriptionStatusResponseSchema,
 } from '../schemas';
 
@@ -72,42 +68,6 @@ export const billingContract = oc.router({
     })
     .input(GetCustomerPortalSchema)
     .output(CustomerPortalResponseSchema)
-    .errors(BillingErrors),
-
-  /**
-   * POST /billing/:workspaceId/preview-plan-change
-   * Preview the cost of changing subscription plan
-   * Shows proration details before committing the change
-   * Requires workspace admin role
-   */
-  previewPlanChange: oc
-    .route({
-      method: 'POST',
-      path: '/billing/{workspaceId}/preview-plan-change',
-      inputStructure: 'detailed',
-      summary: 'Preview subscription plan change',
-      description: 'Preview proration and cost details for a plan change without committing',
-    })
-    .input(PreviewPlanChangeSchema)
-    .output(PreviewPlanChangeResponseSchema)
-    .errors(BillingErrors),
-
-  /**
-   * POST /billing/:workspaceId/change-plan
-   * Change the subscription plan for a workspace
-   * For upgrading/downgrading existing subscriptions
-   * Requires workspace admin role
-   */
-  changePlan: oc
-    .route({
-      method: 'POST',
-      path: '/billing/{workspaceId}/change-plan',
-      inputStructure: 'detailed',
-      summary: 'Change subscription plan',
-      description: 'Upgrade or downgrade an existing subscription to a different plan',
-    })
-    .input(ChangePlanSchema)
-    .output(ChangePlanResponseSchema)
     .errors(BillingErrors),
 });
 

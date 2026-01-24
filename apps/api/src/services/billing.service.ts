@@ -1,15 +1,18 @@
 /**
  * BillingService - Domain service for billing and subscription operations
  * Contains business logic for DodoPayments integration
+ *
+ * Note: Plan changes (upgrade/downgrade) are handled via the DodoPayments
+ * Customer Portal, which provides a native self-service experience.
+ * See: https://docs.dodopayments.com/features/customer-portal
+ *
+ * Error handling: Throws contract errors directly (billingError.*)
+ * This ensures type safety and keeps contract/API in sync.
  */
 
+import { billingError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
-import type {
-  DodoPayments,
-  ProrationBillingMode,
-  SubscriptionPreviewChangePlanResponse,
-  SubscriptionStatus,
-} from '@workspace/payments';
+import type { SubscriptionStatus } from '@workspace/payments';
 import type { PlanId } from '@workspace/pricing';
 import { PLAN_IDS, PLAN_NAMES } from '@workspace/pricing';
 
@@ -22,12 +25,6 @@ import type { WorkspaceRepository } from '@/api/repositories/workspaces.reposito
 import type { Transaction } from '@/api/types';
 
 import { generateSubscriptionId } from '../lib/id';
-
-/**
- * Default proration billing mode for plan changes
- * This is a business decision controlled server-side
- */
-const DEFAULT_PRORATION_MODE: ProrationBillingMode = 'prorated_immediately';
 
 export interface BillingServiceDeps {
   subscriptionRepo: SubscriptionRepository;
@@ -102,6 +99,16 @@ export class BillingService {
   /**
    * Handle subscription activation from webhook
    * Updates subscription status and workspace plan
+   *
+   * IMPORTANT: Uses upsert logic to handle race conditions:
+   * - First tries to find by DodoPayments subscription ID
+   * - If not found, checks if workspace already has a subscription (different subscription ID)
+   * - Updates existing subscription or creates new one as appropriate
+   *
+   * This handles the case where:
+   * 1. User upgrades/downgrades plan (new subscription ID, same workspace)
+   * 2. Webhook arrives before our DB is updated
+   * 3. Multiple webhooks arrive for same subscription
    */
   async handleSubscriptionActive(
     webhookData: SubscriptionWebhookData,
@@ -110,47 +117,82 @@ export class BillingService {
   ) {
     const dbClient = options?.tx || this.deps.db;
 
-    // Find existing subscription
+    // Extract workspace ID from metadata
+    const workspaceId = webhookData.metadata?.workspace_id || webhookData.metadata?.workspaceId;
+
+    // First, try to find by DodoPayments subscription ID
     let subscription = await this.deps.subscriptionRepo.findBySubscriptionId(
       webhookData.subscriptionId
     );
 
     if (!subscription) {
-      // Extract workspace ID from metadata
-      const workspaceId = webhookData.metadata?.workspace_id || webhookData.metadata?.workspaceId;
+      // Subscription not found by ID - check if workspace already has a subscription
       if (!workspaceId) {
-        throw new Error('Workspace ID not found in subscription metadata');
+        throw billingError.SUBSCRIPTION_NOT_FOUND();
       }
 
-      // Create new subscription
-      subscription = await this.createSubscription(
-        {
+      const existingWorkspaceSubscription =
+        await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+
+      if (existingWorkspaceSubscription) {
+        // Workspace already has a subscription - this is likely a plan change
+        // Update the existing subscription with the new DodoPayments subscription ID
+        subscription = await this.deps.subscriptionRepo.updateByWorkspaceId(
           workspaceId,
-          customerId: webhookData.customerId,
-          subscriptionId: webhookData.subscriptionId,
-          productId: webhookData.productId,
-          planId,
-          currentPeriodStart: webhookData.currentPeriodStart,
-          currentPeriodEnd: webhookData.currentPeriodEnd,
-        },
+          {
+            status: 'active',
+            planId,
+            productId: webhookData.productId,
+            currentPeriodStart: webhookData.currentPeriodStart,
+            currentPeriodEnd: webhookData.currentPeriodEnd,
+          },
+          { tx: dbClient as Transaction }
+        );
+
+        // Also update the subscription ID to the new one
+        if (subscription) {
+          await this.updateSubscriptionId(
+            subscription.id,
+            webhookData.subscriptionId,
+            webhookData.customerId,
+            { tx: dbClient as Transaction }
+          );
+        }
+      } else {
+        // No existing subscription for this workspace - create new one
+        subscription = await this.createSubscription(
+          {
+            workspaceId,
+            customerId: webhookData.customerId,
+            subscriptionId: webhookData.subscriptionId,
+            productId: webhookData.productId,
+            planId,
+            currentPeriodStart: webhookData.currentPeriodStart,
+            currentPeriodEnd: webhookData.currentPeriodEnd,
+          },
+          { tx: dbClient as Transaction }
+        );
+      }
+    } else {
+      // Found by subscription ID - just update the status and details
+      const updateData: UpdateSubscriptionData = {
+        status: 'active',
+        planId,
+        productId: webhookData.productId,
+        currentPeriodStart: webhookData.currentPeriodStart,
+        currentPeriodEnd: webhookData.currentPeriodEnd,
+      };
+
+      await this.deps.subscriptionRepo.updateBySubscriptionId(
+        webhookData.subscriptionId,
+        updateData,
         { tx: dbClient as Transaction }
       );
     }
 
-    // Update subscription status
-    const updateData: UpdateSubscriptionData = {
-      status: 'active',
-      planId,
-      productId: webhookData.productId,
-      currentPeriodStart: webhookData.currentPeriodStart,
-      currentPeriodEnd: webhookData.currentPeriodEnd,
-    };
-
-    await this.deps.subscriptionRepo.updateBySubscriptionId(
-      webhookData.subscriptionId,
-      updateData,
-      { tx: dbClient as Transaction }
-    );
+    if (!subscription) {
+      throw billingError.SUBSCRIPTION_NOT_FOUND();
+    }
 
     // Update workspace plan
     await this.updateWorkspacePlan(subscription.workspaceId, planId, {
@@ -163,6 +205,31 @@ export class BillingService {
     });
 
     return subscription;
+  }
+
+  /**
+   * Update the DodoPayments subscription ID for an existing subscription
+   * Used when a plan change results in a new subscription ID
+   */
+  private async updateSubscriptionId(
+    id: string,
+    newSubscriptionId: string,
+    customerId: string,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.deps.db;
+
+    const { subscriptions } = await import('@workspace/db');
+    const { eq } = await import('@workspace/db');
+
+    await (dbClient as DbClient)
+      .update(subscriptions)
+      .set({
+        subscriptionId: newSubscriptionId,
+        customerId,
+        updatedAt: new Date(),
+      })
+      .where(eq(subscriptions.id, id));
   }
 
   /**
@@ -211,6 +278,7 @@ export class BillingService {
 
   /**
    * Handle subscription plan change from webhook
+   * Plan changes are initiated via the DodoPayments Customer Portal
    */
   async handleSubscriptionPlanChanged(
     webhookData: SubscriptionWebhookData,
@@ -219,7 +287,6 @@ export class BillingService {
   ) {
     const dbClient = options?.tx || this.deps.db;
 
-    // Update subscription
     const subscription = await this.deps.subscriptionRepo.updateBySubscriptionId(
       webhookData.subscriptionId,
       {
@@ -402,107 +469,6 @@ export class BillingService {
       planName: PLAN_NAMES[planId] || 'Unknown',
       currentPeriodEnd: subscription.currentPeriodEnd,
       cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-    };
-  }
-
-  /**
-   * Preview subscription plan change (upgrade/downgrade)
-   * Shows proration details without committing the change
-   * Useful for displaying cost breakdown to users before they confirm
-   */
-  async previewPlanChange(
-    workspaceId: string,
-    newProductId: string,
-    dodoClient: DodoPayments
-  ): Promise<
-    | { alreadyOnPlan: true; currentProductId: string; newProductId: string }
-    | { alreadyOnPlan: false; preview: SubscriptionPreviewChangePlanResponse }
-  > {
-    // Find the existing subscription for the workspace
-    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
-
-    if (!subscription) {
-      throw new Error('No active subscription found for workspace');
-    }
-
-    if (subscription.status !== 'active') {
-      throw new Error('Subscription is not active');
-    }
-
-    // Idempotency check: If already on this plan, return early
-    if (subscription.productId === newProductId) {
-      return {
-        alreadyOnPlan: true,
-        currentProductId: subscription.productId,
-        newProductId,
-      };
-    }
-
-    // Call DodoPayments to preview the plan change
-    const preview = await dodoClient.subscriptions.previewChangePlan(subscription.subscriptionId, {
-      product_id: newProductId,
-      proration_billing_mode: DEFAULT_PRORATION_MODE,
-      quantity: 1,
-    });
-
-    return {
-      alreadyOnPlan: false,
-      preview,
-    };
-  }
-
-  /**
-   * Change subscription plan (upgrade/downgrade)
-   * Uses DodoPayments subscriptions.changePlan API
-   * Proration mode is controlled server-side via DEFAULT_PRORATION_MODE
-   * Includes idempotency check to prevent unnecessary API calls
-   */
-  async changePlan(
-    workspaceId: string,
-    newProductId: string,
-    newPlanId: PlanId,
-    dodoClient: DodoPayments
-  ) {
-    // Find the existing subscription for the workspace
-    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
-
-    if (!subscription) {
-      throw new Error('No active subscription found for workspace');
-    }
-
-    if (subscription.status !== 'active') {
-      throw new Error('Subscription is not active');
-    }
-
-    const previousPlanId = subscription.planId;
-
-    // Idempotency check: If already on this plan, return success without API call
-    if (subscription.productId === newProductId) {
-      return {
-        previousPlanId,
-        newPlanId,
-        alreadyOnPlan: true,
-      };
-    }
-
-    // Call DodoPayments to change the plan
-    // Proration mode is a business decision controlled server-side
-    await dodoClient.subscriptions.changePlan(subscription.subscriptionId, {
-      product_id: newProductId,
-      proration_billing_mode: DEFAULT_PRORATION_MODE,
-      quantity: 1,
-      metadata: {
-        workspace_id: workspaceId,
-      },
-    });
-
-    // Note: The actual plan update in our database will happen via webhook
-    // when we receive the subscription.plan_changed event from DodoPayments
-
-    return {
-      previousPlanId,
-      newPlanId,
-      alreadyOnPlan: false,
     };
   }
 }
