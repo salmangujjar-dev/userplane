@@ -38,6 +38,20 @@ export {
   processWebhookPayload,
 } from './webhooks';
 
+// State Machine
+export type { SubscriptionWebhookEventType, TransitionValidationResult } from './state-machine';
+export {
+  EVENT_TO_STATUS,
+  getTargetStatusForEvent,
+  isCancelledToExpiredValid,
+  isSubscriptionWebhookEvent,
+  isTerminalState,
+  isValidTransition,
+  TERMINAL_STATES,
+  VALID_TRANSITIONS,
+  validateTransition,
+} from './state-machine';
+
 // Types
 export type {
   CheckoutConfig,
