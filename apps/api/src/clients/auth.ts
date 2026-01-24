@@ -11,9 +11,10 @@ import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
 import { createBillingWebhookHandler } from '@/api/handlers/billing-webhook.handler';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
+import { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { BillingService } from '@/api/services/billing.service';
 import { emailService } from '@/api/services/email.service';
+import { WebhookProcessorService } from '@/api/services/webhook-processor.service';
 
 const workspaceRepository = new WorkspaceRepository(db);
 
@@ -27,16 +28,22 @@ const dodoConfig: DodoPaymentsConfig = {
 // Get singleton DodoPayments client
 const dodoClient = getDodoPaymentsClient(dodoConfig);
 
-// Create billing service and webhook handler for DodoPayments
+// Create repositories
 const subscriptionRepo = new SubscriptionRepository(db);
-const billingService = new BillingService({
+const webhookEventsRepo = new WebhookEventsRepository(db);
+
+// Create webhook processor service with all dependencies
+const webhookProcessor = new WebhookProcessorService({
   subscriptionRepo,
+  webhookEventsRepo,
   workspaceRepo: workspaceRepository,
   db,
+  dodoClient, // For upstream verification
 });
+
+// Create billing webhook handler
 const handleBillingWebhook = createBillingWebhookHandler({
-  billingService,
-  emailService,
+  webhookProcessor,
 });
 
 // Create DodoPayments plugin for Better Auth
