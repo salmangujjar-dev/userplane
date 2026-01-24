@@ -10,14 +10,15 @@ import {
 } from '@workspace/pricing';
 import { Dialog, DialogContent, DialogTitle } from '@workspace/ui/components/dialog';
 import { Check } from 'lucide-react';
+import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
 import { env } from '@/env';
+import { planModalParser } from '@/lib/parsers';
 
 interface PlanSelectionModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onPlanSelect: (planId: string) => void;
+  defaultPlan?: string;
 }
 
 interface PlanHighlightProps {
@@ -159,11 +160,19 @@ function PlanCard({
   );
 }
 
-export function PlanSelectionModal({ open, onOpenChange, onPlanSelect }: PlanSelectionModalProps) {
+export function PlanSelectionModal({
+  onPlanSelect,
+  defaultPlan = 'Scale Up',
+}: PlanSelectionModalProps) {
+  const [planModal, setPlanModal] = useQueryState('plan-modal', planModalParser);
   const [billingCycle, setBillingCycle] = useState<PlanCycle>('annual');
-  const [selectedPlanName, setSelectedPlanName] = useState<string>('Scale Up');
+  const [selectedPlanName, setSelectedPlanName] = useState<string>(defaultPlan);
+
+  const open = planModal !== null;
+  const showAllPlans = planModal === 'detailed';
 
   const plans = filterPlansByCycle(BASE_PRICING_PLANS, billingCycle);
+  const essential = plans.find((p) => p.name === 'Essential');
   const starter = plans.find((p) => p.name === 'Starter');
   const scaleUp = plans.find((p) => p.name === 'Scale Up');
   const enterprise = plans.find((p) => p.name === 'Enterprise');
@@ -172,17 +181,19 @@ export function PlanSelectionModal({ open, onOpenChange, onPlanSelect }: PlanSel
 
   const isAnnual = billingCycle === 'annual';
 
+  const essentialHighlights = PLAN_CARD_HIGHLIGHTS['Essential'] || [];
   const starterHighlights = PLAN_CARD_HIGHLIGHTS['Starter'] || [];
   const scaleUpHighlights = PLAN_CARD_HIGHLIGHTS['Scale Up'] || [];
   const enterpriseHighlights = PLAN_CARD_HIGHLIGHTS['Enterprise'] || [];
 
-  const maxHighlights = Math.max(
-    starterHighlights.length,
-    scaleUpHighlights.length,
-    enterpriseHighlights.length
-  );
+  const displayedHighlights = showAllPlans
+    ? [essentialHighlights, starterHighlights, scaleUpHighlights, enterpriseHighlights]
+    : [starterHighlights, scaleUpHighlights, enterpriseHighlights];
 
-  const getSelectedPlan = () => {
+  const maxHighlights = Math.max(...displayedHighlights.map((h) => h.length));
+
+  const getSelectedPlan = (): BasePricingPlan => {
+    if (selectedPlanName === 'Essential' && essential) return essential;
     if (selectedPlanName === 'Starter') return starter;
     if (selectedPlanName === 'Scale Up') return scaleUp;
     if (selectedPlanName === 'Enterprise') return enterprise;
@@ -194,9 +205,17 @@ export function PlanSelectionModal({ open, onOpenChange, onPlanSelect }: PlanSel
     onPlanSelect(selectedPlan.id);
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setPlanModal(null);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 gap-0 overflow-hidden sm:max-w-[1000px]">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className={`p-0 gap-0 overflow-hidden ${showAllPlans ? 'sm:max-w-[1200px]' : 'sm:max-w-[1000px]'}`}
+      >
         <DialogTitle className="sr-only">Choose Your Plan</DialogTitle>
 
         <div className="p-6 pb-4">
@@ -204,7 +223,20 @@ export function PlanSelectionModal({ open, onOpenChange, onPlanSelect }: PlanSel
         </div>
 
         <div className="px-6 pb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            className={`grid grid-cols-1 gap-6 ${showAllPlans ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}
+          >
+            {showAllPlans && essential && (
+              <PlanCard
+                plan={essential}
+                highlights={essentialHighlights}
+                isSelected={selectedPlanName === 'Essential'}
+                isAnnual={isAnnual}
+                minHighlights={maxHighlights}
+                onSelect={() => setSelectedPlanName('Essential')}
+                onCheckout={handleCheckout}
+              />
+            )}
             <PlanCard
               plan={starter}
               highlights={starterHighlights}

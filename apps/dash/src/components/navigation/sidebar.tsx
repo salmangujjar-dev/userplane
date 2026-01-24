@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
@@ -40,6 +41,7 @@ import { useSession } from '@/hooks/use-session';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspaces } from '@/hooks/use-workspaces';
+import { planModalParser } from '@/lib/parsers';
 import { useSubscriptionStatus } from '@/queries/use-billing-queries';
 import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
@@ -63,7 +65,7 @@ export function Sidebar() {
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { data: accountResult } = useAccount();
   const [projectsPage, setProjectsPage] = useState(1);
-  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [planModal, setPlanModal] = useQueryState('plan-modal', planModalParser);
   const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects({
     perPage: SIDEBAR_PROJECTS_PER_PAGE,
     page: projectsPage,
@@ -98,8 +100,8 @@ export function Sidebar() {
       // Redirect to workspace tab for existing subscribers
       router.push(`/${workspaceId}/settings?tab=workspace`);
     } else {
-      // Show plan selection modal for new subscribers
-      setShowPlanModal(true);
+      // Show plan selection modal for new subscribers (suggested plans)
+      setPlanModal('suggested');
     }
   };
 
@@ -118,7 +120,7 @@ export function Sidebar() {
       workspaceId,
     });
 
-    setShowPlanModal(false);
+    setPlanModal(null);
   };
 
   const sections: NavSection[] = [
@@ -316,11 +318,7 @@ export function Sidebar() {
         </div>
       )}
 
-      <PlanSelectionModal
-        open={showPlanModal}
-        onOpenChange={setShowPlanModal}
-        onPlanSelect={handlePlanSelect}
-      />
+      <PlanSelectionModal onPlanSelect={handlePlanSelect} />
     </aside>
   );
 }
