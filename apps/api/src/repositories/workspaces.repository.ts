@@ -6,7 +6,6 @@
 import type { DbClient, WorkspaceInvitePolicy, WorkspaceRole } from '@workspace/db';
 import { and, count, eq, ilike, ne, notInArray, or, sql } from '@workspace/db';
 import { workspaceMembers, workspaces } from '@workspace/db';
-import type { PlanId } from '@workspace/pricing';
 
 import type { CreateWorkspaceInput, Transaction } from '@/api/types';
 
@@ -25,7 +24,6 @@ export class WorkspaceRepository {
         workspaceId: data.workspaceId,
         workspaceName: data.workspaceName,
         recordingSlug: data.recordingSlug,
-        workspacePlan: data.workspacePlan,
         workspaceInviteToken: data.workspaceInviteToken,
         workspaceBillingEmail: data.workspaceBillingEmail,
         recordingCompanyName: data.recordingCompanyName,
@@ -41,10 +39,7 @@ export class WorkspaceRepository {
       throw new Error('Failed to create workspace');
     }
 
-    return {
-      ...workspace,
-      workspacePlan: workspace.workspacePlan as PlanId,
-    };
+    return workspace;
   }
 
   /**
@@ -56,7 +51,6 @@ export class WorkspaceRepository {
       .select({
         workspaceId: workspaces.workspaceId,
         workspaceName: workspaces.workspaceName,
-        workspacePlan: workspaces.workspacePlan,
         createdAt: workspaces.createdAt,
         updatedAt: workspaces.updatedAt,
       })
@@ -64,12 +58,7 @@ export class WorkspaceRepository {
       .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .limit(1);
 
-    if (!workspace) return null;
-
-    return {
-      ...workspace,
-      workspacePlan: workspace.workspacePlan as PlanId,
-    };
+    return workspace || null;
   }
 
   /**
@@ -228,7 +217,6 @@ export class WorkspaceRepository {
     const selectFields: any = {
       workspaceId: workspaces.workspaceId,
       workspaceName: workspaces.workspaceName,
-      workspacePlan: workspaces.workspacePlan,
       createdAt: workspaces.createdAt,
       updatedAt: workspaces.updatedAt,
     };
@@ -262,11 +250,7 @@ export class WorkspaceRepository {
         )
       );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return result.map((r: any) => ({
-      ...r,
-      workspacePlan: r.workspacePlan as PlanId,
-    }));
+    return result;
   }
 
   /**
@@ -344,7 +328,6 @@ export class WorkspaceRepository {
       .select({
         workspaceId: workspaces.workspaceId,
         workspaceName: workspaces.workspaceName,
-        workspacePlan: workspaces.workspacePlan,
         createdAt: workspaces.createdAt,
         updatedAt: workspaces.updatedAt,
         workspaceMemberId: workspaceMembers.workspaceMemberId,
@@ -380,7 +363,6 @@ export class WorkspaceRepository {
       const workspace: any = {
         workspaceId: row.workspaceId,
         workspaceName: row.workspaceName,
-        workspacePlan: row.workspacePlan as PlanId,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
       };
@@ -449,17 +431,11 @@ export class WorkspaceRepository {
       .returning({
         workspaceId: workspaces.workspaceId,
         workspaceName: workspaces.workspaceName,
-        workspacePlan: workspaces.workspacePlan,
         createdAt: workspaces.createdAt,
         updatedAt: workspaces.updatedAt,
       });
 
-    if (!updated) return null;
-
-    return {
-      ...updated,
-      workspacePlan: updated.workspacePlan as PlanId,
-    };
+    return updated || null;
   }
 
   /**

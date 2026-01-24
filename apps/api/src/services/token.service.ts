@@ -3,7 +3,6 @@
  * Handles generation and verification of JWT tokens for invites, workspace access, and domain verification
  */
 
-import type { PlanId } from '@workspace/pricing';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 
 import { env } from '@/api/env';
@@ -168,18 +167,14 @@ export class TokenService {
   /**
    * Generate workspace create invite URL for admin provisioning
    * Token expires based on workspaceCreateInviteExpiresIn config (default 7 days)
-   * Contains predetermined workspace ID, URL, and plan
+   * Contains predetermined workspace ID and URL
    * URL points to workspace creation flow with invite token
+   * Workspaces start on free plan - no plan needed in token
    */
-  generateWorkspaceCreateInviteUrl(params: {
-    workspaceId: string;
-    workspaceUrl: string;
-    workspacePlan: PlanId;
-  }): string {
+  generateWorkspaceCreateInviteUrl(params: { workspaceId: string; workspaceUrl: string }): string {
     const payload: Omit<WorkspaceCreateInviteTokenPayload, 'iss' | 'iat' | 'exp'> = {
       wi: params.workspaceId,
       wu: params.workspaceUrl,
-      wp: params.workspacePlan,
     };
 
     const fullPayload: WorkspaceCreateInviteTokenPayload = {

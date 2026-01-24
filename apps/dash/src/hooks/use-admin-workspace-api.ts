@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ADMIN_WORKSPACE_PROJECTS_PAGINATION, type AdminNotifyDuration } from '@workspace/contract';
-import type { PlanId, UserSelectablePlanId } from '@workspace/pricing';
 import { toast } from 'sonner';
 
 import { apiClient } from '@/client';
@@ -28,8 +27,6 @@ interface AdminRestoreProjectResponse {
 export interface AdminWorkspaceListItem {
   workspaceId: string;
   workspaceName: string;
-  workspacePlan: PlanId;
-  workspacePlanName: string;
   createdAt: string;
   memberCount: number;
   projectCount: number;
@@ -57,8 +54,6 @@ export interface AdminWorkspaceMember {
 export interface AdminWorkspaceDetail {
   workspaceId: string;
   workspaceName: string;
-  workspacePlan: PlanId;
-  workspacePlanName: string;
   createdAt: string;
   isDeleted: boolean;
   deletedAt: string | null;
@@ -123,7 +118,6 @@ export interface UseAdminSearchWorkspacesParams {
   sortBy?: 'createdAt' | 'name' | 'memberCount';
   sortDirection?: 'asc' | 'desc';
   filterStatus?: 'active' | 'deleted';
-  filterPlan?: PlanId;
   enabled?: boolean;
 }
 
@@ -137,13 +131,12 @@ export function useAdminSearchWorkspaces({
   sortBy = 'createdAt',
   sortDirection = 'desc',
   filterStatus,
-  filterPlan,
   enabled = true,
 }: UseAdminSearchWorkspacesParams = {}) {
   return useQuery({
     queryKey: [
       'admin-search-workspaces',
-      { search, limit, offset, sortBy, sortDirection, filterStatus, filterPlan },
+      { search, limit, offset, sortBy, sortDirection, filterStatus },
     ],
     queryFn: async () => {
       const [error, response] = await apiClient.admin.workspaces.search({
@@ -154,7 +147,6 @@ export function useAdminSearchWorkspaces({
           sortBy,
           sortDirection,
           filterStatus,
-          filterPlan: filterPlan || undefined,
         },
       });
       return handleSafeResult(error, response?.data ?? null);
@@ -475,7 +467,6 @@ export interface AdminProvisionWorkspaceInput {
   workspace: {
     name: string;
     url: string;
-    plan: UserSelectablePlanId;
   };
   members?: Array<{
     email: string;
@@ -553,7 +544,6 @@ export interface AdminWorkspaceCreateInviteResponse {
   inviteUrl: string;
   workspaceId: string;
   workspaceUrl: string;
-  workspacePlan: PlanId;
 }
 
 /**
@@ -561,7 +551,6 @@ export interface AdminWorkspaceCreateInviteResponse {
  */
 interface AdminWorkspaceCreateInviteInput {
   workspaceUrl: string;
-  plan?: PlanId;
   notify?: 'never' | 'immediate' | '5m' | '15m' | '30m' | '60m';
   email?: string;
 }
@@ -580,7 +569,6 @@ export function useAdminCreateWorkspaceInvite() {
       const [error, response] = await apiClient.admin.workspace.createInvite({
         body: {
           workspaceUrl: input.workspaceUrl,
-          plan: input.plan,
           notify: input.notify,
           email: input.email,
         },

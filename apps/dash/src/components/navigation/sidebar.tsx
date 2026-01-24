@@ -41,7 +41,7 @@ import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useSubscriptionStatus } from '@/queries/use-billing-queries';
-import { useCreateCheckout, useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
+import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 
 const SIDEBAR_PROJECTS_PER_PAGE = 5;
@@ -74,7 +74,6 @@ export function Sidebar() {
   const { signOut } = useAuth();
   const { hasAdminAccess } = useSession();
   const { mutate: createCheckout } = useCreateCheckout();
-  const { mutate: openCustomerPortal } = useOpenCustomerPortal();
 
   const account = accountResult?.success ? accountResult.data : null;
   const projectsData = projectsResult?.success ? projectsResult.data : null;
@@ -155,7 +154,7 @@ export function Sidebar() {
               variant="secondary"
               className="rounded-md text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
             >
-              {workspace?.workspace.workspacePlanName || DEFAULT_PLAN_NAME}
+              {subscriptionData?.planName || DEFAULT_PLAN_NAME}
             </Badge>
           </button>
         </div>

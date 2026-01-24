@@ -170,7 +170,6 @@ export class SubscriptionRepository {
         workspace: {
           workspaceId: workspaces.workspaceId,
           workspaceName: workspaces.workspaceName,
-          workspacePlan: workspaces.workspacePlan,
           workspaceBillingEmail: workspaces.workspaceBillingEmail,
           dodoCustomerId: workspaces.dodoCustomerId,
         },

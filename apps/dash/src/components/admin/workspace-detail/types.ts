@@ -17,7 +17,6 @@ export interface WorkspaceToResetToken {
 export interface WorkspaceDetail {
   workspaceId: string;
   workspaceName: string;
-  workspacePlanName: string | null;
   isDeleted: boolean;
   projectCount: number;
   domainCount: number;

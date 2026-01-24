@@ -6,7 +6,6 @@
  */
 
 import { domainError, inviteError, workspaceError } from '@workspace/contract';
-import { getPlanName } from '@workspace/pricing';
 
 import { authorized } from '@/api/middleware/auth.orpc';
 import {
@@ -77,19 +76,16 @@ export const countWorkspacesImpl = (workspaceService: WorkspaceService) => {
 /**
  * GET /workspace/:workspaceId - Get workspace by ID
  * Requires authentication
+ * Plan is derived from subscription status, not stored on workspace
  */
 export const getWorkspaceByIdImpl = (workspaceService: WorkspaceService) => {
   return authorized.workspace.getById.handler(async ({ input }) => {
     const workspace = await workspaceService.getById(input.params.workspaceId);
-    const workspacePlanName = getPlanName(workspace.workspacePlan);
 
     return {
       message: 'Workspace retrieved successfully',
       data: {
-        workspace: {
-          ...workspace,
-          workspacePlanName,
-        },
+        workspace,
       },
     };
   });

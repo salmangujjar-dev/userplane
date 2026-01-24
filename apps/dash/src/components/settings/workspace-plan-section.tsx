@@ -23,15 +23,12 @@ export function WorkspacePlanSection() {
   const { data: subscriptionResult } = useSubscriptionStatus();
   const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const planName = (workspaceData?.workspace.workspacePlanName || 'Free') as PlanName;
+  const planName = (subscriptionData?.planName || 'Free') as PlanName;
   const workspaceId = workspaceData?.workspace.workspaceId;
 
   const [showPlanModal, setShowPlanModal] = useState(false);
 
-  const { mutate: createCheckout, isPending: isCheckoutPending } = useCreateCheckout();
-
-  const hasActiveSubscription =
-    subscriptionData?.hasSubscription && subscriptionData?.status === 'active';
+  const { mutate: createCheckout } = useCreateCheckout();
 
   const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;

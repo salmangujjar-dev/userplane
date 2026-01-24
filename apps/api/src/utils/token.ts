@@ -3,8 +3,6 @@
  * Utilities for parsing and validating JWT token payloads
  */
 
-import type { PlanId } from '@workspace/pricing';
-
 import type { TokenService } from '@/api/services/token.service';
 import type { WorkspaceCreateInviteTokenPayload } from '@/api/types';
 
@@ -29,7 +27,6 @@ export function extractWorkspaceDetailsFromInviteToken(
 ): {
   workspaceId: string;
   workspaceUrl: string;
-  workspacePlan: PlanId;
 } | null {
   const payload = parseWorkspaceCreateInviteToken(tokenService, token);
 
@@ -40,6 +37,5 @@ export function extractWorkspaceDetailsFromInviteToken(
   return {
     workspaceId: payload.wi,
     workspaceUrl: payload.wu,
-    workspacePlan: payload.wp,
   };
 }

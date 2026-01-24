@@ -7,9 +7,7 @@ import {
   type AdminNotifyDuration,
   DomainUrlSchema,
   EmailSchema,
-  PLAN_OPTIONS,
 } from '@workspace/contract';
-import { PLAN_IDS, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -40,12 +38,7 @@ import type { AdminWorkspaceCreateInviteResponse } from '@/hooks/use-admin-works
 interface AdminCreateWorkspaceInviteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: {
-    workspaceUrl: string;
-    plan?: PlanId;
-    notify?: AdminNotifyDuration;
-    email?: string;
-  }) => void;
+  onSubmit: (data: { workspaceUrl: string; notify?: AdminNotifyDuration; email?: string }) => void;
   isPending: boolean;
 }
 
@@ -58,7 +51,6 @@ interface AdminCreateWorkspaceInviteSuccessModalProps {
 const createWorkspaceInviteFormSchema = z
   .object({
     workspaceUrl: DomainUrlSchema,
-    plan: z.enum(PLAN_IDS),
     notify: z.enum(ADMIN_NOTIFY_DURATION_VALUES),
     email: EmailSchema.optional(),
   })
@@ -80,7 +72,7 @@ type CreateWorkspaceInviteFormData = z.infer<typeof createWorkspaceInviteFormSch
 
 /**
  * Modal for creating a workspace invite URL.
- * Allows admin to specify workspace URL and optional plan.
+ * Allows admin to specify workspace URL. Workspaces start on free plan.
  */
 export function AdminCreateWorkspaceInviteModal({
   open,
@@ -102,7 +94,6 @@ export function AdminCreateWorkspaceInviteModal({
     mode: 'onTouched',
     defaultValues: {
       workspaceUrl: '',
-      plan: 'sandbox',
       notify: 'never',
       email: '',
     },
@@ -129,7 +120,6 @@ export function AdminCreateWorkspaceInviteModal({
   const onFormSubmit = (data: CreateWorkspaceInviteFormData) => {
     onSubmit({
       workspaceUrl: data.workspaceUrl,
-      plan: data.plan,
       notify: data.notify,
       email: data.email,
     });
@@ -146,7 +136,7 @@ export function AdminCreateWorkspaceInviteModal({
               <div className="flex flex-col space-y-1">
                 <DialogTitle className="text-xl font-semibold">Create Workspace Invite</DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground">
-                  Generate an invite URL for workspace creation
+                  Generate an invite URL for workspace creation. Workspaces start on free plan.
                 </DialogDescription>
               </div>
             </div>
@@ -184,42 +174,6 @@ export function AdminCreateWorkspaceInviteModal({
 
               {showAdvanced && (
                 <div className="space-y-5 pt-5 border-t">
-                  <div className="space-y-2.5">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="workspace-plan" className="text-sm font-medium">
-                        Workspace Plan
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Leave as Sandbox for trial workspaces
-                      </p>
-                    </div>
-                    <Controller
-                      name="plan"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          disabled={isPending}
-                        >
-                          <SelectTrigger id="workspace-plan" className="rounded-lg">
-                            <SelectValue placeholder="Select a plan" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="sandbox">Sandbox (Default)</SelectItem>
-                            {PLAN_OPTIONS.filter((option) => option.value !== 'sandbox').map(
-                              (option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              )
-                            )}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
-
                   <div className="space-y-2.5">
                     <div className="space-y-0.5">
                       <Label htmlFor="notify" className="text-sm font-medium">
@@ -420,10 +374,6 @@ export function AdminCreateWorkspaceInviteSuccessModal({
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground">Domain URL</p>
                   <p className="text-sm break-all">{result.workspaceUrl}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">Plan</p>
-                  <p className="text-sm capitalize">{result.workspacePlan}</p>
                 </div>
               </div>
             )}
