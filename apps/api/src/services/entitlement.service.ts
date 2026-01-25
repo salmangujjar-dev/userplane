@@ -18,28 +18,32 @@ import type { Transaction } from '@/api/types';
 
 export interface EntitlementServiceDeps {
   entitlementRepo: EntitlementRepository;
-  billingService?: BillingService;
+  billingService: BillingService;
 }
 
 /**
- * Result of a consumption check
+ * Result from checking if resource can be consumed
+ * - allowed: Whether the consumption is permitted
+ * - reason: Human-readable reason if not allowed (for UI display)
+ * - current: Current resource consumption (resourceConsumed)
+ * - limit: Hard limit (absolute ceiling, -1 for unlimited)
  */
 export interface CanConsumeResult {
   allowed: boolean;
   reason?: string;
   current: number;
   limit: number;
-  isUnlimited: boolean;
-  accessStatus?: SubscriptionAccessStatus;
 }
 
 /**
  * Resource usage details for UI
+ * - consumed: Current resource consumption (resourceConsumed)
+ * - limit: Quoted limit (advertised/displayed limit for users, -1 for unlimited)
+ * - percentUsed: Percentage of quoted limit consumed
  */
 export interface ResourceUsage {
   consumed: number;
   limit: number;
-  isUnlimited: boolean;
   percentUsed: number;
 }
 
@@ -73,6 +77,7 @@ export class EntitlementService {
     const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
       resourceType,
       quotedLimit: planEntitlements[resourceType].quotedLimit,
+      creditLimit: planEntitlements[resourceType].creditLimit,
       softLimit: planEntitlements[resourceType].softLimit,
       hardLimit: planEntitlements[resourceType].hardLimit,
     }));
@@ -101,6 +106,7 @@ export class EntitlementService {
     const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
       resourceType,
       quotedLimit: planEntitlements[resourceType].quotedLimit,
+      creditLimit: planEntitlements[resourceType].creditLimit,
       softLimit: planEntitlements[resourceType].softLimit,
       hardLimit: planEntitlements[resourceType].hardLimit,
     }));
@@ -112,60 +118,65 @@ export class EntitlementService {
   }
 
   /**
-   * Check if workspace can consume a resource (enforcement)
-   * First checks subscription access status (cancellation, on_hold grace period)
-   * Then compares consumed + amount against hardLimit
+   * Internal method to check if workspace can consume a resource (enforcement)
+   *
+   * Enforcement logic:
+   * - Checks subscription access status (cancellation, on_hold grace period)
+   * - Enforces: current usage + amount <= hardLimit (absolute ceiling)
+   * - Limits are clean values that may have been adjusted via applyCredits()
+   *
+   * Credit system:
+   * - creditLimit: Additional capacity from plan (pool of unused credits)
+   * - Use applyCredits() to consume from creditLimit and increase soft/hard limits
+   * - This keeps enforcement simple: just check current usage vs adjusted limits
+   * - Invariant: current usage < softLimit < hardLimit
+   *
+   * Soft limit warnings:
+   * - TODO: Trigger warning email when current usage >= softLimit
+   *
    * Returns -1 hardLimit as unlimited
    */
-  async canConsume(
+  private async checkCanConsume(
     workspaceId: string,
     resourceType: ResourceType,
     amount: number = 1
   ): Promise<CanConsumeResult> {
     // Check subscription access status first
-    let accessStatus: SubscriptionAccessStatus | undefined;
+    const accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
 
-    if (this.deps.billingService) {
-      accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
+    // If subscription access is revoked, use free plan limits
+    if (accessStatus.effectivePlanId === 'free') {
+      // Get free plan limits for this resource
+      const freePlanLimits = PLAN_ENTITLEMENTS['free']?.[resourceType];
+      const freeLimit = freePlanLimits?.hardLimit ?? 0;
 
-      // If subscription access is revoked, use free plan limits
-      if (!accessStatus.hasAccess) {
-        // Get free plan limits for this resource
-        const freePlanLimits = PLAN_ENTITLEMENTS['free']?.[resourceType];
-        const freeLimit = freePlanLimits?.hardLimit ?? 0;
+      // Get current consumption
+      const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
+        workspaceId,
+        resourceType
+      );
+      const currentConsumed = entitlement?.resourceConsumed ?? 0;
 
-        // Get current consumption
-        const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
-          workspaceId,
-          resourceType
-        );
-        const currentConsumed = entitlement?.resourceConsumed ?? 0;
-
-        // Check against free plan limits
-        if (freeLimit !== -1 && currentConsumed + amount > freeLimit) {
-          return {
-            allowed: false,
-            reason: this.getAccessDeniedReason(accessStatus.reason),
-            current: currentConsumed,
-            limit: freeLimit,
-            isUnlimited: false,
-            accessStatus,
-          };
-        }
-
-        // If within free limits, still allow
+      // Check against free plan limits
+      if (freeLimit !== -1 && currentConsumed + amount > freeLimit) {
         return {
-          allowed: freeLimit === -1 || currentConsumed + amount <= freeLimit,
-          reason:
-            freeLimit !== -1 && currentConsumed + amount > freeLimit
-              ? this.getAccessDeniedReason(accessStatus.reason)
-              : undefined,
+          allowed: false,
+          reason: this.getAccessDeniedReason(accessStatus.accessStatus),
           current: currentConsumed,
           limit: freeLimit,
-          isUnlimited: freeLimit === -1,
-          accessStatus,
         };
       }
+
+      // If within free limits, still allow
+      return {
+        allowed: freeLimit === -1 || currentConsumed + amount <= freeLimit,
+        reason:
+          freeLimit !== -1 && currentConsumed + amount > freeLimit
+            ? this.getAccessDeniedReason(accessStatus.accessStatus)
+            : undefined,
+        current: currentConsumed,
+        limit: freeLimit,
+      };
     }
 
     const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
@@ -180,71 +191,65 @@ export class EntitlementService {
         reason: 'No entitlement found for this resource',
         current: 0,
         limit: 0,
-        isUnlimited: false,
-        accessStatus,
       };
     }
 
-    const current = entitlement.resourceConsumed + entitlement.resourceCredited;
-    const limit = entitlement.hardLimit;
-    const isUnlimited = limit === -1;
+    const current = entitlement.resourceConsumed;
+    const hardLimit = entitlement.hardLimit;
 
     // Unlimited = always allowed
-    if (isUnlimited) {
+    if (hardLimit === -1) {
       return {
         allowed: true,
         current,
-        limit,
-        isUnlimited: true,
-        accessStatus,
+        limit: hardLimit,
       };
     }
 
-    // Check if adding amount would exceed hard limit
+    // Check if adding amount would exceed hard limit (absolute ceiling)
+    // Hard limit is NOT extended by resourceCredited
     const newTotal = entitlement.resourceConsumed + amount;
-    const effectiveLimit = limit + entitlement.resourceCredited;
 
-    if (newTotal > effectiveLimit) {
+    if (newTotal > hardLimit) {
       return {
         allowed: false,
-        reason: `Resource limit reached (${current}/${effectiveLimit})`,
-        current: entitlement.resourceConsumed,
-        limit: effectiveLimit,
-        isUnlimited: false,
-        accessStatus,
+        reason: `Resource limit reached (${current}/${hardLimit})`,
+        current,
+        limit: hardLimit,
       };
     }
+
+    // TODO: Check soft limit warning threshold
+    // if (newTotal >= entitlement.softLimit) {
+    //   // Trigger warning email in background
+    // }
 
     return {
       allowed: true,
-      current: entitlement.resourceConsumed,
-      limit: effectiveLimit,
-      isUnlimited: false,
-      accessStatus,
+      current,
+      limit: hardLimit,
     };
   }
 
   /**
    * Get user-friendly reason for access denial based on subscription status
    */
-  private getAccessDeniedReason(reason: SubscriptionAccessStatus['reason']): string {
-    switch (reason) {
-      case 'expired':
-        return 'Your subscription has expired. Please renew to continue.';
-      case 'revoked':
-        return 'Your subscription access has been revoked due to payment issues.';
-      case 'no_subscription':
+  private getAccessDeniedReason(accessStatus: SubscriptionAccessStatus['accessStatus']): string {
+    switch (accessStatus) {
+      case 'inactive':
         return 'No active subscription. Upgrade to access more resources.';
+      case 'grace':
+        return 'Subscription in grace period. Update payment or reactivate to continue.';
       default:
         return 'Subscription access denied.';
     }
   }
 
   /**
-   * Record resource consumption
+   * Internal method to record resource consumption
    * Called after successful resource creation
    */
-  async consume(
+  private async recordConsumption(
     workspaceId: string,
     resourceType: ResourceType,
     amount: number = 1,
@@ -253,16 +258,126 @@ export class EntitlementService {
     await this.deps.entitlementRepo.incrementConsumed(workspaceId, resourceType, amount, options);
   }
 
-  /**
-   * Release resource (e.g., when recording deleted)
-   */
-  async release(
+  // Explicit consumption methods for each resource type
+
+  async canConsumeSeats(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
+    return this.checkCanConsume(workspaceId, 'seats', amount);
+  }
+
+  async consumeSeats(
     workspaceId: string,
-    resourceType: ResourceType,
     amount: number = 1,
     options?: { tx?: Transaction }
   ): Promise<void> {
-    await this.deps.entitlementRepo.decrementConsumed(workspaceId, resourceType, amount, options);
+    await this.recordConsumption(workspaceId, 'seats', amount, options);
+  }
+
+  async canConsumeRecordings(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
+    return this.checkCanConsume(workspaceId, 'recordings', amount);
+  }
+
+  async consumeRecordings(
+    workspaceId: string,
+    amount: number = 1,
+    options?: { tx?: Transaction }
+  ): Promise<void> {
+    await this.recordConsumption(workspaceId, 'recordings', amount, options);
+  }
+
+  async canConsumeScreenshots(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
+    return this.checkCanConsume(workspaceId, 'screenshots', amount);
+  }
+
+  async consumeScreenshots(
+    workspaceId: string,
+    amount: number = 1,
+    options?: { tx?: Transaction }
+  ): Promise<void> {
+    await this.recordConsumption(workspaceId, 'screenshots', amount, options);
+  }
+
+  async canConsumeFiles(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
+    return this.checkCanConsume(workspaceId, 'files', amount);
+  }
+
+  async consumeFiles(
+    workspaceId: string,
+    amount: number = 1,
+    options?: { tx?: Transaction }
+  ): Promise<void> {
+    await this.recordConsumption(workspaceId, 'files', amount, options);
+  }
+
+  async canConsumeLinks(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
+    return this.checkCanConsume(workspaceId, 'links', amount);
+  }
+
+  async consumeLinks(
+    workspaceId: string,
+    amount: number = 1,
+    options?: { tx?: Transaction }
+  ): Promise<void> {
+    await this.recordConsumption(workspaceId, 'links', amount, options);
+  }
+
+  /**
+   * Release seats when members leave workspace
+   * Seats are the only resource that can decrease (other resources only grow or reset)
+   */
+  async releaseSeats(
+    workspaceId: string,
+    amount: number = 1,
+    options?: { tx?: Transaction }
+  ): Promise<void> {
+    await this.deps.entitlementRepo.decrementConsumed(workspaceId, 'seats', amount, options);
+  }
+
+  /**
+   * Apply credits to increase limits
+   * Consumes from creditLimit pool and increases soft/hard limits
+   *
+   * Process:
+   * 1. Atomically checks if creditLimit >= amount
+   * 2. If yes: creditLimit -= amount, softLimit += amount, hardLimit += amount
+   * 3. This makes enforcement clean: just check current < hardLimit
+   *
+   * Uses atomic repository operation to prevent race conditions
+   * Multiple concurrent calls are safe - only one will succeed if creditLimit is limited
+   *
+   * @returns true if credits were applied, false if insufficient creditLimit
+   */
+  async applyCredits(
+    workspaceId: string,
+    resourceType: ResourceType,
+    amount: number,
+    options?: { tx?: Transaction }
+  ): Promise<boolean> {
+    // Atomic update with creditLimit >= amount check in WHERE clause
+    const updated = await this.deps.entitlementRepo.applyCredits(
+      workspaceId,
+      resourceType,
+      amount,
+      options
+    );
+
+    // If no row was updated, either entitlement doesn't exist or insufficient creditLimit
+    if (!updated) {
+      // Check if entitlement exists to provide better error message
+      const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
+        workspaceId,
+        resourceType,
+        options
+      );
+
+      if (!entitlement) {
+        throw new Error('No entitlement found for this resource');
+      }
+
+      // Entitlement exists but insufficient creditLimit
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -273,14 +388,9 @@ export class EntitlementService {
     const entitlementsList = await this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
 
     // Get effective plan from billing service (handles subscription state logic)
-    let effectivePlanId: PlanId = 'free';
-    let planName: PlanName = 'Free';
-
-    if (this.deps.billingService) {
-      const accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
-      effectivePlanId = accessStatus.effectivePlanId as PlanId;
-      planName = (PLAN_NAMES[effectivePlanId] || 'Free') as PlanName;
-    }
+    const accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
+    const effectivePlanId = accessStatus.effectivePlanId as PlanId;
+    const planName = (PLAN_NAMES[effectivePlanId] || 'Free') as PlanName;
 
     // Build resource usage map
     const resources = {} as Record<ResourceType, ResourceUsage>;
@@ -291,18 +401,16 @@ export class EntitlementService {
       if (entitlement) {
         const consumed = entitlement.resourceConsumed;
         const limit = entitlement.quotedLimit;
-        const isUnlimited = entitlement.hardLimit === -1;
 
         // Calculate percent used against limit for user-facing display
         let percentUsed = 0;
-        if (!isUnlimited && limit > 0) {
+        if (limit !== -1 && limit > 0) {
           percentUsed = Math.round((consumed / limit) * 100);
         }
 
         resources[resourceType] = {
           consumed,
           limit,
-          isUnlimited,
           percentUsed,
         };
       } else {
@@ -310,11 +418,9 @@ export class EntitlementService {
         const planDefaults = PLAN_ENTITLEMENTS[effectivePlanId]?.[resourceType];
 
         if (planDefaults) {
-          const isUnlimited = planDefaults.hardLimit === -1;
           resources[resourceType] = {
             consumed: 0,
             limit: planDefaults.quotedLimit,
-            isUnlimited,
             percentUsed: 0,
           };
         } else {
@@ -322,7 +428,6 @@ export class EntitlementService {
           resources[resourceType] = {
             consumed: 0,
             limit: 0,
-            isUnlimited: false,
             percentUsed: 0,
           };
         }
@@ -337,39 +442,10 @@ export class EntitlementService {
   }
 
   /**
-   * Reset period-based usage (recordings, logs)
+   * Reset period-based usage (recordings)
    * Called on subscription renewal
    */
   async resetPeriodUsage(workspaceId: string, options?: { tx?: Transaction }): Promise<void> {
     await this.deps.entitlementRepo.resetPeriodResources(workspaceId, options);
-  }
-
-  /**
-   * Sync current member count to entitlements
-   * Used to initialize seat consumption based on actual members
-   */
-  async syncSeatCount(
-    workspaceId: string,
-    memberCount: number,
-    options?: { tx?: Transaction }
-  ): Promise<void> {
-    const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
-      workspaceId,
-      'seats',
-      options
-    );
-
-    if (entitlement) {
-      // Reset and set to actual count
-      await this.deps.entitlementRepo.resetConsumed(workspaceId, 'seats', options);
-      if (memberCount > 0) {
-        await this.deps.entitlementRepo.incrementConsumed(
-          workspaceId,
-          'seats',
-          memberCount,
-          options
-        );
-      }
-    }
   }
 }

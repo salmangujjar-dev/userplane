@@ -18,7 +18,7 @@ import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { planModalParser } from '@/lib/parsers';
-import { getAccessStatusDisplay, getPlanDisplay } from '@/lib/plan-display';
+import { getPlanDisplay } from '@/lib/plan-display';
 import { useSubscriptionStatus, useUsageSummary } from '@/queries/use-billing-queries';
 import { useCreateCheckout, useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
 
@@ -72,7 +72,7 @@ interface UsageMetricProps {
 }
 
 function UsageMetric({ name, description, usage, periodLabel = 'used' }: UsageMetricProps) {
-  const isOverLimit = !usage?.isUnlimited && (usage?.percentUsed ?? 0) > 100;
+  const isOverLimit = usage?.limit !== -1 && (usage?.percentUsed ?? 0) > 100;
   const displayPercent = Math.min(100, usage?.percentUsed ?? 0);
 
   return (
@@ -92,7 +92,7 @@ function UsageMetric({ name, description, usage, periodLabel = 'used' }: UsageMe
         <span className={`font-semibold ${isOverLimit ? 'text-red-600' : 'text-foreground'}`}>
           {usage?.consumed ?? '-'}
         </span>
-        /{usage?.isUnlimited ? '\u221e' : (usage?.limit ?? '-')} {periodLabel}
+        /{usage?.limit === -1 ? '\u221e' : (usage?.limit ?? '-')} {periodLabel}
       </div>
       <Progress
         value={displayPercent}
@@ -147,18 +147,40 @@ export function WorkspacePlanSection() {
       )
     : [];
 
+  // Calculate daysRemaining from subscription data
+  const calculateDaysRemaining = (): number | undefined => {
+    if (!subscriptionData) return undefined;
+    const now = new Date();
+
+    if (subscriptionData.status === 'on_hold' && subscriptionData.onHoldSince) {
+      // 14-day grace period from onHoldSince
+      const graceEndsAt = new Date(
+        new Date(subscriptionData.onHoldSince).getTime() + 14 * 24 * 60 * 60 * 1000
+      );
+      return Math.max(
+        0,
+        Math.ceil((graceEndsAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+      );
+    }
+
+    if (
+      subscriptionData.status === 'cancelled' &&
+      subscriptionData.cancelAtPeriodEnd &&
+      subscriptionData.currentPeriodEnd
+    ) {
+      const periodEnd = new Date(subscriptionData.currentPeriodEnd);
+      return Math.max(0, Math.ceil((periodEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+    }
+
+    return undefined;
+  };
+
   // Get plan display based on subscription status
   const planDisplay = getPlanDisplay(
     subscriptionData?.planName ?? null,
     subscriptionData?.status ?? null,
     subscriptionData?.cancelAtPeriodEnd,
-    subscriptionData?.accessStatus?.daysRemaining
-  );
-
-  // Get access status display for messaging
-  const accessDisplay = getAccessStatusDisplay(
-    subscriptionData?.accessStatus?.reason ?? null,
-    subscriptionData?.accessStatus?.daysRemaining
+    calculateDaysRemaining()
   );
 
   const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
@@ -166,8 +188,6 @@ export function WorkspacePlanSection() {
 
   const { mutate: createCheckout } = useCreateCheckout();
   const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
-
-  const hasSubscription = subscriptionData?.hasSubscription;
 
   const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
@@ -265,8 +285,8 @@ export function WorkspacePlanSection() {
           ) : (
             <PlanHeader
               planName={planDisplay.displayName}
-              statusMessage={accessDisplay.message || planDisplay.statusMessage}
-              isUrgent={accessDisplay.isUrgent}
+              statusMessage={planDisplay.statusMessage}
+              isUrgent={planDisplay.isUrgent ?? false}
               onShowBillingDetails={() => setShowBillingDetails(true)}
             />
           )}
@@ -323,6 +343,7 @@ export function WorkspacePlanSection() {
               accessStatus: subscriptionData.accessStatus,
             }}
             onManagePortal={handleManageBilling}
+            isPortalLoading={isPortalPending}
           />
         )}
       </div>

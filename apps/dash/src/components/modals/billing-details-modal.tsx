@@ -9,16 +9,11 @@ import {
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
 import { format } from 'date-fns';
-import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
-
-import type { AccessReason } from '@/lib/plan-display';
+import { AlertCircle, CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
 
 interface AccessStatusData {
-  hasAccess: boolean;
   effectivePlanId: string;
-  reason: AccessReason;
-  expiresAt?: Date | string | null;
-  daysRemaining?: number;
+  accessStatus: 'active' | 'grace' | 'inactive';
 }
 
 interface BillingDetailsModalProps {
@@ -38,6 +33,7 @@ interface BillingDetailsModalProps {
     accessStatus?: AccessStatusData;
   } | null;
   onManagePortal: () => void;
+  isPortalLoading?: boolean;
 }
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -61,50 +57,8 @@ interface StatusConfig {
 const getStatusConfig = (
   status: string,
   cancelAtPeriodEnd: boolean,
-  accessStatus?: AccessStatusData
+  daysRemaining?: number
 ): StatusConfig => {
-  // Check access reason first for more specific messaging
-  if (accessStatus?.reason === 'revoked') {
-    return {
-      icon: XCircle,
-      bgColor: 'bg-red-50 dark:bg-red-950/30',
-      dotColor: 'bg-red-500',
-      textColor: 'text-red-800 dark:text-red-200',
-      label: 'Access Revoked',
-      description: 'Your access has been revoked due to payment issues.',
-    };
-  }
-
-  if (accessStatus?.reason === 'on_hold_grace') {
-    const days = accessStatus.daysRemaining ?? 0;
-    return {
-      icon: AlertCircle,
-      bgColor: 'bg-yellow-50 dark:bg-yellow-950/30',
-      dotColor: 'bg-yellow-500',
-      textColor: 'text-yellow-800 dark:text-yellow-200',
-      label: 'Payment Issue',
-      description:
-        days > 0
-          ? `You have ${days} day${days === 1 ? '' : 's'} to update your payment method.`
-          : 'Please update your payment method to continue.',
-    };
-  }
-
-  if (accessStatus?.reason === 'cancelled_in_period') {
-    const days = accessStatus.daysRemaining ?? 0;
-    return {
-      icon: Clock,
-      bgColor: 'bg-muted/50',
-      dotColor: 'bg-gray-500',
-      textColor: 'text-foreground',
-      label: 'Cancelling',
-      description:
-        days > 0
-          ? `Your subscription ends in ${days} day${days === 1 ? '' : 's'}. You have access until then.`
-          : 'Your subscription ends at the end of this billing period.',
-    };
-  }
-
   switch (status) {
     case 'active':
       return {
@@ -117,26 +71,35 @@ const getStatusConfig = (
           ? 'Your subscription will end at the next billing date.'
           : 'Your subscription is active and will renew automatically.',
       };
-    case 'on_hold':
+    case 'on_hold': {
+      const days = daysRemaining ?? 0;
       return {
         icon: AlertCircle,
         bgColor: 'bg-yellow-50 dark:bg-yellow-950/30',
         dotColor: 'bg-yellow-500',
         textColor: 'text-yellow-800 dark:text-yellow-200',
-        label: 'On Hold',
-        description: 'Payment failed. Please update your payment method.',
+        label: 'Payment Issue',
+        description:
+          days > 0
+            ? `Payment failed. You have ${days} day${days === 1 ? '' : 's'} to update your payment method.`
+            : 'Payment failed. Please update your payment method to continue.',
       };
-    case 'cancelled':
+    }
+    case 'cancelled': {
+      const days = daysRemaining ?? 0;
       return {
         icon: Clock,
         bgColor: 'bg-muted/50',
         dotColor: 'bg-gray-500',
         textColor: 'text-foreground',
-        label: 'Cancelled',
+        label: cancelAtPeriodEnd ? 'Cancelling' : 'Cancelled',
         description: cancelAtPeriodEnd
-          ? 'Your subscription is cancelled but you have access until the end of the billing period.'
+          ? days > 0
+            ? `Your subscription ends in ${days} day${days === 1 ? '' : 's'}. You have access until then.`
+            : 'Your subscription is cancelled but you have access until the end of the billing period.'
           : 'Your subscription has been cancelled.',
       };
+    }
     case 'expired':
       return {
         icon: XCircle,
@@ -180,6 +143,7 @@ export function BillingDetailsModal({
   onOpenChange,
   subscription,
   onManagePortal,
+  isPortalLoading = false,
 }: BillingDetailsModalProps) {
   if (!subscription) return null;
 
@@ -192,16 +156,44 @@ export function BillingDetailsModal({
     }
   };
 
+  // Calculate daysRemaining from subscription data
+  const calculateDaysRemaining = (): number | undefined => {
+    const now = new Date();
+
+    if (subscription.status === 'on_hold' && subscription.onHoldSince) {
+      // 14-day grace period from onHoldSince
+      const graceEndsAt = new Date(
+        new Date(subscription.onHoldSince).getTime() + 14 * 24 * 60 * 60 * 1000
+      );
+      return Math.max(
+        0,
+        Math.ceil((graceEndsAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+      );
+    }
+
+    if (
+      subscription.status === 'cancelled' &&
+      subscription.cancelAtPeriodEnd &&
+      subscription.currentPeriodEnd
+    ) {
+      const periodEnd = new Date(subscription.currentPeriodEnd);
+      return Math.max(0, Math.ceil((periodEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+    }
+
+    return undefined;
+  };
+
   const periodStart = formatDate(subscription.currentPeriodStart);
   const periodEnd = formatDate(subscription.currentPeriodEnd);
   const billingCycle = subscription.billingCycle || 'monthly';
   const cancelledAt = formatDate(subscription.cancelledAt);
   const onHoldSince = formatDate(subscription.onHoldSince);
+  const daysRemaining = calculateDaysRemaining();
 
   const statusConfig = getStatusConfig(
     subscription.status,
     subscription.cancelAtPeriodEnd,
-    subscription.accessStatus
+    daysRemaining
   );
   const StatusIcon = statusConfig.icon;
 
@@ -287,8 +279,10 @@ export function BillingDetailsModal({
                 onManagePortal();
                 onOpenChange(false);
               }}
-              className="w-full mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              disabled={isPortalLoading}
+              className="w-full mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
+              {isPortalLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               Manage in Portal
             </button>
           </div>

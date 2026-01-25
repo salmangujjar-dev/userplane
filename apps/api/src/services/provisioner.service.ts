@@ -176,7 +176,7 @@ export class ProvisionerService {
       });
 
       // Initialize seat consumption (owner counts as 1 seat)
-      await this.deps.entitlementService.consume(createdWorkspace.workspaceId!, 'seats', 1, { tx });
+      await this.deps.entitlementService.consumeSeats(createdWorkspace.workspaceId!, 1, { tx });
 
       return createdWorkspace;
     });

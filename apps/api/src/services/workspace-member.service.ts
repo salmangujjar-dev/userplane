@@ -99,11 +99,12 @@ export class WorkspaceMemberService {
 
     // For new members (not restores), check seat entitlement
     if (!deletedMember?.isDeleted && this.deps.entitlementService) {
-      const canAddSeat = await this.deps.entitlementService.canConsume(params.workspaceId, 'seats');
+      const canAddSeat = await this.deps.entitlementService.canConsumeSeats(params.workspaceId);
       if (!canAddSeat.allowed) {
         throw workspaceError.WORKSPACE_SEAT_LIMIT_EXCEEDED({
           current: canAddSeat.current,
           limit: canAddSeat.limit,
+          reason: canAddSeat.reason,
         });
       }
     }
@@ -133,7 +134,7 @@ export class WorkspaceMemberService {
     // Consume seat entitlement after successfully adding member
     if (this.deps.entitlementService) {
       try {
-        await this.deps.entitlementService.consume(params.workspaceId, 'seats', 1, options);
+        await this.deps.entitlementService.consumeSeats(params.workspaceId, 1, options);
       } catch (error) {
         // Log but don't fail - member is already added
         console.error('Failed to track seat consumption:', error);
@@ -230,7 +231,7 @@ export class WorkspaceMemberService {
     // Release seat entitlement after successfully removing member
     if (this.deps.entitlementService) {
       try {
-        await this.deps.entitlementService.release(params.workspaceId, 'seats', 1, options);
+        await this.deps.entitlementService.releaseSeats(params.workspaceId, 1, options);
       } catch (error) {
         // Log but don't fail - member is already removed
         console.error('Failed to release seat:', error);
@@ -345,7 +346,7 @@ export class WorkspaceMemberService {
     // Release seat entitlement after successfully leaving
     if (this.deps.entitlementService) {
       try {
-        await this.deps.entitlementService.release(workspaceId, 'seats', 1, options);
+        await this.deps.entitlementService.releaseSeats(workspaceId, 1, options);
       } catch (error) {
         // Log but don't fail - member has already left
         console.error('Failed to release seat:', error);

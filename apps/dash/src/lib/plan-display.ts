@@ -3,16 +3,15 @@
  * Handles the display logic for subscription status
  */
 
-import type { AccessStatus } from '@workspace/contract';
 import type { SubscriptionStatus as PaymentSubscriptionStatus } from '@workspace/payments';
 import type { PlanName } from '@workspace/pricing';
 
 export type SubscriptionStatus = PaymentSubscriptionStatus;
-export type AccessReason = AccessStatus['reason'];
 
 interface PlanDisplayResult {
   displayName: string;
   statusMessage?: string;
+  isUrgent?: boolean;
 }
 
 /**
@@ -40,6 +39,7 @@ export function getPlanDisplay(
         statusMessage: daysRemaining
           ? `Payment failed. ${daysRemaining} days left to update payment method before losing access.`
           : 'Payment failed. Update your payment method to continue.',
+        isUrgent: (daysRemaining ?? 0) <= 3,
       };
 
     case 'cancelled':
@@ -76,54 +76,6 @@ export function getPlanDisplay(
 
     default:
       return { displayName: 'Free' };
-  }
-}
-
-/**
- * Get extended display info based on access status from API
- */
-export function getAccessStatusDisplay(
-  accessReason: AccessReason | string | null,
-  daysRemaining?: number
-): {
-  message?: string;
-  isUrgent: boolean;
-} {
-  switch (accessReason) {
-    case 'active':
-      return { isUrgent: false };
-
-    case 'on_hold_grace':
-      return {
-        message: daysRemaining
-          ? `Payment failed. ${daysRemaining} days left to update payment before losing access.`
-          : 'Payment failed. Update payment method to continue.',
-        isUrgent: (daysRemaining ?? 0) <= 3,
-      };
-
-    case 'cancelled_in_period':
-      return {
-        message: daysRemaining
-          ? `Subscription ends in ${daysRemaining} days. Reactivate to continue.`
-          : 'Subscription ends at billing period. Reactivate to continue.',
-        isUrgent: false,
-      };
-
-    case 'expired':
-      return {
-        message: 'Subscription expired.',
-        isUrgent: false,
-      };
-
-    case 'revoked':
-      return {
-        message: 'Access revoked due to payment issues. Update payment to restore access.',
-        isUrgent: true,
-      };
-
-    case 'no_subscription':
-    default:
-      return { isUrgent: false };
   }
 }
 

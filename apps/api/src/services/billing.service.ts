@@ -23,19 +23,21 @@ export interface BillingServiceDeps {
 
 /**
  * Subscription access status - determines if user has entitled access
+ *
+ * effectivePlanId:
+ * - PlanId: User has access to this paid plan
+ * - 'free': User has no paid access, falls back to free plan
+ *
+ * accessStatus:
+ * - 'active': Full paid access to subscribed plan
+ * - 'grace': Temporary access (cancelled but in period, or payment failed in grace period)
+ * - 'inactive': No paid access, falls back to free plan
+ *
+ * Note: UI can derive daysRemaining from subscription.onHoldSince or subscription.currentPeriodEnd
  */
 export interface SubscriptionAccessStatus {
-  hasAccess: boolean;
   effectivePlanId: PlanId | 'free';
-  reason:
-    | 'active'
-    | 'cancelled_in_period'
-    | 'on_hold_grace'
-    | 'no_subscription'
-    | 'expired'
-    | 'revoked';
-  expiresAt?: Date | null;
-  daysRemaining?: number;
+  accessStatus: 'active' | 'grace' | 'inactive';
 }
 
 export class BillingService {
@@ -67,9 +69,8 @@ export class BillingService {
         cancelledAt: null,
         onHoldSince: null,
         accessStatus: {
-          hasAccess: false,
           effectivePlanId: 'free' as const,
-          reason: 'no_subscription' as const,
+          accessStatus: 'inactive' as const,
         },
       };
     }
@@ -100,9 +101,8 @@ export class BillingService {
 
     if (!subscription) {
       return {
-        hasAccess: false,
         effectivePlanId: 'free',
-        reason: 'no_subscription',
+        accessStatus: 'inactive',
       };
     }
 
@@ -126,34 +126,25 @@ export class BillingService {
     switch (subscription.status) {
       case 'active':
         return {
-          hasAccess: true,
           effectivePlanId: planId,
-          reason: 'active',
+          accessStatus: 'active',
         };
 
       case 'on_hold': {
         // Allow access during 14-day grace period
         const onHoldSince = subscription.updatedAt;
         const graceEndsAt = new Date(onHoldSince.getTime() + ON_HOLD_GRACE_PERIOD_MS);
-        const daysRemaining = Math.max(
-          0,
-          Math.ceil((graceEndsAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-        );
 
         if (now < graceEndsAt) {
           return {
-            hasAccess: true,
             effectivePlanId: planId,
-            reason: 'on_hold_grace',
-            expiresAt: graceEndsAt,
-            daysRemaining,
+            accessStatus: 'grace',
           };
         }
         // Grace period expired
         return {
-          hasAccess: false,
           effectivePlanId: 'free',
-          reason: 'revoked',
+          accessStatus: 'inactive',
         };
       }
 
@@ -162,48 +153,37 @@ export class BillingService {
         if (subscription.cancelAtPeriodEnd && subscription.currentPeriodEnd) {
           const periodEnd = new Date(subscription.currentPeriodEnd);
           if (now < periodEnd) {
-            const daysRemaining = Math.max(
-              0,
-              Math.ceil((periodEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-            );
             return {
-              hasAccess: true,
               effectivePlanId: planId,
-              reason: 'cancelled_in_period',
-              expiresAt: periodEnd,
-              daysRemaining,
+              accessStatus: 'grace',
             };
           }
         }
         // Immediate cancellation or period ended
         return {
-          hasAccess: false,
           effectivePlanId: 'free',
-          reason: 'expired',
+          accessStatus: 'inactive',
         };
       }
 
       case 'expired':
       case 'failed':
         return {
-          hasAccess: false,
           effectivePlanId: 'free',
-          reason: 'expired',
+          accessStatus: 'inactive',
         };
 
       case 'pending':
         // Pending subscriptions don't have access yet
         return {
-          hasAccess: false,
           effectivePlanId: 'free',
-          reason: 'no_subscription',
+          accessStatus: 'inactive',
         };
 
       default:
         return {
-          hasAccess: false,
           effectivePlanId: 'free',
-          reason: 'no_subscription',
+          accessStatus: 'inactive',
         };
     }
   }

@@ -20,20 +20,21 @@ export const SubscriptionStatusSchema = z.enum(SUBSCRIPTION_STATUSES);
 
 /**
  * Access status for entitlement checks
+ *
+ * effectivePlanId:
+ * - PlanId: User has access to this paid plan
+ * - 'free': User has no paid access, falls back to free plan
+ *
+ * accessStatus:
+ * - 'active': Full paid access to subscribed plan
+ * - 'grace': Temporary access (cancelled but in period, or payment failed in grace period)
+ * - 'inactive': No paid access, falls back to free plan
+ *
+ * Note: UI can derive daysRemaining from subscription.onHoldSince or subscription.currentPeriodEnd
  */
 export const AccessStatusSchema = z.object({
-  hasAccess: z.boolean(),
   effectivePlanId: z.string(),
-  reason: z.enum([
-    'active',
-    'cancelled_in_period',
-    'on_hold_grace',
-    'no_subscription',
-    'expired',
-    'revoked',
-  ]),
-  expiresAt: z.date().nullable().optional(),
-  daysRemaining: z.number().optional(),
+  accessStatus: z.enum(['active', 'grace', 'inactive']),
 });
 
 /**
@@ -130,11 +131,11 @@ export const CustomerPortalResponseSchema = ApiResponseSchema(CustomerPortalData
 /**
  * Resource usage data for a single resource type
  * User-facing API showing usage against plan limits
+ * limit: -1 indicates unlimited
  */
 export const ResourceUsageSchema = z.object({
   consumed: z.number(),
   limit: z.number(),
-  isUnlimited: z.boolean(),
   percentUsed: z.number(),
 });
 
