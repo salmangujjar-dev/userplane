@@ -10,16 +10,15 @@
  */
 
 import type { DbClient } from '@workspace/db';
-import {
-  type DodoSubscription,
-  getDodoPaymentsClient,
-  getPlanIdFromProductId,
-  isSubscriptionEvent,
-  parseSubscriptionDates,
-  type SubscriptionStatus,
-  validateTransition,
-  type WebhookPayload,
-} from '@workspace/payments';
+import { getDodoPaymentsClient } from '@workspace/payments/client';
+import { getPlanIdFromProductId } from '@workspace/payments/products';
+import { validateTransition } from '@workspace/payments/state-machine';
+import type {
+  DodoSubscription,
+  SubscriptionStatus,
+  WebhookPayload,
+} from '@workspace/payments/types';
+import { isSubscriptionEvent, parseSubscriptionDates } from '@workspace/payments/webhooks';
 import type { PlanId } from '@workspace/pricing';
 
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';

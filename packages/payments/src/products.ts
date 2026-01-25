@@ -14,6 +14,10 @@ import type { ProductConfig } from './types';
  *
  * Product IDs should be updated with actual values from DodoPayments dashboard.
  * Format: pdt_xxxxxxxxxxxx
+ *
+ * SERVER-SIDE ONLY: This configuration should never be imported by client code.
+ * Clients pass planId to API endpoints, which handle the conversion to product slugs internally.
+ * Product mappings are kept server-side to avoid exposing configuration in client bundles.
  */
 export const DODO_PRODUCT_IDS: Record<string, string> = {
   // Essential plans

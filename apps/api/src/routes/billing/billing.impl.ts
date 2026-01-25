@@ -2,13 +2,19 @@
  * Billing contract implementation using oRPC
  * Implements the billing contract defined in @workspace/contract
  *
+ * Architecture:
+ * - Product configuration (planId → slug mapping) stays server-side
+ * - Client calls API with planId (type-safe enum)
+ * - API validates permissions and returns slug
+ * - Client uses slug with Better Auth DodoPayments plugin for checkout
+ *
  * Note: Plan changes (upgrade/downgrade) are handled via the DodoPayments
  * Customer Portal, which provides a native self-service experience.
  * See: https://docs.dodopayments.com/features/customer-portal
  */
 
 import { billingError } from '@workspace/contract';
-import { getProductBySlug } from '@workspace/payments';
+import { getProductByPlanId } from '@workspace/payments/products';
 
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
@@ -43,7 +49,8 @@ export const getSubscriptionStatusImpl = (
 
 /**
  * POST /billing/checkout
- * Create a checkout session for subscribing to a plan
+ * Validates permissions and returns product slug for checkout
+ * Client then uses Better Auth's DodoPayments plugin to create the actual checkout session
  * Requires authentication and workspace ownership/admin
  */
 export const createCheckoutSessionImpl = (
@@ -51,7 +58,7 @@ export const createCheckoutSessionImpl = (
   workspaceMemberService: WorkspaceMemberService
 ) => {
   return authorized.billing.createCheckout.handler(async ({ input, context }) => {
-    const { workspaceId, planSlug } = input.body;
+    const { workspaceId, planId } = input.body;
 
     // Verify user has access to the workspace (owner or admin)
     const member = await workspaceMemberService.getMember(context.user.id, workspaceId);
@@ -69,20 +76,19 @@ export const createCheckoutSessionImpl = (
       throw billingError.SUBSCRIPTION_ALREADY_EXISTS();
     }
 
-    // Find the product by slug
-    const product = getProductBySlug(planSlug);
+    // Find the product by planId and convert to slug for checkout
+    const product = getProductByPlanId(planId);
     if (!product) {
       throw billingError.INVALID_PLAN();
     }
 
-    // The actual checkout session is created via Better Auth's DodoPayments plugin
-    // This endpoint provides the information needed to construct the checkout URL
-    // The frontend should use the Better Auth client: authClient.dodopayments.checkoutSession()
-
+    // Return the slug so client can call Better Auth's DodoPayments plugin
+    // Product config stays server-side, but slug is needed for checkout session
     return {
       message: 'Checkout session details retrieved',
       data: {
-        checkoutUrl: `/api/auth/dodopayments/checkout?slug=${planSlug}&metadata[workspace_id]=${workspaceId}`,
+        checkoutUrl: `/api/auth/dodopayments/checkout?slug=${product.slug}&metadata[workspace_id]=${workspaceId}`,
+        slug: product.slug,
         sessionId: undefined,
       },
     };

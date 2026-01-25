@@ -1,11 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
+import type { PlanId } from '@workspace/pricing';
 import { toast } from '@workspace/ui/components/sonner';
 
+import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
 import { env } from '@/env';
 
 interface CheckoutParams {
-  planSlug: string;
+  planId: PlanId;
   workspaceId: string;
 }
 
@@ -15,20 +17,38 @@ interface CheckoutResult {
 
 /**
  * Hook to create a DodoPayments checkout session
- * Uses the Better Auth DodoPayments plugin with checkoutSession method
- * Customer info is automatically pulled from the Better Auth session
- * Billing info can be collected on the checkout page
+ *
+ * Two-step process:
+ * 1. Calls API with planId to validate permissions and get product slug
+ *    - Checks workspace owner/admin role
+ *    - Verifies no existing subscription
+ *    - Converts planId to DodoPayments product slug (server-side)
+ * 2. Uses Better Auth plugin with slug to create checkout session
+ *    - Auto-pulls customer info from authenticated session
+ *    - Redirects to DodoPayments checkout page
  */
 export function useCreateCheckout(options?: {
   onError?: (error: Error) => void;
   onSuccess?: (result: CheckoutResult) => void;
 }) {
   return useMutation<CheckoutResult, Error, CheckoutParams>({
-    mutationFn: async ({ planSlug, workspaceId }) => {
-      // Use checkoutSession which auto-pulls customer from session
-      // and collects billing on checkout page
+    mutationFn: async ({ planId, workspaceId }) => {
+      // Call API to validate permissions and get product slug
+      // API keeps product configuration server-side
+      const [error, response] = await apiClient.billing.createCheckout({
+        body: { planId, workspaceId },
+      });
+
+      if (error || !response?.data?.slug) {
+        throw new Error(error?.message || 'Failed to create checkout session');
+      }
+
+      const slug = response.data.slug;
+
+      // Use Better Auth's DodoPayments plugin to create checkout session
+      // This auto-pulls customer info from the authenticated session
       const result = await authClient.dodopayments.checkoutSession({
-        slug: planSlug,
+        slug,
         referenceId: workspaceId,
         metadata: {
           workspace_id: workspaceId,

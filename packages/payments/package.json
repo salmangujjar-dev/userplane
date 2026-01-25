@@ -8,7 +8,9 @@
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./types": "./src/types.ts",
-    "./webhooks": "./src/webhooks.ts"
+    "./webhooks": "./src/webhooks.ts",
+    "./products": "./src/products.ts",
+    "./state-machine": "./src/state-machine.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

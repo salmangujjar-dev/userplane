@@ -1,4 +1,4 @@
-import { SUBSCRIPTION_STATUSES } from '@workspace/payments';
+import { SUBSCRIPTION_STATUSES } from '@workspace/payments/types';
 import { relations } from 'drizzle-orm';
 import { boolean, index, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
