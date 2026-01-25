@@ -24,6 +24,7 @@ import {
   billingService,
   domainService,
   emailService,
+  entitlementService,
   inviteService,
   linkService,
   projectService,
@@ -110,7 +111,8 @@ const projectProcedures = createProjectProcedures(
 const billingProcedures = createBillingProcedures(
   billingService,
   workspaceMemberService,
-  workspaceService
+  workspaceService,
+  entitlementService
 );
 
 /**

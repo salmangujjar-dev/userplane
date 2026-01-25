@@ -8,10 +8,12 @@ import { workspaceError } from '@workspace/contract';
 
 import { generateWorkspaceMemberId } from '@/api/lib/id';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
+import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { Transaction } from '@/api/types';
 
 export interface WorkspaceMemberServiceDeps {
   memberRepo: WorkspaceMemberRepository;
+  entitlementService?: EntitlementService;
 }
 
 export class WorkspaceMemberService {
@@ -69,6 +71,7 @@ export class WorkspaceMemberService {
    * If user was previously soft-deleted, restores them instead
    * Throws WORKSPACE_MEMBER_IDS_REQUIRED if params are invalid
    * Throws WORKSPACE_MEMBER_ALREADY_EXISTS if user is already a member
+   * Throws WORKSPACE_SEAT_LIMIT_EXCEEDED if seat limit reached
    */
   async addMember(
     params: { userId: string; workspaceId: string; role: WorkspaceRole },
@@ -94,21 +97,50 @@ export class WorkspaceMemberService {
       params.workspaceId
     );
 
-    // If soft-deleted member exists, restore them
-    if (deletedMember && deletedMember.isDeleted) {
-      return this.deps.memberRepo.restore(deletedMember.workspaceMemberId, params.role, options);
+    // For new members (not restores), check seat entitlement
+    if (!deletedMember?.isDeleted && this.deps.entitlementService) {
+      const canAddSeat = await this.deps.entitlementService.canConsume(params.workspaceId, 'seats');
+      if (!canAddSeat.allowed) {
+        throw workspaceError.WORKSPACE_SEAT_LIMIT_EXCEEDED({
+          current: canAddSeat.current,
+          limit: canAddSeat.limit,
+        });
+      }
     }
 
-    // Otherwise, create new member
-    return this.deps.memberRepo.create(
-      {
-        workspaceMemberId: generateWorkspaceMemberId(),
-        userId: params.userId,
-        workspaceId: params.workspaceId,
-        workspaceRole: params.role,
-      },
-      options
-    );
+    let member;
+
+    // If soft-deleted member exists, restore them
+    if (deletedMember && deletedMember.isDeleted) {
+      member = await this.deps.memberRepo.restore(
+        deletedMember.workspaceMemberId,
+        params.role,
+        options
+      );
+    } else {
+      // Otherwise, create new member
+      member = await this.deps.memberRepo.create(
+        {
+          workspaceMemberId: generateWorkspaceMemberId(),
+          userId: params.userId,
+          workspaceId: params.workspaceId,
+          workspaceRole: params.role,
+        },
+        options
+      );
+    }
+
+    // Consume seat entitlement after successfully adding member
+    if (this.deps.entitlementService) {
+      try {
+        await this.deps.entitlementService.consume(params.workspaceId, 'seats', 1, options);
+      } catch (error) {
+        // Log but don't fail - member is already added
+        console.error('Failed to track seat consumption:', error);
+      }
+    }
+
+    return member;
   }
 
   /**
@@ -189,7 +221,23 @@ export class WorkspaceMemberService {
       }
     }
 
-    return this.deps.memberRepo.softDelete(params.memberId, params.deletedAt, options);
+    const result = await this.deps.memberRepo.softDelete(
+      params.memberId,
+      params.deletedAt,
+      options
+    );
+
+    // Release seat entitlement after successfully removing member
+    if (this.deps.entitlementService) {
+      try {
+        await this.deps.entitlementService.release(params.workspaceId, 'seats', 1, options);
+      } catch (error) {
+        // Log but don't fail - member is already removed
+        console.error('Failed to release seat:', error);
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -287,11 +335,23 @@ export class WorkspaceMemberService {
 
         // Only member in workspace - soft delete and signal to delete workspace
         await this.deps.memberRepo.softDelete(member.workspaceMemberId, deletedAt, options);
+        // Note: No need to release seat when workspace is being deleted
         return { shouldDeleteWorkspace: true };
       }
     }
 
     await this.deps.memberRepo.softDelete(member.workspaceMemberId, deletedAt, options);
+
+    // Release seat entitlement after successfully leaving
+    if (this.deps.entitlementService) {
+      try {
+        await this.deps.entitlementService.release(workspaceId, 'seats', 1, options);
+      } catch (error) {
+        // Log but don't fail - member has already left
+        console.error('Failed to release seat:', error);
+      }
+    }
+
     return { shouldDeleteWorkspace: false };
   }
 
