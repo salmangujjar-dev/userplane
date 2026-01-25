@@ -26,7 +26,8 @@ export function BillingSection() {
     : '';
 
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const hasSubscription = subscriptionData?.hasSubscription;
+  // Infer subscription status from contractDetail.planId
+  const hasSubscription = subscriptionData?.contractDetail.planId !== null;
 
   const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
 

@@ -4,7 +4,7 @@
  */
 
 import type { DbClient } from '@workspace/db';
-import { and, eq } from '@workspace/db';
+import { eq } from '@workspace/db';
 import { subscriptions, workspaces } from '@workspace/db';
 import type { PlanId } from '@workspace/pricing';
 
@@ -184,18 +184,5 @@ export class SubscriptionRepository {
       .limit(1);
 
     return result[0] || null;
-  }
-
-  /**
-   * Check if workspace has an active subscription
-   */
-  async hasActiveSubscription(workspaceId: string): Promise<boolean> {
-    const [subscription] = await this.db
-      .select({ id: subscriptions.id })
-      .from(subscriptions)
-      .where(and(eq(subscriptions.workspaceId, workspaceId), eq(subscriptions.status, 'active')))
-      .limit(1);
-
-    return !!subscription;
   }
 }

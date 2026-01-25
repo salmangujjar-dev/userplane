@@ -50,31 +50,28 @@ export class BillingService {
   constructor(private deps: BillingServiceDeps) {}
 
   /**
-   * Check if workspace has an active subscription
-   */
-  async hasActiveSubscription(workspaceId: string): Promise<boolean> {
-    return this.deps.subscriptionRepo.hasActiveSubscription(workspaceId);
-  }
-
-  /**
    * Get subscription status summary for a workspace
    * Extended with access status for entitlement checks
+   *
+   * Note: To check if a subscription exists, check if contractDetail.planId is not null
+   * or if accessDetail.effectivePlanId is not 'free'
    */
   async getSubscriptionStatus(workspaceId: string) {
     const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
 
     if (!subscription) {
       return {
-        hasSubscription: false,
-        status: null,
-        planId: null,
-        planName: null,
-        currentPeriodEnd: null,
-        currentPeriodStart: null,
-        cancelAtPeriodEnd: false,
-        cancelledAt: null,
-        onHoldSince: null,
-        accessStatus: {
+        contractDetail: {
+          status: null,
+          planId: null,
+          planName: null,
+          currentPeriodEnd: null,
+          currentPeriodStart: null,
+          cancelAtPeriodEnd: false,
+          cancelledAt: null,
+          onHoldSince: null,
+        },
+        accessDetail: {
           effectivePlanId: 'free' as const,
           accessStatus: 'inactive' as const,
         },
@@ -85,16 +82,17 @@ export class BillingService {
     const accessStatus = this.calculateAccessStatus(subscription);
 
     return {
-      hasSubscription: true,
-      status: subscription.status,
-      planId,
-      planName: PLAN_NAMES[planId] || 'Unknown',
-      currentPeriodEnd: subscription.currentPeriodEnd,
-      currentPeriodStart: subscription.currentPeriodStart,
-      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-      cancelledAt: subscription.cancelledAt,
-      onHoldSince: subscription.updatedAt, // When status changed to on_hold
-      accessStatus,
+      contractDetail: {
+        status: subscription.status,
+        planId,
+        planName: PLAN_NAMES[planId] || 'Unknown',
+        currentPeriodEnd: subscription.currentPeriodEnd,
+        currentPeriodStart: subscription.currentPeriodStart,
+        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+        cancelledAt: subscription.cancelledAt,
+        onHoldSince: subscription.status === 'on_hold' ? subscription.updatedAt : null,
+      },
+      accessDetail: accessStatus,
     };
   }
 

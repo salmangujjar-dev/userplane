@@ -70,9 +70,14 @@ export const createCheckoutSessionImpl = (
       throw billingError.PORTAL_UNAVAILABLE();
     }
 
-    // Check if workspace already has an active subscription
-    const hasSubscription = await billingService.hasActiveSubscription(workspaceId);
-    if (hasSubscription) {
+    // Check subscription status - prevent checkout if user has active access
+    const subscriptionStatus = await billingService.getSubscriptionStatus(workspaceId);
+
+    // Block checkout if subscription exists and is active
+    if (
+      subscriptionStatus.contractDetail.planId !== null &&
+      subscriptionStatus.contractDetail.status !== 'active'
+    ) {
       throw billingError.SUBSCRIPTION_ALREADY_EXISTS();
     }
 

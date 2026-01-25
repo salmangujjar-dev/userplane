@@ -1,6 +1,6 @@
 'use client';
 
-import type { AccessStatus, SubscriptionStatus } from '@workspace/contract';
+import type { AccessDetail, SubscriptionStatus } from '@workspace/contract';
 import type { PlanId, PlanName } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
@@ -27,7 +27,7 @@ interface BillingDetailsModalProps {
     currentPeriodStart?: Date | string | null;
     cancelledAt?: Date | string | null;
     onHoldSince?: Date | string | null;
-    accessStatus?: AccessStatus;
+    accessStatus?: AccessDetail;
   } | null;
   onManagePortal: () => void;
   isPortalLoading?: boolean;

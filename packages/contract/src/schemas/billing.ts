@@ -19,7 +19,22 @@ import { ApiResponseSchema } from './common';
 export const SubscriptionStatusSchema = z.enum(SUBSCRIPTION_STATUSES);
 
 /**
- * Access status for entitlement checks
+ * Contract detail - raw subscription contract information
+ * Contains the subscription status and billing periods
+ */
+export const ContractDetailSchema = z.object({
+  status: SubscriptionStatusSchema.nullable(),
+  planId: z.string().nullable(),
+  planName: z.string().nullable(),
+  currentPeriodEnd: z.date().nullable(),
+  currentPeriodStart: z.date().nullable(),
+  cancelAtPeriodEnd: z.boolean(),
+  cancelledAt: z.date().nullable(),
+  onHoldSince: z.date().nullable(),
+});
+
+/**
+ * Access detail - computed access/entitlement information
  *
  * effectivePlanId:
  * - PlanId: User has access to this paid plan
@@ -32,27 +47,22 @@ export const SubscriptionStatusSchema = z.enum(SUBSCRIPTION_STATUSES);
  * - 'disputed': Payment dispute open - access blocked regardless of subscription status
  * - 'refunded': Payment refunded - access blocked regardless of subscription status
  *
- * Note: UI can derive daysRemaining from subscription.onHoldSince or subscription.currentPeriodEnd
+ * Note: UI can derive daysRemaining from contractDetail.onHoldSince or contractDetail.currentPeriodEnd
  */
-export const AccessStatusSchema = z.object({
+export const AccessDetailSchema = z.object({
   effectivePlanId: z.string(),
   accessStatus: z.enum(['active', 'grace', 'inactive', 'disputed', 'refunded']),
 });
 
 /**
  * Subscription status response data
+ *
+ * Note: To check if a subscription exists, check if contractDetail.planId is not null
+ * or if accessDetail.effectivePlanId is not 'free'
  */
 export const SubscriptionStatusDataSchema = z.object({
-  hasSubscription: z.boolean(),
-  status: SubscriptionStatusSchema.nullable(),
-  planId: z.string().nullable(),
-  planName: z.string().nullable(),
-  currentPeriodEnd: z.date().nullable(),
-  currentPeriodStart: z.date().nullable(),
-  cancelAtPeriodEnd: z.boolean(),
-  cancelledAt: z.date().nullable(),
-  onHoldSince: z.date().nullable(),
-  accessStatus: AccessStatusSchema,
+  contractDetail: ContractDetailSchema,
+  accessDetail: AccessDetailSchema,
 });
 
 /**
@@ -169,7 +179,8 @@ export const UsageSummaryResponseSchema = ApiResponseSchema(UsageSummaryDataSche
 // ============================================================================
 
 export type SubscriptionStatus = z.infer<typeof SubscriptionStatusSchema>;
-export type AccessStatus = z.infer<typeof AccessStatusSchema>;
+export type ContractDetail = z.infer<typeof ContractDetailSchema>;
+export type AccessDetail = z.infer<typeof AccessDetailSchema>;
 export type SubscriptionStatusData = z.infer<typeof SubscriptionStatusDataSchema>;
 export type CheckoutSessionData = z.infer<typeof CheckoutSessionDataSchema>;
 export type CustomerPortalData = z.infer<typeof CustomerPortalDataSchema>;
