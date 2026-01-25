@@ -31,3 +31,27 @@ export function useSubscriptionStatus() {
     retry: 1,
   });
 }
+
+/**
+ * Hook to fetch usage summary for the current workspace
+ * Returns resource consumption, limits, and progress for all entitlements
+ */
+export function useUsageSummary() {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery({
+    queryKey: ['usage-summary', workspaceId],
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.billing.getUsage({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: !!workspaceId,
+    staleTime: 60 * 1000, // 1 minute - usage changes frequently
+    retry: 1,
+  });
+}

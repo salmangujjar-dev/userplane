@@ -146,6 +146,12 @@ export const WorkspaceErrors = {
     message: 'User is already a member of this workspace',
   },
 
+  // Entitlement errors
+  WORKSPACE_SEAT_LIMIT_EXCEEDED: {
+    status: 403,
+    message: "You've reached your seat limit. Upgrade your plan to add more members.",
+  },
+
   // Workspace invite policy errors
   WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH: {
     status: 403,

@@ -1,7 +1,7 @@
 'use client';
 
 import { getSlugFromPlanId } from '@workspace/payments';
-import { DEFAULT_PLAN_NAME, type PlanId } from '@workspace/pricing';
+import type { PlanId } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
   DropdownMenu,
@@ -42,6 +42,7 @@ import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useWorkspaces } from '@/hooks/use-workspaces';
 import { planModalParser } from '@/lib/parsers';
+import { getPlanDisplay } from '@/lib/plan-display';
 import { useSubscriptionStatus } from '@/queries/use-billing-queries';
 import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
@@ -89,6 +90,13 @@ export function Sidebar() {
   const hasNextPage = projectsPagination ? projectsPage < projectsPagination.totalPages : false;
 
   const hasSubscription = subscriptionData?.hasSubscription;
+
+  // Get plan display based on subscription status
+  const planDisplay = getPlanDisplay(
+    subscriptionData?.planName ?? null,
+    subscriptionData?.status ?? null,
+    subscriptionData?.cancelAtPeriodEnd
+  );
 
   /**
    * Handle plan badge click - redirects to plan-usage tab for existing subscribers
@@ -150,13 +158,27 @@ export function Sidebar() {
           <Link href={`/${workspaceId}/recordings`}>
             <Logo size="sm" />
           </Link>
-          <button onClick={handlePlanClick}>
+          <button
+            onClick={handlePlanClick}
+            title={planDisplay.tooltip}
+            className="flex items-center gap-1.5"
+          >
             <Badge
-              variant="secondary"
-              className="rounded-md text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
+              variant={planDisplay.variant === 'warning' ? 'outline' : planDisplay.variant}
+              className={`rounded-md text-xs cursor-pointer hover:bg-secondary/80 transition-colors ${
+                planDisplay.showWarning ? 'border-yellow-500 text-yellow-700' : ''
+              }`}
             >
-              {subscriptionData?.planName || DEFAULT_PLAN_NAME}
+              {planDisplay.displayName}
             </Badge>
+            {planDisplay.statusBadge && (
+              <Badge
+                variant="outline"
+                className={`rounded-md text-[10px] px-1.5 py-0 ${planDisplay.statusBadge.className || ''}`}
+              >
+                {planDisplay.statusBadge.label}
+              </Badge>
+            )}
           </button>
         </div>
       </div>

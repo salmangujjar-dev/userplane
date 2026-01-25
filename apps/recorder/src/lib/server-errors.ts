@@ -157,6 +157,12 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
     primaryAction: { label: 'Retry', action: 'retry-upload' },
     secondaryAction: { label: 'Start over', action: 'start-over' },
   },
+
+  // Entitlement errors — no recovery
+  SESSION_RECORDING_LIMIT_EXCEEDED: {
+    title: 'Recording limit reached',
+    message: 'Upgrade your plan to record more.',
+  },
 };
 
 /**
