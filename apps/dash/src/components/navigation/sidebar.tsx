@@ -88,13 +88,14 @@ export function Sidebar() {
   const hasPrevPage = projectsPage > 1;
   const hasNextPage = projectsPagination ? projectsPage < projectsPagination.totalPages : false;
 
-  const hasSubscription = subscriptionData?.hasSubscription;
+  // Infer subscription status from contractDetail.planId or accessDetail.effectivePlanId
+  const hasSubscription = subscriptionData?.contractDetail.planId !== null;
 
   // Get plan display based on subscription status
   const planDisplay = getPlanDisplay(
-    subscriptionData?.planName ?? null,
-    subscriptionData?.status ?? null,
-    subscriptionData?.cancelAtPeriodEnd
+    subscriptionData?.contractDetail.planName ?? null,
+    subscriptionData?.contractDetail.status ?? null,
+    subscriptionData?.contractDetail.cancelAtPeriodEnd
   );
 
   /**

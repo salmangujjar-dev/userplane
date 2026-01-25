@@ -198,10 +198,13 @@ export function WorkspacePlanSection() {
     if (!subscriptionData) return undefined;
     const now = new Date();
 
-    if (subscriptionData.status === 'on_hold' && subscriptionData.onHoldSince) {
+    if (
+      subscriptionData.contractDetail.status === 'on_hold' &&
+      subscriptionData.contractDetail.onHoldSince
+    ) {
       // 14-day grace period from onHoldSince
       const graceEndsAt = new Date(
-        new Date(subscriptionData.onHoldSince).getTime() + 14 * 24 * 60 * 60 * 1000
+        new Date(subscriptionData.contractDetail.onHoldSince).getTime() + 14 * 24 * 60 * 60 * 1000
       );
       return Math.max(
         0,
@@ -210,11 +213,11 @@ export function WorkspacePlanSection() {
     }
 
     if (
-      subscriptionData.status === 'cancelled' &&
-      subscriptionData.cancelAtPeriodEnd &&
-      subscriptionData.currentPeriodEnd
+      subscriptionData.contractDetail.status === 'cancelled' &&
+      subscriptionData.contractDetail.cancelAtPeriodEnd &&
+      subscriptionData.contractDetail.currentPeriodEnd
     ) {
-      const periodEnd = new Date(subscriptionData.currentPeriodEnd);
+      const periodEnd = new Date(subscriptionData.contractDetail.currentPeriodEnd);
       return Math.max(0, Math.ceil((periodEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
     }
 
@@ -223,9 +226,9 @@ export function WorkspacePlanSection() {
 
   // Get plan display based on subscription status
   const planDisplay = getPlanDisplay(
-    subscriptionData?.planName ?? null,
-    subscriptionData?.status ?? null,
-    subscriptionData?.cancelAtPeriodEnd,
+    subscriptionData?.contractDetail.planName ?? null,
+    subscriptionData?.contractDetail.status ?? null,
+    subscriptionData?.contractDetail.cancelAtPeriodEnd,
     calculateDaysRemaining()
   );
 
@@ -333,8 +336,8 @@ export function WorkspacePlanSection() {
               planName={planDisplay.displayName}
               statusMessage={planDisplay.statusMessage}
               isUrgent={planDisplay.isUrgent ?? false}
-              hasPlanId={!!subscriptionData?.planId}
-              accessStatus={subscriptionData?.accessStatus.accessStatus}
+              hasPlanId={!!subscriptionData?.contractDetail.planId}
+              accessStatus={subscriptionData?.accessDetail.accessStatus}
               onShowBillingDetails={() => setShowBillingDetails(true)}
               onShowPlanPortal={() => setPlanModal('suggested')}
             />
@@ -377,22 +380,22 @@ export function WorkspacePlanSection() {
         <PlanSelectionModal onPlanSelect={handlePlanSelect} />
 
         {subscriptionData &&
-          subscriptionData.planName &&
-          subscriptionData.planId &&
-          subscriptionData.status && (
+          subscriptionData.contractDetail.planName &&
+          subscriptionData.contractDetail.planId &&
+          subscriptionData.contractDetail.status && (
             <BillingDetailsModal
               open={showBillingDetails}
               onOpenChange={setShowBillingDetails}
               subscription={{
-                planName: subscriptionData.planName as PlanName,
-                planId: subscriptionData.planId as PlanId,
-                status: subscriptionData.status,
-                currentPeriodEnd: subscriptionData.currentPeriodEnd,
-                currentPeriodStart: subscriptionData.currentPeriodStart,
-                cancelAtPeriodEnd: subscriptionData.cancelAtPeriodEnd,
-                cancelledAt: subscriptionData.cancelledAt,
-                onHoldSince: subscriptionData.onHoldSince,
-                accessStatus: subscriptionData.accessStatus,
+                planName: subscriptionData.contractDetail.planName as PlanName,
+                planId: subscriptionData.contractDetail.planId as PlanId,
+                status: subscriptionData.contractDetail.status,
+                currentPeriodEnd: subscriptionData.contractDetail.currentPeriodEnd,
+                currentPeriodStart: subscriptionData.contractDetail.currentPeriodStart,
+                cancelAtPeriodEnd: subscriptionData.contractDetail.cancelAtPeriodEnd,
+                cancelledAt: subscriptionData.contractDetail.cancelledAt,
+                onHoldSince: subscriptionData.contractDetail.onHoldSince,
+                accessStatus: subscriptionData.accessDetail,
               }}
               onManagePortal={handleManageBilling}
               isPortalLoading={isPortalPending}
