@@ -1,4 +1,5 @@
 export * from './account';
+export * from './disputes';
 export * from './domains';
 export * from './entitlements';
 export * from './links';

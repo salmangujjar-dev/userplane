@@ -12,6 +12,7 @@
 import type { PlanId } from '@workspace/pricing';
 import { PLAN_NAMES } from '@workspace/pricing';
 
+import type { DisputeRepository } from '@/api/repositories/disputes.repository';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 
 // Grace period for on_hold status (14 days in milliseconds)
@@ -19,6 +20,7 @@ const ON_HOLD_GRACE_PERIOD_MS = 14 * 24 * 60 * 60 * 1000;
 
 export interface BillingServiceDeps {
   subscriptionRepo: SubscriptionRepository;
+  disputeRepo: DisputeRepository;
 }
 
 /**
@@ -32,12 +34,13 @@ export interface BillingServiceDeps {
  * - 'active': Full paid access to subscribed plan
  * - 'grace': Temporary access (cancelled but in period, or payment failed in grace period)
  * - 'inactive': No paid access, falls back to free plan
+ * - 'disputed': Payment dispute open - access blocked regardless of subscription status
  *
  * Note: UI can derive daysRemaining from subscription.onHoldSince or subscription.currentPeriodEnd
  */
 export interface SubscriptionAccessStatus {
   effectivePlanId: PlanId | 'free';
-  accessStatus: 'active' | 'grace' | 'inactive';
+  accessStatus: 'active' | 'grace' | 'inactive' | 'disputed';
 }
 
 export class BillingService {
@@ -95,8 +98,24 @@ export class BillingService {
   /**
    * Get subscription access status for entitlement checks
    * Determines if a workspace has entitled access based on subscription state
+   *
+   * Priority order:
+   * 1. Check for open disputes (hard safety latch - blocks all access)
+   * 2. Check subscription status (normal flow)
    */
   async getSubscriptionAccessStatus(workspaceId: string): Promise<SubscriptionAccessStatus> {
+    // CHECK DISPUTES FIRST - hard safety latch
+    // Open disputes override all subscription state and block access
+    const hasOpenDispute = await this.deps.disputeRepo.hasOpenDispute(workspaceId);
+
+    if (hasOpenDispute) {
+      return {
+        effectivePlanId: 'free',
+        accessStatus: 'disputed',
+      };
+    }
+
+    // Normal subscription status flow
     const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
 
     if (!subscription) {

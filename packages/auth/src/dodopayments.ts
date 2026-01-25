@@ -18,6 +18,21 @@ export interface WebhookHeaders {
 }
 
 /**
+ * Optional function to retrieve webhook context (headers) from AsyncLocalStorage.
+ * This bridges the gap between the request interceptor and the onPayload callback,
+ * since the Better Auth adapter doesn't expose headers to onPayload.
+ */
+let getWebhookContextFn: (() => WebhookHeaders | undefined) | null = null;
+
+/**
+ * Set the function to retrieve webhook context from AsyncLocalStorage.
+ * Call this during app initialization with getWebhookContext from webhook-context.ts
+ */
+export function setWebhookContextProvider(fn: () => WebhookHeaders | undefined): void {
+  getWebhookContextFn = fn;
+}
+
+/**
  * Configuration for DodoPayments Better Auth plugin
  */
 export interface DodoPaymentsAuthConfig {
@@ -71,42 +86,15 @@ export function createDodoPaymentsPlugin(config: DodoPaymentsAuthConfig) {
         webhookKey: webhookSecret,
         onPayload: onWebhookPayload
           ? async (payload) => {
-              // Note: DodoPayments sends webhook-id and webhook-timestamp headers,
-              // but the @dodopayments/better-auth plugin doesn't expose them to this callback.
-              // It uses them internally for signature verification.
+              // Get webhook headers from AsyncLocalStorage context.
+              // The headers (webhook-id, webhook-timestamp) are intercepted at the
+              // request level and stored in AsyncLocalStorage before Better Auth processes
+              // the request. This is necessary because the Better Auth adapter doesn't
+              // expose headers to the onPayload callback.
               //
-              // We generate a deterministic webhook ID from the payload fields:
-              // - business_id: identifies the merchant
-              // - timestamp: when the event occurred (matches webhook-timestamp header)
-              // - type: the event type
-              //
-              // This combination is unique per webhook event and provides idempotency.
-              let headers: WebhookHeaders | undefined;
-              try {
-                const webhookPayload = payload as {
-                  business_id?: string;
-                  timestamp?: Date | string;
-                  type?: string;
-                };
-
-                if (webhookPayload.business_id && webhookPayload.timestamp) {
-                  const timestamp =
-                    typeof webhookPayload.timestamp === 'string'
-                      ? webhookPayload.timestamp
-                      : webhookPayload.timestamp.toISOString();
-
-                  // Create deterministic webhook ID from payload fields
-                  // Format: {business_id}-{ISO timestamp}-{event_type}
-                  const webhookId = `${webhookPayload.business_id}-${timestamp}-${webhookPayload.type || 'unknown'}`;
-
-                  headers = {
-                    webhookId,
-                    webhookTimestamp: timestamp,
-                  };
-                }
-              } catch {
-                // Payload parsing failed, continue without headers
-              }
+              // The webhook-id header is the canonical event ID from Dodo Payments
+              // and should be used for idempotency checks.
+              const headers = getWebhookContextFn?.();
 
               await onWebhookPayload(payload, headers);
             }

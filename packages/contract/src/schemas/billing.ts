@@ -29,12 +29,13 @@ export const SubscriptionStatusSchema = z.enum(SUBSCRIPTION_STATUSES);
  * - 'active': Full paid access to subscribed plan
  * - 'grace': Temporary access (cancelled but in period, or payment failed in grace period)
  * - 'inactive': No paid access, falls back to free plan
+ * - 'disputed': Payment dispute open - access blocked regardless of subscription status
  *
  * Note: UI can derive daysRemaining from subscription.onHoldSince or subscription.currentPeriodEnd
  */
 export const AccessStatusSchema = z.object({
   effectivePlanId: z.string(),
-  accessStatus: z.enum(['active', 'grace', 'inactive']),
+  accessStatus: z.enum(['active', 'grace', 'inactive', 'disputed']),
 });
 
 /**
