@@ -13,7 +13,9 @@ import {
   CustomerPortalResponseSchema,
   GetCustomerPortalSchema,
   GetSubscriptionStatusSchema,
+  GetUsageSummarySchema,
   SubscriptionStatusResponseSchema,
+  UsageSummaryResponseSchema,
 } from '../schemas';
 
 /**
@@ -68,6 +70,23 @@ export const billingContract = oc.router({
     })
     .input(GetCustomerPortalSchema)
     .output(CustomerPortalResponseSchema)
+    .errors(BillingErrors),
+
+  /**
+   * GET /billing/:workspaceId/usage
+   * Get entitlement usage summary for a workspace
+   * Requires workspace membership
+   */
+  getUsage: oc
+    .route({
+      method: 'GET',
+      path: '/billing/{workspaceId}/usage',
+      inputStructure: 'detailed',
+      summary: 'Get usage summary',
+      description: 'Get entitlement usage summary for a workspace',
+    })
+    .input(GetUsageSummarySchema)
+    .output(UsageSummaryResponseSchema)
     .errors(BillingErrors),
 });
 

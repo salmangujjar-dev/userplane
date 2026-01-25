@@ -125,4 +125,10 @@ export const SessionErrors = {
     status: 500,
     message: 'Database operation failed, try again',
   },
+
+  // Entitlement errors
+  SESSION_RECORDING_LIMIT_EXCEEDED: {
+    status: 403,
+    message: "You've reached your recording limit. Upgrade your plan for more recordings.",
+  },
 } as const;
