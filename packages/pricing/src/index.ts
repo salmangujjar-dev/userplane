@@ -44,7 +44,6 @@ export const RESOURCE_TYPE_VALUES = [
   'seats',
   'links',
   'recordings',
-  'logs',
   'screenshots',
   'files',
 ] as const;
@@ -55,9 +54,9 @@ export type ResourceType = (typeof RESOURCE_TYPE_VALUES)[number];
  */
 export interface ResourceLimits {
   quotedLimit: number;
+  creditLimit: number;
   softLimit: number;
   hardLimit: number;
-  upgradeLimit: number;
 }
 
 /**
@@ -71,93 +70,84 @@ export type PlanEntitlements = Record<ResourceType, ResourceLimits>;
  *
  * Limits explanation:
  * - quotedLimit: What we advertise to customers (included seats/recordings)
+ * - creditLimit: Additional capacity available beyond quotedLimit (for paid upgrades)
  * - softLimit: Warning threshold (usage alerts)
  * - hardLimit: Absolute maximum (requests blocked, "up to X members" limit)
- * - upgradeLimit: Additional capacity available beyond quotedLimit (for paid upgrades)
  *
  * Use -1 for unlimited
  */
 export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   // Essential: $59/mo - Entry-level paid plan
   essential_monthly: {
-    seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
-    recordings: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
+    recordings: { quotedLimit: 25, creditLimit: 0, softLimit: 25, hardLimit: 35 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
   essential_annual: {
-    seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
-    recordings: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
+    recordings: { quotedLimit: 25, creditLimit: 0, softLimit: 25, hardLimit: 35 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
 
   // Starter: $99/mo - For growing teams
   starter_monthly: {
-    seats: { quotedLimit: 10, softLimit: 10, hardLimit: 20, upgradeLimit: 10 },
-    recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    seats: { quotedLimit: 10, creditLimit: 10, softLimit: 10, hardLimit: 20 },
+    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 45, hardLimit: 85 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
   starter_annual: {
-    seats: { quotedLimit: 10, softLimit: 10, hardLimit: 20, upgradeLimit: 10 },
-    recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    seats: { quotedLimit: 10, creditLimit: 10, softLimit: 10, hardLimit: 20 },
+    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 45, hardLimit: 85 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
 
   // Scale Up: $249/mo - For scaling teams
   scale_up_monthly: {
-    seats: { quotedLimit: 15, softLimit: 15, hardLimit: 30, upgradeLimit: 15 },
-    recordings: { quotedLimit: -1, softLimit: 75, hardLimit: 180, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
+    seats: { quotedLimit: 15, creditLimit: 15, softLimit: 15, hardLimit: 30 },
+    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 75, hardLimit: 180 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
   },
   scale_up_annual: {
-    seats: { quotedLimit: 15, softLimit: 15, hardLimit: 30, upgradeLimit: 15 },
-    recordings: { quotedLimit: -1, softLimit: 75, hardLimit: 180, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
+    seats: { quotedLimit: 15, creditLimit: 15, softLimit: 15, hardLimit: 30 },
+    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 75, hardLimit: 180 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
   },
 
   // Free: Free evaluation tier
   free: {
-    seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
-    recordings: { quotedLimit: 3, softLimit: 3, hardLimit: 3, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
-    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
+    recordings: { quotedLimit: 3, creditLimit: 0, softLimit: 3, hardLimit: 3 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
 
   // Enterprise: $650/mo - For large organizations
   enterprise_monthly: {
-    seats: { quotedLimit: 30, softLimit: 30, hardLimit: 45, upgradeLimit: 15 },
-    recordings: { quotedLimit: -1, softLimit: 150, hardLimit: 700, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: -1, softLimit: 150, hardLimit: 700, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
+    seats: { quotedLimit: 30, creditLimit: 15, softLimit: 30, hardLimit: 45 },
+    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 150, hardLimit: 700 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
   },
   enterprise_annual: {
-    seats: { quotedLimit: 30, softLimit: 30, hardLimit: 45, upgradeLimit: 15 },
-    recordings: { quotedLimit: -1, softLimit: 150, hardLimit: 700, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: -1, softLimit: 150, hardLimit: 700, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
+    seats: { quotedLimit: 30, creditLimit: 15, softLimit: 30, hardLimit: 45 },
+    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 150, hardLimit: 700 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
   },
 };
 

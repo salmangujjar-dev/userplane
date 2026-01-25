@@ -242,14 +242,12 @@ export class SessionService {
     }
 
     // Check recording entitlement before creating
-    const canRecord = await this.deps.entitlementService.canConsume(
-      sessionPayload.wid,
-      'recordings'
-    );
+    const canRecord = await this.deps.entitlementService.canConsumeRecordings(sessionPayload.wid);
     if (!canRecord.allowed) {
       throw sessionError.SESSION_RECORDING_LIMIT_EXCEEDED({
         current: canRecord.current,
         limit: canRecord.limit,
+        reason: canRecord.reason,
       });
     }
 
@@ -397,7 +395,7 @@ export class SessionService {
     // Track recording consumption after successful upload
     // Note: We consume when recording becomes available, not when pending
     try {
-      await this.deps.entitlementService.consume(recording.workspaceId, 'recordings');
+      await this.deps.entitlementService.consumeRecordings(recording.workspaceId);
     } catch (error) {
       // Log but don't fail - recording is already created
       // Consumption tracking failure shouldn't block the upload

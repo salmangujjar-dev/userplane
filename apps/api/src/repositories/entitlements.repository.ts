@@ -5,7 +5,7 @@
  */
 
 import type { DbClient } from '@workspace/db';
-import { and, eq, sql } from '@workspace/db';
+import { and, eq, gte, sql } from '@workspace/db';
 import { entitlements } from '@workspace/db';
 import type { ResourceType } from '@workspace/pricing';
 
@@ -16,6 +16,7 @@ export interface CreateEntitlementData {
   workspaceId: string;
   resourceType: ResourceType;
   quotedLimit: number;
+  creditLimit: number;
   softLimit: number;
   hardLimit: number;
   resourceCredited?: number;
@@ -25,6 +26,7 @@ export interface CreateEntitlementData {
 export interface EntitlementData {
   resourceType: ResourceType;
   quotedLimit: number;
+  creditLimit: number;
   softLimit: number;
   hardLimit: number;
 }
@@ -45,6 +47,7 @@ export class EntitlementRepository {
         workspaceId: data.workspaceId,
         resourceType: data.resourceType,
         quotedLimit: data.quotedLimit,
+        creditLimit: data.creditLimit,
         softLimit: data.softLimit,
         hardLimit: data.hardLimit,
         resourceCredited: data.resourceCredited ?? 0,
@@ -120,6 +123,7 @@ export class EntitlementRepository {
         // Update existing entitlement
         const updateData: Record<string, unknown> = {
           quotedLimit: data.quotedLimit,
+          creditLimit: data.creditLimit,
           softLimit: data.softLimit,
           hardLimit: data.hardLimit,
           updatedAt: new Date(),
@@ -144,6 +148,7 @@ export class EntitlementRepository {
             workspaceId,
             resourceType: data.resourceType,
             quotedLimit: data.quotedLimit,
+            creditLimit: data.creditLimit,
             softLimit: data.softLimit,
             hardLimit: data.hardLimit,
           },
@@ -235,6 +240,44 @@ export class EntitlementRepository {
   }
 
   /**
+   * Atomically apply credits to increase limits
+   * Consumes from creditLimit pool and increases soft/hard limits
+   *
+   * Uses SQL-level operations with WHERE clause check to prevent race conditions
+   * Only succeeds if creditLimit >= amount at execution time
+   *
+   * @returns Updated entitlement if successful, null if insufficient creditLimit
+   */
+  async applyCredits(
+    workspaceId: string,
+    resourceType: ResourceType,
+    amount: number,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(entitlements)
+      .set({
+        creditLimit: sql`${entitlements.creditLimit} - ${amount}`,
+        softLimit: sql`${entitlements.softLimit} + ${amount}`,
+        hardLimit: sql`${entitlements.hardLimit} + ${amount}`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(entitlements.workspaceId, workspaceId),
+          eq(entitlements.resourceType, resourceType),
+          eq(entitlements.isDeleted, false),
+          gte(entitlements.creditLimit, amount) // Atomic check: creditLimit >= amount
+        )
+      )
+      .returning();
+
+    return updated || null;
+  }
+
+  /**
    * Reset consumed resources for a workspace
    * If resourceType is provided, only resets that resource
    * Otherwise resets all resources
@@ -266,12 +309,12 @@ export class EntitlementRepository {
   }
 
   /**
-   * Reset period-based resources (recordings, logs)
+   * Reset period-based resources (recordings)
    * Called on subscription renewal
    */
   async resetPeriodResources(workspaceId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
-    const periodResources: ResourceType[] = ['recordings', 'logs'];
+    const periodResources: ResourceType[] = ['recordings'];
 
     return dbClient
       .update(entitlements)
@@ -290,42 +333,12 @@ export class EntitlementRepository {
   }
 
   /**
-   * Atomically increment credited resources
-   * Used for upgrades/add-ons
-   */
-  async incrementCredited(
-    workspaceId: string,
-    resourceType: ResourceType,
-    amount: number,
-    options?: { tx?: Transaction }
-  ) {
-    const dbClient = options?.tx || this.db;
-
-    const [updated] = await dbClient
-      .update(entitlements)
-      .set({
-        resourceCredited: sql`${entitlements.resourceCredited} + ${amount}`,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(entitlements.workspaceId, workspaceId),
-          eq(entitlements.resourceType, resourceType),
-          eq(entitlements.isDeleted, false)
-        )
-      )
-      .returning();
-
-    return updated || null;
-  }
-
-  /**
    * Update limits for a specific entitlement
    */
   async updateLimits(
     workspaceId: string,
     resourceType: ResourceType,
-    limits: { quotedLimit: number; softLimit: number; hardLimit: number },
+    limits: { quotedLimit: number; creditLimit: number; softLimit: number; hardLimit: number },
     options?: { tx?: Transaction }
   ) {
     const dbClient = options?.tx || this.db;
@@ -334,6 +347,7 @@ export class EntitlementRepository {
       .update(entitlements)
       .set({
         quotedLimit: limits.quotedLimit,
+        creditLimit: limits.creditLimit,
         softLimit: limits.softLimit,
         hardLimit: limits.hardLimit,
         updatedAt: new Date(),
