@@ -1,7 +1,7 @@
 'use client';
 
 import type { ResourceUsage } from '@workspace/contract';
-import type { PlanId } from '@workspace/pricing';
+import type { PlanId, PlanName } from '@workspace/pricing';
 import { Progress } from '@workspace/ui/components/progress';
 import {
   Tooltip,
@@ -9,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { FileText, Info } from 'lucide-react';
+import { FileText, Info, MoveUpRight } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
@@ -22,14 +22,61 @@ import { getPlanDisplay } from '@/lib/plan-display';
 import { useSubscriptionStatus, useUsageSummary } from '@/queries/use-billing-queries';
 import { useCreateCheckout, useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
 
+interface BillingActionButtonProps {
+  hasPlanId: boolean;
+  accessStatus?: string;
+  onShowBillingDetails: () => void;
+  onShowPlanPortal: () => void;
+}
+
+function BillingActionButton({
+  hasPlanId,
+  accessStatus,
+  onShowBillingDetails,
+  onShowPlanPortal,
+}: BillingActionButtonProps) {
+  const shouldShowUpgrade = !hasPlanId || (hasPlanId && accessStatus === 'inactive');
+
+  const handleClick = () => {
+    if (shouldShowUpgrade) {
+      onShowPlanPortal();
+    } else {
+      onShowBillingDetails();
+    }
+  };
+
+  const Icon = shouldShowUpgrade ? MoveUpRight : FileText;
+
+  return (
+    <button
+      onClick={handleClick}
+      className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center gap-2"
+    >
+      <Icon className="h-4 w-4" />
+      {shouldShowUpgrade ? 'Upgrade Plan' : 'Review Plan'}
+    </button>
+  );
+}
+
 interface PlanHeaderProps {
   planName: string;
   statusMessage?: string;
   isUrgent: boolean;
+  hasPlanId: boolean;
+  accessStatus?: string;
   onShowBillingDetails: () => void;
+  onShowPlanPortal: () => void;
 }
 
-function PlanHeader({ planName, statusMessage, isUrgent, onShowBillingDetails }: PlanHeaderProps) {
+function PlanHeader({
+  planName,
+  statusMessage,
+  isUrgent,
+  hasPlanId,
+  accessStatus,
+  onShowBillingDetails,
+  onShowPlanPortal,
+}: PlanHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -53,13 +100,12 @@ function PlanHeader({ planName, statusMessage, isUrgent, onShowBillingDetails }:
           </Tooltip>
         )}
       </div>
-      <button
-        onClick={onShowBillingDetails}
-        className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center gap-2"
-      >
-        <FileText className="h-4 w-4" />
-        Review Plan
-      </button>
+      <BillingActionButton
+        hasPlanId={hasPlanId}
+        accessStatus={accessStatus}
+        onShowBillingDetails={onShowBillingDetails}
+        onShowPlanPortal={onShowPlanPortal}
+      />
     </div>
   );
 }
@@ -287,7 +333,10 @@ export function WorkspacePlanSection() {
               planName={planDisplay.displayName}
               statusMessage={planDisplay.statusMessage}
               isUrgent={planDisplay.isUrgent ?? false}
+              hasPlanId={!!subscriptionData?.planId}
+              accessStatus={subscriptionData?.accessStatus.accessStatus}
               onShowBillingDetails={() => setShowBillingDetails(true)}
+              onShowPlanPortal={() => setPlanModal('suggested')}
             />
           )}
 
@@ -327,25 +376,28 @@ export function WorkspacePlanSection() {
 
         <PlanSelectionModal onPlanSelect={handlePlanSelect} />
 
-        {subscriptionData && (
-          <BillingDetailsModal
-            open={showBillingDetails}
-            onOpenChange={setShowBillingDetails}
-            subscription={{
-              planName: subscriptionData.planName || 'Free',
-              planId: subscriptionData.planId || 'free',
-              status: subscriptionData.status || 'active',
-              currentPeriodEnd: subscriptionData.currentPeriodEnd,
-              currentPeriodStart: subscriptionData.currentPeriodStart,
-              cancelAtPeriodEnd: subscriptionData.cancelAtPeriodEnd,
-              cancelledAt: subscriptionData.cancelledAt,
-              onHoldSince: subscriptionData.onHoldSince,
-              accessStatus: subscriptionData.accessStatus,
-            }}
-            onManagePortal={handleManageBilling}
-            isPortalLoading={isPortalPending}
-          />
-        )}
+        {subscriptionData &&
+          subscriptionData.planName &&
+          subscriptionData.planId &&
+          subscriptionData.status && (
+            <BillingDetailsModal
+              open={showBillingDetails}
+              onOpenChange={setShowBillingDetails}
+              subscription={{
+                planName: subscriptionData.planName as PlanName,
+                planId: subscriptionData.planId as PlanId,
+                status: subscriptionData.status,
+                currentPeriodEnd: subscriptionData.currentPeriodEnd,
+                currentPeriodStart: subscriptionData.currentPeriodStart,
+                cancelAtPeriodEnd: subscriptionData.cancelAtPeriodEnd,
+                cancelledAt: subscriptionData.cancelledAt,
+                onHoldSince: subscriptionData.onHoldSince,
+                accessStatus: subscriptionData.accessStatus,
+              }}
+              onManagePortal={handleManageBilling}
+              isPortalLoading={isPortalPending}
+            />
+          )}
       </div>
     </TooltipProvider>
   );

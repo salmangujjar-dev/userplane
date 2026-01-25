@@ -1,5 +1,7 @@
 'use client';
 
+import type { AccessStatus, SubscriptionStatus } from '@workspace/contract';
+import type { PlanId, PlanName } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
   Dialog,
@@ -11,18 +13,13 @@ import Logo from '@workspace/ui/components/logo';
 import { format } from 'date-fns';
 import { AlertCircle, CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
 
-interface AccessStatusData {
-  effectivePlanId: string;
-  accessStatus: 'active' | 'grace' | 'inactive';
-}
-
 interface BillingDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   subscription: {
-    planName: string;
-    planId: string;
-    status: string;
+    planName: PlanName;
+    planId: PlanId;
+    status: SubscriptionStatus;
     currentPeriodEnd: Date | string | null;
     cancelAtPeriodEnd: boolean;
     // Extended data
@@ -30,7 +27,7 @@ interface BillingDetailsModalProps {
     currentPeriodStart?: Date | string | null;
     cancelledAt?: Date | string | null;
     onHoldSince?: Date | string | null;
-    accessStatus?: AccessStatusData;
+    accessStatus?: AccessStatus;
   } | null;
   onManagePortal: () => void;
   isPortalLoading?: boolean;
@@ -55,7 +52,7 @@ interface StatusConfig {
 }
 
 const getStatusConfig = (
-  status: string,
+  status: SubscriptionStatus,
   cancelAtPeriodEnd: boolean,
   daysRemaining?: number
 ): StatusConfig => {
@@ -126,14 +123,6 @@ const getStatusConfig = (
         textColor: 'text-blue-800 dark:text-blue-200',
         label: 'Pending',
         description: 'Your subscription is being processed.',
-      };
-    default:
-      return {
-        icon: Clock,
-        bgColor: 'bg-muted/50',
-        dotColor: 'bg-gray-500',
-        textColor: 'text-foreground',
-        label: status.replace('_', ' '),
       };
   }
 };
@@ -213,26 +202,6 @@ export function BillingDetailsModal({
           </div>
 
           <div className="space-y-4">
-            {/* Prominent Status Banner */}
-            <div className={`p-4 rounded-lg ${statusConfig.bgColor}`}>
-              <div className="flex items-start gap-3">
-                <StatusIcon className={`h-5 w-5 shrink-0 mt-0.5 ${statusConfig.textColor}`} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-semibold ${statusConfig.textColor}`}>
-                      {statusConfig.label}
-                    </span>
-                    <span className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`} />
-                  </div>
-                  {statusConfig.description && (
-                    <p className={`text-sm mt-1 ${statusConfig.textColor} opacity-90`}>
-                      {statusConfig.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
             {/* Plan Info */}
             <div className="space-y-3">
               <DetailRow label="Plan" value={subscription.planName} />
@@ -240,7 +209,31 @@ export function BillingDetailsModal({
                 label="Billing Cycle"
                 value={<span className="capitalize">{billingCycle}</span>}
               />
+              <DetailRow
+                label="Status"
+                value={
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`} />
+                    <span className="font-medium">{statusConfig.label}</span>
+                  </div>
+                }
+              />
             </div>
+
+            {/* Warning Banner - Only show for urgent states */}
+            {(subscription.status === 'on_hold' ||
+              subscription.status === 'expired' ||
+              (subscription.status === 'cancelled' && subscription.cancelAtPeriodEnd)) &&
+              statusConfig.description && (
+                <div className={`p-3 rounded-lg ${statusConfig.bgColor} border border-border/50`}>
+                  <div className="flex items-start gap-2">
+                    <StatusIcon className={`h-4 w-4 shrink-0 mt-0.5 ${statusConfig.textColor}`} />
+                    <p className={`text-sm ${statusConfig.textColor}`}>
+                      {statusConfig.description}
+                    </p>
+                  </div>
+                </div>
+              )}
 
             <hr className="border-border" />
 
