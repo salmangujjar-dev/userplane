@@ -1,7 +1,13 @@
 'use client';
 
 import { Badge } from '@workspace/ui/components/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@workspace/ui/components/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
+import Logo from '@workspace/ui/components/logo';
 import { format } from 'date-fns';
 import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
 
@@ -201,82 +207,91 @@ export function BillingDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Subscription Details</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Prominent Status Banner */}
-          <div className={`p-4 rounded-lg ${statusConfig.bgColor}`}>
-            <div className="flex items-start gap-3">
-              <StatusIcon className={`h-5 w-5 shrink-0 mt-0.5 ${statusConfig.textColor}`} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className={`font-semibold ${statusConfig.textColor}`}>
-                    {statusConfig.label}
-                  </span>
-                  <span className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`} />
-                </div>
-                {statusConfig.description && (
-                  <p className={`text-sm mt-1 ${statusConfig.textColor} opacity-90`}>
-                    {statusConfig.description}
-                  </p>
-                )}
-              </div>
+      <DialogContent className="sm:max-w-md" showCloseButton={false}>
+        <div className="space-y-6 py-4">
+          {/* Header */}
+          <div className="flex items-start gap-4">
+            <Logo variant="tiled" size="md" showText={false} />
+            <div className="flex flex-col space-y-1">
+              <DialogTitle className="text-xl font-semibold">Subscription Details</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                View and manage your subscription information
+              </DialogDescription>
             </div>
           </div>
 
-          {/* Plan Info */}
-          <div className="space-y-3">
-            <DetailRow label="Plan" value={subscription.planName} />
-            <DetailRow
-              label="Billing Cycle"
-              value={<span className="capitalize">{billingCycle}</span>}
-            />
-          </div>
+          <div className="space-y-4">
+            {/* Prominent Status Banner */}
+            <div className={`p-4 rounded-lg ${statusConfig.bgColor}`}>
+              <div className="flex items-start gap-3">
+                <StatusIcon className={`h-5 w-5 shrink-0 mt-0.5 ${statusConfig.textColor}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`font-semibold ${statusConfig.textColor}`}>
+                      {statusConfig.label}
+                    </span>
+                    <span className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`} />
+                  </div>
+                  {statusConfig.description && (
+                    <p className={`text-sm mt-1 ${statusConfig.textColor} opacity-90`}>
+                      {statusConfig.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
 
-          <hr className="border-border" />
-
-          {/* Billing Period */}
-          <div className="space-y-3">
-            {periodStart && periodEnd && (
-              <DetailRow label="Current Period" value={`${periodStart} - ${periodEnd}`} />
-            )}
-            {periodEnd && !subscription.cancelAtPeriodEnd && subscription.status === 'active' && (
-              <DetailRow label="Next Billing" value={periodEnd} />
-            )}
-            {subscription.cancelAtPeriodEnd && periodEnd && (
+            {/* Plan Info */}
+            <div className="space-y-3">
+              <DetailRow label="Plan" value={subscription.planName} />
               <DetailRow
-                label="Access Until"
-                value={<span className="text-muted-foreground">{periodEnd}</span>}
+                label="Billing Cycle"
+                value={<span className="capitalize">{billingCycle}</span>}
               />
-            )}
-            {cancelledAt && <DetailRow label="Cancelled On" value={cancelledAt} />}
-            {onHoldSince && <DetailRow label="On Hold Since" value={onHoldSince} />}
-            <DetailRow
-              label="Auto-Renew"
-              value={
-                <Badge
-                  variant={subscription.cancelAtPeriodEnd ? 'outline' : 'secondary'}
-                  className="text-xs"
-                >
-                  {subscription.cancelAtPeriodEnd ? 'Off' : 'On'}
-                </Badge>
-              }
-            />
-          </div>
+            </div>
 
-          {/* Action */}
-          <button
-            onClick={() => {
-              onManagePortal();
-              onOpenChange(false);
-            }}
-            className="w-full mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Manage in Portal
-          </button>
+            <hr className="border-border" />
+
+            {/* Billing Period */}
+            <div className="space-y-3">
+              {periodStart && periodEnd && (
+                <DetailRow label="Current Period" value={`${periodStart} - ${periodEnd}`} />
+              )}
+              {periodEnd && !subscription.cancelAtPeriodEnd && subscription.status === 'active' && (
+                <DetailRow label="Next Billing" value={periodEnd} />
+              )}
+              {subscription.cancelAtPeriodEnd && periodEnd && (
+                <DetailRow
+                  label="Access Until"
+                  value={<span className="text-muted-foreground">{periodEnd}</span>}
+                />
+              )}
+              {cancelledAt && <DetailRow label="Cancelled On" value={cancelledAt} />}
+              {onHoldSince && <DetailRow label="On Hold Since" value={onHoldSince} />}
+              <DetailRow
+                label="Auto-Renew"
+                value={
+                  <Badge
+                    variant={subscription.cancelAtPeriodEnd ? 'outline' : 'secondary'}
+                    className="text-xs"
+                  >
+                    {subscription.cancelAtPeriodEnd ? 'Off' : 'On'}
+                  </Badge>
+                }
+              />
+            </div>
+
+            {/* Action */}
+            <button
+              onClick={() => {
+                onManagePortal();
+                onOpenChange(false);
+              }}
+              className="w-full mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Manage in Portal
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

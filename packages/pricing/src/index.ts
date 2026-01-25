@@ -48,7 +48,6 @@ export const RESOURCE_TYPE_VALUES = [
   'seats',
   'links',
   'recordings',
-  'recording_links',
   'logs',
   'screenshots',
   'files',
@@ -87,7 +86,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   essential_monthly: {
     seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
     recordings: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -96,7 +94,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   essential_annual: {
     seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
     recordings: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -107,7 +104,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   starter_monthly: {
     seats: { quotedLimit: 10, softLimit: 10, hardLimit: 20, upgradeLimit: 10 },
     recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -116,7 +112,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   starter_annual: {
     seats: { quotedLimit: 10, softLimit: 10, hardLimit: 20, upgradeLimit: 10 },
     recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -127,7 +122,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   scale_up_monthly: {
     seats: { quotedLimit: 15, softLimit: 15, hardLimit: 30, upgradeLimit: 15 },
     recordings: { quotedLimit: -1, softLimit: 75, hardLimit: 250, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: -1, softLimit: 75, hardLimit: 250, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -136,7 +130,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   scale_up_annual: {
     seats: { quotedLimit: 15, softLimit: 15, hardLimit: 30, upgradeLimit: 15 },
     recordings: { quotedLimit: -1, softLimit: 75, hardLimit: 250, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: -1, softLimit: 75, hardLimit: 250, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -147,7 +140,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   free: {
     seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
     recordings: { quotedLimit: 3, softLimit: 3, hardLimit: 3, upgradeLimit: 0 },
-    recording_links: { quotedLimit: 5, softLimit: 5, hardLimit: 5, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: 3, softLimit: 3, hardLimit: 3, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -158,7 +150,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   enterprise_monthly: {
     seats: { quotedLimit: 30, softLimit: 30, hardLimit: 45, upgradeLimit: 15 },
     recordings: { quotedLimit: -1, softLimit: 150, hardLimit: 700, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: -1, softLimit: 150, hardLimit: 700, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -167,7 +158,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   enterprise_annual: {
     seats: { quotedLimit: 30, softLimit: 30, hardLimit: 45, upgradeLimit: 15 },
     recordings: { quotedLimit: -1, softLimit: 150, hardLimit: 700, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: -1, softLimit: 150, hardLimit: 700, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -178,7 +168,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   early_bird_monthly: {
     seats: { quotedLimit: 10, softLimit: 10, hardLimit: 15, upgradeLimit: 5 },
     recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 50, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: -1, softLimit: 45, hardLimit: 50, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
@@ -187,7 +176,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   early_bird_annual: {
     seats: { quotedLimit: 10, softLimit: 10, hardLimit: 15, upgradeLimit: 5 },
     recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 50, upgradeLimit: 0 },
-    recording_links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     logs: { quotedLimit: -1, softLimit: 45, hardLimit: 50, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },

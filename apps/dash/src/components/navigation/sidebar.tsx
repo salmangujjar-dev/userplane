@@ -152,27 +152,13 @@ export function Sidebar() {
           <Link href={`/${workspaceId}/recordings`}>
             <Logo size="sm" />
           </Link>
-          <button
-            onClick={handlePlanClick}
-            title={planDisplay.tooltip}
-            className="flex items-center gap-1.5"
-          >
+          <button onClick={handlePlanClick}>
             <Badge
-              variant={planDisplay.variant === 'warning' ? 'outline' : planDisplay.variant}
-              className={`rounded-md text-xs cursor-pointer hover:bg-secondary/80 transition-colors ${
-                planDisplay.showWarning ? 'border-yellow-500 text-yellow-700' : ''
-              }`}
+              variant="secondary"
+              className="rounded-md text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
             >
               {planDisplay.displayName}
             </Badge>
-            {planDisplay.statusBadge && (
-              <Badge
-                variant="outline"
-                className={`rounded-md text-[10px] px-1.5 py-0 ${planDisplay.statusBadge.className || ''}`}
-              >
-                {planDisplay.statusBadge.label}
-              </Badge>
-            )}
           </button>
         </div>
       </div>

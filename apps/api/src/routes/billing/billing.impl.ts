@@ -146,12 +146,8 @@ export const getUsageImpl = (
     .handler(async ({ input }) => {
       const workspaceId = input.params.workspaceId;
 
-      // Get current subscription to determine plan
-      const subscriptionStatus = await billingService.getSubscriptionStatus(workspaceId);
-      const planId = subscriptionStatus.planId || 'free';
-
-      // Get usage summary with the plan context
-      const usage = await entitlementService.getUsageSummary(workspaceId, planId as never);
+      // Get usage summary (internally determines effective plan from billing service)
+      const usage = await entitlementService.getUsageSummary(workspaceId);
 
       return {
         message: 'Usage summary retrieved successfully',

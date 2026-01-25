@@ -8,7 +8,13 @@ import {
   PLAN_CARD_HIGHLIGHTS,
   type PlanCycle,
 } from '@workspace/pricing';
-import { Dialog, DialogContent, DialogTitle } from '@workspace/ui/components/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
+import Logo from '@workspace/ui/components/logo';
 import { Check } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
@@ -215,10 +221,19 @@ export function PlanSelectionModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className={`p-0 gap-0 overflow-hidden ${showAllPlans ? 'sm:max-w-[1200px]' : 'sm:max-w-[1000px]'}`}
+        showCloseButton={false}
       >
-        <DialogTitle className="sr-only">Choose Your Plan</DialogTitle>
-
         <div className="p-6 pb-4">
+          <div className="flex items-start gap-4 mb-6">
+            <Logo variant="tiled" size="md" showText={false} />
+            <div className="flex flex-col space-y-1">
+              <DialogTitle className="text-xl font-semibold">Choose Your Plan</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Select the plan that best fits your needs
+              </DialogDescription>
+            </div>
+          </div>
+
           <BillingToggle cycle={billingCycle} onCycleChange={setBillingCycle} />
         </div>
 
