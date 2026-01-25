@@ -113,6 +113,14 @@ export function generateDisputeId(): string {
 }
 
 /**
+ * Generate a unique refund ID
+ * @returns ID with 'rfd_' prefix + 12-character alphanumeric ID
+ */
+export function generateRefundId(): string {
+  return `rfd_${nanoid()}`;
+}
+
+/**
  * Export the raw nanoid generator for cases where custom prefixes are needed
  */
 export { nanoid };

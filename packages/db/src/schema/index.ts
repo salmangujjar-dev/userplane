@@ -5,6 +5,7 @@ export * from './entitlements';
 export * from './links';
 export * from './projects';
 export * from './recordings';
+export * from './refunds';
 export * from './relations';
 export * from './session';
 export * from './subscriptions';

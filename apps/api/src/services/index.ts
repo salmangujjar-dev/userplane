@@ -27,6 +27,7 @@ import { EntitlementRepository } from '@/api/repositories/entitlements.repositor
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { RefundRepository } from '@/api/repositories/refunds.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { UserRepository } from '@/api/repositories/users.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
@@ -64,6 +65,7 @@ const recordingRepo = new RecordingRepository(db);
 const subscriptionRepo = new SubscriptionRepository(db);
 const entitlementRepo = new EntitlementRepository(db);
 const disputeRepo = new DisputeRepository(db);
+const refundRepo = new RefundRepository(db);
 const adminRepo = new AdminRepository(db);
 const adminWorkspaceRepo = new AdminWorkspaceRepository(db);
 const adminRecordingRepo = new AdminRecordingRepository(db);
@@ -73,6 +75,7 @@ const adminRecordingRepo = new AdminRecordingRepository(db);
 export const billingService = new BillingService({
   subscriptionRepo,
   disputeRepo,
+  refundRepo,
 });
 
 export const entitlementService = new EntitlementService({
