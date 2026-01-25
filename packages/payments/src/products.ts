@@ -35,10 +35,6 @@ export const DODO_PRODUCT_IDS: Record<string, string> = {
   // Enterprise plans
   enterprise_monthly: process.env.DODO_PRODUCT_ENTERPRISE_MONTHLY || 'pdt_enterprise_monthly',
   enterprise_annual: process.env.DODO_PRODUCT_ENTERPRISE_ANNUAL || 'pdt_enterprise_annual',
-
-  // Early Bird plans (legacy)
-  early_bird_monthly: process.env.DODO_PRODUCT_EARLY_BIRD_MONTHLY || 'pdt_early_bird_monthly',
-  early_bird_annual: process.env.DODO_PRODUCT_EARLY_BIRD_ANNUAL || 'pdt_early_bird_annual',
 };
 
 /**
@@ -91,18 +87,6 @@ export const CHECKOUT_PRODUCTS: ProductConfig[] = [
     productId: DODO_PRODUCT_IDS.enterprise_annual!,
     slug: 'enterprise-annual',
     planId: 'enterprise_annual',
-  },
-
-  // Early Bird (legacy)
-  {
-    productId: DODO_PRODUCT_IDS.early_bird_monthly!,
-    slug: 'early-bird-monthly',
-    planId: 'early_bird_monthly',
-  },
-  {
-    productId: DODO_PRODUCT_IDS.early_bird_annual!,
-    slug: 'early-bird-annual',
-    planId: 'early_bird_annual',
   },
 ];
 

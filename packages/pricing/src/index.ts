@@ -18,8 +18,6 @@ export const PLAN_IDS = [
   'free',
   'enterprise_monthly',
   'enterprise_annual',
-  'early_bird_monthly',
-  'early_bird_annual',
 ] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
@@ -36,8 +34,6 @@ export const USER_SELECTABLE_PLAN_IDS = [
   'scale_up_annual',
   'enterprise_monthly',
   'enterprise_annual',
-  'early_bird_monthly',
-  'early_bird_annual',
 ] as const;
 export type UserSelectablePlanId = (typeof USER_SELECTABLE_PLAN_IDS)[number];
 
@@ -87,16 +83,16 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
     seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
     recordings: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
+    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
     files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
   },
   essential_annual: {
     seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
     recordings: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 25, softLimit: 25, hardLimit: 35, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
+    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
     files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
   },
 
@@ -105,33 +101,33 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
     seats: { quotedLimit: 10, softLimit: 10, hardLimit: 20, upgradeLimit: 10 },
     recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
+    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
   },
   starter_annual: {
     seats: { quotedLimit: 10, softLimit: 10, hardLimit: 20, upgradeLimit: 10 },
     recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: -1, softLimit: 45, hardLimit: 85, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
+    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
   },
 
   // Scale Up: $249/mo - For scaling teams
   scale_up_monthly: {
     seats: { quotedLimit: 15, softLimit: 15, hardLimit: 30, upgradeLimit: 15 },
-    recordings: { quotedLimit: -1, softLimit: 75, hardLimit: 250, upgradeLimit: 0 },
+    recordings: { quotedLimit: -1, softLimit: 75, hardLimit: 180, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: -1, softLimit: 75, hardLimit: 250, upgradeLimit: 0 },
+    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
   },
   scale_up_annual: {
     seats: { quotedLimit: 15, softLimit: 15, hardLimit: 30, upgradeLimit: 15 },
-    recordings: { quotedLimit: -1, softLimit: 75, hardLimit: 250, upgradeLimit: 0 },
+    recordings: { quotedLimit: -1, softLimit: 75, hardLimit: 180, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: -1, softLimit: 75, hardLimit: 250, upgradeLimit: 0 },
+    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
   },
@@ -141,8 +137,8 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
     seats: { quotedLimit: 5, softLimit: 5, hardLimit: 15, upgradeLimit: 10 },
     recordings: { quotedLimit: 3, softLimit: 3, hardLimit: 3, upgradeLimit: 0 },
     links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: 3, softLimit: 3, hardLimit: 3, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
+    logs: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
+    screenshots: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
     files: { quotedLimit: 0, softLimit: 0, hardLimit: 0, upgradeLimit: 0 },
   },
 
@@ -163,24 +159,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
     screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
     files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
   },
-
-  // Early Bird: Legacy plan for early customers (home page display)
-  early_bird_monthly: {
-    seats: { quotedLimit: 10, softLimit: 10, hardLimit: 15, upgradeLimit: 5 },
-    recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 50, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: -1, softLimit: 45, hardLimit: 50, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-  },
-  early_bird_annual: {
-    seats: { quotedLimit: 10, softLimit: 10, hardLimit: 15, upgradeLimit: 5 },
-    recordings: { quotedLimit: -1, softLimit: 45, hardLimit: 50, upgradeLimit: 0 },
-    links: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    logs: { quotedLimit: -1, softLimit: 45, hardLimit: 50, upgradeLimit: 0 },
-    screenshots: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-    files: { quotedLimit: -1, softLimit: -1, hardLimit: -1, upgradeLimit: 0 },
-  },
 };
 
 /**
@@ -193,14 +171,7 @@ export function getPlanEntitlements(planId: PlanId): PlanEntitlements {
 /**
  * Unique plan name values for type safety
  */
-export const PLAN_NAME_VALUES = [
-  'Essential',
-  'Starter',
-  'Scale Up',
-  'Free',
-  'Enterprise',
-  'Early Bird',
-] as const;
+export const PLAN_NAME_VALUES = ['Essential', 'Starter', 'Scale Up', 'Free', 'Enterprise'] as const;
 export type PlanName = (typeof PLAN_NAME_VALUES)[number];
 
 /**
@@ -216,8 +187,6 @@ export const PLAN_NAMES: Record<PlanId, PlanName> = {
   free: 'Free',
   enterprise_monthly: 'Enterprise',
   enterprise_annual: 'Enterprise',
-  early_bird_monthly: 'Early Bird',
-  early_bird_annual: 'Early Bird',
 };
 
 /**
@@ -263,7 +232,8 @@ export interface PlanFeature {
 export const FEATURE_CATEGORIES = [
   'workspace',
   'screenRecordings',
-  'screenshotsFiles',
+  'screenshots',
+  'files',
   'logsDebugging',
   'customization',
   'privacyCompliance',
@@ -278,7 +248,8 @@ export type FeatureCategory = (typeof FEATURE_CATEGORIES)[number];
 export const FEATURE_CATEGORY_LABELS: Record<FeatureCategory, string> = {
   workspace: 'Workspace',
   screenRecordings: 'Screen Recordings',
-  screenshotsFiles: 'Screenshots & Files',
+  screenshots: 'Screenshots',
+  files: 'Files',
   logsDebugging: 'Logs & Debugging',
   customization: 'Customization',
   privacyCompliance: 'Privacy & Compliance',
@@ -324,10 +295,14 @@ export const CATEGORY_FEATURE_DEFINITIONS: Record<FeatureCategory, CategoryFeatu
     { name: 'Recordings per month', key: 'recordingsPerMonth' },
     { name: 'Replay recordings', key: 'replayRecordings' },
     { name: 'Auto-blur sensitive data', key: 'autoBlur' },
+    { name: 'Bring your own storage (BYOS)', key: 'byos' },
   ],
-  screenshotsFiles: [
+  screenshots: [
     { name: 'Screenshots', key: 'screenshots' },
     { name: 'Screenshot annotation', key: 'screenshotAnnotation' },
+    { name: 'Bring your own storage (BYOS)', key: 'byos' },
+  ],
+  files: [
     { name: 'File uploads', key: 'fileUploads' },
     { name: 'Max per file size', key: 'maxFileSize' },
     { name: 'Bring your own storage (BYOS)', key: 'byos' },
@@ -376,10 +351,14 @@ const ESSENTIAL_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     recordingsPerMonth: '25',
     replayRecordings: true,
     autoBlur: true,
+    byos: false,
   },
-  screenshotsFiles: {
-    screenshots: 'Unlimited',
-    screenshotAnnotation: true,
+  screenshots: {
+    screenshots: false,
+    screenshotAnnotation: false,
+    byos: false,
+  },
+  files: {
     fileUploads: false,
     maxFileSize: '-',
     byos: false,
@@ -402,10 +381,10 @@ const ESSENTIAL_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
   },
   integrations: {
     helpdesks: true,
-    crms: true,
-    issueTrackers: true,
-    automation: true,
-    apiAccess: true,
+    crms: false,
+    issueTrackers: false,
+    automation: false,
+    apiAccess: false,
   },
   support: {
     emailSupport: true,
@@ -428,19 +407,23 @@ const STARTER_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     recordingsPerMonth: 'Unlimited',
     replayRecordings: true,
     autoBlur: true,
+    byos: false,
   },
-  screenshotsFiles: {
-    screenshots: 'Unlimited',
-    screenshotAnnotation: true,
-    fileUploads: true,
-    maxFileSize: '100 GB',
-    byos: true,
+  screenshots: {
+    screenshots: false,
+    screenshotAnnotation: false,
+    byos: false,
+  },
+  files: {
+    fileUploads: false,
+    maxFileSize: '-',
+    byos: false,
   },
   logsDebugging: {
-    consoleLogs: true,
-    networkActivity: true,
+    consoleLogs: false,
+    networkActivity: false,
     serverLogs: false,
-    actionReplay: true,
+    actionReplay: false,
   },
   customization: {
     customLogo: true,
@@ -454,10 +437,10 @@ const STARTER_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
   },
   integrations: {
     helpdesks: true,
-    crms: true,
-    issueTrackers: true,
-    automation: true,
-    apiAccess: true,
+    crms: false,
+    issueTrackers: false,
+    automation: false,
+    apiAccess: false,
   },
   support: {
     emailSupport: true,
@@ -480,19 +463,23 @@ const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     recordingsPerMonth: 'Unlimited',
     replayRecordings: true,
     autoBlur: true,
+    byos: false,
   },
-  screenshotsFiles: {
+  screenshots: {
     screenshots: 'Unlimited',
     screenshotAnnotation: true,
+    byos: false,
+  },
+  files: {
     fileUploads: true,
     maxFileSize: '100 GB',
     byos: true,
   },
   logsDebugging: {
-    consoleLogs: true,
-    networkActivity: true,
-    serverLogs: true,
-    actionReplay: true,
+    consoleLogs: false,
+    networkActivity: false,
+    serverLogs: false,
+    actionReplay: false,
   },
   customization: {
     customLogo: true,
@@ -509,7 +496,7 @@ const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     crms: true,
     issueTrackers: true,
     automation: true,
-    apiAccess: true,
+    apiAccess: false,
   },
   support: {
     emailSupport: true,
@@ -532,10 +519,14 @@ const ENTERPRISE_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     recordingsPerMonth: 'Unlimited',
     replayRecordings: true,
     autoBlur: true,
+    byos: true,
   },
-  screenshotsFiles: {
+  screenshots: {
     screenshots: 'Unlimited',
     screenshotAnnotation: true,
+    byos: true,
+  },
+  files: {
     fileUploads: true,
     maxFileSize: '100 GB',
     byos: true,
@@ -594,76 +585,35 @@ export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
   Essential: [
     'Up to 15 seats in workspace',
     'Up to 25 recordings per month',
-    'Request unlimited screenshots',
-    'Basic integrations',
+    'Unlimited recording links',
+    'Basic helpdesk integrations',
   ],
   Starter: [
     'Up to 20 seats in workspace',
     'Request unlimited recordings',
-    'Capture console logs',
     'Custom branding',
-    'File uploads (100GB)',
+    'Helpdesk integrations',
     'Everything in Essential',
   ],
   'Scale Up': [
     'Up to 30 seats in workspace',
     'Request unlimited recordings',
-    'Capture console logs',
-    'Capture server logs',
+    'Screenshots & file uploads (100GB)',
     'Priority support',
-    'Advanced integrations',
+    'Advanced integrations (CRM, issue trackers)',
     'Everything in Starter',
   ],
   Enterprise: [
     'Unlimited seats in workspace',
     'Request unlimited recordings',
-    'Capture console logs',
-    'Bring your own storage (BYOS)',
+    'Bring your own storage (BYOS) for recordings, screenshots & files',
+    'Console & server logs debugging',
+    'API access',
     'Data residency (US/EU)',
     'Dedicated support',
     'Everything in Scale Up',
   ],
 };
-
-// ============================================================================
-// Legacy Feature System (for homepage pricing section)
-// ============================================================================
-
-/**
- * Features for Early Bird plan (homepage display)
- */
-const EARLY_BIRD_FEATURES: PlanFeature[] = [
-  {
-    text: 'Unlimited Screen Recordings',
-    included: true,
-    subFeatures: [
-      {
-        text: 'Request unlimited recordings to spot and solve issues',
-        included: true,
-      },
-    ],
-  },
-  {
-    text: 'Replay Customer Issues',
-    included: true,
-    subFeatures: [
-      {
-        text: 'Know exactly what happened, without the back and forth',
-        included: true,
-      },
-    ],
-  },
-  {
-    text: 'Redact Confidential Data',
-    included: true,
-    subFeatures: [
-      {
-        text: 'Mask confidential fields and sensitive data from recordings',
-        included: true,
-      },
-    ],
-  },
-];
 
 // ============================================================================
 // Base Pricing Plans
@@ -865,30 +815,6 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planCycle: 'one_time',
     },
     features: [],
-  },
-  // Early Bird Monthly (legacy for homepage)
-  {
-    id: 'early_bird_monthly',
-    name: 'Early Bird',
-    description: 'For early Userplane customers',
-    details: {
-      planType: 'subscription',
-      planRate: 99,
-      planCycle: 'monthly',
-    },
-    features: EARLY_BIRD_FEATURES,
-  },
-  // Early Bird Annual (legacy for homepage)
-  {
-    id: 'early_bird_annual',
-    name: 'Early Bird',
-    description: 'For early Userplane customers',
-    details: {
-      planType: 'subscription',
-      planRate: 79,
-      planCycle: 'annual',
-    },
-    features: EARLY_BIRD_FEATURES,
   },
 ];
 

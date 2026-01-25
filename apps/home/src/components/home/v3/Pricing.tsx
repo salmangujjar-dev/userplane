@@ -39,14 +39,14 @@ function PricingFeatureItem({ text, included, subFeatures }: PlanFeature) {
 }
 
 export default function PricingV3() {
-  // Get the early bird plan (annual) - legacy plan for home page
-  const earlyBirdPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'early_bird_annual');
+  // Get the Scale Up plan (annual) - popular plan for home page
+  const featuredPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'scale_up_annual');
 
-  if (!earlyBirdPlan) {
+  if (!featuredPlan) {
     return null;
   }
 
-  const displayRate = formatPlanRate(earlyBirdPlan);
+  const displayRate = formatPlanRate(featuredPlan);
 
   const words = PRICING_HEADING.title.split(' ');
   const highlightMap = new Map(PRICING_HIGHLIGHTS.map((h) => [h.wordIndex, h.color]));
@@ -170,7 +170,7 @@ export default function PricingV3() {
             What&apos;s Included
           </h3>
           <div className="space-y-8">
-            {earlyBirdPlan.features.map((feature, index) => (
+            {featuredPlan.features.map((feature, index) => (
               <PricingFeatureItem key={index} {...feature} />
             ))}
           </div>
