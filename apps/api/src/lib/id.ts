@@ -105,6 +105,14 @@ export function generateEntitlementId(): string {
 }
 
 /**
+ * Generate a unique dispute ID
+ * @returns ID with 'dsp_' prefix + 12-character alphanumeric ID
+ */
+export function generateDisputeId(): string {
+  return `dsp_${nanoid()}`;
+}
+
+/**
  * Export the raw nanoid generator for cases where custom prefixes are needed
  */
 export { nanoid };

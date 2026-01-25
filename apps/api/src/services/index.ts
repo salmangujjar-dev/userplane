@@ -21,6 +21,7 @@ import { env } from '@/api/env';
 import { AdminRepository } from '@/api/repositories/admin.repository';
 import { AdminRecordingRepository } from '@/api/repositories/admin-recording.repository';
 import { AdminWorkspaceRepository } from '@/api/repositories/admin-workspace.repository';
+import { DisputeRepository } from '@/api/repositories/disputes.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { EntitlementRepository } from '@/api/repositories/entitlements.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
@@ -62,6 +63,7 @@ const linkRepo = new LinkRepository(db);
 const recordingRepo = new RecordingRepository(db);
 const subscriptionRepo = new SubscriptionRepository(db);
 const entitlementRepo = new EntitlementRepository(db);
+const disputeRepo = new DisputeRepository(db);
 const adminRepo = new AdminRepository(db);
 const adminWorkspaceRepo = new AdminWorkspaceRepository(db);
 const adminRecordingRepo = new AdminRecordingRepository(db);
@@ -70,6 +72,7 @@ const adminRecordingRepo = new AdminRecordingRepository(db);
 // Level 0: Services with only repository dependencies (no other services)
 export const billingService = new BillingService({
   subscriptionRepo,
+  disputeRepo,
 });
 
 export const entitlementService = new EntitlementService({
@@ -203,4 +206,4 @@ export const adminProvisioningService = new AdminProvisioningService({
 
 // Export tokenService, emailService, and repositories for use in routes
 export { emailService, tokenService };
-export { entitlementRepo, recordingRepo, subscriptionRepo, workspaceMemberRepo };
+export { disputeRepo, entitlementRepo, recordingRepo, subscriptionRepo, workspaceMemberRepo };

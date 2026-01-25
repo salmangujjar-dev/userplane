@@ -1,4 +1,9 @@
-import { APIError, createAuth, createDodoPaymentsPlugin } from '@workspace/auth';
+import {
+  APIError,
+  createAuth,
+  createDodoPaymentsPlugin,
+  setWebhookContextProvider,
+} from '@workspace/auth';
 import { eq } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
 import { getDodoPaymentsClient } from '@workspace/payments/client';
@@ -8,14 +13,21 @@ import type { DodoPaymentsConfig } from '@workspace/payments/types';
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
 import { createBillingWebhookHandler } from '@/api/handlers/billing-webhook.handler';
+import { getWebhookContext } from '@/api/lib/webhook-context';
+import { DisputeRepository } from '@/api/repositories/disputes.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import { DisputeProcessorService } from '@/api/services/dispute-processor.service';
 import { emailService } from '@/api/services/email.service';
 import { entitlementService } from '@/api/services/index';
 import { WebhookProcessorService } from '@/api/services/webhook-processor.service';
 
 const workspaceRepository = new WorkspaceRepository(db);
+
+// Wire up webhook context provider so the Better Auth adapter can access
+// webhook headers (webhook-id, webhook-timestamp) from AsyncLocalStorage
+setWebhookContextProvider(getWebhookContext);
 
 // DodoPayments configuration
 const dodoConfig: DodoPaymentsConfig = {
@@ -30,6 +42,7 @@ const dodoClient = getDodoPaymentsClient(dodoConfig);
 // Create repositories
 const subscriptionRepo = new SubscriptionRepository(db);
 const webhookEventsRepo = new WebhookEventsRepository(db);
+const disputeRepo = new DisputeRepository(db);
 
 // Create webhook processor service with all dependencies
 const webhookProcessor = new WebhookProcessorService({
@@ -41,9 +54,19 @@ const webhookProcessor = new WebhookProcessorService({
   dodoClient, // For upstream verification
 });
 
+// Create dispute processor service for handling payment disputes
+const disputeProcessor = new DisputeProcessorService({
+  disputeRepo,
+  subscriptionRepo,
+  webhookEventsRepo,
+  db,
+  dodoClient, // For payment → subscription mapping
+});
+
 // Create billing webhook handler
 const handleBillingWebhook = createBillingWebhookHandler({
   webhookProcessor,
+  disputeProcessor,
 });
 
 // Create DodoPayments plugin for Better Auth

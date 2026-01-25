@@ -7,7 +7,12 @@
 
 import type DodoPayments from 'dodopayments';
 
-import type { DodoSubscription, SubscriptionStatus, WebhookPayload } from './types';
+import type {
+  DisputeEventType,
+  DodoSubscription,
+  SubscriptionStatus,
+  WebhookPayload,
+} from './types';
 
 /**
  * Subscription webhook event types from DodoPayments
@@ -40,6 +45,26 @@ type SubscriptionEventType = Extract<
  */
 export function isSubscriptionEvent(eventType: string): eventType is SubscriptionEventType {
   return SUBSCRIPTION_EVENTS.includes(eventType as SubscriptionEventType);
+}
+
+/**
+ * Dispute webhook event types from DodoPayments
+ */
+const DISPUTE_EVENTS = [
+  'dispute.opened',
+  'dispute.expired',
+  'dispute.accepted',
+  'dispute.cancelled',
+  'dispute.challenged',
+  'dispute.won',
+  'dispute.lost',
+] as const;
+
+/**
+ * Check if an event type is a dispute event
+ */
+export function isDisputeEvent(eventType: string): eventType is DisputeEventType {
+  return DISPUTE_EVENTS.includes(eventType as DisputeEventType);
 }
 
 /**

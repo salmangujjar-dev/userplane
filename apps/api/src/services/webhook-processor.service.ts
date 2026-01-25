@@ -71,7 +71,8 @@ export class WebhookProcessorService {
   ): Promise<ProcessingResult> {
     const { webhookId, webhookTimestamp } = headers;
     const eventType = payload.type;
-    const eventTimestamp = new Date(webhookTimestamp);
+    // webhook-timestamp header is Unix seconds, convert to milliseconds for Date
+    const eventTimestamp = new Date(parseInt(webhookTimestamp, 10) * 1000);
 
     console.log(`[WebhookProcessor] Processing webhook: ${webhookId}`);
     console.log(`[WebhookProcessor] Event type: ${eventType}, timestamp: ${webhookTimestamp}`);
@@ -142,7 +143,8 @@ export class WebhookProcessorService {
   ): Promise<ProcessingResult> {
     const { webhookId, webhookTimestamp } = headers;
     const eventType = payload.type;
-    const eventTimestamp = new Date(webhookTimestamp);
+    // webhook-timestamp header is Unix seconds, convert to milliseconds for Date
+    const eventTimestamp = new Date(parseInt(webhookTimestamp, 10) * 1000);
     const subscriptionId = subscription.subscription_id;
     const dates = parseSubscriptionDates(subscription);
 
@@ -359,7 +361,8 @@ export class WebhookProcessorService {
     subscription: DodoSubscription
   ): Promise<ProcessingResult> {
     const { webhookId, webhookTimestamp } = headers;
-    const eventTimestamp = new Date(webhookTimestamp);
+    // webhook-timestamp header is Unix seconds, convert to milliseconds for Date
+    const eventTimestamp = new Date(parseInt(webhookTimestamp, 10) * 1000);
     const subscriptionId = subscription.subscription_id;
     const customerId = subscription.customer.customer_id;
     const dates = parseSubscriptionDates(subscription);

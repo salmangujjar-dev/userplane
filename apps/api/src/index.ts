@@ -9,6 +9,7 @@ import { prettyJSON } from 'hono/pretty-json';
 
 import { auth } from '@/api/clients/auth';
 import { env, logConfig } from '@/api/env';
+import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { apiRouter } from '@/api/routes/api.router';
 
 const app = new Hono();
@@ -56,7 +57,22 @@ app.use(
 app.use('*', prettyJSON());
 
 // Better Auth routes - must come before API routes
+// For webhook routes, intercept headers and store in AsyncLocalStorage
+// so they can be accessed in the onPayload callback
 app.on(['POST', 'GET'], '/api/auth/*', (c) => {
+  const path = c.req.path;
+
+  // Check if this is the DodoPayments webhook endpoint
+  if (path.includes('/dodopayments/webhooks')) {
+    const webhookId = c.req.header('webhook-id');
+    const webhookTimestamp = c.req.header('webhook-timestamp');
+
+    if (webhookId && webhookTimestamp) {
+      // Run the auth handler within webhook context so onPayload can access headers
+      return runWithWebhookContext({ webhookId, webhookTimestamp }, () => auth.handler(c.req.raw));
+    }
+  }
+
   return auth.handler(c.req.raw);
 });
 

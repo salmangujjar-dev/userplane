@@ -164,3 +164,42 @@ export interface UpdateSubscriptionInput {
   currentPeriodEnd?: Date;
   cancelledAt?: Date | null;
 }
+
+// ============================================================================
+// Dispute Types
+// ============================================================================
+
+// Re-export official DodoPayments dispute types
+export type DodoDispute = DodoPayments.Dispute;
+export type DodoDisputeStatus = DodoPayments.DisputeStatus;
+export type DodoDisputeStage = DodoPayments.DisputeStage;
+
+/**
+ * Dispute webhook event types
+ * Maps Dodo's DisputeStatus values to webhook event names
+ */
+export const DISPUTE_EVENT_TYPES = [
+  'dispute.opened',
+  'dispute.expired',
+  'dispute.accepted',
+  'dispute.cancelled',
+  'dispute.challenged',
+  'dispute.won',
+  'dispute.lost',
+] as const;
+
+export type DisputeEventType = (typeof DISPUTE_EVENT_TYPES)[number];
+
+/**
+ * Helper to check if dispute event resolves (closes) the dispute
+ * Resolution events: won, lost, accepted, cancelled, expired
+ */
+export function isDisputeResolutionEvent(eventType: DisputeEventType): boolean {
+  return [
+    'dispute.won',
+    'dispute.lost',
+    'dispute.accepted',
+    'dispute.cancelled',
+    'dispute.expired',
+  ].includes(eventType);
+}

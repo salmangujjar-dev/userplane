@@ -240,6 +240,8 @@ export class EntitlementService {
         return 'No active subscription. Upgrade to access more resources.';
       case 'grace':
         return 'Subscription in grace period. Update payment or reactivate to continue.';
+      case 'disputed':
+        return 'Your subscription is under review due to a payment dispute. Please contact support.';
       default:
         return 'Subscription access denied.';
     }
