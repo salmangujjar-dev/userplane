@@ -1,11 +1,9 @@
 import { APIError, createAuth, createDodoPaymentsPlugin } from '@workspace/auth';
 import { eq } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
-import {
-  CHECKOUT_PRODUCTS,
-  type DodoPaymentsConfig,
-  getDodoPaymentsClient,
-} from '@workspace/payments';
+import { getDodoPaymentsClient } from '@workspace/payments/client';
+import { CHECKOUT_PRODUCTS } from '@workspace/payments/products';
+import type { DodoPaymentsConfig } from '@workspace/payments/types';
 
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';

@@ -1,6 +1,5 @@
 'use client';
 
-import { getSlugFromPlanId } from '@workspace/payments';
 import type { PlanId } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
@@ -115,15 +114,10 @@ export function Sidebar() {
   const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
 
-    const slug = getSlugFromPlanId(planId as PlanId);
-    if (!slug) {
-      console.error('No slug found for plan ID:', planId);
-      return;
-    }
-
-    // Create checkout with selected plan
+    // Create checkout with selected plan ID
+    // The API will handle converting planId to the correct product slug
     createCheckout({
-      planSlug: slug,
+      planId: planId as PlanId,
       workspaceId,
     });
 

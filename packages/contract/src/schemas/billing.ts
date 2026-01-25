@@ -2,7 +2,8 @@
  * Billing schemas for API contracts
  */
 
-import { SUBSCRIPTION_STATUSES } from '@workspace/payments';
+import { SUBSCRIPTION_STATUSES } from '@workspace/payments/types';
+import { PLAN_IDS } from '@workspace/pricing';
 import { z } from 'zod';
 
 import { ApiResponseSchema } from './common';
@@ -71,11 +72,12 @@ export const SubscriptionStatusResponseSchema = ApiResponseSchema(SubscriptionSt
 
 /**
  * Create checkout session input
+ * Accepts planId (type-safe enum of valid plan IDs)
  */
 export const CreateCheckoutSessionSchema = z.object({
   body: z.object({
     workspaceId: z.string(),
-    planSlug: z.string(),
+    planId: z.enum(PLAN_IDS),
     successUrl: z.string().url().optional(),
     cancelUrl: z.string().url().optional(),
   }),
@@ -83,9 +85,11 @@ export const CreateCheckoutSessionSchema = z.object({
 
 /**
  * Checkout session response data
+ * Returns the product slug for creating checkout with Better Auth
  */
 export const CheckoutSessionDataSchema = z.object({
   checkoutUrl: z.string(),
+  slug: z.string(),
   sessionId: z.string().optional(),
 });
 

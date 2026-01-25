@@ -2,30 +2,26 @@
  * @workspace/payments - DodoPayments integration for Userplane
  *
  * This package provides:
- * - DodoPayments client configuration
- * - Product/plan mappings
- * - Webhook handling utilities
+ * - DodoPayments client configuration (server-only)
+ * - Webhook handling utilities (server-only)
  * - Type definitions for billing
+ *
+ * CLIENT-SAFE EXPORTS:
+ * - Types only (no runtime code with process.env)
+ *
+ * SERVER-ONLY IMPORTS:
+ * - '@workspace/payments/products' - Product configuration (uses process.env)
+ * - '@workspace/payments/client' - DodoPayments client
+ * - '@workspace/payments/webhooks' - Webhook handlers
  */
 
-// Client
+// Client (server-only but safe to import for types)
 export {
   createDodoPaymentsClient,
   DodoPayments,
   getDodoPaymentsClient,
   resetDodoPaymentsClient,
 } from './client';
-
-// Products
-export {
-  CHECKOUT_PRODUCTS,
-  DODO_PRODUCT_IDS,
-  getPlanIdFromProductId,
-  getProductByPlanId,
-  getProductByProductId,
-  getProductBySlug,
-  getSlugFromPlanId,
-} from './products';
 
 // Webhooks
 export type { SubscriptionWebhookPayload, WebhookHandlers } from './webhooks';

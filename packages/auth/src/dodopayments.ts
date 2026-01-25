@@ -6,7 +6,7 @@
  */
 
 import { checkout, dodopayments, portal, usage, webhooks } from '@dodopayments/better-auth';
-import type { ProductConfig } from '@workspace/payments';
+import type { ProductConfig } from '@workspace/payments/types';
 import type DodoPayments from 'dodopayments';
 
 /**

@@ -41,15 +41,16 @@ export const billingContract = oc.router({
 
   /**
    * POST /billing/checkout
-   * Create a checkout session for subscribing to a plan
-   * Requires authentication
+   * Validate permissions and return product slug for checkout
+   * Client then uses Better Auth DodoPayments plugin to create the actual checkout session
+   * Requires authentication and workspace admin/owner role
    */
   createCheckout: oc
     .route({
       method: 'POST',
       path: '/billing/checkout',
-      summary: 'Create checkout session',
-      description: 'Create a DodoPayments checkout session for a workspace',
+      summary: 'Get checkout slug',
+      description: 'Validates permissions and returns product slug for DodoPayments checkout',
     })
     .input(CreateCheckoutSessionSchema)
     .output(CheckoutSessionResponseSchema)

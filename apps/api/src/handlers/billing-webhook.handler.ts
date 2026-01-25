@@ -10,7 +10,8 @@
  * - Audit trail
  */
 
-import { isSubscriptionEvent, type WebhookPayload } from '@workspace/payments';
+import type { WebhookPayload } from '@workspace/payments/types';
+import { isSubscriptionEvent } from '@workspace/payments/webhooks';
 
 import type {
   WebhookHeaders,
