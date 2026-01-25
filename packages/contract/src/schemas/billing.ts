@@ -129,18 +129,13 @@ export const CustomerPortalResponseSchema = ApiResponseSchema(CustomerPortalData
 
 /**
  * Resource usage data for a single resource type
+ * User-facing API showing usage against plan limits
  */
 export const ResourceUsageSchema = z.object({
   consumed: z.number(),
-  credited: z.number(),
-  available: z.number(),
-  quotedLimit: z.number(),
-  softLimit: z.number(),
-  hardLimit: z.number(),
+  limit: z.number(),
   isUnlimited: z.boolean(),
   percentUsed: z.number(),
-  isOverSoftLimit: z.boolean(),
-  isOverHardLimit: z.boolean(),
 });
 
 /**

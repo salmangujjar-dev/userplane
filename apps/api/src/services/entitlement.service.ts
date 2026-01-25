@@ -38,15 +38,9 @@ export interface CanConsumeResult {
  */
 export interface ResourceUsage {
   consumed: number;
-  credited: number;
-  available: number;
-  quotedLimit: number;
-  softLimit: number;
-  hardLimit: number;
+  limit: number;
   isUnlimited: boolean;
   percentUsed: number;
-  isOverSoftLimit: boolean;
-  isOverHardLimit: boolean;
 }
 
 /**
@@ -130,11 +124,9 @@ export class EntitlementService {
   ): Promise<CanConsumeResult> {
     // Check subscription access status first
     let accessStatus: SubscriptionAccessStatus | undefined;
-    let effectivePlanId: PlanId = 'free';
 
     if (this.deps.billingService) {
       accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
-      effectivePlanId = accessStatus.effectivePlanId as PlanId;
 
       // If subscription access is revoked, use free plan limits
       if (!accessStatus.hasAccess) {
@@ -275,13 +267,20 @@ export class EntitlementService {
 
   /**
    * Get usage summary for all resources (for UI)
+   * Uses billing service to determine effective plan based on subscription access status
    */
-  async getUsageSummary(workspaceId: string, planId?: PlanId): Promise<UsageSummary> {
+  async getUsageSummary(workspaceId: string): Promise<UsageSummary> {
     const entitlementsList = await this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
 
-    // Determine plan from entitlements or use provided/default
-    const effectivePlanId = planId || 'free';
-    const planName = PLAN_NAMES[effectivePlanId] || 'Free';
+    // Get effective plan from billing service (handles subscription state logic)
+    let effectivePlanId: PlanId = 'free';
+    let planName: PlanName = 'Free';
+
+    if (this.deps.billingService) {
+      const accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
+      effectivePlanId = accessStatus.effectivePlanId as PlanId;
+      planName = (PLAN_NAMES[effectivePlanId] || 'Free') as PlanName;
+    }
 
     // Build resource usage map
     const resources = {} as Record<ResourceType, ResourceUsage>;
@@ -291,33 +290,20 @@ export class EntitlementService {
 
       if (entitlement) {
         const consumed = entitlement.resourceConsumed;
-        const credited = entitlement.resourceCredited;
-        const quotedLimit = entitlement.quotedLimit;
-        const softLimit = entitlement.softLimit;
-        const hardLimit = entitlement.hardLimit;
-        const isUnlimited = hardLimit === -1;
+        const limit = entitlement.quotedLimit;
+        const isUnlimited = entitlement.hardLimit === -1;
 
-        // Calculate available capacity
-        const effectiveLimit = isUnlimited ? -1 : hardLimit + credited;
-        const available = isUnlimited ? -1 : Math.max(0, effectiveLimit - consumed);
-
-        // Calculate percent used (0-100, or 0 for unlimited)
+        // Calculate percent used against limit for user-facing display
         let percentUsed = 0;
-        if (!isUnlimited && effectiveLimit > 0) {
-          percentUsed = Math.min(100, Math.round((consumed / effectiveLimit) * 100));
+        if (!isUnlimited && limit > 0) {
+          percentUsed = Math.round((consumed / limit) * 100);
         }
 
         resources[resourceType] = {
           consumed,
-          credited,
-          available,
-          quotedLimit,
-          softLimit,
-          hardLimit,
+          limit,
           isUnlimited,
           percentUsed,
-          isOverSoftLimit: !isUnlimited && softLimit !== -1 && consumed > softLimit + credited,
-          isOverHardLimit: !isUnlimited && consumed > effectiveLimit,
         };
       } else {
         // No entitlement - use plan defaults or zeros
@@ -327,29 +313,17 @@ export class EntitlementService {
           const isUnlimited = planDefaults.hardLimit === -1;
           resources[resourceType] = {
             consumed: 0,
-            credited: 0,
-            available: isUnlimited ? -1 : planDefaults.hardLimit,
-            quotedLimit: planDefaults.quotedLimit,
-            softLimit: planDefaults.softLimit,
-            hardLimit: planDefaults.hardLimit,
+            limit: planDefaults.quotedLimit,
             isUnlimited,
             percentUsed: 0,
-            isOverSoftLimit: false,
-            isOverHardLimit: false,
           };
         } else {
           // Fallback to zeros
           resources[resourceType] = {
             consumed: 0,
-            credited: 0,
-            available: 0,
-            quotedLimit: 0,
-            softLimit: 0,
-            hardLimit: 0,
+            limit: 0,
             isUnlimited: false,
             percentUsed: 0,
-            isOverSoftLimit: false,
-            isOverHardLimit: false,
           };
         }
       }

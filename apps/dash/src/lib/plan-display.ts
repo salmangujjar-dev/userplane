@@ -1,44 +1,24 @@
 /**
  * Plan display utilities
- * Handles the display logic for subscription status badges
+ * Handles the display logic for subscription status
  */
 
+import type { AccessStatus } from '@workspace/contract';
+import type { SubscriptionStatus as PaymentSubscriptionStatus } from '@workspace/payments';
 import type { PlanName } from '@workspace/pricing';
 
-export type SubscriptionStatus =
-  | 'active'
-  | 'on_hold'
-  | 'cancelled'
-  | 'expired'
-  | 'failed'
-  | 'pending';
-
-export type AccessReason =
-  | 'active'
-  | 'cancelled_in_period'
-  | 'on_hold_grace'
-  | 'no_subscription'
-  | 'expired'
-  | 'revoked';
-
-interface StatusBadge {
-  label: string;
-  variant: 'default' | 'warning' | 'destructive' | 'outline';
-  className?: string;
-}
+export type SubscriptionStatus = PaymentSubscriptionStatus;
+export type AccessReason = AccessStatus['reason'];
 
 interface PlanDisplayResult {
   displayName: string;
-  variant: 'secondary' | 'warning' | 'destructive';
-  showWarning: boolean;
-  tooltip?: string;
-  statusBadge?: StatusBadge;
   statusMessage?: string;
-  actionRequired?: string;
 }
 
 /**
- * Get the display properties for a plan badge based on subscription status
+ * Get the display properties for a plan based on subscription status
+ * Returns the effective plan name for sidebar display
+ * Additional status details are shown in the detailed Review section
  */
 export function getPlanDisplay(
   planName: PlanName | string | null,
@@ -46,103 +26,56 @@ export function getPlanDisplay(
   cancelAtPeriodEnd?: boolean,
   daysRemaining?: number
 ): PlanDisplayResult {
-  // No subscription = Free plan
   if (!planName || !status) {
-    return { displayName: 'Free', variant: 'secondary', showWarning: false };
+    return { displayName: 'Free' };
   }
 
   switch (status) {
     case 'active':
-      return { displayName: planName, variant: 'secondary', showWarning: false };
+      return { displayName: planName };
 
     case 'on_hold':
       return {
         displayName: planName,
-        variant: 'warning',
-        showWarning: true,
-        tooltip: 'Payment issue - please update billing',
-        statusBadge: {
-          label: 'Payment Issue',
-          variant: 'warning',
-          className: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-        },
         statusMessage: daysRemaining
-          ? `Your payment failed. You have ${daysRemaining} days to update your payment method before losing access.`
-          : 'Your payment failed. Please update your payment method to continue.',
-        actionRequired: 'Update payment method',
+          ? `Payment failed. ${daysRemaining} days left to update payment method before losing access.`
+          : 'Payment failed. Update your payment method to continue.',
       };
 
     case 'cancelled':
       if (cancelAtPeriodEnd) {
         return {
           displayName: planName,
-          variant: 'secondary',
-          showWarning: false,
-          tooltip: 'Subscription ends at billing period',
-          statusBadge: {
-            label: 'Cancelling',
-            variant: 'outline',
-            className: 'text-muted-foreground',
-          },
           statusMessage: daysRemaining
-            ? `Your subscription will end in ${daysRemaining} days. You'll retain access until then.`
-            : 'Your subscription is set to cancel at the end of the billing period.',
-          actionRequired: 'Reactivate subscription to continue',
+            ? `Subscription ending in ${daysRemaining} days. Reactivate to continue after that.`
+            : 'Subscription set to cancel at end of billing period. Reactivate to continue.',
         };
       }
       return {
         displayName: 'Free',
-        variant: 'secondary',
-        showWarning: false,
-        statusBadge: {
-          label: 'Cancelled',
-          variant: 'outline',
-          className: 'text-muted-foreground',
-        },
-        statusMessage: 'Your subscription has been cancelled. You are now on the Free plan.',
+        statusMessage: 'Subscription cancelled. Now on Free plan.',
       };
 
     case 'expired':
       return {
         displayName: 'Free',
-        variant: 'secondary',
-        showWarning: false,
-        statusBadge: {
-          label: 'Expired',
-          variant: 'outline',
-          className: 'text-muted-foreground',
-        },
-        statusMessage: 'Your subscription has expired. Upgrade to restore your previous plan.',
+        statusMessage: 'Subscription expired. Upgrade to restore previous plan.',
       };
 
     case 'failed':
       return {
         displayName: 'Free',
-        variant: 'destructive',
-        showWarning: true,
-        statusBadge: {
-          label: 'Failed',
-          variant: 'destructive',
-        },
-        statusMessage: 'Your subscription payment failed. Please update your payment method.',
-        actionRequired: 'Update payment method',
+        statusMessage: 'Payment failed. Update your payment method to restore subscription.',
       };
 
     case 'pending':
       return {
         displayName: planName,
-        variant: 'secondary',
-        showWarning: false,
-        tooltip: 'Subscription pending',
-        statusBadge: {
-          label: 'Pending',
-          variant: 'outline',
-        },
-        statusMessage: 'Your subscription is being processed.',
+        statusMessage: 'Subscription being processed.',
       };
 
     default:
-      return { displayName: 'Free', variant: 'secondary', showWarning: false };
+      return { displayName: 'Free' };
   }
 }
 
@@ -153,9 +86,7 @@ export function getAccessStatusDisplay(
   accessReason: AccessReason | string | null,
   daysRemaining?: number
 ): {
-  badge?: StatusBadge;
   message?: string;
-  actionRequired?: string;
   isUrgent: boolean;
 } {
   switch (accessReason) {
@@ -164,51 +95,29 @@ export function getAccessStatusDisplay(
 
     case 'on_hold_grace':
       return {
-        badge: {
-          label: 'Payment Issue',
-          variant: 'warning',
-          className: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-        },
         message: daysRemaining
           ? `Payment failed. ${daysRemaining} days left to update payment before losing access.`
-          : 'Payment failed. Update your payment method to continue.',
-        actionRequired: 'Update payment method',
+          : 'Payment failed. Update payment method to continue.',
         isUrgent: (daysRemaining ?? 0) <= 3,
       };
 
     case 'cancelled_in_period':
       return {
-        badge: {
-          label: 'Cancelling',
-          variant: 'outline',
-          className: 'text-muted-foreground',
-        },
         message: daysRemaining
-          ? `Subscription ends in ${daysRemaining} days.`
-          : 'Subscription ends at billing period.',
-        actionRequired: 'Reactivate to keep features',
+          ? `Subscription ends in ${daysRemaining} days. Reactivate to continue.`
+          : 'Subscription ends at billing period. Reactivate to continue.',
         isUrgent: false,
       };
 
     case 'expired':
       return {
-        badge: {
-          label: 'Expired',
-          variant: 'outline',
-          className: 'text-muted-foreground',
-        },
-        message: 'Your subscription has expired.',
+        message: 'Subscription expired.',
         isUrgent: false,
       };
 
     case 'revoked':
       return {
-        badge: {
-          label: 'Access Revoked',
-          variant: 'destructive',
-        },
-        message: 'Access revoked due to payment issues.',
-        actionRequired: 'Update payment to restore access',
+        message: 'Access revoked due to payment issues. Update payment to restore access.',
         isUrgent: true,
       };
 
