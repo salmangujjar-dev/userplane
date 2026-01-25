@@ -10,6 +10,7 @@ import type DodoPayments from 'dodopayments';
 import type {
   DisputeEventType,
   DodoSubscription,
+  RefundEventType,
   SubscriptionStatus,
   WebhookPayload,
 } from './types';
@@ -65,6 +66,18 @@ const DISPUTE_EVENTS = [
  */
 export function isDisputeEvent(eventType: string): eventType is DisputeEventType {
   return DISPUTE_EVENTS.includes(eventType as DisputeEventType);
+}
+
+/**
+ * Refund webhook event types from DodoPayments
+ */
+const REFUND_EVENTS = ['refund.succeeded', 'refund.failed'] as const;
+
+/**
+ * Check if an event type is a refund event
+ */
+export function isRefundEvent(eventType: string): eventType is RefundEventType {
+  return REFUND_EVENTS.includes(eventType as RefundEventType);
 }
 
 /**

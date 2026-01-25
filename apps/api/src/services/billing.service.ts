@@ -13,6 +13,7 @@ import type { PlanId } from '@workspace/pricing';
 import { PLAN_NAMES } from '@workspace/pricing';
 
 import type { DisputeRepository } from '@/api/repositories/disputes.repository';
+import type { RefundRepository } from '@/api/repositories/refunds.repository';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 
 // Grace period for on_hold status (14 days in milliseconds)
@@ -21,6 +22,7 @@ const ON_HOLD_GRACE_PERIOD_MS = 14 * 24 * 60 * 60 * 1000;
 export interface BillingServiceDeps {
   subscriptionRepo: SubscriptionRepository;
   disputeRepo: DisputeRepository;
+  refundRepo: RefundRepository;
 }
 
 /**
@@ -35,12 +37,13 @@ export interface BillingServiceDeps {
  * - 'grace': Temporary access (cancelled but in period, or payment failed in grace period)
  * - 'inactive': No paid access, falls back to free plan
  * - 'disputed': Payment dispute open - access blocked regardless of subscription status
+ * - 'refunded': Payment refunded - access blocked regardless of subscription status
  *
  * Note: UI can derive daysRemaining from subscription.onHoldSince or subscription.currentPeriodEnd
  */
 export interface SubscriptionAccessStatus {
   effectivePlanId: PlanId | 'free';
-  accessStatus: 'active' | 'grace' | 'inactive' | 'disputed';
+  accessStatus: 'active' | 'grace' | 'inactive' | 'disputed' | 'refunded';
 }
 
 export class BillingService {
@@ -101,7 +104,8 @@ export class BillingService {
    *
    * Priority order:
    * 1. Check for open disputes (hard safety latch - blocks all access)
-   * 2. Check subscription status (normal flow)
+   * 2. Check for successful refunds (hard safety latch - blocks all access)
+   * 3. Check subscription status (normal flow)
    */
   async getSubscriptionAccessStatus(workspaceId: string): Promise<SubscriptionAccessStatus> {
     // CHECK DISPUTES FIRST - hard safety latch
@@ -112,6 +116,17 @@ export class BillingService {
       return {
         effectivePlanId: 'free',
         accessStatus: 'disputed',
+      };
+    }
+
+    // CHECK REFUNDS - hard safety latch
+    // Successful refunds override all subscription state and block access
+    const hasRefund = await this.deps.refundRepo.hasSuccessfulRefund(workspaceId);
+
+    if (hasRefund) {
+      return {
+        effectivePlanId: 'free',
+        accessStatus: 'refunded',
       };
     }
 

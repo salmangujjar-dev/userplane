@@ -203,3 +203,18 @@ export function isDisputeResolutionEvent(eventType: DisputeEventType): boolean {
     'dispute.expired',
   ].includes(eventType);
 }
+
+// ============================================================================
+// Refund Types
+// ============================================================================
+
+// Re-export official DodoPayments refund types
+export type DodoRefund = DodoPayments.Refund;
+export type DodoRefundStatus = DodoPayments.RefundStatus;
+
+/**
+ * Refund webhook event types
+ */
+export const REFUND_EVENT_TYPES = ['refund.succeeded', 'refund.failed'] as const;
+
+export type RefundEventType = (typeof REFUND_EVENT_TYPES)[number];

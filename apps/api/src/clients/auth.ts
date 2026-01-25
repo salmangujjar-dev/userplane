@@ -15,12 +15,14 @@ import { env } from '@/api/env';
 import { createBillingWebhookHandler } from '@/api/handlers/billing-webhook.handler';
 import { getWebhookContext } from '@/api/lib/webhook-context';
 import { DisputeRepository } from '@/api/repositories/disputes.repository';
+import { RefundRepository } from '@/api/repositories/refunds.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { DisputeProcessorService } from '@/api/services/dispute-processor.service';
 import { emailService } from '@/api/services/email.service';
 import { entitlementService } from '@/api/services/index';
+import { RefundProcessorService } from '@/api/services/refund-processor.service';
 import { WebhookProcessorService } from '@/api/services/webhook-processor.service';
 
 const workspaceRepository = new WorkspaceRepository(db);
@@ -43,6 +45,7 @@ const dodoClient = getDodoPaymentsClient(dodoConfig);
 const subscriptionRepo = new SubscriptionRepository(db);
 const webhookEventsRepo = new WebhookEventsRepository(db);
 const disputeRepo = new DisputeRepository(db);
+const refundRepo = new RefundRepository(db);
 
 // Create webhook processor service with all dependencies
 const webhookProcessor = new WebhookProcessorService({
@@ -63,10 +66,20 @@ const disputeProcessor = new DisputeProcessorService({
   dodoClient, // For payment → subscription mapping
 });
 
+// Create refund processor service for handling payment refunds
+const refundProcessor = new RefundProcessorService({
+  refundRepo,
+  subscriptionRepo,
+  webhookEventsRepo,
+  db,
+  dodoClient, // For payment → subscription mapping
+});
+
 // Create billing webhook handler
 const handleBillingWebhook = createBillingWebhookHandler({
   webhookProcessor,
   disputeProcessor,
+  refundProcessor,
 });
 
 // Create DodoPayments plugin for Better Auth

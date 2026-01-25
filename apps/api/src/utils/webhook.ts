@@ -4,8 +4,13 @@
  * Helper functions for webhook header resolution and fallback generation.
  */
 
-import type { DodoDispute, DodoSubscription, WebhookPayload } from '@workspace/payments/types';
-import { isDisputeEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
+import type {
+  DodoDispute,
+  DodoRefund,
+  DodoSubscription,
+  WebhookPayload,
+} from '@workspace/payments/types';
+import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
 
 export interface WebhookHeaders {
   webhookId: string;
@@ -23,6 +28,10 @@ function extractResourceId(eventType: string, data: unknown): string {
   if (isDisputeEvent(eventType)) {
     const dispute = data as unknown as DodoDispute;
     return dispute.dispute_id || 'unknown';
+  }
+  if (isRefundEvent(eventType)) {
+    const refund = data as unknown as DodoRefund;
+    return refund.refund_id || 'unknown';
   }
   return 'unknown';
 }

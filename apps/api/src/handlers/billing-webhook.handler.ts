@@ -12,18 +12,21 @@
  * Routes events to appropriate processors:
  * - Subscription events → WebhookProcessorService
  * - Dispute events → DisputeProcessorService
+ * - Refund events → RefundProcessorService
  */
 
 import type { WebhookPayload } from '@workspace/payments/types';
-import { isDisputeEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
+import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
 
 import type { DisputeProcessorService } from '@/api/services/dispute-processor.service';
+import type { RefundProcessorService } from '@/api/services/refund-processor.service';
 import type { WebhookProcessorService } from '@/api/services/webhook-processor.service';
 import { determineWebhookHeaders, type WebhookHeaders } from '@/api/utils/webhook';
 
 export interface BillingWebhookHandlerDeps {
   webhookProcessor: WebhookProcessorService;
   disputeProcessor: DisputeProcessorService;
+  refundProcessor: RefundProcessorService;
 }
 
 /**
@@ -33,7 +36,7 @@ export interface BillingWebhookHandlerDeps {
  * @returns Handler function that accepts payload and headers
  */
 export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
-  const { webhookProcessor, disputeProcessor } = deps;
+  const { webhookProcessor, disputeProcessor, refundProcessor } = deps;
 
   return async (payload: unknown, headers?: WebhookHeaders): Promise<void> => {
     const webhookPayload = payload as WebhookPayload;
@@ -84,6 +87,33 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         } else if (result.processed) {
           console.log(
             `[Billing Webhook] Processed ${eventType} for dispute: ${result.disputeId}` +
+              (result.workspaceId ? ` (workspace: ${result.workspaceId})` : '')
+          );
+        }
+      } catch (error) {
+        console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
+        throw error;
+      }
+      return;
+    }
+
+    // Route refund events to refund processor
+    if (isRefundEvent(eventType)) {
+      console.log(
+        `[Billing Webhook] Processing refund event: ${eventType} (webhook: ${webhookHeaders.webhookId})`
+      );
+
+      try {
+        const result = await refundProcessor.processRefund(webhookHeaders, webhookPayload);
+
+        if (result.skipped) {
+          console.log(
+            `[Billing Webhook] Skipped ${eventType}: ${result.skipReason}` +
+              (result.refundId ? ` (refund: ${result.refundId})` : '')
+          );
+        } else if (result.processed) {
+          console.log(
+            `[Billing Webhook] Processed ${eventType} for refund: ${result.refundId}` +
               (result.workspaceId ? ` (workspace: ${result.workspaceId})` : '')
           );
         }

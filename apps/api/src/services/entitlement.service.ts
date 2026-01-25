@@ -242,6 +242,8 @@ export class EntitlementService {
         return 'Subscription in grace period. Update payment or reactivate to continue.';
       case 'disputed':
         return 'Your subscription is under review due to a payment dispute. Please contact support.';
+      case 'refunded':
+        return 'Your subscription payment was refunded. Please contact support to reactivate.';
       default:
         return 'Subscription access denied.';
     }
