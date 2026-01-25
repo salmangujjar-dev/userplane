@@ -10,6 +10,7 @@ import type { DbClient } from '@workspace/db';
 import { deriveWorkspaceName } from '@/api/lib/workspace';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { DomainService } from '@/api/services/domain.service';
+import { EntitlementService } from '@/api/services/entitlement.service';
 import { ProjectService } from '@/api/services/project.service';
 import { TokenService } from '@/api/services/token.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
@@ -22,6 +23,7 @@ export interface ProvisionerServiceDeps {
   workspaceMemberService: WorkspaceMemberService;
   domainService: DomainService;
   tokenService: TokenService;
+  entitlementService: EntitlementService;
   workspaceRepo: WorkspaceRepository;
   db: DbClient;
 }
@@ -166,6 +168,15 @@ export class ProvisionerService {
         },
         { tx }
       );
+
+      // Provision entitlements for free plan
+      // All new workspaces start on free plan
+      await this.deps.entitlementService.provisionForPlan(createdWorkspace.workspaceId!, 'free', {
+        tx,
+      });
+
+      // Initialize seat consumption (owner counts as 1 seat)
+      await this.deps.entitlementService.consume(createdWorkspace.workspaceId!, 'seats', 1, { tx });
 
       return createdWorkspace;
     });

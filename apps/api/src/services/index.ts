@@ -22,6 +22,7 @@ import { AdminRepository } from '@/api/repositories/admin.repository';
 import { AdminRecordingRepository } from '@/api/repositories/admin-recording.repository';
 import { AdminWorkspaceRepository } from '@/api/repositories/admin-workspace.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
+import { EntitlementRepository } from '@/api/repositories/entitlements.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
@@ -38,6 +39,7 @@ import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import { BillingService } from '@/api/services/billing.service';
 import { DomainService } from '@/api/services/domain.service';
 import { emailService } from '@/api/services/email.service';
+import { EntitlementService } from '@/api/services/entitlement.service';
 import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
 import { ProjectService } from '@/api/services/project.service';
@@ -59,14 +61,26 @@ const domainRepo = new DomainRepository(db);
 const linkRepo = new LinkRepository(db);
 const recordingRepo = new RecordingRepository(db);
 const subscriptionRepo = new SubscriptionRepository(db);
+const entitlementRepo = new EntitlementRepository(db);
 const adminRepo = new AdminRepository(db);
 const adminWorkspaceRepo = new AdminWorkspaceRepository(db);
 const adminRecordingRepo = new AdminRecordingRepository(db);
 
 // Initialize services in dependency order
+// Level 0: Services with only repository dependencies (no other services)
+export const billingService = new BillingService({
+  subscriptionRepo,
+});
+
+export const entitlementService = new EntitlementService({
+  entitlementRepo,
+  billingService,
+});
+
 // Level 1: Services with no dependencies on other services
 export const workspaceMemberService = new WorkspaceMemberService({
   memberRepo: workspaceMemberRepo,
+  entitlementService,
 });
 
 export const userService = new UserService({
@@ -159,6 +173,7 @@ export const provisionerService = new ProvisionerService({
   workspaceMemberService,
   domainService,
   tokenService,
+  entitlementService,
   workspaceRepo,
   db,
 });
@@ -174,6 +189,7 @@ export const sessionService = new SessionService({
   networkLogsStorage: getNetworkLogsStorage(),
   clientActionsStorage: getClientActionsStorage(),
   linkService,
+  entitlementService,
 });
 
 // Level 4: Admin services that depend on level 3
@@ -185,11 +201,6 @@ export const adminProvisioningService = new AdminProvisioningService({
   db,
 });
 
-// Level 5: Billing service (read-only subscription status)
-export const billingService = new BillingService({
-  subscriptionRepo,
-});
-
 // Export tokenService, emailService, and repositories for use in routes
 export { emailService, tokenService };
-export { recordingRepo, subscriptionRepo, workspaceMemberRepo };
+export { entitlementRepo, recordingRepo, subscriptionRepo, workspaceMemberRepo };

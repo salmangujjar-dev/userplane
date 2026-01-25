@@ -14,6 +14,7 @@ import { SubscriptionRepository } from '@/api/repositories/subscriptions.reposit
 import { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { emailService } from '@/api/services/email.service';
+import { entitlementService } from '@/api/services/index';
 import { WebhookProcessorService } from '@/api/services/webhook-processor.service';
 
 const workspaceRepository = new WorkspaceRepository(db);
@@ -37,6 +38,7 @@ const webhookProcessor = new WebhookProcessorService({
   subscriptionRepo,
   webhookEventsRepo,
   workspaceRepo: workspaceRepository,
+  entitlementService,
   db,
   dodoClient, // For upstream verification
 });

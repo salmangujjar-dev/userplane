@@ -13,6 +13,7 @@ import { getProductBySlug } from '@workspace/payments';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { BillingService } from '@/api/services/billing.service';
+import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 
@@ -122,16 +123,55 @@ export const getCustomerPortalImpl = (
 };
 
 /**
+ * GET /billing/:workspaceId/usage
+ * Get entitlement usage summary for a workspace
+ * Requires workspace membership
+ */
+export const getUsageImpl = (
+  entitlementService: EntitlementService,
+  billingService: BillingService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.billing.getUsage
+    .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const workspaceId = input.params.workspaceId;
+
+      // Get current subscription to determine plan
+      const subscriptionStatus = await billingService.getSubscriptionStatus(workspaceId);
+      const planId = subscriptionStatus.planId || 'free';
+
+      // Get usage summary with the plan context
+      const usage = await entitlementService.getUsageSummary(workspaceId, planId as never);
+
+      return {
+        message: 'Usage summary retrieved successfully',
+        data: usage,
+      };
+    });
+};
+
+/**
  * Create all billing procedures
  */
 export function createBillingProcedures(
   billingService: BillingService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  entitlementService: EntitlementService
 ) {
   return {
     getStatus: getSubscriptionStatusImpl(billingService, workspaceMemberService, workspaceService),
     createCheckout: createCheckoutSessionImpl(billingService, workspaceMemberService),
     getPortal: getCustomerPortalImpl(billingService, workspaceMemberService, workspaceService),
+    getUsage: getUsageImpl(
+      entitlementService,
+      billingService,
+      workspaceMemberService,
+      workspaceService
+    ),
   };
 }

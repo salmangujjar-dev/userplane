@@ -25,6 +25,7 @@ import type { PlanId } from '@workspace/pricing';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import type { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { Transaction } from '@/api/types';
 
 import { generateSubscriptionId } from '../lib/id';
@@ -54,6 +55,7 @@ export interface WebhookProcessorDeps {
   subscriptionRepo: SubscriptionRepository;
   webhookEventsRepo: WebhookEventsRepository;
   workspaceRepo: WorkspaceRepository;
+  entitlementService: EntitlementService;
   db: DbClient;
   dodoClient?: ReturnType<typeof getDodoPaymentsClient>;
 }
@@ -303,6 +305,30 @@ export class WebhookProcessorService {
       { tx }
     );
 
+    // Handle entitlement updates based on event type
+    const workspaceId = await this.getWorkspaceIdFromSubscription(subscriptionId, { tx });
+    if (workspaceId) {
+      // Check if this is a renewal (new billing period)
+      const isRenewal =
+        targetStatus === 'active' &&
+        current.status === 'active' &&
+        dates.currentPeriodStart > current.currentPeriodStart;
+
+      if (isRenewal) {
+        // Reset period-based usage (recordings, logs) on renewal
+        console.log(`[WebhookProcessor] Resetting period usage for workspace: ${workspaceId}`);
+        await this.deps.entitlementService.resetPeriodUsage(workspaceId, { tx });
+      }
+
+      // Handle plan changes
+      if (planId && planId !== current.planId) {
+        console.log(
+          `[WebhookProcessor] Updating entitlements for plan change: ${current.planId} → ${planId}`
+        );
+        await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
+      }
+    }
+
     // 8. Mark webhook as processed
     await this.deps.webhookEventsRepo.markProcessed(
       webhookId,
@@ -427,6 +453,10 @@ export class WebhookProcessorService {
         { tx }
       );
 
+      // Update entitlements for new plan (plan change scenario)
+      console.log(`[WebhookProcessor] Updating entitlements for plan change to: ${planId}`);
+      await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
+
       console.log(
         `[WebhookProcessor] SUCCESS: Updated existing subscription ${existingWorkspaceSubscription.status} → active`
       );
@@ -460,6 +490,11 @@ export class WebhookProcessorService {
     // Update workspace customer ID
     console.log(`[WebhookProcessor] Updating workspace customer ID: ${customerId}`);
     await this.updateWorkspaceCustomerId(workspaceId, customerId, { tx });
+
+    // Provision entitlements for the new plan
+    // This updates existing free plan entitlements to the paid plan limits
+    console.log(`[WebhookProcessor] Provisioning entitlements for plan: ${planId}`);
+    await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
 
     await this.deps.webhookEventsRepo.markProcessed(
       webhookId,
@@ -541,5 +576,19 @@ export class WebhookProcessorService {
       .update(workspaces)
       .set({ dodoCustomerId: customerId })
       .where(eq(workspaces.workspaceId, workspaceId));
+  }
+
+  /**
+   * Get workspace ID from subscription ID
+   */
+  private async getWorkspaceIdFromSubscription(
+    subscriptionId: string,
+    options?: { tx?: Transaction }
+  ): Promise<string | null> {
+    const subscription = await this.deps.subscriptionRepo.findBySubscriptionId(
+      subscriptionId,
+      options
+    );
+    return subscription?.workspaceId || null;
   }
 }

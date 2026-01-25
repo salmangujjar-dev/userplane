@@ -30,6 +30,7 @@ import {
   type UploadFile,
   validateFileMimeType,
 } from '@/api/schema/session.schema';
+import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { LinkService } from '@/api/services/link.service';
 import { TASK_IDS } from '@/api/trigger/constants';
 import { buildStaleRecordingCheckKey } from '@/api/trigger/idempotency';
@@ -54,6 +55,7 @@ export interface SessionServiceDeps {
   networkLogsStorage: NetworkLogsStorageClient;
   clientActionsStorage: ClientActionsStorageClient;
   linkService: LinkService;
+  entitlementService: EntitlementService;
 }
 
 /**
@@ -239,6 +241,18 @@ export class SessionService {
       throw sessionError.SESSION_DURATION_TOO_LONG();
     }
 
+    // Check recording entitlement before creating
+    const canRecord = await this.deps.entitlementService.canConsume(
+      sessionPayload.wid,
+      'recordings'
+    );
+    if (!canRecord.allowed) {
+      throw sessionError.SESSION_RECORDING_LIMIT_EXCEEDED({
+        current: canRecord.current,
+        limit: canRecord.limit,
+      });
+    }
+
     // Validate files and get exclusions
     // filesToUpload stores the information about the files that will be uploaded
     // excludedFiles stores the information about the files that were excluded
@@ -378,6 +392,16 @@ export class SessionService {
     const updated = await this.deps.recordingRepo.markAsAvailable(recording.recordingId);
     if (!updated) {
       throw sessionError.SESSION_UPLOAD_FAILED();
+    }
+
+    // Track recording consumption after successful upload
+    // Note: We consume when recording becomes available, not when pending
+    try {
+      await this.deps.entitlementService.consume(recording.workspaceId, 'recordings');
+    } catch (error) {
+      // Log but don't fail - recording is already created
+      // Consumption tracking failure shouldn't block the upload
+      console.error('Failed to track recording consumption:', error);
     }
 
     return {
