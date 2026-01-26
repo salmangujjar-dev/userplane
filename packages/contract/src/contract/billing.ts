@@ -8,18 +8,12 @@ import { oc } from '@orpc/contract';
 
 import {
   BillingErrors,
-  ChangePlanSchema,
-  CheckoutSessionResponseSchema,
-  CreateCheckoutSessionSchema,
   CustomerPortalResponseSchema,
   GetCustomerPortalSchema,
   GetSubscriptionStatusSchema,
   GetUsageSummarySchema,
-  PlanChangePreviewResponseSchema,
-  PlanChangeRequestResponseSchema,
-  PlanChangeResultResponseSchema,
-  PreviewPlanChangeSchema,
-  RequestPlanChangeSchema,
+  ManagePlanResponseSchema,
+  ManagePlanSchema,
   SubscriptionStatusResponseSchema,
   UsageSummaryResponseSchema,
 } from '../schemas';
@@ -43,23 +37,6 @@ export const billingContract = oc.router({
     })
     .input(GetSubscriptionStatusSchema)
     .output(SubscriptionStatusResponseSchema)
-    .errors(BillingErrors),
-
-  /**
-   * POST /billing/checkout
-   * Validate permissions and return product slug for checkout
-   * Client then uses Better Auth DodoPayments plugin to create the actual checkout session
-   * Requires authentication and workspace admin/owner role
-   */
-  createCheckout: oc
-    .route({
-      method: 'POST',
-      path: '/billing/checkout',
-      summary: 'Get checkout slug',
-      description: 'Validates permissions and returns product slug for DodoPayments checkout',
-    })
-    .input(CreateCheckoutSessionSchema)
-    .output(CheckoutSessionResponseSchema)
     .errors(BillingErrors),
 
   /**
@@ -97,55 +74,25 @@ export const billingContract = oc.router({
     .errors(BillingErrors),
 
   /**
-   * POST /billing/:workspaceId/preview-plan-change
-   * Preview proration details before changing subscription plan
-   * Requires workspace admin/owner role
-   */
-  previewPlanChange: oc
-    .route({
-      method: 'POST',
-      path: '/billing/{workspaceId}/preview-plan-change',
-      inputStructure: 'detailed',
-      summary: 'Preview plan change',
-      description: 'Preview proration details for upgrading or downgrading subscription plan',
-    })
-    .input(PreviewPlanChangeSchema)
-    .output(PlanChangePreviewResponseSchema)
-    .errors(BillingErrors),
-
-  /**
-   * POST /billing/:workspaceId/change-plan
-   * Execute subscription plan change
-   * Requires workspace admin/owner role
-   */
-  changePlan: oc
-    .route({
-      method: 'POST',
-      path: '/billing/{workspaceId}/change-plan',
-      inputStructure: 'detailed',
-      summary: 'Change subscription plan',
-      description: 'Change the subscription plan (upgrade or downgrade)',
-    })
-    .input(ChangePlanSchema)
-    .output(PlanChangeResultResponseSchema)
-    .errors(BillingErrors),
-
-  /**
-   * POST /billing/:workspaceId/request-plan-change
-   * Request a plan change (for non-admins)
-   * Sends email notification to workspace owner
+   * POST /billing/:workspaceId/plan
+   * Unified endpoint for plan management
+   * Behavior depends on subscription status and user role:
+   * - No subscription + owner/admin: Returns checkout URL
+   * - Active subscription + owner/admin + no action: Returns preview
+   * - Active subscription + owner/admin + action=execute: Executes plan change
+   * - Active subscription + member: Creates request and sends email to owners
    * Requires workspace membership
    */
-  requestPlanChange: oc
+  managePlan: oc
     .route({
       method: 'POST',
-      path: '/billing/{workspaceId}/request-plan-change',
+      path: '/billing/{workspaceId}/plan',
       inputStructure: 'detailed',
-      summary: 'Request plan change',
-      description: 'Request a plan change - sends notification to workspace owner',
+      summary: 'Manage workspace plan',
+      description: 'Unified endpoint for checkout, preview, execute, or request plan changes',
     })
-    .input(RequestPlanChangeSchema)
-    .output(PlanChangeRequestResponseSchema)
+    .input(ManagePlanSchema)
+    .output(ManagePlanResponseSchema)
     .errors(BillingErrors),
 });
 

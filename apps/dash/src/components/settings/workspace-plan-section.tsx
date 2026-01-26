@@ -21,7 +21,7 @@ import { useWorkspace } from '@/hooks/use-workspace';
 import { planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
 import { useSubscriptionStatus, useUsageSummary } from '@/queries/use-billing-queries';
-import { useCreateCheckout, useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
+import { useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
 
 interface BillingActionButtonProps {
   hasPlanId: boolean;
@@ -238,32 +238,18 @@ export function WorkspacePlanSection() {
   const [showPlanChangePreview, setShowPlanChangePreview] = useState(false);
   const [selectedPlanIdForChange, setSelectedPlanIdForChange] = useState<PlanId | null>(null);
 
-  const { mutate: createCheckout } = useCreateCheckout();
   const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
 
   const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
 
-    // Check if user has an active subscription that allows plan changes
-    const hasActiveSubscription =
-      subscriptionData?.contractDetail.planId !== null &&
-      (subscriptionData?.contractDetail.status === 'active' ||
-        (subscriptionData?.contractDetail.status === 'cancelled' &&
-          subscriptionData?.contractDetail.cancelAtPeriodEnd));
-
-    if (hasActiveSubscription) {
-      // Plan change flow - show preview modal
-      setSelectedPlanIdForChange(planId as PlanId);
-      setShowPlanChangePreview(true);
-      setPlanModal(null);
-    } else {
-      // Checkout flow - create new subscription
-      createCheckout({
-        planId: planId as PlanId,
-        workspaceId,
-      });
-      setPlanModal(null);
-    }
+    // Always open modal - server will route to appropriate flow:
+    // - No subscription + owner/admin: checkout
+    // - Active subscription + owner/admin: preview + execute
+    // - Active subscription + member: request
+    setSelectedPlanIdForChange(planId as PlanId);
+    setShowPlanChangePreview(true);
+    setPlanModal(null);
   };
 
   const handlePlanChangeComplete = () => {

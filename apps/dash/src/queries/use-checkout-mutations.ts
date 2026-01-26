@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
+  CheckoutSessionData,
+  ManagePlanData,
   PlanChangePreviewData,
   PlanChangeRequestData,
   PlanChangeResultData,
@@ -9,90 +11,7 @@ import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
-import { env } from '@/env';
 import { handleSafeResult } from '@/lib/errors';
-
-interface CheckoutParams {
-  planId: PlanId;
-  workspaceId: string;
-}
-
-interface CheckoutResult {
-  url: string;
-}
-
-interface PlanChangeParams {
-  planId: PlanId;
-  workspaceId: string;
-}
-
-/**
- * Hook to create a DodoPayments checkout session
- *
- * Two-step process:
- * 1. Calls API with planId to validate permissions and get product slug
- *    - Checks workspace owner/admin role
- *    - Verifies no existing subscription
- *    - Converts planId to DodoPayments product slug (server-side)
- * 2. Uses Better Auth plugin with slug to create checkout session
- *    - Auto-pulls customer info from authenticated session
- *    - Redirects to DodoPayments checkout page
- */
-export function useCreateCheckout(options?: {
-  onError?: (error: Error) => void;
-  onSuccess?: (result: CheckoutResult) => void;
-}) {
-  return useMutation<CheckoutResult, Error, CheckoutParams>({
-    mutationFn: async ({ planId, workspaceId }) => {
-      // Call API to validate permissions and get product slug
-      // API keeps product configuration server-side
-      const [error, response] = await apiClient.billing.createCheckout({
-        body: { planId, workspaceId },
-      });
-
-      if (error || !response?.data?.slug) {
-        throw new Error(error?.message || 'Failed to create checkout session');
-      }
-
-      const slug = response.data.slug;
-
-      // Use Better Auth's DodoPayments plugin to create checkout session
-      // This auto-pulls customer info from the authenticated session
-      const result = await authClient.dodopayments.checkoutSession({
-        slug,
-        referenceId: workspaceId,
-        metadata: {
-          workspace_id: workspaceId,
-        },
-        customization: {
-          theme: 'light',
-          show_order_details: true,
-          show_on_demand_tag: false,
-        },
-        return_url: `${env.dashboard.url}/${workspaceId || ''}/settings?tab=plan-usage`,
-      });
-
-      if (result.error) {
-        throw new Error(result.error.message || 'Failed to create checkout session');
-      }
-
-      if (!result.data?.url) {
-        throw new Error('No checkout URL returned');
-      }
-
-      return { url: result.data.url };
-    },
-    onSuccess: (result) => {
-      options?.onSuccess?.(result);
-      // Redirect to checkout
-      window.location.href = result.url;
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to start checkout');
-      options?.onError?.(error);
-    },
-  });
-}
 
 /**
  * Hook to open the DodoPayments customer portal
@@ -123,57 +42,37 @@ export function useOpenCustomerPortal(options?: {
   });
 }
 
-/**
- * Hook to preview plan change proration details
- *
- * Shows the user exactly what they'll be charged (or credited) before
- * confirming a plan upgrade or downgrade.
- */
-export function usePreviewPlanChange(options?: {
-  onError?: (error: Error) => void;
-  onSuccess?: (data: PlanChangePreviewData) => void;
-}) {
-  return useMutation<PlanChangePreviewData, Error, PlanChangeParams>({
-    mutationFn: async ({ planId, workspaceId }) => {
-      const [error, response] = await apiClient.billing.previewPlanChange({
-        params: { workspaceId },
-        body: { planId },
-      });
-
-      const result = handleSafeResult(error, response?.data ?? null);
-      if (!result.success) {
-        throw result.error;
-      }
-
-      return result.data;
-    },
-    onSuccess: (data) => {
-      options?.onSuccess?.(data);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to preview plan change');
-      options?.onError?.(error);
-    },
-  });
+interface ManagePlanParams {
+  workspaceId: string;
+  planId: PlanId;
+  action?: 'preview' | 'execute';
+  message?: string;
 }
 
 /**
- * Hook to execute plan change
+ * Hook to manage workspace plan (unified endpoint)
  *
- * Upgrades or downgrades the subscription plan.
- * DB updates happen asynchronously via webhook.
+ * This hook replaces useCreateCheckout, usePreviewPlanChange, useChangePlan, and useRequestPlanChange.
+ * The server automatically routes to the appropriate flow based on subscription status and user role:
+ * - No subscription + owner/admin: Returns checkout URL
+ * - Active subscription + owner/admin (no action): Returns preview
+ * - Active subscription + owner/admin (action=execute): Executes plan change
+ * - Active subscription + member: Creates request and sends email to owners
  */
-export function useChangePlan(options?: {
+export function useManagePlan(options?: {
+  onCheckout?: (data: CheckoutSessionData) => void;
+  onPreview?: (data: PlanChangePreviewData) => void;
+  onExecute?: (data: PlanChangeResultData) => void;
+  onRequest?: (data: PlanChangeRequestData) => void;
   onError?: (error: Error) => void;
-  onSuccess?: (data: PlanChangeResultData) => void;
 }) {
   const queryClient = useQueryClient();
 
-  return useMutation<PlanChangeResultData, Error, PlanChangeParams>({
-    mutationFn: async ({ planId, workspaceId }) => {
-      const [error, response] = await apiClient.billing.changePlan({
+  return useMutation<ManagePlanData, Error, ManagePlanParams>({
+    mutationFn: async ({ workspaceId, planId, action, message }) => {
+      const [error, response] = await apiClient.billing.managePlan({
         params: { workspaceId },
-        body: { planId },
+        body: { planId, action, message },
       });
 
       const result = handleSafeResult(error, response?.data ?? null);
@@ -184,55 +83,30 @@ export function useChangePlan(options?: {
       return result.data;
     },
     onSuccess: (data, variables) => {
-      // Invalidate subscription status to reflect the change
-      queryClient.invalidateQueries({
-        queryKey: ['subscription-status', variables.workspaceId],
-      });
-      options?.onSuccess?.(data);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to change plan');
-      options?.onError?.(error);
-    },
-  });
-}
-
-interface PlanChangeRequestParams {
-  planId: PlanId;
-  workspaceId: string;
-  message?: string;
-}
-
-/**
- * Hook to request a plan change (for non-admin users)
- *
- * Sends an email notification to workspace owners requesting
- * a plan upgrade or downgrade.
- */
-export function useRequestPlanChange(options?: {
-  onError?: (error: Error) => void;
-  onSuccess?: (data: PlanChangeRequestData) => void;
-}) {
-  return useMutation<PlanChangeRequestData, Error, PlanChangeRequestParams>({
-    mutationFn: async ({ planId, workspaceId, message }) => {
-      const [error, response] = await apiClient.billing.requestPlanChange({
-        params: { workspaceId },
-        body: { planId, message },
-      });
-
-      const result = handleSafeResult(error, response?.data ?? null);
-      if (!result.success) {
-        throw result.error;
+      // Route based on discriminated union response type
+      switch (data.type) {
+        case 'checkout':
+          options?.onCheckout?.(data.data);
+          break;
+        case 'preview':
+          options?.onPreview?.(data.data);
+          break;
+        case 'execute':
+          // Invalidate subscription status to reflect the change
+          queryClient.invalidateQueries({
+            queryKey: ['subscription-status', variables.workspaceId],
+          });
+          toast.success('Plan changed successfully');
+          options?.onExecute?.(data.data);
+          break;
+        case 'request':
+          toast.success('Plan change request sent to workspace owner');
+          options?.onRequest?.(data.data);
+          break;
       }
-
-      return result.data;
-    },
-    onSuccess: (data) => {
-      toast.success('Plan change request sent to workspace owner');
-      options?.onSuccess?.(data);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to send plan change request');
+      toast.error(error.message || 'Failed to manage plan');
       options?.onError?.(error);
     },
   });
