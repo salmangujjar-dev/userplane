@@ -289,6 +289,20 @@ export function WorkspacePlanSection() {
     openCustomerPortal();
   };
 
+  /**
+   * Handle opening plan selection modal
+   * Shows detailed mode (all plans) if no subscription, suggested mode otherwise
+   */
+  const handleShowPlanPortal = () => {
+    const hasActiveSubscription =
+      subscriptionData?.contractDetail.planId &&
+      subscriptionData?.accessDetail.accessStatus === 'active';
+
+    // No subscription → show all plans (detailed mode)
+    // Has subscription → show suggested upgrade plans
+    setPlanModal(hasActiveSubscription ? 'suggested' : 'detailed');
+  };
+
   // Initial loading state (workspace not yet loaded)
   if (isLoadingWorkspace) {
     return (
@@ -373,7 +387,7 @@ export function WorkspacePlanSection() {
               hasPlanId={!!subscriptionData?.contractDetail.planId}
               accessStatus={subscriptionData?.accessDetail.accessStatus}
               onShowBillingDetails={() => setShowBillingDetails(true)}
-              onShowPlanPortal={() => setPlanModal('suggested')}
+              onShowPlanPortal={handleShowPlanPortal}
             />
           )}
 
@@ -411,7 +425,10 @@ export function WorkspacePlanSection() {
           </div>
         </div>
 
-        <PlanSelectionModal onPlanSelect={handlePlanSelect} />
+        <PlanSelectionModal
+          onPlanSelect={handlePlanSelect}
+          currentPlanName={subscriptionData?.contractDetail.planName ?? null}
+        />
 
         {subscriptionData &&
           subscriptionData.contractDetail.planName &&
