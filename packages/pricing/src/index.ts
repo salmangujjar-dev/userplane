@@ -872,3 +872,87 @@ export function formatPlanRate(plan: BasePricingPlan): string {
 export function getPlanName(planId: PlanId): PlanName {
   return PLAN_NAMES[planId] as PlanName;
 }
+
+// ============================================================================
+// Abuse Prevention Configuration
+// ============================================================================
+
+/**
+ * Abuse prevention configuration
+ */
+export const ABUSE_PREVENTION = {
+  workspaceCreation: {
+    maxPerYear: 3,
+    lookbackDays: 365,
+  },
+} as const;
+
+/**
+ * Plan tier classification for cooldown
+ */
+export const PLAN_TIERS = {
+  standard: ['essential_monthly', 'essential_annual', 'starter_monthly', 'starter_annual'],
+  premium: ['scale_up_monthly', 'scale_up_annual', 'enterprise_monthly', 'enterprise_annual'],
+  free: ['free'],
+} as const;
+
+export type PlanTier = keyof typeof PLAN_TIERS;
+
+/**
+ * Get plan tier from plan ID
+ */
+export function getPlanTier(planId: PlanId): PlanTier {
+  if ((PLAN_TIERS.free as readonly string[]).includes(planId)) return 'free';
+  if ((PLAN_TIERS.premium as readonly string[]).includes(planId)) return 'premium';
+  return 'standard';
+}
+
+/**
+ * Cooldown configuration by tier
+ * Controls progressive entitlement unlock for new subscriptions
+ */
+export const COOLDOWN_CONFIG = {
+  standard: {
+    durationDays: 30,
+    schedule: [
+      { days: 0, multiplier: 0.25 }, // Week 1: 25%
+      { days: 7, multiplier: 0.5 }, // Week 2: 50%
+      { days: 14, multiplier: 0.75 }, // Week 3: 75%
+      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
+    ],
+  },
+  premium: {
+    durationDays: 14,
+    schedule: [
+      { days: 0, multiplier: 0.5 }, // Week 1: 50%
+      { days: 7, multiplier: 1.0 }, // Week 2+: 100%
+    ],
+  },
+  free: {
+    durationDays: 0,
+    schedule: [{ days: 0, multiplier: 1.0 }], // No cooldown
+  },
+} as const;
+
+/**
+ * Calculate cooldown multiplier based on subscription age and plan tier
+ * Returns a value between 0 and 1 representing the percentage of entitlements available
+ */
+export function getCooldownMultiplier(subscriptionCreatedAt: Date, planId: PlanId): number {
+  const tier = getPlanTier(planId);
+  const config = COOLDOWN_CONFIG[tier];
+
+  const daysSinceStart = Math.floor(
+    (Date.now() - subscriptionCreatedAt.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  // Find the applicable multiplier (last one where days <= daysSinceStart)
+  let multiplier: number = config.schedule[0].multiplier;
+  for (const step of config.schedule) {
+    if (daysSinceStart >= step.days) {
+      multiplier = step.multiplier;
+    }
+  }
+
+  return multiplier;
+}

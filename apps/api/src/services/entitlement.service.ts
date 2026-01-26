@@ -11,15 +11,22 @@
 
 import type { SubscriptionAccessStatus } from '@workspace/contract';
 import type { PlanId, PlanName, ResourceType } from '@workspace/pricing';
-import { PLAN_ENTITLEMENTS, PLAN_NAMES, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
+import {
+  getCooldownMultiplier,
+  PLAN_ENTITLEMENTS,
+  PLAN_NAMES,
+  RESOURCE_TYPE_VALUES,
+} from '@workspace/pricing';
 
 import type { EntitlementRepository } from '@/api/repositories/entitlements.repository';
+import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import type { BillingService } from '@/api/services/billing.service';
 import type { Transaction } from '@/api/types';
 
 export interface EntitlementServiceDeps {
   entitlementRepo: EntitlementRepository;
   billingService: BillingService;
+  subscriptionRepo: SubscriptionRepository;
 }
 
 /**
@@ -196,27 +203,46 @@ export class EntitlementService {
     }
 
     const current = entitlement.resourceConsumed;
-    const hardLimit = entitlement.hardLimit;
+    let effectiveLimit = entitlement.hardLimit;
+
+    // Apply cooldown if subscription is active (progressive unlock for new subscriptions)
+    let cooldownMultiplier = 1.0;
+    if (accessStatus.accessStatus === 'active') {
+      const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+      if (subscription?.createdAt && subscription?.planId) {
+        cooldownMultiplier = getCooldownMultiplier(
+          subscription.createdAt,
+          subscription.planId as PlanId
+        );
+        if (cooldownMultiplier < 1.0 && effectiveLimit !== -1) {
+          effectiveLimit = Math.floor(effectiveLimit * cooldownMultiplier);
+        }
+      }
+    }
 
     // Unlimited = always allowed
-    if (hardLimit === -1) {
+    if (effectiveLimit === -1) {
       return {
         allowed: true,
         current,
-        limit: hardLimit,
+        limit: effectiveLimit,
       };
     }
 
-    // Check if adding amount would exceed hard limit (absolute ceiling)
-    // Hard limit is NOT extended by resourceCredited
-    const newTotal = entitlement.resourceConsumed + amount;
+    // Check if adding amount would exceed effective limit
+    const newTotal = current + amount;
 
-    if (newTotal > hardLimit) {
+    if (newTotal > effectiveLimit) {
+      const reason =
+        cooldownMultiplier < 1.0
+          ? `Subscription in ramp-up period (${Math.floor(cooldownMultiplier * 100)}% capacity). Limit: ${effectiveLimit}`
+          : `Resource limit reached (${current}/${effectiveLimit})`;
+
       return {
         allowed: false,
-        reason: `Resource limit reached (${current}/${hardLimit})`,
+        reason,
         current,
-        limit: hardLimit,
+        limit: effectiveLimit,
       };
     }
 
@@ -228,7 +254,7 @@ export class EntitlementService {
     return {
       allowed: true,
       current,
-      limit: hardLimit,
+      limit: effectiveLimit,
     };
   }
 

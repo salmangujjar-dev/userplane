@@ -35,4 +35,10 @@ export const ProvisionerErrors = {
     status: 400,
     message: 'Workspace URL is required',
   },
+
+  // Rate limiting errors
+  WORKSPACE_CREATION_LIMIT_EXCEEDED: {
+    status: 429,
+    message: 'You have reached the maximum number of workspaces allowed per year',
+  },
 } as const;

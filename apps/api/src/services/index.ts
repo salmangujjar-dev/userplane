@@ -83,6 +83,7 @@ export const billingService = new BillingService({
 export const entitlementService = new EntitlementService({
   entitlementRepo,
   billingService,
+  subscriptionRepo,
 });
 
 // Level 1: Services with no dependencies on other services
@@ -188,6 +189,7 @@ export const provisionerService = new ProvisionerService({
   tokenService,
   entitlementService,
   workspaceRepo,
+  memberRepo: workspaceMemberRepo,
   db,
 });
 

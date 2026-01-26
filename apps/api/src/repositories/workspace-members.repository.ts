@@ -4,7 +4,7 @@
  */
 
 import type { DbClient, WorkspaceRole } from '@workspace/db';
-import { and, asc, count, eq, ilike, sql } from '@workspace/db';
+import { and, asc, count, eq, gte, ilike, sql } from '@workspace/db';
 import { user, workspaceMembers } from '@workspace/db';
 
 import type { CreateWorkspaceMemberInput, Transaction } from '@/api/types';
@@ -454,5 +454,21 @@ export class WorkspaceMemberRepository {
       .limit(limit);
 
     return members;
+  }
+
+  /**
+   * Count unique workspaces user has joined in period (includes deleted memberships)
+   * Used for workspace creation rate limiting to prevent abuse
+   */
+  async countUniqueWorkspacesForUserInPeriod(userId: string, days: number): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const [result] = await this.db
+      .select({ count: sql<number>`COUNT(DISTINCT ${workspaceMembers.workspaceId})` })
+      .from(workspaceMembers)
+      .where(and(eq(workspaceMembers.userId, userId), gte(workspaceMembers.createdAt, cutoffDate)));
+
+    return Number(result?.count || 0);
   }
 }
