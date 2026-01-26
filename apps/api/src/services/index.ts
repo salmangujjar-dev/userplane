@@ -135,6 +135,7 @@ export const linkService = new LinkService({
   projectRepo,
   domainRepo,
   workspaceRepo,
+  entitlementService,
 });
 
 // Level 3: Services that depend on level 2
