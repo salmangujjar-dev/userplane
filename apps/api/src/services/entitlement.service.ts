@@ -73,6 +73,7 @@ export class EntitlementService {
   /**
    * Provision entitlements for a workspace based on plan
    * Called when: workspace created, subscription activated
+   * Invalidates usage summary cache after provisioning
    */
   async provisionForPlan(
     workspaceId: string,
@@ -97,11 +98,15 @@ export class EntitlementService {
       tx: options?.tx,
       preserveConsumed: false, // New provisioning, start fresh
     });
+
+    // Invalidate usage cache after provisioning
+    await this.deps.cacheService?.invalidateUsage(workspaceId);
   }
 
   /**
    * Update entitlements when plan changes (upgrade/downgrade)
    * Preserves consumption but updates limits
+   * Invalidates usage summary cache after update
    */
   async updateForPlan(
     workspaceId: string,
@@ -126,6 +131,9 @@ export class EntitlementService {
       tx: options?.tx,
       preserveConsumed: true, // Plan change, preserve usage
     });
+
+    // Invalidate usage cache after update
+    await this.deps.cacheService?.invalidateUsage(workspaceId);
   }
 
   /**
@@ -282,6 +290,7 @@ export class EntitlementService {
   /**
    * Internal method to record resource consumption
    * Called after successful resource creation
+   * Invalidates usage summary cache after consumption
    */
   private async recordConsumption(
     workspaceId: string,
@@ -290,6 +299,9 @@ export class EntitlementService {
     options?: { tx?: Transaction }
   ): Promise<void> {
     await this.deps.entitlementRepo.incrementConsumed(workspaceId, resourceType, amount, options);
+
+    // Invalidate usage cache after consumption
+    await this.deps.cacheService?.invalidateUsage(workspaceId);
   }
 
   // Explicit consumption methods for each resource type
@@ -357,6 +369,7 @@ export class EntitlementService {
   /**
    * Release seats when members leave workspace
    * Seats are the only resource that can decrease (other resources only grow or reset)
+   * Invalidates usage summary cache after release
    */
   async releaseSeats(
     workspaceId: string,
@@ -364,6 +377,9 @@ export class EntitlementService {
     options?: { tx?: Transaction }
   ): Promise<void> {
     await this.deps.entitlementRepo.decrementConsumed(workspaceId, 'seats', amount, options);
+
+    // Invalidate usage cache after release
+    await this.deps.cacheService?.invalidateUsage(workspaceId);
   }
 
   /**
@@ -377,6 +393,7 @@ export class EntitlementService {
    *
    * Uses atomic repository operation to prevent race conditions
    * Multiple concurrent calls are safe - only one will succeed if creditLimit is limited
+   * Invalidates usage summary cache if credits were applied
    *
    * @returns true if credits were applied, false if insufficient creditLimit
    */
@@ -410,6 +427,9 @@ export class EntitlementService {
       // Entitlement exists but insufficient creditLimit
       return false;
     }
+
+    // Invalidate usage cache after applying credits
+    await this.deps.cacheService?.invalidateUsage(workspaceId);
 
     return true;
   }
@@ -499,8 +519,12 @@ export class EntitlementService {
   /**
    * Reset period-based usage (recordings)
    * Called on subscription renewal
+   * Invalidates usage summary cache after reset
    */
   async resetPeriodUsage(workspaceId: string, options?: { tx?: Transaction }): Promise<void> {
     await this.deps.entitlementRepo.resetPeriodResources(workspaceId, options);
+
+    // Invalidate usage cache after reset
+    await this.deps.cacheService?.invalidateUsage(workspaceId);
   }
 }

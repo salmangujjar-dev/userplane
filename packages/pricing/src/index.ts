@@ -888,31 +888,29 @@ export const ABUSE_PREVENTION = {
 } as const;
 
 /**
- * Plan tier classification for cooldown
+ * Cooldown schedule step
  */
-export const PLAN_TIERS = {
-  standard: ['essential_monthly', 'essential_annual', 'starter_monthly', 'starter_annual'],
-  premium: ['scale_up_monthly', 'scale_up_annual', 'enterprise_monthly', 'enterprise_annual'],
-  free: ['free'],
-} as const;
-
-export type PlanTier = keyof typeof PLAN_TIERS;
-
-/**
- * Get plan tier from plan ID
- */
-export function getPlanTier(planId: PlanId): PlanTier {
-  if ((PLAN_TIERS.free as readonly string[]).includes(planId)) return 'free';
-  if ((PLAN_TIERS.premium as readonly string[]).includes(planId)) return 'premium';
-  return 'standard';
+export interface CooldownStep {
+  days: number;
+  multiplier: number;
 }
 
 /**
- * Cooldown configuration by tier
- * Controls progressive entitlement unlock for new subscriptions
+ * Cooldown configuration structure
  */
-export const COOLDOWN_CONFIG = {
-  standard: {
+export interface CooldownConfig {
+  durationDays: number;
+  schedule: CooldownStep[];
+}
+
+/**
+ * Cooldown configuration by plan ID
+ * Controls progressive entitlement unlock for new subscriptions
+ * Falls back to 'default' config if plan ID is not found
+ */
+export const COOLDOWN_CONFIG: Record<PlanId | 'default', CooldownConfig> = {
+  // Essential plans - 30 day ramp
+  essential_monthly: {
     durationDays: 30,
     schedule: [
       { days: 0, multiplier: 0.25 }, // Week 1: 25%
@@ -921,33 +919,100 @@ export const COOLDOWN_CONFIG = {
       { days: 21, multiplier: 1.0 }, // Week 4+: 100%
     ],
   },
-  premium: {
+  essential_annual: {
+    durationDays: 30,
+    schedule: [
+      { days: 0, multiplier: 0.25 }, // Week 1: 25%
+      { days: 7, multiplier: 0.5 }, // Week 2: 50%
+      { days: 14, multiplier: 0.75 }, // Week 3: 75%
+      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
+    ],
+  },
+
+  // Starter plans - 30 day ramp
+  starter_monthly: {
+    durationDays: 30,
+    schedule: [
+      { days: 0, multiplier: 0.25 }, // Week 1: 25%
+      { days: 7, multiplier: 0.5 }, // Week 2: 50%
+      { days: 14, multiplier: 0.75 }, // Week 3: 75%
+      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
+    ],
+  },
+  starter_annual: {
+    durationDays: 30,
+    schedule: [
+      { days: 0, multiplier: 0.25 }, // Week 1: 25%
+      { days: 7, multiplier: 0.5 }, // Week 2: 50%
+      { days: 14, multiplier: 0.75 }, // Week 3: 75%
+      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
+    ],
+  },
+
+  // Scale Up plans - 14 day faster ramp
+  scale_up_monthly: {
     durationDays: 14,
     schedule: [
       { days: 0, multiplier: 0.5 }, // Week 1: 50%
       { days: 7, multiplier: 1.0 }, // Week 2+: 100%
     ],
   },
+  scale_up_annual: {
+    durationDays: 14,
+    schedule: [
+      { days: 0, multiplier: 0.5 }, // Week 1: 50%
+      { days: 7, multiplier: 1.0 }, // Week 2+: 100%
+    ],
+  },
+
+  // Enterprise plans - 14 day faster ramp
+  enterprise_monthly: {
+    durationDays: 14,
+    schedule: [
+      { days: 0, multiplier: 0.5 }, // Week 1: 50%
+      { days: 7, multiplier: 1.0 }, // Week 2+: 100%
+    ],
+  },
+  enterprise_annual: {
+    durationDays: 14,
+    schedule: [
+      { days: 0, multiplier: 0.5 }, // Week 1: 50%
+      { days: 7, multiplier: 1.0 }, // Week 2+: 100%
+    ],
+  },
+
+  // Free plan - no cooldown
   free: {
     durationDays: 0,
-    schedule: [{ days: 0, multiplier: 1.0 }], // No cooldown
+    schedule: [{ days: 0, multiplier: 1.0 }],
+  },
+
+  // Default fallback - conservative 30 day ramp
+  default: {
+    durationDays: 30,
+    schedule: [
+      { days: 0, multiplier: 0.25 }, // Week 1: 25%
+      { days: 7, multiplier: 0.5 }, // Week 2: 50%
+      { days: 14, multiplier: 0.75 }, // Week 3: 75%
+      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
+    ],
   },
 } as const;
 
 /**
- * Calculate cooldown multiplier based on subscription age and plan tier
+ * Calculate cooldown multiplier based on subscription age and plan ID
  * Returns a value between 0 and 1 representing the percentage of entitlements available
+ * Falls back to default config if plan ID is not found
  */
 export function getCooldownMultiplier(subscriptionCreatedAt: Date, planId: PlanId): number {
-  const tier = getPlanTier(planId);
-  const config = COOLDOWN_CONFIG[tier];
+  const config = (COOLDOWN_CONFIG[planId] ?? COOLDOWN_CONFIG.default) as CooldownConfig;
 
   const daysSinceStart = Math.floor(
     (Date.now() - subscriptionCreatedAt.getTime()) / (1000 * 60 * 60 * 24)
   );
 
   // Find the applicable multiplier (last one where days <= daysSinceStart)
-  let multiplier: number = config.schedule[0].multiplier;
+  let multiplier: number = config.schedule[0]?.multiplier ?? 1.0;
   for (const step of config.schedule) {
     if (daysSinceStart >= step.days) {
       multiplier = step.multiplier;
