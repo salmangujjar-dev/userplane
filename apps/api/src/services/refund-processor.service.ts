@@ -8,8 +8,10 @@
  * Key design decisions:
  * - Refunds are tracked separately from subscriptions
  * - Payment ID is used to map to subscription via Dodo API
+ * - Cache invalidation on refund state changes
  */
 
+import type { CacheService } from '@workspace/cache';
 import type { DbClient } from '@workspace/db';
 import type { getDodoPaymentsClient } from '@workspace/payments/client';
 import type { DodoRefund, RefundEventType, WebhookPayload } from '@workspace/payments/types';
@@ -45,6 +47,7 @@ export interface RefundProcessorDeps {
   webhookEventsRepo: WebhookEventsRepository;
   db: DbClient;
   dodoClient?: ReturnType<typeof getDodoPaymentsClient>;
+  cacheService?: CacheService;
 }
 
 export class RefundProcessorService {
@@ -159,6 +162,19 @@ export class RefundProcessorService {
           { tx }
         );
       });
+
+      // Invalidate refund cache for this workspace (only for successful refunds)
+      if (workspaceId && status === 'succeeded' && this.deps.cacheService) {
+        try {
+          await this.deps.cacheService.invalidateRefund(workspaceId);
+          console.log(`[RefundProcessor] Invalidated refund cache for workspace: ${workspaceId}`);
+        } catch (cacheError) {
+          console.warn(
+            `[RefundProcessor] Failed to invalidate cache for workspace ${workspaceId}:`,
+            cacheError
+          );
+        }
+      }
 
       console.log(
         `[RefundProcessor] SUCCESS: Processed ${eventType} for refund ${refund.refund_id}`

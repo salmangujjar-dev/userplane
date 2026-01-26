@@ -7,8 +7,10 @@
  * - Out-of-order detection (compare timestamps/billing periods)
  * - Upstream verification (fetch from DodoPayments API when ambiguous)
  * - Audit trail (store all webhook events)
+ * - Cache invalidation on subscription state changes
  */
 
+import type { CacheService } from '@workspace/cache';
 import type { DbClient } from '@workspace/db';
 import { getDodoPaymentsClient } from '@workspace/payments/client';
 import { getPlanIdFromProductId } from '@workspace/payments/products';
@@ -57,6 +59,7 @@ export interface WebhookProcessorDeps {
   entitlementService: EntitlementService;
   db: DbClient;
   dodoClient?: ReturnType<typeof getDodoPaymentsClient>;
+  cacheService?: CacheService;
 }
 
 export class WebhookProcessorService {
@@ -343,6 +346,11 @@ export class WebhookProcessorService {
       { tx }
     );
 
+    // 9. Invalidate billing caches for this workspace
+    if (workspaceId) {
+      await this.invalidateBillingCache(workspaceId);
+    }
+
     console.log(`[WebhookProcessor] SUCCESS: ${current.status} → ${targetStatus}`);
 
     return {
@@ -462,6 +470,9 @@ export class WebhookProcessorService {
       console.log(`[WebhookProcessor] Updating entitlements for plan change to: ${planId}`);
       await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
 
+      // Invalidate billing caches for this workspace
+      await this.invalidateBillingCache(workspaceId);
+
       console.log(
         `[WebhookProcessor] SUCCESS: Updated existing subscription ${existingWorkspaceSubscription.status} → active`
       );
@@ -509,6 +520,9 @@ export class WebhookProcessorService {
       },
       { tx }
     );
+
+    // Invalidate billing caches for this workspace
+    await this.invalidateBillingCache(workspaceId);
 
     console.log(`[WebhookProcessor] SUCCESS: Created new subscription → active`);
 
@@ -603,5 +617,24 @@ export class WebhookProcessorService {
       options
     );
     return subscription?.workspaceId || null;
+  }
+
+  /**
+   * Invalidate all billing-related caches for a workspace
+   * Called after successful subscription state changes
+   */
+  private async invalidateBillingCache(workspaceId: string): Promise<void> {
+    if (!this.deps.cacheService) return;
+
+    try {
+      await this.deps.cacheService.invalidateWorkspaceBilling(workspaceId);
+      console.log(`[WebhookProcessor] Invalidated billing cache for workspace: ${workspaceId}`);
+    } catch (error) {
+      // Cache invalidation errors should not fail the webhook processing
+      console.warn(
+        `[WebhookProcessor] Failed to invalidate billing cache for workspace ${workspaceId}:`,
+        error
+      );
+    }
   }
 }

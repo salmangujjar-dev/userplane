@@ -11,6 +11,7 @@ import { CHECKOUT_PRODUCTS } from '@workspace/payments/products';
 import type { DodoPaymentsConfig } from '@workspace/payments/types';
 
 import { db } from '@/api/clients/db';
+import { cacheService } from '@/api/clients/redis';
 import { env } from '@/api/env';
 import { createBillingWebhookHandler } from '@/api/handlers/billing-webhook.handler';
 import { getWebhookContext } from '@/api/lib/webhook-context';
@@ -55,6 +56,7 @@ const webhookProcessor = new WebhookProcessorService({
   entitlementService,
   db,
   dodoClient, // For upstream verification
+  cacheService, // For cache invalidation
 });
 
 // Create dispute processor service for handling payment disputes
@@ -64,6 +66,7 @@ const disputeProcessor = new DisputeProcessorService({
   webhookEventsRepo,
   db,
   dodoClient, // For payment → subscription mapping
+  cacheService, // For cache invalidation
 });
 
 // Create refund processor service for handling payment refunds
@@ -73,6 +76,7 @@ const refundProcessor = new RefundProcessorService({
   webhookEventsRepo,
   db,
   dodoClient, // For payment → subscription mapping
+  cacheService, // For cache invalidation
 });
 
 // Create billing webhook handler

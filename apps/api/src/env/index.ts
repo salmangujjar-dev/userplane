@@ -26,6 +26,11 @@ interface DodoPaymentsConfig {
   environment: 'test_mode' | 'live_mode';
 }
 
+interface RedisConfig {
+  url?: string;
+  token?: string;
+}
+
 interface EnvConfig {
   port: number;
   host: string;
@@ -93,6 +98,11 @@ interface EnvConfig {
     windowMs: number;
     maxRequests: number;
   };
+  redis: RedisConfig;
+  cache: {
+    enabled: boolean;
+  };
+  rateLimitEnabled: boolean;
   trigger: {
     secretKey?: string;
     workspaceSweepLookbackDays: number;
@@ -243,6 +253,14 @@ export function loadEnvConfig(): EnvConfig {
       windowMs: parseInteger(process.env.RATE_LIMIT_WINDOW, 60000),
       maxRequests: parseInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
     },
+    redis: {
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    },
+    cache: {
+      enabled: parseBoolean(process.env.CACHE_ENABLED, true),
+    },
+    rateLimitEnabled: parseBoolean(process.env.RATE_LIMIT_ENABLED, true),
     trigger: {
       secretKey: process.env.TRIGGER_SECRET_KEY,
       workspaceSweepLookbackDays: parseInteger(process.env.WORKSPACE_SWEEP_LOOKBACK_DAYS, 7), // 7 days
@@ -422,6 +440,14 @@ export function logConfig(): void {
         workspaceRestorationWindowDays: `${env.trigger.workspaceRestorationWindowDays} days`,
         projectRestorationWindowDays: `${env.trigger.projectRestorationWindowDays} days`,
       },
+      redis: {
+        url: env.redis.url ? 'Configured' : 'Not configured',
+        token: env.redis.token ? 'Configured' : 'Not configured',
+      },
+      cache: {
+        enabled: env.cache.enabled,
+      },
+      rateLimitEnabled: env.rateLimitEnabled,
     },
     'Environment configuration loaded'
   );

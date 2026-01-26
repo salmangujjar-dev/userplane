@@ -11,6 +11,7 @@
 
 import { db } from '@/api/clients/db';
 import { getDodoClient } from '@/api/clients/dodo';
+import { cacheService } from '@/api/clients/redis';
 import {
   getClientActionsStorage,
   getConsoleLogsStorage,
@@ -78,12 +79,14 @@ export const billingService = new BillingService({
   disputeRepo,
   refundRepo,
   dodoClient: getDodoClient(),
+  cacheService,
 });
 
 export const entitlementService = new EntitlementService({
   entitlementRepo,
   billingService,
   subscriptionRepo,
+  cacheService,
 });
 
 // Level 1: Services with no dependencies on other services
