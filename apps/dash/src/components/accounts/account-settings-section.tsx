@@ -5,7 +5,6 @@ import { AccountNameSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { cn } from '@workspace/ui/lib/utils';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -99,19 +98,11 @@ export function AccountSettingsSection() {
                   />
                 )}
               />
-              <Button
-                type="submit"
-                disabled={updateNameMutation.isPending || !isDirty || !isValid}
-                size="default"
-                className={cn(
-                  'transition-opacity',
-                  (!isDirty || !isValid) && 'opacity-0 pointer-events-none'
-                )}
-                aria-hidden={!isDirty || !isValid}
-                tabIndex={isDirty && isValid ? 0 : -1}
-              >
-                {updateNameMutation.isPending ? 'Saving...' : 'Save'}
-              </Button>
+              {isDirty && isValid && (
+                <Button type="submit" disabled={updateNameMutation.isPending} size="default">
+                  {updateNameMutation.isPending ? 'Saving...' : 'Save'}
+                </Button>
+              )}
             </div>
             {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           </div>

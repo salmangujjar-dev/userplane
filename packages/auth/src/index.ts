@@ -4,6 +4,7 @@ import { APIError, betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, magicLink, openAPI } from 'better-auth/plugins';
 
+import { setFeatureFlagsConfig } from './flags';
 import { authMiddlewareHook, userCreateHook } from './hooks';
 import { ac, adminRole, csmRole, userRole } from './permissions';
 
@@ -54,6 +55,15 @@ export interface DeleteUserConfig {
   afterDelete?: (user: { id: string; email: string; name: string }) => Promise<void>;
 }
 
+export interface FeatureFlagsConfig {
+  /** Enable email normalization during user creation */
+  enableEmailNormalization?: boolean;
+  /** Allow disposable email addresses during signup */
+  allowDisposableEmail?: boolean;
+  /** Enable name normalization from email during user creation */
+  enableNameNormalization?: boolean;
+}
+
 export interface AuthConfig {
   database: DbClient;
   secret: string;
@@ -70,6 +80,8 @@ export interface AuthConfig {
   admin?: AdminConfig;
   email: EmailConfig;
   deleteUser?: DeleteUserConfig;
+  /** Feature flags configuration - overrides environment variables */
+  featureFlags?: FeatureFlagsConfig;
   /** Additional plugins to include (e.g., DodoPayments) */
   plugins?: BetterAuthPlugin[];
 }
@@ -78,6 +90,11 @@ export function createAuth(config: AuthConfig) {
   const nodeEnv = config.nodeEnv || (process.env.NODE_ENV as typeof config.nodeEnv);
   const isProduction = nodeEnv === 'production';
   const isDevelopment = !isProduction;
+
+  // Register feature flags config for use in hooks
+  if (config.featureFlags) {
+    setFeatureFlagsConfig(config.featureFlags);
+  }
 
   return betterAuth({
     database: drizzleAdapter(config.database, {
