@@ -25,6 +25,7 @@ import { planModalParser } from '@/lib/parsers';
 interface PlanSelectionModalProps {
   onPlanSelect: (planId: string) => void;
   defaultPlan?: string;
+  currentPlanName: string | null;
 }
 
 interface PlanHighlightProps {
@@ -81,6 +82,7 @@ interface PlanCardProps {
   plan: BasePricingPlan;
   highlights: string[];
   isSelected: boolean;
+  isCurrent: boolean;
   isAnnual: boolean;
   minHighlights: number;
   onSelect: () => void;
@@ -91,6 +93,7 @@ function PlanCard({
   plan,
   highlights,
   isSelected,
+  isCurrent,
   isAnnual,
   minHighlights,
   onSelect,
@@ -110,11 +113,13 @@ function PlanCard({
 
   return (
     <div
-      onClick={onSelect}
-      className={`flex flex-col rounded-2xl p-6 relative bg-white border transition-all cursor-pointer ${
-        isSelected
-          ? 'border-blue-300 shadow-lg shadow-blue-100/50'
-          : 'border-zinc-200 hover:border-zinc-300'
+      onClick={isCurrent ? undefined : onSelect}
+      className={`flex flex-col rounded-2xl p-6 relative bg-white border transition-all ${
+        isCurrent
+          ? 'border-zinc-200 cursor-default'
+          : isSelected
+            ? 'border-blue-300 shadow-lg shadow-blue-100/50 cursor-pointer'
+            : 'border-zinc-200 hover:border-zinc-300 cursor-pointer'
       }`}
     >
       <div className="flex items-center gap-2 mb-4">
@@ -147,20 +152,25 @@ function PlanCard({
         ))}
       </ul>
 
-      {isSelected && (
+      {isCurrent ? (
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onCheckout();
-          }}
-          className={`w-full rounded-full px-6 py-2.5 font-medium transition-colors ${
-            isSelected
-              ? 'bg-foreground text-background hover:bg-foreground/90'
-              : 'bg-white text-foreground border border-zinc-300 hover:bg-zinc-50'
-          }`}
+          disabled
+          className="w-full rounded-full px-6 py-2.5 font-medium border border-zinc-300 text-muted-foreground bg-white cursor-default"
         >
-          {isCustom ? 'Talk to sales' : 'Continue to checkout'}
+          Current
         </button>
+      ) : (
+        isSelected && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCheckout();
+            }}
+            className="w-full rounded-full px-6 py-2.5 font-medium transition-colors bg-foreground text-background hover:bg-foreground/90"
+          >
+            {isCustom ? 'Talk to sales' : 'Continue to checkout'}
+          </button>
+        )
       )}
     </div>
   );
@@ -169,6 +179,7 @@ function PlanCard({
 export function PlanSelectionModal({
   onPlanSelect,
   defaultPlan = 'Scale Up',
+  currentPlanName,
 }: PlanSelectionModalProps) {
   const [planModal, setPlanModal] = useQueryState('plan-modal', planModalParser);
   const [billingCycle, setBillingCycle] = useState<PlanCycle>('annual');
@@ -246,6 +257,7 @@ export function PlanSelectionModal({
                 plan={essential}
                 highlights={essentialHighlights}
                 isSelected={selectedPlanName === 'Essential'}
+                isCurrent={currentPlanName === 'Essential'}
                 isAnnual={isAnnual}
                 minHighlights={maxHighlights}
                 onSelect={() => setSelectedPlanName('Essential')}
@@ -256,6 +268,7 @@ export function PlanSelectionModal({
               plan={starter}
               highlights={starterHighlights}
               isSelected={selectedPlanName === 'Starter'}
+              isCurrent={currentPlanName === 'Starter'}
               isAnnual={isAnnual}
               minHighlights={maxHighlights}
               onSelect={() => setSelectedPlanName('Starter')}
@@ -265,6 +278,7 @@ export function PlanSelectionModal({
               plan={scaleUp}
               highlights={scaleUpHighlights}
               isSelected={selectedPlanName === 'Scale Up'}
+              isCurrent={currentPlanName === 'Scale Up'}
               isAnnual={isAnnual}
               minHighlights={maxHighlights}
               onSelect={() => setSelectedPlanName('Scale Up')}
@@ -274,6 +288,7 @@ export function PlanSelectionModal({
               plan={enterprise}
               highlights={enterpriseHighlights}
               isSelected={selectedPlanName === 'Enterprise'}
+              isCurrent={currentPlanName === 'Enterprise'}
               isAnnual={isAnnual}
               minHighlights={maxHighlights}
               onSelect={() => setSelectedPlanName('Enterprise')}

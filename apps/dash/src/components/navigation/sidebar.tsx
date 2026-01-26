@@ -40,6 +40,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useSession } from '@/hooks/use-session';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import { useWorkspaces } from '@/hooks/use-workspaces';
 import { planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
@@ -72,6 +73,7 @@ export function Sidebar() {
   });
   const { data: workspaceResult } = useWorkspace();
   const { data: subscriptionResult } = useSubscriptionStatus();
+  const { data: roleResult } = useWorkspaceRole();
   const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
   const { signOut } = useAuth();
   const { hasAdminAccess } = useSession();
@@ -98,11 +100,45 @@ export function Sidebar() {
     subscriptionData?.contractDetail.cancelAtPeriodEnd
   );
 
+  // Predict which flow the modal will take to show appropriate loading skeleton
+  const getPredictedFlow = (): 'checkout' | 'preview' | 'request' | 'unknown' => {
+    // Need subscription data to predict
+    if (!subscriptionResult?.success) return 'unknown';
+
+    const hasActiveSubscription =
+      subscriptionData?.contractDetail.planId &&
+      subscriptionData?.accessDetail.accessStatus === 'active';
+
+    // No active subscription → checkout flow
+    if (!hasActiveSubscription) {
+      return 'checkout';
+    }
+
+    // Have subscription, check role
+    if (roleResult?.success) {
+      const role = roleResult.data.workspaceRole;
+      if (role === 'owner' || role === 'admin') {
+        return 'preview';
+      }
+      return 'request';
+    }
+
+    // Have subscription but no role data yet → likely preview (most common)
+    return 'preview';
+  };
+
   /**
    * Handle plan badge click - shows plan selection modal for all users
+   * Shows detailed mode (all plans) if no subscription, suggested mode otherwise
    */
   const handlePlanClick = () => {
-    setPlanModal('suggested');
+    const hasActiveSubscription =
+      subscriptionData?.contractDetail.planId &&
+      subscriptionData?.accessDetail.accessStatus === 'active';
+
+    // No subscription → show all plans (detailed mode)
+    // Has subscription → show suggested upgrade plans
+    setPlanModal(hasActiveSubscription ? 'suggested' : 'detailed');
   };
 
   const handlePlanSelect = (planId: string) => {
@@ -316,13 +352,17 @@ export function Sidebar() {
         </div>
       )}
 
-      <PlanSelectionModal onPlanSelect={handlePlanSelect} />
+      <PlanSelectionModal
+        onPlanSelect={handlePlanSelect}
+        currentPlanName={subscriptionData?.contractDetail.planName ?? null}
+      />
 
       <PlanChangePreviewModal
         open={showPlanChangePreview}
         onOpenChange={setShowPlanChangePreview}
         newPlanId={selectedPlanIdForChange}
         onComplete={handlePlanChangeComplete}
+        predictedFlow={getPredictedFlow()}
       />
     </aside>
   );
