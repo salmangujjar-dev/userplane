@@ -201,12 +201,38 @@ export const PreviewPlanChangeSchema = z.object({
 });
 
 /**
- * Charge/credit amount details
+ * Line item for proration breakdown
+ */
+export const LineItemSchema = z.object({
+  name: z.string(),
+  description: z.string().nullable(),
+  unitPrice: z.number(),
+  quantity: z.number(),
+  tax: z.number().nullable(),
+  taxRate: z.number().nullable(),
+  prorationFactor: z.number().nullable(),
+  type: z.string(),
+});
+
+/**
+ * Charge summary details
+ */
+export const ChargeSummarySchema = z.object({
+  currency: z.string(),
+  totalAmount: z.number(),
+  tax: z.number().nullable(),
+  customerCredits: z.number(),
+});
+
+/**
+ * Charge/credit amount details with line items
  */
 export const ChargeAmountSchema = z.object({
   currency: z.string(),
   total: z.number(),
   summary: z.string(),
+  lineItems: z.array(LineItemSchema),
+  chargeSummary: ChargeSummarySchema,
 });
 
 /**
@@ -228,6 +254,9 @@ export const PlanChangePreviewDataSchema = z.object({
     planId: z.string(),
     planName: z.string(),
     billingInterval: z.string(),
+    nextBillingDate: z.string(),
+    recurringPreTaxAmount: z.number(),
+    paymentFrequencyInterval: z.string(),
   }),
   currentPlan: z.object({
     planId: z.string(),

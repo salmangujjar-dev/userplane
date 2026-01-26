@@ -257,6 +257,7 @@ export class BillingService {
       const summary = preview.immediate_charge.summary;
       const totalAmount = summary.total_amount;
       const currency = summary.currency;
+      const lineItems = preview.immediate_charge.line_items || [];
 
       // Determine if this is an upgrade by checking if total_amount is positive
       // Positive = upgrade (charge), negative or zero with credits = downgrade
@@ -266,12 +267,36 @@ export class BillingService {
       // The customer_credits field in summary indicates credits applied
       const hasCredit = summary.customer_credits > 0;
 
+      // Map line items from DodoPayments format to our format
+      // Filter for subscription/addon line items (exclude meters)
+      const mappedLineItems = lineItems
+        .filter(
+          (item): item is Extract<typeof item, { unit_price: number }> => 'unit_price' in item
+        )
+        .map((item) => ({
+          name: item.name || 'Subscription',
+          description: item.description || null,
+          unitPrice: item.unit_price / 100, // Convert from cents to dollars
+          quantity: item.quantity,
+          tax: item.tax ? item.tax / 100 : null, // Convert from cents to dollars
+          taxRate: item.tax_rate || null,
+          prorationFactor: item.proration_factor || null,
+          type: item.type,
+        }));
+
       return {
         immediateCharge: isUpgrade
           ? {
               currency,
               total: totalAmount / 100, // Convert from cents to dollars
               summary: `${currency} ${(totalAmount / 100).toFixed(2)} due today`,
+              lineItems: mappedLineItems,
+              chargeSummary: {
+                currency,
+                totalAmount: totalAmount / 100, // Convert from cents to dollars
+                tax: summary.tax ? summary.tax / 100 : null, // Convert from cents to dollars
+                customerCredits: summary.customer_credits / 100, // Convert from cents to dollars
+              },
             }
           : null,
         creditAmount: hasCredit
@@ -285,6 +310,9 @@ export class BillingService {
           planId: newPlanId,
           planName: newPlanName,
           billingInterval: newPlanId.includes('annual') ? 'annual' : 'monthly',
+          nextBillingDate: preview.new_plan.next_billing_date,
+          recurringPreTaxAmount: preview.new_plan.recurring_pre_tax_amount / 100, // Convert from cents to dollars
+          paymentFrequencyInterval: preview.new_plan.payment_frequency_interval,
         },
         currentPlan: {
           planId: subscription.planId,
