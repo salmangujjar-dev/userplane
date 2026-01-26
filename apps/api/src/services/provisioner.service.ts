@@ -6,8 +6,10 @@
 
 import { provisionerError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
+import { ABUSE_PREVENTION } from '@workspace/pricing';
 
 import { deriveWorkspaceName } from '@/api/lib/workspace';
+import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { DomainService } from '@/api/services/domain.service';
 import { EntitlementService } from '@/api/services/entitlement.service';
@@ -25,6 +27,7 @@ export interface ProvisionerServiceDeps {
   tokenService: TokenService;
   entitlementService: EntitlementService;
   workspaceRepo: WorkspaceRepository;
+  memberRepo: WorkspaceMemberRepository;
   db: DbClient;
 }
 
@@ -110,6 +113,7 @@ export class ProvisionerService {
    * Private method that does the actual workspace provisioning
    * Creates workspace, project, member, and domain in a transaction
    * All workspaces start on free plan
+   * Throws WORKSPACE_CREATION_LIMIT_EXCEEDED if user has hit workspace creation limit
    * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
    * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
    */
@@ -121,6 +125,19 @@ export class ProvisionerService {
     userEmail: string;
   }): Promise<WorkspaceCreationResult> {
     const { url, predeterminedWorkspaceId, userId, userName, userEmail } = params;
+
+    // Check workspace creation rate limit (abuse prevention)
+    const workspaceCount = await this.deps.memberRepo.countUniqueWorkspacesForUserInPeriod(
+      userId,
+      ABUSE_PREVENTION.workspaceCreation.lookbackDays
+    );
+
+    if (workspaceCount >= ABUSE_PREVENTION.workspaceCreation.maxPerYear) {
+      throw provisionerError.WORKSPACE_CREATION_LIMIT_EXCEEDED({
+        current: workspaceCount,
+        limit: ABUSE_PREVENTION.workspaceCreation.maxPerYear,
+      });
+    }
 
     // Derive workspace name from URL
     const workspaceName = deriveWorkspaceName(url, userName);
