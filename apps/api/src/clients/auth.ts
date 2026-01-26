@@ -109,6 +109,10 @@ export const auth = createAuth({
     adminUserIds: env.admin.userIds,
   },
   plugins: [dodoPaymentsPlugin],
+  featureFlags: {
+    enableEmailNormalization: true,
+    enableNameNormalization: true,
+  },
   email: {
     sendVerificationEmail: async ({ user, url }) => {
       await emailService.sendSafeEmailVerification(

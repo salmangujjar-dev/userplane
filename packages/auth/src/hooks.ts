@@ -3,7 +3,11 @@ import { isDisposableEmail } from '@workspace/shared';
 import { APIError } from 'better-auth';
 import { createAuthMiddleware } from 'better-auth/api';
 
-import { isDisposableEmailCheckEnabled, isEmailNormalizationEnabled } from './flags';
+import {
+  isDisposableEmailCheckEnabled,
+  isEmailNormalizationEnabled,
+  isNameNormalizationEnabled,
+} from './flags';
 
 /**
  * Normalize user email during creation
@@ -24,15 +28,77 @@ function normalizeUserEmail(user: { email: string; [key: string]: unknown }): {
 }
 
 /**
- * Database hook to normalize user email before creation
+ * Populate user name from email if name is empty
+ * - Extracts username from email (part before @)
+ * - Capitalizes first letter
+ * - Replaces dots, hyphens, underscores with spaces
+ *
+ * Why: Ensures users always have a displayable name even if they don't provide one
+ */
+function populateNameFromEmail(user: {
+  email: string;
+  name?: string | null;
+  [key: string]: unknown;
+}): {
+  email: string;
+  name: string;
+  [key: string]: unknown;
+} {
+  if (user.name && user.name.trim() !== '') {
+    return { ...user, name: user.name };
+  }
+
+  const emailUsername = user.email.split('@')[0];
+  if (!emailUsername) {
+    return { ...user, name: 'User' };
+  }
+
+  const formattedName = emailUsername
+    .replace(/[._-]/g, ' ')
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+
+  return { ...user, name: formattedName.trim() !== '' ? formattedName : 'User' };
+}
+
+/**
+ * Database hook to normalize user email and populate name before creation
+ * - Normalizes email (if enabled)
+ * - Populates name from email if empty (if enabled)
  */
 export const userCreateHook = {
-  before: async (user: { email: string; [key: string]: unknown }) => {
-    if (!isEmailNormalizationEnabled()) {
-      return { data: user };
+  before: async (user: {
+    email: string;
+    name?: string | null;
+    [key: string]: unknown;
+  }): Promise<{ data: { email: string; name: string; [key: string]: unknown } }> => {
+    let processedUser = user;
+
+    // This is done to ensure the email from non UI input fields are normalized
+    // For example: Google OAuth flow or other onboarding flows outside of the dashboard
+    if (isEmailNormalizationEnabled()) {
+      processedUser = normalizeUserEmail(processedUser);
     }
+
+    // Dodopayment requires a name to kickoff the checkout process
+    // If the name is empty, we'll use the email username as a fallback
+    // If the email username is empty, we'll use 'User' as a fallback
+    // WARNING: Disabling this flag may break Dodopayment integration
+    if (isNameNormalizationEnabled()) {
+      const result = populateNameFromEmail(processedUser);
+      return {
+        data: result,
+      };
+    }
+
+    // If name normalization is disabled, we still need to ensure name is a string
+    // to satisfy the return type and database constraints
     return {
-      data: normalizeUserEmail(user),
+      data: {
+        ...processedUser,
+        name: processedUser.name || 'User',
+      },
     };
   },
 };
