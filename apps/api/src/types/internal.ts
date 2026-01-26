@@ -30,6 +30,7 @@ import type {
   DeletionScheduledEmailProps,
   EmailVerificationEmailProps,
   MagicLinkEmailProps,
+  PlanChangeRequestEmailProps,
   ProjectDeletionScheduledEmailProps,
   ProjectRecoveryConfirmationEmailProps,
   ProjectRecoveryPartiallyEmailProps,
@@ -220,6 +221,16 @@ export interface ScheduledEmailParams {
  * Access request email parameters
  */
 export type AccessRequestEmailParams = AccessRequestEmailProps;
+
+/**
+ * Plan change request email parameters
+ * Sent to workspace owners when a team member requests a plan upgrade/downgrade
+ * Extends email props with workspaceId and planId for idempotency key and billing URL generation
+ */
+export interface PlanChangeRequestEmailParams extends PlanChangeRequestEmailProps {
+  workspaceId: string;
+  planId: string;
+}
 
 /**
  * Domain developer instructions email parameters

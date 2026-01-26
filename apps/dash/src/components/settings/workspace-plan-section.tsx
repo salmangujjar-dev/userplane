@@ -14,6 +14,7 @@ import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
 import { BillingDetailsModal } from '@/components/modals/billing-details-modal';
+import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-modal';
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { useWorkspace } from '@/hooks/use-workspace';
@@ -234,6 +235,8 @@ export function WorkspacePlanSection() {
 
   const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
   const [showBillingDetails, setShowBillingDetails] = useState(false);
+  const [showPlanChangePreview, setShowPlanChangePreview] = useState(false);
+  const [selectedPlanIdForChange, setSelectedPlanIdForChange] = useState<PlanId | null>(null);
 
   const { mutate: createCheckout } = useCreateCheckout();
   const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
@@ -241,14 +244,30 @@ export function WorkspacePlanSection() {
   const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
 
-    // Create checkout with selected plan ID
-    // The API will handle converting planId to the correct product slug
-    createCheckout({
-      planId: planId as PlanId,
-      workspaceId,
-    });
+    // Check if user has an active subscription that allows plan changes
+    const hasActiveSubscription =
+      subscriptionData?.contractDetail.planId !== null &&
+      (subscriptionData?.contractDetail.status === 'active' ||
+        (subscriptionData?.contractDetail.status === 'cancelled' &&
+          subscriptionData?.contractDetail.cancelAtPeriodEnd));
 
-    setPlanModal(null);
+    if (hasActiveSubscription) {
+      // Plan change flow - show preview modal
+      setSelectedPlanIdForChange(planId as PlanId);
+      setShowPlanChangePreview(true);
+      setPlanModal(null);
+    } else {
+      // Checkout flow - create new subscription
+      createCheckout({
+        planId: planId as PlanId,
+        workspaceId,
+      });
+      setPlanModal(null);
+    }
+  };
+
+  const handlePlanChangeComplete = () => {
+    setSelectedPlanIdForChange(null);
   };
 
   const handleManageBilling = () => {
@@ -401,6 +420,13 @@ export function WorkspacePlanSection() {
               isPortalLoading={isPortalPending}
             />
           )}
+
+        <PlanChangePreviewModal
+          open={showPlanChangePreview}
+          onOpenChange={setShowPlanChangePreview}
+          newPlanId={selectedPlanIdForChange}
+          onComplete={handlePlanChangeComplete}
+        />
       </div>
     </TooltipProvider>
   );

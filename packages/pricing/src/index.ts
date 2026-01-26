@@ -50,6 +50,23 @@ export const RESOURCE_TYPE_VALUES = [
 export type ResourceType = (typeof RESOURCE_TYPE_VALUES)[number];
 
 /**
+ * Lifetime resources - accumulate over the subscription lifetime and are NOT reset on renewal
+ * Examples: team members (seats)
+ */
+export const LIFETIME_RESOURCES: readonly ResourceType[] = ['seats'] as const;
+
+/**
+ * Period-based resources - measured per billing cycle and reset to 0 on subscription renewal
+ * Examples: recordings per month, links per month, screenshots per month, files per month
+ */
+export const PERIOD_BASED_RESOURCES: readonly ResourceType[] = [
+  'recordings',
+  'links',
+  'screenshots',
+  'files',
+] as const;
+
+/**
  * Resource limit configuration for a plan
  */
 export interface ResourceLimits {
@@ -81,14 +98,14 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   essential_monthly: {
     seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
     recordings: { quotedLimit: 25, creditLimit: 0, softLimit: 25, hardLimit: 35 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: 70, hardLimit: 90 },
     screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
     files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
   essential_annual: {
     seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
     recordings: { quotedLimit: 25, creditLimit: 0, softLimit: 25, hardLimit: 35 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: 70, hardLimit: 90 },
     screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
     files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
@@ -97,14 +114,14 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   starter_monthly: {
     seats: { quotedLimit: 10, creditLimit: 10, softLimit: 10, hardLimit: 20 },
     recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 45, hardLimit: 85 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: 170, hardLimit: 215 },
     screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
     files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
   starter_annual: {
     seats: { quotedLimit: 10, creditLimit: 10, softLimit: 10, hardLimit: 20 },
     recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 45, hardLimit: 85 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: 170, hardLimit: 215 },
     screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
     files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
@@ -113,14 +130,14 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   scale_up_monthly: {
     seats: { quotedLimit: 15, creditLimit: 15, softLimit: 15, hardLimit: 30 },
     recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 75, hardLimit: 180 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: 360, hardLimit: 450 },
     screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
     files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
   },
   scale_up_annual: {
     seats: { quotedLimit: 15, creditLimit: 15, softLimit: 15, hardLimit: 30 },
     recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 75, hardLimit: 180 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: 360, hardLimit: 450 },
     screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
     files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
   },
@@ -129,7 +146,7 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   free: {
     seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
     recordings: { quotedLimit: 3, creditLimit: 0, softLimit: 3, hardLimit: 3 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: 6, hardLimit: 8 },
     screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
     files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },
@@ -138,14 +155,14 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   enterprise_monthly: {
     seats: { quotedLimit: 30, creditLimit: 15, softLimit: 30, hardLimit: 45 },
     recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 150, hardLimit: 700 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: 1400, hardLimit: 1750 },
     screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
     files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
   },
   enterprise_annual: {
     seats: { quotedLimit: 30, creditLimit: 15, softLimit: 30, hardLimit: 45 },
     recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 150, hardLimit: 700 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    links: { quotedLimit: -1, creditLimit: 0, softLimit: 1400, hardLimit: 1750 },
     screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
     files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
   },

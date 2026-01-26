@@ -8,12 +8,18 @@ import { oc } from '@orpc/contract';
 
 import {
   BillingErrors,
+  ChangePlanSchema,
   CheckoutSessionResponseSchema,
   CreateCheckoutSessionSchema,
   CustomerPortalResponseSchema,
   GetCustomerPortalSchema,
   GetSubscriptionStatusSchema,
   GetUsageSummarySchema,
+  PlanChangePreviewResponseSchema,
+  PlanChangeRequestResponseSchema,
+  PlanChangeResultResponseSchema,
+  PreviewPlanChangeSchema,
+  RequestPlanChangeSchema,
   SubscriptionStatusResponseSchema,
   UsageSummaryResponseSchema,
 } from '../schemas';
@@ -88,6 +94,58 @@ export const billingContract = oc.router({
     })
     .input(GetUsageSummarySchema)
     .output(UsageSummaryResponseSchema)
+    .errors(BillingErrors),
+
+  /**
+   * POST /billing/:workspaceId/preview-plan-change
+   * Preview proration details before changing subscription plan
+   * Requires workspace admin/owner role
+   */
+  previewPlanChange: oc
+    .route({
+      method: 'POST',
+      path: '/billing/{workspaceId}/preview-plan-change',
+      inputStructure: 'detailed',
+      summary: 'Preview plan change',
+      description: 'Preview proration details for upgrading or downgrading subscription plan',
+    })
+    .input(PreviewPlanChangeSchema)
+    .output(PlanChangePreviewResponseSchema)
+    .errors(BillingErrors),
+
+  /**
+   * POST /billing/:workspaceId/change-plan
+   * Execute subscription plan change
+   * Requires workspace admin/owner role
+   */
+  changePlan: oc
+    .route({
+      method: 'POST',
+      path: '/billing/{workspaceId}/change-plan',
+      inputStructure: 'detailed',
+      summary: 'Change subscription plan',
+      description: 'Change the subscription plan (upgrade or downgrade)',
+    })
+    .input(ChangePlanSchema)
+    .output(PlanChangeResultResponseSchema)
+    .errors(BillingErrors),
+
+  /**
+   * POST /billing/:workspaceId/request-plan-change
+   * Request a plan change (for non-admins)
+   * Sends email notification to workspace owner
+   * Requires workspace membership
+   */
+  requestPlanChange: oc
+    .route({
+      method: 'POST',
+      path: '/billing/{workspaceId}/request-plan-change',
+      inputStructure: 'detailed',
+      summary: 'Request plan change',
+      description: 'Request a plan change - sends notification to workspace owner',
+    })
+    .input(RequestPlanChangeSchema)
+    .output(PlanChangeRequestResponseSchema)
     .errors(BillingErrors),
 });
 

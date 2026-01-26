@@ -5,9 +5,9 @@
  */
 
 import type { DbClient } from '@workspace/db';
-import { and, eq, gte, sql } from '@workspace/db';
+import { and, eq, gte, inArray, sql } from '@workspace/db';
 import { entitlements } from '@workspace/db';
-import type { ResourceType } from '@workspace/pricing';
+import { PERIOD_BASED_RESOURCES, type ResourceType } from '@workspace/pricing';
 
 import { generateEntitlementId } from '@/api/lib/id';
 import type { Transaction } from '@/api/types';
@@ -309,12 +309,14 @@ export class EntitlementRepository {
   }
 
   /**
-   * Reset period-based resources (recordings)
+   * Reset period-based resources (recordings, screenshots, files)
    * Called on subscription renewal
+   *
+   * Period-based resources are measured per billing cycle and reset to 0 when the subscription renews.
+   * Lifetime resources (seats, links) are NOT reset as they accumulate over the subscription lifetime.
    */
   async resetPeriodResources(workspaceId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
-    const periodResources: ResourceType[] = ['recordings'];
 
     return dbClient
       .update(entitlements)
@@ -326,7 +328,7 @@ export class EntitlementRepository {
         and(
           eq(entitlements.workspaceId, workspaceId),
           eq(entitlements.isDeleted, false),
-          sql`${entitlements.resourceType} = ANY(${periodResources})`
+          inArray(entitlements.resourceType, [...PERIOD_BASED_RESOURCES])
         )
       )
       .returning();

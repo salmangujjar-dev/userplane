@@ -10,6 +10,7 @@
  */
 
 import { db } from '@/api/clients/db';
+import { getDodoClient } from '@/api/clients/dodo';
 import {
   getClientActionsStorage,
   getConsoleLogsStorage,
@@ -76,6 +77,7 @@ export const billingService = new BillingService({
   subscriptionRepo,
   disputeRepo,
   refundRepo,
+  dodoClient: getDodoClient(),
 });
 
 export const entitlementService = new EntitlementService({

@@ -135,6 +135,13 @@ type SubscriptionPlanChangeKeyParams = {
   subscriptionId: string;
 };
 
+type PlanChangeRequestKeyParams = {
+  to: string | string[];
+  workspaceId: string;
+  planId: string;
+  requesterEmail: string;
+};
+
 type SubscriptionReverseTrialKeyParams = {
   to: string | string[];
   /** Subscription or workspace ID */
@@ -370,6 +377,18 @@ export function subscriptionPlanChangeKey(params: SubscriptionPlanChangeKeyParam
 export function subscriptionReverseTrialKey(params: SubscriptionReverseTrialKeyParams): string {
   const recipients = formatRecipients(params.to);
   return ensureKeyLength(`subscription-reverse-trial/${recipients}/${params.subscriptionId}`);
+}
+
+/**
+ * Generate idempotency key for plan change request
+ * Uses workspaceId, planId, and requesterEmail - one request per plan per requester
+ */
+export function planChangeRequestKey(params: PlanChangeRequestKeyParams): string {
+  const recipients = formatRecipients(params.to);
+  const requesterHash = hashValue(params.requesterEmail);
+  return ensureKeyLength(
+    `plan-change-request/${recipients}/${params.workspaceId}/${params.planId}/${requesterHash}`
+  );
 }
 
 /**

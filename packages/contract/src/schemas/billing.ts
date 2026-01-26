@@ -34,6 +34,16 @@ export const ContractDetailSchema = z.object({
 });
 
 /**
+ * Access status enum - subscription access state
+ */
+export const AccessStatusSchema = z.enum(['active', 'grace', 'inactive', 'disputed', 'refunded']);
+
+/**
+ * Effective plan ID - union of paid plan IDs or 'free'
+ */
+export const EffectivePlanIdSchema = z.union([z.enum(PLAN_IDS), z.literal('free')]);
+
+/**
  * Access detail - computed access/entitlement information
  *
  * effectivePlanId:
@@ -50,8 +60,8 @@ export const ContractDetailSchema = z.object({
  * Note: UI can derive daysRemaining from contractDetail.onHoldSince or contractDetail.currentPeriodEnd
  */
 export const AccessDetailSchema = z.object({
-  effectivePlanId: z.string(),
-  accessStatus: z.enum(['active', 'grace', 'inactive', 'disputed', 'refunded']),
+  effectivePlanId: EffectivePlanIdSchema,
+  accessStatus: AccessStatusSchema,
 });
 
 /**
@@ -175,14 +185,156 @@ export const GetUsageSummarySchema = z.object({
 export const UsageSummaryResponseSchema = ApiResponseSchema(UsageSummaryDataSchema);
 
 // ============================================================================
+// Plan Change Preview
+// ============================================================================
+
+/**
+ * Preview plan change input
+ */
+export const PreviewPlanChangeSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    planId: z.enum(PLAN_IDS),
+  }),
+});
+
+/**
+ * Charge/credit amount details
+ */
+export const ChargeAmountSchema = z.object({
+  currency: z.string(),
+  total: z.number(),
+  summary: z.string(),
+});
+
+/**
+ * Credit amount details
+ */
+export const CreditAmountSchema = z.object({
+  currency: z.string(),
+  amount: z.number(),
+  summary: z.string(),
+});
+
+/**
+ * Plan change preview response data
+ */
+export const PlanChangePreviewDataSchema = z.object({
+  immediateCharge: ChargeAmountSchema.nullable(),
+  creditAmount: CreditAmountSchema.nullable(),
+  newPlan: z.object({
+    planId: z.string(),
+    planName: z.string(),
+    billingInterval: z.string(),
+  }),
+  currentPlan: z.object({
+    planId: z.string(),
+    planName: z.string(),
+  }),
+  isUpgrade: z.boolean(),
+});
+
+/**
+ * Plan change preview response
+ */
+export const PlanChangePreviewResponseSchema = ApiResponseSchema(PlanChangePreviewDataSchema);
+
+// ============================================================================
+// Plan Change
+// ============================================================================
+
+/**
+ * Change plan input
+ */
+export const ChangePlanSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    planId: z.enum(PLAN_IDS),
+  }),
+});
+
+/**
+ * Plan change result response data
+ */
+export const PlanChangeResultDataSchema = z.object({
+  subscriptionId: z.string(),
+  status: z.string(),
+  newPlanId: z.string(),
+  newPlanName: z.string(),
+});
+
+/**
+ * Plan change result response
+ */
+export const PlanChangeResultResponseSchema = ApiResponseSchema(PlanChangeResultDataSchema);
+
+// ============================================================================
+// Upstream Payment Error Data
+// ============================================================================
+
+/**
+ * Structured error data for upstream payment service errors
+ * Used to provide actionable error details to the UI
+ */
+export const UpstreamPaymentErrorDataSchema = z.object({
+  code: z.string(),
+  message: z.string(),
+});
+
+// ============================================================================
+// Plan Change Request (for non-admins)
+// ============================================================================
+
+/**
+ * Request plan change input (for members who can't change plans directly)
+ */
+export const RequestPlanChangeSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    planId: z.enum(PLAN_IDS),
+    message: z.string().max(500).optional(),
+  }),
+});
+
+/**
+ * Plan change request response data
+ */
+export const PlanChangeRequestDataSchema = z.object({
+  requestId: z.string(),
+  status: z.literal('submitted'),
+  planId: z.string(),
+  planName: z.string(),
+});
+
+/**
+ * Plan change request response
+ */
+export const PlanChangeRequestResponseSchema = ApiResponseSchema(PlanChangeRequestDataSchema);
+
+// ============================================================================
 // Type exports
 // ============================================================================
 
 export type SubscriptionStatus = z.infer<typeof SubscriptionStatusSchema>;
 export type ContractDetail = z.infer<typeof ContractDetailSchema>;
+export type AccessStatus = z.infer<typeof AccessStatusSchema>;
+export type EffectivePlanId = z.infer<typeof EffectivePlanIdSchema>;
 export type AccessDetail = z.infer<typeof AccessDetailSchema>;
 export type SubscriptionStatusData = z.infer<typeof SubscriptionStatusDataSchema>;
 export type CheckoutSessionData = z.infer<typeof CheckoutSessionDataSchema>;
 export type CustomerPortalData = z.infer<typeof CustomerPortalDataSchema>;
 export type ResourceUsage = z.infer<typeof ResourceUsageSchema>;
 export type UsageSummaryData = z.infer<typeof UsageSummaryDataSchema>;
+export type PlanChangePreviewData = z.infer<typeof PlanChangePreviewDataSchema>;
+export type PlanChangeResultData = z.infer<typeof PlanChangeResultDataSchema>;
+export type UpstreamPaymentErrorData = z.infer<typeof UpstreamPaymentErrorDataSchema>;
+export type PlanChangeRequestData = z.infer<typeof PlanChangeRequestDataSchema>;
+
+// Alias for internal service layer compatibility
+export type SubscriptionAccessStatus = AccessDetail;

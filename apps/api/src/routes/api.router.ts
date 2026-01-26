@@ -112,7 +112,8 @@ const billingProcedures = createBillingProcedures(
   billingService,
   workspaceMemberService,
   workspaceService,
-  entitlementService
+  entitlementService,
+  emailService
 );
 
 /**

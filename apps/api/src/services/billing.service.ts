@@ -1,14 +1,13 @@
 /**
  * BillingService - Domain service for billing and subscription operations
  *
- * Provides read-only operations for subscription status.
+ * Provides read-only operations for subscription status and plan change operations.
  * Webhook processing is handled by WebhookProcessorService.
- *
- * Note: Plan changes (upgrade/downgrade) are handled via the DodoPayments
- * Customer Portal, which provides a native self-service experience.
- * See: https://docs.dodopayments.com/features/customer-portal
  */
 
+import { billingError, type SubscriptionAccessStatus } from '@workspace/contract';
+import type { DodoPayments } from '@workspace/payments/client';
+import { getProductByPlanId } from '@workspace/payments/products';
 import type { PlanId } from '@workspace/pricing';
 import { PLAN_NAMES } from '@workspace/pricing';
 
@@ -23,10 +22,14 @@ export interface BillingServiceDeps {
   subscriptionRepo: SubscriptionRepository;
   disputeRepo: DisputeRepository;
   refundRepo: RefundRepository;
+  dodoClient: DodoPayments;
 }
 
 /**
  * Subscription access status - determines if user has entitled access
+ *
+ * Type is defined in @workspace/contract for type safety across the codebase.
+ * See: packages/contract/src/schemas/billing.ts
  *
  * effectivePlanId:
  * - PlanId: User has access to this paid plan
@@ -41,10 +44,7 @@ export interface BillingServiceDeps {
  *
  * Note: UI can derive daysRemaining from subscription.onHoldSince or subscription.currentPeriodEnd
  */
-export interface SubscriptionAccessStatus {
-  effectivePlanId: PlanId | 'free';
-  accessStatus: 'active' | 'grace' | 'inactive' | 'disputed' | 'refunded';
-}
+export type { SubscriptionAccessStatus };
 
 export class BillingService {
   constructor(private deps: BillingServiceDeps) {}
@@ -217,6 +217,168 @@ export class BillingService {
           effectivePlanId: 'free',
           accessStatus: 'inactive',
         };
+    }
+  }
+
+  /**
+   * Preview plan change - shows proration details before confirming
+   */
+  async previewPlanChange(workspaceId: string, newPlanId: PlanId) {
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+
+    if (!subscription) {
+      throw billingError.SUBSCRIPTION_NOT_FOUND();
+    }
+
+    this.validateSubscriptionForChange(subscription);
+
+    if (subscription.planId === newPlanId) {
+      throw billingError.SAME_PLAN_SELECTED();
+    }
+
+    const product = getProductByPlanId(newPlanId);
+    if (!product) {
+      throw billingError.INVALID_PLAN();
+    }
+
+    const currentPlanName = PLAN_NAMES[subscription.planId as PlanId] || 'Unknown';
+    const newPlanName = PLAN_NAMES[newPlanId] || 'Unknown';
+
+    try {
+      const preview = await this.deps.dodoClient.subscriptions.previewChangePlan(
+        subscription.subscriptionId,
+        {
+          product_id: product.productId,
+          proration_billing_mode: 'prorated_immediately',
+          quantity: 1,
+        }
+      );
+
+      const summary = preview.immediate_charge.summary;
+      const totalAmount = summary.total_amount;
+      const currency = summary.currency;
+
+      // Determine if this is an upgrade by checking if total_amount is positive
+      // Positive = upgrade (charge), negative or zero with credits = downgrade
+      const isUpgrade = totalAmount > 0;
+
+      // For downgrades with prorated_immediately, credits may be applied
+      // The customer_credits field in summary indicates credits applied
+      const hasCredit = summary.customer_credits > 0;
+
+      return {
+        immediateCharge: isUpgrade
+          ? {
+              currency,
+              total: totalAmount / 100, // Convert from cents to dollars
+              summary: `${currency} ${(totalAmount / 100).toFixed(2)} due today`,
+            }
+          : null,
+        creditAmount: hasCredit
+          ? {
+              currency,
+              amount: summary.customer_credits / 100, // Convert from cents to dollars
+              summary: `${currency} ${(summary.customer_credits / 100).toFixed(2)} credit applied to future billing`,
+            }
+          : null,
+        newPlan: {
+          planId: newPlanId,
+          planName: newPlanName,
+          billingInterval: newPlanId.includes('annual') ? 'annual' : 'monthly',
+        },
+        currentPlan: {
+          planId: subscription.planId,
+          planName: currentPlanName,
+        },
+        isUpgrade,
+      };
+    } catch (error) {
+      console.error('Failed to preview plan change:', error);
+      const dodoError = error as {
+        status?: number;
+        error?: { code?: string; message?: string };
+        message?: string;
+      };
+      throw billingError.UPSTREAM_PAYMENT_ERROR({
+        code: dodoError?.error?.code || `HTTP_${dodoError?.status}` || 'PREVIEW_FAILED',
+        message: dodoError?.error?.message || dodoError?.message || 'Failed to preview plan change',
+      });
+    }
+  }
+
+  /**
+   * Execute plan change
+   */
+  async changePlan(workspaceId: string, newPlanId: PlanId) {
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+
+    if (!subscription) {
+      throw billingError.SUBSCRIPTION_NOT_FOUND();
+    }
+
+    this.validateSubscriptionForChange(subscription);
+
+    if (subscription.planId === newPlanId) {
+      throw billingError.SAME_PLAN_SELECTED();
+    }
+
+    const product = getProductByPlanId(newPlanId);
+    if (!product) {
+      throw billingError.INVALID_PLAN();
+    }
+
+    const newPlanName = PLAN_NAMES[newPlanId] || 'Unknown';
+
+    try {
+      await this.deps.dodoClient.subscriptions.changePlan(subscription.subscriptionId, {
+        product_id: product.productId,
+        proration_billing_mode: 'prorated_immediately',
+        quantity: 1,
+      });
+
+      // Note: DB update happens via webhook handler for subscription.plan_changed
+      // The changePlan API returns void, so we return a constructed response
+      return {
+        subscriptionId: subscription.subscriptionId,
+        status: 'processing',
+        newPlanId,
+        newPlanName,
+      };
+    } catch (error) {
+      console.error('Failed to change plan:', error);
+      const dodoError = error as {
+        status?: number;
+        error?: { code?: string; message?: string };
+        message?: string;
+      };
+      throw billingError.UPSTREAM_PAYMENT_ERROR({
+        code: dodoError?.error?.code || `HTTP_${dodoError?.status}` || 'PLAN_CHANGE_FAILED',
+        message: dodoError?.error?.message || dodoError?.message || 'Failed to change plan',
+      });
+    }
+  }
+
+  /**
+   * Validate subscription is in a state that allows plan changes
+   */
+  private validateSubscriptionForChange(subscription: {
+    status: string;
+    cancelAtPeriodEnd: boolean;
+  }): void {
+    // Block if subscription is on hold (payment failed)
+    if (subscription.status === 'on_hold') {
+      throw billingError.SUBSCRIPTION_ON_HOLD();
+    }
+
+    // Allow plan change for:
+    // 1. Active subscriptions
+    // 2. Cancelled subscriptions with cancelAtPeriodEnd=true (user still has access until period end)
+    const isActive = subscription.status === 'active';
+    const isCancelledWithAccess =
+      subscription.status === 'cancelled' && subscription.cancelAtPeriodEnd;
+
+    if (!isActive && !isCancelledWithAccess) {
+      throw billingError.PLAN_CHANGE_NOT_ALLOWED();
     }
   }
 }

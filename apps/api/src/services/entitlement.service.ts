@@ -9,11 +9,12 @@
  * - Providing usage summaries for UI
  */
 
+import type { SubscriptionAccessStatus } from '@workspace/contract';
 import type { PlanId, PlanName, ResourceType } from '@workspace/pricing';
 import { PLAN_ENTITLEMENTS, PLAN_NAMES, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 
 import type { EntitlementRepository } from '@/api/repositories/entitlements.repository';
-import type { BillingService, SubscriptionAccessStatus } from '@/api/services/billing.service';
+import type { BillingService } from '@/api/services/billing.service';
 import type { Transaction } from '@/api/types';
 
 export interface EntitlementServiceDeps {
