@@ -5,6 +5,7 @@
 
 import { MAX_EMAIL_DOMAINS, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
+import type { DodoPayments } from '@workspace/payments/client';
 import { isDisposableEmail, isDisposableEmailDomain } from '@workspace/shared';
 
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
@@ -13,6 +14,7 @@ import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { ProjectService } from '@/api/services/project.service';
@@ -35,6 +37,8 @@ export interface WorkspaceServiceDeps {
   linkRepo?: LinkRepository;
   recordingRepo?: RecordingRepository;
   projectService?: ProjectService;
+  subscriptionRepo?: SubscriptionRepository;
+  dodoClient?: DodoPayments;
 }
 
 export class WorkspaceService {
@@ -358,6 +362,7 @@ export class WorkspaceService {
    * Soft delete a workspace with cascade deletion
    *
    * Transaction flow:
+   * 0. Cancel active subscription if exists (before transaction)
    * 1. Mark workspace as deleted
    * 2. Mark all workspace members as deleted
    * 3. Mark all projects as deleted
@@ -375,6 +380,9 @@ export class WorkspaceService {
     if (!workspace) {
       throw workspaceError.WORKSPACE_NOT_FOUND();
     }
+
+    // Cancel active subscription before deletion
+    await this.deleteWorkspaceSubscription(workspaceId);
 
     // Use transaction for atomic deletion
     const performDeletion = async (tx: Transaction) => {
@@ -414,6 +422,62 @@ export class WorkspaceService {
     }
 
     return this.deps.db.transaction(performDeletion);
+  }
+
+  /**
+   * Cancel workspace subscription if active
+   * Called before workspace deletion to cancel subscription
+   * Uses Dodo Payments PATCH /subscriptions/{subscription_id} endpoint
+   *
+   * Cancellation modes:
+   * - cancelImmediately=true: Sets status='cancelled' (immediate cancellation)
+   * - cancelImmediately=false: Sets cancel_at_next_billing_date=true (cancel at period end)
+   *
+   * Handles cancellation gracefully:
+   * - If no subscription exists: no-op
+   * - If subscription is not active: no-op (already cancelled/expired/on_hold)
+   * - If subscription is active: cancels according to cancelImmediately flag
+   *
+   * Note: This is a best-effort operation. If cancellation fails, workspace deletion continues.
+   * The subscription will be cancelled when workspace resources are cleaned up.
+   */
+  async deleteWorkspaceSubscription(
+    workspaceId: string,
+    cancelImmediately: boolean = false
+  ): Promise<void> {
+    if (!this.deps.subscriptionRepo || !this.deps.dodoClient) {
+      return;
+    }
+
+    try {
+      const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+
+      if (!subscription) {
+        return;
+      }
+
+      if (subscription.status !== 'active') {
+        return;
+      }
+
+      if (cancelImmediately) {
+        await this.deps.dodoClient.subscriptions.update(subscription.subscriptionId, {
+          status: 'cancelled',
+        });
+        console.log(
+          `Subscription ${subscription.subscriptionId} cancelled immediately for workspace ${workspaceId}`
+        );
+      } else {
+        await this.deps.dodoClient.subscriptions.update(subscription.subscriptionId, {
+          cancel_at_next_billing_date: true,
+        });
+        console.log(
+          `Subscription ${subscription.subscriptionId} scheduled for cancellation at period end for workspace ${workspaceId}`
+        );
+      }
+    } catch (error) {
+      console.error(`Failed to cancel subscription for workspace ${workspaceId}:`, error);
+    }
   }
 
   /**

@@ -149,6 +149,8 @@ export const workspaceService = new WorkspaceService({
   linkRepo,
   recordingRepo,
   projectService,
+  subscriptionRepo,
+  dodoClient: getDodoClient(),
 });
 
 // Admin workspace service - initialized after workspace service is available
