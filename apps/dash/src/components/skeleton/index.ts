@@ -11,6 +11,7 @@ export {
   ProjectsSectionSkeleton,
   RecordingLinkSectionSkeleton,
   TeamSectionSkeleton,
+  WorkspaceMembershipSkeleton,
   WorkspacePlanSectionSkeleton,
   WorkspaceSectionSkeleton,
 } from './settings-section-skeletons';
