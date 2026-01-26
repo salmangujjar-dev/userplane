@@ -5,7 +5,7 @@
 
 import { projectError } from '@workspace/contract';
 
-import { authorized } from '@/api/middleware/auth.orpc';
+import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import {
   createWorkspaceMiddleware,
   createWorkspaceRestoreMiddleware,
@@ -31,7 +31,7 @@ export const getProjectsImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.project.list
+  return authorizedRateLimited.project.list
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const page = input.query.page || 1;
@@ -69,7 +69,7 @@ export const getProjectByIdImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.project.getById
+  return authorizedRateLimited.project.getById
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const project = await projectService.getById(input.params.projectId);
@@ -100,7 +100,7 @@ export const createProjectImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.project.create
+  return authorizedRateLimited.project.create
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const project = await projectService.createProject({
@@ -133,7 +133,7 @@ export const updateProjectImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.project.update
+  return authorizedRateLimited.project.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const updates: Partial<{ projectTitle: string; isDefault: boolean }> = {};
@@ -172,7 +172,7 @@ export const replaceProjectImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.project.replace
+  return authorizedRateLimited.project.replace
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const project = await projectService.updateProject(input.params.projectId, {
@@ -211,7 +211,7 @@ export const deleteProjectImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.project.delete
+  return authorizedRateLimited.project.delete
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const project = await projectService.getById(input.params.projectId);
@@ -259,7 +259,7 @@ export const getProjectRestoreInfoImpl = (
     'owner',
   ]);
 
-  return authorized.project.getRestoreInfo
+  return authorizedRateLimited.project.getRestoreInfo
     .use(workspaceRestoreMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const result = await projectService.getProjectRestoreInfo(input.params.projectId);
@@ -287,7 +287,7 @@ export const restoreProjectImpl = (
     'owner',
   ]);
 
-  return authorized.project.restore
+  return authorizedRateLimited.project.restore
     .use(workspaceRestoreMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const result = await projectService.restoreProject(input.params.projectId);

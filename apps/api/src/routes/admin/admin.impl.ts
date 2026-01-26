@@ -9,6 +9,7 @@ import type { WorkspaceRole } from '@workspace/contract';
 import { generateWorkspaceId } from '@/api/lib/id';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
 import { authorized } from '@/api/middleware/auth.orpc';
+import { authWithAdminRateLimit } from '@/api/middleware/rate-limit.orpc';
 import type { AdminService } from '@/api/services/admin.service';
 import type { AdminProjectService } from '@/api/services/admin-project.service';
 import type { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
@@ -106,47 +107,49 @@ function formatUserWorkspace(workspace: {
 const searchUsersImpl = (adminService: AdminService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.users.search.handler(async ({ input, context }) => {
-    const { search, limit, offset, sortBy, sortDirection, filterStatus } = input.query;
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.users.search.handler(async ({ input, context }) => {
+      const { search, limit, offset, sortBy, sortDirection, filterStatus } = input.query;
 
-    // Validate and narrow the role type
-    const userRole = context.user.role;
-    const validatedRole = userRole && isValidRoleName(userRole) ? userRole : null;
+      // Validate and narrow the role type
+      const userRole = context.user.role;
+      const validatedRole = userRole && isValidRoleName(userRole) ? userRole : null;
 
-    const result = await adminService.searchUsers(
-      {
-        search,
-        limit,
-        offset,
-        sortBy,
-        sortDirection,
-        filterStatus,
-      },
-      validatedRole
-    );
+      const result = await adminService.searchUsers(
+        {
+          search,
+          limit,
+          offset,
+          sortBy,
+          sortDirection,
+          filterStatus,
+        },
+        validatedRole
+      );
 
-    return {
-      message: 'Users retrieved successfully',
-      data: {
-        users: result.users.map((u) => ({
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          image: u.image,
-          role: u.role,
-          banned: u.banned,
-          banReason: u.banReason,
-          banExpires: formatDate(u.banExpires),
-          emailVerified: u.emailVerified,
-          createdAt: u.createdAt.toISOString(),
-          workspaceCount: u.workspaceCount,
-        })),
-        total: result.total,
-        limit,
-        offset,
-      },
-    };
-  });
+      return {
+        message: 'Users retrieved successfully',
+        data: {
+          users: result.users.map((u) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            image: u.image,
+            role: u.role,
+            banned: u.banned,
+            banReason: u.banReason,
+            banExpires: formatDate(u.banExpires),
+            emailVerified: u.emailVerified,
+            createdAt: u.createdAt.toISOString(),
+            workspaceCount: u.workspaceCount,
+          })),
+          total: result.total,
+          limit,
+          offset,
+        },
+      };
+    });
 };
 
 /**
@@ -155,7 +158,7 @@ const searchUsersImpl = (adminService: AdminService) => {
 const getUserImpl = (adminService: AdminService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.users.get.handler(async ({ input }) => {
+  return authWithAdminRateLimit.use(adminMiddleware).admin.users.get.handler(async ({ input }) => {
     const userDetail = await adminService.getUserDetail(input.params.userId);
 
     return {
@@ -171,21 +174,23 @@ const getUserImpl = (adminService: AdminService) => {
 const banUserImpl = (adminService: AdminService, emailService: EmailService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.users.ban.handler(async ({ input, context }) => {
-    const userDetail = await adminService.banUser(input.params.userId, context.user.id, {
-      reason: input.body.reason,
-      expiresInSeconds: input.body.expiresInSeconds,
-      deleteWorkspacesForRoles: input.body.deleteWorkspacesForRoles,
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.users.ban.handler(async ({ input, context }) => {
+      const userDetail = await adminService.banUser(input.params.userId, context.user.id, {
+        reason: input.body.reason,
+        expiresInSeconds: input.body.expiresInSeconds,
+        deleteWorkspacesForRoles: input.body.deleteWorkspacesForRoles,
+      });
+
+      // Send email to suspended account
+      await emailService.sendSafeTosViolation({ to: userDetail.email });
+
+      return {
+        message: 'User banned successfully',
+        data: formatUserDetail(userDetail),
+      };
     });
-
-    // Send email to suspended account
-    await emailService.sendSafeTosViolation({ to: userDetail.email });
-
-    return {
-      message: 'User banned successfully',
-      data: formatUserDetail(userDetail),
-    };
-  });
 };
 
 /**
@@ -194,17 +199,19 @@ const banUserImpl = (adminService: AdminService, emailService: EmailService) => 
 const unbanUserImpl = (adminService: AdminService, emailService: EmailService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.users.unban.handler(async ({ input }) => {
-    const userDetail = await adminService.unbanUser(input.params.userId);
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.users.unban.handler(async ({ input }) => {
+      const userDetail = await adminService.unbanUser(input.params.userId);
 
-    // Send account restored email
-    await emailService.sendSafeAccountRestored({ to: userDetail.email });
+      // Send account restored email
+      await emailService.sendSafeAccountRestored({ to: userDetail.email });
 
-    return {
-      message: 'User unbanned successfully',
-      data: formatUserDetail(userDetail),
-    };
-  });
+      return {
+        message: 'User unbanned successfully',
+        data: formatUserDetail(userDetail),
+      };
+    });
 };
 
 /**
@@ -213,21 +220,23 @@ const unbanUserImpl = (adminService: AdminService, emailService: EmailService) =
 const listUserSessionsImpl = (adminService: AdminService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.users.sessions.list.handler(async ({ input }) => {
-    const { limit, offset } = input.query;
-    const result = await adminService.listUserSessions(input.params.userId, { limit, offset });
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.users.sessions.list.handler(async ({ input }) => {
+      const { limit, offset } = input.query;
+      const result = await adminService.listUserSessions(input.params.userId, { limit, offset });
 
-    return {
-      message: 'Sessions retrieved successfully',
-      data: {
-        sessions: result.sessions.map(formatSession),
-        userId: result.userId,
-        total: result.total,
-        limit,
-        offset,
-      },
-    };
-  });
+      return {
+        message: 'Sessions retrieved successfully',
+        data: {
+          sessions: result.sessions.map(formatSession),
+          userId: result.userId,
+          total: result.total,
+          limit,
+          offset,
+        },
+      };
+    });
 };
 
 /**
@@ -236,17 +245,19 @@ const listUserSessionsImpl = (adminService: AdminService) => {
 const revokeSessionImpl = (adminService: AdminService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.sessions.revoke.handler(async ({ input }) => {
-    const result = await adminService.revokeSession(input.params.sessionId);
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.sessions.revoke.handler(async ({ input }) => {
+      const result = await adminService.revokeSession(input.params.sessionId);
 
-    return {
-      message: 'Session revoked successfully',
-      data: {
-        sessions: result.sessions.map(formatSession),
-        revoked: result.revoked,
-      },
-    };
-  });
+      return {
+        message: 'Session revoked successfully',
+        data: {
+          sessions: result.sessions.map(formatSession),
+          revoked: result.revoked,
+        },
+      };
+    });
 };
 
 /**
@@ -279,21 +290,23 @@ const revokeAllSessionsImpl = (adminService: AdminService) => {
 const listUserWorkspacesImpl = (adminService: AdminService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.users.workspaces.list.handler(async ({ input }) => {
-    const { limit, offset } = input.query;
-    const result = await adminService.listUserWorkspaces(input.params.userId, { limit, offset });
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.users.workspaces.list.handler(async ({ input }) => {
+      const { limit, offset } = input.query;
+      const result = await adminService.listUserWorkspaces(input.params.userId, { limit, offset });
 
-    return {
-      message: 'Workspaces retrieved successfully',
-      data: {
-        workspaces: result.workspaces.map(formatUserWorkspace),
-        userId: result.userId,
-        total: result.total,
-        limit,
-        offset,
-      },
-    };
-  });
+      return {
+        message: 'Workspaces retrieved successfully',
+        data: {
+          workspaces: result.workspaces.map(formatUserWorkspace),
+          userId: result.userId,
+          total: result.total,
+          limit,
+          offset,
+        },
+      };
+    });
 };
 
 // ============================================
@@ -363,38 +376,40 @@ const searchWorkspacesImpl = (
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.workspaces.search.handler(async ({ input }) => {
-    const { search, limit, offset, sortBy, sortDirection, filterStatus } = input.query;
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspaces.search.handler(async ({ input }) => {
+      const { search, limit, offset, sortBy, sortDirection, filterStatus } = input.query;
 
-    const result = await adminWorkspaceService.searchWorkspaces({
-      search,
-      limit,
-      offset,
-      sortBy,
-      sortDirection,
-      filterStatus,
-    });
-
-    return {
-      message: 'Workspaces retrieved successfully',
-      data: {
-        workspaces: result.workspaces.map((w) => ({
-          workspaceId: w.workspaceId,
-          workspaceName: w.workspaceName,
-          createdAt: w.createdAt.toISOString(),
-          memberCount: w.memberCount,
-          projectCount: w.projectCount,
-          domainCount: w.domainCount,
-          linkCount: w.linkCount,
-          recordingCount: w.recordingCount,
-          isDeleted: w.isDeleted,
-        })),
-        total: result.total,
+      const result = await adminWorkspaceService.searchWorkspaces({
+        search,
         limit,
         offset,
-      },
-    };
-  });
+        sortBy,
+        sortDirection,
+        filterStatus,
+      });
+
+      return {
+        message: 'Workspaces retrieved successfully',
+        data: {
+          workspaces: result.workspaces.map((w) => ({
+            workspaceId: w.workspaceId,
+            workspaceName: w.workspaceName,
+            createdAt: w.createdAt.toISOString(),
+            memberCount: w.memberCount,
+            projectCount: w.projectCount,
+            domainCount: w.domainCount,
+            linkCount: w.linkCount,
+            recordingCount: w.recordingCount,
+            isDeleted: w.isDeleted,
+          })),
+          total: result.total,
+          limit,
+          offset,
+        },
+      };
+    });
 };
 
 /**
@@ -406,16 +421,18 @@ const getWorkspaceImpl = (
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.workspaces.get.handler(async ({ input }) => {
-    const workspaceDetail = await adminWorkspaceService.getWorkspaceDetail(
-      input.params.workspaceId
-    );
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspaces.get.handler(async ({ input }) => {
+      const workspaceDetail = await adminWorkspaceService.getWorkspaceDetail(
+        input.params.workspaceId
+      );
 
-    return {
-      message: 'Workspace retrieved successfully',
-      data: formatWorkspaceDetail(workspaceDetail),
-    };
-  });
+      return {
+        message: 'Workspace retrieved successfully',
+        data: formatWorkspaceDetail(workspaceDetail),
+      };
+    });
 };
 
 /**
@@ -519,45 +536,49 @@ const deactivateWorkspaceImpl = (
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.workspaces.deactivate.handler(async ({ input }) => {
-    // Get workspace info before deactivation for email
-    const workspaceInfo = await adminWorkspaceService.getWorkspaceDetail(input.params.workspaceId);
-
-    const workspaceDetail = await adminWorkspaceService.deactivateWorkspace(
-      input.params.workspaceId
-    );
-
-    // Check if notifications are enabled
-    const notify = input.body?.notify;
-    if (notify && notify !== 'never') {
-      // Calculate deletion date using restoration max window
-      const deletionDate = new Date();
-      const maxWindow = getRestorationMaxWindowDays();
-      deletionDate.setDate(deletionDate.getDate() + maxWindow);
-      const formattedDeletionDate = formatDeletionDate(deletionDate);
-
-      // Calculate scheduled time based on notify duration
-      const scheduledAt = calculateScheduledTime(notify);
-
-      // Send deletion scheduled email to workspace owners using batch API
-      const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const ownerEmails = owners.map((owner) => owner.email);
-      await emailService.sendSafeWorkspaceDeletionScheduled(
-        { to: ownerEmails },
-        {
-          workspaceName: workspaceInfo.workspaceName,
-          deletionDate: formattedDeletionDate,
-          workspaceId: input.params.workspaceId,
-          scheduledAt,
-        }
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspaces.deactivate.handler(async ({ input }) => {
+      // Get workspace info before deactivation for email
+      const workspaceInfo = await adminWorkspaceService.getWorkspaceDetail(
+        input.params.workspaceId
       );
-    }
 
-    return {
-      message: 'Workspace deactivated successfully',
-      data: formatWorkspaceDetail(workspaceDetail),
-    };
-  });
+      const workspaceDetail = await adminWorkspaceService.deactivateWorkspace(
+        input.params.workspaceId
+      );
+
+      // Check if notifications are enabled
+      const notify = input.body?.notify;
+      if (notify && notify !== 'never') {
+        // Calculate deletion date using restoration max window
+        const deletionDate = new Date();
+        const maxWindow = getRestorationMaxWindowDays();
+        deletionDate.setDate(deletionDate.getDate() + maxWindow);
+        const formattedDeletionDate = formatDeletionDate(deletionDate);
+
+        // Calculate scheduled time based on notify duration
+        const scheduledAt = calculateScheduledTime(notify);
+
+        // Send deletion scheduled email to workspace owners using batch API
+        const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+        const ownerEmails = owners.map((owner) => owner.email);
+        await emailService.sendSafeWorkspaceDeletionScheduled(
+          { to: ownerEmails },
+          {
+            workspaceName: workspaceInfo.workspaceName,
+            deletionDate: formattedDeletionDate,
+            workspaceId: input.params.workspaceId,
+            scheduledAt,
+          }
+        );
+      }
+
+      return {
+        message: 'Workspace deactivated successfully',
+        data: formatWorkspaceDetail(workspaceDetail),
+      };
+    });
 };
 
 /**
@@ -572,50 +593,52 @@ const restoreWorkspaceImpl = (
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.workspaces.restore.handler(async ({ input }) => {
-    const result = await adminWorkspaceService.restoreWorkspace(input.params.workspaceId);
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspaces.restore.handler(async ({ input }) => {
+      const result = await adminWorkspaceService.restoreWorkspace(input.params.workspaceId);
 
-    // Check if notifications are enabled
-    const notify = input.body?.notify;
-    if (notify && notify !== 'never') {
-      // Calculate scheduled time based on notify duration
-      const scheduledAt = calculateScheduledTime(notify);
+      // Check if notifications are enabled
+      const notify = input.body?.notify;
+      if (notify && notify !== 'never') {
+        // Calculate scheduled time based on notify duration
+        const scheduledAt = calculateScheduledTime(notify);
 
-      // Send email to workspace owners that the workspace has been restored
-      const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+        // Send email to workspace owners that the workspace has been restored
+        const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
 
-      // Send appropriate email based on restoration status using batch
-      const ownerEmails = owners.map((owner) => owner.email);
-      const emailMethod =
-        result.restorationStatus === 'partial'
-          ? emailService.sendSafeWorkspaceRecoveryPartially
-          : emailService.sendSafeWorkspaceRecoveryConfirmation;
+        // Send appropriate email based on restoration status using batch
+        const ownerEmails = owners.map((owner) => owner.email);
+        const emailMethod =
+          result.restorationStatus === 'partial'
+            ? emailService.sendSafeWorkspaceRecoveryPartially
+            : emailService.sendSafeWorkspaceRecoveryConfirmation;
 
-      // Use batch sending via Resend's batch API for multiple recipients
-      await emailMethod(
-        { to: ownerEmails },
-        {
-          workspaceName: result.workspace.workspaceName,
-          workspaceId: input.params.workspaceId,
-          scheduledAt,
-        }
-      );
-    }
+        // Use batch sending via Resend's batch API for multiple recipients
+        await emailMethod(
+          { to: ownerEmails },
+          {
+            workspaceName: result.workspace.workspaceName,
+            workspaceId: input.params.workspaceId,
+            scheduledAt,
+          }
+        );
+      }
 
-    return {
-      message: 'Workspace restored successfully',
-      data: {
-        workspace: {
-          workspaceId: result.workspace.workspaceId,
-          workspaceName: result.workspace.workspaceName,
-          isDeleted: result.workspace.isDeleted,
-          deletedAt: result.workspace.deletedAt ? result.workspace.deletedAt.toISOString() : null,
+      return {
+        message: 'Workspace restored successfully',
+        data: {
+          workspace: {
+            workspaceId: result.workspace.workspaceId,
+            workspaceName: result.workspace.workspaceName,
+            isDeleted: result.workspace.isDeleted,
+            deletedAt: result.workspace.deletedAt ? result.workspace.deletedAt.toISOString() : null,
+          },
+          restoredProjects: result.restoredProjects,
+          restoredLinks: result.restoredLinks,
         },
-        restoredProjects: result.restoredProjects,
-        restoredLinks: result.restoredLinks,
-      },
-    };
-  });
+      };
+    });
 };
 
 /**
@@ -631,49 +654,51 @@ const deactivateProjectImpl = (
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.projects.deactivate.handler(async ({ input }) => {
-    // Get project info before deletion for email
-    const project = await projectService.getById(input.params.projectId);
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.projects.deactivate.handler(async ({ input }) => {
+      // Get project info before deletion for email
+      const project = await projectService.getById(input.params.projectId);
 
-    await adminProjectService.deactivateProject(input.params.projectId, input.params.workspaceId);
+      await adminProjectService.deactivateProject(input.params.projectId, input.params.workspaceId);
 
-    // Check if notifications are enabled
-    const notify = input.body?.notify;
-    if (notify && notify !== 'never') {
-      // Calculate deletion date using restoration max window
-      const deletionDate = new Date();
-      const maxWindow = getRestorationMaxWindowDays();
-      deletionDate.setDate(deletionDate.getDate() + maxWindow);
-      const formattedDeletionDate = formatDeletionDate(deletionDate);
+      // Check if notifications are enabled
+      const notify = input.body?.notify;
+      if (notify && notify !== 'never') {
+        // Calculate deletion date using restoration max window
+        const deletionDate = new Date();
+        const maxWindow = getRestorationMaxWindowDays();
+        deletionDate.setDate(deletionDate.getDate() + maxWindow);
+        const formattedDeletionDate = formatDeletionDate(deletionDate);
 
-      // Calculate scheduled time based on notify duration
-      const scheduledAt = calculateScheduledTime(notify);
+        // Calculate scheduled time based on notify duration
+        const scheduledAt = calculateScheduledTime(notify);
 
-      // Send deletion scheduled email to workspace owners using batch
-      const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
-      const ownerEmails = owners.map((owner) => owner.email);
+        // Send deletion scheduled email to workspace owners using batch
+        const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+        const ownerEmails = owners.map((owner) => owner.email);
 
-      // Use batch sending via Resend's batch API for multiple recipients
-      await emailService.sendSafeProjectDeletionScheduled(
-        { to: ownerEmails },
-        {
-          projectName: project.projectTitle || 'Untitled Project',
-          deletionDate: formattedDeletionDate,
+        // Use batch sending via Resend's batch API for multiple recipients
+        await emailService.sendSafeProjectDeletionScheduled(
+          { to: ownerEmails },
+          {
+            projectName: project.projectTitle || 'Untitled Project',
+            deletionDate: formattedDeletionDate,
+            workspaceId: input.params.workspaceId,
+            projectId: input.params.projectId,
+            scheduledAt,
+          }
+        );
+      }
+
+      return {
+        message: 'Project deactivated successfully',
+        data: {
           workspaceId: input.params.workspaceId,
           projectId: input.params.projectId,
-          scheduledAt,
-        }
-      );
-    }
-
-    return {
-      message: 'Project deactivated successfully',
-      data: {
-        workspaceId: input.params.workspaceId,
-        projectId: input.params.projectId,
-      },
-    };
-  });
+        },
+      };
+    });
 };
 
 /**
@@ -688,50 +713,52 @@ const restoreProjectImpl = (
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.projects.restore.handler(async ({ input }) => {
-    const restoredProject = await adminProjectService.restoreProject(input.params.projectId);
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.projects.restore.handler(async ({ input }) => {
+      const restoredProject = await adminProjectService.restoreProject(input.params.projectId);
 
-    // Check if notifications are enabled
-    const notify = input.body?.notify;
-    if (notify && notify !== 'never') {
-      // Calculate scheduled time based on notify duration
-      const scheduledAt = calculateScheduledTime(notify);
+      // Check if notifications are enabled
+      const notify = input.body?.notify;
+      if (notify && notify !== 'never') {
+        // Calculate scheduled time based on notify duration
+        const scheduledAt = calculateScheduledTime(notify);
 
-      // Send email to workspace owners that the project has been restored
-      const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
+        // Send email to workspace owners that the project has been restored
+        const owners = await workspaceMemberService.getOwners(input.params.workspaceId);
 
-      // Send appropriate email based on restoration status
-      const ownerEmails = owners.map((owner) => owner.email);
-      const emailMethod =
-        restoredProject.restorationStatus === 'partial'
-          ? emailService.sendSafeProjectRecoveryPartially
-          : emailService.sendSafeProjectRecoveryConfirmation;
+        // Send appropriate email based on restoration status
+        const ownerEmails = owners.map((owner) => owner.email);
+        const emailMethod =
+          restoredProject.restorationStatus === 'partial'
+            ? emailService.sendSafeProjectRecoveryPartially
+            : emailService.sendSafeProjectRecoveryConfirmation;
 
-      // Use batch sending via Resend's batch API for multiple recipients
-      await emailMethod(
-        { to: ownerEmails },
-        {
-          projectName: restoredProject.projectTitle,
+        // Use batch sending via Resend's batch API for multiple recipients
+        await emailMethod(
+          { to: ownerEmails },
+          {
+            projectName: restoredProject.projectTitle,
+            workspaceId: input.params.workspaceId,
+            scheduledAt,
+          }
+        );
+      }
+
+      return {
+        message: 'Project restored successfully',
+        data: {
           workspaceId: input.params.workspaceId,
-          scheduledAt,
-        }
-      );
-    }
-
-    return {
-      message: 'Project restored successfully',
-      data: {
-        workspaceId: input.params.workspaceId,
-        project: {
-          projectId: restoredProject.projectId,
-          projectTitle: restoredProject.projectTitle,
-          isDefault: restoredProject.isDefault,
-          createdAt: restoredProject.createdAt.toISOString(),
-          updatedAt: restoredProject.updatedAt.toISOString(),
+          project: {
+            projectId: restoredProject.projectId,
+            projectTitle: restoredProject.projectTitle,
+            isDefault: restoredProject.isDefault,
+            createdAt: restoredProject.createdAt.toISOString(),
+            updatedAt: restoredProject.updatedAt.toISOString(),
+          },
         },
-      },
-    };
-  });
+      };
+    });
 };
 
 /**
@@ -831,21 +858,23 @@ const provisionWorkspaceImpl = (
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.workspaces.provision.handler(async ({ input }) => {
-    const result = await adminProvisioningService.provisionWorkspace({
-      owner: input.body.owner,
-      workspace: {
-        name: input.body.workspace.name,
-        url: input.body.workspace.url,
-      },
-      members: input.body.members,
-    });
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspaces.provision.handler(async ({ input }) => {
+      const result = await adminProvisioningService.provisionWorkspace({
+        owner: input.body.owner,
+        workspace: {
+          name: input.body.workspace.name,
+          url: input.body.workspace.url,
+        },
+        members: input.body.members,
+      });
 
-    return {
-      message: 'Workspace provisioned successfully',
-      data: result,
-    };
-  });
+      return {
+        message: 'Workspace provisioned successfully',
+        data: result,
+      };
+    });
 };
 
 /**
@@ -858,43 +887,45 @@ const createWorkspaceInviteImpl = (
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized.use(adminMiddleware).admin.workspace.createInvite.handler(async ({ input }) => {
-    // Generate a predetermined workspace ID using standard ID generator
-    const workspaceId = generateWorkspaceId();
-    const notify = input.body.notify || 'never';
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspace.createInvite.handler(async ({ input }) => {
+      // Generate a predetermined workspace ID using standard ID generator
+      const workspaceId = generateWorkspaceId();
+      const notify = input.body.notify || 'never';
 
-    // Generate workspace create invite URL
-    // Workspaces start on free plan - users upgrade via subscription
-    const inviteUrl = tokenService.generateWorkspaceCreateInviteUrl({
-      workspaceId,
-      workspaceUrl: input.body.workspaceUrl,
-    });
-
-    // Send email if notify is not 'never' and email is provided
-    const email = input.body.email;
-    if (notify !== 'never' && email) {
-      // Calculate scheduled time based on notify duration
-      const scheduledAt = calculateScheduledTime(notify);
-
-      // Send workspace invite email (immediate or scheduled)
-      await emailService.sendSafeWorkspaceInvite(
-        { to: email },
-        {
-          inviteUrl,
-          scheduledAt,
-        }
-      );
-    }
-
-    return {
-      message: 'Workspace invite generated successfully',
-      data: {
-        inviteUrl,
+      // Generate workspace create invite URL
+      // Workspaces start on free plan - users upgrade via subscription
+      const inviteUrl = tokenService.generateWorkspaceCreateInviteUrl({
         workspaceId,
         workspaceUrl: input.body.workspaceUrl,
-      },
-    };
-  });
+      });
+
+      // Send email if notify is not 'never' and email is provided
+      const email = input.body.email;
+      if (notify !== 'never' && email) {
+        // Calculate scheduled time based on notify duration
+        const scheduledAt = calculateScheduledTime(notify);
+
+        // Send workspace invite email (immediate or scheduled)
+        await emailService.sendSafeWorkspaceInvite(
+          { to: email },
+          {
+            inviteUrl,
+            scheduledAt,
+          }
+        );
+      }
+
+      return {
+        message: 'Workspace invite generated successfully',
+        data: {
+          inviteUrl,
+          workspaceId,
+          workspaceUrl: input.body.workspaceUrl,
+        },
+      };
+    });
 };
 
 /**

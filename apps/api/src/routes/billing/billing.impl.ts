@@ -19,6 +19,7 @@ import { PLAN_NAMES, type PlanId } from '@workspace/pricing';
 import { nanoid } from 'nanoid';
 
 import { authorized } from '@/api/middleware/auth.orpc';
+import { billingRateLimitMiddleware } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { BillingService } from '@/api/services/billing.service';
 import type { EmailService } from '@/api/services/email.service';
@@ -40,6 +41,7 @@ export const getSubscriptionStatusImpl = (
 
   return authorized.billing.getStatus
     .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(billingRateLimitMiddleware)
     .handler(async ({ input }) => {
       const status = await billingService.getSubscriptionStatus(input.params.workspaceId);
 
@@ -64,6 +66,7 @@ export const getCustomerPortalImpl = (
 
   return authorized.billing.getPortal
     .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(billingRateLimitMiddleware)
     .handler(async ({ context }) => {
       // Check if user is owner or admin
       if (context.workspaceRole !== 'owner' && context.workspaceRole !== 'admin') {
@@ -98,6 +101,7 @@ export const getUsageImpl = (
 
   return authorized.billing.getUsage
     .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(billingRateLimitMiddleware)
     .handler(async ({ input }) => {
       const workspaceId = input.params.workspaceId;
 
@@ -126,6 +130,7 @@ export const managePlanImpl = (
 
   return authorized.billing.managePlan
     .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(billingRateLimitMiddleware)
     .handler(async ({ input, context }) => {
       const { workspaceId } = input.params;
       const { planId, action, message: customMessage } = input.body;

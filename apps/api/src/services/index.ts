@@ -151,6 +151,7 @@ export const workspaceService = new WorkspaceService({
   projectService,
   subscriptionRepo,
   dodoClient: getDodoClient(),
+  cacheService,
 });
 
 // Admin service - initialized after workspace service is available
@@ -174,6 +175,8 @@ export const domainService = new DomainService({
   emailService,
   workspaceService,
   userService,
+  linkRepo,
+  cacheService,
 });
 
 export const inviteService = new InviteService({
@@ -209,6 +212,7 @@ export const sessionService = new SessionService({
   clientActionsStorage: getClientActionsStorage(),
   linkService,
   entitlementService,
+  cacheService,
 });
 
 // Level 4: Admin services that depend on level 3

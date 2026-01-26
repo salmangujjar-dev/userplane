@@ -3,6 +3,7 @@
  * Contains business logic for workspace management
  */
 
+import type { CacheService } from '@workspace/cache';
 import { MAX_EMAIL_DOMAINS, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 import type { DodoPayments } from '@workspace/payments/client';
@@ -39,6 +40,7 @@ export interface WorkspaceServiceDeps {
   projectService?: ProjectService;
   subscriptionRepo?: SubscriptionRepository;
   dodoClient?: DodoPayments;
+  cacheService?: CacheService;
 }
 
 export class WorkspaceService {
@@ -321,6 +323,9 @@ export class WorkspaceService {
     if (!updated) {
       throw workspaceError.WORKSPACE_NOT_FOUND();
     }
+
+    // Invalidate link preferences cache for all links in this workspace
+    await this.invalidateWorkspaceLinkCaches(workspaceId);
 
     return updated;
   }
@@ -1123,5 +1128,32 @@ export class WorkspaceService {
           ? ('can_join' as const)
           : ('can_request' as const),
     };
+  }
+
+  /**
+   * Invalidate link preferences cache for all links in a workspace
+   * Called when workspace recording preferences change
+   */
+  private async invalidateWorkspaceLinkCaches(workspaceId: string): Promise<void> {
+    if (!this.deps.linkRepo || !this.deps.cacheService) return;
+
+    try {
+      const linkIds = await this.deps.linkRepo.getLinkIdsByWorkspaceId(workspaceId);
+
+      for (const linkId of linkIds) {
+        await this.deps.cacheService.invalidateLinkPreferences(linkId);
+      }
+
+      if (linkIds.length > 0) {
+        console.log(
+          `[WorkspaceService] Invalidated link preferences cache for ${linkIds.length} links in workspace ${workspaceId}`
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `[WorkspaceService] Failed to invalidate link caches for workspace ${workspaceId}:`,
+        error
+      );
+    }
   }
 }

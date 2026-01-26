@@ -7,7 +7,7 @@
 
 import { domainError, inviteError, workspaceError } from '@workspace/contract';
 
-import { authorized } from '@/api/middleware/auth.orpc';
+import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import {
   createWorkspaceMiddleware,
   createWorkspaceRestoreMiddleware,
@@ -32,7 +32,7 @@ import { formatDeletionDate } from '@/api/utils/format';
  * Requires authentication
  */
 export const getAllWorkspacesImpl = (workspaceService: WorkspaceService) => {
-  return authorized.workspace.list.handler(async ({ input, context }) => {
+  return authorizedRateLimited.workspace.list.handler(async ({ input, context }) => {
     const page = input.query.page || 1;
     const perPage = 5;
 
@@ -61,7 +61,7 @@ export const getAllWorkspacesImpl = (workspaceService: WorkspaceService) => {
  * Requires authentication
  */
 export const countWorkspacesImpl = (workspaceService: WorkspaceService) => {
-  return authorized.workspace.count.handler(async ({ input, context }) => {
+  return authorizedRateLimited.workspace.count.handler(async ({ input, context }) => {
     const count = await workspaceService.countByUserWithRoles(context.user.id, input.query.roles);
 
     return {
@@ -77,7 +77,7 @@ export const countWorkspacesImpl = (workspaceService: WorkspaceService) => {
  * Plan is derived from subscription status, not stored on workspace
  */
 export const getWorkspaceByIdImpl = (workspaceService: WorkspaceService) => {
-  return authorized.workspace.getById.handler(async ({ input }) => {
+  return authorizedRateLimited.workspace.getById.handler(async ({ input }) => {
     const workspace = await workspaceService.getById(input.params.workspaceId);
 
     return {
@@ -103,7 +103,7 @@ export const getWorkspaceResourcesCountImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.getResourcesCount
+  return authorizedRateLimited.workspace.getResourcesCount
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const { workspaceId } = input.params;
@@ -199,7 +199,7 @@ export const updateWorkspaceNameImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.workspace.updateName
+  return authorizedRateLimited.workspace.updateName
     .use(workspaceRoleMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const workspace = await workspaceService.updateName(
@@ -232,7 +232,7 @@ export const deleteWorkspaceImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.workspace.delete
+  return authorizedRateLimited.workspace.delete
     .use(workspaceRoleMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const workspace = await workspaceService.getById(input.params.workspaceId);
@@ -278,7 +278,7 @@ export const getWorkspaceRestoreInfoImpl = (
     'owner',
   ]);
 
-  return authorized.workspace.getRestoreInfo
+  return authorizedRateLimited.workspace.getRestoreInfo
     .use(workspaceRestoreMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const result = await workspaceService.getWorkspaceRestoreInfo(input.params.workspaceId);
@@ -304,7 +304,7 @@ export const restoreWorkspaceImpl = (
     'owner',
   ]);
 
-  return authorized.workspace.restore
+  return authorizedRateLimited.workspace.restore
     .use(workspaceRestoreMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const result = await workspaceService.restoreWorkspace(input.params.workspaceId);
@@ -359,7 +359,7 @@ export const restoreWorkspaceImpl = (
  * Requires authentication
  */
 export const getWorkspacePreferencesImpl = (workspaceService: WorkspaceService) => {
-  return authorized.workspace.preferences.get.handler(async ({ input }) => {
+  return authorizedRateLimited.workspace.preferences.get.handler(async ({ input }) => {
     const preferences = await workspaceService.getPreferencesById(input.params.workspaceId);
 
     return {
@@ -382,7 +382,7 @@ export const updateWorkspacePreferencesImpl = (
     workspaceService
   );
 
-  return authorized.workspace.preferences.update
+  return authorizedRateLimited.workspace.preferences.update
     .use(workspaceMemberMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const preferences = await workspaceService.updatePreferences(
@@ -402,7 +402,7 @@ export const updateWorkspacePreferencesImpl = (
  * Requires authentication
  */
 export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberService) => {
-  return authorized.workspace.members.list.handler(async ({ input }) => {
+  return authorizedRateLimited.workspace.members.list.handler(async ({ input }) => {
     const page = input.query.page || 1;
     const perPage = input.query.per_page || 5;
     const { members, total } = await workspaceMemberService.getTeamMembers(
@@ -435,28 +435,30 @@ export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberS
  * Returns only the current user's membership and role without fetching the full members list
  */
 export const getWorkspaceMembershipImpl = (workspaceMemberService: WorkspaceMemberService) => {
-  return authorized.workspace.members.getMembership.handler(async ({ input, context }) => {
-    const membership = await workspaceMemberService.getMember(
-      context.user.id,
-      input.params.workspaceId
-    );
+  return authorizedRateLimited.workspace.members.getMembership.handler(
+    async ({ input, context }) => {
+      const membership = await workspaceMemberService.getMember(
+        context.user.id,
+        input.params.workspaceId
+      );
 
-    if (!membership) {
-      throw workspaceError.WORKSPACE_MEMBER_NOT_IN_WORKSPACE();
-    }
+      if (!membership) {
+        throw workspaceError.WORKSPACE_MEMBER_NOT_IN_WORKSPACE();
+      }
 
-    return {
-      message: 'Workspace membership retrieved successfully',
-      data: {
-        workspaceId: input.params.workspaceId,
-        workspaceMembership: {
-          workspaceMemberId: membership.workspaceMemberId,
-          workspaceRole: membership.workspaceRole,
-          workspaceJoinedAt: membership.createdAt,
+      return {
+        message: 'Workspace membership retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          workspaceMembership: {
+            workspaceMemberId: membership.workspaceMemberId,
+            workspaceRole: membership.workspaceRole,
+            workspaceJoinedAt: membership.createdAt,
+          },
         },
-      },
-    };
-  });
+      };
+    }
+  );
 };
 
 /**
@@ -473,7 +475,7 @@ export const updateMemberRoleImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.workspace.members.updateRole
+  return authorizedRateLimited.workspace.members.updateRole
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       await workspaceMemberService.updateMemberRole({
@@ -508,7 +510,7 @@ export const removeMemberImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.workspace.members.remove
+  return authorizedRateLimited.workspace.members.remove
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       await workspaceMemberService.removeMember({
@@ -540,7 +542,7 @@ export const leaveWorkspaceImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.members.leave
+  return authorizedRateLimited.workspace.members.leave
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const deletionDate = new Date();
@@ -594,7 +596,7 @@ export const getNotificationPreferencesImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.notifications.get
+  return authorizedRateLimited.workspace.notifications.get
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const notificationPreferences = await workspaceMemberService.getNotificationPreferences(
@@ -622,7 +624,7 @@ export const updateNotificationPreferencesImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.notifications.update
+  return authorizedRateLimited.workspace.notifications.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       await workspaceMemberService.updateNotificationPreferences(
@@ -654,7 +656,7 @@ export const updateLinkSettingsImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.workspace.linkSettings.update
+  return authorizedRateLimited.workspace.linkSettings.update
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const updated = await workspaceService.updatePreferences(input.params.workspaceId, {
@@ -693,7 +695,7 @@ export const getInviteUrlImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.invite.getUrl
+  return authorizedRateLimited.workspace.invite.getUrl
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const inviteUrl = await inviteService.getInviteUrl(input.params.workspaceId, context.user.id);
@@ -723,7 +725,7 @@ export const rotateInviteTokenImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.workspace.invite.rotate
+  return authorizedRateLimited.workspace.invite.rotate
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const inviteUrl = await inviteService.regenerateInviteUrl(
@@ -752,7 +754,7 @@ export const sendWorkspaceInvitesImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.invite.send
+  return authorizedRateLimited.workspace.invite.send
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const result = await inviteService.sendInvites({
@@ -794,7 +796,7 @@ export const acceptInviteImpl = (
   workspaceMemberService: WorkspaceMemberService,
   userService: UserService
 ) => {
-  return authorized.workspace.invite.accept.handler(async ({ input, context }) => {
+  return authorizedRateLimited.workspace.invite.accept.handler(async ({ input, context }) => {
     // Verify the token is for the correct workspace
     const validation = await inviteService.validateInvite(input.body.token);
 
@@ -852,7 +854,7 @@ export const getWorkspaceDomainsImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.domains.list
+  return authorizedRateLimited.workspace.domains.list
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const page = input.query.page || 1;
@@ -890,7 +892,7 @@ export const getDomainByIdImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.domains.getById
+  return authorizedRateLimited.workspace.domains.getById
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const domain = await domainService.getByIdWithPreferences(
@@ -919,7 +921,7 @@ export const addDomainImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.domains.add
+  return authorizedRateLimited.workspace.domains.add
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const domain = await domainService.create({
@@ -953,7 +955,7 @@ export const updateDomainImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.domains.update
+  return authorizedRateLimited.workspace.domains.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const domain = await domainService.updateDomainUrl(
@@ -987,7 +989,7 @@ export const deleteDomainImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.workspace.domains.delete
+  return authorizedRateLimited.workspace.domains.delete
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       await domainService.deleteDomain(input.params.domainId, input.params.workspaceId);
@@ -1013,7 +1015,7 @@ export const getDomainVerificationUrlImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.domains.getVerificationUrl
+  return authorizedRateLimited.workspace.domains.getVerificationUrl
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const domain = await domainService.getByIdWithPreferences(
@@ -1048,7 +1050,7 @@ export const getDomainRecordingPreferencesImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.domains.preferences.get
+  return authorizedRateLimited.workspace.domains.preferences.get
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const domain = await domainService.getByIdWithPreferences(
@@ -1082,7 +1084,7 @@ export const updateDomainRecordingPreferencesImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.domains.preferences.update
+  return authorizedRateLimited.workspace.domains.preferences.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       await domainService.updateRecordingPreferences(
@@ -1118,7 +1120,7 @@ export const replaceDomainRecordingPreferencesImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.domains.preferences.replace
+  return authorizedRateLimited.workspace.domains.preferences.replace
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       await domainService.replaceRecordingPreferences(
@@ -1155,7 +1157,7 @@ export const sendDomainInstructionsImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.domains.sendInstructions
+  return authorizedRateLimited.workspace.domains.sendInstructions
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       // Validate domain and get domain info
@@ -1211,7 +1213,7 @@ export const workspaceSearchImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.search
+  return authorizedRateLimited.workspace.search
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const results = await workspaceService.search(
@@ -1240,7 +1242,7 @@ export const getInvitePolicyImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.invitePolicy.get
+  return authorizedRateLimited.workspace.invitePolicy.get
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const policy = await workspaceService.getInvitePolicy(input.params.workspaceId);
@@ -1264,7 +1266,7 @@ export const updateInvitePolicyImpl = (
     'owner',
   ]);
 
-  return authorized.workspace.invitePolicy.update
+  return authorizedRateLimited.workspace.invitePolicy.update
     .use(requireOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const policy = await workspaceService.updateInvitePolicy(input.params.workspaceId, {
@@ -1284,7 +1286,7 @@ export const updateInvitePolicyImpl = (
  * Requires authentication
  */
 export const suggestWorkspacesImpl = (workspaceService: WorkspaceService) => {
-  return authorized.workspace.suggest.handler(async ({ input, context }) => {
+  return authorizedRateLimited.workspace.suggest.handler(async ({ input, context }) => {
     const suggestions = await workspaceService.suggestWorkspaces(
       context.user.email,
       context.user.id,
@@ -1306,7 +1308,7 @@ export const suggestWorkspacesImpl = (workspaceService: WorkspaceService) => {
  * Sends confirmation email to requester when access is requested
  */
 export const joinWorkspaceImpl = (inviteService: InviteService, emailService: EmailService) => {
-  return authorized.workspace.join.handler(async ({ input, context }) => {
+  return authorizedRateLimited.workspace.join.handler(async ({ input, context }) => {
     const result = await inviteService.joinWorkspace({
       workspaceId: input.params.workspaceId,
       userId: context.user.id,
@@ -1357,17 +1359,19 @@ export const joinWorkspaceImpl = (inviteService: InviteService, emailService: Em
  * Requires authentication (owner only, validated in service)
  */
 export const validateAccessRequestImpl = (inviteService: InviteService) => {
-  return authorized.workspace.accessRequest.validate.handler(async ({ input, context }) => {
-    const result = await inviteService.validateAccessRequest({
-      token: input.query.token,
-      viewerId: context.user.id,
-    });
+  return authorizedRateLimited.workspace.accessRequest.validate.handler(
+    async ({ input, context }) => {
+      const result = await inviteService.validateAccessRequest({
+        token: input.query.token,
+        viewerId: context.user.id,
+      });
 
-    return {
-      message: 'Access request validated successfully',
-      data: result,
-    };
-  });
+      return {
+        message: 'Access request validated successfully',
+        data: result,
+      };
+    }
+  );
 };
 
 /**
@@ -1376,17 +1380,19 @@ export const validateAccessRequestImpl = (inviteService: InviteService) => {
  * Welcome email is sent to requester by the invite service
  */
 export const approveAccessRequestImpl = (inviteService: InviteService) => {
-  return authorized.workspace.accessRequest.approve.handler(async ({ input, context }) => {
-    const result = await inviteService.approveAccessRequest({
-      token: input.body.token,
-      approverId: context.user.id,
-    });
+  return authorizedRateLimited.workspace.accessRequest.approve.handler(
+    async ({ input, context }) => {
+      const result = await inviteService.approveAccessRequest({
+        token: input.body.token,
+        approverId: context.user.id,
+      });
 
-    return {
-      message: 'Access request approved successfully',
-      data: result,
-    };
-  });
+      return {
+        message: 'Access request approved successfully',
+        data: result,
+      };
+    }
+  );
 };
 
 /**
@@ -1394,17 +1400,19 @@ export const approveAccessRequestImpl = (inviteService: InviteService) => {
  * Requires authentication (owner only, validated in service)
  */
 export const declineAccessRequestImpl = (inviteService: InviteService) => {
-  return authorized.workspace.accessRequest.decline.handler(async ({ input, context }) => {
-    const result = await inviteService.declineAccessRequest({
-      token: input.body.token,
-      declinerId: context.user.id,
-    });
+  return authorizedRateLimited.workspace.accessRequest.decline.handler(
+    async ({ input, context }) => {
+      const result = await inviteService.declineAccessRequest({
+        token: input.body.token,
+        declinerId: context.user.id,
+      });
 
-    return {
-      message: 'Access request declined',
-      data: result,
-    };
-  });
+      return {
+        message: 'Access request declined',
+        data: result,
+      };
+    }
+  );
 };
 
 /**
@@ -1413,7 +1421,7 @@ export const declineAccessRequestImpl = (inviteService: InviteService) => {
  * Returns access status for the current user to determine what UI to show
  */
 export const getWorkspaceStatusImpl = (workspaceService: WorkspaceService) => {
-  return authorized.workspace.status.handler(async ({ input, context }) => {
+  return authorizedRateLimited.workspace.status.handler(async ({ input, context }) => {
     const status = await workspaceService.getStatus(
       input.params.workspaceId,
       context.user.id,
@@ -1437,7 +1445,7 @@ export const getWorkspaceBillingEmailImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.workspace.getWorkspaceBillingEmail
+  return authorizedRateLimited.workspace.getWorkspaceBillingEmail
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const email = await workspaceService.getWorkspaceBillingEmail(input.params.workspaceId);
@@ -1467,7 +1475,7 @@ export const updateWorkspaceBillingEmailImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.workspace.updateWorkspaceBillingEmail
+  return authorizedRateLimited.workspace.updateWorkspaceBillingEmail
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       // Get current billing email before update
@@ -1532,7 +1540,7 @@ export const requestBillingEmailChangeImpl = (
     ['admin', 'owner']
   );
 
-  return authorized.workspace.requestBillingEmailChange
+  return authorizedRateLimited.workspace.requestBillingEmailChange
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const workspace = await workspaceService.getById(input.params.workspaceId);
@@ -1589,67 +1597,69 @@ export const verifyBillingEmailChangeImpl = (
   emailService: EmailService,
   tokenService: TokenService
 ) => {
-  return authorized.workspace.verifyBillingEmailChange.handler(async ({ input, context }) => {
-    const payload = tokenService.verifyBillingEmailVerificationToken(input.body.token);
+  return authorizedRateLimited.workspace.verifyBillingEmailChange.handler(
+    async ({ input, context }) => {
+      const payload = tokenService.verifyBillingEmailVerificationToken(input.body.token);
 
-    if (!payload) {
-      throw workspaceError.FORBIDDEN();
+      if (!payload) {
+        throw workspaceError.FORBIDDEN();
+      }
+
+      const workspaceId = payload.wi;
+      const memberId = payload.mi;
+      const newEmail = payload.be;
+
+      const member = await workspaceMemberService.getMember(context.user.id, workspaceId);
+
+      if (!member) {
+        throw workspaceError.FORBIDDEN();
+      }
+
+      if (member.workspaceMemberId !== memberId) {
+        throw workspaceError.FORBIDDEN();
+      }
+
+      if (member.isDeleted) {
+        throw workspaceError.FORBIDDEN();
+      }
+
+      const previousEmail = await workspaceService.getWorkspaceBillingEmail(workspaceId);
+
+      const updated = await workspaceService.updateWorkspaceBillingEmail(workspaceId, newEmail);
+
+      const owners = await workspaceMemberService.getOwners(workspaceId);
+
+      for (const owner of owners) {
+        await emailService.sendSafeBillingEmailUpdated(
+          { to: owner.email },
+          {
+            previousEmail: previousEmail || 'Not set',
+            newEmail: newEmail,
+            workspaceId,
+          }
+        );
+      }
+
+      if (previousEmail && previousEmail !== newEmail) {
+        await emailService.sendSafeBillingEmailUpdated(
+          { to: previousEmail },
+          {
+            previousEmail: previousEmail,
+            newEmail: newEmail,
+            workspaceId,
+          }
+        );
+      }
+
+      return {
+        message: 'Billing email updated successfully',
+        data: {
+          workspaceId: workspaceId,
+          workspaceBillingEmail: updated.workspaceBillingEmail!,
+        },
+      };
     }
-
-    const workspaceId = payload.wi;
-    const memberId = payload.mi;
-    const newEmail = payload.be;
-
-    const member = await workspaceMemberService.getMember(context.user.id, workspaceId);
-
-    if (!member) {
-      throw workspaceError.FORBIDDEN();
-    }
-
-    if (member.workspaceMemberId !== memberId) {
-      throw workspaceError.FORBIDDEN();
-    }
-
-    if (member.isDeleted) {
-      throw workspaceError.FORBIDDEN();
-    }
-
-    const previousEmail = await workspaceService.getWorkspaceBillingEmail(workspaceId);
-
-    const updated = await workspaceService.updateWorkspaceBillingEmail(workspaceId, newEmail);
-
-    const owners = await workspaceMemberService.getOwners(workspaceId);
-
-    for (const owner of owners) {
-      await emailService.sendSafeBillingEmailUpdated(
-        { to: owner.email },
-        {
-          previousEmail: previousEmail || 'Not set',
-          newEmail: newEmail,
-          workspaceId,
-        }
-      );
-    }
-
-    if (previousEmail && previousEmail !== newEmail) {
-      await emailService.sendSafeBillingEmailUpdated(
-        { to: previousEmail },
-        {
-          previousEmail: previousEmail,
-          newEmail: newEmail,
-          workspaceId,
-        }
-      );
-    }
-
-    return {
-      message: 'Billing email updated successfully',
-      data: {
-        workspaceId: workspaceId,
-        workspaceBillingEmail: updated.workspaceBillingEmail!,
-      },
-    };
-  });
+  );
 };
 
 /**

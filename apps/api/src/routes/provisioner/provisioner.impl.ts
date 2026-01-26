@@ -3,7 +3,7 @@
  * Implements workspace creation and provisioning
  */
 
-import { authorized } from '@/api/middleware/auth.orpc';
+import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import type { EmailService } from '@/api/services/email.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 
@@ -17,7 +17,7 @@ export const createWorkspaceImpl = (
   provisionerService: ProvisionerService,
   emailService: EmailService
 ) => {
-  return authorized.provisioner.createWorkspace.handler(async ({ input, context }) => {
+  return authorizedRateLimited.provisioner.createWorkspace.handler(async ({ input, context }) => {
     // Call the appropriate method based on the discriminated union type
     // All workspaces start on free plan - users upgrade via subscription
     const result =

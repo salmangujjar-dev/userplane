@@ -3,6 +3,7 @@
  * Contains business logic for domain management
  */
 
+import type { CacheService } from '@workspace/cache';
 import type { DomainStatus } from '@workspace/contract';
 import { domainError, workspaceError } from '@workspace/contract';
 
@@ -13,6 +14,7 @@ import {
   type DomainSortField,
   type SortDirection,
 } from '@/api/repositories/domains.repository';
+import type { LinkRepository } from '@/api/repositories/links.repository';
 import type { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
 import type { UserService } from '@/api/services/user.service';
@@ -25,6 +27,8 @@ export interface DomainServiceDeps {
   emailService?: EmailService;
   workspaceService?: WorkspaceService;
   userService?: UserService;
+  linkRepo?: LinkRepository;
+  cacheService?: CacheService;
 }
 
 export class DomainService {
@@ -393,6 +397,9 @@ export class DomainService {
       throw domainError.DOMAIN_PREFERENCES_UPDATE_FAILED();
     }
 
+    // Invalidate link preferences cache for all links in this domain
+    await this.invalidateDomainLinkCaches(domainId);
+
     return updated;
   }
 
@@ -441,6 +448,9 @@ export class DomainService {
       throw domainError.DOMAIN_PREFERENCES_UPDATE_FAILED();
     }
 
+    // Invalidate link preferences cache for all links in this domain
+    await this.invalidateDomainLinkCaches(domainId);
+
     return updated;
   }
 
@@ -480,5 +490,32 @@ export class DomainService {
    */
   async countByWorkspace(workspaceId: string): Promise<number> {
     return this.deps.domainRepo.countByWorkspace(workspaceId);
+  }
+
+  /**
+   * Invalidate link preferences cache for all links in a domain
+   * Called when domain recording preferences change
+   */
+  private async invalidateDomainLinkCaches(domainId: string): Promise<void> {
+    if (!this.deps.linkRepo || !this.deps.cacheService) return;
+
+    try {
+      const linkIds = await this.deps.linkRepo.getLinkIdsByDomainId(domainId);
+
+      for (const linkId of linkIds) {
+        await this.deps.cacheService.invalidateLinkPreferences(linkId);
+      }
+
+      if (linkIds.length > 0) {
+        console.log(
+          `[DomainService] Invalidated link preferences cache for ${linkIds.length} links in domain ${domainId}`
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `[DomainService] Failed to invalidate link caches for domain ${domainId}:`,
+        error
+      );
+    }
   }
 }
