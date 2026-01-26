@@ -5,7 +5,7 @@
 
 import { linkError } from '@workspace/contract';
 
-import { authorized } from '@/api/middleware/auth.orpc';
+import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { LinkService } from '@/api/services/link.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
@@ -23,7 +23,7 @@ export const getLinksImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.link.list
+  return authorizedRateLimited.link.list
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const filters = {
@@ -73,7 +73,7 @@ export const createLinkImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.link.create
+  return authorizedRateLimited.link.create
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const createdLink = await linkService.create({
@@ -108,7 +108,7 @@ export const getLinkByIdImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.link.getById
+  return authorizedRateLimited.link.getById
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const link = await linkService.getById(input.params.linkId, input.params.workspaceId);
@@ -134,7 +134,7 @@ export const updateLinkImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.link.update
+  return authorizedRateLimited.link.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       await linkService.update(input.params.linkId, input.params.workspaceId, {
@@ -168,7 +168,7 @@ export const deleteLinkImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.link.delete
+  return authorizedRateLimited.link.delete
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       // Fetch link to check creator

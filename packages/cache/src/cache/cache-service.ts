@@ -28,6 +28,23 @@ export interface CachedSubscriptionAccessStatus {
 }
 
 /**
+ * Cached subscription status (full status for billing page)
+ */
+export interface CachedSubscriptionStatus {
+  contractDetail: {
+    status: string | null;
+    planId: string | null;
+    planName: string | null;
+    currentPeriodEnd: Date | string | null;
+    currentPeriodStart: Date | string | null;
+    cancelAtPeriodEnd: boolean;
+    cancelledAt: Date | string | null;
+    onHoldSince: Date | string | null;
+  };
+  accessDetail: CachedSubscriptionAccessStatus;
+}
+
+/**
  * Cached usage summary
  */
 export interface CachedUsageSummary {
@@ -46,6 +63,14 @@ export interface CachedUsageSummary {
 export interface CacheServiceConfig {
   redis: Redis | null;
   enabled: boolean;
+}
+
+/**
+ * Cache operation options
+ */
+export interface CacheOptions {
+  /** Skip cache lookup, force database query */
+  bypass?: boolean;
 }
 
 export class CacheService {
@@ -118,10 +143,13 @@ export class CacheService {
 
   /**
    * Get cached subscription access status
+   * @param options.bypass - If true, returns null to force database lookup
    */
   async getSubscriptionAccessStatus(
-    workspaceId: string
+    workspaceId: string,
+    options?: CacheOptions
   ): Promise<CachedSubscriptionAccessStatus | null> {
+    if (options?.bypass) return null;
     const key = billingKeys.accessStatus(workspaceId);
     return this.get<CachedSubscriptionAccessStatus>(key);
   }
@@ -138,9 +166,35 @@ export class CacheService {
   }
 
   /**
-   * Get cached dispute status
+   * Get cached subscription status (full status for billing page)
+   * @param options.bypass - If true, returns null to force database lookup
    */
-  async getHasOpenDispute(workspaceId: string): Promise<boolean | null> {
+  async getSubscriptionStatus(
+    workspaceId: string,
+    options?: CacheOptions
+  ): Promise<CachedSubscriptionStatus | null> {
+    if (options?.bypass) return null;
+    const key = billingKeys.subscriptionStatus(workspaceId);
+    return this.get<CachedSubscriptionStatus>(key);
+  }
+
+  /**
+   * Cache subscription status (full status for billing page)
+   */
+  async setSubscriptionStatus(
+    workspaceId: string,
+    status: CachedSubscriptionStatus
+  ): Promise<void> {
+    const key = billingKeys.subscriptionStatus(workspaceId);
+    await this.set(key, status, TTL.BILLING_STATUS);
+  }
+
+  /**
+   * Get cached dispute status
+   * @param options.bypass - If true, returns null to force database lookup
+   */
+  async getHasOpenDispute(workspaceId: string, options?: CacheOptions): Promise<boolean | null> {
+    if (options?.bypass) return null;
     const key = disputeKeys.hasOpen(workspaceId);
     return this.get<boolean>(key);
   }
@@ -155,8 +209,13 @@ export class CacheService {
 
   /**
    * Get cached refund status
+   * @param options.bypass - If true, returns null to force database lookup
    */
-  async getHasSuccessfulRefund(workspaceId: string): Promise<boolean | null> {
+  async getHasSuccessfulRefund(
+    workspaceId: string,
+    options?: CacheOptions
+  ): Promise<boolean | null> {
+    if (options?.bypass) return null;
     const key = refundKeys.hasSuccess(workspaceId);
     return this.get<boolean>(key);
   }
@@ -175,8 +234,13 @@ export class CacheService {
 
   /**
    * Get cached usage summary
+   * @param options.bypass - If true, returns null to force database lookup
    */
-  async getUsageSummary(workspaceId: string): Promise<CachedUsageSummary | null> {
+  async getUsageSummary(
+    workspaceId: string,
+    options?: CacheOptions
+  ): Promise<CachedUsageSummary | null> {
+    if (options?.bypass) return null;
     const key = entitlementKeys.usageSummary(workspaceId);
     return this.get<CachedUsageSummary>(key);
   }
@@ -195,8 +259,10 @@ export class CacheService {
 
   /**
    * Get cached link preferences
+   * @param options.bypass - If true, returns null to force database lookup
    */
-  async getLinkPreferences<T>(linkId: string): Promise<T | null> {
+  async getLinkPreferences<T>(linkId: string, options?: CacheOptions): Promise<T | null> {
+    if (options?.bypass) return null;
     const key = linkKeys.preferences(linkId);
     return this.get<T>(key);
   }

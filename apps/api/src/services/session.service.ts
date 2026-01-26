@@ -4,6 +4,7 @@
  */
 
 import { tasks } from '@trigger.dev/sdk/v3';
+import type { CacheService } from '@workspace/cache';
 import { sessionError } from '@workspace/contract';
 import type {
   ClientActionsStorageClient,
@@ -56,6 +57,7 @@ export interface SessionServiceDeps {
   clientActionsStorage: ClientActionsStorageClient;
   linkService: LinkService;
   entitlementService: EntitlementService;
+  cacheService?: CacheService;
 }
 
 /**
@@ -116,6 +118,29 @@ export class SessionService {
   }
 
   /**
+   * Fetch link with workspace preferences using cache-first pattern
+   * Cache TTL: 600s (10 minutes)
+   */
+  private async getLinkWithPreferences(linkId: string): Promise<LinkWithWorkspacePrefsRow | null> {
+    // Try cache first
+    const cached =
+      await this.deps.cacheService?.getLinkPreferences<LinkWithWorkspacePrefsRow>(linkId);
+    if (cached) {
+      return cached;
+    }
+
+    // Fetch from database
+    const linkData = await this.deps.linkRepo.findByIdWithWorkspacePrefs(linkId);
+
+    // Cache the result if found
+    if (linkData) {
+      await this.deps.cacheService?.setLinkPreferences(linkId, linkData);
+    }
+
+    return linkData;
+  }
+
+  /**
    * Initialize a recording session for a link
    * GET /api/v1/session
    * Validates the link token and extracts the link ID before proceeding
@@ -124,8 +149,8 @@ export class SessionService {
     // Verify link token and extract link ID
     const linkId = this.deps.linkService.verifyLinkToken(linkToken);
 
-    // Fetch link with workspace preferences
-    const linkData = await this.deps.linkRepo.findByIdWithWorkspacePrefs(linkId);
+    // Fetch link with workspace preferences (cached)
+    const linkData = await this.getLinkWithPreferences(linkId);
 
     if (!linkData) {
       // Check if link was deleted
@@ -210,8 +235,8 @@ export class SessionService {
       throw sessionError.SESSION_TOKEN_EXPIRED();
     }
 
-    // Re-validate link state (may have been deleted since session init)
-    const linkData = await this.deps.linkRepo.findByIdWithWorkspacePrefs(sessionPayload.lid);
+    // Re-validate link state (may have been deleted since session init, cached)
+    const linkData = await this.getLinkWithPreferences(sessionPayload.lid);
     if (!linkData) {
       const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(sessionPayload.lid);
       if (isSoftDeleted === true) {

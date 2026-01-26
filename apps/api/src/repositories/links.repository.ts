@@ -625,4 +625,30 @@ export class LinkRepository {
 
     return deleted;
   }
+
+  /**
+   * Get link IDs by domain ID
+   * Used for cache invalidation when domain preferences change
+   */
+  async getLinkIdsByDomainId(domainId: string): Promise<string[]> {
+    const results = await this.db
+      .select({ linkId: links.linkId })
+      .from(links)
+      .where(and(eq(links.domainId, domainId), eq(links.isDeleted, false)));
+
+    return results.map((r) => r.linkId);
+  }
+
+  /**
+   * Get link IDs by workspace ID
+   * Used for cache invalidation when workspace preferences change
+   */
+  async getLinkIdsByWorkspaceId(workspaceId: string): Promise<string[]> {
+    const results = await this.db
+      .select({ linkId: links.linkId })
+      .from(links)
+      .where(and(eq(links.workspaceId, workspaceId), eq(links.isDeleted, false)));
+
+    return results.map((r) => r.linkId);
+  }
 }

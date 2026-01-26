@@ -56,10 +56,32 @@ export class BillingService {
    * Get subscription status summary for a workspace
    * Extended with access status for entitlement checks
    *
+   * Uses cache-first pattern with 300s TTL for billing page performance.
+   *
    * Note: To check if a subscription exists, check if contractDetail.planId is not null
    * or if accessDetail.effectivePlanId is not 'free'
    */
   async getSubscriptionStatus(workspaceId: string) {
+    // Try cache first
+    const cached = await this.deps.cacheService?.getSubscriptionStatus(workspaceId);
+    if (cached) {
+      return cached;
+    }
+
+    // Compute status from database
+    const result = await this._computeSubscriptionStatus(workspaceId);
+
+    // Cache the result
+    await this.deps.cacheService?.setSubscriptionStatus(workspaceId, result);
+
+    return result;
+  }
+
+  /**
+   * Internal method to compute subscription status from database
+   * Called when cache miss occurs
+   */
+  private async _computeSubscriptionStatus(workspaceId: string) {
     const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
 
     if (!subscription) {

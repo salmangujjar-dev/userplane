@@ -3,7 +3,7 @@
  * Implements the account contract defined in @workspace/contract
  */
 
-import { authorized } from '@/api/middleware/auth.orpc';
+import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import type { UserService } from '@/api/services/user.service';
 
 /**
@@ -12,7 +12,7 @@ import type { UserService } from '@/api/services/user.service';
  * Service throws ORPCError directly, no error mapping needed
  */
 export const getAccountImpl = (userService: UserService) => {
-  return authorized.account.get.handler(async ({ context }) => {
+  return authorizedRateLimited.account.get.handler(async ({ context }) => {
     const userData = await userService.getById(context.user.id);
 
     return {
@@ -31,7 +31,7 @@ export const getAccountImpl = (userService: UserService) => {
  * Service throws ORPCError directly, no error mapping needed
  */
 export const updateAccountImpl = (userService: UserService) => {
-  return authorized.account.update.handler(async ({ input, context }) => {
+  return authorizedRateLimited.account.update.handler(async ({ input, context }) => {
     const updatedUser = await userService.updateName(context.user.id, input.body.name);
 
     return {

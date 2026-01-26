@@ -5,7 +5,7 @@
 
 import { recordingError } from '@workspace/contract';
 
-import { authorized } from '@/api/middleware/auth.orpc';
+import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
@@ -23,7 +23,7 @@ export const getRecordingsImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.recording.list
+  return authorizedRateLimited.recording.list
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const filters = {
@@ -71,7 +71,7 @@ export const getRecordingByIdImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.recording.getById
+  return authorizedRateLimited.recording.getById
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const recording = await recordingService.getById(
@@ -100,7 +100,7 @@ export const deleteRecordingImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.recording.delete
+  return authorizedRateLimited.recording.delete
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       // Fetch recording to check creator
@@ -140,7 +140,7 @@ export const getRecordingVideoImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.recording.resources.video
+  return authorizedRateLimited.recording.resources.video
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const resource = await recordingService.getVideoResource(
@@ -169,7 +169,7 @@ export const getRecordingThumbnailImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.recording.resources.thumbnail
+  return authorizedRateLimited.recording.resources.thumbnail
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const resource = await recordingService.getThumbnailResource(
@@ -198,7 +198,7 @@ export const getRecordingConsoleLogImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.recording.resources.consoleLog
+  return authorizedRateLimited.recording.resources.consoleLog
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const resource = await recordingService.getConsoleLogResource(
@@ -227,7 +227,7 @@ export const getRecordingNetworkLogImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.recording.resources.networkLog
+  return authorizedRateLimited.recording.resources.networkLog
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const resource = await recordingService.getNetworkLogResource(
@@ -256,7 +256,7 @@ export const getRecordingActionImpl = (
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.recording.resources.action
+  return authorizedRateLimited.recording.resources.action
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const resource = await recordingService.getActionResource(
