@@ -7,8 +7,10 @@
  * - Checking and enforcing resource limits
  * - Tracking resource consumption
  * - Providing usage summaries for UI
+ * - Caching usage summaries for dashboard performance
  */
 
+import type { CacheService } from '@workspace/cache';
 import type { SubscriptionAccessStatus } from '@workspace/contract';
 import type { PlanId, PlanName, ResourceType } from '@workspace/pricing';
 import {
@@ -27,6 +29,7 @@ export interface EntitlementServiceDeps {
   entitlementRepo: EntitlementRepository;
   billingService: BillingService;
   subscriptionRepo: SubscriptionRepository;
+  cacheService?: CacheService;
 }
 
 /**
@@ -414,8 +417,29 @@ export class EntitlementService {
   /**
    * Get usage summary for all resources (for UI)
    * Uses billing service to determine effective plan based on subscription access status
+   * Supports caching for dashboard performance
    */
   async getUsageSummary(workspaceId: string): Promise<UsageSummary> {
+    // Try cache first
+    const cached = await this.deps.cacheService?.getUsageSummary(workspaceId);
+    if (cached) {
+      return cached as UsageSummary;
+    }
+
+    // Compute usage summary from database
+    const result = await this._computeUsageSummary(workspaceId);
+
+    // Cache the result
+    await this.deps.cacheService?.setUsageSummary(workspaceId, result);
+
+    return result;
+  }
+
+  /**
+   * Internal method to compute usage summary from database
+   * Called when cache miss occurs
+   */
+  private async _computeUsageSummary(workspaceId: string): Promise<UsageSummary> {
     const entitlementsList = await this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
 
     // Get effective plan from billing service (handles subscription state logic)

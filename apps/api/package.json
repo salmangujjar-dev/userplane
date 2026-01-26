@@ -6,6 +6,7 @@
     "@orpc/server": "^1.12.3",
     "@trigger.dev/sdk": "4.3.1",
     "@workspace/auth": "workspace:*",
+    "@workspace/cache": "workspace:*",
     "@workspace/contract": "workspace:*",
     "@workspace/db": "workspace:*",
     "@workspace/email": "workspace:*",

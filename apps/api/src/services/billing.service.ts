@@ -3,8 +3,10 @@
  *
  * Provides read-only operations for subscription status and plan change operations.
  * Webhook processing is handled by WebhookProcessorService.
+ * Supports optional caching for high-frequency access checks.
  */
 
+import type { CacheService } from '@workspace/cache';
 import { billingError, type SubscriptionAccessStatus } from '@workspace/contract';
 import type { DodoPayments } from '@workspace/payments/client';
 import { getProductByPlanId } from '@workspace/payments/products';
@@ -23,6 +25,7 @@ export interface BillingServiceDeps {
   disputeRepo: DisputeRepository;
   refundRepo: RefundRepository;
   dodoClient: DodoPayments;
+  cacheService?: CacheService;
 }
 
 /**
@@ -100,12 +103,38 @@ export class BillingService {
    * Get subscription access status for entitlement checks
    * Determines if a workspace has entitled access based on subscription state
    *
+   * Uses cache-first pattern to reduce database queries.
+   *
    * Priority order:
-   * 1. Check for open disputes (hard safety latch - blocks all access)
-   * 2. Check for successful refunds (hard safety latch - blocks all access)
-   * 3. Check subscription status (normal flow)
+   * 1. Check cache for subscription access status
+   * 2. Check for open disputes (hard safety latch - blocks all access)
+   * 3. Check for successful refunds (hard safety latch - blocks all access)
+   * 4. Check subscription status (normal flow)
+   * 5. Cache result for future requests
    */
   async getSubscriptionAccessStatus(workspaceId: string): Promise<SubscriptionAccessStatus> {
+    // Try cache first
+    const cached = await this.deps.cacheService?.getSubscriptionAccessStatus(workspaceId);
+    if (cached) {
+      return cached as SubscriptionAccessStatus;
+    }
+
+    // Compute access status from database
+    const result = await this._computeSubscriptionAccessStatus(workspaceId);
+
+    // Cache the result
+    await this.deps.cacheService?.setSubscriptionAccessStatus(workspaceId, result);
+
+    return result;
+  }
+
+  /**
+   * Internal method to compute subscription access status from database
+   * Called when cache miss occurs
+   */
+  private async _computeSubscriptionAccessStatus(
+    workspaceId: string
+  ): Promise<SubscriptionAccessStatus> {
     // CHECK DISPUTES FIRST - hard safety latch
     // Open disputes override all subscription state and block access
     const hasOpenDispute = await this.deps.disputeRepo.hasOpenDispute(workspaceId);

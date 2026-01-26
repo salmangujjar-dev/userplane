@@ -10,8 +10,10 @@
  * - Disputes are tracked separately from subscriptions
  * - Open disputes override subscription entitlements (hard safety latch)
  * - Payment ID is used to map to subscription via Dodo API
+ * - Cache invalidation on dispute state changes
  */
 
+import type { CacheService } from '@workspace/cache';
 import type { DbClient } from '@workspace/db';
 import type { getDodoPaymentsClient } from '@workspace/payments/client';
 import type { DisputeEventType, DodoDispute, WebhookPayload } from '@workspace/payments/types';
@@ -48,6 +50,7 @@ export interface DisputeProcessorDeps {
   webhookEventsRepo: WebhookEventsRepository;
   db: DbClient;
   dodoClient?: ReturnType<typeof getDodoPaymentsClient>;
+  cacheService?: CacheService;
 }
 
 export class DisputeProcessorService {
@@ -162,6 +165,19 @@ export class DisputeProcessorService {
           { tx }
         );
       });
+
+      // Invalidate dispute cache for this workspace
+      if (workspaceId && this.deps.cacheService) {
+        try {
+          await this.deps.cacheService.invalidateDispute(workspaceId);
+          console.log(`[DisputeProcessor] Invalidated dispute cache for workspace: ${workspaceId}`);
+        } catch (cacheError) {
+          console.warn(
+            `[DisputeProcessor] Failed to invalidate cache for workspace ${workspaceId}:`,
+            cacheError
+          );
+        }
+      }
 
       console.log(
         `[DisputeProcessor] SUCCESS: Processed ${eventType} for dispute ${dispute.dispute_id}`

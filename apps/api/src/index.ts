@@ -1,5 +1,6 @@
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { onError } from '@orpc/server';
+import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@workspace/cache';
 import { createAppLogger } from '@workspace/logger';
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
@@ -8,6 +9,7 @@ import { logger as honoLogger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 
 import { auth } from '@/api/clients/auth';
+import { rateLimiter } from '@/api/clients/redis';
 import { env, logConfig } from '@/api/env';
 import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { apiRouter } from '@/api/routes/api.router';
@@ -55,6 +57,35 @@ app.use(
 );
 
 app.use('*', prettyJSON());
+
+// Rate limiting middleware - after CORS, before routes
+// Public endpoints rate limiting (IP-based)
+if (rateLimiter.isAvailable()) {
+  // Status endpoints (/, /health)
+  app.use('/api/v1/', rateLimitMiddlewares.public(rateLimiter));
+  app.use('/api/v1/health', rateLimitMiddlewares.public(rateLimiter));
+
+  // Invite validation (public)
+  app.use('/api/v1/invite/*', rateLimitMiddlewares.public(rateLimiter));
+
+  // Domain verification (public)
+  app.use('/api/v1/domains/*', rateLimitMiddlewares.public(rateLimiter));
+
+  // Session initialization (stricter limit for recording init)
+  app.use('/api/v1/session', rateLimitMiddlewares.session(rateLimiter));
+  app.use('/api/v1/session/*', rateLimitMiddlewares.session(rateLimiter));
+
+  // Webhook endpoints (high limit to ensure processing)
+  app.use(
+    '/api/auth/dodopayments/webhooks/*',
+    createRateLimitMiddleware(rateLimiter, {
+      tier: 'webhook',
+      getIdentifier: getClientIP,
+    })
+  );
+
+  logger.info('Rate limiting middleware enabled');
+}
 
 // Better Auth routes - must come before API routes
 // For webhook routes, intercept headers and store in AsyncLocalStorage
