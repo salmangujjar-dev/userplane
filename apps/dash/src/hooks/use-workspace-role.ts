@@ -9,6 +9,7 @@ export type WorkspaceRole = 'owner' | 'admin' | 'member';
 export interface WorkspaceMembership {
   workspaceMemberId: string;
   workspaceRole: WorkspaceRole;
+  workspaceJoinedAt: Date;
 }
 
 /**

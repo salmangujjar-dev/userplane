@@ -41,8 +41,6 @@ export const getAllWorkspacesImpl = (workspaceService: WorkspaceService) => {
       page,
       perPage,
       {
-        minimal: input.query.minimal,
-        includeNotificationPreferences: input.query.include_notification_preference,
         includeWorkspaceMembership: input.query.include_workspace_membership,
       }
     );
@@ -454,6 +452,7 @@ export const getWorkspaceMembershipImpl = (workspaceMemberService: WorkspaceMemb
         workspaceMembership: {
           workspaceMemberId: membership.workspaceMemberId,
           workspaceRole: membership.workspaceRole,
+          workspaceJoinedAt: membership.createdAt,
         },
       },
     };

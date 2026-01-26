@@ -205,11 +205,9 @@ export class WorkspaceRepository {
   async findByUserId(
     userId: string,
     options?: {
-      includeNotificationPreferences?: boolean;
       includeWorkspaceMembership?: boolean;
     }
   ) {
-    const includeNotifications = options?.includeNotificationPreferences || false;
     const includeMembership = options?.includeWorkspaceMembership || false;
 
     // Build the select object dynamically based on options
@@ -221,20 +219,11 @@ export class WorkspaceRepository {
       updatedAt: workspaces.updatedAt,
     };
 
-    if (includeNotifications) {
-      selectFields.notificationPreferences = {
-        notifyFeatureHighlights: workspaceMembers.notifyFeatureHighlights,
-        notifyBillingEvents: workspaceMembers.notifyBillingEvents,
-        notifyUsageEvents: workspaceMembers.notifyUsageEvents,
-        notifyIncomingEvents: workspaceMembers.notifyIncomingEvents,
-        notifyAdminEvents: workspaceMembers.notifyAdminEvents,
-      };
-    }
-
     if (includeMembership) {
       selectFields.workspaceMembership = {
         workspaceMemberId: workspaceMembers.workspaceMemberId,
         workspaceRole: workspaceMembers.workspaceRole,
+        workspaceJoinedAt: workspaceMembers.createdAt,
       };
     }
 
@@ -307,20 +296,15 @@ export class WorkspaceRepository {
 
   /**
    * Find workspaces for a user with pagination
-   * Supports minimal mode which returns only ID and name
    */
   async findByUserIdPaginated(
     userId: string,
     limit: number,
     offset: number,
     options?: {
-      minimal?: boolean;
-      includeNotificationPreferences?: boolean;
       includeWorkspaceMembership?: boolean;
     }
   ) {
-    const isMinimal = options?.minimal || false;
-    const includeNotifications = options?.includeNotificationPreferences || false;
     const includeMembership = options?.includeWorkspaceMembership || false;
 
     // Select all needed fields from both tables
@@ -332,11 +316,7 @@ export class WorkspaceRepository {
         updatedAt: workspaces.updatedAt,
         workspaceMemberId: workspaceMembers.workspaceMemberId,
         workspaceRole: workspaceMembers.workspaceRole,
-        notifyFeatureHighlights: workspaceMembers.notifyFeatureHighlights,
-        notifyBillingEvents: workspaceMembers.notifyBillingEvents,
-        notifyUsageEvents: workspaceMembers.notifyUsageEvents,
-        notifyIncomingEvents: workspaceMembers.notifyIncomingEvents,
-        notifyAdminEvents: workspaceMembers.notifyAdminEvents,
+        workspaceJoinedAt: workspaceMembers.createdAt,
       })
       .from(workspaces)
       .innerJoin(workspaceMembers, eq(workspaces.workspaceId, workspaceMembers.workspaceId))
@@ -352,13 +332,6 @@ export class WorkspaceRepository {
 
     // Map the result to the expected structure based on options
     return result.map((row) => {
-      if (isMinimal) {
-        return {
-          workspaceId: row.workspaceId,
-          workspaceName: row.workspaceName,
-        };
-      }
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const workspace: any = {
         workspaceId: row.workspaceId,
@@ -367,20 +340,11 @@ export class WorkspaceRepository {
         updatedAt: row.updatedAt,
       };
 
-      if (includeNotifications) {
-        workspace.notificationPreferences = {
-          notifyFeatureHighlights: row.notifyFeatureHighlights,
-          notifyBillingEvents: row.notifyBillingEvents,
-          notifyUsageEvents: row.notifyUsageEvents,
-          notifyIncomingEvents: row.notifyIncomingEvents,
-          notifyAdminEvents: row.notifyAdminEvents,
-        };
-      }
-
       if (includeMembership) {
         workspace.workspaceMembership = {
           workspaceMemberId: row.workspaceMemberId,
           workspaceRole: row.workspaceRole,
+          workspaceJoinedAt: row.workspaceJoinedAt,
         };
       }
 

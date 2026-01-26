@@ -213,13 +213,12 @@ export class WorkspaceService {
   /**
    * Get all workspaces for a user
    * Returns workspaces where the user is a member
-   * Optionally includes notification preferences and workspace membership info
+   * Optionally includes workspace membership info
    * Throws WORKSPACE_USER_ID_REQUIRED if user ID is missing
    */
   async getByUserId(
     userId: string,
     options?: {
-      includeNotificationPreferences?: boolean;
       includeWorkspaceMembership?: boolean;
     }
   ) {
@@ -232,8 +231,7 @@ export class WorkspaceService {
   /**
    * Get workspaces for a user with pagination
    * Returns workspaces where the user is a member
-   * Optionally includes notification preferences and workspace membership info
-   * Supports minimal mode which returns only ID and name for efficient loading
+   * Optionally includes workspace membership info
    * Pagination params are validated by the contract schema
    * Throws WORKSPACE_USER_ID_REQUIRED if validation fails
    */
@@ -242,8 +240,6 @@ export class WorkspaceService {
     page: number = 1,
     perPage: number = 5,
     options?: {
-      minimal?: boolean;
-      includeNotificationPreferences?: boolean;
       includeWorkspaceMembership?: boolean;
     }
   ) {

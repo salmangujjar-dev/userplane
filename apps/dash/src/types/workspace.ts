@@ -2,7 +2,11 @@
  * Workspace-related types
  */
 
-import type { WorkspaceInvitePolicy, WorkspaceNotificationPreferences } from '@workspace/contract';
+import type {
+  WorkspaceInvitePolicy,
+  WorkspaceNotificationPreferences,
+  WorkspaceRole,
+} from '@workspace/contract';
 
 /**
  * Workspace notification preferences (re-export from contract)
@@ -15,7 +19,13 @@ export type WorkspaceNotifications = Partial<WorkspaceNotificationPreferences>;
 export interface WorkspaceItem {
   workspaceId: string;
   workspaceName: string;
-  notificationPreferences?: WorkspaceNotifications;
+  createdAt: Date;
+  updatedAt: Date;
+  workspaceMembership?: {
+    workspaceMemberId: string;
+    workspaceRole: WorkspaceRole;
+    workspaceJoinedAt: Date;
+  };
 }
 
 /**
