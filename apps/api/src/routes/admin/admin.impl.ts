@@ -175,6 +175,7 @@ const banUserImpl = (adminService: AdminService, emailService: EmailService) => 
     const userDetail = await adminService.banUser(input.params.userId, context.user.id, {
       reason: input.body.reason,
       expiresInSeconds: input.body.expiresInSeconds,
+      deleteWorkspacesForRoles: input.body.deleteWorkspacesForRoles,
     });
 
     // Send email to suspended account

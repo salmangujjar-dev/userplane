@@ -1,5 +1,6 @@
 'use client';
 
+import type { WorkspaceRole } from '@workspace/contract';
 import {
   ADMIN_USER_SESSIONS_PAGINATION,
   ADMIN_USER_SORT_OPTIONS,
@@ -303,7 +304,11 @@ function AdminUsersPageContent() {
     setUserToBan(user);
   };
 
-  const confirmBan = (options: { reason: string; expiresInSeconds?: number }) => {
+  const confirmBan = (options: {
+    reason: string;
+    expiresInSeconds?: number;
+    deleteWorkspacesForRoles?: WorkspaceRole[];
+  }) => {
     if (userToBan) {
       banMutation.mutate(
         { userId: userToBan.id, ...options },

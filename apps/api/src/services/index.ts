@@ -95,11 +95,6 @@ export const userService = new UserService({
   userRepo,
 });
 
-export const adminService = new AdminService({
-  adminRepo,
-  adminUserIds: env.admin.userIds,
-});
-
 export const adminRecordingService = new AdminRecordingService({
   adminRecordingRepo,
 });
@@ -151,6 +146,14 @@ export const workspaceService = new WorkspaceService({
   projectService,
   subscriptionRepo,
   dodoClient: getDodoClient(),
+});
+
+// Admin service - initialized after workspace service is available
+export const adminService = new AdminService({
+  adminRepo,
+  adminUserIds: env.admin.userIds,
+  workspaceService,
+  workspaceMemberRepo,
 });
 
 // Admin workspace service - initialized after workspace service is available

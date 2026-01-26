@@ -1,6 +1,7 @@
 'use client';
 
 import { type QueryKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { WorkspaceRole } from '@workspace/contract';
 import { toast } from 'sonner';
 
 import { apiClient } from '@/client';
@@ -29,7 +30,7 @@ export interface AdminUserListItem {
 export interface AdminUserWorkspace {
   workspaceId: string;
   workspaceName: string;
-  workspaceRole: 'owner' | 'admin' | 'member';
+  workspaceRole: WorkspaceRole;
   joinedAt: string;
 }
 
@@ -249,6 +250,7 @@ export interface BanUserInput {
   userId: string;
   reason: string;
   expiresInSeconds?: number;
+  deleteWorkspacesForRoles?: WorkspaceRole[];
 }
 
 /**
@@ -264,12 +266,13 @@ export function useAdminBanUser() {
     BanUserInput,
     { previousUserDetail: SafeResult<AdminUserDetail> | undefined }
   >({
-    mutationFn: async ({ userId, reason, expiresInSeconds }) => {
+    mutationFn: async ({ userId, reason, expiresInSeconds, deleteWorkspacesForRoles }) => {
       const [error, response] = await apiClient.admin.users.ban({
         params: { userId },
         body: {
           reason,
           expiresInSeconds,
+          deleteWorkspacesForRoles,
         },
       });
       return handleSafeResult(error, response?.data ?? null);
