@@ -1,8 +1,10 @@
 import { logger, task } from '@trigger.dev/sdk/v3';
 
 import { db } from '@/api/clients/db';
+import { getDodoClient } from '@/api/clients/dodo';
 import { chunkArray } from '@/api/lib/batch';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 
 import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
@@ -30,8 +32,9 @@ interface DeleteWorkspaceResourcesResult {
  *
  * Flow:
  * 1. Short-circuit check - verify workspace is deleted
- * 2. List recordings to clean up
- * 3. Fan-out to deleteRecordingResources using batchTrigger
+ * 2. Cancel active subscription immediately
+ * 3. List recordings to clean up
+ * 4. Fan-out to deleteRecordingResources using batchTrigger
  */
 export const deleteWorkspaceResources = task({
   id: TASK_IDS.DELETE_WORKSPACE_RESOURCES,
@@ -45,6 +48,8 @@ export const deleteWorkspaceResources = task({
 
     const workspaceRepo = new WorkspaceRepository(db);
     const recordingRepo = new RecordingRepository(db);
+    const subscriptionRepo = new SubscriptionRepository(db);
+    const dodoClient = getDodoClient();
 
     // 1. Short-circuit check
     const isDeleted = await workspaceRepo.isSoftDeleted(workspaceId);
@@ -71,13 +76,30 @@ export const deleteWorkspaceResources = task({
       };
     }
 
-    // 2. List recordings to clean up
+    // 2. Cancel active subscription immediately
+    try {
+      const subscription = await subscriptionRepo.findByWorkspaceId(workspaceId);
+
+      if (subscription && subscription.status === 'active') {
+        await dodoClient.subscriptions.update(subscription.subscriptionId, {
+          status: 'cancelled',
+        });
+        logger.info('Subscription cancelled immediately', {
+          workspaceId,
+          subscriptionId: subscription.subscriptionId,
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to cancel subscription during cleanup', { workspaceId, error });
+    }
+
+    // 3. List recordings to clean up
     // Pulls available recordings for deletion
     const recordingsToCleanup = await recordingRepo.findByWorkspaceId(workspaceId);
 
     logger.info('Found recordings to cleanup', { workspaceId, count: recordingsToCleanup.length });
 
-    // 3. Fan-out (use batchTrigger for multiple recordings)
+    // 4. Fan-out (use batchTrigger for multiple recordings)
     // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
     if (recordingsToCleanup.length > 0) {
       const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
