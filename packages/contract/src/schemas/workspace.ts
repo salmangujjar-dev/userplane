@@ -213,14 +213,7 @@ export function getVisibleNotificationFields(
 export const WorkspaceMembershipSchema = z.object({
   workspaceMemberId: WorkspaceMemberIdSchema,
   workspaceRole: WorkspaceRoleSchema,
-});
-
-/**
- * Minimal workspace item (just ID and name)
- */
-export const WorkspaceMinimalItemSchema = z.object({
-  workspaceId: WorkspaceIdSchema,
-  workspaceName: z.string(),
+  workspaceJoinedAt: z.date(),
 });
 
 /**
@@ -231,7 +224,6 @@ export const WorkspaceItemSchema = z.object({
   workspaceName: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  notificationPreferences: WorkspaceNotificationPreferencesSchema.optional(),
   workspaceMembership: WorkspaceMembershipSchema.optional(),
 });
 
@@ -248,8 +240,6 @@ export const ListWorkspacesQuerySchema = z.object({
       .max(WORKSPACE_PAGINATION.MAX_PER_PAGE)
       .optional()
       .default(WORKSPACE_PAGINATION.DEFAULT_PER_PAGE),
-    minimal: z.coerce.boolean().optional().default(false),
-    include_notification_preference: z.coerce.boolean().optional().default(false),
     include_workspace_membership: z.coerce.boolean().optional().default(false),
   }),
 });
@@ -258,7 +248,7 @@ export const ListWorkspacesQuerySchema = z.object({
  * Workspaces list response
  */
 export const WorkspacesListDataSchema = z.object({
-  workspaces: z.array(z.union([WorkspaceItemSchema, WorkspaceMinimalItemSchema])),
+  workspaces: z.array(WorkspaceItemSchema),
   total: z.number().int().nonnegative(),
   pagination: PaginationMetaSchema,
 });

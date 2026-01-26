@@ -6,8 +6,7 @@ import { handleSafeResult } from '@/lib/errors';
 
 /**
  * Hook to fetch all workspaces for the current user
- * Returns list of workspaces with optional notification preferences and membership
- * Supports minimal mode for efficient loading (only ID and name)
+ * Returns list of workspaces with optional membership information
  *
  * Returns SafeResult - check result.success before using data
  * Known API errors won't trigger error monitoring
@@ -35,26 +34,24 @@ import { handleSafeResult } from '@/lib/errors';
 export function useWorkspaces(options?: {
   page?: number;
   perPage?: number;
-  minimal?: boolean;
+  includeWorkspaceMembership?: boolean;
   enabled?: boolean;
 }) {
   const {
     page = 1,
     perPage = DEFAULT_WORKSPACES_PER_PAGE,
-    minimal = false,
+    includeWorkspaceMembership = true,
     enabled = true,
   } = options || {};
 
   return useQuery({
-    queryKey: ['workspaces', page, perPage, minimal],
+    queryKey: ['workspaces', page, perPage, includeWorkspaceMembership],
     queryFn: async () => {
       const [error, response] = await apiClient.workspace.list({
         query: {
           page,
           per_page: perPage,
-          minimal,
-          include_notification_preference: !minimal,
-          include_workspace_membership: !minimal,
+          include_workspace_membership: includeWorkspaceMembership,
         },
       });
       return handleSafeResult(error, response?.data ?? null);

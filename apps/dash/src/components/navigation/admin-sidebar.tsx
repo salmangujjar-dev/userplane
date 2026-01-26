@@ -51,7 +51,11 @@ const sections: NavSection[] = [
 export function AdminSidebar() {
   const router = useRouter();
   const { data: accountResult } = useAccount();
-  const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
+  const { data: workspacesResult } = useWorkspaces({
+    page: 1,
+    perPage: 20,
+    includeWorkspaceMembership: false,
+  });
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { signOut } = useAuth();
 

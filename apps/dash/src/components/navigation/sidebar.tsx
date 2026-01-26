@@ -74,7 +74,11 @@ export function Sidebar() {
   const { data: workspaceResult } = useWorkspace();
   const { data: subscriptionResult } = useSubscriptionStatus();
   const { data: roleResult } = useWorkspaceRole();
-  const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
+  const { data: workspacesResult } = useWorkspaces({
+    page: 1,
+    perPage: 20,
+    includeWorkspaceMembership: false,
+  });
   const { signOut } = useAuth();
   const { hasAdminAccess } = useSession();
 
