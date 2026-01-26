@@ -155,6 +155,16 @@ export class SessionService {
       }
     }
 
+    // Check recording entitlement before initializing session
+    const canRecord = await this.deps.entitlementService.canConsumeRecordings(linkData.workspaceId);
+    if (!canRecord.allowed) {
+      throw sessionError.SESSION_RECORDING_LIMIT_EXCEEDED({
+        current: canRecord.current,
+        limit: canRecord.limit,
+        reason: canRecord.reason,
+      });
+    }
+
     // Generate session ID for tracking
     const sessionId = generateSessionId();
 
