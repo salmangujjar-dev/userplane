@@ -318,6 +318,52 @@ export const PlanChangeRequestDataSchema = z.object({
 export const PlanChangeRequestResponseSchema = ApiResponseSchema(PlanChangeRequestDataSchema);
 
 // ============================================================================
+// Unified Plan Management
+// ============================================================================
+
+/**
+ * Unified plan management input
+ * Handles checkout, preview, execute, and request flows
+ */
+export const ManagePlanSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    planId: z.enum(PLAN_IDS),
+    action: z.enum(['preview', 'execute']).optional(),
+    message: z.string().max(500).optional(),
+  }),
+});
+
+/**
+ * Unified plan management response data (discriminated union)
+ */
+export const ManagePlanDataSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('checkout'),
+    data: CheckoutSessionDataSchema,
+  }),
+  z.object({
+    type: z.literal('preview'),
+    data: PlanChangePreviewDataSchema,
+  }),
+  z.object({
+    type: z.literal('execute'),
+    data: PlanChangeResultDataSchema,
+  }),
+  z.object({
+    type: z.literal('request'),
+    data: PlanChangeRequestDataSchema,
+  }),
+]);
+
+/**
+ * Unified plan management response
+ */
+export const ManagePlanResponseSchema = ApiResponseSchema(ManagePlanDataSchema);
+
+// ============================================================================
 // Type exports
 // ============================================================================
 
@@ -335,6 +381,7 @@ export type PlanChangePreviewData = z.infer<typeof PlanChangePreviewDataSchema>;
 export type PlanChangeResultData = z.infer<typeof PlanChangeResultDataSchema>;
 export type UpstreamPaymentErrorData = z.infer<typeof UpstreamPaymentErrorDataSchema>;
 export type PlanChangeRequestData = z.infer<typeof PlanChangeRequestDataSchema>;
+export type ManagePlanData = z.infer<typeof ManagePlanDataSchema>;
 
 // Alias for internal service layer compatibility
 export type SubscriptionAccessStatus = AccessDetail;

@@ -44,7 +44,6 @@ import { useWorkspaces } from '@/hooks/use-workspaces';
 import { planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
 import { useSubscriptionStatus } from '@/queries/use-billing-queries';
-import { useCreateCheckout } from '@/queries/use-checkout-mutations';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 
 const SIDEBAR_PROJECTS_PER_PAGE = 5;
@@ -76,7 +75,6 @@ export function Sidebar() {
   const { data: workspacesResult } = useWorkspaces({ page: 1, perPage: 20, minimal: true });
   const { signOut } = useAuth();
   const { hasAdminAccess } = useSession();
-  const { mutate: createCheckout } = useCreateCheckout();
 
   const account = accountResult?.success ? accountResult.data : null;
   const projectsData = projectsResult?.success ? projectsResult.data : null;
@@ -92,13 +90,6 @@ export function Sidebar() {
   // State for plan change preview modal
   const [showPlanChangePreview, setShowPlanChangePreview] = useState(false);
   const [selectedPlanIdForChange, setSelectedPlanIdForChange] = useState<PlanId | null>(null);
-
-  // Check if user has an active subscription that allows plan changes
-  const hasActiveSubscription =
-    subscriptionData?.contractDetail.planId !== null &&
-    (subscriptionData?.contractDetail.status === 'active' ||
-      (subscriptionData?.contractDetail.status === 'cancelled' &&
-        subscriptionData?.contractDetail.cancelAtPeriodEnd));
 
   // Get plan display based on subscription status
   const planDisplay = getPlanDisplay(
@@ -117,19 +108,13 @@ export function Sidebar() {
   const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
 
-    if (hasActiveSubscription) {
-      // Plan change flow - show preview modal
-      setSelectedPlanIdForChange(planId as PlanId);
-      setShowPlanChangePreview(true);
-      setPlanModal(null);
-    } else {
-      // Checkout flow - create new subscription
-      createCheckout({
-        planId: planId as PlanId,
-        workspaceId,
-      });
-      setPlanModal(null);
-    }
+    // Always open modal - server will route to appropriate flow:
+    // - No subscription + owner/admin: checkout
+    // - Active subscription + owner/admin: preview + execute
+    // - Active subscription + member: request
+    setSelectedPlanIdForChange(planId as PlanId);
+    setShowPlanChangePreview(true);
+    setPlanModal(null);
   };
 
   const handlePlanChangeComplete = () => {

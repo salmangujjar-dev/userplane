@@ -51,61 +51,6 @@ export const getSubscriptionStatusImpl = (
 };
 
 /**
- * POST /billing/checkout
- * Validates permissions and returns product slug for checkout
- * Client then uses Better Auth's DodoPayments plugin to create the actual checkout session
- * Requires authentication and workspace ownership/admin
- */
-export const createCheckoutSessionImpl = (
-  billingService: BillingService,
-  workspaceMemberService: WorkspaceMemberService
-) => {
-  return authorized.billing.createCheckout.handler(async ({ input, context }) => {
-    const { workspaceId, planId } = input.body;
-
-    // Verify user has access to the workspace (owner or admin)
-    const member = await workspaceMemberService.getMember(context.user.id, workspaceId);
-    if (!member) {
-      throw billingError.SUBSCRIPTION_NOT_FOUND();
-    }
-
-    if (member.workspaceRole !== 'owner' && member.workspaceRole !== 'admin') {
-      throw billingError.PORTAL_UNAVAILABLE();
-    }
-
-    // Check subscription status - prevent checkout if user has active access
-    const subscriptionStatus = await billingService.getSubscriptionStatus(workspaceId);
-
-    // Block checkout if subscription exists and is active
-    if (
-      subscriptionStatus.contractDetail.planId !== null &&
-      (subscriptionStatus.contractDetail.status === 'active' ||
-        (subscriptionStatus.contractDetail.status === 'cancelled' &&
-          subscriptionStatus.contractDetail.cancelAtPeriodEnd))
-    ) {
-      throw billingError.SUBSCRIPTION_ALREADY_EXISTS();
-    }
-
-    // Find the product by planId and convert to slug for checkout
-    const product = getProductByPlanId(planId);
-    if (!product) {
-      throw billingError.INVALID_PLAN();
-    }
-
-    // Return the slug so client can call Better Auth's DodoPayments plugin
-    // Product config stays server-side, but slug is needed for checkout session
-    return {
-      message: 'Checkout session details retrieved',
-      data: {
-        checkoutUrl: `/api/auth/dodopayments/checkout?slug=${product.slug}&metadata[workspace_id]=${workspaceId}`,
-        slug: product.slug,
-        sessionId: undefined,
-      },
-    };
-  });
-};
-
-/**
  * GET /billing/:workspaceId/portal
  * Get customer portal URL for managing subscription
  * Requires workspace admin role
@@ -167,135 +112,124 @@ export const getUsageImpl = (
 };
 
 /**
- * POST /billing/:workspaceId/preview-plan-change
- * Preview proration details before changing subscription plan
- * Requires workspace admin/owner role
+ * POST /billing/:workspaceId/plan
+ * Unified plan management endpoint
+ * Routes to appropriate flow based on subscription status and user role
  */
-export const previewPlanChangeImpl = (
+export const managePlanImpl = (
   billingService: BillingService,
-  workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
-) => {
-  const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
-
-  return authorized.billing.previewPlanChange
-    .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
-    .handler(async ({ input, context }) => {
-      // Check if user is owner or admin
-      if (context.workspaceRole !== 'owner' && context.workspaceRole !== 'admin') {
-        throw billingError.PORTAL_UNAVAILABLE();
-      }
-
-      const { workspaceId } = input.params;
-      const { planId } = input.body;
-
-      const preview = await billingService.previewPlanChange(workspaceId, planId as PlanId);
-
-      return {
-        message: 'Plan change preview retrieved successfully',
-        data: preview,
-      };
-    });
-};
-
-/**
- * POST /billing/:workspaceId/change-plan
- * Execute subscription plan change
- * Requires workspace admin/owner role
- */
-export const changePlanImpl = (
-  billingService: BillingService,
-  workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
-) => {
-  const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
-
-  return authorized.billing.changePlan
-    .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
-    .handler(async ({ input, context }) => {
-      // Check if user is owner or admin
-      if (context.workspaceRole !== 'owner' && context.workspaceRole !== 'admin') {
-        throw billingError.PORTAL_UNAVAILABLE();
-      }
-
-      const { workspaceId } = input.params;
-      const { planId } = input.body;
-
-      const result = await billingService.changePlan(workspaceId, planId as PlanId);
-
-      return {
-        message: 'Plan changed successfully',
-        data: result,
-      };
-    });
-};
-
-/**
- * POST /billing/:workspaceId/request-plan-change
- * Request a plan change (for non-admins)
- * Sends email notification to workspace owner
- * Requires workspace membership
- */
-export const requestPlanChangeImpl = (
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService,
   emailService: EmailService
 ) => {
   const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-  return authorized.billing.requestPlanChange
+  return authorized.billing.managePlan
     .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
       const { workspaceId } = input.params;
-      const { planId, message: customMessage } = input.body;
+      const { planId, action, message: customMessage } = input.body;
+      const userRole = context.workspaceRole;
 
-      // Get the plan name
-      const planName = PLAN_NAMES[planId as PlanId] || 'Unknown';
+      // Get subscription status to determine flow
+      const subscriptionStatus = await billingService.getSubscriptionStatus(workspaceId);
+      const hasActiveSubscription =
+        subscriptionStatus.contractDetail.planId !== null &&
+        (subscriptionStatus.contractDetail.status === 'active' ||
+          (subscriptionStatus.contractDetail.status === 'cancelled' &&
+            subscriptionStatus.contractDetail.cancelAtPeriodEnd));
 
-      // Get workspace owners to send notification
-      const owners = await workspaceMemberService.getOwners(workspaceId);
-
-      if (owners.length === 0) {
-        throw billingError.PLAN_CHANGE_REQUEST_FAILED();
-      }
-
-      // Get the workspace name
-      const workspace = await workspaceService.getById(workspaceId);
-      if (!workspace) {
-        throw billingError.SUBSCRIPTION_NOT_FOUND();
-      }
-
-      // Get the requester info from the session
-      const requesterEmail = context.user.email;
-      const requesterName = context.user.name || requesterEmail;
-
-      // Generate a request ID for tracking
-      const requestId = nanoid();
-
-      // Send email to all workspace owners
-      const ownerEmails = owners.map((o) => o.email);
-
-      await emailService.sendSafePlanChangeRequest(
-        { to: ownerEmails },
-        {
-          workspaceName: workspace.workspaceName,
-          requesterName,
-          requesterEmail,
-          planName,
-          billingUrl: '', // Will be generated internally by email service
-          customMessage,
-          workspaceId,
-          planId,
+      // Route 1: No active subscription -> Checkout (owner/admin only)
+      if (!hasActiveSubscription) {
+        if (userRole !== 'owner' && userRole !== 'admin') {
+          throw billingError.PORTAL_UNAVAILABLE();
         }
-      );
+
+        const product = getProductByPlanId(planId as PlanId);
+        if (!product) {
+          throw billingError.INVALID_PLAN();
+        }
+
+        return {
+          message: 'Checkout session details retrieved',
+          data: {
+            type: 'checkout' as const,
+            data: {
+              checkoutUrl: `/api/auth/dodopayments/checkout?slug=${product.slug}&metadata[workspace_id]=${workspaceId}`,
+              slug: product.slug,
+              sessionId: undefined,
+            },
+          },
+        };
+      }
+
+      // Route 2: Active subscription + member -> Request
+      if (userRole !== 'owner' && userRole !== 'admin') {
+        const planName = PLAN_NAMES[planId as PlanId] || 'Unknown';
+        const owners = await workspaceMemberService.getOwners(workspaceId);
+
+        if (owners.length === 0) {
+          throw billingError.PLAN_CHANGE_REQUEST_FAILED();
+        }
+
+        const workspace = await workspaceService.getById(workspaceId);
+        if (!workspace) {
+          throw billingError.SUBSCRIPTION_NOT_FOUND();
+        }
+
+        const requesterEmail = context.user.email;
+        const requesterName = context.user.name || requesterEmail;
+        const requestId = nanoid();
+
+        await emailService.sendSafePlanChangeRequest(
+          { to: owners.map((o) => o.email) },
+          {
+            workspaceName: workspace.workspaceName,
+            requesterName,
+            requesterEmail,
+            planName,
+            billingUrl: '',
+            customMessage,
+            workspaceId,
+            planId: planId as PlanId,
+          }
+        );
+
+        return {
+          message: 'Plan change request submitted',
+          data: {
+            type: 'request' as const,
+            data: {
+              requestId,
+              status: 'submitted' as const,
+              planId: planId as PlanId,
+              planName,
+            },
+          },
+        };
+      }
+
+      // Route 3: Active subscription + owner/admin + execute -> Execute
+      if (action === 'execute') {
+        const result = await billingService.changePlan(workspaceId, planId as PlanId);
+
+        return {
+          message: 'Plan changed successfully',
+          data: {
+            type: 'execute' as const,
+            data: result,
+          },
+        };
+      }
+
+      // Route 4: Active subscription + owner/admin + (no action or 'preview') -> Preview
+      const preview = await billingService.previewPlanChange(workspaceId, planId as PlanId);
 
       return {
-        message: 'Plan change request submitted',
+        message: 'Plan change preview retrieved successfully',
         data: {
-          requestId,
-          status: 'submitted' as const,
-          planId,
-          planName,
+          type: 'preview' as const,
+          data: preview,
         },
       };
     });
@@ -313,7 +247,6 @@ export function createBillingProcedures(
 ) {
   return {
     getStatus: getSubscriptionStatusImpl(billingService, workspaceMemberService, workspaceService),
-    createCheckout: createCheckoutSessionImpl(billingService, workspaceMemberService),
     getPortal: getCustomerPortalImpl(billingService, workspaceMemberService, workspaceService),
     getUsage: getUsageImpl(
       entitlementService,
@@ -321,13 +254,8 @@ export function createBillingProcedures(
       workspaceMemberService,
       workspaceService
     ),
-    previewPlanChange: previewPlanChangeImpl(
+    managePlan: managePlanImpl(
       billingService,
-      workspaceMemberService,
-      workspaceService
-    ),
-    changePlan: changePlanImpl(billingService, workspaceMemberService, workspaceService),
-    requestPlanChange: requestPlanChangeImpl(
       workspaceMemberService,
       workspaceService,
       emailService
