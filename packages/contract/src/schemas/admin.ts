@@ -138,6 +138,11 @@ export const AdminGetUserInputSchema = z.object({
 
 /**
  * Ban user input
+ * deleteWorkspacesForRoles: array of workspace roles that trigger workspace deletion
+ * - If user has any of these roles in a workspace, that workspace will be deleted
+ * - Default: ['owner'] (only delete workspaces where user is owner)
+ * - Options: 'owner', 'admin', 'member'
+ * - Empty array: skip workspace deletion
  */
 export const AdminBanUserInputSchema = z.object({
   params: z.object({
@@ -146,6 +151,7 @@ export const AdminBanUserInputSchema = z.object({
   body: z.object({
     reason: ReasonTextSchema,
     expiresInSeconds: z.number().int().positive().optional(),
+    deleteWorkspacesForRoles: z.array(z.enum(WORKSPACE_ROLE_VALUES)).optional().default(['owner']),
   }),
 });
 

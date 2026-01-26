@@ -171,6 +171,27 @@ export class WorkspaceMemberRepository {
   }
 
   /**
+   * Find all workspaces where a user is an owner
+   * Used for admin operations like banning users to delete all their owned workspaces
+   */
+  async findWorkspacesByUserAndRole(userId: string, role: WorkspaceRole) {
+    const memberships = await this.db
+      .select({
+        workspaceId: workspaceMembers.workspaceId,
+      })
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaceMembers.workspaceRole, role),
+          eq(workspaceMembers.isDeleted, false)
+        )
+      );
+
+    return memberships;
+  }
+
+  /**
    * Find member by ID
    */
   async findById(memberId: string) {

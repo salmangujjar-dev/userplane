@@ -1,6 +1,8 @@
 'use client';
 
+import type { WorkspaceRole } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
+import { Checkbox } from '@workspace/ui/components/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +32,11 @@ interface AdminBanUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
-  onConfirm: (options: { reason: string; expiresInSeconds?: number }) => void;
+  onConfirm: (options: {
+    reason: string;
+    expiresInSeconds?: number;
+    deleteWorkspacesForRoles?: WorkspaceRole[];
+  }) => void;
   isPending: boolean;
 }
 
@@ -54,6 +60,9 @@ export function AdminBanUserModal({
   const [duration, setDuration] = useState('permanent');
   const [customDays, setCustomDays] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');
+  const [deleteWorkspacesForRoles, setDeleteWorkspacesForRoles] = useState<WorkspaceRole[]>([
+    'owner',
+  ]);
 
   useEffect(() => {
     if (!open) {
@@ -61,8 +70,15 @@ export function AdminBanUserModal({
       setDuration('permanent');
       setCustomDays('');
       setConfirmEmail('');
+      setDeleteWorkspacesForRoles(['owner']);
     }
   }, [open]);
+
+  const handleRoleToggle = (role: WorkspaceRole) => {
+    setDeleteWorkspacesForRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+    );
+  };
 
   const handleConfirm = () => {
     if (!reason.trim() || confirmEmail !== user?.email) return;
@@ -78,6 +94,7 @@ export function AdminBanUserModal({
     onConfirm({
       reason: reason.trim(),
       expiresInSeconds,
+      deleteWorkspacesForRoles,
     });
   };
 
@@ -149,6 +166,59 @@ export function AdminBanUserModal({
                 />
               </div>
             )}
+
+            <div>
+              <Label className="mb-2 block">Delete Workspaces Where User Is:</Label>
+              <div className="space-y-2 rounded-md border border-input bg-background p-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="delete-owner"
+                    checked={deleteWorkspacesForRoles.includes('owner')}
+                    onCheckedChange={() => handleRoleToggle('owner')}
+                    disabled={isPending}
+                  />
+                  <label
+                    htmlFor="delete-owner"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Owner
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="delete-admin"
+                    checked={deleteWorkspacesForRoles.includes('admin')}
+                    onCheckedChange={() => handleRoleToggle('admin')}
+                    disabled={isPending}
+                  />
+                  <label
+                    htmlFor="delete-admin"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Admin
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="delete-member"
+                    checked={deleteWorkspacesForRoles.includes('member')}
+                    onCheckedChange={() => handleRoleToggle('member')}
+                    disabled={isPending}
+                  />
+                  <label
+                    htmlFor="delete-member"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Member
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {deleteWorkspacesForRoles.length === 0
+                    ? 'No workspaces will be deleted'
+                    : `Workspaces where user has ${deleteWorkspacesForRoles.join(', ')} role will be deleted`}
+                </p>
+              </div>
+            </div>
 
             <div>
               <Label htmlFor="confirm-email" className="mb-2 block">

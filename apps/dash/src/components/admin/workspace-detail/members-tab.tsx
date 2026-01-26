@@ -1,5 +1,6 @@
 'use client';
 
+import type { WorkspaceRole } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -77,7 +78,11 @@ export function MembersTab({ workspaceId, isAdmin }: MembersTabProps) {
     setUserToBan({ id: userId, name: userName, email: userEmail });
   };
 
-  const confirmBan = (options: { reason: string; expiresInSeconds?: number }) => {
+  const confirmBan = (options: {
+    reason: string;
+    expiresInSeconds?: number;
+    deleteWorkspacesForRoles?: WorkspaceRole[];
+  }) => {
     if (userToBan) {
       banMutation.mutate(
         { userId: userToBan.id, ...options },

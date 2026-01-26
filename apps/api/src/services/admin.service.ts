@@ -4,12 +4,17 @@
  */
 
 import { adminError } from '@workspace/contract';
+import type { WorkspaceRole } from '@workspace/db';
 
 import type { AdminRepository, SearchUsersParams } from '@/api/repositories/admin.repository';
+import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
+import type { WorkspaceService } from '@/api/services/workspace.service';
 
 export interface AdminServiceDeps {
   adminRepo: AdminRepository;
   adminUserIds: string[];
+  workspaceService?: WorkspaceService;
+  workspaceMemberRepo?: WorkspaceMemberRepository;
 }
 
 export class AdminService {
@@ -86,11 +91,23 @@ export class AdminService {
 
   /**
    * Ban a user
+   * Deletes workspaces where the user has specified roles
+   * Revokes all user sessions
+   *
+   * @param deleteWorkspacesForRoles - Array of workspace roles that trigger deletion
+   *   - If user has any of these roles in a workspace, that workspace will be deleted
+   *   - Default: ['owner'] (only delete workspaces where user is owner)
+   *   - Options: 'owner', 'admin', 'member'
+   *   - Empty array: skip workspace deletion
    */
   async banUser(
     userId: string,
     adminId: string,
-    options?: { reason?: string; expiresInSeconds?: number }
+    options?: {
+      reason?: string;
+      expiresInSeconds?: number;
+      deleteWorkspacesForRoles?: WorkspaceRole[];
+    }
   ) {
     // Check user exists
     const targetUser = await this.deps.adminRepo.findUserById(userId);
@@ -118,6 +135,46 @@ export class AdminService {
     const updated = await this.deps.adminRepo.banUser(userId, options?.reason, expiresAt);
     if (!updated) {
       throw adminError.USER_NOT_FOUND();
+    }
+
+    // Delete workspaces where user has specified roles
+    const deleteRoles = options?.deleteWorkspacesForRoles ?? ['owner'];
+
+    if (deleteRoles.length > 0 && this.deps.workspaceService && this.deps.workspaceMemberRepo) {
+      try {
+        const deletedAt = new Date();
+        const workspacesToDelete = new Set<string>();
+
+        // Collect workspaces for each role
+        for (const role of deleteRoles) {
+          const workspaces = await this.deps.workspaceMemberRepo.findWorkspacesByUserAndRole(
+            userId,
+            role
+          );
+
+          for (const workspace of workspaces) {
+            workspacesToDelete.add(workspace.workspaceId);
+          }
+        }
+
+        // Delete unique workspaces
+        for (const workspaceId of workspacesToDelete) {
+          try {
+            await this.deps.workspaceService.deleteWorkspace(workspaceId, deletedAt);
+          } catch (error) {
+            console.error(
+              `Failed to delete workspace ${workspaceId} for banned user ${userId}:`,
+              error
+            );
+          }
+        }
+
+        console.log(
+          `Deleted ${workspacesToDelete.size} workspaces for banned user ${userId} (roles: ${deleteRoles.join(', ')})`
+        );
+      } catch (error) {
+        console.error(`Failed to delete workspaces for banned user ${userId}:`, error);
+      }
     }
 
     // Revoke all sessions
