@@ -26,7 +26,9 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { ChevronDown, ChevronUp, FolderKanban, Globe, HelpCircle, Plus } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import type { Control, UseFormHandleSubmit, UseFormSetValue } from 'react-hook-form';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -50,6 +52,8 @@ const createLinkFormSchema = z.object({
   isReusable: z.boolean(),
 });
 
+type CreateLinkFormValues = z.infer<typeof createLinkFormSchema>;
+
 export function CreateLinkModal({
   onLinkCreated,
   open: controlledOpen,
@@ -63,6 +67,11 @@ export function CreateLinkModal({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [error, setError] = useState<{
+    message: string;
+    code?: string;
+    data?: { code?: string; message?: string };
+  } | null>(null);
 
   const {
     control,
@@ -71,9 +80,9 @@ export function CreateLinkModal({
     setValue,
     watch,
     formState: { isValid },
-  } = useForm({
+  } = useForm<CreateLinkFormValues>({
     resolver: zodResolver(createLinkFormSchema),
-    mode: 'onTouched',
+    mode: 'onBlur',
     defaultValues: {
       reference: '',
       domainId: '',
@@ -121,7 +130,7 @@ export function CreateLinkModal({
     if (open && domains && domains.length > 0 && !selectedDomain) {
       const verifiedDomain = domains.find((d) => d.domainStatus === 'verified') || domains[0];
       if (verifiedDomain) {
-        setValue('domainId', verifiedDomain.domainId);
+        setValue('domainId', verifiedDomain.domainId, { shouldValidate: true });
       }
     }
   }, [open, domains, selectedDomain, setValue]);
@@ -131,31 +140,41 @@ export function CreateLinkModal({
     if (!open) {
       reset();
       setShowAdvanced(false);
+      setError(null);
     }
   }, [open, reset]);
 
-  const onSubmit = (data: {
-    reference?: string;
-    domainId: string;
-    projectId?: string;
-    isReusable: boolean;
-  }) => {
+  const onSubmit = (data: CreateLinkFormValues) => {
+    setError(null); // Clear any previous errors
     createLinkMutation.mutate(
       {
-        domainId: data.domainId,
-        projectId: data.projectId || undefined,
-        linkReference: data.reference || undefined,
-        linkReusable: data.isReusable,
+        data: {
+          domainId: data.domainId,
+          projectId: data.projectId || undefined,
+          linkReference: data.reference || undefined,
+          linkReusable: data.isReusable,
+        },
+        throwErrors: ['LINK_LIMIT_EXCEEDED'],
       },
       {
         onSuccess: (result) => {
-          // Error already handled by mutation's onSuccess
+          // Only handle successful results - errors are thrown to onError
           if (!result.success) return;
 
+          // Success - create the link
           if (onLinkCreated) {
             onLinkCreated(result.data.link.linkURL);
           }
           setOpen(false);
+        },
+        onError: (err: unknown) => {
+          // Catch thrown errors (e.g., link limit exceeded)
+          const errorObj = err as { message: string; code?: string; data?: unknown };
+          setError({
+            message: errorObj.message || 'Failed to create link',
+            code: errorObj.code,
+            data: errorObj.data as { code?: string; message?: string } | undefined,
+          });
         },
       }
     );
@@ -171,69 +190,180 @@ export function CreateLinkModal({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[600px]" showCloseButton={false}>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-6 py-4">
-            <div className="flex items-start gap-4">
-              <Logo variant="tiled" size="md" showText={false} />
-              <div className="flex flex-col space-y-1">
-                <DialogTitle className="text-xl font-semibold">Create a link</DialogTitle>
-                <div className="flex items-center gap-2">
-                  <DialogDescription className="text-sm text-muted-foreground">
-                    Create a recording link for customer
-                  </DialogDescription>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <a
-                          href="https://userplane.com/docs/recording-links"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center"
-                        >
-                          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
-                        </a>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Learn more about recording links</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-            </div>
+      <DialogContent className="sm:max-w-[600px]" showCloseButton={!error}>
+        {error ? (
+          <CreateLinkErrorView error={error} />
+        ) : (
+          <CreateLinkFormView
+            control={control}
+            handleSubmit={handleSubmit}
+            onSubmit={onSubmit}
+            setValue={setValue}
+            domains={domains}
+            projects={projects}
+            selectedDomain={selectedDomain}
+            selectedProject={selectedProject}
+            isLoadingDomains={isLoadingDomains}
+            isLoadingProjects={isLoadingProjects}
+            showAdvanced={showAdvanced}
+            setShowAdvanced={setShowAdvanced}
+            setOpen={setOpen}
+            isPending={createLinkMutation.isPending}
+            isValid={isValid}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-            <div className="space-y-2.5">
-              <div className="space-y-0.5">
-                <Label htmlFor="reference" className="text-sm font-medium">
-                  Link Reference
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Add a link, ticket, issue number or customer reference
-                </p>
-              </div>
-              <Controller
-                name="reference"
-                control={control}
-                render={({ field }) => (
-                  <LinkReferenceInput
-                    id="reference"
-                    value={field.value || ''}
-                    onChange={field.onChange}
-                    placeholder="e.g. https://github.com/org/repo/issues/123, JIRA-456, Customer ABC"
-                  />
-                )}
+function CreateLinkFormView({
+  control,
+  handleSubmit,
+  onSubmit,
+  setValue,
+  domains,
+  projects,
+  selectedDomain,
+  selectedProject,
+  isLoadingDomains,
+  isLoadingProjects,
+  showAdvanced,
+  setShowAdvanced,
+  setOpen,
+  isPending,
+  isValid,
+}: {
+  control: Control<CreateLinkFormValues>;
+  handleSubmit: UseFormHandleSubmit<CreateLinkFormValues>;
+  onSubmit: (data: CreateLinkFormValues) => void;
+  setValue: UseFormSetValue<CreateLinkFormValues>;
+  domains?: Array<{ domainId: string; domainUrl: string; domainStatus: string }>;
+  projects?: Array<{
+    projectId: string;
+    projectTitle: string | null;
+    isDefault: boolean;
+  }>;
+  selectedDomain: string | undefined;
+  selectedProject: string | undefined;
+  isLoadingDomains: boolean;
+  isLoadingProjects: boolean;
+  showAdvanced: boolean;
+  setShowAdvanced: (show: boolean) => void;
+  setOpen: (open: boolean) => void;
+  isPending: boolean;
+  isValid: boolean;
+}) {
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="space-y-6 py-4">
+        <div className="flex items-start gap-4">
+          <Logo variant="tiled" size="md" showText={false} />
+          <div className="flex flex-col space-y-1">
+            <DialogTitle className="text-xl font-semibold">Create a link</DialogTitle>
+            <div className="flex items-center gap-2">
+              <DialogDescription className="text-sm text-muted-foreground">
+                Create a recording link for customer
+              </DialogDescription>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href="https://userplane.com/docs/recording-links"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center"
+                    >
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Learn more about recording links</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2.5">
+          <div className="space-y-0.5">
+            <Label htmlFor="reference" className="text-sm font-medium">
+              Link Reference
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Add a link, ticket, issue number or customer reference
+            </p>
+          </div>
+          <Controller
+            name="reference"
+            control={control}
+            render={({ field }) => (
+              <LinkReferenceInput
+                id="reference"
+                value={field.value || ''}
+                onChange={field.onChange}
+                placeholder="e.g. https://github.com/org/repo/issues/123, JIRA-456, Customer ABC"
               />
-            </div>
+            )}
+          />
+        </div>
 
-            {domains && domains.length > 0 && (
+        {domains && domains.length > 0 && (
+          <div className="space-y-2.5">
+            <div className="space-y-0.5">
+              <Label htmlFor="domain" className="text-sm font-medium">
+                Domain
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Select the domain for your recording link
+              </p>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between rounded-lg bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={isLoadingDomains}
+                >
+                  <span className="text-foreground">
+                    {selectedDomain
+                      ? domains.find((d) => d.domainId === selectedDomain)?.domainUrl ||
+                        'Select a domain'
+                      : 'Select a domain'}
+                  </span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) max-h-[280px] overflow-y-auto">
+                {domains.map((domain) => (
+                  <DropdownMenuItem
+                    key={domain.domainId}
+                    onClick={() => setValue('domainId', domain.domainId)}
+                    className="cursor-pointer"
+                  >
+                    <Globe className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                    {domain.domainUrl}
+                    {domain.domainStatus === 'verified' && (
+                      <span className="ml-2 text-xs text-green-600">Verified</span>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+
+        {showAdvanced && (
+          <div className="space-y-5 pt-5 border-t">
+            {projects && projects.length > 0 && (
               <div className="space-y-2.5">
                 <div className="space-y-0.5">
-                  <Label htmlFor="domain" className="text-sm font-medium">
-                    Domain
+                  <Label htmlFor="project" className="text-sm font-medium">
+                    Project
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Select the domain for your recording link
+                    Associate this link with a specific project
                   </p>
                 </div>
                 <DropdownMenu>
@@ -241,28 +371,30 @@ export function CreateLinkModal({
                     <button
                       type="button"
                       className="w-full flex items-center justify-between rounded-lg bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      disabled={isLoadingDomains}
+                      disabled={isLoadingProjects}
                     >
-                      <span className="text-foreground">
-                        {selectedDomain
-                          ? domains.find((d) => d.domainId === selectedDomain)?.domainUrl ||
-                            'Select a domain'
-                          : 'Select a domain'}
+                      <span
+                        className={selectedProject ? 'text-foreground' : 'text-muted-foreground'}
+                      >
+                        {selectedProject
+                          ? projects.find((p) => p.projectId === selectedProject)?.projectTitle ||
+                            'Untitled Project'
+                          : 'Select a project'}
                       </span>
                       <ChevronDown className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) max-h-[280px] overflow-y-auto">
-                    {domains.map((domain) => (
+                    {projects.map((project) => (
                       <DropdownMenuItem
-                        key={domain.domainId}
-                        onClick={() => setValue('domainId', domain.domainId)}
+                        key={project.projectId}
+                        onClick={() => setValue('projectId', project.projectId)}
                         className="cursor-pointer"
                       >
-                        <Globe className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                        {domain.domainUrl}
-                        {domain.domainStatus === 'verified' && (
-                          <span className="ml-2 text-xs text-green-600">Verified</span>
+                        <FolderKanban className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                        {project.projectTitle || 'Untitled Project'}
+                        {project.isDefault && (
+                          <span className="ml-2 text-xs text-primary">Default</span>
                         )}
                       </DropdownMenuItem>
                     ))}
@@ -271,121 +403,136 @@ export function CreateLinkModal({
               </div>
             )}
 
-            {showAdvanced && (
-              <div className="space-y-5 pt-5 border-t">
-                {projects && projects.length > 0 && (
-                  <div className="space-y-2.5">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="project" className="text-sm font-medium">
-                        Project
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Associate this link with a specific project
-                      </p>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          className="w-full flex items-center justify-between rounded-lg bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          disabled={isLoadingProjects}
-                        >
-                          <span
-                            className={
-                              selectedProject ? 'text-foreground' : 'text-muted-foreground'
-                            }
-                          >
-                            {selectedProject
-                              ? projects.find((p) => p.projectId === selectedProject)
-                                  ?.projectTitle || 'Untitled Project'
-                              : 'Select a project'}
-                          </span>
-                          <ChevronDown className="h-4 w-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) max-h-[280px] overflow-y-auto">
-                        {projects.map((project) => (
-                          <DropdownMenuItem
-                            key={project.projectId}
-                            onClick={() => setValue('projectId', project.projectId)}
-                            className="cursor-pointer"
-                          >
-                            <FolderKanban className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                            {project.projectTitle || 'Untitled Project'}
-                            {project.isDefault && (
-                              <span className="ml-2 text-xs text-primary">Default</span>
-                            )}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="reusable" className="text-sm font-medium">
-                      Reusable
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Allow this link to be used multiple times
-                    </p>
-                  </div>
-                  <Controller
-                    name="isReusable"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        id="reusable"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="reusable" className="text-sm font-medium">
+                  Reusable
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Allow this link to be used multiple times
+                </p>
               </div>
-            )}
-          </div>
-          <DialogFooter className="mt-8">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
-              disabled={createLinkMutation.isPending}
-            >
-              {showAdvanced ? (
-                <>
-                  <ChevronUp className="h-4 w-4" />
-                  Hide Advanced Options
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4" />
-                  Show Advanced Options
-                </>
-              )}
-            </button>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                className="rounded-full px-6"
-                onClick={() => setOpen(false)}
-                disabled={createLinkMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="rounded-full px-6"
-                disabled={createLinkMutation.isPending || !isValid}
-              >
-                {createLinkMutation.isPending ? 'Creating...' : 'Create Link'}
-              </Button>
+              <Controller
+                name="isReusable"
+                control={control}
+                render={({ field }) => (
+                  <Switch id="reusable" checked={field.value} onCheckedChange={field.onChange} />
+                )}
+              />
             </div>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </div>
+        )}
+      </div>
+      <DialogFooter className="mt-8">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+          disabled={isPending}
+        >
+          {showAdvanced ? (
+            <>
+              <ChevronUp className="h-4 w-4" />
+              Hide Advanced Options
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-4 w-4" />
+              Show Advanced Options
+            </>
+          )}
+        </button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            className="rounded-full px-6"
+            onClick={() => setOpen(false)}
+            disabled={isPending}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" className="rounded-full px-6" disabled={isPending || !isValid}>
+            {isPending ? 'Creating...' : 'Create Link'}
+          </Button>
+        </div>
+      </DialogFooter>
+    </form>
+  );
+}
+
+function CreateLinkErrorView({
+  error,
+}: {
+  error: { message: string; code?: string; data?: { code?: string; message?: string } };
+}) {
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
+  const errorMessage = error.data?.message || error.message;
+  const errorCode = error.data?.code || error.code;
+
+  const handleUpgrade = () => {
+    if (workspaceId) {
+      window.location.href = `/${workspaceId}/recordings?plan-modal=detailed`;
+    }
+  };
+
+  const handleSupport = () => {
+    window.open('https://userplane.com/support', '_blank', 'noopener,noreferrer');
+  };
+
+  return (
+    <>
+      <div className="space-y-6 py-4">
+        <div className="flex items-start gap-4">
+          <Logo variant="tiled" size="md" showText={false} />
+          <div className="flex flex-col space-y-1">
+            <DialogTitle className="text-xl font-semibold">Unable to Create Link</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {errorMessage ||
+                (errorCode && `Error: ${errorCode}`) ||
+                'An unexpected error occurred'}
+            </DialogDescription>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="flex justify-center py-4">
+            <Image src="/assets/dino.svg" alt="Error" width={120} height={120} />
+          </div>
+          <DialogDescription className="text-sm text-muted-foreground text-center">
+            {errorMessage || (errorCode && `Error: ${errorCode}`) || 'An unexpected error occurred'}
+          </DialogDescription>
+        </div>
+      </div>
+      <DialogFooter className="mt-8">
+        <a
+          href="https://userplane.com/docs/troubleshooting/link-creation-errors"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+        >
+          <HelpCircle className="h-4 w-4" />
+          Link issues
+        </a>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            className="rounded-full px-6"
+            onClick={handleUpgrade}
+          >
+            Upgrade
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            className="rounded-full px-6"
+            onClick={handleSupport}
+          >
+            Support
+          </Button>
+        </div>
+      </DialogFooter>
+    </>
   );
 }

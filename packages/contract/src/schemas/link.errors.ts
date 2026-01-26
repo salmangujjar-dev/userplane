@@ -47,6 +47,10 @@ export const LinkErrors = {
     status: 403,
     message: 'Link does not belong to this workspace',
   },
+  LINK_LIMIT_EXCEEDED: {
+    status: 403,
+    message: 'Link limit exceeded for your plan',
+  },
 
   // Not found errors
   LINK_NOT_FOUND: {
