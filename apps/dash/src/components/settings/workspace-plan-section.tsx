@@ -18,6 +18,7 @@ import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { useWorkspace } from '@/hooks/use-workspace';
+import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import { planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
 import { useSubscriptionStatus, useUsageSummary } from '@/queries/use-billing-queries';
@@ -158,6 +159,7 @@ export function WorkspacePlanSection() {
   const { data: workspaceResult, isLoading: isLoadingWorkspace, error, refetch } = useWorkspace();
   const { data: subscriptionResult, isLoading: isLoadingSubscription } = useSubscriptionStatus();
   const { data: usageResult, isLoading: isLoadingUsage } = useUsageSummary();
+  const { data: roleResult } = useWorkspaceRole();
   const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
   const usageData = usageResult?.success ? usageResult.data : null;
@@ -232,6 +234,33 @@ export function WorkspacePlanSection() {
     subscriptionData?.contractDetail.cancelAtPeriodEnd,
     calculateDaysRemaining()
   );
+
+  // Predict which flow the modal will take to show appropriate loading skeleton
+  const getPredictedFlow = (): 'checkout' | 'preview' | 'request' | 'unknown' => {
+    // Need subscription data to predict
+    if (!subscriptionResult?.success) return 'unknown';
+
+    const hasActiveSubscription =
+      subscriptionData?.contractDetail.planId &&
+      subscriptionData?.accessDetail.accessStatus === 'active';
+
+    // No active subscription → checkout flow
+    if (!hasActiveSubscription) {
+      return 'checkout';
+    }
+
+    // Have subscription, check role
+    if (roleResult?.success) {
+      const role = roleResult.data.workspaceRole;
+      if (role === 'owner' || role === 'admin') {
+        return 'preview';
+      }
+      return 'request';
+    }
+
+    // Have subscription but no role data yet → likely preview (most common)
+    return 'preview';
+  };
 
   const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
   const [showBillingDetails, setShowBillingDetails] = useState(false);
@@ -412,6 +441,7 @@ export function WorkspacePlanSection() {
           onOpenChange={setShowPlanChangePreview}
           newPlanId={selectedPlanIdForChange}
           onComplete={handlePlanChangeComplete}
+          predictedFlow={getPredictedFlow()}
         />
       </div>
     </TooltipProvider>

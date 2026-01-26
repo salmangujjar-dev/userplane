@@ -27,11 +27,14 @@ type ModalState =
   | 'request-sent'
   | 'checkout';
 
+type PredictedFlow = 'checkout' | 'preview' | 'request' | 'unknown';
+
 interface PlanChangePreviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   newPlanId: PlanId | null;
   onComplete?: () => void;
+  predictedFlow?: PredictedFlow;
 }
 
 function PreviewView({
@@ -379,7 +382,21 @@ function SuccessView({
   );
 }
 
-function LoadingView() {
+function MinimalLoadingView() {
+  return (
+    <div className="space-y-6 py-4">
+      <DialogTitle className="sr-only">Loading</DialogTitle>
+      <DialogDescription className="sr-only">Processing your request...</DialogDescription>
+      <div className="flex flex-col items-center justify-center py-8 space-y-4">
+        <Logo variant="tiled" size="md" showText={false} />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Preparing your plan details...</p>
+      </div>
+    </div>
+  );
+}
+
+function PreviewLoadingView() {
   return (
     <div className="px-6 pb-6">
       <DialogTitle className="sr-only">Loading plan preview</DialogTitle>
@@ -632,6 +649,7 @@ export function PlanChangePreviewModal({
   onOpenChange,
   newPlanId,
   onComplete,
+  predictedFlow = 'unknown',
 }: PlanChangePreviewModalProps) {
   const workspaceId = useWorkspaceId();
   const [modalState, setModalState] = useState<ModalState>('loading');
@@ -643,7 +661,7 @@ export function PlanChangePreviewModal({
   }>({ message: '' });
   const [completedPlanName, setCompletedPlanName] = useState<string>('');
 
-  const { mutate: managePlan } = useManagePlan({
+  const { mutate: managePlan, isPending: isManagePlanPending } = useManagePlan({
     onCheckout: async (data) => {
       // Got checkout response - need to create session with Better Auth
       if (!workspaceId) {
@@ -748,7 +766,10 @@ export function PlanChangePreviewModal({
     }, 200);
   };
 
-  const isWideLayout = ['loading', 'preview', 'confirming'].includes(modalState);
+  const isWideLayout =
+    (modalState === 'loading' && predictedFlow === 'preview') ||
+    modalState === 'preview' ||
+    modalState === 'confirming';
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -756,12 +777,13 @@ export function PlanChangePreviewModal({
         className={isWideLayout ? 'sm:max-w-4xl' : 'sm:max-w-md'}
         showCloseButton={false}
       >
-        {modalState === 'loading' && <LoadingView />}
+        {modalState === 'loading' &&
+          (predictedFlow === 'preview' ? <PreviewLoadingView /> : <MinimalLoadingView />)}
         {modalState === 'checkout' && <CheckoutView />}
         {modalState === 'preview' && previewData && (
           <PreviewView
             preview={previewData}
-            isConfirming={false}
+            isConfirming={isManagePlanPending}
             onConfirm={handleConfirm}
             onCancel={handleClose}
           />
@@ -769,7 +791,7 @@ export function PlanChangePreviewModal({
         {modalState === 'confirming' && previewData && (
           <PreviewView
             preview={previewData}
-            isConfirming={true}
+            isConfirming={isManagePlanPending}
             onConfirm={handleConfirm}
             onCancel={handleClose}
           />
