@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { LinkErrors } from '@workspace/contract';
 import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
@@ -15,11 +16,16 @@ interface CreateLinkInput {
 
 type LinksQueryData = QueryData<LinksData>;
 
+interface CreateLinkOptions {
+  data: CreateLinkInput;
+  throwErrors?: Array<keyof typeof LinkErrors>;
+}
+
 export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDomain[]) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateLinkInput) => {
+    mutationFn: async ({ data }: CreateLinkOptions) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.link.create({
         params: { workspaceId },
@@ -27,7 +33,7 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
       });
       return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async (data: CreateLinkInput) => {
+    onMutate: async ({ data }: CreateLinkOptions) => {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
@@ -66,23 +72,40 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
 
       return { previousQueries };
     },
-    onSuccess: (result, data, context) => {
+    onSuccess: (result, { throwErrors }, context) => {
       if (!result.success) {
         // Rollback all queries
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
+
+        // If error code is in throwErrors list, throw it so caller can catch in onError
+        const shouldThrow = throwErrors?.includes(result.error.code as keyof typeof LinkErrors);
+        if (shouldThrow) {
+          throw result.error;
+        }
+
+        // Otherwise show default toast
         showErrorToast(result.error);
         return;
       }
       toast.success('Link created successfully');
     },
-    onError: (error: unknown, data, context) => {
+    onError: (error: unknown, { throwErrors }, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process link operation');
+
+      // Check if this is an error we intentionally threw (should be handled by caller)
+      const err = error as { code?: string };
+      const isIntentionalThrow =
+        err.code && throwErrors?.includes(err.code as keyof typeof LinkErrors);
+
+      // Only show toast for unexpected errors, not intentionally thrown ones
+      if (!isIntentionalThrow) {
+        handleUnknownError(error, 'Failed to process link operation');
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['links', workspaceId] });
