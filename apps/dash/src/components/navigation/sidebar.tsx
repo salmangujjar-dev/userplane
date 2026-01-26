@@ -17,6 +17,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   FolderKanban,
+  Folders,
   HelpCircle,
   Link as LinkIcon,
   LogOut,
@@ -307,6 +308,13 @@ export function Sidebar() {
                       ))}
                     </div>
                     <DropdownMenuSeparator className="-mx-2 my-2" />
+                    <button
+                      onClick={() => router.push(`/${workspaceId}/account?tab=workspaces`)}
+                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
+                    >
+                      <Folders className="h-4 w-4" />
+                      Show Workspaces
+                    </button>
                     <button
                       onClick={() => router.push('/workspace/create')}
                       className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"

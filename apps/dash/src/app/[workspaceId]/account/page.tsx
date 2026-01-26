@@ -1,6 +1,6 @@
 'use client';
 
-import { AccountSettingsSection } from '@/components/accounts/account-settings-section';
+import { AccountTab } from '@/components/accounts/account-tab';
 import { Sidebar } from '@/components/navigation/sidebar';
 
 export default function PreferencesPage() {
@@ -16,7 +16,7 @@ export default function PreferencesPage() {
             <p className="text-sm text-muted-foreground">Manage your account settings</p>
           </div>
 
-          <AccountSettingsSection />
+          <AccountTab />
         </main>
       </div>
     </div>

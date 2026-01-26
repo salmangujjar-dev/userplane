@@ -240,3 +240,35 @@ export function AccountSettingsSectionSkeleton() {
     </div>
   );
 }
+
+export function WorkspaceMembershipSkeleton() {
+  return (
+    <div>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">Workspaces</h2>
+        <p className="text-sm text-muted-foreground">Manage workspace membership</p>
+      </div>
+      <div className="max-w-2xl">
+        <div className="rounded-xl border bg-card p-6">
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="flex items-center -space-x-2">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                </div>
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="h-8 w-8" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
