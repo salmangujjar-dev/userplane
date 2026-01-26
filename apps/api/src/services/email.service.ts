@@ -15,6 +15,7 @@ import {
   renderDomainDeveloperInstructions,
   renderEmailVerification,
   renderMagicLink,
+  renderPlanChangeRequest,
   renderProjectDeletionScheduled,
   renderProjectRecoveryConfirmation,
   renderProjectRecoveryPartially,
@@ -48,6 +49,7 @@ import {
   domainDeveloperInstructionsSubject,
   emailVerificationSubject,
   magicLinkSubject,
+  planChangeRequestSubject,
   projectDeletionScheduledSubject,
   projectRecoveryConfirmationSubject,
   projectRecoveryPartiallySubject,
@@ -78,6 +80,7 @@ import type {
   EmailVerificationEmailParams,
   MagicLinkEmailParams,
   PilotSandboxInviteEmailParams,
+  PlanChangeRequestEmailParams,
   ProjectDeletionScheduledEmailParams,
   ProjectRecoveryConfirmationEmailParams,
   ProjectRecoveryPartiallyEmailParams,
@@ -118,6 +121,7 @@ import {
   emailVerificationKey,
   magicLinkKey,
   pilotSandboxInviteKey,
+  planChangeRequestKey,
   projectDeletionScheduledKey,
   projectRecoveryConfirmationKey,
   projectRecoveryPartiallyKey,
@@ -880,6 +884,85 @@ export class EmailService {
       'sendSubscriptionReverseTrial',
       { receipientParams, emailContentParams },
       () => this.sendSubscriptionReverseTrial(receipientParams, emailContentParams)
+    );
+  }
+
+  /**
+   * Send plan change request email to workspace owners
+   * Sent when a team member requests a plan upgrade/downgrade
+   * @private Use sendSafePlanChangeRequest instead
+   */
+  private async sendPlanChangeRequest(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: PlanChangeRequestEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
+    const idempotencyKey = planChangeRequestKey({
+      to: receipientParams.to,
+      workspaceId: emailContentParams.workspaceId,
+      planId: emailContentParams.planId,
+      requesterEmail: emailContentParams.requesterEmail,
+    });
+
+    const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
+
+    const { html, text } = await renderPlanChangeRequest({
+      workspaceName: emailContentParams.workspaceName,
+      requesterName: emailContentParams.requesterName,
+      requesterEmail: emailContentParams.requesterEmail,
+      planName: emailContentParams.planName,
+      billingUrl,
+      customMessage: emailContentParams.customMessage,
+    });
+
+    await emailClient.send(
+      {
+        from: billingFrom(),
+        to: receipientParams.to,
+        subject: planChangeRequestSubject(
+          emailContentParams.requesterName,
+          emailContentParams.planName
+        ),
+        html,
+        text,
+        batch: useBatch,
+        headers: antiThreadingHeaders(),
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.info(
+      {
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceId: emailContentParams.workspaceId,
+        planId: emailContentParams.planId,
+        requesterEmail: emailContentParams.requesterEmail,
+        provider: emailClient.getProvider(),
+      },
+      'Plan change request email sent'
+    );
+  }
+
+  /**
+   * Safe version: Send plan change request email to workspace owners
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafePlanChangeRequest(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: PlanChangeRequestEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendPlanChangeRequest',
+      { receipientParams, emailContentParams },
+      () => this.sendPlanChangeRequest(receipientParams, emailContentParams)
     );
   }
 

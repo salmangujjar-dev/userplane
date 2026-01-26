@@ -12,6 +12,7 @@ import { EmailVerificationEmail, MagicLinkEmail } from './emails/auth';
 import type {
   BillingEmailUpdatedEmailProps,
   BillingEmailVerificationEmailProps,
+  PlanChangeRequestEmailProps,
   SubscriptionActiveEmailProps,
   SubscriptionExpiredEmailProps,
   SubscriptionInactiveEmailProps,
@@ -22,6 +23,7 @@ import type {
 import {
   BillingEmailUpdatedEmail,
   BillingEmailVerificationEmail,
+  PlanChangeRequestEmail,
   SubscriptionActiveEmail,
   SubscriptionExpiredEmail,
   SubscriptionInactiveEmail,
@@ -330,6 +332,14 @@ export async function renderSubscriptionReverseTrial(
   return { html, text };
 }
 
+export async function renderPlanChangeRequest(
+  props: PlanChangeRequestEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(PlanChangeRequestEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
 // ============================================================================
 // OFFBOARDING EMAILS
 // ============================================================================
@@ -384,6 +394,7 @@ export type {
   // Auth
   EmailVerificationEmailProps,
   MagicLinkEmailProps,
+  PlanChangeRequestEmailProps,
   // Project
   ProjectDeletionScheduledEmailProps,
   ProjectRecoveryConfirmationEmailProps,

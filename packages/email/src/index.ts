@@ -35,6 +35,7 @@ export type {
   // Auth
   EmailVerificationEmailProps,
   MagicLinkEmailProps,
+  PlanChangeRequestEmailProps,
   // Project
   ProjectDeletionScheduledEmailProps,
   ProjectRecoveryConfirmationEmailProps,
@@ -78,6 +79,7 @@ export {
   // Auth
   renderEmailVerification,
   renderMagicLink,
+  renderPlanChangeRequest,
   // Project
   renderProjectDeletionScheduled,
   renderProjectRecoveryConfirmation,

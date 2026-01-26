@@ -112,6 +112,10 @@ export function mapSubscriptionStatus(status: string): SubscriptionStatus {
 
 /**
  * Parse subscription dates from webhook payload
+ *
+ * Handles both ISO 8601 strings and Unix timestamps (seconds).
+ * DodoPayments documentation specifies ISO 8601 format, but this provides
+ * defensive handling in case the format changes.
  */
 export function parseSubscriptionDates(subscription: DodoSubscription): {
   currentPeriodStart: Date;
@@ -120,11 +124,44 @@ export function parseSubscriptionDates(subscription: DodoSubscription): {
   createdAt: Date;
 } {
   return {
-    currentPeriodStart: new Date(subscription.previous_billing_date),
-    currentPeriodEnd: new Date(subscription.next_billing_date),
-    cancelledAt: subscription.cancelled_at ? new Date(subscription.cancelled_at) : null,
-    createdAt: new Date(subscription.created_at),
+    currentPeriodStart: parseDodoDate(subscription.previous_billing_date),
+    currentPeriodEnd: parseDodoDate(subscription.next_billing_date),
+    cancelledAt: subscription.cancelled_at ? parseDodoDate(subscription.cancelled_at) : null,
+    createdAt: parseDodoDate(subscription.created_at),
   };
+}
+
+/**
+ * Parse a date from DodoPayments webhook payload
+ *
+ * DodoPayments sends dates as ISO 8601 strings (e.g., "2023-11-07T05:31:56Z").
+ * However, this function defensively handles Unix timestamps (seconds) as well.
+ *
+ * Detection logic:
+ * - If typeof === 'number' → Unix timestamp in seconds → multiply by 1000
+ * - If typeof === 'string' → ISO 8601 string → parse directly
+ * - If already a Date → return as-is
+ *
+ * Unix timestamp detection:
+ * - Numbers < 10000000000 are likely Unix seconds (before year 2286 in seconds)
+ * - Numbers >= 10000000000 are likely Unix milliseconds
+ */
+function parseDodoDate(value: string | number | Date): Date {
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    // Unix timestamp: if < 10 billion, it's likely seconds (before year 2286)
+    // Otherwise treat as milliseconds
+    if (value < 10000000000) {
+      return new Date(value * 1000);
+    }
+    return new Date(value);
+  }
+
+  // ISO 8601 string
+  return new Date(value);
 }
 
 /**

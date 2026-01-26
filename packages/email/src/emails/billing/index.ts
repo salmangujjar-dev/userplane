@@ -6,6 +6,8 @@ export type { BillingEmailUpdatedEmailProps } from './billing-email-updated';
 export { BillingEmailUpdatedEmail } from './billing-email-updated';
 export type { BillingEmailVerificationEmailProps } from './billing-email-verification';
 export { BillingEmailVerificationEmail } from './billing-email-verification';
+export type { PlanChangeRequestEmailProps } from './plan-change-request';
+export { PlanChangeRequestEmail } from './plan-change-request';
 export type { SubscriptionActiveEmailProps } from './subscription-active';
 export { SubscriptionActiveEmail } from './subscription-active';
 export type { SubscriptionExpiredEmailProps } from './subscription-expired';

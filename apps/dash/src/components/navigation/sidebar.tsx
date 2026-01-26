@@ -31,6 +31,7 @@ import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
+import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-modal';
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { SidebarProjectsSkeleton } from '@/components/skeleton';
@@ -88,8 +89,16 @@ export function Sidebar() {
   const hasPrevPage = projectsPage > 1;
   const hasNextPage = projectsPagination ? projectsPage < projectsPagination.totalPages : false;
 
-  // Infer subscription status from contractDetail.planId or accessDetail.effectivePlanId
-  const hasSubscription = subscriptionData?.contractDetail.planId !== null;
+  // State for plan change preview modal
+  const [showPlanChangePreview, setShowPlanChangePreview] = useState(false);
+  const [selectedPlanIdForChange, setSelectedPlanIdForChange] = useState<PlanId | null>(null);
+
+  // Check if user has an active subscription that allows plan changes
+  const hasActiveSubscription =
+    subscriptionData?.contractDetail.planId !== null &&
+    (subscriptionData?.contractDetail.status === 'active' ||
+      (subscriptionData?.contractDetail.status === 'cancelled' &&
+        subscriptionData?.contractDetail.cancelAtPeriodEnd));
 
   // Get plan display based on subscription status
   const planDisplay = getPlanDisplay(
@@ -99,30 +108,32 @@ export function Sidebar() {
   );
 
   /**
-   * Handle plan badge click - redirects to plan-usage tab for existing subscribers
-   * or shows plan selection modal for new subscribers
+   * Handle plan badge click - shows plan selection modal for all users
    */
   const handlePlanClick = () => {
-    if (hasSubscription) {
-      // Redirect to plan-usage tab for existing subscribers
-      router.push(`/${workspaceId}/settings?tab=plan-usage`);
-    } else {
-      // Show plan selection modal for new subscribers (suggested plans)
-      setPlanModal('suggested');
-    }
+    setPlanModal('suggested');
   };
 
   const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
 
-    // Create checkout with selected plan ID
-    // The API will handle converting planId to the correct product slug
-    createCheckout({
-      planId: planId as PlanId,
-      workspaceId,
-    });
+    if (hasActiveSubscription) {
+      // Plan change flow - show preview modal
+      setSelectedPlanIdForChange(planId as PlanId);
+      setShowPlanChangePreview(true);
+      setPlanModal(null);
+    } else {
+      // Checkout flow - create new subscription
+      createCheckout({
+        planId: planId as PlanId,
+        workspaceId,
+      });
+      setPlanModal(null);
+    }
+  };
 
-    setPlanModal(null);
+  const handlePlanChangeComplete = () => {
+    setSelectedPlanIdForChange(null);
   };
 
   const sections: NavSection[] = [
@@ -321,6 +332,13 @@ export function Sidebar() {
       )}
 
       <PlanSelectionModal onPlanSelect={handlePlanSelect} />
+
+      <PlanChangePreviewModal
+        open={showPlanChangePreview}
+        onOpenChange={setShowPlanChangePreview}
+        newPlanId={selectedPlanIdForChange}
+        onComplete={handlePlanChangeComplete}
+      />
     </aside>
   );
 }

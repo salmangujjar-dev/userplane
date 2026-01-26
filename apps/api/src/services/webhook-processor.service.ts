@@ -182,10 +182,13 @@ export class WebhookProcessorService {
     const isStale = this.isStaleWebhook(current, subscription, eventTimestamp);
     if (isStale) {
       console.log(`[WebhookProcessor] SKIP: Stale webhook detected (out-of-order)`);
-      console.log(`[WebhookProcessor] - Event timestamp: ${eventTimestamp}`);
-      console.log(`[WebhookProcessor] - Last webhook timestamp: ${current.lastWebhookTimestamp}`);
-      console.log(`[WebhookProcessor] - Incoming period end: ${subscription.next_billing_date}`);
-      console.log(`[WebhookProcessor] - Current period end: ${current.currentPeriodEnd}`);
+      console.log(`[WebhookProcessor] - Event timestamp: ${eventTimestamp.toISOString()}`);
+      console.log(
+        `[WebhookProcessor] - Last webhook timestamp: ${current.lastWebhookTimestamp?.toISOString() || 'none'}`
+      );
+      console.log(
+        `[WebhookProcessor] - Time difference: ${current.lastWebhookTimestamp ? (current.lastWebhookTimestamp.getTime() - eventTimestamp.getTime()) / 1000 : 0}s ahead`
+      );
       await this.deps.webhookEventsRepo.markSkipped(webhookId, {
         previousStatus: current.status,
         skipReason: 'Stale webhook (older than last processed)',
@@ -520,20 +523,28 @@ export class WebhookProcessorService {
 
   /**
    * Check if a webhook is stale (older than last processed)
+   *
+   * A webhook is considered stale if its event timestamp is older than the last
+   * processed webhook timestamp for this subscription.
+   *
+   * Important: We do NOT compare billing periods because multiple webhooks can
+   * occur within the same billing period:
+   * - Plan upgrades/downgrades (same period, different plan)
+   * - Subscription cancellations (same period, status change)
+   * - Metadata updates (same period, no status change)
+   *
+   * The webhook-timestamp header from DodoPayments is the canonical source of truth
+   * for event ordering. It represents when the event occurred on DodoPayments' side.
    */
   private isStaleWebhook(
     current: { lastWebhookTimestamp: Date | null; currentPeriodEnd: Date },
     incoming: DodoSubscription,
     eventTimestamp: Date
   ): boolean {
-    // Compare with last processed webhook timestamp
+    // Only check: is this webhook older than the last one we processed?
+    // If we haven't processed any webhooks yet (lastWebhookTimestamp is null),
+    // then this webhook is not stale.
     if (current.lastWebhookTimestamp && eventTimestamp < current.lastWebhookTimestamp) {
-      return true;
-    }
-
-    // Compare billing periods (incoming older = stale)
-    const incomingPeriodEnd = new Date(incoming.next_billing_date);
-    if (incomingPeriodEnd < current.currentPeriodEnd) {
       return true;
     }
 
