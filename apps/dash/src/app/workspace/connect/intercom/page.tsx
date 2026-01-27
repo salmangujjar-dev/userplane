@@ -8,22 +8,27 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { apiClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { useWorkspaceStore } from '@/stores/workspace';
+import { handleSafeResult, showErrorToast } from '@/lib/errors';
 
 export default function ConnectIntercomPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
-  const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
 
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // In a real application, this would connect to Intercom and return a workspaceId
-      const mockWorkspaceId = 'workspace-123';
-      setWorkspaceStore(mockWorkspaceId);
-      router.push(`/${mockWorkspaceId}`);
+      const [error, response] = await apiClient.provisioner.intercom.authorize({});
+      const result = handleSafeResult(error, response?.data ?? null);
+
+      if (!result.success) {
+        showErrorToast(result.error);
+        return;
+      }
+
+      // Redirect to Intercom OAuth page
+      window.location.href = result.data.authorizationUrl;
     } catch (error) {
       toast.error('Failed to connect to Intercom', {
         description: error instanceof Error ? error.message : 'Please try again.',

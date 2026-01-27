@@ -100,7 +100,10 @@
         "UPSTASH_REDIS_REST_URL",
         "UPSTASH_REDIS_REST_TOKEN",
         "CACHE_ENABLED",
-        "RATE_LIMIT_ENABLED"
+        "RATE_LIMIT_ENABLED",
+        "INTERCOM_REDIRECT_URI",
+        "INTERCOM_CLIENT_SECRET",
+        "INTERCOM_CLIENT_ID"
       ]
     },
     "lint": {
