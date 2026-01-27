@@ -8,7 +8,6 @@ import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { LinksTab } from '@/components/links/links-tab';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { DinoError } from '@/components/shared/dino-error';
@@ -21,12 +20,6 @@ import { useWorkspaceLinks } from '@/hooks/use-workspace-links';
 import { stringArrayParser } from '@/lib/parsers';
 
 export default function LinksPage() {
-  const [shareLink, setShareLink] = useState<string | null>(null);
-  const [recordingLimitExceeded, setRecordingLimitExceeded] = useState<{
-    quotedLimit: boolean;
-    softLimit: boolean;
-    hardLimit: boolean;
-  } | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = usePagination();
@@ -117,14 +110,6 @@ export default function LinksPage() {
 
   const totalPages = linksData?.pagination.totalPages || 1;
 
-  const handleLinkCreated = (
-    link: string,
-    limitExceeded?: { quotedLimit: boolean; softLimit: boolean; hardLimit: boolean }
-  ) => {
-    setShareLink(link);
-    setRecordingLimitExceeded(limitExceeded || null);
-  };
-
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -132,7 +117,7 @@ export default function LinksPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopActions
           onInviteClick={() => setInviteModalOpen(true)}
-          createLinkButton={<CreateLinkModal onLinkCreated={handleLinkCreated} />}
+          onCreateLinkClick={() => setCreateLinkModalOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
@@ -213,18 +198,7 @@ export default function LinksPage() {
       <CreateLinkModal
         open={createLinkModalOpen}
         onOpenChange={setCreateLinkModalOpen}
-        onLinkCreated={handleLinkCreated}
         hideButton
-      />
-
-      <ShareLinkModal
-        link={shareLink || ''}
-        open={!!shareLink}
-        onClose={() => {
-          setShareLink(null);
-          setRecordingLimitExceeded(null);
-        }}
-        recordingLimitExceeded={recordingLimitExceeded || undefined}
       />
     </div>
   );

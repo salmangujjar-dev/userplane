@@ -18,6 +18,7 @@ import {
   PLAN_ENTITLEMENTS,
   PLAN_NAMES,
   RESOURCE_TYPE_VALUES,
+  UNLIMITED_QUOTED_LIMIT,
 } from '@workspace/pricing';
 
 import type { EntitlementRepository } from '@/api/repositories/entitlements.repository';
@@ -71,6 +72,24 @@ export class EntitlementService {
   constructor(private deps: EntitlementServiceDeps) {}
 
   /**
+   * Reusable function for entitlement threshold math
+   * Computes whether consumption is allowed and which thresholds are exceeded
+   */
+  private checkLimitThresholds(
+    consumed: number,
+    softLimit: number,
+    hardLimit: number,
+    amount: number
+  ): { canConsume: boolean; exceedsSoftLimit: boolean; exceedsHardLimit: boolean } {
+    const newTotal = consumed + amount;
+    return {
+      canConsume: newTotal <= hardLimit,
+      exceedsSoftLimit: newTotal > softLimit,
+      exceedsHardLimit: newTotal > hardLimit,
+    };
+  }
+
+  /**
    * Provision entitlements for a workspace based on plan
    * Called when: workspace created, subscription activated
    * Invalidates usage summary cache after provisioning
@@ -88,7 +107,6 @@ export class EntitlementService {
 
     const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
       resourceType,
-      quotedLimit: planEntitlements[resourceType].quotedLimit,
       creditLimit: planEntitlements[resourceType].creditLimit,
       softLimit: planEntitlements[resourceType].softLimit,
       hardLimit: planEntitlements[resourceType].hardLimit,
@@ -121,7 +139,6 @@ export class EntitlementService {
 
     const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
       resourceType,
-      quotedLimit: planEntitlements[resourceType].quotedLimit,
       creditLimit: planEntitlements[resourceType].creditLimit,
       softLimit: planEntitlements[resourceType].softLimit,
       hardLimit: planEntitlements[resourceType].hardLimit,
@@ -168,6 +185,7 @@ export class EntitlementService {
       // Get free plan limits for this resource
       const freePlanLimits = PLAN_ENTITLEMENTS['free']?.[resourceType];
       const freeLimit = freePlanLimits?.hardLimit ?? 0;
+      const freeSoftLimit = freePlanLimits?.softLimit ?? 0;
 
       // Get current consumption
       const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
@@ -176,8 +194,15 @@ export class EntitlementService {
       );
       const currentConsumed = entitlement?.resourceConsumed ?? 0;
 
-      // Check against free plan limits
-      if (freeLimit !== -1 && currentConsumed + amount > freeLimit) {
+      // Check against free plan limits using reusable threshold function
+      const thresholds = this.checkLimitThresholds(
+        currentConsumed,
+        freeSoftLimit,
+        freeLimit,
+        amount
+      );
+
+      if (!thresholds.canConsume) {
         return {
           allowed: false,
           reason: this.getAccessDeniedReason(accessStatus.accessStatus),
@@ -186,13 +211,8 @@ export class EntitlementService {
         };
       }
 
-      // If within free limits, still allow
       return {
-        allowed: freeLimit === -1 || currentConsumed + amount <= freeLimit,
-        reason:
-          freeLimit !== -1 && currentConsumed + amount > freeLimit
-            ? this.getAccessDeniedReason(accessStatus.accessStatus)
-            : undefined,
+        allowed: true,
         current: currentConsumed,
         limit: freeLimit,
       };
@@ -214,7 +234,8 @@ export class EntitlementService {
     }
 
     const current = entitlement.resourceConsumed;
-    let effectiveLimit = entitlement.hardLimit;
+    let effectiveHardLimit = entitlement.hardLimit;
+    let effectiveSoftLimit = entitlement.softLimit;
 
     // Apply cooldown if subscription is active (progressive unlock for new subscriptions)
     let cooldownMultiplier = 1.0;
@@ -225,47 +246,44 @@ export class EntitlementService {
           subscription.createdAt,
           subscription.planId as PlanId
         );
-        if (cooldownMultiplier < 1.0 && effectiveLimit !== -1) {
-          effectiveLimit = Math.floor(effectiveLimit * cooldownMultiplier);
+        if (cooldownMultiplier < 1.0) {
+          effectiveHardLimit = Math.floor(effectiveHardLimit * cooldownMultiplier);
+          effectiveSoftLimit = Math.floor(effectiveSoftLimit * cooldownMultiplier);
         }
       }
     }
 
-    // Unlimited = always allowed
-    if (effectiveLimit === -1) {
-      return {
-        allowed: true,
-        current,
-        limit: effectiveLimit,
-      };
-    }
+    // Use reusable threshold function for consistent math
+    const thresholds = this.checkLimitThresholds(
+      current,
+      effectiveSoftLimit,
+      effectiveHardLimit,
+      amount
+    );
 
-    // Check if adding amount would exceed effective limit
-    const newTotal = current + amount;
-
-    if (newTotal > effectiveLimit) {
+    if (!thresholds.canConsume) {
       const reason =
         cooldownMultiplier < 1.0
-          ? `Subscription in ramp-up period (${Math.floor(cooldownMultiplier * 100)}% capacity). Limit: ${effectiveLimit}`
-          : `Resource limit reached (${current}/${effectiveLimit})`;
+          ? `Subscription in ramp-up period (${Math.floor(cooldownMultiplier * 100)}% capacity). Limit: ${effectiveHardLimit}`
+          : `Resource limit reached (${current}/${effectiveHardLimit})`;
 
       return {
         allowed: false,
         reason,
         current,
-        limit: effectiveLimit,
+        limit: effectiveHardLimit,
       };
     }
 
     // TODO: Check soft limit warning threshold
-    // if (newTotal >= entitlement.softLimit) {
+    // if (thresholds.exceedsSoftLimit) {
     //   // Trigger warning email in background
     // }
 
     return {
       allowed: true,
       current,
-      limit: effectiveLimit,
+      limit: effectiveHardLimit,
     };
   }
 
@@ -472,40 +490,34 @@ export class EntitlementService {
 
     for (const resourceType of RESOURCE_TYPE_VALUES) {
       const entitlement = entitlementsList.find((e) => e.resourceType === resourceType);
+      // Get quotedLimit from PLAN_ENTITLEMENTS config for UI display
+      const planLimits = PLAN_ENTITLEMENTS[effectivePlanId]?.[resourceType];
+      const quotedLimit = planLimits?.quotedLimit ?? 0;
 
       if (entitlement) {
         const consumed = entitlement.resourceConsumed;
-        const limit = entitlement.quotedLimit;
 
-        // Calculate percent used against limit for user-facing display
+        // Calculate percent used against quotedLimit for user-facing display
+        // Handle -1 (unlimited) by showing small arbitrary percentage (13%) for clean UI rendering
         let percentUsed = 0;
-        if (limit !== -1 && limit > 0) {
-          percentUsed = Math.round((consumed / limit) * 100);
+        if (quotedLimit === UNLIMITED_QUOTED_LIMIT) {
+          percentUsed = 13; // Small arbitrary percentage for "unlimited" plans
+        } else if (quotedLimit > 0) {
+          percentUsed = Math.round((consumed / quotedLimit) * 100);
         }
 
         resources[resourceType] = {
           consumed,
-          limit,
+          limit: quotedLimit,
           percentUsed,
         };
       } else {
         // No entitlement - use plan defaults or zeros
-        const planDefaults = PLAN_ENTITLEMENTS[effectivePlanId]?.[resourceType];
-
-        if (planDefaults) {
-          resources[resourceType] = {
-            consumed: 0,
-            limit: planDefaults.quotedLimit,
-            percentUsed: 0,
-          };
-        } else {
-          // Fallback to zeros
-          resources[resourceType] = {
-            consumed: 0,
-            limit: 0,
-            percentUsed: 0,
-          };
-        }
+        resources[resourceType] = {
+          consumed: 0,
+          limit: quotedLimit,
+          percentUsed: 0,
+        };
       }
     }
 
@@ -529,38 +541,63 @@ export class EntitlementService {
   }
 
   /**
-   * Check if recording limits are exceeded
-   * Returns boolean flags for quotedLimit, softLimit, and hardLimit
-   * Used for informing users about their recording usage status
-   * Supports caching for better performance
+   * Recording limit status values
    */
-  async checkRecordingLimitsExceeded(workspaceId: string): Promise<{
-    quotedLimit: boolean;
-    softLimit: boolean;
-    hardLimit: boolean;
-  }> {
-    // Compute from database
+  static readonly RECORDING_LIMIT_STATUS = {
+    SAFE: 'safe',
+    SOFT_WARNING: 'soft-warning',
+    SOFT_EXCEEDED: 'soft-exceeded',
+    HARD_WARNING: 'hard-warning',
+    HARD_EXCEEDED: 'hard-exceeded',
+  } as const;
+
+  /**
+   * Warning threshold percentage (67%)
+   */
+  private static readonly WARNING_THRESHOLD = 0.67;
+
+  /**
+   * Check recording limit status
+   * Returns a single status value indicating the current state:
+   * - safe: within soft limit warning threshold
+   * - soft-warning: around 83.4% of soft limit
+   * - soft-exceeded: exceeded soft limit
+   * - hard-warning: around 83.4% of hard limit
+   * - hard-exceeded: exceeded hard limit
+   */
+  async checkRecordingLimitStatus(
+    workspaceId: string
+  ): Promise<'safe' | 'soft-warning' | 'soft-exceeded' | 'hard-warning' | 'hard-exceeded'> {
     const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
       workspaceId,
       'recordings'
     );
 
-    const result = entitlement
-      ? {
-          quotedLimit:
-            entitlement.quotedLimit !== -1 &&
-            entitlement.resourceConsumed >= entitlement.quotedLimit,
-          softLimit:
-            entitlement.softLimit !== -1 && entitlement.resourceConsumed >= entitlement.softLimit,
-          hardLimit:
-            entitlement.hardLimit !== -1 && entitlement.resourceConsumed >= entitlement.hardLimit,
-        }
-      : {
-          quotedLimit: false,
-          softLimit: false,
-          hardLimit: false,
-        };
+    if (!entitlement) {
+      return EntitlementService.RECORDING_LIMIT_STATUS.SAFE;
+    }
 
-    return result;
+    const consumed = entitlement.resourceConsumed;
+    const softLimit = entitlement.softLimit;
+    const hardLimit = entitlement.hardLimit;
+
+    // Check thresholds from most severe to least severe
+    if (consumed >= hardLimit) {
+      return EntitlementService.RECORDING_LIMIT_STATUS.HARD_EXCEEDED;
+    }
+
+    if (consumed >= hardLimit * EntitlementService.WARNING_THRESHOLD) {
+      return EntitlementService.RECORDING_LIMIT_STATUS.HARD_WARNING;
+    }
+
+    if (consumed >= softLimit) {
+      return EntitlementService.RECORDING_LIMIT_STATUS.SOFT_EXCEEDED;
+    }
+
+    if (consumed >= softLimit * EntitlementService.WARNING_THRESHOLD) {
+      return EntitlementService.RECORDING_LIMIT_STATUS.SOFT_WARNING;
+    }
+
+    return EntitlementService.RECORDING_LIMIT_STATUS.SAFE;
   }
 }

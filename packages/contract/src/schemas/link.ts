@@ -130,13 +130,21 @@ export const CreateLinkSchema = z.object({
 });
 
 /**
- * Entitlement limit exceeded status
+ * Recording limit status values
+ * - safe: within soft limit
+ * - soft-warning: around 83.4% of soft limit
+ * - soft-exceeded: exceeded soft limit
+ * - hard-warning: around 83.4% of hard limit
+ * - hard-exceeded: exceeded hard limit
  */
-export const EntitlementLimitExceededSchema = z.object({
-  quotedLimit: z.boolean(),
-  softLimit: z.boolean(),
-  hardLimit: z.boolean(),
-});
+export const RecordingLimitStatusSchema = z.enum([
+  'safe',
+  'soft-warning',
+  'soft-exceeded',
+  'hard-warning',
+  'hard-exceeded',
+]);
+export type RecordingLimitStatus = z.infer<typeof RecordingLimitStatusSchema>;
 
 /**
  * Link create response
@@ -144,7 +152,7 @@ export const EntitlementLimitExceededSchema = z.object({
 export const LinkCreateDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   link: LinkItemSchema,
-  recordingLimitExceeded: EntitlementLimitExceededSchema,
+  recordingLimitStatus: RecordingLimitStatusSchema,
 });
 
 /**

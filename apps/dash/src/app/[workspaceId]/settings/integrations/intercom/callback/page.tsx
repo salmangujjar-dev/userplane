@@ -5,7 +5,7 @@ import Logo from '@workspace/ui/components/logo';
 import { ArrowLeftRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 
 import { apiClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
@@ -163,8 +163,14 @@ function IntercomIntegrationCallbackContent() {
   const searchParams = useSearchParams();
   const params = useParams();
   const workspaceId = params.workspaceId as string;
+  const hasExecutedRef = useRef(false);
 
   useEffect(() => {
+    if (hasExecutedRef.current) {
+      return;
+    }
+    hasExecutedRef.current = true;
+
     const handleCallback = async () => {
       const code = searchParams.get('code');
       const state = searchParams.get('state');

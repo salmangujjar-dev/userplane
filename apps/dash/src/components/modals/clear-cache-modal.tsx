@@ -1,5 +1,6 @@
 'use client';
 
+import type { CacheType } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Checkbox } from '@workspace/ui/components/checkbox';
 import {
@@ -10,7 +11,6 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import type { CacheType } from '@workspace/contract';
 import { useState } from 'react';
 
 interface ClearCacheModalProps {

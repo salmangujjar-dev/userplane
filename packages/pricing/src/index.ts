@@ -70,9 +70,13 @@ export const PERIOD_BASED_RESOURCES: readonly ResourceType[] = [
  * Resource limit configuration for a plan
  */
 export interface ResourceLimits {
+  // The advertised limit (what customers see and are not used for entitlement checks or customer warnings)
   quotedLimit: number;
+  // Additional capacity available beyond quotedLimit (for paid upgrades or admin-managed credits)
   creditLimit: number;
+  // Used for entitlement checks and customer warnings - when current usage >= softLimit, a warning is triggered
   softLimit: number;
+  // Used for entitlement checks and customer warnings - when current usage >= hardLimit, consumption is blocked
   hardLimit: number;
 }
 
@@ -80,6 +84,16 @@ export interface ResourceLimits {
  * Entitlement configuration for a plan
  */
 export type PlanEntitlements = Record<ResourceType, ResourceLimits>;
+
+/**
+ * Unlimited quoted limit value
+ */
+export const UNLIMITED_QUOTED_LIMIT = -1;
+
+/**
+ * Entitlement action values
+ */
+export type EntitlementAction = 'allow' | 'warn' | 'block';
 
 /**
  * Default entitlements per plan
@@ -96,77 +110,357 @@ export type PlanEntitlements = Record<ResourceType, ResourceLimits>;
 export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   // Essential: $59/mo - Entry-level paid plan
   essential_monthly: {
-    seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
-    recordings: { quotedLimit: 25, creditLimit: 0, softLimit: 25, hardLimit: 35 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: 70, hardLimit: 90 },
-    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
-    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    seats: {
+      quotedLimit: 5,
+      creditLimit: 10,
+      softLimit: 5,
+      hardLimit: 15,
+    },
+    recordings: {
+      quotedLimit: 25,
+      creditLimit: 0,
+      softLimit: 25,
+      hardLimit: 35,
+    },
+    links: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 70,
+      hardLimit: 90,
+    },
+    screenshots: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
+    files: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
   },
   essential_annual: {
-    seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
-    recordings: { quotedLimit: 25, creditLimit: 0, softLimit: 25, hardLimit: 35 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: 70, hardLimit: 90 },
-    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
-    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    seats: {
+      quotedLimit: 5,
+      creditLimit: 10,
+      softLimit: 5,
+      hardLimit: 15,
+    },
+    recordings: {
+      quotedLimit: 25,
+      creditLimit: 0,
+      softLimit: 25,
+      hardLimit: 35,
+    },
+    links: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 70,
+      hardLimit: 90,
+    },
+    screenshots: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
+    files: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
   },
 
   // Starter: $99/mo - For growing teams
   starter_monthly: {
-    seats: { quotedLimit: 10, creditLimit: 10, softLimit: 10, hardLimit: 20 },
-    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 45, hardLimit: 85 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: 170, hardLimit: 215 },
-    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
-    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    seats: {
+      quotedLimit: 10,
+      creditLimit: 10,
+      softLimit: 10,
+      hardLimit: 20,
+    },
+    recordings: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 45,
+      hardLimit: 85,
+    },
+    links: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 170,
+      hardLimit: 215,
+    },
+    screenshots: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
+    files: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
   },
   starter_annual: {
-    seats: { quotedLimit: 10, creditLimit: 10, softLimit: 10, hardLimit: 20 },
-    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 45, hardLimit: 85 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: 170, hardLimit: 215 },
-    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
-    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    seats: {
+      quotedLimit: 10,
+      creditLimit: 10,
+      softLimit: 10,
+      hardLimit: 20,
+    },
+    recordings: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 45,
+      hardLimit: 85,
+    },
+    links: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 170,
+      hardLimit: 215,
+    },
+    screenshots: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
+    files: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
   },
 
   // Scale Up: $249/mo - For scaling teams
   scale_up_monthly: {
-    seats: { quotedLimit: 15, creditLimit: 15, softLimit: 15, hardLimit: 30 },
-    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 75, hardLimit: 180 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: 360, hardLimit: 450 },
-    screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
-    files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    seats: {
+      quotedLimit: 15,
+      creditLimit: 15,
+      softLimit: 15,
+      hardLimit: 30,
+    },
+    recordings: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 75,
+      hardLimit: 180,
+    },
+    links: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 360,
+      hardLimit: 450,
+    },
+    screenshots: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 100,
+      hardLimit: 200,
+    },
+    files: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 50,
+      hardLimit: 100,
+    },
   },
   scale_up_annual: {
-    seats: { quotedLimit: 15, creditLimit: 15, softLimit: 15, hardLimit: 30 },
-    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 75, hardLimit: 180 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: 360, hardLimit: 450 },
-    screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
-    files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    seats: {
+      quotedLimit: 15,
+      creditLimit: 15,
+      softLimit: 15,
+      hardLimit: 30,
+    },
+    recordings: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 75,
+      hardLimit: 180,
+    },
+    links: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 360,
+      hardLimit: 450,
+    },
+    screenshots: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 100,
+      hardLimit: 200,
+    },
+    files: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 50,
+      hardLimit: 100,
+    },
   },
 
   // Free: Free evaluation tier
   free: {
-    seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
-    recordings: { quotedLimit: 3, creditLimit: 0, softLimit: 3, hardLimit: 3 },
-    links: { quotedLimit: 3, creditLimit: 0, softLimit: 6, hardLimit: 8 },
-    screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
-    files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
+    seats: {
+      quotedLimit: 5,
+      creditLimit: 10,
+      softLimit: 5,
+      hardLimit: 15,
+    },
+    recordings: {
+      quotedLimit: 3,
+      creditLimit: 0,
+      softLimit: 3,
+      hardLimit: 3,
+    },
+    links: {
+      quotedLimit: 3,
+      creditLimit: 0,
+      softLimit: 6,
+      hardLimit: 8,
+    },
+    screenshots: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
+    files: {
+      quotedLimit: 0,
+      creditLimit: 0,
+      softLimit: 0,
+      hardLimit: 0,
+    },
   },
 
   // Enterprise: $650/mo - For large organizations
   enterprise_monthly: {
-    seats: { quotedLimit: 30, creditLimit: 15, softLimit: 30, hardLimit: 45 },
-    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 150, hardLimit: 700 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: 1400, hardLimit: 1750 },
-    screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
-    files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    seats: {
+      quotedLimit: 30,
+      creditLimit: 15,
+      softLimit: 30,
+      hardLimit: 45,
+    },
+    recordings: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 150,
+      hardLimit: 700,
+    },
+    links: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 1400,
+      hardLimit: 1750,
+    },
+    screenshots: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 500,
+      hardLimit: 1000,
+    },
+    files: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 200,
+      hardLimit: 400,
+    },
   },
   enterprise_annual: {
-    seats: { quotedLimit: 30, creditLimit: 15, softLimit: 30, hardLimit: 45 },
-    recordings: { quotedLimit: -1, creditLimit: 0, softLimit: 150, hardLimit: 700 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: 1400, hardLimit: 1750 },
-    screenshots: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
-    files: { quotedLimit: -1, creditLimit: 0, softLimit: -1, hardLimit: -1 },
+    seats: {
+      quotedLimit: 30,
+      creditLimit: 15,
+      softLimit: 30,
+      hardLimit: 45,
+    },
+    recordings: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 150,
+      hardLimit: 700,
+    },
+    links: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 1400,
+      hardLimit: 1750,
+    },
+    screenshots: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 500,
+      hardLimit: 1000,
+    },
+    files: {
+      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      creditLimit: 0,
+      softLimit: 200,
+      hardLimit: 400,
+    },
   },
 };
+
+/**
+ * Helper to get entitlement action for a plan
+ *
+ * @param planId - The plan ID
+ * @param resourceType - The resource type
+ * @param currentUsage - The current usage of the resource
+ * @param consumptionUnits - The number of units to consume
+ * @param hardLimit - Optional overrides for hard limit
+ * @param softLimit - Optional overrides for soft limit
+ * @returns The entitlement action
+ */
+export function getEntitlementAction(
+  // The plan ID
+  planId: PlanId,
+  // The resource type
+  resourceType: ResourceType,
+  // The current usage of the resource
+  currentUsage: number,
+  // The number of units to consume
+  requestedConsumptionUnits: number,
+  // Optional overrides for hard and soft limits
+  // Unless specified, use the plan's default values
+  hardLimit: number = PLAN_ENTITLEMENTS[planId][resourceType].hardLimit,
+  softLimit: number = PLAN_ENTITLEMENTS[planId][resourceType].softLimit,
+  // Optional overrides for the number of units that have been credited
+  // The number of units that have been credited
+  resourceCredited: number = 0
+): { entitlementAction: EntitlementAction; resourceConsumed: number } {
+  // Update the hard and soft limits with the number of units that have been credited
+  hardLimit = hardLimit + resourceCredited;
+  softLimit = softLimit + resourceCredited;
+
+  // If the current usage + consumption units exceeds the hard limit, block the request
+  // and return the current usage as the amount consumed
+  if (currentUsage + requestedConsumptionUnits > hardLimit) {
+    return { entitlementAction: 'block', resourceConsumed: currentUsage };
+  }
+
+  // If the current usage + consumption units exceeds the soft limit, warn the user
+  // and return the current usage including the consumption units as the amount consumed
+  if (currentUsage + requestedConsumptionUnits > softLimit) {
+    return {
+      entitlementAction: 'warn',
+      resourceConsumed: currentUsage + requestedConsumptionUnits,
+    };
+  }
+
+  // If the current usage + consumption units is within the soft limit, allow the request
+  // and return the current usage including the consumption units as the amount consumed
+  return {
+    entitlementAction: 'allow',
+    resourceConsumed: currentUsage + requestedConsumptionUnits,
+  };
+}
 
 /**
  * Helper to get entitlements for a plan

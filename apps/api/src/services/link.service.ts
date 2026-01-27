@@ -29,7 +29,7 @@ export interface LinkServiceDeps {
   projectRepo: ProjectRepository;
   domainRepo: DomainRepository;
   workspaceRepo: WorkspaceRepository;
-  entitlementService?: EntitlementService;
+  entitlementService: EntitlementService;
 }
 
 /**
@@ -201,15 +201,13 @@ export class LinkService {
     const parsed = parseLinkReference(linkReference);
 
     // Check link entitlement before creating
-    if (this.deps.entitlementService) {
-      const canAddLink = await this.deps.entitlementService.canConsumeLinks(params.workspaceId);
-      if (!canAddLink.allowed) {
-        throw linkError.LINK_LIMIT_EXCEEDED({
-          current: canAddLink.current,
-          limit: canAddLink.limit,
-          reason: canAddLink.reason,
-        });
-      }
+    const canAddLink = await this.deps.entitlementService.canConsumeLinks(params.workspaceId);
+    if (!canAddLink.allowed) {
+      throw linkError.LINK_LIMIT_EXCEEDED({
+        current: canAddLink.current,
+        limit: canAddLink.limit,
+        reason: canAddLink.reason,
+      });
     }
 
     // Generate unique ID for the link (12-character alphanumeric)
@@ -239,14 +237,12 @@ export class LinkService {
     }
 
     // Consume link entitlement after successfully creating link
-    if (this.deps.entitlementService) {
-      try {
-        await this.deps.entitlementService.consumeLinks(params.workspaceId, 1, options);
-      } catch (error) {
-        // Log but don't fail - link is already created
-        // Consumption tracking failure shouldn't block the link creation
-        console.error('Failed to track link consumption:', error);
-      }
+    try {
+      await this.deps.entitlementService.consumeLinks(params.workspaceId, 1, options);
+    } catch (error) {
+      // Log but don't fail - link is already created
+      // Consumption tracking failure shouldn't block the link creation
+      console.error('Failed to track link consumption:', error);
     }
 
     // Fetch domain info for linkURL generation

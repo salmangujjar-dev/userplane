@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
@@ -25,7 +24,6 @@ import { stringArrayParser } from '@/lib/parsers';
 export default function RecordingsPage() {
   const [currentPage, setCurrentPage] = usePagination();
   const recordingsPerPage = 16; // 4 columns x 4 rows
-  const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
 
@@ -125,11 +123,6 @@ export default function RecordingsPage() {
 
   const totalPages = recordingsData?.pagination.totalPages || 1;
 
-  const handleLinkCreated = (link: string) => {
-    setShareLink(link);
-    // refetchRecordings();
-  };
-
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -137,7 +130,7 @@ export default function RecordingsPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopActions
           onInviteClick={() => setInviteModalOpen(true)}
-          createLinkButton={<CreateLinkModal onLinkCreated={handleLinkCreated} />}
+          onCreateLinkClick={() => setCreateLinkModalOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
@@ -230,14 +223,7 @@ export default function RecordingsPage() {
       <CreateLinkModal
         open={createLinkModalOpen}
         onOpenChange={setCreateLinkModalOpen}
-        onLinkCreated={handleLinkCreated}
         hideButton
-      />
-
-      <ShareLinkModal
-        link={shareLink || ''}
-        open={!!shareLink}
-        onClose={() => setShareLink(null)}
       />
     </div>
   );

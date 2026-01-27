@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
 import type { CacheType } from '@workspace/contract';
+import { Button } from '@workspace/ui/components/button';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 

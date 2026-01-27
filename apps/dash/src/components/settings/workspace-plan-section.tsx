@@ -1,7 +1,7 @@
 'use client';
 
 import type { ResourceUsage } from '@workspace/contract';
-import type { PlanId, PlanName } from '@workspace/pricing';
+import { type PlanId, type PlanName, UNLIMITED_QUOTED_LIMIT } from '@workspace/pricing';
 import { Progress } from '@workspace/ui/components/progress';
 import {
   Tooltip,
@@ -120,7 +120,7 @@ interface UsageMetricProps {
 }
 
 function UsageMetric({ name, description, usage, periodLabel = 'used' }: UsageMetricProps) {
-  const isOverLimit = usage?.limit !== -1 && (usage?.percentUsed ?? 0) > 100;
+  const isOverLimit = usage?.limit !== UNLIMITED_QUOTED_LIMIT && (usage?.percentUsed ?? 0) > 100;
   const displayPercent = Math.min(100, usage?.percentUsed ?? 0);
 
   return (
@@ -140,7 +140,7 @@ function UsageMetric({ name, description, usage, periodLabel = 'used' }: UsageMe
         <span className={`font-semibold ${isOverLimit ? 'text-red-600' : 'text-foreground'}`}>
           {usage?.consumed ?? '-'}
         </span>
-        /{usage?.limit === -1 ? '\u221e' : (usage?.limit ?? '-')} {periodLabel}
+        /{usage?.limit === UNLIMITED_QUOTED_LIMIT ? '\u221e' : (usage?.limit ?? '-')} {periodLabel}
       </div>
       <Progress
         value={displayPercent}

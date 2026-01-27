@@ -27,11 +27,10 @@ export const entitlements = pgTable(
     resourceType: resourceTypeEnum('resource_type').notNull(),
 
     // Plan-specific limits
-    // quotedLimit: The advertised/displayed limit (what customers see)
     // creditLimit: Additional capacity available beyond quotedLimit (for paid upgrades)
     // softLimit: Warning threshold - usage alerts triggered here
     // hardLimit: Absolute maximum - requests blocked beyond this
-    quotedLimit: integer('quoted_limit').notNull(),
+    // Note: quotedLimit is stored in PLAN_ENTITLEMENTS config for UI display purposes only
     creditLimit: integer('credit_limit').notNull(),
     softLimit: integer('soft_limit').notNull(),
     hardLimit: integer('hard_limit').notNull(),
