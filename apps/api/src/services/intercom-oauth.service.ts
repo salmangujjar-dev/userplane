@@ -78,6 +78,15 @@ export class IntercomService {
   /**
    * Handle Intercom workspace creation
    * Creates workspace, Intercom integration, and sends admin invites
+   * @param params - The parameters for the workspace creation operation
+   * @param params.me - The Intercom me response
+   * @param params.region - The region of the Intercom API
+   * @param params.accessToken - The access token for the Intercom API
+   * @param params.userId - The user ID of the user who is creating the workspace
+   * @param params.userName - The name of the user who is creating the workspace
+   * @param params.userAuthEmail - The email of the user who is creating the workspace
+   * @param params.userIntercomEmail - The intercom email of the user who is creating the workspace
+   * @returns The workspace creation result
    */
   private async handleIntercomCreation(params: {
     me: IntercomMeResponse;
@@ -85,9 +94,10 @@ export class IntercomService {
     accessToken: string;
     userId: string;
     userName?: string;
-    userEmail: string;
+    userAuthEmail: string;
+    userIntercomEmail: string;
   }): Promise<WorkspaceCreationResult> {
-    const { me, region, accessToken, userId, userName, userEmail } = params;
+    const { me, region, accessToken, userId, userName, userIntercomEmail, userAuthEmail } = params;
 
     // 1. Derive workspace URL and name from Intercom email domain and app name
     const workspaceUrl = deriveWorkspaceUrl(me.email);
@@ -101,7 +111,8 @@ export class IntercomService {
       workspaceName: workspaceName,
       userId,
       userName,
-      userEmail,
+      // Use user email for creating the workspace
+      userEmail: userAuthEmail,
     });
 
     // Handle discriminated union: check if workspace was created
@@ -131,8 +142,12 @@ export class IntercomService {
       workspaceId: workspace.workspaceId,
       accessToken,
       region,
-      currentUserEmail: me.email,
-      invitedBy: userId,
+      // Use user email for inviting admins
+      // Exclude user auth email from the invite list
+      userAuthEmail: userAuthEmail,
+      // Exclude user intercom email from the invite list
+      userIntercomEmail: userIntercomEmail,
+      invitedByUserId: userId,
     }).catch((error) => {
       // Log but don't fail the main flow if invitation fails
       console.error('Background invite process failed:', error);
@@ -149,16 +164,32 @@ export class IntercomService {
    * Fetch all admins from Intercom and send workspace invites
    * Excludes the current user from the invite list
    * Runs in background without blocking the main flow
+   * @param params - The parameters for the invite operation
+   * @param params.workspaceId - The workspace ID to invite admins to
+   * @param params.accessToken - The access token for the Intercom API
+   * @param params.region - The region of the Intercom API
+   * @param params.userAuthEmail - The email of the current user
+   * @param params.userIntercomEmail - The intercom email of the current user
+   * @param params.invitedBy - The user ID of the user who is inviting the admins
+   * @returns void
    */
   private async fetchAndInviteIntercomAdmins(params: {
     workspaceId: string;
     accessToken: string;
     region: IntercomRegion;
-    currentUserEmail: string;
-    invitedBy: string;
+    userAuthEmail: string;
+    userIntercomEmail: string;
+    invitedByUserId: string;
   }): Promise<void> {
     try {
-      const { workspaceId, accessToken, region, currentUserEmail, invitedBy } = params;
+      const {
+        workspaceId,
+        accessToken,
+        region,
+        userAuthEmail,
+        userIntercomEmail,
+        invitedByUserId,
+      } = params;
 
       // Fetch all admins from Intercom
       const admins = await listAdmins(accessToken, region);
@@ -167,12 +198,20 @@ export class IntercomService {
       }
 
       // Normalize current user email for comparison
-      const currentEmailResult = FormEmailSchema.safeParse(currentUserEmail);
-      if (!currentEmailResult.success) {
-        console.error('Failed to parse current user email:', currentUserEmail);
+      const currentUserAuthEmailResult = FormEmailSchema.safeParse(userAuthEmail);
+      if (!currentUserAuthEmailResult.success) {
+        console.error('Failed to parse current user email:', userAuthEmail);
         return;
       }
-      const normalizedCurrentEmail = currentEmailResult.data;
+      const normalizedCurrentUserAuthEmail = currentUserAuthEmailResult.data;
+
+      // Normalize current user intercom email for comparison
+      const currentUserIntercomEmailResult = FormEmailSchema.safeParse(userIntercomEmail);
+      if (!currentUserIntercomEmailResult.success) {
+        console.error('Failed to parse current user intercom email:', userIntercomEmail);
+        return;
+      }
+      const normalizedCurrentUserIntercomEmail = currentUserIntercomEmailResult.data;
 
       // Filter out the current user and extract normalized emails
       // Use safeParse to skip invalid admin emails without failing the entire operation
@@ -181,7 +220,15 @@ export class IntercomService {
           const result = FormEmailSchema.safeParse(admin.email);
           return result.success ? result.data : null;
         })
-        .filter((email): email is string => email !== null && email !== normalizedCurrentEmail);
+        .filter(
+          (email): email is string =>
+            // This prevents inviting the current user to the workspace
+            // and handles scenario when the intercom email
+            // is different from the auth email
+            email !== null &&
+            email !== normalizedCurrentUserAuthEmail &&
+            email !== normalizedCurrentUserIntercomEmail
+        );
 
       if (adminEmails.length === 0) {
         return;
@@ -191,7 +238,7 @@ export class IntercomService {
       await this.deps.inviteService.sendInvites({
         workspaceId,
         emails: adminEmails,
-        invitedBy,
+        invitedByUserId,
       });
     } catch (error) {
       // Log error but don't throw - this is a background operation
@@ -265,7 +312,8 @@ export class IntercomService {
       accessToken: tokenResponse.access_token,
       userId,
       userName,
-      userEmail,
+      userIntercomEmail: me.email,
+      userAuthEmail: userEmail,
     });
   }
 

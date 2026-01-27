@@ -761,7 +761,7 @@ export const sendWorkspaceInvitesImpl = (
       const result = await inviteService.sendInvites({
         workspaceId: input.params.workspaceId,
         emails: input.body.emails,
-        invitedBy: context.user.id,
+        invitedByUserId: context.user.id,
       });
 
       const sent = result.sentEmails.map((email) => ({

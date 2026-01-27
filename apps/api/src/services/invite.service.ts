@@ -86,13 +86,13 @@ export class InviteService {
   async sendInvites(params: {
     workspaceId: string;
     emails: string[];
-    invitedBy: string;
+    invitedByUserId: string;
   }): Promise<{ sentEmails: string[]; failedEmails: Array<{ email: string; reason: string }> }> {
-    const { workspaceId, emails, invitedBy } = params;
+    const { workspaceId, emails, invitedByUserId } = params;
 
     const workspace = await this.deps.workspaceService.getById(workspaceId);
     const inviteToken = await this.deps.workspaceService.getInviteToken(workspaceId);
-    const inviter = await this.deps.userService.getById(invitedBy);
+    const inviter = await this.deps.userService.getById(invitedByUserId);
 
     const inviteUrl = this.deps.tokenService.generateInviteUrl({
       wi: workspace.workspaceId,
