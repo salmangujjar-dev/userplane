@@ -16,8 +16,6 @@ import {
   AdminListUserWorkspacesInputSchema,
   AdminListWorkspaceMembersInputSchema,
   AdminListWorkspaceProjectsInputSchema,
-  AdminProvisionWorkspaceDataSchema,
-  AdminProvisionWorkspaceInputSchema,
   AdminResetInviteTokenInputSchema,
   AdminRestoreProjectDataSchema,
   AdminRestoreProjectInputSchema,
@@ -465,35 +463,6 @@ export const getWorkspaceMemberRecordingStats = oc
   })
   .input(AdminGetWorkspaceMemberRecordingStatsInputSchema)
   .output(ApiResponseSchema(AdminWorkspaceMemberRecordingStatsSchema));
-
-// ============================================
-// WORKSPACE PROVISIONING
-// ============================================
-
-/**
- * POST /admin/workspaces/provision
- * Provision a new workspace on behalf of a user
- */
-export const provisionWorkspace = oc
-  .route({
-    method: 'POST',
-    path: '/admin/workspaces/provision',
-    inputStructure: 'detailed',
-    summary: 'Provision workspace',
-    description:
-      'Create a workspace on behalf of a user with optional members. Creates users if they do not exist.',
-    tags: ['Admin'],
-  })
-  .errors({
-    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
-    NOT_ADMIN: AdminErrors.NOT_ADMIN,
-    ADMIN_PROVISION_FAILED: AdminErrors.ADMIN_PROVISION_FAILED,
-    ADMIN_PROVISION_USER_CREATE_FAILED: AdminErrors.ADMIN_PROVISION_USER_CREATE_FAILED,
-    ADMIN_PROVISION_WORKSPACE_CREATE_FAILED: AdminErrors.ADMIN_PROVISION_WORKSPACE_CREATE_FAILED,
-    ADMIN_PROVISION_MEMBER_ADD_FAILED: AdminErrors.ADMIN_PROVISION_MEMBER_ADD_FAILED,
-  })
-  .input(AdminProvisionWorkspaceInputSchema)
-  .output(ApiResponseSchema(AdminProvisionWorkspaceDataSchema));
 
 /**
  * POST /admin/workspace/create/invite

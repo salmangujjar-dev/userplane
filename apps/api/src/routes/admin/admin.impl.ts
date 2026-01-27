@@ -12,7 +12,6 @@ import { authorized } from '@/api/middleware/auth.orpc';
 import { authWithAdminRateLimit } from '@/api/middleware/rate-limit.orpc';
 import type { AdminService } from '@/api/services/admin.service';
 import type { AdminProjectService } from '@/api/services/admin-project.service';
-import type { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import type { EmailService } from '@/api/services/email.service';
@@ -852,30 +851,6 @@ const getWorkspaceMemberRecordingStatsImpl = (
 /**
  * Provision workspace implementation
  */
-const provisionWorkspaceImpl = (
-  adminService: AdminService,
-  adminProvisioningService: AdminProvisioningService
-) => {
-  const adminMiddleware = createAdminMiddleware(adminService);
-
-  return authWithAdminRateLimit
-    .use(adminMiddleware)
-    .admin.workspaces.provision.handler(async ({ input }) => {
-      const result = await adminProvisioningService.provisionWorkspace({
-        owner: input.body.owner,
-        workspace: {
-          name: input.body.workspace.name,
-          url: input.body.workspace.url,
-        },
-        members: input.body.members,
-      });
-
-      return {
-        message: 'Workspace provisioned successfully',
-        data: result,
-      };
-    });
-};
 
 /**
  * Create workspace invite implementation
@@ -936,7 +911,6 @@ export const createAdminProcedures = (
   adminWorkspaceService: AdminWorkspaceService,
   adminProjectService: AdminProjectService,
   adminRecordingService: AdminRecordingService,
-  adminProvisioningService: AdminProvisioningService,
   workspaceService: WorkspaceService,
   workspaceMemberService: WorkspaceMemberService,
   projectService: ProjectService,
@@ -987,7 +961,6 @@ export const createAdminProcedures = (
         adminService,
         adminRecordingService
       ),
-      provision: provisionWorkspaceImpl(adminService, adminProvisioningService),
     },
     projects: {
       deactivate: deactivateProjectImpl(

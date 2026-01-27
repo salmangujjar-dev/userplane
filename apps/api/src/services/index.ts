@@ -38,7 +38,6 @@ import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { AdminService } from '@/api/services/admin.service';
 import { AdminProjectService } from '@/api/services/admin-project.service';
-import { AdminProvisioningService } from '@/api/services/admin-provisioning.service';
 import { AdminRecordingService } from '@/api/services/admin-recording.service';
 import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import { BillingService } from '@/api/services/billing.service';
@@ -217,15 +216,6 @@ export const sessionService = new SessionService({
   linkService,
   entitlementService,
   cacheService,
-});
-
-// Level 4: Admin services that depend on level 3
-export const adminProvisioningService = new AdminProvisioningService({
-  userRepo,
-  provisionerService,
-  workspaceMemberService,
-  workspaceService,
-  db,
 });
 
 // Intercom service
