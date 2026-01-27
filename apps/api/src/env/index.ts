@@ -191,9 +191,7 @@ export function loadEnvConfig(): EnvConfig {
     intercom: {
       clientId: process.env.INTERCOM_CLIENT_ID || '',
       clientSecret: process.env.INTERCOM_CLIENT_SECRET || '',
-      redirectUri:
-        process.env.INTERCOM_REDIRECT_URI ||
-        'http://localhost:3000/workspace/connect/intercom/callback',
+      redirectUri: process.env.INTERCOM_REDIRECT_URI || 'http://localhost:3000/callback/intercom',
     },
     dashboard: {
       baseUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',

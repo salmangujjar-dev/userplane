@@ -13,11 +13,7 @@ export type { RedisConfig } from './client';
 
 // Cache
 export { CacheService } from './cache/cache-service';
-export type {
-  CachedSubscriptionAccessStatus,
-  CachedUsageSummary,
-  CacheServiceConfig,
-} from './cache/cache-service';
+export type { CachedUsageSummary, CacheServiceConfig } from './cache/cache-service';
 export * from './cache/keys';
 export * from './cache/ttl';
 

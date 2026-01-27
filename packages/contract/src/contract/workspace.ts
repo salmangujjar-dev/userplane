@@ -11,6 +11,8 @@ import {
   DeclineAccessRequestDataSchema,
   DeclineAccessRequestSchema,
   DeleteDomainSchema,
+  DeleteIntercomIntegrationDataSchema,
+  DeleteIntercomIntegrationSchema,
   DeleteWorkspaceSchema,
   DomainAddDataSchema,
   DomainByIdDataSchema,
@@ -23,12 +25,18 @@ import {
   DomainVerificationUrlDataSchema,
   DomainVerificationUrlSchema,
   GetDomainRecordingPreferencesSchema,
+  GetIntercomIntegrationSchema,
   GetInvitePolicySchema,
   GetNotificationPreferencesSchema,
   GetWorkspaceBillingEmailSchema,
   GetWorkspaceMembershipSchema,
   GetWorkspaceRestoreInfoSchema,
   GetWorkspaceStatusSchema,
+  IntercomIntegrationAuthorizeDataSchema,
+  IntercomIntegrationAuthorizeSchema,
+  IntercomIntegrationCallbackDataSchema,
+  IntercomIntegrationCallbackSchema,
+  IntercomIntegrationStatusDataSchema,
   InviteErrors,
   InvitePolicyDataSchema,
   InvitePolicyUpdateDataSchema,
@@ -44,6 +52,7 @@ import {
   MemberRoleUpdateDataSchema,
   NotificationPreferencesGetDataSchema,
   NotificationPreferencesUpdateDataSchema,
+  ProvisionerErrors,
   RemoveMemberSchema,
   ReplaceDomainRecordingPreferencesSchema,
   RequestBillingEmailChangeDataSchema,
@@ -1167,3 +1176,108 @@ export const getWorkspaceStatus = oc
   })
   .input(GetWorkspaceStatusSchema)
   .output(ApiResponseSchema(WorkspaceStatusDataSchema));
+
+// ============================================================================
+// INTEGRATION ENDPOINTS
+// ============================================================================
+
+/**
+ * GET /workspace/{workspaceId}/integrations/intercom
+ * Get Intercom integration status for the workspace
+ * Requires workspace membership
+ */
+export const getIntercomIntegration = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/intercom',
+    inputStructure: 'detailed',
+    summary: 'Get Intercom integration status',
+    description: 'Check if Intercom is connected to this workspace',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(GetIntercomIntegrationSchema)
+  .output(ApiResponseSchema(IntercomIntegrationStatusDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/intercom/authorize
+ * Initiate Intercom OAuth flow for an existing workspace
+ * Requires admin or owner role
+ */
+export const intercomIntegrationAuthorize = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/intercom/authorize',
+    inputStructure: 'detailed',
+    summary: 'Initiate Intercom OAuth for workspace',
+    description: 'Generate Intercom OAuth authorization URL with workspace-scoped CSRF state token',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    INTEGRATION_ALREADY_CONNECTED: WorkspaceErrors.INTEGRATION_ALREADY_CONNECTED,
+  })
+  .input(IntercomIntegrationAuthorizeSchema)
+  .output(ApiResponseSchema(IntercomIntegrationAuthorizeDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/intercom/callback
+ * Handle Intercom OAuth callback for an existing workspace
+ * Requires admin or owner role
+ */
+export const intercomIntegrationCallback = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/intercom/callback',
+    inputStructure: 'detailed',
+    summary: 'Handle Intercom OAuth callback for workspace',
+    description: 'Exchange authorization code for access token and connect to existing workspace',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    INTEGRATION_ALREADY_CONNECTED: WorkspaceErrors.INTEGRATION_ALREADY_CONNECTED,
+    INTEGRATION_PROVIDER_WORKSPACE_CONFLICT:
+      WorkspaceErrors.INTEGRATION_PROVIDER_WORKSPACE_CONFLICT,
+    INTERCOM_OAUTH_STATE_INVALID: ProvisionerErrors.INTERCOM_OAUTH_STATE_INVALID,
+    INTERCOM_TOKEN_EXCHANGE_FAILED: ProvisionerErrors.INTERCOM_TOKEN_EXCHANGE_FAILED,
+    INTERCOM_USER_INFO_FAILED: ProvisionerErrors.INTERCOM_USER_INFO_FAILED,
+    INTERCOM_EMAIL_NOT_VERIFIED: ProvisionerErrors.INTERCOM_EMAIL_NOT_VERIFIED,
+  })
+  .input(IntercomIntegrationCallbackSchema)
+  .output(ApiResponseSchema(IntercomIntegrationCallbackDataSchema));
+
+/**
+ * DELETE /workspace/{workspaceId}/integrations/intercom
+ * Disconnect Intercom integration from the workspace
+ * Requires admin or owner role
+ */
+export const deleteIntercomIntegration = oc
+  .route({
+    method: 'DELETE',
+    path: '/workspace/{workspaceId}/integrations/intercom',
+    inputStructure: 'detailed',
+    summary: 'Disconnect Intercom integration',
+    description: 'Remove Intercom connection from this workspace',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    INTEGRATION_NOT_FOUND: WorkspaceErrors.INTEGRATION_NOT_FOUND,
+  })
+  .input(DeleteIntercomIntegrationSchema)
+  .output(ApiResponseSchema(DeleteIntercomIntegrationDataSchema));

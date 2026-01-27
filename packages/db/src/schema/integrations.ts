@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 import { workspaces } from './workspaces';
@@ -50,13 +50,17 @@ export const integrations = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
-    // Unique constraint on provider workspace ID to prevent duplicate connections
-    // Includes provider and isDeleted to allow re-connecting after soft delete
-    uniqueIndex('integrations_provider_workspace_id_idx').on(
-      table.provider,
-      table.providerWorkspaceId,
-      table.isDeleted
-    ),
+    // Partial unique index: only ONE active connection per provider workspace allowed
+    // Allows multiple deleted records for history, but only one active at a time
+    // This prevents the same Intercom workspace being connected to multiple userplane workspaces
+    uniqueIndex('integrations_active_provider_workspace_idx')
+      .on(table.provider, table.providerWorkspaceId)
+      .where(sql`${table.isDeleted} = false`),
+    // Partial unique index: only ONE active integration per workspace-provider combination
+    // Allows reconnecting after disconnect (creates new record, old one is soft-deleted)
+    uniqueIndex('integrations_active_workspace_provider_idx')
+      .on(table.workspaceId, table.provider)
+      .where(sql`${table.isDeleted} = false`),
     // Index for workspace lookups
     index('integrations_workspace_id_idx').on(table.workspaceId),
   ]

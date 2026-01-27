@@ -62,11 +62,13 @@ export interface IntercomMeResponse {
 
 /**
  * Build Intercom OAuth authorization URL
+ * Includes redirect_uri to point to generic dispatcher page
  */
 export function getAuthorizationUrl(state: string): string {
   const params = new URLSearchParams({
     client_id: env.intercom.clientId,
     state,
+    redirect_uri: env.intercom.redirectUri,
   });
 
   return `https://app.intercom.com/oauth?${params.toString()}`;

@@ -8,6 +8,7 @@
  */
 
 import type { Redis } from '@upstash/redis';
+import type { SubscriptionAccessStatus, SubscriptionStatusData } from '@workspace/contract';
 
 import {
   billingKeys,
@@ -18,31 +19,6 @@ import {
   refundKeys,
 } from './keys';
 import { TTL } from './ttl';
-
-/**
- * Cached subscription access status
- */
-export interface CachedSubscriptionAccessStatus {
-  effectivePlanId: string;
-  accessStatus: 'active' | 'grace' | 'inactive' | 'disputed' | 'refunded';
-}
-
-/**
- * Cached subscription status (full status for billing page)
- */
-export interface CachedSubscriptionStatus {
-  contractDetail: {
-    status: string | null;
-    planId: string | null;
-    planName: string | null;
-    currentPeriodEnd: Date | string | null;
-    currentPeriodStart: Date | string | null;
-    cancelAtPeriodEnd: boolean;
-    cancelledAt: Date | string | null;
-    onHoldSince: Date | string | null;
-  };
-  accessDetail: CachedSubscriptionAccessStatus;
-}
 
 /**
  * Cached usage summary
@@ -148,10 +124,10 @@ export class CacheService {
   async getSubscriptionAccessStatus(
     workspaceId: string,
     options?: CacheOptions
-  ): Promise<CachedSubscriptionAccessStatus | null> {
+  ): Promise<SubscriptionAccessStatus | null> {
     if (options?.bypass) return null;
     const key = billingKeys.accessStatus(workspaceId);
-    return this.get<CachedSubscriptionAccessStatus>(key);
+    return this.get<SubscriptionAccessStatus>(key);
   }
 
   /**
@@ -159,7 +135,7 @@ export class CacheService {
    */
   async setSubscriptionAccessStatus(
     workspaceId: string,
-    status: CachedSubscriptionAccessStatus
+    status: SubscriptionAccessStatus
   ): Promise<void> {
     const key = billingKeys.accessStatus(workspaceId);
     await this.set(key, status, TTL.BILLING_ACCESS);
@@ -172,19 +148,16 @@ export class CacheService {
   async getSubscriptionStatus(
     workspaceId: string,
     options?: CacheOptions
-  ): Promise<CachedSubscriptionStatus | null> {
+  ): Promise<SubscriptionStatusData | null> {
     if (options?.bypass) return null;
     const key = billingKeys.subscriptionStatus(workspaceId);
-    return this.get<CachedSubscriptionStatus>(key);
+    return this.get<SubscriptionStatusData>(key);
   }
 
   /**
    * Cache subscription status (full status for billing page)
    */
-  async setSubscriptionStatus(
-    workspaceId: string,
-    status: CachedSubscriptionStatus
-  ): Promise<void> {
+  async setSubscriptionStatus(workspaceId: string, status: SubscriptionStatusData): Promise<void> {
     const key = billingKeys.subscriptionStatus(workspaceId);
     await this.set(key, status, TTL.BILLING_STATUS);
   }

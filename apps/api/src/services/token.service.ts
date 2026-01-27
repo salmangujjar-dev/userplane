@@ -272,12 +272,15 @@ export class TokenService {
    * Generate signed Intercom OAuth state token
    * Used for CSRF protection during OAuth flow
    * Token expires in 15 minutes
+   * @param userId - The user initiating the OAuth flow
+   * @param workspaceId - Optional workspace ID for workspace integration flow (absent for onboarding)
    */
-  signIntercomOAuthState(userId: string): string {
+  signIntercomOAuthState(userId: string, workspaceId?: string): string {
     const now = Math.floor(Date.now() / 1000);
     const payload: IntercomOAuthStatePayload = {
       iss: this.jwtIssuer,
       userId,
+      ...(workspaceId && { workspaceId }),
       timestamp: now,
       nonce: nanoid(16),
       iat: now,
@@ -290,8 +293,15 @@ export class TokenService {
   /**
    * Verify and decode Intercom OAuth state token
    * Returns payload if valid and user matches, null otherwise
+   * @param token - The OAuth state token to verify
+   * @param userId - The expected user ID
+   * @param workspaceId - Optional expected workspace ID for workspace integration flow
    */
-  verifyIntercomOAuthState(token: string, userId: string): IntercomOAuthStatePayload | null {
+  verifyIntercomOAuthState(
+    token: string,
+    userId: string,
+    workspaceId?: string
+  ): IntercomOAuthStatePayload | null {
     try {
       const payload = jwt.verify(token, this.jwtSecret, {
         algorithms: ['HS256'],
@@ -304,6 +314,11 @@ export class TokenService {
 
       // Verify user ID matches (CSRF protection)
       if (payload.userId !== userId) {
+        return null;
+      }
+
+      // If workspaceId is provided, verify it matches
+      if (workspaceId !== undefined && payload.workspaceId !== workspaceId) {
         return null;
       }
 

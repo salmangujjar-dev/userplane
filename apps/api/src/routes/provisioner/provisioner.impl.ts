@@ -84,7 +84,7 @@ export const intercomAuthorizeImpl = (intercomService: IntercomService) => {
 
 /**
  * GET /provisioner/intercom/callback - Handle Intercom OAuth callback
- * Exchanges code for token and creates workspace
+ * Exchanges code for token and creates workspace (onboarding flow only)
  */
 export const intercomCallbackImpl = (
   intercomService: IntercomService,
