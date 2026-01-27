@@ -22,6 +22,11 @@ import { stringArrayParser } from '@/lib/parsers';
 
 export default function LinksPage() {
   const [shareLink, setShareLink] = useState<string | null>(null);
+  const [recordingLimitExceeded, setRecordingLimitExceeded] = useState<{
+    quotedLimit: boolean;
+    softLimit: boolean;
+    hardLimit: boolean;
+  } | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = usePagination();
@@ -112,8 +117,12 @@ export default function LinksPage() {
 
   const totalPages = linksData?.pagination.totalPages || 1;
 
-  const handleLinkCreated = (link: string) => {
+  const handleLinkCreated = (
+    link: string,
+    limitExceeded?: { quotedLimit: boolean; softLimit: boolean; hardLimit: boolean }
+  ) => {
     setShareLink(link);
+    setRecordingLimitExceeded(limitExceeded || null);
   };
 
   return (
@@ -211,7 +220,11 @@ export default function LinksPage() {
       <ShareLinkModal
         link={shareLink || ''}
         open={!!shareLink}
-        onClose={() => setShareLink(null)}
+        onClose={() => {
+          setShareLink(null);
+          setRecordingLimitExceeded(null);
+        }}
+        recordingLimitExceeded={recordingLimitExceeded || undefined}
       />
     </div>
   );

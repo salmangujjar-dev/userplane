@@ -24,6 +24,12 @@ export const TTL = {
   ENTITLEMENT_USAGE: 300,
 
   /**
+   * Recording limit exceeded status - checked on link creation
+   * Medium TTL (5 minutes) - updated on resource consumption
+   */
+  RECORDING_LIMITS: 300,
+
+  /**
    * Open dispute status - hard safety latch
    * Short TTL (60s) because disputes override all access
    */

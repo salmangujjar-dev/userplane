@@ -527,4 +527,40 @@ export class EntitlementService {
     // Invalidate usage cache after reset
     await this.deps.cacheService?.invalidateUsage(workspaceId);
   }
+
+  /**
+   * Check if recording limits are exceeded
+   * Returns boolean flags for quotedLimit, softLimit, and hardLimit
+   * Used for informing users about their recording usage status
+   * Supports caching for better performance
+   */
+  async checkRecordingLimitsExceeded(workspaceId: string): Promise<{
+    quotedLimit: boolean;
+    softLimit: boolean;
+    hardLimit: boolean;
+  }> {
+    // Compute from database
+    const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
+      workspaceId,
+      'recordings'
+    );
+
+    const result = entitlement
+      ? {
+          quotedLimit:
+            entitlement.quotedLimit !== -1 &&
+            entitlement.resourceConsumed >= entitlement.quotedLimit,
+          softLimit:
+            entitlement.softLimit !== -1 && entitlement.resourceConsumed >= entitlement.softLimit,
+          hardLimit:
+            entitlement.hardLimit !== -1 && entitlement.resourceConsumed >= entitlement.hardLimit,
+        }
+      : {
+          quotedLimit: false,
+          softLimit: false,
+          hardLimit: false,
+        };
+
+    return result;
+  }
 }

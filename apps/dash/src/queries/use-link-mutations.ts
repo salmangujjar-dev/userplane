@@ -3,9 +3,9 @@ import type { LinkErrors } from '@workspace/contract';
 import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
-import type { Link, LinksData } from '@/hooks/use-workspace-links';
+import type { LinksData } from '@/hooks/use-workspace-links';
 import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
-import type { QueryData, QuerySnapshot, WorkspaceDomain } from '@/types';
+import type { QueryData, QuerySnapshot } from '@/types';
 
 interface CreateLinkInput {
   domainId: string;
@@ -21,7 +21,7 @@ interface CreateLinkOptions {
   throwErrors?: Array<keyof typeof LinkErrors>;
 }
 
-export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDomain[]) {
+export function useCreateLink(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -33,7 +33,7 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
       });
       return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async ({ data }: CreateLinkOptions) => {
+    onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ['links', workspaceId] });
 
       // Snapshot ALL matching queries for rollback
@@ -42,33 +42,9 @@ export function useCreateLink(workspaceId: string | null, domains?: WorkspaceDom
           queryKey: ['links', workspaceId],
         });
 
-      // Find domain for optimistic data
-      const domain = domains?.find((d) => d.domainId === data.domainId);
-
-      // Optimistically add new link
-      const optimisticLink: Partial<Link> = {
-        linkId: `temp-${Date.now()}`,
-        linkURL: `${domain?.domainUrl || ''}/temp-link`,
-        linkTitle: data.linkReference || null,
-        linkReusable: data.linkReusable,
-        createdAt: new Date().toISOString(),
-      };
-
-      // Update ALL matching queries
-      queryClient.setQueriesData<LinksQueryData>({ queryKey: ['links', workspaceId] }, (old) => {
-        if (!old?.success) return old;
-        return {
-          ...old,
-          data: {
-            ...old.data,
-            links: [optimisticLink as Link, ...old.data.links],
-            pagination: {
-              ...old.data.pagination,
-              total: old.data.pagination.total + 1,
-            },
-          },
-        };
-      });
+      // Skip optimistic update - wait for server response instead
+      // This avoids issues with incomplete data during optimistic rendering
+      // The real link will be added via onSettled invalidation
 
       return { previousQueries };
     },

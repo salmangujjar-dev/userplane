@@ -5,6 +5,8 @@
  * All keys are prefixed consistently to avoid collisions.
  */
 
+import type { CacheType } from '@workspace/contract';
+
 /**
  * Billing-related cache keys
  */
@@ -65,6 +67,33 @@ export const linkKeys = {
    */
   preferences: (linkId: string) => `link:prefs:${linkId}`,
 };
+
+/**
+ * Get cache keys by type
+ */
+export function getCacheKeysByType(workspaceId: string, type: CacheType): string[] {
+  switch (type) {
+    case 'billing':
+      return [billingKeys.accessStatus(workspaceId), billingKeys.subscriptionStatus(workspaceId)];
+    case 'subscription':
+      return [disputeKeys.hasOpen(workspaceId), refundKeys.hasSuccess(workspaceId)];
+    case 'entitlement':
+      return [entitlementKeys.usageSummary(workspaceId)];
+    case 'link':
+      // Link cache uses linkId, not workspaceId
+      // For workspace-level clearing, we cannot target specific link keys
+      return [];
+    default:
+      return [];
+  }
+}
+
+/**
+ * Get cache keys for multiple types
+ */
+export function getCacheKeysByTypes(workspaceId: string, types: CacheType[]): string[] {
+  return types.flatMap((type) => getCacheKeysByType(workspaceId, type));
+}
 
 /**
  * Pattern for invalidating all keys matching a workspace

@@ -11,6 +11,7 @@ export * from './auth.errors';
 export * from './billing';
 export * from './billing.errors';
 export * from './common';
+export * from './diagnostics';
 export * from './domain';
 export * from './domain.errors';
 export * from './form';

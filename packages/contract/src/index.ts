@@ -9,6 +9,7 @@
 export {
   accountContract,
   contract,
+  diagnosticsContract,
   domainContract,
   inviteContract,
   linkContract,
@@ -24,6 +25,7 @@ export {
 export type {
   AccountContract,
   Contract,
+  DiagnosticsContract,
   DomainContract,
   InviteContract,
   LinkContract,
