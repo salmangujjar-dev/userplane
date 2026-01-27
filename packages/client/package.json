@@ -14,6 +14,7 @@
     "dev": "tsc --watch",
     "build": "rm -rf dist && tsc",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev:all": "tsc --watch"
   },
@@ -24,6 +25,8 @@
     "@workspace/contract": "workspace:*"
   },
   "devDependencies": {
+    "eslint": "^9.32.0",
+    "@workspace/eslint-config": "workspace:*",
     "@types/node": "^22.14.1",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "5.8.2"

@@ -4,16 +4,17 @@
  * Focused on recording functionality - session management, state tracking, tab protection
  */
 
-import { host, type Connection } from '@workspace/postbridge';
-import type {
-  RecorderHostSchema,
-  GuestSchema,
-  RecordingState,
-  RecordingSessionInfo,
-  RecordingContext,
-} from './types';
-import { URL_PARAMS, CONNECTION_PREFIXES, generateConnectionId } from '../constants';
 import { getCustomMetadata } from '@workspace/metadata';
+import { type Connection, host } from '@workspace/postbridge';
+
+import { CONNECTION_PREFIXES, generateConnectionId, URL_PARAMS } from '../constants';
+import type {
+  GuestSchema,
+  RecorderHostSchema,
+  RecordingContext,
+  RecordingSessionInfo,
+  RecordingState,
+} from './types';
 
 /**
  * Callbacks for SDK events from the recorder

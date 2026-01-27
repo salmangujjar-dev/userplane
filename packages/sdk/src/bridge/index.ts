@@ -3,34 +3,31 @@
  */
 
 export {
-  RecorderBridgeConnection,
-  type RecorderBridgeCallbacks,
-  type RecorderBridgeConnectionOptions,
-} from './recorder-connection';
-
-export {
-  VerificationBridgeConnection,
-  type VerificationBridgeCallbacks,
-  type VerificationBridgeConnectionOptions,
-} from './verification-connection';
-
-export {
-  CaptureBridgeConnection,
   type CaptureBridgeCallbacks,
+  CaptureBridgeConnection,
   type CaptureBridgeConnectionOptions,
 } from './capture-connection';
-
+export {
+  type RecorderBridgeCallbacks,
+  RecorderBridgeConnection,
+  type RecorderBridgeConnectionOptions,
+} from './recorder-connection';
 export type {
-  RecordingState,
-  RecordingSessionInfo,
-  RecordingContext,
-  RecorderHostSchema,
-  VerificationHostSchema,
-  CaptureHostSchema,
-  CaptureGuestSchema,
-  TabMetadata,
-  CaptureRecorderState,
-  GuestSchema,
-  CustomMetadata,
   BlurrState,
+  CaptureGuestSchema,
+  CaptureHostSchema,
+  CaptureRecorderState,
+  CustomMetadata,
+  GuestSchema,
+  RecorderHostSchema,
+  RecordingContext,
+  RecordingSessionInfo,
+  RecordingState,
+  TabMetadata,
+  VerificationHostSchema,
 } from './types';
+export {
+  type VerificationBridgeCallbacks,
+  VerificationBridgeConnection,
+  type VerificationBridgeConnectionOptions,
+} from './verification-connection';

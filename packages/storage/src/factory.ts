@@ -3,13 +3,13 @@
  * Creates storage clients based on configuration and kind
  */
 
+import { AssetsStorageClient } from './clients/assets';
+import { ClientActionsStorageClient } from './clients/client-actions';
 import { ConsoleLogsStorageClient } from './clients/logs';
 import { NetworkLogsStorageClient } from './clients/network-logs';
-import { ClientActionsStorageClient } from './clients/client-actions';
 import { VideoStorageClient } from './clients/recordings';
 import { ScreenshotsStorageClient } from './clients/screenshots';
 import { ThumbnailsStorageClient } from './clients/thumbnails';
-import { AssetsStorageClient } from './clients/assets';
 import type { GetStorageOptions, StorageClientMap, StorageKind } from './types';
 
 /**

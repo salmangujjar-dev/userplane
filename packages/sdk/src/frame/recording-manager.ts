@@ -3,9 +3,9 @@
  * Manages the recorder iframe with session tracking and state management
  */
 
+import { RecorderBridgeConnection, type RecordingContext } from '../bridge';
 import { BaseFrameManager } from './base-manager';
 import type { IRecordingFrameManager, RecordingFrameManagerConfig } from './types';
-import { RecorderBridgeConnection, type RecordingContext } from '../bridge';
 
 /**
  * Frame manager for recording sessions

@@ -20,10 +20,13 @@
     "dev": "vite build --watch",
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "eslint": "^9.32.0",
+    "@workspace/eslint-config": "workspace:*",
     "@types/node": "^22.14.1",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "5.8.2",

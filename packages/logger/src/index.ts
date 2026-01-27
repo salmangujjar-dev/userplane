@@ -37,7 +37,7 @@ export function createLogger(context: string, options: CreateLoggerOptions = {})
   return pino(pinoOptions);
 }
 
-export { createAppLogger } from './factory';
 export { createBrowserLogger } from './browser';
-export { createUniversalLogger, createServerLogger } from './universal';
+export { createAppLogger } from './factory';
+export { createServerLogger, createUniversalLogger } from './universal';
 export default createLogger;

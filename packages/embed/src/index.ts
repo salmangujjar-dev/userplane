@@ -13,34 +13,33 @@
  */
 
 // Re-export everything from sdk
-export {
-  initialize,
-  isInitialized,
-  open,
-  unmount,
-  isRecorderMounted,
-  isBridgeConnected,
-  getRecordingState,
-  getRecordingContext,
-  getSessionId,
-  getLinkId,
-  getTabRef,
-  clearTabRef,
-  metadata,
-  clearMetadata,
-} from '@workspace/sdk';
-
 export type {
   ActionType,
   InitializeOptions,
-  RecordingState,
-  RecordingContext,
-  SerializableUserplaneData,
   MetadataFunction,
+  RecordingContext,
+  RecordingState,
+  SerializableUserplaneData,
+} from '@workspace/sdk';
+export {
+  clearMetadata,
+  clearTabRef,
+  getLinkId,
+  getRecordingContext,
+  getRecordingState,
+  getSessionId,
+  getTabRef,
+  initialize,
+  isBridgeConnected,
+  isInitialized,
+  isRecorderMounted,
+  metadata,
+  open,
+  unmount,
 } from '@workspace/sdk';
 
 // Re-export metadata types
-export type { SerializableObject, Serializable } from '@workspace/metadata';
+export type { Serializable, SerializableObject } from '@workspace/metadata';
 
 // Auto-initialize on import
 import { initialize } from '@workspace/sdk';

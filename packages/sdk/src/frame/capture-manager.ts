@@ -9,15 +9,15 @@
  * - Used for scatter-gather metadata collection
  */
 
-import type { RecorderFrame, FrameConfig, RecorderParams } from '../types';
-import { URL_PARAMS } from '../constants';
 import {
   CaptureBridgeConnection,
-  type TabMetadata,
   type CaptureRecorderState,
   type RecordingState,
+  type TabMetadata,
 } from '../bridge';
-import type { ICaptureFrameManager, CaptureFrameManagerConfig } from './types';
+import { URL_PARAMS } from '../constants';
+import type { FrameConfig, RecorderFrame, RecorderParams } from '../types';
+import type { CaptureFrameManagerConfig, ICaptureFrameManager } from './types';
 
 /**
  * Frame manager for capture (hidden metadata extraction)

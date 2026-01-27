@@ -4,19 +4,19 @@
  */
 
 import type { ActionType } from '../types';
+import { CaptureFrameManager } from './capture-manager';
+import { RecordingFrameManager } from './recording-manager';
 import type {
+  CaptureFrameManagerConfig,
+  CaptureRecorderState,
+  ICaptureFrameManager,
   IFrameManager,
   IRecordingFrameManager,
   IVerificationFrameManager,
-  ICaptureFrameManager,
   RecordingFrameManagerConfig,
   VerificationFrameManagerConfig,
-  CaptureFrameManagerConfig,
-  CaptureRecorderState,
 } from './types';
-import { RecordingFrameManager } from './recording-manager';
 import { VerificationFrameManager } from './verification-manager';
-import { CaptureFrameManager } from './capture-manager';
 
 /**
  * Factory configuration combining all possible options

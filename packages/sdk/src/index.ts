@@ -21,42 +21,40 @@
  * ```
  */
 
-export {
-  initialize,
-  isInitialized,
-  open,
-  unmount,
-  isRecorderMounted,
-  isBridgeConnected,
-  getRecordingState,
-  getRecordingContext,
-  getSessionId,
-  getLinkId,
-  getTabRef,
-  clearTabRef,
-  metadata,
-  set,
-  clearMetadata,
-} from './sdk';
-
 export type {
   ActionType,
   InitializeOptions,
-  RecordingState,
-  RecordingContext,
-  SerializableUserplaneData,
   MetadataFunction,
+  RecordingContext,
+  RecordingState,
+  SerializableUserplaneData,
+} from './sdk';
+export {
+  clearMetadata,
+  clearTabRef,
+  getLinkId,
+  getRecordingContext,
+  getRecordingState,
+  getSessionId,
+  getTabRef,
+  initialize,
+  isBridgeConnected,
+  isInitialized,
+  isRecorderMounted,
+  metadata,
+  open,
+  set,
+  unmount,
 } from './sdk';
 
 // Re-export metadata package
+export type {
+  MetadataFunction as MetadataFn,
+  Serializable,
+  SerializableObject,
+} from '@workspace/metadata';
 export {
-  metadata as setMetadata,
   clearMetadata as clearMetadataFn,
   getCustomMetadata,
-} from '@workspace/metadata';
-
-export type {
-  SerializableObject,
-  Serializable,
-  MetadataFunction as MetadataFn,
+  metadata as setMetadata,
 } from '@workspace/metadata';

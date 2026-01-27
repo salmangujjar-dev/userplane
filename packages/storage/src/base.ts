@@ -1,18 +1,19 @@
 import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
 import type {
-  StorageProfile,
-  BucketType,
-  StorageConfig,
-  PresignedUrlOptions,
-  UploadPresignOptions,
   BucketCredentials,
+  BucketType,
+  PresignedUrlOptions,
+  StorageConfig,
+  StorageProfile,
+  UploadPresignOptions,
 } from './types';
 
 export abstract class BaseStorageClient {

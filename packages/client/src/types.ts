@@ -4,9 +4,10 @@
  * Re-exports useful types from oRPC and the contract package
  */
 
-import type { JsonifiedClient } from '@orpc/openapi-client';
 import type { ContractRouterClient } from '@orpc/contract';
+import type { JsonifiedClient } from '@orpc/openapi-client';
 import type { contract } from '@workspace/contract';
+
 import type { ClientContext } from './index';
 
 /**
@@ -68,15 +69,15 @@ export type SessionClient = UserplaneClient['session'];
  * Re-export contract types
  */
 export type {
-  Contract,
-  StatusContract,
   AccountContract,
-  ProvisionerContract,
-  WorkspaceContract,
-  InviteContract,
+  Contract,
   DomainContract,
-  ProjectContract,
+  InviteContract,
   LinkContract,
+  ProjectContract,
+  ProvisionerContract,
   RecordingContract,
   SessionContract,
+  StatusContract,
+  WorkspaceContract,
 } from '@workspace/contract';

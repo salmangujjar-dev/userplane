@@ -1,9 +1,9 @@
 import { BaseStorageClient } from '../base';
 import type {
   BucketType,
+  PresignedUrlOptions,
   StorageConfig,
   ThumbnailsClientOptions,
-  PresignedUrlOptions,
 } from '../types';
 import { CacheControl } from '../types';
 

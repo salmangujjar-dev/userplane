@@ -15,18 +15,19 @@
  * - Connects to SharedWorker for cross-tab coordination
  */
 
-import { host, type Connection } from '@workspace/postbridge';
+import { BlurManager } from '@workspace/blurr';
+import { getCustomMetadata } from '@workspace/metadata';
+import { type Connection, host } from '@workspace/postbridge';
+
+import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
 import type {
-  CaptureHostSchema,
+  BlurrState,
   CaptureGuestSchema,
-  TabMetadata,
+  CaptureHostSchema,
   CaptureRecorderState,
   RecordingState,
-  BlurrState,
+  TabMetadata,
 } from './types';
-import { getCustomMetadata } from '@workspace/metadata';
-import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
-import { BlurManager } from '@workspace/blurr';
 
 /**
  * Callbacks for capture bridge events
