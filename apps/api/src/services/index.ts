@@ -26,6 +26,7 @@ import { AdminWorkspaceRepository } from '@/api/repositories/admin-workspace.rep
 import { DisputeRepository } from '@/api/repositories/disputes.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { EntitlementRepository } from '@/api/repositories/entitlements.repository';
+import { IntercomIntegrationRepository } from '@/api/repositories/intercom-integrations.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
@@ -44,6 +45,7 @@ import { BillingService } from '@/api/services/billing.service';
 import { DomainService } from '@/api/services/domain.service';
 import { emailService } from '@/api/services/email.service';
 import { EntitlementService } from '@/api/services/entitlement.service';
+import { IntercomService } from '@/api/services/intercom-oauth.service';
 import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
 import { ProjectService } from '@/api/services/project.service';
@@ -71,6 +73,7 @@ const refundRepo = new RefundRepository(db);
 const adminRepo = new AdminRepository(db);
 const adminWorkspaceRepo = new AdminWorkspaceRepository(db);
 const adminRecordingRepo = new AdminRecordingRepository(db);
+const intercomIntegrationRepo = new IntercomIntegrationRepository(db);
 
 // Initialize services in dependency order
 // Level 0: Services with only repository dependencies (no other services)
@@ -152,6 +155,7 @@ export const workspaceService = new WorkspaceService({
   subscriptionRepo,
   dodoClient: getDodoClient(),
   cacheService,
+  intercomIntegrationRepo,
 });
 
 // Admin service - initialized after workspace service is available
@@ -222,6 +226,14 @@ export const adminProvisioningService = new AdminProvisioningService({
   workspaceMemberService,
   workspaceService,
   db,
+});
+
+// Intercom service
+export const intercomService = new IntercomService({
+  tokenService,
+  intercomIntegrationRepo,
+  provisionerService,
+  inviteService,
 });
 
 // Export tokenService, emailService, and repositories for use in routes

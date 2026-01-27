@@ -51,6 +51,11 @@ interface EnvConfig {
     clientSecret: string;
     redirectUri: string;
   };
+  intercom: {
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+  };
   dashboard: {
     baseUrl: string;
   };
@@ -182,6 +187,13 @@ export function loadEnvConfig(): EnvConfig {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       redirectUri:
         process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/callback/google',
+    },
+    intercom: {
+      clientId: process.env.INTERCOM_CLIENT_ID || '',
+      clientSecret: process.env.INTERCOM_CLIENT_SECRET || '',
+      redirectUri:
+        process.env.INTERCOM_REDIRECT_URI ||
+        'http://localhost:3000/workspace/connect/intercom/callback',
     },
     dashboard: {
       baseUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',

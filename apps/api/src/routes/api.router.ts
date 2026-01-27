@@ -25,6 +25,7 @@ import {
   domainService,
   emailService,
   entitlementService,
+  intercomService,
   inviteService,
   linkService,
   projectService,
@@ -88,7 +89,11 @@ const recordingProcedures = createRecordingProcedures(
 const linkProcedures = createLinkProcedures(linkService, workspaceMemberService, workspaceService);
 const domainProcedures = createDomainProcedures(domainService);
 const inviteProcedures = createInviteProcedures(inviteService);
-const provisionerProcedures = createProvisionerProcedures(provisionerService, emailService);
+const provisionerProcedures = createProvisionerProcedures(
+  provisionerService,
+  emailService,
+  intercomService
+);
 const statusProcedures = createStatusProcedures();
 const adminProcedures = createAdminProcedures(
   adminService,
