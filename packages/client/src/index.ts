@@ -5,9 +5,9 @@
  * Provides full type safety based on oRPC contracts
  */
 
-import type { JsonifiedClient } from '@orpc/openapi-client';
-import type { ContractRouterClient } from '@orpc/contract';
 import { createORPCClient, onError } from '@orpc/client';
+import type { ContractRouterClient } from '@orpc/contract';
+import type { JsonifiedClient } from '@orpc/openapi-client';
 import { OpenAPILink } from '@orpc/openapi-client/fetch';
 import { contract } from '@workspace/contract';
 
@@ -133,50 +133,50 @@ export function createClient(
 /**
  * Re-export contract for convenience
  */
-export { contract } from '@workspace/contract';
 export type { Contract } from '@workspace/contract';
+export { contract } from '@workspace/contract';
 
 /**
  * Re-export useful oRPC client type utilities
  */
 export type {
-  InferClientInputs,
   InferClientBodyInputs,
-  InferClientOutputs,
   InferClientBodyOutputs,
+  InferClientContext,
   InferClientErrors,
   InferClientErrorUnion,
-  InferClientContext,
+  InferClientInputs,
+  InferClientOutputs,
 } from '@orpc/client';
 
 /**
  * Re-export oRPC error handling utilities
  */
-export { safe, isDefinedError, createSafeClient } from '@orpc/client';
+export { createSafeClient, isDefinedError, safe } from '@orpc/client';
 
 /**
  * Re-export domain-specific client types
  */
 export type {
-  UserplaneClient,
-  StatusClient,
   AccountClient,
-  ProvisionerClient,
-  WorkspaceClient,
-  InviteClient,
-  DomainClient,
-  ProjectClient,
-  LinkClient,
-  RecordingClient,
-  SessionClient,
-  StatusContract,
   AccountContract,
-  ProvisionerContract,
-  WorkspaceContract,
-  InviteContract,
+  DomainClient,
   DomainContract,
-  ProjectContract,
+  InviteClient,
+  InviteContract,
+  LinkClient,
   LinkContract,
+  ProjectClient,
+  ProjectContract,
+  ProvisionerClient,
+  ProvisionerContract,
+  RecordingClient,
   RecordingContract,
+  SessionClient,
   SessionContract,
+  StatusClient,
+  StatusContract,
+  UserplaneClient,
+  WorkspaceClient,
+  WorkspaceContract,
 } from './types';

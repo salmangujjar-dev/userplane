@@ -24,6 +24,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "dev:all": "tsc --watch"
   },
   "dependencies": {
@@ -32,6 +33,8 @@
     "@workspace/contract": "workspace:*"
   },
   "devDependencies": {
+    "eslint": "^9.32.0",
+    "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "hono": "^4.6.16",
     "typescript": "5.7.3"

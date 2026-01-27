@@ -25,27 +25,28 @@
  * ```
  */
 
+import {
+  clearMetadata as clearMetadataFn,
+  metadata as setMetadataFn,
+  type MetadataFunction,
+  type Serializable,
+  set as setMetadataValue,
+} from '@workspace/metadata';
+
+import type { RecordingSessionInfo } from './bridge';
+import { FrameManagerFactory } from './frame/factory';
+import type { IFrameManager, IRecordingFrameManager } from './frame/types';
 import type {
   ActionType,
   InitializeOptions,
   RecorderParams,
-  RecordingState,
   RecordingContext,
+  RecordingState,
   SerializableUserplaneData,
 } from './types';
-import { FrameManagerFactory } from './frame/factory';
-import type { IFrameManager, IRecordingFrameManager } from './frame/types';
-import { parseUrlParams } from './utils/url';
 import { readWorkspaceIds } from './utils/meta';
-import { getOrCreateTabRef, clearTabRef as clearTabRefUtil } from './utils/tab';
-import type { RecordingSessionInfo } from './bridge';
-import {
-  metadata as setMetadataFn,
-  set as setMetadataValue,
-  clearMetadata as clearMetadataFn,
-  type MetadataFunction,
-  type Serializable,
-} from '@workspace/metadata';
+import { clearTabRef as clearTabRefUtil, getOrCreateTabRef } from './utils/tab';
+import { parseUrlParams } from './utils/url';
 
 // Internal state
 let factory: FrameManagerFactory | null = null;
@@ -647,9 +648,9 @@ export function clearMetadata(keyOrType?: string): void {
 export type {
   ActionType,
   InitializeOptions,
-  RecordingState,
-  RecordingContext,
-  SerializableUserplaneData,
   MetadataFunction,
+  RecordingContext,
+  RecordingState,
   Serializable,
+  SerializableUserplaneData,
 };

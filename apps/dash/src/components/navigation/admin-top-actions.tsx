@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@workspace/ui/components/button';
-import { Link as LinkIcon, Plus } from 'lucide-react';
+import { Link as LinkIcon } from 'lucide-react';
 
 interface AdminTopActionsProps {
   onCreateInviteClick?: () => void;

@@ -4,9 +4,9 @@
 
 // Re-export bridge types for external use
 export type {
-  RecordingState,
-  RecordingSessionInfo,
   RecordingContext,
+  RecordingSessionInfo,
+  RecordingState,
   VerificationData,
   VerificationError,
   VerificationResult,

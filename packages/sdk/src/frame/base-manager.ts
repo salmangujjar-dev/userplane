@@ -3,11 +3,11 @@
  * Abstract base class with shared frame lifecycle logic
  */
 
-import type { RecorderFrame, FrameConfig, RecorderParams } from '../types';
-import { URL_PARAMS } from '../constants';
 import { FrameConfigBuilder } from '../config/builder';
-import { createOverlay, createIframe, hasExistingRecorder } from './dom';
-import type { IFrameManager, FrameManagerConfig } from './types';
+import { URL_PARAMS } from '../constants';
+import type { FrameConfig, RecorderFrame, RecorderParams } from '../types';
+import { createIframe, createOverlay, hasExistingRecorder } from './dom';
+import type { FrameManagerConfig, IFrameManager } from './types';
 
 /**
  * Abstract base class for frame managers

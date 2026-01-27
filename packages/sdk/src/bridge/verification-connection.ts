@@ -4,9 +4,10 @@
  * Focused on domain verification - handles verification API requests from the iframe
  */
 
-import { host, type Connection } from '@workspace/postbridge';
-import type { VerificationHostSchema, VerificationResult } from './types';
+import { type Connection, host } from '@workspace/postbridge';
+
 import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
+import type { VerificationHostSchema, VerificationResult } from './types';
 
 /**
  * Callbacks for verification events

@@ -3,9 +3,9 @@
  * Interfaces for the frame manager strategy pattern
  */
 
-import type { RecorderFrame, RecorderParams } from '../types';
 import type { RecordingContext } from '../bridge';
-import type { TabMetadata, CaptureRecorderState, RecordingState } from '../bridge/types';
+import type { CaptureRecorderState, RecordingState, TabMetadata } from '../bridge/types';
+import type { RecorderFrame, RecorderParams } from '../types';
 
 // Re-export types used by frame managers
 export type { CaptureRecorderState, TabMetadata };

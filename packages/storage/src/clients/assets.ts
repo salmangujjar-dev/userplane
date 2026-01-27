@@ -1,5 +1,5 @@
 import { BaseStorageClient } from '../base';
-import type { BucketType, StorageConfig, AssetsClientOptions } from '../types';
+import type { AssetsClientOptions, BucketType, StorageConfig } from '../types';
 import { CacheControl } from '../types';
 
 export const ASSETS_ALLOWED_CONTENT_TYPES = [

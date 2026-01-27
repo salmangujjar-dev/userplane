@@ -11,7 +11,7 @@
  */
 
 import type { CacheService } from '@workspace/cache';
-import type { DbClient } from '@workspace/db';
+import { type DbClient, eq, subscriptions, workspaces } from '@workspace/db';
 import { getDodoPaymentsClient } from '@workspace/payments/client';
 import { getPlanIdFromProductId } from '@workspace/payments/products';
 import { validateTransition } from '@workspace/payments/state-machine';
@@ -444,8 +444,6 @@ export class WebhookProcessorService {
         console.log(
           `[WebhookProcessor] Subscription ID changed: ${existingWorkspaceSubscription.subscriptionId} → ${subscriptionId}`
         );
-        const { subscriptions } = await import('@workspace/db');
-        const { eq } = await import('@workspace/db');
 
         await (tx as unknown as DbClient)
           .update(subscriptions)
@@ -595,9 +593,6 @@ export class WebhookProcessorService {
     options?: { tx?: Transaction }
   ) {
     const dbClient = options?.tx || this.deps.db;
-
-    const { workspaces } = await import('@workspace/db');
-    const { eq } = await import('@workspace/db');
 
     await (dbClient as unknown as DbClient)
       .update(workspaces)

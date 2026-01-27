@@ -1,5 +1,5 @@
 import { BaseStorageClient } from '../base';
-import type { BucketType, StorageConfig, PresignedUrlOptions } from '../types';
+import type { BucketType, PresignedUrlOptions, StorageConfig } from '../types';
 import { CacheControl } from '../types';
 
 const ALLOWED_CONTENT_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'] as const;

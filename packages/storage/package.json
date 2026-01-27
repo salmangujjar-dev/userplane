@@ -7,13 +7,16 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.946.0",
     "@aws-sdk/s3-request-presigner": "^3.946.0"
   },
   "devDependencies": {
+    "eslint": "^9.32.0",
+    "@workspace/eslint-config": "workspace:*",
     "@types/bun": "latest",
     "@workspace/typescript-config": "workspace:*"
   }

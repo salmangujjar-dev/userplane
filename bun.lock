@@ -248,7 +248,9 @@
         "@workspace/contract": "workspace:*",
       },
       "devDependencies": {
+        "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
         "hono": "^4.6.16",
         "typescript": "5.7.3",
       },
@@ -270,7 +272,9 @@
       },
       "devDependencies": {
         "@types/node": "^22.14.1",
+        "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
         "typescript": "5.8.2",
       },
     },
@@ -354,7 +358,9 @@
       },
       "devDependencies": {
         "@types/node": "^22.14.1",
+        "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
         "typescript": "5.8.2",
         "vite": "^6.0.7",
         "vite-plugin-dts": "^4.4.0",
@@ -389,7 +395,9 @@
         "server-only": "^0.0.1",
       },
       "devDependencies": {
+        "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
         "typescript": "5.7.3",
       },
     },
@@ -397,7 +405,9 @@
       "name": "@workspace/meta",
       "version": "0.0.0",
       "devDependencies": {
+        "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
         "typescript": "5.7.3",
       },
     },
@@ -406,7 +416,9 @@
       "version": "0.0.1",
       "devDependencies": {
         "@types/node": "^22.14.1",
+        "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
         "typescript": "5.8.2",
         "vite": "^6.0.7",
         "vite-plugin-dts": "^4.4.0",
@@ -457,7 +469,9 @@
       "name": "@workspace/pricing",
       "version": "0.0.0",
       "devDependencies": {
+        "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
         "typescript": "5.7.3",
       },
     },
@@ -472,7 +486,9 @@
       },
       "devDependencies": {
         "@types/node": "^22.14.1",
+        "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
         "typescript": "5.8.2",
         "vite": "^6.0.7",
         "vite-plugin-dts": "^4.4.0",
@@ -497,7 +513,9 @@
       },
       "devDependencies": {
         "@types/bun": "latest",
+        "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
       },
     },
     "packages/typescript-config": {

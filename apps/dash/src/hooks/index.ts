@@ -5,7 +5,6 @@
 export { useAuth } from './use-auth';
 export { useDomainSectionState } from './use-domain-section-state';
 export { useDomainStatusPolling } from './use-domain-status-polling';
-
 export {
   useFetchDomainSettings,
   usePollDomainVerification,

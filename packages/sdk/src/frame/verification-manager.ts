@@ -3,9 +3,9 @@
  * Manages the verification iframe for domain verification flow
  */
 
+import { VerificationBridgeConnection } from '../bridge';
 import { BaseFrameManager } from './base-manager';
 import type { IVerificationFrameManager, VerificationFrameManagerConfig } from './types';
-import { VerificationBridgeConnection } from '../bridge';
 
 /**
  * Frame manager for domain verification

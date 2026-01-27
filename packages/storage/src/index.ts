@@ -8,31 +8,31 @@
 export { getStorage } from './factory';
 
 // Client classes (for advanced use cases)
-export { ConsoleLogsStorageClient } from './clients/logs';
-export { NetworkLogsStorageClient } from './clients/network-logs';
-export { ClientActionsStorageClient } from './clients/client-actions';
-export { VideoStorageClient } from './clients/recordings';
-export { ScreenshotsStorageClient } from './clients/screenshots';
-export { ThumbnailsStorageClient } from './clients/thumbnails';
 export {
-  AssetsStorageClient,
   ASSETS_ALLOWED_CONTENT_TYPES,
   ASSETS_EXTENSION_MAP,
   type AssetsContentType,
+  AssetsStorageClient,
 } from './clients/assets';
+export { ClientActionsStorageClient } from './clients/client-actions';
+export { ConsoleLogsStorageClient } from './clients/logs';
+export { NetworkLogsStorageClient } from './clients/network-logs';
+export { VideoStorageClient } from './clients/recordings';
+export { ScreenshotsStorageClient } from './clients/screenshots';
+export { ThumbnailsStorageClient } from './clients/thumbnails';
 
 // Types
-export { CacheControl } from './types';
 export type {
-  StorageProfile,
-  StorageKind,
-  BucketType,
-  StorageConfig,
-  PresignedUrlOptions,
-  UploadPresignOptions,
-  BucketCredentials,
-  ThumbnailsClientOptions,
   AssetsClientOptions,
+  BucketCredentials,
+  BucketType,
   GetStorageOptions,
+  PresignedUrlOptions,
   StorageClientMap,
+  StorageConfig,
+  StorageKind,
+  StorageProfile,
+  ThumbnailsClientOptions,
+  UploadPresignOptions,
 } from './types';
+export { CacheControl } from './types';

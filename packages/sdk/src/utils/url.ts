@@ -3,8 +3,8 @@
  * Handles extraction and validation of URL parameters.
  */
 
-import type { URLParams, ActionType } from '../types';
-import { URL_PARAMS, ACTIONS } from '../constants';
+import { ACTIONS, URL_PARAMS } from '../constants';
+import type { ActionType, URLParams } from '../types';
 
 /**
  * Valid action values
