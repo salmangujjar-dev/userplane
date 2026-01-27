@@ -131,7 +131,9 @@ export default function CreateWorkspacePage() {
         workspaceName={createdWorkspace.workspaceName}
         onPrimaryAction={handleGoToWorkspace}
         secondaryText="Connect to Intercom"
-        onSecondaryAction={() => router.push(`/${createdWorkspace.workspaceId}/settings?tab=team`)}
+        onSecondaryAction={() =>
+          router.push(`/${createdWorkspace.workspaceId}/settings?tab=integrations`)
+        }
       />
     );
   }

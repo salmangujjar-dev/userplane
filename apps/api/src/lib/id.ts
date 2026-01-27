@@ -121,11 +121,11 @@ export function generateRefundId(): string {
 }
 
 /**
- * Generate a unique ID for Intercom integrations
- * @returns ID with 'icm_' prefix + 12-character alphanumeric ID
+ * Generate a unique ID for integrations
+ * @returns ID with 'int_' prefix + 12-character alphanumeric ID
  */
-export function generateIntercomIntegrationId(): string {
-  return `icm_${nanoid()}`;
+export function generateIntegrationId(): string {
+  return `int_${nanoid()}`;
 }
 
 /**

@@ -4,24 +4,25 @@
  */
 
 import { FormEmailSchema, provisionerError } from '@workspace/contract';
+import { createProviderMeta, createProviderToken, type IntercomRegion } from '@workspace/contract';
 
 import {
   detectRegionAndGetMe,
   exchangeCodeForToken,
   getAuthorizationUrl,
-  type IntercomRegion,
+  IntercomMeResponse,
   listAdmins,
 } from '@/api/clients/intercom';
-import { generateIntercomIntegrationId } from '@/api/lib/id';
+import { generateIntegrationId } from '@/api/lib/id';
 import { deriveWorkspaceUrl } from '@/api/lib/workspace';
-import type { IntercomIntegrationRepository } from '@/api/repositories/intercom-integrations.repository';
+import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import type { InviteService } from '@/api/services/invite.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
 
 export interface IntercomServiceDeps {
   tokenService: TokenService;
-  intercomIntegrationRepo: IntercomIntegrationRepository;
+  integrationRepo: IntegrationRepository;
   provisionerService: ProvisionerService;
   inviteService: InviteService;
 }
@@ -48,15 +49,7 @@ export class IntercomService {
    * Creates workspace, Intercom integration, and sends admin invites
    */
   private async handleIntercomCreation(params: {
-    me: {
-      email: string;
-      id: string;
-      name?: string;
-      app: {
-        id_code: string;
-        name?: string;
-      };
-    };
+    me: IntercomMeResponse;
     region: IntercomRegion;
     accessToken: string;
     userId: string;
@@ -65,14 +58,16 @@ export class IntercomService {
   }): Promise<WorkspaceCreationResult> {
     const { me, region, accessToken, userId, userName, userEmail } = params;
 
-    // 1. Derive workspace URL from Intercom email domain
+    // 1. Derive workspace URL and name from Intercom email domain and app name
     const workspaceUrl = deriveWorkspaceUrl(me.email);
+    const workspaceName = me.app.name;
 
     // 2. Create workspace using ProvisionerService
     // This handles workspace, project, domain, member, entitlement creation,
     // and workspace creation rate limit checks
-    const result = await this.deps.provisionerService.createWorkspaceByURL({
+    const result = await this.deps.provisionerService.createWorkspaceByURLAndName({
       url: workspaceUrl,
+      workspaceName: workspaceName,
       userId,
       userName,
       userEmail,
@@ -88,18 +83,14 @@ export class IntercomService {
       workspaceName: result.workspaceName,
     };
 
-    // 3. Create Intercom integration record
-    await this.deps.intercomIntegrationRepo.create({
-      id: generateIntercomIntegrationId(),
+    // 3. Create integration record
+    await this.deps.integrationRepo.create({
+      id: generateIntegrationId(),
       workspaceId: workspace.workspaceId,
-      intercomWorkspaceId: me.app.id_code,
-      accessToken,
-      region,
-      adminId: me.id,
-      adminEmail: me.email,
-      adminName: me.name,
-      appIdCode: me.app.id_code,
-      appName: me.app.name,
+      provider: 'intercom',
+      providerWorkspaceId: me.app.id_code,
+      providerToken: createProviderToken('intercom', { accessToken }),
+      providerMeta: createProviderMeta('intercom', { region }),
     });
 
     // 4. Fetch Intercom admins and send workspace invites (non-blocking)
@@ -225,7 +216,8 @@ export class IntercomService {
     }
 
     // 5. Check if Intercom workspace is already connected
-    const existingIntegration = await this.deps.intercomIntegrationRepo.findByIntercomWorkspaceId(
+    const existingIntegration = await this.deps.integrationRepo.findByProviderWorkspaceId(
+      'intercom',
       me.app.id_code
     );
     if (existingIntegration) {

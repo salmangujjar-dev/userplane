@@ -1,0 +1,125 @@
+import { z } from 'zod';
+
+/**
+ * Integration provider types
+ * Add new providers here as they are implemented
+ */
+export const INTEGRATION_PROVIDERS = ['intercom'] as const;
+export const IntegrationProviderSchema = z.enum(INTEGRATION_PROVIDERS);
+export type IntegrationProvider = z.infer<typeof IntegrationProviderSchema>;
+
+/**
+ * Provider-specific token schemas
+ * Each provider defines its own token storage structure
+ */
+
+// Intercom token - simple access token (no refresh, valid until revoked)
+export const IntercomTokenSchema = z.object({
+  accessToken: z.string(),
+});
+export type IntercomToken = z.infer<typeof IntercomTokenSchema>;
+
+/**
+ * Intercom region enum
+ * Regional API endpoints: US (api.intercom.io), EU (api.eu.intercom.io), AU (api.au.intercom.io)
+ */
+export const INTERCOM_REGIONS = ['US', 'EU', 'AU'] as const;
+export const IntercomRegionSchema = z.enum(INTERCOM_REGIONS);
+export type IntercomRegion = z.infer<typeof IntercomRegionSchema>;
+
+/**
+ * Provider-specific metadata schemas
+ */
+
+// Intercom provider metadata
+export const IntercomProviderMetaSchema = z.object({
+  region: IntercomRegionSchema,
+});
+export type IntercomProviderMeta = z.infer<typeof IntercomProviderMetaSchema>;
+
+/**
+ * Complete provider configuration
+ * Maps each provider to its token and metadata schemas
+ */
+export interface ProviderConfig {
+  intercom: {
+    token: IntercomToken;
+    meta: IntercomProviderMeta;
+  };
+}
+
+/**
+ * Type helper to get token type for a specific provider
+ */
+export type ProviderTokenFor<P extends IntegrationProvider> = ProviderConfig[P]['token'];
+
+/**
+ * Type helper to get metadata type for a specific provider
+ */
+export type ProviderMetaFor<P extends IntegrationProvider> = ProviderConfig[P]['meta'];
+
+/**
+ * Helper to create provider metadata with type safety
+ */
+export function createProviderMeta<P extends IntegrationProvider>(
+  provider: P,
+  meta: ProviderMetaFor<P>
+): ProviderMetaFor<P> {
+  if (provider === 'intercom') {
+    return IntercomProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
+  }
+  throw new Error(`Unknown provider: ${provider}`);
+}
+
+/**
+ * Helper to parse provider metadata from JSONB
+ */
+export function parseProviderMeta<P extends IntegrationProvider>(
+  provider: P,
+  meta: unknown
+): ProviderMetaFor<P> {
+  if (provider === 'intercom') {
+    return IntercomProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
+  }
+  throw new Error(`Unknown provider: ${provider}`);
+}
+
+/**
+ * Helper to create provider token with type safety
+ */
+export function createProviderToken<P extends IntegrationProvider>(
+  provider: P,
+  token: ProviderTokenFor<P>
+): ProviderTokenFor<P> {
+  if (provider === 'intercom') {
+    return IntercomTokenSchema.parse(token) as ProviderTokenFor<P>;
+  }
+  throw new Error(`Unknown provider: ${provider}`);
+}
+
+/**
+ * Helper to parse provider token from JSONB
+ */
+export function parseProviderToken<P extends IntegrationProvider>(
+  provider: P,
+  token: unknown
+): ProviderTokenFor<P> {
+  if (provider === 'intercom') {
+    return IntercomTokenSchema.parse(token) as ProviderTokenFor<P>;
+  }
+  throw new Error(`Unknown provider: ${provider}`);
+}
+
+/**
+ * Helper to extract access token from provider token
+ * Handles different token structures per provider
+ */
+export function extractAccessToken<P extends IntegrationProvider>(
+  provider: P,
+  token: ProviderTokenFor<P>
+): string {
+  if (provider === 'intercom') {
+    return (token as IntercomToken).accessToken;
+  }
+  throw new Error(`Unknown provider: ${provider}`);
+}

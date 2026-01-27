@@ -4,7 +4,7 @@
  * All new workspaces start on free plan - users upgrade via subscription
  */
 
-import { provisionerError } from '@workspace/contract';
+import { provisionerError, WorkspaceNameSchema } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 import { ABUSE_PREVENTION } from '@workspace/pricing';
 
@@ -80,6 +80,7 @@ export class ProvisionerService {
     return this.provisionWorkspace({
       url: workspaceDetails.workspaceUrl,
       predeterminedWorkspaceId: workspaceDetails.workspaceId,
+      predeterminedWorkspaceName: undefined,
       userId,
       userName,
       userEmail,
@@ -103,6 +104,31 @@ export class ProvisionerService {
     return this.provisionWorkspace({
       url,
       predeterminedWorkspaceId: undefined,
+      predeterminedWorkspaceName: undefined,
+      userId,
+      userName,
+      userEmail,
+    });
+  }
+
+  /**
+   * Create workspace manually with URL and predetermined name
+   * User provides workspace URL and name, workspace starts on free plan
+   * Throws PROVISIONER_WORKSPACE_CREATE_FAILED if workspace creation fails
+   * Throws PROVISIONER_TRANSACTION_FAILED if transaction fails
+   */
+  async createWorkspaceByURLAndName(params: {
+    url: string;
+    workspaceName: string | undefined;
+    userId: string;
+    userName?: string;
+    userEmail: string;
+  }): Promise<WorkspaceCreationResult> {
+    const { url, workspaceName, userId, userName, userEmail } = params;
+    return this.provisionWorkspace({
+      url,
+      predeterminedWorkspaceId: undefined,
+      predeterminedWorkspaceName: workspaceName,
       userId,
       userName,
       userEmail,
@@ -120,11 +146,19 @@ export class ProvisionerService {
   private async provisionWorkspace(params: {
     url: string;
     predeterminedWorkspaceId: string | undefined;
+    predeterminedWorkspaceName: string | undefined;
     userId: string;
     userName?: string;
     userEmail: string;
   }): Promise<WorkspaceCreationResult> {
-    const { url, predeterminedWorkspaceId, userId, userName, userEmail } = params;
+    const {
+      url,
+      predeterminedWorkspaceId,
+      predeterminedWorkspaceName,
+      userId,
+      userName,
+      userEmail,
+    } = params;
 
     // Check workspace creation rate limit (abuse prevention)
     const workspaceCount = await this.deps.memberRepo.countUniqueWorkspacesForUserInPeriod(
@@ -140,7 +174,16 @@ export class ProvisionerService {
     }
 
     // Derive workspace name from URL
-    const workspaceName = deriveWorkspaceName(url, userName);
+    let workspaceName = predeterminedWorkspaceName
+      ? predeterminedWorkspaceName
+      : deriveWorkspaceName(url, userName);
+
+    // Clean up workspace name
+    const workspaceNameResult = WorkspaceNameSchema.safeParse(workspaceName);
+    if (!workspaceNameResult.success) {
+      workspaceName = 'Userplane Workspace';
+    }
+    workspaceName = workspaceNameResult.data ?? 'Userplane Workspace';
 
     const workspace = await this.deps.db.transaction(async (tx) => {
       // Create workspace with default recording preferences
