@@ -11,7 +11,6 @@ import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { LinksList } from '@/components/links/links-list';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
@@ -31,7 +30,6 @@ import { stringArrayParser, tabParser } from '@/lib/parsers';
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.projectId as string;
-  const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useQueryState('tab', tabParser.withDefault('recordings'));
@@ -183,10 +181,6 @@ export default function ProjectPage() {
   const recordingsTotalPages = recordingsData?.pagination.totalPages || 1;
   const linksTotalPages = linksData?.pagination.totalPages || 1;
 
-  const handleLinkCreated = (link: string) => {
-    setShareLink(link);
-  };
-
   // Show loading state for project
   if (isLoadingProject) {
     return (
@@ -195,7 +189,7 @@ export default function ProjectPage() {
         <div className="flex flex-1 flex-col overflow-hidden">
           <TopActions
             onInviteClick={() => setInviteModalOpen(true)}
-            createLinkButton={<CreateLinkModal onLinkCreated={handleLinkCreated} />}
+            onCreateLinkClick={() => setCreateLinkModalOpen(true)}
           />
           <main className="flex-1 overflow-y-auto px-6 pb-8">
             <div className="space-y-6">
@@ -243,7 +237,7 @@ export default function ProjectPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopActions
           onInviteClick={() => setInviteModalOpen(true)}
-          createLinkButton={<CreateLinkModal onLinkCreated={handleLinkCreated} />}
+          onCreateLinkClick={() => setCreateLinkModalOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
@@ -384,15 +378,8 @@ export default function ProjectPage() {
       <CreateLinkModal
         open={createLinkModalOpen}
         onOpenChange={setCreateLinkModalOpen}
-        onLinkCreated={handleLinkCreated}
         hideButton
         defaultProjectId={projectId}
-      />
-
-      <ShareLinkModal
-        link={shareLink || ''}
-        open={!!shareLink}
-        onClose={() => setShareLink(null)}
       />
     </div>
   );

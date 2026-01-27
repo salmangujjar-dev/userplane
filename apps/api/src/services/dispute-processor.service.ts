@@ -49,8 +49,8 @@ export interface DisputeProcessorDeps {
   subscriptionRepo: SubscriptionRepository;
   webhookEventsRepo: WebhookEventsRepository;
   db: DbClient;
-  dodoClient?: ReturnType<typeof getDodoPaymentsClient>;
-  cacheService?: CacheService;
+  dodoClient: ReturnType<typeof getDodoPaymentsClient>;
+  cacheService: CacheService;
 }
 
 export class DisputeProcessorService {
@@ -105,18 +105,14 @@ export class DisputeProcessorService {
     // 3. Map payment_id → subscription_id via Dodo API
     let subscriptionId: string | null = null;
 
-    if (this.deps.dodoClient) {
-      try {
-        console.log(`[DisputeProcessor] Looking up payment: ${dispute.payment_id}`);
-        const payment = await this.deps.dodoClient.payments.retrieve(dispute.payment_id);
-        subscriptionId = payment.subscription_id || null;
-        console.log(`[DisputeProcessor] Payment mapped to subscription: ${subscriptionId}`);
-      } catch (error) {
-        console.warn(`[DisputeProcessor] Failed to retrieve payment ${dispute.payment_id}:`, error);
-        // Continue processing - we can still record the dispute
-      }
-    } else {
-      console.warn('[DisputeProcessor] No Dodo client available for payment lookup');
+    try {
+      console.log(`[DisputeProcessor] Looking up payment: ${dispute.payment_id}`);
+      const payment = await this.deps.dodoClient.payments.retrieve(dispute.payment_id);
+      subscriptionId = payment.subscription_id || null;
+      console.log(`[DisputeProcessor] Payment mapped to subscription: ${subscriptionId}`);
+    } catch (error) {
+      console.warn(`[DisputeProcessor] Failed to retrieve payment ${dispute.payment_id}:`, error);
+      // Continue processing - we can still record the dispute
     }
 
     // 4. Get workspace from subscription (if we have a subscription)
@@ -167,7 +163,7 @@ export class DisputeProcessorService {
       });
 
       // Invalidate dispute cache for this workspace
-      if (workspaceId && this.deps.cacheService) {
+      if (workspaceId) {
         try {
           await this.deps.cacheService.invalidateDispute(workspaceId);
           console.log(`[DisputeProcessor] Invalidated dispute cache for workspace: ${workspaceId}`);

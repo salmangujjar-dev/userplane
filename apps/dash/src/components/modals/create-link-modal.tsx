@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { RecordingLimitStatus } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -18,6 +19,7 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
+import { toast } from '@workspace/ui/components/sonner';
 import { Switch } from '@workspace/ui/components/switch';
 import {
   Tooltip,
@@ -25,7 +27,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { ChevronDown, ChevronUp, FolderKanban, Globe, HelpCircle, Plus } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowUpCircle,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  FolderKanban,
+  Globe,
+  HelpCircle,
+  Plus,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import type { Control, UseFormHandleSubmit, UseFormSetValue } from 'react-hook-form';
@@ -37,15 +49,8 @@ import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
 import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useCreateLink } from '@/queries/use-link-mutations';
 import { useWorkspaceStore } from '@/stores/workspace';
+
 interface CreateLinkModalProps {
-  onLinkCreated?: (
-    linkUrl: string,
-    recordingLimitExceeded?: {
-      quotedLimit: boolean;
-      softLimit: boolean;
-      hardLimit: boolean;
-    }
-  ) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideButton?: boolean;
@@ -61,8 +66,12 @@ const createLinkFormSchema = z.object({
 
 type CreateLinkFormValues = z.infer<typeof createLinkFormSchema>;
 
+type ModalState =
+  | { view: 'create' }
+  | { view: 'error'; error: { message: string; code?: string } }
+  | { view: 'share'; linkUrl: string; recordingLimitStatus: RecordingLimitStatus };
+
 export function CreateLinkModal({
-  onLinkCreated,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   hideButton = false,
@@ -73,12 +82,9 @@ export function CreateLinkModal({
 
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
+
+  const [state, setState] = useState<ModalState>({ view: 'create' });
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [error, setError] = useState<{
-    message: string;
-    code?: string;
-    data?: { code?: string; message?: string };
-  } | null>(null);
 
   const {
     control,
@@ -114,10 +120,9 @@ export function CreateLinkModal({
 
   const createLinkMutation = useCreateLink(workspaceId);
 
-  // Effect to set default project and domain when data loads
+  // Set default project and domain when data loads
   useEffect(() => {
     if (open && projects && projects.length > 0 && !selectedProject) {
-      // Use defaultProjectId if provided and exists in projects list
       if (defaultProjectId) {
         const projectExists = projects.some((p) => p.projectId === defaultProjectId);
         if (projectExists) {
@@ -125,7 +130,6 @@ export function CreateLinkModal({
           return;
         }
       }
-      // Fall back to default project or first project
       const defaultProject = projects.find((p) => p.isDefault) || projects[0];
       if (defaultProject) {
         setValue('projectId', defaultProject.projectId);
@@ -142,17 +146,16 @@ export function CreateLinkModal({
     }
   }, [open, domains, selectedDomain, setValue]);
 
-  // Effect to reset form state when modal closes
+  // Reset state when modal closes
   useEffect(() => {
     if (!open) {
       reset();
       setShowAdvanced(false);
-      setError(null);
+      setState({ view: 'create' });
     }
   }, [open, reset]);
 
   const onSubmit = (data: CreateLinkFormValues) => {
-    setError(null); // Clear any previous errors
     createLinkMutation.mutate(
       {
         data: {
@@ -165,27 +168,25 @@ export function CreateLinkModal({
       },
       {
         onSuccess: (result) => {
-          // Only handle successful results - errors are thrown to onError
           if (!result.success) return;
-
-          // Success - create the link
-          if (onLinkCreated) {
-            onLinkCreated(result.data.link.linkURL, result.data.recordingLimitExceeded);
-          }
-          setOpen(false);
+          setState({
+            view: 'share',
+            linkUrl: result.data.link.linkURL,
+            recordingLimitStatus: result.data.recordingLimitStatus,
+          });
         },
         onError: (err: unknown) => {
-          // Catch thrown errors (e.g., link limit exceeded)
-          const errorObj = err as { message: string; code?: string; data?: unknown };
-          setError({
-            message: errorObj.message || 'Failed to create link',
-            code: errorObj.code,
-            data: errorObj.data as { code?: string; message?: string } | undefined,
+          const errorObj = err as { message: string; code?: string };
+          setState({
+            view: 'error',
+            error: { message: errorObj.message || 'Failed to create link', code: errorObj.code },
           });
         },
       }
     );
   };
+
+  const handleClose = () => setOpen(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -197,11 +198,9 @@ export function CreateLinkModal({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[600px]" showCloseButton={!error}>
-        {error ? (
-          <CreateLinkErrorView error={error} />
-        ) : (
-          <CreateLinkFormView
+      <DialogContent className="sm:max-w-[600px]" showCloseButton={state.view === 'create'}>
+        {state.view === 'create' && (
+          <FormView
             control={control}
             handleSubmit={handleSubmit}
             onSubmit={onSubmit}
@@ -214,17 +213,25 @@ export function CreateLinkModal({
             isLoadingProjects={isLoadingProjects}
             showAdvanced={showAdvanced}
             setShowAdvanced={setShowAdvanced}
-            setOpen={setOpen}
+            onClose={handleClose}
             isPending={createLinkMutation.isPending}
             isValid={isValid}
           />
+        )}
+        {state.view === 'error' && <ErrorView error={state.error} onClose={handleClose} />}
+        {state.view === 'share' && (
+          <ShareView linkUrl={state.linkUrl} recordingLimitStatus={state.recordingLimitStatus} />
         )}
       </DialogContent>
     </Dialog>
   );
 }
 
-function CreateLinkFormView({
+// ============================================================================
+// Form View
+// ============================================================================
+
+function FormView({
   control,
   handleSubmit,
   onSubmit,
@@ -237,7 +244,7 @@ function CreateLinkFormView({
   isLoadingProjects,
   showAdvanced,
   setShowAdvanced,
-  setOpen,
+  onClose,
   isPending,
   isValid,
 }: {
@@ -246,18 +253,14 @@ function CreateLinkFormView({
   onSubmit: (data: CreateLinkFormValues) => void;
   setValue: UseFormSetValue<CreateLinkFormValues>;
   domains?: Array<{ domainId: string; domainUrl: string; domainStatus: string }>;
-  projects?: Array<{
-    projectId: string;
-    projectTitle: string | null;
-    isDefault: boolean;
-  }>;
+  projects?: Array<{ projectId: string; projectTitle: string | null; isDefault: boolean }>;
   selectedDomain: string | undefined;
   selectedProject: string | undefined;
   isLoadingDomains: boolean;
   isLoadingProjects: boolean;
   showAdvanced: boolean;
   setShowAdvanced: (show: boolean) => void;
-  setOpen: (open: boolean) => void;
+  onClose: () => void;
   isPending: boolean;
   isValid: boolean;
 }) {
@@ -430,6 +433,7 @@ function CreateLinkFormView({
           </div>
         )}
       </div>
+
       <DialogFooter className="mt-8">
         <button
           type="button"
@@ -454,7 +458,7 @@ function CreateLinkFormView({
             type="button"
             variant="secondary"
             className="rounded-full px-6"
-            onClick={() => setOpen(false)}
+            onClick={onClose}
             disabled={isPending}
           >
             Cancel
@@ -468,23 +472,23 @@ function CreateLinkFormView({
   );
 }
 
-function CreateLinkErrorView({
+// ============================================================================
+// Error View
+// ============================================================================
+
+function ErrorView({
   error,
+  onClose,
 }: {
-  error: { message: string; code?: string; data?: { code?: string; message?: string } };
+  error: { message: string; code?: string };
+  onClose: () => void;
 }) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
-  const errorMessage = error.data?.message || error.message;
-  const errorCode = error.data?.code || error.code;
 
   const handleUpgrade = () => {
     if (workspaceId) {
-      window.location.href = `/${workspaceId}/recordings?plan-modal=detailed`;
+      window.location.href = `/${workspaceId}/settings?tab=billing`;
     }
-  };
-
-  const handleSupport = () => {
-    window.open('https://userplane.com/support', '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -495,9 +499,7 @@ function CreateLinkErrorView({
           <div className="flex flex-col space-y-1">
             <DialogTitle className="text-xl font-semibold">Unable to Create Link</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              {errorMessage ||
-                (errorCode && `Error: ${errorCode}`) ||
-                'An unexpected error occurred'}
+              {error.message || (error.code && `Error: ${error.code}`) || 'An error occurred'}
             </DialogDescription>
           </div>
         </div>
@@ -506,11 +508,9 @@ function CreateLinkErrorView({
           <div className="flex justify-center py-4">
             <Image src="/assets/dino.svg" alt="Error" width={120} height={120} />
           </div>
-          <DialogDescription className="text-sm text-muted-foreground text-center">
-            {errorMessage || (errorCode && `Error: ${errorCode}`) || 'An unexpected error occurred'}
-          </DialogDescription>
         </div>
       </div>
+
       <DialogFooter className="mt-8">
         <a
           href="https://userplane.com/docs/troubleshooting/link-creation-errors"
@@ -522,23 +522,137 @@ function CreateLinkErrorView({
           Link issues
         </a>
         <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            className="rounded-full px-6"
-            onClick={handleUpgrade}
-          >
+          <Button variant="outline" className="rounded-full px-6" onClick={onClose}>
+            Close
+          </Button>
+          <Button variant="secondary" className="rounded-full px-6" onClick={handleUpgrade}>
             Upgrade
           </Button>
-          <Button
-            type="button"
-            variant="default"
-            className="rounded-full px-6"
-            onClick={handleSupport}
-          >
-            Support
-          </Button>
         </div>
+      </DialogFooter>
+    </>
+  );
+}
+
+// ============================================================================
+// Share View
+// ============================================================================
+
+function ShareView({
+  linkUrl,
+  recordingLimitStatus,
+}: {
+  linkUrl: string;
+  recordingLimitStatus: RecordingLimitStatus;
+}) {
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
+
+  // Auto-copy on mount
+  useEffect(() => {
+    navigator.clipboard
+      .writeText(linkUrl)
+      .then(() => toast.success('Link copied to clipboard'))
+      .catch(() => toast.error('Failed to copy link'));
+  }, [linkUrl]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(linkUrl);
+      toast.success('Link copied to clipboard');
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleUpgrade = () => {
+    if (workspaceId) {
+      window.location.href = `/${workspaceId}/recordings?plan-modal=detailed`;
+    }
+  };
+
+  const showWarning = recordingLimitStatus !== 'safe';
+
+  const getWarningMessage = (status: RecordingLimitStatus): string => {
+    switch (status) {
+      case 'hard-exceeded':
+        return 'You have exceeded your fair use limit';
+      case 'hard-warning':
+        return 'You are approaching your fair use limit';
+      case 'soft-exceeded':
+        return 'You have exceeded your recomended recording limit';
+      case 'soft-warning':
+        return 'You are approaching your recomended recording limit';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <>
+      <div className="space-y-6 py-4">
+        <div className="flex items-start gap-4">
+          <Logo variant="tiled" size="md" showText={false} />
+          <div className="flex flex-col space-y-1">
+            <DialogTitle className="text-xl font-semibold">Link copied, ready to share</DialogTitle>
+            <div className="flex items-center gap-2">
+              <DialogDescription className="text-sm text-muted-foreground">
+                Share with anyone to capture their screen
+              </DialogDescription>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href="https://userplane.com/docs/sharing-links"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center"
+                    >
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Learn more about sharing links</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={linkUrl}
+            readOnly
+            className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+
+          {showWarning && (
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                {getWarningMessage(recordingLimitStatus)}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <DialogFooter>
+        {showWarning && (
+          <button
+            type="button"
+            onClick={handleUpgrade}
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+          >
+            <ArrowUpCircle className="h-4 w-4" />
+            Upgrade
+          </button>
+        )}
+        <Button variant="default" onClick={handleCopy} className="rounded-full px-6">
+          <Copy className="h-4 w-4 mr-2" />
+          Copy Link
+        </Button>
       </DialogFooter>
     </>
   );

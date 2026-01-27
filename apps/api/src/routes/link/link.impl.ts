@@ -89,7 +89,7 @@ export const createLinkImpl = (
 
       const link = await linkService.getById(createdLink.linkId, input.params.workspaceId);
 
-      const recordingLimitExceeded = await entitlementService.checkRecordingLimitsExceeded(
+      const recordingLimitStatus = await entitlementService.checkRecordingLimitStatus(
         input.params.workspaceId
       );
 
@@ -98,7 +98,7 @@ export const createLinkImpl = (
         data: {
           workspaceId: input.params.workspaceId,
           link,
-          recordingLimitExceeded,
+          recordingLimitStatus,
         },
       };
     });

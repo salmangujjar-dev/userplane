@@ -46,8 +46,8 @@ export interface RefundProcessorDeps {
   subscriptionRepo: SubscriptionRepository;
   webhookEventsRepo: WebhookEventsRepository;
   db: DbClient;
-  dodoClient?: ReturnType<typeof getDodoPaymentsClient>;
-  cacheService?: CacheService;
+  dodoClient: ReturnType<typeof getDodoPaymentsClient>;
+  cacheService: CacheService;
 }
 
 export class RefundProcessorService {
@@ -102,18 +102,14 @@ export class RefundProcessorService {
     // 3. Map payment_id → subscription_id via Dodo API
     let subscriptionId: string | null = null;
 
-    if (this.deps.dodoClient) {
-      try {
-        console.log(`[RefundProcessor] Looking up payment: ${refund.payment_id}`);
-        const payment = await this.deps.dodoClient.payments.retrieve(refund.payment_id);
-        subscriptionId = payment.subscription_id || null;
-        console.log(`[RefundProcessor] Payment mapped to subscription: ${subscriptionId}`);
-      } catch (error) {
-        console.warn(`[RefundProcessor] Failed to retrieve payment ${refund.payment_id}:`, error);
-        // Continue processing - we can still record the refund
-      }
-    } else {
-      console.warn('[RefundProcessor] No Dodo client available for payment lookup');
+    try {
+      console.log(`[RefundProcessor] Looking up payment: ${refund.payment_id}`);
+      const payment = await this.deps.dodoClient.payments.retrieve(refund.payment_id);
+      subscriptionId = payment.subscription_id || null;
+      console.log(`[RefundProcessor] Payment mapped to subscription: ${subscriptionId}`);
+    } catch (error) {
+      console.warn(`[RefundProcessor] Failed to retrieve payment ${refund.payment_id}:`, error);
+      // Continue processing - we can still record the refund
     }
 
     // 4. Get workspace from subscription (if we have a subscription)
@@ -164,7 +160,7 @@ export class RefundProcessorService {
       });
 
       // Invalidate refund cache for this workspace (only for successful refunds)
-      if (workspaceId && status === 'succeeded' && this.deps.cacheService) {
+      if (workspaceId && status === 'succeeded') {
         try {
           await this.deps.cacheService.invalidateRefund(workspaceId);
           console.log(`[RefundProcessor] Invalidated refund cache for workspace: ${workspaceId}`);

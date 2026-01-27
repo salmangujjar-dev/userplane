@@ -13,7 +13,7 @@ import type { Transaction } from '@/api/types';
 
 export interface WorkspaceMemberServiceDeps {
   memberRepo: WorkspaceMemberRepository;
-  entitlementService?: EntitlementService;
+  entitlementService: EntitlementService;
 }
 
 export class WorkspaceMemberService {
@@ -98,7 +98,7 @@ export class WorkspaceMemberService {
     );
 
     // For new members (not restores), check seat entitlement
-    if (!deletedMember?.isDeleted && this.deps.entitlementService) {
+    if (!deletedMember?.isDeleted) {
       const canAddSeat = await this.deps.entitlementService.canConsumeSeats(params.workspaceId);
       if (!canAddSeat.allowed) {
         throw workspaceError.WORKSPACE_SEAT_LIMIT_EXCEEDED({
@@ -132,13 +132,11 @@ export class WorkspaceMemberService {
     }
 
     // Consume seat entitlement after successfully adding member
-    if (this.deps.entitlementService) {
-      try {
-        await this.deps.entitlementService.consumeSeats(params.workspaceId, 1, options);
-      } catch (error) {
-        // Log but don't fail - member is already added
-        console.error('Failed to track seat consumption:', error);
-      }
+    try {
+      await this.deps.entitlementService.consumeSeats(params.workspaceId, 1, options);
+    } catch (error) {
+      // Log but don't fail - member is already added
+      console.error('Failed to track seat consumption:', error);
     }
 
     return member;
@@ -229,13 +227,11 @@ export class WorkspaceMemberService {
     );
 
     // Release seat entitlement after successfully removing member
-    if (this.deps.entitlementService) {
-      try {
-        await this.deps.entitlementService.releaseSeats(params.workspaceId, 1, options);
-      } catch (error) {
-        // Log but don't fail - member is already removed
-        console.error('Failed to release seat:', error);
-      }
+    try {
+      await this.deps.entitlementService.releaseSeats(params.workspaceId, 1, options);
+    } catch (error) {
+      // Log but don't fail - member is already removed
+      console.error('Failed to release seat:', error);
     }
 
     return result;
@@ -344,13 +340,11 @@ export class WorkspaceMemberService {
     await this.deps.memberRepo.softDelete(member.workspaceMemberId, deletedAt, options);
 
     // Release seat entitlement after successfully leaving
-    if (this.deps.entitlementService) {
-      try {
-        await this.deps.entitlementService.releaseSeats(workspaceId, 1, options);
-      } catch (error) {
-        // Log but don't fail - member has already left
-        console.error('Failed to release seat:', error);
-      }
+    try {
+      await this.deps.entitlementService.releaseSeats(workspaceId, 1, options);
+    } catch (error) {
+      // Log but don't fail - member has already left
+      console.error('Failed to release seat:', error);
     }
 
     return { shouldDeleteWorkspace: false };

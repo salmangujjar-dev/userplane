@@ -27,10 +27,10 @@ import {
 export interface ProjectServiceDeps {
   projectRepo: ProjectRepository;
   db: DbClient;
-  recordingService?: RecordingService;
-  linkRepo?: LinkRepository;
-  recordingRepo?: RecordingRepository;
-  workspaceRepo?: WorkspaceRepository;
+  recordingService: RecordingService;
+  linkRepo: LinkRepository;
+  recordingRepo: RecordingRepository;
+  workspaceRepo: WorkspaceRepository;
 }
 
 export class ProjectService {
@@ -256,10 +256,8 @@ export class ProjectService {
         throw projectError.PROJECT_DELETE_FAILED();
       }
 
-      // Soft delete all links in project (if linkRepo available)
-      if (this.deps.linkRepo) {
-        await this.deps.linkRepo.softDeleteByProjectId(projectId, { tx });
-      }
+      // Soft delete all links in project
+      await this.deps.linkRepo.softDeleteByProjectId(projectId, { tx });
 
       return deleted;
     };
@@ -292,26 +290,22 @@ export class ProjectService {
     }
 
     // 2. Check if workspace is deleted - cannot restore project if workspace is deleted
-    if (this.deps.workspaceRepo) {
-      const workspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(project.workspaceId);
-      if (workspaceDeleted) {
-        return {
-          restoration: 'impossible' as const,
-          reason: 'Cannot restore project because its workspace is deleted',
-          project: {
-            projectId: project.projectId,
-            projectTitle: project.projectTitle,
-            workspaceId: project.workspaceId,
-            isDeleted: project.isDeleted,
-            deletedAt: project.deletedAt ? project.deletedAt.toISOString() : null,
-            deletedSince: project.deletedAt
-              ? calculateDaysSince(new Date(project.deletedAt))
-              : null,
-          },
-          linksToRestore: 0,
-          recordingsToRestore: 0,
-        };
-      }
+    const workspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(project.workspaceId);
+    if (workspaceDeleted) {
+      return {
+        restoration: 'impossible' as const,
+        reason: 'Cannot restore project because its workspace is deleted',
+        project: {
+          projectId: project.projectId,
+          projectTitle: project.projectTitle,
+          workspaceId: project.workspaceId,
+          isDeleted: project.isDeleted,
+          deletedAt: project.deletedAt ? project.deletedAt.toISOString() : null,
+          deletedSince: project.deletedAt ? calculateDaysSince(new Date(project.deletedAt)) : null,
+        },
+        linksToRestore: 0,
+        recordingsToRestore: 0,
+      };
     }
 
     // 3. Check if project is deleted
@@ -362,14 +356,10 @@ export class ProjectService {
 
     if (restoration !== 'impossible') {
       // Count active (non-deleted) links for this project
-      if (this.deps.linkRepo) {
-        linksToRestore = await this.deps.linkRepo.countByProject(projectId);
-      }
+      linksToRestore = await this.deps.linkRepo.countByProject(projectId);
 
       // Count active (non-deleted) recordings for this project
-      if (this.deps.recordingRepo) {
-        recordingsToRestore = await this.deps.recordingRepo.countByProject(projectId);
-      }
+      recordingsToRestore = await this.deps.recordingRepo.countByProject(projectId);
     }
 
     return {
@@ -423,27 +413,17 @@ export class ProjectService {
     }
 
     // 2. Check if workspace is deleted - cannot restore project if workspace is deleted
-    if (this.deps.workspaceRepo) {
-      const workspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(project.workspaceId);
-      if (workspaceDeleted) {
-        throw projectError.PROJECT_RESTORE_WORKSPACE_DELETED();
-      }
+    const workspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(project.workspaceId);
+    if (workspaceDeleted) {
+      throw projectError.PROJECT_RESTORE_WORKSPACE_DELETED();
     }
 
     // 3. Idempotent: If project is not deleted, it's already in the desired state
     // Return it successfully instead of throwing an error
     if (!project.isDeleted) {
       // Count active resources for already restored project
-      let restoredLinks = 0;
-      let restoredRecordings = 0;
-
-      if (this.deps.linkRepo) {
-        restoredLinks = await this.deps.linkRepo.countByProject(projectId);
-      }
-
-      if (this.deps.recordingRepo) {
-        restoredRecordings = await this.deps.recordingRepo.countByProject(projectId);
-      }
+      const restoredLinks = await this.deps.linkRepo.countByProject(projectId);
+      const restoredRecordings = await this.deps.recordingRepo.countByProject(projectId);
 
       return {
         restorationStatus: 'possible' as const,
@@ -486,16 +466,8 @@ export class ProjectService {
     }
 
     // 6. Count restored resources (active links and recordings)
-    let restoredLinks = 0;
-    let restoredRecordings = 0;
-
-    if (this.deps.linkRepo) {
-      restoredLinks = await this.deps.linkRepo.countByProject(projectId);
-    }
-
-    if (this.deps.recordingRepo) {
-      restoredRecordings = await this.deps.recordingRepo.countByProject(projectId);
-    }
+    const restoredLinks = await this.deps.linkRepo.countByProject(projectId);
+    const restoredRecordings = await this.deps.recordingRepo.countByProject(projectId);
 
     return {
       restorationStatus,

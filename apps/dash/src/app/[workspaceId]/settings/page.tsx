@@ -4,18 +4,13 @@ import { useState } from 'react';
 
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { SettingsTab } from '@/components/settings/settings-tab';
 
 export default function SettingsPage() {
-  const [shareLink, setShareLink] = useState<string | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-
-  const handleLinkCreated = (link: string) => {
-    setShareLink(link);
-  };
+  const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-background">
@@ -24,7 +19,7 @@ export default function SettingsPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopActions
           onInviteClick={() => setInviteModalOpen(true)}
-          createLinkButton={<CreateLinkModal onLinkCreated={handleLinkCreated} />}
+          onCreateLinkClick={() => setCreateLinkModalOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
@@ -39,10 +34,10 @@ export default function SettingsPage() {
 
       <InviteModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
 
-      <ShareLinkModal
-        link={shareLink || ''}
-        open={!!shareLink}
-        onClose={() => setShareLink(null)}
+      <CreateLinkModal
+        open={createLinkModalOpen}
+        onOpenChange={setCreateLinkModalOpen}
+        hideButton
       />
     </div>
   );

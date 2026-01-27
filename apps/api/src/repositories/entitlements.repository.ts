@@ -15,7 +15,6 @@ import type { Transaction } from '@/api/types';
 export interface CreateEntitlementData {
   workspaceId: string;
   resourceType: ResourceType;
-  quotedLimit: number;
   creditLimit: number;
   softLimit: number;
   hardLimit: number;
@@ -25,7 +24,6 @@ export interface CreateEntitlementData {
 
 export interface EntitlementData {
   resourceType: ResourceType;
-  quotedLimit: number;
   creditLimit: number;
   softLimit: number;
   hardLimit: number;
@@ -46,7 +44,6 @@ export class EntitlementRepository {
         id: generateEntitlementId(),
         workspaceId: data.workspaceId,
         resourceType: data.resourceType,
-        quotedLimit: data.quotedLimit,
         creditLimit: data.creditLimit,
         softLimit: data.softLimit,
         hardLimit: data.hardLimit,
@@ -122,7 +119,6 @@ export class EntitlementRepository {
       if (existing) {
         // Update existing entitlement
         const updateData: Record<string, unknown> = {
-          quotedLimit: data.quotedLimit,
           creditLimit: data.creditLimit,
           softLimit: data.softLimit,
           hardLimit: data.hardLimit,
@@ -147,7 +143,6 @@ export class EntitlementRepository {
           {
             workspaceId,
             resourceType: data.resourceType,
-            quotedLimit: data.quotedLimit,
             creditLimit: data.creditLimit,
             softLimit: data.softLimit,
             hardLimit: data.hardLimit,
@@ -340,7 +335,7 @@ export class EntitlementRepository {
   async updateLimits(
     workspaceId: string,
     resourceType: ResourceType,
-    limits: { quotedLimit: number; creditLimit: number; softLimit: number; hardLimit: number },
+    limits: { creditLimit: number; softLimit: number; hardLimit: number },
     options?: { tx?: Transaction }
   ) {
     const dbClient = options?.tx || this.db;
@@ -348,7 +343,6 @@ export class EntitlementRepository {
     const [updated] = await dbClient
       .update(entitlements)
       .set({
-        quotedLimit: limits.quotedLimit,
         creditLimit: limits.creditLimit,
         softLimit: limits.softLimit,
         hardLimit: limits.hardLimit,
