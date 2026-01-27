@@ -88,6 +88,10 @@ export const adminContract = {
  */
 export const provisionerContract = {
   createWorkspace: provisioner.createWorkspace,
+  intercom: {
+    authorize: provisioner.intercomAuthorize,
+    callback: provisioner.intercomCallback,
+  },
 };
 
 /**

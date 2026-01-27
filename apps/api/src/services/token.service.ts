@@ -4,15 +4,20 @@
  */
 
 import jwt, { type SignOptions } from 'jsonwebtoken';
+import { nanoid } from 'nanoid';
 
 import { env } from '@/api/env';
 import type {
   AccessRequestTokenPayload,
   BillingEmailVerificationTokenPayload,
   DomainVerificationTokenPayload,
+  IntercomOAuthStatePayload,
   InviteTokenPayload,
   WorkspaceCreateInviteTokenPayload,
 } from '@/api/types';
+
+// Intercom OAuth state expiry: 15 minutes
+const INTERCOM_OAUTH_STATE_EXPIRES_IN = 15 * 60;
 
 export class TokenService {
   private jwtSecret: string;
@@ -261,6 +266,51 @@ export class TokenService {
    */
   getAccessRequestExpiresIn(): number {
     return this.accessRequestExpiresIn;
+  }
+
+  /**
+   * Generate signed Intercom OAuth state token
+   * Used for CSRF protection during OAuth flow
+   * Token expires in 15 minutes
+   */
+  signIntercomOAuthState(userId: string): string {
+    const now = Math.floor(Date.now() / 1000);
+    const payload: IntercomOAuthStatePayload = {
+      iss: this.jwtIssuer,
+      userId,
+      timestamp: now,
+      nonce: nanoid(16),
+      iat: now,
+      exp: now + INTERCOM_OAUTH_STATE_EXPIRES_IN,
+    };
+
+    return jwt.sign(payload, this.jwtSecret, { algorithm: 'HS256' });
+  }
+
+  /**
+   * Verify and decode Intercom OAuth state token
+   * Returns payload if valid and user matches, null otherwise
+   */
+  verifyIntercomOAuthState(token: string, userId: string): IntercomOAuthStatePayload | null {
+    try {
+      const payload = jwt.verify(token, this.jwtSecret, {
+        algorithms: ['HS256'],
+      }) as IntercomOAuthStatePayload;
+
+      // Verify issuer
+      if (payload.iss !== this.jwtIssuer) {
+        return null;
+      }
+
+      // Verify user ID matches (CSRF protection)
+      if (payload.userId !== userId) {
+        return null;
+      }
+
+      return payload;
+    } catch {
+      return null;
+    }
   }
 }
 

@@ -41,3 +41,21 @@ export const WorkspaceCreateDataSchema = z.discriminatedUnion('created', [
     workspaceName: z.string(),
   }),
 ]);
+
+/**
+ * Intercom OAuth authorize response
+ * Returns the authorization URL and state for CSRF protection
+ */
+export const IntercomAuthorizeResponseSchema = z.object({
+  authorizationUrl: z.string().url(),
+  state: z.string(),
+});
+
+/**
+ * Intercom OAuth callback query parameters
+ * Received from Intercom after user authorizes
+ */
+export const IntercomCallbackQuerySchema = z.object({
+  code: z.string(),
+  state: z.string(),
+});

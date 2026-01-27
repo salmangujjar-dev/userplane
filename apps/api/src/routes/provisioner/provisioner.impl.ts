@@ -5,6 +5,7 @@
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import type { EmailService } from '@/api/services/email.service';
+import type { IntercomService } from '@/api/services/intercom-oauth.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 
 /**
@@ -67,13 +68,68 @@ export const createWorkspaceImpl = (
 };
 
 /**
+ * GET /provisioner/intercom/authorize - Initiate Intercom OAuth flow
+ * Returns authorization URL and state token for CSRF protection
+ */
+export const intercomAuthorizeImpl = (intercomService: IntercomService) => {
+  return authorizedRateLimited.provisioner.intercom.authorize.handler(async ({ context }) => {
+    const { authorizationUrl, state } = intercomService.generateAuthorizationUrl(context.user.id);
+
+    return {
+      message: 'Authorization URL generated',
+      data: { authorizationUrl, state },
+    };
+  });
+};
+
+/**
+ * GET /provisioner/intercom/callback - Handle Intercom OAuth callback
+ * Exchanges code for token and creates workspace
+ */
+export const intercomCallbackImpl = (
+  intercomService: IntercomService,
+  emailService: EmailService
+) => {
+  return authorizedRateLimited.provisioner.intercom.callback.handler(async ({ input, context }) => {
+    const result = await intercomService.handleCallback({
+      code: input.query.code,
+      state: input.query.state,
+      userId: context.user.id,
+      userName: context.user.name,
+      userEmail: context.user.email,
+    });
+
+    // Send welcome email if workspace was created
+    if (result.created) {
+      await emailService.sendSafeWelcomeEmailSubscription(
+        { to: context.user.email },
+        {
+          workspaceName: result.workspaceName,
+          workspaceId: result.workspaceId,
+        }
+      );
+    }
+
+    return {
+      message: 'Workspace created successfully',
+      data: result,
+    };
+  });
+};
+
+/**
  * Create the provisioner procedures object
  */
 export const createProvisionerProcedures = (
   provisionerService: ProvisionerService,
-  emailService: EmailService
+  emailService: EmailService,
+  intercomService: IntercomService
 ) => {
   return {
     createWorkspace: createWorkspaceImpl(provisionerService, emailService),
+    intercom: {
+      authorize: intercomAuthorizeImpl(intercomService),
+      callback: intercomCallbackImpl(intercomService, emailService),
+    },
   };
 };

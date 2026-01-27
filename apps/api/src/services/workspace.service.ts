@@ -12,6 +12,7 @@ import { isDisposableEmail, isDisposableEmailDomain } from '@workspace/shared';
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
 import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@/api/lib/id';
 import { DomainRepository } from '@/api/repositories/domains.repository';
+import { IntercomIntegrationRepository } from '@/api/repositories/intercom-integrations.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
@@ -32,13 +33,14 @@ export interface WorkspaceServiceDeps {
   workspaceRepo: WorkspaceRepository;
   tokenService: TokenService;
   db: DbClient;
-  workspaceMemberRepo?: WorkspaceMemberRepository;
-  projectRepo?: ProjectRepository;
-  domainRepo?: DomainRepository;
-  linkRepo?: LinkRepository;
-  recordingRepo?: RecordingRepository;
-  projectService?: ProjectService;
-  subscriptionRepo?: SubscriptionRepository;
+  workspaceMemberRepo: WorkspaceMemberRepository;
+  projectRepo: ProjectRepository;
+  domainRepo: DomainRepository;
+  linkRepo: LinkRepository;
+  recordingRepo: RecordingRepository;
+  projectService: ProjectService;
+  subscriptionRepo: SubscriptionRepository;
+  intercomIntegrationRepo: IntercomIntegrationRepository;
   dodoClient?: DodoPayments;
   cacheService?: CacheService;
 }
@@ -395,24 +397,19 @@ export class WorkspaceService {
       }
 
       // 2. Soft delete all workspace members
-      if (this.deps.workspaceMemberRepo) {
-        await this.deps.workspaceMemberRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
-      }
+      await this.deps.workspaceMemberRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
 
       // 3. Soft delete all projects in workspace
-      if (this.deps.projectRepo) {
-        await this.deps.projectRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
-      }
+      await this.deps.projectRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
 
       // 4. Soft delete all links in workspace
-      if (this.deps.linkRepo) {
-        await this.deps.linkRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
-      }
+      await this.deps.linkRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
 
       // 5. Soft delete all recordings in workspace
-      if (this.deps.recordingRepo) {
-        await this.deps.recordingRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
-      }
+      await this.deps.recordingRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
+
+      // 6. Soft delete intercom integration
+      await this.deps.intercomIntegrationRepo.delete(workspaceId, { tx, deletedAt });
 
       return deleted;
     };
@@ -551,33 +548,22 @@ export class WorkspaceService {
     let recordingsToRestore = 0;
 
     if (restoration !== 'impossible') {
-      if (this.deps.projectRepo) {
-        projectsToRestore = await this.deps.projectRepo.countByWorkspaceIdAndDeletionTime(
-          workspaceId,
-          deletedAt
-        );
-      }
-
-      if (this.deps.linkRepo) {
-        linksToRestore = await this.deps.linkRepo.countByWorkspaceIdAndDeletionTime(
-          workspaceId,
-          deletedAt
-        );
-      }
-
-      if (this.deps.workspaceMemberRepo) {
-        membersToRestore = await this.deps.workspaceMemberRepo.countByWorkspaceIdAndDeletionTime(
-          workspaceId,
-          deletedAt
-        );
-      }
-
-      if (this.deps.recordingRepo) {
-        recordingsToRestore = await this.deps.recordingRepo.countByWorkspaceIdAndDeletionTime(
-          workspaceId,
-          deletedAt
-        );
-      }
+      projectsToRestore = await this.deps.projectRepo.countByWorkspaceIdAndDeletionTime(
+        workspaceId,
+        deletedAt
+      );
+      linksToRestore = await this.deps.linkRepo.countByWorkspaceIdAndDeletionTime(
+        workspaceId,
+        deletedAt
+      );
+      membersToRestore = await this.deps.workspaceMemberRepo.countByWorkspaceIdAndDeletionTime(
+        workspaceId,
+        deletedAt
+      );
+      recordingsToRestore = await this.deps.recordingRepo.countByWorkspaceIdAndDeletionTime(
+        workspaceId,
+        deletedAt
+      );
     }
 
     return {
@@ -635,25 +621,10 @@ export class WorkspaceService {
     // 2. Idempotent: If workspace is not deleted, it's already in the desired state
     // Return it successfully with current active resource counts
     if (!workspace.isDeleted) {
-      let activeProjects = 0;
-      if (this.deps.projectRepo) {
-        activeProjects = await this.deps.projectRepo.countByWorkspace(workspaceId);
-      }
-
-      let activeLinks = 0;
-      if (this.deps.linkRepo) {
-        activeLinks = await this.deps.linkRepo.countByWorkspace(workspaceId);
-      }
-
-      let activeMembers = 0;
-      if (this.deps.workspaceMemberRepo) {
-        activeMembers = await this.deps.workspaceMemberRepo.countByWorkspace(workspaceId);
-      }
-
-      let activeRecordings = 0;
-      if (this.deps.recordingRepo) {
-        activeRecordings = await this.deps.recordingRepo.countByWorkspace(workspaceId);
-      }
+      const activeProjects = await this.deps.projectRepo.countByWorkspace(workspaceId);
+      const activeLinks = await this.deps.linkRepo.countByWorkspace(workspaceId);
+      const activeMembers = await this.deps.workspaceMemberRepo.countByWorkspace(workspaceId);
+      const activeRecordings = await this.deps.recordingRepo.countByWorkspace(workspaceId);
 
       return {
         restorationStatus: 'possible' as const,
@@ -696,68 +667,76 @@ export class WorkspaceService {
       // Only restore projects that were deleted at the exact same time as the workspace
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let restoredProjects: any[] = [];
-      if (this.deps.projectRepo) {
-        try {
-          restoredProjects = await this.deps.projectRepo.restoreByWorkspaceIdAndDeletionTime(
-            workspaceId,
-            deletedAt,
-            { tx }
-          );
-        } catch (error) {
-          // Log but don't fail - best effort
-          console.error('Error restoring workspace projects:', error);
-        }
+      try {
+        restoredProjects = await this.deps.projectRepo.restoreByWorkspaceIdAndDeletionTime(
+          workspaceId,
+          deletedAt,
+          { tx }
+        );
+      } catch (error) {
+        // Log but don't fail - best effort
+        console.error('Error restoring workspace projects:', error);
       }
 
       // 6. Restore associated links (best effort)
       // Only restore links that were deleted at the exact same time as the workspace
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let restoredLinks: any[] = [];
-      if (this.deps.linkRepo) {
-        try {
-          restoredLinks = await this.deps.linkRepo.restoreByWorkspaceIdAndDeletionTime(
-            workspaceId,
-            deletedAt,
-            { tx }
-          );
-        } catch (error) {
-          // Log but don't fail - best effort
-          console.error('Error restoring workspace links:', error);
-        }
+      try {
+        restoredLinks = await this.deps.linkRepo.restoreByWorkspaceIdAndDeletionTime(
+          workspaceId,
+          deletedAt,
+          { tx }
+        );
+      } catch (error) {
+        // Log but don't fail - best effort
+        console.error('Error restoring workspace links:', error);
       }
 
       // 7. Restore all workspace members (best effort)
       // Only restore members that were deleted at the exact same time as the workspace
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let restoredMembers: any[] = [];
-      if (this.deps.workspaceMemberRepo) {
-        try {
-          restoredMembers = await this.deps.workspaceMemberRepo.restoreByWorkspaceIdAndDeletionTime(
-            workspaceId,
-            deletedAt,
-            { tx }
-          );
-        } catch (error) {
-          // Log but don't fail - best effort
-          console.error('Error restoring workspace members:', error);
-        }
+      try {
+        restoredMembers = await this.deps.workspaceMemberRepo.restoreByWorkspaceIdAndDeletionTime(
+          workspaceId,
+          deletedAt,
+          { tx }
+        );
+      } catch (error) {
+        // Log but don't fail - best effort
+        console.error('Error restoring workspace members:', error);
       }
 
       // 8. Restore associated recordings (best effort)
       // Only restore recordings that were deleted at the exact same time as the workspace
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let restoredRecordings: any[] = [];
-      if (this.deps.recordingRepo) {
-        try {
-          restoredRecordings = await this.deps.recordingRepo.restoreByWorkspaceIdAndDeletionTime(
-            workspaceId,
-            deletedAt,
-            { tx }
-          );
-        } catch (error) {
-          // Log but don't fail - best effort
-          console.error('Error restoring workspace recordings:', error);
-        }
+      try {
+        restoredRecordings = await this.deps.recordingRepo.restoreByWorkspaceIdAndDeletionTime(
+          workspaceId,
+          deletedAt,
+          { tx }
+        );
+      } catch (error) {
+        // Log but don't fail - best effort
+        console.error('Error restoring workspace recordings:', error);
+      }
+
+      // 9. Restore intercom integration (best effort)
+      // Only restore integration if deleted at the same time and no duplicate intercomWorkspaceId exists
+      let restoredIntercomIntegration = null;
+      try {
+        restoredIntercomIntegration = await this.deps.intercomIntegrationRepo.restore(
+          workspaceId,
+          deletedAt,
+          {
+            tx,
+          }
+        );
+      } catch (error) {
+        // Log but don't fail - best effort
+        console.error('Error restoring intercom integration:', error);
       }
 
       return {
@@ -767,6 +746,7 @@ export class WorkspaceService {
         restoredLinks: restoredLinks.length,
         restoredMembers: restoredMembers.length,
         restoredRecordings: restoredRecordings.length,
+        restoredIntercomIntegration: restoredIntercomIntegration ? 1 : 0,
       };
     };
 
@@ -1074,21 +1054,16 @@ export class WorkspaceService {
       : [];
 
     // 3. Check membership
-    if (this.deps.workspaceMemberRepo) {
-      const member = await this.deps.workspaceMemberRepo.findByUserAndWorkspace(
-        userId,
-        workspaceId
-      );
+    const member = await this.deps.workspaceMemberRepo.findByUserAndWorkspace(userId, workspaceId);
 
-      if (member) {
-        return {
-          workspaceId: workspace.workspaceId,
-          workspaceName: workspace.workspaceName,
-          isDeleted: false,
-          invitePolicy: workspace.workspaceInvitePolicy,
-          accessStatus: 'member' as const,
-        };
-      }
+    if (member) {
+      return {
+        workspaceId: workspace.workspaceId,
+        workspaceName: workspace.workspaceName,
+        isDeleted: false,
+        invitePolicy: workspace.workspaceInvitePolicy,
+        accessStatus: 'member' as const,
+      };
     }
 
     // 4. Non-member - determine access based on policy

@@ -121,6 +121,14 @@ export function generateRefundId(): string {
 }
 
 /**
+ * Generate a unique ID for Intercom integrations
+ * @returns ID with 'icm_' prefix + 12-character alphanumeric ID
+ */
+export function generateIntercomIntegrationId(): string {
+  return `icm_${nanoid()}`;
+}
+
+/**
  * Export the raw nanoid generator for cases where custom prefixes are needed
  */
 export { nanoid };

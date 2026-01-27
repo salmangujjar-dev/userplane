@@ -125,3 +125,22 @@ export function deriveWorkspaceName(
   // Final fallback
   return 'Userplane Workspace';
 }
+
+/**
+ * Derive workspace URL from email address
+ * Extracts domain from email and formats as https URL
+ *
+ * @param email - User email address
+ * @returns URL string (e.g., "https://example.com")
+ *
+ * @example
+ * deriveWorkspaceUrl("user@example.com") → "https://example.com"
+ * deriveWorkspaceUrl("admin@subdomain.company.io") → "https://subdomain.company.io"
+ */
+export function deriveWorkspaceUrl(email: string): string {
+  const domain = email.split('@')[1];
+  if (!domain) {
+    return 'https://example.com';
+  }
+  return `https://${domain}`;
+}

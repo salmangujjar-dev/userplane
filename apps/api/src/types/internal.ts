@@ -478,3 +478,16 @@ export interface CreateWorkspaceParams {
   userId: string;
   workspaceBillingEmail: string;
 }
+
+/**
+ * Intercom OAuth state payload for CSRF protection
+ * Signed JWT with 15 minute expiry
+ */
+export interface IntercomOAuthStatePayload {
+  iss: string;
+  userId: string;
+  timestamp: number;
+  nonce: string;
+  iat: number;
+  exp: number;
+}
