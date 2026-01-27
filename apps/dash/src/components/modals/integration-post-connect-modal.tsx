@@ -19,6 +19,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 
 import { getIntegrationConfig } from '@/constants/integration-permissions';
+import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
 
 interface IntegrationPostConnectModalProps {
   open: boolean;
@@ -39,6 +40,7 @@ export function IntegrationPostConnectModal({
 }: IntegrationPostConnectModalProps) {
   const [openSection, setOpenSection] = useState<number | null>(null);
   const config = getIntegrationConfig(integrationName);
+  const { canEdit } = useCanEditWorkspace();
 
   const toggleSection = (index: number) => {
     setOpenSection((prev) => (prev === index ? null : index));
@@ -133,9 +135,9 @@ export function IntegrationPostConnectModal({
           </div>
         </div>
 
-        {onDisconnect && (
-          <DialogFooter className="mt-6">
-            <div className="flex w-full justify-between items-center">
+        <DialogFooter className="mt-6">
+          <div className="flex w-full justify-between items-center">
+            {onDisconnect && canEdit && (
               <Button
                 type="button"
                 variant="ghost"
@@ -153,18 +155,18 @@ export function IntegrationPostConnectModal({
                   'Disconnect'
                 )}
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                className="rounded-full px-6"
-                onClick={() => onOpenChange(false)}
-                disabled={isDisconnecting}
-              >
-                Close
-              </Button>
-            </div>
-          </DialogFooter>
-        )}
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              className="rounded-full px-6 ml-auto"
+              onClick={() => onOpenChange(false)}
+              disabled={isDisconnecting}
+            >
+              Close
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
