@@ -38,7 +38,14 @@ import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
 import { useCreateLink } from '@/queries/use-link-mutations';
 import { useWorkspaceStore } from '@/stores/workspace';
 interface CreateLinkModalProps {
-  onLinkCreated?: (linkUrl: string) => void;
+  onLinkCreated?: (
+    linkUrl: string,
+    recordingLimitExceeded?: {
+      quotedLimit: boolean;
+      softLimit: boolean;
+      hardLimit: boolean;
+    }
+  ) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideButton?: boolean;
@@ -105,7 +112,7 @@ export function CreateLinkModal({
   const projects = projectsResult?.success ? projectsResult.data.projects : undefined;
   const domains = domainsResult?.success ? domainsResult.data.domains : undefined;
 
-  const createLinkMutation = useCreateLink(workspaceId, domains);
+  const createLinkMutation = useCreateLink(workspaceId);
 
   // Effect to set default project and domain when data loads
   useEffect(() => {
@@ -163,7 +170,7 @@ export function CreateLinkModal({
 
           // Success - create the link
           if (onLinkCreated) {
-            onLinkCreated(result.data.link.linkURL);
+            onLinkCreated(result.data.link.linkURL, result.data.recordingLimitExceeded);
           }
           setOpen(false);
         },

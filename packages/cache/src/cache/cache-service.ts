@@ -294,7 +294,7 @@ export class CacheService {
    * Called after resource consumption or plan changes
    */
   async invalidateUsage(workspaceId: string): Promise<void> {
-    const key = entitlementKeys.usageSummary(workspaceId);
-    await this.delete(key);
+    const usageKey = entitlementKeys.usageSummary(workspaceId);
+    await this.delete(usageKey);
   }
 }

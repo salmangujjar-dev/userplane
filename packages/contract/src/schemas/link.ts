@@ -130,11 +130,21 @@ export const CreateLinkSchema = z.object({
 });
 
 /**
+ * Entitlement limit exceeded status
+ */
+export const EntitlementLimitExceededSchema = z.object({
+  quotedLimit: z.boolean(),
+  softLimit: z.boolean(),
+  hardLimit: z.boolean(),
+});
+
+/**
  * Link create response
  */
 export const LinkCreateDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   link: LinkItemSchema,
+  recordingLimitExceeded: EntitlementLimitExceededSchema,
 });
 
 /**
