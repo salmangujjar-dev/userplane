@@ -12,7 +12,7 @@ import { isDisposableEmail, isDisposableEmailDomain } from '@workspace/shared';
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
 import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@/api/lib/id';
 import { DomainRepository } from '@/api/repositories/domains.repository';
-import { IntercomIntegrationRepository } from '@/api/repositories/intercom-integrations.repository';
+import { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
@@ -40,7 +40,7 @@ export interface WorkspaceServiceDeps {
   recordingRepo: RecordingRepository;
   projectService: ProjectService;
   subscriptionRepo: SubscriptionRepository;
-  intercomIntegrationRepo: IntercomIntegrationRepository;
+  integrationRepo: IntegrationRepository;
   dodoClient?: DodoPayments;
   cacheService?: CacheService;
 }
@@ -408,8 +408,8 @@ export class WorkspaceService {
       // 5. Soft delete all recordings in workspace
       await this.deps.recordingRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
 
-      // 6. Soft delete intercom integration
-      await this.deps.intercomIntegrationRepo.delete(workspaceId, { tx, deletedAt });
+      // 6. Soft delete integrations
+      await this.deps.integrationRepo.delete(workspaceId, 'intercom', { tx, deletedAt });
 
       return deleted;
     };
@@ -724,11 +724,12 @@ export class WorkspaceService {
       }
 
       // 9. Restore intercom integration (best effort)
-      // Only restore integration if deleted at the same time and no duplicate intercomWorkspaceId exists
-      let restoredIntercomIntegration = null;
+      // Only restore integration if deleted at the same time and no duplicate providerWorkspaceId exists
+      let restoredIntegration = null;
       try {
-        restoredIntercomIntegration = await this.deps.intercomIntegrationRepo.restore(
+        restoredIntegration = await this.deps.integrationRepo.restore(
           workspaceId,
+          'intercom',
           deletedAt,
           {
             tx,
@@ -746,7 +747,7 @@ export class WorkspaceService {
         restoredLinks: restoredLinks.length,
         restoredMembers: restoredMembers.length,
         restoredRecordings: restoredRecordings.length,
-        restoredIntercomIntegration: restoredIntercomIntegration ? 1 : 0,
+        restoredIntegrations: restoredIntegration ? 1 : 0,
       };
     };
 

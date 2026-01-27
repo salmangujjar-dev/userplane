@@ -410,7 +410,5 @@ export type PlanChangePreviewData = z.infer<typeof PlanChangePreviewDataSchema>;
 export type PlanChangeResultData = z.infer<typeof PlanChangeResultDataSchema>;
 export type UpstreamPaymentErrorData = z.infer<typeof UpstreamPaymentErrorDataSchema>;
 export type PlanChangeRequestData = z.infer<typeof PlanChangeRequestDataSchema>;
-export type ManagePlanData = z.infer<typeof ManagePlanDataSchema>;
-
-// Alias for internal service layer compatibility
+export type ManagePlanData = z.infer<typeof ManagePlanDataSchema>; // Alias for internal service layer compatibility
 export type SubscriptionAccessStatus = AccessDetail;

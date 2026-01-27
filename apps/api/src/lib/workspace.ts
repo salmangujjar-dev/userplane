@@ -140,7 +140,7 @@ export function deriveWorkspaceName(
 export function deriveWorkspaceUrl(email: string): string {
   const domain = email.split('@')[1];
   if (!domain) {
-    return 'https://example.com';
+    return 'https://userplane.io';
   }
   return `https://${domain}`;
 }

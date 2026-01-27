@@ -26,7 +26,7 @@ import { AdminWorkspaceRepository } from '@/api/repositories/admin-workspace.rep
 import { DisputeRepository } from '@/api/repositories/disputes.repository';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { EntitlementRepository } from '@/api/repositories/entitlements.repository';
-import { IntercomIntegrationRepository } from '@/api/repositories/intercom-integrations.repository';
+import { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
@@ -73,7 +73,7 @@ const refundRepo = new RefundRepository(db);
 const adminRepo = new AdminRepository(db);
 const adminWorkspaceRepo = new AdminWorkspaceRepository(db);
 const adminRecordingRepo = new AdminRecordingRepository(db);
-const intercomIntegrationRepo = new IntercomIntegrationRepository(db);
+const integrationRepo = new IntegrationRepository(db);
 
 // Initialize services in dependency order
 // Level 0: Services with only repository dependencies (no other services)
@@ -155,7 +155,7 @@ export const workspaceService = new WorkspaceService({
   subscriptionRepo,
   dodoClient: getDodoClient(),
   cacheService,
-  intercomIntegrationRepo,
+  integrationRepo,
 });
 
 // Admin service - initialized after workspace service is available
@@ -231,7 +231,7 @@ export const adminProvisioningService = new AdminProvisioningService({
 // Intercom service
 export const intercomService = new IntercomService({
   tokenService,
-  intercomIntegrationRepo,
+  integrationRepo,
   provisionerService,
   inviteService,
 });

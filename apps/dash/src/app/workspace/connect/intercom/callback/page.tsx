@@ -195,8 +195,8 @@ function IntercomCallbackContent() {
         title="Connected successfully"
         description="Your Intercom workspace is now connected. Start capturing user feedback"
         onPrimaryAction={handleGoToWorkspace}
-        secondaryText="Configure settings"
-        onSecondaryAction={() => router.push(`/${createdWorkspace.workspaceId}/settings?tab=team`)}
+        secondaryText="Configure domains"
+        onSecondaryAction={() => router.push(`/${createdWorkspace.workspaceId}/settings`)}
       />
     );
   }

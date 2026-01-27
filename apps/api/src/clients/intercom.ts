@@ -3,6 +3,7 @@
  * Handles OAuth flow and API calls to Intercom
  */
 
+import type { IntercomRegion } from '@workspace/contract';
 import { createAppLogger } from '@workspace/logger';
 
 import { env } from '@/api/env';
@@ -12,13 +13,11 @@ const logger = createAppLogger('intercom-client');
 /**
  * Intercom API regions and their base URLs
  */
-export const INTERCOM_REGIONS = {
+export const INTERCOM_REGIONS: Record<IntercomRegion, string> = {
   US: 'https://api.intercom.io',
   EU: 'https://api.eu.intercom.io',
   AU: 'https://api.au.intercom.io',
 } as const;
-
-export type IntercomRegion = keyof typeof INTERCOM_REGIONS;
 
 /**
  * Intercom OAuth token response
@@ -38,13 +37,21 @@ export interface IntercomMeResponse {
   name?: string;
   email_verified: boolean;
   has_inbox_seat: boolean;
+  // app is a workspace on Intercom
   app: {
+    // The type of the app.
     type: string;
+    // The id of the app. This is the same as the workspace id on Intercom.
     id_code: string;
+    // The name of the app.
     name?: string;
+    // The created at timestamp of the app.
     created_at: number;
+    // The region of the app.
     region: string;
+    // The timezone of the app.
     timezone: string;
+    // The identity verification status of the app.
     identity_verification: boolean;
   };
   avatar?: {
