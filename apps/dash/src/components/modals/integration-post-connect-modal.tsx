@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@workspace/ui/components/button';
 import {
   Collapsible,
   CollapsibleContent,
@@ -9,10 +10,11 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import { ArrowLeftRight, ChevronDown } from 'lucide-react';
+import { ArrowLeftRight, ChevronDown, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -23,6 +25,8 @@ interface IntegrationPostConnectModalProps {
   onOpenChange: (open: boolean) => void;
   integrationName: string;
   integrationImage: string;
+  onDisconnect?: () => void;
+  isDisconnecting?: boolean;
 }
 
 export function IntegrationPostConnectModal({
@@ -30,6 +34,8 @@ export function IntegrationPostConnectModal({
   onOpenChange,
   integrationName,
   integrationImage,
+  onDisconnect,
+  isDisconnecting = false,
 }: IntegrationPostConnectModalProps) {
   const [openSection, setOpenSection] = useState<number | null>(null);
   const config = getIntegrationConfig(integrationName);
@@ -40,17 +46,17 @@ export function IntegrationPostConnectModal({
 
   const guideSteps = [
     {
-      title: 'Install the Chrome extension',
-      content:
-        'Add the Userplane Chrome extension from the Chrome Web Store. Click "Add to Chrome" and pin it to your toolbar for easy access.',
+      title: 'Step 1',
+      content: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      isVideo: true,
     },
     {
-      title: 'Configure your workspace settings',
-      content:
-        'Navigate to your workspace settings and copy your API key. Paste it into the extension settings to link your recordings.',
+      title: 'Step 2',
+      content: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      isVideo: true,
     },
     {
-      title: 'Watch setup tutorial',
+      title: 'Step 3',
       content: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       isVideo: true,
     },
@@ -126,6 +132,39 @@ export function IntegrationPostConnectModal({
             ))}
           </div>
         </div>
+
+        {onDisconnect && (
+          <DialogFooter className="mt-6">
+            <div className="flex w-full justify-between items-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={onDisconnect}
+                disabled={isDisconnecting}
+              >
+                {isDisconnecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Disconnecting...
+                  </>
+                ) : (
+                  'Disconnect'
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="rounded-full px-6"
+                onClick={() => onOpenChange(false)}
+                disabled={isDisconnecting}
+              >
+                Close
+              </Button>
+            </div>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

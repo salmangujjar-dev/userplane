@@ -1,0 +1,90 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { apiClient } from '@/client';
+import { handleSafeResult, showErrorToast } from '@/lib/errors';
+import { useWorkspaceId } from '@/stores/workspace';
+
+/**
+ * Hook to fetch Intercom integration status for the current workspace
+ * Returns whether Intercom is connected and connection details
+ */
+export function useIntercomIntegration() {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery({
+    queryKey: ['intercom-integration', workspaceId],
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.intercom.get({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: !!workspaceId,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+/**
+ * Hook to initiate Intercom OAuth authorization flow
+ * Returns authorization URL that user should be redirected to
+ */
+export function useIntercomAuthorize() {
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.intercom.authorize({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToast(result.error);
+        return;
+      }
+      // Redirect to Intercom OAuth page
+      window.location.href = result.data.authorizationUrl;
+    },
+    onSettled: () => {
+      // Invalidate integration status after authorization attempt
+      queryClient.invalidateQueries({ queryKey: ['intercom-integration', workspaceId] });
+    },
+  });
+}
+
+/**
+ * Hook to disconnect Intercom integration from the workspace
+ */
+export function useIntercomDisconnect() {
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.intercom.delete({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToast(result.error);
+        return;
+      }
+      // Invalidate integration status after disconnect
+      queryClient.invalidateQueries({ queryKey: ['intercom-integration', workspaceId] });
+    },
+  });
+}
