@@ -2,6 +2,7 @@ export * from './account';
 export * from './disputes';
 export * from './domains';
 export * from './entitlements';
+export * from './intercom-integrations';
 export * from './links';
 export * from './projects';
 export * from './recordings';
@@ -18,6 +19,7 @@ export * from './workspaces';
 import { account } from './account';
 import { domains } from './domains';
 import { entitlements } from './entitlements';
+import { intercomIntegrations } from './intercom-integrations';
 import { links } from './links';
 import { projects } from './projects';
 import { recordings } from './recordings';
@@ -63,3 +65,6 @@ export type NewRecording = typeof recordings.$inferInsert;
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
+
+export type IntercomIntegration = typeof intercomIntegrations.$inferSelect;
+export type NewIntercomIntegration = typeof intercomIntegrations.$inferInsert;

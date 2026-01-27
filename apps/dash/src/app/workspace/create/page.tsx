@@ -5,7 +5,6 @@ import { DomainUrlSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
@@ -14,8 +13,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { URLInput } from '@/components/url-input';
+import { WorkspaceCreatedSuccess } from '@/components/workspace/workspace-created-success';
 import { useAccount } from '@/hooks/use-account';
 import { useAuth } from '@/hooks/use-auth';
 import { useCreateWorkspace } from '@/hooks/use-create-workspace';
@@ -129,11 +128,10 @@ export default function CreateWorkspacePage() {
   if (createdWorkspace) {
     return (
       <WorkspaceCreatedSuccess
-        createdWorkspace={createdWorkspace}
-        onGoToWorkspace={handleGoToWorkspace}
-        onConnectToIntercom={() =>
-          router.push(`/${createdWorkspace.workspaceId}/settings?tab=team`)
-        }
+        workspaceName={createdWorkspace.workspaceName}
+        onPrimaryAction={handleGoToWorkspace}
+        secondaryText="Connect to Intercom"
+        onSecondaryAction={() => router.push(`/${createdWorkspace.workspaceId}/settings?tab=team`)}
       />
     );
   }
@@ -250,87 +248,6 @@ export default function CreateWorkspacePage() {
             </button>
           </div>
         </form>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Success screen shown after workspace creation
- */
-function WorkspaceCreatedSuccess({
-  createdWorkspace,
-  onGoToWorkspace,
-  onConnectToIntercom,
-}: {
-  createdWorkspace: { workspaceId: string; workspaceName: string };
-  onGoToWorkspace: () => void;
-  onConnectToIntercom: () => void;
-}) {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12 bg-background">
-      <AuthIcons />
-
-      <div className="flex flex-col items-center gap-6 w-full max-w-md relative z-10">
-        <div className="flex flex-col items-center gap-3">
-          <Logo />
-          <h1 className="text-xl font-medium text-foreground">Workspace created successfully</h1>
-          <p className="text-sm text-muted-foreground text-center">
-            You&apos;re all set! Start capturing user feedback
-          </p>
-        </div>
-
-        <WorkspaceCard workspaceName={createdWorkspace.workspaceName} />
-
-        <div className="w-full space-y-3">
-          <Button onClick={onGoToWorkspace} size="lg" className="w-full rounded-full px-7 py-6">
-            Go to Workspace
-          </Button>
-
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={onConnectToIntercom}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Connect to Intercom
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Workspace card with avatars
- */
-function WorkspaceCard({ workspaceName }: { workspaceName: string }) {
-  // Generate consistent "member" names based on workspace name for avatars
-  const avatarNames = [
-    `${workspaceName}-member-1`,
-    `${workspaceName}-member-2`,
-    `${workspaceName}-member-3`,
-  ];
-
-  return (
-    <div className="w-full p-6 rounded-xl border bg-card">
-      <div className="flex flex-col items-center gap-3">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex -space-x-2 shrink-0 cursor-default">
-              {avatarNames.map((name, index) => (
-                <div key={index} className="rounded-full border-2 border-card overflow-hidden">
-                  <BoringAvatar name={name} size={28} />
-                </div>
-              ))}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <span className="text-xs">{workspaceName} workspace</span>
-          </TooltipContent>
-        </Tooltip>
-        <span className="text-sm font-medium text-foreground text-center">{workspaceName}</span>
       </div>
     </div>
   );
