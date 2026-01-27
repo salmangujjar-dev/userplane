@@ -5,8 +5,7 @@
 export { useAuth } from './use-auth';
 export { useDomainSectionState } from './use-domain-section-state';
 export { useDomainStatusPolling } from './use-domain-status-polling';
-export type { ProvisionFormData, ProvisionFormMember } from './use-provision-form';
-export { useProvisionForm, USER_SELECTABLE_PLAN_OPTIONS } from './use-provision-form';
+
 export {
   useFetchDomainSettings,
   usePollDomainVerification,

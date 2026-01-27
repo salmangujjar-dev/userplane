@@ -109,25 +109,4 @@ export const AdminErrors = {
     status: 400,
     message: 'Recording is not deleted',
   },
-
-  // Provisioning errors
-  ADMIN_PROVISION_FAILED: {
-    status: 500,
-    message: 'Failed to provision workspace',
-  },
-
-  ADMIN_PROVISION_USER_CREATE_FAILED: {
-    status: 500,
-    message: 'Failed to create user account',
-  },
-
-  ADMIN_PROVISION_WORKSPACE_CREATE_FAILED: {
-    status: 500,
-    message: 'Failed to create workspace',
-  },
-
-  ADMIN_PROVISION_MEMBER_ADD_FAILED: {
-    status: 500,
-    message: 'Failed to add member to workspace',
-  },
 } as const;

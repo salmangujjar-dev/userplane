@@ -12,14 +12,12 @@ import {
   ADMIN_FILTER_STATUS_VALUES,
   ADMIN_NOTIFY_DURATION_VALUES,
   ADMIN_PROJECT_SORT_FIELDS,
-  ADMIN_PROVISION_ROLE_VALUES,
   ADMIN_RECORDING_WEEKS_VALUES,
   ADMIN_USER_FILTER_STATUS_VALUES,
   ADMIN_USER_SORT_FIELDS,
   ADMIN_WORKSPACE_FILTER_STATUS_VALUES,
   ADMIN_WORKSPACE_SORT_FIELDS,
   EmailSchema,
-  NameSchema,
   ProjectIdSchema,
   ReasonTextSchema,
   SessionIdSchema,
@@ -653,77 +651,6 @@ export type AdminWorkspaceRecordingStats = z.infer<typeof AdminWorkspaceRecordin
 export type AdminGetWorkspaceRecordingStatsInput = z.infer<
   typeof AdminGetWorkspaceRecordingStatsInputSchema
 >;
-
-// ============================================
-// ADMIN PROVISIONING SCHEMAS
-// ============================================
-
-/**
- * Admin provision workspace member input
- */
-export const AdminProvisionMemberSchema = z.object({
-  email: EmailSchema,
-  name: NameSchema,
-  role: z.enum(ADMIN_PROVISION_ROLE_VALUES).default('member'),
-});
-
-/**
- * Admin provision workspace input
- * Workspaces start on free plan - users upgrade via subscription
- */
-export const AdminProvisionWorkspaceInputSchema = z.object({
-  body: z.object({
-    owner: z.object({
-      email: EmailSchema,
-      name: NameSchema,
-    }),
-    workspace: z.object({
-      name: z.string().min(1, 'Workspace name is required').max(255),
-      url: z.string().url('Invalid URL'),
-    }),
-    members: z.array(AdminProvisionMemberSchema).optional().default([]),
-  }),
-});
-
-/**
- * Admin provision workspace owner response
- */
-export const AdminProvisionOwnerSchema = z.object({
-  userId: UserIdSchema,
-  email: z.string(),
-  name: z.string(),
-  isNew: z.boolean(),
-});
-
-/**
- * Admin provision workspace member response
- */
-export const AdminProvisionMemberResponseSchema = z.object({
-  userId: UserIdSchema,
-  email: z.string(),
-  name: z.string(),
-  role: z.enum(ADMIN_PROVISION_ROLE_VALUES),
-  isNew: z.boolean(),
-});
-
-/**
- * Admin provision workspace response data
- */
-export const AdminProvisionWorkspaceDataSchema = z.object({
-  workspaceId: WorkspaceIdSchema,
-  workspaceName: z.string(),
-  owner: AdminProvisionOwnerSchema,
-  members: z.array(AdminProvisionMemberResponseSchema),
-});
-
-/**
- * Types - Provisioning
- */
-export type AdminProvisionMember = z.infer<typeof AdminProvisionMemberSchema>;
-export type AdminProvisionWorkspaceInput = z.infer<typeof AdminProvisionWorkspaceInputSchema>;
-export type AdminProvisionOwner = z.infer<typeof AdminProvisionOwnerSchema>;
-export type AdminProvisionMemberResponse = z.infer<typeof AdminProvisionMemberResponseSchema>;
-export type AdminProvisionWorkspaceData = z.infer<typeof AdminProvisionWorkspaceDataSchema>;
 
 // ============================================
 // WORKSPACE INVITE SCHEMAS

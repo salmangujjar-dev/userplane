@@ -18,7 +18,6 @@
 import { cacheService } from '@/api/clients/redis';
 import {
   adminProjectService,
-  adminProvisioningService,
   adminRecordingService,
   adminService,
   adminWorkspaceService,
@@ -108,7 +107,7 @@ const adminProcedures = createAdminProcedures(
   adminWorkspaceService,
   adminProjectService,
   adminRecordingService,
-  adminProvisioningService,
+
   workspaceService,
   workspaceMemberService,
   projectService,

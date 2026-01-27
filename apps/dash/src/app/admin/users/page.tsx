@@ -11,7 +11,6 @@ import {
 } from '@workspace/contract';
 import type {
   PlanId, // Used for create invite (includes all plans including sandbox/free)
-  UserSelectablePlanId, // Used for provisioner (excludes admin-only plans)
 } from '@workspace/pricing';
 import { Input } from '@workspace/ui/components/input';
 import { Skeleton } from '@workspace/ui/components/skeleton';
@@ -28,10 +27,6 @@ import {
   AdminCreateWorkspaceInviteModal,
   AdminCreateWorkspaceInviteSuccessModal,
 } from '@/components/modals/admin-create-workspace-invite-modal';
-import {
-  AdminProvisionSuccessModal,
-  AdminProvisionWorkspaceModal,
-} from '@/components/modals/admin-provision-workspace-modal';
 import { AdminRevokeAllSessionsModal } from '@/components/modals/admin-revoke-all-sessions-modal';
 import { AdminRevokeSessionModal } from '@/components/modals/admin-revoke-session-modal';
 import { AdminSessionsModal } from '@/components/modals/admin-sessions-modal';
@@ -51,10 +46,8 @@ import {
   useAdminUserWorkspaces,
 } from '@/hooks/use-admin-api';
 import {
-  type AdminProvisionWorkspaceResponse,
   type AdminWorkspaceCreateInviteResponse,
   useAdminCreateWorkspaceInvite,
-  useAdminProvisionWorkspace,
 } from '@/hooks/use-admin-workspace-api';
 import { useImpersonation } from '@/hooks/use-impersonation';
 import { useSession } from '@/hooks/use-session';
@@ -125,11 +118,7 @@ function AdminUsersPageContent() {
   const [userForSessions, setUserForSessions] = useState<UserToAction | null>(null);
   const [sessionToRevoke, setSessionToRevoke] = useState<AdminUserSession | null>(null);
   const [userToRevokeAllSessions, setUserToRevokeAllSessions] = useState<UserToAction | null>(null);
-  const [showProvisionModal, setShowProvisionModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [provisionResult, setProvisionResult] = useState<AdminProvisionWorkspaceResponse | null>(
-    null
-  );
+
   const [showCreateInviteModal, setShowCreateInviteModal] = useState(false);
   const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
   const [inviteResult, setInviteResult] = useState<AdminWorkspaceCreateInviteResponse | null>(null);
@@ -140,7 +129,7 @@ function AdminUsersPageContent() {
   const unbanMutation = useAdminUnbanUser();
   const revokeSessionMutation = useAdminRevokeSession();
   const revokeAllSessionsMutation = useAdminRevokeAllSessions();
-  const provisionMutation = useAdminProvisionWorkspace();
+
   const createInviteMutation = useAdminCreateWorkspaceInvite();
 
   // Debounce all filter changes (search, status, sort) together
@@ -345,26 +334,6 @@ function AdminUsersPageContent() {
   };
 
   /**
-   * Handle workspace provisioning
-   * Uses UserSelectablePlanId - excludes admin-only plans (sandbox, free)
-   */
-  const handleProvision = (data: {
-    owner: { email: string; name: string };
-    workspace: { name: string; url: string; plan: UserSelectablePlanId };
-    members: Array<{ email: string; name: string; role: 'admin' | 'member' }>;
-  }) => {
-    provisionMutation.mutate(data, {
-      onSuccess: (result) => {
-        setShowProvisionModal(false);
-        if (result.success) {
-          setProvisionResult(result.data);
-          setShowSuccessModal(true);
-        }
-      },
-    });
-  };
-
-  /**
    * Handle workspace invite creation
    * Uses PlanId - includes all plans (sandbox, free, user-selectable)
    */
@@ -391,10 +360,7 @@ function AdminUsersPageContent() {
       <AdminSidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <AdminTopActions
-          onCreateInviteClick={() => setShowCreateInviteModal(true)}
-          onProvisionWorkspaceClick={() => setShowProvisionModal(true)}
-        />
+        <AdminTopActions onCreateInviteClick={() => setShowCreateInviteModal(true)} />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="space-y-6">
@@ -616,19 +582,6 @@ function AdminUsersPageContent() {
         user={userToRevokeAllSessions}
         onConfirm={confirmRevokeAllSessions}
         isPending={revokeAllSessionsMutation.isPending}
-      />
-
-      <AdminProvisionWorkspaceModal
-        open={showProvisionModal}
-        onOpenChange={setShowProvisionModal}
-        onSubmit={handleProvision}
-        isPending={provisionMutation.isPending}
-      />
-
-      <AdminProvisionSuccessModal
-        open={showSuccessModal}
-        onOpenChange={setShowSuccessModal}
-        result={provisionResult}
       />
 
       <AdminCreateWorkspaceInviteModal

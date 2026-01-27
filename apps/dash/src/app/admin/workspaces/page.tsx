@@ -9,7 +9,6 @@ import {
 } from '@workspace/contract';
 import type {
   PlanId, // Used for create invite (includes all plans including sandbox/free)
-  UserSelectablePlanId, // Used for provisioner (excludes admin-only plans)
 } from '@workspace/pricing';
 import { Input } from '@workspace/ui/components/input';
 import { Skeleton } from '@workspace/ui/components/skeleton';
@@ -25,21 +24,15 @@ import {
   AdminCreateWorkspaceInviteSuccessModal,
 } from '@/components/modals/admin-create-workspace-invite-modal';
 import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
-import {
-  AdminProvisionSuccessModal,
-  AdminProvisionWorkspaceModal,
-} from '@/components/modals/admin-provision-workspace-modal';
 import { AdminRestoreWorkspaceModal } from '@/components/modals/admin-restore-workspace-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
 import { AdminTopActions } from '@/components/navigation/admin-top-actions';
 import { PaginationControls } from '@/components/shared/pagination-controls';
-import type { AdminProvisionWorkspaceResponse } from '@/hooks/use-admin-workspace-api';
 import {
   type AdminWorkspaceCreateInviteResponse,
   useAdminCreateWorkspaceInvite,
   useAdminDeactivateWorkspace,
-  useAdminProvisionWorkspace,
   useAdminResetInviteToken,
   useAdminRestoreWorkspace,
   useAdminSearchWorkspaces,
@@ -115,11 +108,7 @@ function AdminRecordingsPageContent() {
   const [workspaceToResetToken, setWorkspaceToResetToken] = useState<WorkspaceToResetToken | null>(
     null
   );
-  const [showProvisionModal, setShowProvisionModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [provisionResult, setProvisionResult] = useState<AdminProvisionWorkspaceResponse | null>(
-    null
-  );
+
   const [showCreateInviteModal, setShowCreateInviteModal] = useState(false);
   const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
   const [inviteResult, setInviteResult] = useState<AdminWorkspaceCreateInviteResponse | null>(null);
@@ -128,7 +117,7 @@ function AdminRecordingsPageContent() {
   const deactivateMutation = useAdminDeactivateWorkspace();
   const restoreMutation = useAdminRestoreWorkspace();
   const resetTokenMutation = useAdminResetInviteToken();
-  const provisionMutation = useAdminProvisionWorkspace();
+
   const createInviteMutation = useAdminCreateWorkspaceInvite();
 
   // Debounce all filter changes (search, status, sort) together
@@ -258,26 +247,6 @@ function AdminRecordingsPageContent() {
   };
 
   /**
-   * Handle workspace provisioning
-   * Uses UserSelectablePlanId - excludes admin-only plans (sandbox, free)
-   */
-  const handleProvision = (data: {
-    owner: { email: string; name: string };
-    workspace: { name: string; url: string; plan: UserSelectablePlanId };
-    members: Array<{ email: string; name: string; role: 'admin' | 'member' }>;
-  }) => {
-    provisionMutation.mutate(data, {
-      onSuccess: (result) => {
-        setShowProvisionModal(false);
-        if (result.success) {
-          setProvisionResult(result.data);
-          setShowSuccessModal(true);
-        }
-      },
-    });
-  };
-
-  /**
    * Handle workspace invite creation
    * Uses PlanId - includes all plans (sandbox, free, user-selectable)
    */
@@ -304,10 +273,7 @@ function AdminRecordingsPageContent() {
       <AdminSidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <AdminTopActions
-          onCreateInviteClick={() => setShowCreateInviteModal(true)}
-          onProvisionWorkspaceClick={() => setShowProvisionModal(true)}
-        />
+        <AdminTopActions onCreateInviteClick={() => setShowCreateInviteModal(true)} />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="space-y-6">
@@ -433,19 +399,6 @@ function AdminRecordingsPageContent() {
         workspace={workspaceToResetToken}
         onConfirm={confirmResetInviteToken}
         isPending={resetTokenMutation.isPending}
-      />
-
-      <AdminProvisionWorkspaceModal
-        open={showProvisionModal}
-        onOpenChange={setShowProvisionModal}
-        onSubmit={handleProvision}
-        isPending={provisionMutation.isPending}
-      />
-
-      <AdminProvisionSuccessModal
-        open={showSuccessModal}
-        onOpenChange={setShowSuccessModal}
-        result={provisionResult}
       />
 
       <AdminCreateWorkspaceInviteModal
