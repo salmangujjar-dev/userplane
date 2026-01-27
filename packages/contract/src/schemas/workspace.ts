@@ -1154,3 +1154,92 @@ export const WorkspaceStatusDataSchema = z.object({
   invitePolicy: WorkspaceInvitePolicySchema.nullable(),
   accessStatus: WorkspaceAccessStatusSchema,
 });
+
+// ============================================================================
+// INTEGRATION SCHEMAS
+// ============================================================================
+
+/**
+ * Integration status response
+ * Indicates whether Intercom is connected to the workspace
+ */
+export const IntegrationStatusSchema = z.object({
+  connected: z.boolean(),
+  providerWorkspaceId: z.string().nullable(),
+  connectedAt: z.date().nullable(),
+});
+
+/**
+ * Get integration status request (detailed mode)
+ */
+export const GetIntercomIntegrationSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Get integration status response
+ */
+export const IntercomIntegrationStatusDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  integration: IntegrationStatusSchema,
+});
+
+/**
+ * Intercom integration authorize request (detailed mode)
+ */
+export const IntercomIntegrationAuthorizeSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Intercom integration authorize response
+ * Returns the authorization URL and state for CSRF protection
+ */
+export const IntercomIntegrationAuthorizeDataSchema = z.object({
+  authorizationUrl: z.string().url(),
+  state: z.string(),
+});
+
+/**
+ * Intercom integration callback request (detailed mode)
+ * Received from Intercom after user authorizes
+ */
+export const IntercomIntegrationCallbackSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    code: z.string(),
+    state: z.string(),
+  }),
+});
+
+/**
+ * Intercom integration callback response
+ */
+export const IntercomIntegrationCallbackDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  connected: z.literal(true),
+  providerWorkspaceId: z.string(),
+});
+
+/**
+ * Delete Intercom integration request (detailed mode)
+ */
+export const DeleteIntercomIntegrationSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Delete Intercom integration response
+ */
+export const DeleteIntercomIntegrationDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  disconnected: z.literal(true),
+});

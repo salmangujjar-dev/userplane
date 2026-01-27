@@ -170,6 +170,15 @@ export const workspaceContract = {
   linkSettings: {
     update: workspace.updateLinkSettings,
   },
+
+  integrations: {
+    intercom: {
+      get: workspace.getIntercomIntegration,
+      authorize: workspace.intercomIntegrationAuthorize,
+      callback: workspace.intercomIntegrationCallback,
+      delete: workspace.deleteIntercomIntegration,
+    },
+  },
 };
 
 /**

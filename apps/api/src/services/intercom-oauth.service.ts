@@ -1,10 +1,19 @@
 /**
  * IntercomService - Handles Intercom OAuth flow and integration management
  * Orchestrates OAuth authorization, token exchange, workspace creation, and admin invites
+ * Supports two flows:
+ * 1. Onboarding flow: Creates a new workspace during OAuth (no workspaceId in state)
+ * 2. Workspace integration flow: Connects to existing workspace (workspaceId in state)
  */
 
-import { FormEmailSchema, provisionerError } from '@workspace/contract';
-import { createProviderMeta, createProviderToken, type IntercomRegion } from '@workspace/contract';
+import {
+  createProviderMeta,
+  createProviderToken,
+  FormEmailSchema,
+  type IntercomRegion,
+  provisionerError,
+  workspaceError,
+} from '@workspace/contract';
 
 import {
   detectRegionAndGetMe,
@@ -31,14 +40,36 @@ type WorkspaceCreationResult =
   | { created: false; workspaceUrl?: string }
   | { created: true; workspaceId: string; workspaceName: string };
 
+/**
+ * Integration status result
+ */
+export interface IntegrationStatus {
+  connected: boolean;
+  providerWorkspaceId: string | null;
+  connectedAt: Date | null;
+}
+
+/**
+ * Integration connect result (workspace integration flow)
+ */
+export interface IntegrationConnectResult {
+  connected: true;
+  providerWorkspaceId: string;
+}
+
 export class IntercomService {
   constructor(private deps: IntercomServiceDeps) {}
 
   /**
    * Generate OAuth authorization URL with signed state token
+   * @param userId - The user initiating the OAuth flow
+   * @param workspaceId - Optional workspace ID for workspace integration flow
    */
-  generateAuthorizationUrl(userId: string): { authorizationUrl: string; state: string } {
-    const state = this.deps.tokenService.signIntercomOAuthState(userId);
+  generateAuthorizationUrl(
+    userId: string,
+    workspaceId?: string
+  ): { authorizationUrl: string; state: string } {
+    const state = this.deps.tokenService.signIntercomOAuthState(userId, workspaceId);
     const authorizationUrl = getAuthorizationUrl(state);
 
     return { authorizationUrl, state };
@@ -171,10 +202,13 @@ export class IntercomService {
 
   /**
    * Validate OAuth state token
-   * Returns true if state is valid for the given user
+   * Returns true if state is valid for the given user and optional workspace
+   * @param state - The OAuth state token to verify
+   * @param userId - The expected user ID
+   * @param workspaceId - Optional expected workspace ID for workspace integration flow
    */
-  validateState(state: string, userId: string): boolean {
-    const payload = this.deps.tokenService.verifyIntercomOAuthState(state, userId);
+  validateState(state: string, userId: string, workspaceId?: string): boolean {
+    const payload = this.deps.tokenService.verifyIntercomOAuthState(state, userId, workspaceId);
     return payload !== null;
   }
 
@@ -233,5 +267,117 @@ export class IntercomService {
       userName,
       userEmail,
     });
+  }
+
+  // ============================================================================
+  // WORKSPACE INTEGRATION FLOW (for existing workspaces)
+  // ============================================================================
+
+  /**
+   * Handle OAuth callback for workspace integration flow
+   * Connects Intercom to an existing workspace (no workspace creation)
+   */
+  async handleIntegrationCallback(params: {
+    code: string;
+    state: string;
+    userId: string;
+    workspaceId: string;
+  }): Promise<IntegrationConnectResult> {
+    const { code, state, userId, workspaceId } = params;
+
+    // 1. Validate state token with workspace ID
+    if (!this.validateState(state, userId, workspaceId)) {
+      throw provisionerError.INTERCOM_OAUTH_STATE_INVALID();
+    }
+
+    // 2. Check if workspace already has an Intercom integration
+    const existingWorkspaceIntegration =
+      await this.deps.integrationRepo.findByWorkspaceIdAndProvider(workspaceId, 'intercom');
+    if (existingWorkspaceIntegration) {
+      throw workspaceError.INTEGRATION_ALREADY_CONNECTED();
+    }
+
+    // 3. Exchange code for access token
+    const tokenResponse = await exchangeCodeForToken(code);
+    if (!tokenResponse) {
+      throw provisionerError.INTERCOM_TOKEN_EXCHANGE_FAILED();
+    }
+
+    // 4. Get user info from Intercom /me endpoint (auto-detect region)
+    const meResult = await detectRegionAndGetMe(tokenResponse.access_token);
+    if (!meResult) {
+      throw provisionerError.INTERCOM_USER_INFO_FAILED();
+    }
+
+    const { me, region } = meResult;
+
+    // 5. Verify email is verified (security)
+    if (!me.email_verified) {
+      throw provisionerError.INTERCOM_EMAIL_NOT_VERIFIED();
+    }
+
+    // 6. Check if this Intercom workspace is already connected to another userplane workspace
+    const existingProviderIntegration = await this.deps.integrationRepo.findByProviderWorkspaceId(
+      'intercom',
+      me.app.id_code
+    );
+    if (existingProviderIntegration) {
+      throw workspaceError.INTEGRATION_PROVIDER_WORKSPACE_CONFLICT();
+    }
+
+    // 7. Create integration record
+    await this.deps.integrationRepo.create({
+      id: generateIntegrationId(),
+      workspaceId,
+      provider: 'intercom',
+      providerWorkspaceId: me.app.id_code,
+      providerToken: createProviderToken('intercom', {
+        accessToken: tokenResponse.access_token,
+      }),
+      providerMeta: createProviderMeta('intercom', { region: region as IntercomRegion }),
+    });
+
+    return {
+      connected: true,
+      providerWorkspaceId: me.app.id_code,
+    };
+  }
+
+  /**
+   * Get integration status for a workspace
+   */
+  async getIntegrationStatus(workspaceId: string): Promise<IntegrationStatus> {
+    const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
+      workspaceId,
+      'intercom'
+    );
+
+    if (!integration) {
+      return {
+        connected: false,
+        providerWorkspaceId: null,
+        connectedAt: null,
+      };
+    }
+
+    return {
+      connected: true,
+      providerWorkspaceId: integration.providerWorkspaceId,
+      connectedAt: integration.createdAt,
+    };
+  }
+
+  /**
+   * Disconnect Intercom integration from a workspace
+   * Returns true if disconnected, throws if not found
+   */
+  async disconnectIntegration(workspaceId: string): Promise<boolean> {
+    const deleted = await this.deps.integrationRepo.delete(workspaceId, 'intercom');
+
+    if (!deleted) {
+      throw workspaceError.INTEGRATION_NOT_FOUND();
+    }
+
+    return true;
   }
 }

@@ -482,10 +482,12 @@ export interface CreateWorkspaceParams {
 /**
  * Intercom OAuth state payload for CSRF protection
  * Signed JWT with 15 minute expiry
+ * workspaceId is optional - present for workspace integration flow, absent for onboarding flow
  */
 export interface IntercomOAuthStatePayload {
   iss: string;
   userId: string;
+  workspaceId?: string;
   timestamp: number;
   nonce: string;
   iat: number;

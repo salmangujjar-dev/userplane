@@ -15,6 +15,7 @@ import {
 } from '@/api/middleware/workspace.orpc';
 import type { DomainService } from '@/api/services/domain.service';
 import type { EmailService } from '@/api/services/email.service';
+import type { IntercomService } from '@/api/services/intercom-oauth.service';
 import type { InviteService } from '@/api/services/invite.service';
 import type { LinkService } from '@/api/services/link.service';
 import type { ProjectService } from '@/api/services/project.service';
@@ -1662,9 +1663,148 @@ export const verifyBillingEmailChangeImpl = (
   );
 };
 
+// ============================================================================
+// INTEGRATION HANDLERS
+// ============================================================================
+
+/**
+ * GET /workspace/:workspaceId/integrations/intercom - Get Intercom integration status
+ * Requires workspace membership
+ */
+export const getIntercomIntegrationImpl = (
+  intercomService: IntercomService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorizedRateLimited.workspace.integrations.intercom.get
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const status = await intercomService.getIntegrationStatus(input.params.workspaceId);
+
+      return {
+        message: 'Integration status retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          integration: {
+            connected: status.connected,
+            providerWorkspaceId: status.providerWorkspaceId,
+            connectedAt: status.connectedAt,
+          },
+        },
+      };
+    });
+};
+
+/**
+ * GET /workspace/:workspaceId/integrations/intercom/authorize - Initiate Intercom OAuth
+ * Requires admin or owner role
+ */
+export const intercomIntegrationAuthorizeImpl = (
+  intercomService: IntercomService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorizedRateLimited.workspace.integrations.intercom.authorize
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      // Check if already connected
+      const existingStatus = await intercomService.getIntegrationStatus(input.params.workspaceId);
+      if (existingStatus.connected) {
+        throw workspaceError.INTEGRATION_ALREADY_CONNECTED();
+      }
+
+      const { authorizationUrl, state } = intercomService.generateAuthorizationUrl(
+        context.user.id,
+        input.params.workspaceId
+      );
+
+      return {
+        message: 'Authorization URL generated successfully',
+        data: {
+          authorizationUrl,
+          state,
+        },
+      };
+    });
+};
+
+/**
+ * GET /workspace/:workspaceId/integrations/intercom/callback - Handle Intercom OAuth callback
+ * Requires admin or owner role
+ */
+export const intercomIntegrationCallbackImpl = (
+  intercomService: IntercomService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorizedRateLimited.workspace.integrations.intercom.callback
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      const result = await intercomService.handleIntegrationCallback({
+        code: input.query.code,
+        state: input.query.state,
+        userId: context.user.id,
+        workspaceId: input.params.workspaceId,
+      });
+
+      return {
+        message: 'Intercom connected successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          connected: result.connected,
+          providerWorkspaceId: result.providerWorkspaceId,
+        },
+      };
+    });
+};
+
+/**
+ * DELETE /workspace/:workspaceId/integrations/intercom - Disconnect Intercom integration
+ * Requires admin or owner role
+ */
+export const deleteIntercomIntegrationImpl = (
+  intercomService: IntercomService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorizedRateLimited.workspace.integrations.intercom.delete
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      await intercomService.disconnectIntegration(input.params.workspaceId);
+
+      return {
+        message: 'Intercom disconnected successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          disconnected: true as const,
+        },
+      };
+    });
+};
+
 /**
  * Create the workspace procedures object
- * Complete implementation with CRUD, member management, invites, and domains
+ * Complete implementation with CRUD, member management, invites, domains, and integrations
  */
 export const createWorkspaceProcedures = (
   inviteService: InviteService,
@@ -1676,7 +1816,8 @@ export const createWorkspaceProcedures = (
   linkService: LinkService,
   emailService: EmailService,
   userService: UserService,
-  tokenService: TokenService
+  tokenService: TokenService,
+  intercomService: IntercomService
 ) => {
   return {
     list: getAllWorkspacesImpl(workspaceService),
@@ -1790,6 +1931,27 @@ export const createWorkspaceProcedures = (
         ),
         replace: replaceDomainRecordingPreferencesImpl(
           domainService,
+          workspaceMemberService,
+          workspaceService
+        ),
+      },
+    },
+
+    integrations: {
+      intercom: {
+        get: getIntercomIntegrationImpl(intercomService, workspaceMemberService, workspaceService),
+        authorize: intercomIntegrationAuthorizeImpl(
+          intercomService,
+          workspaceMemberService,
+          workspaceService
+        ),
+        callback: intercomIntegrationCallbackImpl(
+          intercomService,
+          workspaceMemberService,
+          workspaceService
+        ),
+        delete: deleteIntercomIntegrationImpl(
+          intercomService,
           workspaceMemberService,
           workspaceService
         ),
