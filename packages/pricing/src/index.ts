@@ -146,7 +146,7 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   free: {
     seats: { quotedLimit: 5, creditLimit: 10, softLimit: 5, hardLimit: 15 },
     recordings: { quotedLimit: 3, creditLimit: 0, softLimit: 3, hardLimit: 3 },
-    links: { quotedLimit: -1, creditLimit: 0, softLimit: 6, hardLimit: 8 },
+    links: { quotedLimit: 3, creditLimit: 0, softLimit: 6, hardLimit: 8 },
     screenshots: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
     files: { quotedLimit: 0, creditLimit: 0, softLimit: 0, hardLimit: 0 },
   },

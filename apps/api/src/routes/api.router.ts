@@ -15,6 +15,7 @@
  */
 
 // Services and Repositories
+import { cacheService } from '@/api/clients/redis';
 import {
   adminProjectService,
   adminProvisioningService,
@@ -43,6 +44,7 @@ import {
 import { createAccountProcedures } from './account/account.impl';
 import { createAdminProcedures } from './admin/admin.impl';
 import { createBillingProcedures } from './billing/billing.impl';
+import { createDiagnosticsProcedures } from './diagnostics/diagnostics.impl';
 import { createDomainProcedures } from './domain/domain.impl';
 import { createInviteProcedures } from './invite/invite.impl';
 import { createLinkProcedures } from './link/link.impl';
@@ -87,7 +89,12 @@ const recordingProcedures = createRecordingProcedures(
   workspaceMemberService,
   workspaceService
 );
-const linkProcedures = createLinkProcedures(linkService, workspaceMemberService, workspaceService);
+const linkProcedures = createLinkProcedures(
+  linkService,
+  workspaceMemberService,
+  workspaceService,
+  entitlementService
+);
 const domainProcedures = createDomainProcedures(domainService);
 const inviteProcedures = createInviteProcedures(inviteService);
 const provisionerProcedures = createProvisionerProcedures(
@@ -121,6 +128,11 @@ const billingProcedures = createBillingProcedures(
   entitlementService,
   emailService
 );
+const diagnosticsProcedures = createDiagnosticsProcedures(
+  cacheService,
+  workspaceMemberService,
+  workspaceService
+);
 
 /**
  * Complete router export
@@ -137,6 +149,7 @@ const billingProcedures = createBillingProcedures(
  * - domain: Public domain verification
  * - invite: Public invite validation and acceptance
  * - billing: Subscription management and billing operations
+ * - diagnostics: Workspace diagnostics and maintenance operations
  */
 export const apiRouter = {
   status: statusProcedures,
@@ -144,6 +157,7 @@ export const apiRouter = {
   account: accountProcedures,
   admin: adminProcedures,
   billing: billingProcedures,
+  diagnostics: diagnosticsProcedures,
   provisioner: provisionerProcedures,
   workspace: workspaceProcedures,
   project: projectProcedures,
