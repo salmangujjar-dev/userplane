@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { sentryEsbuildPlugin } from '@sentry/esbuild-plugin';
-import { esbuildPlugin, syncEnvVars } from '@trigger.dev/build/extensions';
+import { esbuildPlugin } from '@trigger.dev/build/extensions';
+import { syncEnvVars } from '@trigger.dev/build/extensions/core';
 import { defineConfig } from '@trigger.dev/sdk/v3';
 
 // Build Sentry plugin if credentials are available
@@ -105,7 +106,7 @@ export default defineConfig({
     extensions: [
       // Sync env vars from .env file during deployment
       // Reads .env.staging for staging, .env.production for production
-      syncEnvVars(async (ctx) => {
+      syncEnvVars(async (ctx: { environment: string; projectRef: string }) => {
         // Determine which env file to use based on deploy environment
         const envFile =
           ctx.environment === 'staging'
