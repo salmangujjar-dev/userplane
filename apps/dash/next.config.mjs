@@ -1,6 +1,11 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@workspace/ui"],
+  experimental: {
+    instrumentationHook: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -41,4 +46,21 @@ const nextConfig = {
   // It properly handles server-only imports out of the box
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  // Sentry webpack plugin options
+  silent: true, // Suppresses all logs
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT_DASH,
+
+  // Source maps upload configuration
+  widenClientFileUpload: true,
+  hideSourceMaps: true,
+
+  // Webpack-specific options
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+    automaticVercelMonitors: true,
+  },
+})
