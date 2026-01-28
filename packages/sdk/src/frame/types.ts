@@ -4,7 +4,7 @@
  */
 
 import type { RecordingContext } from '../bridge';
-import type { CaptureRecorderState, RecordingState, TabMetadata } from '../bridge/types';
+import type { CaptureRecorderState, TabMetadata } from '../bridge/types';
 import type { RecorderFrame, RecorderParams } from '../types';
 
 // Re-export types used by frame managers
@@ -67,6 +67,7 @@ export interface IRecordingFrameManager extends IFrameManager {
  * Verification-specific frame manager interface
  * Focused on domain verification flow
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface IVerificationFrameManager extends IFrameManager {
   // Currently no additional methods needed
   // Interface exists for type safety and future extensibility

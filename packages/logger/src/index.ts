@@ -25,6 +25,7 @@ export function createLogger(context: string, options: CreateLoggerOptions = {})
   if (usePretty) {
     // Lazy load pino-pretty only when needed
     // This prevents bundling it in browser/edge environments
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pretty = require('pino-pretty');
     const stream = pretty({
       colorize: true,
