@@ -1,5 +1,10 @@
+// Initialize Sentry first, before all other imports
+import { initSentry } from '@/api/sentry';
+initSentry();
+
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { onError } from '@orpc/server';
+import * as Sentry from '@sentry/bun';
 import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@workspace/cache';
 import { createAppLogger } from '@workspace/logger';
 import { Hono } from 'hono';
@@ -21,6 +26,7 @@ const openAPIHandler = new OpenAPIHandler(apiRouter, {
   interceptors: [
     onError((error) => {
       logger.error({ err: error }, 'oRPC error');
+      Sentry.captureException(error);
     }),
   ],
 });
@@ -261,6 +267,17 @@ app.notFound((c) => {
 // Error handler
 app.onError((err, c) => {
   logger.error({ err, path: c.req.path }, 'Internal server error');
+
+  // Capture error in Sentry with request context
+  Sentry.captureException(err, {
+    contexts: {
+      request: {
+        path: c.req.path,
+        method: c.req.method,
+      },
+    },
+  });
+
   return c.json(
     {
       error: 'Internal Server Error',

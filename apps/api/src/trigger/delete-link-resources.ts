@@ -9,6 +9,7 @@ import { getPurgeDelay } from '@/api/trigger/delay-calculator';
 import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { buildRecordingDeletionKey } from './idempotency';
+import { withSentryTrigger } from './instrument';
 
 interface DeleteLinkResourcesPayload {
   linkId: string;
@@ -36,80 +37,88 @@ interface DeleteLinkResourcesResult {
 export const deleteLinkResources = task({
   id: TASK_IDS.DELETE_LINK_RESOURCES,
   maxDuration: MAX_DURATIONS.LINK_CLEANUP,
-  run: async (payload: DeleteLinkResourcesPayload): Promise<DeleteLinkResourcesResult> => {
-    const { linkId } = payload;
+  run: withSentryTrigger(
+    async (payload: DeleteLinkResourcesPayload): Promise<DeleteLinkResourcesResult> => {
+      const { linkId } = payload;
 
-    logger.info('Starting link resource cleanup', { linkId });
+      logger.info('Starting link resource cleanup', { linkId });
 
-    const linkRepo = new LinkRepository(db);
-    const recordingRepo = new RecordingRepository(db);
+      const linkRepo = new LinkRepository(db);
+      const recordingRepo = new RecordingRepository(db);
 
-    // 1. Short-circuit check
-    const isDeleted = await linkRepo.isSoftDeleted(linkId);
+      // 1. Short-circuit check
+      const isDeleted = await linkRepo.isSoftDeleted(linkId);
 
-    if (isDeleted === null) {
-      logger.info('Link not found, skipping', { linkId });
-      return { success: true, linkId, recordingsScheduled: 0, skipped: true, reason: 'not_found' };
-    }
-
-    if (!isDeleted) {
-      logger.info('Link not deleted, skipping', { linkId });
-      return {
-        success: true,
-        linkId,
-        recordingsScheduled: 0,
-        skipped: true,
-        reason: 'not_deleted',
-      };
-    }
-
-    // 2. List recordings to clean up
-    // Pulls available recordings for deletion
-    const recordingsToCleanup = await recordingRepo.findByLinkId(linkId);
-
-    logger.info('Found recordings to cleanup', { linkId, count: recordingsToCleanup.length });
-
-    // 3. Fan-out (use batchTrigger for multiple recordings)
-    // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
-    if (recordingsToCleanup.length > 0) {
-      const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
-
-      logger.info('Batching recording cleanup triggers', {
-        linkId,
-        totalRecordings: recordingsToCleanup.length,
-        batchCount: recordingChunks.length,
-        batchSize: BATCH_LIMITS.MAX_BATCH_SIZE,
-      });
-
-      for (const [index, chunk] of recordingChunks.entries()) {
-        await deleteRecordingResources.batchTrigger(
-          chunk.map((recording) => ({
-            payload: { recordingId: recording.recordingId },
-            options: {
-              idempotencyKey: buildRecordingDeletionKey(recording.recordingId),
-              delay: getPurgeDelay(recording.uploadStatus),
-            },
-          }))
-        );
-
-        logger.info('Triggered recording cleanup batch', {
+      if (isDeleted === null) {
+        logger.info('Link not found, skipping', { linkId });
+        return {
+          success: true,
           linkId,
-          batchIndex: index + 1,
+          recordingsScheduled: 0,
+          skipped: true,
+          reason: 'not_found',
+        };
+      }
+
+      if (!isDeleted) {
+        logger.info('Link not deleted, skipping', { linkId });
+        return {
+          success: true,
+          linkId,
+          recordingsScheduled: 0,
+          skipped: true,
+          reason: 'not_deleted',
+        };
+      }
+
+      // 2. List recordings to clean up
+      // Pulls available recordings for deletion
+      const recordingsToCleanup = await recordingRepo.findByLinkId(linkId);
+
+      logger.info('Found recordings to cleanup', { linkId, count: recordingsToCleanup.length });
+
+      // 3. Fan-out (use batchTrigger for multiple recordings)
+      // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
+      if (recordingsToCleanup.length > 0) {
+        const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
+
+        logger.info('Batching recording cleanup triggers', {
+          linkId,
+          totalRecordings: recordingsToCleanup.length,
           batchCount: recordingChunks.length,
-          recordingsInBatch: chunk.length,
+          batchSize: BATCH_LIMITS.MAX_BATCH_SIZE,
+        });
+
+        for (const [index, chunk] of recordingChunks.entries()) {
+          await deleteRecordingResources.batchTrigger(
+            chunk.map((recording) => ({
+              payload: { recordingId: recording.recordingId },
+              options: {
+                idempotencyKey: buildRecordingDeletionKey(recording.recordingId),
+                delay: getPurgeDelay(recording.uploadStatus),
+              },
+            }))
+          );
+
+          logger.info('Triggered recording cleanup batch', {
+            linkId,
+            batchIndex: index + 1,
+            batchCount: recordingChunks.length,
+            recordingsInBatch: chunk.length,
+          });
+        }
+
+        logger.info('Scheduled recording cleanup tasks', {
+          linkId,
+          recordingsScheduled: recordingsToCleanup.length,
         });
       }
 
-      logger.info('Scheduled recording cleanup tasks', {
+      return {
+        success: true,
         linkId,
         recordingsScheduled: recordingsToCleanup.length,
-      });
+      };
     }
-
-    return {
-      success: true,
-      linkId,
-      recordingsScheduled: recordingsToCleanup.length,
-    };
-  },
+  ),
 });

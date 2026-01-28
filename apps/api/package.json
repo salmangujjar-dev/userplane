@@ -4,6 +4,7 @@
     "@hono/zod-validator": "^0.4.1",
     "@orpc/openapi": "^1.12.3",
     "@orpc/server": "^1.12.3",
+    "@sentry/bun": "^10.37.0",
     "@trigger.dev/sdk": "4.3.1",
     "@workspace/auth": "workspace:*",
     "@workspace/cache": "workspace:*",

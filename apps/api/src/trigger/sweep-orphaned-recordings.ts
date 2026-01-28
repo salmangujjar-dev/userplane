@@ -9,6 +9,7 @@ import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
 import { getPurgeDelay } from './delay-calculator';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { buildRecordingDeletionKey } from './idempotency';
+import { withSentryTrigger } from './instrument';
 
 interface SweepOrphanedRecordingsResult {
   recordingsTriggered: number;
@@ -42,7 +43,7 @@ export const sweepOrphanedRecordings = schedules.task({
     // Only run in PRODUCTION and STAGING environments
     environments: ['PRODUCTION', 'STAGING'],
   },
-  run: async (payload): Promise<SweepOrphanedRecordingsResult> => {
+  run: withSentryTrigger(async (payload): Promise<SweepOrphanedRecordingsResult> => {
     logger.info('Starting sweep for orphaned recordings', {
       timestamp: payload.timestamp,
       lastTimestamp: payload.lastTimestamp,
@@ -124,5 +125,5 @@ export const sweepOrphanedRecordings = schedules.task({
     logger.info('Sweep completed', result);
 
     return result;
-  },
+  }),
 });

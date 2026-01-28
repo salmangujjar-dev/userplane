@@ -17,6 +17,7 @@ import { rateLimiter } from '@/api/clients/redis';
 
 import type { AuthContext } from './auth.orpc';
 import { authMiddleware, authorized, base } from './auth.orpc';
+import { enrichSentryUserContext } from './sentry.orpc';
 
 /**
  * Rate limit error with proper HTTP status
@@ -141,11 +142,19 @@ export const billingRateLimitMiddleware = createBillingRateLimitMiddleware(rateL
 /**
  * Authenticated base with rate limiting for general authenticated routes
  * Use this instead of `authorized` for routes that need rate limiting
+ * Also enriches Sentry events with user context
  */
-export const authorizedRateLimited = authorized.use(authenticatedRateLimitMiddleware);
+export const authorizedRateLimited = authorized.use(authenticatedRateLimitMiddleware).use(
+  // @ts-expect-error - Type mismatch between simplified AuthContext and full Better Auth session type
+  enrichSentryUserContext
+);
 
 /**
  * Combined auth + admin rate limit middleware
  * For admin routes that need the higher rate limit
+ * Also enriches Sentry events with user context
  */
-export const authWithAdminRateLimit = base.use(authMiddleware).use(adminRateLimitMiddleware);
+export const authWithAdminRateLimit = base.use(authMiddleware).use(adminRateLimitMiddleware).use(
+  // @ts-expect-error - Type mismatch between simplified AuthContext and full Better Auth session type
+  enrichSentryUserContext
+);

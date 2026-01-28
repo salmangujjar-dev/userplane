@@ -61,7 +61,6 @@ export type { WorkspaceContext } from '@/api/middleware/workspace.orpc';
 
 /**
  * Implemented procedures
- * Add new implementations here as endpoints are migrated to v2
  */
 const sessionProcedures = createSessionProcedures(
   sessionService,

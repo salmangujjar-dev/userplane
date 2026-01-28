@@ -3,6 +3,7 @@
  * Handles all database operations for recording entities
  */
 
+import * as Sentry from '@sentry/bun';
 import type { DbClient, Recording } from '@workspace/db';
 import { and, asc, count, desc, eq, inArray, sql } from '@workspace/db';
 import {
@@ -292,6 +293,17 @@ export class RecordingRepository {
     recordingId: string,
     statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
   ) {
+    Sentry.addBreadcrumb({
+      category: 'db.query',
+      message: 'Query recording by ID with status group',
+      level: 'info',
+      data: {
+        recording_id: recordingId,
+        status_group: statusGroup,
+        operation: 'select',
+      },
+    });
+
     const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
 
     const [result] = await this.db
@@ -311,6 +323,15 @@ export class RecordingRepository {
         )
       )
       .limit(1);
+
+    if (!result) {
+      Sentry.addBreadcrumb({
+        category: 'db.query',
+        message: 'Recording not found',
+        level: 'warning',
+        data: { recording_id: recordingId, status_group: statusGroup },
+      });
+    }
 
     return result?.recordings || null;
   }
@@ -572,6 +593,18 @@ export class RecordingRepository {
    * until they become available
    */
   async create(data: CreateRecordingInput, options?: { tx?: Transaction }) {
+    Sentry.addBreadcrumb({
+      category: 'db.query',
+      message: 'Create new recording',
+      level: 'info',
+      data: {
+        recording_id: data.recordingId,
+        workspace_id: data.workspaceId,
+        project_id: data.projectId,
+        operation: 'insert',
+      },
+    });
+
     const dbClient = options?.tx || this.db;
 
     const [recording] = await dbClient
@@ -604,6 +637,17 @@ export class RecordingRepository {
    * Sets isDeleted to false so recording becomes visible to users
    */
   async markAsAvailable(recordingId: string, options?: { tx?: Transaction }) {
+    Sentry.addBreadcrumb({
+      category: 'db.query',
+      message: 'Mark recording as available',
+      level: 'info',
+      data: {
+        recording_id: recordingId,
+        operation: 'update',
+        new_status: 'available',
+      },
+    });
+
     const dbClient = options?.tx || this.db;
 
     const [updated] = await dbClient
@@ -746,6 +790,17 @@ export class RecordingRepository {
    * Sets isDeleted to true to mark recording as cleaned up
    */
   async markAsPurged(recordingId: string, options?: { tx?: Transaction }) {
+    Sentry.addBreadcrumb({
+      category: 'db.query',
+      message: 'Mark recording as purged',
+      level: 'info',
+      data: {
+        recording_id: recordingId,
+        operation: 'update',
+        new_status: 'purged',
+      },
+    });
+
     const dbClient = options?.tx || this.db;
 
     const [updated] = await dbClient
@@ -757,6 +812,15 @@ export class RecordingRepository {
       })
       .where(eq(recordings.recordingId, recordingId))
       .returning();
+
+    if (!updated) {
+      Sentry.addBreadcrumb({
+        category: 'db.query',
+        message: 'Failed to mark recording as purged - recording not found',
+        level: 'warning',
+        data: { recording_id: recordingId },
+      });
+    }
 
     return updated || null;
   }
