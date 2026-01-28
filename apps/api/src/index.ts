@@ -3,7 +3,7 @@ import { initSentry } from '@/api/sentry';
 initSentry();
 
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
-import { onError } from '@orpc/server';
+import { isDefinedError, onError } from '@orpc/server';
 import * as Sentry from '@sentry/bun';
 import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@workspace/cache';
 import { createAppLogger } from '@workspace/logger';
@@ -25,8 +25,9 @@ const logger = createAppLogger('api');
 const openAPIHandler = new OpenAPIHandler(apiRouter, {
   interceptors: [
     onError((error) => {
-      logger.error({ err: error }, 'oRPC error');
-      Sentry.captureException(error);
+      if (!isDefinedError(error)) {
+        Sentry.captureException(error);
+      }
     }),
   ],
 });
@@ -268,15 +269,17 @@ app.notFound((c) => {
 app.onError((err, c) => {
   logger.error({ err, path: c.req.path }, 'Internal server error');
 
-  // Capture error in Sentry with request context
-  Sentry.captureException(err, {
-    contexts: {
-      request: {
-        path: c.req.path,
-        method: c.req.method,
+  // Capture application level error in Sentry with request context
+  if (!isDefinedError(err)) {
+    Sentry.captureException(err, {
+      contexts: {
+        request: {
+          path: c.req.path,
+          method: c.req.method,
+        },
       },
-    },
-  });
+    });
+  }
 
   return c.json(
     {

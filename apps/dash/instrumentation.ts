@@ -4,10 +4,12 @@
  * Learn more: https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
  */
 
+import * as Sentry from '@sentry/nextjs';
+import { createBeforeSendFilter, IGNORED_ERRORS_SERVER } from '@workspace/sentry';
+
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     // Server-side Sentry initialization
-    const Sentry = await import('@sentry/nextjs');
     const { env } = await import('./src/lib/env');
 
     Sentry.init({
@@ -19,28 +21,15 @@ export async function register() {
       tracesSampleRate: env.sentry.tracesSampleRate,
 
       // Filter sensitive data
-      beforeSend(event) {
-        // Remove sensitive headers
-        if (event.request?.headers) {
-          const sensitiveHeaders = ['authorization', 'cookie'];
-          for (const header of sensitiveHeaders) {
-            if (event.request.headers[header]) {
-              event.request.headers[header] = '[Filtered]';
-            }
-          }
-        }
-
-        return event;
-      },
+      beforeSend: createBeforeSendFilter(),
 
       // Ignore expected errors
-      ignoreErrors: ['UNAUTHORIZED', 'Unauthorized'],
+      ignoreErrors: [...IGNORED_ERRORS_SERVER],
     });
   }
 
   if (process.env.NEXT_RUNTIME === 'edge') {
     // Edge runtime Sentry initialization
-    const Sentry = await import('@sentry/nextjs');
     const { env } = await import('./src/lib/env');
 
     Sentry.init({
@@ -52,19 +41,13 @@ export async function register() {
       tracesSampleRate: env.sentry.tracesSampleRate,
 
       // Filter sensitive data
-      beforeSend(event) {
-        // Remove sensitive headers
-        if (event.request?.headers) {
-          const sensitiveHeaders = ['authorization', 'cookie'];
-          for (const header of sensitiveHeaders) {
-            if (event.request.headers[header]) {
-              event.request.headers[header] = '[Filtered]';
-            }
-          }
-        }
-
-        return event;
-      },
+      beforeSend: createBeforeSendFilter(),
     });
   }
 }
+
+/**
+ * Capture errors from nested React Server Components
+ * @see https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#errors-from-nested-react-server-components
+ */
+export const onRequestError = Sentry.captureRequestError;

@@ -1,6 +1,7 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
+import { buildErrorTags, type ReactErrorContext } from '@workspace/sentry';
 import { toast } from '@workspace/ui/components/sonner';
 import { useEffect } from 'react';
 
@@ -18,14 +19,11 @@ export default function AppError({
     logger.error({ err: error, digest: error.digest }, 'App error boundary caught error');
 
     // Capture error in Sentry
+    const reactCtx: ReactErrorContext = { digest: error.digest };
     Sentry.captureException(error, {
-      tags: {
-        error_boundary: 'app',
-      },
+      tags: buildErrorTags({ errorBoundary: 'app' }),
       contexts: {
-        react: {
-          digest: error.digest,
-        },
+        react: reactCtx,
       },
     });
 

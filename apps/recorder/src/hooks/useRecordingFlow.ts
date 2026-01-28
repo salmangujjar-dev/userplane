@@ -5,9 +5,16 @@
 
 import * as Sentry from '@sentry/astro';
 import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
+import {
+  buildErrorTags,
+  createFlowBreadcrumb,
+  ErrorSources,
+  ErrorTypes,
+  type RecordingContext,
+} from '@workspace/sentry';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { createClientError, createClientErrorWithMessage } from '@/lib/client-errors';
+import { createClientError, createClientErrorWithMessage } from '@/sentry/client-errors';
 import {
   isScreenRecordingSupported,
   MediaCapture,
@@ -111,27 +118,22 @@ export function useRecordingFlow(
     (newState: FlowState, context?: Record<string, unknown>) => {
       const previousState = flowState;
 
-      Sentry.addBreadcrumb({
-        category: 'recording_flow',
-        message: `State transition: ${previousState} → ${newState}`,
-        level: newState === 'error' ? 'warning' : 'info',
-        data: {
+      Sentry.addBreadcrumb(
+        createFlowBreadcrumb({
           previous_state: previousState,
           new_state: newState,
-          timestamp: Date.now(),
           session_id: sessionInfo?.sessionId,
           ...context,
-        },
-      });
+        })
+      );
 
       // Update recording context in Sentry
       if (sessionInfo?.sessionId) {
-        Sentry.setContext('recording', {
+        const recordingCtx: RecordingContext = {
           session_id: sessionInfo.sessionId,
-          workspace_id: sessionInfo.workspaceId,
-          link_id: sessionInfo.linkId,
-          stage: newState,
-        });
+          stage: newState as RecordingContext['stage'],
+        };
+        Sentry.setContext('recording', recordingCtx);
       }
 
       setFlowState(newState);
@@ -412,8 +414,10 @@ export function useRecordingFlow(
       Sentry.captureException(err, {
         level: 'error',
         tags: {
-          error_type: 'recording_start_failed',
-          error_source: 'recording_flow',
+          ...buildErrorTags({
+            errorType: ErrorTypes.RECORDING_START_FAILED,
+            errorSource: ErrorSources.RECORDING_FLOW,
+          }),
           recording_mode: mode,
         },
       });
@@ -521,10 +525,10 @@ export function useRecordingFlow(
       // Capture recording stop failures in Sentry
       Sentry.captureException(err, {
         level: 'error',
-        tags: {
-          error_type: 'recording_stop_failed',
-          error_source: 'recording_flow',
-        },
+        tags: buildErrorTags({
+          errorType: ErrorTypes.RECORDING_STOP_FAILED,
+          errorSource: ErrorSources.RECORDING_FLOW,
+        }),
       });
 
       // Clean up blob URL if it was created but we're erroring out

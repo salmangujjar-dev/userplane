@@ -21,6 +21,7 @@
     "@workspace/contract": "workspace:*",
     "@workspace/logger": "workspace:*",
     "@workspace/meta": "workspace:*",
+    "@workspace/sentry": "workspace:*",
     "@workspace/payments": "workspace:*",
     "@workspace/pricing": "workspace:*",
     "@workspace/ui": "workspace:*",

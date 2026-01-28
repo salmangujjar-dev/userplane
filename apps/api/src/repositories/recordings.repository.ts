@@ -15,6 +15,7 @@ import {
   workspaceMembers,
   workspaces,
 } from '@workspace/db';
+import { createDbBreadcrumb } from '@workspace/sentry';
 
 import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
 import {
@@ -293,16 +294,14 @@ export class RecordingRepository {
     recordingId: string,
     statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
   ) {
-    Sentry.addBreadcrumb({
-      category: 'db.query',
-      message: 'Query recording by ID with status group',
-      level: 'info',
-      data: {
+    Sentry.addBreadcrumb(
+      createDbBreadcrumb({
+        message: 'Query recording by ID with status group',
+        operation: 'select',
         recording_id: recordingId,
         status_group: statusGroup,
-        operation: 'select',
-      },
-    });
+      })
+    );
 
     const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
 
@@ -325,12 +324,15 @@ export class RecordingRepository {
       .limit(1);
 
     if (!result) {
-      Sentry.addBreadcrumb({
-        category: 'db.query',
-        message: 'Recording not found',
-        level: 'warning',
-        data: { recording_id: recordingId, status_group: statusGroup },
-      });
+      Sentry.addBreadcrumb(
+        createDbBreadcrumb({
+          message: 'Recording not found',
+          level: 'warning',
+          operation: 'select',
+          recording_id: recordingId,
+          status_group: statusGroup,
+        })
+      );
     }
 
     return result?.recordings || null;
@@ -593,17 +595,15 @@ export class RecordingRepository {
    * until they become available
    */
   async create(data: CreateRecordingInput, options?: { tx?: Transaction }) {
-    Sentry.addBreadcrumb({
-      category: 'db.query',
-      message: 'Create new recording',
-      level: 'info',
-      data: {
+    Sentry.addBreadcrumb(
+      createDbBreadcrumb({
+        message: 'Create new recording',
+        operation: 'insert',
         recording_id: data.recordingId,
         workspace_id: data.workspaceId,
         project_id: data.projectId,
-        operation: 'insert',
-      },
-    });
+      })
+    );
 
     const dbClient = options?.tx || this.db;
 
@@ -637,16 +637,14 @@ export class RecordingRepository {
    * Sets isDeleted to false so recording becomes visible to users
    */
   async markAsAvailable(recordingId: string, options?: { tx?: Transaction }) {
-    Sentry.addBreadcrumb({
-      category: 'db.query',
-      message: 'Mark recording as available',
-      level: 'info',
-      data: {
-        recording_id: recordingId,
+    Sentry.addBreadcrumb(
+      createDbBreadcrumb({
+        message: 'Mark recording as available',
         operation: 'update',
+        recording_id: recordingId,
         new_status: 'available',
-      },
-    });
+      })
+    );
 
     const dbClient = options?.tx || this.db;
 
@@ -790,16 +788,14 @@ export class RecordingRepository {
    * Sets isDeleted to true to mark recording as cleaned up
    */
   async markAsPurged(recordingId: string, options?: { tx?: Transaction }) {
-    Sentry.addBreadcrumb({
-      category: 'db.query',
-      message: 'Mark recording as purged',
-      level: 'info',
-      data: {
-        recording_id: recordingId,
+    Sentry.addBreadcrumb(
+      createDbBreadcrumb({
+        message: 'Mark recording as purged',
         operation: 'update',
+        recording_id: recordingId,
         new_status: 'purged',
-      },
-    });
+      })
+    );
 
     const dbClient = options?.tx || this.db;
 
@@ -814,12 +810,14 @@ export class RecordingRepository {
       .returning();
 
     if (!updated) {
-      Sentry.addBreadcrumb({
-        category: 'db.query',
-        message: 'Failed to mark recording as purged - recording not found',
-        level: 'warning',
-        data: { recording_id: recordingId },
-      });
+      Sentry.addBreadcrumb(
+        createDbBreadcrumb({
+          message: 'Failed to mark recording as purged - recording not found',
+          level: 'warning',
+          operation: 'update',
+          recording_id: recordingId,
+        })
+      );
     }
 
     return updated || null;

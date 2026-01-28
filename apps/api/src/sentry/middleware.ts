@@ -8,10 +8,15 @@
  */
 
 import * as Sentry from '@sentry/bun';
+import {
+  buildWorkspaceTags,
+  TagNames,
+  type WorkspaceContext as SentryWorkspaceContext,
+} from '@workspace/sentry';
 
-import type { AuthContext } from './auth.orpc';
-import { base } from './auth.orpc';
-import type { WorkspaceContext } from './workspace.orpc';
+import type { AuthContext } from '@/api/middleware/auth.orpc';
+import { base } from '@/api/middleware/auth.orpc';
+import type { WorkspaceContext } from '@/api/middleware/workspace.orpc';
 
 /**
  * Enriches Sentry events with user context from authenticated requests
@@ -28,7 +33,7 @@ export const enrichSentryUserContext = base
     });
 
     // Add user metadata as tags for easier filtering
-    Sentry.setTag('user_id', context.user.id);
+    Sentry.setTag(TagNames.USER_ID, context.user.id);
 
     try {
       return await next({ context });
@@ -46,15 +51,19 @@ export const enrichSentryWorkspaceContext = base
   .$context<AuthContext & WorkspaceContext>()
   .middleware(async ({ context, next }) => {
     // Set workspace context for Sentry
-    Sentry.setContext('workspace', {
+    const workspaceCtx: SentryWorkspaceContext = {
       workspace_id: context.workspaceId,
       workspace_role: context.workspaceRole,
       workspace_member_id: context.workspaceMemberId,
-    });
+    };
+    Sentry.setContext('workspace', workspaceCtx);
 
     // Add workspace tags for easier filtering
-    Sentry.setTag('workspace_id', context.workspaceId);
-    Sentry.setTag('workspace_role', context.workspaceRole);
+    const tags = buildWorkspaceTags({
+      workspaceId: context.workspaceId,
+      workspaceRole: context.workspaceRole,
+    });
+    Sentry.setTags(tags);
 
     try {
       return await next({ context });
@@ -79,16 +88,20 @@ export const enrichSentryFullContext = base
     });
 
     // Set workspace context
-    Sentry.setContext('workspace', {
+    const workspaceCtx: SentryWorkspaceContext = {
       workspace_id: context.workspaceId,
       workspace_role: context.workspaceRole,
       workspace_member_id: context.workspaceMemberId,
-    });
+    };
+    Sentry.setContext('workspace', workspaceCtx);
 
     // Add tags for easier filtering
-    Sentry.setTag('user_id', context.user.id);
-    Sentry.setTag('workspace_id', context.workspaceId);
-    Sentry.setTag('workspace_role', context.workspaceRole);
+    Sentry.setTag(TagNames.USER_ID, context.user.id);
+    const tags = buildWorkspaceTags({
+      workspaceId: context.workspaceId,
+      workspaceRole: context.workspaceRole,
+    });
+    Sentry.setTags(tags);
 
     try {
       return await next({ context });

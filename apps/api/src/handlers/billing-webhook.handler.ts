@@ -18,6 +18,7 @@
 import * as Sentry from '@sentry/bun';
 import type { WebhookPayload } from '@workspace/payments/types';
 import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
+import { buildWebhookTags, type WebhookContext } from '@workspace/sentry';
 
 import type { DisputeProcessorService } from '@/api/services/dispute-processor.service';
 import type { RefundProcessorService } from '@/api/services/refund-processor.service';
@@ -45,11 +46,12 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
     const webhookHeaders = determineWebhookHeaders(webhookPayload, headers);
 
     // Set webhook context for Sentry
-    Sentry.setContext('webhook', {
+    const webhookCtx: WebhookContext = {
       webhookId: webhookHeaders.webhookId,
       eventType,
       timestamp: webhookHeaders.webhookTimestamp,
-    });
+    };
+    Sentry.setContext('webhook', webhookCtx);
 
     // Route subscription events to webhook processor
     if (isSubscriptionEvent(eventType)) {
@@ -86,10 +88,10 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
       } catch (error) {
         console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
         Sentry.captureException(error, {
-          tags: {
-            webhook_type: 'subscription',
-            event_type: eventType,
-          },
+          tags: buildWebhookTags({
+            webhookType: 'subscription',
+            eventType,
+          }),
         });
         throw error;
       }
@@ -131,10 +133,10 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
       } catch (error) {
         console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
         Sentry.captureException(error, {
-          tags: {
-            webhook_type: 'dispute',
-            event_type: eventType,
-          },
+          tags: buildWebhookTags({
+            webhookType: 'dispute',
+            eventType,
+          }),
         });
         throw error;
       }
@@ -176,10 +178,10 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
       } catch (error) {
         console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
         Sentry.captureException(error, {
-          tags: {
-            webhook_type: 'refund',
-            event_type: eventType,
-          },
+          tags: buildWebhookTags({
+            webhookType: 'refund',
+            eventType,
+          }),
         });
         throw error;
       }

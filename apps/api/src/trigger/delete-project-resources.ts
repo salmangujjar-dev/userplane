@@ -1,15 +1,18 @@
+// Initialize Sentry for Trigger.dev workers - must be first import
+import './init';
+
 import { logger, task } from '@trigger.dev/sdk/v3';
 
 import { db } from '@/api/clients/db';
 import { chunkArray } from '@/api/lib/batch';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { withSentryTrigger } from '@/api/sentry';
 import { getPurgeDelay } from '@/api/trigger/delay-calculator';
 
 import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { buildRecordingDeletionKey } from './idempotency';
-import { withSentryTrigger } from './instrument';
 
 interface DeleteProjectResourcesPayload {
   projectId: string;

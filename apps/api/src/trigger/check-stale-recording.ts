@@ -13,15 +13,18 @@
  * after the presigned URL expires, preventing orphaned pending recordings.
  */
 
+// Initialize Sentry for Trigger.dev workers - must be first import
+import './init';
+
 import { logger, task } from '@trigger.dev/sdk/v3';
 
 import { db } from '@/api/clients/db';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { withSentryTrigger } from '@/api/sentry';
 
 import { MAX_DURATIONS, TASK_IDS } from './constants';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { buildRecordingDeletionKey } from './idempotency';
-import { withSentryTrigger } from './instrument';
 
 export interface CheckStaleRecordingPayload {
   recordingId: string;

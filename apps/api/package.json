@@ -13,6 +13,7 @@
     "@workspace/email": "workspace:*",
     "@workspace/logger": "workspace:*",
     "@workspace/meta": "workspace:*",
+    "@workspace/sentry": "workspace:*",
     "@workspace/payments": "workspace:*",
     "@workspace/pricing": "workspace:*",
     "@workspace/shared": "workspace:*",
@@ -29,6 +30,8 @@
   },
   "devDependencies": {
     "@orpc/zod": "^1.13.0",
+    "@sentry/esbuild-plugin": "^3.5.0",
+    "@trigger.dev/build": "^4.3.1",
     "@types/bun": "latest",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/react": "^19.2.7",

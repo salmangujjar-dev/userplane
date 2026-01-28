@@ -1,6 +1,12 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
+import {
+  buildErrorTags,
+  buildWorkspaceTags,
+  type ReactErrorContext,
+  type WorkspaceContext,
+} from '@workspace/sentry';
 import { toast } from '@workspace/ui/components/sonner';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -23,18 +29,16 @@ export default function WorkspaceError({
     logger.error({ err: error, digest: error.digest }, 'Workspace error boundary caught error');
 
     // Capture error in Sentry with workspace context
+    const reactCtx: ReactErrorContext = { digest: error.digest };
+    const workspaceCtx: WorkspaceContext = { workspace_id: workspaceId || '' };
     Sentry.captureException(error, {
       tags: {
-        error_boundary: 'workspace',
-        workspace_id: workspaceId,
+        ...buildErrorTags({ errorBoundary: 'workspace' }),
+        ...buildWorkspaceTags({ workspaceId }),
       },
       contexts: {
-        react: {
-          digest: error.digest,
-        },
-        workspace: {
-          workspaceId,
-        },
+        react: reactCtx,
+        workspace: workspaceCtx,
       },
     });
 
