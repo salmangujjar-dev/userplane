@@ -3,12 +3,15 @@
  * Handles session initialization and file uploads using the userplane session API
  */
 
+import * as Sentry from '@sentry/astro';
+
 import { getRecorderClient } from '@/client/api';
 import {
   DEFAULT_MAX_RECORDING_DURATION_MS,
   THUMBNAIL_UPLOAD_CONFIG,
   VIDEO_UPLOAD_CONFIG,
 } from '@/constants';
+import { createRecordingSpan, setRecordingContext } from '@/lib/sentry';
 import { handleServerResult, type ServerResult } from '@/lib/server-errors';
 import type { RecordingPreferences, SessionTokenPayload } from '@/types/session-preferences';
 import { toRecordingPreferences } from '@/types/session-preferences';
@@ -74,95 +77,158 @@ export class RecordingSession {
    * Initialize session from link token
    */
   async initialize(linkToken: string): Promise<ServerResult<SessionData>> {
-    console.log('[Session] Initializing session');
-
-    const [error, response] = await this.client.session.init({
-      query: {
-        'userplane-token': linkToken,
+    return Sentry.startSpan(
+      {
+        name: 'api.session.init',
+        op: 'http.client',
+        attributes: {
+          'http.method': 'POST',
+          'http.url': '/api/v1/session',
+        },
       },
-    });
+      async (span) => {
+        console.log('[Session] Initializing session');
 
-    const result = handleServerResult(error, response?.data);
+        const startTime = Date.now();
+        const [error, response] = await this.client.session.init({
+          query: {
+            'userplane-token': linkToken,
+          },
+        });
+        const responseTime = Date.now() - startTime;
 
-    if (!result.ok) {
-      console.log('[Session] Initialize failed:', result.error);
-      return result;
-    }
+        // Set span attributes for detailed tracking
+        span.setStatus({ code: error ? 1 : 0 });
+        span.setAttribute('http.response_time_ms', responseTime);
+        span.setAttribute('has_error', !!error);
 
-    this.sessionToken = result.data.sessionToken;
+        const result = handleServerResult(error, response?.data);
 
-    if (!this.sessionToken) {
-      return {
-        ok: false,
-        error: {
-          title: 'Session error',
-          message: 'No session token returned from API',
-          primaryAction: { label: 'Start over', action: 'start-over' },
-        },
-      };
-    }
+        if (!result.ok) {
+          console.log('[Session] Initialize failed:', result.error);
+          return result;
+        }
 
-    let payload: SessionTokenPayload;
-    try {
-      payload = decodeJwtPayload<SessionTokenPayload>(this.sessionToken);
-    } catch {
-      return {
-        ok: false,
-        error: {
-          title: 'Invalid session',
-          message: 'Could not decode session token',
-          primaryAction: { label: 'Start over', action: 'start-over' },
-        },
-      };
-    }
+        this.sessionToken = result.data.sessionToken;
 
-    console.log('[Session] Session token payload:', payload);
+        if (!this.sessionToken) {
+          return {
+            ok: false,
+            error: {
+              title: 'Session error',
+              message: 'No session token returned from API',
+              primaryAction: { label: 'Start over', action: 'start-over' },
+            },
+          };
+        }
 
-    // Extract decoded properties from session token
-    this.workspaceId = payload.wid || null;
-    this.linkId = payload.lid || null;
-    this.sessionId = payload.sid;
+        let payload: SessionTokenPayload;
+        try {
+          payload = decodeJwtPayload<SessionTokenPayload>(this.sessionToken);
+        } catch {
+          return {
+            ok: false,
+            error: {
+              title: 'Invalid session',
+              message: 'Could not decode session token',
+              primaryAction: { label: 'Start over', action: 'start-over' },
+            },
+          };
+        }
 
-    if (!payload.prefs) {
-      return {
-        ok: false,
-        error: {
-          title: 'Session error',
-          message: 'Session token missing preferences',
-          primaryAction: { label: 'Start over', action: 'start-over' },
-        },
-      };
-    }
+        console.log('[Session] Session token payload:', payload);
 
-    console.log('[Session] Raw preferences from token:', payload.prefs);
+        // Extract decoded properties from session token
+        this.workspaceId = payload.wid || null;
+        this.linkId = payload.lid || null;
+        this.sessionId = payload.sid;
 
-    this.preferences = toRecordingPreferences(payload.prefs);
-    this.maxRecordingDurationMs =
-      this.preferences?.maxDurationMs ?? DEFAULT_MAX_RECORDING_DURATION_MS;
-    this.requesterName = this.preferences?.requestedBy ?? null;
-    this.maxRecordingSize = null; // Not currently used
+        if (!payload.prefs) {
+          return {
+            ok: false,
+            error: {
+              title: 'Session error',
+              message: 'Session token missing preferences',
+              primaryAction: { label: 'Start over', action: 'start-over' },
+            },
+          };
+        }
 
-    console.log('[Session] Initialized successfully');
-    console.log('[Session] Workspace ID:', this.workspaceId);
-    console.log('[Session] Link ID:', this.linkId);
-    console.log('[Session] Session ID:', this.sessionId);
-    console.log('[Session] Preferences:', this.preferences);
-    console.log('[Session] Max recording duration:', `${this.maxRecordingDurationMs}ms`);
-    console.log(
-      '[Session] Max recording size:',
-      this.maxRecordingSize ? `${this.maxRecordingSize} bytes` : '(unlimited)'
+        console.log('[Session] Raw preferences from token:', payload.prefs);
+
+        this.preferences = toRecordingPreferences(payload.prefs);
+        this.maxRecordingDurationMs =
+          this.preferences?.maxDurationMs ?? DEFAULT_MAX_RECORDING_DURATION_MS;
+        this.requesterName = this.preferences?.requestedBy ?? null;
+        this.maxRecordingSize = null; // Not currently used
+
+        console.log('[Session] Initialized successfully');
+        console.log('[Session] Workspace ID:', this.workspaceId);
+        console.log('[Session] Link ID:', this.linkId);
+        console.log('[Session] Session ID:', this.sessionId);
+        console.log('[Session] Preferences:', this.preferences);
+        console.log('[Session] Max recording duration:', `${this.maxRecordingDurationMs}ms`);
+        console.log(
+          '[Session] Max recording size:',
+          this.maxRecordingSize ? `${this.maxRecordingSize} bytes` : '(unlimited)'
+        );
+
+        // Set recording context in Sentry
+        setRecordingContext({
+          sessionId: this.sessionId,
+          stage: 'initialization',
+        });
+
+        // Set user context for error correlation
+        Sentry.setUser({
+          id: this.sessionId || 'unknown',
+          workspace_id: this.workspaceId || undefined,
+          link_id: this.linkId || undefined,
+        });
+
+        // Set recording preferences context
+        Sentry.setContext('recording_preferences', {
+          maxDurationMs: this.maxRecordingDurationMs,
+          maxSizeBytes: this.maxRecordingSize,
+          requestedBy: this.requesterName,
+          preferences: this.preferences,
+        });
+
+        // Capture and set browser capabilities context
+        const systemMetadata = await captureSystemMetadata();
+        Sentry.setContext('browser_capabilities', {
+          browser: systemMetadata.browser,
+          os: systemMetadata.os,
+          screen_resolution: `${systemMetadata.screenSize.width}x${systemMetadata.screenSize.height}`,
+          window_size: `${systemMetadata.windowSize.width}x${systemMetadata.windowSize.height}`,
+          language: systemMetadata.language,
+          timezone: systemMetadata.timezone,
+        });
+
+        // Add breadcrumb with system info
+        Sentry.addBreadcrumb({
+          category: 'system',
+          message: 'System metadata captured',
+          level: 'info',
+          data: {
+            browser: systemMetadata.browser,
+            os: systemMetadata.os,
+            screen_resolution: `${systemMetadata.screenSize.width}x${systemMetadata.screenSize.height}`,
+          },
+        });
+
+        return {
+          ok: true,
+          data: {
+            sessionId: this.sessionId,
+            preferences: this.preferences,
+            maxRecordingDurationMs: this.maxRecordingDurationMs,
+            maxRecordingSize: this.maxRecordingSize,
+            requesterName: this.requesterName,
+          },
+        };
+      }
     );
-
-    return {
-      ok: true,
-      data: {
-        sessionId: this.sessionId,
-        preferences: this.preferences,
-        maxRecordingDurationMs: this.maxRecordingDurationMs,
-        maxRecordingSize: this.maxRecordingSize,
-        requesterName: this.requesterName,
-      },
-    };
   }
 
   /**
@@ -180,110 +246,142 @@ export class RecordingSession {
     recordingDurationMs: number | null,
     customMetadata?: Record<string, unknown> | null
   ): Promise<ServerResult<UploadState>> {
-    console.log('[Upload:Init] Initializing upload');
-    console.log('[Upload:Init] Video file:', {
-      name: videoFile.name,
-      size: videoFile.size,
-      type: videoFile.type,
-    });
-    console.log(
-      '[Upload:Init] Recording duration:',
-      recordingDurationMs ? `${recordingDurationMs}ms` : '0ms (default)'
-    );
-    console.log('[Upload:Init] Thumbnail:', thumbnailBlob ? `${thumbnailBlob.size} bytes` : 'none');
-
-    if (!this.sessionToken) {
-      return {
-        ok: false,
-        error: {
-          title: 'Session expired',
-          message: 'No session token available. Please start over.',
-          primaryAction: { label: 'Start over', action: 'start-over' },
-        },
-      };
-    }
-
-    const systemMetadata = captureSystemMetadata();
-    console.log('[Upload:Init] System metadata:', systemMetadata);
-
-    const files: Array<{
-      type: 'video' | 'thumbnail' | 'console_log' | 'network_log' | 'action';
-      name: string;
-      size: number;
-      mime_type: string;
-    }> = [
-      {
-        type: 'video',
+    return createRecordingSpan('session.initializeUpload', 'recording.upload', async () => {
+      console.log('[Upload:Init] Initializing upload');
+      console.log('[Upload:Init] Video file:', {
         name: videoFile.name,
         size: videoFile.size,
-        mime_type: videoFile.type,
-      },
-    ];
-
-    if (thumbnailBlob && thumbnailBlob.size > 0) {
-      files.push({
-        type: 'thumbnail',
-        name: 'thumbnail.webp',
-        size: thumbnailBlob.size,
-        mime_type: 'image/webp',
+        type: videoFile.type,
       });
-    }
+      console.log(
+        '[Upload:Init] Recording duration:',
+        recordingDurationMs ? `${recordingDurationMs}ms` : '0ms (default)'
+      );
+      console.log(
+        '[Upload:Init] Thumbnail:',
+        thumbnailBlob ? `${thumbnailBlob.size} bytes` : 'none'
+      );
 
-    console.log(
-      '[Upload:Init] Requesting presigned URLs with session token:',
-      this.sessionToken?.substring(0, 20) + '...'
-    );
+      if (!this.sessionToken) {
+        return {
+          ok: false,
+          error: {
+            title: 'Session expired',
+            message: 'No session token available. Please start over.',
+            primaryAction: { label: 'Start over', action: 'start-over' },
+          },
+        };
+      }
 
-    const uploadInitPayload = {
-      body: {
-        recording_duration: recordingDurationMs || 0,
-        files,
-        metadata: {
-          systemMetadata: prettySystemMetadata(systemMetadata),
-          customMetadata: customMetadata ?? {},
+      const systemMetadata = captureSystemMetadata();
+      console.log('[Upload:Init] System metadata:', systemMetadata);
+
+      // Set system metadata context for error tracking
+      Sentry.setContext('system', systemMetadata as unknown as Record<string, unknown>);
+
+      const files: Array<{
+        type: 'video' | 'thumbnail' | 'console_log' | 'network_log' | 'action';
+        name: string;
+        size: number;
+        mime_type: string;
+      }> = [
+        {
+          type: 'video',
+          name: videoFile.name,
+          size: videoFile.size,
+          mime_type: videoFile.type,
         },
-      },
-    };
-    console.log('[Upload:Init] Upload init payload:', uploadInitPayload);
-    if (customMetadata) {
-      console.log('[Upload:Init] Custom metadata attached:', customMetadata);
-    }
+      ];
 
-    const [error, response] = await this.client.session.upload.init(uploadInitPayload, {
-      context: {
-        headers: {
-          'x-userplane-session-token': this.sessionToken,
+      if (thumbnailBlob && thumbnailBlob.size > 0) {
+        files.push({
+          type: 'thumbnail',
+          name: 'thumbnail.webp',
+          size: thumbnailBlob.size,
+          mime_type: 'image/webp',
+        });
+      }
+
+      console.log(
+        '[Upload:Init] Requesting presigned URLs with session token:',
+        this.sessionToken?.substring(0, 20) + '...'
+      );
+
+      const uploadInitPayload = {
+        body: {
+          recording_duration: recordingDurationMs || 0,
+          files,
+          metadata: {
+            systemMetadata: prettySystemMetadata(systemMetadata),
+            customMetadata: customMetadata ?? {},
+          },
         },
-      },
-    });
+      };
+      console.log('[Upload:Init] Upload init payload:', uploadInitPayload);
+      if (customMetadata) {
+        console.log('[Upload:Init] Custom metadata attached:', customMetadata);
+      }
 
-    const result = handleServerResult(error, response?.data);
+      const startTime = Date.now();
+      const [error, response] = await this.client.session.upload.init(uploadInitPayload, {
+        context: {
+          headers: {
+            'x-userplane-session-token': this.sessionToken,
+          },
+        },
+      });
+      const responseTime = Date.now() - startTime;
 
-    if (!result.ok) {
-      console.log('[Upload:Init] Failed:', result.error);
-      return result;
-    }
+      // Track API call performance
+      Sentry.addBreadcrumb({
+        category: 'api',
+        message: 'Upload initialization API call',
+        level: error ? 'error' : 'info',
+        data: {
+          endpoint: '/session/upload/init',
+          method: 'POST',
+          has_error: !!error,
+          responseTime,
+          videoSize: videoFile.size,
+          thumbnailSize: thumbnailBlob?.size || 0,
+        },
+      });
 
-    console.log('[Upload:Init] Received upload initialization response');
+      const result = handleServerResult(error, response?.data);
 
-    this.recordingId = result.data.recordingId;
-    const uploadToken = result.data.uploadToken;
-    const presignedUrls = result.data.presignedUrls;
+      if (!result.ok) {
+        console.log('[Upload:Init] Failed:', result.error);
+        return result;
+      }
 
-    console.log('[Upload:Init] Recording ID:', this.recordingId);
-    console.log('[Upload:Init] Upload token received');
-    console.log('[Upload:Init] Presigned URLs count:', presignedUrls.length);
+      console.log('[Upload:Init] Received upload initialization response');
 
-    return {
-      ok: true,
-      data: {
+      this.recordingId = result.data.recordingId;
+      const uploadToken = result.data.uploadToken;
+      const presignedUrls = result.data.presignedUrls;
+
+      console.log('[Upload:Init] Recording ID:', this.recordingId);
+      console.log('[Upload:Init] Upload token received');
+      console.log('[Upload:Init] Presigned URLs count:', presignedUrls.length);
+
+      // Update recording context with recordingId
+      setRecordingContext({
+        sessionId: this.sessionId || undefined,
         recordingId: this.recordingId,
-        uploadToken,
-        presignedUrls,
-        videoFile,
-        thumbnailBlob,
-      },
-    };
+        stage: 'upload',
+      });
+
+      return {
+        ok: true,
+        data: {
+          recordingId: this.recordingId,
+          uploadToken,
+          presignedUrls,
+          videoFile,
+          thumbnailBlob,
+        },
+      };
+    });
   }
 
   /**
@@ -294,109 +392,169 @@ export class RecordingSession {
     uploadState: UploadState,
     onProgress?: (progress: UploadProgress) => void
   ): Promise<ServerResult<void>> {
-    console.log('[Upload:Storage] Starting file uploads to object storage');
-    console.log('[Upload:Storage] Recording ID:', uploadState.recordingId);
+    return createRecordingSpan('session.uploadToStorage', 'recording.storage', async () => {
+      console.log('[Upload:Storage] Starting file uploads to object storage');
+      console.log('[Upload:Storage] Recording ID:', uploadState.recordingId);
 
-    const { videoFile, thumbnailBlob, presignedUrls } = uploadState;
+      const { videoFile, thumbnailBlob, presignedUrls } = uploadState;
 
-    const videoUrl = presignedUrls.find((u) => u.type === 'video');
-    if (!videoUrl) {
-      return {
-        ok: false,
-        error: {
-          title: 'Upload error',
-          message: 'No video upload URL provided',
-          primaryAction: { label: 'Start over', action: 'start-over' },
-        },
+      const videoUrl = presignedUrls.find((u) => u.type === 'video');
+      if (!videoUrl) {
+        return {
+          ok: false,
+          error: {
+            title: 'Upload error',
+            message: 'No video upload URL provided',
+            primaryAction: { label: 'Start over', action: 'start-over' },
+          },
+        };
+      }
+
+      // Track progress across both files
+      const totalSize = videoFile.size + (thumbnailBlob?.size || 0);
+      let videoUploaded = 0;
+      let thumbnailUploaded = 0;
+
+      const reportProgress = () => {
+        if (onProgress) {
+          const uploadedBytes = videoUploaded + thumbnailUploaded;
+          const percentage = Math.round((uploadedBytes / totalSize) * 100);
+
+          // Add breadcrumbs at upload milestones for monitoring
+          if ([25, 50, 75, 100].includes(percentage)) {
+            Sentry.addBreadcrumb({
+              category: 'upload',
+              message: `Upload progress: ${percentage}%`,
+              level: 'info',
+              data: {
+                uploadedBytes,
+                totalSize,
+                percentage,
+                recordingId: uploadState.recordingId,
+                sessionId: this.sessionId,
+              },
+            });
+          }
+
+          onProgress({
+            partNumber: 1,
+            totalParts: 1,
+            uploadedBytes,
+            totalBytes: totalSize,
+            percentage,
+          });
+        }
       };
-    }
 
-    // Track progress across both files
-    const totalSize = videoFile.size + (thumbnailBlob?.size || 0);
-    let videoUploaded = 0;
-    let thumbnailUploaded = 0;
+      console.log('[Upload:Storage] Uploading video file...');
 
-    const reportProgress = () => {
+      try {
+        // Upload video file with unified configuration
+        await uploadToObjectStore(videoFile, videoUrl.url, {
+          ...VIDEO_UPLOAD_CONFIG,
+          onProgress: (progress) => {
+            videoUploaded = progress.loaded;
+            reportProgress();
+          },
+        });
+      } catch (err) {
+        console.error('[Upload:Storage] Video upload failed:', err);
+
+        // Capture CRITICAL video upload failure in Sentry with detailed context
+        Sentry.captureException(err, {
+          level: 'error',
+          tags: {
+            error_type: 'video_upload_failed',
+            error_source: 'recording_session',
+            recording_id: uploadState.recordingId,
+          },
+          contexts: {
+            upload: {
+              file_type: 'video',
+              file_size: videoFile.size,
+              file_mime_type: videoFile.type,
+              recording_id: uploadState.recordingId,
+              session_id: this.sessionId,
+              total_size: totalSize,
+              progress_before_failure: videoUploaded,
+            },
+          },
+        });
+
+        return {
+          ok: false,
+          error: {
+            title: 'Upload failed',
+            message: 'Failed to upload video. Check your connection and try again.',
+            primaryAction: { label: 'Retry', action: 'retry-upload' },
+            secondaryAction: { label: 'Start over', action: 'start-over' },
+          },
+        };
+      }
+
+      console.log('[Upload:Storage] Video upload complete');
+
+      // Upload thumbnail if available
+      // Thumbnail upload is non-critical: if it fails, we proceed with acknowledgment
+      // to prevent orphaning the already-uploaded video
+      if (thumbnailBlob && thumbnailBlob.size > 0) {
+        const thumbnailUrl = presignedUrls.find((u) => u.type === 'thumbnail');
+        if (thumbnailUrl) {
+          console.log('[Upload:Storage] Uploading thumbnail...');
+          try {
+            const thumbnailFile = new File([thumbnailBlob], 'thumbnail.webp', {
+              type: 'image/webp',
+            });
+            await uploadToObjectStore(thumbnailFile, thumbnailUrl.url, {
+              ...THUMBNAIL_UPLOAD_CONFIG,
+              onProgress: (progress) => {
+                thumbnailUploaded = progress.loaded;
+                reportProgress();
+              },
+            });
+            console.log('[Upload:Storage] Thumbnail upload complete');
+          } catch (err) {
+            console.warn(
+              '[Upload:Storage] Thumbnail upload failed, proceeding without thumbnail:',
+              err
+            );
+
+            // Capture thumbnail upload failures as quality degradation warnings
+            Sentry.captureException(err, {
+              level: 'warning',
+              tags: {
+                error_type: 'thumbnail_upload_failure',
+                error_source: 'recording_session',
+                recording_id: uploadState.recordingId || 'unknown',
+              },
+              contexts: {
+                upload: {
+                  file_type: 'thumbnail',
+                  recording_id: uploadState.recordingId,
+                  session_id: this.sessionId,
+                },
+              },
+            });
+
+            // Don't return error - proceed with acknowledgment anyway
+          }
+        }
+      }
+
+      // Report 100% completion
       if (onProgress) {
-        const uploadedBytes = videoUploaded + thumbnailUploaded;
         onProgress({
           partNumber: 1,
           totalParts: 1,
-          uploadedBytes,
+          uploadedBytes: totalSize,
           totalBytes: totalSize,
-          percentage: Math.round((uploadedBytes / totalSize) * 100),
+          percentage: 100,
         });
       }
-    };
 
-    console.log('[Upload:Storage] Uploading video file...');
-
-    try {
-      // Upload video file with unified configuration
-      await uploadToObjectStore(videoFile, videoUrl.url, {
-        ...VIDEO_UPLOAD_CONFIG,
-        onProgress: (progress) => {
-          videoUploaded = progress.loaded;
-          reportProgress();
-        },
-      });
-    } catch (err) {
-      console.error('[Upload:Storage] Video upload failed:', err);
-      return {
-        ok: false,
-        error: {
-          title: 'Upload failed',
-          message: 'Failed to upload video. Check your connection and try again.',
-          primaryAction: { label: 'Retry', action: 'retry-upload' },
-          secondaryAction: { label: 'Start over', action: 'start-over' },
-        },
-      };
-    }
-
-    console.log('[Upload:Storage] Video upload complete');
-
-    // Upload thumbnail if available
-    // Thumbnail upload is non-critical: if it fails, we proceed with acknowledgment
-    // to prevent orphaning the already-uploaded video
-    if (thumbnailBlob && thumbnailBlob.size > 0) {
-      const thumbnailUrl = presignedUrls.find((u) => u.type === 'thumbnail');
-      if (thumbnailUrl) {
-        console.log('[Upload:Storage] Uploading thumbnail...');
-        try {
-          const thumbnailFile = new File([thumbnailBlob], 'thumbnail.webp', {
-            type: 'image/webp',
-          });
-          await uploadToObjectStore(thumbnailFile, thumbnailUrl.url, {
-            ...THUMBNAIL_UPLOAD_CONFIG,
-            onProgress: (progress) => {
-              thumbnailUploaded = progress.loaded;
-              reportProgress();
-            },
-          });
-          console.log('[Upload:Storage] Thumbnail upload complete');
-        } catch (err) {
-          console.warn(
-            '[Upload:Storage] Thumbnail upload failed, proceeding without thumbnail:',
-            err
-          );
-          // Don't return error - proceed with acknowledgment anyway
-        }
-      }
-    }
-
-    // Report 100% completion
-    if (onProgress) {
-      onProgress({
-        partNumber: 1,
-        totalParts: 1,
-        uploadedBytes: totalSize,
-        totalBytes: totalSize,
-        percentage: 100,
-      });
-    }
-
-    console.log('[Upload:Storage] All files uploaded successfully');
-    return { ok: true, data: undefined };
+      console.log('[Upload:Storage] All files uploaded successfully');
+      return { ok: true, data: undefined };
+    });
   }
 
   /**
@@ -404,33 +562,53 @@ export class RecordingSession {
    * Marks the recording as available
    */
   async acknowledgeUpload(uploadState: UploadState): Promise<ServerResult<void>> {
-    console.log('[Upload:Ack] Acknowledging upload completion');
-    console.log('[Upload:Ack] Recording ID:', uploadState.recordingId);
-
-    const [error, response] = await this.client.session.upload.complete(
+    return Sentry.startSpan(
       {
-        body: {
+        name: 'api.session.upload.complete',
+        op: 'http.client',
+        attributes: {
+          'http.method': 'POST',
+          'http.url': '/api/v1/session/upload/complete',
           recording_id: uploadState.recordingId,
         },
       },
-      {
-        context: {
-          headers: {
-            'x-userplane-upload-token': uploadState.uploadToken,
+      async (span) => {
+        console.log('[Upload:Ack] Acknowledging upload completion');
+        console.log('[Upload:Ack] Recording ID:', uploadState.recordingId);
+
+        const startTime = Date.now();
+        const [error, response] = await this.client.session.upload.complete(
+          {
+            body: {
+              recording_id: uploadState.recordingId,
+            },
           },
-        },
+          {
+            context: {
+              headers: {
+                'x-userplane-upload-token': uploadState.uploadToken,
+              },
+            },
+          }
+        );
+        const responseTime = Date.now() - startTime;
+
+        // Set span attributes for detailed tracking
+        span.setStatus({ code: error ? 1 : 0 });
+        span.setAttribute('http.response_time_ms', responseTime);
+        span.setAttribute('has_error', !!error);
+
+        const result = handleServerResult(error, response?.data);
+
+        if (!result.ok) {
+          console.log('[Upload:Ack] Failed:', result.error);
+          return result;
+        }
+
+        console.log('[Upload:Ack] Upload acknowledged successfully');
+        return { ok: true, data: undefined };
       }
     );
-
-    const result = handleServerResult(error, response?.data);
-
-    if (!result.ok) {
-      console.log('[Upload:Ack] Failed:', result.error);
-      return result;
-    }
-
-    console.log('[Upload:Ack] Upload acknowledged successfully');
-    return { ok: true, data: undefined };
   }
 
   /**

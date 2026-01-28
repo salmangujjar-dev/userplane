@@ -7,6 +7,7 @@
  * required for the API's origin validation.
  */
 
+import * as Sentry from '@sentry/astro';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { VerificationBridgeConnection } from '@/bridge';
@@ -71,6 +72,28 @@ export function useVerificationFlow(
 
   const verificationAttemptedRef = useRef(false);
 
+  // Helper to track state transitions with Sentry breadcrumbs
+  const transitionToState = useCallback(
+    (newState: VerificationFlowState, context?: Record<string, unknown>) => {
+      const previousState = flowState;
+
+      Sentry.addBreadcrumb({
+        category: 'verification_flow',
+        message: `State transition: ${previousState} → ${newState}`,
+        level: newState === 'error' ? 'warning' : 'info',
+        data: {
+          previous_state: previousState,
+          new_state: newState,
+          timestamp: Date.now(),
+          ...context,
+        },
+      });
+
+      setFlowState(newState);
+    },
+    [flowState]
+  );
+
   /**
    * Perform the verification via bridge
    * The parent SDK makes the actual API call so the origin is correct
@@ -90,12 +113,26 @@ export function useVerificationFlow(
 
     if (!bridge) {
       console.error('[useVerificationFlow] No bridge connection available');
+
+      // Capture bridge connection issues - critical for embedded verification
+      const error = new Error('No bridge connection available for verification');
+      Sentry.captureException(error, {
+        level: 'error',
+        tags: {
+          error_type: 'verification_bridge_missing',
+          error_source: 'verification_flow',
+        },
+      });
+
       setError(createVerificationError('VERIFICATION_BRIDGE_NOT_EMBEDDED'));
       setFlowState('error');
       return;
     }
 
-    setFlowState('verifying');
+    transitionToState('verifying', {
+      workspace_ids: workspaceIds,
+      has_bridge: !!bridge,
+    });
     setError(null);
 
     console.log(
@@ -118,7 +155,12 @@ export function useVerificationFlow(
 
     setResult(verificationResult.data as VerificationResult);
     setDomainUrl(verificationResult.data?.domainUrl ?? null);
-    setFlowState('verified');
+    transitionToState('verified', {
+      domain_url: verificationResult.data?.domainUrl,
+      domain_status: verificationResult.data?.domainStatus,
+      workspace_id: verificationResult.data?.workspaceId,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, workspaceIds, bridge]);
 
   /**

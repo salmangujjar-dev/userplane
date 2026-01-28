@@ -3,6 +3,8 @@
  * Generic retry and timeout utilities with exponential backoff
  */
 
+import * as Sentry from '@sentry/astro';
+
 export interface RetryOptions {
   /** Maximum number of retry attempts (default: 3) */
   maxRetries?: number;
@@ -57,6 +59,21 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      // Add breadcrumb for retry attempt
+      if (attempt > 1) {
+        Sentry.addBreadcrumb({
+          category: 'retry',
+          message: `Retry attempt ${attempt} of ${maxRetries}`,
+          level: 'info',
+          data: {
+            attempt,
+            max_retries: maxRetries,
+            elapsed_ms: Date.now() - startTime,
+            backoff_strategy: backoffStrategy,
+          },
+        });
+      }
+
       // Check if we've exceeded the total timeout across all attempts
       if (totalTimeout !== undefined) {
         const elapsed = Date.now() - startTime;
@@ -69,7 +86,23 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
       if (timeout !== undefined) {
         return await withTimeout(fn, { timeout });
       }
-      return await fn();
+
+      const result = await fn();
+
+      // Add breadcrumb for successful retry
+      if (attempt > 1) {
+        Sentry.addBreadcrumb({
+          category: 'retry',
+          message: `Operation succeeded after ${attempt - 1} retries`,
+          level: 'info',
+          data: {
+            attempts: attempt,
+            total_duration_ms: Date.now() - startTime,
+          },
+        });
+      }
+
+      return result;
     } catch (error) {
       lastError = error as Error;
 
@@ -78,8 +111,25 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
         throw lastError;
       }
 
-      // If this was the last attempt, throw
+      // If this was the last attempt, capture and throw
       if (attempt >= maxRetries) {
+        // Capture retry exhaustion in Sentry
+        Sentry.captureException(lastError, {
+          level: 'error',
+          tags: {
+            error_type: 'retry_exhausted',
+            error_source: 'retry_util',
+          },
+          contexts: {
+            retry: {
+              max_retries: maxRetries,
+              attempts_made: attempt,
+              total_duration_ms: Date.now() - startTime,
+              backoff_strategy: backoffStrategy,
+              base_delay_ms: baseDelay,
+            },
+          },
+        });
         throw lastError;
       }
 
@@ -101,6 +151,19 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
           delay = remaining;
         }
       }
+
+      // Add breadcrumb for retry delay
+      Sentry.addBreadcrumb({
+        category: 'retry',
+        message: `Retrying after ${delay}ms delay`,
+        level: 'warning',
+        data: {
+          attempt,
+          delay_ms: delay,
+          error_message: lastError.message,
+          error_type: lastError.name,
+        },
+      });
 
       // Call retry callback if provided
       if (onRetry) {

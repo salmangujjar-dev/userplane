@@ -3,6 +3,8 @@
  * Type-locked config for browser/media errors
  */
 
+import * as Sentry from '@sentry/astro';
+
 import type { RecordingError } from '@/types/errors';
 
 /**
@@ -65,6 +67,35 @@ export class ClientError extends Error {
    */
   static fromBrowserError(error: Error): ClientError {
     const code = browserErrorToCode(error.name);
+
+    // Add breadcrumb for browser errors
+    Sentry.addBreadcrumb({
+      category: 'browser_error',
+      message: `Browser error: ${error.name}`,
+      level: 'error',
+      data: {
+        error_name: error.name,
+        error_code: code,
+        error_message: error.message,
+      },
+    });
+
+    // Capture critical browser errors in Sentry
+    const criticalErrors: ClientErrorCode[] = [
+      'CLIENT_BROWSER_UNSUPPORTED',
+      'CLIENT_MEDIA_CONNECTION_FAILED',
+      'CLIENT_SECURITY_BLOCKED',
+    ];
+
+    if (criticalErrors.includes(code)) {
+      Sentry.captureException(error, {
+        tags: {
+          error_type: 'critical_browser_error',
+          client_error_code: code,
+        },
+      });
+    }
+
     return new ClientError(code, error);
   }
 }

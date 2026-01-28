@@ -4,6 +4,7 @@
  * Type-safe client for interacting with the Userplane API
  */
 
+import * as Sentry from '@sentry/astro';
 import { createClient, createSafeClient } from '@workspace/client';
 
 /**
@@ -22,7 +23,7 @@ export function createRecorderClient() {
         return apiUrl;
       }
 
-      return `${window.location.origin}/api/v2`;
+      return `${window.location.origin}/api/1`;
     },
     headers: ({ context }) => {
       console.log('[API Client] Building headers with context:', context?.headers);
@@ -31,6 +32,27 @@ export function createRecorderClient() {
     credentials: 'include',
     onError: (error) => {
       console.error('[API Client] Error:', error);
+
+      // Capture API errors in Sentry with context
+      Sentry.captureException(error, {
+        level: 'error',
+        tags: {
+          error_type: 'api_client_error',
+          error_source: 'recorder_api_client',
+        },
+        contexts: {
+          api: {
+            // @ts-expect-error - error may have these properties
+            endpoint: error.endpoint || 'unknown',
+            // @ts-expect-error - error may have these properties
+            method: error.method || 'unknown',
+            // @ts-expect-error - error may have these properties
+            status: error.status || 0,
+            // @ts-expect-error - error may have these properties
+            statusText: error.statusText || '',
+          },
+        },
+      });
     },
   });
 
