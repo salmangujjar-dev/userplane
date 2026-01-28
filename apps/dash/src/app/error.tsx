@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { toast } from '@workspace/ui/components/sonner';
 import { useEffect } from 'react';
 
@@ -15,6 +16,19 @@ export default function AppError({
 }) {
   useEffect(() => {
     logger.error({ err: error, digest: error.digest }, 'App error boundary caught error');
+
+    // Capture error in Sentry
+    Sentry.captureException(error, {
+      tags: {
+        error_boundary: 'app',
+      },
+      contexts: {
+        react: {
+          digest: error.digest,
+        },
+      },
+    });
+
     toast.error('Something went wrong', {
       description: error.message || 'An unexpected error occurred',
     });

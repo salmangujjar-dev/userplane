@@ -1,7 +1,9 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@workspace/ui/components/button';
 import Image from 'next/image';
+import { useEffect } from 'react';
 
 export default function GlobalError({
   error,
@@ -10,6 +12,20 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // Capture error in Sentry
+    Sentry.captureException(error, {
+      tags: {
+        error_boundary: 'global',
+      },
+      contexts: {
+        react: {
+          digest: error.digest,
+        },
+      },
+    });
+  }, [error]);
+
   return (
     <html>
       <body>
