@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
-  "globalEnv": ["NODE_ENV"],
+  "globalEnv": ["NODE_ENV", "LOG_LEVEL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -103,7 +103,19 @@
         "RATE_LIMIT_ENABLED",
         "INTERCOM_REDIRECT_URI",
         "INTERCOM_CLIENT_SECRET",
-        "INTERCOM_CLIENT_ID"
+        "INTERCOM_CLIENT_ID",
+        "SENTRY_DSN",
+        "SENTRY_AUTH_TOKEN",
+        "SENTRY_ORG",
+        "SENTRY_PROJECT_API",
+        "SENTRY_PROJECT_DASH",
+        "SENTRY_PROJECT_RECORDER",
+        "SENTRY_RELEASE",
+        "SENTRY_TRACES_SAMPLE_RATE",
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "NEXT_PUBLIC_SENTRY_RELEASE",
+        "PUBLIC_SENTRY_DSN",
+        "PUBLIC_SENTRY_RELEASE"
       ]
     },
     "lint": {
