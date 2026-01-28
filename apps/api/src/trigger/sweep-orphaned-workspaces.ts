@@ -10,6 +10,7 @@ import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
 import { getPurgeDelay } from './delay-calculator';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { buildRecordingDeletionKey, buildWorkspaceDeletionKey } from './idempotency';
+import { withSentryTrigger } from './instrument';
 
 interface CleanupOrphanedWorkspacePayload {
   workspaceId: string;
@@ -41,90 +42,93 @@ interface SweepOrphanedWorkspacesResult {
 export const cleanupOrphanedWorkspace = task({
   id: TASK_IDS.CLEANUP_ORPHANED_WORKSPACE,
   maxDuration: MAX_DURATIONS.WORKSPACE_CLEANUP,
-  run: async (
-    payload: CleanupOrphanedWorkspacePayload
-  ): Promise<CleanupOrphanedWorkspaceResult> => {
-    const { workspaceId } = payload;
+  run: withSentryTrigger(
+    async (payload: CleanupOrphanedWorkspacePayload): Promise<CleanupOrphanedWorkspaceResult> => {
+      const { workspaceId } = payload;
 
-    logger.info('Starting orphan workspace resource cleanup', { workspaceId });
+      logger.info('Starting orphan workspace resource cleanup', { workspaceId });
 
-    const workspaceRepo = new WorkspaceRepository(db);
-    const recordingRepo = new RecordingRepository(db);
+      const workspaceRepo = new WorkspaceRepository(db);
+      const recordingRepo = new RecordingRepository(db);
 
-    // 1. Short-circuit check
-    const isDeleted = await workspaceRepo.isSoftDeleted(workspaceId);
+      // 1. Short-circuit check
+      const isDeleted = await workspaceRepo.isSoftDeleted(workspaceId);
 
-    if (isDeleted === null) {
-      logger.info('Workspace not found, skipping', { workspaceId });
-      return {
-        success: true,
+      if (isDeleted === null) {
+        logger.info('Workspace not found, skipping', { workspaceId });
+        return {
+          success: true,
+          workspaceId,
+          recordingsScheduled: 0,
+          skipped: true,
+          reason: 'not_found',
+        };
+      }
+
+      if (!isDeleted) {
+        logger.info('Workspace not deleted, skipping', { workspaceId });
+        return {
+          success: true,
+          workspaceId,
+          recordingsScheduled: 0,
+          skipped: true,
+          reason: 'not_deleted',
+        };
+      }
+
+      // 2. List recordings to clean up
+      // Pulls orphaned recordings for deletion
+      const recordingsToCleanup = await recordingRepo.findByWorkspaceId(workspaceId, 'ORPHAN');
+
+      logger.info('Found recordings to cleanup', {
         workspaceId,
-        recordingsScheduled: 0,
-        skipped: true,
-        reason: 'not_found',
-      };
-    }
-
-    if (!isDeleted) {
-      logger.info('Workspace not deleted, skipping', { workspaceId });
-      return {
-        success: true,
-        workspaceId,
-        recordingsScheduled: 0,
-        skipped: true,
-        reason: 'not_deleted',
-      };
-    }
-
-    // 2. List recordings to clean up
-    // Pulls orphaned recordings for deletion
-    const recordingsToCleanup = await recordingRepo.findByWorkspaceId(workspaceId, 'ORPHAN');
-
-    logger.info('Found recordings to cleanup', { workspaceId, count: recordingsToCleanup.length });
-
-    // 3. Fan-out (use batchTrigger for multiple recordings)
-    // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
-    if (recordingsToCleanup.length > 0) {
-      const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
-
-      logger.info('Batching recording cleanup triggers', {
-        workspaceId,
-        totalRecordings: recordingsToCleanup.length,
-        batchCount: recordingChunks.length,
-        batchSize: BATCH_LIMITS.MAX_BATCH_SIZE,
+        count: recordingsToCleanup.length,
       });
 
-      for (const [index, chunk] of recordingChunks.entries()) {
-        await deleteRecordingResources.batchTrigger(
-          chunk.map((recording) => ({
-            payload: { recordingId: recording.recordingId },
-            options: {
-              idempotencyKey: buildRecordingDeletionKey(recording.recordingId),
-              delay: getPurgeDelay(),
-            },
-          }))
-        );
+      // 3. Fan-out (use batchTrigger for multiple recordings)
+      // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
+      if (recordingsToCleanup.length > 0) {
+        const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
 
-        logger.info('Triggered recording cleanup batch', {
+        logger.info('Batching recording cleanup triggers', {
           workspaceId,
-          batchIndex: index + 1,
+          totalRecordings: recordingsToCleanup.length,
           batchCount: recordingChunks.length,
-          recordingsInBatch: chunk.length,
+          batchSize: BATCH_LIMITS.MAX_BATCH_SIZE,
+        });
+
+        for (const [index, chunk] of recordingChunks.entries()) {
+          await deleteRecordingResources.batchTrigger(
+            chunk.map((recording) => ({
+              payload: { recordingId: recording.recordingId },
+              options: {
+                idempotencyKey: buildRecordingDeletionKey(recording.recordingId),
+                delay: getPurgeDelay(),
+              },
+            }))
+          );
+
+          logger.info('Triggered recording cleanup batch', {
+            workspaceId,
+            batchIndex: index + 1,
+            batchCount: recordingChunks.length,
+            recordingsInBatch: chunk.length,
+          });
+        }
+
+        logger.info('Scheduled recording cleanup tasks', {
+          workspaceId,
+          recordingsScheduled: recordingsToCleanup.length,
         });
       }
 
-      logger.info('Scheduled recording cleanup tasks', {
+      return {
+        success: true,
         workspaceId,
         recordingsScheduled: recordingsToCleanup.length,
-      });
+      };
     }
-
-    return {
-      success: true,
-      workspaceId,
-      recordingsScheduled: recordingsToCleanup.length,
-    };
-  },
+  ),
 });
 
 /**
@@ -153,7 +157,7 @@ export const sweepOrphanedWorkspaces = schedules.task({
     // Only run in PRODUCTION and STAGING environments
     environments: ['PRODUCTION', 'STAGING'],
   },
-  run: async (payload): Promise<SweepOrphanedWorkspacesResult> => {
+  run: withSentryTrigger(async (payload): Promise<SweepOrphanedWorkspacesResult> => {
     logger.info('Starting sweep for orphaned workspace recordings', {
       timestamp: payload.timestamp,
       lastTimestamp: payload.lastTimestamp,
@@ -230,5 +234,5 @@ export const sweepOrphanedWorkspaces = schedules.task({
     logger.info('Sweep completed', result);
 
     return result;
-  },
+  }),
 });

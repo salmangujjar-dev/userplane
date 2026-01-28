@@ -3,6 +3,7 @@
  * Checks workspace membership and attaches workspace context
  */
 
+import * as Sentry from '@sentry/bun';
 import type { WorkspaceRole } from '@workspace/contract';
 import { workspaceError } from '@workspace/contract';
 
@@ -36,6 +37,15 @@ export function createWorkspaceMiddleware(
       if (!member) {
         throw workspaceError.FORBIDDEN();
       }
+
+      // Enrich Sentry with workspace context
+      Sentry.setContext('workspace', {
+        workspace_id: workspace.workspaceId,
+        workspace_role: member.workspaceRole,
+        workspace_member_id: member.workspaceMemberId,
+      });
+      Sentry.setTag('workspace_id', workspace.workspaceId);
+      Sentry.setTag('workspace_role', member.workspaceRole);
 
       return next({
         context: {
@@ -71,6 +81,15 @@ export function createWorkspaceRoleMiddleware(
       if (!allowedRoles.includes(member.workspaceRole)) {
         throw workspaceError.FORBIDDEN();
       }
+
+      // Enrich Sentry with workspace context
+      Sentry.setContext('workspace', {
+        workspace_id: workspace.workspaceId,
+        workspace_role: member.workspaceRole,
+        workspace_member_id: member.workspaceMemberId,
+      });
+      Sentry.setTag('workspace_id', workspace.workspaceId);
+      Sentry.setTag('workspace_role', member.workspaceRole);
 
       return next({
         context: {
@@ -114,6 +133,15 @@ export function createWorkspaceRestoreMiddleware(
       if (!allowedRoles.includes(member.workspaceRole)) {
         throw workspaceError.FORBIDDEN();
       }
+
+      // Enrich Sentry with workspace context
+      Sentry.setContext('workspace', {
+        workspace_id: workspaceId,
+        workspace_role: member.workspaceRole,
+        workspace_member_id: member.workspaceMemberId,
+      });
+      Sentry.setTag('workspace_id', workspaceId);
+      Sentry.setTag('workspace_role', member.workspaceRole);
 
       return next({
         context: {

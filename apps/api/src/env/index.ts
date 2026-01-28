@@ -124,6 +124,11 @@ interface EnvConfig {
     maxWindowDays: number;
   };
   storage: StorageConfig;
+  sentry: {
+    dsn?: string;
+    release?: string;
+    tracesSampleRate: number;
+  };
   admin: {
     userIds: string[];
   };
@@ -155,6 +160,15 @@ function parseInteger(value: string | undefined, defaultValue: number): number {
 function parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
   if (!value) return defaultValue;
   return value.toLowerCase() === 'true';
+}
+
+/**
+ * Parse float with fallback
+ */
+function parseFloat(value: string | undefined, defaultValue: number): number {
+  if (!value) return defaultValue;
+  const parsed = Number.parseFloat(value);
+  return isNaN(parsed) ? defaultValue : parsed;
 }
 
 /**
@@ -325,6 +339,14 @@ export function loadEnvConfig(): EnvConfig {
           }
         : undefined,
     },
+    sentry: {
+      dsn: process.env.SENTRY_DSN,
+      release: process.env.SENTRY_RELEASE,
+      tracesSampleRate: parseFloat(
+        process.env.SENTRY_TRACES_SAMPLE_RATE,
+        nodeEnv === 'production' ? 0.1 : 1.0
+      ),
+    },
     admin: {
       userIds: parseCommaSeparated(process.env.ADMIN_USER_IDS, []),
     },
@@ -458,6 +480,11 @@ export function logConfig(): void {
         enabled: env.cache.enabled,
       },
       rateLimitEnabled: env.rateLimitEnabled,
+      sentry: {
+        dsn: env.sentry.dsn ? 'Configured' : 'Not configured',
+        release: env.sentry.release || 'Not configured',
+        tracesSampleRate: env.sentry.tracesSampleRate,
+      },
     },
     'Environment configuration loaded'
   );

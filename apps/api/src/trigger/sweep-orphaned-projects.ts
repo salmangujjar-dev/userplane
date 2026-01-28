@@ -10,6 +10,7 @@ import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
 import { getPurgeDelay } from './delay-calculator';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { buildProjectDeletionKey, buildRecordingDeletionKey } from './idempotency';
+import { withSentryTrigger } from './instrument';
 
 interface CleanupOrphanedProjectPayload {
   projectId: string;
@@ -43,88 +44,90 @@ interface SweepOrphanedProjectsResult {
 export const cleanupOrphanedProject = task({
   id: TASK_IDS.CLEANUP_ORPHANED_PROJECT,
   maxDuration: MAX_DURATIONS.PROJECT_CLEANUP,
-  run: async (payload: CleanupOrphanedProjectPayload): Promise<CleanupOrphanedProjectResult> => {
-    const { projectId } = payload;
+  run: withSentryTrigger(
+    async (payload: CleanupOrphanedProjectPayload): Promise<CleanupOrphanedProjectResult> => {
+      const { projectId } = payload;
 
-    logger.info('Starting orphan project resource cleanup', { projectId });
+      logger.info('Starting orphan project resource cleanup', { projectId });
 
-    const projectRepo = new ProjectRepository(db);
-    const recordingRepo = new RecordingRepository(db);
+      const projectRepo = new ProjectRepository(db);
+      const recordingRepo = new RecordingRepository(db);
 
-    // 1. Short-circuit check
-    const isDeleted = await projectRepo.isSoftDeleted(projectId);
+      // 1. Short-circuit check
+      const isDeleted = await projectRepo.isSoftDeleted(projectId);
 
-    if (isDeleted === null) {
-      logger.info('Project not found, skipping', { projectId });
-      return {
-        success: true,
-        projectId,
-        recordingsScheduled: 0,
-        skipped: true,
-        reason: 'not_found',
-      };
-    }
-
-    if (!isDeleted) {
-      logger.info('Project not deleted, skipping', { projectId });
-      return {
-        success: true,
-        projectId,
-        recordingsScheduled: 0,
-        skipped: true,
-        reason: 'not_deleted',
-      };
-    }
-
-    // 2. List recordings to clean up
-    // Pulls orphaned recordings for deletion
-    const recordingsToCleanup = await recordingRepo.findByProjectId(projectId, 'ORPHAN');
-
-    logger.info('Found recordings to cleanup', { projectId, count: recordingsToCleanup.length });
-
-    // 3. Fan-out (use batchTrigger for multiple recordings)
-    // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
-    if (recordingsToCleanup.length > 0) {
-      const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
-
-      logger.info('Batching recording cleanup triggers', {
-        projectId,
-        totalRecordings: recordingsToCleanup.length,
-        batchCount: recordingChunks.length,
-        batchSize: BATCH_LIMITS.MAX_BATCH_SIZE,
-      });
-
-      for (const [index, chunk] of recordingChunks.entries()) {
-        await deleteRecordingResources.batchTrigger(
-          chunk.map((recording) => ({
-            payload: { recordingId: recording.recordingId },
-            options: {
-              idempotencyKey: buildRecordingDeletionKey(recording.recordingId),
-              delay: getPurgeDelay(),
-            },
-          }))
-        );
-
-        logger.info('Triggered recording cleanup batch', {
+      if (isDeleted === null) {
+        logger.info('Project not found, skipping', { projectId });
+        return {
+          success: true,
           projectId,
-          batchIndex: index + 1,
+          recordingsScheduled: 0,
+          skipped: true,
+          reason: 'not_found',
+        };
+      }
+
+      if (!isDeleted) {
+        logger.info('Project not deleted, skipping', { projectId });
+        return {
+          success: true,
+          projectId,
+          recordingsScheduled: 0,
+          skipped: true,
+          reason: 'not_deleted',
+        };
+      }
+
+      // 2. List recordings to clean up
+      // Pulls orphaned recordings for deletion
+      const recordingsToCleanup = await recordingRepo.findByProjectId(projectId, 'ORPHAN');
+
+      logger.info('Found recordings to cleanup', { projectId, count: recordingsToCleanup.length });
+
+      // 3. Fan-out (use batchTrigger for multiple recordings)
+      // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
+      if (recordingsToCleanup.length > 0) {
+        const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
+
+        logger.info('Batching recording cleanup triggers', {
+          projectId,
+          totalRecordings: recordingsToCleanup.length,
           batchCount: recordingChunks.length,
-          recordingsInBatch: chunk.length,
+          batchSize: BATCH_LIMITS.MAX_BATCH_SIZE,
+        });
+
+        for (const [index, chunk] of recordingChunks.entries()) {
+          await deleteRecordingResources.batchTrigger(
+            chunk.map((recording) => ({
+              payload: { recordingId: recording.recordingId },
+              options: {
+                idempotencyKey: buildRecordingDeletionKey(recording.recordingId),
+                delay: getPurgeDelay(),
+              },
+            }))
+          );
+
+          logger.info('Triggered recording cleanup batch', {
+            projectId,
+            batchIndex: index + 1,
+            batchCount: recordingChunks.length,
+            recordingsInBatch: chunk.length,
+          });
+        }
+
+        logger.info('Scheduled recording cleanup tasks', {
+          projectId,
+          recordingsScheduled: recordingsToCleanup.length,
         });
       }
 
-      logger.info('Scheduled recording cleanup tasks', {
+      return {
+        success: true,
         projectId,
         recordingsScheduled: recordingsToCleanup.length,
-      });
+      };
     }
-
-    return {
-      success: true,
-      projectId,
-      recordingsScheduled: recordingsToCleanup.length,
-    };
-  },
+  ),
 });
 
 /**
@@ -153,7 +156,7 @@ export const sweepOrphanedProjects = schedules.task({
     // Only run in PRODUCTION and STAGING environments
     environments: ['PRODUCTION', 'STAGING'],
   },
-  run: async (payload): Promise<SweepOrphanedProjectsResult> => {
+  run: withSentryTrigger(async (payload): Promise<SweepOrphanedProjectsResult> => {
     logger.info('Starting sweep for orphaned project recordings', {
       timestamp: payload.timestamp,
       lastTimestamp: payload.lastTimestamp,
@@ -232,5 +235,5 @@ export const sweepOrphanedProjects = schedules.task({
     logger.info('Sweep completed', result);
 
     return result;
-  },
+  }),
 });

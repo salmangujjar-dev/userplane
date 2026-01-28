@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/bun';
 import { logger, task } from '@trigger.dev/sdk/v3';
 
 import { db } from '@/api/clients/db';
@@ -11,6 +12,7 @@ import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
 import { getPurgeDelay } from './delay-calculator';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { buildRecordingDeletionKey } from './idempotency';
+import { withSentryTrigger } from './instrument';
 
 interface DeleteWorkspaceResourcesPayload {
   workspaceId: string;
@@ -39,107 +41,124 @@ interface DeleteWorkspaceResourcesResult {
 export const deleteWorkspaceResources = task({
   id: TASK_IDS.DELETE_WORKSPACE_RESOURCES,
   maxDuration: MAX_DURATIONS.WORKSPACE_CLEANUP,
-  run: async (
-    payload: DeleteWorkspaceResourcesPayload
-  ): Promise<DeleteWorkspaceResourcesResult> => {
-    const { workspaceId } = payload;
+  run: withSentryTrigger(
+    async (payload: DeleteWorkspaceResourcesPayload): Promise<DeleteWorkspaceResourcesResult> => {
+      const { workspaceId } = payload;
 
-    logger.info('Starting workspace resource cleanup', { workspaceId });
+      logger.info('Starting workspace resource cleanup', { workspaceId });
 
-    const workspaceRepo = new WorkspaceRepository(db);
-    const recordingRepo = new RecordingRepository(db);
-    const subscriptionRepo = new SubscriptionRepository(db);
-    const dodoClient = getDodoClient();
+      const workspaceRepo = new WorkspaceRepository(db);
+      const recordingRepo = new RecordingRepository(db);
+      const subscriptionRepo = new SubscriptionRepository(db);
+      const dodoClient = getDodoClient();
 
-    // 1. Short-circuit check
-    const isDeleted = await workspaceRepo.isSoftDeleted(workspaceId);
+      // 1. Short-circuit check
+      const isDeleted = await workspaceRepo.isSoftDeleted(workspaceId);
 
-    if (isDeleted === null) {
-      logger.info('Workspace not found, skipping', { workspaceId });
-      return {
-        success: true,
-        workspaceId,
-        recordingsScheduled: 0,
-        skipped: true,
-        reason: 'not_found',
-      };
-    }
-
-    if (!isDeleted) {
-      logger.info('Workspace not deleted, skipping', { workspaceId });
-      return {
-        success: true,
-        workspaceId,
-        recordingsScheduled: 0,
-        skipped: true,
-        reason: 'not_deleted',
-      };
-    }
-
-    // 2. Cancel active subscription immediately
-    try {
-      const subscription = await subscriptionRepo.findByWorkspaceId(workspaceId);
-
-      if (subscription && subscription.status === 'active') {
-        await dodoClient.subscriptions.update(subscription.subscriptionId, {
-          status: 'cancelled',
-        });
-        logger.info('Subscription cancelled immediately', {
+      if (isDeleted === null) {
+        logger.info('Workspace not found, skipping', { workspaceId });
+        return {
+          success: true,
           workspaceId,
-          subscriptionId: subscription.subscriptionId,
+          recordingsScheduled: 0,
+          skipped: true,
+          reason: 'not_found',
+        };
+      }
+
+      if (!isDeleted) {
+        logger.info('Workspace not deleted, skipping', { workspaceId });
+        return {
+          success: true,
+          workspaceId,
+          recordingsScheduled: 0,
+          skipped: true,
+          reason: 'not_deleted',
+        };
+      }
+
+      // 2. Cancel active subscription immediately
+      try {
+        const subscription = await subscriptionRepo.findByWorkspaceId(workspaceId);
+
+        if (subscription && subscription.status === 'active') {
+          await dodoClient.subscriptions.update(subscription.subscriptionId, {
+            status: 'cancelled',
+          });
+          logger.info('Subscription cancelled immediately', {
+            workspaceId,
+            subscriptionId: subscription.subscriptionId,
+          });
+        }
+      } catch (error) {
+        logger.error('Failed to cancel subscription during cleanup', { workspaceId, error });
+
+        Sentry.captureException(error, {
+          level: 'error',
+          tags: {
+            operation: 'subscription_cancellation',
+            workspace_id: workspaceId,
+          },
+          contexts: {
+            subscription: {
+              workspace_id: workspaceId,
+              step: 'workspace_deletion_cleanup',
+            },
+          },
         });
       }
-    } catch (error) {
-      logger.error('Failed to cancel subscription during cleanup', { workspaceId, error });
-    }
 
-    // 3. List recordings to clean up
-    // Pulls available recordings for deletion
-    const recordingsToCleanup = await recordingRepo.findByWorkspaceId(workspaceId);
+      // 3. List recordings to clean up
+      // Pulls available recordings for deletion
+      const recordingsToCleanup = await recordingRepo.findByWorkspaceId(workspaceId);
 
-    logger.info('Found recordings to cleanup', { workspaceId, count: recordingsToCleanup.length });
-
-    // 4. Fan-out (use batchTrigger for multiple recordings)
-    // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
-    if (recordingsToCleanup.length > 0) {
-      const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
-
-      logger.info('Batching recording cleanup triggers', {
+      logger.info('Found recordings to cleanup', {
         workspaceId,
-        totalRecordings: recordingsToCleanup.length,
-        batchCount: recordingChunks.length,
-        batchSize: BATCH_LIMITS.MAX_BATCH_SIZE,
+        count: recordingsToCleanup.length,
       });
 
-      for (const [index, chunk] of recordingChunks.entries()) {
-        await deleteRecordingResources.batchTrigger(
-          chunk.map((recording) => ({
-            payload: { recordingId: recording.recordingId },
-            options: {
-              idempotencyKey: buildRecordingDeletionKey(recording.recordingId),
-              delay: getPurgeDelay(recording.uploadStatus),
-            },
-          }))
-        );
+      // 4. Fan-out (use batchTrigger for multiple recordings)
+      // Batch into chunks of 500 (Trigger.dev limit) to handle large numbers of recordings
+      if (recordingsToCleanup.length > 0) {
+        const recordingChunks = chunkArray(recordingsToCleanup, BATCH_LIMITS.MAX_BATCH_SIZE);
 
-        logger.info('Triggered recording cleanup batch', {
+        logger.info('Batching recording cleanup triggers', {
           workspaceId,
-          batchIndex: index + 1,
+          totalRecordings: recordingsToCleanup.length,
           batchCount: recordingChunks.length,
-          recordingsInBatch: chunk.length,
+          batchSize: BATCH_LIMITS.MAX_BATCH_SIZE,
+        });
+
+        for (const [index, chunk] of recordingChunks.entries()) {
+          await deleteRecordingResources.batchTrigger(
+            chunk.map((recording) => ({
+              payload: { recordingId: recording.recordingId },
+              options: {
+                idempotencyKey: buildRecordingDeletionKey(recording.recordingId),
+                delay: getPurgeDelay(recording.uploadStatus),
+              },
+            }))
+          );
+
+          logger.info('Triggered recording cleanup batch', {
+            workspaceId,
+            batchIndex: index + 1,
+            batchCount: recordingChunks.length,
+            recordingsInBatch: chunk.length,
+          });
+        }
+
+        logger.info('Scheduled recording cleanup tasks', {
+          workspaceId,
+          recordingsScheduled: recordingsToCleanup.length,
         });
       }
 
-      logger.info('Scheduled recording cleanup tasks', {
+      return {
+        success: true,
         workspaceId,
         recordingsScheduled: recordingsToCleanup.length,
-      });
+      };
     }
-
-    return {
-      success: true,
-      workspaceId,
-      recordingsScheduled: recordingsToCleanup.length,
-    };
-  },
+  ),
 });

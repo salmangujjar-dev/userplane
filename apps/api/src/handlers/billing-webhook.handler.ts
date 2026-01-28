@@ -15,6 +15,7 @@
  * - Refund events → RefundProcessorService
  */
 
+import * as Sentry from '@sentry/bun';
 import type { WebhookPayload } from '@workspace/payments/types';
 import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
 
@@ -43,6 +44,13 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
     const { type: eventType } = webhookPayload;
     const webhookHeaders = determineWebhookHeaders(webhookPayload, headers);
 
+    // Set webhook context for Sentry
+    Sentry.setContext('webhook', {
+      webhookId: webhookHeaders.webhookId,
+      eventType,
+      timestamp: webhookHeaders.webhookTimestamp,
+    });
+
     // Route subscription events to webhook processor
     if (isSubscriptionEvent(eventType)) {
       console.log(
@@ -50,7 +58,19 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
       );
 
       try {
-        const result = await webhookProcessor.processWebhook(webhookHeaders, webhookPayload);
+        const result = await Sentry.startSpan(
+          {
+            name: 'webhook.process.subscription',
+            op: 'webhook',
+            attributes: {
+              'webhook.type': eventType,
+              'webhook.id': webhookHeaders.webhookId,
+            },
+          },
+          async () => {
+            return await webhookProcessor.processWebhook(webhookHeaders, webhookPayload);
+          }
+        );
 
         if (result.skipped) {
           console.log(
@@ -65,6 +85,12 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         }
       } catch (error) {
         console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
+        Sentry.captureException(error, {
+          tags: {
+            webhook_type: 'subscription',
+            event_type: eventType,
+          },
+        });
         throw error;
       }
       return;
@@ -77,7 +103,19 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
       );
 
       try {
-        const result = await disputeProcessor.processDispute(webhookHeaders, webhookPayload);
+        const result = await Sentry.startSpan(
+          {
+            name: 'webhook.process.dispute',
+            op: 'webhook',
+            attributes: {
+              'webhook.type': eventType,
+              'webhook.id': webhookHeaders.webhookId,
+            },
+          },
+          async () => {
+            return await disputeProcessor.processDispute(webhookHeaders, webhookPayload);
+          }
+        );
 
         if (result.skipped) {
           console.log(
@@ -92,6 +130,12 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         }
       } catch (error) {
         console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
+        Sentry.captureException(error, {
+          tags: {
+            webhook_type: 'dispute',
+            event_type: eventType,
+          },
+        });
         throw error;
       }
       return;
@@ -104,7 +148,19 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
       );
 
       try {
-        const result = await refundProcessor.processRefund(webhookHeaders, webhookPayload);
+        const result = await Sentry.startSpan(
+          {
+            name: 'webhook.process.refund',
+            op: 'webhook',
+            attributes: {
+              'webhook.type': eventType,
+              'webhook.id': webhookHeaders.webhookId,
+            },
+          },
+          async () => {
+            return await refundProcessor.processRefund(webhookHeaders, webhookPayload);
+          }
+        );
 
         if (result.skipped) {
           console.log(
@@ -119,6 +175,12 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         }
       } catch (error) {
         console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
+        Sentry.captureException(error, {
+          tags: {
+            webhook_type: 'refund',
+            event_type: eventType,
+          },
+        });
         throw error;
       }
       return;
