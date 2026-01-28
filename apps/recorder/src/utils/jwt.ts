@@ -5,6 +5,8 @@
  * Uses types from @workspace/contract for type safety
  */
 
+import * as Sentry from '@sentry/astro';
+
 /**
  * Base JWT payload with standard claims
  */
@@ -34,8 +36,28 @@ export function decodeJwtPayload<T extends BaseJwtPayload = BaseJwtPayload>(toke
     const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
     const decoded = atob(base64);
     return JSON.parse(decoded) as T;
-  } catch {
-    throw new Error('Invalid JWT: failed to decode payload');
+  } catch (err) {
+    const error = new Error(
+      `Invalid JWT: failed to decode payload - ${err instanceof Error ? err.message : 'unknown error'}`
+    );
+
+    // Capture JWT decode errors for monitoring session initialization failures
+    Sentry.captureException(error, {
+      level: 'error',
+      tags: {
+        error_type: 'jwt_decode_error',
+        error_source: 'recorder_jwt_utils',
+      },
+      contexts: {
+        jwt: {
+          token_format_valid: parts.length === 3,
+          payload_length: payload.length,
+          has_payload: !!payload,
+        },
+      },
+    });
+
+    throw error;
   }
 }
 

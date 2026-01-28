@@ -3,6 +3,7 @@
  * Manages the state machine for the entire recording flow
  */
 
+import * as Sentry from '@sentry/astro';
 import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -105,6 +106,39 @@ export function useRecordingFlow(
   const autoStopTimerRef = useRef<NodeJS.Timeout | null>(null);
   const stopRecordingRef = useRef<(() => Promise<void>) | null>(null);
 
+  // Helper to track state transitions with Sentry breadcrumbs
+  const transitionToState = useCallback(
+    (newState: FlowState, context?: Record<string, unknown>) => {
+      const previousState = flowState;
+
+      Sentry.addBreadcrumb({
+        category: 'recording_flow',
+        message: `State transition: ${previousState} → ${newState}`,
+        level: newState === 'error' ? 'warning' : 'info',
+        data: {
+          previous_state: previousState,
+          new_state: newState,
+          timestamp: Date.now(),
+          session_id: sessionInfo?.sessionId,
+          ...context,
+        },
+      });
+
+      // Update recording context in Sentry
+      if (sessionInfo?.sessionId) {
+        Sentry.setContext('recording', {
+          session_id: sessionInfo.sessionId,
+          workspace_id: sessionInfo.workspaceId,
+          link_id: sessionInfo.linkId,
+          stage: newState,
+        });
+      }
+
+      setFlowState(newState);
+    },
+    [flowState, sessionInfo]
+  );
+
   useEffect(() => {
     console.log('[Flow] Hook initialized');
     console.log('[Flow] Link token:', linkToken ? 'Present' : 'Empty');
@@ -170,6 +204,7 @@ export function useRecordingFlow(
         autoStopTimerRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkToken, action, workspaceIds]);
 
   useEffect(() => {
@@ -301,7 +336,10 @@ export function useRecordingFlow(
     }
 
     console.log('[Flow] Transitioning to setup state');
-    setFlowState('setup');
+    transitionToState('setup', {
+      workspace_id: session.workspaceId,
+      link_id: session.linkId,
+    });
   }
 
   async function startRecording(mode: RecordingMode) {
@@ -339,7 +377,7 @@ export function useRecordingFlow(
       console.log('[Flow] Media stream:', stream ? 'Available' : 'Not available');
 
       console.log('[Flow] Starting 3-second countdown...');
-      setFlowState('countdown');
+      transitionToState('countdown', { recording_mode: mode });
       setCountdownSeconds(3);
 
       // Clear any existing countdown interval
@@ -360,12 +398,26 @@ export function useRecordingFlow(
           }
           console.log('[Flow] Countdown complete, starting recording...');
           mediaCapture.startRecording();
-          setFlowState('recording');
+          transitionToState('recording', {
+            recording_mode: mode,
+            max_duration_ms: maxRecordingDurationMs,
+          });
         }
       }, 1000);
     } catch (err) {
       console.error('[Flow] Failed to start recording:', err);
       console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+
+      // Capture recording start failures in Sentry
+      Sentry.captureException(err, {
+        level: 'error',
+        tags: {
+          error_type: 'recording_start_failed',
+          error_source: 'recording_flow',
+          recording_mode: mode,
+        },
+      });
+
       setError(classifyError(err as Error));
       setFlowState('error');
     }
@@ -457,10 +509,23 @@ export function useRecordingFlow(
       }
 
       console.log('[Flow] Transitioning to review state');
-      setFlowState('review');
+      transitionToState('review', {
+        recording_duration_ms: recordingDurationMs,
+        blob_size_bytes: blob.size,
+        has_thumbnail: !!thumbnail,
+      });
     } catch (err) {
       console.error('[Flow] Failed to stop recording:', err);
       console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+
+      // Capture recording stop failures in Sentry
+      Sentry.captureException(err, {
+        level: 'error',
+        tags: {
+          error_type: 'recording_stop_failed',
+          error_source: 'recording_flow',
+        },
+      });
 
       // Clean up blob URL if it was created but we're erroring out
       if (createdBlobUrl) {
@@ -473,6 +538,7 @@ export function useRecordingFlow(
     } finally {
       setIsProcessing(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessing, maxRecordingDurationMs, maxRecordingSize]);
 
   // Keep stopRecordingRef in sync with the latest stopRecording function
@@ -504,7 +570,11 @@ export function useRecordingFlow(
     console.log('[Flow] Recording blob size:', recordingBlob.size, 'bytes');
     console.log('[Flow] Recording blob type:', recordingBlob.type);
 
-    setFlowState('uploading');
+    transitionToState('uploading', {
+      blob_size_bytes: recordingBlob.size,
+      blob_type: recordingBlob.type,
+      has_thumbnail: !!thumbnailBlob,
+    });
     setUploadProgress(0);
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -588,7 +658,9 @@ export function useRecordingFlow(
 
     console.log('[Flow] Upload completed successfully');
     console.log('[Flow] Transitioning to success state');
-    setFlowState('success');
+    transitionToState('success', {
+      recording_id: newUploadState.recordingId,
+    });
     setIsProcessing(false);
   }
 

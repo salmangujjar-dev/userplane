@@ -3,6 +3,8 @@
  * Handles screen and audio recording using MediaRecorder API
  */
 
+import * as Sentry from '@sentry/astro';
+
 import { AUDIO_SAMPLE_RATE_HZ, MEDIA_RECORDER_TIMESLICE_MS, VIDEO_BITRATE_BPS } from '@/constants';
 import { ClientError } from '@/lib/client-errors';
 import {
@@ -150,6 +152,23 @@ export class MediaCapture {
       this.mediaRecorder.onerror = (event: any) => {
         const error = new ClientError('CLIENT_MEDIA_CONNECTION_FAILED', event.error);
         console.error('[MediaCapture] Error:', error.code);
+
+        // Capture MediaRecorder errors in Sentry - critical runtime failures
+        Sentry.captureException(error, {
+          level: 'error',
+          tags: {
+            error_type: 'media_recorder_error',
+            error_source: 'media_capture',
+            error_code: error.code,
+          },
+          contexts: {
+            mediaRecorder: {
+              state: this.mediaRecorder?.state || 'unknown',
+              mimeType: this.mediaRecorder?.mimeType || 'unknown',
+            },
+          },
+        });
+
         if (this.onErrorCallback) {
           this.onErrorCallback(error);
         }
@@ -165,6 +184,23 @@ export class MediaCapture {
       console.log('[MediaCapture] Permissions granted, ready to start recording');
     } catch (error) {
       console.error('[MediaCapture] Failed to request permissions:', error);
+
+      // Capture permission failures - critical for understanding recording start issues
+      Sentry.captureException(error, {
+        level: 'error',
+        tags: {
+          error_type: 'media_permission_denied',
+          error_source: 'media_capture',
+          recording_mode: this.mode,
+        },
+        contexts: {
+          permission: {
+            mode: this.mode,
+            browserSupported: checkScreenRecordingSupport(),
+          },
+        },
+      });
+
       throw ClientError.fromBrowserError(error as Error);
     }
   }
@@ -320,6 +356,16 @@ export async function requestScreenRecordingPermission(): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('[MediaCapture] Screen recording permission denied:', error);
+
+    // Capture permission check failures for monitoring (info level - this is a test)
+    Sentry.captureException(error, {
+      level: 'info',
+      tags: {
+        error_type: 'permission_check_failed',
+        error_source: 'media_capture_test',
+      },
+    });
+
     return false;
   }
 }
