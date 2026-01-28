@@ -6,7 +6,7 @@
 import * as Sentry from '@sentry/astro';
 
 import { AUDIO_SAMPLE_RATE_HZ, MEDIA_RECORDER_TIMESLICE_MS, VIDEO_BITRATE_BPS } from '@/constants';
-import { ClientError } from '@/lib/client-errors';
+import { ClientError } from '@/sentry/client-errors';
 import {
   getBestMimeType,
   isScreenRecordingSupported as checkScreenRecordingSupport,

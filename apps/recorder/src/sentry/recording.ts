@@ -3,11 +3,15 @@
  * Provides recording-specific error capture with context
  */
 import * as Sentry from '@sentry/astro';
+import {
+  buildRecordingTags,
+  type RecordingContext as SharedRecordingContext,
+} from '@workspace/sentry';
 
 /**
  * Recording context for Sentry
  */
-interface RecordingContext {
+export interface RecordingContext {
   sessionId?: string;
   recordingId?: string;
   stage?: 'initialization' | 'upload' | 'processing' | 'completion';
@@ -23,20 +27,25 @@ export function captureRecordingError(
   context: RecordingContext,
   additionalTags?: Record<string, string>
 ): void {
+  const sentryContext: SharedRecordingContext = {
+    session_id: context.sessionId,
+    recording_id: context.recordingId,
+    stage: context.stage,
+    upload_status: context.uploadStatus,
+  };
+
   Sentry.captureException(error, {
     tags: {
-      error_type: 'recording_error',
-      recording_stage: context.stage,
-      upload_status: context.uploadStatus,
-      ...additionalTags,
-    },
-    contexts: {
-      recording: {
+      ...buildRecordingTags({
         sessionId: context.sessionId,
         recordingId: context.recordingId,
         stage: context.stage,
         uploadStatus: context.uploadStatus,
-      },
+      }),
+      ...additionalTags,
+    },
+    contexts: {
+      recording: sentryContext,
     },
   });
 }
@@ -46,12 +55,13 @@ export function captureRecordingError(
  * Useful for setting context at the start of a recording session
  */
 export function setRecordingContext(context: RecordingContext): void {
-  Sentry.setContext('recording', {
-    sessionId: context.sessionId,
-    recordingId: context.recordingId,
+  const sentryContext: SharedRecordingContext = {
+    session_id: context.sessionId,
+    recording_id: context.recordingId,
     stage: context.stage,
-    uploadStatus: context.uploadStatus,
-  });
+    upload_status: context.uploadStatus,
+  };
+  Sentry.setContext('recording', sentryContext);
 
   if (context.sessionId) {
     Sentry.setTag('session_id', context.sessionId);

@@ -437,7 +437,11 @@ trigger\:deploy: ## Deploy tasks to trigger.dev (dev)
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd apps/api && export $$(grep -v '^#' .env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && npx trigger.dev@latest deploy
+	@cd apps/api && \
+		export SENTRY_AUTH_TOKEN=$$(grep '^SENTRY_AUTH_TOKEN=' .env.development | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
+		export SENTRY_ORG=$$(grep '^SENTRY_ORG=' .env.development | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
+		export SENTRY_PROJECT_API=$$(grep '^SENTRY_PROJECT_API=' .env.development | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
+		npx trigger.dev@latest deploy --env dev
 	@echo "$(GREEN)Deployment complete!$(RESET)"
 
 trigger\:deploy\:staging: ## Deploy tasks to trigger.dev (staging)
@@ -446,7 +450,11 @@ trigger\:deploy\:staging: ## Deploy tasks to trigger.dev (staging)
 		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
 		exit 1; \
 	fi
-	@cd apps/api && export $$(grep -v '^#' .env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && npx trigger.dev@latest deploy
+	@cd apps/api && \
+		export SENTRY_AUTH_TOKEN=$$(grep '^SENTRY_AUTH_TOKEN=' .env.staging | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
+		export SENTRY_ORG=$$(grep '^SENTRY_ORG=' .env.staging | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
+		export SENTRY_PROJECT_API=$$(grep '^SENTRY_PROJECT_API=' .env.staging | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
+		npx trigger.dev@latest deploy --env staging
 	@echo "$(GREEN)Deployment complete!$(RESET)"
 
 trigger\:deploy\:production: ## Deploy tasks to trigger.dev (production)
@@ -457,7 +465,11 @@ trigger\:deploy\:production: ## Deploy tasks to trigger.dev (production)
 		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
 		exit 1; \
 	fi
-	@cd apps/api && export $$(grep -v '^#' .env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && npx trigger.dev@latest deploy
+	@cd apps/api && \
+		export SENTRY_AUTH_TOKEN=$$(grep '^SENTRY_AUTH_TOKEN=' .env.production | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
+		export SENTRY_ORG=$$(grep '^SENTRY_ORG=' .env.production | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
+		export SENTRY_PROJECT_API=$$(grep '^SENTRY_PROJECT_API=' .env.production | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
+		npx trigger.dev@latest deploy --env production
 	@echo "$(GREEN)Deployment complete!$(RESET)"
 
 i: install ## Shortcut for install

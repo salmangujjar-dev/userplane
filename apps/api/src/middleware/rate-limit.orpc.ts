@@ -14,10 +14,10 @@ import { ORPCError } from '@orpc/server';
 import type { RateLimiter, RateLimitTier } from '@workspace/cache';
 
 import { rateLimiter } from '@/api/clients/redis';
+import { enrichSentryUserContext } from '@/api/sentry';
 
 import type { AuthContext } from './auth.orpc';
 import { authMiddleware, authorized, base } from './auth.orpc';
-import { enrichSentryUserContext } from './sentry.orpc';
 
 /**
  * Rate limit error with proper HTTP status

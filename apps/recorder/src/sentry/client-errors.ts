@@ -4,6 +4,7 @@
  */
 
 import * as Sentry from '@sentry/astro';
+import { buildClientErrorTags, createBrowserErrorBreadcrumb, ErrorTypes } from '@workspace/sentry';
 
 import type { RecordingError } from '@/types/errors';
 
@@ -69,16 +70,13 @@ export class ClientError extends Error {
     const code = browserErrorToCode(error.name);
 
     // Add breadcrumb for browser errors
-    Sentry.addBreadcrumb({
-      category: 'browser_error',
-      message: `Browser error: ${error.name}`,
-      level: 'error',
-      data: {
-        error_name: error.name,
-        error_code: code,
-        error_message: error.message,
-      },
-    });
+    Sentry.addBreadcrumb(
+      createBrowserErrorBreadcrumb({
+        errorName: error.name,
+        errorCode: code,
+        errorMessage: error.message,
+      })
+    );
 
     // Capture critical browser errors in Sentry
     const criticalErrors: ClientErrorCode[] = [
@@ -89,10 +87,10 @@ export class ClientError extends Error {
 
     if (criticalErrors.includes(code)) {
       Sentry.captureException(error, {
-        tags: {
-          error_type: 'critical_browser_error',
-          client_error_code: code,
-        },
+        tags: buildClientErrorTags({
+          errorType: ErrorTypes.CRITICAL_BROWSER_ERROR,
+          clientErrorCode: code,
+        }),
       });
     }
 

@@ -2,6 +2,7 @@
 
 import * as Sentry from '@sentry/nextjs';
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { buildReactQueryTags, ErrorSources, type ReactQueryContext } from '@workspace/sentry';
 import { Toaster } from '@workspace/ui/components/sonner';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import * as React from 'react';
@@ -20,16 +21,17 @@ const queryClient = new QueryClient({
       }
 
       // Only capture non-defined errors in Sentry
+      const queryCtx: ReactQueryContext = {
+        type: 'query',
+        error_type: error instanceof Error ? error.name : 'unknown',
+      };
       Sentry.captureException(error, {
-        tags: {
-          error_source: 'react_query',
-          operation_type: 'query',
-        },
+        tags: buildReactQueryTags({
+          operationType: 'query',
+          errorSource: ErrorSources.REACT_QUERY,
+        }),
         contexts: {
-          react_query: {
-            type: 'query',
-            error_type: error instanceof Error ? error.name : 'unknown',
-          },
+          react_query: queryCtx,
         },
       });
     },
@@ -42,20 +44,21 @@ const queryClient = new QueryClient({
       }
 
       // Only capture non-defined errors in Sentry
+      const mutationCtx: ReactQueryContext = {
+        type: 'mutation',
+        error_type: error instanceof Error ? error.name : 'unknown',
+        // Only log variables in non-production to avoid PII
+        ...(process.env.NODE_ENV !== 'production' && {
+          variables: JSON.stringify(variables),
+        }),
+      };
       Sentry.captureException(error, {
-        tags: {
-          error_source: 'react_query',
-          operation_type: 'mutation',
-        },
+        tags: buildReactQueryTags({
+          operationType: 'mutation',
+          errorSource: ErrorSources.REACT_QUERY,
+        }),
         contexts: {
-          react_query: {
-            type: 'mutation',
-            error_type: error instanceof Error ? error.name : 'unknown',
-            // Only log variables in non-production to avoid PII
-            ...(process.env.NODE_ENV !== 'production' && {
-              variables: JSON.stringify(variables),
-            }),
-          },
+          react_query: mutationCtx,
         },
       });
     },

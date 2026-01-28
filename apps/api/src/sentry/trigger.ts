@@ -3,6 +3,7 @@
  * Provides automatic error capture with task context
  */
 import * as Sentry from '@sentry/bun';
+import { buildTaskTags, TagNames, type TriggerTaskContext } from '@workspace/sentry';
 
 /**
  * Wraps a Trigger.dev task with Sentry error capture
@@ -18,32 +19,30 @@ export function withSentryTrigger<TPayload = any, TOutput = any>(
   return async (payload: TPayload, params: any) => {
     const { ctx } = params;
 
+    const taskContext: TriggerTaskContext = {
+      taskId: ctx.task.id,
+      runId: ctx.run.id,
+      attemptNumber: ctx.attempt.number,
+    };
+
     try {
       // Set task context for Sentry
-      Sentry.setContext('trigger_task', {
-        taskId: ctx.task.id,
-        runId: ctx.run.id,
-        attemptNumber: ctx.attempt.number,
-      });
+      Sentry.setContext('trigger_task', taskContext);
 
       // Add payload as extra data (careful with sensitive info)
-      Sentry.setTag('task_id', ctx.task.id);
+      Sentry.setTag(TagNames.TASK_ID, ctx.task.id);
 
       // Execute the actual task
       return await taskFn(payload, params);
     } catch (error) {
       // Capture error with task context
       Sentry.captureException(error, {
-        tags: {
-          task_id: ctx.task.id,
-          run_id: ctx.run.id,
-        },
+        tags: buildTaskTags({
+          taskId: ctx.task.id,
+          runId: ctx.run.id,
+        }),
         contexts: {
-          trigger_task: {
-            taskId: ctx.task.id,
-            runId: ctx.run.id,
-            attemptNumber: ctx.attempt.number,
-          },
+          trigger_task: taskContext,
         },
       });
 

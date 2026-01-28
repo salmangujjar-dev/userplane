@@ -1,3 +1,6 @@
+// Initialize Sentry for Trigger.dev workers - must be first import
+import './init';
+
 import * as Sentry from '@sentry/bun';
 import { logger, task } from '@trigger.dev/sdk/v3';
 
@@ -10,9 +13,9 @@ import {
   getVideoStorage,
 } from '@/api/clients/storage';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
+import { withSentryTrigger } from '@/api/sentry';
 
 import { MAX_DURATIONS, TASK_IDS } from './constants';
-import { withSentryTrigger } from './instrument';
 
 interface DeleteRecordingResourcesPayload {
   recordingId: string;

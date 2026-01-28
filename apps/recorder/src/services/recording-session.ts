@@ -4,6 +4,15 @@
  */
 
 import * as Sentry from '@sentry/astro';
+import {
+  buildErrorTags,
+  createApiBreadcrumb,
+  createSystemBreadcrumb,
+  createUploadBreadcrumb,
+  ErrorSources,
+  ErrorTypes,
+  type UploadContext,
+} from '@workspace/sentry';
 
 import { getRecorderClient } from '@/client/api';
 import {
@@ -11,8 +20,8 @@ import {
   THUMBNAIL_UPLOAD_CONFIG,
   VIDEO_UPLOAD_CONFIG,
 } from '@/constants';
-import { createRecordingSpan, setRecordingContext } from '@/lib/sentry';
 import { handleServerResult, type ServerResult } from '@/lib/server-errors';
+import { createRecordingSpan, setRecordingContext } from '@/sentry/recording';
 import type { RecordingPreferences, SessionTokenPayload } from '@/types/session-preferences';
 import { toRecordingPreferences } from '@/types/session-preferences';
 import { captureSystemMetadata, prettySystemMetadata, type SystemMetadata } from '@/utils/browser';
@@ -206,16 +215,13 @@ export class RecordingSession {
         });
 
         // Add breadcrumb with system info
-        Sentry.addBreadcrumb({
-          category: 'system',
-          message: 'System metadata captured',
-          level: 'info',
-          data: {
+        Sentry.addBreadcrumb(
+          createSystemBreadcrumb({
             browser: systemMetadata.browser,
             os: systemMetadata.os,
-            screen_resolution: `${systemMetadata.screenSize.width}x${systemMetadata.screenSize.height}`,
-          },
-        });
+            screenResolution: `${systemMetadata.screenSize.width}x${systemMetadata.screenSize.height}`,
+          })
+        );
 
         return {
           ok: true,
@@ -333,19 +339,18 @@ export class RecordingSession {
       const responseTime = Date.now() - startTime;
 
       // Track API call performance
-      Sentry.addBreadcrumb({
-        category: 'api',
-        message: 'Upload initialization API call',
-        level: error ? 'error' : 'info',
-        data: {
+      Sentry.addBreadcrumb(
+        createApiBreadcrumb({
           endpoint: '/session/upload/init',
           method: 'POST',
-          has_error: !!error,
+          hasError: !!error,
           responseTime,
-          videoSize: videoFile.size,
-          thumbnailSize: thumbnailBlob?.size || 0,
-        },
-      });
+          additionalData: {
+            videoSize: videoFile.size,
+            thumbnailSize: thumbnailBlob?.size || 0,
+          },
+        })
+      );
 
       const result = handleServerResult(error, response?.data);
 
@@ -422,18 +427,15 @@ export class RecordingSession {
 
           // Add breadcrumbs at upload milestones for monitoring
           if ([25, 50, 75, 100].includes(percentage)) {
-            Sentry.addBreadcrumb({
-              category: 'upload',
-              message: `Upload progress: ${percentage}%`,
-              level: 'info',
-              data: {
+            Sentry.addBreadcrumb(
+              createUploadBreadcrumb({
+                percentage,
                 uploadedBytes,
                 totalSize,
-                percentage,
                 recordingId: uploadState.recordingId,
-                sessionId: this.sessionId,
-              },
-            });
+                sessionId: this.sessionId ?? undefined,
+              })
+            );
           }
 
           onProgress({
@@ -461,23 +463,26 @@ export class RecordingSession {
         console.error('[Upload:Storage] Video upload failed:', err);
 
         // Capture CRITICAL video upload failure in Sentry with detailed context
+        const uploadCtx: UploadContext = {
+          file_type: 'video',
+          file_size: videoFile.size,
+          file_mime_type: videoFile.type,
+          recording_id: uploadState.recordingId,
+          session_id: this.sessionId ?? undefined,
+          total_size: totalSize,
+          progress_before_failure: videoUploaded,
+        };
         Sentry.captureException(err, {
           level: 'error',
           tags: {
-            error_type: 'video_upload_failed',
-            error_source: 'recording_session',
+            ...buildErrorTags({
+              errorType: ErrorTypes.VIDEO_UPLOAD_FAILED,
+              errorSource: ErrorSources.RECORDING_SESSION,
+            }),
             recording_id: uploadState.recordingId,
           },
           contexts: {
-            upload: {
-              file_type: 'video',
-              file_size: videoFile.size,
-              file_mime_type: videoFile.type,
-              recording_id: uploadState.recordingId,
-              session_id: this.sessionId,
-              total_size: totalSize,
-              progress_before_failure: videoUploaded,
-            },
+            upload: uploadCtx,
           },
         });
 
@@ -520,19 +525,22 @@ export class RecordingSession {
             );
 
             // Capture thumbnail upload failures as quality degradation warnings
+            const thumbCtx: UploadContext = {
+              file_type: 'thumbnail',
+              recording_id: uploadState.recordingId,
+              session_id: this.sessionId ?? undefined,
+            };
             Sentry.captureException(err, {
               level: 'warning',
               tags: {
-                error_type: 'thumbnail_upload_failure',
-                error_source: 'recording_session',
+                ...buildErrorTags({
+                  errorType: ErrorTypes.THUMBNAIL_UPLOAD_FAILURE,
+                  errorSource: ErrorSources.RECORDING_SESSION,
+                }),
                 recording_id: uploadState.recordingId || 'unknown',
               },
               contexts: {
-                upload: {
-                  file_type: 'thumbnail',
-                  recording_id: uploadState.recordingId,
-                  session_id: this.sessionId,
-                },
+                upload: thumbCtx,
               },
             });
 

@@ -1,3 +1,6 @@
+// Initialize Sentry for Trigger.dev workers - must be first import
+import './init';
+
 import * as Sentry from '@sentry/bun';
 import { logger, task } from '@trigger.dev/sdk/v3';
 
@@ -7,12 +10,12 @@ import { chunkArray } from '@/api/lib/batch';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import { withSentryTrigger } from '@/api/sentry';
 
 import { BATCH_LIMITS, MAX_DURATIONS, TASK_IDS } from './constants';
 import { getPurgeDelay } from './delay-calculator';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { buildRecordingDeletionKey } from './idempotency';
-import { withSentryTrigger } from './instrument';
 
 interface DeleteWorkspaceResourcesPayload {
   workspaceId: string;

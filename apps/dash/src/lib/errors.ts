@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import { isDefinedError } from '@workspace/client';
+import { buildErrorTags, ErrorTypes } from '@workspace/sentry';
 import { toast } from '@workspace/ui/components/sonner';
 
 /**
@@ -78,9 +79,7 @@ export function handleSafeResult<T>(error: unknown, response: T | null): SafeRes
     }
     // Unknown error - capture in Sentry and throw to be caught by React Query onError
     Sentry.captureException(error, {
-      tags: {
-        error_type: 'api_unknown_error',
-      },
+      tags: buildErrorTags({ errorType: ErrorTypes.API_UNKNOWN_ERROR }),
     });
     throw error;
   }
@@ -119,9 +118,7 @@ export function showErrorToast(error: ORPCDefinedError): void {
 export function handleUnknownError(error: unknown, fallbackMessage: string): void {
   // Capture unknown errors in Sentry
   Sentry.captureException(error, {
-    tags: {
-      error_type: 'unknown_error',
-    },
+    tags: buildErrorTags({ errorType: ErrorTypes.UNKNOWN_ERROR }),
     contexts: {
       error_handling: {
         fallbackMessage,

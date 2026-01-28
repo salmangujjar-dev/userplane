@@ -3,7 +3,7 @@
  * Core types and classification for recording errors
  */
 
-import { getClientError } from '@/lib/client-errors';
+import { getClientError } from '@/sentry/client-errors';
 
 /**
  * What action to take when user clicks the button
