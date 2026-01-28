@@ -6,7 +6,7 @@
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 export interface LogData {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export class BrowserLogger {

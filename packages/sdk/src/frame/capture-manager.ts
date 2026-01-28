@@ -9,12 +9,7 @@
  * - Used for scatter-gather metadata collection
  */
 
-import {
-  CaptureBridgeConnection,
-  type CaptureRecorderState,
-  type RecordingState,
-  type TabMetadata,
-} from '../bridge';
+import { CaptureBridgeConnection, type CaptureRecorderState, type TabMetadata } from '../bridge';
 import { URL_PARAMS } from '../constants';
 import type { FrameConfig, RecorderFrame, RecorderParams } from '../types';
 import type { CaptureFrameManagerConfig, ICaptureFrameManager } from './types';

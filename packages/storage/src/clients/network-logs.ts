@@ -1,10 +1,5 @@
 import { BaseStorageClient } from '../base';
-import type {
-  BucketType,
-  PresignedUrlOptions,
-  StorageConfig,
-  UploadPresignOptions,
-} from '../types';
+import type { PresignedUrlOptions, StorageConfig, UploadPresignOptions } from '../types';
 import { CacheControl } from '../types';
 
 const ALLOWED_CONTENT_TYPES = ['application/json'] as const;

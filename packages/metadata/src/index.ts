@@ -28,12 +28,15 @@ type SerializablePrimitive = string | number | boolean | null | undefined;
 /**
  * Array containing any serializable values
  */
-type SerializableArray = Serializable[];
+interface SerializableArray extends Array<Serializable> {}
 
 /**
  * Object with string or number keys containing serializable values
  */
-export interface SerializableObject extends Record<string | number, Serializable> {}
+export interface SerializableObject {
+  [key: string]: Serializable;
+  [key: number]: Serializable;
+}
 
 /**
  * Union type representing all values that can be safely serialized

@@ -33,6 +33,7 @@ export function createServerLogger(context: string, options: CreateLoggerOptions
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createAppLogger } = require('./factory');
   return createAppLogger(context, options);
 }

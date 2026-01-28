@@ -27,8 +27,8 @@ export interface ClientContext {
 export interface ClientConfig {
   /**
    * Base URL of the API
-   * @example 'http://localhost:3000/api/v2'
-   * @example 'https://api.userplane.com/api/v2'
+   * @example 'http://localhost:3000/api/v1'
+   * @example 'https://api.userplane.com/api/v1'
    */
   url: string | (() => string);
 
@@ -69,7 +69,7 @@ export interface ClientConfig {
  * @example Basic usage
  * ```ts
  * const client = createClient({
- *   url: 'http://localhost:3000/api/v2',
+ *   url: 'http://localhost:3000/api/v1',
  * });
  *
  * const session = await client.session.init({
@@ -83,7 +83,7 @@ export interface ClientConfig {
  * @example With authentication
  * ```ts
  * const client = createClient({
- *   url: 'http://localhost:3000/api/v2',
+ *   url: 'http://localhost:3000/api/v1',
  *   headers: {
  *     'Authorization': 'Bearer token',
  *   },
@@ -93,7 +93,7 @@ export interface ClientConfig {
  * @example With dynamic headers
  * ```ts
  * const client = createClient({
- *   url: 'http://localhost:3000/api/v2',
+ *   url: 'http://localhost:3000/api/v1',
  *   headers: ({ context }) => ({
  *     'Authorization': `Bearer ${context?.headers?.token}`,
  *   }),

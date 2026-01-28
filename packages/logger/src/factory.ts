@@ -12,7 +12,15 @@ export function createAppLogger(context: string, options: Partial<CreateLoggerOp
   const isDevelopment = nodeEnv !== 'production';
 
   return createLogger(context, {
-    level: (process.env.LOG_LEVEL as any) || (isDevelopment ? 'debug' : 'info'),
+    level:
+      (process.env.LOG_LEVEL as
+        | 'trace'
+        | 'debug'
+        | 'info'
+        | 'warn'
+        | 'error'
+        | 'fatal'
+        | undefined) || (isDevelopment ? 'debug' : 'info'),
     pretty: isDevelopment,
     base: { env: nodeEnv },
     ...options,
