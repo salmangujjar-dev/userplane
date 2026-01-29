@@ -50,6 +50,22 @@ export interface CreateLinkParams {
 }
 
 /**
+ * Parameters for creating a link with explicit provider info
+ * Skips the linkReference parsing step
+ */
+export interface CreateLinkWithProviderParams {
+  workspaceId: string;
+  projectId?: string;
+  domainId: string;
+  createdBy: string;
+  linkTitle?: string;
+  linkReusable?: boolean;
+  linkProviderType: LinkProviderType;
+  linkProviderId?: string | null;
+  linkProviderRef?: string | null;
+}
+
+/**
  * Parameters for updating a link
  */
 export interface UpdateLinkParams {
@@ -143,16 +159,12 @@ export class LinkService {
   }
 
   /**
-   * Create a new link
-   * Parses the linkReference to infer provider info and generate title
-   * If linkReference is empty, uses user's first name as default
-   * If projectId is not provided, uses the default project for the workspace
-   * Throws NOT_FOUND if workspace or project doesn't exist
-   * Throws specific link errors if validation fails
+   * Common validation and setup for link creation
+   * Returns validated projectId and member info
    */
-  async create(params: CreateLinkParams, options?: { tx?: Transaction }) {
+  private async validateAndPrepareLink(workspaceId: string, createdBy: string, projectId?: string) {
     // Guard rail: Check if workspace is deleted
-    const isWorkspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(params.workspaceId);
+    const isWorkspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
     if (isWorkspaceDeleted === null) {
       throw linkError.LINK_NOT_FOUND();
     }
@@ -161,28 +173,28 @@ export class LinkService {
     }
 
     // Get the workspace member with user info
-    const memberWithUser = await this.deps.workspaceMemberRepo.findByIdWithUser(params.createdBy);
+    const memberWithUser = await this.deps.workspaceMemberRepo.findByIdWithUser(createdBy);
     if (!memberWithUser) {
       throw linkError.LINK_MEMBER_NOT_FOUND();
     }
 
     // Verify member belongs to the workspace
-    if (memberWithUser.workspaceId !== params.workspaceId) {
+    if (memberWithUser.workspaceId !== workspaceId) {
       throw linkError.LINK_MEMBER_WORKSPACE_MISMATCH();
     }
 
     // Determine projectId - use provided or get default
-    let projectId = params.projectId;
-    if (!projectId) {
-      const defaultProject = await this.deps.projectRepo.findDefaultByWorkspace(params.workspaceId);
+    let resolvedProjectId = projectId;
+    if (!resolvedProjectId) {
+      const defaultProject = await this.deps.projectRepo.findDefaultByWorkspace(workspaceId);
       if (!defaultProject) {
         throw linkError.LINK_DEFAULT_PROJECT_NOT_FOUND();
       }
-      projectId = defaultProject.projectId;
+      resolvedProjectId = defaultProject.projectId;
     }
 
     // Guard rail: Check if project is deleted
-    const isProjectDeleted = await this.deps.projectRepo.isSoftDeleted(projectId);
+    const isProjectDeleted = await this.deps.projectRepo.isSoftDeleted(resolvedProjectId);
     if (isProjectDeleted === null) {
       throw linkError.LINK_NOT_FOUND();
     }
@@ -190,18 +202,8 @@ export class LinkService {
       throw linkError.LINK_PROJECT_DELETED();
     }
 
-    // Determine linkReference - use provided or generate default based on user's first name
-    let linkReference = params.linkReference;
-    if (!linkReference || linkReference.trim() === '') {
-      const firstName = this.extractFirstName(memberWithUser.userName);
-      linkReference = `${firstName}'s Recording Link`;
-    }
-
-    // Parse link reference to extract provider info
-    const parsed = parseLinkReference(linkReference);
-
     // Check link entitlement before creating
-    const canAddLink = await this.deps.entitlementService.canConsumeLinks(params.workspaceId);
+    const canAddLink = await this.deps.entitlementService.canConsumeLinks(workspaceId);
     if (!canAddLink.allowed) {
       throw linkError.LINK_LIMIT_EXCEEDED({
         current: canAddLink.current,
@@ -210,24 +212,45 @@ export class LinkService {
       });
     }
 
+    return { memberWithUser, projectId: resolvedProjectId };
+  }
+
+  /**
+   * Common link creation and post-processing
+   * Handles the actual database insert and returns enriched link data
+   */
+  private async createLinkRecord(
+    params: {
+      workspaceId: string;
+      projectId: string;
+      domainId: string;
+      createdBy: string;
+      linkTitle: string | null;
+      linkReusable: boolean;
+      linkProviderType: LinkProviderType;
+      linkProviderId: string | null;
+      linkProviderRef: string | null;
+    },
+    options?: { tx?: Transaction }
+  ) {
     // Generate unique ID for the link (12-character alphanumeric)
-    const id = generateLinkId();
+    const linkId = generateLinkId();
 
     // Create the link
     // Currently only 'recording' type is supported
     const link = await this.deps.linkRepo.create(
       {
-        linkId: id,
+        linkId,
         workspaceId: params.workspaceId,
-        projectId,
+        projectId: params.projectId,
         domainId: params.domainId,
         createdBy: params.createdBy,
-        linkTitle: parsed.linkTitle,
+        linkTitle: params.linkTitle,
         linkType: 'recording',
-        linkReusable: params.linkReusable ?? false,
-        linkProviderType: parsed.linkProviderType,
-        linkProviderId: parsed.linkProviderId,
-        linkProviderRef: parsed.linkProviderRef,
+        linkReusable: params.linkReusable,
+        linkProviderType: params.linkProviderType,
+        linkProviderId: params.linkProviderId,
+        linkProviderRef: params.linkProviderRef,
       },
       options
     );
@@ -272,6 +295,81 @@ export class LinkService {
       recordingCaptureServerLog: domain?.recordingCaptureServerLog || false,
       recordingCaptureNetworkLog: domain?.recordingCaptureNetworkLog || false,
     };
+  }
+
+  /**
+   * Create a new link
+   * Parses the linkReference to infer provider info and generate title
+   * If linkReference is empty, uses user's first name as default
+   * If projectId is not provided, uses the default project for the workspace
+   * Throws NOT_FOUND if workspace or project doesn't exist
+   * Throws specific link errors if validation fails
+   */
+  async create(params: CreateLinkParams, options?: { tx?: Transaction }) {
+    // Validate and prepare
+    const { memberWithUser, projectId } = await this.validateAndPrepareLink(
+      params.workspaceId,
+      params.createdBy,
+      params.projectId
+    );
+
+    // Determine linkReference - use provided or generate default based on user's first name
+    let linkReference = params.linkReference;
+    if (!linkReference || linkReference.trim() === '') {
+      const firstName = this.extractFirstName(memberWithUser.userName);
+      linkReference = `${firstName}'s Recording Link`;
+    }
+
+    // Parse link reference to extract provider info
+    const parsed = parseLinkReference(linkReference);
+
+    // Create the link record
+    return this.createLinkRecord(
+      {
+        workspaceId: params.workspaceId,
+        projectId,
+        domainId: params.domainId,
+        createdBy: params.createdBy,
+        linkTitle: parsed.linkTitle,
+        linkReusable: params.linkReusable ?? false,
+        linkProviderType: parsed.linkProviderType,
+        linkProviderId: parsed.linkProviderId,
+        linkProviderRef: parsed.linkProviderRef,
+      },
+      options
+    );
+  }
+
+  /**
+   * Create a new link with explicit provider info
+   * Skips the linkReference parsing step - use this when provider info is already known
+   * If projectId is not provided, uses the default project for the workspace
+   * Throws NOT_FOUND if workspace or project doesn't exist
+   * Throws specific link errors if validation fails
+   */
+  async createWithProvider(params: CreateLinkWithProviderParams, options?: { tx?: Transaction }) {
+    // Validate and prepare
+    const { projectId } = await this.validateAndPrepareLink(
+      params.workspaceId,
+      params.createdBy,
+      params.projectId
+    );
+
+    // Create the link record with explicit provider info
+    return this.createLinkRecord(
+      {
+        workspaceId: params.workspaceId,
+        projectId,
+        domainId: params.domainId,
+        createdBy: params.createdBy,
+        linkTitle: params.linkTitle ?? null,
+        linkReusable: params.linkReusable ?? false,
+        linkProviderType: params.linkProviderType,
+        linkProviderId: params.linkProviderId ?? null,
+        linkProviderRef: params.linkProviderRef ?? null,
+      },
+      options
+    );
   }
 
   /**

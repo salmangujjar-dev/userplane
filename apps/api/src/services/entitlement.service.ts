@@ -180,44 +180,6 @@ export class EntitlementService {
     // Check subscription access status first
     const accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
 
-    // If subscription access is revoked, use free plan limits
-    if (accessStatus.effectivePlanId === 'free') {
-      // Get free plan limits for this resource
-      const freePlanLimits = PLAN_ENTITLEMENTS['free']?.[resourceType];
-      const freeLimit = freePlanLimits?.hardLimit ?? 0;
-      const freeSoftLimit = freePlanLimits?.softLimit ?? 0;
-
-      // Get current consumption
-      const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
-        workspaceId,
-        resourceType
-      );
-      const currentConsumed = entitlement?.resourceConsumed ?? 0;
-
-      // Check against free plan limits using reusable threshold function
-      const thresholds = this.checkLimitThresholds(
-        currentConsumed,
-        freeSoftLimit,
-        freeLimit,
-        amount
-      );
-
-      if (!thresholds.canConsume) {
-        return {
-          allowed: false,
-          reason: this.getAccessDeniedReason(accessStatus.accessStatus),
-          current: currentConsumed,
-          limit: freeLimit,
-        };
-      }
-
-      return {
-        allowed: true,
-        current: currentConsumed,
-        limit: freeLimit,
-      };
-    }
-
     const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
       workspaceId,
       resourceType
@@ -261,11 +223,15 @@ export class EntitlementService {
       amount
     );
 
+    // If consumption is not allowed, return the reason
     if (!thresholds.canConsume) {
-      const reason =
-        cooldownMultiplier < 1.0
-          ? `Subscription in ramp-up period (${Math.floor(cooldownMultiplier * 100)}% capacity). Limit: ${effectiveHardLimit}`
-          : `Resource limit reached (${current}/${effectiveHardLimit})`;
+      // If subscription is active and access is denied
+      const reason = this.getSubscriptionAccessDeniedReason(
+        accessStatus.accessStatus,
+        cooldownMultiplier,
+        current,
+        effectiveHardLimit
+      );
 
       return {
         allowed: false,
@@ -289,9 +255,24 @@ export class EntitlementService {
 
   /**
    * Get user-friendly reason for access denial based on subscription status
+   * - If subscription is active and in ramp-up period, return the ramp-up period reason
+   * - If subscription is active and resource limit is reached, return the resource limit reached reason
+   * - If subscription is not active, return the subscription access denied reason
+   * - If subscription is in grace period, return the grace period reason
+   * - If subscription is under dispute, return the dispute reason
+   * - If subscription is refunded, return the refunded reason
    */
-  private getAccessDeniedReason(accessStatus: SubscriptionAccessStatus['accessStatus']): string {
+  private getSubscriptionAccessDeniedReason(
+    accessStatus: SubscriptionAccessStatus['accessStatus'],
+    cooldownMultiplier: number,
+    currentUsage: number,
+    effectiveHardLimit: number
+  ): string {
     switch (accessStatus) {
+      case 'active':
+        return cooldownMultiplier < 1.0
+          ? `Subscription in ramp-up period (${Math.floor(cooldownMultiplier * 100)}% capacity). Limit: ${effectiveHardLimit}`
+          : `Resource limit reached (${currentUsage}/${effectiveHardLimit})`;
       case 'inactive':
         return 'No active subscription. Upgrade to access more resources.';
       case 'grace':
