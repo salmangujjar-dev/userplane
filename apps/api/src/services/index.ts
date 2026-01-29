@@ -44,6 +44,7 @@ import { BillingService } from '@/api/services/billing.service';
 import { DomainService } from '@/api/services/domain.service';
 import { emailService } from '@/api/services/email.service';
 import { EntitlementService } from '@/api/services/entitlement.service';
+import { IntercomCanvasService } from '@/api/services/intercom-canvas.service';
 import { IntercomService } from '@/api/services/intercom-oauth.service';
 import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
@@ -218,12 +219,24 @@ export const sessionService = new SessionService({
   cacheService,
 });
 
-// Intercom service
+// Intercom OAuth service
 export const intercomService = new IntercomService({
   tokenService,
   integrationRepo,
   provisionerService,
   inviteService,
+});
+
+// Intercom Canvas service
+export const intercomCanvasService = new IntercomCanvasService({
+  integrationRepo,
+  userRepo,
+  workspaceMemberRepo,
+  linkService,
+  projectRepo,
+  domainRepo,
+  entitlementService,
+  workspaceRepo,
 });
 
 // Export tokenService, emailService, and repositories for use in routes

@@ -16,8 +16,15 @@ import { prettyJSON } from 'hono/pretty-json';
 import { auth } from '@/api/clients/auth';
 import { rateLimiter } from '@/api/clients/redis';
 import { env, logConfig } from '@/api/env';
+import {
+  createConfigureHandler,
+  createInitializeHandler,
+  createSubmitHandler,
+} from '@/api/handlers/intercom-canvas.handler';
 import { runWithWebhookContext } from '@/api/lib/webhook-context';
+import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
 import { apiRouter } from '@/api/routes/api.router';
+import { intercomCanvasService } from '@/api/services';
 
 const app = new Hono();
 const logger = createAppLogger('api');
@@ -113,6 +120,23 @@ app.on(['POST', 'GET'], '/api/auth/*', (c) => {
 
   return auth.handler(c.req.raw);
 });
+
+// Intercom Canvas Kit routes
+// These routes are called by Intercom and require signature verification
+const canvasRouter = new Hono();
+
+// Apply signature verification middleware to all canvas routes
+canvasRouter.use('*', verifyIntercomSignature(env.intercom.clientSecret));
+
+// Canvas Kit endpoints
+canvasRouter.post('/initialize', createInitializeHandler(intercomCanvasService));
+canvasRouter.post('/configure', createConfigureHandler(intercomCanvasService));
+canvasRouter.post('/submit', createSubmitHandler(intercomCanvasService));
+
+// Mount canvas routes under /api/v1/intercom/canvas
+app.route('/api/v1/intercom/canvas', canvasRouter);
+
+logger.info('Intercom Canvas Kit routes registered at /api/v1/intercom/canvas');
 
 // OpenAPI handler - handles RESTful requests
 // Respects HTTP methods and paths defined in the contract
