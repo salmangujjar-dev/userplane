@@ -16,6 +16,7 @@ export * from './domain';
 export * from './domain.errors';
 export * from './form';
 export * from './integration';
+export * from './intercom.errors';
 export * from './invite';
 export * from './invite.errors';
 export * from './link';
