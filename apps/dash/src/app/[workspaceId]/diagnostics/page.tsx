@@ -1,6 +1,5 @@
 'use client';
 
-import type { CacheType } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import { useState } from 'react';
 import { ClearCacheModal } from '@/components/modals/clear-cache-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { useClearClientCache, useClearServerCache } from '@/hooks/use-diagnostics';
+import type { CacheType } from '@/types';
 
 export default function DiagnosticsPage() {
   const params = useParams();

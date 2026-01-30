@@ -1,12 +1,5 @@
 'use client';
 
-import {
-  ADMIN_WORKSPACE_SORT_OPTIONS,
-  ADMIN_WORKSPACE_STATUS_OPTIONS,
-  ADMIN_WORKSPACES_PAGINATION,
-  type AdminNotifyDuration,
-  SORT_DIRECTION_OPTIONS,
-} from '@workspace/contract';
 import type {
   PlanId, // Used for create invite (includes all plans including sandbox/free)
 } from '@workspace/pricing';
@@ -30,7 +23,12 @@ import { AdminSidebar } from '@/components/navigation/admin-sidebar';
 import { AdminTopActions } from '@/components/navigation/admin-top-actions';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import {
-  type AdminWorkspaceCreateInviteResponse,
+  ADMIN_WORKSPACE_SORT_OPTIONS,
+  ADMIN_WORKSPACE_STATUS_OPTIONS,
+  ADMIN_WORKSPACES_PAGINATION,
+  SORT_DIRECTION_OPTIONS,
+} from '@/constants/admin';
+import {
   useAdminCreateWorkspaceInvite,
   useAdminDeactivateWorkspace,
   useAdminResetInviteToken,
@@ -45,6 +43,8 @@ import {
   searchParser,
   singleValueArrayParser,
 } from '@/lib/parsers';
+import type { AdminNotifyDuration } from '@/types';
+import type { AdminCreateWorkspaceInviteData } from '@/types';
 
 const ITEMS_PER_PAGE = ADMIN_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE;
 
@@ -111,7 +111,7 @@ function AdminRecordingsPageContent() {
 
   const [showCreateInviteModal, setShowCreateInviteModal] = useState(false);
   const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
-  const [inviteResult, setInviteResult] = useState<AdminWorkspaceCreateInviteResponse | null>(null);
+  const [inviteResult, setInviteResult] = useState<AdminCreateWorkspaceInviteData | null>(null);
 
   // Mutations
   const deactivateMutation = useAdminDeactivateWorkspace();
