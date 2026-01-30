@@ -225,6 +225,7 @@ export const intercomService = new IntercomService({
   integrationRepo,
   provisionerService,
   inviteService,
+  cacheService,
 });
 
 // Intercom Canvas service
@@ -237,6 +238,7 @@ export const intercomCanvasService = new IntercomCanvasService({
   domainRepo,
   entitlementService,
   workspaceRepo,
+  cacheService,
 });
 
 // Export tokenService, emailService, and repositories for use in routes

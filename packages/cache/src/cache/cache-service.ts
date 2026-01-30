@@ -15,6 +15,7 @@ import {
   disputeKeys,
   entitlementKeys,
   getWorkspaceBillingKeys,
+  integrationKeys,
   linkKeys,
   refundKeys,
 } from './keys';
@@ -296,5 +297,43 @@ export class CacheService {
   async invalidateUsage(workspaceId: string): Promise<void> {
     const usageKey = entitlementKeys.usageSummary(workspaceId);
     await this.delete(usageKey);
+  }
+
+  // ============================================================
+  // Typed cache operations for integrations
+  // ============================================================
+
+  /**
+   * Cached integration data
+   */
+  async getIntegrationByProviderWorkspace<T>(
+    provider: string,
+    providerWorkspaceId: string,
+    options?: CacheOptions
+  ): Promise<T | null> {
+    if (options?.bypass) return null;
+    const key = integrationKeys.byProviderWorkspace(provider, providerWorkspaceId);
+    return this.get<T>(key);
+  }
+
+  /**
+   * Cache integration lookup result
+   */
+  async setIntegrationByProviderWorkspace<T>(
+    provider: string,
+    providerWorkspaceId: string,
+    integration: T
+  ): Promise<void> {
+    const key = integrationKeys.byProviderWorkspace(provider, providerWorkspaceId);
+    await this.set(key, integration, TTL.INTEGRATION_LOOKUP);
+  }
+
+  /**
+   * Invalidate integration cache
+   * Called when integration is connected/disconnected
+   */
+  async invalidateIntegration(provider: string, providerWorkspaceId: string): Promise<void> {
+    const key = integrationKeys.byProviderWorkspace(provider, providerWorkspaceId);
+    await this.delete(key);
   }
 }

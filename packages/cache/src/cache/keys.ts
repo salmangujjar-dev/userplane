@@ -69,6 +69,18 @@ export const linkKeys = {
 };
 
 /**
+ * Integration-related cache keys
+ */
+export const integrationKeys = {
+  /**
+   * Integration lookup by provider workspace ID
+   * Used by: IntercomCanvasService for workspace resolution
+   */
+  byProviderWorkspace: (provider: string, providerWorkspaceId: string) =>
+    `integration:${provider}:${providerWorkspaceId}`,
+};
+
+/**
  * Get cache keys by type
  */
 export function getCacheKeysByType(workspaceId: string, type: CacheType): string[] {

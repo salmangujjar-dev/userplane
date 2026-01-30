@@ -1,21 +1,47 @@
 /**
  * IntercomCanvasService - Business logic for Intercom Canvas Kit integration
- * Handles initialize, configure, and submit flows for the Inbox and Messenger apps
+ *
+ * Provides explicit methods for Messenger (customer-facing) and Inbox (teammate) flows:
+ *
+ * Messenger methods:
+ * - handleMessengerInitialize() - Customer opens card, expects card_creation_options
+ * - handleMessengerSubmit() - Customer interacts with card
+ *
+ * Inbox methods:
+ * - handleInboxInitialize() - Teammate opens inbox app, expects admin
+ * - handleInboxSubmit() - Teammate interacts with inbox app
+ *
+ * Configure method (used by Messenger):
+ * - handleConfigure() - Teammate configures card before sending
+ *
+ * Features:
+ * - Cache-first integration lookup with graceful degradation
+ * - Structured logging with Pino
+ * - Sentry breadcrumbs for operation tracing
  */
+
+import * as Sentry from '@sentry/bun';
+import type { CacheService } from '@workspace/cache';
+import { createAppLogger } from '@workspace/logger';
 
 import {
   buildAccessRequestedCanvas,
   buildCanvasErrorCanvas,
   buildConnectIntegrationCanvas,
-  // buildIntegrationNotFoundCanvas,
+  buildIntercomConversationRef,
   buildLimitExceededCanvas,
   buildLinkCreatorCanvas,
   buildOpenerCanvas,
   buildRecordingCanvas,
   buildSignUpCanvas,
   buildSuccessCanvas,
+  ConfigureComponentId,
   type DomainOption,
+  extractLinkCreatorFormValues,
+  getTeammateDisplayName,
+  InboxComponentId,
   type ProjectOption,
+  resolveRecordingMessage,
 } from '@/api/lib/intercom-canvas';
 import type { DomainRepository } from '@/api/repositories/domains.repository';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
@@ -25,17 +51,23 @@ import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-mem
 import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { LinkService } from '@/api/services/link.service';
-import type {
-  CanvasInputValues,
-  CanvasResponse,
-  ConfigureResponse,
-  IntercomAdmin,
-  IntercomCanvasConfigureRequest,
-  IntercomCanvasInitializeRequest,
-  IntercomCanvasSubmitRequest,
-  IntercomConversation,
-  MessengerLocation,
+import {
+  type CanvasInputValues,
+  type CanvasResponse,
+  type ConfigureResponse,
+  type IntercomCanvasConfigureRequest,
+  type IntercomCanvasInitializeRequest,
+  type IntercomCanvasSubmitRequest,
+  type IntercomConversation,
+  type IntercomTeammate,
+  RecordingCanvasStoredDataSchema,
 } from '@/api/types/intercom-canvas';
+
+// =============================================================================
+// Service Dependencies & Types
+// =============================================================================
+
+const logger = createAppLogger('intercom-canvas-service');
 
 export interface IntercomCanvasServiceDeps {
   integrationRepo: IntegrationRepository;
@@ -46,587 +78,375 @@ export interface IntercomCanvasServiceDeps {
   domainRepo: DomainRepository;
   entitlementService: EntitlementService;
   workspaceRepo: WorkspaceRepository;
+  cacheService: CacheService;
 }
 
-interface WorkspaceContext {
+/**
+ * Verified workspace context after access check
+ */
+interface VerifiedWorkspaceContext {
   workspaceId: string;
   workspaceMemberId: string;
 }
 
 /**
- * Result of admin access verification
+ * Result of teammate access verification
  */
-type AdminAccessResult =
-  | { status: 'granted'; context: WorkspaceContext }
+type TeammateAccessResult =
+  | { status: 'granted'; context: VerifiedWorkspaceContext }
   | { status: 'user_not_found' }
+  | { status: 'integration_not_found' }
   | { status: 'not_workspace_member' };
 
 /**
- * Result of user existence check
+ * Cached integration data structure
  */
-interface UserExists {
-  userId: string;
+interface CachedIntegration {
+  workspaceId: string;
 }
 
-/**
- * Messenger location values per Intercom Canvas Kit spec
- */
-const MESSENGER_LOCATIONS: MessengerLocation[] = ['conversation', 'home', 'message'];
-
-/**
- * Check if location is a messenger context (customer-facing)
- */
-function isMessengerLocation(location?: string): location is MessengerLocation {
-  return MESSENGER_LOCATIONS.includes(location as MessengerLocation);
-}
+// =============================================================================
+// Service Implementation
+// =============================================================================
 
 export class IntercomCanvasService {
   constructor(private deps: IntercomCanvasServiceDeps) {}
 
-  /**
-   * Handle initialize request from Intercom Canvas Kit
-   * Routes to appropriate canvas based on context (inbox vs messenger)
-   *
-   * Messenger locations: 'conversation', 'home', 'message' - customer-facing
-   * Inbox location: 'inbox' - teammate-facing
-   */
-  async handleInitialize(req: IntercomCanvasInitializeRequest): Promise<CanvasResponse> {
-    const { context, admin, user, card_creation_options, workspace_id } = req;
-    const location = context?.location;
-
-    // Messenger context: customer is viewing the card
-    // Identified by messenger locations OR presence of user object without admin
-    if (isMessengerLocation(location) || (user && !admin)) {
-      return this.handleMessengerInitialize(card_creation_options);
-    }
-
-    // Inbox context: teammate is viewing the app
-    // Requires admin and workspace_id
-    if (!admin || !workspace_id) {
-      return { canvas: buildCanvasErrorCanvas() };
-    }
-
-    return this.handleInboxInitialize(workspace_id, admin);
-  }
+  // ===========================================================================
+  // Messenger Methods (Customer-facing)
+  // ===========================================================================
 
   /**
-   * Handle configure request for card creation flow
-   * This flow is used when teammate inserts the app into a conversation
+   * Handle messenger card initialization for customer
    *
-   * Flow:
-   * 1. Initial request: Show link creator canvas
-   * 2. Teammate selects project/domain and clicks "Create Link"
-   * 3. Create the link and return results with link_url
-   * 4. Results become card_creation_options for initialize flow
+   * Called when a customer opens a card in Messenger.
+   * The card was previously configured via handleConfigure() which set card_creation_options.
+   *
+   * Note: Request is already validated by Zod at handler boundary.
    */
-  async handleConfigure(
-    req: IntercomCanvasConfigureRequest
-  ): Promise<ConfigureResponse | CanvasResponse> {
-    const {
-      admin: intercomAdmin,
-      workspace_id: intercomWorkspaceId,
-      component_id,
-      input_values,
-    } = req;
+  handleMessengerInitialize(req: IntercomCanvasInitializeRequest): CanvasResponse {
+    const { card_creation_options } = req;
 
-    if (!intercomAdmin || !intercomWorkspaceId) {
-      return { canvas: buildCanvasErrorCanvas() };
-    }
-
-    // If component_id is present, this is a subsequent request (teammate interaction)
-    if (component_id) {
-      return this.handleConfigureSubmit(
-        intercomAdmin,
-        component_id,
-        intercomWorkspaceId,
-        req.context?.conversation_id?.toString(),
-        input_values
+    // card_creation_options.link_url is required for messenger cards
+    // This is a data integrity issue if missing (card was misconfigured)
+    if (!card_creation_options?.link_url) {
+      logger.warn(
+        { workspaceId: req.workspace_id },
+        'Messenger card missing link_url - card misconfigured'
       );
+      return { canvas: buildCanvasErrorCanvas() };
     }
 
-    // Initial configure request: show link creator canvas
-    return this.handleConfigureInitial(intercomWorkspaceId, intercomAdmin);
-  }
-
-  /**
-   * Handle initial configure request - show link creator canvas
-   */
-  private async handleConfigureInitial(
-    intercomWorkspaceId: string,
-    intercomAdmin: IntercomAdmin
-  ): Promise<CanvasResponse> {
-    // Find integration
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId(
-      'intercom',
-      intercomWorkspaceId
-    );
-
-    const intercomAdminEmail = intercomAdmin.email;
-
-    if (!integration) {
-      return this.buildIntegrationNotFoundResponse(intercomAdminEmail);
-    }
-
-    // Verify admin access
-    const accessResult = await this.verifyAdminAccess(integration.workspaceId, intercomAdminEmail);
-
-    if (accessResult.status !== 'granted') {
-      return this.buildAccessDeniedCanvas(accessResult, intercomAdminEmail);
-    }
-
-    // Check if link limit exceeded
-    const canAddLink = await this.deps.entitlementService.canConsumeLinks(integration.workspaceId);
-    if (!canAddLink.allowed) {
-      return {
-        canvas: buildLimitExceededCanvas({
-          workspaceId: integration.workspaceId,
-          limitType: 'links',
-        }),
-      };
-    }
-
-    // Get projects and domains for dropdowns
-    const { projects, domains } = await this.getProjectsAndDomains(integration.workspaceId);
-
-    if (projects.length === 0 || domains.length === 0) {
-      return {
-        canvas: buildCanvasErrorCanvas(),
-      };
-    }
+    Sentry.addBreadcrumb({
+      category: 'intercom',
+      message: 'Messenger initialize - showing recording canvas',
+      level: 'info',
+      data: { workspaceId: req.workspace_id, hasLinkUrl: true },
+    });
 
     return {
-      canvas: buildLinkCreatorCanvas({
-        projects,
-        domains,
-        adminName: intercomAdmin.name || intercomAdminEmail,
+      canvas: buildRecordingCanvas({
+        linkUrl: card_creation_options.link_url,
+        linkTitle: card_creation_options.link_title,
+        customMessage: card_creation_options.custom_message,
+        footer: card_creation_options.footer,
       }),
     };
   }
 
   /**
-   * Handle configure submit - teammate clicked a button in configure canvas
-   * Returns results object when link is created, which ends configure flow
-   */
-  private async handleConfigureSubmit(
-    intercomAdmin: IntercomAdmin,
-    componentId: string,
-    intercomWorkspaceId: string,
-    intercomConversationId?: string,
-    inputValues?: CanvasInputValues
-  ): Promise<ConfigureResponse | CanvasResponse> {
-    switch (componentId) {
-      case 'create_link':
-        return this.handleConfigureCreateLink(
-          intercomAdmin,
-          intercomWorkspaceId,
-          intercomConversationId,
-          inputValues
-        );
-
-      case 'go_back':
-        // Return to initial configure canvas
-        return this.handleConfigureInitial(intercomWorkspaceId, intercomAdmin);
-
-      default:
-        return { canvas: buildCanvasErrorCanvas() };
-    }
-  }
-
-  /**
-   * Handle link creation in configure flow
-   * Creates link and returns results to complete configure flow
-   */
-  private async handleConfigureCreateLink(
-    intercomAdmin: IntercomAdmin,
-    intercomWorkspaceId: string,
-    intercomConversationId?: string,
-    inputValues?: CanvasInputValues
-  ): Promise<ConfigureResponse | CanvasResponse> {
-    if (!inputValues) {
-      return { canvas: buildCanvasErrorCanvas() };
-    }
-
-    const projectId = inputValues.project_id as string | undefined;
-    const domainId = inputValues.domain_id as string | undefined;
-    const customMessage = inputValues.custom_message as string | undefined;
-
-    if (!projectId || !domainId) {
-      return { canvas: buildCanvasErrorCanvas() };
-    }
-
-    // Find integration
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId(
-      'intercom',
-      intercomWorkspaceId
-    );
-
-    const intercomAdminEmail = intercomAdmin.email;
-
-    if (!integration) {
-      return this.buildIntegrationNotFoundResponse(intercomAdminEmail);
-    }
-
-    // Verify admin access
-    const accessResult = await this.verifyAdminAccess(integration.workspaceId, intercomAdminEmail);
-
-    if (accessResult.status !== 'granted') {
-      return this.buildAccessDeniedCanvas(accessResult, intercomAdminEmail);
-    }
-
-    // Fetch workspace preferences for footer
-    const workspacePreferences = await this.deps.workspaceRepo.findPreferencesById(
-      integration.workspaceId
-    );
-
-    const intercomConversationUrl = `https://app.intercom.com/a/inbox/${intercomWorkspaceId}/inbox/shared/all/conversation/${intercomConversationId}`;
-
-    const intercomConversationTitle = `Intercom #${intercomConversationId}`;
-
-    // Create the recording link with explicit provider info
-    try {
-      const link = await this.deps.linkService.createWithProvider({
-        workspaceId: integration.workspaceId,
-        projectId,
-        domainId,
-        createdBy: accessResult.context.workspaceMemberId,
-        linkReusable: false,
-        linkProviderType: 'intercom',
-        linkTitle: intercomConversationTitle,
-        linkProviderId: intercomConversationId,
-        linkProviderRef: intercomConversationUrl,
-      });
-
-      // Generate link URL
-      const linkUrl = this.deps.linkService.generateLinkURL(
-        link.linkId,
-        link.workspaceId,
-        link.domainUrl,
-        link.domainStatus,
-        link.recordingHideSensitive,
-        link.recordingCaptureClientLog,
-        false,
-        link.recordingCaptureServerLog,
-        link.recordingCaptureNetworkLog
-      );
-
-      // Generate default message with admin's name
-      const adminName = intercomAdmin.name || intercomAdminEmail;
-      const defaultMessage = `${adminName} has requested a screen recording`;
-      const messageToUse = customMessage?.trim() || defaultMessage;
-
-      // Return results to complete configure flow
-      // These values become card_creation_options in initialize
-      return {
-        results: {
-          link_url: linkUrl,
-          custom_message: messageToUse,
-          footer: workspacePreferences?.recordingFootnote ?? null,
-        },
-      };
-    } catch (error) {
-      // Check for limit exceeded error
-      if (error && typeof error === 'object' && 'code' in error) {
-        const errorWithCode = error as { code: string };
-        if (errorWithCode.code === 'LINK_LIMIT_EXCEEDED') {
-          return {
-            canvas: buildLimitExceededCanvas({
-              workspaceId: integration.workspaceId,
-              limitType: 'links',
-            }),
-          };
-        }
-      }
-
-      return { canvas: buildCanvasErrorCanvas() };
-    }
-  }
-
-  /**
-   * Handle submit request from Intercom Canvas Kit
-   * Routes to appropriate handler based on context and component_id
-   *
-   * Messenger submits: handled by handleMessengerSubmit (customer actions)
-   * Inbox submits: handled by handleInboxSubmit (teammate actions)
-   */
-  async handleSubmit(req: IntercomCanvasSubmitRequest): Promise<CanvasResponse> {
-    const { component_id, context, workspace_id } = req;
-
-    if (!component_id || !workspace_id) {
-      return { canvas: buildCanvasErrorCanvas() };
-    }
-
-    const location = context?.location;
-
-    // Route based on context location
-    if (isMessengerLocation(location) || (req.user && !req.admin)) {
-      return this.handleMessengerSubmit(req);
-    }
-
-    return this.handleInboxSubmit(req);
-  }
-
-  /**
    * Handle submit from Messenger context (customer actions)
-   * Currently the recording canvas uses URL action, so submits shouldn't occur
-   * This is a safety handler for future messenger interactions
+   *
+   * Currently the recording canvas uses URL action, so submits shouldn't occur.
+   * This is a safety handler for future messenger interactions.
    */
-  private handleMessengerSubmit(req: IntercomCanvasSubmitRequest): CanvasResponse {
-    const { component_id, current_canvas } = req;
+  handleMessengerSubmit(req: IntercomCanvasSubmitRequest): CanvasResponse {
+    const { component_id, current_canvas, workspace_id } = req;
 
-    // For now, messenger cards don't have submit actions
-    // The recording button uses URL action type, not submit
-    // This handles any unexpected submits gracefully
-    switch (component_id) {
-      default: {
-        // If we have stored link URL, show recording canvas again
-        const storedLinkUrl = current_canvas?.stored_data?.link_url as string | undefined;
-        if (storedLinkUrl) {
-          return {
-            canvas: buildRecordingCanvas({
-              linkUrl: storedLinkUrl,
-              linkTitle: current_canvas?.stored_data?.link_title as string | undefined,
-              customMessage: current_canvas?.stored_data?.custom_message as string | undefined,
-              footer: current_canvas?.stored_data?.footer as string | null | undefined,
-            }),
-          };
-        }
-        return { canvas: buildCanvasErrorCanvas() };
-      }
+    logger.debug(
+      { componentId: component_id, workspaceId: workspace_id },
+      'Messenger submit (unexpected)'
+    );
+
+    Sentry.addBreadcrumb({
+      category: 'intercom',
+      message: 'Messenger submit - unexpected action',
+      level: 'warning',
+      data: { workspaceId: workspace_id, componentId: component_id },
+    });
+
+    // Parse stored_data with Zod for type safety
+    const storedDataResult = RecordingCanvasStoredDataSchema.safeParse(current_canvas?.stored_data);
+    if (storedDataResult.success) {
+      const storedData = storedDataResult.data;
+      return {
+        canvas: buildRecordingCanvas({
+          linkUrl: storedData.link_url,
+          linkTitle: storedData.link_title,
+          customMessage: storedData.custom_message,
+          footer: storedData.footer,
+        }),
+      };
     }
+
+    return { canvas: buildCanvasErrorCanvas() };
+  }
+
+  // ===========================================================================
+  // Inbox Methods (Teammate-facing)
+  // ===========================================================================
+
+  /**
+   * Handle inbox app initialization for teammate
+   *
+   * Called when a teammate opens the app in the Inbox conversation details.
+   * Verifies teammate access and returns opener canvas.
+   */
+  async handleInboxInitialize(req: IntercomCanvasInitializeRequest): Promise<CanvasResponse> {
+    const { admin: teammate, workspace_id: intercomWorkspaceId } = req;
+
+    // Zod schema allows optional admin for messenger/inbox compatibility.
+    // Inbox flow requires teammate - this is a runtime invariant check.
+    if (!teammate) {
+      logger.warn(
+        { intercomWorkspaceId },
+        'Inbox initialize called without teammate - invalid request routing'
+      );
+      return { canvas: buildCanvasErrorCanvas() };
+    }
+
+    Sentry.addBreadcrumb({
+      category: 'intercom',
+      message: 'Inbox initialize',
+      level: 'info',
+      data: { intercomWorkspaceId, teammateEmail: teammate.email },
+    });
+
+    return this.showOpenerCanvas(intercomWorkspaceId, teammate);
   }
 
   /**
    * Handle submit from Inbox context (teammate actions)
-   * Routes to appropriate handler based on component_id
+   *
+   * Routes to appropriate handler based on component_id.
    */
-  private async handleInboxSubmit(req: IntercomCanvasSubmitRequest): Promise<CanvasResponse> {
+  async handleInboxSubmit(req: IntercomCanvasSubmitRequest): Promise<CanvasResponse> {
     const {
-      component_id,
-      admin: intercomAdmin,
-      input_values,
+      component_id: componentId,
+      admin: teammate,
+      input_values: inputValues,
       workspace_id: intercomWorkspaceId,
       conversation,
     } = req;
 
-    if (!intercomAdmin || !intercomWorkspaceId) {
+    // Zod schema allows optional admin for messenger/inbox compatibility.
+    // Inbox flow requires teammate - this is a runtime invariant check.
+    if (!teammate) {
+      logger.warn(
+        { componentId, intercomWorkspaceId },
+        'Inbox submit called without teammate - invalid request routing'
+      );
       return { canvas: buildCanvasErrorCanvas() };
     }
 
-    switch (component_id) {
-      case 'request_recording':
-        return this.handleRequestRecording(intercomWorkspaceId, intercomAdmin);
+    Sentry.addBreadcrumb({
+      category: 'intercom',
+      message: `Inbox submit - ${componentId}`,
+      level: 'info',
+      data: { intercomWorkspaceId, teammateEmail: teammate.email, componentId },
+    });
 
-      case 'create_link':
-        return this.handleCreateLink(
+    switch (componentId) {
+      case InboxComponentId.REQUEST_RECORDING:
+        return this.showLinkCreatorCanvas(intercomWorkspaceId, teammate);
+
+      case InboxComponentId.CREATE_LINK:
+        return this.createLinkAndShowSuccess(
           intercomWorkspaceId,
           conversation,
-          intercomAdmin,
-          input_values
+          teammate,
+          inputValues
         );
 
-      case 'go_back':
-      case 'done':
-      case 'retry':
-        return this.handleInboxInitialize(intercomWorkspaceId, intercomAdmin);
+      case InboxComponentId.GO_BACK:
+      case InboxComponentId.DONE:
+      case InboxComponentId.RETRY:
+        return this.showOpenerCanvas(intercomWorkspaceId, teammate);
 
-      case 'create_another':
-        return this.handleRequestRecording(intercomWorkspaceId, intercomAdmin);
+      case InboxComponentId.CREATE_ANOTHER:
+        return this.showLinkCreatorCanvas(intercomWorkspaceId, teammate);
 
       default:
+        logger.warn({ componentId, intercomWorkspaceId }, 'Unknown inbox component_id');
         return { canvas: buildCanvasErrorCanvas() };
     }
   }
 
+  // ===========================================================================
+  // Configure Methods (Messenger card configuration)
+  // ===========================================================================
+
   /**
-   * Handle inbox app initialization for teammate
-   * Verifies admin access and returns opener canvas
+   * Handle configure request for card creation flow
+   *
+   * This flow is used when teammate inserts the app into a conversation.
    */
-  private async handleInboxInitialize(
-    providerWorkspaceId: string,
-    intercomAdmin?: IntercomAdmin
-  ): Promise<CanvasResponse> {
-    if (!intercomAdmin) {
+  async handleConfigure(
+    req: IntercomCanvasConfigureRequest
+  ): Promise<ConfigureResponse | CanvasResponse> {
+    const {
+      admin: teammate,
+      workspace_id: intercomWorkspaceId,
+      component_id: componentId,
+      input_values: inputValues,
+      context,
+    } = req;
+
+    // Configure schema requires admin, but defensive check for type narrowing
+    if (!teammate || !intercomWorkspaceId) {
+      logger.warn('Configure called with missing teammate or workspace_id');
       return { canvas: buildCanvasErrorCanvas() };
     }
 
-    // Find integration by provider workspace ID
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId(
-      'intercom',
-      providerWorkspaceId
-    );
-
-    const intercomAdminEmail = intercomAdmin.email;
-
-    if (!integration) {
-      // Integration not found - check if user exists and has workspaces
-      return this.buildIntegrationNotFoundResponse(intercomAdminEmail);
+    // Subsequent request (teammate interaction)
+    if (componentId) {
+      return this.handleConfigureSubmit(
+        teammate,
+        componentId,
+        intercomWorkspaceId,
+        context?.conversation_id?.toString(),
+        inputValues
+      );
     }
 
-    // Verify admin is a workspace member
-    const accessResult = await this.verifyAdminAccess(integration.workspaceId, intercomAdminEmail);
+    // Initial configure request: show link creator canvas
+    return this.showConfigureLinkCreatorCanvas(intercomWorkspaceId, teammate);
+  }
+
+  // ===========================================================================
+  // Private: Canvas Display Methods
+  // ===========================================================================
+
+  /**
+   * Show opener canvas with "Request recording" and "View recordings" buttons
+   */
+  private async showOpenerCanvas(
+    intercomWorkspaceId: string,
+    teammate: IntercomTeammate
+  ): Promise<CanvasResponse> {
+    const accessResult = await this.verifyTeammateAccess(intercomWorkspaceId, teammate.email);
 
     if (accessResult.status !== 'granted') {
-      return this.buildAccessDeniedCanvas(accessResult, intercomAdminEmail);
+      return this.buildAccessDeniedCanvas(accessResult, teammate.email);
     }
 
-    // Return opener canvas with recordings URL filtered by this teammate
     return {
       canvas: buildOpenerCanvas({
-        workspaceId: integration.workspaceId,
+        workspaceId: accessResult.context.workspaceId,
         workspaceMemberId: accessResult.context.workspaceMemberId,
       }),
     };
   }
 
   /**
-   * Handle messenger card initialization for customer
-   * Shows the recording canvas with the link from card_creation_options
+   * Show link creator canvas with project/domain dropdowns
    */
-  private handleMessengerInitialize(cardCreationOptions?: {
-    link_url?: string;
-    link_title?: string;
-    custom_message?: string;
-    footer?: string | null;
-  }): CanvasResponse {
-    if (!cardCreationOptions?.link_url) {
-      return {
-        canvas: buildCanvasErrorCanvas(),
-      };
-    }
-
-    return {
-      canvas: buildRecordingCanvas({
-        linkUrl: cardCreationOptions.link_url,
-        linkTitle: cardCreationOptions.link_title,
-        customMessage: cardCreationOptions.custom_message,
-        footer: cardCreationOptions.footer,
-      }),
-    };
-  }
-
-  /**
-   * Handle "Request recording" button click
-   * Shows link creator canvas with project/domain dropdowns
-   */
-  private async handleRequestRecording(
-    providerWorkspaceId: string,
-    admin?: IntercomAdmin
+  private async showLinkCreatorCanvas(
+    intercomWorkspaceId: string,
+    teammate: IntercomTeammate
   ): Promise<CanvasResponse> {
-    if (!admin) {
-      return { canvas: buildCanvasErrorCanvas() };
-    }
-
-    // Find integration
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId(
-      'intercom',
-      providerWorkspaceId
-    );
-
-    if (!integration) {
-      return this.buildIntegrationNotFoundResponse(admin.email);
-    }
-
-    // Verify admin access
-    const accessResult = await this.verifyAdminAccess(integration.workspaceId, admin.email);
+    const accessResult = await this.verifyTeammateAccess(intercomWorkspaceId, teammate.email);
 
     if (accessResult.status !== 'granted') {
-      return this.buildAccessDeniedCanvas(accessResult, admin.email);
+      return this.buildAccessDeniedCanvas(accessResult, teammate.email);
     }
 
-    // Check if link limit exceeded
-    const canAddLink = await this.deps.entitlementService.canConsumeLinks(integration.workspaceId);
+    const { workspaceId } = accessResult.context;
+
+    // Check entitlement
+    const canAddLink = await this.deps.entitlementService.canConsumeLinks(workspaceId);
     if (!canAddLink.allowed) {
-      return {
-        canvas: buildLimitExceededCanvas({
-          workspaceId: integration.workspaceId,
-          limitType: 'links',
-        }),
-      };
+      return { canvas: buildLimitExceededCanvas({ workspaceId, limitType: 'links' }) };
     }
 
-    // Get projects and domains
-    const { projects, domains } = await this.getProjectsAndDomains(integration.workspaceId);
-
+    // Get dropdown options
+    const { projects, domains } = await this.getProjectsAndDomains(workspaceId);
     if (projects.length === 0 || domains.length === 0) {
-      return {
-        canvas: buildCanvasErrorCanvas(),
-      };
+      return { canvas: buildCanvasErrorCanvas() };
     }
 
     return {
       canvas: buildLinkCreatorCanvas({
         projects,
         domains,
-        adminName: admin.name || admin.email,
+        adminName: getTeammateDisplayName(teammate),
       }),
     };
   }
 
   /**
-   * Handle "Create Link" button click
-   * Creates a recording link and returns success canvas with card_creation_options
+   * Show link creator canvas for configure flow (same as inbox, but separate for clarity)
    */
-  private async handleCreateLink(
+  private async showConfigureLinkCreatorCanvas(
     intercomWorkspaceId: string,
-    intercomConversation?: IntercomConversation,
-    admin?: IntercomAdmin,
-    inputValues?: Record<string, string | string[] | undefined>
+    teammate: IntercomTeammate
   ): Promise<CanvasResponse> {
-    if (!admin || !inputValues) {
+    return this.showLinkCreatorCanvas(intercomWorkspaceId, teammate);
+  }
+
+  // ===========================================================================
+  // Private: Link Creation Methods
+  // ===========================================================================
+
+  /**
+   * Create link and show success canvas (Inbox flow)
+   * Returns card_creation_options for Intercom to auto-send card
+   */
+  private async createLinkAndShowSuccess(
+    intercomWorkspaceId: string,
+    conversation: IntercomConversation | undefined,
+    teammate: IntercomTeammate,
+    inputValues: CanvasInputValues | undefined
+  ): Promise<CanvasResponse> {
+    Sentry.addBreadcrumb({
+      category: 'intercom',
+      message: 'Creating link (inbox flow)',
+      level: 'info',
+      data: { intercomWorkspaceId, teammateEmail: teammate.email },
+    });
+
+    const formValues = extractLinkCreatorFormValues(inputValues);
+    if (!formValues) {
+      logger.warn({ intercomWorkspaceId }, 'Link creation failed: invalid form values');
       return { canvas: buildCanvasErrorCanvas() };
     }
 
-    const projectId = inputValues.project_id as string;
-    const domainId = inputValues.domain_id as string;
-    const customMessage = inputValues.custom_message as string | undefined;
-
-    if (!projectId || !domainId) {
-      return { canvas: buildCanvasErrorCanvas() };
-    }
-
-    // Find integration
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId(
-      'intercom',
-      intercomWorkspaceId
-    );
-
-    if (!integration) {
-      return this.buildIntegrationNotFoundResponse(admin.email);
-    }
-
-    // Verify admin access
-    const accessResult = await this.verifyAdminAccess(integration.workspaceId, admin.email);
-
+    const accessResult = await this.verifyTeammateAccess(intercomWorkspaceId, teammate.email);
     if (accessResult.status !== 'granted') {
-      return this.buildAccessDeniedCanvas(accessResult, admin.email);
+      return this.buildAccessDeniedCanvas(accessResult, teammate.email);
     }
 
-    // Fetch workspace preferences for footer
-    const workspacePreferences = await this.deps.workspaceRepo.findPreferencesById(
-      integration.workspaceId
-    );
+    const { workspaceId, workspaceMemberId } = accessResult.context;
 
-    const intercomConversationId = intercomConversation?.id;
+    // Get workspace preferences for footer
+    const workspacePreferences = await this.deps.workspaceRepo.findPreferencesById(workspaceId);
 
-    const intercomConversationUrl = `https://app.intercom.com/a/inbox/${intercomWorkspaceId}/inbox/shared/all/conversation/${intercomConversationId}`;
+    // Build conversation reference
+    const conversationRef = buildIntercomConversationRef(intercomWorkspaceId, conversation?.id);
 
-    const intercomConversationTitle = `Intercom #${intercomConversationId}`;
-
-    // Create the recording link with explicit provider info
     try {
       const link = await this.deps.linkService.createWithProvider({
-        workspaceId: integration.workspaceId,
-        projectId,
-        domainId,
-        createdBy: accessResult.context.workspaceMemberId,
+        workspaceId,
+        projectId: formValues.project_id,
+        domainId: formValues.domain_id,
+        createdBy: workspaceMemberId,
         linkReusable: false,
         linkProviderType: 'intercom',
-        linkTitle: intercomConversationTitle,
-        linkProviderId: intercomConversationId,
-        linkProviderRef: intercomConversationUrl,
+        linkTitle: conversationRef.title,
+        linkProviderId: conversationRef.id,
+        linkProviderRef: conversationRef.url,
       });
 
-      // Generate link URL
       const linkUrl = this.deps.linkService.generateLinkURL(
         link.linkId,
         link.workspaceId,
@@ -639,12 +459,16 @@ export class IntercomCanvasService {
         link.recordingCaptureNetworkLog
       );
 
-      // Generate default message with admin's name
-      const adminName = admin.name || admin.email;
-      const defaultMessage = `${adminName} has requested a screen recording from you`;
-      const messageToUse = customMessage?.trim() || defaultMessage;
+      const message = resolveRecordingMessage(formValues.custom_message, teammate, 'inbox');
 
-      // Return success canvas with card_creation_options
+      logger.info({ workspaceId, linkId: link.linkId }, 'Link created successfully (inbox flow)');
+      Sentry.addBreadcrumb({
+        category: 'intercom',
+        message: 'Link created successfully',
+        level: 'info',
+        data: { workspaceId, linkId: link.linkId },
+      });
+
       return {
         canvas: buildSuccessCanvas({
           linkUrl,
@@ -652,128 +476,305 @@ export class IntercomCanvasService {
         }),
         card_creation_options: {
           link_url: linkUrl,
-          custom_message: messageToUse,
+          custom_message: message,
           footer: workspacePreferences?.recordingFootnote ?? null,
         },
       };
     } catch (error) {
-      // Check for limit exceeded error
-      if (error && typeof error === 'object' && 'code' in error) {
-        const errorWithCode = error as { code: string };
-        if (errorWithCode.code === 'LINK_LIMIT_EXCEEDED') {
-          return {
-            canvas: buildLimitExceededCanvas({
-              workspaceId: integration.workspaceId,
-              limitType: 'links',
-            }),
-          };
-        }
-      }
-
-      return { canvas: buildCanvasErrorCanvas() };
+      return this.handleLinkCreationError(error, workspaceId);
     }
   }
 
   /**
-   * Verify that the admin (Intercom teammate) is a member of the workspace
-   * Returns detailed result indicating why access was denied
+   * Handle configure submit actions
    */
-  private async verifyAdminAccess(
-    workspaceId: string,
-    adminEmail: string
-  ): Promise<AdminAccessResult> {
+  private async handleConfigureSubmit(
+    teammate: IntercomTeammate,
+    componentId: string,
+    intercomWorkspaceId: string,
+    conversationId: string | undefined,
+    inputValues: CanvasInputValues | undefined
+  ): Promise<ConfigureResponse | CanvasResponse> {
+    switch (componentId) {
+      case ConfigureComponentId.CREATE_LINK:
+        return this.createLinkAndReturnResults(
+          teammate,
+          intercomWorkspaceId,
+          conversationId,
+          inputValues
+        );
+
+      case ConfigureComponentId.GO_BACK:
+        return this.showConfigureLinkCreatorCanvas(intercomWorkspaceId, teammate);
+
+      default:
+        return { canvas: buildCanvasErrorCanvas() };
+    }
+  }
+
+  /**
+   * Create link and return results to complete configure flow
+   * Results become card_creation_options in initialize flow
+   */
+  private async createLinkAndReturnResults(
+    teammate: IntercomTeammate,
+    intercomWorkspaceId: string,
+    conversationId: string | undefined,
+    inputValues: CanvasInputValues | undefined
+  ): Promise<ConfigureResponse | CanvasResponse> {
+    Sentry.addBreadcrumb({
+      category: 'intercom',
+      message: 'Creating link (configure flow)',
+      level: 'info',
+      data: { intercomWorkspaceId, teammateEmail: teammate.email },
+    });
+
+    const formValues = extractLinkCreatorFormValues(inputValues);
+    if (!formValues) {
+      logger.warn({ intercomWorkspaceId }, 'Link creation failed: invalid form values');
+      return { canvas: buildCanvasErrorCanvas() };
+    }
+
+    const accessResult = await this.verifyTeammateAccess(intercomWorkspaceId, teammate.email);
+    if (accessResult.status !== 'granted') {
+      return this.buildAccessDeniedCanvas(accessResult, teammate.email);
+    }
+
+    const { workspaceId, workspaceMemberId } = accessResult.context;
+
+    // Get workspace preferences for footer
+    const workspacePreferences = await this.deps.workspaceRepo.findPreferencesById(workspaceId);
+
+    // Build conversation reference
+    const conversationRef = buildIntercomConversationRef(intercomWorkspaceId, conversationId);
+
+    try {
+      const link = await this.deps.linkService.createWithProvider({
+        workspaceId,
+        projectId: formValues.project_id,
+        domainId: formValues.domain_id,
+        createdBy: workspaceMemberId,
+        linkReusable: false,
+        linkProviderType: 'intercom',
+        linkTitle: conversationRef.title,
+        linkProviderId: conversationRef.id,
+        linkProviderRef: conversationRef.url,
+      });
+
+      const linkUrl = this.deps.linkService.generateLinkURL(
+        link.linkId,
+        link.workspaceId,
+        link.domainUrl,
+        link.domainStatus,
+        link.recordingHideSensitive,
+        link.recordingCaptureClientLog,
+        false,
+        link.recordingCaptureServerLog,
+        link.recordingCaptureNetworkLog
+      );
+
+      const message = resolveRecordingMessage(formValues.custom_message, teammate, 'configure');
+
+      logger.info(
+        { workspaceId, linkId: link.linkId },
+        'Link created successfully (configure flow)'
+      );
+      Sentry.addBreadcrumb({
+        category: 'intercom',
+        message: 'Link created successfully',
+        level: 'info',
+        data: { workspaceId, linkId: link.linkId },
+      });
+
+      // Return results to complete configure flow
+      return {
+        results: {
+          link_url: linkUrl,
+          custom_message: message,
+          footer: workspacePreferences?.recordingFootnote ?? null,
+        },
+      };
+    } catch (error) {
+      return this.handleLinkCreationError(error, workspaceId);
+    }
+  }
+
+  // ===========================================================================
+  // Private: Access Verification
+  // ===========================================================================
+
+  /**
+   * Verify that the teammate is a member of the workspace
+   *
+   * Uses cache-first lookup for integration (30 min TTL).
+   * User and member lookups are not cached as they're less frequent.
+   */
+  private async verifyTeammateAccess(
+    intercomWorkspaceId: string,
+    teammateEmail: string
+  ): Promise<TeammateAccessResult> {
+    Sentry.addBreadcrumb({
+      category: 'intercom',
+      message: 'Verifying teammate access',
+      level: 'info',
+      data: { intercomWorkspaceId, teammateEmail },
+    });
+
+    // Cache-first integration lookup
+    let integration =
+      await this.deps.cacheService.getIntegrationByProviderWorkspace<CachedIntegration>(
+        'intercom',
+        intercomWorkspaceId
+      );
+
+    if (integration) {
+      logger.debug(
+        { intercomWorkspaceId, workspaceId: integration.workspaceId },
+        'Integration cache hit'
+      );
+    }
+
+    if (!integration) {
+      // Cache miss - fetch from database
+      const dbIntegration = await this.deps.integrationRepo.findByProviderWorkspaceId(
+        'intercom',
+        intercomWorkspaceId
+      );
+
+      if (!dbIntegration) {
+        // Integration not found - check if user exists to show appropriate canvas
+        const user = await this.deps.userRepo.findByEmail(teammateEmail);
+        if (!user) {
+          logger.info({ teammateEmail }, 'Teammate access denied: user not found');
+          return { status: 'user_not_found' };
+        }
+        // User exists but integration not connected - prompt to connect
+        logger.info(
+          { teammateEmail, intercomWorkspaceId },
+          'Teammate access denied: integration not found'
+        );
+        return { status: 'integration_not_found' };
+      }
+
+      // Cache the integration for future lookups
+      integration = { workspaceId: dbIntegration.workspaceId };
+      await this.deps.cacheService.setIntegrationByProviderWorkspace(
+        'intercom',
+        intercomWorkspaceId,
+        integration
+      );
+      logger.debug(
+        { intercomWorkspaceId, workspaceId: integration.workspaceId },
+        'Integration cached'
+      );
+    }
+
     // Find user by email
-    const user = await this.deps.userRepo.findByEmail(adminEmail);
+    const user = await this.deps.userRepo.findByEmail(teammateEmail);
     if (!user) {
+      logger.info({ teammateEmail }, 'Teammate access denied: user not found');
       return { status: 'user_not_found' };
     }
 
     // Find workspace member
-    const member = await this.deps.workspaceMemberRepo.findByUserAndWorkspace(user.id, workspaceId);
+    const member = await this.deps.workspaceMemberRepo.findByUserAndWorkspace(
+      user.id,
+      integration.workspaceId
+    );
 
     if (!member) {
+      logger.info(
+        { teammateEmail, workspaceId: integration.workspaceId },
+        'Teammate access denied: not workspace member'
+      );
       return { status: 'not_workspace_member' };
     }
+
+    Sentry.addBreadcrumb({
+      category: 'intercom',
+      message: 'Teammate access granted',
+      level: 'info',
+      data: { workspaceId: integration.workspaceId },
+    });
 
     return {
       status: 'granted',
       context: {
-        workspaceId,
+        workspaceId: integration.workspaceId,
         workspaceMemberId: member.workspaceMemberId,
       },
     };
   }
 
-  /**
-   * Check if user exists by email
-   * Used to determine what canvas to show when integration is not found
-   */
-  private async findUserByEmail(adminEmail: string): Promise<UserExists | null> {
-    const user = await this.deps.userRepo.findByEmail(adminEmail);
-    if (!user) {
-      return null;
-    }
-
-    return { userId: user.id };
-  }
+  // ===========================================================================
+  // Private: Error & Canvas Helpers
+  // ===========================================================================
 
   /**
-   * Build appropriate canvas when admin access is denied
+   * Build appropriate canvas when teammate access is denied
    */
   private buildAccessDeniedCanvas(
-    result: Exclude<AdminAccessResult, { status: 'granted' }>,
-    adminEmail: string
+    result: Exclude<TeammateAccessResult, { status: 'granted' }>,
+    teammateEmail: string
   ): CanvasResponse {
     switch (result.status) {
       case 'user_not_found':
-        return { canvas: buildSignUpCanvas({ adminEmail }) };
+        return { canvas: buildSignUpCanvas({ adminEmail: teammateEmail }) };
+      case 'integration_not_found':
+        return { canvas: buildConnectIntegrationCanvas({ adminEmail: teammateEmail }) };
       case 'not_workspace_member':
-        return { canvas: buildAccessRequestedCanvas({ adminEmail }) };
+        return { canvas: buildAccessRequestedCanvas({ adminEmail: teammateEmail }) };
     }
   }
 
   /**
-   * Build appropriate canvas when integration is not found
-   * Checks if user exists to show relevant message
+   * Handle link creation errors
    */
-  private async buildIntegrationNotFoundResponse(adminEmail: string): Promise<CanvasResponse> {
-    const userExists = await this.findUserByEmail(adminEmail);
-
-    if (!userExists) {
-      // User doesn't exist in Userplane - show sign up
-      return { canvas: buildSignUpCanvas({ adminEmail }) };
+  private handleLinkCreationError(error: unknown, workspaceId: string): CanvasResponse {
+    // Handle expected business errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const errorWithCode = error as { code: string };
+      if (errorWithCode.code === 'LINK_LIMIT_EXCEEDED') {
+        logger.info({ workspaceId }, 'Link creation failed: limit exceeded');
+        Sentry.addBreadcrumb({
+          category: 'intercom',
+          message: 'Link creation failed - limit exceeded',
+          level: 'warning',
+          data: { workspaceId },
+        });
+        return { canvas: buildLimitExceededCanvas({ workspaceId, limitType: 'links' }) };
+      }
     }
 
-    // User exists - show connect integration
-    // They can choose which workspace to connect from the settings page
-    return {
-      canvas: buildConnectIntegrationCanvas({
-        adminEmail,
-      }),
-    };
+    // Unexpected error - log and capture in Sentry
+    logger.error({ err: error, workspaceId }, 'Link creation failed unexpectedly');
+    Sentry.captureException(error, {
+      tags: {
+        component: 'intercom_canvas',
+        operation: 'link_creation',
+      },
+      contexts: {
+        intercom: { workspaceId },
+      },
+    });
+
+    return { canvas: buildCanvasErrorCanvas() };
   }
 
   /**
    * Get projects and domains for a workspace
-   * Returns arrays suitable for dropdown options
    */
   private async getProjectsAndDomains(
     workspaceId: string
   ): Promise<{ projects: ProjectOption[]; domains: DomainOption[] }> {
-    // Fetch projects (non-paginated, all active projects)
-    const projectRows = await this.deps.projectRepo.findByWorkspace(workspaceId);
-    const projects: ProjectOption[] = projectRows.map((p) => ({
-      id: p.projectId,
-      title: p.projectTitle,
-    }));
+    const [projectRows, domainRows] = await Promise.all([
+      this.deps.projectRepo.findByWorkspace(workspaceId),
+      this.deps.domainRepo.findByWorkspaceId(workspaceId),
+    ]);
 
-    // Fetch domains (non-paginated, all active domains)
-    const domainRows = await this.deps.domainRepo.findByWorkspaceId(workspaceId);
-    const domains: DomainOption[] = domainRows.map((d) => ({
-      id: d.domainId,
-      url: d.domainUrl,
-    }));
-
-    return { projects, domains };
+    return {
+      projects: projectRows.map((p) => ({ id: p.projectId, title: p.projectTitle })),
+      domains: domainRows.map((d) => ({ id: d.domainId, url: d.domainUrl })),
+    };
   }
 }

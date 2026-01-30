@@ -46,6 +46,12 @@ export const TTL = {
    * Longer TTL (10 minutes) - preferences change infrequently
    */
   LINK_PREFERENCES: 600,
+
+  /**
+   * Integration lookup - maps provider workspace to our workspace
+   * Longer TTL (30 minutes) - integrations change very rarely
+   */
+  INTEGRATION_LOOKUP: 1800,
 } as const;
 
 export type TTLKey = keyof typeof TTL;

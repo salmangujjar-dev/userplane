@@ -1,8 +1,11 @@
 /**
- * Intercom Canvas View Builders
- * Re-exports all canvas builder functions for easy importing
+ * Intercom Canvas Kit
+ *
+ * Re-exports all canvas builder functions, URL utilities, and helpers
+ * for the Intercom Canvas Kit integration.
  */
 
+// Canvas builders
 export { type AccessRequestedCanvasOptions, buildAccessRequestedCanvas } from './access-requested';
 export {
   buildConnectIntegrationCanvas,
@@ -31,4 +34,23 @@ export {
 } from './recording';
 export { buildSignUpCanvas, type SignUpCanvasOptions } from './signup';
 export { buildSuccessCanvas, type SuccessCanvasOptions } from './success';
+
+// URL utilities
 export { type IntercomCanvasUrls, intercomCanvasUrls } from './urls';
+
+// Intercom utilities
+export {
+  buildIntercomConversationRef,
+  buildIntercomConversationTitle,
+  buildIntercomConversationUrl,
+  ConfigureComponentId,
+  extractLinkCreatorFormValues,
+  FormFieldId,
+  generateRecordingRequestMessage,
+  generateRecordingRequestMessageForInbox,
+  getTeammateDisplayName,
+  InboxComponentId,
+  type IntercomConversationRef,
+  type LinkCreatorFormValues,
+  resolveRecordingMessage,
+} from './utils';

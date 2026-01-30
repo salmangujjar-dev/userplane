@@ -1,71 +1,310 @@
 /**
  * Intercom Canvas Kit Route Handlers
- * Handlers for Canvas Kit initialize, configure, and submit endpoints
+ *
+ * Split handlers for Messenger (customer-facing) and Inbox (teammate) contexts.
+ * Each endpoint explicitly handles a single context for clarity and type-safety.
+ *
+ * Features:
+ * - Zod validation at request boundaries
+ * - Structured logging with request context
+ * - Sentry error tracking with Intercom-specific tags
+ *
+ * @see https://developers.intercom.com/docs/canvas-kit
  */
 
-// import { createAppLogger } from '@workspace/logger';
+import * as Sentry from '@sentry/bun';
+import { createAppLogger } from '@workspace/logger';
+import { buildWebhookTags } from '@workspace/sentry';
 import type { Context } from 'hono';
 
 import { buildCanvasErrorCanvas } from '@/api/lib/intercom-canvas';
 import { getParsedBody } from '@/api/middleware/intercom-signature';
 import type { IntercomCanvasService } from '@/api/services/intercom-canvas.service';
-import type {
-  IntercomCanvasConfigureRequest,
-  IntercomCanvasInitializeRequest,
-  IntercomCanvasSubmitRequest,
+import {
+  IntercomCanvasConfigureRequestSchema,
+  IntercomCanvasInitializeRequestSchema,
+  IntercomCanvasSubmitRequestSchema,
 } from '@/api/types/intercom-canvas';
 
+const logger = createAppLogger('intercom-canvas');
+
 /**
- * Create handler for POST /canvas/initialize
- * Called when a teammate opens the Inbox app or customer opens a card in Messenger
+ * Intercom context for Sentry tracking
  */
-export function createInitializeHandler(service: IntercomCanvasService) {
+interface IntercomSentryContext {
+  intercom_workspace_id?: string;
+  teammate_email?: string;
+  component_id?: string;
+  endpoint: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Set Sentry context for Intercom requests
+ */
+function setIntercomSentryContext(ctx: IntercomSentryContext): void {
+  Sentry.setContext('intercom', ctx);
+  Sentry.setTags(
+    buildWebhookTags({
+      webhookType: 'intercom_canvas',
+      eventType: ctx.endpoint,
+    })
+  );
+}
+
+/**
+ * Handle errors with Sentry capture and logging
+ */
+function handleError(
+  error: unknown,
+  endpoint: string,
+  context: Record<string, unknown> = {}
+): void {
+  logger.error({ err: error, endpoint, ...context }, `Canvas ${endpoint} error`);
+
+  Sentry.captureException(error, {
+    tags: buildWebhookTags({
+      webhookType: 'intercom_canvas',
+      eventType: endpoint,
+    }),
+    contexts: {
+      intercom: context,
+    },
+  });
+}
+
+// =============================================================================
+// Messenger Handlers (Customer-facing)
+// =============================================================================
+
+/**
+ * Handler for POST /canvas/messenger/initialize
+ *
+ * Called when a customer opens a card in Messenger.
+ */
+export function createMessengerInitializeHandler(service: IntercomCanvasService) {
   return async (c: Context) => {
+    const endpoint = 'messenger/initialize';
+
     try {
-      const body = getParsedBody<IntercomCanvasInitializeRequest>(c);
-      // logger.info({ payload: body }, 'Canvas initialize payload');
-      const response = await service.handleInitialize(body);
+      const rawBody = getParsedBody(c);
+      const parseResult = IntercomCanvasInitializeRequestSchema.safeParse(rawBody);
+
+      if (!parseResult.success) {
+        logger.warn(
+          { errors: parseResult.error.flatten(), endpoint },
+          'Invalid messenger initialize request'
+        );
+        return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
+      }
+
+      const body = parseResult.data;
+
+      setIntercomSentryContext({
+        intercom_workspace_id: body.workspace_id,
+        endpoint,
+      });
+
+      logger.info(
+        { workspaceId: body.workspace_id, hasLinkUrl: !!body.card_creation_options?.link_url },
+        'Messenger initialize request'
+      );
+
+      const response = service.handleMessengerInitialize(body);
       return c.json(response);
     } catch (error) {
-      console.error('Canvas initialize error:', error);
+      handleError(error, endpoint);
       return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
     }
   };
 }
 
 /**
- * Create handler for POST /canvas/configure
- * Called during card creation flow to configure card options
- * Can return either a canvas (for multi-step config) or results (to complete config)
+ * Handler for POST /canvas/messenger/submit
+ *
+ * Called when a customer interacts with a card in Messenger.
  */
-export function createConfigureHandler(service: IntercomCanvasService) {
+export function createMessengerSubmitHandler(service: IntercomCanvasService) {
   return async (c: Context) => {
+    const endpoint = 'messenger/submit';
+
     try {
-      const body = getParsedBody<IntercomCanvasConfigureRequest>(c);
-      // logger.info({ payload: body }, 'Canvas configure payload');
+      const rawBody = getParsedBody(c);
+      const parseResult = IntercomCanvasSubmitRequestSchema.safeParse(rawBody);
+
+      if (!parseResult.success) {
+        logger.warn(
+          { errors: parseResult.error.flatten(), endpoint },
+          'Invalid messenger submit request'
+        );
+        return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
+      }
+
+      const body = parseResult.data;
+
+      setIntercomSentryContext({
+        intercom_workspace_id: body.workspace_id,
+        component_id: body.component_id,
+        endpoint,
+      });
+
+      logger.info(
+        { workspaceId: body.workspace_id, componentId: body.component_id },
+        'Messenger submit request'
+      );
+
+      const response = service.handleMessengerSubmit(body);
+      return c.json(response);
+    } catch (error) {
+      handleError(error, endpoint);
+      return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
+    }
+  };
+}
+
+/**
+ * Handler for POST /canvas/messenger/configure
+ *
+ * Used for Messenger card configuration flow.
+ */
+export function createMessengerConfigureHandler(service: IntercomCanvasService) {
+  return async (c: Context) => {
+    const endpoint = 'messenger/configure';
+
+    try {
+      const rawBody = getParsedBody(c);
+      const parseResult = IntercomCanvasConfigureRequestSchema.safeParse(rawBody);
+
+      if (!parseResult.success) {
+        logger.warn(
+          { errors: parseResult.error.flatten(), endpoint },
+          'Invalid messenger configure request'
+        );
+        return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
+      }
+
+      const body = parseResult.data;
+
+      setIntercomSentryContext({
+        intercom_workspace_id: body.workspace_id,
+        teammate_email: body.admin.email,
+        component_id: body.component_id,
+        endpoint,
+      });
+
+      logger.info(
+        {
+          workspaceId: body.workspace_id,
+          teammateEmail: body.admin.email,
+          componentId: body.component_id,
+          isInitial: !body.component_id,
+        },
+        'Messenger configure request'
+      );
+
       const response = await service.handleConfigure(body);
       return c.json(response);
     } catch (error) {
-      console.error('Canvas configure error:', error);
-      // Return error canvas so teammate sees the error
+      handleError(error, endpoint);
+      return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
+    }
+  };
+}
+
+// =============================================================================
+// Inbox Handlers (Teammate-facing)
+// =============================================================================
+
+/**
+ * Handler for POST /canvas/inbox/initialize
+ *
+ * Called when a teammate opens the app in the Inbox conversation details.
+ */
+export function createInboxInitializeHandler(service: IntercomCanvasService) {
+  return async (c: Context) => {
+    const endpoint = 'inbox/initialize';
+
+    try {
+      const rawBody = getParsedBody(c);
+      const parseResult = IntercomCanvasInitializeRequestSchema.safeParse(rawBody);
+
+      if (!parseResult.success) {
+        logger.warn(
+          { errors: parseResult.error.flatten(), endpoint },
+          'Invalid inbox initialize request'
+        );
+        return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
+      }
+
+      const body = parseResult.data;
+
+      setIntercomSentryContext({
+        intercom_workspace_id: body.workspace_id,
+        teammate_email: body.admin?.email,
+        endpoint,
+      });
+
+      logger.info(
+        {
+          workspaceId: body.workspace_id,
+          teammateEmail: body.admin?.email,
+          hasTeammate: !!body.admin,
+        },
+        'Inbox initialize request'
+      );
+
+      const response = await service.handleInboxInitialize(body);
+      return c.json(response);
+    } catch (error) {
+      handleError(error, endpoint);
       return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
     }
   };
 }
 
 /**
- * Create handler for POST /canvas/submit
- * Called when user interacts with a canvas component (button click, form submit)
+ * Handler for POST /canvas/inbox/submit
+ *
+ * Called when a teammate interacts with the inbox app.
  */
-export function createSubmitHandler(service: IntercomCanvasService) {
+export function createInboxSubmitHandler(service: IntercomCanvasService) {
   return async (c: Context) => {
+    const endpoint = 'inbox/submit';
+
     try {
-      const body = getParsedBody<IntercomCanvasSubmitRequest>(c);
-      // logger.info({ payload: body }, 'Canvas submit payload');
-      const response = await service.handleSubmit(body);
+      const rawBody = getParsedBody(c);
+      const parseResult = IntercomCanvasSubmitRequestSchema.safeParse(rawBody);
+
+      if (!parseResult.success) {
+        logger.warn(
+          { errors: parseResult.error.flatten(), endpoint },
+          'Invalid inbox submit request'
+        );
+        return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
+      }
+
+      const body = parseResult.data;
+
+      setIntercomSentryContext({
+        intercom_workspace_id: body.workspace_id,
+        teammate_email: body.admin?.email,
+        component_id: body.component_id,
+        endpoint,
+      });
+
+      logger.info(
+        {
+          workspaceId: body.workspace_id,
+          teammateEmail: body.admin?.email,
+          componentId: body.component_id,
+        },
+        'Inbox submit request'
+      );
+
+      const response = await service.handleInboxSubmit(body);
       return c.json(response);
     } catch (error) {
-      console.error('Canvas submit error:', error);
+      handleError(error, endpoint);
       return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
     }
   };
