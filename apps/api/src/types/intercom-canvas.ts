@@ -175,12 +175,13 @@ export const IntercomCanvasInitializeRequestSchema = z.object({
 
 /**
  * Configure Request
- * Used for card creation flow to configure the card before sending
+ * Used for card creation flow to configure the card before sending.
+ * Triggered from Messenger context (when teammate inserts card into conversation).
  */
 export const IntercomCanvasConfigureRequestSchema = z.object({
   workspace_id: z.string(),
   admin: IntercomTeammateSchema,
-  context: InboxCanvasContextSchema.optional(),
+  context: CanvasContextSchema.optional(),
   current_canvas: CurrentCanvasSchema.optional(),
   component_id: z.string().optional(),
   input_values: CanvasInputValuesSchema.optional(),
