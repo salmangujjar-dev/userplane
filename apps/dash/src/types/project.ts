@@ -1,24 +1,13 @@
 /**
  * Project-related types
+ * Re-exports from @workspace/contract for type consistency
+ *
+ * Note: Contract uses z.coerce.date() so JSON string dates are
+ * automatically coerced to Date objects during parsing.
  */
 
-import type { PaginationMeta } from './common';
+export type { ProjectItem, ProjectsListData } from '@workspace/contract';
 
-/**
- * Project object
- */
-export interface Project {
-  projectId: string;
-  projectTitle: string;
-  isDefault: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
- * Projects list response
- */
-export interface ProjectsData {
-  projects: Project[];
-  pagination: PaginationMeta;
-}
+// Aliases for backward compatibility
+export type { ProjectItem as Project } from '@workspace/contract';
+export type { ProjectsListData as ProjectsData } from '@workspace/contract';

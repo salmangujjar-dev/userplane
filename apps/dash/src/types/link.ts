@@ -1,24 +1,24 @@
 /**
  * Link-related types
+ * Re-exports from @workspace/contract for type consistency
+ *
+ * Note: Contract uses z.coerce.date() so JSON string dates are
+ * automatically coerced to Date objects during parsing.
  */
 
-import type { PaginationMeta } from './common';
+export type {
+  // Data types
+  LinkDomain,
+  // Error types
+  LinkErrors,
+  LinkItem,
+  LinkProject,
+  // Enums
+  LinkProviderType,
+  LinksListData,
+  LinkType,
+} from '@workspace/contract';
 
-/**
- * Link object
- */
-export interface Link {
-  linkId: string;
-  linkURL: string;
-  linkTitle: string | null;
-  linkReusable: boolean;
-  createdAt: string;
-}
-
-/**
- * Links list response
- */
-export interface LinksData {
-  links: Link[];
-  pagination: PaginationMeta;
-}
+// Aliases for backward compatibility
+export type { LinkItem as Link } from '@workspace/contract';
+export type { LinksListData as LinksData } from '@workspace/contract';

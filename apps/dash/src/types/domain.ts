@@ -1,11 +1,29 @@
 /**
  * Domain-related types
+ * Re-exports from @workspace/contract for type consistency
+ *
+ * Note: Contract uses z.coerce.date() so JSON string dates are
+ * automatically coerced to Date objects during parsing.
  */
 
-import { DomainRecordingPreferencesSchema, type DomainStatus } from '@workspace/contract';
+import { DomainStatus } from '@workspace/contract';
 import type { z } from 'zod';
 
-import type { PaginationMeta } from './common';
+import { DomainRecordingPreferencesSchema } from '@/schemas';
+
+// Re-export contract types
+export type {
+  DomainAddData,
+  DomainItem,
+  DomainStatus,
+  DomainUpdateData,
+  WorkspaceDomainsData,
+} from '@workspace/contract';
+
+// Aliases for backward compatibility
+export type { DomainItem as WorkspaceDomain } from '@workspace/contract';
+export type { DomainAddData as DomainResponse } from '@workspace/contract';
+export type { WorkspaceDomainsData as DomainsData } from '@workspace/contract';
 
 /**
  * Domain recording preferences from API contract
@@ -25,12 +43,7 @@ export const DEFAULT_DOMAIN_RECORDING_PREFERENCES: DomainRecordingPreferences = 
 };
 
 /**
- * Re-export DomainStatus from contract for convenience
- */
-export type { DomainStatus };
-
-/**
- * Domain identifier
+ * Domain identifier (frontend-specific for UI state)
  */
 export interface DomainIdentifier {
   id: string;
@@ -38,45 +51,11 @@ export interface DomainIdentifier {
 }
 
 /**
- * Domain being configured
+ * Domain being configured (frontend-specific for UI state)
  */
 export interface ConfiguringDomain {
   domainId: string;
   url: string;
   status: DomainStatus;
   settings: DomainRecordingPreferences | null;
-}
-
-/**
- * Domain object
- * Used in both list and detail views
- */
-export interface WorkspaceDomain {
-  domainId: string;
-  domainUrl: string;
-  domainStatus: DomainStatus;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-/**
- * Domain response from create/update operations
- */
-export interface DomainResponse {
-  domain: {
-    domainId: string;
-    domainUrl: string;
-    domainStatus: DomainStatus;
-    createdAt: string;
-    updatedAt: string;
-  };
-  workspaceId: string;
-}
-
-/**
- * Domains list response
- */
-export interface DomainsData {
-  domains: WorkspaceDomain[];
-  pagination: PaginationMeta;
 }

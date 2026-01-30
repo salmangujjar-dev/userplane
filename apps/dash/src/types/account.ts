@@ -1,18 +1,17 @@
 /**
  * Account-related types
+ * Re-exports from @workspace/contract for type consistency
  */
 
-/**
- * User account data
- */
-export interface AccountData {
-  userName: string;
-  userEmail: string;
-}
+import type { AccountDataSchema, AccountUpdateDataSchema } from '@workspace/contract';
+import type { z } from 'zod';
 
 /**
- * Update account name response
+ * User account data - pinned to contract schema
  */
-export interface UpdateAccountData {
-  userName: string;
-}
+export type AccountData = z.infer<typeof AccountDataSchema>;
+
+/**
+ * Update account name response - pinned to contract schema
+ */
+export type UpdateAccountData = z.infer<typeof AccountUpdateDataSchema>;

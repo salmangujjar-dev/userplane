@@ -1,43 +1,51 @@
 /**
  * Workspace-related types
+ * Re-exports from @workspace/contract for type consistency
  */
 
 import type {
-  WorkspaceInvitePolicy,
+  JoinWorkspaceDataSchema,
+  LeaveWorkspaceDataSchema,
+  WorkspaceItem,
   WorkspaceNotificationPreferences,
-  WorkspaceRole,
 } from '@workspace/contract';
+import type { z } from 'zod';
 
 /**
- * Workspace notification preferences (re-export from contract)
+ * Workspace notification preferences (partial for updates)
  */
 export type WorkspaceNotifications = Partial<WorkspaceNotificationPreferences>;
 
-/**
- * Workspace item in list
- */
-export interface WorkspaceItem {
-  workspaceId: string;
-  workspaceName: string;
-  createdAt: Date;
-  updatedAt: Date;
-  workspaceMembership?: {
-    workspaceMemberId: string;
-    workspaceRole: WorkspaceRole;
-    workspaceJoinedAt: Date;
-  };
-}
+// Re-export contract types
+export type {
+  InvitePolicyData,
+  InviteUrlData,
+  SuggestedWorkspaceItem,
+  SuggestWorkspacesData,
+  WorkspaceBillingEmailData,
+  WorkspaceInvitePolicy,
+  WorkspaceItem,
+  WorkspacePreferences,
+  WorkspacePreferencesGetData,
+  WorkspaceResourcesCountData,
+  WorkspacesListData,
+  WorkspaceStatusData,
+} from '@workspace/contract';
+
+// Aliases for backward compatibility
+export type { SuggestedWorkspaceItem as SuggestedWorkspace } from '@workspace/contract';
+export type { SuggestWorkspacesData as WorkspaceSuggestionsData } from '@workspace/contract';
+export type { WorkspaceResourcesCountData as WorkspaceResourceCountsData } from '@workspace/contract';
+
+// ============================================
+// FRONTEND-SPECIFIC SIMPLIFIED TYPES
+// ============================================
+// These are intentionally simplified for specific UI components
+// Contract types include additional fields (pagination, etc.) not needed
 
 /**
- * Workspaces list response
- */
-export interface WorkspacesData {
-  workspaces: WorkspaceItem[];
-  total: number;
-}
-
-/**
- * Workspace detail response
+ * Workspace detail response (simplified)
+ * Contract equivalent: N/A - used for minimal workspace display
  */
 export interface WorkspaceData {
   workspace: {
@@ -47,37 +55,12 @@ export interface WorkspaceData {
 }
 
 /**
- * Workspace preferences
+ * Workspaces list response (simplified without pagination)
+ * Contract equivalent: WorkspacesListData (includes pagination)
  */
-export interface WorkspacePreferences {
-  recordingCustomizeLink: boolean;
-  recordingCompanyName?: string | null;
-  recordingCompanyLogoPath?: string | null;
-  recordingHeader?: string | null;
-  recordingFootnote?: string | null;
-  recordingPrimaryColor?: string | null;
-}
-
-/**
- * Re-export WorkspaceInvitePolicy from contract for convenience
- */
-export type { WorkspaceInvitePolicy };
-
-/**
- * Workspace invite policy data
- */
-export interface InvitePolicyData {
-  workspaceId: string;
-  workspaceInvitePolicy: WorkspaceInvitePolicy;
-  workspaceInviteDomains: string[] | null;
-}
-
-/**
- * Workspace billing email data
- */
-export interface WorkspaceBillingEmailData {
-  workspaceId: string;
-  workspaceBillingEmail: string;
+export interface WorkspacesData {
+  workspaces: WorkspaceItem[];
+  total: number;
 }
 
 /**
@@ -88,34 +71,11 @@ export interface NotificationPreferencesData {
 }
 
 /**
- * Workspace invite URL response
+ * Join workspace response - pinned to contract
  */
-export interface InviteUrlData {
-  inviteUrl: string;
-}
+export type JoinWorkspaceData = z.infer<typeof JoinWorkspaceDataSchema>;
 
 /**
- * Join workspace response
- * Discriminated union based on whether user was already a member
+ * Leave workspace response - pinned to contract
  */
-export type JoinWorkspaceData =
-  | {
-      alreadyMember: false;
-      workspaceId: string;
-      workspaceName: string;
-      status: 'joined' | 'requested';
-    }
-  | {
-      alreadyMember: true;
-      workspaceId: string;
-      workspaceName: string;
-      status: 'joined';
-    };
-
-/**
- * Leave workspace response
- */
-export interface LeaveWorkspaceData {
-  workspaceId: string;
-  workspaceDeleted?: boolean;
-}
+export type LeaveWorkspaceData = z.infer<typeof LeaveWorkspaceDataSchema>;
