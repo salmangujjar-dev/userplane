@@ -8,7 +8,7 @@ import { Suspense, useEffect } from 'react';
 import { AdminWorkspaceTabs } from '@/components/admin/workspace-detail';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
 import { AdminTopActions } from '@/components/navigation/admin-top-actions';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/features/auth';
 
 function WorkspaceDetailPageContent() {
   const router = useRouter();

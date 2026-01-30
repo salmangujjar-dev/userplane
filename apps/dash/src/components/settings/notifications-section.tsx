@@ -11,10 +11,12 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { SectionError } from '@/components/shared/section-error';
 import { NotificationsSectionSkeleton } from '@/components/skeleton';
+import {
+  useUpdateNotifications,
+  useWorkspaceNotifications,
+  useWorkspaceRole,
+} from '@/features/workspace';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
-import { useWorkspaceNotifications } from '@/hooks/use-workspace-notifications';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
-import { useUpdateNotifications } from '@/queries/use-workspace-mutations';
 import { useWorkspaceId } from '@/stores/workspace';
 
 function NotificationItem({

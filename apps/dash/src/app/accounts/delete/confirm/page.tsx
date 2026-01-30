@@ -18,7 +18,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { authClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { DinoError } from '@/components/shared/dino-error';
-import { useAccount } from '@/hooks/use-account';
+import { useAccount } from '@/features/account';
 import { useAuth } from '@/hooks/use-auth';
 import { logger } from '@/logger';
 

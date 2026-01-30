@@ -13,7 +13,7 @@ import {
   useIntercomAuthorize,
   useIntercomDisconnect,
   useIntercomIntegration,
-} from '@/hooks/use-intercom-integration';
+} from '@/features/integrations';
 
 export function IntegrationsSection() {
   const [showModal, setShowModal] = useState(false);

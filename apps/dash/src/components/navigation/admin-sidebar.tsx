@@ -22,9 +22,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { useAccount } from '@/hooks/use-account';
+import { useAccount } from '@/features/account';
+import { useWorkspaces } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 interface NavItem {

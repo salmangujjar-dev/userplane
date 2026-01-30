@@ -36,16 +36,14 @@ import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { SidebarProjectsSkeleton } from '@/components/skeleton';
-import { useAccount } from '@/hooks/use-account';
+import { useAccount } from '@/features/account';
+import { useSession } from '@/features/auth';
+import { useSubscriptionStatus } from '@/features/billing';
+import { useWorkspaceProjects } from '@/features/projects';
+import { useWorkspace, useWorkspaceRole, useWorkspaces } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { useSession } from '@/hooks/use-session';
-import { useWorkspace } from '@/hooks/use-workspace';
-import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
-import { useWorkspaces } from '@/hooks/use-workspaces';
 import { planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
-import { useSubscriptionStatus } from '@/queries/use-billing-queries';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 
 const SIDEBAR_PROJECTS_PER_PAGE = 5;

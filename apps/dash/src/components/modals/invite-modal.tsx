@@ -24,7 +24,7 @@ import validator from 'validator';
 import { z } from 'zod';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { useSendWorkspaceInvites, useWorkspaceInvite } from '@/hooks/use-workspace-invite';
+import { useSendWorkspaceInvites, useWorkspaceInvite } from '@/features/workspace';
 
 const inviteFormSchema = z.object({
   emails: z

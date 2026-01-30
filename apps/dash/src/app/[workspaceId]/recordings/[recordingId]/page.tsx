@@ -16,13 +16,13 @@ import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-r
 import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { DinoError } from '@/components/shared/dino-error';
 import { RecordingDetailSkeleton } from '@/components/skeleton';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
-import { useDeleteRecording } from '@/queries/use-recording-mutations';
 import {
+  useDeleteRecording,
   useRecording,
   useRecordingThumbnail,
   useRecordingVideo,
-} from '@/queries/use-recording-query';
+} from '@/features/recordings';
+import { useWorkspaceRole } from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 
 export default function RecordingDetailPage() {

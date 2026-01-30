@@ -11,9 +11,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { SectionError } from '@/components/shared/section-error';
 import { RecordingLinkSectionSkeleton } from '@/components/skeleton';
+import {
+  useUpdateAppearance,
+  useUpdateToggle,
+  useWorkspacePreferences,
+} from '@/features/workspace';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
-import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
-import { useUpdateAppearance, useUpdateToggle } from '@/queries/use-appearance-mutations';
 import { useWorkspaceId } from '@/stores/workspace';
 
 import { RecordingLinkPreview } from './recording-link-preview';

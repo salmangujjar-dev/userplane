@@ -45,9 +45,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { LinkReferenceInput } from '@/components/link-reference-input';
-import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
-import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
-import { useCreateLink } from '@/queries/use-link-mutations';
+import { useWorkspaceDomains } from '@/features/domains';
+import { useCreateLink } from '@/features/links';
+import { useWorkspaceProjects } from '@/features/projects';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 interface CreateLinkModalProps {

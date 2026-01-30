@@ -9,7 +9,7 @@ import * as React from 'react';
 
 import { WorkspaceProvider } from '@/components/providers/workspace-provider';
 import { ImpersonationBanner } from '@/components/shared/impersonation-banner';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/features/auth';
 import { isDefinedError } from '@/lib/errors';
 
 const queryClient = new QueryClient({

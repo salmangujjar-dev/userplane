@@ -15,7 +15,7 @@ import {
   useApproveAccessRequest,
   useDeclineAccessRequest,
   useValidateAccessRequest,
-} from '@/hooks/use-access-request';
+} from '@/features/workspace';
 import { logger } from '@/logger';
 
 function AccessRequestLayout({ children }: { children: React.ReactNode }) {

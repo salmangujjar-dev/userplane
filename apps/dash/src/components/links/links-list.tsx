@@ -5,9 +5,9 @@ import { useState } from 'react';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { LinkEmptyState, ProjectLinkEmptyState } from '@/components/shared/empty-state';
 import { LinksListSkeleton } from '@/components/skeleton';
-import type { Link } from '@/hooks/use-workspace-links';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
-import { useDeleteLink, useUpdateLink } from '@/queries/use-link-mutations';
+import type { Link } from '@/features/links';
+import { useDeleteLink, useUpdateLink } from '@/features/links';
+import { useWorkspaceRole } from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 
 import { LinkPreview } from './link-preview';

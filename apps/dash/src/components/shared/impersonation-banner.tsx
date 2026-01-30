@@ -3,8 +3,8 @@
 import { Button } from '@workspace/ui/components/button';
 import { AlertTriangle, X } from 'lucide-react';
 
+import { useSession } from '@/features/auth';
 import { useAuth } from '@/hooks/use-auth';
-import { useSession } from '@/hooks/use-session';
 
 /**
  * A banner displayed at the top of the page when an admin is impersonating another user.

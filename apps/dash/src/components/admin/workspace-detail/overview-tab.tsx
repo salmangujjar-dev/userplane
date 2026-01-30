@@ -9,10 +9,7 @@ import { useState } from 'react';
 
 import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
-import {
-  useAdminDeactivateWorkspace,
-  useAdminResetInviteToken,
-} from '@/hooks/use-admin-workspace-api';
+import { useAdminDeactivateWorkspace, useAdminResetInviteToken } from '@/features/admin';
 
 import type { WorkspaceDetail, WorkspaceToDeactivate, WorkspaceToResetToken } from './types';
 

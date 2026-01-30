@@ -1,4 +1,4 @@
-import type { Link } from '@/hooks/use-workspace-links';
+import type { Link } from '@/features/links';
 
 import { LinksList } from './links-list';
 

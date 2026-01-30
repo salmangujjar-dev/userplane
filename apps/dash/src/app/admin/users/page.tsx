@@ -44,13 +44,13 @@ import {
   useAdminUserDetail,
   useAdminUserSessions,
   useAdminUserWorkspaces,
-} from '@/hooks/use-admin-api';
+} from '@/features/admin';
 import {
   type AdminWorkspaceCreateInviteResponse,
   useAdminCreateWorkspaceInvite,
-} from '@/hooks/use-admin-workspace-api';
-import { useImpersonation } from '@/hooks/use-impersonation';
-import { useSession } from '@/hooks/use-session';
+} from '@/features/admin';
+import { useImpersonation } from '@/features/admin';
+import { useSession } from '@/features/auth';
 import {
   adminSortDirectionParser,
   adminUserSortByParser,

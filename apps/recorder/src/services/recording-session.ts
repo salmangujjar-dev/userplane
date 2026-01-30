@@ -204,7 +204,7 @@ export class RecordingSession {
         });
 
         // Capture and set browser capabilities context
-        const systemMetadata = await captureSystemMetadata();
+        const systemMetadata = captureSystemMetadata();
         Sentry.setContext('browser_capabilities', {
           browser: systemMetadata.browser,
           os: systemMetadata.os,

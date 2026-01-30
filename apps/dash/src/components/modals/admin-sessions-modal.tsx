@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-import type { AdminUserSession } from '@/hooks/use-admin-api';
+import type { AdminUserSession } from '@/features/admin';
 
 import { AdminRevokeSessionModal } from './admin-revoke-session-modal';
 

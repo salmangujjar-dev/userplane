@@ -9,8 +9,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
+import { useVerifyBillingEmailChange } from '@/features/workspace';
 import { logger } from '@/logger';
-import { useVerifyBillingEmailChange } from '@/queries/use-billing-email-verification-mutations';
 
 function BillingEmailVerificationPageContent() {
   const router = useRouter();

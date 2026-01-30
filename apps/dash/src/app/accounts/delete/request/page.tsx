@@ -12,9 +12,9 @@ import { useState } from 'react';
 
 import { authClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { useAccount } from '@/hooks/use-account';
+import { useAccount } from '@/features/account';
+import { useWorkspaceCount } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { useWorkspaceCount } from '@/hooks/use-workspace-count';
 import { logger } from '@/logger';
 
 function RequestDeleteHeader() {

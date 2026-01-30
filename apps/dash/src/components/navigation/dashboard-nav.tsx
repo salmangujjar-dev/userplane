@@ -4,7 +4,7 @@ import { Badge } from '@workspace/ui/components/badge';
 import Logo from '@workspace/ui/components/logo';
 import Link from 'next/link';
 
-import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
+import { useWorkspaceMembers } from '@/features/workspace';
 
 import { WorkspaceMemberAvatars } from '../workspace/workspace-member-avatars';
 

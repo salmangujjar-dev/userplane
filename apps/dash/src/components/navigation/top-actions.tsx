@@ -3,7 +3,7 @@
 import { Button } from '@workspace/ui/components/button';
 import { Plus } from 'lucide-react';
 
-import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
+import { useWorkspaceMembers } from '@/features/workspace';
 
 import { WorkspaceMemberAvatars } from '../workspace/workspace-member-avatars';
 

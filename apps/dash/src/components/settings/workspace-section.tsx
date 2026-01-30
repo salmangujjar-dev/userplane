@@ -14,10 +14,12 @@ import { z } from 'zod';
 import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { WorkspaceSectionSkeleton } from '@/components/skeleton';
-import { useWorkspace } from '@/hooks/use-workspace';
-import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
-import { useUpdateWorkspaceName } from '@/queries/use-overview-mutations';
-import { useLeaveWorkspace } from '@/queries/use-workspace-mutations';
+import {
+  useCanEditWorkspace,
+  useLeaveWorkspace,
+  useUpdateWorkspaceName,
+  useWorkspace,
+} from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 
 const workspaceNameFormSchema = z.object({
