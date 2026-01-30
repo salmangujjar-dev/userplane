@@ -19,6 +19,7 @@ import type {
   LinkCore,
   WorkspaceRecordingPrefs,
 } from '@workspace/cache';
+import { domainRecordingKeys, linkKeys, workspaceRecordingKeys } from '@workspace/cache';
 import { sessionError } from '@workspace/contract';
 import type {
   ClientActionsStorageClient,
@@ -73,7 +74,7 @@ export interface SessionServiceDeps {
   clientActionsStorage: ClientActionsStorageClient;
   linkService: LinkService;
   entitlementService: EntitlementService;
-  cacheService?: CacheService;
+  cacheService: CacheService;
 }
 
 /**
@@ -146,7 +147,7 @@ export class SessionService {
    */
   private async getLinkWithPreferences(linkId: string): Promise<LinkWithWorkspacePrefsRow | null> {
     // Step 1: Try to get workspaceId from mapping cache
-    const cachedWorkspaceId = await this.deps.cacheService?.getLinkWorkspaceMapping(linkId);
+    const cachedWorkspaceId = await this.deps.cacheService.getLinkWorkspaceMapping(linkId);
 
     if (cachedWorkspaceId) {
       // Step 2: Try to assemble from normalized caches
@@ -171,28 +172,27 @@ export class SessionService {
 
   /**
    * Try to assemble link data from normalized caches
+   * Uses mget for efficient batch fetching (2 round trips instead of 3)
    * Returns null if any cache component is missing
    */
   private async tryAssembleFromCaches(
     linkId: string,
     workspaceId: string
   ): Promise<LinkWithWorkspacePrefsRow | null> {
-    if (!this.deps.cacheService) return null;
+    // Step 1: Batch fetch linkCore + workspacePrefs (we have workspaceId)
+    const linkCoreKey = linkKeys.core(workspaceId, linkId);
+    const workspacePrefsKey = workspaceRecordingKeys.preferences(workspaceId);
 
-    // First get link core to get domainId
-    const linkCore = await this.deps.cacheService.getLinkCore(workspaceId, linkId);
-    if (!linkCore) return null;
+    const [linkCore, workspacePrefs] = (await this.deps.cacheService.mget<
+      LinkCore | WorkspaceRecordingPrefs
+    >([linkCoreKey, workspacePrefsKey])) as [LinkCore | null, WorkspaceRecordingPrefs | null];
 
-    // Then get workspace and domain prefs in parallel
-    const [workspacePrefs, domainPrefs] = await Promise.all([
-      this.deps.cacheService.getWorkspaceRecordingPrefs(workspaceId),
-      this.deps.cacheService.getDomainRecordingPrefs(linkCore.domainId),
-    ]);
+    // If linkCore or workspacePrefs missing, cache miss
+    if (!linkCore || !workspacePrefs) return null;
 
-    // If any component is missing, we have a cache miss
-    if (!workspacePrefs || !domainPrefs) {
-      return null;
-    }
+    // Step 2: Now fetch domainPrefs (we have domainId from linkCore)
+    const domainPrefs = await this.deps.cacheService.getDomainRecordingPrefs(linkCore.domainId);
+    if (!domainPrefs) return null;
 
     // Assemble the full object from cached components
     return {
@@ -224,8 +224,6 @@ export class SessionService {
    * Called on cache miss to populate all cache types including workspace mapping
    */
   private async cacheAllComponents(linkData: LinkWithWorkspacePrefsRow): Promise<void> {
-    if (!this.deps.cacheService) return;
-
     // Build the normalized cache objects
     const linkCore: LinkCore = {
       linkId: linkData.linkId,

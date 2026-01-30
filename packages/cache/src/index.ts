@@ -20,7 +20,11 @@ export type {
   UsageSummary,
   WorkspaceRecordingPrefs,
 } from './cache/cache-service';
-export { CacheService } from './cache/cache-service';
+export {
+  CACHE_BYPASS_HEADER,
+  CacheService,
+  getCacheOptionsFromHeaders,
+} from './cache/cache-service';
 export * from './cache/keys';
 export * from './cache/ttl';
 

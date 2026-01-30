@@ -26,6 +26,8 @@ export type LinkWorkspaceMappingKey = CacheKey<'link:ws'>;
 export type WorkspaceRecordingPrefsKey = CacheKey<'workspace:recording-prefs'>;
 export type DomainRecordingPrefsKey = CacheKey<'domain:recording-prefs'>;
 export type IntegrationKey = CacheKey<'integration'>;
+export type MembershipKey = CacheKey<'member'>;
+export type WorkspaceExistsKey = CacheKey<'workspace:exists'>;
 
 // ============================================================
 // Key generators
@@ -84,6 +86,26 @@ export const integrationKeys = {
   /** Integration lookup by provider workspace ID */
   byProviderWorkspace: (provider: string, providerWorkspaceId: string): IntegrationKey =>
     `integration:${provider}:${providerWorkspaceId}` as IntegrationKey,
+};
+
+/**
+ * Membership cache keys
+ * Used for fast workspace access checks (happens on every API request)
+ */
+export const membershipKeys = {
+  /** User's membership in a workspace (role + memberId) */
+  byUserAndWorkspace: (userId: string, workspaceId: string): MembershipKey =>
+    `member:${userId}:${workspaceId}` as MembershipKey,
+};
+
+/**
+ * Workspace existence cache keys
+ * Used for fast workspace validation (happens on every API request)
+ */
+export const workspaceKeys = {
+  /** Whether workspace exists and is not deleted */
+  exists: (workspaceId: string): WorkspaceExistsKey =>
+    `workspace:exists:${workspaceId}` as WorkspaceExistsKey,
 };
 
 /**

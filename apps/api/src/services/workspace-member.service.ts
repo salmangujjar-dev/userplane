@@ -3,6 +3,7 @@
  * Contains business logic for workspace membership management
  */
 
+import type { CacheService } from '@workspace/cache';
 import type { WorkspaceRole } from '@workspace/contract';
 import { workspaceError } from '@workspace/contract';
 
@@ -14,6 +15,7 @@ import type { Transaction } from '@/api/types';
 export interface WorkspaceMemberServiceDeps {
   memberRepo: WorkspaceMemberRepository;
   entitlementService: EntitlementService;
+  cacheService: CacheService;
 }
 
 export class WorkspaceMemberService {
@@ -47,21 +49,37 @@ export class WorkspaceMemberService {
       params.workspaceId
     );
 
+    let member;
+
     // If soft-deleted member exists, restore them as owner
     if (deletedMember && deletedMember.isDeleted) {
-      return this.deps.memberRepo.restore(deletedMember.workspaceMemberId, 'owner', options);
+      member = await this.deps.memberRepo.restore(
+        deletedMember.workspaceMemberId,
+        'owner',
+        options
+      );
+    } else {
+      // Otherwise, create new member as owner
+      member = await this.deps.memberRepo.create(
+        {
+          workspaceMemberId: generateWorkspaceMemberId(),
+          userId: params.userId,
+          workspaceId: params.workspaceId,
+          workspaceRole: 'owner',
+        },
+        options
+      );
     }
 
-    // Otherwise, create new member as owner
-    return this.deps.memberRepo.create(
-      {
-        workspaceMemberId: generateWorkspaceMemberId(),
-        userId: params.userId,
-        workspaceId: params.workspaceId,
-        workspaceRole: 'owner',
-      },
-      options
-    );
+    // Warm membership cache
+    if (member) {
+      await this.deps.cacheService.setMembership(params.userId, params.workspaceId, {
+        workspaceMemberId: member.workspaceMemberId,
+        workspaceRole: member.workspaceRole,
+      });
+    }
+
+    return member;
   }
 
   /**
@@ -139,6 +157,14 @@ export class WorkspaceMemberService {
       console.error('Failed to track seat consumption:', error);
     }
 
+    // Warm cache with new membership
+    if (member) {
+      await this.deps.cacheService.setMembership(params.userId, params.workspaceId, {
+        workspaceMemberId: member.workspaceMemberId,
+        workspaceRole: member.workspaceRole,
+      });
+    }
+
     return member;
   }
 
@@ -177,7 +203,14 @@ export class WorkspaceMemberService {
       }
     }
 
-    return this.deps.memberRepo.updateRole(params.memberId, params.newRole, options);
+    const updated = await this.deps.memberRepo.updateRole(params.memberId, params.newRole, options);
+
+    // Invalidate membership cache - role has changed
+    if (updated) {
+      await this.deps.cacheService.invalidateMembership(member.userId, params.workspaceId);
+    }
+
+    return updated;
   }
 
   /**
@@ -234,14 +267,54 @@ export class WorkspaceMemberService {
       console.error('Failed to release seat:', error);
     }
 
+    // Invalidate membership cache - member removed
+    await this.deps.cacheService.invalidateMembership(member.userId, params.workspaceId);
+
     return result;
   }
 
   /**
-   * Get member
+   * Get member with full data (not cached)
+   * Use getMembershipForAuth for auth checks that only need role/memberId
    */
   async getMember(userId: string, workspaceId: string) {
     return this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
+  }
+
+  /**
+   * Get minimal membership for auth checks (cached)
+   * Returns only workspaceMemberId and workspaceRole
+   * Used by middleware for fast workspace access validation
+   */
+  async getMembershipForAuth(
+    userId: string,
+    workspaceId: string
+  ): Promise<{ workspaceMemberId: string; workspaceRole: WorkspaceRole } | null> {
+    // Try cache first
+    const cached = await this.deps.cacheService.getMembership(userId, workspaceId);
+    if (cached) {
+      return {
+        workspaceMemberId: cached.workspaceMemberId,
+        workspaceRole: cached.workspaceRole as WorkspaceRole,
+      };
+    }
+
+    // Cache miss - fetch from database
+    const member = await this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
+
+    // Cache the result if found
+    if (member) {
+      await this.deps.cacheService.setMembership(userId, workspaceId, {
+        workspaceMemberId: member.workspaceMemberId,
+        workspaceRole: member.workspaceRole,
+      });
+      return {
+        workspaceMemberId: member.workspaceMemberId,
+        workspaceRole: member.workspaceRole,
+      };
+    }
+
+    return null;
   }
 
   /**

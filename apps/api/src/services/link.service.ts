@@ -31,7 +31,7 @@ export interface LinkServiceDeps {
   domainRepo: DomainRepository;
   workspaceRepo: WorkspaceRepository;
   entitlementService: EntitlementService;
-  cacheService?: CacheService;
+  cacheService: CacheService;
 }
 
 /**
@@ -227,6 +227,7 @@ export class LinkService {
       projectId: string;
       domainId: string;
       createdBy: string;
+      createdByName: string | null;
       linkTitle: string | null;
       linkReusable: boolean;
       linkProviderType: LinkProviderType;
@@ -269,6 +270,23 @@ export class LinkService {
       // Consumption tracking failure shouldn't block the link creation
       console.error('Failed to track link consumption:', error);
     }
+
+    // Warm caches for new link
+    await Promise.all([
+      // linkId -> workspaceId mapping for cache-first lookups
+      this.deps.cacheService.setLinkWorkspaceMapping(link.linkId, params.workspaceId),
+      // link:core data for session initialization
+      this.deps.cacheService.setLinkCore(params.workspaceId, link.linkId, {
+        linkId: link.linkId,
+        linkType: link.linkType,
+        linkReusable: link.linkReusable,
+        workspaceId: link.workspaceId,
+        projectId: link.projectId,
+        domainId: link.domainId,
+        createdBy: link.createdBy,
+        createdByName: params.createdByName,
+      }),
+    ]);
 
     // Fetch domain info for linkURL generation
     const domain = await this.deps.domainRepo.findById(params.domainId);
@@ -332,6 +350,7 @@ export class LinkService {
         projectId,
         domainId: params.domainId,
         createdBy: params.createdBy,
+        createdByName: memberWithUser.userName,
         linkTitle: parsed.linkTitle,
         linkReusable: params.linkReusable ?? false,
         linkProviderType: parsed.linkProviderType,
@@ -351,7 +370,7 @@ export class LinkService {
    */
   async createWithProvider(params: CreateLinkWithProviderParams, options?: { tx?: Transaction }) {
     // Validate and prepare
-    const { projectId } = await this.validateAndPrepareLink(
+    const { memberWithUser, projectId } = await this.validateAndPrepareLink(
       params.workspaceId,
       params.createdBy,
       params.projectId
@@ -364,6 +383,7 @@ export class LinkService {
         projectId,
         domainId: params.domainId,
         createdBy: params.createdBy,
+        createdByName: memberWithUser.userName,
         linkTitle: params.linkTitle ?? null,
         linkReusable: params.linkReusable ?? false,
         linkProviderType: params.linkProviderType,
@@ -482,7 +502,7 @@ export class LinkService {
     }
 
     // Invalidate all link caches (core + workspace mapping)
-    await this.deps.cacheService?.invalidateLinkFull(workspaceId, linkId);
+    await this.deps.cacheService.invalidateLinkFull(workspaceId, linkId);
 
     // Fetch domain info for linkURL generation
     const domain = await this.deps.domainRepo.findById(updated.domainId);
@@ -608,7 +628,7 @@ export class LinkService {
     }
 
     // Invalidate all link caches (core + workspace mapping)
-    await this.deps.cacheService?.invalidateLinkFull(workspaceId, linkId);
+    await this.deps.cacheService.invalidateLinkFull(workspaceId, linkId);
 
     return deleted;
   }

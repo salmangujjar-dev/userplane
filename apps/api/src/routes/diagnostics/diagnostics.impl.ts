@@ -14,7 +14,12 @@
  */
 
 import type { CacheService } from '@workspace/cache';
-import { domainRecordingKeys, getCacheKeysByTypes, linkKeys } from '@workspace/cache';
+import {
+  domainRecordingKeys,
+  getCacheKeysByTypes,
+  integrationKeys,
+  linkKeys,
+} from '@workspace/cache';
 import type { CacheType } from '@workspace/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
@@ -99,14 +104,10 @@ const handleClearCache = async (
   if (types.includes('integration')) {
     try {
       const integrations = await integrationRepo.findByWorkspaceId(workspaceId);
-      for (const integration of integrations) {
-        if (integration.providerWorkspaceId) {
-          await cacheService.invalidateIntegration(
-            integration.provider,
-            integration.providerWorkspaceId
-          );
-        }
-      }
+      const integrationCacheKeys = integrations
+        .filter((i) => i.providerWorkspaceId)
+        .map((i) => integrationKeys.byProviderWorkspace(i.provider, i.providerWorkspaceId));
+      keysToDelete = [...keysToDelete, ...integrationCacheKeys];
     } catch (error) {
       console.warn(`[Diagnostics] Failed to clear integration caches:`, error);
     }

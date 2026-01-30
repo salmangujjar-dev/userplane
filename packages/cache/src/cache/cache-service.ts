@@ -25,7 +25,9 @@ import {
   getWorkspaceBillingKeys,
   integrationKeys,
   linkKeys,
+  membershipKeys,
   refundKeys,
+  workspaceKeys,
   workspaceRecordingKeys,
 } from './keys';
 import { TTL } from './ttl';
@@ -49,6 +51,22 @@ export interface CacheServiceConfig {
 export interface CacheOptions {
   /** Skip cache lookup, force database query */
   bypass?: boolean;
+}
+
+/**
+ * HTTP header name for cache bypass
+ * Set to any truthy value to skip cache for debugging
+ * Example: X-Cache-Bypass: 1
+ */
+export const CACHE_BYPASS_HEADER = 'x-cache-bypass';
+
+/**
+ * Extract cache options from HTTP headers
+ * Use in route handlers to propagate bypass flag to services
+ */
+export function getCacheOptionsFromHeaders(headers: Headers): CacheOptions {
+  const bypass = headers.get(CACHE_BYPASS_HEADER);
+  return { bypass: !!bypass };
 }
 
 export class CacheService {
@@ -96,6 +114,42 @@ export class CacheService {
   }
 
   /**
+   * Batch get multiple values from cache
+   * Returns array in same order as keys, with null for misses
+   */
+  async mget<T>(keys: string[]): Promise<(T | null)[]> {
+    if (!this.enabled || !this.redis || keys.length === 0) {
+      return keys.map(() => null);
+    }
+
+    try {
+      const values = await this.redis.mget<(T | null)[]>(...keys);
+      return values;
+    } catch (error) {
+      console.warn(`[Cache] MGET error for ${keys.length} keys:`, error);
+      return keys.map(() => null);
+    }
+  }
+
+  /**
+   * Batch set multiple values with same TTL using pipeline
+   * More efficient than individual sets for bulk operations
+   */
+  async mset<T>(entries: Array<{ key: string; value: T }>, ttlSeconds: number): Promise<void> {
+    if (!this.enabled || !this.redis || entries.length === 0) return;
+
+    try {
+      const pipeline = this.redis.pipeline();
+      for (const { key, value } of entries) {
+        pipeline.set(key, value, { ex: ttlSeconds });
+      }
+      await pipeline.exec();
+    } catch (error) {
+      console.warn(`[Cache] MSET error for ${entries.length} entries:`, error);
+    }
+  }
+
+  /**
    * Delete one or more keys from cache
    * Accepts branded key types for type safety
    */
@@ -134,7 +188,7 @@ export class CacheService {
     status: SubscriptionAccessStatus
   ): Promise<void> {
     const key = billingKeys.accessStatus(workspaceId);
-    await this.set(key, status, TTL.BILLING_ACCESS);
+    await this._set(key, status, TTL.BILLING_ACCESS);
   }
 
   /**
@@ -147,7 +201,7 @@ export class CacheService {
   ): Promise<SubscriptionStatusData | null> {
     if (options?.bypass) return null;
     const key = billingKeys.subscriptionStatus(workspaceId);
-    return this.get<SubscriptionStatusData>(key);
+    return this._get<SubscriptionStatusData>(key);
   }
 
   /**
@@ -155,7 +209,7 @@ export class CacheService {
    */
   async setSubscriptionStatus(workspaceId: string, status: SubscriptionStatusData): Promise<void> {
     const key = billingKeys.subscriptionStatus(workspaceId);
-    await this.set(key, status, TTL.BILLING_STATUS);
+    await this._set(key, status, TTL.BILLING_STATUS);
   }
 
   // ============================================================
@@ -169,7 +223,7 @@ export class CacheService {
   async getUsageSummary(workspaceId: string, options?: CacheOptions): Promise<UsageSummary | null> {
     if (options?.bypass) return null;
     const key = entitlementKeys.usageSummary(workspaceId);
-    return this.get<UsageSummary>(key);
+    return this._get<UsageSummary>(key);
   }
 
   /**
@@ -177,7 +231,7 @@ export class CacheService {
    */
   async setUsageSummary(workspaceId: string, summary: UsageSummary): Promise<void> {
     const key = entitlementKeys.usageSummary(workspaceId);
-    await this.set(key, summary, TTL.ENTITLEMENT_USAGE);
+    await this._set(key, summary, TTL.ENTITLEMENT_USAGE);
   }
 
   // ============================================================
@@ -192,7 +246,7 @@ export class CacheService {
   async getLinkWorkspaceMapping(linkId: string, options?: CacheOptions): Promise<string | null> {
     if (options?.bypass) return null;
     const key = linkKeys.workspaceMapping(linkId);
-    return this.get<string>(key);
+    return this._get<string>(key);
   }
 
   /**
@@ -200,7 +254,7 @@ export class CacheService {
    */
   async setLinkWorkspaceMapping(linkId: string, workspaceId: string): Promise<void> {
     const key = linkKeys.workspaceMapping(linkId);
-    await this.set(key, workspaceId, TTL.LINK_WORKSPACE_MAPPING);
+    await this._set(key, workspaceId, TTL.LINK_WORKSPACE_MAPPING);
   }
 
   /**
@@ -225,7 +279,7 @@ export class CacheService {
   ): Promise<WorkspaceRecordingPrefs | null> {
     if (options?.bypass) return null;
     const key = workspaceRecordingKeys.preferences(workspaceId);
-    return this.get<WorkspaceRecordingPrefs>(key);
+    return this._get<WorkspaceRecordingPrefs>(key);
   }
 
   /**
@@ -236,7 +290,7 @@ export class CacheService {
     prefs: WorkspaceRecordingPrefs
   ): Promise<void> {
     const key = workspaceRecordingKeys.preferences(workspaceId);
-    await this.set(key, prefs, TTL.WORKSPACE_RECORDING_PREFS);
+    await this._set(key, prefs, TTL.WORKSPACE_RECORDING_PREFS);
   }
 
   /**
@@ -257,7 +311,7 @@ export class CacheService {
   ): Promise<DomainRecordingPrefs | null> {
     if (options?.bypass) return null;
     const key = domainRecordingKeys.preferences(domainId);
-    return this.get<DomainRecordingPrefs>(key);
+    return this._get<DomainRecordingPrefs>(key);
   }
 
   /**
@@ -265,7 +319,7 @@ export class CacheService {
    */
   async setDomainRecordingPrefs(domainId: string, prefs: DomainRecordingPrefs): Promise<void> {
     const key = domainRecordingKeys.preferences(domainId);
-    await this.set(key, prefs, TTL.DOMAIN_RECORDING_PREFS);
+    await this._set(key, prefs, TTL.DOMAIN_RECORDING_PREFS);
   }
 
   /**
@@ -278,6 +332,15 @@ export class CacheService {
   }
 
   /**
+   * Invalidate domain recording preferences for multiple domains (batch)
+   */
+  async invalidateDomainRecordingPrefsBatch(domainIds: string[]): Promise<void> {
+    if (domainIds.length === 0) return;
+    const keys = domainIds.map((id) => domainRecordingKeys.preferences(id));
+    await this.delete(...keys);
+  }
+
+  /**
    * Get cached link core data
    */
   async getLinkCore(
@@ -287,7 +350,7 @@ export class CacheService {
   ): Promise<LinkCore | null> {
     if (options?.bypass) return null;
     const key = linkKeys.core(workspaceId, linkId);
-    return this.get<LinkCore>(key);
+    return this._get<LinkCore>(key);
   }
 
   /**
@@ -295,7 +358,7 @@ export class CacheService {
    */
   async setLinkCore(workspaceId: string, linkId: string, core: LinkCore): Promise<void> {
     const key = linkKeys.core(workspaceId, linkId);
-    await this.set(key, core, TTL.LINK_CORE);
+    await this._set(key, core, TTL.LINK_CORE);
   }
 
   /**
@@ -382,7 +445,7 @@ export class CacheService {
   ): Promise<T | null> {
     if (options?.bypass) return null;
     const key = integrationKeys.byProviderWorkspace(provider, providerWorkspaceId);
-    return this.get<T>(key);
+    return this._get<T>(key);
   }
 
   /**
@@ -394,7 +457,7 @@ export class CacheService {
     integration: T
   ): Promise<void> {
     const key = integrationKeys.byProviderWorkspace(provider, providerWorkspaceId);
-    await this.set(key, integration, TTL.INTEGRATION_LOOKUP);
+    await this._set(key, integration, TTL.INTEGRATION_LOOKUP);
   }
 
   /**
@@ -403,6 +466,75 @@ export class CacheService {
    */
   async invalidateIntegration(provider: string, providerWorkspaceId: string): Promise<void> {
     const key = integrationKeys.byProviderWorkspace(provider, providerWorkspaceId);
+    await this.delete(key);
+  }
+
+  // ============================================================
+  // Membership cache (hot path - every authenticated request)
+  // ============================================================
+
+  /**
+   * Get cached membership for user in workspace
+   */
+  async getMembership(
+    userId: string,
+    workspaceId: string,
+    options?: CacheOptions
+  ): Promise<{ workspaceMemberId: string; workspaceRole: string } | null> {
+    if (options?.bypass) return null;
+    const key = membershipKeys.byUserAndWorkspace(userId, workspaceId);
+    return this._get<{ workspaceMemberId: string; workspaceRole: string }>(key);
+  }
+
+  /**
+   * Cache membership data
+   */
+  async setMembership(
+    userId: string,
+    workspaceId: string,
+    membership: { workspaceMemberId: string; workspaceRole: string }
+  ): Promise<void> {
+    const key = membershipKeys.byUserAndWorkspace(userId, workspaceId);
+    await this._set(key, membership, TTL.MEMBERSHIP);
+  }
+
+  /**
+   * Invalidate membership cache
+   * Called when member role changes or member is removed
+   */
+  async invalidateMembership(userId: string, workspaceId: string): Promise<void> {
+    const key = membershipKeys.byUserAndWorkspace(userId, workspaceId);
+    await this.delete(key);
+  }
+
+  // ============================================================
+  // Workspace existence cache (hot path - every workspace request)
+  // ============================================================
+
+  /**
+   * Get cached workspace existence
+   * Returns workspaceId if exists, null if not cached or doesn't exist
+   */
+  async getWorkspaceExists(workspaceId: string, options?: CacheOptions): Promise<boolean | null> {
+    if (options?.bypass) return null;
+    const key = workspaceKeys.exists(workspaceId);
+    return this._get<boolean>(key);
+  }
+
+  /**
+   * Cache workspace existence
+   */
+  async setWorkspaceExists(workspaceId: string, exists: boolean): Promise<void> {
+    const key = workspaceKeys.exists(workspaceId);
+    await this._set(key, exists, TTL.WORKSPACE_EXISTS);
+  }
+
+  /**
+   * Invalidate workspace existence cache
+   * Called when workspace is deleted or restored
+   */
+  async invalidateWorkspaceExists(workspaceId: string): Promise<void> {
+    const key = workspaceKeys.exists(workspaceId);
     await this.delete(key);
   }
 }

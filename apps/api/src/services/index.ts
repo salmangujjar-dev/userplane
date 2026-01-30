@@ -96,6 +96,7 @@ export const entitlementService = new EntitlementService({
 export const workspaceMemberService = new WorkspaceMemberService({
   memberRepo: workspaceMemberRepo,
   entitlementService,
+  cacheService,
 });
 
 export const userService = new UserService({

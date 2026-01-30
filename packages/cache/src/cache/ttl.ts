@@ -64,6 +64,18 @@ export const TTL = {
    * Longer TTL (30 minutes) - integrations change very rarely
    */
   INTEGRATION_LOOKUP: 1800,
+
+  /**
+   * Workspace membership - checked on every authenticated API request
+   * Short TTL (2 minutes) - role changes should reflect quickly
+   */
+  MEMBERSHIP: 120,
+
+  /**
+   * Workspace existence - checked on every workspace API request
+   * Short TTL (2 minutes) - deletion should reflect quickly
+   */
+  WORKSPACE_EXISTS: 120,
 } as const;
 
 export type TTLKey = keyof typeof TTL;
