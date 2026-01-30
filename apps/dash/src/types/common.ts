@@ -2,10 +2,10 @@
  * Common shared types used across the application
  */
 
-import type { PaginationMetaSchema } from '@workspace/contract';
 import type { z } from 'zod';
 
 import type { SafeResult } from '@/lib/errors';
+import { PaginationMetaSchema } from '@/schemas';
 
 /**
  * Re-export PaginationMeta from contract for convenience

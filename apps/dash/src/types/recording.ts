@@ -1,24 +1,13 @@
 /**
  * Recording-related types
+ * Re-exports from @workspace/contract for type consistency
+ *
+ * Note: Contract uses z.coerce.date() so JSON string dates are
+ * automatically coerced to Date objects during parsing.
  */
 
-import type { PaginationMeta } from './common';
+export type { RecordingCreator, RecordingItem, RecordingsListData } from '@workspace/contract';
 
-/**
- * Recording object
- */
-export interface Recording {
-  recordingId: string;
-  recordingTitle: string | null;
-  recordingUrl: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Recordings list response
- */
-export interface RecordingsData {
-  recordings: Recording[];
-  pagination: PaginationMeta;
-}
+// Aliases for backward compatibility
+export type { RecordingItem as Recording } from '@workspace/contract';
+export type { RecordingsListData as RecordingsData } from '@workspace/contract';
