@@ -12,7 +12,14 @@ export type { RedisConfig } from './client';
 export { createRedisClient, getRedisClient, isRedisAvailable } from './client';
 
 // Cache
-export type { CachedUsageSummary, CacheServiceConfig } from './cache/cache-service';
+export type {
+  CacheOptions,
+  CacheServiceConfig,
+  DomainRecordingPrefs,
+  LinkCore,
+  UsageSummary,
+  WorkspaceRecordingPrefs,
+} from './cache/cache-service';
 export { CacheService } from './cache/cache-service';
 export * from './cache/keys';
 export * from './cache/ttl';

@@ -303,4 +303,17 @@ export class DomainRepository {
 
     return preferences || null;
   }
+
+  /**
+   * Get all domain IDs for a workspace
+   * Used for cache invalidation operations
+   */
+  async getDomainIdsByWorkspaceId(workspaceId: string): Promise<string[]> {
+    const results = await this.db
+      .select({ domainId: domains.domainId })
+      .from(domains)
+      .where(and(eq(domains.workspaceId, workspaceId), eq(domains.isDeleted, false)));
+
+    return results.map((r) => r.domainId);
+  }
 }

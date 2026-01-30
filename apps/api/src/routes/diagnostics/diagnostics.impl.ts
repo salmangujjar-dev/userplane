@@ -1,16 +1,40 @@
 /**
  * Diagnostics contract implementation using oRPC
  * Implements diagnostic and maintenance operations for workspaces
+ *
+ * Normalized cache architecture:
+ * - billing: Subscription access and status
+ * - safety_latches: Dispute and refund flags
+ * - entitlement: Usage summary
+ * - workspace_recording: Workspace recording preferences (branding, limits)
+ * - domain_recording: Domain recording preferences (capture settings)
+ * - link: Link core data + workspace mapping
+ * - integration: Integration lookups
+ * - all: All of the above
  */
 
 import type { CacheService } from '@workspace/cache';
-import { getCacheKeysByTypes } from '@workspace/cache';
+import { domainRecordingKeys, getCacheKeysByTypes, linkKeys } from '@workspace/cache';
 import type { CacheType } from '@workspace/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
+import type { DomainRepository } from '@/api/repositories/domains.repository';
+import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { LinkRepository } from '@/api/repositories/links.repository';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+
+/** All cache types except 'all' itself */
+const ALL_CACHE_TYPES: CacheType[] = [
+  'billing',
+  'safety_latches',
+  'entitlement',
+  'workspace_recording',
+  'domain_recording',
+  'link',
+  'integration',
+];
 
 /**
  * Handle clear-cache action
@@ -19,9 +43,17 @@ import type { WorkspaceMemberService } from '@/api/services/workspace-member.ser
 const handleClearCache = async (
   cacheService: CacheService,
   workspaceId: string,
-  payload: { types: CacheType[] }
+  payload: { types: CacheType[] },
+  linkRepo: LinkRepository,
+  domainRepo: DomainRepository,
+  integrationRepo: IntegrationRepository
 ) => {
-  const { types } = payload;
+  let { types } = payload;
+
+  // Expand 'all' to all cache types
+  if (types.includes('all')) {
+    types = ALL_CACHE_TYPES;
+  }
 
   if (!cacheService.isAvailable()) {
     return {
@@ -34,7 +66,51 @@ const handleClearCache = async (
     };
   }
 
-  const keysToDelete = getCacheKeysByTypes(workspaceId, types);
+  // Get standard cache keys (billing, safety_latches, entitlement, workspace_recording)
+  let keysToDelete = getCacheKeysByTypes(workspaceId, types);
+
+  // Handle 'domain_recording' type - requires fetching domain IDs from database
+  if (types.includes('domain_recording')) {
+    try {
+      const domainIds = await domainRepo.getDomainIdsByWorkspaceId(workspaceId);
+      const domainCacheKeys = domainIds.map((id) => domainRecordingKeys.preferences(id));
+      keysToDelete = [...keysToDelete, ...domainCacheKeys];
+    } catch (error) {
+      console.warn(`[Diagnostics] Failed to fetch domain IDs for cache clearing:`, error);
+    }
+  }
+
+  // Handle 'link' type - requires fetching link IDs from database
+  // Clears both link:core and link:ws (workspace mapping) caches
+  if (types.includes('link')) {
+    try {
+      const linkIds = await linkRepo.getLinkIdsByWorkspaceId(workspaceId);
+      const linkCacheKeys = linkIds.flatMap((id) => [
+        linkKeys.core(workspaceId, id),
+        linkKeys.workspaceMapping(id),
+      ]);
+      keysToDelete = [...keysToDelete, ...linkCacheKeys];
+    } catch (error) {
+      console.warn(`[Diagnostics] Failed to fetch link IDs for cache clearing:`, error);
+    }
+  }
+
+  // Handle 'integration' type - requires fetching integration IDs from database
+  if (types.includes('integration')) {
+    try {
+      const integrations = await integrationRepo.findByWorkspaceId(workspaceId);
+      for (const integration of integrations) {
+        if (integration.providerWorkspaceId) {
+          await cacheService.invalidateIntegration(
+            integration.provider,
+            integration.providerWorkspaceId
+          );
+        }
+      }
+    } catch (error) {
+      console.warn(`[Diagnostics] Failed to clear integration caches:`, error);
+    }
+  }
 
   if (keysToDelete.length === 0) {
     return {
@@ -69,7 +145,10 @@ const handleClearCache = async (
 export const runDiagnosticsImpl = (
   cacheService: CacheService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  linkRepo: LinkRepository,
+  domainRepo: DomainRepository,
+  integrationRepo: IntegrationRepository
 ) => {
   const workspaceMiddleware = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
@@ -81,7 +160,14 @@ export const runDiagnosticsImpl = (
 
       switch (action) {
         case 'clear-cache':
-          return handleClearCache(cacheService, workspaceId, payload as { types: CacheType[] });
+          return handleClearCache(
+            cacheService,
+            workspaceId,
+            payload as { types: CacheType[] },
+            linkRepo,
+            domainRepo,
+            integrationRepo
+          );
         default:
           throw new Error(`Unknown diagnostic action: ${action}`);
       }
@@ -95,9 +181,19 @@ export const runDiagnosticsImpl = (
 export const createDiagnosticsProcedures = (
   cacheService: CacheService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  linkRepo: LinkRepository,
+  domainRepo: DomainRepository,
+  integrationRepo: IntegrationRepository
 ) => {
   return {
-    runDiagnostics: runDiagnosticsImpl(cacheService, workspaceMemberService, workspaceService),
+    runDiagnostics: runDiagnosticsImpl(
+      cacheService,
+      workspaceMemberService,
+      workspaceService,
+      linkRepo,
+      domainRepo,
+      integrationRepo
+    ),
   };
 };

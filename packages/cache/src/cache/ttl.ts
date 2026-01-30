@@ -24,12 +24,6 @@ export const TTL = {
   ENTITLEMENT_USAGE: 300,
 
   /**
-   * Recording limit exceeded status - checked on link creation
-   * Medium TTL (5 minutes) - updated on resource consumption
-   */
-  RECORDING_LIMITS: 300,
-
-  /**
    * Open dispute status - hard safety latch
    * Short TTL (60s) because disputes override all access
    */
@@ -42,10 +36,28 @@ export const TTL = {
   REFUND_SUCCESS: 60,
 
   /**
-   * Link preferences - includes domain/workspace settings
+   * Workspace recording preferences (branding, limits)
    * Longer TTL (10 minutes) - preferences change infrequently
    */
-  LINK_PREFERENCES: 600,
+  WORKSPACE_RECORDING_PREFS: 600,
+
+  /**
+   * Domain recording preferences (capture settings)
+   * Longer TTL (10 minutes) - preferences change infrequently
+   */
+  DOMAIN_RECORDING_PREFS: 600,
+
+  /**
+   * Link core data (link-specific properties only)
+   * Longer TTL (10 minutes) - link data changes infrequently
+   */
+  LINK_CORE: 600,
+
+  /**
+   * Link to workspace mapping - lightweight lookup for cache-first pattern
+   * Longer TTL (30 minutes) - linkId->workspaceId rarely changes
+   */
+  LINK_WORKSPACE_MAPPING: 1800,
 
   /**
    * Integration lookup - maps provider workspace to our workspace

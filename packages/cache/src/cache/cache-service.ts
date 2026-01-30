@@ -8,34 +8,35 @@
  */
 
 import type { Redis } from '@upstash/redis';
-import type { SubscriptionAccessStatus, SubscriptionStatusData } from '@workspace/contract';
+import type {
+  DomainRecordingPrefs,
+  LinkCore,
+  SubscriptionAccessStatus,
+  SubscriptionStatusData,
+  UsageSummary,
+  WorkspaceRecordingPrefs,
+} from '@workspace/contract';
 
 import {
   billingKeys,
   disputeKeys,
+  domainRecordingKeys,
   entitlementKeys,
   getWorkspaceBillingKeys,
   integrationKeys,
   linkKeys,
   refundKeys,
+  workspaceRecordingKeys,
 } from './keys';
 import { TTL } from './ttl';
 
-/**
- * Cached usage summary
- */
-export interface CachedUsageSummary {
-  planId: string;
-  planName: string;
-  resources: Record<
-    string,
-    {
-      consumed: number;
-      limit: number;
-      percentUsed: number;
-    }
-  >;
-}
+// Re-export cache types from contract
+export type {
+  DomainRecordingPrefs,
+  LinkCore,
+  UsageSummary,
+  WorkspaceRecordingPrefs,
+} from '@workspace/contract';
 
 export interface CacheServiceConfig {
   redis: Redis | null;
@@ -67,14 +68,11 @@ export class CacheService {
   }
 
   // ============================================================
-  // Generic cache operations with graceful degradation
+  // Internal cache operations (use typed methods below instead)
   // ============================================================
 
-  /**
-   * Get value from cache
-   * Returns null on miss or error
-   */
-  async get<T>(key: string): Promise<T | null> {
+  /** Internal: Get value from cache. Use typed methods for public API. */
+  private async _get<T>(key: string): Promise<T | null> {
     if (!this.enabled || !this.redis) return null;
 
     try {
@@ -86,11 +84,8 @@ export class CacheService {
     }
   }
 
-  /**
-   * Set value in cache with TTL
-   * Silently fails on error
-   */
-  async set<T>(key: string, value: T, ttlSeconds: number): Promise<void> {
+  /** Internal: Set value in cache with TTL. Use typed methods for public API. */
+  private async _set<T>(key: string, value: T, ttlSeconds: number): Promise<void> {
     if (!this.enabled || !this.redis) return;
 
     try {
@@ -102,7 +97,7 @@ export class CacheService {
 
   /**
    * Delete one or more keys from cache
-   * Silently fails on error
+   * Accepts branded key types for type safety
    */
   async delete(...keys: string[]): Promise<void> {
     if (!this.enabled || !this.redis || keys.length === 0) return;
@@ -128,7 +123,7 @@ export class CacheService {
   ): Promise<SubscriptionAccessStatus | null> {
     if (options?.bypass) return null;
     const key = billingKeys.accessStatus(workspaceId);
-    return this.get<SubscriptionAccessStatus>(key);
+    return this._get<SubscriptionAccessStatus>(key);
   }
 
   /**
@@ -163,45 +158,6 @@ export class CacheService {
     await this.set(key, status, TTL.BILLING_STATUS);
   }
 
-  /**
-   * Get cached dispute status
-   * @param options.bypass - If true, returns null to force database lookup
-   */
-  async getHasOpenDispute(workspaceId: string, options?: CacheOptions): Promise<boolean | null> {
-    if (options?.bypass) return null;
-    const key = disputeKeys.hasOpen(workspaceId);
-    return this.get<boolean>(key);
-  }
-
-  /**
-   * Cache dispute status
-   */
-  async setHasOpenDispute(workspaceId: string, hasDispute: boolean): Promise<void> {
-    const key = disputeKeys.hasOpen(workspaceId);
-    await this.set(key, hasDispute, TTL.DISPUTE_OPEN);
-  }
-
-  /**
-   * Get cached refund status
-   * @param options.bypass - If true, returns null to force database lookup
-   */
-  async getHasSuccessfulRefund(
-    workspaceId: string,
-    options?: CacheOptions
-  ): Promise<boolean | null> {
-    if (options?.bypass) return null;
-    const key = refundKeys.hasSuccess(workspaceId);
-    return this.get<boolean>(key);
-  }
-
-  /**
-   * Cache refund status
-   */
-  async setHasSuccessfulRefund(workspaceId: string, hasRefund: boolean): Promise<void> {
-    const key = refundKeys.hasSuccess(workspaceId);
-    await this.set(key, hasRefund, TTL.REFUND_SUCCESS);
-  }
-
   // ============================================================
   // Typed cache operations for entitlements
   // ============================================================
@@ -210,55 +166,170 @@ export class CacheService {
    * Get cached usage summary
    * @param options.bypass - If true, returns null to force database lookup
    */
-  async getUsageSummary(
-    workspaceId: string,
-    options?: CacheOptions
-  ): Promise<CachedUsageSummary | null> {
+  async getUsageSummary(workspaceId: string, options?: CacheOptions): Promise<UsageSummary | null> {
     if (options?.bypass) return null;
     const key = entitlementKeys.usageSummary(workspaceId);
-    return this.get<CachedUsageSummary>(key);
+    return this.get<UsageSummary>(key);
   }
 
   /**
    * Cache usage summary
    */
-  async setUsageSummary(workspaceId: string, summary: CachedUsageSummary): Promise<void> {
+  async setUsageSummary(workspaceId: string, summary: UsageSummary): Promise<void> {
     const key = entitlementKeys.usageSummary(workspaceId);
     await this.set(key, summary, TTL.ENTITLEMENT_USAGE);
   }
 
   // ============================================================
-  // Typed cache operations for links
+  // Link workspace mapping (for cache-first pattern)
+  // Enables lookups when only linkId is known
   // ============================================================
 
   /**
-   * Get cached link preferences
-   * @param options.bypass - If true, returns null to force database lookup
+   * Get cached linkId -> workspaceId mapping
+   * Enables cache-first pattern when only linkId is available
    */
-  async getLinkPreferences<T>(linkId: string, options?: CacheOptions): Promise<T | null> {
+  async getLinkWorkspaceMapping(linkId: string, options?: CacheOptions): Promise<string | null> {
     if (options?.bypass) return null;
-    const key = linkKeys.preferences(linkId);
-    return this.get<T>(key);
+    const key = linkKeys.workspaceMapping(linkId);
+    return this.get<string>(key);
   }
 
   /**
-   * Cache link preferences
+   * Cache linkId -> workspaceId mapping
    */
-  async setLinkPreferences<T>(linkId: string, preferences: T): Promise<void> {
-    const key = linkKeys.preferences(linkId);
-    await this.set(key, preferences, TTL.LINK_PREFERENCES);
+  async setLinkWorkspaceMapping(linkId: string, workspaceId: string): Promise<void> {
+    const key = linkKeys.workspaceMapping(linkId);
+    await this.set(key, workspaceId, TTL.LINK_WORKSPACE_MAPPING);
   }
 
   /**
-   * Invalidate link preferences cache
+   * Invalidate linkId -> workspaceId mapping
    */
-  async invalidateLinkPreferences(linkId: string): Promise<void> {
-    const key = linkKeys.preferences(linkId);
+  async invalidateLinkWorkspaceMapping(linkId: string): Promise<void> {
+    const key = linkKeys.workspaceMapping(linkId);
     await this.delete(key);
   }
 
   // ============================================================
-  // Bulk invalidation
+  // Normalized cache operations for session initialization
+  // Workspace prefs + Domain prefs + Link core = Session data
+  // ============================================================
+
+  /**
+   * Get cached workspace recording preferences
+   */
+  async getWorkspaceRecordingPrefs(
+    workspaceId: string,
+    options?: CacheOptions
+  ): Promise<WorkspaceRecordingPrefs | null> {
+    if (options?.bypass) return null;
+    const key = workspaceRecordingKeys.preferences(workspaceId);
+    return this.get<WorkspaceRecordingPrefs>(key);
+  }
+
+  /**
+   * Cache workspace recording preferences
+   */
+  async setWorkspaceRecordingPrefs(
+    workspaceId: string,
+    prefs: WorkspaceRecordingPrefs
+  ): Promise<void> {
+    const key = workspaceRecordingKeys.preferences(workspaceId);
+    await this.set(key, prefs, TTL.WORKSPACE_RECORDING_PREFS);
+  }
+
+  /**
+   * Invalidate workspace recording preferences cache
+   * O(1) operation - replaces invalidating all link caches in workspace
+   */
+  async invalidateWorkspaceRecordingPrefs(workspaceId: string): Promise<void> {
+    const key = workspaceRecordingKeys.preferences(workspaceId);
+    await this.delete(key);
+  }
+
+  /**
+   * Get cached domain recording preferences
+   */
+  async getDomainRecordingPrefs(
+    domainId: string,
+    options?: CacheOptions
+  ): Promise<DomainRecordingPrefs | null> {
+    if (options?.bypass) return null;
+    const key = domainRecordingKeys.preferences(domainId);
+    return this.get<DomainRecordingPrefs>(key);
+  }
+
+  /**
+   * Cache domain recording preferences
+   */
+  async setDomainRecordingPrefs(domainId: string, prefs: DomainRecordingPrefs): Promise<void> {
+    const key = domainRecordingKeys.preferences(domainId);
+    await this.set(key, prefs, TTL.DOMAIN_RECORDING_PREFS);
+  }
+
+  /**
+   * Invalidate domain recording preferences cache
+   * O(1) operation - replaces invalidating all link caches in domain
+   */
+  async invalidateDomainRecordingPrefs(domainId: string): Promise<void> {
+    const key = domainRecordingKeys.preferences(domainId);
+    await this.delete(key);
+  }
+
+  /**
+   * Get cached link core data
+   */
+  async getLinkCore(
+    workspaceId: string,
+    linkId: string,
+    options?: CacheOptions
+  ): Promise<LinkCore | null> {
+    if (options?.bypass) return null;
+    const key = linkKeys.core(workspaceId, linkId);
+    return this.get<LinkCore>(key);
+  }
+
+  /**
+   * Cache link core data
+   */
+  async setLinkCore(workspaceId: string, linkId: string, core: LinkCore): Promise<void> {
+    const key = linkKeys.core(workspaceId, linkId);
+    await this.set(key, core, TTL.LINK_CORE);
+  }
+
+  /**
+   * Invalidate link core cache
+   * O(1) operation - only the specific link
+   */
+  async invalidateLinkCore(workspaceId: string, linkId: string): Promise<void> {
+    const key = linkKeys.core(workspaceId, linkId);
+    await this.delete(key);
+  }
+
+  /**
+   * Invalidate all link-related caches for a single link
+   * Clears both link core and workspace mapping
+   */
+  async invalidateLinkFull(workspaceId: string, linkId: string): Promise<void> {
+    await this.delete(linkKeys.core(workspaceId, linkId), linkKeys.workspaceMapping(linkId));
+  }
+
+  /**
+   * Invalidate link caches for multiple links (batch operation)
+   * Used during bulk deletions (project/workspace deletion)
+   */
+  async invalidateLinksBatch(workspaceId: string, linkIds: string[]): Promise<void> {
+    if (linkIds.length === 0) return;
+    const keys = linkIds.flatMap((id) => [
+      linkKeys.core(workspaceId, id),
+      linkKeys.workspaceMapping(id),
+    ]);
+    await this.delete(...keys);
+  }
+
+  // ============================================================
+  // Bulk invalidation for workspace-level operations
   // ============================================================
 
   /**
@@ -272,22 +343,20 @@ export class CacheService {
 
   /**
    * Invalidate dispute cache for a workspace
+   * Uses single delete call for both dispute and access status keys
    */
   async invalidateDispute(workspaceId: string): Promise<void> {
-    const key = disputeKeys.hasOpen(workspaceId);
-    await this.delete(key);
-    // Also invalidate access status since disputes affect it
-    await this.delete(billingKeys.accessStatus(workspaceId));
+    // Batch delete: dispute status and access status (disputes affect access)
+    await this.delete(disputeKeys.hasOpen(workspaceId), billingKeys.accessStatus(workspaceId));
   }
 
   /**
    * Invalidate refund cache for a workspace
+   * Uses single delete call for both refund and access status keys
    */
   async invalidateRefund(workspaceId: string): Promise<void> {
-    const key = refundKeys.hasSuccess(workspaceId);
-    await this.delete(key);
-    // Also invalidate access status since refunds affect it
-    await this.delete(billingKeys.accessStatus(workspaceId));
+    // Batch delete: refund status and access status (refunds affect access)
+    await this.delete(refundKeys.hasSuccess(workspaceId), billingKeys.accessStatus(workspaceId));
   }
 
   /**

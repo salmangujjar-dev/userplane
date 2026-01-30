@@ -22,11 +22,14 @@ import {
   adminService,
   adminWorkspaceService,
   billingService,
+  domainRepo,
   domainService,
   emailService,
   entitlementService,
+  integrationRepo,
   intercomService,
   inviteService,
+  linkRepo,
   linkService,
   projectService,
   provisionerService,
@@ -129,7 +132,10 @@ const billingProcedures = createBillingProcedures(
 const diagnosticsProcedures = createDiagnosticsProcedures(
   cacheService,
   workspaceMemberService,
-  workspaceService
+  workspaceService,
+  linkRepo,
+  domainRepo,
+  integrationRepo
 );
 
 /**

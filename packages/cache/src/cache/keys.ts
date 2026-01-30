@@ -3,97 +3,120 @@
  *
  * Convention: {service}:{entity}:{identifier}:{optional-qualifier}
  * All keys are prefixed consistently to avoid collisions.
+ *
+ * Type safety: Each key type is branded to prevent mixing keys with wrong value types.
  */
 
 import type { CacheType } from '@workspace/contract';
 
-/**
- * Billing-related cache keys
- */
+// ============================================================
+// Branded key types - ensures type safety between keys and values
+// ============================================================
+
+/** Branded type for cache keys - prevents mixing key types */
+type CacheKey<T extends string> = string & { readonly __brand: T };
+
+export type BillingAccessKey = CacheKey<'billing:access'>;
+export type BillingStatusKey = CacheKey<'billing:status'>;
+export type DisputeOpenKey = CacheKey<'dispute:open'>;
+export type RefundSuccessKey = CacheKey<'refund:success'>;
+export type EntitlementUsageKey = CacheKey<'entitlement:usage'>;
+export type LinkCoreKey = CacheKey<'link:core'>;
+export type LinkWorkspaceMappingKey = CacheKey<'link:ws'>;
+export type WorkspaceRecordingPrefsKey = CacheKey<'workspace:recording-prefs'>;
+export type DomainRecordingPrefsKey = CacheKey<'domain:recording-prefs'>;
+export type IntegrationKey = CacheKey<'integration'>;
+
+// ============================================================
+// Key generators
+// ============================================================
+
 export const billingKeys = {
-  /**
-   * Subscription access status for a workspace
-   * Used by: BillingService.getSubscriptionAccessStatus()
-   */
-  accessStatus: (workspaceId: string) => `billing:access:${workspaceId}`,
+  /** Subscription access status for a workspace */
+  accessStatus: (workspaceId: string): BillingAccessKey =>
+    `billing:access:${workspaceId}` as BillingAccessKey,
 
-  /**
-   * Full subscription status (contract + access details)
-   * Used by: BillingService.getSubscriptionStatus()
-   */
-  subscriptionStatus: (workspaceId: string) => `billing:status:${workspaceId}`,
+  /** Full subscription status (contract + access details) */
+  subscriptionStatus: (workspaceId: string): BillingStatusKey =>
+    `billing:status:${workspaceId}` as BillingStatusKey,
 };
 
-/**
- * Dispute-related cache keys
- */
 export const disputeKeys = {
-  /**
-   * Whether workspace has an open dispute
-   * Used by: BillingService.getSubscriptionAccessStatus()
-   */
-  hasOpen: (workspaceId: string) => `dispute:open:${workspaceId}`,
+  /** Whether workspace has an open dispute */
+  hasOpen: (workspaceId: string): DisputeOpenKey => `dispute:open:${workspaceId}` as DisputeOpenKey,
 };
 
-/**
- * Refund-related cache keys
- */
 export const refundKeys = {
-  /**
-   * Whether workspace has a successful refund
-   * Used by: BillingService.getSubscriptionAccessStatus()
-   */
-  hasSuccess: (workspaceId: string) => `refund:success:${workspaceId}`,
+  /** Whether workspace has a successful refund */
+  hasSuccess: (workspaceId: string): RefundSuccessKey =>
+    `refund:success:${workspaceId}` as RefundSuccessKey,
 };
 
-/**
- * Entitlement-related cache keys
- */
 export const entitlementKeys = {
-  /**
-   * Usage summary for a workspace (all resources)
-   * Used by: EntitlementService.getUsageSummary()
-   */
-  usageSummary: (workspaceId: string) => `entitlement:usage:${workspaceId}`,
+  /** Usage summary for a workspace (all resources) */
+  usageSummary: (workspaceId: string): EntitlementUsageKey =>
+    `entitlement:usage:${workspaceId}` as EntitlementUsageKey,
 };
 
-/**
- * Link-related cache keys
- */
 export const linkKeys = {
-  /**
-   * Link preferences including domain and workspace settings
-   * Used by: SessionService for recording initialization
-   */
-  preferences: (linkId: string) => `link:prefs:${linkId}`,
+  /** Link core data (link-specific properties only) */
+  core: (workspaceId: string, linkId: string): LinkCoreKey =>
+    `link:core:${workspaceId}:${linkId}` as LinkCoreKey,
+
+  /** Lightweight mapping from linkId to workspaceId */
+  workspaceMapping: (linkId: string): LinkWorkspaceMappingKey =>
+    `link:ws:${linkId}` as LinkWorkspaceMappingKey,
 };
 
-/**
- * Integration-related cache keys
- */
+export const workspaceRecordingKeys = {
+  /** Workspace recording preferences (branding, limits) */
+  preferences: (workspaceId: string): WorkspaceRecordingPrefsKey =>
+    `workspace:recording-prefs:${workspaceId}` as WorkspaceRecordingPrefsKey,
+};
+
+export const domainRecordingKeys = {
+  /** Domain recording preferences (capture settings) */
+  preferences: (domainId: string): DomainRecordingPrefsKey =>
+    `domain:recording-prefs:${domainId}` as DomainRecordingPrefsKey,
+};
+
 export const integrationKeys = {
-  /**
-   * Integration lookup by provider workspace ID
-   * Used by: IntercomCanvasService for workspace resolution
-   */
-  byProviderWorkspace: (provider: string, providerWorkspaceId: string) =>
-    `integration:${provider}:${providerWorkspaceId}`,
+  /** Integration lookup by provider workspace ID */
+  byProviderWorkspace: (provider: string, providerWorkspaceId: string): IntegrationKey =>
+    `integration:${provider}:${providerWorkspaceId}` as IntegrationKey,
 };
 
 /**
  * Get cache keys by type
+ * Note: Some cache types require async lookups (domain_recording, link, integration)
+ * and return empty arrays here - they are handled specially in the diagnostics endpoint
  */
 export function getCacheKeysByType(workspaceId: string, type: CacheType): string[] {
   switch (type) {
     case 'billing':
       return [billingKeys.accessStatus(workspaceId), billingKeys.subscriptionStatus(workspaceId)];
-    case 'subscription':
+    case 'safety_latches':
+      // Dispute and refund flags - safety latches that override subscription access
       return [disputeKeys.hasOpen(workspaceId), refundKeys.hasSuccess(workspaceId)];
     case 'entitlement':
       return [entitlementKeys.usageSummary(workspaceId)];
+    case 'workspace_recording':
+      // Workspace recording preferences (branding, limits)
+      return [workspaceRecordingKeys.preferences(workspaceId)];
+    case 'domain_recording':
+      // Domain recording preferences require domainId lookup
+      // Handled specially in diagnostics endpoint
+      return [];
     case 'link':
-      // Link cache uses linkId, not workspaceId
-      // For workspace-level clearing, we cannot target specific link keys
+      // Link core cache requires linkId lookup
+      // Handled specially in diagnostics endpoint
+      return [];
+    case 'integration':
+      // Integration cache requires provider workspace lookup
+      // Handled specially in diagnostics endpoint
+      return [];
+    case 'all':
+      // 'all' is handled by expanding to all types in diagnostics endpoint
       return [];
     default:
       return [];

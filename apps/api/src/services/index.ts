@@ -125,6 +125,7 @@ export const projectService = new ProjectService({
   linkRepo,
   recordingRepo,
   workspaceRepo,
+  cacheService,
 });
 
 // Admin project service - initialized after project service is available
@@ -139,6 +140,7 @@ export const linkService = new LinkService({
   domainRepo,
   workspaceRepo,
   entitlementService,
+  cacheService,
 });
 
 // Level 3: Services that depend on level 2
@@ -209,6 +211,7 @@ export const sessionService = new SessionService({
   recordingRepo,
   projectRepo,
   workspaceRepo,
+  domainRepo,
   videoStorage: getVideoStorage(),
   thumbnailsStorage: getThumbnailsStorage(),
   consoleLogsStorage: getConsoleLogsStorage(),
@@ -243,4 +246,13 @@ export const intercomCanvasService = new IntercomCanvasService({
 
 // Export tokenService, emailService, and repositories for use in routes
 export { emailService, tokenService };
-export { disputeRepo, entitlementRepo, recordingRepo, subscriptionRepo, workspaceMemberRepo };
+export {
+  disputeRepo,
+  domainRepo,
+  entitlementRepo,
+  integrationRepo,
+  linkRepo,
+  recordingRepo,
+  subscriptionRepo,
+  workspaceMemberRepo,
+};
