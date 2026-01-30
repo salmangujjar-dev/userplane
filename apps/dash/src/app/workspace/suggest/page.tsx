@@ -1,6 +1,5 @@
 'use client';
 
-import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
@@ -14,6 +13,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { PaginationControls } from '@/components/shared/pagination-controls';
+import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@/constants';
 import { useJoinWorkspace, useWorkspaceSuggestions } from '@/features/workspace';
 import { logger } from '@/logger';
 

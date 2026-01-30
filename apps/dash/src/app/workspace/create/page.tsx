@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DomainUrlSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
@@ -18,6 +17,7 @@ import { WorkspaceCreatedSuccess } from '@/components/workspace/workspace-create
 import { useAccount } from '@/features/account';
 import { useCreateWorkspace } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
+import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 const workspaceFormSchema = z.object({

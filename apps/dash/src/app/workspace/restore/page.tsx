@@ -1,6 +1,5 @@
 'use client';
 
-import type { RestorationStatus } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
@@ -16,6 +15,7 @@ import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { useProjectRestoreInfo, useRestoreProject } from '@/features/projects';
 import { useRestoreWorkspace, useWorkspaceRestoreInfo } from '@/features/workspace';
 import { useWorkspaceStore } from '@/stores/workspace';
+import type { RestorationStatus } from '@/types';
 
 type RestoreType = 'workspace' | 'project';
 

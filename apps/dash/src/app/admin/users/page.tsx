@@ -1,14 +1,5 @@
 'use client';
 
-import type { WorkspaceRole } from '@workspace/contract';
-import {
-  ADMIN_USER_SESSIONS_PAGINATION,
-  ADMIN_USER_SORT_OPTIONS,
-  ADMIN_USER_STATUS_OPTIONS,
-  ADMIN_USER_WORKSPACES_PAGINATION,
-  ADMIN_USERS_PAGINATION,
-  SORT_DIRECTION_OPTIONS,
-} from '@workspace/contract';
 import type {
   PlanId, // Used for create invite (includes all plans including sandbox/free)
 } from '@workspace/pricing';
@@ -35,8 +26,16 @@ import { AdminSidebar } from '@/components/navigation/admin-sidebar';
 import { AdminTopActions } from '@/components/navigation/admin-top-actions';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import {
-  type AdminUserSession,
+  ADMIN_USER_SESSIONS_PAGINATION,
+  ADMIN_USER_SORT_OPTIONS,
+  ADMIN_USER_STATUS_OPTIONS,
+  ADMIN_USER_WORKSPACES_PAGINATION,
+  ADMIN_USERS_PAGINATION,
+  SORT_DIRECTION_OPTIONS,
+} from '@/constants/admin';
+import {
   useAdminBanUser,
+  useAdminCreateWorkspaceInvite,
   useAdminRevokeAllSessions,
   useAdminRevokeSession,
   useAdminSearchUsers,
@@ -44,12 +43,8 @@ import {
   useAdminUserDetail,
   useAdminUserSessions,
   useAdminUserWorkspaces,
+  useImpersonation,
 } from '@/features/admin';
-import {
-  type AdminWorkspaceCreateInviteResponse,
-  useAdminCreateWorkspaceInvite,
-} from '@/features/admin';
-import { useImpersonation } from '@/features/admin';
 import { useSession } from '@/features/auth';
 import {
   adminSortDirectionParser,
@@ -58,6 +53,8 @@ import {
   searchParser,
   singleValueArrayParser,
 } from '@/lib/parsers';
+import type { WorkspaceRole } from '@/types';
+import type { AdminCreateWorkspaceInviteData, AdminUserSession } from '@/types';
 
 const ITEMS_PER_PAGE = ADMIN_USERS_PAGINATION.DEFAULT_PER_PAGE;
 const SESSIONS_PER_PAGE = ADMIN_USER_SESSIONS_PAGINATION.DEFAULT_PER_PAGE;
@@ -121,7 +118,7 @@ function AdminUsersPageContent() {
 
   const [showCreateInviteModal, setShowCreateInviteModal] = useState(false);
   const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
-  const [inviteResult, setInviteResult] = useState<AdminWorkspaceCreateInviteResponse | null>(null);
+  const [inviteResult, setInviteResult] = useState<AdminCreateWorkspaceInviteData | null>(null);
 
   // Hooks
   const { impersonateUser, isPending: isImpersonating } = useImpersonation();
