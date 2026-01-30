@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { intercomCanvasUrls } from './urls';
+import { canvasImages, intercomCanvasUrls } from './urls';
 
 export interface SignUpCanvasOptions {
   adminEmail?: string;
@@ -14,54 +14,70 @@ export interface SignUpCanvasOptions {
 /**
  * Build the sign up canvas
  * Shown when admin doesn't have a Userplane account
+ * Features centered logo and welcoming message
  */
 export function buildSignUpCanvas(options: SignUpCanvasOptions): Canvas {
-  const components: Canvas['content']['components'] = [
-    {
-      type: 'text',
-      id: 'header',
-      text: 'Welcome to Userplane',
-      style: 'header',
-    },
-    {
-      type: 'text',
-      id: 'description',
-      text: 'Create an account to start requesting screen recordings from your customers.',
-      style: 'paragraph',
-    },
-    {
-      type: 'spacer',
-      size: 'm',
-    },
-  ];
-
-  if (options.adminEmail) {
-    components.push({
-      type: 'text',
-      id: 'email_info',
-      text: `Sign up with: ${options.adminEmail}`,
-      style: 'muted',
-    });
-    components.push({
-      type: 'spacer',
-      size: 's',
-    });
-  }
-
-  components.push({
-    type: 'button',
-    id: 'signup',
-    label: 'Sign up for Userplane',
-    style: 'primary',
-    action: {
-      type: 'url',
-      url: intercomCanvasUrls.signUpURL(),
-    },
-  });
+  const emailText = options.adminEmail
+    ? `Sign up with *${options.adminEmail}* to get started`
+    : 'Create an account to start requesting screen recordings';
 
   return {
     content: {
-      components,
+      components: [
+        {
+          type: 'image',
+          id: 'logo',
+          url: canvasImages.logo,
+          align: 'center',
+          width: 50,
+          height: 50,
+        },
+        {
+          type: 'spacer',
+          size: 'm',
+        },
+        {
+          type: 'text',
+          id: 'header',
+          text: '*Welcome to Userplane*',
+          align: 'center',
+        },
+        {
+          type: 'spacer',
+          size: 's',
+        },
+        {
+          type: 'text',
+          id: 'description',
+          text: emailText,
+          style: 'muted',
+          align: 'center',
+        },
+        {
+          type: 'spacer',
+          size: 'm',
+        },
+        {
+          type: 'button',
+          id: 'signup',
+          label: 'Sign up for Userplane',
+          style: 'primary',
+          action: {
+            type: 'url',
+            url: intercomCanvasUrls.signUpURL(),
+          },
+        },
+        {
+          type: 'button',
+          id: 'contact_support',
+          label: 'Contact Support',
+          style: 'secondary',
+          action: {
+            type: 'url',
+            url: intercomCanvasUrls.supportEmailURL(),
+          },
+        },
+      ],
     },
     stored_data: {
       flow: 'signup',

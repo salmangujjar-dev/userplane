@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { intercomCanvasUrls } from './urls';
+import { canvasImages, intercomCanvasUrls } from './urls';
 
 export interface OpenerCanvasOptions {
   workspaceId: string;
@@ -13,7 +13,7 @@ export interface OpenerCanvasOptions {
 }
 
 /**
- * Build the opener canvas with main action buttons
+ * Build the opener canvas with main action buttons using list component
  * - "Request screen recording" - Primary action to create a recording link
  * - "View received recordings" - Link to dashboard recordings page
  */
@@ -22,20 +22,52 @@ export function buildOpenerCanvas(options: OpenerCanvasOptions): Canvas {
     options.workspaceId,
     options.workspaceMemberId
   );
+
   return {
     content: {
       components: [
         {
-          type: 'text',
-          id: 'header',
-          text: 'Userplane',
-          style: 'header',
+          type: 'image',
+          id: 'logo',
+          url: canvasImages.logo,
+          align: 'center',
+          width: 50,
+          height: 50,
         },
         {
-          type: 'text',
-          id: 'description',
-          text: 'Request screen recordings from your customers',
-          style: 'paragraph',
+          type: 'spacer',
+          size: 'm',
+        },
+        {
+          type: 'list',
+          disabled: false,
+          items: [
+            {
+              type: 'item',
+              id: 'request_recording',
+              title: 'Request screen recording',
+              subtitle: 'Get a screen recording for troubleshooting',
+              image: canvasImages.openerRequestRecording,
+              image_width: 30,
+              image_height: 30,
+              disabled: false,
+              action: { type: 'submit' },
+            },
+            {
+              type: 'item',
+              id: 'view_recordings',
+              title: 'View received recordings',
+              subtitle: 'Review recordings to resolve issues',
+              image: canvasImages.openerViewRecordings,
+              image_width: 30,
+              image_height: 30,
+              disabled: false,
+              action: {
+                type: 'url',
+                url: dashboardUrl,
+              },
+            },
+          ],
         },
         {
           type: 'spacer',
@@ -43,23 +75,12 @@ export function buildOpenerCanvas(options: OpenerCanvasOptions): Canvas {
         },
         {
           type: 'button',
-          id: 'request_recording',
-          label: 'Request screen recording',
-          style: 'primary',
-          action: { type: 'submit' },
-        },
-        {
-          type: 'spacer',
-          size: 's',
-        },
-        {
-          type: 'button',
-          id: 'view_recordings',
-          label: 'View received recordings',
+          id: 'contact_support',
+          label: 'Contact Support',
           style: 'secondary',
           action: {
             type: 'url',
-            url: dashboardUrl,
+            url: intercomCanvasUrls.supportEmailURL(),
           },
         },
       ],

@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { intercomCanvasUrls } from './urls';
+import { canvasImages, intercomCanvasUrls } from './urls';
 
 export interface AccessRequestedCanvasOptions {
   adminEmail?: string;
@@ -14,50 +14,85 @@ export interface AccessRequestedCanvasOptions {
 /**
  * Build the access requested canvas
  * Shown when admin tries to use the app but isn't a workspace member
+ * Features centered lock icon and clear instructions
  */
 export function buildAccessRequestedCanvas(options: AccessRequestedCanvasOptions): Canvas {
+  const signedInText = options.adminEmail ? `Signed in as *${options.adminEmail}*` : undefined;
+
   const components: Canvas['content']['components'] = [
     {
-      type: 'text',
-      id: 'header',
-      text: 'Access Required',
-      style: 'header',
-    },
-    {
-      type: 'text',
-      id: 'description',
-      text: "You don't have access to this workspace. Please contact your workspace administrator to get access.",
-      style: 'paragraph',
+      type: 'image',
+      id: 'logo',
+      url: canvasImages.accessRequestedLock,
+      align: 'center',
+      width: 50,
+      height: 50,
     },
     {
       type: 'spacer',
       size: 'm',
     },
-  ];
-
-  if (options.adminEmail) {
-    components.push({
+    {
       type: 'text',
-      id: 'email_info',
-      text: `Signed in as: ${options.adminEmail}`,
-      style: 'muted',
-    });
-    components.push({
+      id: 'header',
+      text: "*You don't seem to have access* to the workspace yet.",
+      align: 'center',
+    },
+    {
       type: 'spacer',
       size: 's',
-    });
+    },
+    {
+      type: 'text',
+      id: 'description',
+      text: 'Contact your administrator to get started with Userplane.',
+      style: 'muted',
+      align: 'center',
+    },
+  ];
+
+  if (signedInText) {
+    components.push(
+      {
+        type: 'spacer',
+        size: 's',
+      },
+      {
+        type: 'text',
+        id: 'signed_in',
+        text: signedInText,
+        style: 'muted',
+        align: 'center',
+      }
+    );
   }
 
-  components.push({
-    type: 'button',
-    id: 'contact_admin',
-    label: 'Contact Support',
-    style: 'secondary',
-    action: {
-      type: 'url',
-      url: intercomCanvasUrls.supportEmailURL(),
+  components.push(
+    {
+      type: 'spacer',
+      size: 'm',
     },
-  });
+    {
+      type: 'button',
+      id: 'contact_admin',
+      label: 'Contact Admin',
+      style: 'primary',
+      action: {
+        type: 'url',
+        url: intercomCanvasUrls.supportEmailURL(),
+      },
+    },
+    {
+      type: 'button',
+      id: 'contact_support',
+      label: 'Contact Support',
+      style: 'secondary',
+      action: {
+        type: 'url',
+        url: intercomCanvasUrls.supportEmailURL(),
+      },
+    }
+  );
 
   return {
     content: {
