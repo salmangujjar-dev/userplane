@@ -4,14 +4,13 @@ import { toast } from '@workspace/ui/components/sonner';
 import { useCallback, useReducer } from 'react';
 
 import { apiClient } from '@/client';
+import { useDomainStatusPolling } from '@/features/domains';
 import { useWorkspaceId } from '@/stores/workspace';
 import {
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
   type DomainIdentifier,
   type DomainRecordingPreferences,
 } from '@/types/domain';
-
-import { useDomainStatusPolling } from './use-domain-status-polling';
 
 // Verification step types
 export type VerificationStep = 'pre' | 'verifying' | 'post' | null;

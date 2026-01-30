@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 
 import { DEFAULT_SEARCHABLE_PROJECTS_PER_PAGE } from '@/constants/pagination';
+import { useWorkspaceProjects } from '@/features/projects';
+import { type SearchProject, useWorkspaceSearch } from '@/features/workspace';
 
 import { useDebouncedValue } from './use-debounced-value';
-import { useWorkspaceProjects } from './use-workspace-projects';
-import { type SearchProject, useWorkspaceSearch } from './use-workspace-search';
 
 /**
  * Hook that combines initial project list with server-side search
