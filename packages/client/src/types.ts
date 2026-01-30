@@ -5,15 +5,15 @@
  */
 
 import type { ContractRouterClient } from '@orpc/contract';
-import type { JsonifiedClient } from '@orpc/openapi-client';
 import type { contract } from '@workspace/contract';
 
 import type { ClientContext } from './index';
 
 /**
  * The complete API client type
+ * Note: Uses native Date types via ResponseValidationPlugin coercion
  */
-export type UserplaneClient = JsonifiedClient<ContractRouterClient<typeof contract, ClientContext>>;
+export type UserplaneClient = ContractRouterClient<typeof contract, ClientContext>;
 
 /**
  * Status API types

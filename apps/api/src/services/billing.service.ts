@@ -361,7 +361,7 @@ export class BillingService {
           planId: newPlanId,
           planName: newPlanName,
           billingInterval: newPlanId.includes('annual') ? 'annual' : 'monthly',
-          nextBillingDate: preview.new_plan.next_billing_date,
+          nextBillingDate: new Date(preview.new_plan.next_billing_date),
           recurringPreTaxAmount: preview.new_plan.recurring_pre_tax_amount / 100, // Convert from cents to dollars
           paymentFrequencyInterval: preview.new_plan.payment_frequency_interval,
         },

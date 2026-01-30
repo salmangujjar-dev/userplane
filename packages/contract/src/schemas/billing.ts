@@ -26,11 +26,11 @@ export const ContractDetailSchema = z.object({
   status: SubscriptionStatusSchema.nullable(),
   planId: z.string().nullable(),
   planName: z.string().nullable(),
-  currentPeriodEnd: z.date().nullable(),
-  currentPeriodStart: z.date().nullable(),
+  currentPeriodEnd: z.coerce.date().nullable(),
+  currentPeriodStart: z.coerce.date().nullable(),
   cancelAtPeriodEnd: z.boolean(),
-  cancelledAt: z.date().nullable(),
-  onHoldSince: z.date().nullable(),
+  cancelledAt: z.coerce.date().nullable(),
+  onHoldSince: z.coerce.date().nullable(),
 });
 
 /**
@@ -254,7 +254,7 @@ export const PlanChangePreviewDataSchema = z.object({
     planId: z.string(),
     planName: z.string(),
     billingInterval: z.string(),
-    nextBillingDate: z.string(),
+    nextBillingDate: z.coerce.date(),
     recurringPreTaxAmount: z.number(),
     paymentFrequencyInterval: z.string(),
   }),

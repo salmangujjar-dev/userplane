@@ -71,7 +71,7 @@ export const RecordingItemSchema = z.object({
   recordingId: RecordingIdSchema,
   recordingThumbnail: z.string().nullable(),
   recordingDurationMs: z.number().int().nullable(),
-  createdAt: z.date(),
+  createdAt: z.coerce.date(),
   creator: RecordingCreatorSchema,
 });
 
@@ -114,7 +114,7 @@ export const LinkRefSchema = z.object({
   providerId: z.string().nullable(),
   providerRef: z.string().nullable(),
   providerData: z.unknown(),
-  createdAt: z.date(),
+  createdAt: z.coerce.date(),
 });
 
 /**
@@ -145,8 +145,8 @@ export const RecordingDetailMetaSchema = z.object({
   status: UploadStatusSchema,
   systemMeta: SystemMetaSchema.nullable(),
   customMeta: CustomMetaSchema.nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
 });
 
 /**
@@ -201,3 +201,9 @@ export const RecordingDeleteDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   recordingId: RecordingIdSchema,
 });
+
+// Type exports
+export type RecordingCreator = z.infer<typeof RecordingCreatorSchema>;
+export type RecordingItem = z.infer<typeof RecordingItemSchema>;
+export type RecordingsListData = z.infer<typeof RecordingsListDataSchema>;
+export type RecordingResourceData = z.infer<typeof RecordingResourceDataSchema>;

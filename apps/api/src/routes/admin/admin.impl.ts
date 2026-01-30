@@ -23,10 +23,10 @@ import { calculateScheduledTime, getRestorationMaxWindowDays } from '@/api/utils
 import { formatDeletionDate } from '@/api/utils/format';
 
 /**
- * Format date to ISO string
+ * Format date to Date object (or null)
  */
-function formatDate(date: Date | null): string | null {
-  return date ? date.toISOString() : null;
+function formatDate(date: Date | string | null): Date | null {
+  return date ? new Date(date) : null;
 }
 
 /**
@@ -36,16 +36,16 @@ function formatSession(session: {
   id: string;
   ipAddress: string | null;
   userAgent: string | null;
-  createdAt: Date;
-  expiresAt: Date;
+  createdAt: Date | string;
+  expiresAt: Date | string;
   impersonatedBy: string | null;
 }) {
   return {
     id: session.id,
     ipAddress: session.ipAddress,
     userAgent: session.userAgent,
-    createdAt: session.createdAt.toISOString(),
-    expiresAt: session.expiresAt.toISOString(),
+    createdAt: new Date(session.createdAt),
+    expiresAt: new Date(session.expiresAt),
     impersonatedBy: session.impersonatedBy,
   };
 }
@@ -62,10 +62,10 @@ function formatUserDetail(user: {
   role: string | null;
   banned: boolean | null;
   banReason: string | null;
-  banExpires: Date | null;
+  banExpires: Date | string | null;
   emailVerified: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   workspaceCount: number;
 }) {
   return {
@@ -78,7 +78,7 @@ function formatUserDetail(user: {
     banReason: user.banReason,
     banExpires: formatDate(user.banExpires),
     emailVerified: user.emailVerified,
-    createdAt: user.createdAt.toISOString(),
+    createdAt: new Date(user.createdAt),
     workspaceCount: user.workspaceCount,
   };
 }
@@ -90,13 +90,13 @@ function formatUserWorkspace(workspace: {
   workspaceId: string;
   workspaceName: string;
   workspaceRole: WorkspaceRole;
-  joinedAt: Date;
+  joinedAt: Date | string;
 }) {
   return {
     workspaceId: workspace.workspaceId,
     workspaceName: workspace.workspaceName,
     workspaceRole: workspace.workspaceRole,
-    joinedAt: workspace.joinedAt.toISOString(),
+    joinedAt: new Date(workspace.joinedAt),
   };
 }
 
@@ -140,7 +140,7 @@ const searchUsersImpl = (adminService: AdminService) => {
             banReason: u.banReason,
             banExpires: formatDate(u.banExpires),
             emailVerified: u.emailVerified,
-            createdAt: u.createdAt.toISOString(),
+            createdAt: new Date(u.createdAt),
             workspaceCount: u.workspaceCount,
           })),
           total: result.total,
@@ -320,14 +320,14 @@ function formatWorkspaceMember(member: {
   userName: string;
   userEmail: string;
   workspaceRole: 'owner' | 'admin' | 'member';
-  joinedAt: Date;
+  joinedAt: Date | string;
 }) {
   return {
     userId: member.userId,
     userName: member.userName,
     userEmail: member.userEmail,
     workspaceRole: member.workspaceRole,
-    joinedAt: member.joinedAt.toISOString(),
+    joinedAt: new Date(member.joinedAt),
   };
 }
 
@@ -339,9 +339,9 @@ function formatWorkspaceMember(member: {
 function formatWorkspaceDetail(workspace: {
   workspaceId: string;
   workspaceName: string;
-  createdAt: Date;
+  createdAt: Date | string;
   isDeleted: boolean;
-  deletedAt: Date | null;
+  deletedAt: Date | string | null;
   memberCount: number;
   projectCount: number;
   domainCount: number;
@@ -351,7 +351,7 @@ function formatWorkspaceDetail(workspace: {
   return {
     workspaceId: workspace.workspaceId,
     workspaceName: workspace.workspaceName,
-    createdAt: workspace.createdAt.toISOString(),
+    createdAt: new Date(workspace.createdAt),
     isDeleted: workspace.isDeleted,
     deletedAt: formatDate(workspace.deletedAt),
     memberCount: workspace.memberCount,
@@ -395,7 +395,7 @@ const searchWorkspacesImpl = (
           workspaces: result.workspaces.map((w) => ({
             workspaceId: w.workspaceId,
             workspaceName: w.workspaceName,
-            createdAt: w.createdAt.toISOString(),
+            createdAt: new Date(w.createdAt),
             memberCount: w.memberCount,
             projectCount: w.projectCount,
             domainCount: w.domainCount,
@@ -472,9 +472,9 @@ function formatWorkspaceProject(project: {
   projectTitle: string;
   isDefault: boolean;
   isDeleted: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  deletedAt: Date | string | null;
   recordingCount: number;
 }) {
   return {
@@ -482,9 +482,9 @@ function formatWorkspaceProject(project: {
     projectTitle: project.projectTitle,
     isDefault: project.isDefault,
     isDeleted: project.isDeleted,
-    createdAt: project.createdAt.toISOString(),
-    updatedAt: project.updatedAt.toISOString(),
-    deletedAt: project.deletedAt?.toISOString() ?? null,
+    createdAt: new Date(project.createdAt),
+    updatedAt: new Date(project.updatedAt),
+    deletedAt: formatDate(project.deletedAt),
     recordingCount: project.recordingCount,
   };
 }
@@ -631,7 +631,7 @@ const restoreWorkspaceImpl = (
             workspaceId: result.workspace.workspaceId,
             workspaceName: result.workspace.workspaceName,
             isDeleted: result.workspace.isDeleted,
-            deletedAt: result.workspace.deletedAt ? result.workspace.deletedAt.toISOString() : null,
+            deletedAt: formatDate(result.workspace.deletedAt),
           },
           restoredProjects: result.restoredProjects,
           restoredLinks: result.restoredLinks,
@@ -752,8 +752,8 @@ const restoreProjectImpl = (
             projectId: restoredProject.projectId,
             projectTitle: restoredProject.projectTitle,
             isDefault: restoredProject.isDefault,
-            createdAt: restoredProject.createdAt.toISOString(),
-            updatedAt: restoredProject.updatedAt.toISOString(),
+            createdAt: new Date(restoredProject.createdAt),
+            updatedAt: new Date(restoredProject.updatedAt),
           },
         },
       };

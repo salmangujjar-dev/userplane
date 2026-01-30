@@ -40,7 +40,7 @@ export const AdminUserWorkspaceSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
   workspaceRole: z.enum(WORKSPACE_ROLE_VALUES),
-  joinedAt: z.string(),
+  joinedAt: z.coerce.date(),
 });
 
 /**
@@ -50,8 +50,8 @@ export const AdminUserSessionSchema = z.object({
   id: SessionIdSchema,
   ipAddress: z.string().nullable(),
   userAgent: z.string().nullable(),
-  createdAt: z.string(),
-  expiresAt: z.string(),
+  createdAt: z.coerce.date(),
+  expiresAt: z.coerce.date(),
   impersonatedBy: UserIdSchema.nullable(),
   isCurrent: z.boolean().optional(),
 });
@@ -67,9 +67,9 @@ export const AdminUserListItemSchema = z.object({
   role: z.string().nullable(),
   banned: z.boolean().nullable(),
   banReason: z.string().nullable(),
-  banExpires: z.string().nullable(),
+  banExpires: z.coerce.date().nullable(),
   emailVerified: z.boolean(),
-  createdAt: z.string(),
+  createdAt: z.coerce.date(),
   workspaceCount: z.number(),
 });
 
@@ -85,9 +85,9 @@ export const AdminUserDetailSchema = z.object({
   role: z.string().nullable(),
   banned: z.boolean().nullable(),
   banReason: z.string().nullable(),
-  banExpires: z.string().nullable(),
+  banExpires: z.coerce.date().nullable(),
   emailVerified: z.boolean(),
-  createdAt: z.string(),
+  createdAt: z.coerce.date(),
   workspaceCount: z.number(),
 });
 
@@ -258,7 +258,7 @@ export const AdminWorkspaceMemberSchema = z.object({
   userName: z.string(),
   userEmail: z.string(),
   workspaceRole: z.enum(WORKSPACE_ROLE_VALUES),
-  joinedAt: z.string(),
+  joinedAt: z.coerce.date(),
 });
 
 /**
@@ -267,7 +267,7 @@ export const AdminWorkspaceMemberSchema = z.object({
 export const AdminWorkspaceListItemSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
-  createdAt: z.string(),
+  createdAt: z.coerce.date(),
   memberCount: z.number(),
   projectCount: z.number(),
   domainCount: z.number(),
@@ -284,9 +284,9 @@ export const AdminWorkspaceListItemSchema = z.object({
 export const AdminWorkspaceDetailSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
-  createdAt: z.string(),
+  createdAt: z.coerce.date(),
   isDeleted: z.boolean(),
-  deletedAt: z.string().nullable(),
+  deletedAt: z.coerce.date().nullable(),
   memberCount: z.number(),
   projectCount: z.number(),
   domainCount: z.number(),
@@ -344,9 +344,9 @@ export const AdminWorkspaceProjectSchema = z.object({
   projectTitle: z.string(),
   isDefault: z.boolean(),
   isDeleted: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+  deletedAt: z.coerce.date().nullable(),
   recordingCount: z.number().int().nonnegative(),
 });
 
@@ -454,7 +454,7 @@ export const AdminRestoreWorkspaceDataSchema = z.object({
     workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
     isDeleted: z.boolean(),
-    deletedAt: z.string().nullable(),
+    deletedAt: z.coerce.date().nullable(),
   }),
   restoredProjects: z.number().int().nonnegative(),
   restoredLinks: z.number().int().nonnegative(),
@@ -507,8 +507,8 @@ export const AdminRestoreProjectDataSchema = z.object({
     projectId: ProjectIdSchema,
     projectTitle: z.string(),
     isDefault: z.boolean(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
   }),
 });
 

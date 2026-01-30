@@ -286,7 +286,13 @@ export const getWorkspaceRestoreInfoImpl = (
 
       return {
         message: 'Workspace restore info retrieved successfully',
-        data: result,
+        data: {
+          ...result,
+          workspace: {
+            ...result.workspace,
+            deletedAt: result.workspace.deletedAt ? new Date(result.workspace.deletedAt) : null,
+          },
+        },
       };
     });
 };
@@ -343,7 +349,7 @@ export const restoreWorkspaceImpl = (
             workspaceId: result.workspace.workspaceId,
             workspaceName: result.workspace.workspaceName,
             isDeleted: result.workspace.isDeleted,
-            deletedAt: result.workspace.deletedAt,
+            deletedAt: result.workspace.deletedAt ? new Date(result.workspace.deletedAt) : null,
             deletedSince,
           },
           restoredProjects: result.restoredProjects,

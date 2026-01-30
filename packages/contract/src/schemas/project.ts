@@ -39,8 +39,8 @@ export const ProjectItemSchema = z.object({
   projectId: ProjectIdSchema,
   projectTitle: z.string(),
   isDefault: z.boolean(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
 });
 
 /**
@@ -196,7 +196,7 @@ export const ProjectRestoreInfoDataSchema = z.object({
     projectTitle: z.string(),
     workspaceId: WorkspaceIdSchema,
     isDeleted: z.boolean(),
-    deletedAt: z.string().nullable(),
+    deletedAt: z.coerce.date().nullable(),
     deletedSince: z.number().nullable(),
   }),
   linksToRestore: z.number().int().nonnegative(),
@@ -228,10 +228,10 @@ export const ProjectRestoreDataSchema = z.object({
     projectId: ProjectIdSchema,
     projectTitle: z.string(),
     isDefault: z.boolean(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
     isDeleted: z.boolean(),
-    deletedAt: z.date().nullable(),
+    deletedAt: z.coerce.date().nullable(),
     deletedSince: z.number().nullable(),
   }),
   restoredLinks: z.number().int().nonnegative(),
@@ -242,3 +242,7 @@ export const ProjectRestoreDataSchema = z.object({
  * Type inference from ProjectRestoreDataSchema
  */
 export type ProjectRestoreData = z.infer<typeof ProjectRestoreDataSchema>;
+
+// Additional type exports
+export type ProjectItem = z.infer<typeof ProjectItemSchema>;
+export type ProjectsListData = z.infer<typeof ProjectsListDataSchema>;
