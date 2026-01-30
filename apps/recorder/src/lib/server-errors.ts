@@ -4,8 +4,8 @@
  */
 
 import { isDefinedError } from '@workspace/client';
-import { SessionErrors } from '@workspace/contract';
 
+import { SessionErrors } from '@/types';
 import type { RecordingError } from '@/types/errors';
 
 /**

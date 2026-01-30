@@ -4,7 +4,6 @@
  */
 
 import * as Sentry from '@sentry/astro';
-import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
 import {
   buildErrorTags,
   createFlowBreadcrumb,
@@ -14,6 +13,7 @@ import {
 } from '@workspace/sentry';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { RECORDING_LIMITS } from '@/constants';
 import { createClientError, createClientErrorWithMessage } from '@/sentry/client-errors';
 import {
   isScreenRecordingSupported,
@@ -96,7 +96,7 @@ export function useRecordingFlow(
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [maxRecordingDurationMs, setMaxRecordingDurationMs] = useState<number>(
-    RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS
+    RECORDING_LIMITS.DEFAULT_MAX_DURATION_MS
   );
   const [maxRecordingSize, setMaxRecordingSize] = useState<number | null>(null);
   const [recordingDurationMs, setRecordingDurationMs] = useState<number | null>(null);

@@ -3,7 +3,7 @@
  * Functions for detecting browser, OS, and system capabilities
  */
 
-import { VIDEO_MIME_TYPES } from '@workspace/contract';
+import { VIDEO_MIME_TYPES } from '@/constants';
 
 /**
  * Application mode indicating whether the recorder is running embedded (iframe) or standalone
