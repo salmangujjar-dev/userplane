@@ -122,7 +122,7 @@ function createSharedWorker(workerURL?: string): SharedWorker {
   // Use bundler's native worker import
   // This will be handled by Vite/Webpack/Rollup during build
   // If your bundler doesn't support this, provide a workerURL option
-  return new SharedWorker(new URL('./bridge-worker.ts', import.meta.url), {
+  return new SharedWorker(new URL('./bridge-worker.js', import.meta.url), {
     type: 'module',
     name: 'bridge-worker',
   });

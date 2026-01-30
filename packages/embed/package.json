@@ -18,6 +18,7 @@
   ],
   "scripts": {
     "dev": "vite build --watch",
+    "dev:all": "vite build --watch",
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

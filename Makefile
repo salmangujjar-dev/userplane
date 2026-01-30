@@ -125,7 +125,7 @@ dev: ## Run apps in minimal dev mode (no Storybook, no Trigger.dev)
 
 dev\:all: ## Run all apps with Storybook and Trigger.dev
 	@echo "$(MAGENTA)Starting all apps in full development mode...$(RESET)"
-	@bunx turbo dev:all --concurrency=20
+	@bunx turbo dev:all --concurrency=30
 
 dev\:web: ## Run web app only
 	@echo "$(MAGENTA)Starting web app (Next.js)...$(RESET)"

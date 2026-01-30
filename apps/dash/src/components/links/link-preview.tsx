@@ -32,6 +32,9 @@ interface LinkPreviewProps {
   linkId: string;
   linkURL: string;
   title: string | null;
+  reference: string | null;
+  linkProvider: string | null;
+  linkProviderId: string | null;
   createdBy: string;
   createdAt: Date;
   projectName: string | null;
@@ -48,6 +51,9 @@ export function LinkPreview({
   linkId,
   linkURL,
   title,
+  reference,
+  linkProvider,
+  linkProviderId,
   createdBy,
   createdAt,
   projectName,
@@ -241,8 +247,10 @@ export function LinkPreview({
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         title={displayTitle}
-        reference=""
+        reference={reference || ''}
         isReusable={isReusable}
+        linkProvider={linkProvider || undefined}
+        linkProviderId={linkProviderId || undefined}
         onSave={handleSaveEdit}
       />
 

@@ -3,10 +3,18 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "dev:all": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
@@ -18,6 +26,7 @@
     "eslint": "^9.32.0",
     "@workspace/eslint-config": "workspace:*",
     "@types/bun": "latest",
-    "@workspace/typescript-config": "workspace:*"
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5.5.4"
   }
 }

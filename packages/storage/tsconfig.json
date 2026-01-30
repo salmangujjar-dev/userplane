@@ -2,12 +2,11 @@
   "extends": "@workspace/typescript-config/base.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./src",
     "lib": ["ESNext"],
     "module": "ESNext",
     "target": "ESNext",
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "noEmit": true
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
