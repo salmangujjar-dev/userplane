@@ -3,11 +3,18 @@
  * Limits and defaults for recording duration, size, and media settings
  */
 
-import { FILE_SIZE_LIMITS, RECORDING_DURATION_LIMITS } from '@workspace/contract';
+import {
+  FILE_SIZE_LIMITS,
+  RECORDING_DURATION_LIMITS,
+  VIDEO_MIME_TYPES as CONTRACT_VIDEO_MIME_TYPES,
+} from '@workspace/contract';
 
 // ===========================================
 // Duration Limits (from contract)
 // ===========================================
+
+/** Recording duration limits object (from contract) */
+export const RECORDING_LIMITS = RECORDING_DURATION_LIMITS;
 
 /** Default max recording duration in milliseconds (3 minutes) */
 export const DEFAULT_MAX_RECORDING_DURATION_MS = RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS;
@@ -31,6 +38,9 @@ export const BYTES_PER_MB = 1024 * 1024;
 // ===========================================
 // Media Settings
 // ===========================================
+
+/** Supported video MIME types in order of preference (from contract) */
+export const VIDEO_MIME_TYPES = CONTRACT_VIDEO_MIME_TYPES;
 
 /** Video bitrate in bits per second (2.5 Mbps) */
 export const VIDEO_BITRATE_BPS = 2500000;
