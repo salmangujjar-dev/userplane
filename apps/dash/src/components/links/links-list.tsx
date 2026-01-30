@@ -81,6 +81,9 @@ export function LinksList({
             linkId={link.linkId}
             linkURL={link.linkURL}
             title={link.linkTitle}
+            reference={link.linkProviderReference}
+            linkProvider={link.linkProviderType}
+            linkProviderId={link.linkProviderId}
             createdBy={link.creator.name}
             createdAt={link.createdAt}
             projectName={link.project.title}

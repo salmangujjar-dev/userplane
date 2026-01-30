@@ -5,10 +5,11 @@
   "private": true,
   "description": "Production-grade privacy blur system for screen recording and session replay",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
+      "import": "./dist/index.js"
     }
   },
   "scripts": {

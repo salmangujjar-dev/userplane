@@ -2,18 +2,22 @@
   "name": "@workspace/contract",
   "type": "module",
   "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "dev:all": "tsc --watch",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit",
-    "type:check": "tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@orpc/contract": "^1.0.3",
