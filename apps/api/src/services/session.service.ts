@@ -1,10 +1,24 @@
 /**
  * SessionService - Business logic for recording session and upload operations
  * Handles token generation, validation, and upload workflow
+ *
+ * Caching Architecture:
+ * Uses normalized caching with three separate cache types:
+ * - workspace:recording-prefs:{workspaceId} - Workspace branding/limits
+ * - domain:recording-prefs:{domainId} - Domain capture settings
+ * - link:core:{workspaceId}:{linkId} - Link-specific data
+ *
+ * This allows O(1) invalidation when workspace/domain preferences change,
+ * instead of invalidating all link caches (O(N)).
  */
 
 import { tasks } from '@trigger.dev/sdk/v3';
-import type { CacheService } from '@workspace/cache';
+import type {
+  CacheService,
+  DomainRecordingPrefs,
+  LinkCore,
+  WorkspaceRecordingPrefs,
+} from '@workspace/cache';
 import { sessionError } from '@workspace/contract';
 import type {
   ClientActionsStorageClient,
@@ -17,6 +31,7 @@ import jwt from 'jsonwebtoken';
 
 import { env } from '@/api/env';
 import { generateRecordingId, generateSessionId } from '@/api/lib/id';
+import { DomainRepository } from '@/api/repositories/domains.repository';
 import {
   LinkRepository,
   type LinkWithWorkspacePrefsRow,
@@ -50,6 +65,7 @@ export interface SessionServiceDeps {
   recordingRepo: RecordingRepository;
   projectRepo: ProjectRepository;
   workspaceRepo: WorkspaceRepository;
+  domainRepo: DomainRepository;
   videoStorage: VideoStorageClient;
   thumbnailsStorage: ThumbnailsStorageClient;
   consoleLogsStorage: ConsoleLogsStorageClient;
@@ -118,26 +134,137 @@ export class SessionService {
   }
 
   /**
-   * Fetch link with workspace preferences using cache-first pattern
-   * Cache TTL: 600s (10 minutes)
+   * Fetch link with workspace preferences using TRUE cache-first pattern
+   *
+   * Flow:
+   * 1. Try to get workspaceId from link:ws:{linkId} mapping cache
+   * 2. If found, try to assemble from normalized caches
+   * 3. On any cache miss, fetch from DB and populate all caches
+   *
+   * This ensures we only hit the database on true cache misses,
+   * not on every request like the previous broken implementation.
    */
   private async getLinkWithPreferences(linkId: string): Promise<LinkWithWorkspacePrefsRow | null> {
-    // Try cache first
-    const cached =
-      await this.deps.cacheService?.getLinkPreferences<LinkWithWorkspacePrefsRow>(linkId);
-    if (cached) {
-      return cached;
+    // Step 1: Try to get workspaceId from mapping cache
+    const cachedWorkspaceId = await this.deps.cacheService?.getLinkWorkspaceMapping(linkId);
+
+    if (cachedWorkspaceId) {
+      // Step 2: Try to assemble from normalized caches
+      const assembled = await this.tryAssembleFromCaches(linkId, cachedWorkspaceId);
+      if (assembled) {
+        return assembled;
+      }
     }
 
-    // Fetch from database
+    // Step 3: Cache miss - fetch from database
     const linkData = await this.deps.linkRepo.findByIdWithWorkspacePrefs(linkId);
 
-    // Cache the result if found
-    if (linkData) {
-      await this.deps.cacheService?.setLinkPreferences(linkId, linkData);
+    if (!linkData) {
+      return null;
     }
 
+    // Step 4: Cache all components for future requests
+    await this.cacheAllComponents(linkData);
+
     return linkData;
+  }
+
+  /**
+   * Try to assemble link data from normalized caches
+   * Returns null if any cache component is missing
+   */
+  private async tryAssembleFromCaches(
+    linkId: string,
+    workspaceId: string
+  ): Promise<LinkWithWorkspacePrefsRow | null> {
+    if (!this.deps.cacheService) return null;
+
+    // First get link core to get domainId
+    const linkCore = await this.deps.cacheService.getLinkCore(workspaceId, linkId);
+    if (!linkCore) return null;
+
+    // Then get workspace and domain prefs in parallel
+    const [workspacePrefs, domainPrefs] = await Promise.all([
+      this.deps.cacheService.getWorkspaceRecordingPrefs(workspaceId),
+      this.deps.cacheService.getDomainRecordingPrefs(linkCore.domainId),
+    ]);
+
+    // If any component is missing, we have a cache miss
+    if (!workspacePrefs || !domainPrefs) {
+      return null;
+    }
+
+    // Assemble the full object from cached components
+    return {
+      linkId: linkCore.linkId,
+      linkType: linkCore.linkType as LinkWithWorkspacePrefsRow['linkType'],
+      linkReusable: linkCore.linkReusable,
+      workspaceId: linkCore.workspaceId,
+      projectId: linkCore.projectId,
+      domainId: linkCore.domainId,
+      createdBy: linkCore.createdBy,
+      createdByName: linkCore.createdByName,
+      recordingCustomizeLink: workspacePrefs.recordingCustomizeLink,
+      recordingHideSensitive: domainPrefs.recordingHideSensitive,
+      recordingCaptureClientLog: domainPrefs.recordingCaptureClientLog,
+      recordingCaptureClientAction: domainPrefs.recordingCaptureClientAction,
+      recordingCaptureServerLog: domainPrefs.recordingCaptureServerLog,
+      recordingCaptureNetworkLog: domainPrefs.recordingCaptureNetworkLog,
+      recordingCompanyName: workspacePrefs.recordingCompanyName,
+      recordingCompanyLogoPath: workspacePrefs.recordingCompanyLogoPath,
+      recordingHeader: workspacePrefs.recordingHeader,
+      recordingFootnote: workspacePrefs.recordingFootnote,
+      recordingPrimaryColor: workspacePrefs.recordingPrimaryColor,
+      recordingMaxDurationMs: workspacePrefs.recordingMaxDurationMs,
+    };
+  }
+
+  /**
+   * Cache all components for a link
+   * Called on cache miss to populate all cache types including workspace mapping
+   */
+  private async cacheAllComponents(linkData: LinkWithWorkspacePrefsRow): Promise<void> {
+    if (!this.deps.cacheService) return;
+
+    // Build the normalized cache objects
+    const linkCore: LinkCore = {
+      linkId: linkData.linkId,
+      linkType: linkData.linkType,
+      linkReusable: linkData.linkReusable,
+      workspaceId: linkData.workspaceId,
+      projectId: linkData.projectId,
+      domainId: linkData.domainId,
+      createdBy: linkData.createdBy,
+      createdByName: linkData.createdByName,
+    };
+
+    const workspacePrefs: WorkspaceRecordingPrefs = {
+      recordingCustomizeLink: linkData.recordingCustomizeLink,
+      recordingCompanyName: linkData.recordingCompanyName,
+      recordingCompanyLogoPath: linkData.recordingCompanyLogoPath,
+      recordingHeader: linkData.recordingHeader,
+      recordingFootnote: linkData.recordingFootnote,
+      recordingPrimaryColor: linkData.recordingPrimaryColor,
+      recordingMaxDurationMs: linkData.recordingMaxDurationMs,
+    };
+
+    const domainPrefs: DomainRecordingPrefs = {
+      workspaceId: linkData.workspaceId,
+      domainStatus: 'verified', // If we have the data, domain must be verified
+      recordingHideSensitive: linkData.recordingHideSensitive,
+      recordingCaptureClientLog: linkData.recordingCaptureClientLog,
+      recordingCaptureClientAction: linkData.recordingCaptureClientAction,
+      recordingCaptureServerLog: linkData.recordingCaptureServerLog,
+      recordingCaptureNetworkLog: linkData.recordingCaptureNetworkLog,
+    };
+
+    // Cache all components in parallel (including workspace mapping)
+    await Promise.all([
+      this.deps.cacheService.setLinkWorkspaceMapping(linkData.linkId, linkData.workspaceId),
+      this.deps.cacheService.setLinkCore(linkData.workspaceId, linkData.linkId, linkCore),
+      this.deps.cacheService.setWorkspaceRecordingPrefs(linkData.workspaceId, workspacePrefs),
+      this.deps.cacheService.setDomainRecordingPrefs(linkData.domainId, domainPrefs),
+    ]);
   }
 
   /**

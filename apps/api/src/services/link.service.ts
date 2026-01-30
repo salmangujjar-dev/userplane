@@ -3,6 +3,7 @@
  * Contains validation and business rules for link management
  */
 
+import type { CacheService } from '@workspace/cache';
 import { linkError } from '@workspace/contract';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 
@@ -30,6 +31,7 @@ export interface LinkServiceDeps {
   domainRepo: DomainRepository;
   workspaceRepo: WorkspaceRepository;
   entitlementService: EntitlementService;
+  cacheService?: CacheService;
 }
 
 /**
@@ -479,6 +481,9 @@ export class LinkService {
       throw linkError.LINK_UPDATE_FAILED();
     }
 
+    // Invalidate all link caches (core + workspace mapping)
+    await this.deps.cacheService?.invalidateLinkFull(workspaceId, linkId);
+
     // Fetch domain info for linkURL generation
     const domain = await this.deps.domainRepo.findById(updated.domainId);
 
@@ -601,6 +606,9 @@ export class LinkService {
     if (!deleted) {
       throw linkError.LINK_DELETE_FAILED();
     }
+
+    // Invalidate all link caches (core + workspace mapping)
+    await this.deps.cacheService?.invalidateLinkFull(workspaceId, linkId);
 
     return deleted;
   }

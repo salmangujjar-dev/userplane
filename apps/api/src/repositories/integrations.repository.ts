@@ -136,6 +136,20 @@ export class IntegrationRepository {
   }
 
   /**
+   * Find all integrations for a workspace
+   * Only returns non-deleted integrations
+   * Used for cache invalidation and listing integrations
+   */
+  async findByWorkspaceId(workspaceId: string): Promise<TypedIntegration[]> {
+    const results = await this.db
+      .select()
+      .from(integrations)
+      .where(and(eq(integrations.workspaceId, workspaceId), eq(integrations.isDeleted, false)));
+
+    return results.map((r) => this.parseIntegration(r, r.provider as IntegrationProvider));
+  }
+
+  /**
    * Find integration by workspace ID and provider
    * Only returns non-deleted integrations
    */

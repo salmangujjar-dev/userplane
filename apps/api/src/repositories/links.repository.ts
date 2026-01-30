@@ -651,4 +651,17 @@ export class LinkRepository {
 
     return results.map((r) => r.linkId);
   }
+
+  /**
+   * Get link IDs by project ID
+   * Used for cache invalidation when project is deleted
+   */
+  async getLinkIdsByProjectId(projectId: string): Promise<string[]> {
+    const results = await this.db
+      .select({ linkId: links.linkId })
+      .from(links)
+      .where(and(eq(links.projectId, projectId), eq(links.isDeleted, false)));
+
+    return results.map((r) => r.linkId);
+  }
 }

@@ -10,6 +10,7 @@ export * from './admin.errors';
 export * from './auth.errors';
 export * from './billing';
 export * from './billing.errors';
+export * from './cache';
 export * from './common';
 export * from './diagnostics';
 export * from './domain';

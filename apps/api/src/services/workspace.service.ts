@@ -326,8 +326,9 @@ export class WorkspaceService {
       throw workspaceError.WORKSPACE_NOT_FOUND();
     }
 
-    // Invalidate link preferences cache for all links in this workspace
-    await this.invalidateWorkspaceLinkCaches(workspaceId);
+    // Invalidate workspace recording preferences cache - O(1) operation
+    // No longer need to invalidate all link caches thanks to normalized cache architecture
+    await this.deps.cacheService?.invalidateWorkspaceRecordingPrefs(workspaceId);
 
     return updated;
   }
@@ -415,11 +416,57 @@ export class WorkspaceService {
     };
 
     // Execute in provided transaction or create new one
+    let deleted;
     if (options?.tx) {
-      return performDeletion(options.tx);
+      deleted = await performDeletion(options.tx);
+    } else {
+      deleted = await this.deps.db.transaction(performDeletion);
     }
 
-    return this.deps.db.transaction(performDeletion);
+    // Clean up all workspace-related caches after successful deletion
+    await this.cleanupWorkspaceCaches(workspaceId);
+
+    return deleted;
+  }
+
+  /**
+   * Clean up all caches related to a workspace
+   * Called during workspace deletion to remove stale cache entries
+   */
+  private async cleanupWorkspaceCaches(workspaceId: string): Promise<void> {
+    if (!this.deps.cacheService) return;
+
+    try {
+      // Clear billing caches
+      await this.deps.cacheService.invalidateWorkspaceBilling(workspaceId);
+
+      // Clear workspace recording preferences cache
+      await this.deps.cacheService.invalidateWorkspaceRecordingPrefs(workspaceId);
+
+      // Clear all link caches (core + workspace mapping)
+      if (this.deps.linkRepo) {
+        const linkIds = await this.deps.linkRepo.getLinkIdsByWorkspaceId(workspaceId);
+        if (linkIds.length > 0) {
+          await this.deps.cacheService.invalidateLinksBatch(workspaceId, linkIds);
+        }
+      }
+
+      // Clear all domain caches
+      if (this.deps.domainRepo) {
+        const domainIds = await this.deps.domainRepo.getDomainIdsByWorkspaceId(workspaceId);
+        for (const domainId of domainIds) {
+          await this.deps.cacheService.invalidateDomainRecordingPrefs(domainId);
+        }
+      }
+
+      console.log(`[WorkspaceService] Cleaned up caches for deleted workspace: ${workspaceId}`);
+    } catch (error) {
+      // Don't fail deletion if cache cleanup fails
+      console.warn(
+        `[WorkspaceService] Failed to cleanup caches for workspace ${workspaceId}:`,
+        error
+      );
+    }
   }
 
   /**
@@ -1104,32 +1151,5 @@ export class WorkspaceService {
           ? ('can_join' as const)
           : ('can_request' as const),
     };
-  }
-
-  /**
-   * Invalidate link preferences cache for all links in a workspace
-   * Called when workspace recording preferences change
-   */
-  private async invalidateWorkspaceLinkCaches(workspaceId: string): Promise<void> {
-    if (!this.deps.linkRepo || !this.deps.cacheService) return;
-
-    try {
-      const linkIds = await this.deps.linkRepo.getLinkIdsByWorkspaceId(workspaceId);
-
-      for (const linkId of linkIds) {
-        await this.deps.cacheService.invalidateLinkPreferences(linkId);
-      }
-
-      if (linkIds.length > 0) {
-        console.log(
-          `[WorkspaceService] Invalidated link preferences cache for ${linkIds.length} links in workspace ${workspaceId}`
-        );
-      }
-    } catch (error) {
-      console.warn(
-        `[WorkspaceService] Failed to invalidate link caches for workspace ${workspaceId}:`,
-        error
-      );
-    }
   }
 }

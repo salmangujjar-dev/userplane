@@ -3,6 +3,7 @@
  * Contains business logic for project management
  */
 
+import type { CacheService } from '@workspace/cache';
 import { projectError, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 
@@ -31,6 +32,7 @@ export interface ProjectServiceDeps {
   linkRepo: LinkRepository;
   recordingRepo: RecordingRepository;
   workspaceRepo: WorkspaceRepository;
+  cacheService?: CacheService;
 }
 
 export class ProjectService {
@@ -239,6 +241,9 @@ export class ProjectService {
       throw projectError.PROJECT_LAST_PROJECT_DELETE_FORBIDDEN();
     }
 
+    // Get link IDs before deletion for cache invalidation
+    const linkIds = await this.deps.linkRepo.getLinkIdsByProjectId(projectId);
+
     // Use transaction for atomic deletion
     const performDeletion = async (tx: Transaction) => {
       // If deleting a default project, set another one as default before deletion
@@ -263,11 +268,19 @@ export class ProjectService {
     };
 
     // Execute in provided transaction or create new one
+    let result;
     if (options?.tx) {
-      return performDeletion(options.tx);
+      result = await performDeletion(options.tx);
+    } else {
+      result = await this.deps.db.transaction(performDeletion);
     }
 
-    return this.deps.db.transaction(performDeletion);
+    // Invalidate link caches after transaction commits
+    if (linkIds.length > 0 && this.deps.cacheService) {
+      await this.deps.cacheService.invalidateLinksBatch(workspaceId, linkIds);
+    }
+
+    return result;
   }
 
   /**

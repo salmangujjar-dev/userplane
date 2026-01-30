@@ -23,24 +23,44 @@ interface ClearCacheModalProps {
 
 const CACHE_TYPES: Array<{ value: CacheType; label: string; description: string }> = [
   {
-    value: 'billing',
-    label: 'Billing Cache',
-    description: 'Clear billing access and subscription status cache',
+    value: 'all',
+    label: 'All Caches',
+    description: 'Clear all cache types for this workspace',
   },
   {
-    value: 'subscription',
-    label: 'Subscription Cache',
-    description: 'Clear dispute and refund status cache',
+    value: 'billing',
+    label: 'Billing',
+    description: 'Subscription access and status',
+  },
+  {
+    value: 'safety_latches',
+    label: 'Safety Latches',
+    description: 'Dispute and refund flags',
   },
   {
     value: 'entitlement',
-    label: 'Entitlement Cache',
-    description: 'Clear usage summary and recording limits cache',
+    label: 'Entitlement',
+    description: 'Usage summary and resource limits',
+  },
+  {
+    value: 'workspace_recording',
+    label: 'Workspace Recording',
+    description: 'Branding and recording limit settings',
+  },
+  {
+    value: 'domain_recording',
+    label: 'Domain Recording',
+    description: 'Domain capture settings (logs, sensitivity)',
   },
   {
     value: 'link',
-    label: 'Link Cache',
-    description: 'Clear link preferences and settings cache',
+    label: 'Link Data',
+    description: 'Link core data and session mappings',
+  },
+  {
+    value: 'integration',
+    label: 'Integrations',
+    description: 'Integration lookup caches',
   },
 ];
 
