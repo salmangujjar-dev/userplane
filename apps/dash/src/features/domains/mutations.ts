@@ -53,6 +53,8 @@ export function useCreateDomain(workspaceId: string | null) {
         domainId: `temp-${Date.now()}`,
         domainUrl: url,
         domainStatus: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       // Update ALL matching queries

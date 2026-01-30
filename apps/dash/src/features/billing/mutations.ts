@@ -1,10 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
-import type { ManagePlanData, PlanChangePreviewData } from '@workspace/contract';
 import type { PlanId } from '@workspace/pricing';
 
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
 import { handleUnknownError } from '@/lib/errors';
+import type { ManagePlanData, PlanChangePreviewData } from '@/types';
 
 interface ManagePlanCallbacks {
   onCheckout?: (data: { slug: string }) => void;

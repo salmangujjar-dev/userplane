@@ -32,8 +32,8 @@ import {
 } from 'lucide-react';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import type { AdminUserDetail, AdminUserSession, AdminUserWorkspace } from '@/features/admin';
 import { usePermissions } from '@/hooks/use-permissions';
+import type { AdminUserDetail, AdminUserSession, AdminUserWorkspace } from '@/types';
 
 import { DetailedListSkeleton } from './components/detailed-list-skeleton';
 import { PagedSectionHeader } from './components/paged-section-header';
@@ -62,8 +62,8 @@ interface UserDetailSheetProps {
   isCurrentUser: boolean;
 }
 
-function formatDateTime(dateString: string): string {
-  return new Date(dateString).toLocaleString(undefined, {
+function formatDateTime(date: Date): string {
+  return date.toLocaleString(undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -72,9 +72,9 @@ function formatDateTime(dateString: string): string {
   });
 }
 
-function isBanExpired(banExpires: string | null): boolean {
+function isBanExpired(banExpires: Date | null): boolean {
   if (!banExpires) return false;
-  return new Date(banExpires) < new Date();
+  return banExpires < new Date();
 }
 
 const LoadingState = () => (

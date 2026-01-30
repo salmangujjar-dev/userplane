@@ -1,12 +1,6 @@
 'use client';
 
 import {
-  ADMIN_FILTER_STATUS_OPTIONS,
-  ADMIN_RECORDING_WEEKS_OPTIONS,
-  STREAMING_STATUS_OPTIONS,
-  UPLOAD_STATUS_OPTIONS,
-} from '@workspace/contract';
-import {
   Card,
   CardContent,
   CardDescription,
@@ -21,6 +15,12 @@ import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis } from 'recharts';
 
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
+import {
+  ADMIN_FILTER_STATUS_OPTIONS,
+  ADMIN_RECORDING_WEEKS_OPTIONS,
+  STREAMING_STATUS_OPTIONS,
+  UPLOAD_STATUS_OPTIONS,
+} from '@/constants/admin';
 import {
   useAdminWorkspaceMemberRecordingStats,
   useAdminWorkspaceRecordingStats,

@@ -1,44 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
-import type { LinkProviderType, LinkType } from '@workspace/contract';
 
 import { apiClient } from '@/client';
 import { DEFAULT_LINKS_PER_PAGE } from '@/constants/pagination';
 import { handleSafeResult } from '@/lib/errors';
 import { useWorkspaceId } from '@/stores/workspace';
+import type {
+  Link,
+  LinkDomain,
+  LinkProject,
+  LinkProviderType,
+  LinksData,
+  LinkType,
+  SortDirection,
+} from '@/types';
 
 import { linkKeys } from './query-keys';
 
 // Re-export types for consumers
-export interface LinkDomain {
-  domainId: string;
-  url: string;
-  status: string;
-}
-
-export interface LinkProject {
-  projectId: string;
-  title: string | null;
-}
-
-export interface LinkCreator {
-  workspaceMemberId: string;
-  name: string;
-}
-
-export interface Link {
-  linkId: string;
-  linkTitle: string | null;
-  linkType: LinkType;
-  linkReusable: boolean;
-  linkProviderType: LinkProviderType;
-  linkProviderId: string | null;
-  linkProviderReference: string | null;
-  linkURL: string;
-  createdAt: string | Date;
-  project: LinkProject;
-  creator: LinkCreator;
-  domain: LinkDomain;
-}
+export type { Link, LinkDomain, LinkProject, LinksData };
 
 export interface LinksFilters {
   createdBy?: string[];
@@ -47,21 +26,7 @@ export interface LinksFilters {
   linkProviderType?: LinkProviderType[];
   linkType?: LinkType;
   sortBy?: 'created_at' | 'link_title';
-  sortDirection?: 'asc' | 'desc';
-}
-
-export interface PaginationMeta {
-  page: number;
-  perPage: number;
-  total: number;
-  totalPages: number;
-  hasMore: boolean;
-}
-
-export interface LinksData {
-  workspaceId: string;
-  links: Link[];
-  pagination: PaginationMeta;
+  sortDirection?: SortDirection;
 }
 
 /**

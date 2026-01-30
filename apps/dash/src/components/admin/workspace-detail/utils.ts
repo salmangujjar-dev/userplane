@@ -2,7 +2,7 @@
  * Utility functions and constants for admin workspace detail views
  */
 
-import { ADMIN_WORKSPACE_MEMBERS_PAGINATION } from '@workspace/contract';
+import { ADMIN_WORKSPACE_MEMBERS_PAGINATION } from '@/constants';
 
 /**
  * Members per page for pagination

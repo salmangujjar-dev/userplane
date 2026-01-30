@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AccountNameSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
@@ -13,6 +12,7 @@ import { z } from 'zod';
 import { SectionError } from '@/components/shared/section-error';
 import { AccountSettingsSectionSkeleton } from '@/components/skeleton';
 import { useAccount, useUpdateAccountName } from '@/features/account';
+import { AccountNameSchema } from '@/schemas';
 
 const accountNameFormSchema = z.object({
   name: AccountNameSchema,

@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormEmailSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -16,6 +15,8 @@ import Logo from '@workspace/ui/components/logo';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+import { FormEmailSchema } from '@/schemas';
 
 const billingEmailFormSchema = z.object({
   email: FormEmailSchema,

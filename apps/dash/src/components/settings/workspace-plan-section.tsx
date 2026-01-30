@@ -1,6 +1,5 @@
 'use client';
 
-import type { ResourceUsage } from '@workspace/contract';
 import { type PlanId, type PlanName, UNLIMITED_QUOTED_LIMIT } from '@workspace/pricing';
 import { Progress } from '@workspace/ui/components/progress';
 import {
@@ -21,6 +20,7 @@ import { useOpenCustomerPortal, useSubscriptionStatus, useUsageSummary } from '@
 import { useWorkspace, useWorkspaceRole } from '@/features/workspace';
 import { planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
+import type { ResourceUsage } from '@/types';
 
 interface BillingActionButtonProps {
   hasPlanId: boolean;
@@ -205,7 +205,7 @@ export function WorkspacePlanSection() {
     ) {
       // 14-day grace period from onHoldSince
       const graceEndsAt = new Date(
-        new Date(subscriptionData.contractDetail.onHoldSince).getTime() + 14 * 24 * 60 * 60 * 1000
+        subscriptionData.contractDetail.onHoldSince.getTime() + 14 * 24 * 60 * 60 * 1000
       );
       return Math.max(
         0,
@@ -218,8 +218,13 @@ export function WorkspacePlanSection() {
       subscriptionData.contractDetail.cancelAtPeriodEnd &&
       subscriptionData.contractDetail.currentPeriodEnd
     ) {
-      const periodEnd = new Date(subscriptionData.contractDetail.currentPeriodEnd);
-      return Math.max(0, Math.ceil((periodEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+      return Math.max(
+        0,
+        Math.ceil(
+          (subscriptionData.contractDetail.currentPeriodEnd.getTime() - now.getTime()) /
+            (24 * 60 * 60 * 1000)
+        )
+      );
     }
 
     return undefined;

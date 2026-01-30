@@ -1,6 +1,5 @@
 'use client';
 
-import type { WorkspaceRole } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -26,6 +25,7 @@ import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { useAdminBanUser, useAdminWorkspaceMembers, useImpersonation } from '@/features/admin';
 import { usePermissions } from '@/hooks/use-permissions';
+import type { WorkspaceRole } from '@/types';
 
 import type { UserToAction } from './types';
 import { MEMBERS_PER_PAGE } from './utils';

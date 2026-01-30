@@ -8,6 +8,7 @@ import {
   type SafeResult,
   showErrorToast,
 } from '@/lib/errors';
+import type { WorkspaceInvitePolicy } from '@/types';
 import type {
   DeleteResponse,
   InvitePolicyData,
@@ -19,7 +20,6 @@ import type {
   QueryData,
   QuerySnapshot,
   UpdateResponse,
-  WorkspaceInvitePolicy,
   WorkspaceNotifications,
   WorkspacesData,
 } from '@/types';
@@ -957,14 +957,7 @@ export function useUpdateWorkspaceBillingEmail(options?: {
 // WORKSPACE RESTORE
 // ============================================
 
-import type { WorkspaceRestoreData } from '@workspace/contract';
-
-// Client-side type with dates as strings (after JSON serialization)
-type WorkspaceRestoreDataClient = Omit<WorkspaceRestoreData, 'workspace'> & {
-  workspace: Omit<WorkspaceRestoreData['workspace'], 'deletedAt'> & {
-    deletedAt: string | null;
-  };
-};
+import type { WorkspaceRestoreData } from '@/types';
 
 interface RestoreWorkspaceInput {
   workspaceId: string;
@@ -975,7 +968,7 @@ interface RestoreWorkspaceInput {
  * Restores workspace and associated projects/links
  */
 export function useRestoreWorkspace() {
-  return useMutation<SafeResult<WorkspaceRestoreDataClient>, Error, RestoreWorkspaceInput>({
+  return useMutation<SafeResult<WorkspaceRestoreData>, Error, RestoreWorkspaceInput>({
     mutationFn: async (input: RestoreWorkspaceInput) => {
       const [error, response] = await apiClient.workspace.restore({
         params: { workspaceId: input.workspaceId },
@@ -994,9 +987,6 @@ export function useRestoreWorkspace() {
     },
   });
 }
-
-// Re-export types
-export type { WorkspaceRestoreDataClient };
 
 interface RequestBillingEmailChangeData {
   workspaceId: string;

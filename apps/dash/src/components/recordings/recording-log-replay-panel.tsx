@@ -34,8 +34,8 @@ interface RecordingLogReplayPanelProps {
       status: string;
       systemMeta: Record<string, unknown> | null;
       customMeta?: Record<string, unknown> | null;
-      createdAt: Date | string;
-      updatedAt: Date | string;
+      createdAt: Date;
+      updatedAt: Date;
     };
   };
 }

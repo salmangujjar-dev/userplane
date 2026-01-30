@@ -9,11 +9,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import {
-  useJoinWorkspace,
-  useWorkspaceStatus,
-  type WorkspaceInvitePolicy,
-} from '@/features/workspace';
+import { useJoinWorkspace, useWorkspaceStatus } from '@/features/workspace';
+import type { WorkspaceInvitePolicy } from '@/types';
 
 interface WorkspaceAccessGateProps {
   children: React.ReactNode;

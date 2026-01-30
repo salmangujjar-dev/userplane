@@ -1,6 +1,5 @@
 'use client';
 
-import type { AdminNotifyDuration } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
@@ -10,6 +9,7 @@ import { useState } from 'react';
 import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import { useAdminDeactivateWorkspace, useAdminResetInviteToken } from '@/features/admin';
+import type { AdminNotifyDuration } from '@/types';
 
 import type { WorkspaceDetail, WorkspaceToDeactivate, WorkspaceToResetToken } from './types';
 

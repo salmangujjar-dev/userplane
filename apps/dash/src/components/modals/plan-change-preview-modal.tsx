@@ -1,6 +1,5 @@
 'use client';
 
-import type { PlanChangePreviewData } from '@workspace/contract';
 import type { PlanId } from '@workspace/pricing';
 import {
   Dialog,
@@ -17,6 +16,7 @@ import { authClient } from '@/client/auth';
 import { env } from '@/env';
 import { useManagePlan, useOpenCustomerPortal } from '@/features/billing';
 import { useWorkspaceId } from '@/stores/workspace';
+import type { PlanChangePreviewData } from '@/types';
 
 type ModalState =
   | 'loading'
@@ -55,12 +55,12 @@ function PreviewView({
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric',
-    }).format(new Date(dateString));
+    }).format(date);
   };
 
   type LineItem = NonNullable<typeof preview.immediateCharge>['lineItems'][0];

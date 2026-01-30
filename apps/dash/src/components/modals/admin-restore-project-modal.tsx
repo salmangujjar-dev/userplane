@@ -1,6 +1,5 @@
 'use client';
 
-import { ADMIN_NOTIFY_DURATION_OPTIONS, type AdminNotifyDuration } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -20,6 +19,9 @@ import {
   SelectValue,
 } from '@workspace/ui/components/select';
 import { useEffect, useState } from 'react';
+
+import { ADMIN_NOTIFY_DURATION_OPTIONS } from '@/constants';
+import type { AdminNotifyDuration } from '@/types';
 
 interface Project {
   projectId: string;

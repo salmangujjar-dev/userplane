@@ -8,6 +8,7 @@ import {
   type SafeResult,
   showErrorToast,
 } from '@/lib/errors';
+import type { ProjectRestoreData, RestorationStatus } from '@/types';
 import type { ProjectsData, QueryData, QuerySnapshot } from '@/types';
 
 import { workspaceKeys } from '../workspace/query-keys';
@@ -240,17 +241,6 @@ export function useDeleteProject(workspaceId: string | null) {
 // PROJECT RESTORE
 // ============================================
 
-import type { ProjectRestoreData, RestorationStatus } from '@workspace/contract';
-
-// Client-side type with dates as strings (after JSON serialization)
-type ProjectRestoreDataClient = Omit<ProjectRestoreData, 'project'> & {
-  project: Omit<ProjectRestoreData['project'], 'deletedAt' | 'createdAt' | 'updatedAt'> & {
-    deletedAt: string | null;
-    createdAt: string;
-    updatedAt: string;
-  };
-};
-
 interface RestoreProjectInput {
   workspaceId: string;
   projectId: string;
@@ -261,7 +251,7 @@ interface RestoreProjectInput {
  * Restores project within its workspace
  */
 export function useRestoreProject() {
-  return useMutation<SafeResult<ProjectRestoreDataClient>, Error, RestoreProjectInput>({
+  return useMutation<SafeResult<ProjectRestoreData>, Error, RestoreProjectInput>({
     mutationFn: async (input: RestoreProjectInput) => {
       const [error, response] = await apiClient.project.restore({
         params: { workspaceId: input.workspaceId, projectId: input.projectId },
@@ -282,4 +272,4 @@ export function useRestoreProject() {
 }
 
 // Re-export types
-export type { ProjectRestoreDataClient, RestorationStatus };
+export type { RestorationStatus };

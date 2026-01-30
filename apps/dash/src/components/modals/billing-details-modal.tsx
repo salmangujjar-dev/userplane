@@ -1,6 +1,5 @@
 'use client';
 
-import type { AccessDetail, SubscriptionStatus } from '@workspace/contract';
 import type { PlanId, PlanName } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
@@ -13,6 +12,8 @@ import Logo from '@workspace/ui/components/logo';
 import { format } from 'date-fns';
 import { AlertCircle, CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
 
+import type { AccessDetail, SubscriptionStatus } from '@/types';
+
 interface BillingDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -20,13 +21,13 @@ interface BillingDetailsModalProps {
     planName: PlanName;
     planId: PlanId;
     status: SubscriptionStatus;
-    currentPeriodEnd: Date | string | null;
+    currentPeriodEnd: Date | null;
     cancelAtPeriodEnd: boolean;
     // Extended data
     billingCycle?: string;
-    currentPeriodStart?: Date | string | null;
-    cancelledAt?: Date | string | null;
-    onHoldSince?: Date | string | null;
+    currentPeriodStart?: Date | null;
+    cancelledAt?: Date | null;
+    onHoldSince?: Date | null;
     accessStatus?: AccessDetail;
   } | null;
   onManagePortal: () => void;
@@ -136,10 +137,10 @@ export function BillingDetailsModal({
 }: BillingDetailsModalProps) {
   if (!subscription) return null;
 
-  const formatDate = (date: Date | string | null | undefined) => {
+  const formatDate = (date: Date | null | undefined) => {
     if (!date) return null;
     try {
-      return format(new Date(date), 'MMM d, yyyy');
+      return format(date, 'MMM d, yyyy');
     } catch {
       return null;
     }
@@ -151,9 +152,7 @@ export function BillingDetailsModal({
 
     if (subscription.status === 'on_hold' && subscription.onHoldSince) {
       // 14-day grace period from onHoldSince
-      const graceEndsAt = new Date(
-        new Date(subscription.onHoldSince).getTime() + 14 * 24 * 60 * 60 * 1000
-      );
+      const graceEndsAt = new Date(subscription.onHoldSince.getTime() + 14 * 24 * 60 * 60 * 1000);
       return Math.max(
         0,
         Math.ceil((graceEndsAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
@@ -165,8 +164,10 @@ export function BillingDetailsModal({
       subscription.cancelAtPeriodEnd &&
       subscription.currentPeriodEnd
     ) {
-      const periodEnd = new Date(subscription.currentPeriodEnd);
-      return Math.max(0, Math.ceil((periodEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+      return Math.max(
+        0,
+        Math.ceil((subscription.currentPeriodEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+      );
     }
 
     return undefined;

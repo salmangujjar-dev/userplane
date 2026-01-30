@@ -1,90 +1,39 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ProjectRestoreInfoData, WorkspaceRestoreInfoData } from '@workspace/contract';
 import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import { DEFAULT_MEMBERS_PER_PAGE, DEFAULT_WORKSPACES_PER_PAGE } from '@/constants/pagination';
 import { handleSafeResult, type SafeResult, showErrorToast } from '@/lib/errors';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
+import type {
+  InvitePolicyData,
+  SuggestedWorkspace,
+  WorkspaceBillingEmailData,
+  WorkspaceMember,
+  WorkspacePreferencesGetData,
+  WorkspaceResourceCountsData,
+  WorkspaceRole,
+  WorkspaceStatusData,
+  WorkspaceSuggestionsData,
+} from '@/types';
 
 import { workspaceKeys } from './query-keys';
 
-// Re-export types for consumers
-export type WorkspaceInvitePolicy = 'private' | 'whitelisted' | 'protected';
+// Re-export types that are used by consumers
+export type {
+  InvitePolicyData,
+  SuggestedWorkspace,
+  WorkspaceBillingEmailData,
+  WorkspaceMember,
+  WorkspacePreferencesGetData,
+  WorkspaceResourceCountsData,
+  WorkspaceStatusData,
+  WorkspaceSuggestionsData,
+};
+
+// Local types for this module
 export type WorkspaceAccessStatus = 'member' | 'can_join' | 'can_request' | 'no_access';
 export type JoinAction = 'join' | 'request';
-
-export interface WorkspaceMember {
-  workspaceMemberId: string;
-  memberName: string;
-  memberEmail: string;
-  workspaceRole: 'owner' | 'admin' | 'member';
-}
-
-export interface WorkspacePreferences {
-  workspaceId: string;
-  recordingCustomizeLink: boolean;
-  recordingCompanyName: string | null;
-  recordingCompanyLogoPath: string | null;
-  recordingHeader: string | null;
-  recordingFootnote: string | null;
-  recordingPrimaryColor: string | null;
-  recordingMaxDurationMs: number | null;
-  recordingSlug: string;
-}
-
-export interface WorkspaceStatusData {
-  workspaceId: string;
-  workspaceName: string;
-  isDeleted: boolean;
-  invitePolicy: WorkspaceInvitePolicy | null;
-  accessStatus: WorkspaceAccessStatus;
-}
-
-export interface InvitePolicyData {
-  workspaceId: string;
-  workspaceInvitePolicy: WorkspaceInvitePolicy;
-  workspaceInviteDomains: string[] | null;
-}
-
-export interface ResourceCounts {
-  projects?: number;
-  recordings?: number;
-  activeRecordings?: number;
-  links?: number;
-  domains?: number;
-  members?: number;
-}
-
-export interface WorkspaceResourceCountsData {
-  workspaceId: string;
-  counts: ResourceCounts;
-}
-
-export interface SuggestedWorkspace {
-  workspaceId: string;
-  workspaceName: string;
-  workspaceInvitePolicy: WorkspaceInvitePolicy;
-  action: JoinAction;
-}
-
-export interface PaginationMeta {
-  page: number;
-  perPage: number;
-  total: number;
-  totalPages: number;
-  hasMore: boolean;
-}
-
-export interface WorkspaceSuggestionsData {
-  workspaces: SuggestedWorkspace[];
-  pagination: PaginationMeta;
-}
-
-export interface WorkspaceBillingEmailData {
-  workspaceId: string;
-  workspaceBillingEmail: string | null;
-}
 
 type SearchType = 'members' | 'projects' | 'domains' | 'links';
 
@@ -662,8 +611,6 @@ export function useAcceptInvite() {
 // WORKSPACE ROLE
 // ============================================
 
-export type WorkspaceRole = 'owner' | 'admin' | 'member';
-
 export interface WorkspaceMembership {
   workspaceMemberId: string;
   workspaceRole: WorkspaceRole;
@@ -834,6 +781,3 @@ export function useWorkspaceRestoreInfo(workspaceId: string | null) {
     retry: false,
   });
 }
-
-// Re-export types from contract for convenience
-export type { ProjectRestoreInfoData, WorkspaceRestoreInfoData };

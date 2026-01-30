@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ProjectTitleSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -24,6 +23,8 @@ import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+import { ProjectTitleSchema } from '@/schemas';
 
 interface CreateProjectModalProps {
   open: boolean;

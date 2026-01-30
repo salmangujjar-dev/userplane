@@ -31,8 +31,8 @@ interface InfoPanelProps {
       status: string;
       systemMeta: Record<string, unknown> | null;
       customMeta?: Record<string, unknown> | null;
-      createdAt: Date | string;
-      updatedAt: Date | string;
+      createdAt: Date;
+      updatedAt: Date;
     };
   };
 }
@@ -73,9 +73,7 @@ export function InfoPanel({ recording }: InfoPanelProps) {
           </div>
           <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
             <span className="text-muted-foreground">Requested At</span>
-            <span className="font-mono">
-              {format(new Date(meta.createdAt), 'MMM dd, yyyy HH:mm:ss')}
-            </span>
+            <span className="font-mono">{format(meta.createdAt, 'MMM dd, yyyy HH:mm:ss')}</span>
           </div>
         </div>
       </div>

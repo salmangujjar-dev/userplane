@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { LinkErrors } from '@workspace/contract';
 import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
+import type { LinkErrors } from '@/types';
 import type { QueryData, QuerySnapshot } from '@/types';
 
 import { workspaceKeys } from '../workspace/query-keys';

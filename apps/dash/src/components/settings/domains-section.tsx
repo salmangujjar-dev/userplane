@@ -1,7 +1,6 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { DOMAIN_PAGINATION } from '@workspace/contract';
 import {
   Select,
   SelectContent,
@@ -16,9 +15,9 @@ import { useCallback, useState } from 'react';
 import { apiClient } from '@/client';
 import { SectionError } from '@/components/shared/section-error';
 import { DomainsSectionSkeleton } from '@/components/skeleton';
+import { DOMAIN_PAGINATION } from '@/constants';
 import {
   type DomainSortField,
-  type SortDirection,
   useCreateDomain,
   useDeleteDomain,
   useDomainStatusPolling,
@@ -29,6 +28,7 @@ import {
 import { useWorkspaceRole } from '@/features/workspace';
 import { useDomainSectionState } from '@/hooks/use-domain-section-state';
 import { useWorkspaceId } from '@/stores/workspace';
+import type { SortDirection } from '@/types';
 import type { DomainResponse } from '@/types';
 import {
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,

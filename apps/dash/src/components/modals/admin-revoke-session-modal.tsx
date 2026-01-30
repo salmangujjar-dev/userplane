@@ -15,7 +15,7 @@ interface Session {
   id: string;
   ipAddress: string | null;
   userAgent: string | null;
-  expiresAt: string;
+  expiresAt: Date;
 }
 
 interface AdminRevokeSessionModalProps {
@@ -26,8 +26,8 @@ interface AdminRevokeSessionModalProps {
   isPending: boolean;
 }
 
-function formatDateTime(dateString: string): string {
-  return new Date(dateString).toLocaleString(undefined, {
+function formatDateTime(date: Date): string {
+  return date.toLocaleString(undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
