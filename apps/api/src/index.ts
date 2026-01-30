@@ -7,6 +7,7 @@ import { isDefinedError, onError } from '@orpc/server';
 import * as Sentry from '@sentry/bun';
 import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@workspace/cache';
 import { createAppLogger } from '@workspace/logger';
+import type { Context } from 'hono';
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
 import { cors } from 'hono/cors';
@@ -17,9 +18,11 @@ import { auth } from '@/api/clients/auth';
 import { rateLimiter } from '@/api/clients/redis';
 import { env, logConfig } from '@/api/env';
 import {
-  createConfigureHandler,
-  createInitializeHandler,
-  createSubmitHandler,
+  createInboxInitializeHandler,
+  createInboxSubmitHandler,
+  createMessengerConfigureHandler,
+  createMessengerInitializeHandler,
+  createMessengerSubmitHandler,
 } from '@/api/handlers/intercom-canvas.handler';
 import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
@@ -98,6 +101,9 @@ if (rateLimiter.isAvailable()) {
     })
   );
 
+  // Note: Intercom Canvas rate limiting is handled inside the routers
+  // after signature verification, using workspace_id as identifier
+
   logger.info('Rate limiting middleware enabled');
 }
 
@@ -121,22 +127,82 @@ app.on(['POST', 'GET'], '/api/auth/*', (c) => {
   return auth.handler(c.req.raw);
 });
 
-// Intercom Canvas Kit routes
-// These routes are called by Intercom and require signature verification
-const canvasRouter = new Hono();
+// Intercom Canvas Kit Routes
+// ===========================
+// Per Intercom docs: developers.intercom.com/docs/canvas-kit
+//
+// Split endpoints for Messenger (customer-facing) and Inbox (teammate) contexts.
+// Each endpoint explicitly handles a single context for clarity and type-safety.
+//
+// 1. Messenger (Customer-facing cards) - /api/v1/intercom/canvas/messenger/*
+//    - Configured under: "For users, leads, and visitors"
+//    - /configure - Teammate configures card before sending
+//    - /initialize - Customer opens card
+//    - /submit - Customer interacts with card
+//
+// 2. Inbox (Teammate sidebar app) - /api/v1/intercom/canvas/inbox/*
+//    - Configured under: "For teammates"
+//    - /initialize - Teammate opens app
+//    - /submit - Teammate interacts with app
 
-// Apply signature verification middleware to all canvas routes
-canvasRouter.use('*', verifyIntercomSignature(env.intercom.clientSecret));
+/**
+ * Extract Intercom workspace_id from parsed body for rate limiting
+ * Falls back to IP if workspace_id not available (shouldn't happen for valid requests)
+ */
+function getIntercomWorkspaceId(c: Context): string {
+  try {
+    const rawBody = c.get('rawBody') as string | undefined;
+    if (rawBody) {
+      const body = JSON.parse(rawBody) as { workspace_id?: string };
+      if (body.workspace_id) {
+        return `intercom:${body.workspace_id}`;
+      }
+    }
+  } catch {
+    // Fall through to IP-based
+  }
+  return getClientIP(c);
+}
 
-// Canvas Kit endpoints
-canvasRouter.post('/initialize', createInitializeHandler(intercomCanvasService));
-canvasRouter.post('/configure', createConfigureHandler(intercomCanvasService));
-canvasRouter.post('/submit', createSubmitHandler(intercomCanvasService));
+// Intercom rate limiting middleware (applied after signature verification)
+const intercomRateLimitMiddleware = rateLimiter.isAvailable()
+  ? createRateLimitMiddleware(rateLimiter, {
+      tier: 'webhook',
+      getIdentifier: getIntercomWorkspaceId,
+    })
+  : undefined;
 
-// Mount canvas routes under /api/v1/intercom/canvas
-app.route('/api/v1/intercom/canvas', canvasRouter);
+// Messenger routes (for users, leads, and visitors)
+const messengerRouter = new Hono();
+messengerRouter.use('*', verifyIntercomSignature(env.intercom.clientSecret));
+if (intercomRateLimitMiddleware) {
+  messengerRouter.use('*', intercomRateLimitMiddleware);
+}
+messengerRouter.post('/initialize', createMessengerInitializeHandler(intercomCanvasService));
+messengerRouter.post('/submit', createMessengerSubmitHandler(intercomCanvasService));
+messengerRouter.post('/configure', createMessengerConfigureHandler(intercomCanvasService));
 
-logger.info('Intercom Canvas Kit routes registered at /api/v1/intercom/canvas');
+// Inbox routes (for teammates)
+const inboxRouter = new Hono();
+inboxRouter.use('*', verifyIntercomSignature(env.intercom.clientSecret));
+if (intercomRateLimitMiddleware) {
+  inboxRouter.use('*', intercomRateLimitMiddleware);
+}
+inboxRouter.post('/initialize', createInboxInitializeHandler(intercomCanvasService));
+inboxRouter.post('/submit', createInboxSubmitHandler(intercomCanvasService));
+
+// Mount canvas routes
+app.route('/api/v1/intercom/canvas/messenger', messengerRouter);
+app.route('/api/v1/intercom/canvas/inbox', inboxRouter);
+
+logger.info('Intercom Canvas Kit routes registered:');
+logger.info('  Messenger (for users, leads, and visitors):');
+logger.info('    → /api/v1/intercom/canvas/messenger/configure');
+logger.info('    → /api/v1/intercom/canvas/messenger/initialize');
+logger.info('    → /api/v1/intercom/canvas/messenger/submit');
+logger.info('  Inbox (for teammates):');
+logger.info('    → /api/v1/intercom/canvas/inbox/initialize');
+logger.info('    → /api/v1/intercom/canvas/inbox/submit');
 
 // OpenAPI handler - handles RESTful requests
 // Respects HTTP methods and paths defined in the contract

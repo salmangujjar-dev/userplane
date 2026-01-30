@@ -1,334 +1,412 @@
 /**
  * Intercom Canvas Kit Types
- * Types for Intercom Inbox and Messenger app integration
+ *
+ * Zod schemas for type-safe Intercom Canvas Kit integration.
+ * Types are derived from schemas for runtime validation and compile-time safety.
+ *
  * @see https://developers.intercom.com/docs/canvas-kit
  */
 
-/**
- * Intercom admin (teammate) context object
- * @see https://developers.intercom.com/docs/canvas-kit#admin
- */
-export interface IntercomAdmin {
-  type: 'admin';
-  id: string;
-  name: string;
-  email: string;
-  job_title?: string;
-  away_mode_enabled?: boolean;
-  away_mode_reassign?: boolean;
-  avatar?: {
-    image_url?: string;
-  };
-  team_ids?: number[];
-}
+import { z } from 'zod';
+
+// =============================================================================
+// Intercom Entity Schemas
+// =============================================================================
 
 /**
- * Intercom user (customer) context object
+ * Intercom admin (teammate) - the person using the Inbox app
+ * We call them "teammate" in our domain, Intercom calls them "admin"
  */
-export interface IntercomUser {
-  id: string;
-  email?: string;
-  name?: string;
-  type: 'user' | 'lead';
-}
+export const IntercomTeammateSchema = z.object({
+  type: z.literal('admin'),
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  job_title: z.string().optional(),
+  away_mode_enabled: z.boolean().optional(),
+  away_mode_reassign: z.boolean().optional(),
+  avatar: z
+    .object({
+      image_url: z.string().optional(),
+    })
+    .optional(),
+  team_ids: z.array(z.number()).optional(),
+});
+
+/**
+ * Intercom user (customer/lead) - the person receiving the card
+ */
+export const IntercomCustomerSchema = z.object({
+  id: z.string(),
+  email: z.string().optional(),
+  name: z.string().optional(),
+  type: z.enum(['user', 'lead']),
+});
 
 /**
  * Intercom conversation context
  */
-export interface IntercomConversation {
-  id: string;
-  custom_attributes?: Record<string, unknown>;
-}
+export const IntercomConversationSchema = z.object({
+  id: z.string(),
+  custom_attributes: z.record(z.unknown()).optional(),
+});
+
+// =============================================================================
+// Context Schemas
+// =============================================================================
 
 /**
- * Messenger context location types
- * @see https://developers.intercom.com/docs/canvas-kit#context
+ * Messenger location types (customer-facing)
  */
-export type MessengerLocation = 'conversation' | 'home' | 'message';
+export const MessengerLocationSchema = z.enum(['conversation', 'home', 'message']);
 
 /**
- * Inbox context location type
+ * Inbox location type (teammate-facing)
  */
-export type InboxLocation = 'inbox';
-
-/**
- * Combined location type for all contexts
- */
-export type CanvasLocation = MessengerLocation | InboxLocation;
+export const InboxLocationSchema = z.literal('inbox');
 
 /**
  * Base context fields shared across all contexts
  */
-interface BaseCanvasContext {
-  locale?: string;
-}
+const BaseCanvasContextSchema = z.object({
+  locale: z.string().optional(),
+});
 
 /**
  * Messenger context - sent when app is rendered in Messenger
  */
-export interface MessengerCanvasContext extends BaseCanvasContext {
-  location: MessengerLocation;
-  conversation_id?: number; // Only present if location === 'conversation'
-  messenger_action_color?: string;
-  messenger_background_color?: string;
-  referrer?: string;
-}
+export const MessengerCanvasContextSchema = BaseCanvasContextSchema.extend({
+  location: MessengerLocationSchema,
+  conversation_id: z.number().optional(),
+  messenger_action_color: z.string().optional(),
+  messenger_background_color: z.string().optional(),
+  referrer: z.string().optional(),
+});
 
 /**
  * Inbox context - sent when app is rendered in Inbox sidebar
  */
-export interface InboxCanvasContext extends BaseCanvasContext {
-  location: InboxLocation;
-  conversation_id?: number;
-}
+export const InboxCanvasContextSchema = BaseCanvasContextSchema.extend({
+  location: InboxLocationSchema,
+  conversation_id: z.number().optional(),
+});
 
 /**
  * Union type for all canvas contexts
  */
-export type CanvasContext = MessengerCanvasContext | InboxCanvasContext;
+export const CanvasContextSchema = z.union([
+  MessengerCanvasContextSchema,
+  InboxCanvasContextSchema,
+]);
+
+// =============================================================================
+// Card Creation Options Schema
+// =============================================================================
 
 /**
  * Card creation options for inserting a card into conversation
+ * These are set during configure flow and passed to initialize flow
  */
-export interface CardCreationOptions {
-  link_url?: string;
-  link_title?: string;
-  custom_message?: string;
-  footer?: string | null;
-}
+export const CardCreationOptionsSchema = z.object({
+  link_url: z.string().optional(),
+  link_title: z.string().optional(),
+  custom_message: z.string().optional(),
+  footer: z.string().nullable().optional(),
+});
+
+// =============================================================================
+// Request Schemas
+// =============================================================================
 
 /**
  * Input values from form submissions
  */
-export interface CanvasInputValues {
-  [componentId: string]: string | string[] | undefined;
-}
+export const CanvasInputValuesSchema = z.record(
+  z.union([z.string(), z.array(z.string()), z.undefined()])
+);
 
 /**
- * Initialize request from Intercom Canvas Kit
- * Called when card is being added or messenger app is opened
- * @see https://developers.intercom.com/docs/canvas-kit#initialize-flow
+ * Current canvas state (for subsequent requests)
  */
-export interface IntercomCanvasInitializeRequest {
-  workspace_id: string;
-  admin?: IntercomAdmin; // Present for inbox context
-  user?: IntercomUser; // Present for messenger context
-  conversation?: IntercomConversation;
-  context?: CanvasContext;
-  card_creation_options?: CardCreationOptions;
-  current_canvas?: {
-    content_url?: string;
-    stored_data?: Record<string, unknown>;
-  };
-}
+export const CurrentCanvasSchema = z.object({
+  content_url: z.string().optional(),
+  content: z.any().optional(), // Canvas content - complex nested structure
+  stored_data: z.record(z.unknown()).optional(),
+});
 
 /**
- * Configure request from Intercom Canvas Kit
+ * Messenger Initialize Request
+ * Called when customer opens a card in Messenger
+ */
+export const MessengerInitializeRequestSchema = z.object({
+  workspace_id: z.string(),
+  card_creation_options: CardCreationOptionsSchema,
+  user: IntercomCustomerSchema.optional(),
+  conversation: IntercomConversationSchema.optional(),
+  context: MessengerCanvasContextSchema.optional(),
+  current_canvas: CurrentCanvasSchema.optional(),
+});
+
+/**
+ * Inbox Initialize Request
+ * Called when teammate opens app in Inbox sidebar
+ */
+export const InboxInitializeRequestSchema = z.object({
+  workspace_id: z.string(),
+  admin: IntercomTeammateSchema,
+  conversation: IntercomConversationSchema.optional(),
+  context: InboxCanvasContextSchema.optional(),
+  current_canvas: CurrentCanvasSchema.optional(),
+});
+
+/**
+ * Combined Initialize Request (for raw Intercom webhook)
+ * Use MessengerInitializeRequestSchema or InboxInitializeRequestSchema for typed handling
+ */
+export const IntercomCanvasInitializeRequestSchema = z.object({
+  workspace_id: z.string(),
+  admin: IntercomTeammateSchema.optional(),
+  user: IntercomCustomerSchema.optional(),
+  conversation: IntercomConversationSchema.optional(),
+  context: CanvasContextSchema.optional(),
+  card_creation_options: CardCreationOptionsSchema.optional(),
+  current_canvas: CurrentCanvasSchema.optional(),
+});
+
+/**
+ * Configure Request
  * Used for card creation flow to configure the card before sending
- * Can be called multiple times as teammate interacts with configuration UI
- * @see https://developers.intercom.com/docs/canvas-kit#configure-flow
  */
-export interface IntercomCanvasConfigureRequest {
-  workspace_id: string;
-  admin: IntercomAdmin;
-  context?: InboxCanvasContext;
-  // Present in subsequent configure requests (after first request)
-  current_canvas?: {
-    content: CanvasContent;
-    stored_data?: Record<string, unknown>;
-  };
-  component_id?: string; // ID of component that triggered the action
-  input_values?: CanvasInputValues; // Values entered in form components
-}
+export const IntercomCanvasConfigureRequestSchema = z.object({
+  workspace_id: z.string(),
+  admin: IntercomTeammateSchema,
+  context: InboxCanvasContextSchema.optional(),
+  current_canvas: CurrentCanvasSchema.optional(),
+  component_id: z.string().optional(),
+  input_values: CanvasInputValuesSchema.optional(),
+});
 
 /**
- * Submit request from Intercom Canvas Kit
- * Called when user/admin interacts with a canvas component (button click, form submit)
- * @see https://developers.intercom.com/docs/canvas-kit#submit-flow
+ * Submit Request
+ * Called when user/teammate interacts with a canvas component
  */
-export interface IntercomCanvasSubmitRequest {
-  workspace_id: string;
-  component_id: string; // ID of component that triggered the action
-  context?: CanvasContext;
-  current_canvas?: {
-    content: CanvasContent;
-    stored_data?: Record<string, unknown>;
-  };
-  input_values?: CanvasInputValues;
-  // For Inbox context (teammate)
-  admin?: IntercomAdmin;
-  // For Messenger context (customer)
-  user?: IntercomUser;
-  conversation?: IntercomConversation;
-}
+export const IntercomCanvasSubmitRequestSchema = z.object({
+  workspace_id: z.string(),
+  component_id: z.string(),
+  context: CanvasContextSchema.optional(),
+  current_canvas: CurrentCanvasSchema.optional(),
+  input_values: CanvasInputValuesSchema.optional(),
+  admin: IntercomTeammateSchema.optional(),
+  user: IntercomCustomerSchema.optional(),
+  conversation: IntercomConversationSchema.optional(),
+});
+
+// =============================================================================
+// Component Types (for Canvas Response)
+// =============================================================================
+
+export const TextStyleSchema = z.enum(['header', 'paragraph', 'muted', 'error']);
+export const ButtonStyleSchema = z.enum(['primary', 'secondary', 'link']);
+
+export const ButtonSubmitActionSchema = z.object({ type: z.literal('submit') });
+export const ButtonUrlActionSchema = z.object({ type: z.literal('url'), url: z.string() });
+export const ButtonSheetActionSchema = z.object({ type: z.literal('sheet'), url: z.string() });
+export const ButtonActionSchema = z.union([
+  ButtonSubmitActionSchema,
+  ButtonUrlActionSchema,
+  ButtonSheetActionSchema,
+]);
+
+export const DropdownOptionSchema = z.object({
+  type: z.literal('option'),
+  id: z.string(),
+  text: z.string(),
+  disabled: z.boolean().optional(),
+});
+
+// Component schemas
+export const TextComponentSchema = z.object({
+  type: z.literal('text'),
+  id: z.string(),
+  text: z.string(),
+  style: TextStyleSchema.optional(),
+  align: z.enum(['left', 'center', 'right']).optional(),
+});
+
+export const ButtonComponentSchema = z.object({
+  type: z.literal('button'),
+  id: z.string(),
+  label: z.string(),
+  style: ButtonStyleSchema.optional(),
+  action: ButtonActionSchema,
+  disabled: z.boolean().optional(),
+});
+
+export const DropdownComponentSchema = z.object({
+  type: z.literal('dropdown'),
+  id: z.string(),
+  label: z.string().optional(),
+  options: z.array(DropdownOptionSchema),
+  value: z.string().optional(),
+  disabled: z.boolean().optional(),
+  save_state: z.enum(['unsaved', 'saved', 'failed']).optional(),
+});
+
+export const InputComponentSchema = z.object({
+  type: z.literal('input'),
+  id: z.string(),
+  label: z.string().optional(),
+  placeholder: z.string().optional(),
+  value: z.string().optional(),
+  disabled: z.boolean().optional(),
+  save_state: z.enum(['unsaved', 'saved', 'failed']).optional(),
+});
+
+export const SpacerComponentSchema = z.object({
+  type: z.literal('spacer'),
+  size: z.enum(['xs', 's', 'm', 'l', 'xl']),
+});
+
+export const DividerComponentSchema = z.object({
+  type: z.literal('divider'),
+});
+
+export const ImageComponentSchema = z.object({
+  type: z.literal('image'),
+  id: z.string(),
+  url: z.string(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  align: z.enum(['left', 'center', 'right']).optional(),
+});
+
+export const ListItemSchema = z.object({
+  type: z.literal('item'),
+  id: z.string(),
+  title: z.string(),
+  subtitle: z.string().optional(),
+  image: z.string().optional(),
+  image_width: z.number().optional(),
+  image_height: z.number().optional(),
+  action: ButtonActionSchema.optional(),
+  disabled: z.boolean().optional(),
+});
+
+export const ListComponentSchema = z.object({
+  type: z.literal('list'),
+  id: z.string().optional(),
+  items: z.array(ListItemSchema),
+  disabled: z.boolean().optional(),
+});
+
+export const CanvasComponentSchema = z.union([
+  TextComponentSchema,
+  ButtonComponentSchema,
+  DropdownComponentSchema,
+  InputComponentSchema,
+  SpacerComponentSchema,
+  DividerComponentSchema,
+  ImageComponentSchema,
+  ListComponentSchema,
+]);
+
+// =============================================================================
+// Stored Data Schemas
+// =============================================================================
 
 /**
- * Canvas component types
+ * Stored data for recording canvas (Messenger)
+ * Contains link information passed from configure flow
  */
-export type CanvasComponentType =
-  | 'text'
-  | 'button'
-  | 'dropdown'
-  | 'input'
-  | 'spacer'
-  | 'divider'
-  | 'image'
-  | 'list';
+export const RecordingCanvasStoredDataSchema = z.object({
+  link_url: z.string(),
+  link_title: z.string().optional(),
+  custom_message: z.string().optional(),
+  footer: z.string().nullable().optional(),
+});
 
-/**
- * Text style options
- */
-export type TextStyle = 'header' | 'paragraph' | 'muted' | 'error';
+// =============================================================================
+// Response Schemas
+// =============================================================================
 
-/**
- * Button style options
- */
-export type ButtonStyle = 'primary' | 'secondary' | 'link';
+export const CanvasContentSchema = z.object({
+  components: z.array(CanvasComponentSchema),
+});
 
-/**
- * Button action types
- */
-export interface ButtonSubmitAction {
-  type: 'submit';
-}
+export const CanvasSchema = z.object({
+  content: CanvasContentSchema,
+  stored_data: z.record(z.unknown()).optional(),
+});
 
-export interface ButtonUrlAction {
-  type: 'url';
-  url: string;
-}
+export const CanvasResponseSchema = z.object({
+  canvas: CanvasSchema,
+  card_creation_options: CardCreationOptionsSchema.optional(),
+});
 
-export interface ButtonSheetAction {
-  type: 'sheet';
-  url: string;
-}
+export const ConfigureResponseSchema = z.object({
+  results: CardCreationOptionsSchema,
+});
 
-export type ButtonAction = ButtonSubmitAction | ButtonUrlAction | ButtonSheetAction;
+// =============================================================================
+// Derived Types (from Zod schemas)
+// =============================================================================
 
-/**
- * Dropdown option
- */
-export interface DropdownOption {
-  type: 'option';
-  id: string;
-  text: string;
-  disabled?: boolean;
-}
+// Entity types
+export type IntercomTeammate = z.infer<typeof IntercomTeammateSchema>;
+export type IntercomCustomer = z.infer<typeof IntercomCustomerSchema>;
+export type IntercomConversation = z.infer<typeof IntercomConversationSchema>;
 
-/**
- * Canvas component definitions
- */
-export interface TextComponent {
-  type: 'text';
-  id: string;
-  text: string;
-  style?: TextStyle;
-  align?: 'left' | 'center' | 'right';
-}
+// Context types
+export type MessengerLocation = z.infer<typeof MessengerLocationSchema>;
+export type InboxLocation = z.infer<typeof InboxLocationSchema>;
+export type CanvasLocation = MessengerLocation | InboxLocation;
+export type MessengerCanvasContext = z.infer<typeof MessengerCanvasContextSchema>;
+export type InboxCanvasContext = z.infer<typeof InboxCanvasContextSchema>;
+export type CanvasContext = z.infer<typeof CanvasContextSchema>;
 
-export interface ButtonComponent {
-  type: 'button';
-  id: string;
-  label: string;
-  style?: ButtonStyle;
-  action: ButtonAction;
-  disabled?: boolean;
-}
+// Options types
+export type CardCreationOptions = z.infer<typeof CardCreationOptionsSchema>;
+export type CanvasInputValues = z.infer<typeof CanvasInputValuesSchema>;
+export type RecordingCanvasStoredData = z.infer<typeof RecordingCanvasStoredDataSchema>;
 
-export interface DropdownComponent {
-  type: 'dropdown';
-  id: string;
-  label?: string;
-  options: DropdownOption[];
-  value?: string;
-  disabled?: boolean;
-  save_state?: 'unsaved' | 'saved' | 'failed';
-}
+// Request types
+export type MessengerInitializeRequest = z.infer<typeof MessengerInitializeRequestSchema>;
+export type InboxInitializeRequest = z.infer<typeof InboxInitializeRequestSchema>;
+export type IntercomCanvasInitializeRequest = z.infer<typeof IntercomCanvasInitializeRequestSchema>;
+export type IntercomCanvasConfigureRequest = z.infer<typeof IntercomCanvasConfigureRequestSchema>;
+export type IntercomCanvasSubmitRequest = z.infer<typeof IntercomCanvasSubmitRequestSchema>;
 
-export interface InputComponent {
-  type: 'input';
-  id: string;
-  label?: string;
-  placeholder?: string;
-  value?: string;
-  disabled?: boolean;
-  save_state?: 'unsaved' | 'saved' | 'failed';
-}
+// Component types
+export type TextStyle = z.infer<typeof TextStyleSchema>;
+export type ButtonStyle = z.infer<typeof ButtonStyleSchema>;
+export type ButtonSubmitAction = z.infer<typeof ButtonSubmitActionSchema>;
+export type ButtonUrlAction = z.infer<typeof ButtonUrlActionSchema>;
+export type ButtonSheetAction = z.infer<typeof ButtonSheetActionSchema>;
+export type ButtonAction = z.infer<typeof ButtonActionSchema>;
+export type DropdownOption = z.infer<typeof DropdownOptionSchema>;
+export type TextComponent = z.infer<typeof TextComponentSchema>;
+export type ButtonComponent = z.infer<typeof ButtonComponentSchema>;
+export type DropdownComponent = z.infer<typeof DropdownComponentSchema>;
+export type InputComponent = z.infer<typeof InputComponentSchema>;
+export type SpacerComponent = z.infer<typeof SpacerComponentSchema>;
+export type DividerComponent = z.infer<typeof DividerComponentSchema>;
+export type ImageComponent = z.infer<typeof ImageComponentSchema>;
+export type ListItem = z.infer<typeof ListItemSchema>;
+export type ListComponent = z.infer<typeof ListComponentSchema>;
+export type CanvasComponent = z.infer<typeof CanvasComponentSchema>;
 
-export interface SpacerComponent {
-  type: 'spacer';
-  size: 'xs' | 's' | 'm' | 'l' | 'xl';
-}
+// Response types
+export type CanvasContent = z.infer<typeof CanvasContentSchema>;
+export type Canvas = z.infer<typeof CanvasSchema>;
+export type CanvasResponse = z.infer<typeof CanvasResponseSchema>;
+export type ConfigureResponse = z.infer<typeof ConfigureResponseSchema>;
 
-export interface DividerComponent {
-  type: 'divider';
-}
+// =============================================================================
+// Legacy Aliases (for backward compatibility during migration)
+// =============================================================================
 
-export interface ImageComponent {
-  type: 'image';
-  id: string;
-  url: string;
-  width?: number;
-  height?: number;
-  align?: 'left' | 'center' | 'right';
-}
+/** @deprecated Use IntercomTeammate instead */
+export type IntercomAdmin = IntercomTeammate;
 
-export interface ListItem {
-  type: 'item';
-  id: string;
-  title: string;
-  subtitle?: string;
-  image?: string;
-  image_width?: number;
-  image_height?: number;
-  action?: ButtonAction;
-  disabled?: boolean;
-}
-
-export interface ListComponent {
-  type: 'list';
-  id?: string;
-  items: ListItem[];
-  disabled?: boolean;
-}
-
-export type CanvasComponent =
-  | TextComponent
-  | ButtonComponent
-  | DropdownComponent
-  | InputComponent
-  | SpacerComponent
-  | DividerComponent
-  | ImageComponent
-  | ListComponent;
-
-/**
- * Canvas content structure
- */
-export interface CanvasContent {
-  components: CanvasComponent[];
-}
-
-/**
- * Canvas response object
- */
-export interface Canvas {
-  content: CanvasContent;
-  stored_data?: Record<string, unknown>;
-}
-
-/**
- * Full canvas response
- */
-export interface CanvasResponse {
-  canvas: Canvas;
-  card_creation_options?: CardCreationOptions;
-}
-
-/**
- * Configure response for completing card creation flow
- * Results become card_creation_options in the initialize flow
- * @see https://developers.intercom.com/docs/canvas-kit#configure-flow
- */
-export interface ConfigureResponse {
-  results: CardCreationOptions;
-}
+/** @deprecated Use IntercomCustomer instead */
+export type IntercomUser = IntercomCustomer;

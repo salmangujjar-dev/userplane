@@ -6,6 +6,7 @@
  * 2. Workspace integration flow: Connects to existing workspace (workspaceId in state)
  */
 
+import type { CacheService } from '@workspace/cache';
 import {
   createProviderMeta,
   createProviderToken,
@@ -34,6 +35,7 @@ export interface IntercomServiceDeps {
   integrationRepo: IntegrationRepository;
   provisionerService: ProvisionerService;
   inviteService: InviteService;
+  cacheService: CacheService;
 }
 
 type WorkspaceCreationResult =
@@ -385,6 +387,11 @@ export class IntercomService {
       providerMeta: createProviderMeta('intercom', { region: region as IntercomRegion }),
     });
 
+    // 8. Warm cache for future lookups
+    await this.deps.cacheService.setIntegrationByProviderWorkspace('intercom', me.app.id_code, {
+      workspaceId,
+    });
+
     return {
       connected: true,
       providerWorkspaceId: me.app.id_code,
@@ -420,11 +427,25 @@ export class IntercomService {
    * Returns true if disconnected, throws if not found
    */
   async disconnectIntegration(workspaceId: string): Promise<boolean> {
+    // Get integration first to retrieve providerWorkspaceId for cache invalidation
+    const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
+      workspaceId,
+      'intercom'
+    );
+
+    if (!integration) {
+      throw workspaceError.INTEGRATION_NOT_FOUND();
+    }
+
+    // Delete the integration
     const deleted = await this.deps.integrationRepo.delete(workspaceId, 'intercom');
 
     if (!deleted) {
       throw workspaceError.INTEGRATION_NOT_FOUND();
     }
+
+    // Invalidate cache to prevent stale lookups
+    await this.deps.cacheService.invalidateIntegration('intercom', integration.providerWorkspaceId);
 
     return true;
   }
