@@ -7,7 +7,7 @@ import {
   type UserResource,
 } from '@workspace/auth/permissions-client';
 
-import { useSession } from './use-session';
+import { useSession } from '@/features/auth';
 
 /**
  * Hook to check if the current user has specific permissions

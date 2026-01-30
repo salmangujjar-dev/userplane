@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 
 import { DEFAULT_SEARCHABLE_LINKS_PER_PAGE } from '@/constants/pagination';
+import { useWorkspaceLinks } from '@/features/links';
+import { type SearchLink, useWorkspaceSearch } from '@/features/workspace';
 
 import { useDebouncedValue } from './use-debounced-value';
-import { useWorkspaceLinks } from './use-workspace-links';
-import { type SearchLink, useWorkspaceSearch } from './use-workspace-search';
 
 /**
  * Hook that combines initial link list with server-side search
