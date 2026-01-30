@@ -34,7 +34,7 @@ interface RecordingPreviewProps {
   recordingId: string;
   onClick?: () => void;
   createdBy: string;
-  createdAt: string | Date;
+  createdAt: Date;
   durationMs: number | null;
   thumbnailUrl: string | null;
 }
@@ -60,16 +60,8 @@ export function RecordingPreview({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - dateObj.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 7) {
-      return dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-    }
-    return dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
   };
 
   const displayDuration = formatDuration(durationMs);

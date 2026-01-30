@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DomainUrlSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -24,6 +23,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { URLInput } from '@/components/url-input';
+import { DomainUrlSchema } from '@/schemas';
 
 interface EditDomainModalProps {
   open: boolean;

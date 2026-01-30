@@ -1,6 +1,5 @@
 'use client';
 
-import { WORKSPACE_MEMBERS_PAGINATION } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -23,6 +22,7 @@ import { TeamMemberActionModal } from '@/components/modals/team-member-action-mo
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { SectionError } from '@/components/shared/section-error';
 import { TeamSectionSkeleton } from '@/components/skeleton';
+import { WORKSPACE_MEMBERS_PAGINATION } from '@/constants';
 import {
   useRemoveMember,
   useUpdateMemberRole,

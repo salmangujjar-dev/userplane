@@ -1,10 +1,5 @@
 'use client';
 
-import type {
-  NotificationFieldMetadata,
-  WorkspaceNotificationPreferences,
-} from '@workspace/contract';
-import { getVisibleNotificationFields } from '@workspace/contract';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { useCallback, useMemo, useState } from 'react';
@@ -17,7 +12,9 @@ import {
   useWorkspaceRole,
 } from '@/features/workspace';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
+import { getVisibleNotificationFields } from '@/lib/notifications';
 import { useWorkspaceId } from '@/stores/workspace';
+import type { NotificationFieldMetadata, WorkspaceNotificationPreferences } from '@/types';
 
 function NotificationItem({
   field,

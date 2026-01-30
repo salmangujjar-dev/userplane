@@ -1,12 +1,5 @@
 'use client';
 
-import {
-  ADMIN_FILTER_STATUS_OPTIONS,
-  ADMIN_PROJECT_SORT_OPTIONS,
-  ADMIN_WORKSPACE_PROJECTS_PAGINATION,
-  type AdminNotifyDuration,
-  SORT_DIRECTION_OPTIONS,
-} from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -43,10 +36,17 @@ import { AdminDeactivateProjectModal } from '@/components/modals/admin-deactivat
 import { AdminRestoreProjectModal } from '@/components/modals/admin-restore-project-modal';
 import { SectionError } from '@/components/shared/section-error';
 import {
+  ADMIN_FILTER_STATUS_OPTIONS,
+  ADMIN_PROJECT_SORT_OPTIONS,
+  ADMIN_WORKSPACE_PROJECTS_PAGINATION,
+  SORT_DIRECTION_OPTIONS,
+} from '@/constants/admin';
+import {
   useAdminDeactivateProject,
   useAdminRestoreProject,
   useAdminSearchWorkspaceProjects,
 } from '@/features/admin';
+import type { AdminNotifyDuration } from '@/types';
 
 const ITEMS_PER_PAGE = ADMIN_WORKSPACE_PROJECTS_PAGINATION.DEFAULT_PER_PAGE;
 
@@ -287,11 +287,11 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
                         {project.recordingCount === 1 ? 'recording' : 'recordings'}
                       </span>
                       <span>•</span>
-                      <span>Created {new Date(project.createdAt).toLocaleDateString()}</span>
+                      <span>Created {project.createdAt.toLocaleDateString()}</span>
                       {project.deletedAt && (
                         <>
                           <span>•</span>
-                          <span>Deleted {new Date(project.deletedAt).toLocaleDateString()}</span>
+                          <span>Deleted {project.deletedAt.toLocaleDateString()}</span>
                         </>
                       )}
                     </div>

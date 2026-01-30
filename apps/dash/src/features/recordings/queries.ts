@@ -2,44 +2,21 @@ import { useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/client';
 import { DEFAULT_RECORDINGS_PER_PAGE } from '@/constants/pagination';
-import { handleSafeResult, type SafeResult } from '@/lib/errors';
+import { handleSafeResult } from '@/lib/errors';
 import { useWorkspaceId } from '@/stores/workspace';
+import type { Recording, RecordingCreator, RecordingsData, SortDirection } from '@/types';
 
 import { recordingKeys } from './query-keys';
 
 // Re-export types for consumers
-export interface RecordingCreator {
-  workspaceMemberId: string;
-  name: string;
-}
-
-export interface Recording {
-  recordingId: string;
-  recordingThumbnail: string | null;
-  recordingDurationMs: number | null;
-  createdAt: string | Date;
-  creator: RecordingCreator;
-}
+export type { Recording, RecordingCreator, RecordingsData };
 
 export interface RecordingsFilters {
   createdBy?: string[];
   projectId?: string[];
   linkId?: string[];
   sortBy?: 'created_at' | 'recording_duration';
-  sortDirection?: 'asc' | 'desc';
-}
-
-export interface PaginationMeta {
-  page: number;
-  perPage: number;
-  total: number;
-  totalPages: number;
-}
-
-export interface RecordingsData {
-  workspaceId: string;
-  recordings: Recording[];
-  pagination: PaginationMeta;
+  sortDirection?: SortDirection;
 }
 
 /**
@@ -77,7 +54,7 @@ export function useWorkspaceRecordings(options?: {
         direction: filters.sortDirection,
       },
     }),
-    queryFn: async (): Promise<SafeResult<RecordingsData>> => {
+    queryFn: async () => {
       if (!workspaceId) {
         throw new Error('No workspace ID available');
       }

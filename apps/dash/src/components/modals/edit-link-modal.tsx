@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { URLSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -32,6 +31,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { LinkReferenceInput } from '@/components/link-reference-input';
+import { URLSchema } from '@/schemas';
 
 interface EditLinkModalProps {
   open: boolean;

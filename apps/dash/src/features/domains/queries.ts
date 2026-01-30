@@ -1,16 +1,18 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
+import { z } from 'zod';
 
 import { apiClient } from '@/client';
 import { DEFAULT_DOMAINS_PER_PAGE } from '@/constants/pagination';
 import { handleSafeResult } from '@/lib/errors';
+import { DomainSortFieldSchema } from '@/schemas';
 import { useWorkspaceId } from '@/stores/workspace';
+import type { DomainStatus as DomainStatusEnum, SortDirection } from '@/types';
 
 import { domainKeys } from './query-keys';
 
-// Re-export types for consumers
-export type DomainSortField = 'created_at' | 'domain_url';
-export type SortDirection = 'asc' | 'desc';
+// Types inferred from contract schemas
+export type DomainSortField = z.infer<typeof DomainSortFieldSchema>;
 
 /**
  * Hook to fetch domains for the current workspace
@@ -63,12 +65,10 @@ export function useWorkspaceDomains(options?: {
 // DOMAIN STATUS POLLING
 // ============================================
 
-export type DomainVerificationStatus = 'pending' | 'verified' | 'failed';
-
 export interface DomainStatus {
   domainId: string;
   domainUrl: string;
-  domainVerificationStatus: DomainVerificationStatus;
+  domainVerificationStatus: DomainStatusEnum;
   domainVerificationMethod: string | null;
   domainVerificationToken: string | null;
   domainSslStatus: string | null;

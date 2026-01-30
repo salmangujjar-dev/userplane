@@ -1,7 +1,5 @@
 'use client';
 
-import { MAX_EMAIL_DOMAINS } from '@workspace/contract';
-import { WORKSPACE_INVITE_POLICY_OPTIONS } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import {
@@ -18,14 +16,15 @@ import { useEffect, useState } from 'react';
 import { AddEmailDomainModal } from '@/components/modals/add-email-domain-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import { SectionError } from '@/components/shared/section-error';
+import { MAX_EMAIL_DOMAINS, WORKSPACE_INVITE_POLICY_OPTIONS } from '@/constants';
 import {
   useCanEditWorkspace,
   useInvitePolicy,
   useRotateInvite,
   useUpdateInvitePolicy,
-  type WorkspaceInvitePolicy,
 } from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
+import type { WorkspaceInvitePolicy } from '@/types';
 
 const POLICY_OPTIONS = [
   { ...WORKSPACE_INVITE_POLICY_OPTIONS[0]!, icon: Lock },

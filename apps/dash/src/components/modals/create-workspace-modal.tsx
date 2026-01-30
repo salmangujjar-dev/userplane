@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { WorkspaceNameSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -16,6 +15,8 @@ import { Building2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+import { WorkspaceNameSchema } from '@/schemas';
 
 interface CreateWorkspaceModalProps {
   open: boolean;

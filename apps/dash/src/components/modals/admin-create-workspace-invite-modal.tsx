@@ -1,13 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  ADMIN_NOTIFY_DURATION_OPTIONS,
-  ADMIN_NOTIFY_DURATION_VALUES,
-  type AdminNotifyDuration,
-  DomainUrlSchema,
-  EmailSchema,
-} from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -33,7 +26,10 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { URLInput } from '@/components/url-input';
-import type { AdminWorkspaceCreateInviteResponse } from '@/features/admin';
+import { ADMIN_NOTIFY_DURATION_OPTIONS, ADMIN_NOTIFY_DURATION_VALUES } from '@/constants/admin';
+import { DomainUrlSchema, EmailSchema } from '@/schemas';
+import type { AdminNotifyDuration } from '@/types';
+import type { AdminCreateWorkspaceInviteData } from '@/types';
 
 interface AdminCreateWorkspaceInviteModalProps {
   open: boolean;
@@ -45,7 +41,7 @@ interface AdminCreateWorkspaceInviteModalProps {
 interface AdminCreateWorkspaceInviteSuccessModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  result: AdminWorkspaceCreateInviteResponse | null;
+  result: AdminCreateWorkspaceInviteData | null;
 }
 
 const createWorkspaceInviteFormSchema = z

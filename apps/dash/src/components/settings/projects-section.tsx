@@ -1,6 +1,5 @@
 'use client';
 
-import { PROJECT_PAGINATION } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -40,9 +39,9 @@ import { CreateProjectModal } from '@/components/modals/create-project-modal';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { EditProjectModal } from '@/components/modals/edit-project-modal';
 import { SectionError } from '@/components/shared/section-error';
+import { PROJECT_PAGINATION } from '@/constants';
 import {
   type ProjectSortField,
-  type SortDirection,
   useCreateProject,
   useDeleteProject,
   useUpdateProject,
@@ -50,6 +49,7 @@ import {
 } from '@/features/projects';
 import { useWorkspaceRole } from '@/features/workspace';
 import { useWorkspaceStore } from '@/stores/workspace';
+import type { SortDirection } from '@/types';
 
 const ITEMS_PER_PAGE = PROJECT_PAGINATION.DEFAULT_PER_PAGE;
 

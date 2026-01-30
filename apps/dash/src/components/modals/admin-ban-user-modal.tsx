@@ -1,6 +1,5 @@
 'use client';
 
-import type { WorkspaceRole } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Checkbox } from '@workspace/ui/components/checkbox';
 import {
@@ -21,6 +20,8 @@ import {
   SelectValue,
 } from '@workspace/ui/components/select';
 import { useEffect, useState } from 'react';
+
+import type { WorkspaceRole } from '@/types';
 
 interface User {
   id: string;

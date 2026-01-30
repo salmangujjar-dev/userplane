@@ -1,6 +1,5 @@
 'use client';
 
-import { WORKSPACE_PAGINATION } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -25,6 +24,7 @@ import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { SectionError } from '@/components/shared/section-error';
 import { WorkspaceMembershipSkeleton } from '@/components/skeleton';
+import { WORKSPACE_PAGINATION } from '@/constants';
 import { useLeaveWorkspace, useWorkspaces } from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 
@@ -162,9 +162,7 @@ export function WorkspaceMembershipSection() {
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {joinedAt
-                            ? formatDistanceToNow(new Date(joinedAt), { addSuffix: true })
-                            : '-'}
+                          {joinedAt ? formatDistanceToNow(joinedAt, { addSuffix: true }) : '-'}
                         </span>
                       </TableCell>
                       <TableCell>

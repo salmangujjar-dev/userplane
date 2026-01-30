@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DomainUrlSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -27,6 +26,7 @@ import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
 import { DomainRecordingSettings } from '@/components/domains/domain-recording-settings';
 import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
 import { URLInput } from '@/components/url-input';
+import { DomainUrlSchema } from '@/schemas';
 import {
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
   type DomainRecordingPreferences,

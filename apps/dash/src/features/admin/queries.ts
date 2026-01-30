@@ -1,186 +1,27 @@
 'use client';
 
 import { type QueryKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { WorkspaceRole } from '@workspace/contract';
-import { ADMIN_WORKSPACE_PROJECTS_PAGINATION, type AdminNotifyDuration } from '@workspace/contract';
 import { toast } from 'sonner';
 
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
+import { ADMIN_WORKSPACE_PROJECTS_PAGINATION } from '@/constants';
 import { handleSafeResult, type SafeResult, showErrorToast } from '@/lib/errors';
+import type {
+  AdminCreateWorkspaceInviteData,
+  AdminNotifyDuration,
+  AdminRestoreProjectData,
+  AdminRestoreWorkspaceData,
+  AdminUserDetail,
+  AdminUserSession,
+  AdminUserSessionsData,
+  AdminWorkspaceCreateInviteInput,
+  AdminWorkspaceDetail,
+  BanUserInput,
+  ImpersonateUserParams,
+} from '@/types';
 
 import { adminKeys } from './query-keys';
-
-// ============================================
-// TYPES
-// ============================================
-
-export interface AdminUserListItem {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  role: string | null;
-  banned: boolean | null;
-  banReason: string | null;
-  banExpires: string | null;
-  emailVerified: boolean;
-  createdAt: string;
-  workspaceCount: number;
-}
-
-export interface AdminUserWorkspace {
-  workspaceId: string;
-  workspaceName: string;
-  workspaceRole: WorkspaceRole;
-  joinedAt: string;
-}
-
-export interface AdminUserSession {
-  id: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  createdAt: string;
-  expiresAt: string;
-  impersonatedBy: string | null;
-}
-
-export interface AdminUserDetail {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  role: string | null;
-  banned: boolean | null;
-  banReason: string | null;
-  banExpires: string | null;
-  emailVerified: boolean;
-  createdAt: string;
-  workspaceCount: number;
-}
-
-export interface AdminUsersListResponse {
-  users: AdminUserListItem[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-export interface AdminUserSessionsResponse {
-  sessions: AdminUserSession[];
-  userId: string;
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-export interface AdminUserWorkspacesResponse {
-  workspaces: AdminUserWorkspace[];
-  userId: string;
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-export interface AdminWorkspaceListItem {
-  workspaceId: string;
-  workspaceName: string;
-  createdAt: string;
-  memberCount: number;
-  projectCount: number;
-  domainCount: number;
-  linkCount: number;
-  recordingCount: number;
-  isDeleted: boolean;
-}
-
-export interface AdminWorkspaceMember {
-  userId: string;
-  userName: string;
-  userEmail: string;
-  workspaceRole: 'owner' | 'admin' | 'member';
-  joinedAt: string;
-}
-
-export interface AdminWorkspaceDetail {
-  workspaceId: string;
-  workspaceName: string;
-  createdAt: string;
-  isDeleted: boolean;
-  deletedAt: string | null;
-  memberCount: number;
-  projectCount: number;
-  domainCount: number;
-  linkCount: number;
-  recordingCount: number;
-}
-
-export interface AdminWorkspaceMembersListResponse {
-  members: AdminWorkspaceMember[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-export interface AdminWorkspaceProject {
-  projectId: string;
-  projectTitle: string;
-  isDefault: boolean;
-  isDeleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-  recordingCount: number;
-}
-
-export interface AdminWorkspaceProjectsListResponse {
-  projects: AdminWorkspaceProject[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-export interface AdminWorkspacesListResponse {
-  workspaces: AdminWorkspaceListItem[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-export interface AdminRestoreWorkspaceResponse {
-  workspace: {
-    workspaceId: string;
-    workspaceName: string;
-    isDeleted: boolean;
-    deletedAt: string | null;
-  };
-  restoredProjects: number;
-  restoredLinks: number;
-}
-
-export interface AdminRestoreProjectResponse {
-  workspaceId: string;
-  project: {
-    projectId: string;
-    projectTitle: string;
-    isDefault: boolean;
-    createdAt: string;
-    updatedAt: string;
-  };
-}
-
-export interface AdminWorkspaceCreateInviteResponse {
-  inviteUrl: string;
-  workspaceId: string;
-  workspaceUrl: string;
-}
-
-export interface BanUserInput {
-  userId: string;
-  reason: string;
-  expiresInSeconds?: number;
-  deleteWorkspacesForRoles?: WorkspaceRole[];
-}
 
 // ============================================
 // USER QUERIES
@@ -690,7 +531,7 @@ export function useAdminUnbanUser() {
 export function useAdminRevokeSession() {
   const queryClient = useQueryClient();
 
-  type SessionsQueryData = [QueryKey, SafeResult<AdminUserSessionsResponse> | undefined][];
+  type SessionsQueryData = [QueryKey, SafeResult<AdminUserSessionsData> | undefined][];
 
   return useMutation<
     SafeResult<{ sessions: AdminUserSession[]; revoked: string }>,
@@ -707,13 +548,13 @@ export function useAdminRevokeSession() {
     onMutate: async ({ sessionId, userId }) => {
       await queryClient.cancelQueries({ queryKey: adminKeys.userSessions(userId) });
 
-      const previousSessions = queryClient.getQueriesData<SafeResult<AdminUserSessionsResponse>>({
+      const previousSessions = queryClient.getQueriesData<SafeResult<AdminUserSessionsData>>({
         queryKey: adminKeys.userSessions(userId),
       });
 
-      queryClient.setQueriesData<SafeResult<AdminUserSessionsResponse>>(
+      queryClient.setQueriesData<SafeResult<AdminUserSessionsData>>(
         { queryKey: adminKeys.userSessions(userId) },
-        (old: SafeResult<AdminUserSessionsResponse> | undefined) => {
+        (old: SafeResult<AdminUserSessionsData> | undefined) => {
           if (!old?.success) return old;
           return {
             ...old,
@@ -757,10 +598,10 @@ export function useAdminRevokeSession() {
 export function useAdminRevokeAllSessions() {
   const queryClient = useQueryClient();
 
-  type SessionsQueryData = [QueryKey, SafeResult<AdminUserSessionsResponse> | undefined][];
+  type SessionsQueryData = [QueryKey, SafeResult<AdminUserSessionsData> | undefined][];
 
   return useMutation<
-    SafeResult<AdminUserSessionsResponse>,
+    SafeResult<AdminUserSessionsData>,
     Error,
     { userId: string },
     { previousSessions: SessionsQueryData }
@@ -774,13 +615,13 @@ export function useAdminRevokeAllSessions() {
     onMutate: async ({ userId }) => {
       await queryClient.cancelQueries({ queryKey: adminKeys.userSessions(userId) });
 
-      const previousSessions = queryClient.getQueriesData<SafeResult<AdminUserSessionsResponse>>({
+      const previousSessions = queryClient.getQueriesData<SafeResult<AdminUserSessionsData>>({
         queryKey: adminKeys.userSessions(userId),
       });
 
-      queryClient.setQueriesData<SafeResult<AdminUserSessionsResponse>>(
+      queryClient.setQueriesData<SafeResult<AdminUserSessionsData>>(
         { queryKey: adminKeys.userSessions(userId) },
-        (old: SafeResult<AdminUserSessionsResponse> | undefined) => {
+        (old: SafeResult<AdminUserSessionsData> | undefined) => {
           if (!old?.success) return old;
           return {
             ...old,
@@ -892,7 +733,7 @@ export function useAdminRestoreWorkspace() {
   const queryClient = useQueryClient();
 
   return useMutation<
-    SafeResult<AdminRestoreWorkspaceResponse>,
+    SafeResult<AdminRestoreWorkspaceData>,
     Error,
     { workspaceId: string; notify?: AdminNotifyDuration },
     { previousWorkspaceDetail: SafeResult<AdminWorkspaceDetail> | undefined }
@@ -980,15 +821,9 @@ export function useAdminResetInviteToken() {
   });
 }
 
-interface AdminWorkspaceCreateInviteInput {
-  workspaceUrl: string;
-  notify?: 'never' | 'immediate' | '5m' | '15m' | '30m' | '60m';
-  email?: string;
-}
-
 export function useAdminCreateWorkspaceInvite() {
   return useMutation<
-    SafeResult<AdminWorkspaceCreateInviteResponse>,
+    SafeResult<AdminCreateWorkspaceInviteData>,
     Error,
     AdminWorkspaceCreateInviteInput
   >({
@@ -1063,7 +898,7 @@ export function useAdminRestoreProject(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation<
-    SafeResult<AdminRestoreProjectResponse>,
+    SafeResult<AdminRestoreProjectData>,
     Error,
     { projectId: string; notify?: AdminNotifyDuration }
   >({
@@ -1098,11 +933,6 @@ export function useAdminRestoreProject(workspaceId: string) {
 // ============================================
 // IMPERSONATION
 // ============================================
-
-interface ImpersonateUserParams {
-  userId: string;
-  userName?: string;
-}
 
 /**
  * Hook for impersonating users (admin only)

@@ -29,7 +29,7 @@ interface UserCardProps {
   role: string | null;
   workspaceCount: number;
   banned: boolean;
-  banExpires: string | null;
+  banExpires: Date | null;
   isSelected?: boolean;
   onClick?: () => void;
   onImpersonate?: () => void;
@@ -40,9 +40,9 @@ interface UserCardProps {
   isCurrentUser?: boolean;
 }
 
-function isBanExpired(banExpires: string | null): boolean {
+function isBanExpired(banExpires: Date | null): boolean {
   if (!banExpires) return false;
-  return new Date(banExpires) < new Date();
+  return banExpires < new Date();
 }
 
 export function UserCard({

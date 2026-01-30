@@ -1,6 +1,5 @@
 'use client';
 
-import { WORKSPACE_ROLE_OPTIONS } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -11,6 +10,8 @@ import {
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
 import { useEffect, useState } from 'react';
+
+import { WORKSPACE_ROLE_OPTIONS } from '@/constants';
 
 type ActionType = 'remove' | 'changeRole';
 type Role = 'owner' | 'admin' | 'member';

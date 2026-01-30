@@ -3,28 +3,9 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { authClient } from '@/client/auth';
+import type { SessionData } from '@/types';
 
 import { authKeys } from './query-keys';
-
-interface Session {
-  id: string;
-  userId: string;
-  expiresAt: Date;
-  impersonatedBy?: string;
-}
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  image?: string | null;
-  role?: string;
-}
-
-interface SessionData {
-  session: Session;
-  user: User;
-}
 
 /**
  * Hook to access the current session data with admin and impersonation status.
@@ -91,6 +72,3 @@ export function useSession() {
     refetch,
   };
 }
-
-// Re-export types
-export type { Session, SessionData, User };

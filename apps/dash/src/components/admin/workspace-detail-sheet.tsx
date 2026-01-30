@@ -38,8 +38,8 @@ import {
 } from 'lucide-react';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import type { AdminWorkspaceDetail, AdminWorkspaceMember } from '@/features/admin';
 import { usePermissions } from '@/hooks/use-permissions';
+import type { AdminWorkspaceDetail, AdminWorkspaceMember } from '@/types';
 
 interface WorkspaceDetailSheetProps {
   open: boolean;

@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { RecordingLimitStatus } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -49,6 +48,7 @@ import { useWorkspaceDomains } from '@/features/domains';
 import { useCreateLink } from '@/features/links';
 import { useWorkspaceProjects } from '@/features/projects';
 import { useWorkspaceStore } from '@/stores/workspace';
+import type { RecordingLimitStatus } from '@/types';
 
 interface CreateLinkModalProps {
   open?: boolean;

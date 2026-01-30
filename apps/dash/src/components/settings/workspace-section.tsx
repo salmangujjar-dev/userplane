@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { WorkspaceNameSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
@@ -20,6 +19,7 @@ import {
   useUpdateWorkspaceName,
   useWorkspace,
 } from '@/features/workspace';
+import { WorkspaceNameSchema } from '@/schemas';
 import { useWorkspaceId } from '@/stores/workspace';
 
 const workspaceNameFormSchema = z.object({

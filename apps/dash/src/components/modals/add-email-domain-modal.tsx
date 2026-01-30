@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { EmailDomainSchema } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -17,6 +16,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { DomainInput } from '@/components/domain-input';
+import { EmailDomainSchema } from '@/schemas';
 
 interface AddEmailDomainModalProps {
   open: boolean;

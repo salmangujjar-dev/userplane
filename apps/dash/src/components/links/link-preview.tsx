@@ -33,7 +33,7 @@ interface LinkPreviewProps {
   linkURL: string;
   title: string | null;
   createdBy: string;
-  createdAt: string | Date;
+  createdAt: Date;
   projectName: string | null;
   isReusable: boolean;
   domainUrl: string;
@@ -110,17 +110,16 @@ export function LinkPreview({
     console.log('Link provider ID:', linkProviderId);
   };
 
-  const formatDate = (date: string | Date) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const formatDate = (date: Date) => {
     const now = new Date();
-    const diff = now.getTime() - dateObj.getTime();
+    const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
     if (days === 0) return 'Today';
     if (days === 1) return 'Yesterday';
     if (days < 7) return `${days} days ago`;
     if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
-    return dateObj.toLocaleDateString();
+    return date.toLocaleDateString();
   };
 
   const extractDomain = (url: string): string => {

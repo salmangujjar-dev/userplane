@@ -1,11 +1,11 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CacheType } from '@workspace/contract';
 import { toast } from 'sonner';
 
 import { apiClient } from '@/client';
 import { handleUnknownError } from '@/lib/errors';
+import type { CacheType } from '@/types';
 
 interface ClearServerCacheInput {
   workspaceId: string;

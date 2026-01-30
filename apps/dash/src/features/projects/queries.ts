@@ -1,24 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import type { ProjectRestoreInfoData } from '@workspace/contract';
+import { z } from 'zod';
 
 import { apiClient } from '@/client';
 import { DEFAULT_PROJECTS_PER_PAGE } from '@/constants/pagination';
 import { handleSafeResult } from '@/lib/errors';
+import { ProjectItemSchema, ProjectSortFieldSchema } from '@/schemas';
 import { useWorkspaceId } from '@/stores/workspace';
+import type { SortDirection } from '@/types';
 
 import { projectKeys } from './query-keys';
 
-// Re-export types for consumers
-export interface Project {
-  projectId: string;
-  projectTitle: string;
-  isDefault: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export type ProjectSortField = 'created_at' | 'project_title';
-export type SortDirection = 'asc' | 'desc';
+// Types inferred from contract schemas
+export type Project = z.infer<typeof ProjectItemSchema>;
+export type ProjectSortField = z.infer<typeof ProjectSortFieldSchema>;
 
 /**
  * Hook to fetch projects for the current workspace
@@ -112,6 +106,3 @@ export function useProjectRestoreInfo(workspaceId: string | null, projectId: str
     retry: false,
   });
 }
-
-// Re-export types from contract for convenience
-export type { ProjectRestoreInfoData };

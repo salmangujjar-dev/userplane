@@ -1,4 +1,4 @@
-import type { LinkProviderType, LinkType } from '@workspace/contract';
+import type { LinkProviderType, LinkType } from '@/types';
 
 /**
  * Query key factory for link-related queries
