@@ -5,6 +5,8 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
+import { canvasImages } from './urls';
+
 export interface SuccessCanvasOptions {
   linkUrl: string;
   linkTitle?: string;
@@ -14,22 +16,22 @@ export interface SuccessCanvasOptions {
 /**
  * Build the success canvas after link creation
  * Contains confirmation message and option to create another link
+ * Features centered success checkmark and clear confirmation
  */
 export function buildSuccessCanvas(options: SuccessCanvasOptions): Canvas {
+  const displayMessage =
+    options.message || 'Good to go! Your recording link is live and ready to use.';
+
   return {
     content: {
       components: [
         {
-          type: 'text',
-          id: 'header',
-          text: 'Link Created',
-          style: 'header',
-        },
-        {
-          type: 'text',
-          id: 'description',
-          text: options.message || 'The recording link has been sent to the customer.',
-          style: 'paragraph',
+          type: 'image',
+          id: 'icon',
+          url: canvasImages.successLinkCreated,
+          align: 'center',
+          width: 50,
+          height: 50,
         },
         {
           type: 'spacer',
@@ -37,9 +39,20 @@ export function buildSuccessCanvas(options: SuccessCanvasOptions): Canvas {
         },
         {
           type: 'text',
-          id: 'link_title',
-          text: options.linkTitle || 'Recording Link',
+          id: 'header',
+          text: '*Recording link created*',
+          align: 'center',
+        },
+        {
+          type: 'spacer',
+          size: 's',
+        },
+        {
+          type: 'text',
+          id: 'description',
+          text: displayMessage,
           style: 'muted',
+          align: 'center',
         },
         {
           type: 'spacer',
@@ -51,10 +64,6 @@ export function buildSuccessCanvas(options: SuccessCanvasOptions): Canvas {
           label: 'Create another link',
           style: 'secondary',
           action: { type: 'submit' },
-        },
-        {
-          type: 'spacer',
-          size: 's',
         },
         {
           type: 'button',

@@ -5,6 +5,8 @@
 
 import type { Canvas, DropdownOption } from '@/api/types/intercom-canvas';
 
+import { canvasImages } from './urls';
+
 export interface ProjectOption {
   id: string;
   title: string;
@@ -66,16 +68,33 @@ export function buildLinkCreatorCanvas(options: LinkCreatorCanvasOptions): Canva
     content: {
       components: [
         {
+          type: 'image',
+          id: 'logo',
+          url: canvasImages.logo,
+          align: 'center',
+          width: 50,
+          height: 50,
+        },
+        {
+          type: 'spacer',
+          size: 'm',
+        },
+        {
           type: 'text',
           id: 'header',
-          text: 'Create recording link',
-          style: 'header',
+          text: '*Create link*',
+          align: 'center',
+        },
+        {
+          type: 'spacer',
+          size: 'm',
         },
         {
           type: 'text',
           id: 'description',
-          text: 'Select a project and domain for the recording',
+          text: 'Pick a project and domain you want to use for this recording link',
           style: 'muted',
+          align: 'left',
         },
         {
           type: 'spacer',
@@ -90,7 +109,7 @@ export function buildLinkCreatorCanvas(options: LinkCreatorCanvasOptions): Canva
         },
         {
           type: 'spacer',
-          size: 's',
+          size: 'm',
         },
         {
           type: 'dropdown',
@@ -101,7 +120,7 @@ export function buildLinkCreatorCanvas(options: LinkCreatorCanvasOptions): Canva
         },
         {
           type: 'spacer',
-          size: 's',
+          size: 'm',
         },
         {
           type: 'input',
@@ -112,7 +131,7 @@ export function buildLinkCreatorCanvas(options: LinkCreatorCanvasOptions): Canva
         },
         {
           type: 'spacer',
-          size: 'm',
+          size: 'l',
         },
         {
           type: 'button',
@@ -120,10 +139,6 @@ export function buildLinkCreatorCanvas(options: LinkCreatorCanvasOptions): Canva
           label: 'Create Link',
           style: 'primary',
           action: { type: 'submit' },
-        },
-        {
-          type: 'spacer',
-          size: 's',
         },
         {
           type: 'button',

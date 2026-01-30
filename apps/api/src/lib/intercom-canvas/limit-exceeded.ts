@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { intercomCanvasUrls } from './urls';
+import { canvasImages, intercomCanvasUrls } from './urls';
 
 export interface LimitExceededCanvasOptions {
   workspaceId: string;
@@ -15,28 +15,35 @@ export interface LimitExceededCanvasOptions {
 /**
  * Build the limit exceeded canvas
  * Shown when workspace has exceeded plan limits
+ * Features centered upgrade icon and clear upgrade path
  */
 export function buildLimitExceededCanvas(options: LimitExceededCanvasOptions): Canvas {
   const upgradeUrl = intercomCanvasUrls.upgradeWorkspaceURL(options.workspaceId);
   const limitDescription =
     options.limitType === 'links'
-      ? "You've reached the maximum number of recording links for your plan."
-      : "You've reached the maximum number of recordings for your plan.";
+      ? "You've reached the maximum number of recording links for your workspace."
+      : "You've reached the maximum number of recordings for your workspace.";
 
   return {
     content: {
       components: [
         {
-          type: 'text',
-          id: 'header',
-          text: 'Limit Reached',
-          style: 'header',
+          type: 'image',
+          id: 'icon',
+          url: canvasImages.limitExceededUpgrade,
+          align: 'center',
+          width: 50,
+          height: 50,
+        },
+        {
+          type: 'spacer',
+          size: 'm',
         },
         {
           type: 'text',
-          id: 'description',
-          text: limitDescription,
-          style: 'paragraph',
+          id: 'header',
+          text: '*Limit Reached*',
+          align: 'center',
         },
         {
           type: 'spacer',
@@ -44,9 +51,21 @@ export function buildLimitExceededCanvas(options: LimitExceededCanvasOptions): C
         },
         {
           type: 'text',
-          id: 'upgrade_prompt',
-          text: 'Upgrade your plan to continue creating recording links.',
+          id: 'description',
+          text: limitDescription,
           style: 'muted',
+          align: 'center',
+        },
+        {
+          type: 'spacer',
+          size: 'xs',
+        },
+        {
+          type: 'text',
+          id: 'upgrade_prompt',
+          text: 'Upgrade your workspace to continue creating recording links.',
+          style: 'muted',
+          align: 'center',
         },
         {
           type: 'spacer',
@@ -55,16 +74,12 @@ export function buildLimitExceededCanvas(options: LimitExceededCanvasOptions): C
         {
           type: 'button',
           id: 'upgrade',
-          label: 'Upgrade to Pro',
+          label: 'Upgrade Workspace',
           style: 'primary',
           action: {
             type: 'url',
             url: upgradeUrl,
           },
-        },
-        {
-          type: 'spacer',
-          size: 's',
         },
         {
           type: 'button',

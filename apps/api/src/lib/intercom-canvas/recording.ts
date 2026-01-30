@@ -6,6 +6,7 @@
 import type { Canvas } from '@/api/types/intercom-canvas';
 
 import { DEFAULT_RECORDING_MESSAGE } from './link-creator';
+import { canvasImages } from './urls';
 
 /**
  * Default footer message for the recording canvas
@@ -23,6 +24,7 @@ export interface RecordingCanvasOptions {
 /**
  * Build the recording canvas shown to customers
  * Contains a button to open the recording interface
+ * Features centered logo and clean layout
  */
 export function buildRecordingCanvas(options: RecordingCanvasOptions): Canvas {
   const message = options.customMessage || DEFAULT_RECORDING_MESSAGE;
@@ -33,16 +35,23 @@ export function buildRecordingCanvas(options: RecordingCanvasOptions): Canvas {
     content: {
       components: [
         {
-          type: 'text',
-          id: 'header',
-          text: options.linkTitle || 'Screen Recording Request',
-          style: 'header',
+          type: 'image',
+          id: 'logo',
+          url: canvasImages.logo,
+          align: 'center',
+          width: 50,
+          height: 50,
+        },
+        {
+          type: 'spacer',
+          size: 'm',
         },
         {
           type: 'text',
           id: 'description',
           text: message,
-          style: 'paragraph',
+          style: 'muted',
+          align: 'center',
         },
         {
           type: 'spacer',
@@ -51,7 +60,7 @@ export function buildRecordingCanvas(options: RecordingCanvasOptions): Canvas {
         {
           type: 'button',
           id: 'record_screen',
-          label: 'Record your screen',
+          label: 'Record screen',
           style: 'primary',
           action: {
             type: 'url',
@@ -67,6 +76,7 @@ export function buildRecordingCanvas(options: RecordingCanvasOptions): Canvas {
           id: 'footer',
           text: footer,
           style: 'muted',
+          align: 'center',
         },
       ],
     },

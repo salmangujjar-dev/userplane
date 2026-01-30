@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { intercomCanvasUrls } from './urls';
+import { canvasImages, intercomCanvasUrls } from './urls';
 
 export interface ErrorCanvasOptions {
   title?: string;
@@ -18,20 +18,40 @@ export interface ErrorCanvasOptions {
 /**
  * Build a generic error canvas
  * Configurable title, message, and optional action button
+ * Features centered error icon and clear messaging
  */
 export function buildErrorCanvas(options: ErrorCanvasOptions): Canvas {
+  const headerText = options.title ? `*${options.title}*` : '*Something went wrong*';
+
   const components: Canvas['content']['components'] = [
+    {
+      type: 'image',
+      id: 'icon',
+      url: canvasImages.errorGeneric,
+      align: 'center',
+      width: 50,
+      height: 50,
+    },
+    {
+      type: 'spacer',
+      size: 'm',
+    },
     {
       type: 'text',
       id: 'header',
-      text: options.title || 'Something went wrong',
-      style: 'header',
+      text: headerText,
+      align: 'center',
+    },
+    {
+      type: 'spacer',
+      size: 's',
     },
     {
       type: 'text',
       id: 'description',
       text: options.message,
-      style: 'paragraph',
+      style: 'muted',
+      align: 'center',
     },
     {
       type: 'spacer',
@@ -46,10 +66,6 @@ export function buildErrorCanvas(options: ErrorCanvasOptions): Canvas {
       label: 'Try again',
       style: 'primary',
       action: { type: 'submit' },
-    });
-    components.push({
-      type: 'spacer',
-      size: 's',
     });
   }
 
@@ -66,15 +82,26 @@ export function buildErrorCanvas(options: ErrorCanvasOptions): Canvas {
     });
   }
 
-  if (!options.showRetry && !options.actionUrl) {
-    components.push({
+  // Always show Contact Support and Go Back buttons
+  components.push(
+    {
+      type: 'button',
+      id: 'contact_support',
+      label: 'Contact Support',
+      style: options.showRetry || options.actionUrl ? 'secondary' : 'primary',
+      action: {
+        type: 'url',
+        url: intercomCanvasUrls.supportEmailURL(),
+      },
+    },
+    {
       type: 'button',
       id: 'go_back',
       label: 'Go back',
       style: 'secondary',
       action: { type: 'submit' },
-    });
-  }
+    }
+  );
 
   return {
     content: {
