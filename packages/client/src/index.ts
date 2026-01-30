@@ -7,7 +7,7 @@
 
 import { createORPCClient, onError } from '@orpc/client';
 import type { ContractRouterClient } from '@orpc/contract';
-import type { JsonifiedClient } from '@orpc/openapi-client';
+import { ResponseValidationPlugin } from '@orpc/contract/plugins';
 import { OpenAPILink } from '@orpc/openapi-client/fetch';
 import { contract } from '@workspace/contract';
 
@@ -107,7 +107,7 @@ export interface ClientConfig {
  */
 export function createClient(
   config: ClientConfig
-): JsonifiedClient<ContractRouterClient<typeof contract, ClientContext>> {
+): ContractRouterClient<typeof contract, ClientContext> {
   const link = new OpenAPILink<ClientContext>(contract, {
     url: config.url,
     headers: config.headers,
@@ -125,6 +125,8 @@ export function createClient(
           });
         },
     interceptors: config.onError ? [onError(config.onError)] : [],
+    // Enable response validation to coerce dates and other types
+    plugins: [new ResponseValidationPlugin(contract)],
   });
 
   return createORPCClient(link);

@@ -266,7 +266,13 @@ export const getProjectRestoreInfoImpl = (
 
       return {
         message: 'Project restore info retrieved successfully',
-        data: result,
+        data: {
+          ...result,
+          project: {
+            ...result.project,
+            deletedAt: result.project.deletedAt ? new Date(result.project.deletedAt) : null,
+          },
+        },
       };
     });
 };
@@ -329,7 +335,7 @@ export const restoreProjectImpl = (
             createdAt: result.createdAt,
             updatedAt: result.updatedAt,
             isDeleted: result.isDeleted,
-            deletedAt: result.deletedAt,
+            deletedAt: result.deletedAt ? new Date(result.deletedAt) : null,
             deletedSince,
           },
           restoredLinks: result.restoredLinks,

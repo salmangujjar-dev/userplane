@@ -90,7 +90,7 @@ export const LinkItemSchema = z.object({
   linkProviderId: z.string().nullable(),
   linkProviderReference: z.string().nullable(),
   linkURL: z.string(),
-  createdAt: z.date(),
+  createdAt: z.coerce.date(),
   project: LinkProjectSchema,
   creator: z.object({
     workspaceMemberId: WorkspaceMemberIdSchema,
@@ -215,3 +215,9 @@ export const LinkDeleteDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   linkId: LinkIdSchema,
 });
+
+// Type exports
+export type LinkDomain = z.infer<typeof LinkDomainSchema>;
+export type LinkProject = z.infer<typeof LinkProjectSchema>;
+export type LinkItem = z.infer<typeof LinkItemSchema>;
+export type LinksListData = z.infer<typeof LinksListDataSchema>;

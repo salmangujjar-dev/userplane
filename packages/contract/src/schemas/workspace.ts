@@ -213,7 +213,7 @@ export function getVisibleNotificationFields(
 export const WorkspaceMembershipSchema = z.object({
   workspaceMemberId: WorkspaceMemberIdSchema,
   workspaceRole: WorkspaceRoleSchema,
-  workspaceJoinedAt: z.date(),
+  workspaceJoinedAt: z.coerce.date(),
 });
 
 /**
@@ -222,8 +222,8 @@ export const WorkspaceMembershipSchema = z.object({
 export const WorkspaceItemSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   workspaceName: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
   workspaceMembership: WorkspaceMembershipSchema.optional(),
 });
 
@@ -285,8 +285,8 @@ export const WorkspaceByIdDataSchema = z.object({
   workspace: z.object({
     workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
   }),
 });
 
@@ -388,9 +388,10 @@ export const WorkspacePreferencesUpdateDataSchema = z.object({
 });
 
 /**
- * Team member
+ * Workspace member
+ * Represents a member of a workspace with their role
  */
-export const TeamMemberSchema = z.object({
+export const WorkspaceMemberSchema = z.object({
   workspaceMemberId: WorkspaceMemberIdSchema,
   memberName: z.string(),
   memberEmail: z.string().email(),
@@ -421,7 +422,7 @@ export const WorkspaceTeamQuerySchema = z.object({
  */
 export const WorkspaceTeamDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
-  workspaceMembers: z.array(TeamMemberSchema),
+  workspaceMembers: z.array(WorkspaceMemberSchema),
   pagination: PaginationMetaSchema,
 });
 
@@ -546,8 +547,8 @@ export const DomainItemSchema = z.object({
   domainId: DomainIdSchema,
   domainUrl: z.string(),
   domainStatus: DomainStatusSchema,
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
 });
 
 /**
@@ -609,8 +610,8 @@ export const DomainByIdDataSchema = z.object({
     recordingCaptureClientAction: z.boolean(),
     recordingCaptureServerLog: z.boolean(),
     recordingCaptureNetworkLog: z.boolean(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
   }),
 });
 
@@ -795,7 +796,7 @@ export const WorkspaceRestoreInfoDataSchema = z.object({
     workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
     isDeleted: z.boolean(),
-    deletedAt: z.string().nullable(),
+    deletedAt: z.coerce.date().nullable(),
     deletedSince: z.number().nullable(),
   }),
   projectsToRestore: z.number().int().nonnegative(),
@@ -827,7 +828,7 @@ export const WorkspaceRestoreDataSchema = z.object({
     workspaceId: WorkspaceIdSchema,
     workspaceName: z.string(),
     isDeleted: z.boolean(),
-    deletedAt: z.date().nullable(),
+    deletedAt: z.coerce.date().nullable(),
     deletedSince: z.number().nullable(),
   }),
   restoredProjects: z.number().int().nonnegative(),
@@ -840,6 +841,16 @@ export const WorkspaceRestoreDataSchema = z.object({
  * Type inference from WorkspaceRestoreDataSchema
  */
 export type WorkspaceRestoreData = z.infer<typeof WorkspaceRestoreDataSchema>;
+
+/**
+ * Type inference from WorkspaceMemberSchema
+ */
+export type WorkspaceMember = z.infer<typeof WorkspaceMemberSchema>;
+
+/**
+ * Type inference from WorkspaceTeamDataSchema
+ */
+export type WorkspaceTeamData = z.infer<typeof WorkspaceTeamDataSchema>;
 
 /**
  * Workspace search query parameters (detailed mode)
@@ -1166,7 +1177,7 @@ export const WorkspaceStatusDataSchema = z.object({
 export const IntegrationStatusSchema = z.object({
   connected: z.boolean(),
   providerWorkspaceId: z.string().nullable(),
-  connectedAt: z.date().nullable(),
+  connectedAt: z.coerce.date().nullable(),
 });
 
 /**
@@ -1243,3 +1254,22 @@ export const DeleteIntercomIntegrationDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   disconnected: z.literal(true),
 });
+
+// Additional type exports
+export type WorkspaceItem = z.infer<typeof WorkspaceItemSchema>;
+export type WorkspacesListData = z.infer<typeof WorkspacesListDataSchema>;
+export type WorkspacePreferences = z.infer<typeof WorkspacePreferencesSchema>;
+export type WorkspacePreferencesGetData = z.infer<typeof WorkspacePreferencesGetDataSchema>;
+export type WorkspaceResourcesCountData = z.infer<typeof WorkspaceResourcesCountDataSchema>;
+export type SuggestedWorkspaceItem = z.infer<typeof SuggestedWorkspaceItemSchema>;
+export type SuggestWorkspacesData = z.infer<typeof SuggestWorkspacesDataSchema>;
+export type WorkspaceStatusData = z.infer<typeof WorkspaceStatusDataSchema>;
+export type InvitePolicyData = z.infer<typeof InvitePolicyDataSchema>;
+export type WorkspaceBillingEmailData = z.infer<typeof WorkspaceBillingEmailDataSchema>;
+export type InviteUrlData = z.infer<typeof InviteUrlDataSchema>;
+
+// Domain type exports
+export type DomainItem = z.infer<typeof DomainItemSchema>;
+export type WorkspaceDomainsData = z.infer<typeof WorkspaceDomainsDataSchema>;
+export type DomainAddData = z.infer<typeof DomainAddDataSchema>;
+export type DomainUpdateData = z.infer<typeof DomainUpdateDataSchema>;
