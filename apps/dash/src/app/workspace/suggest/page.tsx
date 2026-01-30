@@ -14,9 +14,8 @@ import { Suspense, useEffect, useState } from 'react';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { PaginationControls } from '@/components/shared/pagination-controls';
-import { useWorkspaceSuggestions } from '@/hooks/use-workspace-suggestions';
+import { useJoinWorkspace, useWorkspaceSuggestions } from '@/features/workspace';
 import { logger } from '@/logger';
-import { useJoinWorkspace } from '@/queries/use-workspace-mutations';
 
 const ITEMS_PER_PAGE = WORKSPACE_SUGGESTIONS_PAGINATION.DEFAULT_PER_PAGE;
 

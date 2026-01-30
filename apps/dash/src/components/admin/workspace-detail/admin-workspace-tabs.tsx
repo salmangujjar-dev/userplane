@@ -3,7 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import { useQueryState } from 'nuqs';
 
-import { useAdminWorkspaceDetail } from '@/hooks/use-admin-workspace-api';
+import { useAdminWorkspaceDetail } from '@/features/admin';
 import { tabParser } from '@/lib/parsers';
 
 import { MembersTab } from './members-tab';

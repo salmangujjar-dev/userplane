@@ -40,14 +40,15 @@ import { CreateProjectModal } from '@/components/modals/create-project-modal';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { EditProjectModal } from '@/components/modals/edit-project-modal';
 import { SectionError } from '@/components/shared/section-error';
-import type { ProjectSortField, SortDirection } from '@/hooks/use-workspace-projects';
-import { useWorkspaceProjects } from '@/hooks/use-workspace-projects';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import {
+  type ProjectSortField,
+  type SortDirection,
   useCreateProject,
   useDeleteProject,
   useUpdateProject,
-} from '@/queries/use-project-mutations';
+  useWorkspaceProjects,
+} from '@/features/projects';
+import { useWorkspaceRole } from '@/features/workspace';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 const ITEMS_PER_PAGE = PROJECT_PAGINATION.DEFAULT_PER_PAGE;

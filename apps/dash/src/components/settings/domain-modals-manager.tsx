@@ -8,7 +8,7 @@ import { DomainVerificationPostModal } from '@/components/modals/domain-verifica
 import { DomainVerificationPreModal } from '@/components/modals/domain-verification-pre-modal';
 import { DomainVerificationVerifyingModal } from '@/components/modals/domain-verification-verifying-modal';
 import { EditDomainModal } from '@/components/modals/edit-domain-modal';
-import { useSendDomainInstructions } from '@/hooks/use-domain-instructions';
+import { useSendDomainInstructions } from '@/features/domains';
 import type { VerificationStep } from '@/hooks/use-verification-flow';
 import {
   type ConfiguringDomain,

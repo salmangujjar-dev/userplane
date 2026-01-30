@@ -25,8 +25,7 @@ import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { SectionError } from '@/components/shared/section-error';
 import { WorkspaceMembershipSkeleton } from '@/components/skeleton';
-import { useWorkspaces } from '@/hooks/use-workspaces';
-import { useLeaveWorkspace } from '@/queries/use-workspace-mutations';
+import { useLeaveWorkspace, useWorkspaces } from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 
 export function WorkspaceMembershipSection() {

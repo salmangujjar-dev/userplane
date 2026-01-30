@@ -36,8 +36,8 @@ import {
   useAdminResetInviteToken,
   useAdminRestoreWorkspace,
   useAdminSearchWorkspaces,
-} from '@/hooks/use-admin-workspace-api';
-import { useSession } from '@/hooks/use-session';
+} from '@/features/admin';
+import { useSession } from '@/features/auth';
 import {
   adminSortDirectionParser,
   adminWorkspaceSortByParser,

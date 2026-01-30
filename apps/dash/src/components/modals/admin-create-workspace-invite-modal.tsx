@@ -33,7 +33,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { URLInput } from '@/components/url-input';
-import type { AdminWorkspaceCreateInviteResponse } from '@/hooks/use-admin-workspace-api';
+import type { AdminWorkspaceCreateInviteResponse } from '@/features/admin';
 
 interface AdminCreateWorkspaceInviteModalProps {
   open: boolean;

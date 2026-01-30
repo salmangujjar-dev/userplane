@@ -23,9 +23,12 @@ import { TeamMemberActionModal } from '@/components/modals/team-member-action-mo
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { SectionError } from '@/components/shared/section-error';
 import { TeamSectionSkeleton } from '@/components/skeleton';
-import { useWorkspaceMembers } from '@/hooks/use-workspace-members';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
-import { useRemoveMember, useUpdateMemberRole } from '@/queries/use-team-mutations';
+import {
+  useRemoveMember,
+  useUpdateMemberRole,
+  useWorkspaceMembers,
+  useWorkspaceRole,
+} from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 
 const ITEMS_PER_PAGE = WORKSPACE_MEMBERS_PAGINATION.DEFAULT_PER_PAGE;

@@ -16,17 +16,18 @@ import { useCallback, useState } from 'react';
 import { apiClient } from '@/client';
 import { SectionError } from '@/components/shared/section-error';
 import { DomainsSectionSkeleton } from '@/components/skeleton';
-import { useDomainSectionState } from '@/hooks/use-domain-section-state';
-import { useDomainStatusPolling } from '@/hooks/use-domain-status-polling';
-import type { DomainSortField, SortDirection } from '@/hooks/use-workspace-domains';
-import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
 import {
+  type DomainSortField,
+  type SortDirection,
   useCreateDomain,
   useDeleteDomain,
+  useDomainStatusPolling,
   useUpdateDomain,
   useUpdateDomainPreferences,
-} from '@/queries/use-domain-mutations';
+  useWorkspaceDomains,
+} from '@/features/domains';
+import { useWorkspaceRole } from '@/features/workspace';
+import { useDomainSectionState } from '@/hooks/use-domain-section-state';
 import { useWorkspaceId } from '@/stores/workspace';
 import type { DomainResponse } from '@/types';
 import {

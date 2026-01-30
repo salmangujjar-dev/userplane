@@ -7,11 +7,12 @@ import { CreditCard, Loader2, Mail } from 'lucide-react';
 import { useState } from 'react';
 
 import { BillingEmailVerificationModal } from '@/components/modals/billing-email-verification-modal';
-import { useWorkspaceBillingEmail } from '@/hooks/use-workspace-billing-email';
-import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
-import { useRequestBillingEmailChange } from '@/queries/use-billing-email-verification-mutations';
-import { useSubscriptionStatus } from '@/queries/use-billing-queries';
-import { useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
+import { useOpenCustomerPortal, useSubscriptionStatus } from '@/features/billing';
+import {
+  useCanEditWorkspace,
+  useRequestBillingEmailChange,
+  useWorkspaceBillingEmail,
+} from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 
 export function BillingSection() {

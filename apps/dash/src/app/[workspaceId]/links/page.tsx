@@ -12,11 +12,11 @@ import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { DinoError } from '@/components/shared/dino-error';
 import { PaginationControls } from '@/components/shared/pagination-controls';
+import { useWorkspaceDomains } from '@/features/domains';
+import { useWorkspaceLinks } from '@/features/links';
 import { usePagination } from '@/hooks/use-pagination';
 import { useSearchableMembers } from '@/hooks/use-searchable-members';
 import { useSearchableProjects } from '@/hooks/use-searchable-projects';
-import { useWorkspaceDomains } from '@/hooks/use-workspace-domains';
-import { useWorkspaceLinks } from '@/hooks/use-workspace-links';
 import { stringArrayParser } from '@/lib/parsers';
 
 export default function LinksPage() {

@@ -46,7 +46,7 @@ import {
   useAdminDeactivateProject,
   useAdminRestoreProject,
   useAdminSearchWorkspaceProjects,
-} from '@/hooks/use-admin-workspace-api';
+} from '@/features/admin';
 
 const ITEMS_PER_PAGE = ADMIN_WORKSPACE_PROJECTS_PAGINATION.DEFAULT_PER_PAGE;
 

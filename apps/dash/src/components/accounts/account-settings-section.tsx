@@ -12,8 +12,7 @@ import { z } from 'zod';
 
 import { SectionError } from '@/components/shared/section-error';
 import { AccountSettingsSectionSkeleton } from '@/components/skeleton';
-import { useAccount } from '@/hooks/use-account';
-import { useUpdateAccountName } from '@/queries/use-account-mutations';
+import { useAccount, useUpdateAccountName } from '@/features/account';
 
 const accountNameFormSchema = z.object({
   name: AccountNameSchema,

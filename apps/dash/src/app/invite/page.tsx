@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { useAcceptInvite, useValidateInvite } from '@/hooks/use-workspace-invite';
+import { useAcceptInvite, useValidateInvite } from '@/features/workspace';
 import { logger } from '@/logger';
 import { useWorkspaceStore } from '@/stores/workspace';
 

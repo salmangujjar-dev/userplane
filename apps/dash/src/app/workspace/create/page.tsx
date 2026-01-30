@@ -15,9 +15,9 @@ import { z } from 'zod';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { URLInput } from '@/components/url-input';
 import { WorkspaceCreatedSuccess } from '@/components/workspace/workspace-created-success';
-import { useAccount } from '@/hooks/use-account';
+import { useAccount } from '@/features/account';
+import { useCreateWorkspace } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { useCreateWorkspace } from '@/hooks/use-create-workspace';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 const workspaceFormSchema = z.object({

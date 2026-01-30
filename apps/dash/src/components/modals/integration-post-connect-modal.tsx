@@ -19,7 +19,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 
 import { getIntegrationConfig } from '@/constants/integration-permissions';
-import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
+import { useCanEditWorkspace } from '@/features/workspace';
 
 interface IntegrationPostConnectModalProps {
   open: boolean;

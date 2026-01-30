@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import type { AdminUserDetail, AdminUserSession, AdminUserWorkspace } from '@/hooks/use-admin-api';
+import type { AdminUserDetail, AdminUserSession, AdminUserWorkspace } from '@/features/admin';
 import { usePermissions } from '@/hooks/use-permissions';
 
 import { DetailedListSkeleton } from './components/detailed-list-skeleton';

@@ -24,7 +24,7 @@ import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import {
   useAdminWorkspaceMemberRecordingStats,
   useAdminWorkspaceRecordingStats,
-} from '@/hooks/use-admin-recording-api';
+} from '@/features/admin';
 import {
   adminRecordingStatusParser,
   adminRecordingWeeksParser,

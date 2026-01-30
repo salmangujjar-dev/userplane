@@ -14,11 +14,11 @@ import { DinoError } from '@/components/shared/dino-error';
 import { RecordingEmptyState } from '@/components/shared/empty-state';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { RecordingGridSkeleton } from '@/components/skeleton';
+import { useWorkspaceRecordings } from '@/features/recordings';
 import { usePagination } from '@/hooks/use-pagination';
 import { useSearchableLinks } from '@/hooks/use-searchable-links';
 import { useSearchableMembers } from '@/hooks/use-searchable-members';
 import { useSearchableProjects } from '@/hooks/use-searchable-projects';
-import { useWorkspaceRecordings } from '@/hooks/use-workspace-recordings';
 import { stringArrayParser } from '@/lib/parsers';
 
 export default function RecordingsPage() {

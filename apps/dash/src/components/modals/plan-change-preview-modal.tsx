@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 
 import { authClient } from '@/client/auth';
 import { env } from '@/env';
-import { useManagePlan, useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
+import { useManagePlan, useOpenCustomerPortal } from '@/features/billing';
 import { useWorkspaceId } from '@/stores/workspace';
 
 type ModalState =

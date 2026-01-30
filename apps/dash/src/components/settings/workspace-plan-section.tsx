@@ -17,12 +17,10 @@ import { BillingDetailsModal } from '@/components/modals/billing-details-modal';
 import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-modal';
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { SectionError } from '@/components/shared/section-error';
-import { useWorkspace } from '@/hooks/use-workspace';
-import { useWorkspaceRole } from '@/hooks/use-workspace-role';
+import { useOpenCustomerPortal, useSubscriptionStatus, useUsageSummary } from '@/features/billing';
+import { useWorkspace, useWorkspaceRole } from '@/features/workspace';
 import { planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
-import { useSubscriptionStatus, useUsageSummary } from '@/queries/use-billing-queries';
-import { useOpenCustomerPortal } from '@/queries/use-checkout-mutations';
 
 interface BillingActionButtonProps {
   hasPlanId: boolean;

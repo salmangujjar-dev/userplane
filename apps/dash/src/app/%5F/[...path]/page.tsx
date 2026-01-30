@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-import { useWorkspaces } from '@/hooks/use-workspaces';
+import { useWorkspaces } from '@/features/workspace';
 
 /**
  * Catch-all route that redirects /_/* paths to /{workspaceId}/*

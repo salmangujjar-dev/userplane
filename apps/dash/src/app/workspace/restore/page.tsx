@@ -13,8 +13,8 @@ import { Suspense, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { useRestoreProject, useRestoreWorkspace } from '@/hooks/use-restore';
-import { useProjectRestoreInfo, useWorkspaceRestoreInfo } from '@/hooks/use-restore-info';
+import { useProjectRestoreInfo, useRestoreProject } from '@/features/projects';
+import { useRestoreWorkspace, useWorkspaceRestoreInfo } from '@/features/workspace';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 type RestoreType = 'workspace' | 'project';

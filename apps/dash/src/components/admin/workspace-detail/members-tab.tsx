@@ -24,9 +24,7 @@ import { AdminBanUserModal } from '@/components/modals/admin-ban-user-modal';
 import { ImpersonateConfirmModal } from '@/components/modals/impersonate-confirm-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { PaginationControls } from '@/components/shared/pagination-controls';
-import { useAdminBanUser } from '@/hooks/use-admin-api';
-import { useAdminWorkspaceMembers } from '@/hooks/use-admin-workspace-api';
-import { useImpersonation } from '@/hooks/use-impersonation';
+import { useAdminBanUser, useAdminWorkspaceMembers, useImpersonation } from '@/features/admin';
 import { usePermissions } from '@/hooks/use-permissions';
 
 import type { UserToAction } from './types';

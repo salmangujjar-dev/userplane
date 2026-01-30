@@ -18,9 +18,13 @@ import { useEffect, useState } from 'react';
 import { AddEmailDomainModal } from '@/components/modals/add-email-domain-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import { SectionError } from '@/components/shared/section-error';
-import { useInvitePolicy, type WorkspaceInvitePolicy } from '@/hooks/use-invite-policy';
-import { useCanEditWorkspace } from '@/hooks/use-workspace-role';
-import { useRotateInvite, useUpdateInvitePolicy } from '@/queries/use-workspace-mutations';
+import {
+  useCanEditWorkspace,
+  useInvitePolicy,
+  useRotateInvite,
+  useUpdateInvitePolicy,
+  type WorkspaceInvitePolicy,
+} from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
 
 const POLICY_OPTIONS = [

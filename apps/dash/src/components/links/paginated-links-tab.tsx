@@ -1,6 +1,6 @@
 'use client';
 
-import type { Link } from '@/hooks/use-workspace-links';
+import type { Link } from '@/features/links';
 
 import { PaginationControls } from '../shared/pagination-controls';
 import { LinksList } from './links-list';
