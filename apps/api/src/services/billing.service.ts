@@ -25,7 +25,7 @@ export interface BillingServiceDeps {
   disputeRepo: DisputeRepository;
   refundRepo: RefundRepository;
   dodoClient: DodoPayments;
-  cacheService?: CacheService;
+  cacheService: CacheService;
 }
 
 /**
@@ -63,7 +63,7 @@ export class BillingService {
    */
   async getSubscriptionStatus(workspaceId: string) {
     // Try cache first
-    const cached = await this.deps.cacheService?.getSubscriptionStatus(workspaceId);
+    const cached = await this.deps.cacheService.getSubscriptionStatus(workspaceId);
     if (cached) {
       return cached;
     }
@@ -72,7 +72,7 @@ export class BillingService {
     const result = await this._computeSubscriptionStatus(workspaceId);
 
     // Cache the result
-    await this.deps.cacheService?.setSubscriptionStatus(workspaceId, result);
+    await this.deps.cacheService.setSubscriptionStatus(workspaceId, result);
 
     return result;
   }
@@ -136,7 +136,7 @@ export class BillingService {
    */
   async getSubscriptionAccessStatus(workspaceId: string): Promise<SubscriptionAccessStatus> {
     // Try cache first
-    const cached = await this.deps.cacheService?.getSubscriptionAccessStatus(workspaceId);
+    const cached = await this.deps.cacheService.getSubscriptionAccessStatus(workspaceId);
     if (cached) {
       return cached as SubscriptionAccessStatus;
     }
@@ -145,7 +145,7 @@ export class BillingService {
     const result = await this._computeSubscriptionAccessStatus(workspaceId);
 
     // Cache the result
-    await this.deps.cacheService?.setSubscriptionAccessStatus(workspaceId, result);
+    await this.deps.cacheService.setSubscriptionAccessStatus(workspaceId, result);
 
     return result;
   }

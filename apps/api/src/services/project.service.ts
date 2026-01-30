@@ -32,7 +32,7 @@ export interface ProjectServiceDeps {
   linkRepo: LinkRepository;
   recordingRepo: RecordingRepository;
   workspaceRepo: WorkspaceRepository;
-  cacheService?: CacheService;
+  cacheService: CacheService;
 }
 
 export class ProjectService {
@@ -276,7 +276,7 @@ export class ProjectService {
     }
 
     // Invalidate link caches after transaction commits
-    if (linkIds.length > 0 && this.deps.cacheService) {
+    if (linkIds.length > 0) {
       await this.deps.cacheService.invalidateLinksBatch(workspaceId, linkIds);
     }
 

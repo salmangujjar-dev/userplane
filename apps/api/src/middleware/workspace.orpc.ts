@@ -32,7 +32,11 @@ export function createWorkspaceMiddleware(
       }
 
       const workspace = await workspaceService.getById(workspaceId);
-      const member = await workspaceMemberService.getMember(context.user.id, workspace.workspaceId);
+      // Use cached membership lookup for fast auth checks
+      const member = await workspaceMemberService.getMembershipForAuth(
+        context.user.id,
+        workspace.workspaceId
+      );
 
       if (!member) {
         throw workspaceError.FORBIDDEN();
@@ -72,7 +76,11 @@ export function createWorkspaceRoleMiddleware(
       }
 
       const workspace = await workspaceService.getById(workspaceId);
-      const member = await workspaceMemberService.getMember(context.user.id, workspace.workspaceId);
+      // Use cached membership lookup for fast auth checks
+      const member = await workspaceMemberService.getMembershipForAuth(
+        context.user.id,
+        workspace.workspaceId
+      );
 
       if (!member) {
         throw workspaceError.FORBIDDEN();
@@ -105,6 +113,7 @@ export function createWorkspaceRoleMiddleware(
  * Workspace restore middleware
  * Similar to createWorkspaceRoleMiddleware but allows deleted workspaces
  * Used for restore endpoints where workspace may be soft-deleted
+ * Note: This does NOT use caching since it's for restore flows with deleted members
  */
 export function createWorkspaceRestoreMiddleware(
   workspaceMemberService: WorkspaceMemberService,
@@ -121,6 +130,7 @@ export function createWorkspaceRestoreMiddleware(
 
       // Skip workspace validation for deleted workspaces
       // Only check if user is a member with the required role (including soft-deleted members)
+      // Note: getMemberIncludingDeleted is not cached as it's a rare restore operation
       const member = await workspaceMemberService.getMemberIncludingDeleted(
         context.user.id,
         workspaceId

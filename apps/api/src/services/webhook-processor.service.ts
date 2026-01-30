@@ -59,7 +59,7 @@ export interface WebhookProcessorDeps {
   entitlementService: EntitlementService;
   db: DbClient;
   dodoClient?: ReturnType<typeof getDodoPaymentsClient>;
-  cacheService?: CacheService;
+  cacheService: CacheService;
 }
 
 export class WebhookProcessorService {
@@ -619,8 +619,6 @@ export class WebhookProcessorService {
    * Called after successful subscription state changes
    */
   private async invalidateBillingCache(workspaceId: string): Promise<void> {
-    if (!this.deps.cacheService) return;
-
     try {
       await this.deps.cacheService.invalidateWorkspaceBilling(workspaceId);
       console.log(`[WebhookProcessor] Invalidated billing cache for workspace: ${workspaceId}`);

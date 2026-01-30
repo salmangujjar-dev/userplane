@@ -30,7 +30,7 @@ export interface EntitlementServiceDeps {
   entitlementRepo: EntitlementRepository;
   billingService: BillingService;
   subscriptionRepo: SubscriptionRepository;
-  cacheService?: CacheService;
+  cacheService: CacheService;
 }
 
 /**
@@ -118,7 +118,7 @@ export class EntitlementService {
     });
 
     // Invalidate usage cache after provisioning
-    await this.deps.cacheService?.invalidateUsage(workspaceId);
+    await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
   /**
@@ -150,7 +150,7 @@ export class EntitlementService {
     });
 
     // Invalidate usage cache after update
-    await this.deps.cacheService?.invalidateUsage(workspaceId);
+    await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
   /**
@@ -300,7 +300,7 @@ export class EntitlementService {
     await this.deps.entitlementRepo.incrementConsumed(workspaceId, resourceType, amount, options);
 
     // Invalidate usage cache after consumption
-    await this.deps.cacheService?.invalidateUsage(workspaceId);
+    await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
   // Explicit consumption methods for each resource type
@@ -378,7 +378,7 @@ export class EntitlementService {
     await this.deps.entitlementRepo.decrementConsumed(workspaceId, 'seats', amount, options);
 
     // Invalidate usage cache after release
-    await this.deps.cacheService?.invalidateUsage(workspaceId);
+    await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
   /**
@@ -428,7 +428,7 @@ export class EntitlementService {
     }
 
     // Invalidate usage cache after applying credits
-    await this.deps.cacheService?.invalidateUsage(workspaceId);
+    await this.deps.cacheService.invalidateUsage(workspaceId);
 
     return true;
   }
@@ -440,7 +440,7 @@ export class EntitlementService {
    */
   async getUsageSummary(workspaceId: string): Promise<UsageSummary> {
     // Try cache first
-    const cached = await this.deps.cacheService?.getUsageSummary(workspaceId);
+    const cached = await this.deps.cacheService.getUsageSummary(workspaceId);
     if (cached) {
       return cached as UsageSummary;
     }
@@ -449,7 +449,7 @@ export class EntitlementService {
     const result = await this._computeUsageSummary(workspaceId);
 
     // Cache the result
-    await this.deps.cacheService?.setUsageSummary(workspaceId, result);
+    await this.deps.cacheService.setUsageSummary(workspaceId, result);
 
     return result;
   }
@@ -518,7 +518,7 @@ export class EntitlementService {
     await this.deps.entitlementRepo.resetPeriodResources(workspaceId, options);
 
     // Invalidate usage cache after reset
-    await this.deps.cacheService?.invalidateUsage(workspaceId);
+    await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
   /**

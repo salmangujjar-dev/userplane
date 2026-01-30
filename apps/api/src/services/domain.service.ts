@@ -28,7 +28,7 @@ export interface DomainServiceDeps {
   workspaceService?: WorkspaceService;
   userService?: UserService;
   linkRepo?: LinkRepository;
-  cacheService?: CacheService;
+  cacheService: CacheService;
 }
 
 export class DomainService {
@@ -62,7 +62,7 @@ export class DomainService {
       throw domainError.DOMAIN_ALREADY_EXISTS();
     }
 
-    return this.deps.domainRepo.create(
+    const domain = await this.deps.domainRepo.create(
       {
         domainId: generateDomainId(),
         workspaceId: params.workspaceId,
@@ -71,6 +71,21 @@ export class DomainService {
       },
       options
     );
+
+    // Warm domain recording preferences cache
+    if (domain) {
+      await this.deps.cacheService.setDomainRecordingPrefs(domain.domainId, {
+        workspaceId: domain.workspaceId,
+        domainStatus: domain.domainStatus,
+        recordingHideSensitive: domain.recordingHideSensitive,
+        recordingCaptureClientLog: domain.recordingCaptureClientLog,
+        recordingCaptureClientAction: domain.recordingCaptureClientAction,
+        recordingCaptureServerLog: domain.recordingCaptureServerLog,
+        recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
+      });
+    }
+
+    return domain;
   }
 
   /**
@@ -177,7 +192,7 @@ export class DomainService {
 
     // Invalidate domain recording preferences cache - O(1) operation
     // No longer need to invalidate all link caches thanks to normalized cache architecture
-    await this.deps.cacheService?.invalidateDomainRecordingPrefs(domainId);
+    await this.deps.cacheService.invalidateDomainRecordingPrefs(domainId);
 
     return updated;
   }
@@ -217,7 +232,7 @@ export class DomainService {
     }
 
     // Invalidate domain recording preferences cache - O(1) operation
-    await this.deps.cacheService?.invalidateDomainRecordingPrefs(domainId);
+    await this.deps.cacheService.invalidateDomainRecordingPrefs(domainId);
 
     return deleted;
   }
@@ -405,7 +420,7 @@ export class DomainService {
     }
 
     // Invalidate domain recording preferences cache - O(1) operation
-    await this.deps.cacheService?.invalidateDomainRecordingPrefs(domainId);
+    await this.deps.cacheService.invalidateDomainRecordingPrefs(domainId);
 
     return updated;
   }
@@ -456,7 +471,7 @@ export class DomainService {
     }
 
     // Invalidate domain recording preferences cache - O(1) operation
-    await this.deps.cacheService?.invalidateDomainRecordingPrefs(domainId);
+    await this.deps.cacheService.invalidateDomainRecordingPrefs(domainId);
 
     return updated;
   }

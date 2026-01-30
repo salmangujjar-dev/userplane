@@ -42,7 +42,7 @@ export interface WorkspaceServiceDeps {
   subscriptionRepo: SubscriptionRepository;
   integrationRepo: IntegrationRepository;
   dodoClient?: DodoPayments;
-  cacheService?: CacheService;
+  cacheService: CacheService;
 }
 
 export class WorkspaceService {
@@ -69,7 +69,7 @@ export class WorkspaceService {
     // Get default recording preferences
     const defaultPrefs = getDefaultRecordingPreferences();
 
-    return this.deps.workspaceRepo.create(
+    const workspace = await this.deps.workspaceRepo.create(
       {
         workspaceId: params.workspaceId || generateWorkspaceId(),
         workspaceName: params.workspaceName,
@@ -84,6 +84,24 @@ export class WorkspaceService {
       },
       options
     );
+
+    // Warm caches for new workspace
+    if (workspace) {
+      await Promise.all([
+        this.deps.cacheService.setWorkspaceExists(workspace.workspaceId, true),
+        this.deps.cacheService.setWorkspaceRecordingPrefs(workspace.workspaceId, {
+          recordingCustomizeLink: workspace.recordingCustomizeLink,
+          recordingCompanyName: workspace.recordingCompanyName,
+          recordingCompanyLogoPath: workspace.recordingCompanyLogoPath,
+          recordingHeader: workspace.recordingHeader,
+          recordingFootnote: workspace.recordingFootnote,
+          recordingPrimaryColor: workspace.recordingPrimaryColor,
+          recordingMaxDurationMs: workspace.recordingMaxDurationMs,
+        }),
+      ]);
+    }
+
+    return workspace;
   }
 
   /**
@@ -96,19 +114,35 @@ export class WorkspaceService {
   }
 
   /**
-   * Get workspace by ID
+   * Get workspace by ID (cached existence check)
    * Returns only basic workspace info
    * Throws WORKSPACE_GONE if soft-deleted, WORKSPACE_NOT_FOUND if not found
    */
   async getById(workspaceId: string) {
+    // Fast path: check cache for known non-existent workspaces
+    const cachedExists = await this.deps.cacheService.getWorkspaceExists(workspaceId);
+    if (cachedExists === false) {
+      throw workspaceError.WORKSPACE_NOT_FOUND();
+    }
+
     const workspace = await this.deps.workspaceRepo.findById(workspaceId);
     if (!workspace) {
       const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
       if (isSoftDeleted === true) {
+        // Cache as non-existent (deleted)
+        await this.deps.cacheService.setWorkspaceExists(workspaceId, false);
         throw workspaceError.WORKSPACE_GONE();
       }
+      // Cache as non-existent
+      await this.deps.cacheService.setWorkspaceExists(workspaceId, false);
       throw workspaceError.WORKSPACE_NOT_FOUND();
     }
+
+    // Cache as existing (only if not already cached)
+    if (cachedExists === null) {
+      await this.deps.cacheService.setWorkspaceExists(workspaceId, true);
+    }
+
     return workspace;
   }
 
@@ -328,7 +362,7 @@ export class WorkspaceService {
 
     // Invalidate workspace recording preferences cache - O(1) operation
     // No longer need to invalidate all link caches thanks to normalized cache architecture
-    await this.deps.cacheService?.invalidateWorkspaceRecordingPrefs(workspaceId);
+    await this.deps.cacheService.invalidateWorkspaceRecordingPrefs(workspaceId);
 
     return updated;
   }
@@ -434,8 +468,6 @@ export class WorkspaceService {
    * Called during workspace deletion to remove stale cache entries
    */
   private async cleanupWorkspaceCaches(workspaceId: string): Promise<void> {
-    if (!this.deps.cacheService) return;
-
     try {
       // Clear billing caches
       await this.deps.cacheService.invalidateWorkspaceBilling(workspaceId);
@@ -451,11 +483,11 @@ export class WorkspaceService {
         }
       }
 
-      // Clear all domain caches
+      // Clear all domain caches (batch operation)
       if (this.deps.domainRepo) {
         const domainIds = await this.deps.domainRepo.getDomainIdsByWorkspaceId(workspaceId);
-        for (const domainId of domainIds) {
-          await this.deps.cacheService.invalidateDomainRecordingPrefs(domainId);
+        if (domainIds.length > 0) {
+          await this.deps.cacheService.invalidateDomainRecordingPrefsBatch(domainIds);
         }
       }
 
@@ -799,11 +831,54 @@ export class WorkspaceService {
     };
 
     // Execute in provided transaction or create new one
+    let result;
     if (options?.tx) {
-      return performRestoration(options.tx);
+      result = await performRestoration(options.tx);
+    } else {
+      result = await this.deps.db.transaction(performRestoration);
     }
 
-    return this.deps.db.transaction(performRestoration);
+    // Warm caches after successful restoration
+    await this.warmWorkspaceCaches(workspaceId, result.workspace);
+
+    return result;
+  }
+
+  /**
+   * Warm caches for a workspace after restoration
+   * Called after workspace is restored to pre-populate hot caches
+   */
+  private async warmWorkspaceCaches(
+    workspaceId: string,
+    workspace: {
+      recordingCustomizeLink: boolean;
+      recordingCompanyName: string | null;
+      recordingCompanyLogoPath: string | null;
+      recordingHeader: string | null;
+      recordingFootnote: string | null;
+      recordingPrimaryColor: string | null;
+      recordingMaxDurationMs: number | null;
+    }
+  ): Promise<void> {
+    try {
+      await Promise.all([
+        // Mark workspace as existing
+        this.deps.cacheService.setWorkspaceExists(workspaceId, true),
+        // Warm recording preferences
+        this.deps.cacheService.setWorkspaceRecordingPrefs(workspaceId, {
+          recordingCustomizeLink: workspace.recordingCustomizeLink,
+          recordingCompanyName: workspace.recordingCompanyName,
+          recordingCompanyLogoPath: workspace.recordingCompanyLogoPath,
+          recordingHeader: workspace.recordingHeader,
+          recordingFootnote: workspace.recordingFootnote,
+          recordingPrimaryColor: workspace.recordingPrimaryColor,
+          recordingMaxDurationMs: workspace.recordingMaxDurationMs,
+        }),
+      ]);
+    } catch (error) {
+      // Cache warming failure shouldn't fail the restore
+      console.warn(`[WorkspaceService] Failed to warm caches for restored workspace:`, error);
+    }
   }
 
   /**
