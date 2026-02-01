@@ -230,6 +230,7 @@ export const intercomService = new IntercomService({
   provisionerService,
   inviteService,
   cacheService,
+  memberRepo: workspaceMemberRepo,
 });
 
 // Intercom Canvas service

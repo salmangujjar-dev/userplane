@@ -19,7 +19,7 @@ import type {
   LinkCore,
   WorkspaceRecordingPrefs,
 } from '@workspace/cache';
-import { domainRecordingKeys, linkKeys, workspaceRecordingKeys } from '@workspace/cache';
+import { linkKeys, workspaceRecordingKeys } from '@workspace/cache';
 import { sessionError } from '@workspace/contract';
 import type {
   ClientActionsStorageClient,

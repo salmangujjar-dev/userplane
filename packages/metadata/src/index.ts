@@ -28,7 +28,7 @@ type SerializablePrimitive = string | number | boolean | null | undefined;
 /**
  * Array containing any serializable values
  */
-interface SerializableArray extends Array<Serializable> {}
+type SerializableArray = Array<Serializable>;
 
 /**
  * Object with string or number keys containing serializable values

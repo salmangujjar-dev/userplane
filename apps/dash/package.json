@@ -15,8 +15,8 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@sentry/nextjs": "^10.37.0",
-    "import-in-the-middle": "^1.13.1",
-    "require-in-the-middle": "^7.5.2",
+    "import-in-the-middle": "^2.0.1",
+    "require-in-the-middle": "^8.0.0",
     "@tanstack/react-query": "^5.90.10",
     "@workspace/auth": "workspace:*",
     "@workspace/client": "workspace:*",

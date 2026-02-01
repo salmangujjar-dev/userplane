@@ -471,4 +471,22 @@ export class WorkspaceMemberRepository {
 
     return Number(result?.count || 0);
   }
+
+  /**
+   * Get all member emails for a workspace
+   * Used for filtering Intercom admins who are already workspace members
+   */
+  async findAllMemberEmails(workspaceId: string): Promise<string[]> {
+    const members = await this.db
+      .select({
+        email: user.email,
+      })
+      .from(workspaceMembers)
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .where(
+        and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.isDeleted, false))
+      );
+
+    return members.map((m) => m.email);
+  }
 }

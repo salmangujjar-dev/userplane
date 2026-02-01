@@ -25,6 +25,7 @@ import {
   DomainVerificationUrlDataSchema,
   DomainVerificationUrlSchema,
   GetDomainRecordingPreferencesSchema,
+  GetIntercomAdminsSchema,
   GetIntercomIntegrationSchema,
   GetInvitePolicySchema,
   GetNotificationPreferencesSchema,
@@ -32,6 +33,7 @@ import {
   GetWorkspaceMembershipSchema,
   GetWorkspaceRestoreInfoSchema,
   GetWorkspaceStatusSchema,
+  IntercomAdminsDataSchema,
   IntercomIntegrationAuthorizeDataSchema,
   IntercomIntegrationAuthorizeSchema,
   IntercomIntegrationCallbackDataSchema,
@@ -1281,3 +1283,28 @@ export const deleteIntercomIntegration = oc
   })
   .input(DeleteIntercomIntegrationSchema)
   .output(ApiResponseSchema(DeleteIntercomIntegrationDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/intercom/admins
+ * Get all admins from the connected Intercom workspace
+ * Requires admin or owner role
+ */
+export const getIntercomAdmins = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/intercom/admins',
+    inputStructure: 'detailed',
+    summary: 'Get Intercom admins',
+    description:
+      'Fetch all admins from the connected Intercom workspace. Use exclude_members=true to filter out admins who are already workspace members.',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    INTEGRATION_NOT_FOUND: WorkspaceErrors.INTEGRATION_NOT_FOUND,
+  })
+  .input(GetIntercomAdminsSchema)
+  .output(ApiResponseSchema(IntercomAdminsDataSchema));
