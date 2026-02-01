@@ -11,6 +11,7 @@ import {
   createProviderMeta,
   createProviderToken,
   FormEmailSchema,
+  type IntercomAdminItem,
   type IntercomRegion,
   provisionerError,
   workspaceError,
@@ -26,6 +27,7 @@ import {
 import { generateIntegrationId } from '@/api/lib/id';
 import { deriveWorkspaceUrl } from '@/api/lib/workspace';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { InviteService } from '@/api/services/invite.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
@@ -36,6 +38,7 @@ export interface IntercomServiceDeps {
   provisionerService: ProvisionerService;
   inviteService: InviteService;
   cacheService: CacheService;
+  memberRepo: WorkspaceMemberRepository;
 }
 
 type WorkspaceCreationResult =
@@ -87,7 +90,6 @@ export class IntercomService {
    * @param params.userId - The user ID of the user who is creating the workspace
    * @param params.userName - The name of the user who is creating the workspace
    * @param params.userAuthEmail - The email of the user who is creating the workspace
-   * @param params.userIntercomEmail - The intercom email of the user who is creating the workspace
    * @returns The workspace creation result
    */
   private async handleIntercomCreation(params: {
@@ -97,9 +99,8 @@ export class IntercomService {
     userId: string;
     userName?: string;
     userAuthEmail: string;
-    userIntercomEmail: string;
   }): Promise<WorkspaceCreationResult> {
-    const { me, region, accessToken, userId, userName, userIntercomEmail, userAuthEmail } = params;
+    const { me, region, accessToken, userId, userName, userAuthEmail } = params;
 
     // 1. Derive workspace URL and name from Intercom email domain and app name
     const workspaceUrl = deriveWorkspaceUrl(me.email);
@@ -137,116 +138,14 @@ export class IntercomService {
       providerMeta: createProviderMeta('intercom', { region }),
     });
 
-    // 4. Fetch Intercom admins and send workspace invites (non-blocking)
-    // This runs after workspace creation to invite all Intercom admins
-    // excluding the current user who created the workspace
-    this.fetchAndInviteIntercomAdmins({
-      workspaceId: workspace.workspaceId,
-      accessToken,
-      region,
-      // Use user email for inviting admins
-      // Exclude user auth email from the invite list
-      userAuthEmail: userAuthEmail,
-      // Exclude user intercom email from the invite list
-      userIntercomEmail: userIntercomEmail,
-      invitedByUserId: userId,
-    }).catch((error) => {
-      // Log but don't fail the main flow if invitation fails
-      console.error('Background invite process failed:', error);
-    });
+    // Note: Admin invites are now handled via the UI flow
+    // Users can select which admins to invite on the invite page
 
     return {
       created: true,
       workspaceId: workspace.workspaceId,
       workspaceName: workspace.workspaceName,
     };
-  }
-
-  /**
-   * Fetch all admins from Intercom and send workspace invites
-   * Excludes the current user from the invite list
-   * Runs in background without blocking the main flow
-   * @param params - The parameters for the invite operation
-   * @param params.workspaceId - The workspace ID to invite admins to
-   * @param params.accessToken - The access token for the Intercom API
-   * @param params.region - The region of the Intercom API
-   * @param params.userAuthEmail - The email of the current user
-   * @param params.userIntercomEmail - The intercom email of the current user
-   * @param params.invitedBy - The user ID of the user who is inviting the admins
-   * @returns void
-   */
-  private async fetchAndInviteIntercomAdmins(params: {
-    workspaceId: string;
-    accessToken: string;
-    region: IntercomRegion;
-    userAuthEmail: string;
-    userIntercomEmail: string;
-    invitedByUserId: string;
-  }): Promise<void> {
-    try {
-      const {
-        workspaceId,
-        accessToken,
-        region,
-        userAuthEmail,
-        userIntercomEmail,
-        invitedByUserId,
-      } = params;
-
-      // Fetch all admins from Intercom
-      const admins = await listAdmins(accessToken, region);
-      if (!admins || admins.length === 0) {
-        return;
-      }
-
-      // Normalize current user email for comparison
-      const currentUserAuthEmailResult = FormEmailSchema.safeParse(userAuthEmail);
-      if (!currentUserAuthEmailResult.success) {
-        console.error('Failed to parse current user email:', userAuthEmail);
-        return;
-      }
-      const normalizedCurrentUserAuthEmail = currentUserAuthEmailResult.data;
-
-      // Normalize current user intercom email for comparison
-      const currentUserIntercomEmailResult = FormEmailSchema.safeParse(userIntercomEmail);
-      if (!currentUserIntercomEmailResult.success) {
-        console.error('Failed to parse current user intercom email:', userIntercomEmail);
-        return;
-      }
-      const normalizedCurrentUserIntercomEmail = currentUserIntercomEmailResult.data;
-
-      // Filter out the current user and extract normalized emails
-      // Use safeParse to skip invalid admin emails without failing the entire operation
-      const adminEmails = admins
-        .map((admin) => {
-          const result = FormEmailSchema.safeParse(admin.email);
-          return result.success ? result.data : null;
-        })
-        .filter(
-          (email): email is string =>
-            // This prevents inviting the current user to the workspace
-            // and handles scenario when the intercom email
-            // is different from the auth email
-            email !== null &&
-            email !== normalizedCurrentUserAuthEmail &&
-            email !== normalizedCurrentUserIntercomEmail
-        );
-
-      if (adminEmails.length === 0) {
-        return;
-      }
-
-      // Send invites to all filtered admins
-      await this.deps.inviteService.sendInvites({
-        workspaceId,
-        emails: adminEmails,
-        invitedByUserId,
-      });
-    } catch (error) {
-      // Log error but don't throw - this is a background operation
-      // that shouldn't fail the main OAuth flow
-      console.error('Failed to fetch and invite Intercom admins:', error);
-    }
   }
 
   /**
@@ -307,14 +206,13 @@ export class IntercomService {
       throw provisionerError.INTERCOM_WORKSPACE_ALREADY_CONNECTED();
     }
 
-    // 6. Create workspace, integration, and send admin invites
+    // 6. Create workspace and integration
     return this.handleIntercomCreation({
       me,
       region: region as IntercomRegion,
       accessToken: tokenResponse.access_token,
       userId,
       userName,
-      userIntercomEmail: me.email,
       userAuthEmail: userEmail,
     });
   }
@@ -448,5 +346,78 @@ export class IntercomService {
     await this.deps.cacheService.invalidateIntegration('intercom', integration.providerWorkspaceId);
 
     return true;
+  }
+
+  /**
+   * Get all admins from the connected Intercom workspace
+   * Optionally filters out admins who are already workspace members
+   * @param workspaceId - The workspace ID to get admins for
+   * @param excludeMembers - If true, excludes admins who are already workspace members
+   */
+  async getAdmins(
+    workspaceId: string,
+    excludeMembers: boolean = false
+  ): Promise<IntercomAdminItem[]> {
+    // Get integration to retrieve access token and region
+    const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
+      workspaceId,
+      'intercom'
+    );
+
+    if (!integration) {
+      throw workspaceError.INTEGRATION_NOT_FOUND();
+    }
+
+    // Parse provider token to get access token
+    const providerToken = integration.providerToken as { accessToken: string };
+    const providerMeta = integration.providerMeta as { region: IntercomRegion };
+
+    // Fetch admins from Intercom
+    const admins = await listAdmins(providerToken.accessToken, providerMeta.region);
+
+    if (!admins || admins.length === 0) {
+      return [];
+    }
+
+    // Get member emails for filtering if needed
+    let memberEmails: Set<string> = new Set();
+    if (excludeMembers) {
+      const emails = await this.deps.memberRepo.findAllMemberEmails(workspaceId);
+      // Normalize emails for comparison
+      memberEmails = new Set(
+        emails
+          .map((email) => {
+            const result = FormEmailSchema.safeParse(email);
+            return result.success ? result.data : null;
+          })
+          .filter((email): email is string => email !== null)
+      );
+    }
+
+    // Map and filter admins
+    const result: IntercomAdminItem[] = [];
+    for (const admin of admins) {
+      // Validate and normalize email
+      const emailResult = FormEmailSchema.safeParse(admin.email);
+      if (!emailResult.success) {
+        // Skip admins with invalid emails
+        continue;
+      }
+
+      const normalizedEmail = emailResult.data;
+
+      // Skip if excluding members and this admin is already a member
+      if (excludeMembers && memberEmails.has(normalizedEmail)) {
+        continue;
+      }
+
+      result.push({
+        id: admin.id,
+        email: normalizedEmail,
+        name: admin.name ?? null,
+      });
+    }
+
+    return result;
   }
 }

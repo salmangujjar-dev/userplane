@@ -1255,6 +1255,36 @@ export const DeleteIntercomIntegrationDataSchema = z.object({
   disconnected: z.literal(true),
 });
 
+/**
+ * Get Intercom admins request (detailed mode)
+ * Query param exclude_members filters out admins who are already workspace members
+ */
+export const GetIntercomAdminsSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    exclude_members: z.coerce.boolean().default(false),
+  }),
+});
+
+/**
+ * Intercom admin item
+ */
+export const IntercomAdminItemSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  name: z.string().nullable(),
+});
+
+/**
+ * Get Intercom admins response
+ */
+export const IntercomAdminsDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  admins: z.array(IntercomAdminItemSchema),
+});
+
 // Additional type exports
 export type WorkspaceItem = z.infer<typeof WorkspaceItemSchema>;
 export type WorkspacesListData = z.infer<typeof WorkspacesListDataSchema>;
@@ -1273,3 +1303,7 @@ export type DomainItem = z.infer<typeof DomainItemSchema>;
 export type WorkspaceDomainsData = z.infer<typeof WorkspaceDomainsDataSchema>;
 export type DomainAddData = z.infer<typeof DomainAddDataSchema>;
 export type DomainUpdateData = z.infer<typeof DomainUpdateDataSchema>;
+
+// Integration type exports
+export type IntercomAdminItem = z.infer<typeof IntercomAdminItemSchema>;
+export type IntercomAdminsData = z.infer<typeof IntercomAdminsDataSchema>;

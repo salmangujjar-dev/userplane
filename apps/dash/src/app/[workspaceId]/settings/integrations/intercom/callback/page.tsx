@@ -2,6 +2,7 @@
 
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { ArrowLeftRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -32,14 +33,21 @@ function LoadingState() {
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               <h1 className="text-xl font-medium text-foreground">Connecting Intercom</h1>
-              <p className="text-sm text-muted-foreground">
-                Please wait while we connect your Intercom account...
-              </p>
             </div>
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground text-center">
+              Please wait while we connect your Intercom account...
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Skeleton className="h-14 w-full rounded-full" />
+          <div className="flex justify-center">
+            <Skeleton className="h-4 w-24" />
           </div>
         </div>
       </div>
@@ -50,7 +58,11 @@ function LoadingState() {
 function SuccessState({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
 
-  const handleGoToSettings = () => {
+  const handleInviteMembers = () => {
+    router.push(`/${workspaceId}/settings/integrations/intercom/invite`);
+  };
+
+  const handleSkip = () => {
     router.push(`/${workspaceId}/settings`);
   };
 
@@ -77,16 +89,25 @@ function SuccessState({ workspaceId }: { workspaceId: string }) {
           <div className="flex flex-col items-center gap-3">
             <h1 className="text-xl font-medium text-foreground">Connected successfully</h1>
             <p className="text-sm text-muted-foreground text-center">
-              Your Intercom workspace is now connected. You can manage the integration from
-              settings.
+              Your Intercom workspace is now connected. Invite your teammates to collaborate.
             </p>
           </div>
         </div>
 
         <div className="space-y-4">
-          <Button onClick={handleGoToSettings} size="lg" className="w-full rounded-full px-7 py-6">
-            Go to Settings
+          <Button onClick={handleInviteMembers} size="lg" className="w-full rounded-full px-7 py-6">
+            Invite Workspace Members
           </Button>
+
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip for now
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1809,6 +1809,39 @@ export const deleteIntercomIntegrationImpl = (
 };
 
 /**
+ * GET /workspace/:workspaceId/integrations/intercom/admins - Get Intercom admins
+ * Requires admin or owner role
+ */
+export const getIntercomAdminsImpl = (
+  intercomService: IntercomService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorizedRateLimited.workspace.integrations.intercom.admins
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const admins = await intercomService.getAdmins(
+        input.params.workspaceId,
+        input.query.exclude_members
+      );
+
+      return {
+        message: 'Intercom admins retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          admins,
+        },
+      };
+    });
+};
+
+/**
  * Create the workspace procedures object
  * Complete implementation with CRUD, member management, invites, domains, and integrations
  */
@@ -1961,6 +1994,7 @@ export const createWorkspaceProcedures = (
           workspaceMemberService,
           workspaceService
         ),
+        admins: getIntercomAdminsImpl(intercomService, workspaceMemberService, workspaceService),
       },
     },
   };

@@ -90,3 +90,29 @@ export function useIntercomDisconnect() {
     },
   });
 }
+
+/**
+ * Hook to fetch Intercom admins for the current workspace
+ * @param excludeMembers - If true, excludes admins who are already workspace members (default: true)
+ * @param enabled - If false, disables the query (default: true)
+ */
+export function useIntercomAdmins(excludeMembers: boolean = true, enabled: boolean = true) {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery({
+    queryKey: integrationKeys.intercomAdmins(workspaceId ?? '', excludeMembers),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.intercom.admins({
+        params: { workspaceId },
+        query: { exclude_members: excludeMembers },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: enabled && !!workspaceId,
+    staleTime: 1 * 60 * 1000, // 1 minute - admins list can change
+    retry: 1,
+  });
+}
