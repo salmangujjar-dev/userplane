@@ -1,6 +1,6 @@
 import '@workspace/ui/globals.css';
 
-import { getAppMeta } from '@workspace/meta';
+import { getAppMeta } from '@workspace/shared/meta';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 

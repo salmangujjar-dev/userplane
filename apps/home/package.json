@@ -21,7 +21,7 @@
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "@workspace/logger": "workspace:*",
-    "@workspace/meta": "workspace:*",
+    "@workspace/shared": "workspace:*",
     "@workspace/pricing": "workspace:*",
     "@workspace/ui": "workspace:*",
     "astro": "^5.15.9",
