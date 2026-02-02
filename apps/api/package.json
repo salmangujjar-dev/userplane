@@ -12,7 +12,6 @@
     "@workspace/db": "workspace:*",
     "@workspace/email": "workspace:*",
     "@workspace/logger": "workspace:*",
-    "@workspace/meta": "workspace:*",
     "@workspace/sentry": "workspace:*",
     "@workspace/payments": "workspace:*",
     "@workspace/pricing": "workspace:*",

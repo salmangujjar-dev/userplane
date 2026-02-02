@@ -22,7 +22,7 @@
     "@workspace/client": "workspace:*",
     "@workspace/contract": "workspace:*",
     "@workspace/logger": "workspace:*",
-    "@workspace/meta": "workspace:*",
+    "@workspace/shared": "workspace:*",
     "@workspace/sentry": "workspace:*",
     "@workspace/payments": "workspace:*",
     "@workspace/pricing": "workspace:*",
