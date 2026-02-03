@@ -4,23 +4,29 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "astro dev",
-    "dev:all": "astro dev",
+    "dev": "astro dev --port 4444",
+    "dev:all": "astro dev --port 4444",
+    "dev:preview": "astro dev --port 4444 --mode preview",
+    "dev:staging": "astro dev --port 4444 --mode staging",
     "build": "astro build",
-    "preview": "astro preview",
+    "build:staging": "astro build --mode staging",
+    "build:production": "astro build --mode production",
+    "preview": "astro preview --port 4444",
     "astro": "astro",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "typecheck": "astro check"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.6",
     "@astrojs/react": "^4.4.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@workspace/sdk": "workspace:*",
     "astro": "^5.16.6",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",

@@ -4,7 +4,7 @@
  * These are NOT exposed via API contracts
  */
 
-import type { DomainStatus, WorkspaceRole } from '@workspace/contract';
+import type { DomainStatus, WorkspaceInvitePolicy, WorkspaceRole } from '@workspace/contract';
 import {
   AccessRequestTokenPayloadSchema,
   BillingEmailVerificationTokenPayloadSchema,
@@ -154,6 +154,8 @@ export interface CreateWorkspaceInput {
   workspaceName: string;
   recordingSlug: string;
   workspaceInviteToken: string;
+  workspaceInvitePolicy: WorkspaceInvitePolicy;
+  workspaceInviteDomains: string | null;
   workspaceBillingEmail: string;
   recordingCompanyName?: string;
   recordingHeader?: string;
@@ -476,6 +478,7 @@ export interface CreateWorkspaceParams {
   workspaceName: string;
   recordingSlug?: string;
   userId: string;
+  userEmail: string;
   workspaceBillingEmail: string;
 }
 

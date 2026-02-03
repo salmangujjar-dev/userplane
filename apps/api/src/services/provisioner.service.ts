@@ -194,6 +194,7 @@ export class ProvisionerService {
           workspaceId: predeterminedWorkspaceId,
           workspaceName,
           userId,
+          userEmail,
           workspaceBillingEmail: userEmail,
         },
         { tx }
