@@ -19,8 +19,10 @@ export interface SuccessCanvasOptions {
  * Features centered success checkmark and clear confirmation
  */
 export function buildSuccessCanvas(options: SuccessCanvasOptions): Canvas {
+  // Use markdown link syntax [text](url) as per Intercom Canvas Kit Text component spec
   const displayMessage =
-    options.message || 'Good to go! Your recording link is live and ready to use.';
+    options.message ||
+    `Good to go! Your [recording link](${options.linkUrl}) is live and ready to use.`;
 
   return {
     content: {

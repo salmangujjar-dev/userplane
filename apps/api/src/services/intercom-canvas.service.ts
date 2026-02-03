@@ -477,7 +477,6 @@ export class IntercomCanvasService {
       return {
         canvas: buildSuccessCanvas({
           linkUrl,
-          message: 'Good to go! Your recording link is live and ready to use',
         }),
         card_creation_options: {
           link_url: linkUrl,

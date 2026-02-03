@@ -884,27 +884,31 @@ export function getPlanCategoryFeatures(planName: string): PlanAllCategoryFeatur
  */
 export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
   Essential: [
+    'Everything in Basic',
     'Up to 15 seats in workspace',
     'Up to 25 recordings per month',
     'Unlimited recording links',
-    'Basic helpdesk integrations',
+    'Helpdesk integrations',
   ],
   Starter: [
+    'Everything in Essential',
     'Up to 20 seats in workspace',
     'Request unlimited recordings',
-    'Custom branding',
-    'Helpdesk integrations',
-    'Everything in Essential',
+    'Unlimited recording links',
+    'Customize Userplane workspace branding',
+    'Custom data retention policies',
   ],
   'Scale Up': [
+    'Everything in Starter',
     'Up to 30 seats in workspace',
     'Request unlimited recordings',
     'Screenshots & file uploads (100GB)',
     'Priority support',
-    'Advanced integrations (CRM, issue trackers)',
-    'Everything in Starter',
+    'Advanced data and governance controls',
+    'Additional integrations (CRM, issue trackers)',
   ],
   Enterprise: [
+    'Everything in Scale Up',
     'Unlimited seats in workspace',
     'Request unlimited recordings',
     'Bring your own storage (BYOS) for recordings, screenshots & files',
@@ -912,7 +916,6 @@ export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
     'API access',
     'Data residency (US/EU)',
     'Dedicated support',
-    'Everything in Scale Up',
   ],
 };
 

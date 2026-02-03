@@ -144,34 +144,36 @@ function PlanCard({
 
       <p className="text-sm text-muted-foreground mb-4">{getBillingText()}</p>
 
-      <p className="text-sm text-muted-foreground mb-6">{description}</p>
+      <p className="text-sm text-muted-foreground mb-6 min-h-[2.5rem]">{description}</p>
 
-      <ul className="space-y-3 flex-1 mb-2" style={{ minHeight: `${minHeight}px` }}>
+      <ul className="space-y-3 flex-1 mb-4" style={{ minHeight: `${minHeight}px` }}>
         {highlights.map((highlight, index) => (
           <PlanHighlight key={index} text={highlight} />
         ))}
       </ul>
 
-      {isCurrent ? (
-        <button
-          disabled
-          className="w-full rounded-full px-6 py-2.5 font-medium border border-zinc-300 text-muted-foreground bg-white cursor-default"
-        >
-          Current
-        </button>
-      ) : (
-        isSelected && (
+      <div className="h-9">
+        {isCurrent ? (
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onCheckout();
-            }}
-            className="w-full rounded-full px-6 py-2.5 font-medium transition-colors bg-foreground text-background hover:bg-foreground/90"
+            disabled
+            className="w-full h-full rounded-full px-4 py-2 text-sm font-medium border border-zinc-300 text-muted-foreground bg-white cursor-default"
           >
-            {isCustom ? 'Talk to sales' : 'Continue to checkout'}
+            Current
           </button>
-        )
-      )}
+        ) : (
+          isSelected && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCheckout();
+              }}
+              className="w-full h-full rounded-full px-4 py-2 text-sm font-medium transition-colors bg-foreground text-background hover:bg-foreground/90"
+            >
+              {isCustom ? 'Talk to sales' : 'Continue'}
+            </button>
+          )
+        )}
+      </div>
     </div>
   );
 }
@@ -231,7 +233,7 @@ export function PlanSelectionModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className={`p-0 gap-0 overflow-hidden ${showAllPlans ? 'sm:max-w-[1200px]' : 'sm:max-w-[1000px]'}`}
+        className={`p-0 gap-0 overflow-hidden max-h-[calc(100vh-2rem)] overflow-y-auto ${showAllPlans ? 'sm:max-w-5xl' : 'sm:max-w-4xl'}`}
         showCloseButton={false}
       >
         <div className="p-6 pb-4">
@@ -250,7 +252,7 @@ export function PlanSelectionModal({
 
         <div className="px-6 pb-6">
           <div
-            className={`grid grid-cols-1 gap-6 ${showAllPlans ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}
+            className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${showAllPlans ? 'lg:grid-cols-4' : 'md:grid-cols-3'}`}
           >
             {showAllPlans && essential && (
               <PlanCard
