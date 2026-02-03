@@ -246,10 +246,16 @@ export function useWorkspaceInvite() {
  * Hook to fetch workspace invite policy
  * Returns the invite policy and allowed domains
  *
+ * @param workspaceIdOverride - Optional workspace ID override (uses store if not provided)
+ * @param options - Query options
  * Returns SafeResult - check result.success before using data
  */
-export function useInvitePolicy(options?: { enabled?: boolean }) {
-  const workspaceId = useWorkspaceId();
+export function useInvitePolicy(
+  workspaceIdOverride?: string | null,
+  options?: { enabled?: boolean }
+) {
+  const storeWorkspaceId = useWorkspaceId();
+  const workspaceId = workspaceIdOverride ?? storeWorkspaceId;
   const { enabled = true } = options || {};
 
   return useQuery({

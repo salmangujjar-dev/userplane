@@ -78,10 +78,6 @@ export function InvitePolicySection() {
 
   const handlePolicyChange = (newPolicy: WorkspaceInvitePolicy) => {
     setPolicy(newPolicy);
-    // Clear domains when switching to private
-    if (newPolicy === 'private') {
-      setDomains([]);
-    }
     setHasChanges(true);
   };
 
@@ -103,7 +99,7 @@ export function InvitePolicySection() {
     updatePolicyMutation.mutate({
       workspaceId,
       policy,
-      domains: policy === 'private' ? null : domains.length > 0 ? domains : null,
+      domains: domains.length > 0 ? domains : null,
     });
   };
 
@@ -155,7 +151,6 @@ export function InvitePolicySection() {
 
   const selectedOption = POLICY_OPTIONS.find((opt) => opt.value === policy);
   const showDomainInput = policy !== 'private';
-  const needsDomains = policy !== 'private' && domains.length === 0;
   const isMaxDomainsReached = domains.length >= MAX_EMAIL_DOMAINS;
 
   return (
@@ -190,10 +185,7 @@ export function InvitePolicySection() {
 
             {hasChanges && canEdit && (
               <div className="flex gap-2">
-                <Button
-                  onClick={handleSave}
-                  disabled={updatePolicyMutation.isPending || needsDomains}
-                >
+                <Button onClick={handleSave} disabled={updatePolicyMutation.isPending}>
                   {updatePolicyMutation.isPending ? 'Saving...' : 'Save'}
                 </Button>
                 <Button

@@ -16,7 +16,7 @@ import { InviteLoadingState, InviteTeammatesView } from '@/components/integratio
 import { URLInput } from '@/components/url-input';
 import { useAccount } from '@/features/account';
 import { useFirstWorkspaceDomain } from '@/features/domains';
-import { useCreateWorkspace } from '@/features/workspace';
+import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -185,21 +185,26 @@ function PostCreationInviteView({
 }) {
   const router = useRouter();
 
-  // Fetch first domain (gets ID for domain created during workspace setup)
-  const { data: domainsData, isLoading } = useFirstWorkspaceDomain(workspaceId);
+  // Fetch first domain and invite policy in parallel
+  const { data: domainsData, isLoading: domainsLoading } = useFirstWorkspaceDomain(workspaceId);
+  const { data: policyData, isLoading: policyLoading } = useInvitePolicy(workspaceId);
+
+  const isLoading = domainsLoading || policyLoading;
 
   if (isLoading) {
     return <InviteLoadingState />;
   }
 
   const firstDomain = domainsData?.success ? domainsData.data.domains[0] : null;
+  const invitePolicy = policyData?.success ? policyData.data.workspaceInvitePolicy : 'private';
+  const allowedDomains = policyData?.success ? policyData.data.workspaceInviteDomains : null;
 
   return (
     <InviteTeammatesView
       workspaceId={workspaceId}
       teammates={[]}
-      invitePolicy="private"
-      allowedDomains={null}
+      invitePolicy={invitePolicy}
+      allowedDomains={allowedDomains}
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? domainUrl}
       variant="direct"
