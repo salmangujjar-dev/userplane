@@ -75,6 +75,11 @@
         "R2_REPORTS_ACCESS_KEY_ID",
         "R2_REPORTS_SECRET_ACCESS_KEY",
         "R2_REPORTS_BUCKET_NAME",
+        "APP_ENV",
+        "MEDIA_CDN_BASE_URL",
+        "MEDIA_ASSETS_PREFIX",
+        "R2_ASSETS_PREFIX",
+        "MODE",
         "ADMIN_USER_IDS",
         "NEXT_PUBLIC_APP_URL",
         "NEXT_PUBLIC_API_URL",
@@ -133,6 +138,10 @@
       "outputs": ["coverage/**"]
     },
     "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev:preview": {
       "cache": false,
       "persistent": true
     },

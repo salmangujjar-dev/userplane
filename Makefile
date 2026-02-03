@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build i d b l f t c
+.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email dev\:preview build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:setup\:preview env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:staging assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -33,8 +33,9 @@ help: ## Show this help message
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)install$(WHITE)                       ║$(RESET) Install all dependencies                                          $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)update$(WHITE)                        ║$(RESET) Update dependencies                                               $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)env:setup$(WHITE)                     ║$(RESET) Copy .env.example files to create .env files                      $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)env:check$(WHITE)                     ║$(RESET) Check if .env files exist                                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)env:setup$(WHITE)                     ║$(RESET) Copy .env.example files to create .env.development files         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)env:setup:preview$(WHITE)             ║$(RESET) Copy .env.preview.example files for tunnel preview                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)env:check$(WHITE)                     ║$(RESET) Check if .env.development files exist                             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)DATABASE$(WHITE)                                                                                          ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -61,6 +62,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:share$(WHITE)                     ║$(RESET) Run Share URL shortener only                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:email$(WHITE)                     ║$(RESET) Run Email preview server only                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:playground$(WHITE)                ║$(RESET) Run playground app only                                           $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:preview$(WHITE)                   ║$(RESET) Run apps in preview mode (uses .env.preview)                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -93,6 +95,20 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)storybook:recorder:build$(WHITE)      ║$(RESET) Build Storybook for recorder app                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:postbridge$(WHITE)          ║$(RESET) Run Storybook for postbridge package                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:postbridge:build$(WHITE)    ║$(RESET) Build Storybook for postbridge package                            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)ASSETS (CDN)$(WHITE)                                                                                     ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)assets:upload$(WHITE)                 ║$(RESET) Upload assets to R2 CDN (dev)                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)assets:upload:staging$(WHITE)         ║$(RESET) Upload assets to R2 CDN (staging)                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)assets:upload:production$(WHITE)      ║$(RESET) Upload assets to R2 CDN (production)                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)assets:upload:dry-run$(WHITE)         ║$(RESET) Preview what would be uploaded (dev)                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)assets:manifest$(WHITE)               ║$(RESET) Generate asset manifest only (no upload)                          $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)TUNNELS (Cloudflare Tunnel)$(WHITE)                                                                      ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)tunnel:start$(WHITE)                  ║$(RESET) Start Cloudflare tunnel (all services)                             $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)tunnel:stop$(WHITE)                   ║$(RESET) Stop Cloudflare tunnel                                             $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)tunnel:status$(WHITE)                 ║$(RESET) Show tunnel status and URLs                                        $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BACKGROUND JOBS (Trigger.dev)$(WHITE)                                                                    ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -150,6 +166,10 @@ dev\:email: ## Run Email preview server only
 dev\:playground: ## Run playground app only
 	@echo "$(MAGENTA)Starting Playground app...$(RESET)"
 	@cd apps/playground && bun dev
+
+dev\:preview: ## Run apps in preview mode (uses .env.preview files)
+	@echo "$(MAGENTA)Starting apps in preview mode...$(RESET)"
+	@bun dev:preview
 
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
@@ -274,28 +294,148 @@ storybook\:postbridge\:build: ## Build Storybook for postbridge package
 	@cd packages/postbridge && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
 
+# Assets commands
+assets\:upload: ## Upload assets to R2 CDN (dev)
+	@echo "$(BLUE)Uploading assets to R2 CDN (development)...$(RESET)"
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
+		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/shared && bun run upload-assets --env=development
+	@echo "$(GREEN)Assets uploaded!$(RESET)"
+
+assets\:upload\:staging: ## Upload assets to R2 CDN (staging)
+	@echo "$(BLUE)Uploading assets to R2 CDN (staging)...$(RESET)"
+	@if [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/shared && bun run upload-assets --env=staging
+	@echo "$(GREEN)Assets uploaded!$(RESET)"
+
+assets\:upload\:production: ## Upload assets to R2 CDN (production)
+	@echo "$(RED)Uploading assets to R2 CDN (production)...$(RESET)"
+	@echo "$(RED)WARNING: This will upload assets to PRODUCTION!$(RESET)"
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
+	@if [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/shared && bun run upload-assets --env=production
+	@echo "$(GREEN)Assets uploaded!$(RESET)"
+
+assets\:upload\:dry-run: ## Preview what would be uploaded to R2 CDN (dev)
+	@echo "$(BLUE)Previewing asset upload (development)...$(RESET)"
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
+		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/shared && bun run upload-assets --env=development --dry-run
+
+assets\:manifest: ## Generate asset manifest only (no upload)
+	@echo "$(BLUE)Generating asset manifest...$(RESET)"
+	@cd packages/shared && bun run assets:manifest
+	@echo "$(GREEN)Manifest generated!$(RESET)"
+
 update: ## Update dependencies
 	@echo "$(BLUE)Updating dependencies...$(RESET)"
 	@bun update
 	@echo "$(GREEN)Dependencies updated!$(RESET)"
 
-env\:setup: ## Copy .env.example files to create .env files
+env\:setup: ## Copy .env.example files to create .env.development files
 	@echo "$(BLUE)Setting up environment files...$(RESET)"
-	@if [ ! -f .env ]; then cp .env.example .env && echo "$(GREEN)✓$(RESET) Created .env"; else echo "$(YELLOW)⚠$(RESET) .env already exists"; fi
 	@if [ ! -f apps/api/.env.development ]; then cp apps/api/.env.example apps/api/.env.development && echo "$(GREEN)✓$(RESET) Created apps/api/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/api/.env.development already exists"; fi
 	@if [ ! -f apps/dash/.env.development ]; then cp apps/dash/.env.example apps/dash/.env.development && echo "$(GREEN)✓$(RESET) Created apps/dash/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/dash/.env.development already exists"; fi
-	@if [ ! -f apps/home/.env ]; then cp apps/home/.env.example apps/home/.env && echo "$(GREEN)✓$(RESET) Created apps/home/.env"; else echo "$(YELLOW)⚠$(RESET) apps/home/.env already exists"; fi
-	@if [ ! -f apps/recorder/.env ]; then cp apps/recorder/.env.example apps/recorder/.env && echo "$(GREEN)✓$(RESET) Created apps/recorder/.env"; else echo "$(YELLOW)⚠$(RESET) apps/recorder/.env already exists"; fi
+	@if [ ! -f apps/home/.env.development ]; then cp apps/home/.env.example apps/home/.env.development && echo "$(GREEN)✓$(RESET) Created apps/home/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/home/.env.development already exists"; fi
+	@if [ ! -f apps/recorder/.env.development ]; then cp apps/recorder/.env.example apps/recorder/.env.development && echo "$(GREEN)✓$(RESET) Created apps/recorder/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/recorder/.env.development already exists"; fi
 	@echo "$(GREEN)Environment files setup complete!$(RESET)"
-	@echo "$(YELLOW)Remember to update the values in each .env file$(RESET)"
+	@echo "$(YELLOW)Remember to update the values in each .env.development file$(RESET)"
 
-env\:check: ## Check if .env files exist
+env\:check: ## Check if .env.development files exist
 	@echo "$(BLUE)Checking environment files...$(RESET)"
-	@if [ -f .env ]; then echo "$(GREEN)✓$(RESET) .env exists"; else echo "$(RED)✗$(RESET) .env missing"; fi
 	@if [ -f apps/api/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/api/.env.development exists"; else echo "$(RED)✗$(RESET) apps/api/.env.development missing"; fi
 	@if [ -f apps/dash/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/dash/.env.development exists"; else echo "$(RED)✗$(RESET) apps/dash/.env.development missing"; fi
-	@if [ -f apps/home/.env ]; then echo "$(GREEN)✓$(RESET) apps/home/.env exists"; else echo "$(RED)✗$(RESET) apps/home/.env missing"; fi
-	@if [ -f apps/recorder/.env ]; then echo "$(GREEN)✓$(RESET) apps/recorder/.env exists"; else echo "$(RED)✗$(RESET) apps/recorder/.env missing"; fi
+	@if [ -f apps/home/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/home/.env.development exists"; else echo "$(RED)✗$(RESET) apps/home/.env.development missing"; fi
+	@if [ -f apps/recorder/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/recorder/.env.development exists"; else echo "$(RED)✗$(RESET) apps/recorder/.env.development missing"; fi
+
+env\:setup\:preview: ## Copy .env.development files and replace URLs with tunnel URLs
+	@echo "$(BLUE)Setting up preview environment files with tunnel URLs...$(RESET)"
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found. Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@if [ ! -f apps/dash/.env.development ]; then \
+		echo "$(RED)Error: apps/dash/.env.development not found. Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@if [ ! -f apps/recorder/.env.development ]; then \
+		echo "$(RED)Error: apps/recorder/.env.development not found. Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@if [ ! -f apps/home/.env.development ]; then \
+		echo "$(RED)Error: apps/home/.env.development not found. Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@# Copy and transform API env
+	@cp apps/api/.env.development apps/api/.env.preview
+	@sed -i '' \
+		-e 's|http://localhost:3001|https://api-preview.userplane.io|g' \
+		-e 's|http://localhost:3000|https://dash-preview.userplane.io|g' \
+		-e 's|http://localhost:4321|https://home-preview.userplane.io|g' \
+		-e 's|http://localhost:4322|https://recorder-preview.userplane.io|g' \
+		-e 's|http://localhost:4444|https://playground-preview.userplane.io|g' \
+		-e 's|^APP_ENV=.*|APP_ENV=preview|' \
+		apps/api/.env.preview
+	@# Add APP_ENV=preview if not present
+	@grep -q '^APP_ENV=' apps/api/.env.preview || echo 'APP_ENV=preview' >> apps/api/.env.preview
+	@# Add cookie domain for cross-subdomain sharing
+	@grep -q '^BETTER_AUTH_COOKIE_DOMAIN=' apps/api/.env.preview || echo 'BETTER_AUTH_COOKIE_DOMAIN=.userplane.io' >> apps/api/.env.preview
+	@echo "$(GREEN)✓$(RESET) Created apps/api/.env.preview"
+	@# Copy and transform Dash env
+	@cp apps/dash/.env.development apps/dash/.env.preview
+	@sed -i '' \
+		-e 's|http://localhost:3001|https://api-preview.userplane.io|g' \
+		-e 's|http://localhost:3000|https://dash-preview.userplane.io|g' \
+		-e 's|http://localhost:4321|https://home-preview.userplane.io|g' \
+		-e 's|http://localhost:4322|https://recorder-preview.userplane.io|g' \
+		-e 's|http://localhost:4444|https://playground-preview.userplane.io|g' \
+		-e 's|^APP_ENV=.*|APP_ENV=preview|' \
+		apps/dash/.env.preview
+	@grep -q '^APP_ENV=' apps/dash/.env.preview || echo 'APP_ENV=preview' >> apps/dash/.env.preview
+	@echo "$(GREEN)✓$(RESET) Created apps/dash/.env.preview"
+	@# Copy and transform Recorder env
+	@cp apps/recorder/.env.development apps/recorder/.env.preview
+	@sed -i '' \
+		-e 's|http://localhost:3001|https://api-preview.userplane.io|g' \
+		-e 's|http://localhost:3000|https://dash-preview.userplane.io|g' \
+		-e 's|http://localhost:4321|https://home-preview.userplane.io|g' \
+		-e 's|http://localhost:4322|https://recorder-preview.userplane.io|g' \
+		-e 's|http://localhost:4444|https://playground-preview.userplane.io|g' \
+		-e 's|^APP_ENV=.*|APP_ENV=preview|' \
+		apps/recorder/.env.preview
+	@grep -q '^APP_ENV=' apps/recorder/.env.preview || echo 'APP_ENV=preview' >> apps/recorder/.env.preview
+	@echo "$(GREEN)✓$(RESET) Created apps/recorder/.env.preview"
+	@# Copy and transform Home env
+	@cp apps/home/.env.development apps/home/.env.preview
+	@sed -i '' \
+		-e 's|http://localhost:3001|https://api-preview.userplane.io|g' \
+		-e 's|http://localhost:3000|https://dash-preview.userplane.io|g' \
+		-e 's|http://localhost:4321|https://home-preview.userplane.io|g' \
+		-e 's|http://localhost:4322|https://recorder-preview.userplane.io|g' \
+		-e 's|http://localhost:4444|https://playground-preview.userplane.io|g' \
+		-e 's|^APP_ENV=.*|APP_ENV=preview|' \
+		apps/home/.env.preview
+	@grep -q '^APP_ENV=' apps/home/.env.preview || echo 'APP_ENV=preview' >> apps/home/.env.preview
+	@echo "$(GREEN)✓$(RESET) Created apps/home/.env.preview"
+	@echo "$(GREEN)Preview environment files created!$(RESET)"
+	@echo "$(CYAN)Tunnel URLs configured:$(RESET)"
+	@echo "  API:        https://api-preview.userplane.io"
+	@echo "  Dash:       https://dash-preview.userplane.io"
+	@echo "  Home:       https://home-preview.userplane.io"
+	@echo "  Recorder:   https://recorder-preview.userplane.io"
+	@echo "  Playground: https://playground-preview.userplane.io"
 
 # Database commands - Development
 db\:generate: ## Generate Drizzle migrations (dev)
@@ -471,6 +611,86 @@ trigger\:deploy\:production: ## Deploy tasks to trigger.dev (production)
 		export SENTRY_PROJECT_API=$$(grep '^SENTRY_PROJECT_API=' .env.production | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
 		npx trigger.dev@latest deploy --env production
 	@echo "$(GREEN)Deployment complete!$(RESET)"
+
+# Tunnel commands (Cloudflare Tunnel)
+# Config file location
+TUNNEL_CONFIG := .cloudflared/config.yml
+TUNNEL_PID_FILE := .cloudflared/tunnel.pid
+TUNNEL_LOG_FILE := .cloudflared/tunnel.log
+
+tunnel\:start: ## Start Cloudflare tunnel (all services)
+	@echo "$(MAGENTA)Starting Cloudflare tunnel...$(RESET)"
+	@if ! command -v cloudflared >/dev/null 2>&1; then \
+		echo "$(RED)Error: cloudflared is not installed$(RESET)"; \
+		echo "$(YELLOW)Install with: brew install cloudflared$(RESET)"; \
+		exit 1; \
+	fi
+	@if [ ! -f $(TUNNEL_CONFIG) ]; then \
+		echo "$(RED)Error: $(TUNNEL_CONFIG) not found$(RESET)"; \
+		exit 1; \
+	fi
+	@# Check if tunnel is already running
+	@if [ -f $(TUNNEL_PID_FILE) ] && kill -0 $$(cat $(TUNNEL_PID_FILE)) 2>/dev/null; then \
+		echo "$(YELLOW)Tunnel is already running (PID: $$(cat $(TUNNEL_PID_FILE)))$(RESET)"; \
+		exit 0; \
+	fi
+	@# Start cloudflared in background
+	@cloudflared tunnel --config $(TUNNEL_CONFIG) run > $(TUNNEL_LOG_FILE) 2>&1 & echo $$! > $(TUNNEL_PID_FILE)
+	@echo "$(YELLOW)Waiting for tunnel to establish...$(RESET)"
+	@sleep 3
+	@if kill -0 $$(cat $(TUNNEL_PID_FILE)) 2>/dev/null; then \
+		echo ""; \
+		echo "$(GREEN)Cloudflare tunnel started!$(RESET)"; \
+		echo ""; \
+		echo "$(CYAN)Tunnel URLs:$(RESET)"; \
+		echo "$(WHITE)-------------------------------------------$(RESET)"; \
+		echo "$(GREEN)API:$(RESET)        https://api-preview.userplane.io"; \
+		echo "$(GREEN)Dash:$(RESET)       https://dash-preview.userplane.io"; \
+		echo "$(GREEN)Home:$(RESET)       https://home-preview.userplane.io"; \
+		echo "$(GREEN)Recorder:$(RESET)   https://recorder-preview.userplane.io"; \
+		echo "$(GREEN)Playground:$(RESET) https://playground-preview.userplane.io"; \
+		echo "$(WHITE)-------------------------------------------$(RESET)"; \
+		echo ""; \
+		echo "$(YELLOW)Run 'make tunnel:stop' to stop the tunnel$(RESET)"; \
+	else \
+		echo "$(RED)Failed to start tunnel. Check $(TUNNEL_LOG_FILE) for details$(RESET)"; \
+		exit 1; \
+	fi
+
+tunnel\:stop: ## Stop Cloudflare tunnel
+	@echo "$(YELLOW)Stopping Cloudflare tunnel...$(RESET)"
+	@if [ -f $(TUNNEL_PID_FILE) ]; then \
+		pid=$$(cat $(TUNNEL_PID_FILE)); \
+		if kill -0 "$$pid" 2>/dev/null; then \
+			kill "$$pid" 2>/dev/null || true; \
+			echo "$(GREEN)Stopped tunnel (PID: $$pid)$(RESET)"; \
+		else \
+			echo "$(YELLOW)Tunnel was not running$(RESET)"; \
+		fi; \
+		rm -f $(TUNNEL_PID_FILE); \
+	else \
+		echo "$(YELLOW)No tunnel PID file found$(RESET)"; \
+	fi
+	@# Also kill any orphaned cloudflared processes
+	@pkill -f "cloudflared tunnel.*run" 2>/dev/null || true
+	@echo "$(GREEN)Tunnel stopped!$(RESET)"
+
+tunnel\:status: ## Show tunnel status and URLs
+	@echo "$(CYAN)Cloudflare Tunnel Status$(RESET)"
+	@echo "$(WHITE)-------------------------------------------$(RESET)"
+	@if [ -f $(TUNNEL_PID_FILE) ] && kill -0 $$(cat $(TUNNEL_PID_FILE)) 2>/dev/null; then \
+		echo "$(GREEN)Status:$(RESET)   Running (PID: $$(cat $(TUNNEL_PID_FILE)))"; \
+	else \
+		echo "$(RED)Status:$(RESET)   Not running"; \
+	fi
+	@echo "$(WHITE)-------------------------------------------$(RESET)"
+	@echo "$(CYAN)Configured URLs:$(RESET)"
+	@echo "$(GREEN)API:$(RESET)        https://api-preview.userplane.io"
+	@echo "$(GREEN)Dash:$(RESET)       https://dash-preview.userplane.io"
+	@echo "$(GREEN)Home:$(RESET)       https://home-preview.userplane.io"
+	@echo "$(GREEN)Recorder:$(RESET)   https://recorder-preview.userplane.io"
+	@echo "$(GREEN)Playground:$(RESET) https://playground-preview.userplane.io"
+	@echo "$(WHITE)-------------------------------------------$(RESET)"
 
 i: install ## Shortcut for install
 d: dev ## Shortcut for dev
