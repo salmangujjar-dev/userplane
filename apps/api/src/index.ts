@@ -24,6 +24,7 @@ import {
   createMessengerInitializeHandler,
   createMessengerSubmitHandler,
 } from '@/api/handlers/intercom-canvas.handler';
+import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
 import { apiRouter } from '@/api/routes/api.router';
@@ -203,6 +204,12 @@ logger.info('    → /api/v1/intercom/canvas/messenger/submit');
 logger.info('  Inbox (for teammates):');
 logger.info('    → /api/v1/intercom/canvas/inbox/initialize');
 logger.info('    → /api/v1/intercom/canvas/inbox/submit');
+
+// Workspace logo upload route (multipart/form-data - handled before OpenAPI)
+// This route handles file uploads which require special multipart handling
+app.post('/api/v1/workspace/:workspaceId/logo', handleWorkspaceLogoUpload);
+logger.info('Workspace logo upload route registered:');
+logger.info('    → POST /api/v1/workspace/:workspaceId/logo');
 
 // OpenAPI handler - handles RESTful requests
 // Respects HTTP methods and paths defined in the contract

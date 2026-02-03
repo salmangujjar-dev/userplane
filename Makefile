@@ -297,8 +297,8 @@ storybook\:postbridge\:build: ## Build Storybook for postbridge package
 # Assets commands
 assets\:upload: ## Upload assets to R2 CDN (dev)
 	@echo "$(BLUE)Uploading assets to R2 CDN (development)...$(RESET)"
-	@if [ ! -f apps/api/.env.development ]; then \
-		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
+	@if [ ! -f packages/shared/.env.development ] && [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: .env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
@@ -307,19 +307,28 @@ assets\:upload: ## Upload assets to R2 CDN (dev)
 
 assets\:upload\:staging: ## Upload assets to R2 CDN (staging)
 	@echo "$(BLUE)Uploading assets to R2 CDN (staging)...$(RESET)"
-	@if [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
+	@if [ ! -f packages/shared/.env.staging ] && [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: .env.staging not found$(RESET)"; \
 		exit 1; \
 	fi
 	@cd packages/shared && bun run upload-assets --env=staging
+	@echo "$(GREEN)Assets uploaded!$(RESET)"
+
+assets\:upload\:preview: ## Upload assets to R2 CDN (preview)
+	@echo "$(BLUE)Uploading assets to R2 CDN (preview)...$(RESET)"
+	@if [ ! -f packages/shared/.env.preview ] && [ ! -f apps/api/.env.preview ]; then \
+		echo "$(RED)Error: .env.preview not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/shared && bun run upload-assets --env=preview
 	@echo "$(GREEN)Assets uploaded!$(RESET)"
 
 assets\:upload\:production: ## Upload assets to R2 CDN (production)
 	@echo "$(RED)Uploading assets to R2 CDN (production)...$(RESET)"
 	@echo "$(RED)WARNING: This will upload assets to PRODUCTION!$(RESET)"
 	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
-	@if [ ! -f apps/api/.env.production ]; then \
-		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
+	@if [ ! -f packages/shared/.env.production ] && [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: .env.production not found$(RESET)"; \
 		exit 1; \
 	fi
 	@cd packages/shared && bun run upload-assets --env=production
@@ -327,8 +336,8 @@ assets\:upload\:production: ## Upload assets to R2 CDN (production)
 
 assets\:upload\:dry-run: ## Preview what would be uploaded to R2 CDN (dev)
 	@echo "$(BLUE)Previewing asset upload (development)...$(RESET)"
-	@if [ ! -f apps/api/.env.development ]; then \
-		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
+	@if [ ! -f packages/shared/.env.development ] && [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: .env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
@@ -338,6 +347,31 @@ assets\:manifest: ## Generate asset manifest only (no upload)
 	@echo "$(BLUE)Generating asset manifest...$(RESET)"
 	@cd packages/shared && bun run assets:manifest
 	@echo "$(GREEN)Manifest generated!$(RESET)"
+
+assets\:validate: ## Validate manifest assets exist (local + remote dev)
+	@echo "$(BLUE)Validating manifest assets...$(RESET)"
+	@cd packages/shared && bun run assets:validate
+	@echo "$(GREEN)Validation complete!$(RESET)"
+
+assets\:validate\:local: ## Validate local asset files exist
+	@echo "$(BLUE)Validating local assets...$(RESET)"
+	@cd packages/shared && bun run assets:validate:local
+	@echo "$(GREEN)Local validation complete!$(RESET)"
+
+assets\:validate\:staging: ## Validate assets exist on staging CDN
+	@echo "$(BLUE)Validating staging CDN assets...$(RESET)"
+	@cd packages/shared && bun run assets:validate:staging
+	@echo "$(GREEN)Staging validation complete!$(RESET)"
+
+assets\:validate\:preview: ## Validate assets exist on preview CDN
+	@echo "$(BLUE)Validating preview CDN assets...$(RESET)"
+	@cd packages/shared && bun run assets:validate:preview
+	@echo "$(GREEN)Preview validation complete!$(RESET)"
+
+assets\:validate\:production: ## Validate assets exist on production CDN
+	@echo "$(BLUE)Validating production CDN assets...$(RESET)"
+	@cd packages/shared && bun run assets:validate:production
+	@echo "$(GREEN)Production validation complete!$(RESET)"
 
 update: ## Update dependencies
 	@echo "$(BLUE)Updating dependencies...$(RESET)"

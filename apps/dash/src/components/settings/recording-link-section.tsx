@@ -5,7 +5,7 @@ import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { cn } from '@workspace/ui/lib/utils';
-import { Upload } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -14,6 +14,7 @@ import { RecordingLinkSectionSkeleton } from '@/components/skeleton';
 import {
   useUpdateAppearance,
   useUpdateToggle,
+  useUploadWorkspaceLogo,
   useWorkspacePreferences,
 } from '@/features/workspace';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
@@ -67,8 +68,10 @@ export function RecordingLinkSection() {
   }, [preferences, setCustomizeRecordingLink]);
 
   const updateAppearanceMutation = useUpdateAppearance(workspaceId);
+  const uploadLogoMutation = useUploadWorkspaceLogo(workspaceId);
 
   // Check if form has changes (excluding toggle, which auto-saves)
+  // Note: workspaceImage is now a CDN URL, not base64
   const hasChanges = useMemo(() => {
     if (!preferences) return false;
 
@@ -81,14 +84,21 @@ export function RecordingLinkSection() {
     );
   }, [preferences, workspaceName, headerText, footnoteText, primaryColor, workspaceImage]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setWorkspaceImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    try {
+      // Upload to R2 storage - returns CDN URL on success, throws on error
+      const result = await uploadLogoMutation.mutateAsync(file);
+      setWorkspaceImage(result.url);
+    } catch {
+      // Error already handled by mutation's onError
+    } finally {
+      // Reset file input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -187,17 +197,19 @@ export function RecordingLinkSection() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="relative w-24 h-24 mt-2 rounded-lg border-2 border-dashed border-input hover:border-primary hover:bg-accent transition-colors flex flex-col items-center justify-center gap-1 overflow-hidden"
+                        disabled={uploadLogoMutation.isPending}
+                        className="relative w-24 h-24 mt-2 rounded-lg border-2 border-dashed border-input hover:border-primary hover:bg-accent transition-colors flex flex-col items-center justify-center gap-1 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {workspaceImage ? (
-                          // TODO: unoptimized for now - base64 data URLs cannot use Next.js optimization
+                        {uploadLogoMutation.isPending ? (
+                          <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                        ) : workspaceImage ? (
                           <Image
                             src={workspaceImage}
                             alt="Workspace"
                             width={96}
                             height={96}
                             className="w-full h-full object-cover"
-                            unoptimized
+                            unoptimized // External CDN images - configure in next.config.js for optimization
                           />
                         ) : (
                           <>

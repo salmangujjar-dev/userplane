@@ -112,6 +112,7 @@ export const CardCreationOptionsSchema = z.object({
   link_title: z.string().optional(),
   custom_message: z.string().optional(),
   footer: z.string().nullable().optional(),
+  logo_url: z.string().nullable().optional(),
 });
 
 // =============================================================================
@@ -324,6 +325,7 @@ export const RecordingCanvasStoredDataSchema = z.object({
   link_title: z.string().optional(),
   custom_message: z.string().optional(),
   footer: z.string().nullable().optional(),
+  logo_url: z.string().nullable().optional(),
 });
 
 // =============================================================================

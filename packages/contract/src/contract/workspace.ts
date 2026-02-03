@@ -77,6 +77,7 @@ import {
   UpdateWorkspaceBillingEmailSchema,
   UpdateWorkspaceNameSchema,
   UpdateWorkspacePreferencesSchema,
+  UploadWorkspaceLogoSchema,
   ValidateAccessRequestDataSchema,
   ValidateAccessRequestSchema,
   VerifyBillingEmailChangeDataSchema,
@@ -90,6 +91,7 @@ import {
   WorkspaceDomainsDataSchema,
   WorkspaceDomainsQuerySchema,
   WorkspaceErrors,
+  WorkspaceLogoUploadDataSchema,
   WorkspaceMembershipDataSchema,
   WorkspaceNameUpdateDataSchema,
   WorkspacePreferencesGetDataSchema,
@@ -241,6 +243,31 @@ export const updateWorkspacePreferences = oc
   })
   .input(UpdateWorkspacePreferencesSchema)
   .output(ApiResponseSchema(WorkspacePreferencesUpdateDataSchema));
+
+/**
+ * POST /workspace/{workspaceId}/logo
+ * Upload workspace logo
+ * Uploads image to R2 storage and stores the full CDN URL in the database
+ * Maximum file size: 2MB
+ */
+export const uploadWorkspaceLogo = oc
+  .route({
+    method: 'POST',
+    path: '/workspace/{workspaceId}/logo',
+    inputStructure: 'detailed',
+    summary: 'Upload workspace logo',
+    description:
+      'Upload a workspace logo image. The image is stored in R2 and the full CDN URL is saved. Max size: 2MB.',
+    tags: ['Workspaces'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(UploadWorkspaceLogoSchema)
+  .output(ApiResponseSchema(WorkspaceLogoUploadDataSchema));
 
 /**
  * GET /workspace/{workspaceId}/members

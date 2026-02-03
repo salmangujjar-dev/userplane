@@ -19,6 +19,8 @@ export interface RecordingCanvasOptions {
   linkTitle?: string;
   customMessage?: string;
   footer?: string | null;
+  /** Custom logo URL to display instead of default Userplane logo */
+  logoUrl?: string | null;
 }
 
 /**
@@ -30,6 +32,8 @@ export function buildRecordingCanvas(options: RecordingCanvasOptions): Canvas {
   const message = options.customMessage || DEFAULT_RECORDING_MESSAGE;
   // Use provided footer, or default. If footer is explicitly null, use default.
   const footer = options.footer ?? DEFAULT_RECORDING_FOOTER;
+  // Use custom logo URL if provided, otherwise fall back to default Userplane logo
+  const logoUrl = options.logoUrl || canvasImages.logo;
 
   return {
     content: {
@@ -37,7 +41,7 @@ export function buildRecordingCanvas(options: RecordingCanvasOptions): Canvas {
         {
           type: 'image',
           id: 'logo',
-          url: canvasImages.logo,
+          url: logoUrl,
           align: 'center',
           width: 50,
           height: 50,
@@ -86,6 +90,7 @@ export function buildRecordingCanvas(options: RecordingCanvasOptions): Canvas {
       link_title: options.linkTitle,
       custom_message: options.customMessage,
       footer: options.footer,
+      logo_url: options.logoUrl,
     },
   };
 }

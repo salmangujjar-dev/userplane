@@ -775,6 +775,74 @@ export function useUpdateAppearance(workspaceId: string | null) {
 }
 
 // ============================================
+// LOGO UPLOAD MUTATIONS
+// ============================================
+
+interface LogoUploadData {
+  url: string;
+}
+
+interface LogoUploadResponse {
+  message: string;
+  data: {
+    url: string;
+  };
+}
+
+interface LogoUploadErrorResponse {
+  error: string;
+}
+
+const MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Upload workspace logo
+ * Uploads file to R2 storage and returns the full CDN URL
+ */
+export function useUploadWorkspaceLogo(workspaceId: string | null) {
+  return useMutation<LogoUploadData, Error, File>({
+    mutationFn: async (file: File) => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID');
+      }
+
+      // Validate file size client-side (2MB limit)
+      if (file.size > MAX_LOGO_SIZE_BYTES) {
+        throw new Error(
+          `File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds maximum allowed size (2MB)`
+        );
+      }
+
+      const formData = new FormData();
+      formData.append('logo', file);
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/api/v1/workspace/${workspaceId}/logo`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json().catch(() => ({}))) as LogoUploadErrorResponse;
+        throw new Error(errorData.error || `Upload failed with status ${response.status}`);
+      }
+
+      const data = (await response.json()) as LogoUploadResponse;
+      return { url: data.data.url };
+    },
+    onSuccess: () => {
+      toast.success('Logo uploaded successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to upload logo', {
+        description: error.message,
+      });
+    },
+  });
+}
+
+// ============================================
 // OVERVIEW MUTATIONS (WORKSPACE NAME)
 // ============================================
 
