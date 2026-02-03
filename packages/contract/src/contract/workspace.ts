@@ -27,6 +27,7 @@ import {
   GetDomainRecordingPreferencesSchema,
   GetIntercomAdminsSchema,
   GetIntercomIntegrationSchema,
+  GetIntercomSuggestionsSchema,
   GetInvitePolicySchema,
   GetNotificationPreferencesSchema,
   GetWorkspaceBillingEmailSchema,
@@ -39,6 +40,7 @@ import {
   IntercomIntegrationCallbackDataSchema,
   IntercomIntegrationCallbackSchema,
   IntercomIntegrationStatusDataSchema,
+  IntercomSuggestionsDataSchema,
   InviteErrors,
   InvitePolicyDataSchema,
   InvitePolicyUpdateDataSchema,
@@ -1308,3 +1310,28 @@ export const getIntercomAdmins = oc
   })
   .input(GetIntercomAdminsSchema)
   .output(ApiResponseSchema(IntercomAdminsDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/intercom/suggestions
+ * Get Intercom admin suggestions for invite modal
+ * Returns empty array if not connected or on any error (graceful degradation)
+ * Requires workspace membership
+ */
+export const getIntercomSuggestions = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/intercom/suggestions',
+    inputStructure: 'detailed',
+    summary: 'Get Intercom admin suggestions',
+    description:
+      'Fetch suggested admins from Intercom for invite modal. Returns empty if not connected.',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(GetIntercomSuggestionsSchema)
+  .output(ApiResponseSchema(IntercomSuggestionsDataSchema));

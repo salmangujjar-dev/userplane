@@ -26,6 +26,7 @@ export type LinkWorkspaceMappingKey = CacheKey<'link:ws'>;
 export type WorkspaceRecordingPrefsKey = CacheKey<'workspace:recording-prefs'>;
 export type DomainRecordingPrefsKey = CacheKey<'domain:recording-prefs'>;
 export type IntegrationKey = CacheKey<'integration'>;
+export type IntercomAdminsKey = CacheKey<'intercom:admins'>;
 export type MembershipKey = CacheKey<'member'>;
 export type WorkspaceExistsKey = CacheKey<'workspace:exists'>;
 
@@ -86,6 +87,12 @@ export const integrationKeys = {
   /** Integration lookup by provider workspace ID */
   byProviderWorkspace: (provider: string, providerWorkspaceId: string): IntegrationKey =>
     `integration:${provider}:${providerWorkspaceId}` as IntegrationKey,
+};
+
+export const intercomKeys = {
+  /** Raw Intercom admins list for a workspace */
+  admins: (workspaceId: string): IntercomAdminsKey =>
+    `intercom:admins:${workspaceId}` as IntercomAdminsKey,
 };
 
 /**

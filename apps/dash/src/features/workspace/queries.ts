@@ -17,6 +17,7 @@ import type {
   WorkspaceSuggestionsData,
 } from '@/types';
 
+import { integrationKeys } from '../integrations/query-keys';
 import { workspaceKeys } from './query-keys';
 
 // Re-export types that are used by consumers
@@ -779,5 +780,50 @@ export function useWorkspaceRestoreInfo(workspaceId: string | null) {
     },
     enabled: !!workspaceId,
     retry: false,
+  });
+}
+
+// ============================================
+// INTERCOM SUGGESTIONS
+// ============================================
+
+/**
+ * Intercom suggestions response data
+ */
+export interface IntercomSuggestionsData {
+  workspaceId: string;
+  connected: boolean;
+  suggestions: Array<{
+    id: string;
+    email: string;
+    name: string | null;
+  }>;
+}
+
+/**
+ * Hook to fetch Intercom admin suggestions for invite modal
+ * Returns suggested admins (non-members) when Intercom is connected
+ * Gracefully degrades - returns empty suggestions on any error
+ *
+ * Returns SafeResult - check result.success before using data
+ */
+export function useIntercomSuggestions(limit: number = 5, enabled: boolean = true) {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery({
+    queryKey: integrationKeys.intercomSuggestions(workspaceId ?? '', limit),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID');
+      }
+      const [error, response] = await apiClient.workspace.integrations.intercom.suggestions({
+        params: { workspaceId },
+        query: { limit },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: enabled && !!workspaceId,
+    staleTime: 60 * 1000, // 1 minute
+    retry: false, // Graceful degradation - don't retry
   });
 }

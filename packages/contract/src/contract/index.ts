@@ -178,6 +178,7 @@ export const workspaceContract = {
       callback: workspace.intercomIntegrationCallback,
       delete: workspace.deleteIntercomIntegration,
       admins: workspace.getIntercomAdmins,
+      suggestions: workspace.getIntercomSuggestions,
     },
   },
 };

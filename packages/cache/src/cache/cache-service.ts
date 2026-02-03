@@ -24,6 +24,7 @@ import {
   entitlementKeys,
   getWorkspaceBillingKeys,
   integrationKeys,
+  intercomKeys,
   linkKeys,
   membershipKeys,
   refundKeys,
@@ -467,6 +468,39 @@ export class CacheService {
   async invalidateIntegration(provider: string, providerWorkspaceId: string): Promise<void> {
     const key = integrationKeys.byProviderWorkspace(provider, providerWorkspaceId);
     await this.delete(key);
+  }
+
+  // ============================================================
+  // Intercom admins cache (reduces external API calls)
+  // ============================================================
+
+  /**
+   * Get cached Intercom admins list
+   * Returns raw admin data from Intercom API
+   */
+  async getIntercomAdmins<T>(workspaceId: string, options?: CacheOptions): Promise<T[] | null> {
+    if (options?.bypass) return null;
+    const key = intercomKeys.admins(workspaceId);
+    return this._get<T[]>(key);
+  }
+
+  /**
+   * Cache Intercom admins list
+   */
+  async setIntercomAdmins<T>(workspaceId: string, admins: T[]): Promise<void> {
+    const key = intercomKeys.admins(workspaceId);
+    await this._set(key, admins, TTL.INTERCOM_ADMINS);
+  }
+
+  /**
+   * Invalidate all Intercom-related caches for a workspace
+   * Called when integration is disconnected
+   */
+  async invalidateIntercom(workspaceId: string, providerWorkspaceId: string): Promise<void> {
+    await this.delete(
+      integrationKeys.byProviderWorkspace('intercom', providerWorkspaceId),
+      intercomKeys.admins(workspaceId)
+    );
   }
 
   // ============================================================

@@ -66,6 +66,12 @@ export const TTL = {
   INTEGRATION_LOOKUP: 1800,
 
   /**
+   * Intercom admins list - fetched from Intercom API
+   * Medium TTL (5 minutes) - admin lists change infrequently
+   */
+  INTERCOM_ADMINS: 300,
+
+  /**
    * Workspace membership - checked on every authenticated API request
    * Short TTL (2 minutes) - role changes should reflect quickly
    */
