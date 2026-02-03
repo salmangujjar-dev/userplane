@@ -28,7 +28,7 @@ export default function SettingsPage() {
             <p className="text-sm text-muted-foreground">Manage your workspace settings</p>
           </div>
 
-          <SettingsTab />
+          <SettingsTab onInviteClick={() => setInviteModalOpen(true)} />
         </main>
       </div>
 

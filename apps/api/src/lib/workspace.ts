@@ -3,6 +3,8 @@
  * Helper functions for workspace name derivation and formatting
  */
 
+import { getEmailDomain, isDisposableEmail } from '@workspace/shared';
+
 /**
  * Check if a string is an IP address (IPv4 or IPv6)
  * Why: IP addresses don't make good workspace names, so we detect them separately
@@ -138,8 +140,8 @@ export function deriveWorkspaceName(
  * deriveWorkspaceUrl("admin@subdomain.company.io") → "https://subdomain.company.io"
  */
 export function deriveWorkspaceUrl(email: string): string {
-  const domain = email.split('@')[1];
-  if (!domain) {
+  const domain = getEmailDomain(email);
+  if (!domain || isDisposableEmail(email)) {
     return 'https://userplane.io';
   }
   return `https://${domain}`;
