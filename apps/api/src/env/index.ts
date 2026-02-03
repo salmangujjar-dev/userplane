@@ -3,7 +3,7 @@
  * Centralizes all environment variable access with type safety and validation
  */
 import { createAppLogger } from '@workspace/logger';
-import { parseAppEnv, type Environment } from '@workspace/shared/env';
+import { type Environment, parseAppEnv } from '@workspace/shared/env';
 
 interface BucketCredentials {
   accountId: string;
