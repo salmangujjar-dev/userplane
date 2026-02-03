@@ -150,6 +150,7 @@ export class IntercomCanvasService {
         linkTitle: card_creation_options.link_title,
         customMessage: card_creation_options.custom_message,
         footer: card_creation_options.footer,
+        logoUrl: card_creation_options.logo_url,
       }),
     };
   }
@@ -185,6 +186,7 @@ export class IntercomCanvasService {
           linkTitle: storedData.link_title,
           customMessage: storedData.custom_message,
           footer: storedData.footer,
+          logoUrl: storedData.logo_url,
         }),
       };
     }
@@ -469,6 +471,9 @@ export class IntercomCanvasService {
         data: { workspaceId, linkId: link.linkId },
       });
 
+      // Use logo URL directly from workspace preferences (stored as full CDN URL)
+      const logoUrl = workspacePreferences?.recordingCompanyLogoPath ?? null;
+
       return {
         canvas: buildSuccessCanvas({
           linkUrl,
@@ -478,6 +483,7 @@ export class IntercomCanvasService {
           link_url: linkUrl,
           custom_message: message,
           footer: workspacePreferences?.recordingFootnote ?? null,
+          logo_url: logoUrl,
         },
       };
     } catch (error) {
@@ -586,12 +592,16 @@ export class IntercomCanvasService {
         data: { workspaceId, linkId: link.linkId },
       });
 
+      // Use logo URL directly from workspace preferences (stored as full CDN URL)
+      const logoUrl = workspacePreferences?.recordingCompanyLogoPath ?? null;
+
       // Return results to complete configure flow
       return {
         results: {
           link_url: linkUrl,
           custom_message: message,
           footer: workspacePreferences?.recordingFootnote ?? null,
+          logo_url: logoUrl,
         },
       };
     } catch (error) {

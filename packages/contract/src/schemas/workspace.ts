@@ -1316,7 +1316,34 @@ export const IntercomSuggestionsDataSchema = z.object({
   hasMore: z.boolean(),
 });
 
+// ============================================================================
+// WORKSPACE LOGO UPLOAD
+// ============================================================================
+
+/**
+ * Maximum logo file size: 2MB
+ */
+export const MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Upload workspace logo request
+ */
+export const UploadWorkspaceLogoSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Upload workspace logo response
+ * Returns the full CDN URL that is stored in the database
+ */
+export const WorkspaceLogoUploadDataSchema = z.object({
+  url: z.string().url(),
+});
+
 // Additional type exports
+export type WorkspaceLogoUploadData = z.infer<typeof WorkspaceLogoUploadDataSchema>;
 export type WorkspaceItem = z.infer<typeof WorkspaceItemSchema>;
 export type WorkspacesListData = z.infer<typeof WorkspacesListDataSchema>;
 export type WorkspacePreferences = z.infer<typeof WorkspacePreferencesSchema>;

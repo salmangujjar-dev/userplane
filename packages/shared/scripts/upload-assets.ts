@@ -33,7 +33,12 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 // =============================================================================
 
 type AssetCategory = 'brand' | 'tiles' | 'integrations' | 'auth' | 'intercom-canvas';
-type Environment = 'development' | 'staging' | 'production';
+
+/** Valid environment names - matches packages/shared/src/env.ts */
+type Environment = 'development' | 'staging' | 'production' | 'preview';
+
+/** All valid environments for validation */
+const VALID_ENVIRONMENTS: Environment[] = ['development', 'staging', 'production', 'preview'];
 
 interface AssetEntry {
   /** Original path key (e.g., 'brand/logo-dark.svg') */
@@ -140,12 +145,27 @@ function parseEnvFile(content: string): Record<string, string> {
 
 /**
  * Load environment variables from a .env file
+ * Checks packages/shared/.env.<env> first, then falls back to apps/api/.env.<env>
  */
 function loadEnvFile(envName: Environment): void {
-  const envPath = join(MONOREPO_ROOT, 'apps/api', `.env.${envName}`);
+  // Try packages/shared first (local to this package)
+  const sharedEnvPath = join(SCRIPT_DIR, '..', `.env.${envName}`);
+  // Fall back to apps/api
+  const apiEnvPath = join(MONOREPO_ROOT, 'apps/api', `.env.${envName}`);
 
-  if (!existsSync(envPath)) {
-    console.error(`Error: Environment file not found: ${envPath}`);
+  let envPath: string;
+  let envSource: string;
+
+  if (existsSync(sharedEnvPath)) {
+    envPath = sharedEnvPath;
+    envSource = `packages/shared/.env.${envName}`;
+  } else if (existsSync(apiEnvPath)) {
+    envPath = apiEnvPath;
+    envSource = `apps/api/.env.${envName}`;
+  } else {
+    console.error(`Error: Environment file not found.`);
+    console.error(`  Checked: packages/shared/.env.${envName}`);
+    console.error(`  Checked: apps/api/.env.${envName}`);
     console.error(`\nRun 'make env:setup' to create environment files.`);
     process.exit(1);
   }
@@ -153,22 +173,24 @@ function loadEnvFile(envName: Environment): void {
   const content = readFileSync(envPath, 'utf-8');
   const envVars = parseEnvFile(content);
 
-  // Only set R2_ASSETS_* variables
-  const r2Vars = [
+  // Set R2_ASSETS_* and MEDIA_* variables
+  const envVarNames = [
     'R2_ASSETS_ACCOUNT_ID',
     'R2_ASSETS_ACCESS_KEY_ID',
     'R2_ASSETS_SECRET_ACCESS_KEY',
     'R2_ASSETS_BUCKET_NAME',
     'R2_ASSETS_PREFIX',
+    'MEDIA_CDN_BASE_URL',
+    'MEDIA_ASSETS_PREFIX',
   ];
 
-  for (const key of r2Vars) {
+  for (const key of envVarNames) {
     if (envVars[key]) {
       process.env[key] = envVars[key];
     }
   }
 
-  console.log(`Loaded environment from: apps/api/.env.${envName}\n`);
+  console.log(`Loaded environment from: ${envSource}\n`);
 }
 
 // =============================================================================
@@ -195,9 +217,9 @@ function parseArgs(): UploadOptions {
       options.verbose = true;
     } else if (arg.startsWith('--env=')) {
       const envValue = arg.slice(6) as Environment;
-      if (!['development', 'staging', 'production'].includes(envValue)) {
+      if (!VALID_ENVIRONMENTS.includes(envValue)) {
         console.error(`Invalid environment: ${envValue}`);
-        console.error('Valid options: development, staging, production');
+        console.error(`Valid options: ${VALID_ENVIRONMENTS.join(', ')}`);
         process.exit(1);
       }
       options.env = envValue;
@@ -224,8 +246,9 @@ Usage:
   bun run scripts/upload-assets.ts [options]
 
 Options:
-  --env=<env>     Load R2 credentials from apps/api/.env.<env>
-                  Valid values: development, staging, production
+  --env=<env>     Load R2 credentials from .env.<env>
+                  Valid values: ${VALID_ENVIRONMENTS.join(', ')}
+                  Checks packages/shared/.env.<env> first, falls back to apps/api/.env.<env>
   --dry-run       Show what would be uploaded without actually uploading
   --force         Re-upload even if hash unchanged
   --manifest-only Generate manifest only (no upload, no R2 credentials needed)
@@ -238,10 +261,13 @@ Environment Variables (required for upload, loaded via --env or set manually):
   R2_ASSETS_SECRET_ACCESS_KEY R2 secret access key
   R2_ASSETS_BUCKET_NAME       R2 bucket name
   R2_ASSETS_PREFIX            Top-level path prefix (default: 'media')
+  MEDIA_CDN_BASE_URL          CDN base URL (for validation)
+  MEDIA_ASSETS_PREFIX         Assets prefix (for validation)
 
 Examples:
   bun run upload-assets --env=development           # Upload using dev credentials
   bun run upload-assets --env=staging               # Upload using staging credentials
+  bun run upload-assets --env=preview               # Upload using preview credentials
   bun run upload-assets --env=production            # Upload using production credentials
   bun run upload-assets --env=development --dry-run # Preview with dev credentials
   bun run upload-assets --manifest-only             # Generate manifest only (no creds needed)

@@ -1,44 +1,41 @@
 /**
  * Media Store Configuration
  * CDN URL configuration for serving media assets
+ *
+ * This module re-exports from defaults.ts and env.ts for backwards compatibility.
+ * For new code, prefer importing from './defaults' and './env' directly.
  */
 
-/**
- * Get environment variable in a cross-platform way
- */
-function getEnvVar(name: string): string | undefined {
-  // Check for globalThis.process (Node.js/Bun)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const g = globalThis as any;
-  if (g?.process?.env) {
-    return g.process.env[name] as string | undefined;
-  }
-  return undefined;
-}
+// Re-export defaults
+export { MEDIA_DEFAULTS, type MediaDefaults } from './defaults';
 
-/**
- * Default values for media configuration
- */
-const DEFAULTS = {
-  CDN_BASE_URL: 'https://cdn.userplane.io',
-  ASSETS_PREFIX: 'media',
-} as const;
+// Re-export env config
+export { loadMediaEnvConfig, mediaEnv, type MediaEnvConfig } from './env';
+
+// Import for backwards-compatible exports
+import { mediaEnv } from './env';
 
 /**
  * CDN base URL (without prefix)
  * Set via MEDIA_CDN_BASE_URL environment variable
+ *
+ * @deprecated Use `mediaEnv.cdnBaseUrl` instead
  */
-export const MEDIA_CDN_BASE_URL = getEnvVar('MEDIA_CDN_BASE_URL') || DEFAULTS.CDN_BASE_URL;
+export const MEDIA_CDN_BASE_URL = mediaEnv.cdnBaseUrl;
 
 /**
  * Assets prefix path
  * Set via MEDIA_ASSETS_PREFIX environment variable
  * Should match R2_ASSETS_PREFIX used during upload
+ *
+ * @deprecated Use `mediaEnv.assetsPrefix` instead
  */
-export const MEDIA_ASSETS_PREFIX = getEnvVar('MEDIA_ASSETS_PREFIX') || DEFAULTS.ASSETS_PREFIX;
+export const MEDIA_ASSETS_PREFIX = mediaEnv.assetsPrefix;
 
 /**
  * Full CDN URL for media assets (base + prefix)
  * Constructed from MEDIA_CDN_BASE_URL and MEDIA_ASSETS_PREFIX
+ *
+ * @deprecated Use `mediaEnv.cdnUrl` instead
  */
-export const MEDIA_CDN_URL = `${MEDIA_CDN_BASE_URL}/${MEDIA_ASSETS_PREFIX}`;
+export const MEDIA_CDN_URL = mediaEnv.cdnUrl;

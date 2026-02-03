@@ -121,6 +121,10 @@ export const workspaceContract = {
     update: workspace.updateWorkspacePreferences,
   },
 
+  logo: {
+    upload: workspace.uploadWorkspaceLogo,
+  },
+
   members: {
     list: workspace.getWorkspaceMembers,
     getMembership: workspace.getWorkspaceMembership,
