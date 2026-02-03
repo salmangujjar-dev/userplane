@@ -19,6 +19,7 @@
   "sideEffects": false,
   "scripts": {
     "dev": "vite build --watch",
+    "dev:preview": "bun run dev",
     "dev:all": "vite build --watch",
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",

@@ -1,5 +1,6 @@
 import type { DbClient } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
+import { type Environment, isSecureEnvironment } from '@workspace/shared/env';
 import { APIError, betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, magicLink, openAPI } from 'better-auth/plugins';
@@ -70,8 +71,20 @@ export interface AuthConfig {
   baseURL: string;
   trustedOrigins: string[];
   cookiePrefix?: string;
+  /**
+   * Cookie domain for cross-subdomain sharing (e.g., .userplane.io)
+   * When set, cookies are shared across all subdomains
+   * Only set this in preview/staging/production environments
+   */
+  cookieDomain?: string;
   /** Node environment - defaults to process.env.NODE_ENV */
   nodeEnv?: 'development' | 'production' | 'test';
+  /**
+   * Application environment for deployment stage
+   * Controls cookie security settings (preview/staging/production use secure cookies)
+   * Defaults to 'development'
+   */
+  appEnv?: Environment;
   google: {
     clientId: string;
     clientSecret: string;
@@ -89,7 +102,10 @@ export interface AuthConfig {
 export function createAuth(config: AuthConfig) {
   const nodeEnv = config.nodeEnv || (process.env.NODE_ENV as typeof config.nodeEnv);
   const isProduction = nodeEnv === 'production';
-  const isDevelopment = !isProduction;
+
+  // Use appEnv for cookie security decisions (preview/staging/production all need secure cookies)
+  const appEnv = config.appEnv || 'development';
+  const isSecure = isSecureEnvironment(appEnv);
 
   // Register feature flags config for use in hooks
   if (config.featureFlags) {
@@ -172,17 +188,42 @@ export function createAuth(config: AuthConfig) {
     advanced: {
       // Cookie prefix for all cookies
       cookiePrefix: config.cookiePrefix || 'userplane',
-      // Cookie attributes based on environment
-      // Development: use lax for localhost with different ports
-      // Production: use lax with secure flag
-      defaultCookieAttributes: isDevelopment
+      // Force secure cookies for preview/staging/production even when NODE_ENV=development
+      // This is needed because Better Auth checks NODE_ENV to decide secure cookie behavior
+      useSecureCookies: isSecure,
+      // Cross-subdomain cookie sharing for preview/staging/production
+      // Allows cookies set on api.userplane.io to be read by dash.userplane.io
+      //
+      // Security model:
+      // - cookieDomain (.userplane.io) controls which domains can READ the cookie
+      // - trustedOrigins controls which domains can USE the auth API
+      // Even if an untrusted subdomain reads the cookie, it cannot authenticate
+      // because requests from non-trusted origins are rejected by Better Auth.
+      // This is the recommended pattern: parent domain for cookie sharing,
+      // trustedOrigins for access control.
+      // See: https://www.better-auth.com/docs/concepts/cookies#cross-subdomain-cookies
+      ...(config.cookieDomain
         ? {
-            sameSite: 'lax',
-            secure: false,
+            crossSubDomainCookies: {
+              enabled: true,
+              domain: config.cookieDomain,
+            },
+          }
+        : {}),
+      // Cookie attributes based on appEnv (deployment stage)
+      // Development: use lax for localhost with different ports
+      // Preview/Staging/Production: use none with secure flag to support OAuth POST callbacks
+      // SameSite=lax cookies are NOT sent on cross-site POST requests (per spec),
+      // which breaks OAuth providers that use POST-based callbacks (Google, Apple)
+      // See: https://github.com/better-auth/better-auth/issues/5243
+      defaultCookieAttributes: isSecure
+        ? {
+            sameSite: 'none',
+            secure: true,
           }
         : {
             sameSite: 'lax',
-            secure: true,
+            secure: false,
           },
     },
     databaseHooks: {

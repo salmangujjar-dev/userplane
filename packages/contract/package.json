@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "dev:preview": "bun run dev",
     "dev:all": "tsc --watch",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "lint": "eslint . --max-warnings 0",

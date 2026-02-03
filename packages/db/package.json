@@ -21,6 +21,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "dev:preview": "bun run dev",
     "dev:all": "tsc --watch",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun run src/migrate.ts",

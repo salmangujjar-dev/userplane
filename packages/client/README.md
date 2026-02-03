@@ -41,7 +41,7 @@ bun install
 import { createClient } from '@workspace/client';
 
 const client = createClient({
-  url: 'http://localhost:3000/api/v2',
+  url: 'http://localhost:3000/api/v1',
 });
 
 const session = await client.session.init({
@@ -53,7 +53,7 @@ const session = await client.session.init({
 
 ```typescript
 const client = createClient({
-  url: 'http://localhost:3000/api/v2',
+  url: 'http://localhost:3000/api/v1',
   headers: {
     Authorization: 'Bearer your-token-here',
   },
@@ -64,7 +64,7 @@ const client = createClient({
 
 ```typescript
 const client = createClient({
-  url: 'http://localhost:3000/api/v2',
+  url: 'http://localhost:3000/api/v1',
   headers: async ({ context }) => {
     const token = await getAuthToken();
     return { Authorization: `Bearer ${token}` };
@@ -158,7 +158,7 @@ const result = await client.session.init(
 
 ```typescript
 const client = createClient({
-  url: 'http://localhost:3000/api/v2',
+  url: 'http://localhost:3000/api/v1',
   fetch: async (request, init) => {
     const url = typeof request === 'string' ? request : request.url;
     console.log(`Request: ${init?.method || 'GET'} ${url}`);
@@ -173,7 +173,7 @@ const client = createClient({
 
 ```typescript
 const client = createClient({
-  url: 'http://localhost:3000/api/v2',
+  url: 'http://localhost:3000/api/v1',
   onError: (error) => {
     console.error('API Error:', error);
   },
@@ -188,7 +188,7 @@ const client = createClient({
     if (typeof window === 'undefined') {
       throw new Error('Client-side only');
     }
-    return `${window.location.origin}/api/v2`;
+    return `${window.location.origin}/api/v1`;
   },
   credentials: 'include',
 });
