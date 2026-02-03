@@ -12,9 +12,10 @@ import { Control, Controller, FieldErrors, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
+import { InviteLoadingState, InviteTeammatesView } from '@/components/integrations/intercom';
 import { URLInput } from '@/components/url-input';
-import { WorkspaceCreatedSuccess } from '@/components/workspace/workspace-created-success';
 import { useAccount } from '@/features/account';
+import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useCreateWorkspace } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
 import { DomainUrlSchema } from '@/schemas';
@@ -171,10 +172,48 @@ function CreateWorkspaceForm({
   );
 }
 
+/**
+ * Post-creation view for inviting teammates and configuring settings.
+ * Shows after workspace is manually created (no Intercom integration).
+ */
+function PostCreationInviteView({
+  workspaceId,
+  domainUrl,
+}: {
+  workspaceId: string;
+  domainUrl: string;
+}) {
+  const router = useRouter();
+
+  // Fetch first domain (gets ID for domain created during workspace setup)
+  const { data: domainsData, isLoading } = useFirstWorkspaceDomain(workspaceId);
+
+  if (isLoading) {
+    return <InviteLoadingState />;
+  }
+
+  const firstDomain = domainsData?.success ? domainsData.data.domains[0] : null;
+
+  return (
+    <InviteTeammatesView
+      workspaceId={workspaceId}
+      teammates={[]}
+      invitePolicy="private"
+      allowedDomains={null}
+      initialDomainId={firstDomain?.domainId ?? null}
+      initialDomainUrl={firstDomain?.domainUrl ?? domainUrl}
+      variant="direct"
+      onComplete={() => router.push(`/${workspaceId}`)}
+      onSkip={() => router.push(`/${workspaceId}/settings`)}
+    />
+  );
+}
+
 export default function CreateWorkspacePage() {
   const [createdWorkspace, setCreatedWorkspace] = useState<{
     workspaceId: string;
     workspaceName: string;
+    domainUrl: string;
   } | null>(null);
   const [tokenCreationFailed, setTokenCreationFailed] = useState(false);
 
@@ -238,6 +277,7 @@ export default function CreateWorkspacePage() {
           setCreatedWorkspace({
             workspaceId,
             workspaceName,
+            domainUrl: '', // Will be fetched by PostCreationInviteView
           });
         },
       }
@@ -259,28 +299,19 @@ export default function CreateWorkspacePage() {
           setCreatedWorkspace({
             workspaceId,
             workspaceName,
+            domainUrl: data.workspace,
           });
         },
       }
     );
   };
 
-  const handleGoToWorkspace = () => {
-    if (createdWorkspace) {
-      router.push(`/${createdWorkspace.workspaceId}`);
-    }
-  };
-
-  // Show success state after workspace is created
+  // Show invite view after workspace is created
   if (createdWorkspace) {
     return (
-      <WorkspaceCreatedSuccess
-        workspaceName={createdWorkspace.workspaceName}
-        onPrimaryAction={handleGoToWorkspace}
-        secondaryText="Connect to Intercom"
-        onSecondaryAction={() =>
-          router.push(`/${createdWorkspace.workspaceId}/settings?tab=integrations`)
-        }
+      <PostCreationInviteView
+        workspaceId={createdWorkspace.workspaceId}
+        domainUrl={createdWorkspace.domainUrl}
       />
     );
   }
