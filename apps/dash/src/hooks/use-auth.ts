@@ -1,4 +1,5 @@
 import { authClient } from '@/client/auth';
+import { env } from '@/env';
 
 export interface SignUpWithEmailParams {
   email: string;
@@ -24,20 +25,28 @@ export interface SendVerificationEmailParams {
   redirectTo?: string;
 }
 
+// Base URL for auth callbacks - use configured dashboard URL for consistency
+const dashboardUrl = env.dashboard.url;
+
 /**
  * Custom hook for authentication operations
  * Provides methods for sign in, sign out, sign up, impersonation, etc.
  */
 export function useAuth() {
   const signOut = async () => {
-    await authClient.signOut();
+    try {
+      await authClient.signOut();
+    } catch (error) {
+      // Even if API call fails, clear local state and redirect
+      // This handles edge cases like network issues or expired sessions
+      console.error('Sign out error:', error);
+    }
+    // Always redirect to auth page
     window.location.href = '/auth';
   };
 
   const signInWithGoogle = async (redirectTo?: string) => {
-    const callbackURL = redirectTo
-      ? `${window.location.origin}${redirectTo}`
-      : `${window.location.origin}/`;
+    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
 
     await authClient.signIn.social({
       provider: 'google',
@@ -49,9 +58,7 @@ export function useAuth() {
    * Sign up with email and password
    */
   const signUpWithEmail = async ({ email, password, name, redirectTo }: SignUpWithEmailParams) => {
-    const callbackURL = redirectTo
-      ? `${window.location.origin}${redirectTo}`
-      : `${window.location.origin}/`;
+    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
 
     return await authClient.signUp.email({
       email,
@@ -70,9 +77,7 @@ export function useAuth() {
     rememberMe = true,
     redirectTo,
   }: SignInWithEmailParams) => {
-    const callbackURL = redirectTo
-      ? `${window.location.origin}${redirectTo}`
-      : `${window.location.origin}/`;
+    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
 
     return await authClient.signIn.email({
       email,
@@ -86,9 +91,7 @@ export function useAuth() {
    * Sign in with magic link (passwordless)
    */
   const signInWithMagicLink = async ({ email, redirectTo }: SignInWithMagicLinkParams) => {
-    const callbackURL = redirectTo
-      ? `${window.location.origin}${redirectTo}`
-      : `${window.location.origin}/`;
+    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
 
     return await authClient.signIn.magicLink({
       email,
@@ -100,9 +103,7 @@ export function useAuth() {
    * Link Google account to current user
    */
   const linkGoogle = async (redirectTo?: string) => {
-    const callbackURL = redirectTo
-      ? `${window.location.origin}${redirectTo}`
-      : `${window.location.origin}/`;
+    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
 
     await authClient.linkSocial({
       provider: 'google',
@@ -114,9 +115,7 @@ export function useAuth() {
    * Send verification email to user
    */
   const sendVerificationEmail = async ({ email, redirectTo }: SendVerificationEmailParams) => {
-    const callbackURL = redirectTo
-      ? `${window.location.origin}${redirectTo}`
-      : `${window.location.origin}/`;
+    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
 
     return await authClient.sendVerificationEmail({
       email,

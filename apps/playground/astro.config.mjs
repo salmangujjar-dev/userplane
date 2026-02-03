@@ -13,7 +13,7 @@ export default defineConfig({
       exclude: ['@workspace/sdk']
     },
     server: {
-      allowedHosts: ['.ngrok-free.app', '.ngrok.io']
+      allowedHosts: ['playground-preview.userplane.io'],
     }
   }
 });

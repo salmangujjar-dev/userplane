@@ -1,4 +1,9 @@
+import { type Environment, isSecureEnvironment, parseAppEnv } from '@workspace/shared/env';
+
 interface EnvConfig {
+  appEnv: Environment;
+  /** Whether secure cookies are used (preview/staging/production use __Secure- prefix) */
+  useSecureCookies: boolean;
   api: {
     url: string;
   };
@@ -17,7 +22,12 @@ interface EnvConfig {
 }
 
 function loadEnvConfig(): EnvConfig {
+  const appEnv = parseAppEnv(process.env.APP_ENV);
+  const useSecureCookies = isSecureEnvironment(appEnv);
+
   const config: EnvConfig = {
+    appEnv,
+    useSecureCookies,
     api: {
       url: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
     },

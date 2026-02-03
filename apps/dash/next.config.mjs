@@ -1,8 +1,27 @@
+/* global process */
+import dotenv from 'dotenv';
+
 import { withSentryConfig } from '@sentry/nextjs';
+
+import { getEnvFileName } from '@workspace/shared/env';
+
+// Load environment-specific .env file based on APP_ENV
+// APP_ENV=development (default) -> .env.development
+// APP_ENV=preview -> .env.preview
+// APP_ENV=staging -> .env.staging
+// APP_ENV=production -> .env.production
+// Note: override=true is needed because Next.js loads .env.development first
+const appEnv = process.env.APP_ENV || 'development';
+const envFile = getEnvFileName(appEnv);
+dotenv.config({ path: envFile, override: true });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@workspace/ui"],
+  // Allow Cloudflare tunnel origins for dev/preview mode
+  allowedDevOrigins: [
+    'dash-preview.userplane.io',
+  ],
   images: {
     remotePatterns: [
       {

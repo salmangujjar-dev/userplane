@@ -9,13 +9,23 @@ const logger = createBrowserLogger('middleware');
 const authRoutes = ['/auth'];
 const publicRoutes = ['/accounts/delete/confirm', '/setup'];
 
+/**
+ * Get session cookie name based on environment
+ * When useSecureCookies is enabled (preview/staging/production), cookies are prefixed with __Secure-
+ */
+function getSessionCookieName(): string {
+  const baseName = `${env.auth.cookiePrefix}.session_token`;
+  return env.useSecureCookies ? `__Secure-${baseName}` : baseName;
+}
+
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
   const isPublicRoute = publicRoutes.some((route) => path.startsWith(route));
   const isProtectedRoute = !isAuthRoute && !isPublicRoute;
 
-  const sessionCookie = request.cookies.get(`${env.auth.cookiePrefix}.session_token`);
+  const sessionCookieName = getSessionCookieName();
+  const sessionCookie = request.cookies.get(sessionCookieName);
   const hasSession = !!sessionCookie;
 
   logger.debug(

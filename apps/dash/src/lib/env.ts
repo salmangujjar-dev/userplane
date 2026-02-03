@@ -2,6 +2,7 @@
  * Environment configuration for Dashboard
  * Centralizes all environment variable access with type safety and validation
  */
+import { type Environment, isProductionLike, parseAppEnv } from '@workspace/shared/env';
 
 interface SentryConfig {
   // Runtime configuration
@@ -19,6 +20,8 @@ interface SentryConfig {
 
 interface EnvConfig {
   nodeEnv: 'development' | 'production' | 'test';
+  /** Application environment for deployment stage (development, preview, staging, production) */
+  appEnv: Environment;
   apiUrl: string;
   homeUrl: string;
   authCookiePrefix: string;
@@ -39,10 +42,14 @@ function parseFloat(value: string | undefined, defaultValue: number): number {
  */
 export function loadEnvConfig(): EnvConfig {
   const nodeEnv = (process.env.NODE_ENV || 'development') as EnvConfig['nodeEnv'];
-  const isProduction = nodeEnv === 'production';
+  // APP_ENV is set via next.config.mjs (e.g., APP_ENV=preview next dev)
+  const appEnv = parseAppEnv(process.env.APP_ENV);
+  // Use appEnv to determine production-like behavior for Sentry sampling
+  const isProdLike = isProductionLike(appEnv);
 
   const config: EnvConfig = {
     nodeEnv,
+    appEnv,
     apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
     homeUrl: process.env.NEXT_PUBLIC_HOME_URL || 'http://localhost:4321',
     authCookiePrefix: process.env.NEXT_PUBLIC_AUTH_COOKIE_PREFIX || 'userplane',
@@ -52,7 +59,7 @@ export function loadEnvConfig(): EnvConfig {
       release: process.env.NEXT_PUBLIC_SENTRY_RELEASE || process.env.SENTRY_RELEASE,
       tracesSampleRate: parseFloat(
         process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE || process.env.SENTRY_TRACES_SAMPLE_RATE,
-        isProduction ? 0.1 : 1.0
+        isProdLike ? 0.1 : 1.0
       ),
       replaysSessionSampleRate: parseFloat(
         process.env.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
@@ -84,6 +91,7 @@ export const env = loadEnvConfig();
  */
 export const clientEnv = {
   nodeEnv: env.nodeEnv,
+  appEnv: env.appEnv,
   apiUrl: env.apiUrl,
   homeUrl: env.homeUrl,
   authCookiePrefix: env.authCookiePrefix,

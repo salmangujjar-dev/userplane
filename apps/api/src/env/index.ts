@@ -3,6 +3,7 @@
  * Centralizes all environment variable access with type safety and validation
  */
 import { createAppLogger } from '@workspace/logger';
+import { parseAppEnv, type Environment } from '@workspace/shared/env';
 
 interface BucketCredentials {
   accountId: string;
@@ -35,6 +36,8 @@ interface EnvConfig {
   port: number;
   host: string;
   nodeEnv: 'development' | 'production' | 'test';
+  /** Application environment for deployment stage (development, preview, staging, production) */
+  appEnv: Environment;
   jwtIssuer: string;
   cors: {
     origins: string[];
@@ -45,6 +48,8 @@ interface EnvConfig {
     secret: string;
     url: string;
     cookiePrefix: string;
+    /** Cookie domain for cross-subdomain sharing (e.g., .userplane.io) */
+    cookieDomain?: string;
   };
   google: {
     clientId: string;
@@ -176,11 +181,13 @@ function parseFloat(value: string | undefined, defaultValue: number): number {
  */
 export function loadEnvConfig(): EnvConfig {
   const nodeEnv = (process.env.NODE_ENV || 'development') as EnvConfig['nodeEnv'];
+  const appEnv = parseAppEnv(process.env.APP_ENV);
 
   const config: EnvConfig = {
     port: parseInteger(process.env.PORT, 3001),
     host: process.env.HOST || '0.0.0.0',
     nodeEnv,
+    appEnv,
     jwtIssuer: process.env.JWT_ISSUER || 'userplane',
     cors: {
       origins: parseCommaSeparated(process.env.CORS_ORIGINS, [
@@ -195,6 +202,9 @@ export function loadEnvConfig(): EnvConfig {
       secret: process.env.BETTER_AUTH_SECRET || 'dev-auth-secret-change-in-production',
       url: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
       cookiePrefix: process.env.BETTER_AUTH_COOKIE_PREFIX || 'userplane',
+      // Cookie domain for cross-subdomain sharing (e.g., .userplane.io)
+      // Only set in preview/staging/production to share cookies across subdomains
+      cookieDomain: process.env.BETTER_AUTH_COOKIE_DOMAIN,
     },
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -410,7 +420,8 @@ if (env.nodeEnv === 'production') {
 export function logConfig(): void {
   logger.info(
     {
-      mode: env.nodeEnv,
+      env: env.nodeEnv,
+      appEnv: env.appEnv,
       port: env.port,
       host: env.host,
       corsOrigins: env.cors.origins,

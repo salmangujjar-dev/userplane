@@ -101,9 +101,16 @@ export const auth = createAuth({
   database: db,
   secret: env.auth.secret,
   baseURL: env.auth.url,
-  trustedOrigins: env.cors.origins,
+  // trustedOrigins enforces which domains can USE the auth API (access control)
+  // Combined with cookieDomain (which domains can READ cookies), this provides security:
+  // untrusted subdomains may read cookies but cannot authenticate without being listed here
+  trustedOrigins: [...env.cors.origins, env.auth.url],
   cookiePrefix: env.auth.cookiePrefix,
+  // Cookie domain for cross-subdomain sharing (preview/staging/production only)
+  // Enables cookies set on api.userplane.io to be read by dash.userplane.io
+  cookieDomain: env.auth.cookieDomain,
   nodeEnv: env.nodeEnv,
+  appEnv: env.appEnv,
   google: {
     clientId: env.google.clientId,
     clientSecret: env.google.clientSecret,
