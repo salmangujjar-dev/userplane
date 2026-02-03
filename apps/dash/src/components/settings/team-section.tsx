@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@workspace/ui/components/table';
-import { ChevronUp, MoreVertical, UserMinus } from 'lucide-react';
+import { ArrowUpRight, ChevronUp, MoreVertical, UserMinus } from 'lucide-react';
 import { useState } from 'react';
 
 import { TeamMemberActionModal } from '@/components/modals/team-member-action-modal';
@@ -41,7 +41,11 @@ type ConfirmAction = {
   currentRole?: 'owner' | 'admin' | 'member';
 };
 
-export function TeamSection() {
+interface TeamSectionProps {
+  onInviteClick?: () => void;
+}
+
+export function TeamSection({ onInviteClick }: TeamSectionProps) {
   const workspaceId = useWorkspaceId();
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
@@ -83,12 +87,12 @@ export function TeamSection() {
 
   if (error || (membersResult && !membersResult.success)) {
     return (
-      <div>
+      <div className="max-w-2xl">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Team</h2>
           <p className="text-sm text-muted-foreground">Manage team members and permissions</p>
         </div>
-        <div className="max-w-2xl">
+        <div>
           <SectionError
             title="Failed to load team members"
             description={
@@ -109,13 +113,13 @@ export function TeamSection() {
   const totalPages = pagination?.totalPages || 1;
 
   return (
-    <div>
+    <div className="max-w-2xl">
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Team</h2>
         <p className="text-sm text-muted-foreground">Manage team members and permissions</p>
       </div>
 
-      <div className="max-w-2xl">
+      <div>
         <div className="rounded-xl border bg-card">
           <Table>
             <TableHeader>
@@ -229,6 +233,18 @@ export function TeamSection() {
             </div>
           )}
         </div>
+
+        {onInviteClick && (
+          <div className="mt-3 flex justify-center">
+            <button
+              onClick={onInviteClick}
+              className="text-sm text-muted-foreground underline hover:text-foreground transition-colors inline-flex items-center gap-1"
+            >
+              Add more
+              <ArrowUpRight className="h-3 w-3" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Confirmation Modal */}

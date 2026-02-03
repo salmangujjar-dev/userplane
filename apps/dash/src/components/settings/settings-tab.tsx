@@ -16,7 +16,11 @@ import { TeamSection } from './team-section';
 import { WorkspacePlanSection } from './workspace-plan-section';
 import { WorkspaceSection } from './workspace-section';
 
-export function SettingsTab() {
+interface SettingsTabProps {
+  onInviteClick?: () => void;
+}
+
+export function SettingsTab({ onInviteClick }: SettingsTabProps) {
   const [activeTab, setActiveTab] = useQueryState('tab', tabParser.withDefault('general'));
 
   return (
@@ -38,7 +42,7 @@ export function SettingsTab() {
         </TabsContent>
 
         <TabsContent value="team" className="space-y-8">
-          <TeamSection />
+          <TeamSection onInviteClick={onInviteClick} />
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-8">
