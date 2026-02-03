@@ -6,15 +6,19 @@ import { Checkbox } from '@workspace/ui/components/checkbox';
 import { Input } from '@workspace/ui/components/input';
 import { toast } from '@workspace/ui/components/sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import Logo from '@workspace/ui/components/logo';
 import { Loader2, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import validator from 'validator';
 import { z } from 'zod';
 
+import { cn } from '@workspace/ui/lib/utils';
+
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { PaginationControls } from '@/components/shared/pagination-controls';
+import { useAccount } from '@/features/account';
 import { useCreateDomain, useUpdateDomain } from '@/features/domains';
 import { useSendWorkspaceInvites, useUpdateInvitePolicy } from '@/features/workspace';
 import { showErrorToast } from '@/lib/errors';
@@ -38,12 +42,13 @@ const emailSchema = z.object({
 
 type EmailFormData = z.infer<typeof emailSchema>;
 
-// Internal teammate type for rendering (extends base Teammate with isManual flag)
+// Internal teammate type for rendering (extends base Teammate with flags)
 interface TeammateItem {
   id: string;
   email: string;
   name: string | null;
   isManual: boolean;
+  isCurrentUser: boolean;
 }
 
 interface InviteTeammatesViewProps {
@@ -53,6 +58,7 @@ interface InviteTeammatesViewProps {
   allowedDomains: string[] | null;
   initialDomainId: string | null;
   initialDomainUrl: string;
+  variant?: 'direct' | 'intercom';
   onComplete: () => void;
   onSkip: () => void;
 }
@@ -69,10 +75,15 @@ export function InviteTeammatesView({
   allowedDomains: initialDomains,
   initialDomainId,
   initialDomainUrl,
+  variant = 'intercom',
   onComplete,
   onSkip,
 }: InviteTeammatesViewProps) {
   const [activeTab, setActiveTab] = useState('teammates');
+
+  // Fetch current user to show in the team list
+  const { data: accountResult } = useAccount();
+  const currentUser = accountResult?.success ? accountResult.data : null;
 
   // Selection state - tracks all selected emails (both manual and from teammates)
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(() => {
@@ -117,22 +128,47 @@ export function InviteTeammatesView({
     setEmailDomains(initialDomains || []);
   }, [initialPolicy, initialDomains]);
 
-  // Create unified teammates list (manual emails first, then teammates from props)
+  // Create unified teammates list (current user first, then manual emails, then teammates from props)
   const allTeammates: TeammateItem[] = useMemo(() => {
-    const manualItems: TeammateItem[] = manualEmails.map((email) => ({
-      id: `manual-${email}`,
-      email,
-      name: null,
-      isManual: true,
-    }));
-    const teammateItems: TeammateItem[] = teammates.map((t) => ({
-      id: t.id,
-      email: t.email,
-      name: t.name,
-      isManual: false,
-    }));
-    return [...manualItems, ...teammateItems];
-  }, [manualEmails, teammates]);
+    const items: TeammateItem[] = [];
+
+    // Current user always first (if available)
+    if (currentUser) {
+      items.push({
+        id: 'current-user',
+        email: currentUser.userEmail,
+        name: currentUser.userName,
+        isManual: false,
+        isCurrentUser: true,
+      });
+    }
+
+    // Manual emails (skip if same as current user)
+    manualEmails.forEach((email) => {
+      if (currentUser && email.toLowerCase() === currentUser.userEmail.toLowerCase()) return;
+      items.push({
+        id: `manual-${email}`,
+        email,
+        name: null,
+        isManual: true,
+        isCurrentUser: false,
+      });
+    });
+
+    // Teammates from props (skip if same as current user)
+    teammates.forEach((t) => {
+      if (currentUser && t.email.toLowerCase() === currentUser.userEmail.toLowerCase()) return;
+      items.push({
+        id: t.id,
+        email: t.email,
+        name: t.name,
+        isManual: false,
+        isCurrentUser: false,
+      });
+    });
+
+    return items;
+  }, [manualEmails, teammates, currentUser]);
 
   // Pagination over unified list
   const totalPages = Math.ceil(allTeammates.length / ITEMS_PER_PAGE);
@@ -162,8 +198,10 @@ export function InviteTeammatesView({
     createDomainMutation.isPending ||
     updateDomainMutation.isPending;
 
+  // Check if all selectable teammates (excluding current user) are selected
+  const selectableTeammates = allTeammates.filter((t) => !t.isCurrentUser);
   const allSelected =
-    allTeammates.length > 0 && allTeammates.every((t) => selectedEmails.has(t.email));
+    selectableTeammates.length > 0 && selectableTeammates.every((t) => selectedEmails.has(t.email));
 
   // Toggle email selection
   const handleToggleEmail = (email: string) => {
@@ -191,7 +229,8 @@ export function InviteTeammatesView({
     if (allSelected) {
       setSelectedEmails(new Set());
     } else {
-      setSelectedEmails(new Set(allTeammates.map((t) => t.email)));
+      // Only select non-current-user teammates
+      setSelectedEmails(new Set(selectableTeammates.map((t) => t.email)));
     }
   };
 
@@ -310,15 +349,14 @@ export function InviteTeammatesView({
     });
   };
 
-  // All emails to invite (from selection)
+  // All emails to invite (from selection, excluding current user)
   const allEmailsToInvite = useMemo(() => {
-    return Array.from(selectedEmails);
-  }, [selectedEmails]);
+    const currentUserEmail = currentUser?.userEmail?.toLowerCase();
+    return Array.from(selectedEmails).filter((email) => email.toLowerCase() !== currentUserEmail);
+  }, [selectedEmails, currentUser]);
 
   // Main action: save domain, policy, then send invites
   const handleLetsGo = async () => {
-    if (allEmailsToInvite.length === 0) return;
-
     // Save domain first (if changed)
     if (hasDomainChanges) {
       const domainSaved = await saveDomain();
@@ -331,19 +369,24 @@ export function InviteTeammatesView({
       if (!policySaved) return;
     }
 
-    // Send invites
-    sendInvites.mutate(allEmailsToInvite, {
-      onSuccess: (result) => {
-        if (!result.success) {
-          showErrorToast(result.error);
-          return;
-        }
-        toast.success(
-          `Invites sent to ${allEmailsToInvite.length} teammate${allEmailsToInvite.length > 1 ? 's' : ''}`
-        );
-        onComplete();
-      },
-    });
+    // Send invites only if there are emails selected
+    if (allEmailsToInvite.length > 0) {
+      sendInvites.mutate(allEmailsToInvite, {
+        onSuccess: (result) => {
+          if (!result.success) {
+            showErrorToast(result.error);
+            return;
+          }
+          toast.success(
+            `Invites sent to ${allEmailsToInvite.length} teammate${allEmailsToInvite.length > 1 ? 's' : ''}`
+          );
+          onComplete();
+        },
+      });
+    } else {
+      // No invites to send, just complete
+      onComplete();
+    }
   };
 
   return (
@@ -352,7 +395,7 @@ export function InviteTeammatesView({
 
       <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="flex flex-col items-center gap-6">
-          <IntercomInviteHeader />
+          {variant === 'direct' ? <Logo /> : <IntercomInviteHeader />}
 
           <div className="flex flex-col items-center gap-2">
             <h1 className="text-xl font-medium text-foreground">Invite your teammates</h1>
@@ -376,7 +419,7 @@ export function InviteTeammatesView({
                 <span className="text-sm text-muted-foreground">
                   {selectedEmails.size} selected
                 </span>
-                {allTeammates.length > 0 && (
+                {selectableTeammates.length > 0 && (
                   <button
                     type="button"
                     onClick={handleSelectAll}
@@ -392,32 +435,39 @@ export function InviteTeammatesView({
                 {paginatedTeammates.map((teammate) => (
                   <label
                     key={teammate.id}
-                    className="flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                    className={cn(
+                      'flex items-center gap-3 p-3 transition-colors',
+                      teammate.isCurrentUser ? 'opacity-60' : 'cursor-pointer hover:bg-muted/50'
+                    )}
                   >
                     <Checkbox
-                      checked={selectedEmails.has(teammate.email)}
-                      onCheckedChange={() => handleToggleTeammate(teammate)}
+                      checked={teammate.isCurrentUser || selectedEmails.has(teammate.email)}
+                      onCheckedChange={() =>
+                        !teammate.isCurrentUser && handleToggleTeammate(teammate)
+                      }
+                      disabled={teammate.isCurrentUser}
                     />
                     <BoringAvatar name={teammate.email} size={28} />
                     <div className="flex flex-col min-w-0 flex-1">
                       {teammate.name ? (
                         <>
-                          <span className="text-sm font-medium truncate">{teammate.name}</span>
+                          <span className="text-sm font-medium truncate">
+                            {teammate.name}
+                            {teammate.isCurrentUser && ' (You)'}
+                          </span>
                           <span className="text-xs text-muted-foreground truncate">
                             {teammate.email}
                           </span>
                         </>
                       ) : (
-                        <span className="text-sm font-medium truncate">{teammate.email}</span>
+                        <span className="text-sm font-medium truncate">
+                          {teammate.email}
+                          {teammate.isCurrentUser && ' (You)'}
+                        </span>
                       )}
                     </div>
                   </label>
                 ))}
-                {allTeammates.length === 0 && (
-                  <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                    Add emails below to invite teammates
-                  </div>
-                )}
               </div>
 
               {/* Pagination */}
@@ -473,7 +523,7 @@ export function InviteTeammatesView({
             onClick={handleLetsGo}
             size="lg"
             className="w-full rounded-full px-7 py-6"
-            disabled={allEmailsToInvite.length === 0 || isProcessing || needsEmailDomains}
+            disabled={isProcessing || needsEmailDomains}
           >
             {isProcessing ? (
               <>
