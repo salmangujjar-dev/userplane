@@ -1,113 +1,80 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
-import { ArrowLeftRight, Loader2 } from 'lucide-react';
-import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { apiClient } from '@/client';
-import { AuthIcons } from '@/components/auth/auth-icons';
-import { WorkspaceCreatedSuccess } from '@/components/workspace/workspace-created-success';
+import {
+  InviteEmptyState,
+  InviteErrorState,
+  InviteLoadingState,
+  InviteTeammatesView,
+  OAuthErrorState,
+  OAuthLoadingState,
+} from '@/components/integrations/intercom';
+import { useFirstWorkspaceDomain } from '@/features/domains';
+import { useIntercomAdmins } from '@/features/integrations';
 import { type DefinedError, handleSafeResult } from '@/lib/errors';
 import { useWorkspaceStore } from '@/stores/workspace';
 
-function LoadingState() {
+/**
+ * View shown after workspace is created to invite teammates.
+ * Fetches Intercom teammates and first domain in parallel.
+ */
+function PostCreationInviteView({ workspaceId }: { workspaceId: string }) {
+  const router = useRouter();
+
+  // Fetch teammates and first domain in parallel
+  const {
+    data: teammatesData,
+    isLoading: teammatesLoading,
+    error: teammatesError,
+    refetch: refetchTeammates,
+  } = useIntercomAdmins(workspaceId, true);
+
+  const { data: domainsData, isLoading: domainsLoading } = useFirstWorkspaceDomain(workspaceId);
+
+  const isLoading = teammatesLoading || domainsLoading;
+
+  if (isLoading) {
+    return <InviteLoadingState />;
+  }
+
+  if (teammatesError || !teammatesData?.success) {
+    return (
+      <InviteErrorState
+        workspaceId={workspaceId}
+        message={
+          teammatesData?.success === false
+            ? teammatesData.error.message
+            : 'Failed to load teammates'
+        }
+        onRetry={() => refetchTeammates()}
+      />
+    );
+  }
+
+  // API already filters out @intercom.io emails
+  const teammates = teammatesData.data.admins;
+
+  if (teammates.length === 0) {
+    return <InviteEmptyState workspaceId={workspaceId} />;
+  }
+
+  // Extract first domain if exists
+  const firstDomain = domainsData?.success ? domainsData.data.domains[0] : null;
+
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
-      <AuthIcons />
-
-      <div className="w-full max-w-md space-y-10 relative z-10">
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex items-center gap-4">
-            <Logo variant="tiled" size="md" showText={false} />
-            <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
-            <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
-              <Image
-                src="/integrations/intercom.webp"
-                alt="Intercom"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex flex-col items-center gap-2">
-              <h1 className="text-xl font-medium text-foreground">Setting up your workspace</h1>
-              <p className="text-sm text-muted-foreground">
-                Please wait while we connect your Intercom account...
-              </p>
-            </div>
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface ErrorAction {
-  label: string;
-  callback: () => void;
-}
-
-interface ErrorStateProps {
-  error: DefinedError;
-  errorActionPrimary: ErrorAction;
-  errorActionSecondary: ErrorAction;
-}
-
-function ErrorState({ error, errorActionPrimary, errorActionSecondary }: ErrorStateProps) {
-  return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
-      <AuthIcons />
-
-      <div className="w-full max-w-md space-y-10 relative z-10">
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex items-center gap-4">
-            <Logo variant="tiled" size="md" showText={false} />
-            <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
-            <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
-              <Image
-                src="/integrations/intercom.webp"
-                alt="Intercom"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-3">
-            <h1 className="text-xl font-medium text-foreground">Connection Failed</h1>
-            <p className="text-sm text-muted-foreground text-center">{error.message}</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <Button
-            onClick={errorActionPrimary.callback}
-            size="lg"
-            className="w-full rounded-full px-7 py-6"
-          >
-            {errorActionPrimary.label}
-          </Button>
-
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={errorActionSecondary.callback}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {errorActionSecondary.label}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <InviteTeammatesView
+      workspaceId={workspaceId}
+      teammates={teammates}
+      invitePolicy={teammatesData.data.invitePolicy}
+      allowedDomains={teammatesData.data.allowedDomains}
+      initialDomainId={firstDomain?.domainId ?? null}
+      initialDomainUrl={firstDomain?.domainUrl ?? ''}
+      onComplete={() => router.push(`/${workspaceId}`)}
+      onSkip={() => router.push(`/${workspaceId}/settings`)}
+    />
   );
 }
 
@@ -152,6 +119,7 @@ function IntercomCallbackContent() {
         }
 
         if (result.data.created) {
+          // Set workspace in store so hooks can access it
           setWorkspaceStore(result.data.workspaceId);
           setCreatedWorkspace({
             workspaceId: result.data.workspaceId,
@@ -182,32 +150,20 @@ function IntercomCallbackContent() {
     handleCallback();
   }, [searchParams, router, setWorkspaceStore]);
 
-  const handleGoToWorkspace = () => {
-    if (createdWorkspace) {
-      router.push(`/${createdWorkspace.workspaceId}`);
-    }
-  };
-
+  // Show invite view after workspace creation
   if (createdWorkspace) {
-    return (
-      <WorkspaceCreatedSuccess
-        workspaceName={createdWorkspace.workspaceName}
-        title="Connected successfully"
-        description="Your Intercom workspace is now connected. Start capturing user feedback"
-        onPrimaryAction={handleGoToWorkspace}
-        secondaryText="Configure domains"
-        onSecondaryAction={() => router.push(`/${createdWorkspace.workspaceId}/settings`)}
-      />
-    );
+    return <PostCreationInviteView workspaceId={createdWorkspace.workspaceId} />;
   }
 
+  // Show loading during OAuth callback processing
   if (isLoading) {
-    return <LoadingState />;
+    return <OAuthLoadingState />;
   }
 
+  // Show error if OAuth callback failed
   if (error) {
     return (
-      <ErrorState
+      <OAuthErrorState
         error={error}
         errorActionPrimary={{
           label: 'Configure Userplane Manually',
@@ -228,34 +184,7 @@ function IntercomCallbackContent() {
 
 export default function IntercomCallbackPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
-          <AuthIcons />
-          <div className="w-full max-w-md space-y-10 relative z-10">
-            <div className="flex flex-col items-center gap-6">
-              <div className="flex items-center gap-4">
-                <Logo variant="tiled" size="md" showText={false} />
-                <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
-                <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
-                  <Image
-                    src="/integrations/intercom.webp"
-                    alt="Intercom"
-                    width={32}
-                    height={32}
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Loading...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<OAuthLoadingState />}>
       <IntercomCallbackContent />
     </Suspense>
   );

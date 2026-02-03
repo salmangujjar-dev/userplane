@@ -234,7 +234,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
   const { data: inviteResult, isLoading: isLoadingInvite } = useWorkspaceInvite();
-  const { mutate: sendInvites, isPending } = useSendWorkspaceInvites();
+  const { mutate: sendInvites, isPending } = useSendWorkspaceInvites(workspaceId);
   const { data: suggestionsResult } = useIntercomSuggestions(8);
 
   const inviteToken = inviteResult?.success ? inviteResult.data : null;

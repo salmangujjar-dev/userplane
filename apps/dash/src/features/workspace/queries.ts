@@ -515,14 +515,14 @@ export function useWorkspaceBillingEmail(options?: { enabled?: boolean }) {
 }
 
 /**
- * Hook to send email invitations to the current workspace
+ * Hook to send email invitations to a workspace
+ * @param workspaceId - The workspace ID to send invites for
  */
 interface SendInvitesData {
   sentCount: number;
 }
 
-export function useSendWorkspaceInvites() {
-  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
+export function useSendWorkspaceInvites(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation<SafeResult<SendInvitesData>, Error, string[]>({
