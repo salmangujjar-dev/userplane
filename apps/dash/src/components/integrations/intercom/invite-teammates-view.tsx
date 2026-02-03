@@ -4,16 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@workspace/ui/components/button';
 import { Checkbox } from '@workspace/ui/components/checkbox';
 import { Input } from '@workspace/ui/components/input';
+import Logo from '@workspace/ui/components/logo';
 import { toast } from '@workspace/ui/components/sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
-import Logo from '@workspace/ui/components/logo';
+import { cn } from '@workspace/ui/lib/utils';
 import { Loader2, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import validator from 'validator';
 import { z } from 'zod';
-
-import { cn } from '@workspace/ui/lib/utils';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
@@ -22,6 +20,7 @@ import { useAccount } from '@/features/account';
 import { useCreateDomain, useUpdateDomain } from '@/features/domains';
 import { useSendWorkspaceInvites, useUpdateInvitePolicy } from '@/features/workspace';
 import { showErrorToast } from '@/lib/errors';
+import { FormEmailSchema } from '@/schemas';
 import type { WorkspaceInvitePolicy } from '@/types';
 
 import { IntercomInviteHeader } from './intercom-invite-header';
@@ -35,9 +34,7 @@ const MAX_MANUAL_EMAILS = 10;
 
 // Schema for email input validation
 const emailSchema = z.object({
-  email: z.string().refine((val) => validator.isEmail(val), {
-    message: 'Please enter a valid email address',
-  }),
+  email: FormEmailSchema,
 });
 
 type EmailFormData = z.infer<typeof emailSchema>;
@@ -190,8 +187,6 @@ export function InviteTeammatesView({
     return domainUrl.trim() !== '' && domainUrl !== originalDomainUrl;
   }, [domainUrl, originalDomainUrl]);
 
-  // Validation
-  const needsEmailDomains = policy !== 'private' && emailDomains.length === 0;
   const isProcessing =
     sendInvites.isPending ||
     updatePolicyMutation.isPending ||
@@ -264,9 +259,6 @@ export function InviteTeammatesView({
 
   const handlePolicyChange = (newPolicy: WorkspaceInvitePolicy) => {
     setPolicy(newPolicy);
-    if (newPolicy === 'private') {
-      setEmailDomains([]);
-    }
   };
 
   const handleAddEmailDomain = (domain: string) => {
@@ -332,7 +324,7 @@ export function InviteTeammatesView({
         {
           workspaceId,
           policy,
-          domains: policy === 'private' ? null : emailDomains.length > 0 ? emailDomains : null,
+          domains: emailDomains.length > 0 ? emailDomains : null,
         },
         {
           onSuccess: (result) => {
@@ -523,7 +515,7 @@ export function InviteTeammatesView({
             onClick={handleLetsGo}
             size="lg"
             className="w-full rounded-full px-7 py-6"
-            disabled={isProcessing || needsEmailDomains}
+            disabled={isProcessing}
           >
             {isProcessing ? (
               <>

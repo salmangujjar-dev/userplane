@@ -163,7 +163,7 @@ export const WorkspaceErrors = {
   },
   WORKSPACE_INVITE_POLICY_DOMAINS_REQUIRED: {
     status: 400,
-    message: 'At least one email domain is required for whitelisted or protected policies',
+    message: 'At least one email domain is required for protected policy',
   },
   WORKSPACE_INVITE_POLICY_DISPOSABLE_DOMAIN: {
     status: 400,

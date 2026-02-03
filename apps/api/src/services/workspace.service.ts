@@ -1017,10 +1017,7 @@ export class WorkspaceService {
 
         domainsString = normalizedDomains.join(',');
       }
-      // Require at least one domain for whitelisted/protected policies
-      if (!domainsString) {
-        throw workspaceError.WORKSPACE_INVITE_POLICY_DOMAINS_REQUIRED();
-      }
+      // No domains = no domain restrictions (whitelisted: anyone joins, protected: no one can request)
     }
 
     const updated = await this.deps.workspaceRepo.updateInvitePolicy(
