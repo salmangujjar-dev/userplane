@@ -1,6 +1,6 @@
 import type { WorkspaceInvitePolicy } from '@/types';
 
-export interface Admin {
+export interface Teammate {
   id: string;
   email: string;
   name: string | null;

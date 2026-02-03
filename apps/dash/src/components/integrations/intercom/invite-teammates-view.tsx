@@ -22,7 +22,7 @@ import type { WorkspaceInvitePolicy } from '@/types';
 
 import { IntercomInviteHeader } from './intercom-invite-header';
 import { InvitePolicyTab } from './invite-policy-tab';
-import type { Admin } from './types';
+import type { Teammate } from './types';
 import { WorkspaceDomainsSection } from './workspace-domains-section';
 
 const ITEMS_PER_PAGE = 6;
@@ -38,17 +38,17 @@ const emailSchema = z.object({
 
 type EmailFormData = z.infer<typeof emailSchema>;
 
-// Unified teammate type for rendering
-interface Teammate {
+// Internal teammate type for rendering (extends base Teammate with isManual flag)
+interface TeammateItem {
   id: string;
   email: string;
   name: string | null;
   isManual: boolean;
 }
 
-interface AdminSelectionViewProps {
+interface InviteTeammatesViewProps {
   workspaceId: string;
-  admins: Admin[];
+  teammates: Teammate[];
   invitePolicy: WorkspaceInvitePolicy;
   allowedDomains: string[] | null;
   initialDomainId: string | null;
@@ -62,21 +62,21 @@ interface AdminSelectionViewProps {
  * Features a tabbed interface with Teammates selection and Settings tabs.
  * Used in both the OAuth callback flow and the settings invite page.
  */
-export function AdminSelectionView({
+export function InviteTeammatesView({
   workspaceId,
-  admins,
+  teammates,
   invitePolicy: initialPolicy,
   allowedDomains: initialDomains,
   initialDomainId,
   initialDomainUrl,
   onComplete,
   onSkip,
-}: AdminSelectionViewProps) {
+}: InviteTeammatesViewProps) {
   const [activeTab, setActiveTab] = useState('teammates');
 
-  // Selection state - tracks all selected emails (both manual and admin)
+  // Selection state - tracks all selected emails (both manual and from teammates)
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(() => {
-    const initialSelection = admins.slice(0, AUTO_SELECT_LIMIT).map((a) => a.email);
+    const initialSelection = teammates.slice(0, AUTO_SELECT_LIMIT).map((t) => t.email);
     return new Set(initialSelection);
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -117,22 +117,22 @@ export function AdminSelectionView({
     setEmailDomains(initialDomains || []);
   }, [initialPolicy, initialDomains]);
 
-  // Create unified teammates list (manual emails first, then admins)
-  const allTeammates: Teammate[] = useMemo(() => {
-    const manualItems: Teammate[] = manualEmails.map((email) => ({
+  // Create unified teammates list (manual emails first, then teammates from props)
+  const allTeammates: TeammateItem[] = useMemo(() => {
+    const manualItems: TeammateItem[] = manualEmails.map((email) => ({
       id: `manual-${email}`,
       email,
       name: null,
       isManual: true,
     }));
-    const adminItems: Teammate[] = admins.map((a) => ({
-      id: a.id,
-      email: a.email,
-      name: a.name,
+    const teammateItems: TeammateItem[] = teammates.map((t) => ({
+      id: t.id,
+      email: t.email,
+      name: t.name,
       isManual: false,
     }));
-    return [...manualItems, ...adminItems];
-  }, [manualEmails, admins]);
+    return [...manualItems, ...teammateItems];
+  }, [manualEmails, teammates]);
 
   // Pagination over unified list
   const totalPages = Math.ceil(allTeammates.length / ITEMS_PER_PAGE);
@@ -179,7 +179,7 @@ export function AdminSelectionView({
   };
 
   // Also remove from manual emails if unchecking a manual one
-  const handleToggleTeammate = (teammate: Teammate) => {
+  const handleToggleTeammate = (teammate: TeammateItem) => {
     handleToggleEmail(teammate.email);
     // If unchecking a manual email, remove it from the list
     if (teammate.isManual && selectedEmails.has(teammate.email)) {
@@ -201,9 +201,9 @@ export function AdminSelectionView({
 
     // Check if already exists
     const existsInManual = manualEmails.some((e) => e.toLowerCase() === email);
-    const existsInAdmins = admins.some((a) => a.email.toLowerCase() === email);
+    const existsInTeammates = teammates.some((t) => t.email.toLowerCase() === email);
 
-    if (existsInManual || existsInAdmins) {
+    if (existsInManual || existsInTeammates) {
       // Just select it if it already exists
       setSelectedEmails((prev) => new Set([...prev, email]));
       reset();
