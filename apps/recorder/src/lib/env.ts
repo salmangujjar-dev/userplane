@@ -2,6 +2,7 @@
  * Environment configuration for Recorder
  * Centralizes all environment variable access with type safety and validation
  */
+import { isProductionLike, parseAppEnv, type Environment } from '@workspace/shared/env';
 
 interface SentryConfig {
   // Runtime configuration
@@ -17,6 +18,8 @@ interface SentryConfig {
 
 interface EnvConfig {
   nodeEnv: 'development' | 'production' | 'test';
+  /** Application environment for deployment stage (development, preview, staging, production) */
+  appEnv: Environment;
   apiUrl: string;
   sentry: SentryConfig;
 }
@@ -35,10 +38,14 @@ function parseFloat(value: string | undefined, defaultValue: number): number {
  */
 export function loadEnvConfig(): EnvConfig {
   const nodeEnv = (process.env.NODE_ENV || 'development') as EnvConfig['nodeEnv'];
-  const isProduction = nodeEnv === 'production';
+  // Astro's --mode flag sets import.meta.env.MODE (e.g., --mode preview sets MODE=preview)
+  const appEnv = parseAppEnv(import.meta.env.MODE);
+  // Use appEnv to determine production-like behavior for Sentry sampling
+  const isProdLike = isProductionLike(appEnv);
 
   const config: EnvConfig = {
     nodeEnv,
+    appEnv,
     apiUrl: import.meta.env.PUBLIC_API_URL || 'http://localhost:3001/api/v1',
     sentry: {
       // Runtime configuration
@@ -46,7 +53,7 @@ export function loadEnvConfig(): EnvConfig {
       release: import.meta.env.PUBLIC_SENTRY_RELEASE,
       tracesSampleRate: parseFloat(
         import.meta.env.PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
-        isProduction ? 0.1 : 1.0
+        isProdLike ? 0.1 : 1.0
       ),
 
       // Build-time only (for source map uploads)

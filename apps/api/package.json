@@ -49,12 +49,15 @@
   "private": true,
   "scripts": {
     "build": "bun build src/index.ts --outdir ./dist --target bun",
-    "dev": "bun run --watch src/index.ts",
+    "dev": "bun run --env-file=.env.development --watch src/index.ts",
     "dev:all": "concurrently \"bun run dev:api\" \"bun run dev:trigger\" --names \"api,trigger\" --prefix-colors \"blue,yellow\"",
-    "dev:api": "bun run --watch src/index.ts",
+    "dev:api": "bun run --env-file=.env.development --watch src/index.ts",
     "dev:trigger": "npx trigger.dev@latest dev",
-    "dev:hot": "bun run --hot src/index.ts",
+    "dev:hot": "bun run --env-file=.env.development --hot src/index.ts",
+    "dev:preview": "APP_ENV=preview bun run --env-file=.env.preview --watch src/index.ts",
+    "dev:staging": "APP_ENV=staging bun run --env-file=.env.staging --watch src/index.ts",
     "start": "bun run dist/index.js",
+    "start:production": "bun run --env-file=.env.production dist/index.js",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit"

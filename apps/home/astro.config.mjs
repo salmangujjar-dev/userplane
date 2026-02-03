@@ -12,6 +12,9 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: ['home-preview.userplane.io'],
+    },
   },
   integrations: [react()],
 });

@@ -30,6 +30,9 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: ['recorder-preview.userplane.io'],
+    },
   },
   integrations: [
     react(),

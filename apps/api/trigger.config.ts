@@ -5,6 +5,7 @@ import { sentryEsbuildPlugin } from '@sentry/esbuild-plugin';
 import { esbuildPlugin } from '@trigger.dev/build/extensions';
 import { syncEnvVars } from '@trigger.dev/build/extensions/core';
 import { defineConfig } from '@trigger.dev/sdk/v3';
+import { getEnvFileName } from '@workspace/shared/env';
 
 // Build Sentry plugin if credentials are available
 // Uses SENTRY_PROJECT_API for the API app's Sentry project
@@ -108,13 +109,7 @@ export default defineConfig({
       // Reads .env.staging for staging, .env.production for production
       syncEnvVars(async (ctx: { environment: string; projectRef: string }) => {
         // Determine which env file to use based on deploy environment
-        const envFile =
-          ctx.environment === 'staging'
-            ? '.env.staging'
-            : ctx.environment === 'production'
-              ? '.env.production'
-              : '.env.development';
-
+        const envFile = getEnvFileName(ctx.environment);
         const envPath = resolve(process.cwd(), envFile);
         console.log(`[trigger.config] Syncing env vars from: ${envFile} (${ctx.environment})`);
 
