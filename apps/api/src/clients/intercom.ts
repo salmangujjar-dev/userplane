@@ -137,18 +137,80 @@ export async function getMe(
 }
 
 /**
+ * Map AWS region prefixes to IntercomRegion
+ * AWS regions: us-* (US), eu-* (EU), ap-* (AU/APAC)
+ */
+const AWS_REGION_PREFIX_MAP: Array<{ prefix: string; region: IntercomRegion }> = [
+  { prefix: 'us-', region: 'US' },
+  { prefix: 'eu-', region: 'EU' },
+  { prefix: 'ap-', region: 'AU' },
+];
+
+/**
+ * Extract region from Intercom authorization code
+ * Code format after base64 decode: {code}:{aws-region}
+ * e.g., "465f4c05c97c4cf98d199d178da176ea:us-east-1"
+ * Returns null if region cannot be extracted or is unrecognized
+ */
+export function extractRegionFromCode(authCode: string): IntercomRegion | null {
+  try {
+    // Base64 decode the authorization code
+    const decoded = Buffer.from(authCode, 'base64').toString('utf-8');
+    // Format: {code}:{aws-region}
+    const parts = decoded.split(':');
+    const awsRegion = parts[1];
+    if (parts.length !== 2 || !awsRegion) {
+      return null;
+    }
+    // Match by prefix (e.g., "us-east-1" matches "us-" -> US)
+    for (const { prefix, region } of AWS_REGION_PREFIX_MAP) {
+      if (awsRegion.startsWith(prefix)) {
+        return region;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get admin info with known region (fast path)
+ * Used when region is extracted from authorization code
+ */
+export async function getMeWithRegion(
+  accessToken: string,
+  region: IntercomRegion
+): Promise<{ me: IntercomMeResponse; region: IntercomRegion } | null> {
+  const me = await getMe(accessToken, region);
+  if (me) {
+    return { me, region };
+  }
+  return null;
+}
+
+/**
  * Auto-detect region and get admin info
- * Tries US first, then EU, then AU
+ * Tries all regions in parallel for faster response
+ * Prefers US > EU > AU if multiple succeed (unlikely)
  */
 export async function detectRegionAndGetMe(
   accessToken: string
 ): Promise<{ me: IntercomMeResponse; region: IntercomRegion } | null> {
   const regions: IntercomRegion[] = ['US', 'EU', 'AU'];
 
-  for (const region of regions) {
-    const me = await getMe(accessToken, region);
-    if (me) {
-      return { me, region };
+  // Run all region checks in parallel
+  const results = await Promise.all(
+    regions.map(async (region) => {
+      const me = await getMe(accessToken, region);
+      return me ? { me, region } : null;
+    })
+  );
+
+  // Return first successful result (priority: US > EU > AU)
+  for (const result of results) {
+    if (result) {
+      return result;
     }
   }
 

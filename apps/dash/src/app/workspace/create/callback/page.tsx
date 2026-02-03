@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { redirect, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { apiClient } from '@/client';
@@ -167,7 +167,7 @@ function IntercomCallbackContent() {
         error={error}
         errorActionPrimary={{
           label: 'Configure Userplane Manually',
-          callback: () => router.push('/workspace/create'),
+          callback: () => router.push('/workspace/create?flow=direct'),
         }}
         errorActionSecondary={{
           label: 'Contact Support',
@@ -182,10 +182,22 @@ function IntercomCallbackContent() {
   return null;
 }
 
-export default function IntercomCallbackPage() {
+function CallbackContent() {
+  const searchParams = useSearchParams();
+  const flow = searchParams.get('flow');
+
+  if (flow === 'intercom') {
+    return <IntercomCallbackContent />;
+  }
+
+  // Invalid callback flow - redirect to create page with error
+  redirect('/workspace/create?error=invalid_callback_flow');
+}
+
+export default function CreateCallbackPage() {
   return (
     <Suspense fallback={<OAuthLoadingState />}>
-      <IntercomCallbackContent />
+      <CallbackContent />
     </Suspense>
   );
 }

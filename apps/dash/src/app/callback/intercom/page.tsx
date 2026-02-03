@@ -7,7 +7,7 @@ type Props = {
 /**
  * Generic Intercom OAuth callback dispatcher
  * Decodes the state token and redirects to the appropriate callback page:
- * - Onboarding flow (no workspaceId): /workspace/connect/intercom/callback
+ * - Onboarding flow (no workspaceId): /workspace/create/callback?flow=intercom
  * - Integration flow (has workspaceId): /:workspaceId/settings/integrations/intercom/callback
  *
  * This keeps separation of concerns:
@@ -55,6 +55,6 @@ export default async function IntercomCallbackPage({ searchParams }: Props) {
     );
   } else {
     // Onboarding flow - redirect to workspace creation callback
-    redirect(`/workspace/connect/intercom/callback?${queryParams.toString()}`);
+    redirect(`/workspace/create/callback?flow=intercom&${queryParams.toString()}`);
   }
 }
