@@ -473,20 +473,33 @@ export class WorkspaceMemberRepository {
   }
 
   /**
-   * Get all member emails for a workspace
-   * Used for filtering Intercom admins who are already workspace members
+   * Check which emails from a given list exist as workspace members
+   * Takes pre-normalized (lowercase) emails and returns the ones that match
+   * Used for filtering external lists (like Intercom admins) against workspace members
    */
-  async findAllMemberEmails(workspaceId: string): Promise<string[]> {
+  async findMatchingMemberEmails(
+    workspaceId: string,
+    normalizedEmails: string[]
+  ): Promise<Set<string>> {
+    if (normalizedEmails.length === 0) return new Set();
+
     const members = await this.db
       .select({
-        email: user.email,
+        email: sql<string>`LOWER(${user.email})`,
       })
       .from(workspaceMembers)
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
       .where(
-        and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.isDeleted, false))
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.isDeleted, false),
+          sql`LOWER(${user.email}) IN (${sql.join(
+            normalizedEmails.map((e) => sql`${e}`),
+            sql`, `
+          )})`
+        )
       );
 
-    return members.map((m) => m.email);
+    return new Set(members.map((m) => m.email));
   }
 }

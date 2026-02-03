@@ -379,34 +379,26 @@ export class IntercomService {
       return [];
     }
 
-    // Get member emails for filtering if needed
-    let memberEmails: Set<string> = new Set();
-    if (excludeMembers) {
-      const emails = await this.deps.memberRepo.findAllMemberEmails(workspaceId);
-      // Normalize emails for comparison
-      memberEmails = new Set(
-        emails
-          .map((email) => {
-            const result = FormEmailSchema.safeParse(email);
-            return result.success ? result.data : null;
-          })
-          .filter((email): email is string => email !== null)
-      );
+    // Collect and normalize admin emails first
+    const adminEmailMap = new Map<string, (typeof admins)[number]>();
+    for (const admin of admins) {
+      const emailResult = FormEmailSchema.safeParse(admin.email);
+      if (emailResult.success) {
+        adminEmailMap.set(emailResult.data, admin);
+      }
     }
 
-    // Map and filter admins
+    // Get matching member emails in one DB call with filter pushed down
+    let memberEmails: Set<string> = new Set();
+    if (excludeMembers && adminEmailMap.size > 0) {
+      memberEmails = await this.deps.memberRepo.findMatchingMemberEmails(workspaceId, [
+        ...adminEmailMap.keys(),
+      ]);
+    }
+
+    // Filter and map admins
     const result: IntercomAdminItem[] = [];
-    for (const admin of admins) {
-      // Validate and normalize email
-      const emailResult = FormEmailSchema.safeParse(admin.email);
-      if (!emailResult.success) {
-        // Skip admins with invalid emails
-        continue;
-      }
-
-      const normalizedEmail = emailResult.data;
-
-      // Skip if excluding members and this admin is already a member
+    for (const [normalizedEmail, admin] of adminEmailMap) {
       if (excludeMembers && memberEmails.has(normalizedEmail)) {
         continue;
       }
