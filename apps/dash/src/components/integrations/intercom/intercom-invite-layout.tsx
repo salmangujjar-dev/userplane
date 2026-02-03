@@ -19,7 +19,7 @@ export function IntercomInviteLayout({ children, title, description }: IntercomI
     <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
       <AuthIcons />
 
-      <div className="w-full max-w-md space-y-8 relative z-10">
+      <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="flex flex-col items-center gap-6">
           <IntercomInviteHeader />
 
