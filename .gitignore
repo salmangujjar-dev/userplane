@@ -74,6 +74,10 @@ Thumbs.db
 *.temp
 dump/
 
+# Cloudflare Tunnel runtime files (keep config.yml tracked)
+.cloudflared/*.pid
+.cloudflared/*.log
+
 # Mocked stores
 apps/api/localhost
 
