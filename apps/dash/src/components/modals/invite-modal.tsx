@@ -24,7 +24,12 @@ import validator from 'validator';
 import { z } from 'zod';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
-import { useSendWorkspaceInvites, useWorkspaceInvite } from '@/features/workspace';
+import {
+  useIntercomSuggestions,
+  useSendWorkspaceInvites,
+  useWorkspaceInvite,
+} from '@/features/workspace';
+import { useWorkspaceStore } from '@/stores/workspace';
 
 const inviteFormSchema = z.object({
   emails: z
@@ -170,15 +175,80 @@ function InviteLinkSection({ inviteLink, isLoading, onCopyLink }: InviteLinkSect
   );
 }
 
+interface SuggestionsPillsProps {
+  suggestions: Array<{ id: string; email: string; name: string | null }>;
+  onSelect: (email: string) => void;
+  existingEmails: string[];
+  workspaceId: string;
+  hasMore: boolean;
+}
+
+function SuggestionsPills({
+  suggestions,
+  onSelect,
+  existingEmails,
+  workspaceId,
+  hasMore,
+}: SuggestionsPillsProps) {
+  // Filter out emails already added to the input
+  const available = suggestions.filter((s) => !existingEmails.includes(s.email.toLowerCase()));
+
+  if (available.length === 0) return null;
+
+  return (
+    <div>
+      <span className="text-xs text-muted-foreground block mb-2">Suggestions:</span>
+      <div className="flex flex-wrap gap-2">
+        {available.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => onSelect(s.email)}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <BoringAvatar size={16} name={s.email} />
+            <span className="truncate max-w-[120px]">{s.name || s.email}</span>
+          </button>
+        ))}
+        {hasMore && (
+          <a
+            href={`/${workspaceId}/settings/integrations/intercom/invite`}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <div className="flex -space-x-1.5">
+              <BoringAvatar size={16} name="more-1" />
+              <BoringAvatar size={16} name="more-2" />
+              <BoringAvatar size={16} name="more-3" />
+            </div>
+            <span>More</span>
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState('');
   const MAX_EMAILS = 10;
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
   const { data: inviteResult, isLoading: isLoadingInvite } = useWorkspaceInvite();
   const { mutate: sendInvites, isPending } = useSendWorkspaceInvites();
+  const { data: suggestionsResult } = useIntercomSuggestions(8);
 
   const inviteToken = inviteResult?.success ? inviteResult.data : null;
   const inviteLink = inviteToken?.inviteUrl || 'Loading invite link...';
+
+  // Extract suggestions if Intercom is connected
+  const suggestions =
+    suggestionsResult?.success && suggestionsResult.data.connected
+      ? suggestionsResult.data.suggestions
+      : [];
+  const hasMoreSuggestions =
+    suggestionsResult?.success && suggestionsResult.data.connected
+      ? (suggestionsResult.data.hasMore ?? false)
+      : false;
 
   const {
     control,
@@ -244,6 +314,10 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
 
   const removeEmail = (index: number) => {
     remove(index);
+  };
+
+  const handleSelectSuggestion = (email: string) => {
+    addEmail(email);
   };
 
   const onSubmit = (data: InviteFormData) => {
@@ -323,6 +397,17 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
               onKeyDown={handleKeyDown}
               onRemoveEmail={removeEmail}
             />
+
+            {/* Subtle suggestions below email input */}
+            {suggestions.length > 0 && workspaceId && (
+              <SuggestionsPills
+                suggestions={suggestions}
+                onSelect={handleSelectSuggestion}
+                existingEmails={fields.map((f) => f.email.toLowerCase())}
+                workspaceId={workspaceId}
+                hasMore={hasMoreSuggestions}
+              />
+            )}
           </div>
 
           <DialogFooter className="mt-6">

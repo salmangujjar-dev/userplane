@@ -1288,6 +1288,34 @@ export const IntercomAdminsDataSchema = z.object({
   allowedDomains: z.array(z.string()).nullable(),
 });
 
+// Intercom suggestions pagination
+export const INTERCOM_SUGGESTIONS = {
+  DEFAULT_LIMIT: 5,
+  MAX_LIMIT: 10,
+} as const;
+
+/**
+ * Get Intercom suggestions request (detailed mode)
+ */
+export const GetIntercomSuggestionsSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    limit: z.coerce.number().int().min(1).max(10).optional().default(5),
+  }),
+});
+
+/**
+ * Intercom suggestions response
+ */
+export const IntercomSuggestionsDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  connected: z.boolean(),
+  suggestions: z.array(IntercomAdminItemSchema),
+  hasMore: z.boolean(),
+});
+
 // Additional type exports
 export type WorkspaceItem = z.infer<typeof WorkspaceItemSchema>;
 export type WorkspacesListData = z.infer<typeof WorkspacesListDataSchema>;
@@ -1310,3 +1338,4 @@ export type DomainUpdateData = z.infer<typeof DomainUpdateDataSchema>;
 // Integration type exports
 export type IntercomAdminItem = z.infer<typeof IntercomAdminItemSchema>;
 export type IntercomAdminsData = z.infer<typeof IntercomAdminsDataSchema>;
+export type IntercomSuggestionsData = z.infer<typeof IntercomSuggestionsDataSchema>;

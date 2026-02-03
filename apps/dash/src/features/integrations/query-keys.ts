@@ -7,7 +7,9 @@ export const integrationKeys = {
   // Intercom
   intercom: (workspaceId: string) => [...integrationKeys.all, 'intercom', workspaceId] as const,
   intercomAdmins: (workspaceId: string, excludeMembers: boolean) =>
-    [...integrationKeys.all, 'intercom', 'admins', workspaceId, { excludeMembers }] as const,
+    [...integrationKeys.intercom(workspaceId), 'admins', { excludeMembers }] as const,
+  intercomSuggestions: (workspaceId: string, limit?: number) =>
+    [...integrationKeys.intercom(workspaceId), 'suggestions', { limit }] as const,
 } as const;
 
 // Type helpers for query key inference

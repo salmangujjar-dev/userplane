@@ -21,7 +21,8 @@ import {
   detectRegionAndGetMe,
   exchangeCodeForToken,
   getAuthorizationUrl,
-  IntercomMeResponse,
+  type IntercomAdmin,
+  type IntercomMeResponse,
   listAdmins,
 } from '@/api/clients/intercom';
 import { generateIntegrationId } from '@/api/lib/id';
@@ -61,6 +62,9 @@ export interface IntegrationConnectResult {
   connected: true;
   providerWorkspaceId: string;
 }
+
+/** Maximum number of admin suggestions to return */
+const MAX_ADMIN_SUGGESTIONS = 10;
 
 export class IntercomService {
   constructor(private deps: IntercomServiceDeps) {}
@@ -342,22 +346,19 @@ export class IntercomService {
       throw workspaceError.INTEGRATION_NOT_FOUND();
     }
 
-    // Invalidate cache to prevent stale lookups
-    await this.deps.cacheService.invalidateIntegration('intercom', integration.providerWorkspaceId);
+    // Invalidate caches to prevent stale lookups
+    await this.deps.cacheService.invalidateIntercom(workspaceId, integration.providerWorkspaceId);
 
     return true;
   }
 
   /**
-   * Get all admins from the connected Intercom workspace
-   * Optionally filters out admins who are already workspace members
-   * @param workspaceId - The workspace ID to get admins for
-   * @param excludeMembers - If true, excludes admins who are already workspace members
+   * Fetch and normalize admins from Intercom (shared logic)
+   * Handles integration lookup, caching, Intercom API call, and email normalization
+   * @param workspaceId - The workspace ID
+   * @returns Map of normalized email to IntercomAdmin, or throws on error
    */
-  async getAdmins(
-    workspaceId: string,
-    excludeMembers: boolean = false
-  ): Promise<IntercomAdminItem[]> {
+  private async _fetchAndNormalizeAdmins(workspaceId: string): Promise<Map<string, IntercomAdmin>> {
     // Get integration to retrieve access token and region
     const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
       workspaceId,
@@ -372,34 +373,65 @@ export class IntercomService {
     const providerToken = integration.providerToken as { accessToken: string };
     const providerMeta = integration.providerMeta as { region: IntercomRegion };
 
-    // Fetch admins from Intercom
-    const admins = await listAdmins(providerToken.accessToken, providerMeta.region);
+    // Check cache first for raw Intercom admins
+    let admins = await this.deps.cacheService.getIntercomAdmins<IntercomAdmin>(workspaceId);
 
-    if (!admins || admins.length === 0) {
-      return [];
+    // Cache miss - fetch from Intercom API and cache result
+    if (!admins) {
+      admins = await listAdmins(providerToken.accessToken, providerMeta.region);
+
+      if (!admins || admins.length === 0) {
+        return new Map();
+      }
+
+      await this.deps.cacheService.setIntercomAdmins(workspaceId, admins);
     }
 
-    // Collect and normalize admin emails first
-    const adminEmailMap = new Map<string, (typeof admins)[number]>();
+    // Collect and normalize admin emails, excluding Intercom internal emails
+    const adminEmailMap = new Map<string, IntercomAdmin>();
     for (const admin of admins) {
       const emailResult = FormEmailSchema.safeParse(admin.email);
       if (emailResult.success) {
+        // Skip Intercom internal/operator emails
+        if (emailResult.data.endsWith('@intercom.io')) {
+          continue;
+        }
         adminEmailMap.set(emailResult.data, admin);
       }
     }
 
-    // Get matching member emails in one DB call with filter pushed down
+    return adminEmailMap;
+  }
+
+  /**
+   * Build list of admin items from Intercom, optionally excluding existing members
+   * Shared logic for getAdmins and suggestAdmins
+   * @param workspaceId - The workspace ID
+   * @param options - Configuration for filtering
+   * @returns Array of admin items
+   */
+  private async _buildAdminItemList(
+    workspaceId: string,
+    options: { excludeMembers: boolean }
+  ): Promise<IntercomAdminItem[]> {
+    const adminEmailMap = await this._fetchAndNormalizeAdmins(workspaceId);
+
+    if (adminEmailMap.size === 0) {
+      return [];
+    }
+
+    // Get matching member emails if we need to exclude them
     let memberEmails: Set<string> = new Set();
-    if (excludeMembers && adminEmailMap.size > 0) {
+    if (options.excludeMembers) {
       memberEmails = await this.deps.memberRepo.findMatchingMemberEmails(workspaceId, [
         ...adminEmailMap.keys(),
       ]);
     }
 
-    // Filter and map admins
+    // Filter and map admins to IntercomAdminItem
     const result: IntercomAdminItem[] = [];
     for (const [normalizedEmail, admin] of adminEmailMap) {
-      if (excludeMembers && memberEmails.has(normalizedEmail)) {
+      if (options.excludeMembers && memberEmails.has(normalizedEmail)) {
         continue;
       }
 
@@ -411,5 +443,44 @@ export class IntercomService {
     }
 
     return result;
+  }
+
+  /**
+   * Get all admins from the connected Intercom workspace
+   * Optionally filters out admins who are already workspace members
+   * @param workspaceId - The workspace ID to get admins for
+   * @param excludeMembers - If true, excludes admins who are already workspace members
+   */
+  async getAdmins(
+    workspaceId: string,
+    excludeMembers: boolean = false
+  ): Promise<IntercomAdminItem[]> {
+    return this._buildAdminItemList(workspaceId, { excludeMembers });
+  }
+
+  /**
+   * Get suggested admins from Intercom for invite modal
+   * Always excludes existing members and returns empty array on any error (graceful degradation)
+   * @param workspaceId - The workspace ID
+   * @param options - Optional configuration { limit?: number }
+   * @returns Object with suggestions array and hasMore flag (never throws)
+   */
+  async suggestAdmins(
+    workspaceId: string,
+    options?: { limit?: number }
+  ): Promise<{ suggestions: IntercomAdminItem[]; hasMore: boolean }> {
+    try {
+      const limit = Math.min(options?.limit ?? 5, MAX_ADMIN_SUGGESTIONS);
+
+      const admins = await this._buildAdminItemList(workspaceId, { excludeMembers: true });
+
+      const hasMore = admins.length > limit;
+      const suggestions = hasMore ? admins.slice(0, limit) : admins;
+
+      return { suggestions, hasMore };
+    } catch {
+      // Graceful degradation - return empty array on any error
+      return { suggestions: [], hasMore: false };
+    }
   }
 }

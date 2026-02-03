@@ -1846,6 +1846,54 @@ export const getIntercomAdminsImpl = (
 };
 
 /**
+ * GET /workspace/:workspaceId/integrations/intercom/suggestions - Get Intercom admin suggestions
+ * Requires workspace membership
+ * Returns suggested admins for invite modal, gracefully degrades if not connected
+ */
+export const getIntercomSuggestionsImpl = (
+  intercomService: IntercomService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorizedRateLimited.workspace.integrations.intercom.suggestions
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const status = await intercomService.getIntegrationStatus(input.params.workspaceId);
+
+      if (!status.connected) {
+        return {
+          message: 'No Intercom integration',
+          data: {
+            workspaceId: input.params.workspaceId,
+            connected: false,
+            suggestions: [],
+            hasMore: false,
+          },
+        };
+      }
+
+      const { suggestions, hasMore } = await intercomService.suggestAdmins(
+        input.params.workspaceId,
+        {
+          limit: input.query.limit,
+        }
+      );
+
+      return {
+        message: 'Suggestions retrieved',
+        data: {
+          workspaceId: input.params.workspaceId,
+          connected: true,
+          suggestions,
+          hasMore,
+        },
+      };
+    });
+};
+
+/**
  * Create the workspace procedures object
  * Complete implementation with CRUD, member management, invites, domains, and integrations
  */
@@ -1999,6 +2047,11 @@ export const createWorkspaceProcedures = (
           workspaceService
         ),
         admins: getIntercomAdminsImpl(intercomService, workspaceMemberService, workspaceService),
+        suggestions: getIntercomSuggestionsImpl(
+          intercomService,
+          workspaceMemberService,
+          workspaceService
+        ),
       },
     },
   };
