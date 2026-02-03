@@ -27,6 +27,8 @@ export class WorkspaceRepository {
         recordingSlug: data.recordingSlug,
         workspaceInviteToken: data.workspaceInviteToken,
         workspaceBillingEmail: data.workspaceBillingEmail,
+        workspaceInvitePolicy: data.workspaceInvitePolicy,
+        workspaceInviteDomains: data.workspaceInviteDomains,
         recordingCompanyName: data.recordingCompanyName,
         recordingHeader: data.recordingHeader,
         recordingFootnote: data.recordingFootnote,

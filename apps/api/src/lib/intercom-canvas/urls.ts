@@ -3,6 +3,8 @@
  * Centralizes URL formatting for all Intercom canvas views
  */
 
+import { intercomCanvasUrls as mediaCanvasUrls } from '@workspace/shared/media';
+
 import { env } from '@/api/env';
 
 /**
@@ -16,7 +18,7 @@ const baseUrl = env.dashboard.baseUrl;
 
 /**
  * Image URLs for canvas components
- * These are hosted on the dashboard and used across all canvases
+ * These are served from the CDN with content-hash filenames
  *
  * Each image is named for the specific screen/context it's used in:
  * - logo: Branding header on signup, connect, recording, link-creator screens
@@ -27,22 +29,7 @@ const baseUrl = env.dashboard.baseUrl;
  * - accessRequestedLock: Header icon on access-requested screen
  * - limitExceededUpgrade: Header icon on limit-exceeded screen
  */
-export const canvasImages = {
-  /** Userplane logo - used on signup, connect, recording, link-creator screens */
-  logo: `${baseUrl}/img/userplane-icon.png`,
-  /** Request recording icon - opener screen list item */
-  openerRequestRecording: `${baseUrl}/img/intercom/request-recording.png`,
-  /** View recordings icon - opener screen list item */
-  openerViewRecordings: `${baseUrl}/img/intercom/view-recordings.png`,
-  /** Success checkmark - success screen after link creation */
-  successLinkCreated: `${baseUrl}/img/intercom/success.png`,
-  /** Error icon - generic error screens */
-  errorGeneric: `${baseUrl}/img/intercom/error.png`,
-  /** Lock icon - access-requested screen */
-  accessRequestedLock: `${baseUrl}/img/intercom/lock.png`,
-  /** Upgrade icon - limit-exceeded screen */
-  limitExceededUpgrade: `${baseUrl}/img/intercom/upgrade.png`,
-} as const;
+export const canvasImages = mediaCanvasUrls.all();
 
 /**
  * URL builder options

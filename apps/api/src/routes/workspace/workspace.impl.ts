@@ -1811,6 +1811,7 @@ export const deleteIntercomIntegrationImpl = (
 /**
  * GET /workspace/:workspaceId/integrations/intercom/admins - Get Intercom admins
  * Requires admin or owner role
+ * Returns admins and invite policy (with allowed domains) for UI display
  */
 export const getIntercomAdminsImpl = (
   intercomService: IntercomService,
@@ -1826,16 +1827,19 @@ export const getIntercomAdminsImpl = (
   return authorizedRateLimited.workspace.integrations.intercom.admins
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      const admins = await intercomService.getAdmins(
-        input.params.workspaceId,
-        input.query.exclude_members
-      );
+      // Fetch admins and invite policy in parallel
+      const [admins, invitePolicyData] = await Promise.all([
+        intercomService.getAdmins(input.params.workspaceId, input.query.exclude_members),
+        workspaceService.getInvitePolicy(input.params.workspaceId),
+      ]);
 
       return {
         message: 'Intercom admins retrieved successfully',
         data: {
           workspaceId: input.params.workspaceId,
           admins,
+          invitePolicy: invitePolicyData.workspaceInvitePolicy,
+          allowedDomains: invitePolicyData.workspaceInviteDomains,
         },
       };
     });

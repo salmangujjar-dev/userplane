@@ -29,6 +29,8 @@ import {
   getRestorationStatus,
 } from '@/api/utils/date';
 
+import { determineWorkspaceInvitePolicyFromEmail } from '../lib/email';
+
 export interface WorkspaceServiceDeps {
   workspaceRepo: WorkspaceRepository;
   tokenService: TokenService;
@@ -54,6 +56,9 @@ export class WorkspaceService {
    * Sets default recording preferences from recorder app configuration
    * Optionally accepts a predetermined workspace ID (for invite-based workspaces)
    * Throws WORKSPACE_NAME_REQUIRED if workspace name is missing
+   * It determines the workspace invite policy based on the user's email address
+   * If the email is a disposable email, the workspace invite policy is set to 'private'
+   * Otherwise, the workspace invite policy is set to 'whitelisted'
    */
   async create(params: CreateWorkspaceParams, options?: { tx?: Transaction }) {
     if (!params.workspaceName) {
@@ -63,18 +68,25 @@ export class WorkspaceService {
     // Generate unique recording slug if not provided
     const recordingSlug = params.recordingSlug || generateRecordingId();
 
+    // Determine workspace invite policy
+    const { workspaceInvitePolicy, workspaceInviteDomains } =
+      determineWorkspaceInvitePolicyFromEmail(params.userEmail);
+
     // Generate workspace invite token
     const inviteToken = generateInviteToken();
 
     // Get default recording preferences
     const defaultPrefs = getDefaultRecordingPreferences();
 
+    // Create a new workspace
     const workspace = await this.deps.workspaceRepo.create(
       {
         workspaceId: params.workspaceId || generateWorkspaceId(),
         workspaceName: params.workspaceName,
         recordingSlug,
         workspaceInviteToken: inviteToken,
+        workspaceInvitePolicy,
+        workspaceInviteDomains,
         recordingCompanyName: defaultPrefs.recordingCompanyName,
         recordingHeader: defaultPrefs.recordingHeader,
         recordingFootnote: defaultPrefs.recordingFootnote,

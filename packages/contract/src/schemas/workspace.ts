@@ -1279,10 +1279,13 @@ export const IntercomAdminItemSchema = z.object({
 
 /**
  * Get Intercom admins response
+ * Includes invite policy to show allowed domains in the UI
  */
 export const IntercomAdminsDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   admins: z.array(IntercomAdminItemSchema),
+  invitePolicy: WorkspaceInvitePolicySchema,
+  allowedDomains: z.array(z.string()).nullable(),
 });
 
 // Additional type exports

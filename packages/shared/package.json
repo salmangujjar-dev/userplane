@@ -9,21 +9,38 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./env": {
+      "types": "./dist/env.d.ts",
+      "import": "./dist/env.js"
+    },
     "./meta": {
       "types": "./dist/meta.d.ts",
       "import": "./dist/meta.js"
+    },
+    "./media": {
+      "types": "./dist/media/index.d.ts",
+      "import": "./dist/media/index.js"
     },
     "./assets/*": "./assets/*"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "dev:preview": "bun run dev",
     "dev:all": "tsc --watch",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "upload-assets": "bun run scripts/upload-assets.ts",
+    "assets:upload": "bun run scripts/upload-assets.ts --env=development",
+    "assets:upload:staging": "bun run scripts/upload-assets.ts --env=staging",
+    "assets:upload:production": "bun run scripts/upload-assets.ts --env=production",
+    "assets:upload:dry-run": "bun run scripts/upload-assets.ts --env=development --dry-run",
+    "assets:upload:force": "bun run scripts/upload-assets.ts --env=development --force",
+    "assets:manifest": "bun run scripts/upload-assets.ts --manifest-only"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.621.0",
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "eslint": "^9.32.0",
