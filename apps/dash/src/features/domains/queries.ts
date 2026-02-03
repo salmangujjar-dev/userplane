@@ -61,6 +61,29 @@ export function useWorkspaceDomains(options?: {
   });
 }
 
+/**
+ * Hook to fetch the first workspace domain
+ * Used for onboarding flows where we need to show/edit the primary domain
+ * @param workspaceId - The workspace ID to fetch domain for (accepts null for conditional fetching)
+ */
+export function useFirstWorkspaceDomain(workspaceId: string | null) {
+  return useQuery({
+    queryKey: domainKeys.list(workspaceId ?? '', { page: 1, perPage: 1 }),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.domains.list({
+        params: { workspaceId },
+        query: { page: 1, per_page: 1, sort_by: 'created_at', sort_direction: 'asc' },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: !!workspaceId,
+    staleTime: 1 * 60 * 1000,
+  });
+}
+
 // ============================================
 // DOMAIN STATUS POLLING
 // ============================================

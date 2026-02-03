@@ -92,13 +92,11 @@ export function useIntercomDisconnect() {
 }
 
 /**
- * Hook to fetch Intercom admins for the current workspace
+ * Hook to fetch Intercom admins for a workspace
+ * @param workspaceId - The workspace ID to fetch admins for
  * @param excludeMembers - If true, excludes admins who are already workspace members (default: true)
- * @param enabled - If false, disables the query (default: true)
  */
-export function useIntercomAdmins(excludeMembers: boolean = true, enabled: boolean = true) {
-  const workspaceId = useWorkspaceId();
-
+export function useIntercomAdmins(workspaceId: string | null, excludeMembers: boolean = true) {
   return useQuery({
     queryKey: integrationKeys.intercomAdmins(workspaceId ?? '', excludeMembers),
     queryFn: async () => {
@@ -111,7 +109,7 @@ export function useIntercomAdmins(excludeMembers: boolean = true, enabled: boole
       });
       return handleSafeResult(error, response?.data ?? null);
     },
-    enabled: enabled && !!workspaceId,
+    enabled: !!workspaceId,
     staleTime: 1 * 60 * 1000, // 1 minute - admins list can change
     retry: 1,
   });
