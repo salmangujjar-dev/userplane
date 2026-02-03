@@ -74,12 +74,12 @@ export function buildAccessRequestedCanvas(options: AccessRequestedCanvasOptions
     },
     {
       type: 'button',
-      id: 'contact_admin',
-      label: 'Contact Admin',
+      id: 'request_access',
+      label: 'Request Access',
       style: 'primary',
       action: {
         type: 'url',
-        url: intercomCanvasUrls.supportEmailURL(),
+        url: intercomCanvasUrls.workspaceSuggestURL(),
       },
     },
     {

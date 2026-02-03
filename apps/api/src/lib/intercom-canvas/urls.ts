@@ -74,6 +74,11 @@ export interface IntercomCanvasUrls {
    * URL for support email contact
    */
   supportEmailURL(): string;
+
+  /**
+   * URL for workspace suggestions page where users can join/request access
+   */
+  workspaceSuggestURL(): string;
 }
 
 /**
@@ -107,5 +112,9 @@ export const intercomCanvasUrls: IntercomCanvasUrls = {
 
   supportEmailURL(): string {
     return `mailto:${env.support.supportEmail}`;
+  },
+
+  workspaceSuggestURL(): string {
+    return `${baseUrl}/workspace/suggest`;
   },
 };
