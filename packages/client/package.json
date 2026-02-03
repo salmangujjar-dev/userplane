@@ -12,6 +12,7 @@
   },
   "scripts": {
     "dev": "tsc --watch",
+    "dev:preview": "bun run dev",
     "build": "rm -rf dist && tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
