@@ -20,7 +20,9 @@ import {
 import {
   detectRegionAndGetMe,
   exchangeCodeForToken,
+  extractRegionFromCode,
   getAuthorizationUrl,
+  getMeWithRegion,
   type IntercomAdmin,
   type IntercomMeResponse,
   listAdmins,
@@ -182,26 +184,33 @@ export class IntercomService {
       throw provisionerError.INTERCOM_OAUTH_STATE_INVALID();
     }
 
-    // 2. Exchange code for access token
+    // 2. Extract region from authorization code (fast path)
+    // Intercom encodes region in the code: base64({code}:{aws-region})
+    const extractedRegion = extractRegionFromCode(code);
+
+    // 3. Exchange code for access token
     const tokenResponse = await exchangeCodeForToken(code);
     if (!tokenResponse) {
       throw provisionerError.INTERCOM_TOKEN_EXCHANGE_FAILED();
     }
 
-    // 3. Get user info from Intercom /me endpoint (auto-detect region)
-    const meResult = await detectRegionAndGetMe(tokenResponse.access_token);
+    // 4. Get user info from Intercom /me endpoint
+    // Use extracted region if available (fast path), otherwise detect (slow path)
+    const meResult = extractedRegion
+      ? await getMeWithRegion(tokenResponse.access_token, extractedRegion)
+      : await detectRegionAndGetMe(tokenResponse.access_token);
     if (!meResult) {
       throw provisionerError.INTERCOM_USER_INFO_FAILED();
     }
 
     const { me, region } = meResult;
 
-    // 4. Verify email is verified (security)
+    // 5. Verify email is verified (security)
     if (!me.email_verified) {
       throw provisionerError.INTERCOM_EMAIL_NOT_VERIFIED();
     }
 
-    // 5. Check if Intercom workspace is already connected
+    // 6. Check if Intercom workspace is already connected
     const existingIntegration = await this.deps.integrationRepo.findByProviderWorkspaceId(
       'intercom',
       me.app.id_code
@@ -210,7 +219,7 @@ export class IntercomService {
       throw provisionerError.INTERCOM_WORKSPACE_ALREADY_CONNECTED();
     }
 
-    // 6. Create workspace and integration
+    // 7. Create workspace and integration
     return this.handleIntercomCreation({
       me,
       region: region as IntercomRegion,
@@ -249,26 +258,33 @@ export class IntercomService {
       throw workspaceError.INTEGRATION_ALREADY_CONNECTED();
     }
 
-    // 3. Exchange code for access token
+    // 3. Extract region from authorization code (fast path)
+    // Intercom encodes region in the code: base64({code}:{aws-region})
+    const extractedRegion = extractRegionFromCode(code);
+
+    // 4. Exchange code for access token
     const tokenResponse = await exchangeCodeForToken(code);
     if (!tokenResponse) {
       throw provisionerError.INTERCOM_TOKEN_EXCHANGE_FAILED();
     }
 
-    // 4. Get user info from Intercom /me endpoint (auto-detect region)
-    const meResult = await detectRegionAndGetMe(tokenResponse.access_token);
+    // 5. Get user info from Intercom /me endpoint
+    // Use extracted region if available (fast path), otherwise detect (slow path)
+    const meResult = extractedRegion
+      ? await getMeWithRegion(tokenResponse.access_token, extractedRegion)
+      : await detectRegionAndGetMe(tokenResponse.access_token);
     if (!meResult) {
       throw provisionerError.INTERCOM_USER_INFO_FAILED();
     }
 
     const { me, region } = meResult;
 
-    // 5. Verify email is verified (security)
+    // 6. Verify email is verified (security)
     if (!me.email_verified) {
       throw provisionerError.INTERCOM_EMAIL_NOT_VERIFIED();
     }
 
-    // 6. Check if this Intercom workspace is already connected to another userplane workspace
+    // 7. Check if this Intercom workspace is already connected to another userplane workspace
     const existingProviderIntegration = await this.deps.integrationRepo.findByProviderWorkspaceId(
       'intercom',
       me.app.id_code
@@ -277,7 +293,7 @@ export class IntercomService {
       throw workspaceError.INTEGRATION_PROVIDER_WORKSPACE_CONFLICT();
     }
 
-    // 7. Create integration record
+    // 8. Create integration record
     await this.deps.integrationRepo.create({
       id: generateIntegrationId(),
       workspaceId,
@@ -289,7 +305,7 @@ export class IntercomService {
       providerMeta: createProviderMeta('intercom', { region: region as IntercomRegion }),
     });
 
-    // 8. Warm cache for future lookups
+    // 9. Warm cache for future lookups
     await this.deps.cacheService.setIntegrationByProviderWorkspace('intercom', me.app.id_code, {
       workspaceId,
     });

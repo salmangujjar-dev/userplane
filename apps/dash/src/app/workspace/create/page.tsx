@@ -4,13 +4,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
-import { Loader2 } from 'lucide-react';
+import { toast } from '@workspace/ui/components/sonner';
+import { ArrowLeftRight, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { useEffect, useState } from 'react';
 import { Control, Controller, FieldErrors, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { apiClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { InviteLoadingState, InviteTeammatesView } from '@/components/integrations/intercom';
 import { URLInput } from '@/components/url-input';
@@ -18,6 +21,7 @@ import { useAccount } from '@/features/account';
 import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
+import { handleSafeResult, showErrorToast } from '@/lib/errors';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -214,7 +218,100 @@ function PostCreationInviteView({
   );
 }
 
+// Intercom OAuth initiation flow
+function IntercomConnectFlow() {
+  const [isConnecting, setIsConnecting] = useState(false);
+  const router = useRouter();
+
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    try {
+      const [error, response] = await apiClient.provisioner.intercom.authorize({});
+      const result = handleSafeResult(error, response?.data ?? null);
+
+      if (!result.success) {
+        showErrorToast(result.error);
+        return;
+      }
+
+      // Redirect to Intercom OAuth page
+      window.location.href = result.data.authorizationUrl;
+    } catch (error) {
+      toast.error('Failed to connect to Intercom', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  return (
+    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
+      <AuthIcons />
+
+      <div className="w-full max-w-md space-y-10 relative z-10">
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex items-center gap-4">
+            <Logo variant="tiled" size="md" showText={false} />
+            <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
+              <Image
+                src="/integrations/intercom.webp"
+                alt="Intercom"
+                width={32}
+                height={32}
+                className="object-contain"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="text-xl font-medium text-foreground">
+              Let&apos;s create your workspace
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Connect your intercom workspace to get started
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Button
+            onClick={handleConnect}
+            disabled={isConnecting}
+            size="lg"
+            className="w-full rounded-full px-7 py-6"
+          >
+            {isConnecting ? 'Connecting...' : 'Connect to Intercom'}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => router.push('/workspace/create?flow=direct')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center"
+          >
+            Configure userplane manually
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CreateWorkspacePage() {
+  const [flow] = useQueryState('flow', { defaultValue: 'direct' });
+
+  // Render Intercom connect flow if flow=intercom
+  if (flow === 'intercom') {
+    return <IntercomConnectFlow />;
+  }
+
+  // Otherwise render the direct create flow
+  return <DirectCreateFlow />;
+}
+
+// Direct workspace creation flow
+function DirectCreateFlow() {
   const [createdWorkspace, setCreatedWorkspace] = useState<{
     workspaceId: string;
     workspaceName: string;
@@ -345,7 +442,7 @@ export default function CreateWorkspacePage() {
           isValid={isValid}
           isPending={isPending}
           onSubmit={handleSubmit(handleUrlSubmit)}
-          onConnectIntercom={() => router.push('/workspace/connect/intercom')}
+          onConnectIntercom={() => router.push('/workspace/create?flow=intercom')}
         />
       </div>
     </div>

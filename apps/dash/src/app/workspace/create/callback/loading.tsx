@@ -2,7 +2,7 @@ import { Skeleton } from '@workspace/ui/components/skeleton';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 
-export default function ConnectIntercomLoading() {
+export default function CreateCallbackLoading() {
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
       <AuthIcons />
@@ -13,14 +13,13 @@ export default function ConnectIntercomLoading() {
             <Skeleton className="h-5 w-5" />
             <Skeleton className="h-14 w-14 rounded-xl" />
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <Skeleton className="h-7 w-72" />
-            <Skeleton className="h-4 w-64" />
+          <div className="flex flex-col items-center gap-4">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="flex flex-col items-center gap-2">
+              <Skeleton className="h-7 w-64" />
+              <Skeleton className="h-4 w-72" />
+            </div>
           </div>
-        </div>
-        <div className="space-y-4">
-          <Skeleton className="h-14 w-full rounded-full" />
-          <Skeleton className="h-5 w-56 mx-auto" />
         </div>
       </div>
     </div>
