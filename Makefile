@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email dev\:preview build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:setup\:preview env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:staging assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status i d b l f t c
+.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email dev\:preview build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:setup\:preview env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:staging assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:upload embed\:upload\:staging embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:staging embed\:deploy\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -118,6 +118,32 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)trigger:deploy$(WHITE)                ║$(RESET) Deploy tasks (dev)                                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)trigger:deploy:staging$(WHITE)        ║$(RESET) Deploy tasks (staging)                                            $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)trigger:deploy:production$(WHITE)     ║$(RESET) Deploy tasks (production)                                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)SDK PACKAGE$(WHITE)                                                                                        ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)sdk:build$(WHITE)                     ║$(RESET) Build SDK (standard dev build)                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)sdk:build:npm$(WHITE)                 ║$(RESET) Build SDK (size-optimized for npm)                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)sdk:build:cdn$(WHITE)                 ║$(RESET) Build SDK (size-optimized for CDN)                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)sdk:build:npm:obfuscate$(WHITE)       ║$(RESET) Build SDK (obfuscated for npm)                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)sdk:build:cdn:obfuscate$(WHITE)       ║$(RESET) Build SDK (obfuscated for CDN)                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)METADATA PACKAGE$(WHITE)                                                                                   ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)metadata:build$(WHITE)                ║$(RESET) Build Metadata (standard dev build)                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)metadata:build:npm$(WHITE)            ║$(RESET) Build Metadata (size-optimized for npm)                            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)metadata:build:cdn$(WHITE)            ║$(RESET) Build Metadata (size-optimized for CDN)                            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)EMBED PACKAGE (CDN)$(WHITE)                                                                                ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:build$(WHITE)                   ║$(RESET) Build Embed (standard dev build)                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:build:cdn$(WHITE)               ║$(RESET) Build Embed for CDN (script.js + main.js)                          $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:upload$(WHITE)                  ║$(RESET) Upload Embed to R2 CDN (dev)                                       $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:upload:staging$(WHITE)          ║$(RESET) Upload Embed to R2 CDN (staging)                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:upload:production$(WHITE)       ║$(RESET) Upload Embed to R2 CDN (production)                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:upload:dry-run$(WHITE)          ║$(RESET) Preview Embed upload (no changes)                                  $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:deploy$(WHITE)                  ║$(RESET) Build and deploy Embed (dev)                                       $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:deploy:staging$(WHITE)          ║$(RESET) Build and deploy Embed (staging)                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:deploy:production$(WHITE)       ║$(RESET) Build and deploy Embed (production)                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)MAINTENANCE$(WHITE)                                                                                       ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -725,6 +751,128 @@ tunnel\:status: ## Show tunnel status and URLs
 	@echo "$(GREEN)Recorder:$(RESET)   https://recorder-preview.userplane.io"
 	@echo "$(GREEN)Playground:$(RESET) https://playground-preview.userplane.io"
 	@echo "$(WHITE)-------------------------------------------$(RESET)"
+
+# SDK Package commands
+sdk\:build: ## Build SDK (standard dev build)
+	@echo "$(BLUE)Building SDK...$(RESET)"
+	@cd packages/sdk && bun run build
+	@echo "$(GREEN)SDK built!$(RESET)"
+
+sdk\:build\:npm: ## Build SDK (size-optimized for npm)
+	@echo "$(BLUE)Building SDK (npm optimized)...$(RESET)"
+	@cd packages/sdk && bun run build:npm
+	@echo "$(GREEN)SDK built (npm optimized)!$(RESET)"
+
+sdk\:build\:cdn: ## Build SDK (size-optimized for CDN)
+	@echo "$(BLUE)Building SDK (CDN optimized)...$(RESET)"
+	@cd packages/sdk && bun run build:cdn
+	@echo "$(GREEN)SDK built (CDN optimized)!$(RESET)"
+
+sdk\:build\:npm\:obfuscate: ## Build SDK (obfuscated for npm)
+	@echo "$(BLUE)Building SDK (npm obfuscated)...$(RESET)"
+	@cd packages/sdk && bun run build:npm:obfuscate
+	@echo "$(GREEN)SDK built (npm obfuscated)!$(RESET)"
+
+sdk\:build\:cdn\:obfuscate: ## Build SDK (obfuscated for CDN)
+	@echo "$(BLUE)Building SDK (CDN obfuscated)...$(RESET)"
+	@cd packages/sdk && bun run build:cdn:obfuscate
+	@echo "$(GREEN)SDK built (CDN obfuscated)!$(RESET)"
+
+# Metadata Package commands
+metadata\:build: ## Build Metadata (standard dev build)
+	@echo "$(BLUE)Building Metadata...$(RESET)"
+	@cd packages/metadata && bun run build
+	@echo "$(GREEN)Metadata built!$(RESET)"
+
+metadata\:build\:npm: ## Build Metadata (size-optimized for npm)
+	@echo "$(BLUE)Building Metadata (npm optimized)...$(RESET)"
+	@cd packages/metadata && bun run build:npm
+	@echo "$(GREEN)Metadata built (npm optimized)!$(RESET)"
+
+metadata\:build\:cdn: ## Build Metadata (size-optimized for CDN)
+	@echo "$(BLUE)Building Metadata (CDN optimized)...$(RESET)"
+	@cd packages/metadata && bun run build:cdn
+	@echo "$(GREEN)Metadata built (CDN optimized)!$(RESET)"
+
+# Embed Package commands
+embed\:build: ## Build Embed (standard dev build)
+	@echo "$(BLUE)Building Embed...$(RESET)"
+	@cd packages/embed && bun run build
+	@echo "$(GREEN)Embed built!$(RESET)"
+
+embed\:build\:cdn: ## Build Embed for CDN (script.js + main.js)
+	@echo "$(BLUE)Building Embed (CDN)...$(RESET)"
+	@cd packages/embed && bun run build:cdn
+	@echo "$(GREEN)Embed built (CDN)!$(RESET)"
+
+embed\:upload: ## Upload Embed to R2 CDN (dev)
+	@echo "$(BLUE)Uploading Embed to R2 CDN (development)...$(RESET)"
+	@if [ ! -f packages/embed/.env.development ] && [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: .env.development not found$(RESET)"; \
+		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/embed && bun run upload:cdn --env=development
+	@echo "$(GREEN)Embed uploaded!$(RESET)"
+
+embed\:upload\:staging: ## Upload Embed to R2 CDN (staging)
+	@echo "$(BLUE)Uploading Embed to R2 CDN (staging)...$(RESET)"
+	@if [ ! -f packages/embed/.env.staging ] && [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: .env.staging not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/embed && bun run upload:cdn --env=staging
+	@echo "$(GREEN)Embed uploaded!$(RESET)"
+
+embed\:upload\:production: ## Upload Embed to R2 CDN (production)
+	@echo "$(RED)Uploading Embed to R2 CDN (production)...$(RESET)"
+	@echo "$(RED)WARNING: This will upload Embed to PRODUCTION CDN!$(RESET)"
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
+	@if [ ! -f packages/embed/.env.production ] && [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: .env.production not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/embed && bun run upload:cdn --env=production
+	@echo "$(GREEN)Embed uploaded!$(RESET)"
+
+embed\:upload\:dry-run: ## Preview Embed upload (no changes)
+	@echo "$(BLUE)Previewing Embed upload (development)...$(RESET)"
+	@if [ ! -f packages/embed/.env.development ] && [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: .env.development not found$(RESET)"; \
+		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/embed && bun run upload:cdn --env=development --dry-run
+
+embed\:deploy: embed\:build\:cdn ## Build and deploy Embed (dev)
+	@echo "$(BLUE)Deploying Embed (development)...$(RESET)"
+	@if [ ! -f packages/embed/.env.development ] && [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: .env.development not found$(RESET)"; \
+		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/embed && bun run upload:cdn --env=development
+	@echo "$(GREEN)Embed deployed!$(RESET)"
+
+embed\:deploy\:staging: embed\:build\:cdn ## Build and deploy Embed (staging)
+	@echo "$(BLUE)Deploying Embed (staging)...$(RESET)"
+	@if [ ! -f packages/embed/.env.staging ] && [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: .env.staging not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/embed && bun run upload:cdn --env=staging
+	@echo "$(GREEN)Embed deployed!$(RESET)"
+
+embed\:deploy\:production: embed\:build\:cdn ## Build and deploy Embed (production)
+	@echo "$(RED)Deploying Embed (production)...$(RESET)"
+	@echo "$(RED)WARNING: This will deploy Embed to PRODUCTION CDN!$(RESET)"
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
+	@if [ ! -f packages/embed/.env.production ] && [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: .env.production not found$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/embed && bun run upload:cdn --env=production
+	@echo "$(GREEN)Embed deployed!$(RESET)"
 
 i: install ## Shortcut for install
 d: dev ## Shortcut for dev
