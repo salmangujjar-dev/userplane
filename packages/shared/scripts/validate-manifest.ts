@@ -27,10 +27,10 @@ import { dirname, join } from 'node:path';
 // =============================================================================
 
 /** Valid environment names - matches packages/shared/src/env.ts */
-type Environment = 'development' | 'staging' | 'production' | 'preview';
+type Environment = 'development' | 'production';
 
 /** All valid environments for validation */
-const VALID_ENVIRONMENTS: Environment[] = ['development', 'staging', 'production', 'preview'];
+const VALID_ENVIRONMENTS: Environment[] = ['development', 'production'];
 
 interface ValidateOptions {
   local: boolean;

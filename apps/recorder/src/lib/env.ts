@@ -18,7 +18,7 @@ interface SentryConfig {
 
 interface EnvConfig {
   nodeEnv: 'development' | 'production' | 'test';
-  /** Application environment for deployment stage (development, preview, staging, production) */
+  /** Application environment for deployment stage (development, production) */
   appEnv: Environment;
   apiUrl: string;
   sentry: SentryConfig;
@@ -38,7 +38,7 @@ function parseFloat(value: string | undefined, defaultValue: number): number {
  */
 export function loadEnvConfig(): EnvConfig {
   const nodeEnv = (process.env.NODE_ENV || 'development') as EnvConfig['nodeEnv'];
-  // Astro's --mode flag sets import.meta.env.MODE (e.g., --mode preview sets MODE=preview)
+  // Astro's --mode flag sets import.meta.env.MODE (e.g., --mode development sets MODE=development)
   const appEnv = parseAppEnv(import.meta.env.MODE);
   // Use appEnv to determine production-like behavior for Sentry sampling
   const isProdLike = isProductionLike(appEnv);
@@ -46,7 +46,7 @@ export function loadEnvConfig(): EnvConfig {
   const config: EnvConfig = {
     nodeEnv,
     appEnv,
-    apiUrl: import.meta.env.PUBLIC_API_URL || 'http://localhost:3001/api/v1',
+    apiUrl: import.meta.env.PUBLIC_API_URL || 'https://api-preview.userplane.io/api/v1',
     sentry: {
       // Runtime configuration
       dsn: import.meta.env.PUBLIC_SENTRY_DSN,

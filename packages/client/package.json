@@ -12,12 +12,10 @@
   },
   "scripts": {
     "dev": "tsc --watch",
-    "dev:preview": "bun run dev",
     "build": "rm -rf dist && tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev:all": "tsc --watch"
+    "clean": "git clean -xdf .cache .turbo dist node_modules"
   },
   "dependencies": {
     "@orpc/client": "^1.12.3",

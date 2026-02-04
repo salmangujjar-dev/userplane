@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email dev\:preview build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:setup\:preview env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:staging assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:preview embed\:build\:cdn\:staging embed\:build\:cdn\:production embed\:upload embed\:upload\:preview embed\:upload\:staging embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:preview embed\:deploy\:staging embed\:deploy\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:studio db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -34,35 +34,28 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)install$(WHITE)                       ║$(RESET) Install all dependencies                                          $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)update$(WHITE)                        ║$(RESET) Update dependencies                                               $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)env:setup$(WHITE)                     ║$(RESET) Copy .env.example files to create .env.development files         $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)env:setup:preview$(WHITE)             ║$(RESET) Copy .env.preview.example files for tunnel preview                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)env:check$(WHITE)                     ║$(RESET) Check if .env.development files exist                             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)DATABASE$(WHITE)                                                                                          ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:generate$(WHITE)                   ║$(RESET) Generate migrations (dev)                                         $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)db:generate:staging$(WHITE)           ║$(RESET) Generate migrations (staging)                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:generate:production$(WHITE)        ║$(RESET) Generate migrations (production)                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:migrate$(WHITE)                    ║$(RESET) Run migrations (dev)                                              $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)db:migrate:staging$(WHITE)            ║$(RESET) Run migrations (staging)                                          $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:migrate:production$(WHITE)         ║$(RESET) Run migrations (production)                                       $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:push$(WHITE)                       ║$(RESET) Push schema directly (dev)                                        $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)db:push:staging$(WHITE)               ║$(RESET) Push schema directly (staging)                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:push:production$(WHITE)            ║$(RESET) Push schema directly (production)                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:studio$(WHITE)                     ║$(RESET) Open Drizzle Studio (dev)                                         $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)db:studio:staging$(WHITE)             ║$(RESET) Open Drizzle Studio (staging)                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:studio:production$(WHITE)          ║$(RESET) Open Drizzle Studio (production)                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)DEVELOPMENT$(WHITE)                                                                                       ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev$(WHITE)                           ║$(RESET) Run apps in minimal mode (no Storybook/Trigger)                   $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev:all$(WHITE)                       ║$(RESET) Run all apps with Storybook and Trigger.dev                       $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev$(WHITE)                           ║$(RESET) Run all apps in development mode                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:web$(WHITE)                       ║$(RESET) Run web app only                                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:astro$(WHITE)                     ║$(RESET) Run astro app only                                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:api$(WHITE)                       ║$(RESET) Run API only                                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:share$(WHITE)                     ║$(RESET) Run Share URL shortener only                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:email$(WHITE)                     ║$(RESET) Run Email preview server only                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:playground$(WHITE)                ║$(RESET) Run playground app only                                           $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev:preview$(WHITE)                   ║$(RESET) Run apps in preview mode (uses .env.preview)                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -99,7 +92,6 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(CYAN)ASSETS (CDN)$(WHITE)                                                                                     ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)assets:upload$(WHITE)                 ║$(RESET) Upload assets to R2 CDN (dev)                                     $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)assets:upload:staging$(WHITE)         ║$(RESET) Upload assets to R2 CDN (staging)                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)assets:upload:production$(WHITE)      ║$(RESET) Upload assets to R2 CDN (production)                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)assets:upload:dry-run$(WHITE)         ║$(RESET) Preview what would be uploaded (dev)                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)assets:manifest$(WHITE)               ║$(RESET) Generate asset manifest only (no upload)                          $(WHITE)║$(RESET)"
@@ -116,7 +108,6 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)trigger:whoami$(WHITE)                ║$(RESET) Show current trigger.dev user                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)trigger:dev$(WHITE)                   ║$(RESET) Run trigger.dev dev server                                        $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)trigger:deploy$(WHITE)                ║$(RESET) Deploy tasks (dev)                                                $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)trigger:deploy:staging$(WHITE)        ║$(RESET) Deploy tasks (staging)                                            $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)trigger:deploy:production$(WHITE)     ║$(RESET) Deploy tasks (production)                                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)SDK PACKAGE$(WHITE)                                                                                        ║$(RESET)"
@@ -138,17 +129,11 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)embed:build$(WHITE)                   ║$(RESET) Build Embed (standard dev build)                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:build:cdn$(WHITE)               ║$(RESET) Build Embed for CDN (dev env, alias for embed:build:cdn:dev)       $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:dev$(WHITE)           ║$(RESET) Build Embed for CDN with dev EMBED_CDN_BASE_URL                    $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:preview$(WHITE)       ║$(RESET) Build Embed for CDN with preview EMBED_CDN_BASE_URL                $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:staging$(WHITE)       ║$(RESET) Build Embed for CDN with staging EMBED_CDN_BASE_URL                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:production$(WHITE)    ║$(RESET) Build Embed for CDN with production EMBED_CDN_BASE_URL             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:upload$(WHITE)                  ║$(RESET) Upload Embed to R2 CDN (dev)                                       $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)embed:upload:preview$(WHITE)          ║$(RESET) Upload Embed to R2 CDN (preview)                                   $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)embed:upload:staging$(WHITE)          ║$(RESET) Upload Embed to R2 CDN (staging)                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:upload:production$(WHITE)       ║$(RESET) Upload Embed to R2 CDN (production)                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:upload:dry-run$(WHITE)          ║$(RESET) Preview Embed upload (no changes)                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:deploy$(WHITE)                  ║$(RESET) Build and deploy Embed (dev)                                       $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)embed:deploy:preview$(WHITE)          ║$(RESET) Build and deploy Embed (preview)                                   $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)embed:deploy:staging$(WHITE)          ║$(RESET) Build and deploy Embed (staging)                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:deploy:production$(WHITE)       ║$(RESET) Build and deploy Embed (production)                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)MAINTENANCE$(WHITE)                                                                                       ║$(RESET)"
@@ -167,13 +152,9 @@ install: ## Install all dependencies
 	@bun install
 	@echo "$(GREEN)Dependencies installed!$(RESET)"
 
-dev: ## Run apps in minimal dev mode (no Storybook, no Trigger.dev)
-	@echo "$(MAGENTA)Starting apps in minimal development mode...$(RESET)"
+dev: ## Run all apps in development mode
+	@echo "$(MAGENTA)Starting all apps in development mode...$(RESET)"
 	@bun dev
-
-dev\:all: ## Run all apps with Storybook and Trigger.dev
-	@echo "$(MAGENTA)Starting all apps in full development mode...$(RESET)"
-	@bunx turbo dev:all --concurrency=30
 
 dev\:web: ## Run web app only
 	@echo "$(MAGENTA)Starting web app (Next.js)...$(RESET)"
@@ -198,10 +179,6 @@ dev\:email: ## Run Email preview server only
 dev\:playground: ## Run playground app only
 	@echo "$(MAGENTA)Starting Playground app...$(RESET)"
 	@cd apps/playground && bun dev
-
-dev\:preview: ## Run apps in preview mode (uses .env.preview files)
-	@echo "$(MAGENTA)Starting apps in preview mode...$(RESET)"
-	@bun dev:preview
 
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
@@ -337,24 +314,6 @@ assets\:upload: ## Upload assets to R2 CDN (dev)
 	@cd packages/shared && bun run upload-assets --env=development
 	@echo "$(GREEN)Assets uploaded!$(RESET)"
 
-assets\:upload\:staging: ## Upload assets to R2 CDN (staging)
-	@echo "$(BLUE)Uploading assets to R2 CDN (staging)...$(RESET)"
-	@if [ ! -f packages/shared/.env.staging ] && [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: .env.staging not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd packages/shared && bun run upload-assets --env=staging
-	@echo "$(GREEN)Assets uploaded!$(RESET)"
-
-assets\:upload\:preview: ## Upload assets to R2 CDN (preview)
-	@echo "$(BLUE)Uploading assets to R2 CDN (preview)...$(RESET)"
-	@if [ ! -f packages/shared/.env.preview ] && [ ! -f apps/api/.env.preview ]; then \
-		echo "$(RED)Error: .env.preview not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd packages/shared && bun run upload-assets --env=preview
-	@echo "$(GREEN)Assets uploaded!$(RESET)"
-
 assets\:upload\:production: ## Upload assets to R2 CDN (production)
 	@echo "$(RED)Uploading assets to R2 CDN (production)...$(RESET)"
 	@echo "$(RED)WARNING: This will upload assets to PRODUCTION!$(RESET)"
@@ -390,16 +349,6 @@ assets\:validate\:local: ## Validate local asset files exist
 	@cd packages/shared && bun run assets:validate:local
 	@echo "$(GREEN)Local validation complete!$(RESET)"
 
-assets\:validate\:staging: ## Validate assets exist on staging CDN
-	@echo "$(BLUE)Validating staging CDN assets...$(RESET)"
-	@cd packages/shared && bun run assets:validate:staging
-	@echo "$(GREEN)Staging validation complete!$(RESET)"
-
-assets\:validate\:preview: ## Validate assets exist on preview CDN
-	@echo "$(BLUE)Validating preview CDN assets...$(RESET)"
-	@cd packages/shared && bun run assets:validate:preview
-	@echo "$(GREEN)Preview validation complete!$(RESET)"
-
 assets\:validate\:production: ## Validate assets exist on production CDN
 	@echo "$(BLUE)Validating production CDN assets...$(RESET)"
 	@cd packages/shared && bun run assets:validate:production
@@ -425,83 +374,6 @@ env\:check: ## Check if .env.development files exist
 	@if [ -f apps/dash/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/dash/.env.development exists"; else echo "$(RED)✗$(RESET) apps/dash/.env.development missing"; fi
 	@if [ -f apps/home/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/home/.env.development exists"; else echo "$(RED)✗$(RESET) apps/home/.env.development missing"; fi
 	@if [ -f apps/recorder/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/recorder/.env.development exists"; else echo "$(RED)✗$(RESET) apps/recorder/.env.development missing"; fi
-
-env\:setup\:preview: ## Copy .env.development files and replace URLs with tunnel URLs
-	@echo "$(BLUE)Setting up preview environment files with tunnel URLs...$(RESET)"
-	@if [ ! -f apps/api/.env.development ]; then \
-		echo "$(RED)Error: apps/api/.env.development not found. Run 'make env:setup' first$(RESET)"; \
-		exit 1; \
-	fi
-	@if [ ! -f apps/dash/.env.development ]; then \
-		echo "$(RED)Error: apps/dash/.env.development not found. Run 'make env:setup' first$(RESET)"; \
-		exit 1; \
-	fi
-	@if [ ! -f apps/recorder/.env.development ]; then \
-		echo "$(RED)Error: apps/recorder/.env.development not found. Run 'make env:setup' first$(RESET)"; \
-		exit 1; \
-	fi
-	@if [ ! -f apps/home/.env.development ]; then \
-		echo "$(RED)Error: apps/home/.env.development not found. Run 'make env:setup' first$(RESET)"; \
-		exit 1; \
-	fi
-	@# Copy and transform API env
-	@cp apps/api/.env.development apps/api/.env.preview
-	@sed -i '' \
-		-e 's|http://localhost:3001|https://api-preview.userplane.io|g' \
-		-e 's|http://localhost:3000|https://dash-preview.userplane.io|g' \
-		-e 's|http://localhost:4321|https://home-preview.userplane.io|g' \
-		-e 's|http://localhost:4322|https://recorder-preview.userplane.io|g' \
-		-e 's|http://localhost:4444|https://playground-preview.userplane.io|g' \
-		-e 's|^APP_ENV=.*|APP_ENV=preview|' \
-		apps/api/.env.preview
-	@# Add APP_ENV=preview if not present
-	@grep -q '^APP_ENV=' apps/api/.env.preview || echo 'APP_ENV=preview' >> apps/api/.env.preview
-	@# Add cookie domain for cross-subdomain sharing
-	@grep -q '^BETTER_AUTH_COOKIE_DOMAIN=' apps/api/.env.preview || echo 'BETTER_AUTH_COOKIE_DOMAIN=.userplane.io' >> apps/api/.env.preview
-	@echo "$(GREEN)✓$(RESET) Created apps/api/.env.preview"
-	@# Copy and transform Dash env
-	@cp apps/dash/.env.development apps/dash/.env.preview
-	@sed -i '' \
-		-e 's|http://localhost:3001|https://api-preview.userplane.io|g' \
-		-e 's|http://localhost:3000|https://dash-preview.userplane.io|g' \
-		-e 's|http://localhost:4321|https://home-preview.userplane.io|g' \
-		-e 's|http://localhost:4322|https://recorder-preview.userplane.io|g' \
-		-e 's|http://localhost:4444|https://playground-preview.userplane.io|g' \
-		-e 's|^APP_ENV=.*|APP_ENV=preview|' \
-		apps/dash/.env.preview
-	@grep -q '^APP_ENV=' apps/dash/.env.preview || echo 'APP_ENV=preview' >> apps/dash/.env.preview
-	@echo "$(GREEN)✓$(RESET) Created apps/dash/.env.preview"
-	@# Copy and transform Recorder env
-	@cp apps/recorder/.env.development apps/recorder/.env.preview
-	@sed -i '' \
-		-e 's|http://localhost:3001|https://api-preview.userplane.io|g' \
-		-e 's|http://localhost:3000|https://dash-preview.userplane.io|g' \
-		-e 's|http://localhost:4321|https://home-preview.userplane.io|g' \
-		-e 's|http://localhost:4322|https://recorder-preview.userplane.io|g' \
-		-e 's|http://localhost:4444|https://playground-preview.userplane.io|g' \
-		-e 's|^APP_ENV=.*|APP_ENV=preview|' \
-		apps/recorder/.env.preview
-	@grep -q '^APP_ENV=' apps/recorder/.env.preview || echo 'APP_ENV=preview' >> apps/recorder/.env.preview
-	@echo "$(GREEN)✓$(RESET) Created apps/recorder/.env.preview"
-	@# Copy and transform Home env
-	@cp apps/home/.env.development apps/home/.env.preview
-	@sed -i '' \
-		-e 's|http://localhost:3001|https://api-preview.userplane.io|g' \
-		-e 's|http://localhost:3000|https://dash-preview.userplane.io|g' \
-		-e 's|http://localhost:4321|https://home-preview.userplane.io|g' \
-		-e 's|http://localhost:4322|https://recorder-preview.userplane.io|g' \
-		-e 's|http://localhost:4444|https://playground-preview.userplane.io|g' \
-		-e 's|^APP_ENV=.*|APP_ENV=preview|' \
-		apps/home/.env.preview
-	@grep -q '^APP_ENV=' apps/home/.env.preview || echo 'APP_ENV=preview' >> apps/home/.env.preview
-	@echo "$(GREEN)✓$(RESET) Created apps/home/.env.preview"
-	@echo "$(GREEN)Preview environment files created!$(RESET)"
-	@echo "$(CYAN)Tunnel URLs configured:$(RESET)"
-	@echo "  API:        https://api-preview.userplane.io"
-	@echo "  Dash:       https://dash-preview.userplane.io"
-	@echo "  Home:       https://home-preview.userplane.io"
-	@echo "  Recorder:   https://recorder-preview.userplane.io"
-	@echo "  Playground: https://playground-preview.userplane.io"
 
 # Database commands - Development
 db\:generate: ## Generate Drizzle migrations (dev)
@@ -542,42 +414,6 @@ db\:studio: ## Open Drizzle Studio (dev)
 		exit 1; \
 	fi
 	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:studio
-
-# Database commands - Staging
-db\:generate\:staging: ## Generate Drizzle migrations (staging)
-	@echo "$(BLUE)Generating Drizzle migrations (staging)...$(RESET)"
-	@if [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:generate
-	@echo "$(GREEN)Migrations generated!$(RESET)"
-
-db\:migrate\:staging: ## Run database migrations (staging)
-	@echo "$(BLUE)Running database migrations (staging)...$(RESET)"
-	@if [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:migrate
-	@echo "$(GREEN)Migrations complete!$(RESET)"
-
-db\:push\:staging: ## Push schema directly to DB (staging)
-	@echo "$(YELLOW)Pushing schema to database (staging)...$(RESET)"
-	@if [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:push
-	@echo "$(GREEN)Schema pushed!$(RESET)"
-
-db\:studio\:staging: ## Open Drizzle Studio (staging)
-	@echo "$(MAGENTA)Opening Drizzle Studio (staging)...$(RESET)"
-	@if [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.staging | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:studio
 
 # Database commands - Production
 db\:generate\:production: ## Generate Drizzle migrations (production)
@@ -648,19 +484,6 @@ trigger\:deploy: ## Deploy tasks to trigger.dev (dev)
 		export SENTRY_ORG=$$(grep '^SENTRY_ORG=' .env.development | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
 		export SENTRY_PROJECT_API=$$(grep '^SENTRY_PROJECT_API=' .env.development | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
 		npx trigger.dev@latest deploy --env dev
-	@echo "$(GREEN)Deployment complete!$(RESET)"
-
-trigger\:deploy\:staging: ## Deploy tasks to trigger.dev (staging)
-	@echo "$(BLUE)Deploying tasks to trigger.dev (staging)...$(RESET)"
-	@if [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: apps/api/.env.staging not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd apps/api && \
-		export SENTRY_AUTH_TOKEN=$$(grep '^SENTRY_AUTH_TOKEN=' .env.staging | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
-		export SENTRY_ORG=$$(grep '^SENTRY_ORG=' .env.staging | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
-		export SENTRY_PROJECT_API=$$(grep '^SENTRY_PROJECT_API=' .env.staging | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
-		npx trigger.dev@latest deploy --env staging
 	@echo "$(GREEN)Deployment complete!$(RESET)"
 
 trigger\:deploy\:production: ## Deploy tasks to trigger.dev (production)
@@ -844,38 +667,6 @@ embed\:build\:cdn\:dev: ## Build Embed for CDN with dev EMBED_CDN_BASE_URL
 	@cd packages/embed && EMBED_CDN_BASE_URL="$(CDN_URL)" bun run build:cdn
 	@echo "$(GREEN)Embed built (CDN) for development!$(RESET)"
 
-embed\:build\:cdn\:preview: ## Build Embed for CDN with preview EMBED_CDN_BASE_URL
-	@if [ ! -f packages/embed/.env.preview ] && [ ! -f apps/api/.env.preview ]; then \
-		echo "$(RED)Error: .env.preview not found$(RESET)"; \
-		exit 1; \
-	fi
-	@$(MAKE) sdk:build:cdn
-	@echo "$(BLUE)Building Embed (CDN) for preview...$(RESET)"
-	$(eval CDN_URL := $(call get_embed_cdn_url,preview))
-	@if [ -z "$(CDN_URL)" ]; then \
-		echo "$(RED)Error: EMBED_CDN_BASE_URL not found in .env.preview$(RESET)"; \
-		exit 1; \
-	fi
-	@echo "$(CYAN)Using CDN URL: $(CDN_URL)$(RESET)"
-	@cd packages/embed && EMBED_CDN_BASE_URL="$(CDN_URL)" bun run build:cdn
-	@echo "$(GREEN)Embed built (CDN) for preview!$(RESET)"
-
-embed\:build\:cdn\:staging: ## Build Embed for CDN with staging EMBED_CDN_BASE_URL
-	@if [ ! -f packages/embed/.env.staging ] && [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: .env.staging not found$(RESET)"; \
-		exit 1; \
-	fi
-	@$(MAKE) sdk:build:cdn
-	@echo "$(BLUE)Building Embed (CDN) for staging...$(RESET)"
-	$(eval CDN_URL := $(call get_embed_cdn_url,staging))
-	@if [ -z "$(CDN_URL)" ]; then \
-		echo "$(RED)Error: EMBED_CDN_BASE_URL not found in .env.staging$(RESET)"; \
-		exit 1; \
-	fi
-	@echo "$(CYAN)Using CDN URL: $(CDN_URL)$(RESET)"
-	@cd packages/embed && EMBED_CDN_BASE_URL="$(CDN_URL)" bun run build:cdn
-	@echo "$(GREEN)Embed built (CDN) for staging!$(RESET)"
-
 embed\:build\:cdn\:production: ## Build Embed for CDN with production EMBED_CDN_BASE_URL
 	@if [ ! -f packages/embed/.env.production ] && [ ! -f apps/api/.env.production ]; then \
 		echo "$(RED)Error: .env.production not found$(RESET)"; \
@@ -902,24 +693,6 @@ embed\:upload: ## Upload Embed to R2 CDN (dev)
 	@cd packages/embed && bun run upload:cdn --env=development
 	@echo "$(GREEN)Embed uploaded!$(RESET)"
 
-embed\:upload\:preview: ## Upload Embed to R2 CDN (preview)
-	@echo "$(BLUE)Uploading Embed to R2 CDN (preview)...$(RESET)"
-	@if [ ! -f packages/embed/.env.preview ] && [ ! -f apps/api/.env.preview ]; then \
-		echo "$(RED)Error: .env.preview not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd packages/embed && bun run upload:cdn --env=preview
-	@echo "$(GREEN)Embed uploaded!$(RESET)"
-
-embed\:upload\:staging: ## Upload Embed to R2 CDN (staging)
-	@echo "$(BLUE)Uploading Embed to R2 CDN (staging)...$(RESET)"
-	@if [ ! -f packages/embed/.env.staging ] && [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: .env.staging not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd packages/embed && bun run upload:cdn --env=staging
-	@echo "$(GREEN)Embed uploaded!$(RESET)"
-
 embed\:upload\:production: ## Upload Embed to R2 CDN (production)
 	@echo "$(RED)Uploading Embed to R2 CDN (production)...$(RESET)"
 	@echo "$(RED)WARNING: This will upload Embed to PRODUCTION CDN!$(RESET)"
@@ -944,18 +717,6 @@ embed\:deploy: ## Build and deploy Embed (dev)
 	@$(MAKE) embed:build:cdn:dev
 	@echo "$(BLUE)Deploying Embed (development)...$(RESET)"
 	@cd packages/embed && bun run upload:cdn --env=development
-	@echo "$(GREEN)Embed deployed!$(RESET)"
-
-embed\:deploy\:preview: ## Build and deploy Embed (preview)
-	@$(MAKE) embed:build:cdn:preview
-	@echo "$(BLUE)Deploying Embed (preview)...$(RESET)"
-	@cd packages/embed && bun run upload:cdn --env=preview
-	@echo "$(GREEN)Embed deployed!$(RESET)"
-
-embed\:deploy\:staging: ## Build and deploy Embed (staging)
-	@$(MAKE) embed:build:cdn:staging
-	@echo "$(BLUE)Deploying Embed (staging)...$(RESET)"
-	@cd packages/embed && bun run upload:cdn --env=staging
 	@echo "$(GREEN)Embed deployed!$(RESET)"
 
 embed\:deploy\:production: ## Build and deploy Embed (production)

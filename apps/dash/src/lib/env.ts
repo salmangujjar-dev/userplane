@@ -20,7 +20,7 @@ interface SentryConfig {
 
 interface EnvConfig {
   nodeEnv: 'development' | 'production' | 'test';
-  /** Application environment for deployment stage (development, preview, staging, production) */
+  /** Application environment for deployment stage (development, production) */
   appEnv: Environment;
   apiUrl: string;
   homeUrl: string;
@@ -42,7 +42,7 @@ function parseFloat(value: string | undefined, defaultValue: number): number {
  */
 export function loadEnvConfig(): EnvConfig {
   const nodeEnv = (process.env.NODE_ENV || 'development') as EnvConfig['nodeEnv'];
-  // APP_ENV is set via next.config.mjs (e.g., APP_ENV=preview next dev)
+  // APP_ENV is set via next.config.mjs (e.g., APP_ENV=development next dev)
   const appEnv = parseAppEnv(process.env.APP_ENV);
   // Use appEnv to determine production-like behavior for Sentry sampling
   const isProdLike = isProductionLike(appEnv);
@@ -50,8 +50,8 @@ export function loadEnvConfig(): EnvConfig {
   const config: EnvConfig = {
     nodeEnv,
     appEnv,
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
-    homeUrl: process.env.NEXT_PUBLIC_HOME_URL || 'http://localhost:4321',
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api-preview.userplane.io',
+    homeUrl: process.env.NEXT_PUBLIC_HOME_URL || 'https://home-preview.userplane.io',
     authCookiePrefix: process.env.NEXT_PUBLIC_AUTH_COOKIE_PREFIX || 'userplane',
     sentry: {
       // Runtime configuration

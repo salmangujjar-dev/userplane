@@ -59,7 +59,7 @@ export abstract class BaseStorageClient {
     return {
       credentials: bucketConfig,
       bucket: bucketConfig.bucketName,
-      prefix: config.profile === 'staging' ? 'staging/' : '',
+      prefix: '',
     };
   }
 

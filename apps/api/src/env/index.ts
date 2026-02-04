@@ -13,7 +13,7 @@ interface BucketCredentials {
 }
 
 interface StorageConfig {
-  profile: 'development' | 'staging' | 'production';
+  profile: 'development' | 'production';
   assetsDomain?: string;
   dev?: BucketCredentials;
   cdn?: BucketCredentials;
@@ -36,7 +36,7 @@ interface EnvConfig {
   port: number;
   host: string;
   nodeEnv: 'development' | 'production' | 'test';
-  /** Application environment for deployment stage (development, preview, staging, production) */
+  /** Application environment for deployment stage (development, production) */
   appEnv: Environment;
   jwtIssuer: string;
   cors: {
@@ -191,34 +191,35 @@ export function loadEnvConfig(): EnvConfig {
     jwtIssuer: process.env.JWT_ISSUER || 'userplane',
     cors: {
       origins: parseCommaSeparated(process.env.CORS_ORIGINS, [
-        'http://localhost:3000',
-        'http://localhost:4321',
-        'http://localhost:4322',
+        'https://dash-preview.userplane.io',
+        'https://home-preview.userplane.io',
+        'https://recorder-preview.userplane.io',
       ]),
       credentials: parseBoolean(process.env.CORS_CREDENTIALS, true),
       maxAge: parseInteger(process.env.CORS_MAX_AGE, 86400),
     },
     auth: {
       secret: process.env.BETTER_AUTH_SECRET || 'dev-auth-secret-change-in-production',
-      url: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
+      url: process.env.BETTER_AUTH_URL || 'https://api-preview.userplane.io',
       cookiePrefix: process.env.BETTER_AUTH_COOKIE_PREFIX || 'userplane',
       // Cookie domain for cross-subdomain sharing (e.g., .userplane.io)
-      // Only set in preview/staging/production to share cookies across subdomains
       cookieDomain: process.env.BETTER_AUTH_COOKIE_DOMAIN,
     },
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       redirectUri:
-        process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/callback/google',
+        process.env.GOOGLE_REDIRECT_URI ||
+        'https://api-preview.userplane.io/api/auth/callback/google',
     },
     intercom: {
       clientId: process.env.INTERCOM_CLIENT_ID || '',
       clientSecret: process.env.INTERCOM_CLIENT_SECRET || '',
-      redirectUri: process.env.INTERCOM_REDIRECT_URI || 'http://localhost:3000/callback/intercom',
+      redirectUri:
+        process.env.INTERCOM_REDIRECT_URI || 'https://dash-preview.userplane.io/callback/intercom',
     },
     dashboard: {
-      baseUrl: process.env.INVITE_APP_URL || 'http://localhost:3000',
+      baseUrl: process.env.INVITE_APP_URL || 'https://dash-preview.userplane.io',
     },
     dodoPayments: {
       apiKey: process.env.DODO_PAYMENTS_API_KEY,
@@ -265,7 +266,7 @@ export function loadEnvConfig(): EnvConfig {
       url: process.env.DATABASE_URL || '',
     },
     recorder: {
-      baseUrl: process.env.RECORDER_URL || 'http://localhost:4322',
+      baseUrl: process.env.RECORDER_URL || 'https://recorder-preview.userplane.io',
     },
     support: {
       docsUrl: process.env.DOCS_URL || 'https://userplane.io/docs',

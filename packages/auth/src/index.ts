@@ -74,14 +74,14 @@ export interface AuthConfig {
   /**
    * Cookie domain for cross-subdomain sharing (e.g., .userplane.io)
    * When set, cookies are shared across all subdomains
-   * Only set this in preview/staging/production environments
+   * Set this to share cookies across subdomains
    */
   cookieDomain?: string;
   /** Node environment - defaults to process.env.NODE_ENV */
   nodeEnv?: 'development' | 'production' | 'test';
   /**
    * Application environment for deployment stage
-   * Controls cookie security settings (preview/staging/production use secure cookies)
+   * Controls cookie security settings (both environments use secure cookies via HTTPS)
    * Defaults to 'development'
    */
   appEnv?: Environment;
@@ -103,7 +103,7 @@ export function createAuth(config: AuthConfig) {
   const nodeEnv = config.nodeEnv || (process.env.NODE_ENV as typeof config.nodeEnv);
   const isProduction = nodeEnv === 'production';
 
-  // Use appEnv for cookie security decisions (preview/staging/production all need secure cookies)
+  // Use appEnv for cookie security decisions (both environments use HTTPS)
   const appEnv = config.appEnv || 'development';
   const isSecure = isSecureEnvironment(appEnv);
 
@@ -188,10 +188,9 @@ export function createAuth(config: AuthConfig) {
     advanced: {
       // Cookie prefix for all cookies
       cookiePrefix: config.cookiePrefix || 'userplane',
-      // Force secure cookies for preview/staging/production even when NODE_ENV=development
-      // This is needed because Better Auth checks NODE_ENV to decide secure cookie behavior
+      // Force secure cookies since both environments use HTTPS
       useSecureCookies: isSecure,
-      // Cross-subdomain cookie sharing for preview/staging/production
+      // Cross-subdomain cookie sharing
       // Allows cookies set on api.userplane.io to be read by dash.userplane.io
       //
       // Security model:
@@ -210,21 +209,14 @@ export function createAuth(config: AuthConfig) {
             },
           }
         : {}),
-      // Cookie attributes based on appEnv (deployment stage)
-      // Development: use lax for localhost with different ports
-      // Preview/Staging/Production: use none with secure flag to support OAuth POST callbacks
+      // Cookie attributes: use none with secure flag to support OAuth POST callbacks
       // SameSite=lax cookies are NOT sent on cross-site POST requests (per spec),
       // which breaks OAuth providers that use POST-based callbacks (Google, Apple)
       // See: https://github.com/better-auth/better-auth/issues/5243
-      defaultCookieAttributes: isSecure
-        ? {
-            sameSite: 'none',
-            secure: true,
-          }
-        : {
-            sameSite: 'lax',
-            secure: false,
-          },
+      defaultCookieAttributes: {
+        sameSite: 'none',
+        secure: true,
+      },
     },
     databaseHooks: {
       user: {

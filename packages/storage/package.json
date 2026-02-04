@@ -14,8 +14,6 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "dev:preview": "bun run dev",
-    "dev:all": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },

@@ -106,7 +106,7 @@ export default defineConfig({
   build: {
     extensions: [
       // Sync env vars from .env file during deployment
-      // Reads .env.staging for staging, .env.production for production
+      // Reads .env.development for development, .env.production for production
       syncEnvVars(async (ctx: { environment: string; projectRef: string }) => {
         // Determine which env file to use based on deploy environment
         const envFile = getEnvFileName(ctx.environment);

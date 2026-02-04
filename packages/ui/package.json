@@ -6,8 +6,6 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "dev:preview": "bun run dev",
-    "dev:all": "tsc --watch",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },
