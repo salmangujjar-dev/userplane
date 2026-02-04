@@ -50,10 +50,10 @@
         throw new Error('main.js not found in manifest');
       }
 
-      // Create and inject main script
+      // Create and inject main script as ES module
       const script = document.createElement('script');
+      script.type = 'module';
       script.src = `${CDN_BASE}/${mainJs}`;
-      script.async = true;
       script.crossOrigin = 'anonymous';
 
       // Preserve nonce for CSP compliance

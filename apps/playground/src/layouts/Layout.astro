@@ -20,18 +20,23 @@ const defaultDescription =
     <meta name="userplane:blur" content=".company-description" />
     <meta name="userplane:blur" content=".search-input" />
     <link rel="icon" type="image/png" href="/yc-logo.png" />
+    <!-- Set the workspace ID for the playground -->
+    <meta name="userplane:workspace" content="ws_riP5gYg0fLYz" />
     <title>{title}</title>
   </head>
   <body>
     <slot />
-    <script>
+    <!-- Try to import the SDK as an ES module for the playground -->
+    <!-- <script>
       import * as userplane from '@workspace/sdk';
 
       // Initialize the Userplane SDK once
       userplane.initialize({
         workspaceId: ['ws_UqPERwvxiO5U'],
       });
-    </script>
+    </script> -->
+    <!-- Try the embed script for production use -->
+    <script src="https://dev.userplane.io/embed/script.js?v=2.2.1"></script>
   </body>
 </html>
 
