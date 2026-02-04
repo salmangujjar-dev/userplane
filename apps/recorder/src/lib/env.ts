@@ -2,7 +2,7 @@
  * Environment configuration for Recorder
  * Centralizes all environment variable access with type safety and validation
  */
-import { isProductionLike, parseAppEnv, type Environment } from '@workspace/shared/env';
+import { type Environment, isProductionLike, parseAppEnv } from '@workspace/shared/env';
 
 interface SentryConfig {
   // Runtime configuration
