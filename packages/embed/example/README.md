@@ -4,10 +4,10 @@ Simple customer dashboard demonstrating auto-initialization of the Userplane rec
 
 ## Quick Start
 
-1. Serve the example:
+1. Build and serve (from `packages/embed` directory):
 
 ```bash
-npx serve .
+bun run build:cdn && npx serve example
 ```
 
 2. Open in browser:
@@ -34,9 +34,9 @@ When you visit with `userplane-action=recording` and `userplane-token` in the UR
 
 ## Files
 
-- `index.html` - Customer dashboard with workspace meta tag and embed script
+- `index.html` - Customer dashboard example
 - `script.js` - Simple application logic
-- `styles.css` - Clean dashboard styling
+- `styles.css` - Dashboard styling
 - `README.md` - This file
 
 ## Integration
@@ -52,12 +52,43 @@ To integrate into your app:
 2. Add embed script:
 
 ```html
-<script type="module" src="https://cdn.userplane.com/embed.js"></script>
+<!-- Production (CDN) -->
+<script src="https://cdn.userplane.com/embed/script.js"></script>
 ```
 
 3. Generate recording links server-side with tokens
 
 That's it. The recorder auto-initializes when users visit recording links.
+
+## CDN Architecture
+
+The CDN embed uses a two-stage loading pattern for optimal caching:
+
+```
+script.js (1KB)     - Bootstrap loader, short cache (5 min)
+    |
+    v
+manifest.json       - Maps to content-hashed main file, short cache (5 min)
+    |
+    v
+main.{hash}.js      - Full embed code, immutable cache (1 year)
+```
+
+This allows instant updates while maximizing cache efficiency.
+
+## Local Development
+
+Build with `build:cdn` and use the dist output directly:
+
+```bash
+bun run build:cdn
+```
+
+```html
+<script src="../dist/main.js"></script>
+```
+
+This mirrors production behavior where `script.js` loads `main.js`.
 
 ## API Access
 
