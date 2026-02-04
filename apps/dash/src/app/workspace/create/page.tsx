@@ -299,7 +299,7 @@ function IntercomConnectFlow() {
 }
 
 export default function CreateWorkspacePage() {
-  const [flow] = useQueryState('flow', { defaultValue: 'direct' });
+  const [flow] = useQueryState('flow', { defaultValue: 'intercom' });
 
   // Render Intercom connect flow if flow=intercom
   if (flow === 'intercom') {
