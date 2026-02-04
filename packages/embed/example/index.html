@@ -9,8 +9,13 @@
     <meta name="userplane:workspace" content="ws_jUcnqdGX3hAD" />
     <meta name="userplane:workspace" content="ws_production_123" />
 
-    <!-- Userplane Embed Script (auto-initializes) -->
-    <script type="module" src="../dist/index.es.js"></script>
+    <!--
+      Userplane Embed Script (auto-initializes)
+
+      Local dev: bun run build:cdn && npx serve example
+      Production: <script src="https://cdn.userplane.com/embed/script.js"></script>
+    -->
+    <script src="../dist/main.js"></script>
 
     <link rel="stylesheet" href="styles.css" />
   </head>
