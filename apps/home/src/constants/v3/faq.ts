@@ -61,12 +61,17 @@ export const FAQ_ITEMS: FAQItem[] = [
   {
     question: 'Can I try Userplane for free?',
     answer:
-      "Yes! We offer a 14-day free trial—enough time to evaluate Userplane and see if it works for you. And if you need more time, we're happy to extend your trial.",
+      'While most teams prefer to start with a paid plan to get the most out of Userplane, we offer a free plan to help customers evaluate Userplane and see if it works for their team.',
   },
   {
     question: 'How much does Userplane cost?',
     answer:
-      'Simple pricing: $99/month. No tiers, no quotas, no hidden fees. Month-to-month with no long-term contracts.',
+      'Simple pricing starting at $79/month. No tiers, no quotas, no hidden fees. Month-to-month with no long-term contracts.',
+  },
+  {
+    question: 'How does Userplane pricing work?',
+    answer:
+      'Userplane operates on a straightforward pricing model with a flat rate for all plans. Which means you pay a consistent price month-to-month with no hidden fees, no tiers, no quotas, no hidden fees.',
   },
   {
     question: 'Are there any cancellation fees or contracts?',

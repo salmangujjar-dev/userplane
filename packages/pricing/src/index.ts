@@ -517,10 +517,10 @@ export interface PlanDetails {
 /**
  * Plan feature with optional sub-features (legacy format for homepage)
  */
-export interface PlanFeature {
+export interface PlanFeatureHighlight {
   text: string;
   included?: boolean;
-  subFeatures?: PlanFeature[];
+  subFeatures?: PlanFeatureHighlight[];
 }
 
 // ============================================================================
@@ -695,6 +695,42 @@ const ESSENTIAL_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
 };
 
 /**
+ * Feature highlights for Essential plan
+ */
+const ESSENTIAL_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
+  {
+    text: 'Request Screen Recordings',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Request recordings for any customer issue',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Replay Customer Issues',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Know exactly what went wrong, without the back and forth',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Redact Sensitive Customer Data',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Mask confidential fields and sensitive data from customer recordings',
+        included: true,
+      },
+    ],
+  },
+];
+
+/**
  * Category features for Starter plan
  */
 const STARTER_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
@@ -749,6 +785,42 @@ const STARTER_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     dedicatedSupport: false,
   },
 };
+
+/**
+ * Feature highlights for Starter plan
+ */
+const STARTER_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
+  {
+    text: 'Request Unlimited Screen Recordings',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Request unlimited recordings for any customer issue',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Replay Customer Issues',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Know exactly what went wrong, without the back and forth',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Redact Sensitive Customer Data',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Mask confidential fields and sensitive data from customer recordings',
+        included: true,
+      },
+    ],
+  },
+];
 
 /**
  * Category features for Scale Up plan
@@ -807,6 +879,42 @@ const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
 };
 
 /**
+ * Feature highlights for Scale Up plan
+ */
+const SCALE_UP_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
+  {
+    text: 'Request Unlimited Screen Recordings & Screenshots',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Request unlimited recordings and screenshots for any customer issue',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Replay Customer Issues',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Know exactly what went wrong, without the back and forth',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Redact Sensitive Customer Data',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Mask confidential fields and sensitive data from customer recordings',
+        included: true,
+      },
+    ],
+  },
+];
+
+/**
  * Category features for Enterprise plan
  */
 const ENTERPRISE_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
@@ -861,6 +969,62 @@ const ENTERPRISE_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     dedicatedSupport: true,
   },
 };
+
+/**
+ * Feature highlights for Enterprise plan
+ */
+const ENTERPRISE_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
+  {
+    text: 'Request Unlimited Screen Recordings & Screenshots',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Request unlimited recordings and screenshots for any customer issue',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Console & server logs debugging',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Debug customer issues with console & server logs',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Replay Customer Issues',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Know exactly what went wrong, without the back and forth',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Redact Sensitive Customer Data',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Mask confidential fields and sensitive data from customer recordings',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Bring your own storage (BYOS)',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Bring your own storage for recordings, screenshots & files',
+        included: true,
+      },
+    ],
+  },
+];
 
 /**
  * Category features by plan name
@@ -931,7 +1095,9 @@ export interface BasePricingPlan {
   name: string;
   description: string;
   details: PlanDetails;
-  features: PlanFeature[];
+  // Feature highlights for the plan for the homepage
+  featureHighlights: PlanFeatureHighlight[];
+  // Category features for the plan for the pricing column
   categoryFeatures?: PlanAllCategoryFeatures;
   isPopular?: boolean;
   isEnterprise?: boolean;
@@ -1010,7 +1176,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 59,
       planCycle: 'monthly',
     },
-    features: [],
+    featureHighlights: ESSENTIAL_FEATURE_HIGHLIGHTS,
     categoryFeatures: ESSENTIAL_CATEGORY_FEATURES,
   },
   // Essential Annual
@@ -1023,7 +1189,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 47,
       planCycle: 'annual',
     },
-    features: [],
+    featureHighlights: ESSENTIAL_FEATURE_HIGHLIGHTS,
     categoryFeatures: ESSENTIAL_CATEGORY_FEATURES,
   },
   // Starter Monthly
@@ -1036,7 +1202,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 99,
       planCycle: 'monthly',
     },
-    features: [],
+    featureHighlights: STARTER_FEATURE_HIGHLIGHTS,
     categoryFeatures: STARTER_CATEGORY_FEATURES,
   },
   // Starter Annual
@@ -1049,7 +1215,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 79,
       planCycle: 'annual',
     },
-    features: [],
+    featureHighlights: STARTER_FEATURE_HIGHLIGHTS,
     categoryFeatures: STARTER_CATEGORY_FEATURES,
   },
   // Scale Up Monthly
@@ -1062,7 +1228,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 249,
       planCycle: 'monthly',
     },
-    features: [],
+    featureHighlights: SCALE_UP_FEATURE_HIGHLIGHTS,
     categoryFeatures: SCALE_UP_CATEGORY_FEATURES,
     isPopular: true,
   },
@@ -1076,7 +1242,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 199,
       planCycle: 'annual',
     },
-    features: [],
+    featureHighlights: SCALE_UP_FEATURE_HIGHLIGHTS,
     categoryFeatures: SCALE_UP_CATEGORY_FEATURES,
     isPopular: true,
   },
@@ -1090,7 +1256,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: null,
       planCycle: 'monthly',
     },
-    features: [],
+    featureHighlights: [],
     categoryFeatures: ENTERPRISE_CATEGORY_FEATURES,
     isEnterprise: true,
   },
@@ -1104,7 +1270,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: null,
       planCycle: 'annual',
     },
-    features: [],
+    featureHighlights: ENTERPRISE_FEATURE_HIGHLIGHTS,
     categoryFeatures: ENTERPRISE_CATEGORY_FEATURES,
     isEnterprise: true,
   },
@@ -1118,7 +1284,7 @@ export const BASE_PRICING_PLANS: BasePricingPlan[] = [
       planRate: 0,
       planCycle: 'one_time',
     },
-    features: [],
+    featureHighlights: ENTERPRISE_FEATURE_HIGHLIGHTS,
   },
 ];
 
