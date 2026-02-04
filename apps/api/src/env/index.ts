@@ -268,7 +268,7 @@ export function loadEnvConfig(): EnvConfig {
       baseUrl: process.env.RECORDER_URL || 'http://localhost:4322',
     },
     support: {
-      docsUrl: process.env.DOCS_URL || 'https://userplane.com/docs',
+      docsUrl: process.env.DOCS_URL || 'https://userplane.io/docs',
       supportEmail: process.env.SUPPORT_EMAIL || 'support@userplane.io',
       calendarUrl: process.env.CALENDAR_URL || 'https://cal.com/userplane/intro',
     },

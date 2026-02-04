@@ -496,7 +496,7 @@ async function main(): Promise<void> {
     if (options.dryRun) {
       console.log('\nRun without --dry-run to upload files');
     } else {
-      const cdnBase = process.env.EMBED_CDN_BASE_URL || 'https://cdn.userplane.com/embed';
+      const cdnBase = process.env.EMBED_CDN_BASE_URL || 'https://cdn.userplane.io/embed';
       console.log('\nCDN URLs:');
       console.log(`  Bootstrap: ${cdnBase}/script.js`);
       console.log(`  Manifest:  ${cdnBase}/manifest.json`);

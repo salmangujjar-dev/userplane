@@ -86,7 +86,7 @@ export function EditProjectModal({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <a
-                        href="https://userplane.com/docs/projects"
+                        href="https://userplane.io/docs/projects"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center"

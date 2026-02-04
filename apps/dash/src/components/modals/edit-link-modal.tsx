@@ -143,7 +143,7 @@ export function EditLinkModal({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href="https://userplane.com/docs/recording-links"
+                          href="https://userplane.io/docs/recording-links"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center"

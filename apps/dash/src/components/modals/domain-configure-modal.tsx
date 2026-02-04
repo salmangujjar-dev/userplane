@@ -99,7 +99,7 @@ export function DomainConfigureModal({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <a
-                        href="https://userplane.com/docs/domains"
+                        href="https://userplane.io/docs/domains"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center"

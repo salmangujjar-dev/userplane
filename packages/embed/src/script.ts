@@ -7,7 +7,7 @@
  *
  * Usage:
  * <meta name="userplane:workspace" content="ws_xxx" />
- * <script src="https://cdn.userplane.com/embed/script.js"></script>
+ * <script src="https://cdn.userplane.io/embed/script.js"></script>
  */
 
 (function () {
@@ -16,7 +16,7 @@
   // CDN base URL - replaced at build time or uses default
   const CDN_BASE =
     (typeof __EMBED_CDN_BASE_URL__ !== 'undefined' && __EMBED_CDN_BASE_URL__) ||
-    'https://cdn.userplane.com/embed';
+    'https://cdn.userplane.io/embed';
 
   // Find our script element for nonce preservation (CSP support)
   let scriptElement: HTMLScriptElement | null = null;

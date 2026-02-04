@@ -53,7 +53,7 @@ To integrate into your app:
 
 ```html
 <!-- Production (CDN) -->
-<script src="https://cdn.userplane.com/embed/script.js"></script>
+<script src="https://cdn.userplane.io/embed/script.js"></script>
 ```
 
 3. Generate recording links server-side with tokens

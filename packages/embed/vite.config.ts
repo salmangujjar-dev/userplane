@@ -7,7 +7,7 @@ import dts from 'vite-plugin-dts';
 const optimizeMode = process.env.OPTIMIZE_MODE as 'cdn' | undefined;
 
 // CDN base URL for script.ts (can be overridden via env)
-const cdnBaseUrl = process.env.EMBED_CDN_BASE_URL || 'https://cdn.userplane.com/embed';
+const cdnBaseUrl = process.env.EMBED_CDN_BASE_URL || 'https://cdn.userplane.io/embed';
 
 // Terser config for CDN builds (aggressive optimization)
 const cdnTerserConfig = {

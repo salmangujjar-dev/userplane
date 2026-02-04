@@ -28,7 +28,7 @@ export interface ClientConfig {
   /**
    * Base URL of the API
    * @example 'http://localhost:3000/api/v1'
-   * @example 'https://api.userplane.com/api/v1'
+   * @example 'https://api.userplane.io/api/v1'
    */
   url: string | (() => string);
 

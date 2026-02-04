@@ -362,7 +362,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href="https://userplane.com/docs/team-invites"
+                          href="https://userplane.io/docs/team-invites"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center"
