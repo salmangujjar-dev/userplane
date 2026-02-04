@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email dev\:preview build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:setup\:preview env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:staging assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:upload embed\:upload\:preview embed\:upload\:staging embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:preview embed\:deploy\:staging embed\:deploy\:production i d b l f t c
+.PHONY: help install dev dev\:all dev\:web dev\:astro dev\:api dev\:share dev\:email dev\:preview build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:setup\:preview env\:check db\:generate db\:generate\:staging db\:generate\:production db\:migrate db\:migrate\:staging db\:migrate\:production db\:push db\:push\:staging db\:push\:production db\:studio db\:studio\:staging db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:staging trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:staging assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:preview embed\:build\:cdn\:staging embed\:build\:cdn\:production embed\:upload embed\:upload\:preview embed\:upload\:staging embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:preview embed\:deploy\:staging embed\:deploy\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -136,7 +136,11 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(CYAN)EMBED PACKAGE (CDN)$(WHITE)                                                                                ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:build$(WHITE)                   ║$(RESET) Build Embed (standard dev build)                                   $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)embed:build:cdn$(WHITE)               ║$(RESET) Build Embed for CDN (script.js + main.js)                          $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:build:cdn$(WHITE)               ║$(RESET) Build Embed for CDN (dev env, alias for embed:build:cdn:dev)       $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:dev$(WHITE)           ║$(RESET) Build Embed for CDN with dev EMBED_CDN_BASE_URL                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:preview$(WHITE)       ║$(RESET) Build Embed for CDN with preview EMBED_CDN_BASE_URL                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:staging$(WHITE)       ║$(RESET) Build Embed for CDN with staging EMBED_CDN_BASE_URL                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:production$(WHITE)    ║$(RESET) Build Embed for CDN with production EMBED_CDN_BASE_URL             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:upload$(WHITE)                  ║$(RESET) Upload Embed to R2 CDN (dev)                                       $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:upload:preview$(WHITE)          ║$(RESET) Upload Embed to R2 CDN (preview)                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:upload:staging$(WHITE)          ║$(RESET) Upload Embed to R2 CDN (staging)                                   $(WHITE)║$(RESET)"
@@ -808,11 +812,85 @@ embed\:build: ## Build Embed (standard dev build)
 	@cd packages/embed && bun run build
 	@echo "$(GREEN)Embed built!$(RESET)"
 
-embed\:build\:cdn: ## Build Embed for CDN (script.js + main.js)
+# Helper function to extract EMBED_CDN_BASE_URL from .env file
+# Usage: $(call get_embed_cdn_url,environment)
+# Checks packages/embed/.env.<env> first, then apps/api/.env.<env>
+define get_embed_cdn_url
+$(shell \
+	if [ -f packages/embed/.env.$(1) ]; then \
+		grep '^EMBED_CDN_BASE_URL' packages/embed/.env.$(1) 2>/dev/null | cut -d'=' -f2 | tr -d "'" | tr -d '"'; \
+	elif [ -f apps/api/.env.$(1) ]; then \
+		grep '^EMBED_CDN_BASE_URL' apps/api/.env.$(1) 2>/dev/null | cut -d'=' -f2 | tr -d "'" | tr -d '"'; \
+	fi \
+)
+endef
+
+embed\:build\:cdn: embed\:build\:cdn\:dev ## Build Embed for CDN (alias for embed:build:cdn:dev)
+
+embed\:build\:cdn\:dev: ## Build Embed for CDN with dev EMBED_CDN_BASE_URL
+	@if [ ! -f packages/embed/.env.development ] && [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: .env.development not found$(RESET)"; \
+		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
 	@$(MAKE) sdk:build:cdn
-	@echo "$(BLUE)Building Embed (CDN)...$(RESET)"
-	@cd packages/embed && bun run build:cdn
-	@echo "$(GREEN)Embed built (CDN)!$(RESET)"
+	@echo "$(BLUE)Building Embed (CDN) for development...$(RESET)"
+	$(eval CDN_URL := $(call get_embed_cdn_url,development))
+	@if [ -z "$(CDN_URL)" ]; then \
+		echo "$(RED)Error: EMBED_CDN_BASE_URL not found in .env.development$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(CYAN)Using CDN URL: $(CDN_URL)$(RESET)"
+	@cd packages/embed && EMBED_CDN_BASE_URL="$(CDN_URL)" bun run build:cdn
+	@echo "$(GREEN)Embed built (CDN) for development!$(RESET)"
+
+embed\:build\:cdn\:preview: ## Build Embed for CDN with preview EMBED_CDN_BASE_URL
+	@if [ ! -f packages/embed/.env.preview ] && [ ! -f apps/api/.env.preview ]; then \
+		echo "$(RED)Error: .env.preview not found$(RESET)"; \
+		exit 1; \
+	fi
+	@$(MAKE) sdk:build:cdn
+	@echo "$(BLUE)Building Embed (CDN) for preview...$(RESET)"
+	$(eval CDN_URL := $(call get_embed_cdn_url,preview))
+	@if [ -z "$(CDN_URL)" ]; then \
+		echo "$(RED)Error: EMBED_CDN_BASE_URL not found in .env.preview$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(CYAN)Using CDN URL: $(CDN_URL)$(RESET)"
+	@cd packages/embed && EMBED_CDN_BASE_URL="$(CDN_URL)" bun run build:cdn
+	@echo "$(GREEN)Embed built (CDN) for preview!$(RESET)"
+
+embed\:build\:cdn\:staging: ## Build Embed for CDN with staging EMBED_CDN_BASE_URL
+	@if [ ! -f packages/embed/.env.staging ] && [ ! -f apps/api/.env.staging ]; then \
+		echo "$(RED)Error: .env.staging not found$(RESET)"; \
+		exit 1; \
+	fi
+	@$(MAKE) sdk:build:cdn
+	@echo "$(BLUE)Building Embed (CDN) for staging...$(RESET)"
+	$(eval CDN_URL := $(call get_embed_cdn_url,staging))
+	@if [ -z "$(CDN_URL)" ]; then \
+		echo "$(RED)Error: EMBED_CDN_BASE_URL not found in .env.staging$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(CYAN)Using CDN URL: $(CDN_URL)$(RESET)"
+	@cd packages/embed && EMBED_CDN_BASE_URL="$(CDN_URL)" bun run build:cdn
+	@echo "$(GREEN)Embed built (CDN) for staging!$(RESET)"
+
+embed\:build\:cdn\:production: ## Build Embed for CDN with production EMBED_CDN_BASE_URL
+	@if [ ! -f packages/embed/.env.production ] && [ ! -f apps/api/.env.production ]; then \
+		echo "$(RED)Error: .env.production not found$(RESET)"; \
+		exit 1; \
+	fi
+	@$(MAKE) sdk:build:cdn
+	@echo "$(BLUE)Building Embed (CDN) for production...$(RESET)"
+	$(eval CDN_URL := $(call get_embed_cdn_url,production))
+	@if [ -z "$(CDN_URL)" ]; then \
+		echo "$(RED)Error: EMBED_CDN_BASE_URL not found in .env.production$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(CYAN)Using CDN URL: $(CDN_URL)$(RESET)"
+	@cd packages/embed && EMBED_CDN_BASE_URL="$(CDN_URL)" bun run build:cdn
+	@echo "$(GREEN)Embed built (CDN) for production!$(RESET)"
 
 embed\:upload: ## Upload Embed to R2 CDN (dev)
 	@echo "$(BLUE)Uploading Embed to R2 CDN (development)...$(RESET)"
@@ -863,45 +941,28 @@ embed\:upload\:dry-run: ## Preview Embed upload (no changes)
 	@cd packages/embed && bun run upload:cdn --env=development --dry-run
 
 embed\:deploy: ## Build and deploy Embed (dev)
-	@$(MAKE) embed:build:cdn
+	@$(MAKE) embed:build:cdn:dev
 	@echo "$(BLUE)Deploying Embed (development)...$(RESET)"
-	@if [ ! -f packages/embed/.env.development ] && [ ! -f apps/api/.env.development ]; then \
-		echo "$(RED)Error: .env.development not found$(RESET)"; \
-		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
-		exit 1; \
-	fi
 	@cd packages/embed && bun run upload:cdn --env=development
 	@echo "$(GREEN)Embed deployed!$(RESET)"
 
 embed\:deploy\:preview: ## Build and deploy Embed (preview)
-	@$(MAKE) embed:build:cdn
+	@$(MAKE) embed:build:cdn:preview
 	@echo "$(BLUE)Deploying Embed (preview)...$(RESET)"
-	@if [ ! -f packages/embed/.env.preview ] && [ ! -f apps/api/.env.preview ]; then \
-		echo "$(RED)Error: .env.preview not found$(RESET)"; \
-		exit 1; \
-	fi
 	@cd packages/embed && bun run upload:cdn --env=preview
 	@echo "$(GREEN)Embed deployed!$(RESET)"
 
 embed\:deploy\:staging: ## Build and deploy Embed (staging)
-	@$(MAKE) embed:build:cdn
+	@$(MAKE) embed:build:cdn:staging
 	@echo "$(BLUE)Deploying Embed (staging)...$(RESET)"
-	@if [ ! -f packages/embed/.env.staging ] && [ ! -f apps/api/.env.staging ]; then \
-		echo "$(RED)Error: .env.staging not found$(RESET)"; \
-		exit 1; \
-	fi
 	@cd packages/embed && bun run upload:cdn --env=staging
 	@echo "$(GREEN)Embed deployed!$(RESET)"
 
 embed\:deploy\:production: ## Build and deploy Embed (production)
-	@$(MAKE) embed:build:cdn
+	@$(MAKE) embed:build:cdn:production
 	@echo "$(RED)Deploying Embed (production)...$(RESET)"
 	@echo "$(RED)WARNING: This will deploy Embed to PRODUCTION CDN!$(RESET)"
 	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
-	@if [ ! -f packages/embed/.env.production ] && [ ! -f apps/api/.env.production ]; then \
-		echo "$(RED)Error: .env.production not found$(RESET)"; \
-		exit 1; \
-	fi
 	@cd packages/embed && bun run upload:cdn --env=production
 	@echo "$(GREEN)Embed deployed!$(RESET)"
 
