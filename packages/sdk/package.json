@@ -22,16 +22,25 @@
     "dev:preview": "bun run dev",
     "dev:all": "vite build --watch",
     "build": "tsc && vite build",
+    "build:npm": "tsc && OPTIMIZE_MODE=npm vite build",
+    "build:cdn": "tsc && OPTIMIZE_MODE=cdn vite build",
+    "build:npm:obfuscate": "tsc && OBFUSCATE_MODE=npm vite build",
+    "build:cdn:obfuscate": "tsc && OBFUSCATE_MODE=cdn vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "bun run build:npm"
   },
   "devDependencies": {
-    "eslint": "^9.32.0",
-    "@workspace/eslint-config": "workspace:*",
+    "@rollup/plugin-terser": "^0.4.4",
     "@types/node": "^22.14.1",
+    "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9.32.0",
+    "javascript-obfuscator": "^5.2.1",
+    "rollup-plugin-obfuscator": "^1.1.0",
+    "terser": "^5.46.0",
     "typescript": "5.8.2",
     "vite": "^6.0.7",
     "vite-plugin-dts": "^4.4.0"
