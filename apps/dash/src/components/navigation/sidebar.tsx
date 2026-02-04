@@ -342,7 +342,7 @@ export function Sidebar() {
               )}
               <DropdownMenuSeparator className="-mx-2 my-2" />
               <a
-                href="https://docs.userplane.com"
+                href="https://docs.userplane.io"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"

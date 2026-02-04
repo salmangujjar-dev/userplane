@@ -279,7 +279,7 @@ function FormView({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
-                      href="https://userplane.com/docs/recording-links"
+                      href="https://userplane.io/docs/recording-links"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center"
@@ -513,7 +513,7 @@ function ErrorView({
 
       <DialogFooter className="mt-8">
         <a
-          href="https://userplane.com/docs/troubleshooting/link-creation-errors"
+          href="https://userplane.io/docs/troubleshooting/link-creation-errors"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
@@ -602,7 +602,7 @@ function ShareView({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
-                      href="https://userplane.com/docs/sharing-links"
+                      href="https://userplane.io/docs/sharing-links"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center"

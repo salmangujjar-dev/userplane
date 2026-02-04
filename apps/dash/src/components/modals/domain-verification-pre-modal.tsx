@@ -29,7 +29,7 @@ export function DomainVerificationPreModal({
   onVerify,
 }: DomainVerificationPreModalProps) {
   const handleHowItWorks = () => {
-    window.open('https://docs.userplane.com/domains', '_blank');
+    window.open('https://docs.userplane.io/domains', '_blank');
   };
 
   return (

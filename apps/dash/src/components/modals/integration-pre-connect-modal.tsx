@@ -44,7 +44,7 @@ export function IntegrationPreConnectModal({
   };
 
   const handleHowItWorks = () => {
-    window.open('https://docs.userplane.com/integrations', '_blank');
+    window.open('https://docs.userplane.io/integrations', '_blank');
   };
 
   return (

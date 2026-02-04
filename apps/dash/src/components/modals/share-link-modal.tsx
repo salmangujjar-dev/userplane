@@ -49,7 +49,7 @@ function ShareLinkView({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
-                      href="https://userplane.com/docs/sharing-links"
+                      href="https://userplane.io/docs/sharing-links"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center"

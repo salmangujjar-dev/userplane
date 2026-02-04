@@ -266,7 +266,7 @@ function IntercomIntegrationCallbackContent() {
         errorActionSecondary={{
           label: 'Contact Support',
           callback: () => {
-            window.open('mailto:support@userplane.com', '_blank');
+            window.open('mailto:support@userplane.io', '_blank');
           },
         }}
       />
