@@ -35,10 +35,10 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 type AssetCategory = 'brand' | 'tiles' | 'integrations' | 'auth' | 'intercom-canvas';
 
 /** Valid environment names - matches packages/shared/src/env.ts */
-type Environment = 'development' | 'staging' | 'production' | 'preview';
+type Environment = 'development' | 'production';
 
 /** All valid environments for validation */
-const VALID_ENVIRONMENTS: Environment[] = ['development', 'staging', 'production', 'preview'];
+const VALID_ENVIRONMENTS: Environment[] = ['development', 'production'];
 
 interface AssetEntry {
   /** Original path key (e.g., 'brand/logo-dark.svg') */
@@ -266,8 +266,6 @@ Environment Variables (required for upload, loaded via --env or set manually):
 
 Examples:
   bun run upload-assets --env=development           # Upload using dev credentials
-  bun run upload-assets --env=staging               # Upload using staging credentials
-  bun run upload-assets --env=preview               # Upload using preview credentials
   bun run upload-assets --env=production            # Upload using production credentials
   bun run upload-assets --env=development --dry-run # Preview with dev credentials
   bun run upload-assets --manifest-only             # Generate manifest only (no creds needed)

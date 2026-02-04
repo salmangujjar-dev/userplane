@@ -19,8 +19,6 @@
   "sideEffects": false,
   "scripts": {
     "dev": "vite build --watch",
-    "dev:preview": "bun run dev",
-    "dev:all": "vite build --watch",
     "build": "tsc && vite build",
     "build:npm": "tsc && OPTIMIZE_MODE=npm vite build",
     "build:cdn": "tsc && OPTIMIZE_MODE=cdn vite build",

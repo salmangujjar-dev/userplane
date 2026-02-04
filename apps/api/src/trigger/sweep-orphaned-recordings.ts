@@ -44,7 +44,7 @@ export const sweepOrphanedRecordings = schedules.task({
     pattern: env.trigger.recordingSweepCronSchedule,
     timezone: 'UTC',
     // Only run in PRODUCTION and STAGING environments
-    environments: ['PRODUCTION', 'STAGING'],
+    environments: ['PRODUCTION'],
   },
   run: withSentryTrigger(async (payload): Promise<SweepOrphanedRecordingsResult> => {
     logger.info('Starting sweep for orphaned recordings', {

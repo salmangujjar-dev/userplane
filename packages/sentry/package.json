@@ -35,10 +35,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "dev:preview": "bun run dev",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "dev:all": "tsc --watch"
+    "lint": "eslint ."
   },
   "devDependencies": {
     "eslint": "^9.32.0",

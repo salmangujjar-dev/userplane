@@ -2,7 +2,7 @@ import { type Environment, isSecureEnvironment, parseAppEnv } from '@workspace/s
 
 interface EnvConfig {
   appEnv: Environment;
-  /** Whether secure cookies are used (preview/staging/production use __Secure- prefix) */
+  /** Whether secure cookies are used (both environments use __Secure- prefix via HTTPS) */
   useSecureCookies: boolean;
   api: {
     url: string;
@@ -29,16 +29,16 @@ function loadEnvConfig(): EnvConfig {
     appEnv,
     useSecureCookies,
     api: {
-      url: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+      url: process.env.NEXT_PUBLIC_API_URL || 'https://api-preview.userplane.io',
     },
     recorder: {
-      url: process.env.NEXT_PUBLIC_RECORDER_URL || 'http://localhost:4322',
+      url: process.env.NEXT_PUBLIC_RECORDER_URL || 'https://recorder-preview.userplane.io',
     },
     dashboard: {
-      url: process.env.NEXT_PUBLIC_DASHBOARD_URL || 'http://localhost:3000',
+      url: process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dash-preview.userplane.io',
     },
     home: {
-      url: process.env.NEXT_PUBLIC_HOME_URL || 'http://localhost:4321',
+      url: process.env.NEXT_PUBLIC_HOME_URL || 'https://home-preview.userplane.io',
     },
     auth: {
       cookiePrefix: process.env.NEXT_PUBLIC_AUTH_COOKIE_PREFIX || 'userplane',

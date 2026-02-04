@@ -1,4 +1,4 @@
-export type StorageProfile = 'development' | 'staging' | 'production';
+export type StorageProfile = 'development' | 'production';
 
 export type BucketType = 'cdn' | 'assets' | 'reports';
 

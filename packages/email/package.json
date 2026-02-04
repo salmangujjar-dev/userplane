@@ -14,11 +14,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "email dev -p 3003 --dir src/emails",
-    "dev:preview": "bun run dev",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit",
-    "dev:all": "email dev -p 3003 --dir src/emails"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@react-email/components": "^1.0.4",

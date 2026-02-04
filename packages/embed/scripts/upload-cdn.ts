@@ -33,9 +33,9 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 // Types
 // =============================================================================
 
-type Environment = 'development' | 'staging' | 'production' | 'preview';
+type Environment = 'development' | 'production';
 
-const VALID_ENVIRONMENTS: Environment[] = ['development', 'staging', 'production', 'preview'];
+const VALID_ENVIRONMENTS: Environment[] = ['development', 'production'];
 
 interface UploadOptions {
   env?: Environment;

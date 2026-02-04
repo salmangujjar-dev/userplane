@@ -158,7 +158,7 @@ export const sweepOrphanedWorkspaces = schedules.task({
     pattern: env.trigger.workspaceSweepCronSchedule,
     timezone: 'UTC',
     // Only run in PRODUCTION and STAGING environments
-    environments: ['PRODUCTION', 'STAGING'],
+    environments: ['PRODUCTION'],
   },
   run: withSentryTrigger(async (payload): Promise<SweepOrphanedWorkspacesResult> => {
     logger.info('Starting sweep for orphaned workspace recordings', {
