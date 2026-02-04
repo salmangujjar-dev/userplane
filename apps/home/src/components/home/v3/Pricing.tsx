@@ -1,4 +1,4 @@
-import { BASE_PRICING_PLANS, formatPlanRate, type PlanFeature } from '@workspace/pricing';
+import { BASE_PRICING_PLANS, formatPlanRate, type PlanFeatureHighlight } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import { ChevronRight } from 'lucide-react';
 
@@ -7,7 +7,7 @@ import { PRICING_HEADING, PRICING_HIGHLIGHTS } from '@/constants/v3/pricing';
 
 import Highlight from '../Highlight';
 
-function PricingFeatureItem({ text, included, subFeatures }: PlanFeature) {
+function PricingFeatureItem({ text, included, subFeatures }: PlanFeatureHighlight) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 items-start">
       <div className="flex items-start gap-3">
@@ -26,7 +26,7 @@ function PricingFeatureItem({ text, included, subFeatures }: PlanFeature) {
       <div>
         {subFeatures && subFeatures.length > 0 && (
           <ul className="space-y-2">
-            {subFeatures.map((subFeature, index) => (
+            {subFeatures.map((subFeature: PlanFeatureHighlight, index: number) => (
               <li key={index} className="flex items-start">
                 <span className="text-base text-gray-600">{subFeature.text}</span>
               </li>
@@ -40,7 +40,7 @@ function PricingFeatureItem({ text, included, subFeatures }: PlanFeature) {
 
 export default function PricingV3() {
   // Get the Scale Up plan (annual) - popular plan for home page
-  const featuredPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'scale_up_annual');
+  const featuredPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'starter_annual');
 
   if (!featuredPlan) {
     return null;
@@ -158,7 +158,7 @@ export default function PricingV3() {
 
             <Button asChild className="rounded-full px-7 py-6" size="lg" variant="secondary">
               <a className="flex items-center gap-2 font-medium" href={SIGNUP_URL}>
-                Start Trial <ChevronRight />
+                Get Started <ChevronRight />
               </a>
             </Button>
           </div>
@@ -170,7 +170,7 @@ export default function PricingV3() {
             What&apos;s Included
           </h3>
           <div className="space-y-8">
-            {featuredPlan.features.map((feature, index) => (
+            {featuredPlan.featureHighlights.map((feature, index) => (
               <PricingFeatureItem key={index} {...feature} />
             ))}
           </div>
