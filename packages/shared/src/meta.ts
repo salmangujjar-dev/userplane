@@ -3,8 +3,6 @@
  * Provides consistent branding, SEO, and meta tags across the workspace
  */
 
-import type { MediaClient } from './media';
-
 /**
  * Site metadata interface
  */
@@ -15,15 +13,6 @@ export interface SiteMeta {
   locale: string;
   favicon: string;
   ogImage: string;
-}
-
-/**
- * Brand URLs from CDN
- */
-export interface MetaUrls {
-  favicon: string;
-  logoDark: string;
-  logoLight: string;
 }
 
 /**
@@ -73,29 +62,5 @@ export function createMeta(overrides: Partial<SiteMeta>): SiteMeta {
   return {
     ...SITE_META,
     ...overrides,
-  };
-}
-
-/**
- * Get brand URLs (favicon, logos) from a media client
- * Use this to get CDN URLs for brand assets
- *
- * @param client - MediaClient instance configured with CDN domain
- * @returns MetaUrls with favicon, logoDark, and logoLight URLs
- *
- * @example
- * ```typescript
- * import { mediaClient } from '@/lib/media';
- * import { getMetaUrls } from '@workspace/shared/meta';
- *
- * const urls = getMetaUrls(mediaClient);
- * // urls.favicon = 'https://cdn.userplane.io/media/brand/favicon.xxx.svg'
- * ```
- */
-export function getMetaUrls(client: MediaClient): MetaUrls {
-  return {
-    favicon: client.getBrandMediaUrl('brand/favicon.svg'),
-    logoDark: client.getBrandMediaUrl('brand/logo-dark.svg'),
-    logoLight: client.getBrandMediaUrl('brand/logo-light.svg'),
   };
 }

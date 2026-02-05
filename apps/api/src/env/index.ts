@@ -15,6 +15,10 @@ interface BucketCredentials {
 interface StorageConfig {
   assetsDomain?: string;
   cdnDomain?: string;
+  /** Cloudflare zone for image transforms (e.g., 'userplane.io') */
+  imageZone?: string;
+  /** Skip image transforms (serve original URLs) */
+  skipTransform?: boolean;
   cdn?: BucketCredentials;
   assets?: BucketCredentials;
   reports?: BucketCredentials;
@@ -315,6 +319,8 @@ export function loadEnvConfig(): EnvConfig {
     storage: {
       assetsDomain: process.env.ASSETS_DOMAIN,
       cdnDomain: process.env.CDN_DOMAIN,
+      imageZone: process.env.CLOUDFLARE_IMAGE_ZONE || 'userplane.io',
+      skipTransform: process.env.SKIP_IMAGE_TRANSFORM === 'true',
       cdn: process.env.R2_CDN_ACCOUNT_ID
         ? {
             accountId: process.env.R2_CDN_ACCOUNT_ID,

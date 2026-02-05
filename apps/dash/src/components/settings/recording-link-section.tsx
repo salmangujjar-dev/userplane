@@ -209,7 +209,6 @@ export function RecordingLinkSection() {
                             width={96}
                             height={96}
                             className="w-full h-full object-cover"
-                            unoptimized // External CDN images - configure in next.config.js for optimization
                           />
                         ) : (
                           <>

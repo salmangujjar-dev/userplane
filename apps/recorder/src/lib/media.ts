@@ -1,10 +1,15 @@
 /**
  * Media client for recorder app
  * Provides access to CDN media assets (logos, favicons, etc.)
+ * Includes Cloudflare Image Transform support for on-the-fly optimization.
  */
 
-import { createMediaClient, DEFAULT_CDN_DOMAIN } from '@workspace/shared/media';
+import { createMediaClient } from '@workspace/storage/media';
 
-const cdnDomain = import.meta.env.PUBLIC_CDN_DOMAIN || DEFAULT_CDN_DOMAIN;
+import { env } from './env';
 
-export const mediaClient = createMediaClient({ cdnDomain });
+export const mediaClient = createMediaClient({
+  cdnDomain: env.media.cdnDomain,
+  imageZone: env.media.imageZone,
+  skipTransform: env.media.skipTransform,
+});

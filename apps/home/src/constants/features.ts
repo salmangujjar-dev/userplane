@@ -1,3 +1,5 @@
+import { mediaClient } from '../lib/media';
+
 /**
  * Feature card data
  */
@@ -18,31 +20,32 @@ export const FEATURES_HEADING = {
 
 /**
  * Features list
+ * Images are served from CDN with Cloudflare Image Transforms
  */
 export const FEATURES: Feature[] = [
   {
-    image: '/images/features/one-click-recordings.webp',
+    image: mediaClient.getFeatureMediaUrl('features/one-click-screen-recordings.png'),
     imageAlt: 'One Click Recordings',
     title: 'One Click Recordings',
     description:
       'One-click recording links that works everywhere. No apps, installs, or browser extensions needed. A simple link that lets you capture and replay the issue.',
   },
   {
-    image: '/images/features/complete-issue-context.webp',
+    image: mediaClient.getFeatureMediaUrl('features/complete-issue-context.png'),
     imageAlt: 'Complete Issue Context',
     title: 'Complete Issue Context',
     description:
       'Capture console errors, network activity, user steps, and error traces with every recording. Get complete visibility into customer issue.',
   },
   {
-    image: '/images/features/native-integrations.webp',
+    image: mediaClient.getFeatureMediaUrl('features/native-integrations.png'),
     imageAlt: 'Intercom Native',
     title: 'Intercom Native',
     description:
       'Best-in-class Intercom integration. Request and receive screen recordings without leaving Intercom. No context switching required.',
   },
   {
-    image: '/images/features/enterprise-ready.webp',
+    image: mediaClient.getFeatureMediaUrl('features/privacy-and-security.png'),
     imageAlt: 'Enterprise Ready',
     title: 'Enterprise Ready',
     description:

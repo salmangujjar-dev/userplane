@@ -108,7 +108,6 @@ export function RecordingPreview({
               className="w-full h-full object-cover"
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              unoptimized
               onError={() => setImageError(true)}
             />
           )}

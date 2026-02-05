@@ -29,7 +29,6 @@ function LoadingState() {
                 alt="Intercom"
                 width={32}
                 height={32}
-                unoptimized
                 className="object-contain"
               />
             </div>
@@ -83,7 +82,6 @@ function SuccessState({ workspaceId }: { workspaceId: string }) {
                 alt="Intercom"
                 width={32}
                 height={32}
-                unoptimized
                 className="object-contain"
               />
             </div>
@@ -144,7 +142,6 @@ function ErrorState({ error, errorActionPrimary, errorActionSecondary }: ErrorSt
                 alt="Intercom"
                 width={32}
                 height={32}
-                unoptimized
                 className="object-contain"
               />
             </div>

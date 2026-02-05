@@ -38,5 +38,8 @@
   },
   "dependencies": {
     "prism-react-renderer": "^2.4.1"
+  },
+  "overrides": {
+    "@smithy/types": "4.12.0"
   }
 }

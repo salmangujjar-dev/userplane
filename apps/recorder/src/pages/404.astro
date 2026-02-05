@@ -1,12 +1,10 @@
 ---
 import '../styles/global.css';
-import { getAppMeta, getMetaUrls } from '@workspace/shared/meta';
+import { getAppMeta } from '@workspace/shared/meta';
 import { COMPANY_NAME, NOT_FOUND_COPY } from '@workspace/shared';
 import { mediaClient } from '@/lib/media';
 
 const meta = getAppMeta('recorder');
-const metaUrls = getMetaUrls(mediaClient);
-// Use local favicon for SEO, CDN for UI elements (logo, tiles)
 ---
 
 <html lang="en">
@@ -134,7 +132,11 @@ const metaUrls = getMetaUrls(mediaClient);
 
         <!-- Footer -->
         <div class="flex items-center gap-3 pb-4">
-          <img src={metaUrls.logoDark} alt={COMPANY_NAME} class="h-6 w-auto" />
+          <img
+            src={mediaClient.getBrandMediaUrl('brand/logo-dark.svg')}
+            alt={COMPANY_NAME}
+            class="h-6 w-auto"
+          />
           <span class="text-sm font-medium text-foreground">{COMPANY_NAME}</span>
         </div>
       </div>

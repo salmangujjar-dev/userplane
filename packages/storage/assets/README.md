@@ -65,7 +65,7 @@ import {
   authUrls,
   intercomCanvasUrls,
   getIntegrationAssets,
-} from '@workspace/shared/media';
+} from '@workspace/storage/media';
 
 // Get CDN URLs with content-hash for cache busting
 const darkLogo = brandUrls.logo('dark');
@@ -88,7 +88,7 @@ const canvasImages = intercomCanvasUrls.all();
 Assets are uploaded to R2 CDN with content-hash filenames for cache busting:
 
 ```bash
-# From packages/shared directory
+# From packages/storage directory
 bun run upload-assets              # Upload all assets
 bun run upload-assets --dry-run    # Preview what would be uploaded
 bun run upload-assets --force      # Re-upload all assets
@@ -98,7 +98,7 @@ bun run upload-assets --verbose    # Show detailed output
 Or from the monorepo root:
 
 ```bash
-bun run --filter @workspace/shared upload-assets
+bun run --filter @workspace/storage upload-assets
 ```
 
 ### R2 Path Structure
@@ -147,7 +147,7 @@ R2_CDN_PREFIX=media
 1. **Update source files** in this directory
 2. **Run upload script** to upload to R2 CDN:
    ```bash
-   bun run --filter @workspace/shared upload-assets
+   bun run --filter @workspace/storage upload-assets
    ```
 3. **Commit the source files** and the generated `manifest.generated.ts`
 

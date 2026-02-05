@@ -40,7 +40,6 @@ export function LinkReferenceInput({
             height={16}
             className="w-4 h-4 object-contain"
             onError={handleFaviconError}
-            unoptimized
           />
         </div>
       )}

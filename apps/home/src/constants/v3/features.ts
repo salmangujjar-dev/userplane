@@ -1,3 +1,4 @@
+import { mediaClient } from '../../lib/media';
 import type { HighlightConfig } from '../types';
 
 /**
@@ -31,10 +32,11 @@ export const FEATURES_HIGHLIGHTS: HighlightConfig[] = [
 
 /**
  * Features list
+ * Images are served from CDN with Cloudflare Image Transforms
  */
 export const FEATURES: Feature[] = [
   {
-    image: '/images/features/one-click-screen-recordings.png',
+    image: mediaClient.getFeatureMediaUrl('features/one-click-screen-recordings.png'),
     imageAlt: 'One click recordings',
     title: 'One click recordings',
     description:
@@ -43,7 +45,7 @@ export const FEATURES: Feature[] = [
     url: 'app.userplane.io/record',
   },
   {
-    image: '/images/features/complete-issue-context.png',
+    image: mediaClient.getFeatureMediaUrl('features/complete-issue-context.png'),
     imageAlt: 'Replay customer issues',
     title: 'Replay customer issues',
     description:
@@ -52,7 +54,7 @@ export const FEATURES: Feature[] = [
     url: 'app.userplane.io/replay',
   },
   {
-    image: '/images/features/native-integrations.png',
+    image: mediaClient.getFeatureMediaUrl('features/native-integrations.png'),
     imageAlt: 'Native Intercom integration',
     title: 'Native Intercom integration',
     description:
@@ -61,7 +63,7 @@ export const FEATURES: Feature[] = [
     url: 'app.userplane.io/integrations',
   },
   {
-    image: '/images/features/privacy-and-security.png',
+    image: mediaClient.getFeatureMediaUrl('features/privacy-and-security.png'),
     imageAlt: 'Privacy and security controls',
     title: 'Privacy and security built-in',
     description:

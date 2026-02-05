@@ -306,52 +306,52 @@ storybook\:postbridge\:build: ## Build Storybook for postbridge package
 # Assets commands
 assets\:upload: ## Upload assets to R2 CDN (dev)
 	@echo "$(BLUE)Uploading assets to R2 CDN (development)...$(RESET)"
-	@if [ ! -f packages/shared/.env.development ] && [ ! -f apps/api/.env.development ]; then \
+	@if [ ! -f packages/storage/.env.development ] && [ ! -f apps/api/.env.development ]; then \
 		echo "$(RED)Error: .env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/shared && bun run upload-assets --env=development
+	@cd packages/storage && bun run upload-assets --env=development
 	@echo "$(GREEN)Assets uploaded!$(RESET)"
 
 assets\:upload\:production: ## Upload assets to R2 CDN (production)
 	@echo "$(RED)Uploading assets to R2 CDN (production)...$(RESET)"
 	@echo "$(RED)WARNING: This will upload assets to PRODUCTION!$(RESET)"
 	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
-	@if [ ! -f packages/shared/.env.production ] && [ ! -f apps/api/.env.production ]; then \
+	@if [ ! -f packages/storage/.env.production ] && [ ! -f apps/api/.env.production ]; then \
 		echo "$(RED)Error: .env.production not found$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/shared && bun run upload-assets --env=production
+	@cd packages/storage && bun run upload-assets --env=production
 	@echo "$(GREEN)Assets uploaded!$(RESET)"
 
 assets\:upload\:dry-run: ## Preview what would be uploaded to R2 CDN (dev)
 	@echo "$(BLUE)Previewing asset upload (development)...$(RESET)"
-	@if [ ! -f packages/shared/.env.development ] && [ ! -f apps/api/.env.development ]; then \
+	@if [ ! -f packages/storage/.env.development ] && [ ! -f apps/api/.env.development ]; then \
 		echo "$(RED)Error: .env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/shared && bun run upload-assets --env=development --dry-run
+	@cd packages/storage && bun run upload-assets --env=development --dry-run
 
 assets\:manifest: ## Generate asset manifest only (no upload)
 	@echo "$(BLUE)Generating asset manifest...$(RESET)"
-	@cd packages/shared && bun run assets:manifest
+	@cd packages/storage && bun run assets:manifest
 	@echo "$(GREEN)Manifest generated!$(RESET)"
 
 assets\:validate: ## Validate manifest assets exist (local + remote dev)
 	@echo "$(BLUE)Validating manifest assets...$(RESET)"
-	@cd packages/shared && bun run assets:validate
+	@cd packages/storage && bun run assets:validate
 	@echo "$(GREEN)Validation complete!$(RESET)"
 
 assets\:validate\:local: ## Validate local asset files exist
 	@echo "$(BLUE)Validating local assets...$(RESET)"
-	@cd packages/shared && bun run assets:validate:local
+	@cd packages/storage && bun run assets:validate:local
 	@echo "$(GREEN)Local validation complete!$(RESET)"
 
 assets\:validate\:production: ## Validate assets exist on production CDN
 	@echo "$(BLUE)Validating production CDN assets...$(RESET)"
-	@cd packages/shared && bun run assets:validate:production
+	@cd packages/storage && bun run assets:validate:production
 	@echo "$(GREEN)Production validation complete!$(RESET)"
 
 update: ## Update dependencies
@@ -365,6 +365,7 @@ env\:setup: ## Copy .env.example files to create .env.development files
 	@if [ ! -f apps/dash/.env.development ]; then cp apps/dash/.env.example apps/dash/.env.development && echo "$(GREEN)✓$(RESET) Created apps/dash/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/dash/.env.development already exists"; fi
 	@if [ ! -f apps/home/.env.development ]; then cp apps/home/.env.example apps/home/.env.development && echo "$(GREEN)✓$(RESET) Created apps/home/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/home/.env.development already exists"; fi
 	@if [ ! -f apps/recorder/.env.development ]; then cp apps/recorder/.env.example apps/recorder/.env.development && echo "$(GREEN)✓$(RESET) Created apps/recorder/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/recorder/.env.development already exists"; fi
+	@if [ ! -f packages/storage/.env.development ]; then cp packages/storage/.env.example packages/storage/.env.development && echo "$(GREEN)✓$(RESET) Created packages/storage/.env.development"; else echo "$(YELLOW)⚠$(RESET) packages/storage/.env.development already exists"; fi
 	@echo "$(GREEN)Environment files setup complete!$(RESET)"
 	@echo "$(YELLOW)Remember to update the values in each .env.development file$(RESET)"
 
@@ -374,6 +375,7 @@ env\:check: ## Check if .env.development files exist
 	@if [ -f apps/dash/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/dash/.env.development exists"; else echo "$(RED)✗$(RESET) apps/dash/.env.development missing"; fi
 	@if [ -f apps/home/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/home/.env.development exists"; else echo "$(RED)✗$(RESET) apps/home/.env.development missing"; fi
 	@if [ -f apps/recorder/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/recorder/.env.development exists"; else echo "$(RED)✗$(RESET) apps/recorder/.env.development missing"; fi
+	@if [ -f packages/storage/.env.development ]; then echo "$(GREEN)✓$(RESET) packages/storage/.env.development exists"; else echo "$(RED)✗$(RESET) packages/storage/.env.development missing (optional, falls back to apps/api)"; fi
 
 # Database commands - Development
 db\:generate: ## Generate Drizzle migrations (dev)

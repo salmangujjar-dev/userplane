@@ -36,7 +36,6 @@ export default function GlobalError({
               alt="Error"
               width={120}
               height={120}
-              unoptimized
               className="mb-2"
             />
             <h1 className="text-xl font-medium text-zinc-900">Something went wrong</h1>

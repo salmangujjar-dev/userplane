@@ -28,7 +28,6 @@ export function OAuthLoadingState() {
                 alt="Intercom"
                 width={32}
                 height={32}
-                unoptimized
                 className="object-contain"
               />
             </div>
@@ -83,7 +82,6 @@ export function OAuthErrorState({
                 alt="Intercom"
                 width={32}
                 height={32}
-                unoptimized
                 className="object-contain"
               />
             </div>

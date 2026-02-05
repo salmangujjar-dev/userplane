@@ -261,7 +261,6 @@ function IntercomConnectFlow() {
                 alt="Intercom"
                 width={32}
                 height={32}
-                unoptimized
                 className="object-contain"
               />
             </div>

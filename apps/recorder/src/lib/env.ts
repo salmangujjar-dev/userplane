@@ -16,11 +16,21 @@ interface SentryConfig {
   authToken?: string;
 }
 
+interface MediaConfig {
+  /** CDN domain for static assets (e.g., 'cdn.userplane.io') */
+  cdnDomain: string;
+  /** Cloudflare zone for image transforms (e.g., 'userplane.io') */
+  imageZone: string;
+  /** Skip image transforms (serve original URLs). Opt-out for local dev. */
+  skipTransform: boolean;
+}
+
 interface EnvConfig {
   nodeEnv: 'development' | 'production' | 'test';
   /** Application environment for deployment stage (development, production) */
   appEnv: Environment;
   apiUrl: string;
+  media: MediaConfig;
   sentry: SentryConfig;
 }
 
@@ -47,6 +57,11 @@ export function loadEnvConfig(): EnvConfig {
     nodeEnv,
     appEnv,
     apiUrl: import.meta.env.PUBLIC_API_URL || 'https://api-dev.userplane.io/api/v1',
+    media: {
+      cdnDomain: import.meta.env.PUBLIC_CDN_DOMAIN || 'cdn.userplane.io',
+      imageZone: import.meta.env.PUBLIC_CLOUDFLARE_IMAGE_ZONE || 'userplane.io',
+      skipTransform: import.meta.env.PUBLIC_SKIP_IMAGE_TRANSFORM === 'true',
+    },
     sentry: {
       // Runtime configuration
       dsn: import.meta.env.PUBLIC_SENTRY_DSN,

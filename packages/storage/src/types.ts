@@ -44,6 +44,10 @@ export interface ThumbnailsClientOptions {
 export interface AssetsClientOptions {
   domain?: string;
   maxSizeBytes?: number;
+  /** Cloudflare zone for image transforms (e.g., 'userplane.io') */
+  imageZone?: string;
+  /** Skip image transforms (serve original URLs). Set via SKIP_IMAGE_TRANSFORM env var */
+  skipTransform?: boolean;
 }
 
 // Base options for getStorage

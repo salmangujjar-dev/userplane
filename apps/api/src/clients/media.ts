@@ -1,9 +1,15 @@
 /**
  * Media client initialization
  * Creates media client using configuration from environment
+ * Includes Cloudflare Image Transform support for on-the-fly optimization.
  */
 
-import { createMediaClient, DEFAULT_CDN_DOMAIN, type MediaClient } from '@workspace/shared/media';
+import {
+  createMediaClient,
+  DEFAULT_CDN_DOMAIN,
+  DEFAULT_IMAGE_ZONE,
+  type MediaClient,
+} from '@workspace/storage/media';
 
 import { env } from '@/api/env';
 
@@ -18,6 +24,8 @@ export function getMediaClient(): MediaClient {
   if (!mediaClient) {
     mediaClient = createMediaClient({
       cdnDomain: env.storage.cdnDomain || DEFAULT_CDN_DOMAIN,
+      imageZone: env.storage.imageZone || DEFAULT_IMAGE_ZONE,
+      skipTransform: env.storage.skipTransform ?? false,
     });
   }
   return mediaClient;
