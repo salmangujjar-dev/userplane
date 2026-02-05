@@ -3,19 +3,19 @@
  * Centralizes URL construction for the entire application
  */
 
-import { env } from '@/lib/env';
+import { env } from '@/env';
 
 /**
  * Marketing/Homepage base URL
  * Used for static content, blog, landing pages
  */
-export const HOME_URL = env.homeUrl;
+export const HOME_URL = env.home.url;
 
 /**
  * Dashboard base URL
  * Used for dashboard, authentication, and app pages
  */
-export const DASH_URL = env.dashUrl;
+export const DASH_URL = env.dashboard.url;
 
 /**
  * Helper to construct full URL for marketing pages

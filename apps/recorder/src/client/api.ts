@@ -7,6 +7,8 @@
 import * as Sentry from '@sentry/astro';
 import { createClient, createSafeClient } from '@workspace/client';
 
+import { env } from '@/env';
+
 /**
  * Create a client instance for the recorder
  * Uses lazy URL evaluation to work in browser environment
@@ -18,9 +20,8 @@ export function createRecorderClient() {
         throw new Error('Recorder client must be used in browser environment');
       }
 
-      const apiUrl = import.meta.env.PUBLIC_API_URL;
-      if (apiUrl) {
-        return apiUrl;
+      if (env.api.url) {
+        return env.api.url;
       }
 
       return `${window.location.origin}/api/1`;
