@@ -1,366 +1,256 @@
 /**
  * Environment configuration and validation
  * Centralizes all environment variable access with type safety and validation
+ *
+ * Types are inferred from Zod schemas in schema.ts to ensure consistency.
  */
 import { createAppLogger } from '@workspace/logger';
-import { type Environment, parseAppEnv } from '@workspace/shared/env';
+import { parseAppEnv } from '@workspace/shared/env';
+import { ZodError } from 'zod';
 
-interface BucketCredentials {
-  accountId: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  bucketName: string;
-}
+import { DEV_SECRETS, SENTRY } from './defaults';
+import {
+  type AdminConfig,
+  type AuthConfig,
+  type BucketCredentials,
+  type CacheConfig,
+  type CorsConfig,
+  type DashboardConfig,
+  type DatabaseConfig,
+  type EmailConfig,
+  type EmailInboxes,
+  type EnvConfig,
+  type OAuthConfig,
+  type PaymentsConfig,
+  type RateLimitConfig,
+  type RawEnvConfig,
+  rawEnvSchema,
+  type RecorderConfig,
+  type RedisConfig,
+  type RestorationConfig,
+  type SentryConfig,
+  type ServerConfig,
+  type SessionConfig,
+  type StorageConfig,
+  type SupportConfig,
+  type TokenConfig,
+  type TriggerConfig,
+} from './schema';
 
-interface StorageConfig {
-  assetsDomain?: string;
-  cdnDomain?: string;
-  /** Cloudflare zone for image transforms (e.g., 'userplane.io') */
-  imageZone?: string;
-  /** Skip image transforms (serve original URLs) */
-  skipTransform?: boolean;
-  cdn?: BucketCredentials;
-  assets?: BucketCredentials;
-  reports?: BucketCredentials;
-}
+// Re-export types for external use
+export type {
+  AdminConfig,
+  AuthConfig,
+  BucketCredentials,
+  CacheConfig,
+  CorsConfig,
+  DashboardConfig,
+  DatabaseConfig,
+  EmailConfig,
+  EmailInboxes,
+  EnvConfig,
+  OAuthConfig,
+  PaymentsConfig,
+  RateLimitConfig,
+  RecorderConfig,
+  RedisConfig,
+  RestorationConfig,
+  SentryConfig,
+  ServerConfig,
+  SessionConfig,
+  StorageConfig,
+  SupportConfig,
+  TokenConfig,
+  TriggerConfig,
+};
 
-interface DodoPaymentsConfig {
-  apiKey?: string;
-  webhookSecret?: string;
-  environment: 'test_mode' | 'live_mode';
-}
+// =============================================================================
+// Environment Parsing and Transformation
+// =============================================================================
 
-interface RedisConfig {
-  url?: string;
-  token?: string;
-}
+/**
+ * Parse raw environment variables using Zod schema
+ */
+function parseEnv(): RawEnvConfig {
+  const result = rawEnvSchema.safeParse(process.env);
 
-interface EnvConfig {
-  port: number;
-  host: string;
-  nodeEnv: 'development' | 'production' | 'test';
-  /** Application environment for deployment stage (development, production) */
-  appEnv: Environment;
-  jwtIssuer: string;
-  cors: {
-    origins: string[];
-    credentials: boolean;
-    maxAge: number;
-  };
-  auth: {
-    secret: string;
-    url: string;
-    cookiePrefix: string;
-    /** Cookie domain for cross-subdomain sharing (e.g., .userplane.io) */
-    cookieDomain?: string;
-  };
-  google: {
-    clientId: string;
-    clientSecret: string;
-    redirectUri: string;
-  };
-  intercom: {
-    clientId: string;
-    clientSecret: string;
-    redirectUri: string;
-  };
-  dashboard: {
-    baseUrl: string;
-  };
-  dodoPayments: DodoPaymentsConfig;
-  token: {
-    inviteSecret: string;
-    inviteExpiresIn: number;
-    domainVerificationExpiresIn: number;
-    accessRequestExpiresIn: number;
-    workspaceCreateInviteExpiresIn: number;
-    billingEmailVerificationExpiresIn: number;
-    recordingSecret: string;
-    recordingTokenExpiresIn: number;
-  };
-  session: {
-    tokenSecret: string;
-    uploadTokenSecret: string;
-    tokenExpiry: number;
-    uploadTokenExpiry: number;
-    presignedUrlExpiry: number;
-  };
-  database: {
-    url: string;
-  };
-  recorder: {
-    baseUrl: string;
-  };
-  support: {
-    docsUrl: string;
-    supportEmail: string;
-    calendarUrl: string;
-  };
-  email: {
-    provider: 'localhost' | 'resend';
-    providerApiKey?: string;
-    inboxes: {
-      onboarding: string;
-      notification: string;
-      billing: string;
-      invite: string;
-      auth: string;
-    };
-  };
-  rateLimit: {
-    windowMs: number;
-    maxRequests: number;
-  };
-  redis: RedisConfig;
-  cache: {
-    enabled: boolean;
-  };
-  rateLimitEnabled: boolean;
-  trigger: {
-    secretKey?: string;
-    workspaceSweepLookbackDays: number;
-    workspaceSweepCronSchedule: string;
-    projectSweepLookbackDays: number;
-    projectSweepCronSchedule: string;
-    recordingSweepLookbackDays: number;
-    recordingSweepCronSchedule: string;
-    workspaceRestorationWindowDays: number;
-    projectRestorationWindowDays: number;
-  };
-  restoration: {
-    gracePeriodDays: number;
-    maxWindowDays: number;
-  };
-  storage: StorageConfig;
-  sentry: {
-    dsn?: string;
-    release?: string;
-    tracesSampleRate: number;
-  };
-  admin: {
-    userIds: string[];
-  };
+  if (!result.success) {
+    const errors = formatZodErrors(result.error);
+    throw new Error(`Environment configuration errors:\n${errors}`);
+  }
+
+  return result.data;
 }
 
 /**
- * Parse comma-separated string into array
+ * Format Zod errors into readable messages
  */
-function parseCommaSeparated(value: string | undefined, defaultValue: string[]): string[] {
-  if (!value) return defaultValue;
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
+function formatZodErrors(error: ZodError): string {
+  return error.errors
+    .map((err) => {
+      const path = err.path.join('.');
+      return `  - ${path}: ${err.message}`;
+    })
+    .join('\n');
 }
 
 /**
- * Parse integer with fallback
+ * Transform raw env vars into structured EnvConfig
  */
-function parseInteger(value: string | undefined, defaultValue: number): number {
-  if (!value) return defaultValue;
-  const parsed = parseInt(value, 10);
-  return isNaN(parsed) ? defaultValue : parsed;
-}
+function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
+  // Adjust Sentry sample rate based on environment
+  const sentryTracesSampleRate =
+    raw.NODE_ENV === 'production' ? SENTRY.TRACES_SAMPLE_RATE_PROD : raw.SENTRY_TRACES_SAMPLE_RATE;
 
-/**
- * Parse boolean with fallback
- */
-function parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
-  if (!value) return defaultValue;
-  return value.toLowerCase() === 'true';
-}
-
-/**
- * Parse float with fallback
- */
-function parseFloat(value: string | undefined, defaultValue: number): number {
-  if (!value) return defaultValue;
-  const parsed = Number.parseFloat(value);
-  return isNaN(parsed) ? defaultValue : parsed;
+  return {
+    server: {
+      port: raw.PORT,
+      host: raw.HOST,
+      nodeEnv: raw.NODE_ENV,
+      appEnv: parseAppEnv(raw.APP_ENV),
+    },
+    cors: {
+      origins: raw.CORS_ORIGINS,
+      credentials: raw.CORS_CREDENTIALS,
+      maxAge: raw.CORS_MAX_AGE,
+    },
+    auth: {
+      secret: raw.BETTER_AUTH_SECRET,
+      url: raw.BETTER_AUTH_URL,
+      cookiePrefix: raw.BETTER_AUTH_COOKIE_PREFIX,
+      cookieDomain: raw.BETTER_AUTH_COOKIE_DOMAIN,
+      jwtIssuer: raw.JWT_ISSUER,
+    },
+    google: {
+      clientId: raw.GOOGLE_CLIENT_ID,
+      clientSecret: raw.GOOGLE_CLIENT_SECRET,
+      redirectUri: raw.GOOGLE_REDIRECT_URI,
+    },
+    intercom: {
+      clientId: raw.INTERCOM_CLIENT_ID,
+      clientSecret: raw.INTERCOM_CLIENT_SECRET,
+      redirectUri: raw.INTERCOM_REDIRECT_URI,
+    },
+    dashboard: {
+      baseUrl: raw.INVITE_APP_URL,
+    },
+    payments: {
+      apiKey: raw.DODO_PAYMENTS_API_KEY,
+      webhookSecret: raw.DODO_PAYMENTS_WEBHOOK_SECRET,
+      environment: raw.DODO_PAYMENTS_ENVIRONMENT,
+    },
+    token: {
+      inviteSecret: raw.INVITE_TOKEN_SECRET,
+      inviteExpiresIn: raw.INVITE_TOKEN_EXPIRES_IN,
+      domainVerificationExpiresIn: raw.DOMAIN_VERIFICATION_TOKEN_EXPIRES_IN,
+      accessRequestExpiresIn: raw.ACCESS_REQUEST_TOKEN_EXPIRES_IN,
+      workspaceCreateInviteExpiresIn: raw.WORKSPACE_CREATE_INVITE_TOKEN_EXPIRES_IN,
+      billingEmailVerificationExpiresIn: raw.BILLING_EMAIL_VERIFICATION_TOKEN_EXPIRES_IN,
+      recordingSecret: raw.RECORDER_TOKEN_SECRET,
+      recordingTokenExpiresIn: raw.RECORDER_TOKEN_EXPIRES_IN,
+    },
+    session: {
+      tokenSecret: raw.SESSION_TOKEN_SECRET,
+      uploadTokenSecret: raw.UPLOAD_TOKEN_SECRET,
+      tokenExpiry: raw.SESSION_TOKEN_EXPIRY,
+      uploadTokenExpiry: raw.UPLOAD_TOKEN_EXPIRY,
+      presignedUrlExpiry: raw.PRESIGNED_URL_EXPIRY,
+    },
+    database: {
+      url: raw.DATABASE_URL,
+    },
+    recorder: {
+      baseUrl: raw.RECORDER_URL,
+    },
+    support: {
+      docsUrl: raw.DOCS_URL,
+      supportEmail: raw.SUPPORT_EMAIL,
+      calendarUrl: raw.CALENDAR_URL,
+    },
+    email: {
+      provider: raw.EMAIL_PROVIDER,
+      providerApiKey: raw.EMAIL_PROVIDER_API_KEY,
+      inboxes: {
+        onboarding: raw.EMAIL_ONBOARDING_INBOX,
+        notification: raw.EMAIL_NOTIFICATION_INBOX,
+        billing: raw.EMAIL_BILLING_INBOX,
+        invite: raw.EMAIL_INVITE_INBOX,
+        auth: raw.EMAIL_AUTH_INBOX,
+      },
+    },
+    rateLimit: {
+      enabled: raw.RATE_LIMIT_ENABLED,
+      windowMs: raw.RATE_LIMIT_WINDOW,
+      maxRequests: raw.RATE_LIMIT_MAX_REQUESTS,
+    },
+    redis: {
+      url: raw.UPSTASH_REDIS_REST_URL,
+      token: raw.UPSTASH_REDIS_REST_TOKEN,
+    },
+    cache: {
+      enabled: raw.CACHE_ENABLED,
+    },
+    trigger: {
+      secretKey: raw.TRIGGER_SECRET_KEY,
+      workspaceSweepLookbackDays: raw.WORKSPACE_SWEEP_LOOKBACK_DAYS,
+      workspaceSweepCronSchedule: raw.WORKSPACE_SWEEP_CRON_SCHEDULE,
+      projectSweepLookbackDays: raw.PROJECT_SWEEP_LOOKBACK_DAYS,
+      projectSweepCronSchedule: raw.PROJECT_SWEEP_CRON_SCHEDULE,
+      recordingSweepLookbackDays: raw.RECORDING_SWEEP_LOOKBACK_DAYS,
+      recordingSweepCronSchedule: raw.RECORDING_SWEEP_CRON_SCHEDULE,
+      workspaceRestorationWindowDays: raw.WORKSPACE_RESTORATION_WINDOW_DAYS,
+      projectRestorationWindowDays: raw.PROJECT_RESTORATION_WINDOW_DAYS,
+    },
+    restoration: {
+      gracePeriodDays: raw.RESTORATION_GRACE_PERIOD_DAYS,
+      maxWindowDays: raw.RESTORATION_MAX_WINDOW_DAYS,
+    },
+    storage: {
+      assetsDomain: raw.ASSETS_DOMAIN,
+      cdnDomain: raw.CDN_DOMAIN,
+      imageZone: raw.CLOUDFLARE_IMAGE_ZONE,
+      skipTransform: raw.SKIP_IMAGE_TRANSFORM,
+      cdn: {
+        accountId: raw.R2_CDN_ACCOUNT_ID,
+        accessKeyId: raw.R2_CDN_ACCESS_KEY_ID,
+        secretAccessKey: raw.R2_CDN_SECRET_ACCESS_KEY,
+        bucketName: raw.R2_CDN_BUCKET_NAME,
+      },
+      assets: {
+        accountId: raw.R2_ASSETS_ACCOUNT_ID,
+        accessKeyId: raw.R2_ASSETS_ACCESS_KEY_ID,
+        secretAccessKey: raw.R2_ASSETS_SECRET_ACCESS_KEY,
+        bucketName: raw.R2_ASSETS_BUCKET_NAME,
+      },
+      reports: {
+        accountId: raw.R2_REPORTS_ACCOUNT_ID,
+        accessKeyId: raw.R2_REPORTS_ACCESS_KEY_ID,
+        secretAccessKey: raw.R2_REPORTS_SECRET_ACCESS_KEY,
+        bucketName: raw.R2_REPORTS_BUCKET_NAME,
+      },
+    },
+    sentry: {
+      dsn: raw.SENTRY_DSN,
+      release: raw.SENTRY_RELEASE,
+      tracesSampleRate: sentryTracesSampleRate,
+    },
+    admin: {
+      userIds: raw.ADMIN_USER_IDS,
+    },
+  };
 }
 
 /**
  * Load and validate environment configuration
  */
 export function loadEnvConfig(): EnvConfig {
-  const nodeEnv = (process.env.NODE_ENV || 'development') as EnvConfig['nodeEnv'];
-  const appEnv = parseAppEnv(process.env.APP_ENV);
-
-  const config: EnvConfig = {
-    port: parseInteger(process.env.PORT, 3001),
-    host: process.env.HOST || '0.0.0.0',
-    nodeEnv,
-    appEnv,
-    jwtIssuer: process.env.JWT_ISSUER || 'userplane',
-    cors: {
-      origins: parseCommaSeparated(process.env.CORS_ORIGINS, [
-        'https://dash-dev.userplane.io',
-        'https://home-dev.userplane.io',
-        'https://recorder-dev.userplane.io',
-      ]),
-      credentials: parseBoolean(process.env.CORS_CREDENTIALS, true),
-      maxAge: parseInteger(process.env.CORS_MAX_AGE, 86400),
-    },
-    auth: {
-      secret: process.env.BETTER_AUTH_SECRET || 'dev-auth-secret-change-in-production',
-      url: process.env.BETTER_AUTH_URL || 'https://api-dev.userplane.io',
-      cookiePrefix: process.env.BETTER_AUTH_COOKIE_PREFIX || 'userplane',
-      // Cookie domain for cross-subdomain sharing (e.g., .userplane.io)
-      cookieDomain: process.env.BETTER_AUTH_COOKIE_DOMAIN,
-    },
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-      redirectUri:
-        process.env.GOOGLE_REDIRECT_URI || 'https://api-dev.userplane.io/api/auth/callback/google',
-    },
-    intercom: {
-      clientId: process.env.INTERCOM_CLIENT_ID || '',
-      clientSecret: process.env.INTERCOM_CLIENT_SECRET || '',
-      redirectUri:
-        process.env.INTERCOM_REDIRECT_URI || 'https://dash-dev.userplane.io/callback/intercom',
-    },
-    dashboard: {
-      baseUrl: process.env.INVITE_APP_URL || 'https://dash-dev.userplane.io',
-    },
-    dodoPayments: {
-      apiKey: process.env.DODO_PAYMENTS_API_KEY,
-      webhookSecret: process.env.DODO_PAYMENTS_WEBHOOK_SECRET,
-      environment: (process.env.DODO_PAYMENTS_ENVIRONMENT || 'test_mode') as
-        | 'test_mode'
-        | 'live_mode',
-    },
-    token: {
-      inviteSecret: process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-in-production',
-      inviteExpiresIn: parseInteger(process.env.INVITE_TOKEN_EXPIRES_IN, 30 * 24 * 60 * 60), // 30 days
-      domainVerificationExpiresIn: parseInteger(
-        process.env.DOMAIN_VERIFICATION_TOKEN_EXPIRES_IN,
-        300
-      ), // 5 minutes
-      accessRequestExpiresIn: parseInteger(
-        process.env.ACCESS_REQUEST_TOKEN_EXPIRES_IN,
-        7 * 24 * 60 * 60
-      ), // 7 days
-      workspaceCreateInviteExpiresIn: parseInteger(
-        process.env.WORKSPACE_CREATE_INVITE_TOKEN_EXPIRES_IN,
-        90 * 24 * 60 * 60
-      ), // 90 days
-      billingEmailVerificationExpiresIn: parseInteger(
-        process.env.BILLING_EMAIL_VERIFICATION_TOKEN_EXPIRES_IN,
-        10 * 60
-      ), // 10 minutes
-      recordingSecret:
-        process.env.RECORDER_TOKEN_SECRET || 'dev-recorder-secret-change-in-production',
-      recordingTokenExpiresIn: parseInteger(
-        process.env.RECORDER_TOKEN_EXPIRES_IN,
-        180 * 24 * 60 * 60
-      ), // 180 days
-    },
-    session: {
-      tokenSecret: process.env.SESSION_TOKEN_SECRET || 'dev-session-secret-change-in-production',
-      uploadTokenSecret:
-        process.env.UPLOAD_TOKEN_SECRET || 'dev-upload-secret-change-in-production',
-      tokenExpiry: parseInteger(process.env.SESSION_TOKEN_EXPIRY, 180 * 60), // 180 minutes
-      uploadTokenExpiry: parseInteger(process.env.UPLOAD_TOKEN_EXPIRY, 120 * 60), // 120 minutes
-      presignedUrlExpiry: parseInteger(process.env.PRESIGNED_URL_EXPIRY, 90 * 60), // 90 minutes
-    },
-    database: {
-      url: process.env.DATABASE_URL || '',
-    },
-    recorder: {
-      baseUrl: process.env.RECORDER_URL || 'https://recorder-dev.userplane.io',
-    },
-    support: {
-      docsUrl: process.env.DOCS_URL || 'https://userplane.io/docs',
-      supportEmail: process.env.SUPPORT_EMAIL || 'support@userplane.io',
-      calendarUrl: process.env.CALENDAR_URL || 'https://cal.com/userplane/intro',
-    },
-    email: {
-      provider: (process.env.EMAIL_PROVIDER as 'localhost' | 'resend') || 'localhost',
-      providerApiKey: process.env.EMAIL_PROVIDER_API_KEY,
-      inboxes: {
-        onboarding: process.env.EMAIL_ONBOARDING_INBOX || 'onboarding@userplane.io',
-        notification: process.env.EMAIL_NOTIFICATION_INBOX || 'notifications@userplane.io',
-        billing: process.env.EMAIL_BILLING_INBOX || 'billing@userplane.io',
-        invite: process.env.EMAIL_INVITE_INBOX || 'invites@userplane.io',
-        auth: process.env.EMAIL_AUTH_INBOX || 'auth@userplane.io',
-      },
-    },
-    rateLimit: {
-      windowMs: parseInteger(process.env.RATE_LIMIT_WINDOW, 60000),
-      maxRequests: parseInteger(process.env.RATE_LIMIT_MAX_REQUESTS, 100),
-    },
-    redis: {
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    },
-    cache: {
-      enabled: parseBoolean(process.env.CACHE_ENABLED, true),
-    },
-    rateLimitEnabled: parseBoolean(process.env.RATE_LIMIT_ENABLED, true),
-    trigger: {
-      secretKey: process.env.TRIGGER_SECRET_KEY,
-      workspaceSweepLookbackDays: parseInteger(process.env.WORKSPACE_SWEEP_LOOKBACK_DAYS, 7), // 7 days
-      workspaceSweepCronSchedule: process.env.WORKSPACE_SWEEP_CRON_SCHEDULE || '0 0 * * *', // Daily at midnight UTC
-      projectSweepLookbackDays: parseInteger(process.env.PROJECT_SWEEP_LOOKBACK_DAYS, 3), // 3 days
-      projectSweepCronSchedule: process.env.PROJECT_SWEEP_CRON_SCHEDULE || '0 0 * * *', // Daily at midnight UTC
-      recordingSweepLookbackDays: parseInteger(process.env.RECORDING_SWEEP_LOOKBACK_DAYS, 3), // 3 days
-      recordingSweepCronSchedule: process.env.RECORDING_SWEEP_CRON_SCHEDULE || '0 0 * * *', // Daily at midnight UTC
-      workspaceRestorationWindowDays: parseInteger(
-        process.env.WORKSPACE_RESTORATION_WINDOW_DAYS,
-        2
-      ), // 2 days
-      projectRestorationWindowDays: parseInteger(process.env.PROJECT_RESTORATION_WINDOW_DAYS, 2), // 2 days
-    },
-    restoration: {
-      gracePeriodDays: parseInteger(process.env.RESTORATION_GRACE_PERIOD_DAYS, 3), // Full restoration within 3 days
-      maxWindowDays: parseInteger(process.env.RESTORATION_MAX_WINDOW_DAYS, 30), // Partial restoration until 30 days
-    },
-    storage: {
-      assetsDomain: process.env.ASSETS_DOMAIN,
-      cdnDomain: process.env.CDN_DOMAIN,
-      imageZone: process.env.CLOUDFLARE_IMAGE_ZONE || 'userplane.io',
-      skipTransform: process.env.SKIP_IMAGE_TRANSFORM === 'true',
-      cdn: process.env.R2_CDN_ACCOUNT_ID
-        ? {
-            accountId: process.env.R2_CDN_ACCOUNT_ID,
-            accessKeyId: process.env.R2_CDN_ACCESS_KEY_ID || '',
-            secretAccessKey: process.env.R2_CDN_SECRET_ACCESS_KEY || '',
-            bucketName: process.env.R2_CDN_BUCKET_NAME || '',
-          }
-        : undefined,
-      assets: process.env.R2_ASSETS_ACCOUNT_ID
-        ? {
-            accountId: process.env.R2_ASSETS_ACCOUNT_ID,
-            accessKeyId: process.env.R2_ASSETS_ACCESS_KEY_ID || '',
-            secretAccessKey: process.env.R2_ASSETS_SECRET_ACCESS_KEY || '',
-            bucketName: process.env.R2_ASSETS_BUCKET_NAME || '',
-          }
-        : undefined,
-      reports: process.env.R2_REPORTS_ACCOUNT_ID
-        ? {
-            accountId: process.env.R2_REPORTS_ACCOUNT_ID,
-            accessKeyId: process.env.R2_REPORTS_ACCESS_KEY_ID || '',
-            secretAccessKey: process.env.R2_REPORTS_SECRET_ACCESS_KEY || '',
-            bucketName: process.env.R2_REPORTS_BUCKET_NAME || '',
-          }
-        : undefined,
-    },
-    sentry: {
-      dsn: process.env.SENTRY_DSN,
-      release: process.env.SENTRY_RELEASE,
-      tracesSampleRate: parseFloat(
-        process.env.SENTRY_TRACES_SAMPLE_RATE,
-        nodeEnv === 'production' ? 0.1 : 1.0
-      ),
-    },
-    admin: {
-      userIds: parseCommaSeparated(process.env.ADMIN_USER_IDS, []),
-    },
-  };
-
-  return config;
+  const raw = parseEnv();
+  return transformEnvConfig(raw);
 }
+
+// =============================================================================
+// Global Configuration Instance
+// =============================================================================
 
 /**
  * Global environment configuration instance
@@ -372,124 +262,233 @@ export const env = loadEnvConfig();
  */
 const logger = createAppLogger('env');
 
-// Validate critical configuration in production
-if (env.nodeEnv === 'production') {
-  if (env.auth.secret === 'dev-auth-secret-change-in-production') {
-    throw new Error('BETTER_AUTH_SECRET must be set in production');
+// =============================================================================
+// Post-load Validation
+// =============================================================================
+
+/**
+ * Validate secrets are not using development values in production
+ */
+function validateSecrets(config: EnvConfig): void {
+  const isProduction = config.server.nodeEnv === 'production';
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const secretChecks = [
+    { value: config.auth.secret, devValue: DEV_SECRETS.AUTH, envVar: 'BETTER_AUTH_SECRET' },
+    {
+      value: config.token.inviteSecret,
+      devValue: DEV_SECRETS.INVITE,
+      envVar: 'INVITE_TOKEN_SECRET',
+    },
+    {
+      value: config.session.tokenSecret,
+      devValue: DEV_SECRETS.SESSION,
+      envVar: 'SESSION_TOKEN_SECRET',
+    },
+    {
+      value: config.session.uploadTokenSecret,
+      devValue: DEV_SECRETS.UPLOAD,
+      envVar: 'UPLOAD_TOKEN_SECRET',
+    },
+    {
+      value: config.token.recordingSecret,
+      devValue: DEV_SECRETS.RECORDER,
+      envVar: 'RECORDER_TOKEN_SECRET',
+    },
+  ];
+
+  for (const check of secretChecks) {
+    if (check.value === check.devValue) {
+      if (isProduction) {
+        errors.push(`${check.envVar} must not use development value in production`);
+      } else {
+        warnings.push(`Using development secret for ${check.envVar}`);
+      }
+    }
   }
-  if (env.token.inviteSecret === 'dev-invite-secret-change-in-production') {
-    throw new Error('INVITE_TOKEN_SECRET must be set in production');
+
+  // Production-only email validation
+  if (isProduction) {
+    if (config.email.provider !== 'localhost' && !config.email.providerApiKey) {
+      errors.push('EMAIL_PROVIDER_API_KEY must be set when email provider is not localhost');
+    }
   }
-  if (env.session.tokenSecret === 'dev-session-secret-change-in-production') {
-    throw new Error('SESSION_TOKEN_SECRET must be set in production');
+
+  if (errors.length > 0) {
+    throw new Error(`Environment configuration errors:\n  - ${errors.join('\n  - ')}`);
   }
-  if (env.session.uploadTokenSecret === 'dev-upload-secret-change-in-production') {
-    throw new Error('UPLOAD_TOKEN_SECRET must be set in production');
+
+  if (!isProduction && warnings.length > 0) {
+    for (const warning of warnings) {
+      logger.warn(warning);
+    }
   }
-  if (env.token.recordingSecret === 'dev-recorder-secret-change-in-production') {
-    throw new Error('RECORDER_TOKEN_SECRET must be set in production');
+}
+
+// Run post-load validation
+validateSecrets(env);
+
+// =============================================================================
+// Logging
+// =============================================================================
+
+/**
+ * Format duration in human-readable format
+ */
+function formatDuration(seconds: number): string {
+  if (seconds >= 86400) {
+    const days = Math.floor(seconds / 86400);
+    return `${days}d`;
   }
-  if (!env.database.url) {
-    throw new Error('DATABASE_URL must be set in production');
+  if (seconds >= 3600) {
+    const hours = Math.floor(seconds / 3600);
+    return `${hours}h`;
   }
-  if (!env.trigger.secretKey) {
-    throw new Error('TRIGGER_SECRET_KEY must be set in production');
+  if (seconds >= 60) {
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}m`;
   }
-  if (!env.google.clientId || !env.google.clientSecret) {
-    logger.warn('Google OAuth credentials not set. Google authentication will not work.');
-  }
-  if (env.email.provider !== 'localhost' && !env.email.providerApiKey) {
-    throw new Error('EMAIL_PROVIDER_API_KEY must be set when email provider is not localhost');
-  }
-  if (
-    !env.email.inboxes.onboarding ||
-    !env.email.inboxes.notification ||
-    !env.email.inboxes.billing ||
-    !env.email.inboxes.invite
-  ) {
-    throw new Error('All email inbox addresses must be configured in production');
-  }
+  return `${seconds}s`;
+}
+
+/**
+ * Get configuration status summary for logging
+ */
+function getConfigStatus(): {
+  configured: string[];
+  notConfigured: string[];
+  usingDefaults: string[];
+} {
+  const configured: string[] = [];
+  const notConfigured: string[] = [];
+  const usingDefaults: string[] = [];
+
+  // Core services (all required now)
+  configured.push('Database');
+  configured.push('Redis');
+  configured.push('Payments');
+  configured.push('Trigger.dev');
+  configured.push('Storage (CDN)');
+  configured.push('Storage (Assets)');
+  configured.push('Storage (Reports)');
+
+  // Optional services
+  if (env.google.clientId && env.google.clientSecret) configured.push('Google OAuth');
+  else notConfigured.push('Google OAuth');
+
+  if (env.intercom.clientId && env.intercom.clientSecret) configured.push('Intercom');
+  else notConfigured.push('Intercom');
+
+  if (env.sentry.dsn) configured.push('Sentry');
+  else notConfigured.push('Sentry');
+
+  if (env.email.provider !== 'localhost') configured.push('Email (Resend)');
+  else usingDefaults.push('Email (localhost)');
+
+  // Check for development secrets
+  if (env.auth.secret === DEV_SECRETS.AUTH) usingDefaults.push('Auth secret');
+  if (env.token.inviteSecret === DEV_SECRETS.INVITE) usingDefaults.push('Invite secret');
+  if (env.session.tokenSecret === DEV_SECRETS.SESSION) usingDefaults.push('Session secret');
+
+  return { configured, notConfigured, usingDefaults };
 }
 
 /**
  * Log configuration on startup
  */
 export function logConfig(): void {
+  const status = getConfigStatus();
+
   logger.info(
     {
-      env: env.nodeEnv,
-      appEnv: env.appEnv,
-      port: env.port,
-      host: env.host,
-      corsOrigins: env.cors.origins,
-      corsCredentials: env.cors.credentials,
-      authUrl: env.auth.url,
-      authCookiePrefix: env.auth.cookiePrefix,
-      dashboardBaseUrl: env.dashboard.baseUrl,
-      token: {
-        inviteExpiry: `${env.token.inviteExpiresIn}s`,
-        domainVerificationExpiry: `${env.token.domainVerificationExpiresIn}s`,
-        accessRequestExpiry: `${env.token.accessRequestExpiresIn}s`,
-        workspaceCreateInviteExpiry: `${env.token.workspaceCreateInviteExpiresIn}s`,
-        billingEmailVerificationExpiry: `${env.token.billingEmailVerificationExpiresIn}s`,
-        recordingTokenExpiry: `${env.token.recordingTokenExpiresIn}s`,
+      server: {
+        nodeEnv: env.server.nodeEnv,
+        appEnv: env.server.appEnv,
+        port: env.server.port,
+        host: env.server.host,
       },
-      recorderBaseUrl: env.recorder.baseUrl,
-      support: {
-        docsUrl: env.support.docsUrl,
-        supportEmail: env.support.supportEmail,
-        calendarUrl: env.support.calendarUrl,
+      cors: {
+        origins: env.cors.origins,
+        credentials: env.cors.credentials,
+        maxAge: formatDuration(env.cors.maxAge),
       },
-      session: {
-        tokenExpiry: `${env.session.tokenExpiry}s`,
-        uploadTokenExpiry: `${env.session.uploadTokenExpiry}s`,
-        presignedUrlExpiry: `${env.session.presignedUrlExpiry}s`,
+      auth: {
+        url: env.auth.url,
+        cookiePrefix: env.auth.cookiePrefix,
+        cookieDomain: env.auth.cookieDomain,
+        jwtIssuer: env.auth.jwtIssuer,
       },
-      database: env.database.url ? 'Connected' : 'Not configured',
-      googleOAuth: env.google.clientId ? 'Configured' : 'Not configured',
-      dodoPayments: {
-        apiKey: env.dodoPayments.apiKey ? 'Configured' : 'Not configured',
-        webhookSecret: env.dodoPayments.webhookSecret ? 'Configured' : 'Not configured',
-        environment: env.dodoPayments.environment,
+      urls: {
+        dashboard: env.dashboard.baseUrl,
+        recorder: env.recorder.baseUrl,
+        docs: env.support.docsUrl,
       },
-      emailProvider: env.email.provider,
-      emailProviderApiKey: env.email.provider !== 'localhost' ? !!env.email.providerApiKey : 'N/A',
-      emailInboxes: {
-        onboarding: env.email.inboxes.onboarding,
-        notification: env.email.inboxes.notification,
-        billing: env.email.inboxes.billing,
-        invite: env.email.inboxes.invite,
-        auth: env.email.inboxes.auth,
+      tokenExpiry: {
+        invite: formatDuration(env.token.inviteExpiresIn),
+        domainVerification: formatDuration(env.token.domainVerificationExpiresIn),
+        accessRequest: formatDuration(env.token.accessRequestExpiresIn),
+        workspaceCreateInvite: formatDuration(env.token.workspaceCreateInviteExpiresIn),
+        billingEmailVerification: formatDuration(env.token.billingEmailVerificationExpiresIn),
+        recording: formatDuration(env.token.recordingTokenExpiresIn),
       },
-      storage: {
-        assetsDomain: env.storage.assetsDomain || 'Not configured',
-        cdn: env.storage.cdn ? 'Configured' : 'Not configured',
-        assets: env.storage.assets ? 'Configured' : 'Not configured',
-        reports: env.storage.reports ? 'Configured' : 'Not configured',
+      sessionExpiry: {
+        token: formatDuration(env.session.tokenExpiry),
+        uploadToken: formatDuration(env.session.uploadTokenExpiry),
+        presignedUrl: formatDuration(env.session.presignedUrlExpiry),
+      },
+      email: {
+        provider: env.email.provider,
+        apiKeySet: env.email.provider !== 'localhost' ? !!env.email.providerApiKey : 'N/A',
+        inboxes: env.email.inboxes,
       },
       trigger: {
-        secretKey: env.trigger.secretKey ? 'Configured' : 'Not configured',
-        workspaceSweepLookbackDays: `${env.trigger.workspaceSweepLookbackDays} days`,
-        workspaceSweepCronSchedule: env.trigger.workspaceSweepCronSchedule,
-        projectSweepLookbackDays: `${env.trigger.projectSweepLookbackDays} days`,
-        projectSweepCronSchedule: env.trigger.projectSweepCronSchedule,
-        recordingSweepLookbackDays: `${env.trigger.recordingSweepLookbackDays} days`,
-        recordingSweepCronSchedule: env.trigger.recordingSweepCronSchedule,
-        workspaceRestorationWindowDays: `${env.trigger.workspaceRestorationWindowDays} days`,
-        projectRestorationWindowDays: `${env.trigger.projectRestorationWindowDays} days`,
+        sweepSchedule: env.trigger.workspaceSweepCronSchedule,
+        lookbackDays: {
+          workspace: env.trigger.workspaceSweepLookbackDays,
+          project: env.trigger.projectSweepLookbackDays,
+          recording: env.trigger.recordingSweepLookbackDays,
+        },
+        restorationWindow: {
+          workspace: `${env.trigger.workspaceRestorationWindowDays}d`,
+          project: `${env.trigger.projectRestorationWindowDays}d`,
+        },
       },
-      redis: {
-        url: env.redis.url ? 'Configured' : 'Not configured',
-        token: env.redis.token ? 'Configured' : 'Not configured',
+      restoration: {
+        gracePeriod: `${env.restoration.gracePeriodDays}d`,
+        maxWindow: `${env.restoration.maxWindowDays}d`,
+      },
+      payments: {
+        environment: env.payments.environment,
+      },
+      storage: {
+        assetsDomain: env.storage.assetsDomain,
+        cdnDomain: env.storage.cdnDomain,
+        imageZone: env.storage.imageZone,
+        skipTransform: env.storage.skipTransform,
+        buckets: {
+          cdn: env.storage.cdn.bucketName,
+          assets: env.storage.assets.bucketName,
+          reports: env.storage.reports.bucketName,
+        },
+      },
+      rateLimit: {
+        enabled: env.rateLimit.enabled,
+        window: `${env.rateLimit.windowMs}ms`,
+        maxRequests: env.rateLimit.maxRequests,
       },
       cache: {
         enabled: env.cache.enabled,
       },
-      rateLimitEnabled: env.rateLimitEnabled,
       sentry: {
-        dsn: env.sentry.dsn ? 'Configured' : 'Not configured',
-        release: env.sentry.release || 'Not configured',
+        configured: !!env.sentry.dsn,
+        release: env.sentry.release || 'Not set',
         tracesSampleRate: env.sentry.tracesSampleRate,
+      },
+      status: {
+        configured: status.configured,
+        notConfigured: status.notConfigured,
+        usingDefaults: status.usingDefaults,
       },
     },
     'Environment configuration loaded'
