@@ -25,7 +25,7 @@ export function RecordingDetailNav({ onCopyLink, onShare, onDelete }: RecordingD
   return (
     <nav>
       <div className="flex w-full items-center justify-between px-6 py-4">
-        <Link href={`/${workspaceId}/recordings`}>
+        <Link href={`/workspace/${workspaceId}/recordings`}>
           <Logo size="sm" />
         </Link>
         <div className="flex items-center gap-3">

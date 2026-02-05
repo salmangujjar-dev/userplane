@@ -141,7 +141,7 @@ export function AdminSidebar() {
                           key={ws.workspaceId}
                           onClick={() => {
                             setWorkspaceStore(ws.workspaceId);
-                            router.push(`/${ws.workspaceId}/recordings`);
+                            router.push(`/workspace/${ws.workspaceId}/recordings`);
                           }}
                           className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left"
                         >

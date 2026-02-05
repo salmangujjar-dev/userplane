@@ -164,9 +164,9 @@ export function Sidebar() {
     {
       title: 'Overview',
       items: [
-        { label: 'Recordings', href: `/${workspaceId}/recordings`, icon: Video },
-        { label: 'Links', href: `/${workspaceId}/links`, icon: LinkIcon },
-        { label: 'Settings', href: `/${workspaceId}/settings`, icon: Settings },
+        { label: 'Recordings', href: `/workspace/${workspaceId}/recordings`, icon: Video },
+        { label: 'Links', href: `/workspace/${workspaceId}/links`, icon: LinkIcon },
+        { label: 'Settings', href: `/workspace/${workspaceId}/settings`, icon: Settings },
       ],
     },
     {
@@ -175,7 +175,7 @@ export function Sidebar() {
         ? []
         : projects?.map((project) => ({
             label: project.projectTitle || 'Untitled Project',
-            href: `/${workspaceId}/projects/${project.projectId}`,
+            href: `/workspace/${workspaceId}/projects/${project.projectId}`,
             icon: FolderKanban,
           })) || [],
     },
@@ -185,7 +185,7 @@ export function Sidebar() {
     <aside className="flex h-screen w-64 flex-col shrink-0 bg-background">
       <div className="px-6 py-6 shrink-0">
         <div className="flex items-center gap-3">
-          <Link href={`/${workspaceId}/recordings`}>
+          <Link href={`/workspace/${workspaceId}/recordings`}>
             <Logo size="sm" />
           </Link>
           <button onClick={handlePlanClick}>
@@ -293,7 +293,7 @@ export function Sidebar() {
                           key={ws.workspaceId}
                           onClick={() => {
                             setWorkspaceStore(ws.workspaceId);
-                            router.push(`/${ws.workspaceId}/recordings`);
+                            router.push(`/workspace/${ws.workspaceId}/recordings`);
                           }}
                           className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left"
                         >
@@ -307,7 +307,9 @@ export function Sidebar() {
                     </div>
                     <DropdownMenuSeparator className="-mx-2 my-2" />
                     <button
-                      onClick={() => router.push(`/${workspaceId}/account?tab=workspaces`)}
+                      onClick={() =>
+                        router.push(`/workspace/${workspaceId}/account?tab=workspaces`)
+                      }
                       className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
                     >
                       <Folders className="h-4 w-4" />
@@ -325,7 +327,7 @@ export function Sidebar() {
               </div>
               <DropdownMenuSeparator className="-mx-2 my-2" />
               <Link
-                href={`/${workspaceId}/account`}
+                href={`/workspace/${workspaceId}/account`}
                 className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
               >
                 <Settings2 className="h-4 w-4" />

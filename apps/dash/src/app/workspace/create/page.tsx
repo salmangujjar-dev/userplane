@@ -213,8 +213,8 @@ function PostCreationInviteView({
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? domainUrl}
       variant="direct"
-      onComplete={() => router.push(`/${workspaceId}`)}
-      onSkip={() => router.push(`/${workspaceId}/settings`)}
+      onComplete={() => router.push(`/workspace/${workspaceId}`)}
+      onSkip={() => router.push(`/workspace/${workspaceId}/settings`)}
     />
   );
 }

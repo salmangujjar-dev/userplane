@@ -41,7 +41,7 @@ export default function RootPage() {
     if (workspacesData.data.workspaces && workspacesData.data.workspaces.length > 0) {
       const firstWorkspace = workspacesData.data.workspaces[0];
       if (firstWorkspace) {
-        router.push(`/${firstWorkspace.workspaceId}`);
+        router.push(`/workspace/${firstWorkspace.workspaceId}`);
       } else {
         router.push('/workspace/suggest');
       }

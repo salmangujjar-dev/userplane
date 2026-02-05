@@ -66,7 +66,9 @@ function BillingEmailVerificationPageContent() {
 
           <Button
             onClick={() =>
-              workspaceId ? router.push(`/${workspaceId}/settings?tab=workspace`) : router.push('/')
+              workspaceId
+                ? router.push(`/workspace/${workspaceId}/settings?tab=workspace`)
+                : router.push('/')
             }
             size="lg"
             className="w-full rounded-full px-7 py-6"

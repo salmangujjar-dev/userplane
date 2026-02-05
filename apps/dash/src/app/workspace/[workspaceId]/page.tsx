@@ -6,5 +6,5 @@ export default async function DashboardPage({
   params: Promise<{ workspaceId: string }>;
 }) {
   const { workspaceId } = await params;
-  redirect(`/${workspaceId}/recordings`);
+  redirect(`/workspace/${workspaceId}/recordings`);
 }

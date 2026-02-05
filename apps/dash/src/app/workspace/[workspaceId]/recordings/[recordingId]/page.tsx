@@ -50,7 +50,7 @@ export default function RecordingDetailPage() {
   const thumbnailData = thumbnailResult?.success ? thumbnailResult.data : null;
 
   const deleteRecordingMutation = useDeleteRecording(workspaceId, () => {
-    router.push(`/${workspaceId}/recordings`);
+    router.push(`/workspace/${workspaceId}/recordings`);
   });
 
   const { data: roleResult } = useWorkspaceRole();

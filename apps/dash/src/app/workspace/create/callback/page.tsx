@@ -72,8 +72,8 @@ function PostCreationInviteView({ workspaceId }: { workspaceId: string }) {
       allowedDomains={teammatesData.data.allowedDomains}
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
-      onComplete={() => router.push(`/${workspaceId}`)}
-      onSkip={() => router.push(`/${workspaceId}/settings`)}
+      onComplete={() => router.push(`/workspace/${workspaceId}`)}
+      onSkip={() => router.push(`/workspace/${workspaceId}/settings`)}
     />
   );
 }

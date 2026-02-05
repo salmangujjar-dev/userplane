@@ -488,7 +488,7 @@ function ErrorView({
 
   const handleUpgrade = () => {
     if (workspaceId) {
-      window.location.href = `/${workspaceId}/settings?tab=billing`;
+      window.location.href = `/workspace/${workspaceId}/settings?tab=billing`;
     }
   };
 
@@ -573,7 +573,7 @@ function ShareView({
 
   const handleUpgrade = () => {
     if (workspaceId) {
-      window.location.href = `/${workspaceId}/recordings?plan-modal=detailed`;
+      window.location.href = `/workspace/${workspaceId}/recordings?plan-modal=detailed`;
     }
   };
 

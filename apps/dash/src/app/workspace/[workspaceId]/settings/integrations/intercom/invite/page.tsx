@@ -64,8 +64,8 @@ export default function IntercomInvitePage() {
       allowedDomains={teammatesData.data.allowedDomains}
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
-      onComplete={() => router.push(`/${workspaceId}/settings`)}
-      onSkip={() => router.push(`/${workspaceId}/settings`)}
+      onComplete={() => router.push(`/workspace/${workspaceId}/settings`)}
+      onSkip={() => router.push(`/workspace/${workspaceId}/settings`)}
     />
   );
 }

@@ -77,7 +77,7 @@ export function LinkPreview({
     if (onView) {
       onView();
     } else if (workspaceId) {
-      router.push(`/${workspaceId}/recordings?links=${linkId}`);
+      router.push(`/workspace/${workspaceId}/recordings?links=${linkId}`);
     }
   };
 
