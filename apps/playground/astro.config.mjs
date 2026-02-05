@@ -13,7 +13,7 @@ export default defineConfig({
       exclude: ['@workspace/sdk']
     },
     server: {
-      allowedHosts: ['playground-preview.userplane.io'],
+      allowedHosts: ['playground-dev.userplane.io'],
     }
   }
 });

@@ -14,7 +14,7 @@ export class ScreenshotsStorageClient extends BaseStorageClient {
 
   protected resolvePath(key: string): string {
     const normalizedKey = key.startsWith('/') ? key.slice(1) : key;
-    return `${this.basePrefix}screenshots/${normalizedKey}`;
+    return `screenshots/${normalizedKey}`;
   }
 
   // Upload method - returns { url, path } where path is stored in DB

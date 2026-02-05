@@ -128,8 +128,8 @@ help: ## Show this help message
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:build$(WHITE)                   ║$(RESET) Build Embed (standard dev build)                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:build:cdn$(WHITE)               ║$(RESET) Build Embed for CDN (dev env, alias for embed:build:cdn:dev)       $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:dev$(WHITE)           ║$(RESET) Build Embed for CDN with dev EMBED_CDN_BASE_URL                    $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:production$(WHITE)    ║$(RESET) Build Embed for CDN with production EMBED_CDN_BASE_URL             $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:dev$(WHITE)           ║$(RESET) Build Embed for CDN with dev CDN configuration                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)embed:build:cdn:production$(WHITE)    ║$(RESET) Build Embed for CDN with production CDN configuration              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:upload$(WHITE)                  ║$(RESET) Upload Embed to R2 CDN (dev)                                       $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:upload:production$(WHITE)       ║$(RESET) Upload Embed to R2 CDN (production)                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)embed:upload:dry-run$(WHITE)          ║$(RESET) Preview Embed upload (no changes)                                  $(WHITE)║$(RESET)"
@@ -533,11 +533,11 @@ tunnel\:start: ## Start Cloudflare tunnel (all services)
 		echo ""; \
 		echo "$(CYAN)Tunnel URLs:$(RESET)"; \
 		echo "$(WHITE)-------------------------------------------$(RESET)"; \
-		echo "$(GREEN)API:$(RESET)        https://api-preview.userplane.io"; \
-		echo "$(GREEN)Dash:$(RESET)       https://dash-preview.userplane.io"; \
-		echo "$(GREEN)Home:$(RESET)       https://home-preview.userplane.io"; \
-		echo "$(GREEN)Recorder:$(RESET)   https://recorder-preview.userplane.io"; \
-		echo "$(GREEN)Playground:$(RESET) https://playground-preview.userplane.io"; \
+		echo "$(GREEN)API:$(RESET)        https://api-dev.userplane.io"; \
+		echo "$(GREEN)Dash:$(RESET)       https://dash-dev.userplane.io"; \
+		echo "$(GREEN)Home:$(RESET)       https://home-dev.userplane.io"; \
+		echo "$(GREEN)Recorder:$(RESET)   https://recorder-dev.userplane.io"; \
+		echo "$(GREEN)Playground:$(RESET) https://playground-dev.userplane.io"; \
 		echo "$(WHITE)-------------------------------------------$(RESET)"; \
 		echo ""; \
 		echo "$(YELLOW)Run 'make tunnel:stop' to stop the tunnel$(RESET)"; \
@@ -574,11 +574,11 @@ tunnel\:status: ## Show tunnel status and URLs
 	fi
 	@echo "$(WHITE)-------------------------------------------$(RESET)"
 	@echo "$(CYAN)Configured URLs:$(RESET)"
-	@echo "$(GREEN)API:$(RESET)        https://api-preview.userplane.io"
-	@echo "$(GREEN)Dash:$(RESET)       https://dash-preview.userplane.io"
-	@echo "$(GREEN)Home:$(RESET)       https://home-preview.userplane.io"
-	@echo "$(GREEN)Recorder:$(RESET)   https://recorder-preview.userplane.io"
-	@echo "$(GREEN)Playground:$(RESET) https://playground-preview.userplane.io"
+	@echo "$(GREEN)API:$(RESET)        https://api-dev.userplane.io"
+	@echo "$(GREEN)Dash:$(RESET)       https://dash-dev.userplane.io"
+	@echo "$(GREEN)Home:$(RESET)       https://home-dev.userplane.io"
+	@echo "$(GREEN)Recorder:$(RESET)   https://recorder-dev.userplane.io"
+	@echo "$(GREEN)Playground:$(RESET) https://playground-dev.userplane.io"
 	@echo "$(WHITE)-------------------------------------------$(RESET)"
 
 # SDK Package commands
@@ -635,22 +635,33 @@ embed\:build: ## Build Embed (standard dev build)
 	@cd packages/embed && bun run build
 	@echo "$(GREEN)Embed built!$(RESET)"
 
-# Helper function to extract EMBED_CDN_BASE_URL from .env file
-# Usage: $(call get_embed_cdn_url,environment)
-# Checks packages/embed/.env.<env> first, then apps/api/.env.<env>
-define get_embed_cdn_url
+# Helper function to extract CDN_DOMAIN from .env file
+# Usage: $(call get_cdn_domain,environment)
+define get_cdn_domain
 $(shell \
 	if [ -f packages/embed/.env.$(1) ]; then \
-		grep '^EMBED_CDN_BASE_URL' packages/embed/.env.$(1) 2>/dev/null | cut -d'=' -f2 | tr -d "'" | tr -d '"'; \
+		grep '^CDN_DOMAIN' packages/embed/.env.$(1) 2>/dev/null | cut -d'=' -f2 | tr -d "'" | tr -d '"'; \
 	elif [ -f apps/api/.env.$(1) ]; then \
-		grep '^EMBED_CDN_BASE_URL' apps/api/.env.$(1) 2>/dev/null | cut -d'=' -f2 | tr -d "'" | tr -d '"'; \
+		grep '^CDN_DOMAIN' apps/api/.env.$(1) 2>/dev/null | cut -d'=' -f2 | tr -d "'" | tr -d '"'; \
+	fi \
+)
+endef
+
+# Helper function to extract R2_CDN_PREFIX from .env file
+# Usage: $(call get_cdn_prefix,environment)
+define get_cdn_prefix
+$(shell \
+	if [ -f packages/embed/.env.$(1) ]; then \
+		grep '^R2_CDN_PREFIX' packages/embed/.env.$(1) 2>/dev/null | cut -d'=' -f2 | tr -d "'" | tr -d '"'; \
+	elif [ -f apps/api/.env.$(1) ]; then \
+		grep '^R2_CDN_PREFIX' apps/api/.env.$(1) 2>/dev/null | cut -d'=' -f2 | tr -d "'" | tr -d '"'; \
 	fi \
 )
 endef
 
 embed\:build\:cdn: embed\:build\:cdn\:dev ## Build Embed for CDN (alias for embed:build:cdn:dev)
 
-embed\:build\:cdn\:dev: ## Build Embed for CDN with dev EMBED_CDN_BASE_URL
+embed\:build\:cdn\:dev: ## Build Embed for CDN with dev CDN configuration
 	@if [ ! -f packages/embed/.env.development ] && [ ! -f apps/api/.env.development ]; then \
 		echo "$(RED)Error: .env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
@@ -658,29 +669,31 @@ embed\:build\:cdn\:dev: ## Build Embed for CDN with dev EMBED_CDN_BASE_URL
 	fi
 	@$(MAKE) sdk:build:cdn
 	@echo "$(BLUE)Building Embed (CDN) for development...$(RESET)"
-	$(eval CDN_URL := $(call get_embed_cdn_url,development))
-	@if [ -z "$(CDN_URL)" ]; then \
-		echo "$(RED)Error: EMBED_CDN_BASE_URL not found in .env.development$(RESET)"; \
+	$(eval CDN_DOMAIN_VAL := $(call get_cdn_domain,development))
+	$(eval CDN_PREFIX_VAL := $(call get_cdn_prefix,development))
+	@if [ -z "$(CDN_DOMAIN_VAL)" ]; then \
+		echo "$(RED)Error: CDN_DOMAIN not found in .env.development$(RESET)"; \
 		exit 1; \
 	fi
-	@echo "$(CYAN)Using CDN URL: $(CDN_URL)$(RESET)"
-	@cd packages/embed && EMBED_CDN_BASE_URL="$(CDN_URL)" bun run build:cdn
+	@echo "$(CYAN)Using CDN URL: $(CDN_DOMAIN_VAL)/$(or $(CDN_PREFIX_VAL),embed)$(RESET)"
+	@cd packages/embed && CDN_DOMAIN="$(CDN_DOMAIN_VAL)" R2_CDN_PREFIX="$(or $(CDN_PREFIX_VAL),embed)" bun run build:cdn
 	@echo "$(GREEN)Embed built (CDN) for development!$(RESET)"
 
-embed\:build\:cdn\:production: ## Build Embed for CDN with production EMBED_CDN_BASE_URL
+embed\:build\:cdn\:production: ## Build Embed for CDN with production CDN configuration
 	@if [ ! -f packages/embed/.env.production ] && [ ! -f apps/api/.env.production ]; then \
 		echo "$(RED)Error: .env.production not found$(RESET)"; \
 		exit 1; \
 	fi
 	@$(MAKE) sdk:build:cdn
 	@echo "$(BLUE)Building Embed (CDN) for production...$(RESET)"
-	$(eval CDN_URL := $(call get_embed_cdn_url,production))
-	@if [ -z "$(CDN_URL)" ]; then \
-		echo "$(RED)Error: EMBED_CDN_BASE_URL not found in .env.production$(RESET)"; \
+	$(eval CDN_DOMAIN_VAL := $(call get_cdn_domain,production))
+	$(eval CDN_PREFIX_VAL := $(call get_cdn_prefix,production))
+	@if [ -z "$(CDN_DOMAIN_VAL)" ]; then \
+		echo "$(RED)Error: CDN_DOMAIN not found in .env.production$(RESET)"; \
 		exit 1; \
 	fi
-	@echo "$(CYAN)Using CDN URL: $(CDN_URL)$(RESET)"
-	@cd packages/embed && EMBED_CDN_BASE_URL="$(CDN_URL)" bun run build:cdn
+	@echo "$(CYAN)Using CDN URL: $(CDN_DOMAIN_VAL)/$(or $(CDN_PREFIX_VAL),embed)$(RESET)"
+	@cd packages/embed && CDN_DOMAIN="$(CDN_DOMAIN_VAL)" R2_CDN_PREFIX="$(or $(CDN_PREFIX_VAL),embed)" bun run build:cdn
 	@echo "$(GREEN)Embed built (CDN) for production!$(RESET)"
 
 embed\:upload: ## Upload Embed to R2 CDN (dev)

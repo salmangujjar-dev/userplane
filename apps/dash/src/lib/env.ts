@@ -50,8 +50,8 @@ export function loadEnvConfig(): EnvConfig {
   const config: EnvConfig = {
     nodeEnv,
     appEnv,
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api-preview.userplane.io',
-    homeUrl: process.env.NEXT_PUBLIC_HOME_URL || 'https://home-preview.userplane.io',
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api-dev.userplane.io',
+    homeUrl: process.env.NEXT_PUBLIC_HOME_URL || 'https://home-dev.userplane.io',
     authCookiePrefix: process.env.NEXT_PUBLIC_AUTH_COOKIE_PREFIX || 'userplane',
     sentry: {
       // Runtime configuration

@@ -3,7 +3,7 @@
  * Functions for constructing CDN URLs to media assets
  */
 
-import { MEDIA_CDN_URL } from './config';
+import { mediaEnv } from './env';
 import { ASSET_MANIFEST, type AssetKey } from './manifest.generated';
 import type {
   AuthProviderName,
@@ -23,12 +23,12 @@ import type {
  * @returns Full CDN URL with content hash
  * @throws Error if asset key is not found in manifest
  */
-function getAssetUrl(key: string): string {
+function getMediaUrl(key: string): string {
   const hashedPath = ASSET_MANIFEST[key as AssetKey];
   if (!hashedPath) {
     throw new Error(`Unknown asset: ${key}`);
   }
-  return `${MEDIA_CDN_URL}/${hashedPath}`;
+  return `${mediaEnv.cdnUrl}/${hashedPath}`;
 }
 
 // =============================================================================
@@ -44,14 +44,14 @@ export const brandUrls = {
    * @param theme - 'dark' or 'light'
    */
   logo(theme: ThemeVariant): string {
-    return getAssetUrl(`brand/logo-${theme}.svg`);
+    return getMediaUrl(`brand/logo-${theme}.svg`);
   },
 
   /**
    * Get favicon URL
    */
   favicon(): string {
-    return getAssetUrl('brand/favicon.svg');
+    return getMediaUrl('brand/favicon.svg');
   },
 } as const;
 
@@ -68,7 +68,7 @@ export const tileUrls = {
    * @param name - Tile name
    */
   get(name: TileName): string {
-    return getAssetUrl(`tiles/${name}.png`);
+    return getMediaUrl(`tiles/${name}.png`);
   },
 
   /**
@@ -91,7 +91,7 @@ export const tileUrls = {
     ];
     const result = {} as Record<TileName, string>;
     for (const name of tiles) {
-      result[name] = getAssetUrl(`tiles/${name}.png`);
+      result[name] = getMediaUrl(`tiles/${name}.png`);
     }
     return result;
   },
@@ -110,7 +110,7 @@ export const integrationUrls = {
    * @param name - Integration name
    */
   get(name: IntegrationName): string {
-    return getAssetUrl(`integrations/${name}.webp`);
+    return getMediaUrl(`integrations/${name}.webp`);
   },
 
   /**
@@ -148,7 +148,7 @@ export const integrationUrls = {
     ];
     const result = {} as Record<IntegrationName, string>;
     for (const name of integrations) {
-      result[name] = getAssetUrl(`integrations/${name}.webp`);
+      result[name] = getMediaUrl(`integrations/${name}.webp`);
     }
     return result;
   },
@@ -167,7 +167,7 @@ export const authUrls = {
    * @param name - Auth provider name
    */
   get(name: AuthProviderName): string {
-    return getAssetUrl(`auth/${name}.png`);
+    return getMediaUrl(`auth/${name}.png`);
   },
 
   /**
@@ -190,7 +190,7 @@ export const authUrls = {
     ];
     const result = {} as Record<AuthProviderName, string>;
     for (const name of providers) {
-      result[name] = getAssetUrl(`auth/${name}.png`);
+      result[name] = getMediaUrl(`auth/${name}.png`);
     }
     return result;
   },
@@ -223,7 +223,7 @@ export const intercomCanvasUrls = {
    * @param name - Image name
    */
   get(name: IntercomCanvasImageName): string {
-    return getAssetUrl(INTERCOM_CANVAS_ASSET_KEYS[name]);
+    return getMediaUrl(INTERCOM_CANVAS_ASSET_KEYS[name]);
   },
 
   /**
@@ -241,7 +241,7 @@ export const intercomCanvasUrls = {
     ];
     const result = {} as Record<IntercomCanvasImageName, string>;
     for (const name of names) {
-      result[name] = getAssetUrl(INTERCOM_CANVAS_ASSET_KEYS[name]);
+      result[name] = getMediaUrl(INTERCOM_CANVAS_ASSET_KEYS[name]);
     }
     return result;
   },

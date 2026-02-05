@@ -14,7 +14,7 @@ export class ConsoleLogsStorageClient extends BaseStorageClient {
 
   protected resolvePath(key: string): string {
     const normalizedKey = key.startsWith('/') ? key.slice(1) : key;
-    return `${this.basePrefix}logs/console/${normalizedKey}`;
+    return `logs/console/${normalizedKey}`;
   }
 
   // Upload - returns { url, path } where path is stored in DB

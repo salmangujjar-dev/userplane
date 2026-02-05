@@ -1,15 +1,15 @@
-# Cloudflare Tunnel configuration for userplane preview environment
+# Cloudflare Tunnel configuration for userplane dev environment
 #
 # Prerequisites:
 #   1. Install cloudflared: brew install cloudflared
 #   2. Login: cloudflared tunnel login
 #   3. Create tunnel: cloudflared tunnel create userplane-preview
 #   4. Set up DNS routes (one-time):
-#      cloudflared tunnel route dns userplane-preview api-preview.userplane.io
-#      cloudflared tunnel route dns userplane-preview dash-preview.userplane.io
-#      cloudflared tunnel route dns userplane-preview home-preview.userplane.io
-#      cloudflared tunnel route dns userplane-preview recorder-preview.userplane.io
-#      cloudflared tunnel route dns userplane-preview playground-preview.userplane.io
+#      cloudflared tunnel route dns userplane-preview api-dev.userplane.io
+#      cloudflared tunnel route dns userplane-preview dash-dev.userplane.io
+#      cloudflared tunnel route dns userplane-preview home-dev.userplane.io
+#      cloudflared tunnel route dns userplane-preview recorder-dev.userplane.io
+#      cloudflared tunnel route dns userplane-preview playground-dev.userplane.io
 #
 # Usage: make tunnel:start
 
@@ -17,15 +17,15 @@ tunnel: f2e3a327-f11c-4055-9ed8-ee29129c234e
 credentials-file: ~/.cloudflared/f2e3a327-f11c-4055-9ed8-ee29129c234e.json
 
 ingress:
-  - hostname: api-preview.userplane.io
+  - hostname: api-dev.userplane.io
     service: http://localhost:3001
-  - hostname: dash-preview.userplane.io
+  - hostname: dash-dev.userplane.io
     service: http://localhost:3000
-  - hostname: home-preview.userplane.io
+  - hostname: home-dev.userplane.io
     service: http://localhost:4321
-  - hostname: recorder-preview.userplane.io
+  - hostname: recorder-dev.userplane.io
     service: http://localhost:4322
-  - hostname: playground-preview.userplane.io
+  - hostname: playground-dev.userplane.io
     service: http://localhost:4444
   # Catch-all rule (required by cloudflared)
   - service: http_status:404

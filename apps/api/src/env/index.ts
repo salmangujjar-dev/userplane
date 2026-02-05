@@ -13,9 +13,8 @@ interface BucketCredentials {
 }
 
 interface StorageConfig {
-  profile: 'development' | 'production';
   assetsDomain?: string;
-  dev?: BucketCredentials;
+  cdnDomain?: string;
   cdn?: BucketCredentials;
   assets?: BucketCredentials;
   reports?: BucketCredentials;
@@ -191,16 +190,16 @@ export function loadEnvConfig(): EnvConfig {
     jwtIssuer: process.env.JWT_ISSUER || 'userplane',
     cors: {
       origins: parseCommaSeparated(process.env.CORS_ORIGINS, [
-        'https://dash-preview.userplane.io',
-        'https://home-preview.userplane.io',
-        'https://recorder-preview.userplane.io',
+        'https://dash-dev.userplane.io',
+        'https://home-dev.userplane.io',
+        'https://recorder-dev.userplane.io',
       ]),
       credentials: parseBoolean(process.env.CORS_CREDENTIALS, true),
       maxAge: parseInteger(process.env.CORS_MAX_AGE, 86400),
     },
     auth: {
       secret: process.env.BETTER_AUTH_SECRET || 'dev-auth-secret-change-in-production',
-      url: process.env.BETTER_AUTH_URL || 'https://api-preview.userplane.io',
+      url: process.env.BETTER_AUTH_URL || 'https://api-dev.userplane.io',
       cookiePrefix: process.env.BETTER_AUTH_COOKIE_PREFIX || 'userplane',
       // Cookie domain for cross-subdomain sharing (e.g., .userplane.io)
       cookieDomain: process.env.BETTER_AUTH_COOKIE_DOMAIN,
@@ -209,17 +208,16 @@ export function loadEnvConfig(): EnvConfig {
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       redirectUri:
-        process.env.GOOGLE_REDIRECT_URI ||
-        'https://api-preview.userplane.io/api/auth/callback/google',
+        process.env.GOOGLE_REDIRECT_URI || 'https://api-dev.userplane.io/api/auth/callback/google',
     },
     intercom: {
       clientId: process.env.INTERCOM_CLIENT_ID || '',
       clientSecret: process.env.INTERCOM_CLIENT_SECRET || '',
       redirectUri:
-        process.env.INTERCOM_REDIRECT_URI || 'https://dash-preview.userplane.io/callback/intercom',
+        process.env.INTERCOM_REDIRECT_URI || 'https://dash-dev.userplane.io/callback/intercom',
     },
     dashboard: {
-      baseUrl: process.env.INVITE_APP_URL || 'https://dash-preview.userplane.io',
+      baseUrl: process.env.INVITE_APP_URL || 'https://dash-dev.userplane.io',
     },
     dodoPayments: {
       apiKey: process.env.DODO_PAYMENTS_API_KEY,
@@ -266,7 +264,7 @@ export function loadEnvConfig(): EnvConfig {
       url: process.env.DATABASE_URL || '',
     },
     recorder: {
-      baseUrl: process.env.RECORDER_URL || 'https://recorder-preview.userplane.io',
+      baseUrl: process.env.RECORDER_URL || 'https://recorder-dev.userplane.io',
     },
     support: {
       docsUrl: process.env.DOCS_URL || 'https://userplane.io/docs',
@@ -315,16 +313,8 @@ export function loadEnvConfig(): EnvConfig {
       maxWindowDays: parseInteger(process.env.RESTORATION_MAX_WINDOW_DAYS, 30), // Partial restoration until 30 days
     },
     storage: {
-      profile: (process.env.STORAGE_PROFILE || 'development') as StorageConfig['profile'],
       assetsDomain: process.env.ASSETS_DOMAIN,
-      dev: process.env.R2_DEV_ACCOUNT_ID
-        ? {
-            accountId: process.env.R2_DEV_ACCOUNT_ID,
-            accessKeyId: process.env.R2_DEV_ACCESS_KEY_ID || '',
-            secretAccessKey: process.env.R2_DEV_SECRET_ACCESS_KEY || '',
-            bucketName: process.env.R2_DEV_BUCKET_NAME || '',
-          }
-        : undefined,
+      cdnDomain: process.env.CDN_DOMAIN,
       cdn: process.env.R2_CDN_ACCOUNT_ID
         ? {
             accountId: process.env.R2_CDN_ACCOUNT_ID,
@@ -466,9 +456,7 @@ export function logConfig(): void {
         auth: env.email.inboxes.auth,
       },
       storage: {
-        profile: env.storage.profile,
         assetsDomain: env.storage.assetsDomain || 'Not configured',
-        dev: env.storage.dev ? 'Configured' : 'Not configured',
         cdn: env.storage.cdn ? 'Configured' : 'Not configured',
         assets: env.storage.assets ? 'Configured' : 'Not configured',
         reports: env.storage.reports ? 'Configured' : 'Not configured',

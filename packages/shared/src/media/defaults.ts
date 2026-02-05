@@ -9,8 +9,8 @@
 export const MEDIA_DEFAULTS = {
   /** Default CDN base URL (without prefix) */
   CDN_BASE_URL: 'https://cdn.userplane.io',
-  /** Default assets prefix path */
-  ASSETS_PREFIX: 'media',
+  /** Default CDN prefix path */
+  CDN_PREFIX: 'media',
 } as const;
 
 export type MediaDefaults = typeof MEDIA_DEFAULTS;

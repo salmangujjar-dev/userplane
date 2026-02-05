@@ -20,7 +20,8 @@
  *   R2_CDN_ACCESS_KEY_ID     - R2 access key ID
  *   R2_CDN_SECRET_ACCESS_KEY - R2 secret access key
  *   R2_CDN_BUCKET_NAME       - R2 bucket name
- *   EMBED_CDN_BASE_URL       - CDN base URL (for verification)
+ *   CDN_DOMAIN               - CDN domain (for verification)
+ *   R2_CDN_PREFIX             - CDN prefix path (default: 'embed')
  */
 
 import { createHash } from 'node:crypto';
@@ -135,13 +136,14 @@ function loadEnvFile(envName: Environment): void {
   const content = readFileSync(envPath, 'utf-8');
   const envVars = parseEnvFile(content);
 
-  // Load R2_CDN_* and EMBED_* variables
+  // Load R2_CDN_* and CDN_* variables
   const envVarNames = [
     'R2_CDN_ACCOUNT_ID',
     'R2_CDN_ACCESS_KEY_ID',
     'R2_CDN_SECRET_ACCESS_KEY',
     'R2_CDN_BUCKET_NAME',
-    'EMBED_CDN_BASE_URL',
+    'R2_CDN_PREFIX',
+    'CDN_DOMAIN',
   ];
 
   for (const key of envVarNames) {
@@ -496,7 +498,9 @@ async function main(): Promise<void> {
     if (options.dryRun) {
       console.log('\nRun without --dry-run to upload files');
     } else {
-      const cdnBase = process.env.EMBED_CDN_BASE_URL || 'https://cdn.userplane.io/embed';
+      const cdnDomain = process.env.CDN_DOMAIN || 'https://cdn.userplane.io';
+      const cdnPrefix = process.env.R2_CDN_PREFIX || 'embed';
+      const cdnBase = `${cdnDomain}/${cdnPrefix}`;
       console.log('\nCDN URLs:');
       console.log(`  Bootstrap: ${cdnBase}/script.js`);
       console.log(`  Manifest:  ${cdnBase}/manifest.json`);

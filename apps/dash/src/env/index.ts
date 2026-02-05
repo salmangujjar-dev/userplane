@@ -29,16 +29,16 @@ function loadEnvConfig(): EnvConfig {
     appEnv,
     useSecureCookies,
     api: {
-      url: process.env.NEXT_PUBLIC_API_URL || 'https://api-preview.userplane.io',
+      url: process.env.NEXT_PUBLIC_API_URL || 'https://api-dev.userplane.io',
     },
     recorder: {
-      url: process.env.NEXT_PUBLIC_RECORDER_URL || 'https://recorder-preview.userplane.io',
+      url: process.env.NEXT_PUBLIC_RECORDER_URL || 'https://recorder-dev.userplane.io',
     },
     dashboard: {
-      url: process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dash-preview.userplane.io',
+      url: process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dash-dev.userplane.io',
     },
     home: {
-      url: process.env.NEXT_PUBLIC_HOME_URL || 'https://home-preview.userplane.io',
+      url: process.env.NEXT_PUBLIC_HOME_URL || 'https://home-dev.userplane.io',
     },
     auth: {
       cookiePrefix: process.env.NEXT_PUBLIC_AUTH_COOKIE_PREFIX || 'userplane',

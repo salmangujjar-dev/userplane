@@ -16,9 +16,9 @@ dotenv.config({ path: envFile, override: true });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@workspace/ui"],
-  // Allow Cloudflare tunnel origins for dev/preview mode
+  // Allow Cloudflare tunnel origins for dev mode
   allowedDevOrigins: [
-    'dash-preview.userplane.io',
+    'dash-dev.userplane.io',
   ],
   images: {
     remotePatterns: [

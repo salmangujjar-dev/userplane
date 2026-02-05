@@ -15,11 +15,11 @@
  *   --verbose       Show detailed output
  *
  * Environment Variables:
- *   R2_ASSETS_ACCOUNT_ID       - Cloudflare account ID
- *   R2_ASSETS_ACCESS_KEY_ID    - R2 access key ID
- *   R2_ASSETS_SECRET_ACCESS_KEY - R2 secret access key
- *   R2_ASSETS_BUCKET_NAME      - R2 bucket name
- *   R2_ASSETS_PREFIX           - Top-level path prefix in R2 (default: 'media')
+ *   R2_CDN_ACCOUNT_ID       - Cloudflare account ID
+ *   R2_CDN_ACCESS_KEY_ID    - R2 access key ID
+ *   R2_CDN_SECRET_ACCESS_KEY - R2 secret access key
+ *   R2_CDN_BUCKET_NAME      - R2 bucket name
+ *   R2_CDN_PREFIX           - Top-level path prefix in R2 (default: 'media')
  */
 
 import { createHash } from 'node:crypto';
@@ -97,7 +97,7 @@ const CACHE_CONTROL = 'public, max-age=31536000, immutable';
  * Get R2 prefix from environment or use default
  */
 function getR2Prefix(): string {
-  return process.env.R2_ASSETS_PREFIX || DEFAULT_R2_PREFIX;
+  return process.env.R2_CDN_PREFIX || DEFAULT_R2_PREFIX;
 }
 
 // =============================================================================
@@ -173,15 +173,14 @@ function loadEnvFile(envName: Environment): void {
   const content = readFileSync(envPath, 'utf-8');
   const envVars = parseEnvFile(content);
 
-  // Set R2_ASSETS_* and MEDIA_* variables
+  // Set R2_CDN_* and MEDIA_* variables
   const envVarNames = [
-    'R2_ASSETS_ACCOUNT_ID',
-    'R2_ASSETS_ACCESS_KEY_ID',
-    'R2_ASSETS_SECRET_ACCESS_KEY',
-    'R2_ASSETS_BUCKET_NAME',
-    'R2_ASSETS_PREFIX',
-    'MEDIA_CDN_BASE_URL',
-    'MEDIA_ASSETS_PREFIX',
+    'R2_CDN_ACCOUNT_ID',
+    'R2_CDN_ACCESS_KEY_ID',
+    'R2_CDN_SECRET_ACCESS_KEY',
+    'R2_CDN_BUCKET_NAME',
+    'R2_CDN_PREFIX',
+    'CDN_DOMAIN',
   ];
 
   for (const key of envVarNames) {
@@ -256,13 +255,12 @@ Options:
   --help, -h      Show this help message
 
 Environment Variables (required for upload, loaded via --env or set manually):
-  R2_ASSETS_ACCOUNT_ID        Cloudflare account ID
-  R2_ASSETS_ACCESS_KEY_ID     R2 access key ID
-  R2_ASSETS_SECRET_ACCESS_KEY R2 secret access key
-  R2_ASSETS_BUCKET_NAME       R2 bucket name
-  R2_ASSETS_PREFIX            Top-level path prefix (default: 'media')
-  MEDIA_CDN_BASE_URL          CDN base URL (for validation)
-  MEDIA_ASSETS_PREFIX         Assets prefix (for validation)
+  R2_CDN_ACCOUNT_ID        Cloudflare account ID
+  R2_CDN_ACCESS_KEY_ID     R2 access key ID
+  R2_CDN_SECRET_ACCESS_KEY R2 secret access key
+  R2_CDN_BUCKET_NAME       R2 bucket name
+  R2_CDN_PREFIX            CDN path prefix (default: 'media')
+  CDN_DOMAIN               CDN base URL (for validation)
 
 Examples:
   bun run upload-assets --env=development           # Upload using dev credentials
@@ -413,18 +411,18 @@ function writeManifest(entries: AssetEntry[], options: UploadOptions): void {
 // =============================================================================
 
 function createR2Client(): { client: S3Client; bucket: string } {
-  const accountId = process.env.R2_ASSETS_ACCOUNT_ID;
-  const accessKeyId = process.env.R2_ASSETS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_ASSETS_SECRET_ACCESS_KEY;
-  const bucket = process.env.R2_ASSETS_BUCKET_NAME;
+  const accountId = process.env.R2_CDN_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_CDN_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_CDN_SECRET_ACCESS_KEY;
+  const bucket = process.env.R2_CDN_BUCKET_NAME;
 
   if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
     throw new Error(
       'Missing R2 credentials. Required environment variables:\n' +
-        '  R2_ASSETS_ACCOUNT_ID\n' +
-        '  R2_ASSETS_ACCESS_KEY_ID\n' +
-        '  R2_ASSETS_SECRET_ACCESS_KEY\n' +
-        '  R2_ASSETS_BUCKET_NAME\n\n' +
+        '  R2_CDN_ACCOUNT_ID\n' +
+        '  R2_CDN_ACCESS_KEY_ID\n' +
+        '  R2_CDN_SECRET_ACCESS_KEY\n' +
+        '  R2_CDN_BUCKET_NAME\n\n' +
         'Use --env=<environment> to load from apps/api/.env.<environment>\n' +
         'Or set the environment variables directly.'
     );

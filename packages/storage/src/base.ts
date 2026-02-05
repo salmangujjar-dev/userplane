@@ -12,15 +12,12 @@ import type {
   BucketType,
   PresignedUrlOptions,
   StorageConfig,
-  StorageProfile,
   UploadPresignOptions,
 } from './types';
 
 export abstract class BaseStorageClient {
-  protected profile: StorageProfile;
   protected client: S3Client;
   protected bucket: string;
-  protected basePrefix: string;
 
   protected readonly bucketType: BucketType;
   protected abstract readonly allowedContentTypes: readonly string[];
@@ -28,39 +25,17 @@ export abstract class BaseStorageClient {
 
   constructor(config: StorageConfig, bucketType: BucketType) {
     this.bucketType = bucketType;
-    this.profile = config.profile;
-    const resolved = this.resolveCredentials(config);
-    this.client = this.createClient(resolved.credentials);
-    this.bucket = resolved.bucket;
-    this.basePrefix = resolved.prefix;
+    const credentials = this.resolveCredentials(config);
+    this.client = this.createClient(credentials);
+    this.bucket = credentials.bucketName;
   }
 
-  private resolveCredentials(config: StorageConfig): {
-    credentials: BucketCredentials;
-    bucket: string;
-    prefix: string;
-  } {
-    if (config.profile === 'development') {
-      if (!config.dev) {
-        throw new Error('Dev config required for development profile');
-      }
-      return {
-        credentials: config.dev,
-        bucket: config.dev.bucketName,
-        prefix: `${this.bucketType}/`,
-      };
-    }
-
+  private resolveCredentials(config: StorageConfig): BucketCredentials {
     const bucketConfig = config[this.bucketType];
     if (!bucketConfig) {
-      throw new Error(`${this.bucketType} config required for ${config.profile} profile`);
+      throw new Error(`${this.bucketType} bucket config required`);
     }
-
-    return {
-      credentials: bucketConfig,
-      bucket: bucketConfig.bucketName,
-      prefix: '',
-    };
+    return bucketConfig;
   }
 
   private createClient(creds: BucketCredentials): S3Client {
@@ -80,8 +55,7 @@ export abstract class BaseStorageClient {
    * path = full storage path (stored in DB, used for download)
    */
   protected resolvePath(key: string): string {
-    const normalizedKey = key.startsWith('/') ? key.slice(1) : key;
-    return `${this.basePrefix}${normalizedKey}`;
+    return key.startsWith('/') ? key.slice(1) : key;
   }
 
   protected validateContentType(contentType: string): void {

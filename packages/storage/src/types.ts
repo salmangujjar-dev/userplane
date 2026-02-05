@@ -1,5 +1,3 @@
-export type StorageProfile = 'development' | 'production';
-
 export type BucketType = 'cdn' | 'assets' | 'reports';
 
 export type StorageKind =
@@ -28,8 +26,6 @@ export interface BucketCredentials {
 }
 
 export interface StorageConfig {
-  profile: StorageProfile;
-  dev?: BucketCredentials;
   cdn?: BucketCredentials;
   assets?: BucketCredentials;
   reports?: BucketCredentials;

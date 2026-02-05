@@ -15,8 +15,8 @@ import { MEDIA_DEFAULTS } from './defaults';
 export interface MediaEnvConfig {
   /** CDN base URL (without prefix) */
   cdnBaseUrl: string;
-  /** Assets prefix path */
-  assetsPrefix: string;
+  /** CDN prefix path */
+  cdnPrefix: string;
   /** Full CDN URL (base + prefix) */
   cdnUrl: string;
 }
@@ -48,19 +48,19 @@ function getEnvVar(name: string): string | undefined {
  * Reads from environment variables with fallback to defaults
  *
  * Environment variables:
- * - MEDIA_CDN_BASE_URL: CDN base URL (default: https://cdn.userplane.io)
- * - MEDIA_ASSETS_PREFIX: Assets prefix path (default: media)
+ * - CDN_DOMAIN: CDN base URL (default: https://cdn.userplane.io)
+ * - R2_CDN_PREFIX: CDN prefix path (default: media)
  *
  * @returns MediaEnvConfig with resolved values
  */
 export function loadMediaEnvConfig(): MediaEnvConfig {
-  const cdnBaseUrl = getEnvVar('MEDIA_CDN_BASE_URL') || MEDIA_DEFAULTS.CDN_BASE_URL;
-  const assetsPrefix = getEnvVar('MEDIA_ASSETS_PREFIX') || MEDIA_DEFAULTS.ASSETS_PREFIX;
+  const cdnBaseUrl = getEnvVar('CDN_DOMAIN') || MEDIA_DEFAULTS.CDN_BASE_URL;
+  const cdnPrefix = getEnvVar('R2_CDN_PREFIX') || MEDIA_DEFAULTS.CDN_PREFIX;
 
   return {
     cdnBaseUrl,
-    assetsPrefix,
-    cdnUrl: `${cdnBaseUrl}/${assetsPrefix}`,
+    cdnPrefix,
+    cdnUrl: `${cdnBaseUrl}/${cdnPrefix}`,
   };
 }
 

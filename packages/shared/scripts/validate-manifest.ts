@@ -15,8 +15,8 @@
  *   --help, -h      Show this help message
  *
  * Environment Variables (for remote validation):
- *   MEDIA_CDN_BASE_URL  - CDN base URL (default: https://cdn.userplane.io)
- *   MEDIA_ASSETS_PREFIX - Assets prefix (default: media)
+ *   CDN_DOMAIN  - CDN base URL (default: https://cdn.userplane.io)
+ *   R2_CDN_PREFIX - CDN prefix (default: media)
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -61,7 +61,7 @@ const MANIFEST_PATH = join(SCRIPT_DIR, '../src/media/manifest.generated.ts');
 
 const DEFAULTS = {
   CDN_BASE_URL: 'https://cdn.userplane.io',
-  ASSETS_PREFIX: 'media',
+  CDN_PREFIX: 'media',
 } as const;
 
 // =============================================================================
@@ -130,8 +130,8 @@ function loadEnvFile(envName: Environment): void {
   const content = readFileSync(envPath, 'utf-8');
   const envVars = parseEnvFile(content);
 
-  // Set MEDIA_* variables for CDN URL construction
-  const envVarNames = ['MEDIA_CDN_BASE_URL', 'MEDIA_ASSETS_PREFIX'];
+  // Set CDN URL construction variables
+  const envVarNames = ['CDN_DOMAIN', 'R2_CDN_PREFIX'];
 
   for (const key of envVarNames) {
     if (envVars[key]) {
@@ -220,9 +220,9 @@ async function validateRemote(
 ): Promise<ValidationResult['remote']> {
   const result = { passed: [] as string[], failed: [] as string[] };
 
-  const cdnBaseUrl = process.env.MEDIA_CDN_BASE_URL || DEFAULTS.CDN_BASE_URL;
-  const assetsPrefix = process.env.MEDIA_ASSETS_PREFIX || DEFAULTS.ASSETS_PREFIX;
-  const cdnUrl = `${cdnBaseUrl}/${assetsPrefix}`;
+  const cdnBaseUrl = process.env.CDN_DOMAIN || DEFAULTS.CDN_BASE_URL;
+  const cdnPrefix = process.env.R2_CDN_PREFIX || DEFAULTS.CDN_PREFIX;
+  const cdnUrl = `${cdnBaseUrl}/${cdnPrefix}`;
 
   console.log(`CDN URL: ${cdnUrl}\n`);
 
@@ -325,8 +325,8 @@ Options:
   --help, -h      Show this help message
 
 Environment Variables (for remote validation):
-  MEDIA_CDN_BASE_URL  CDN base URL (default: ${DEFAULTS.CDN_BASE_URL})
-  MEDIA_ASSETS_PREFIX Assets prefix (default: ${DEFAULTS.ASSETS_PREFIX})
+  CDN_DOMAIN          CDN base URL (default: ${DEFAULTS.CDN_BASE_URL})
+  R2_CDN_PREFIX       CDN prefix (default: ${DEFAULTS.CDN_PREFIX})
 
 Examples:
   bun run validate-manifest --local                    # Check local files exist
