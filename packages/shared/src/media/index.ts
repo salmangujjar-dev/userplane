@@ -12,6 +12,7 @@
 export type {
   AssetCategory,
   AuthProviderName,
+  IconName,
   IntegrationAsset,
   IntegrationName,
   IntercomCanvasImageName,
@@ -20,28 +21,22 @@ export type {
 } from './types';
 
 // =============================================================================
-// Defaults
+// Client
 // =============================================================================
 
-export { MEDIA_DEFAULTS, type MediaDefaults } from './defaults';
-
-// =============================================================================
-// Environment Config
-// =============================================================================
-
-export { loadMediaEnvConfig, mediaEnv, type MediaEnvConfig } from './env';
+export {
+  createMediaClient,
+  DEFAULT_CDN_DOMAIN,
+  DEFAULT_CDN_PREFIX,
+  MediaClient,
+  type MediaClientConfig,
+} from './client';
 
 // =============================================================================
 // Manifest
 // =============================================================================
 
 export { ASSET_MANIFEST, type AssetKey } from './manifest.generated';
-
-// =============================================================================
-// URLs
-// =============================================================================
-
-export { authUrls, brandUrls, integrationUrls, intercomCanvasUrls, tileUrls } from './urls';
 
 // =============================================================================
 // Registry

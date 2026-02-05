@@ -15,6 +15,7 @@ import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@/constants';
 import { useJoinWorkspace, useWorkspaceSuggestions } from '@/features/workspace';
+import { mediaClient } from '@/lib/media';
 import { logger } from '@/logger';
 
 const ITEMS_PER_PAGE = WORKSPACE_SUGGESTIONS_PAGINATION.DEFAULT_PER_PAGE;
@@ -148,7 +149,14 @@ function WorkspaceSuggestPageContent() {
     return (
       <WorkspaceSuggestLayout>
         <div className="flex flex-col items-center gap-3">
-          <Image src="/assets/dino.svg" alt="Dino" width={120} height={120} className="mb-2" />
+          <Image
+            src={mediaClient.icons.get('dino')}
+            alt="Dino"
+            width={120}
+            height={120}
+            unoptimized
+            className="mb-2"
+          />
           <h1 className="text-xl font-medium text-foreground">Unable to Load Suggestions</h1>
           <p className="text-sm text-muted-foreground text-center">
             {suggestionsData && !suggestionsData.success

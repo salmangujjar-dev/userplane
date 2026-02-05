@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { canvasImages, intercomCanvasUrls } from './urls';
+import { getCanvasImages, intercomCanvasUrls } from './urls';
 
 export interface ErrorCanvasOptions {
   title?: string;
@@ -27,7 +27,7 @@ export function buildErrorCanvas(options: ErrorCanvasOptions): Canvas {
     {
       type: 'image',
       id: 'icon',
-      url: canvasImages.errorGeneric,
+      url: getCanvasImages().errorGeneric,
       align: 'center',
       width: 50,
       height: 50,

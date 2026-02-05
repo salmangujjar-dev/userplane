@@ -6,7 +6,7 @@
 import type { Canvas } from '@/api/types/intercom-canvas';
 
 import { DEFAULT_RECORDING_MESSAGE } from './link-creator';
-import { canvasImages } from './urls';
+import { getCanvasImages } from './urls';
 
 /**
  * Default footer message for the recording canvas
@@ -33,7 +33,7 @@ export function buildRecordingCanvas(options: RecordingCanvasOptions): Canvas {
   // Use provided footer, or default. If footer is explicitly null, use default.
   const footer = options.footer ?? DEFAULT_RECORDING_FOOTER;
   // Use custom logo URL if provided, otherwise fall back to default Userplane logo
-  const logoUrl = options.logoUrl || canvasImages.logo;
+  const logoUrl = options.logoUrl || getCanvasImages().logo;
 
   return {
     content: {

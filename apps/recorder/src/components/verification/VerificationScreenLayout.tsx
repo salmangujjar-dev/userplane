@@ -7,6 +7,7 @@
 import type { ReactNode } from 'react';
 
 import { DEFAULT_COMPANY_NAME } from '@/constants';
+import { mediaClient } from '@/lib/media';
 
 interface VerificationScreenLayoutProps {
   children: ReactNode;
@@ -30,7 +31,7 @@ export default function VerificationScreenLayout({
       <footer className="flex flex-col items-center gap-2 sm:gap-4 px-4 py-6 sm:py-8 relative z-10">
         <div className="flex items-center gap-2">
           <img
-            src={workspaceLogoUrl ?? '/logo-dark.svg'}
+            src={workspaceLogoUrl ?? mediaClient.brand.logo('dark')}
             alt={workspaceName ?? DEFAULT_COMPANY_NAME}
             className="h-4 sm:h-5 w-auto object-contain opacity-60"
           />

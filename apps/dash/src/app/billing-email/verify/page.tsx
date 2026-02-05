@@ -10,6 +10,7 @@ import { Suspense, useEffect, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useVerifyBillingEmailChange } from '@/features/workspace';
+import { mediaClient } from '@/lib/media';
 import { logger } from '@/logger';
 
 function BillingEmailVerificationPageContent() {
@@ -90,10 +91,11 @@ function BillingEmailVerificationPageContent() {
 
           <div className="flex flex-col items-center gap-6">
             <Image
-              src="/assets/dino.svg"
+              src={mediaClient.icons.get('dino')}
               alt="Error"
               width={120}
               height={120}
+              unoptimized
               className="opacity-80"
             />
             <div className="flex flex-col items-center gap-2">

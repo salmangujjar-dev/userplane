@@ -10,6 +10,7 @@ import { useState } from 'react';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { useJoinWorkspace, useWorkspaceStatus } from '@/features/workspace';
+import { mediaClient } from '@/lib/media';
 import type { WorkspaceInvitePolicy } from '@/types';
 
 interface WorkspaceAccessGateProps {
@@ -223,7 +224,14 @@ function WorkspaceAccessDenied({ onGoBack }: { onGoBack?: () => void }) {
   return (
     <WorkspaceAccessLayout>
       <div className="flex flex-col items-center gap-3">
-        <Image src="/assets/dino.svg" alt="Not Found" width={120} height={120} className="mb-2" />
+        <Image
+          src={mediaClient.icons.get('dino')}
+          alt="Not Found"
+          width={120}
+          height={120}
+          unoptimized
+          className="mb-2"
+        />
         <h1 className="text-xl font-medium text-foreground">Page not found</h1>
         <p className="text-sm text-muted-foreground text-center">
           The page you&apos;re looking for doesn&apos;t exist or you don&apos;t have access.
@@ -246,7 +254,14 @@ function WorkspaceAccessDeleted({ onGoBack }: { onGoBack?: () => void }) {
   return (
     <WorkspaceAccessLayout>
       <div className="flex flex-col items-center gap-3">
-        <Image src="/assets/dino.svg" alt="Deleted" width={120} height={120} className="mb-2" />
+        <Image
+          src={mediaClient.icons.get('dino')}
+          alt="Deleted"
+          width={120}
+          height={120}
+          unoptimized
+          className="mb-2"
+        />
         <h1 className="text-xl font-medium text-foreground">Workspace deleted</h1>
         <p className="text-sm text-muted-foreground text-center">
           This workspace has been deleted and is no longer accessible.

@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { canvasImages, intercomCanvasUrls } from './urls';
+import { getCanvasImages, intercomCanvasUrls } from './urls';
 
 export interface AccessRequestedCanvasOptions {
   adminEmail?: string;
@@ -23,7 +23,7 @@ export function buildAccessRequestedCanvas(options: AccessRequestedCanvasOptions
     {
       type: 'image',
       id: 'logo',
-      url: canvasImages.accessRequestedLock,
+      url: getCanvasImages().accessRequestedLock,
       align: 'center',
       width: 50,
       height: 50,

@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { canvasImages } from './urls';
+import { getCanvasImages } from './urls';
 
 export interface SuccessCanvasOptions {
   linkUrl: string;
@@ -30,7 +30,7 @@ export function buildSuccessCanvas(options: SuccessCanvasOptions): Canvas {
         {
           type: 'image',
           id: 'icon',
-          url: canvasImages.successLinkCreated,
+          url: getCanvasImages().successLinkCreated,
           align: 'center',
           width: 50,
           height: 50,

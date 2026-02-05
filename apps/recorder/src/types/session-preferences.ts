@@ -41,7 +41,7 @@ export const DEFAULT_RECORDING_PREFERENCES = {
   captureServerLog: true,
   captureNetworkLog: true,
   companyName: DEFAULT_COMPANY_NAME,
-  companyLogoUrl: null, // Will use /logo-dark.svg
+  companyLogoUrl: null, // Will use CDN logo via mediaClient
   headerText: DEFAULT_RECORDING_HEADER,
   footnoteText: null,
   primaryColor: DEFAULT_PRIMARY_COLOR,

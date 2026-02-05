@@ -14,6 +14,7 @@ import {
   useIntercomDisconnect,
   useIntercomIntegration,
 } from '@/features/integrations';
+import { mediaClient } from '@/lib/media';
 
 export function IntegrationsSection() {
   const [showModal, setShowModal] = useState(false);
@@ -73,10 +74,11 @@ export function IntegrationsSection() {
         <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
           <div className="flex items-center gap-3">
             <Image
-              src="/integrations/intercom.webp"
+              src={mediaClient.integrations.get('intercom')}
               alt="Intercom"
               width={32}
               height={32}
+              unoptimized
               className="object-contain"
             />
             <span className="font-medium">Intercom</span>
@@ -105,7 +107,7 @@ export function IntegrationsSection() {
           open={showModal}
           onOpenChange={setShowModal}
           integrationName="Intercom"
-          integrationImage="/integrations/intercom.webp"
+          integrationImage={mediaClient.integrations.get('intercom')}
           onConnect={handleConnect}
         />
       )}
@@ -115,7 +117,7 @@ export function IntegrationsSection() {
           open={showModal}
           onOpenChange={setShowModal}
           integrationName="Intercom"
-          integrationImage="/integrations/intercom.webp"
+          integrationImage={mediaClient.integrations.get('intercom')}
           onDisconnect={handleDisconnect}
           isDisconnecting={disconnectIntercom.isPending}
         />

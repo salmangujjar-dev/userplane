@@ -6,6 +6,8 @@ import { Button } from '@workspace/ui/components/button';
 import Image from 'next/image';
 import { useEffect } from 'react';
 
+import { mediaClient } from '@/lib/media';
+
 export default function GlobalError({
   error,
   reset,
@@ -29,7 +31,14 @@ export default function GlobalError({
       <body>
         <div className="flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-white">
           <div className="flex flex-col items-center gap-3 max-w-md">
-            <Image src="/assets/dino.svg" alt="Error" width={120} height={120} className="mb-2" />
+            <Image
+              src={mediaClient.icons.get('dino')}
+              alt="Error"
+              width={120}
+              height={120}
+              unoptimized
+              className="mb-2"
+            />
             <h1 className="text-xl font-medium text-zinc-900">Something went wrong</h1>
             <p className="text-sm text-zinc-500 text-center">
               {error.message || 'An unexpected error occurred. Please try again.'}

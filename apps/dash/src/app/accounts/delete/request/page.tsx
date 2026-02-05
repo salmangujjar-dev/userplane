@@ -15,6 +15,7 @@ import { AuthIcons } from '@/components/auth/auth-icons';
 import { useAccount } from '@/features/account';
 import { useWorkspaceCount } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
+import { mediaClient } from '@/lib/media';
 import { logger } from '@/logger';
 
 function RequestDeleteHeader() {
@@ -161,10 +162,11 @@ function RequestDeleteContent() {
 
           <div className="flex flex-col items-center gap-6">
             <Image
-              src="/assets/dino.svg"
+              src={mediaClient.icons.get('dino')}
               alt="Error"
               width={120}
               height={120}
+              unoptimized
               className="opacity-80"
             />
             <div className="flex flex-col items-center gap-2">
@@ -204,10 +206,11 @@ function RequestDeleteContent() {
         <div className="space-y-6">
           <div className="flex justify-center">
             <Image
-              src="/assets/dino.svg"
+              src={mediaClient.icons.get('dino')}
               alt="Dino"
               width={120}
               height={120}
+              unoptimized
               className="opacity-80"
             />
           </div>

@@ -10,7 +10,13 @@
 /**
  * Categories of media assets in the store
  */
-export type AssetCategory = 'brand' | 'tiles' | 'integrations' | 'auth' | 'intercom-canvas';
+export type AssetCategory =
+  | 'brand'
+  | 'tiles'
+  | 'integrations'
+  | 'auth'
+  | 'intercom-canvas'
+  | 'icons';
 
 /**
  * Theme variants for assets that have light/dark versions
@@ -108,6 +114,15 @@ export type AuthProviderName =
   | 'pylon'
   | 'slack'
   | 'zendesk';
+
+// =============================================================================
+// Icon Assets
+// =============================================================================
+
+/**
+ * Available icon asset names
+ */
+export type IconName = 'dino' | 'checkmark' | 'desktop' | 'monitor' | 'video';
 
 // =============================================================================
 // Intercom Canvas Assets

@@ -20,6 +20,7 @@ import { AuthIcons } from '@/components/auth/auth-icons';
 import { DinoError } from '@/components/shared/dino-error';
 import { useAccount } from '@/features/account';
 import { useAuth } from '@/hooks/use-auth';
+import { mediaClient } from '@/lib/media';
 import { logger } from '@/logger';
 
 function DeleteAccountLayout({ children }: { children: React.ReactNode }) {
@@ -178,10 +179,11 @@ function DeleteAccountContent() {
 
           <div className="flex flex-col items-center gap-6">
             <Image
-              src="/assets/dino.svg"
+              src={mediaClient.icons.get('dino')}
               alt="Error"
               width={120}
               height={120}
+              unoptimized
               className="opacity-80"
             />
             <div className="flex flex-col items-center gap-2">

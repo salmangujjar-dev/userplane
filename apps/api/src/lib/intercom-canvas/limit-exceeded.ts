@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { canvasImages, intercomCanvasUrls } from './urls';
+import { getCanvasImages, intercomCanvasUrls } from './urls';
 
 export interface LimitExceededCanvasOptions {
   workspaceId: string;
@@ -30,7 +30,7 @@ export function buildLimitExceededCanvas(options: LimitExceededCanvasOptions): C
         {
           type: 'image',
           id: 'icon',
-          url: canvasImages.limitExceededUpgrade,
+          url: getCanvasImages().limitExceededUpgrade,
           align: 'center',
           width: 50,
           height: 50,

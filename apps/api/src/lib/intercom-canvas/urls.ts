@@ -3,8 +3,9 @@
  * Centralizes URL formatting for all Intercom canvas views
  */
 
-import { intercomCanvasUrls as mediaCanvasUrls } from '@workspace/shared/media';
+import type { IntercomCanvasImageName } from '@workspace/shared/media';
 
+import { getMediaClient } from '@/api/clients/media';
 import { env } from '@/api/env';
 
 /**
@@ -17,7 +18,7 @@ const baseUrl = env.dashboard.baseUrl;
 // =============================================================================
 
 /**
- * Image URLs for canvas components
+ * Get image URLs for canvas components
  * These are served from the CDN with content-hash filenames
  *
  * Each image is named for the specific screen/context it's used in:
@@ -29,7 +30,9 @@ const baseUrl = env.dashboard.baseUrl;
  * - accessRequestedLock: Header icon on access-requested screen
  * - limitExceededUpgrade: Header icon on limit-exceeded screen
  */
-export const canvasImages = mediaCanvasUrls.all();
+export function getCanvasImages(): Record<IntercomCanvasImageName, string> {
+  return getMediaClient().intercomCanvas.all();
+}
 
 /**
  * URL builder options

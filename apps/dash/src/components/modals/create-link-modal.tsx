@@ -47,6 +47,7 @@ import { LinkReferenceInput } from '@/components/link-reference-input';
 import { useWorkspaceDomains } from '@/features/domains';
 import { useCreateLink } from '@/features/links';
 import { useWorkspaceProjects } from '@/features/projects';
+import { mediaClient } from '@/lib/media';
 import { useWorkspaceStore } from '@/stores/workspace';
 import type { RecordingLimitStatus } from '@/types';
 
@@ -506,7 +507,13 @@ function ErrorView({
 
         <div className="flex flex-col items-center space-y-4">
           <div className="flex justify-center py-4">
-            <Image src="/assets/dino.svg" alt="Error" width={120} height={120} />
+            <Image
+              src={mediaClient.icons.get('dino')}
+              alt="Error"
+              width={120}
+              height={120}
+              unoptimized
+            />
           </div>
         </div>
       </div>

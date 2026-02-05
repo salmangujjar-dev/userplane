@@ -5,7 +5,7 @@
 
 import type { Canvas, DropdownOption } from '@/api/types/intercom-canvas';
 
-import { canvasImages } from './urls';
+import { getCanvasImages } from './urls';
 
 export interface ProjectOption {
   id: string;
@@ -70,7 +70,7 @@ export function buildLinkCreatorCanvas(options: LinkCreatorCanvasOptions): Canva
         {
           type: 'image',
           id: 'logo',
-          url: canvasImages.logo,
+          url: getCanvasImages().logo,
           align: 'center',
           width: 50,
           height: 50,

@@ -22,6 +22,7 @@ import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
 import { handleSafeResult, showErrorToast } from '@/lib/errors';
+import { mediaClient } from '@/lib/media';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -256,10 +257,11 @@ function IntercomConnectFlow() {
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src="/integrations/intercom.webp"
+                src={mediaClient.integrations.get('intercom')}
                 alt="Intercom"
                 width={32}
                 height={32}
+                unoptimized
                 className="object-contain"
               />
             </div>
