@@ -13,6 +13,11 @@ const appEnv = process.env.APP_ENV || 'development';
 const envFile = getEnvFileName(appEnv);
 dotenv.config({ path: envFile, override: true });
 
+// Skip Sentry build instrumentation in development to speed up builds
+// Sentry adds significant webpack overhead even without source map uploads
+// Enable Sentry when: production build OR SENTRY_AUTH_TOKEN is set (for source map uploads)
+const shouldUseSentry = appEnv === 'production' || !!process.env.SENTRY_AUTH_TOKEN;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@workspace/ui"],
@@ -24,11 +29,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'assets.userplane.io',
+        hostname: 'cdn.userplane.io',
       },
       {
         protocol: 'https',
-        hostname: 'dev.userplane.io',
+        hostname: 'cdn-dev.userplane.io',
       },
     ],
   },
@@ -60,7 +65,9 @@ const nextConfig = {
   // It properly handles server-only imports out of the box
 }
 
-export default withSentryConfig(nextConfig, {
+// Sentry config for production builds and source map uploads
+// Skipped in development to avoid ~30-40s of webpack overhead
+const sentryConfig = {
   // Sentry webpack plugin options
   silent: true, // Suppresses all logs
   org: process.env.SENTRY_ORG,
@@ -77,4 +84,10 @@ export default withSentryConfig(nextConfig, {
     },
     automaticVercelMonitors: true,
   },
-})
+};
+
+// Export with or without Sentry based on environment
+// Development builds skip Sentry instrumentation for faster iteration
+export default shouldUseSentry
+  ? withSentryConfig(nextConfig, sentryConfig)
+  : nextConfig;

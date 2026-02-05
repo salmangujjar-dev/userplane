@@ -99,7 +99,7 @@ export default function PreRecordingCountdownScreen({
               {countdownSeconds}
             </div>
             <img
-              src={mediaClient.icons.get('video')}
+              src={mediaClient.getIconMediaUrl('icons/video.svg')}
               alt="Recording"
               className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 text-gray-800"
             />

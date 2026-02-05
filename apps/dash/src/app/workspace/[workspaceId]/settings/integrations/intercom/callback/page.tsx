@@ -25,7 +25,7 @@ function LoadingState() {
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src={mediaClient.integrations.get('intercom')}
+                src={mediaClient.getIntegrationMediaUrl('integrations/intercom.webp')}
                 alt="Intercom"
                 width={32}
                 height={32}
@@ -79,7 +79,7 @@ function SuccessState({ workspaceId }: { workspaceId: string }) {
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src={mediaClient.integrations.get('intercom')}
+                src={mediaClient.getIntegrationMediaUrl('integrations/intercom.webp')}
                 alt="Intercom"
                 width={32}
                 height={32}
@@ -140,7 +140,7 @@ function ErrorState({ error, errorActionPrimary, errorActionSecondary }: ErrorSt
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src={mediaClient.integrations.get('intercom')}
+                src={mediaClient.getIntegrationMediaUrl('integrations/intercom.webp')}
                 alt="Intercom"
                 width={32}
                 height={32}

@@ -225,7 +225,7 @@ function WorkspaceAccessDenied({ onGoBack }: { onGoBack?: () => void }) {
     <WorkspaceAccessLayout>
       <div className="flex flex-col items-center gap-3">
         <Image
-          src={mediaClient.icons.get('dino')}
+          src={mediaClient.getIconMediaUrl('icons/dino.svg')}
           alt="Not Found"
           width={120}
           height={120}
@@ -255,7 +255,7 @@ function WorkspaceAccessDeleted({ onGoBack }: { onGoBack?: () => void }) {
     <WorkspaceAccessLayout>
       <div className="flex flex-col items-center gap-3">
         <Image
-          src={mediaClient.icons.get('dino')}
+          src={mediaClient.getIconMediaUrl('icons/dino.svg')}
           alt="Deleted"
           width={120}
           height={120}

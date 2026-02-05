@@ -78,7 +78,7 @@ export default function PreRecordingScreen({
             }}
           >
             <img
-              src={mediaClient.icons.get('desktop')}
+              src={mediaClient.getIconMediaUrl('icons/desktop.svg')}
               alt="Screen + Voice"
               className="w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4"
             />
@@ -96,7 +96,7 @@ export default function PreRecordingScreen({
             }}
           >
             <img
-              src={mediaClient.icons.get('monitor')}
+              src={mediaClient.getIconMediaUrl('icons/monitor.svg')}
               alt="Screen only"
               className="w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4"
             />

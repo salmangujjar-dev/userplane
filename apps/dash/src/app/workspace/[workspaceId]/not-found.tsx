@@ -9,7 +9,7 @@ export default function WorkspaceNotFound() {
     <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12 bg-background">
       <div className="flex flex-col items-center gap-4 max-w-md text-center">
         <Image
-          src={mediaClient.icons.get('dino')}
+          src={mediaClient.getIconMediaUrl('icons/dino.svg')}
           alt="Not Found"
           width={120}
           height={120}

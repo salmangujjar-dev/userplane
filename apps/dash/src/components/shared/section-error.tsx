@@ -20,7 +20,7 @@ export function SectionError({
   return (
     <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl border border-dashed">
       <Image
-        src={mediaClient.icons.get('dino')}
+        src={mediaClient.getIconMediaUrl('icons/dino.svg')}
         alt="Error"
         width={64}
         height={64}

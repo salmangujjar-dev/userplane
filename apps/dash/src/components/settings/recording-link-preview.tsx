@@ -214,7 +214,7 @@ export function RecordingLinkPreview({
           ) : (
             <>
               <Image
-                src={mediaClient.brand.logo('dark')}
+                src={mediaClient.getBrandMediaUrl('brand/logo-dark.svg')}
                 alt="Userplane"
                 width={24}
                 height={24}

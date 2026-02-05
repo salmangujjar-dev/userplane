@@ -74,7 +74,7 @@ export function IntegrationsSection() {
         <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
           <div className="flex items-center gap-3">
             <Image
-              src={mediaClient.integrations.get('intercom')}
+              src={mediaClient.getIntegrationMediaUrl('integrations/intercom.webp')}
               alt="Intercom"
               width={32}
               height={32}
@@ -107,7 +107,7 @@ export function IntegrationsSection() {
           open={showModal}
           onOpenChange={setShowModal}
           integrationName="Intercom"
-          integrationImage={mediaClient.integrations.get('intercom')}
+          integrationImage={mediaClient.getIntegrationMediaUrl('integrations/intercom.webp')}
           onConnect={handleConnect}
         />
       )}
@@ -117,7 +117,7 @@ export function IntegrationsSection() {
           open={showModal}
           onOpenChange={setShowModal}
           integrationName="Intercom"
-          integrationImage={mediaClient.integrations.get('intercom')}
+          integrationImage={mediaClient.getIntegrationMediaUrl('integrations/intercom.webp')}
           onDisconnect={handleDisconnect}
           isDisconnecting={disconnectIntercom.isPending}
         />

@@ -3,8 +3,6 @@
  * Centralizes URL formatting for all Intercom canvas views
  */
 
-import type { IntercomCanvasImageName } from '@workspace/shared/media';
-
 import { getMediaClient } from '@/api/clients/media';
 import { env } from '@/api/env';
 
@@ -18,20 +16,46 @@ const baseUrl = env.dashboard.baseUrl;
 // =============================================================================
 
 /**
+ * Intercom canvas image record keyed by semantic name.
+ * Each key maps to a CDN URL for the corresponding canvas image.
+ */
+export interface CanvasImages {
+  logo: string;
+  openerRequestRecording: string;
+  openerRequestScreenshot: string;
+  openerViewRecordings: string;
+  openerRequestAccess: string;
+  successLinkCreated: string;
+  errorGeneric: string;
+  accessRequestedLock: string;
+  limitExceededUpgrade: string;
+}
+
+/**
  * Get image URLs for canvas components
  * These are served from the CDN with content-hash filenames
- *
- * Each image is named for the specific screen/context it's used in:
- * - logo: Branding header on signup, connect, recording, link-creator screens
- * - openerRequestRecording: List item icon on opener screen (inbox app)
- * - openerViewRecordings: List item icon on opener screen (inbox app)
- * - successLinkCreated: Header icon on success screen after link creation
- * - errorGeneric: Header icon on error screens
- * - accessRequestedLock: Header icon on access-requested screen
- * - limitExceededUpgrade: Header icon on limit-exceeded screen
  */
-export function getCanvasImages(): Record<IntercomCanvasImageName, string> {
-  return getMediaClient().intercomCanvas.all();
+export function getCanvasImages(): CanvasImages {
+  const client = getMediaClient();
+  return {
+    logo: client.getIntercomCanvasMediaUrl('intercom-canvas/userplane-icon.svg'),
+    openerRequestRecording: client.getIntercomCanvasMediaUrl(
+      'intercom-canvas/intercom/request-recording.svg'
+    ),
+    openerRequestScreenshot: client.getIntercomCanvasMediaUrl(
+      'intercom-canvas/intercom/request-screenshot.svg'
+    ),
+    openerViewRecordings: client.getIntercomCanvasMediaUrl(
+      'intercom-canvas/intercom/view-recordings.svg'
+    ),
+    openerRequestAccess: client.getIntercomCanvasMediaUrl(
+      'intercom-canvas/intercom/request-access.svg'
+    ),
+    successLinkCreated: client.getIntercomCanvasMediaUrl('intercom-canvas/intercom/success.svg'),
+    errorGeneric: client.getIntercomCanvasMediaUrl('intercom-canvas/intercom/error.svg'),
+    accessRequestedLock: client.getIntercomCanvasMediaUrl('intercom-canvas/intercom/lock.svg'),
+    limitExceededUpgrade: client.getIntercomCanvasMediaUrl('intercom-canvas/intercom/upgrade.svg'),
+  };
 }
 
 /**
@@ -98,19 +122,19 @@ export const intercomCanvasUrls: IntercomCanvasUrls = {
   },
 
   integrateWorkspaceURLWithWorkspace(workspaceId: string): string {
-    return `${baseUrl}/${workspaceId}/settings?tab=integrations`;
+    return `${baseUrl}/workspace/${workspaceId}/settings?tab=integrations`;
   },
 
   upgradeWorkspaceURL(workspaceId: string): string {
-    return `${baseUrl}/${workspaceId}/settings?tab=plan-usage&plan-modal=detailed`;
+    return `${baseUrl}/workspace/${workspaceId}/settings?tab=plan-usage&plan-modal=detailed`;
   },
 
   accessUserSubmittedRecordingsURL(workspaceId: string, workspaceMemberId: string): string {
-    return `${baseUrl}/${workspaceId}/recordings?creators=${workspaceMemberId}`;
+    return `${baseUrl}/workspace/${workspaceId}/recordings?creators=${workspaceMemberId}`;
   },
 
   accessAllRecordingsURL(workspaceId: string): string {
-    return `${baseUrl}/${workspaceId}/recordings`;
+    return `${baseUrl}/workspace/${workspaceId}/recordings`;
   },
 
   supportEmailURL(): string {
