@@ -26,6 +26,11 @@ const nextConfig = {
     'dash-dev.userplane.io',
   ],
   images: {
+    // Use custom Cloudflare image loader for on-the-fly transforms
+    // @see https://developers.cloudflare.com/images/transform-images/integrate-with-frameworks/
+    loader: 'custom',
+    loaderFile: './src/lib/cloudflare-image-loader.ts',
+    // Remote patterns still needed for image validation
     remotePatterns: [
       {
         protocol: 'https',
@@ -34,6 +39,14 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'cdn-dev.userplane.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.userplane.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets-dev.userplane.io',
       },
     ],
   },

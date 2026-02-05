@@ -549,7 +549,6 @@ function ErrorView({
           alt="Error"
           width={120}
           height={120}
-          unoptimized
         />
       </div>
 

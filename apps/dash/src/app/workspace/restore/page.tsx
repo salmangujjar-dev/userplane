@@ -40,7 +40,6 @@ function InvalidParamsState({ onGoToDashboard }: { onGoToDashboard: () => void }
             alt="Error"
             width={120}
             height={120}
-            unoptimized
             className="opacity-80"
           />
           <div className="flex flex-col items-center gap-2">
@@ -214,7 +213,6 @@ function ErrorState({
             alt="Error"
             width={120}
             height={120}
-            unoptimized
             className="opacity-80"
           />
           <div className="flex flex-col items-center gap-2">

@@ -31,7 +31,6 @@ export function DinoError({
           alt="Error"
           width={120}
           height={120}
-          unoptimized
           className="mb-2"
         />
         <h1 className="text-xl font-medium text-foreground">{title}</h1>

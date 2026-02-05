@@ -7,7 +7,7 @@
  *   bun run scripts/validate-manifest.ts [options]
  *
  * Options:
- *   --local         Check assets exist in packages/shared/assets/
+ *   --local         Check assets exist in packages/storage/assets/
  *   --remote        Check assets exist on CDN via HTTP HEAD requests
  *   --env=<env>     Load CDN URL from .env.<env> (for remote validation)
  *                   (development, staging, preview, production)
@@ -26,7 +26,7 @@ import { dirname, join } from 'node:path';
 // Types
 // =============================================================================
 
-/** Valid environment names - matches packages/shared/src/env.ts */
+/** Valid environment names - matches packages/storage environment config */
 type Environment = 'development' | 'production';
 
 /** All valid environments for validation */
@@ -104,24 +104,24 @@ function parseEnvFile(content: string): Record<string, string> {
 
 /**
  * Load environment variables from a .env file
- * Checks packages/shared/.env.<env> first, then falls back to apps/api/.env.<env>
+ * Checks packages/storage/.env.<env> first, then falls back to apps/api/.env.<env>
  */
 function loadEnvFile(envName: Environment): void {
-  const sharedEnvPath = join(SCRIPT_DIR, '..', `.env.${envName}`);
+  const storageEnvPath = join(SCRIPT_DIR, '..', `.env.${envName}`);
   const apiEnvPath = join(MONOREPO_ROOT, 'apps/api', `.env.${envName}`);
 
   let envPath: string;
   let envSource: string;
 
-  if (existsSync(sharedEnvPath)) {
-    envPath = sharedEnvPath;
-    envSource = `packages/shared/.env.${envName}`;
+  if (existsSync(storageEnvPath)) {
+    envPath = storageEnvPath;
+    envSource = `packages/storage/.env.${envName}`;
   } else if (existsSync(apiEnvPath)) {
     envPath = apiEnvPath;
     envSource = `apps/api/.env.${envName}`;
   } else {
     console.error(`Error: Environment file not found.`);
-    console.error(`  Checked: packages/shared/.env.${envName}`);
+    console.error(`  Checked: packages/storage/.env.${envName}`);
     console.error(`  Checked: apps/api/.env.${envName}`);
     console.error(`\nRun 'make env:setup' to create environment files.`);
     process.exit(1);
@@ -316,11 +316,11 @@ Usage:
   bun run scripts/validate-manifest.ts [options]
 
 Options:
-  --local         Check assets exist in packages/shared/assets/
+  --local         Check assets exist in packages/storage/assets/
   --remote        Check assets exist on CDN via HTTP HEAD requests
   --env=<env>     Load CDN URL from .env.<env> (for remote validation)
                   Valid values: ${VALID_ENVIRONMENTS.join(', ')}
-                  Checks packages/shared/.env.<env> first, falls back to apps/api/.env.<env>
+                  Checks packages/storage/.env.<env> first, falls back to apps/api/.env.<env>
   --verbose       Show detailed output (including passed checks)
   --help, -h      Show this help message
 

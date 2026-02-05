@@ -13,9 +13,13 @@ export type {
   AssetKey,
   AuthAssetKey,
   BrandAssetKey,
+  FeatureAssetKey,
+  HeroAssetKey,
   IconAssetKey,
   IntegrationAssetKey,
   IntercomCanvasAssetKey,
+  PreviewAssetKey,
+  SpotlightAssetKey,
   TileAssetKey,
 } from './types';
 
@@ -27,9 +31,24 @@ export {
   createMediaClient,
   DEFAULT_CDN_DOMAIN,
   DEFAULT_CDN_PREFIX,
+  type GetMediaUrlOptions,
   MediaClient,
   type MediaClientConfig,
 } from './client';
+
+// =============================================================================
+// Transform
+// =============================================================================
+
+export {
+  buildTransformUrl,
+  DEFAULT_IMAGE_ZONE,
+  getTransformProfile,
+  mergeTransformOptions,
+  TRANSFORM_PROFILES,
+  type TransformOptions,
+  type TransformProfile,
+} from './transform';
 
 // =============================================================================
 // Manifest

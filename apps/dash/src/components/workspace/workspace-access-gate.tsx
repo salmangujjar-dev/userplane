@@ -229,7 +229,6 @@ function WorkspaceAccessDenied({ onGoBack }: { onGoBack?: () => void }) {
           alt="Not Found"
           width={120}
           height={120}
-          unoptimized
           className="mb-2"
         />
         <h1 className="text-xl font-medium text-foreground">Page not found</h1>
@@ -259,7 +258,6 @@ function WorkspaceAccessDeleted({ onGoBack }: { onGoBack?: () => void }) {
           alt="Deleted"
           width={120}
           height={120}
-          unoptimized
           className="mb-2"
         />
         <h1 className="text-xl font-medium text-foreground">Workspace deleted</h1>

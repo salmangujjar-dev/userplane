@@ -24,7 +24,6 @@ export function SectionError({
         alt="Error"
         width={64}
         height={64}
-        unoptimized
         className="mb-4 opacity-50"
       />
       <p className="text-sm font-medium text-foreground mb-1">{title}</p>

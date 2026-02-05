@@ -204,7 +204,6 @@ export function RecordingLinkPreview({
                   width={32}
                   height={32}
                   className="h-8 w-8 object-contain"
-                  unoptimized
                 />
               )}
               <span className="text-sm font-medium" style={{ color: '#000' }}>
@@ -219,7 +218,6 @@ export function RecordingLinkPreview({
                 width={24}
                 height={24}
                 className="h-6 w-6 shrink-0"
-                unoptimized
               />
               <span className="text-sm font-medium" style={{ color: '#000' }}>
                 Userplane

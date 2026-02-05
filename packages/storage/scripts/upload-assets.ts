@@ -32,9 +32,19 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 // Types
 // =============================================================================
 
-type AssetCategory = 'brand' | 'tiles' | 'integrations' | 'auth' | 'intercom-canvas' | 'icons';
+type AssetCategory =
+  | 'brand'
+  | 'tiles'
+  | 'integrations'
+  | 'auth'
+  | 'intercom-canvas'
+  | 'icons'
+  | 'features'
+  | 'hero'
+  | 'preview'
+  | 'spotlight';
 
-/** Valid environment names - matches packages/shared/src/env.ts */
+/** Valid environment names - matches packages/storage environment config */
 type Environment = 'development' | 'production';
 
 /** All valid environments for validation */
@@ -85,6 +95,10 @@ const CATEGORIES: AssetCategory[] = [
   'auth',
   'intercom-canvas',
   'icons',
+  'features',
+  'hero',
+  'preview',
+  'spotlight',
 ];
 
 const CONTENT_TYPE_MAP: Record<string, string> = {
@@ -152,26 +166,26 @@ function parseEnvFile(content: string): Record<string, string> {
 
 /**
  * Load environment variables from a .env file
- * Checks packages/shared/.env.<env> first, then falls back to apps/api/.env.<env>
+ * Checks packages/storage/.env.<env> first, then falls back to apps/api/.env.<env>
  */
 function loadEnvFile(envName: Environment): void {
-  // Try packages/shared first (local to this package)
-  const sharedEnvPath = join(SCRIPT_DIR, '..', `.env.${envName}`);
+  // Try packages/storage first (local to this package)
+  const storageEnvPath = join(SCRIPT_DIR, '..', `.env.${envName}`);
   // Fall back to apps/api
   const apiEnvPath = join(MONOREPO_ROOT, 'apps/api', `.env.${envName}`);
 
   let envPath: string;
   let envSource: string;
 
-  if (existsSync(sharedEnvPath)) {
-    envPath = sharedEnvPath;
-    envSource = `packages/shared/.env.${envName}`;
+  if (existsSync(storageEnvPath)) {
+    envPath = storageEnvPath;
+    envSource = `packages/storage/.env.${envName}`;
   } else if (existsSync(apiEnvPath)) {
     envPath = apiEnvPath;
     envSource = `apps/api/.env.${envName}`;
   } else {
     console.error(`Error: Environment file not found.`);
-    console.error(`  Checked: packages/shared/.env.${envName}`);
+    console.error(`  Checked: packages/storage/.env.${envName}`);
     console.error(`  Checked: apps/api/.env.${envName}`);
     console.error(`\nRun 'make env:setup' to create environment files.`);
     process.exit(1);
@@ -254,7 +268,7 @@ Usage:
 Options:
   --env=<env>     Load R2 credentials from .env.<env>
                   Valid values: ${VALID_ENVIRONMENTS.join(', ')}
-                  Checks packages/shared/.env.<env> first, falls back to apps/api/.env.<env>
+                  Checks packages/storage/.env.<env> first, falls back to apps/api/.env.<env>
   --dry-run       Show what would be uploaded without actually uploading
   --force         Re-upload even if hash unchanged
   --manifest-only Generate manifest only (no upload, no R2 credentials needed)

@@ -9,17 +9,37 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./media": {
+      "types": "./dist/media/index.d.ts",
+      "import": "./dist/media/index.js"
+    },
+    "./assets/*": "./assets/*"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "upload-assets": "bun run scripts/upload-assets.ts",
+    "assets:upload": "bun run scripts/upload-assets.ts --env=development",
+    "assets:upload:staging": "bun run scripts/upload-assets.ts --env=staging",
+    "assets:upload:preview": "bun run scripts/upload-assets.ts --env=preview",
+    "assets:upload:production": "bun run scripts/upload-assets.ts --env=production",
+    "assets:upload:dry-run": "bun run scripts/upload-assets.ts --env=development --dry-run",
+    "assets:upload:force": "bun run scripts/upload-assets.ts --env=development --force",
+    "assets:manifest": "bun run scripts/upload-assets.ts --manifest-only",
+    "validate-manifest": "bun run scripts/validate-manifest.ts",
+    "assets:validate": "bun run scripts/validate-manifest.ts --local --remote --env=development",
+    "assets:validate:local": "bun run scripts/validate-manifest.ts --local",
+    "assets:validate:remote": "bun run scripts/validate-manifest.ts --remote --env=development",
+    "assets:validate:staging": "bun run scripts/validate-manifest.ts --remote --env=staging",
+    "assets:validate:preview": "bun run scripts/validate-manifest.ts --remote --env=preview",
+    "assets:validate:production": "bun run scripts/validate-manifest.ts --remote --env=production"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.946.0",
-    "@aws-sdk/s3-request-presigner": "^3.946.0"
+    "@aws-sdk/client-s3": "^3.982.0",
+    "@aws-sdk/s3-request-presigner": "^3.982.0"
   },
   "devDependencies": {
     "eslint": "^9.32.0",

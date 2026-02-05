@@ -13,7 +13,6 @@ export default function WorkspaceNotFound() {
           alt="Not Found"
           width={120}
           height={120}
-          unoptimized
           className="mb-2"
         />
         <h1 className="text-2xl font-semibold text-foreground">Not found</h1>

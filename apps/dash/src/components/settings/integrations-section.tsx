@@ -78,7 +78,6 @@ export function IntegrationsSection() {
               alt="Intercom"
               width={32}
               height={32}
-              unoptimized
               className="object-contain"
             />
             <span className="font-medium">Intercom</span>

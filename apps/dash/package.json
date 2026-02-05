@@ -25,6 +25,7 @@
     "@workspace/pricing": "workspace:*",
     "@workspace/sentry": "workspace:*",
     "@workspace/shared": "workspace:*",
+    "@workspace/storage": "workspace:*",
     "@workspace/ui": "workspace:*",
     "boring-avatars": "^2.0.4",
     "date-fns": "^4.1.0",

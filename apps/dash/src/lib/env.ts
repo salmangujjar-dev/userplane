@@ -18,6 +18,15 @@ interface SentryConfig {
   authToken?: string;
 }
 
+interface MediaConfig {
+  /** CDN domain for static assets (e.g., 'cdn.userplane.io') */
+  cdnDomain: string;
+  /** Cloudflare zone for image transforms (e.g., 'userplane.io') */
+  imageZone: string;
+  /** Skip image transforms (serve original URLs). Opt-out for local dev. */
+  skipTransform: boolean;
+}
+
 interface EnvConfig {
   nodeEnv: 'development' | 'production' | 'test';
   /** Application environment for deployment stage (development, production) */
@@ -25,6 +34,7 @@ interface EnvConfig {
   apiUrl: string;
   homeUrl: string;
   authCookiePrefix: string;
+  media: MediaConfig;
   sentry: SentryConfig;
 }
 
@@ -53,6 +63,11 @@ export function loadEnvConfig(): EnvConfig {
     apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api-dev.userplane.io',
     homeUrl: process.env.NEXT_PUBLIC_HOME_URL || 'https://home-dev.userplane.io',
     authCookiePrefix: process.env.NEXT_PUBLIC_AUTH_COOKIE_PREFIX || 'userplane',
+    media: {
+      cdnDomain: process.env.NEXT_PUBLIC_CDN_DOMAIN || 'cdn.userplane.io',
+      imageZone: process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE || 'userplane.io',
+      skipTransform: process.env.NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM === 'true',
+    },
     sentry: {
       // Runtime configuration
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN,
@@ -95,6 +110,7 @@ export const clientEnv = {
   apiUrl: env.apiUrl,
   homeUrl: env.homeUrl,
   authCookiePrefix: env.authCookiePrefix,
+  media: env.media,
   sentry: {
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     release: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
