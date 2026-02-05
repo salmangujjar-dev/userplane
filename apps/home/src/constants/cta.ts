@@ -18,7 +18,7 @@ export const CTA_PRIMARY_BUTTON = {
 };
 
 export const CTA_SECONDARY_BUTTON = {
-  text: 'Contact Sales',
+  text: 'Talk to a Human',
   href: TALLY_SALES_FORM_URL,
   isExternal: true,
 };

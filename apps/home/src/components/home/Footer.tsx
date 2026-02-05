@@ -1,7 +1,7 @@
 import Logo from '@workspace/ui/components/logo';
 import { Separator } from '@workspace/ui/components/separator';
 
-import { FOOTER_LINKS } from '@/constants/navigation';
+import { FOOTER_COPYRIGHT, FOOTER_LINKS } from '@/constants/footer';
 
 export default function Footer() {
   return (
@@ -17,7 +17,7 @@ export default function Footer() {
                 <div className="flex shrink-0 flex-col gap-4">
                   <Logo size="lg" />
                   <p className="max-w-sm text-muted-foreground text-sm">
-                    © {new Date().getFullYear()} Userplane. All rights reserved.
+                    © {new Date().getFullYear()} {FOOTER_COPYRIGHT}
                   </p>
                 </div>
               </div>

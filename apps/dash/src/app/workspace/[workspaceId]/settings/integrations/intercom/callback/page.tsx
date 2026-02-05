@@ -1,5 +1,6 @@
 'use client';
 
+import { SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
@@ -267,7 +268,7 @@ function IntercomIntegrationCallbackContent() {
         errorActionSecondary={{
           label: 'Contact Support',
           callback: () => {
-            window.open('mailto:support@userplane.io', '_blank');
+            window.open(SUPPORT_EMAIL_MAILTO, '_blank');
           },
         }}
       />

@@ -17,9 +17,9 @@ let dodoPaymentsInstance: DodoPayments | null = null;
 export function getDodoClient(): DodoPayments {
   if (!dodoPaymentsInstance) {
     dodoPaymentsInstance = getDodoPaymentsClient({
-      apiKey: env.dodoPayments.apiKey || '',
-      webhookSecret: env.dodoPayments.webhookSecret || '',
-      environment: env.dodoPayments.environment,
+      apiKey: env.payments.apiKey || '',
+      webhookSecret: env.payments.webhookSecret || '',
+      environment: env.payments.environment,
     });
   }
   return dodoPaymentsInstance;

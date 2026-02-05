@@ -34,9 +34,9 @@ setWebhookContextProvider(getWebhookContext);
 
 // DodoPayments configuration
 const dodoConfig: DodoPaymentsConfig = {
-  apiKey: env.dodoPayments.apiKey || '',
-  webhookSecret: env.dodoPayments.webhookSecret || '',
-  environment: env.dodoPayments.environment,
+  apiKey: env.payments.apiKey || '',
+  webhookSecret: env.payments.webhookSecret || '',
+  environment: env.payments.environment,
 };
 
 // Get singleton DodoPayments client
@@ -109,8 +109,8 @@ export const auth = createAuth({
   // Cookie domain for cross-subdomain sharing (preview/staging/production only)
   // Enables cookies set on api.userplane.io to be read by dash.userplane.io
   cookieDomain: env.auth.cookieDomain,
-  nodeEnv: env.nodeEnv,
-  appEnv: env.appEnv,
+  nodeEnv: env.server.nodeEnv,
+  appEnv: env.server.appEnv,
   google: {
     clientId: env.google.clientId,
     clientSecret: env.google.clientSecret,

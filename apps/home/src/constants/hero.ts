@@ -17,7 +17,7 @@ export const HERO_HIGHLIGHTS: HighlightConfig[] = [
 ];
 
 export const HERO_DESCRIPTION =
-  "Request screen recording with console logs, network data and user steps showing exactly what went wrong. See the issue through your customer's lens.";
+  "Request screen recordings from your customers showing exactly what went wrong. See the issue through your customer's lens.";
 
 export const HERO_PRIMARY_BUTTON = {
   text: 'Get Started',
@@ -25,7 +25,7 @@ export const HERO_PRIMARY_BUTTON = {
 };
 
 export const HERO_SECONDARY_BUTTON = {
-  text: 'Contact Sales',
+  text: 'See Demo',
   href: TALLY_SALES_FORM_URL,
   isExternal: true,
 };

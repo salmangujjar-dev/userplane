@@ -3,6 +3,8 @@
  * All defaults are defined here to eliminate sprawl and ensure consistency
  */
 
+import { SUPPORT_EMAIL as SHARED_SUPPORT_EMAIL } from '@workspace/shared';
+
 // =============================================================================
 // Time Constants (in seconds)
 // =============================================================================
@@ -123,7 +125,8 @@ export const EMAIL = {
 // =============================================================================
 
 export const SUPPORT = {
-  EMAIL: 'support@userplane.io',
+  /** Uses shared constant, can be overridden via SUPPORT_EMAIL env var */
+  EMAIL: SHARED_SUPPORT_EMAIL,
 } as const;
 
 // =============================================================================

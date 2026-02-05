@@ -42,14 +42,14 @@ export const cacheService = new CacheService({
 /**
  * Rate limiter instance
  */
-export const rateLimiter = new RateLimiter(redis, env.rateLimitEnabled);
+export const rateLimiter = new RateLimiter(redis, env.rateLimit.enabled);
 
 // Log initialization status
 if (redis) {
   logger.info(
     {
       cacheEnabled: env.cache.enabled,
-      rateLimitEnabled: env.rateLimitEnabled,
+      rateLimitEnabled: env.rateLimit.enabled,
     },
     'Redis client initialized'
   );

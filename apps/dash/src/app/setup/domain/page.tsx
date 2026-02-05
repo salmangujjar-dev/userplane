@@ -1,5 +1,6 @@
 'use client';
 
+import { SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { useQueryState } from 'nuqs';
@@ -61,7 +62,7 @@ function DomainSetupContent() {
               <p className="text-sm text-muted-foreground">
                 Not sure?{' '}
                 <a
-                  href="mailto:support@userplane.io"
+                  href={SUPPORT_EMAIL_MAILTO}
                   className="text-foreground hover:underline font-medium"
                 >
                   Ask away

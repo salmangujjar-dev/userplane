@@ -8,8 +8,9 @@ import {
   HERO_ICON,
   HERO_PRIMARY_BUTTON,
   HERO_SECONDARY_BUTTON,
-} from '../../constants/hero';
-import type { HighlightColor } from '../../constants/types';
+} from '@/constants/hero';
+import type { HighlightColor } from '@/constants/types';
+
 import Highlight from './Highlight';
 
 interface WordSegment {

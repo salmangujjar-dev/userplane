@@ -1,32 +1,13 @@
 /**
- * Company information
+ * Re-export shared constants for backward compatibility
+ * Source of truth: @userplane/shared
  */
-export const COMPANY_NAME = 'Userplane';
-
-/**
- * Website URL
- * Also used in:
- * - /content/legal/terms.md
- *
- * If changed, manually update legal documents as well.
- */
-export const WEBSITE_URL = 'https://userplane.io';
-
-/**
- * Contact email (raw)
- * Also used in:
- * - /content/legal/terms.md
- * - /content/legal/privacy.md
- *
- * If changed, manually update legal documents as well.
- */
-export const CONTACT_EMAIL = 'support@userplane.io';
-
-/**
- * Contact email (mailto link)
- * Use this for href attributes in links
- */
-export const CONTACT_EMAIL_MAILTO = `mailto:${CONTACT_EMAIL}`;
+export {
+  COMPANY_NAME,
+  SUPPORT_EMAIL as CONTACT_EMAIL,
+  SUPPORT_EMAIL_MAILTO as CONTACT_EMAIL_MAILTO,
+  WEBSITE_URL,
+} from '@workspace/shared';
 
 /**
  * Sales and waitlist form

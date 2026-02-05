@@ -15,6 +15,7 @@ import {
   Section,
   Text,
 } from '@react-email/components';
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
 import * as React from 'react';
 
 import * as styles from './styles';
@@ -54,8 +55,8 @@ export const EmailLayout = ({ preview, children, showSupport = true, ps }: Email
             <Section style={styles.supportSection}>
               <Text style={styles.supportText}>
                 Questions?{' '}
-                <Link href="mailto:support@userplane.io" style={styles.supportLink}>
-                  support@userplane.io
+                <Link href={SUPPORT_EMAIL_MAILTO} style={styles.supportLink}>
+                  {SUPPORT_EMAIL}
                 </Link>
               </Text>
             </Section>

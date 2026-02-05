@@ -131,7 +131,7 @@ export class SessionService {
   constructor(private deps: SessionServiceDeps) {
     this.sessionSecret = env.session.tokenSecret;
     this.uploadSecret = env.session.uploadTokenSecret;
-    this.jwtIssuer = env.jwtIssuer;
+    this.jwtIssuer = env.auth.jwtIssuer;
   }
 
   /**

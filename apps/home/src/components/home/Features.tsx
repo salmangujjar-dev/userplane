@@ -1,4 +1,11 @@
-import { type Feature, FEATURES, FEATURES_HEADING } from '../../constants/features';
+import {
+  type Feature,
+  FEATURES,
+  FEATURES_HEADING,
+  FEATURES_HIGHLIGHTS,
+} from '@/constants/features';
+
+import Highlight from './Highlight';
 
 function FeatureCard({ image, imageAlt, title, description }: Feature) {
   return (
@@ -23,19 +30,32 @@ function FeatureCard({ image, imageAlt, title, description }: Feature) {
 }
 
 export default function Features() {
+  const words = FEATURES_HEADING.title.split(' ');
+  const highlightMap = new Map(FEATURES_HIGHLIGHTS.map((h) => [h.wordIndex, h.color]));
+
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 scroll-mt-20" id="features">
+      {/* Header */}
       <div className="max-w-4xl mx-auto text-center mb-16">
         <div className="flex flex-col gap-8">
           <p className="text-center text-base text-muted-foreground md:text-lg">
             {FEATURES_HEADING.label}
           </p>
-          <h2 className="mx-auto max-w-2xl text-center font-dm-sans font-medium text-2xl text-foreground leading-normal tracking-tight md:text-3xl lg:text-4xl">
-            {FEATURES_HEADING.title}
+          <h2 className="font-dm-sans font-medium text-4xl text-foreground tracking-tighter md:text-5xl lg:text-6xl leading-tight">
+            {words.map((word, index) => {
+              const color = highlightMap.get(index);
+              return (
+                <span key={index}>
+                  {color ? <Highlight color={color}>{word}</Highlight> : word}{' '}
+                </span>
+              );
+            })}
           </h2>
+          <p className="md:text-lg max-w-2xl mx-auto">{FEATURES_HEADING.subtitle}</p>
         </div>
       </div>
 
+      {/* Feature cards grid */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         {FEATURES.map((feature, index) => (
           <FeatureCard key={index} {...feature} />

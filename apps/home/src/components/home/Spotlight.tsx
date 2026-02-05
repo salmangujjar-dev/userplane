@@ -1,4 +1,4 @@
-import { SPOTLIGHT_IMAGE } from '../../constants/spotlight';
+import { SPOTLIGHT_IMAGE } from '@/constants/spotlight';
 
 export default function Spotlight() {
   return (
