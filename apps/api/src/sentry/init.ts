@@ -15,7 +15,7 @@ export function initSentry() {
 
   Sentry.init({
     dsn: env.sentry.dsn,
-    environment: env.nodeEnv,
+    environment: env.server.nodeEnv,
     release: env.sentry.release,
 
     // Performance monitoring

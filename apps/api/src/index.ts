@@ -229,7 +229,7 @@ app.use('/api/v1/*', async (c, next) => {
 });
 
 // OpenAPI specification and documentation (development only)
-if (env.nodeEnv === 'development') {
+if (env.server.nodeEnv === 'development') {
   const { OpenAPIGenerator } = await import('@orpc/openapi');
   const { ZodToJsonSchemaConverter } = await import('@orpc/zod');
 
@@ -388,7 +388,7 @@ app.onError((err, c) => {
 });
 
 export default {
-  port: env.port,
-  hostname: env.host,
+  port: env.server.port,
+  hostname: env.server.host,
   fetch: app.fetch,
 };

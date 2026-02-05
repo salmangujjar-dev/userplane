@@ -60,7 +60,7 @@ function parseEnv(): RawEnvConfig {
  * Format Zod validation errors into readable string
  */
 function formatZodErrors(error: ZodError): string {
-  return error.errors
+  return error.issues
     .map((err) => {
       const path = err.path.join('.');
       return `  - ${path}: ${err.message}`;

@@ -1,5 +1,6 @@
 'use client';
 
+import { SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
 import { redirect, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
@@ -172,7 +173,7 @@ function IntercomCallbackContent() {
         errorActionSecondary={{
           label: 'Contact Support',
           callback: () => {
-            window.open('mailto:support@userplane.io', '_blank');
+            window.open(SUPPORT_EMAIL_MAILTO, '_blank');
           },
         }}
       />

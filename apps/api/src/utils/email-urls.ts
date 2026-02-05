@@ -6,6 +6,8 @@
  * This ensures consistency and makes URL updates easier to manage
  */
 
+import { SUPPORT_EMAIL } from '@workspace/shared';
+
 import { env } from '@/api/env';
 
 /**
@@ -209,7 +211,7 @@ export const externalUrls = {
    * Used in account suspension emails
    */
   appeal: (): string => {
-    return 'mailto:support@userplane.io?subject=Account%20Appeal';
+    return `mailto:${SUPPORT_EMAIL}?subject=Account%20Appeal`;
   },
 
   /**

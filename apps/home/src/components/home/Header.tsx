@@ -67,13 +67,13 @@ export default function Header() {
       <div className="hidden items-center gap-8 md:flex">
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href={NAV_LINKS.features}
+          href="/#features"
         >
           Features
         </a>
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href={NAV_LINKS.pricing}
+          href="/#pricing"
         >
           Pricing
         </a>
@@ -116,8 +116,8 @@ export default function Header() {
             </div>
             <div className="flex w-full flex-col items-center gap-4">
               <nav className="flex w-full flex-col">
-                <DrawerNavLink href={NAV_LINKS.features}>Features</DrawerNavLink>
-                <DrawerNavLink href={NAV_LINKS.pricing}>Pricing</DrawerNavLink>
+                <DrawerNavLink href="/#features">Features</DrawerNavLink>
+                <DrawerNavLink href="/#pricing">Pricing</DrawerNavLink>
                 <DrawerNavLink href={NAV_LINKS.roadmap}>Roadmap</DrawerNavLink>
               </nav>
               <div className="flex w-full flex-col">

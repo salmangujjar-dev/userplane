@@ -1,9 +1,9 @@
 import { Minus, Plus } from 'lucide-react';
 import { useState } from 'react';
 
-import { FAQ_HEADING, FAQ_HIGHLIGHTS, FAQ_ITEMS, type FAQItem } from '@/constants/v3/faq';
+import { FAQ_HEADING, FAQ_HIGHLIGHTS, FAQ_ITEMS, type FAQItem } from '@/constants/faq';
 
-import Highlight from '../Highlight';
+import Highlight from './Highlight';
 
 interface FAQAccordionItemProps {
   item: FAQItem;

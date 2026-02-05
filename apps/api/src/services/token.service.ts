@@ -334,7 +334,7 @@ export const tokenService = new TokenService({
   dashboardUrl: env.dashboard.baseUrl,
   expiresIn: env.token.inviteExpiresIn,
   domainVerificationSecret: env.token.recordingSecret,
-  jwtIssuer: env.jwtIssuer,
+  jwtIssuer: env.auth.jwtIssuer,
   domainVerificationExpiresIn: env.token.domainVerificationExpiresIn,
   accessRequestExpiresIn: env.token.accessRequestExpiresIn,
   workspaceCreateInviteExpiresIn: env.token.workspaceCreateInviteExpiresIn,

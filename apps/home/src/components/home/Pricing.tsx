@@ -3,9 +3,9 @@ import { Button } from '@workspace/ui/components/button';
 import { ChevronRight } from 'lucide-react';
 
 import { SIGNUP_URL } from '@/constants/onboarding';
-import { PRICING_HEADING, PRICING_HIGHLIGHTS } from '@/constants/v3/pricing';
+import { PRICING_HEADING, PRICING_HIGHLIGHTS } from '@/constants/pricing';
 
-import Highlight from '../Highlight';
+import Highlight from './Highlight';
 
 function PricingFeatureItem({ text, included, subFeatures }: PlanFeatureHighlight) {
   return (
@@ -38,7 +38,7 @@ function PricingFeatureItem({ text, included, subFeatures }: PlanFeatureHighligh
   );
 }
 
-export default function PricingV3() {
+export default function Pricing() {
   // Get the Scale Up plan (annual) - popular plan for home page
   const featuredPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'starter_annual');
 

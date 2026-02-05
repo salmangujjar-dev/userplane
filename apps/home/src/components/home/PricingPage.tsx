@@ -29,9 +29,9 @@ import {
   PRICING_PAGE_HEADING,
   PRICING_PAGE_HIGHLIGHTS,
   type PricingFAQItem,
-} from '@/constants/v3/pricing-page';
+} from '@/constants/pricing-page';
 
-import Highlight from '../Highlight';
+import Highlight from './Highlight';
 
 // ============================================================================
 // Billing Toggle Component

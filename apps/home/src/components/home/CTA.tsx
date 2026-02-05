@@ -7,8 +7,9 @@ import {
   CTA_HIGHLIGHTS,
   CTA_PRIMARY_BUTTON,
   CTA_SECONDARY_BUTTON,
-} from '../../constants/cta';
-import type { HighlightColor } from '../../constants/types';
+} from '@/constants/cta';
+import type { HighlightColor } from '@/constants/types';
+
 import Highlight from './Highlight';
 
 interface WordSegment {

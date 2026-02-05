@@ -87,7 +87,11 @@ export const storageEnvSchema = z.object({
 
 /** Client-side Sentry env vars schema */
 export const sentryClientEnvSchema = z.object({
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z
+    .string()
+    .optional()
+    .transform((val): string | undefined => val || undefined)
+    .pipe(z.string().url().optional()),
   NEXT_PUBLIC_SENTRY_RELEASE: z.string().optional(),
   NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE: floatWithDefault(SENTRY.TRACES_SAMPLE_RATE_DEV),
   NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE: floatWithDefault(
@@ -98,7 +102,11 @@ export const sentryClientEnvSchema = z.object({
 
 /** Server-side Sentry env vars schema */
 export const sentryServerEnvSchema = z.object({
-  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_DSN: z
+    .string()
+    .optional()
+    .transform((val): string | undefined => val || undefined)
+    .pipe(z.string().url().optional()),
   SENTRY_RELEASE: z.string().optional(),
   SENTRY_TRACES_SAMPLE_RATE: floatWithDefault(SENTRY.TRACES_SAMPLE_RATE_DEV),
 });
