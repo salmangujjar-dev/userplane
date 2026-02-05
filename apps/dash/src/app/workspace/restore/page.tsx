@@ -457,9 +457,9 @@ function RestorePageContent() {
 
   const handleGoToWorkspace = () => {
     if (restoreType === 'workspace' && id) {
-      router.push(`/${id}`);
+      router.push(`/workspace/${id}`);
     } else if (restoreType === 'project' && workspaceId && projectId) {
-      router.push(`/${workspaceId}/projects/${projectId}`);
+      router.push(`/workspace/${workspaceId}/projects/${projectId}`);
     }
   };
 

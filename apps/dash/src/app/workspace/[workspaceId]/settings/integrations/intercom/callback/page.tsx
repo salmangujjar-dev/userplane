@@ -61,11 +61,11 @@ function SuccessState({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
 
   const handleInviteMembers = () => {
-    router.push(`/${workspaceId}/settings/integrations/intercom/invite`);
+    router.push(`/workspace/${workspaceId}/settings/integrations/intercom/invite`);
   };
 
   const handleSkip = () => {
-    router.push(`/${workspaceId}/settings`);
+    router.push(`/workspace/${workspaceId}/settings`);
   };
 
   return (
@@ -265,7 +265,7 @@ function IntercomIntegrationCallbackContent() {
         error={error}
         errorActionPrimary={{
           label: 'Try Again',
-          callback: () => router.push(`/${workspaceId}/settings?tab=integrations`),
+          callback: () => router.push(`/workspace/${workspaceId}/settings?tab=integrations`),
         }}
         errorActionSecondary={{
           label: 'Contact Support',

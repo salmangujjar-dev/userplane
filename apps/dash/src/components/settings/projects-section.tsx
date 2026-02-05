@@ -130,7 +130,7 @@ export function ProjectsSection() {
 
   const handleViewProject = (projectId: string) => {
     if (workspaceId) {
-      router.push(`/${workspaceId}/projects/${projectId}`);
+      router.push(`/workspace/${workspaceId}/projects/${projectId}`);
     }
   };
 

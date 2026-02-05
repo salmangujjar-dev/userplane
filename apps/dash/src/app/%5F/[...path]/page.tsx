@@ -45,7 +45,7 @@ export default function UnderscoreCatchAllPage() {
     if (workspacesData.data.workspaces && workspacesData.data.workspaces.length > 0) {
       const firstWorkspace = workspacesData.data.workspaces[0];
       if (firstWorkspace) {
-        router.push(`/${firstWorkspace.workspaceId}/${fullPath}`);
+        router.push(`/workspace/${firstWorkspace.workspaceId}/${fullPath}`);
       } else {
         router.push('/workspace/suggest');
       }

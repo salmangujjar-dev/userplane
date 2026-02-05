@@ -212,7 +212,7 @@ function SuggestionsPills({
         ))}
         {hasMore && (
           <a
-            href={`/${workspaceId}/settings/integrations/intercom/invite`}
+            href={`/workspace/${workspaceId}/settings/integrations/intercom/invite`}
             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <div className="flex -space-x-1.5">

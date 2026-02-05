@@ -55,7 +55,7 @@ export function WorkspaceMembershipSection() {
   });
 
   const handleSwitchWorkspace = (workspaceId: string) => {
-    router.push(`/${workspaceId}`);
+    router.push(`/workspace/${workspaceId}`);
   };
 
   const handleLeaveWorkspace = (workspaceId: string, workspaceName: string, isOwner: boolean) => {

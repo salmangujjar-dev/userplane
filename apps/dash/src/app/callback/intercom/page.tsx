@@ -51,7 +51,7 @@ export default async function IntercomCallbackPage({ searchParams }: Props) {
   if (payload.workspaceId) {
     // Integration flow - redirect to workspace integration callback
     redirect(
-      `/${payload.workspaceId}/settings/integrations/intercom/callback?${queryParams.toString()}`
+      `/workspace/${payload.workspaceId}/settings/integrations/intercom/callback?${queryParams.toString()}`
     );
   } else {
     // Onboarding flow - redirect to workspace creation callback

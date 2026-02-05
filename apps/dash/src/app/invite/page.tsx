@@ -56,7 +56,7 @@ function InvitePageContent() {
 
           logger.info({ workspaceId: result.data.workspaceId }, logMessage);
           setWorkspaceStore(result.data.workspaceId);
-          router.push(`/${result.data.workspaceId}`);
+          router.push(`/workspace/${result.data.workspaceId}`);
         },
         onError: (error) => {
           logger.error({ err: error }, 'Failed to accept invite');

@@ -90,7 +90,7 @@ function AccessRequestPageContent() {
           <p className="text-sm text-muted-foreground text-center flex items-center gap-2 flex-wrap justify-center">
             <span>Requesting access to</span>
             <Link
-              href={`/${requestInfo?.workspaceId}`}
+              href={`/workspace/${requestInfo?.workspaceId}`}
               className="flex items-center gap-1.5 hover:text-foreground transition-colors group"
             >
               <strong className="underline underline-offset-2 decoration-muted-foreground group-hover:decoration-foreground">
@@ -134,7 +134,7 @@ function AccessRequestPageContent() {
 
           <div className="flex justify-center pt-2">
             <Link
-              href={`/${requestInfo?.workspaceId}/settings?tab=team`}
+              href={`/workspace/${requestInfo?.workspaceId}/settings?tab=team`}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Go to workspace
@@ -235,7 +235,7 @@ function AccessRequestPageContent() {
         <p className="text-sm text-muted-foreground text-center flex items-center gap-2 flex-wrap justify-center">
           <span>Requesting access to</span>
           <Link
-            href={`/${requestInfo.workspaceId}`}
+            href={`/workspace/${requestInfo.workspaceId}`}
             className="flex items-center gap-1.5 hover:text-foreground transition-colors group"
           >
             <strong className="underline underline-offset-2 decoration-muted-foreground group-hover:decoration-foreground">
@@ -295,7 +295,7 @@ function AccessRequestPageContent() {
 
         <div className="flex justify-center pt-2">
           <Link
-            href={`/${requestInfo.workspaceId}/settings?tab=team`}
+            href={`/workspace/${requestInfo.workspaceId}/settings?tab=team`}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Go to workspace

@@ -84,7 +84,7 @@ export function InviteEmptyState({ workspaceId }: InviteEmptyStateProps) {
     >
       <div className="space-y-4">
         <Button
-          onClick={() => router.push(`/${workspaceId}/settings`)}
+          onClick={() => router.push(`/workspace/${workspaceId}/settings`)}
           size="lg"
           className="w-full rounded-full px-7 py-6"
         >
@@ -117,7 +117,7 @@ export function InviteErrorState({ workspaceId, message, onRetry }: InviteErrorS
         <div className="flex justify-center">
           <button
             type="button"
-            onClick={() => router.push(`/${workspaceId}/settings`)}
+            onClick={() => router.push(`/workspace/${workspaceId}/settings`)}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Skip for now

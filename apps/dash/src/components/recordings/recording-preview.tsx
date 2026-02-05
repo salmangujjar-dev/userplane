@@ -70,14 +70,14 @@ export function RecordingPreview({
     if (onClick) {
       onClick();
     } else if (workspaceId) {
-      router.push(`/${workspaceId}/recordings/${recordingId}`);
+      router.push(`/workspace/${workspaceId}/recordings/${recordingId}`);
     }
   };
 
   const handleCopyLink = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const recordingUrl = `${window.location.origin}/${workspaceId}/recordings/${recordingId}`;
+      const recordingUrl = `${window.location.origin}/workspace/${workspaceId}/recordings/${recordingId}`;
       await navigator.clipboard.writeText(recordingUrl);
       toast.success('Link copied to clipboard');
     } catch {
