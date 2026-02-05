@@ -23,8 +23,8 @@ export function loadEnvConfig(): EnvConfig {
   const config: EnvConfig = {
     nodeEnv,
     appEnv,
-    homeUrl: import.meta.env.PUBLIC_HOME_URL || 'https://home-preview.userplane.io',
-    dashUrl: import.meta.env.PUBLIC_DASH_URL || 'https://dash-preview.userplane.io',
+    homeUrl: import.meta.env.PUBLIC_HOME_URL || 'https://home-dev.userplane.io',
+    dashUrl: import.meta.env.PUBLIC_DASH_URL || 'https://dash-dev.userplane.io',
   };
 
   return config;

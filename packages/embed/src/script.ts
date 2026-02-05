@@ -15,7 +15,7 @@
 
   // CDN base URL - replaced at build time or uses default
   const CDN_BASE =
-    (typeof __EMBED_CDN_BASE_URL__ !== 'undefined' && __EMBED_CDN_BASE_URL__) ||
+    (typeof __CDN_BASE_URL__ !== 'undefined' && __CDN_BASE_URL__) ||
     'https://cdn.userplane.io/embed';
 
   // Find our script element for nonce preservation (CSP support)
@@ -77,4 +77,4 @@
 })();
 
 // Declare global for CDN base URL override
-declare const __EMBED_CDN_BASE_URL__: string | undefined;
+declare const __CDN_BASE_URL__: string | undefined;

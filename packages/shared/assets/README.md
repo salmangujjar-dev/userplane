@@ -128,16 +128,18 @@ media/
 ### Upload Script
 
 ```bash
-R2_ASSETS_ACCOUNT_ID=xxx
-R2_ASSETS_ACCESS_KEY_ID=xxx
-R2_ASSETS_SECRET_ACCESS_KEY=xxx
-R2_ASSETS_BUCKET_NAME=xxx
+R2_CDN_ACCOUNT_ID=xxx
+R2_CDN_ACCESS_KEY_ID=xxx
+R2_CDN_SECRET_ACCESS_KEY=xxx
+R2_CDN_BUCKET_NAME=xxx
 ```
 
 ### Apps
 
 ```bash
-MEDIA_CDN_URL=https://cdn.userplane.io/media
+# CDN configuration (with defaults)
+CDN_DOMAIN=https://cdn.userplane.io
+R2_CDN_PREFIX=media
 ```
 
 ## Updating Assets

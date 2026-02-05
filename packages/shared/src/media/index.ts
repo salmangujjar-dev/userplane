@@ -32,12 +32,6 @@ export { MEDIA_DEFAULTS, type MediaDefaults } from './defaults';
 export { loadMediaEnvConfig, mediaEnv, type MediaEnvConfig } from './env';
 
 // =============================================================================
-// Config (backwards-compatible exports)
-// =============================================================================
-
-export { MEDIA_ASSETS_PREFIX, MEDIA_CDN_BASE_URL, MEDIA_CDN_URL } from './config';
-
-// =============================================================================
 // Manifest
 // =============================================================================
 

@@ -46,7 +46,7 @@ export function loadEnvConfig(): EnvConfig {
   const config: EnvConfig = {
     nodeEnv,
     appEnv,
-    apiUrl: import.meta.env.PUBLIC_API_URL || 'https://api-preview.userplane.io/api/v1',
+    apiUrl: import.meta.env.PUBLIC_API_URL || 'https://api-dev.userplane.io/api/v1',
     sentry: {
       // Runtime configuration
       dsn: import.meta.env.PUBLIC_SENTRY_DSN,

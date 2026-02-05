@@ -13,7 +13,7 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     server: {
-      allowedHosts: ['home-preview.userplane.io'],
+      allowedHosts: ['home-dev.userplane.io'],
     },
   },
   integrations: [react()],

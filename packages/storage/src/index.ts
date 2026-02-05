@@ -1,7 +1,7 @@
 /**
  * @workspace/storage
  * Unified storage package for Cloudflare R2
- * Supports multiple bucket types with profile-based configuration
+ * Supports multiple bucket types with per-bucket credentials
  */
 
 // Factory
@@ -31,7 +31,6 @@ export type {
   StorageClientMap,
   StorageConfig,
   StorageKind,
-  StorageProfile,
   ThumbnailsClientOptions,
   UploadPresignOptions,
 } from './types';

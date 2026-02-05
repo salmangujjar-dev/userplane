@@ -28,8 +28,6 @@ let assetsClient: AssetsStorageClient | null = null;
 
 function getConfig(): StorageConfig {
   return {
-    profile: env.storage.profile,
-    dev: env.storage.dev,
     cdn: env.storage.cdn,
     assets: env.storage.assets,
     reports: env.storage.reports,
