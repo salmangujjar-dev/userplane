@@ -46,7 +46,7 @@ const openAPIHandler = new OpenAPIHandler(apiRouter, {
 // Log configuration on startup
 logConfig();
 
-// Serve favicon
+// Serve favicon locally for SEO and browser compatibility
 app.get('/favicon.ico', serveStatic({ path: './public/favicon.svg' }));
 app.get('/favicon.svg', serveStatic({ path: './public/favicon.svg' }));
 

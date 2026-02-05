@@ -7,6 +7,7 @@ import { Button } from '@workspace/ui/components/button';
 import { type ReactNode, useState } from 'react';
 
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR, PRE_RECORDING_COPY } from '@/constants';
+import { mediaClient } from '@/lib/media';
 import type { RecordingMode } from '@/services/media-capture';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
@@ -77,7 +78,7 @@ export default function PreRecordingScreen({
             }}
           >
             <img
-              src="/desktop.svg"
+              src={mediaClient.icons.get('desktop')}
               alt="Screen + Voice"
               className="w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4"
             />
@@ -95,7 +96,7 @@ export default function PreRecordingScreen({
             }}
           >
             <img
-              src="/monitor.svg"
+              src={mediaClient.icons.get('monitor')}
               alt="Screen only"
               className="w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4"
             />

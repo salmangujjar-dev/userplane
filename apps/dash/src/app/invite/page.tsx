@@ -9,6 +9,7 @@ import { Suspense } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useAcceptInvite, useValidateInvite } from '@/features/workspace';
+import { mediaClient } from '@/lib/media';
 import { logger } from '@/logger';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -79,7 +80,14 @@ function InvitePageContent() {
     return (
       <InviteLayout>
         <div className="flex flex-col items-center gap-3">
-          <Image src="/assets/dino.svg" alt="Dino" width={120} height={120} className="mb-2" />
+          <Image
+            src={mediaClient.icons.get('dino')}
+            alt="Dino"
+            width={120}
+            height={120}
+            unoptimized
+            className="mb-2"
+          />
           <h1 className="text-xl font-medium text-foreground">Invalid Invite</h1>
           <p className="text-sm text-muted-foreground text-center">
             {inviteResult && !inviteResult.success

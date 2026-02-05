@@ -4,6 +4,8 @@ import { Button } from '@workspace/ui/components/button';
 import { RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 
+import { mediaClient } from '@/lib/media';
+
 interface SectionErrorProps {
   title?: string;
   description?: string;
@@ -18,10 +20,11 @@ export function SectionError({
   return (
     <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl border border-dashed">
       <Image
-        src="/assets/dino.svg"
+        src={mediaClient.icons.get('dino')}
         alt="Error"
         width={64}
         height={64}
+        unoptimized
         className="mb-4 opacity-50"
       />
       <p className="text-sm font-medium text-foreground mb-1">{title}</p>

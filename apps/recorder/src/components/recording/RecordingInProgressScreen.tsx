@@ -11,6 +11,7 @@ import {
   DEFAULT_PRIMARY_COLOR,
   RECORDING_IN_PROGRESS_COPY,
 } from '@/constants';
+import { mediaClient } from '@/lib/media';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 import RecordingScreenLayout from './RecordingScreenLayout';
@@ -121,7 +122,7 @@ export default function RecordingInProgressScreen({
         ) : (
           <div className="mb-6 sm:mb-8">
             <img
-              src="/video.svg"
+              src={mediaClient.icons.get('video')}
               alt="Recording"
               className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 text-gray-800"
             />

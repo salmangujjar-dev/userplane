@@ -16,6 +16,7 @@ import {
   useDeclineAccessRequest,
   useValidateAccessRequest,
 } from '@/features/workspace';
+import { mediaClient } from '@/lib/media';
 import { logger } from '@/logger';
 
 function AccessRequestLayout({ children }: { children: React.ReactNode }) {
@@ -160,7 +161,14 @@ function AccessRequestPageContent() {
     return (
       <AccessRequestLayout>
         <div className="flex flex-col items-center gap-3">
-          <Image src="/assets/dino.svg" alt="Dino" width={120} height={120} className="mb-2" />
+          <Image
+            src={mediaClient.icons.get('dino')}
+            alt="Dino"
+            width={120}
+            height={120}
+            unoptimized
+            className="mb-2"
+          />
           <h1 className="text-xl font-medium text-foreground">Invalid Request</h1>
           <p className="text-sm text-muted-foreground text-center">
             {validateResult && !validateResult.success

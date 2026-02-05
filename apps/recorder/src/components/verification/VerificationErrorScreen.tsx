@@ -7,6 +7,7 @@
 import { Button } from '@workspace/ui/components/button';
 
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
+import { mediaClient } from '@/lib/media';
 
 import VerificationScreenLayout from './VerificationScreenLayout';
 
@@ -52,7 +53,7 @@ export default function VerificationErrorScreen({
         <p className="text-gray-600 mb-8 max-w-md">{subtitle}</p>
 
         <div className="mb-8">
-          <img src="/dino.svg" alt="Error" className="w-32 h-32 opacity-80" />
+          <img src={mediaClient.icons.get('dino')} alt="Error" className="w-32 h-32 opacity-80" />
         </div>
 
         {onPrimaryAction && primaryActionText && (

@@ -32,7 +32,7 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 // Types
 // =============================================================================
 
-type AssetCategory = 'brand' | 'tiles' | 'integrations' | 'auth' | 'intercom-canvas';
+type AssetCategory = 'brand' | 'tiles' | 'integrations' | 'auth' | 'intercom-canvas' | 'icons';
 
 /** Valid environment names - matches packages/shared/src/env.ts */
 type Environment = 'development' | 'production';
@@ -78,7 +78,14 @@ const MONOREPO_ROOT = join(SCRIPT_DIR, '../../..');
 const ASSETS_DIR = join(SCRIPT_DIR, '../assets');
 const MANIFEST_PATH = join(SCRIPT_DIR, '../src/media/manifest.generated.ts');
 
-const CATEGORIES: AssetCategory[] = ['brand', 'tiles', 'integrations', 'auth', 'intercom-canvas'];
+const CATEGORIES: AssetCategory[] = [
+  'brand',
+  'tiles',
+  'integrations',
+  'auth',
+  'intercom-canvas',
+  'icons',
+];
 
 const CONTENT_TYPE_MAP: Record<string, string> = {
   '.svg': 'image/svg+xml',
@@ -355,8 +362,9 @@ function createAssetEntry(
 
   // Key format: 'brand/logo-dark.svg'
   const key = `${category}/${filename}`;
-  // Hashed path format: 'brand/logo-dark.a1b2c3d4.svg'
-  const hashedPath = `${category}/${hashedFilename}`;
+  // Hashed path format includes prefix: 'media/brand/logo-dark.a1b2c3d4.svg'
+  const prefix = getR2Prefix();
+  const hashedPath = `${prefix}/${category}/${hashedFilename}`;
 
   return {
     key,
@@ -442,11 +450,10 @@ function createR2Client(): { client: S3Client; bucket: string } {
 
 async function uploadAsset(client: S3Client, bucket: string, entry: AssetEntry): Promise<void> {
   const content = readFileSync(entry.localPath);
-  const key = `${getR2Prefix()}/${entry.hashedPath}`;
-
+  // hashedPath already includes prefix (e.g., 'media/brand/logo-dark.a1b2c3d4.svg')
   const command = new PutObjectCommand({
     Bucket: bucket,
-    Key: key,
+    Key: entry.hashedPath,
     Body: content,
     ContentType: entry.contentType,
     CacheControl: CACHE_CONTROL,
@@ -464,16 +471,14 @@ async function uploadAssets(entries: AssetEntry[], options: UploadOptions): Prom
 
   if (options.dryRun) {
     log('\n[DRY RUN] Would upload:');
-    const prefix = getR2Prefix();
     for (const entry of entries) {
-      log(`  ${entry.key} → ${prefix}/${entry.hashedPath}`);
+      log(`  ${entry.key} → ${entry.hashedPath}`);
     }
     result.uploaded = entries;
     return result;
   }
 
   const { client, bucket } = createR2Client();
-  const prefix = getR2Prefix();
 
   log('\nUploading assets...');
 
@@ -482,7 +487,7 @@ async function uploadAssets(entries: AssetEntry[], options: UploadOptions): Prom
       verbose(`Uploading ${entry.key}...`, options);
       await uploadAsset(client, bucket, entry);
       result.uploaded.push(entry);
-      log(`  ✓ ${entry.key} → ${prefix}/${entry.hashedPath}`);
+      log(`  ✓ ${entry.key} → ${entry.hashedPath}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       result.errors.push({ entry, error: message });

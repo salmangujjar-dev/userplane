@@ -1,21 +1,141 @@
-import { Button } from '@workspace/ui/components/button';
+import { COMPANY_NAME, NOT_FOUND_COPY } from '@workspace/shared';
 import Image from 'next/image';
-import Link from 'next/link';
+
+import { mediaClient } from '@/lib/media';
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12 bg-background">
-      <div className="flex flex-col items-center gap-4 max-w-md text-center">
-        <Image src="/assets/dino.svg" alt="Not Found" width={120} height={120} className="mb-2" />
-        <h1 className="text-2xl font-semibold text-foreground">Page not found</h1>
-        <p className="text-sm text-muted-foreground">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
-        </p>
-        <Link href="/" className="mt-4">
-          <Button size="lg" className="rounded-full px-8">
-            Go to Dashboard
-          </Button>
-        </Link>
+    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 overflow-hidden bg-background">
+      {/* Decorative icons - Desktop Left Side */}
+      <div className="absolute left-0 top-0 h-full w-32 hidden lg:block">
+        <Image
+          src={mediaClient.tiles.get('bubble')}
+          alt=""
+          width={80}
+          height={80}
+          unoptimized
+          className="absolute top-[18%] -left-6 rotate-[-15deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <Image
+          src={mediaClient.tiles.get('fin')}
+          alt=""
+          width={90}
+          height={90}
+          unoptimized
+          className="absolute top-[38%] -left-8 rotate-12 transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <Image
+          src={mediaClient.tiles.get('letterbox')}
+          alt=""
+          width={85}
+          height={85}
+          unoptimized
+          className="absolute top-[58%] -left-7 rotate-[-8deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <Image
+          src={mediaClient.tiles.get('paperplane')}
+          alt=""
+          width={75}
+          height={75}
+          unoptimized
+          className="absolute top-[78%] -left-5 rotate-18 transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
+        />
+      </div>
+
+      {/* Decorative icons - Desktop Right Side */}
+      <div className="absolute right-0 top-0 h-full w-32 hidden lg:block">
+        <Image
+          src={mediaClient.tiles.get('intercom')}
+          alt=""
+          width={85}
+          height={85}
+          unoptimized
+          className="absolute top-[17%] -right-7 rotate-10 transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <Image
+          src={mediaClient.tiles.get('browsercursor')}
+          alt=""
+          width={75}
+          height={75}
+          unoptimized
+          className="absolute top-[38%] -right-5 rotate-[-14deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <Image
+          src={mediaClient.tiles.get('magf')}
+          alt=""
+          width={80}
+          height={80}
+          unoptimized
+          className="absolute top-[59%] -right-6 rotate-[-10deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
+        />
+        <Image
+          src={mediaClient.tiles.get('documentation')}
+          alt=""
+          width={85}
+          height={85}
+          unoptimized
+          className="absolute top-[80%] -right-7 rotate-13 transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
+        />
+      </div>
+
+      {/* Decorative icons - Mobile Bottom */}
+      <div className="absolute bottom-0 left-0 right-0 w-full h-32 block lg:hidden">
+        <Image
+          src={mediaClient.tiles.get('bubble')}
+          alt=""
+          width={70}
+          height={70}
+          unoptimized
+          className="absolute bottom-[-20px] left-[10%] rotate-[-15deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
+        />
+        <Image
+          src={mediaClient.tiles.get('intercom')}
+          alt=""
+          width={75}
+          height={75}
+          unoptimized
+          className="absolute bottom-[-25px] left-[32%] rotate-12 transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
+        />
+        <Image
+          src={mediaClient.tiles.get('fin')}
+          alt=""
+          width={70}
+          height={70}
+          unoptimized
+          className="absolute bottom-[-22px] left-[54%] rotate-[-8deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
+        />
+        <Image
+          src={mediaClient.tiles.get('pointer')}
+          alt=""
+          width={65}
+          height={65}
+          unoptimized
+          className="absolute bottom-[-20px] left-[76%] -rotate-12 transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
+        />
+      </div>
+
+      {/* Main Content */}
+      <div className="w-full max-w-md space-y-8 relative z-10 flex flex-col items-center min-h-[60vh] justify-between">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6">
+          <div className="text-center space-y-3">
+            <h1 className="text-7xl font-bold text-foreground">{NOT_FOUND_COPY.title}</h1>
+            <h2 className="text-2xl font-semibold text-foreground">{NOT_FOUND_COPY.heading}</h2>
+            <p className="text-muted-foreground max-w-sm mx-auto">{NOT_FOUND_COPY.subtitle}</p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center gap-3 pb-4">
+          <Image
+            src={mediaClient.brand.logo('dark')}
+            alt={COMPANY_NAME}
+            width={24}
+            height={24}
+            unoptimized
+            className="h-6 w-auto"
+          />
+          <span className="text-sm font-medium text-foreground">{COMPANY_NAME}</span>
+        </div>
       </div>
     </div>
   );

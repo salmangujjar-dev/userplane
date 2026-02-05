@@ -14,6 +14,7 @@ import { AuthIcons } from '@/components/auth/auth-icons';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { useProjectRestoreInfo, useRestoreProject } from '@/features/projects';
 import { useRestoreWorkspace, useWorkspaceRestoreInfo } from '@/features/workspace';
+import { mediaClient } from '@/lib/media';
 import { useWorkspaceStore } from '@/stores/workspace';
 import type { RestorationStatus } from '@/types';
 
@@ -35,10 +36,11 @@ function InvalidParamsState({ onGoToDashboard }: { onGoToDashboard: () => void }
 
         <div className="flex flex-col items-center gap-6">
           <Image
-            src="/assets/dino.svg"
+            src={mediaClient.icons.get('dino')}
             alt="Error"
             width={120}
             height={120}
+            unoptimized
             className="opacity-80"
           />
           <div className="flex flex-col items-center gap-2">
@@ -208,10 +210,11 @@ function ErrorState({
 
         <div className="flex flex-col items-center gap-6">
           <Image
-            src="/assets/dino.svg"
+            src={mediaClient.icons.get('dino')}
             alt="Error"
             width={120}
             height={120}
+            unoptimized
             className="opacity-80"
           />
           <div className="flex flex-col items-center gap-2">

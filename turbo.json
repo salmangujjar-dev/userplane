@@ -98,6 +98,8 @@
         "PUBLIC_HOME_URL",
         "PUBLIC_DASH_URL",
         "PUBLIC_API_URL",
+        "PUBLIC_CDN_DOMAIN",
+        "NEXT_PUBLIC_CDN_DOMAIN",
         "DOCS_URL",
         "SUPPORT_EMAIL",
         "CALENDAR_URL",

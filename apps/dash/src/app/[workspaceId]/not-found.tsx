@@ -2,11 +2,20 @@ import { Button } from '@workspace/ui/components/button';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { mediaClient } from '@/lib/media';
+
 export default function WorkspaceNotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12 bg-background">
       <div className="flex flex-col items-center gap-4 max-w-md text-center">
-        <Image src="/assets/dino.svg" alt="Not Found" width={120} height={120} className="mb-2" />
+        <Image
+          src={mediaClient.icons.get('dino')}
+          alt="Not Found"
+          width={120}
+          height={120}
+          unoptimized
+          className="mb-2"
+        />
         <h1 className="text-2xl font-semibold text-foreground">Not found</h1>
         <p className="text-sm text-muted-foreground">
           The resource you&apos;re looking for doesn&apos;t exist or has been removed.

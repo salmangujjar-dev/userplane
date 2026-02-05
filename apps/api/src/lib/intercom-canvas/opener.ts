@@ -5,7 +5,7 @@
 
 import type { Canvas } from '@/api/types/intercom-canvas';
 
-import { canvasImages, intercomCanvasUrls } from './urls';
+import { getCanvasImages, intercomCanvasUrls } from './urls';
 
 export interface OpenerCanvasOptions {
   workspaceId: string;
@@ -29,7 +29,7 @@ export function buildOpenerCanvas(options: OpenerCanvasOptions): Canvas {
         {
           type: 'image',
           id: 'logo',
-          url: canvasImages.logo,
+          url: getCanvasImages().logo,
           align: 'center',
           width: 50,
           height: 50,
@@ -47,7 +47,7 @@ export function buildOpenerCanvas(options: OpenerCanvasOptions): Canvas {
               id: 'request_recording',
               title: 'Request screen recording',
               subtitle: 'Get a screen recording for troubleshooting',
-              image: canvasImages.openerRequestRecording,
+              image: getCanvasImages().openerRequestRecording,
               image_width: 30,
               image_height: 30,
               disabled: false,
@@ -58,7 +58,7 @@ export function buildOpenerCanvas(options: OpenerCanvasOptions): Canvas {
               id: 'view_recordings',
               title: 'View received recordings',
               subtitle: 'Review recordings to resolve issues',
-              image: canvasImages.openerViewRecordings,
+              image: getCanvasImages().openerViewRecordings,
               image_width: 30,
               image_height: 30,
               disabled: false,

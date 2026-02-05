@@ -1,9 +1,12 @@
 ---
 import '../styles/global.css';
-import { getAppMeta } from '@workspace/shared/meta';
-import { NOT_FOUND_COPY, DEFAULT_COMPANY_NAME } from '@/constants';
+import { getAppMeta, getMetaUrls } from '@workspace/shared/meta';
+import { COMPANY_NAME, NOT_FOUND_COPY } from '@workspace/shared';
+import { mediaClient } from '@/lib/media';
 
 const meta = getAppMeta('recorder');
+const metaUrls = getMetaUrls(mediaClient);
+// Use local favicon for SEO, CDN for UI elements (logo, tiles)
 ---
 
 <html lang="en">
@@ -22,28 +25,28 @@ const meta = getAppMeta('recorder');
       <!-- Decorative icons - Desktop Left Side -->
       <div class="absolute left-0 top-0 h-full w-32 hidden lg:block">
         <img
-          src="/tile/bubble.png"
+          src={mediaClient.tiles.get('bubble')}
           alt=""
           width="80"
           height="80"
           class="absolute top-[18%] -left-6 rotate-[-15deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
-          src="/tile/fin.png"
+          src={mediaClient.tiles.get('fin')}
           alt=""
           width="90"
           height="90"
           class="absolute top-[38%] -left-8 rotate-12 transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
-          src="/tile/letterbox.png"
+          src={mediaClient.tiles.get('letterbox')}
           alt=""
           width="85"
           height="85"
           class="absolute top-[58%] -left-7 rotate-[-8deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
-          src="/tile/paperplane.png"
+          src={mediaClient.tiles.get('paperplane')}
           alt=""
           width="75"
           height="75"
@@ -54,28 +57,28 @@ const meta = getAppMeta('recorder');
       <!-- Decorative icons - Desktop Right Side -->
       <div class="absolute right-0 top-0 h-full w-32 hidden lg:block">
         <img
-          src="/tile/intercom.png"
+          src={mediaClient.tiles.get('intercom')}
           alt=""
           width="85"
           height="85"
           class="absolute top-[17%] -right-7 rotate-10 transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
-          src="/tile/browsercursor.png"
+          src={mediaClient.tiles.get('browsercursor')}
           alt=""
           width="75"
           height="75"
           class="absolute top-[38%] -right-5 rotate-[-14deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
-          src="/tile/magf.png"
+          src={mediaClient.tiles.get('magf')}
           alt=""
           width="80"
           height="80"
           class="absolute top-[59%] -right-6 rotate-[-10deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
-          src="/tile/documentation.png"
+          src={mediaClient.tiles.get('documentation')}
           alt=""
           width="85"
           height="85"
@@ -86,28 +89,28 @@ const meta = getAppMeta('recorder');
       <!-- Decorative icons - Mobile Bottom -->
       <div class="absolute bottom-0 left-0 right-0 w-full h-32 block lg:hidden">
         <img
-          src="/tile/bubble.png"
+          src={mediaClient.tiles.get('bubble')}
           alt=""
           width="70"
           height="70"
           class="absolute bottom-[-20px] left-[10%] rotate-[-15deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
         <img
-          src="/tile/intercom.png"
+          src={mediaClient.tiles.get('intercom')}
           alt=""
           width="75"
           height="75"
           class="absolute bottom-[-25px] left-[32%] rotate-12 transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
         <img
-          src="/tile/fin.png"
+          src={mediaClient.tiles.get('fin')}
           alt=""
           width="70"
           height="70"
           class="absolute bottom-[-22px] left-[54%] rotate-[-8deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
         <img
-          src="/tile/pointer.png"
+          src={mediaClient.tiles.get('pointer')}
           alt=""
           width="65"
           height="65"
@@ -131,8 +134,8 @@ const meta = getAppMeta('recorder');
 
         <!-- Footer -->
         <div class="flex items-center gap-3 pb-4">
-          <img src="/logo-dark.svg" alt={DEFAULT_COMPANY_NAME} class="h-6 w-auto" />
-          <span class="text-sm font-medium text-foreground">{DEFAULT_COMPANY_NAME}</span>
+          <img src={metaUrls.logoDark} alt={COMPANY_NAME} class="h-6 w-auto" />
+          <span class="text-sm font-medium text-foreground">{COMPANY_NAME}</span>
         </div>
       </div>
     </div>

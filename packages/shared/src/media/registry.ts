@@ -3,8 +3,58 @@
  * Asset metadata including labels, alt text, and categorization
  */
 
-import { AUTH_PATHS, AUTH_PROVIDER_NAMES, INTEGRATION_NAMES, INTEGRATION_PATHS } from './paths';
 import type { AuthProviderName, IntegrationAsset, IntegrationName } from './types';
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+/** All integration names */
+const INTEGRATION_NAMES: readonly IntegrationName[] = [
+  'asana',
+  'clickup',
+  'crisp',
+  'discord',
+  'freshchat',
+  'freshdesk',
+  'front',
+  'happyfox',
+  'helpscout',
+  'hiver',
+  'hubspot',
+  'intercom',
+  'jira',
+  'jiraservicedesk',
+  'linear',
+  'make',
+  'n8n',
+  'notion',
+  'plain',
+  'pylon',
+  'salesforce',
+  'sentry',
+  'slack',
+  'talkdesk',
+  'zapier',
+  'zendesk',
+  'zoho',
+] as const;
+
+/** All auth provider names */
+const AUTH_PROVIDER_NAMES: readonly AuthProviderName[] = [
+  'crisp',
+  'discord',
+  'freshdesk',
+  'happyfox',
+  'helpscout',
+  'hiver',
+  'intercom',
+  'jira',
+  'linear',
+  'pylon',
+  'slack',
+  'zendesk',
+] as const;
 
 // =============================================================================
 // Integration Registry
@@ -45,6 +95,7 @@ const INTEGRATION_LABELS: Record<IntegrationName, string> = {
 
 /**
  * Integration asset registry with full metadata
+ * Path uses manifest key format (without hash, used for lookup)
  */
 export const INTEGRATION_REGISTRY: Record<IntegrationName, IntegrationAsset> = Object.fromEntries(
   INTEGRATION_NAMES.map((name) => [
@@ -53,7 +104,7 @@ export const INTEGRATION_REGISTRY: Record<IntegrationName, IntegrationAsset> = O
       name,
       label: INTEGRATION_LABELS[name],
       alt: `${INTEGRATION_LABELS[name]} Logo`,
-      path: INTEGRATION_PATHS[name],
+      path: `integrations/${name}.webp`,
     },
   ])
 ) as Record<IntegrationName, IntegrationAsset>;
@@ -65,7 +116,7 @@ export const INTEGRATION_REGISTRY: Record<IntegrationName, IntegrationAsset> = O
  * @example
  * ```typescript
  * const logos = getIntegrationAssets();
- * // [{ name: 'asana', label: 'Asana', alt: 'Asana Logo', path: '/integrations/asana.webp' }, ...]
+ * // [{ name: 'asana', label: 'Asana', alt: 'Asana Logo', path: 'integrations/asana.webp' }, ...]
  * ```
  */
 export function getIntegrationAssets(): IntegrationAsset[] {
@@ -114,7 +165,7 @@ export interface AuthProviderAsset {
   label: string;
   /** Alt text for accessibility */
   alt: string;
-  /** Relative path to the asset */
+  /** Asset key (manifest key format, without hash) */
   path: string;
 }
 
@@ -129,7 +180,7 @@ export const AUTH_PROVIDER_REGISTRY: Record<AuthProviderName, AuthProviderAsset>
         name,
         label: AUTH_PROVIDER_LABELS[name],
         alt: `${AUTH_PROVIDER_LABELS[name]} Logo`,
-        path: AUTH_PATHS[name],
+        path: `auth/${name}.png`,
       },
     ])
   ) as Record<AuthProviderName, AuthProviderAsset>;

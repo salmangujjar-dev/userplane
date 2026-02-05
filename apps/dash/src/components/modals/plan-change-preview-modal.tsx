@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { authClient } from '@/client/auth';
 import { env } from '@/env';
 import { useManagePlan, useOpenCustomerPortal } from '@/features/billing';
+import { mediaClient } from '@/lib/media';
 import { useWorkspaceId } from '@/stores/workspace';
 import type { PlanChangePreviewData } from '@/types';
 
@@ -543,7 +544,13 @@ function ErrorView({
 
       {/* Dino */}
       <div className="flex justify-center py-4">
-        <Image src="/assets/dino.svg" alt="Error" width={120} height={120} />
+        <Image
+          src={mediaClient.icons.get('dino')}
+          alt="Error"
+          width={120}
+          height={120}
+          unoptimized
+        />
       </div>
 
       {/* Actions */}

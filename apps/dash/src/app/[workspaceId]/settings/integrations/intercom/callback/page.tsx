@@ -11,6 +11,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { apiClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { type DefinedError, handleSafeResult } from '@/lib/errors';
+import { mediaClient } from '@/lib/media';
 
 function LoadingState() {
   return (
@@ -24,10 +25,11 @@ function LoadingState() {
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src="/integrations/intercom.webp"
+                src={mediaClient.integrations.get('intercom')}
                 alt="Intercom"
                 width={32}
                 height={32}
+                unoptimized
                 className="object-contain"
               />
             </div>
@@ -77,10 +79,11 @@ function SuccessState({ workspaceId }: { workspaceId: string }) {
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src="/integrations/intercom.webp"
+                src={mediaClient.integrations.get('intercom')}
                 alt="Intercom"
                 width={32}
                 height={32}
+                unoptimized
                 className="object-contain"
               />
             </div>
@@ -137,10 +140,11 @@ function ErrorState({ error, errorActionPrimary, errorActionSecondary }: ErrorSt
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src="/integrations/intercom.webp"
+                src={mediaClient.integrations.get('intercom')}
                 alt="Intercom"
                 width={32}
                 height={32}
+                unoptimized
                 className="object-contain"
               />
             </div>

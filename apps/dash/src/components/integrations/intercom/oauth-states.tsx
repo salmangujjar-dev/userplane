@@ -7,6 +7,7 @@ import Image from 'next/image';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import type { DefinedError } from '@/lib/errors';
+import { mediaClient } from '@/lib/media';
 
 /**
  * Loading state shown during OAuth callback processing (before workspace creation).
@@ -23,10 +24,11 @@ export function OAuthLoadingState() {
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src="/integrations/intercom.webp"
+                src={mediaClient.integrations.get('intercom')}
                 alt="Intercom"
                 width={32}
                 height={32}
+                unoptimized
                 className="object-contain"
               />
             </div>
@@ -77,10 +79,11 @@ export function OAuthErrorState({
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src="/integrations/intercom.webp"
+                src={mediaClient.integrations.get('intercom')}
                 alt="Intercom"
                 width={32}
                 height={32}
+                unoptimized
                 className="object-contain"
               />
             </div>
