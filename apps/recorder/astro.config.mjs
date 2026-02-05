@@ -12,6 +12,11 @@ import { defineConfig } from 'astro/config';
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isProduction = nodeEnv === 'production';
 
+// Skip Sentry build instrumentation in development to speed up builds
+// Sentry adds significant Vite overhead even without source map uploads
+// Enable Sentry when: production build OR SENTRY_AUTH_TOKEN is set (for source map uploads)
+const shouldUseSentry = isProduction || !!process.env.SENTRY_AUTH_TOKEN;
+
 const sentryConfig = {
   dsn: process.env.PUBLIC_SENTRY_DSN,
   release: process.env.PUBLIC_SENTRY_RELEASE,
@@ -21,6 +26,23 @@ const sentryConfig = {
       ? 0.1
       : 1.0,
 };
+
+// Sentry integration for production builds and source map uploads
+// Skipped in development to avoid build overhead
+const sentryIntegration = shouldUseSentry
+  ? sentry({
+      dsn: sentryConfig.dsn,
+      environment: nodeEnv,
+      release: sentryConfig.release,
+      tracesSampleRate: sentryConfig.tracesSampleRate,
+      beforeSend: recorderBeforeSendFilter,
+      sourceMapsUploadOptions: {
+        project: process.env.SENTRY_PROJECT_RECORDER,
+        org: process.env.SENTRY_ORG,
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      },
+    })
+  : null;
 
 // https://astro.build/config
 export default defineConfig({
@@ -36,17 +58,8 @@ export default defineConfig({
   },
   integrations: [
     react(),
-    sentry({
-      dsn: sentryConfig.dsn,
-      environment: nodeEnv,
-      release: sentryConfig.release,
-      tracesSampleRate: sentryConfig.tracesSampleRate,
-      beforeSend: recorderBeforeSendFilter,
-      sourceMapsUploadOptions: {
-        project: process.env.SENTRY_PROJECT_RECORDER,
-        org: process.env.SENTRY_ORG,
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-      },
-    }),
+    // Only include Sentry in production or when auth token is set
+    // Development builds skip Sentry instrumentation for faster iteration
+    ...(sentryIntegration ? [sentryIntegration] : []),
   ],
 });

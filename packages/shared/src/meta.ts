@@ -94,8 +94,8 @@ export function createMeta(overrides: Partial<SiteMeta>): SiteMeta {
  */
 export function getMetaUrls(client: MediaClient): MetaUrls {
   return {
-    favicon: client.brand.favicon(),
-    logoDark: client.brand.logo('dark'),
-    logoLight: client.brand.logo('light'),
+    favicon: client.getBrandMediaUrl('brand/favicon.svg'),
+    logoDark: client.getBrandMediaUrl('brand/logo-dark.svg'),
+    logoLight: client.getBrandMediaUrl('brand/logo-light.svg'),
   };
 }

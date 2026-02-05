@@ -36,7 +36,7 @@ export default function RecordingScreenLayout({
       <footer className="flex flex-col items-center gap-2 sm:gap-4 px-4 py-6 sm:py-8 relative z-10">
         <div className="flex items-center gap-2">
           <img
-            src={workspaceLogoUrl ?? mediaClient.brand.logo('dark')}
+            src={workspaceLogoUrl ?? mediaClient.getBrandMediaUrl('brand/logo-dark.svg')}
             alt={workspaceName ?? DEFAULT_COMPANY_NAME}
             className="h-4 sm:h-5 w-auto object-contain opacity-60"
           />

@@ -34,7 +34,7 @@ export const FEATURES_HIGHLIGHTS: HighlightConfig[] = [
  */
 export const FEATURES: Feature[] = [
   {
-    image: 'https://placehold.co/800x500/f5f5f4/a8a29e?text=One+Click+Recordings',
+    image: '/images/features/one-click-screen-recordings.png',
     imageAlt: 'One click recordings',
     title: 'One click recordings',
     description:
@@ -43,7 +43,7 @@ export const FEATURES: Feature[] = [
     url: 'app.userplane.io/record',
   },
   {
-    image: 'https://placehold.co/800x500/fce7f3/db2777?text=Replay+Customer+Issues',
+    image: '/images/features/complete-issue-context.png',
     imageAlt: 'Replay customer issues',
     title: 'Replay customer issues',
     description:
@@ -52,7 +52,7 @@ export const FEATURES: Feature[] = [
     url: 'app.userplane.io/replay',
   },
   {
-    image: 'https://placehold.co/800x500/d1fae5/059669?text=Native+Integrations',
+    image: '/images/features/native-integrations.png',
     imageAlt: 'Native Intercom integration',
     title: 'Native Intercom integration',
     description:
@@ -61,7 +61,7 @@ export const FEATURES: Feature[] = [
     url: 'app.userplane.io/integrations',
   },
   {
-    image: 'https://placehold.co/800x500/dbeafe/3b82f6?text=Privacy+%26+Security',
+    image: '/images/features/privacy-and-security.png',
     imageAlt: 'Privacy and security controls',
     title: 'Privacy and security built-in',
     description:

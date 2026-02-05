@@ -9,7 +9,7 @@ export default function NotFound() {
       {/* Decorative icons - Desktop Left Side */}
       <div className="absolute left-0 top-0 h-full w-32 hidden lg:block">
         <Image
-          src={mediaClient.tiles.get('bubble')}
+          src={mediaClient.getTileMediaUrl('tiles/bubble.png')}
           alt=""
           width={80}
           height={80}
@@ -17,7 +17,7 @@ export default function NotFound() {
           className="absolute top-[18%] -left-6 rotate-[-15deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
         <Image
-          src={mediaClient.tiles.get('fin')}
+          src={mediaClient.getTileMediaUrl('tiles/fin.png')}
           alt=""
           width={90}
           height={90}
@@ -25,7 +25,7 @@ export default function NotFound() {
           className="absolute top-[38%] -left-8 rotate-12 transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
         <Image
-          src={mediaClient.tiles.get('letterbox')}
+          src={mediaClient.getTileMediaUrl('tiles/letterbox.png')}
           alt=""
           width={85}
           height={85}
@@ -33,7 +33,7 @@ export default function NotFound() {
           className="absolute top-[58%] -left-7 rotate-[-8deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
         <Image
-          src={mediaClient.tiles.get('paperplane')}
+          src={mediaClient.getTileMediaUrl('tiles/paperplane.png')}
           alt=""
           width={75}
           height={75}
@@ -45,7 +45,7 @@ export default function NotFound() {
       {/* Decorative icons - Desktop Right Side */}
       <div className="absolute right-0 top-0 h-full w-32 hidden lg:block">
         <Image
-          src={mediaClient.tiles.get('intercom')}
+          src={mediaClient.getTileMediaUrl('tiles/intercom.png')}
           alt=""
           width={85}
           height={85}
@@ -53,7 +53,7 @@ export default function NotFound() {
           className="absolute top-[17%] -right-7 rotate-10 transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
         <Image
-          src={mediaClient.tiles.get('browsercursor')}
+          src={mediaClient.getTileMediaUrl('tiles/browsercursor.png')}
           alt=""
           width={75}
           height={75}
@@ -61,7 +61,7 @@ export default function NotFound() {
           className="absolute top-[38%] -right-5 rotate-[-14deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
         <Image
-          src={mediaClient.tiles.get('magf')}
+          src={mediaClient.getTileMediaUrl('tiles/magf.png')}
           alt=""
           width={80}
           height={80}
@@ -69,7 +69,7 @@ export default function NotFound() {
           className="absolute top-[59%] -right-6 rotate-[-10deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
         <Image
-          src={mediaClient.tiles.get('documentation')}
+          src={mediaClient.getTileMediaUrl('tiles/documentation.png')}
           alt=""
           width={85}
           height={85}
@@ -81,7 +81,7 @@ export default function NotFound() {
       {/* Decorative icons - Mobile Bottom */}
       <div className="absolute bottom-0 left-0 right-0 w-full h-32 block lg:hidden">
         <Image
-          src={mediaClient.tiles.get('bubble')}
+          src={mediaClient.getTileMediaUrl('tiles/bubble.png')}
           alt=""
           width={70}
           height={70}
@@ -89,7 +89,7 @@ export default function NotFound() {
           className="absolute bottom-[-20px] left-[10%] rotate-[-15deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
         <Image
-          src={mediaClient.tiles.get('intercom')}
+          src={mediaClient.getTileMediaUrl('tiles/intercom.png')}
           alt=""
           width={75}
           height={75}
@@ -97,7 +97,7 @@ export default function NotFound() {
           className="absolute bottom-[-25px] left-[32%] rotate-12 transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
         <Image
-          src={mediaClient.tiles.get('fin')}
+          src={mediaClient.getTileMediaUrl('tiles/fin.png')}
           alt=""
           width={70}
           height={70}
@@ -105,7 +105,7 @@ export default function NotFound() {
           className="absolute bottom-[-22px] left-[54%] rotate-[-8deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
         <Image
-          src={mediaClient.tiles.get('pointer')}
+          src={mediaClient.getTileMediaUrl('tiles/pointer.png')}
           alt=""
           width={65}
           height={65}
@@ -127,7 +127,7 @@ export default function NotFound() {
         {/* Footer */}
         <div className="flex items-center gap-3 pb-4">
           <Image
-            src={mediaClient.brand.logo('dark')}
+            src={mediaClient.getBrandMediaUrl('brand/logo-dark.svg')}
             alt={COMPANY_NAME}
             width={24}
             height={24}

@@ -93,7 +93,7 @@ function BillingEmailVerificationPageContent() {
 
           <div className="flex flex-col items-center gap-6">
             <Image
-              src={mediaClient.icons.get('dino')}
+              src={mediaClient.getIconMediaUrl('icons/dino.svg')}
               alt="Error"
               width={120}
               height={120}

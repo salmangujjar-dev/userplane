@@ -162,7 +162,7 @@ function RequestDeleteContent() {
 
           <div className="flex flex-col items-center gap-6">
             <Image
-              src={mediaClient.icons.get('dino')}
+              src={mediaClient.getIconMediaUrl('icons/dino.svg')}
               alt="Error"
               width={120}
               height={120}
@@ -206,7 +206,7 @@ function RequestDeleteContent() {
         <div className="space-y-6">
           <div className="flex justify-center">
             <Image
-              src={mediaClient.icons.get('dino')}
+              src={mediaClient.getIconMediaUrl('icons/dino.svg')}
               alt="Dino"
               width={120}
               height={120}

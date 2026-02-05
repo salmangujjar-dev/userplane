@@ -10,14 +10,13 @@
 // =============================================================================
 
 export type {
-  AssetCategory,
-  AuthProviderName,
-  IconName,
-  IntegrationAsset,
-  IntegrationName,
-  IntercomCanvasImageName,
-  ThemeVariant,
-  TileName,
+  AssetKey,
+  AuthAssetKey,
+  BrandAssetKey,
+  IconAssetKey,
+  IntegrationAssetKey,
+  IntercomCanvasAssetKey,
+  TileAssetKey,
 } from './types';
 
 // =============================================================================
@@ -36,13 +35,13 @@ export {
 // Manifest
 // =============================================================================
 
-export { ASSET_MANIFEST, type AssetKey } from './manifest.generated';
+export { ASSET_MANIFEST } from './manifest.generated';
 
 // =============================================================================
 // Registry
 // =============================================================================
 
-export type { AuthProviderAsset } from './registry';
+export type { AuthProviderAsset, IntegrationAsset } from './registry';
 export {
   AUTH_PROVIDER_REGISTRY,
   getAuthProviderAsset,

@@ -1,7 +1,6 @@
 /**
  * Integration logo data
  */
-import { mediaClient } from '../lib/media';
 
 export interface IntegrationLogo {
   src: string;
@@ -12,33 +11,33 @@ export interface IntegrationLogo {
  * Integration logos for spotlight section
  */
 export const INTEGRATION_LOGOS: IntegrationLogo[] = [
-  { src: mediaClient.integrations.get('asana'), alt: 'Asana Logo' },
-  { src: mediaClient.integrations.get('clickup'), alt: 'ClickUp Logo' },
-  { src: mediaClient.integrations.get('crisp'), alt: 'Crisp Logo' },
-  { src: mediaClient.integrations.get('discord'), alt: 'Discord Logo' },
-  { src: mediaClient.integrations.get('freshchat'), alt: 'Freshchat Logo' },
-  { src: mediaClient.integrations.get('freshdesk'), alt: 'Freshdesk Logo' },
-  { src: mediaClient.integrations.get('front'), alt: 'Front Logo' },
-  { src: mediaClient.integrations.get('happyfox'), alt: 'HappyFox Logo' },
-  { src: mediaClient.integrations.get('helpscout'), alt: 'Help Scout Logo' },
-  { src: mediaClient.integrations.get('hiver'), alt: 'Hiver Logo' },
-  { src: mediaClient.integrations.get('hubspot'), alt: 'HubSpot Logo' },
-  { src: mediaClient.integrations.get('intercom'), alt: 'Intercom Logo' },
-  { src: mediaClient.integrations.get('jira'), alt: 'Jira Logo' },
-  { src: mediaClient.integrations.get('jiraservicedesk'), alt: 'Jira Service Desk Logo' },
-  { src: mediaClient.integrations.get('linear'), alt: 'Linear Logo' },
-  { src: mediaClient.integrations.get('make'), alt: 'Make Logo' },
-  { src: mediaClient.integrations.get('n8n'), alt: 'n8n Logo' },
-  { src: mediaClient.integrations.get('notion'), alt: 'Notion Logo' },
-  { src: mediaClient.integrations.get('plain'), alt: 'Plain Logo' },
-  { src: mediaClient.integrations.get('pylon'), alt: 'Pylon Logo' },
-  { src: mediaClient.integrations.get('salesforce'), alt: 'Salesforce Logo' },
-  { src: mediaClient.integrations.get('sentry'), alt: 'Sentry Logo' },
-  { src: mediaClient.integrations.get('slack'), alt: 'Slack Logo' },
-  { src: mediaClient.integrations.get('talkdesk'), alt: 'Talkdesk Logo' },
-  { src: mediaClient.integrations.get('zapier'), alt: 'Zapier Logo' },
-  { src: mediaClient.integrations.get('zendesk'), alt: 'Zendesk Logo' },
-  { src: mediaClient.integrations.get('zoho'), alt: 'Zoho Logo' },
+  { src: '/images/integrations/asana.webp', alt: 'Asana Logo' },
+  { src: '/images/integrations/clickup.webp', alt: 'ClickUp Logo' },
+  { src: '/images/integrations/crisp.webp', alt: 'Crisp Logo' },
+  { src: '/images/integrations/discord.webp', alt: 'Discord Logo' },
+  { src: '/images/integrations/freshchat.webp', alt: 'Freshchat Logo' },
+  { src: '/images/integrations/freshdesk.webp', alt: 'Freshdesk Logo' },
+  { src: '/images/integrations/front.webp', alt: 'Front Logo' },
+  { src: '/images/integrations/happyfox.webp', alt: 'HappyFox Logo' },
+  { src: '/images/integrations/helpscout.webp', alt: 'Help Scout Logo' },
+  { src: '/images/integrations/hiver.webp', alt: 'Hiver Logo' },
+  { src: '/images/integrations/hubspot.webp', alt: 'HubSpot Logo' },
+  { src: '/images/integrations/intercom.webp', alt: 'Intercom Logo' },
+  { src: '/images/integrations/jira.webp', alt: 'Jira Logo' },
+  { src: '/images/integrations/jiraservicedesk.webp', alt: 'Jira Service Desk Logo' },
+  { src: '/images/integrations/linear.webp', alt: 'Linear Logo' },
+  { src: '/images/integrations/make.webp', alt: 'Make Logo' },
+  { src: '/images/integrations/n8n.webp', alt: 'n8n Logo' },
+  { src: '/images/integrations/notion.webp', alt: 'Notion Logo' },
+  { src: '/images/integrations/plain.webp', alt: 'Plain Logo' },
+  { src: '/images/integrations/pylon.webp', alt: 'Pylon Logo' },
+  { src: '/images/integrations/salesforce.webp', alt: 'Salesforce Logo' },
+  { src: '/images/integrations/sentry.webp', alt: 'Sentry Logo' },
+  { src: '/images/integrations/slack.webp', alt: 'Slack Logo' },
+  { src: '/images/integrations/talkdesk.webp', alt: 'Talkdesk Logo' },
+  { src: '/images/integrations/zapier.webp', alt: 'Zapier Logo' },
+  { src: '/images/integrations/zendesk.webp', alt: 'Zendesk Logo' },
+  { src: '/images/integrations/zoho.webp', alt: 'Zoho Logo' },
 ];
 
 /**

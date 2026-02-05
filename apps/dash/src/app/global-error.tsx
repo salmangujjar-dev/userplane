@@ -32,7 +32,7 @@ export default function GlobalError({
         <div className="flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-white">
           <div className="flex flex-col items-center gap-3 max-w-md">
             <Image
-              src={mediaClient.icons.get('dino')}
+              src={mediaClient.getIconMediaUrl('icons/dino.svg')}
               alt="Error"
               width={120}
               height={120}

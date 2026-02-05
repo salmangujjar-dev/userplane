@@ -508,7 +508,7 @@ function ErrorView({
         <div className="flex flex-col items-center space-y-4">
           <div className="flex justify-center py-4">
             <Image
-              src={mediaClient.icons.get('dino')}
+              src={mediaClient.getIconMediaUrl('icons/dino.svg')}
               alt="Error"
               width={120}
               height={120}

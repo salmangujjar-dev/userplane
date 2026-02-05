@@ -38,7 +38,7 @@ export const workspaceUrls = {
    * Used in welcome emails, team notifications, etc.
    */
   dashboard: (workspaceId: string): string => {
-    return `${env.dashboard.baseUrl}/${workspaceId}`;
+    return `${env.dashboard.baseUrl}/workspace/${workspaceId}`;
   },
 
   /**
@@ -90,7 +90,7 @@ export const recordingUrls = {
    * Used in recording received notification emails
    */
   view: (workspaceId: string, recordingId: string): string => {
-    return `${env.dashboard.baseUrl}/${workspaceId}/recordings/${recordingId}`;
+    return `${env.dashboard.baseUrl}/workspace/${workspaceId}/recordings/${recordingId}`;
   },
 } as const;
 
@@ -103,7 +103,7 @@ export const settingsUrls = {
    * Used in billing-related emails
    */
   billing: (workspaceId: string): string => {
-    return `${env.dashboard.baseUrl}/${workspaceId}/settings?tab=workspace`;
+    return `${env.dashboard.baseUrl}/workspace/${workspaceId}/settings?tab=workspace`;
   },
 
   /**
@@ -111,7 +111,7 @@ export const settingsUrls = {
    * Used in domain developer instruction emails
    */
   domains: (workspaceId: string): string => {
-    return `${env.dashboard.baseUrl}/${workspaceId}/settings/domains`;
+    return `${env.dashboard.baseUrl}/workspace/${workspaceId}/settings/domains`;
   },
 } as const;
 
