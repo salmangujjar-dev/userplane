@@ -8,16 +8,19 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     },
     "./browser": {
+      "types": "./dist/browser.d.ts",
       "import": "./dist/browser.js",
-      "types": "./dist/browser.d.ts"
+      "default": "./dist/browser.js"
     },
     "./server": {
+      "types": "./dist/factory.d.ts",
       "import": "./dist/factory.js",
-      "types": "./dist/factory.d.ts"
+      "default": "./dist/factory.js"
     }
   },
   "scripts": {

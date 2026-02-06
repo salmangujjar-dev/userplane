@@ -4,38 +4,19 @@
 import react from '@astrojs/react';
 import sentry from '@sentry/astro';
 import tailwindcss from '@tailwindcss/vite';
-import { recorderBeforeSendFilter } from '@workspace/sentry';
 import { defineConfig } from 'astro/config';
-
-// Load centralized env config for Sentry
-// Note: This runs at build time, so we access process.env directly for build-time values
-const nodeEnv = process.env.NODE_ENV || 'development';
-const isProduction = nodeEnv === 'production';
 
 // Skip Sentry build instrumentation in development to speed up builds
 // Sentry adds significant Vite overhead even without source map uploads
 // Enable Sentry when: production build OR SENTRY_AUTH_TOKEN is set (for source map uploads)
+const isProduction = (process.env.NODE_ENV || 'development') === 'production';
 const shouldUseSentry = isProduction || !!process.env.SENTRY_AUTH_TOKEN;
 
-const sentryConfig = {
-  dsn: process.env.PUBLIC_SENTRY_DSN,
-  release: process.env.PUBLIC_SENTRY_RELEASE,
-  tracesSampleRate: process.env.PUBLIC_SENTRY_TRACES_SAMPLE_RATE
-    ? parseFloat(process.env.PUBLIC_SENTRY_TRACES_SAMPLE_RATE)
-    : isProduction
-      ? 0.1
-      : 1.0,
-};
-
-// Sentry integration for production builds and source map uploads
-// Skipped in development to avoid build overhead
+// Sentry integration handles build-time concerns (source map uploads).
+// SDK init options (dsn, environment, tracesSampleRate, beforeSend) are
+// configured in sentry.client.config.ts and sentry.server.config.ts.
 const sentryIntegration = shouldUseSentry
   ? sentry({
-      dsn: sentryConfig.dsn,
-      environment: nodeEnv,
-      release: sentryConfig.release,
-      tracesSampleRate: sentryConfig.tracesSampleRate,
-      beforeSend: recorderBeforeSendFilter,
       sourceMapsUploadOptions: {
         project: process.env.SENTRY_PROJECT_RECORDER,
         org: process.env.SENTRY_ORG,
