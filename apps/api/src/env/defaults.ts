@@ -112,11 +112,11 @@ export const SESSION = {
 export const EMAIL = {
   PROVIDER: 'localhost' as const,
   INBOXES: {
-    ONBOARDING: 'hey@userplane.io',
-    NOTIFICATION: 'hey@userplane.io',
-    BILLING: 'hey@userplane.io',
-    INVITE: 'hey@userplane.io',
-    AUTH: 'hey@userplane.io',
+    ONBOARDING: 'hey@mail.userplane.io',
+    NOTIFICATION: 'hey@mail.userplane.io',
+    BILLING: 'hey@mail.userplane.io',
+    INVITE: 'hey@mail.userplane.io',
+    AUTH: 'hey@mail.userplane.io',
   },
 } as const;
 

@@ -385,7 +385,7 @@ db\:generate: ## Generate Drizzle migrations (dev)
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:generate
+	@cd packages/db && set -a && . ../../apps/api/.env.development && set +a && bun run db:generate
 	@echo "$(GREEN)Migrations generated!$(RESET)"
 
 db\:migrate: ## Run database migrations (dev)
@@ -395,7 +395,7 @@ db\:migrate: ## Run database migrations (dev)
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:migrate
+	@cd packages/db && set -a && . ../../apps/api/.env.development && set +a && bun run db:migrate
 	@echo "$(GREEN)Migrations complete!$(RESET)"
 
 db\:push: ## Push schema directly to DB (dev)
@@ -405,7 +405,7 @@ db\:push: ## Push schema directly to DB (dev)
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:push
+	@cd packages/db && set -a && . ../../apps/api/.env.development && set +a && bun run db:push
 	@echo "$(GREEN)Schema pushed!$(RESET)"
 
 db\:studio: ## Open Drizzle Studio (dev)
@@ -415,7 +415,7 @@ db\:studio: ## Open Drizzle Studio (dev)
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:studio
+	@cd packages/db && set -a && . ../../apps/api/.env.development && set +a && bun run db:studio
 
 # Database commands - Production
 db\:generate\:production: ## Generate Drizzle migrations (production)
@@ -424,7 +424,7 @@ db\:generate\:production: ## Generate Drizzle migrations (production)
 		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:generate
+	@cd packages/db && set -a && . ../../apps/api/.env.production && set +a && bun run db:generate
 	@echo "$(GREEN)Migrations generated!$(RESET)"
 
 db\:migrate\:production: ## Run database migrations (production)
@@ -433,7 +433,7 @@ db\:migrate\:production: ## Run database migrations (production)
 		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:migrate
+	@cd packages/db && set -a && . ../../apps/api/.env.production && set +a && bun run db:migrate
 	@echo "$(GREEN)Migrations complete!$(RESET)"
 
 db\:push\:production: ## Push schema directly to DB (production)
@@ -444,7 +444,7 @@ db\:push\:production: ## Push schema directly to DB (production)
 		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:push
+	@cd packages/db && set -a && . ../../apps/api/.env.production && set +a && bun run db:push
 	@echo "$(GREEN)Schema pushed!$(RESET)"
 
 db\:studio\:production: ## Open Drizzle Studio (production)
@@ -453,7 +453,7 @@ db\:studio\:production: ## Open Drizzle Studio (production)
 		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
 		exit 1; \
 	fi
-	@cd packages/db && export $$(grep -v '^#' ../../apps/api/.env.production | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && bun run db:studio
+	@cd packages/db && set -a && . ../../apps/api/.env.production && set +a && bun run db:studio
 
 # Trigger.dev commands
 trigger\:login: ## Login to trigger.dev CLI
@@ -472,7 +472,7 @@ trigger\:dev: ## Run trigger.dev dev server
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd apps/api && export $$(grep -v '^#' .env.development | grep -v '^\s*$$' | sed 's/[[:space:]]*#.*//' | xargs) && npx trigger.dev@latest dev
+	@cd apps/api && set -a && . .env.development && set +a && npx trigger.dev@latest dev
 
 trigger\:deploy: ## Deploy tasks to trigger.dev (dev)
 	@echo "$(BLUE)Deploying tasks to trigger.dev (development)...$(RESET)"

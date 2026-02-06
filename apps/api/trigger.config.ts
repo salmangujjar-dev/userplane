@@ -95,7 +95,7 @@ const TRIGGER_ENV_KEYS = [
 ];
 
 export default defineConfig({
-  project: 'proj_zexjttpszqhvkzmtqzgx',
+  project: 'proj_pftbudrujxtzedzxhqlg',
   runtime: 'bun',
   logLevel: 'log',
   maxDuration: 300,

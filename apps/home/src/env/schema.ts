@@ -30,7 +30,7 @@ const urlWithDefault = (defaultValue: string) =>
     .string()
     .optional()
     .transform((val): string => val || defaultValue)
-    .pipe(z.string().url());
+    .pipe(z.url());
 
 /**
  * Boolean from string with default value
@@ -70,7 +70,11 @@ export const storageEnvSchema = z.object({
 });
 
 /** Combined raw environment variables schema */
-export const rawEnvSchema = appEnvSchema.merge(urlEnvSchema).merge(storageEnvSchema);
+export const rawEnvSchema = z.object({
+  ...appEnvSchema.shape,
+  ...urlEnvSchema.shape,
+  ...storageEnvSchema.shape,
+});
 
 /** Raw parsed environment type */
 export type RawEnvConfig = z.infer<typeof rawEnvSchema>;
@@ -81,18 +85,18 @@ export type RawEnvConfig = z.infer<typeof rawEnvSchema>;
 
 /** Home configuration schema */
 export const homeConfigSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
 });
 
 /** Dashboard configuration schema */
 export const dashboardConfigSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
 });
 
 /** Storage configuration schema */
 export const storageConfigSchema = z.object({
-  cdnDomain: z.string().url(),
-  assetsDomain: z.string().url(),
+  cdnDomain: z.url(),
+  assetsDomain: z.url(),
   imageZone: z.string(),
   skipTransform: z.boolean(),
 });
