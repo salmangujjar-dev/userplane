@@ -15,7 +15,7 @@
  * - Refund events → RefundProcessorService
  */
 
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import type { WebhookPayload } from '@workspace/payments/types';
 import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
 import { buildWebhookTags, type WebhookContext } from '@workspace/sentry';

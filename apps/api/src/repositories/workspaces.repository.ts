@@ -3,7 +3,7 @@
  * Handles all database operations for workspace entities
  */
 
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import type { DbClient, WorkspaceInvitePolicy, WorkspaceRole } from '@workspace/db';
 import { and, count, eq, ilike, ne, notInArray, or, sql } from '@workspace/db';
 import { workspaceMembers, workspaces } from '@workspace/db';

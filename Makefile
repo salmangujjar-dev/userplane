@@ -107,7 +107,8 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)trigger:login$(WHITE)                 ║$(RESET) Login to trigger.dev CLI                                          $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)trigger:whoami$(WHITE)                ║$(RESET) Show current trigger.dev user                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)trigger:dev$(WHITE)                   ║$(RESET) Run trigger.dev dev server                                        $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)trigger:deploy$(WHITE)                ║$(RESET) Deploy tasks (dev)                                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:deploy$(WHITE)                ║$(RESET) Show deploy usage                                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)trigger:deploy:staging$(WHITE)        ║$(RESET) Deploy tasks (staging)                                            $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)trigger:deploy:production$(WHITE)     ║$(RESET) Deploy tasks (production)                                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)SDK PACKAGE$(WHITE)                                                                                        ║$(RESET)"
@@ -474,18 +475,18 @@ trigger\:dev: ## Run trigger.dev dev server
 	fi
 	@cd apps/api && set -a && . .env.development && set +a && npx trigger.dev@latest dev
 
-trigger\:deploy: ## Deploy tasks to trigger.dev (dev)
-	@echo "$(BLUE)Deploying tasks to trigger.dev (development)...$(RESET)"
+trigger\:deploy: ## Hint to use trigger:deploy:staging or trigger:deploy:production
+	@echo "$(YELLOW)Usage: make trigger:deploy:staging or make trigger:deploy:production$(RESET)"
+	@echo "$(YELLOW)For local development, run: make trigger:dev$(RESET)"
+
+trigger\:deploy\:staging: ## Deploy tasks to trigger.dev (staging)
+	@echo "$(BLUE)Deploying tasks to trigger.dev (staging)...$(RESET)"
 	@if [ ! -f apps/api/.env.development ]; then \
 		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@cd apps/api && \
-		export SENTRY_AUTH_TOKEN=$$(grep '^SENTRY_AUTH_TOKEN=' .env.development | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
-		export SENTRY_ORG=$$(grep '^SENTRY_ORG=' .env.development | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
-		export SENTRY_PROJECT_API=$$(grep '^SENTRY_PROJECT_API=' .env.development | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
-		npx trigger.dev@latest deploy --env dev
+	@cd apps/api && npx trigger.dev@latest deploy --env staging
 	@echo "$(GREEN)Deployment complete!$(RESET)"
 
 trigger\:deploy\:production: ## Deploy tasks to trigger.dev (production)
@@ -496,11 +497,7 @@ trigger\:deploy\:production: ## Deploy tasks to trigger.dev (production)
 		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
 		exit 1; \
 	fi
-	@cd apps/api && \
-		export SENTRY_AUTH_TOKEN=$$(grep '^SENTRY_AUTH_TOKEN=' .env.production | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
-		export SENTRY_ORG=$$(grep '^SENTRY_ORG=' .env.production | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
-		export SENTRY_PROJECT_API=$$(grep '^SENTRY_PROJECT_API=' .env.production | cut -d'=' -f2- | tr -d "'" | tr -d '"') && \
-		npx trigger.dev@latest deploy --env production
+	@cd apps/api && npx trigger.dev@latest deploy --env production
 	@echo "$(GREEN)Deployment complete!$(RESET)"
 
 # Tunnel commands (Cloudflare Tunnel)

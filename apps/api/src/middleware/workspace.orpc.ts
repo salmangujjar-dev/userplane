@@ -3,7 +3,7 @@
  * Checks workspace membership and attaches workspace context
  */
 
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import type { WorkspaceRole } from '@workspace/contract';
 import { workspaceError } from '@workspace/contract';
 

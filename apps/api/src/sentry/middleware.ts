@@ -7,7 +7,7 @@
  * - Import `enrichSentryWorkspaceContext` for workspace-scoped routes
  */
 
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import {
   buildWorkspaceTags,
   TagNames,

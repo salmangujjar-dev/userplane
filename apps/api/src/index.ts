@@ -4,7 +4,7 @@ initSentry();
 
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { isDefinedError, onError } from '@orpc/server';
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@workspace/cache';
 import { createAppLogger } from '@workspace/logger';
 import type { Context } from 'hono';
