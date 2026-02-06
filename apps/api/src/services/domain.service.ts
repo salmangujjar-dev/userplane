@@ -89,6 +89,79 @@ export class DomainService {
   }
 
   /**
+   * Create multiple domains in a single batch
+   * Accepts any URL format and cleans them before storage
+   * Deduplicates within batch (first wins) and skips existing domains
+   * Throws DOMAIN_URL_REQUIRED if any URL is missing
+   */
+  async createBatch(
+    params: { workspaceId: string; url: string; status: DomainStatus }[],
+    options?: { tx?: Transaction }
+  ) {
+    if (params.length === 0) {
+      return [];
+    }
+
+    // Validate and normalize all URLs
+    const normalizedParams = params.map((p) => {
+      if (!p.url) {
+        throw domainError.DOMAIN_URL_REQUIRED();
+      }
+      return {
+        ...p,
+        normalizedUrl: cleanUrl(p.url),
+      };
+    });
+
+    // Get existing domains in the workspace to skip duplicates
+    const workspaceId = params[0]!.workspaceId;
+    const existingDomains = await this.deps.domainRepo.findByWorkspaceId(workspaceId);
+    const existingUrls = new Set(existingDomains.map((d) => d.domainUrl));
+
+    // Deduplicate: first occurrence wins, skip existing domains
+    const seenUrls = new Set<string>();
+    const uniqueParams = normalizedParams.filter((p) => {
+      const key = `${p.workspaceId}:${p.normalizedUrl}`;
+      if (seenUrls.has(key) || existingUrls.has(p.normalizedUrl)) {
+        return false;
+      }
+      seenUrls.add(key);
+      return true;
+    });
+
+    if (uniqueParams.length === 0) {
+      return [];
+    }
+
+    // Create all unique domains
+    const domainsToCreate = uniqueParams.map((p) => ({
+      domainId: generateDomainId(),
+      workspaceId: p.workspaceId,
+      url: p.normalizedUrl,
+      domainStatus: p.status,
+    }));
+
+    const createdDomains = await this.deps.domainRepo.createBatch(domainsToCreate, options);
+
+    // Warm domain recording preferences cache for all created domains
+    await Promise.all(
+      createdDomains.map((domain) =>
+        this.deps.cacheService.setDomainRecordingPrefs(domain.domainId, {
+          workspaceId: domain.workspaceId,
+          domainStatus: domain.domainStatus,
+          recordingHideSensitive: domain.recordingHideSensitive,
+          recordingCaptureClientLog: domain.recordingCaptureClientLog,
+          recordingCaptureClientAction: domain.recordingCaptureClientAction,
+          recordingCaptureServerLog: domain.recordingCaptureServerLog,
+          recordingCaptureNetworkLog: domain.recordingCaptureNetworkLog,
+        })
+      )
+    );
+
+    return createdDomains;
+  }
+
+  /**
    * Get all domains for a workspace
    * Excludes soft-deleted domains
    */

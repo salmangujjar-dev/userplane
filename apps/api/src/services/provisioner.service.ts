@@ -8,6 +8,7 @@ import { provisionerError, WorkspaceNameSchema } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 import { ABUSE_PREVENTION } from '@workspace/pricing';
 
+import { env } from '@/api/env';
 import { deriveWorkspaceName } from '@/api/lib/workspace';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
@@ -221,12 +222,22 @@ export class ProvisionerService {
         { tx }
       );
 
-      await this.deps.domainService.create(
-        {
-          workspaceId: createdWorkspace.workspaceId!,
-          url,
-          status: 'pending',
-        },
+      // Create user's domain (pending) and recorder domain (verified) in batch
+      await this.deps.domainService.createBatch(
+        [
+          // Accept user domain
+          {
+            workspaceId: createdWorkspace.workspaceId!,
+            url,
+            status: 'pending',
+          },
+          // Add recorder domain as a verified default domain
+          {
+            workspaceId: createdWorkspace.workspaceId!,
+            url: env.recorder.baseUrl,
+            status: 'verified',
+          },
+        ],
         { tx }
       );
 
