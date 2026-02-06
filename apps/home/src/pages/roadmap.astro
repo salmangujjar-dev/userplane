@@ -13,25 +13,345 @@ import { TALLY_FEATURE_REQUEST_URL } from '../constants/contact';
  * }
  */
 const roadmapItems: RoadmapProps[] = [
-  // Example items - replace with Userplane roadmap items:
-  // {
-  //   title: 'slack integration',
-  //   description: 'send screen recordings directly to slack channels for team collaboration.',
-  //   status: 'planned',
-  //   date: 'Q2 2026',
-  // },
-  // {
-  //   title: 'advanced console filtering',
-  //   description: 'filter and search through console logs with advanced query syntax.',
-  //   status: 'inProgress',
-  //   date: 'Q1 2026',
-  // },
-  // {
-  //   title: 'one-click screen recording',
-  //   description: 'capture screen recordings with console logs and network data in one click.',
-  //   status: 'completed',
-  //   date: 'Q4 2025',
-  // },
+  // Completed -- Q4 2025
+  {
+    title: 'Request screen recordings from customers',
+    description:
+      'Request and capture screen recordings with console logs and network data from customers.',
+    status: 'completed',
+    date: 'Q4 2025',
+  },
+  {
+    title: 'Automatically blur and redact sensitive data',
+    description: 'Automatically detect and blur sensitive information to ensure confidentiality.',
+    status: 'completed',
+    date: 'Q4 2025',
+  },
+  // Completed -- Q1 2026
+  {
+    title: 'Intercom integration',
+    description: 'Integrate Userplane with Intercom to streamline customer communication.',
+    status: 'completed',
+    date: 'Q1 2026',
+  },
+  // Planned -- Q1 2026
+  {
+    title: 'Public recording links',
+    description: 'Allow sharing of session recordings via public links.',
+    status: 'planned',
+    date: 'Q1 2026',
+  },
+  {
+    title: 'Request screenshots from customers',
+    description:
+      'Enable users to request screenshots directly from customers for faster issue resolution.',
+    status: 'planned',
+    date: 'Q1 2026',
+  },
+  {
+    title: 'Zendesk integration',
+    description: 'Connect Userplane with Zendesk to streamline support workflows.',
+    status: 'planned',
+    date: 'Q1 2026',
+  },
+  {
+    title: 'Crisp integration',
+    description: 'Connect Userplane with Zendesk to streamline support workflows.',
+    status: 'planned',
+    date: 'Q1 2026',
+  },
+  // Planned -- Q2 2026
+  {
+    title: 'NPM package for metadata capture',
+    description: 'Provide an NPM package for capturing and forwarding user metadata.',
+    status: 'planned',
+    date: 'Q2 2026',
+  },
+  {
+    title: 'Userplane client SDK',
+    description: 'Provide a client SDK for integrating Userplane into any web application.',
+    status: 'planned',
+    date: 'Q2 2026',
+  },
+  {
+    title: 'Capture console logs from users',
+    description: 'Collect and review console logs from users for debugging.',
+    status: 'planned',
+    date: 'Q2 2026',
+  },
+  {
+    title: 'Slack integration',
+    description: 'Send screen recordings and session data directly to Slack channels.',
+    status: 'planned',
+    date: 'Q2 2026',
+  },
+  {
+    title: 'Jira integration',
+    description: 'Automatically create Jira tickets from user sessions.',
+    status: 'planned',
+    date: 'Q2 2026',
+  },
+  {
+    title: 'Help Scout integration',
+    description: 'Integrate with Help Scout for enhanced customer support tracking.',
+    status: 'planned',
+    date: 'Q2 2026',
+  },
+  // Planned -- Q3 2026
+  {
+    title: 'Session capture',
+    description: 'Capture full user sessions for troubleshooting and analysis.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Native widget for capture',
+    description: 'Provide a native widget to capture user sessions directly on the platform.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Chrome extension',
+    description: 'Provide a Chrome extension for easier screen recording and session capture.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Electron / Desktop app',
+    description: 'Provide a desktop application for screen recording and session capture.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Request video calls from customers',
+    description: 'Allow users to request video calls directly from customers.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Request file uploads from customers',
+    description: 'Allow users to request file uploads directly from customers.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'SSO',
+    description: 'Enable single sign-on for secure and streamlined team authentication.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Custom retention periods',
+    description: 'Allow teams to configure how long session data and recordings are retained.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'API integration',
+    description: 'Add programmatic API access to Userplane for advanced integrations.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'API documentation',
+    description: 'Provide comprehensive API documentation for easy integration.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Webhooks',
+    description: 'Send real-time event notifications to external services via webhooks.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Freshdesk integration',
+    description: 'Connect Userplane with Freshdesk to streamline support ticket workflows.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Jira Service Management integration',
+    description: 'Integrate with Jira Service Management for IT and customer service management.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'ServiceNow integration',
+    description: 'Connect Userplane with ServiceNow for enterprise service management.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Freshchat integration',
+    description: 'Connect Userplane with Freshchat for live chat support workflows.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Salesforce Service Cloud integration',
+    description: 'Integrate with Salesforce Service Cloud for enterprise support management.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Happyfox integration',
+    description: 'Connect Userplane with Happyfox to streamline help desk workflows.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Ada integration',
+    description: 'Integrate with Ada for AI-powered customer support automation.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Forethought integration',
+    description: 'Integrate with Forethought for AI-driven support ticket resolution.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Canny integration',
+    description: 'Connect Userplane with Canny to link session data to feature requests.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'HubSpot integration',
+    description: 'Sync Userplane data with HubSpot CRM for better customer insights.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Linear integration',
+    description: 'Integrate with Linear to streamline issue tracking and resolution.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Sentry integration',
+    description: 'Connect Userplane with Sentry for advanced error tracking.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Asana integration',
+    description: 'Integrate with Asana to connect session insights to project workflows.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Azure DevOps integration',
+    description: 'Connect Userplane with Azure DevOps for development workflow integration.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'ClickUp integration',
+    description: 'Integrate with ClickUp to link session data to project tasks.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Notion integration',
+    description: 'Send session data and recordings to Notion for documentation and tracking.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'GitHub integration',
+    description: 'Create GitHub issues from user sessions for streamlined bug tracking.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'GitLab integration',
+    description: 'Create GitLab issues from user sessions for streamlined bug tracking.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Figma integration',
+    description: 'Connect Userplane with Figma to bridge user feedback and design workflows.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Fullstory integration',
+    description: 'Integrate with Fullstory for combined session replay and analytics insights.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'LogRocket integration',
+    description: 'Connect with LogRocket for enhanced frontend monitoring and session analysis.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Discord integration',
+    description: 'Send recordings and session data to Discord channels for team collaboration.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Gmail integration',
+    description: 'Send session recordings and updates via Gmail.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Front integration',
+    description: 'Integrate with Front to centralize support communications.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Zapier integration',
+    description: 'Integrate with Zapier for support automation workflows.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'Make integration',
+    description: 'Integrate with Make for support automation workflows.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  {
+    title: 'N8n integration',
+    description: 'Integrate with N8n for support automation workflows.',
+    status: 'planned',
+    date: 'Q3 2026',
+  },
+  // Planned -- Q4 2026
+  {
+    title: 'AI agents / AI integration',
+    description: 'Integrate AI agents to assist in analyzing sessions and user data.',
+    status: 'planned',
+    date: 'Q4 2026',
+  },
+  {
+    title: 'MCP integration',
+    description: 'Integrate with MCP for advanced customer management workflows.',
+    status: 'planned',
+    date: 'Q4 2026',
+  },
+  {
+    title: 'MCP apps integration',
+    description: 'Support MCP applications to extend Userplane functionality.',
+    status: 'planned',
+    date: 'Q4 2026',
+  },
+  {
+    title: 'Fin integration',
+    description:
+      'Integrate with Fin to provide additional analytics and session tracking features.',
+    status: 'planned',
+    date: 'Q4 2026',
+  },
 ];
 ---
 
@@ -65,7 +385,7 @@ const roadmapItems: RoadmapProps[] = [
       </p>
     </div>
     <div class="w-full text-left">
-      <RoadmapComponent items={roadmapItems} />
+      <RoadmapComponent client:load items={roadmapItems} />
     </div>
   </div>
 </HomepageLayout>
