@@ -9,7 +9,6 @@ import { buildProjectDeletionKey, buildRecordingDeletionKey } from '@/api/innges
 import { chunkArray } from '@/api/lib/batch';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { withSentryInngest } from '@/api/sentry';
 
 const logger = createAppLogger('inngest:sweep-orphaned-projects');
 
@@ -25,10 +24,10 @@ export const cleanupOrphanedProject = inngest.createFunction(
     retries: 3,
   },
   { event: EVENT_NAMES.CLEANUP_ORPHANED_PROJECT },
-  withSentryInngest(async ({ event, step }) => {
+  async ({ event, step }) => {
     const { projectId } = event.data;
 
-    logger.info('Starting orphan project resource cleanup', { projectId });
+    logger.info({ projectId }, 'Starting orphan project resource cleanup');
 
     const projectRepo = new ProjectRepository(db);
     const recordingRepo = new RecordingRepository(db);
@@ -39,7 +38,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
     });
 
     if (isDeleted === null) {
-      logger.info('Project not found, skipping', { projectId });
+      logger.info({ projectId }, 'Project not found, skipping');
       return {
         success: true,
         projectId,
@@ -50,7 +49,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
     }
 
     if (!isDeleted) {
-      logger.info('Project not deleted, skipping', { projectId });
+      logger.info({ projectId }, 'Project not deleted, skipping');
       return {
         success: true,
         projectId,
@@ -65,7 +64,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
       return recordingRepo.findByProjectId(projectId, 'ORPHAN');
     });
 
-    logger.info('Found recordings to cleanup', { projectId, count: recordingsToCleanup.length });
+    logger.info({ projectId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
 
     // 3. Fan-out in batches of 500
     if (recordingsToCleanup.length > 0) {
@@ -75,7 +74,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
             chunk.map((recording) => ({
-              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES as const,
+              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
               data: { recordingId: recording.recordingId },
               id: buildRecordingDeletionKey(recording.recordingId),
               ...(getPurgeDelayTimestamp() ? { ts: getPurgeDelayTimestamp() } : {}),
@@ -83,12 +82,15 @@ export const cleanupOrphanedProject = inngest.createFunction(
           );
         });
 
-        logger.info('Triggered recording cleanup batch', {
-          projectId,
-          batchIndex: index + 1,
-          batchCount: recordingChunks.length,
-          recordingsInBatch: chunk.length,
-        });
+        logger.info(
+          {
+            projectId,
+            batchIndex: index + 1,
+            batchCount: recordingChunks.length,
+            recordingsInBatch: chunk.length,
+          },
+          'Triggered recording cleanup batch'
+        );
       }
     }
 
@@ -97,7 +99,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
       projectId,
       recordingsScheduled: recordingsToCleanup.length,
     };
-  })
+  }
 );
 
 /**
@@ -112,7 +114,7 @@ export const sweepOrphanedProjects = inngest.createFunction(
     retries: 3,
   },
   { cron: env.inngest.projectSweepCronSchedule },
-  withSentryInngest(async ({ step }) => {
+  async ({ step }) => {
     // Environment guard: only run in production
     if (env.server.appEnv !== 'production') {
       logger.info('Skipping orphaned project sweep in non-production environment');
@@ -131,20 +133,26 @@ export const sweepOrphanedProjects = inngest.createFunction(
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - lookbackDays);
 
-    logger.info('Querying projects deleted within date range with orphaned recordings', {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      lookbackDays,
-    });
+    logger.info(
+      {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        lookbackDays,
+      },
+      'Querying projects deleted within date range with orphaned recordings'
+    );
 
     const projectsWithOrphans = await step.run('find-orphaned-projects', async () => {
       return recordingRepo.findProjectsWithOrphanedRecordings(startDate, endDate);
     });
 
-    logger.info('Found projects with orphaned recordings', {
-      count: projectsWithOrphans.length,
-      projectIds: projectsWithOrphans.map((p) => p.projectId),
-    });
+    logger.info(
+      {
+        count: projectsWithOrphans.length,
+        projectIds: projectsWithOrphans.map((p) => p.projectId),
+      },
+      'Found projects with orphaned recordings'
+    );
 
     if (projectsWithOrphans.length > 0) {
       const projectChunks = chunkArray(projectsWithOrphans, BATCH_LIMITS.MAX_BATCH_SIZE);
@@ -153,18 +161,21 @@ export const sweepOrphanedProjects = inngest.createFunction(
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
             chunk.map((project) => ({
-              name: EVENT_NAMES.CLEANUP_ORPHANED_PROJECT as const,
+              name: EVENT_NAMES.CLEANUP_ORPHANED_PROJECT,
               data: { projectId: project.projectId },
               id: buildProjectDeletionKey(project.projectId),
             }))
           );
         });
 
-        logger.info('Triggered project cleanup batch', {
-          batchIndex: index + 1,
-          batchCount: projectChunks.length,
-          projectsInBatch: chunk.length,
-        });
+        logger.info(
+          {
+            batchIndex: index + 1,
+            batchCount: projectChunks.length,
+            projectsInBatch: chunk.length,
+          },
+          'Triggered project cleanup batch'
+        );
       }
     }
 
@@ -174,7 +185,7 @@ export const sweepOrphanedProjects = inngest.createFunction(
       dateRangeEnd: endDate.toISOString(),
     };
 
-    logger.info('Sweep completed', result);
+    logger.info(result, 'Sweep completed');
     return result;
-  })
+  }
 );

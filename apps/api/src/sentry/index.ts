@@ -4,7 +4,6 @@
  */
 
 export { initSentry } from './init';
-export { withSentryInngest } from './inngest';
 export {
   enrichSentryFullContext,
   enrichSentryUserContext,

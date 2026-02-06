@@ -8,7 +8,6 @@ import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { chunkArray } from '@/api/lib/batch';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { withSentryInngest } from '@/api/sentry';
 
 const logger = createAppLogger('inngest:sweep-orphaned-recordings');
 
@@ -26,7 +25,7 @@ export const sweepOrphanedRecordings = inngest.createFunction(
     retries: 3,
   },
   { cron: env.inngest.recordingSweepCronSchedule },
-  withSentryInngest(async ({ step }) => {
+  async ({ step }) => {
     // Environment guard: only run in production
     if (env.server.appEnv !== 'production') {
       logger.info('Skipping orphaned recording sweep in non-production environment');
@@ -45,20 +44,26 @@ export const sweepOrphanedRecordings = inngest.createFunction(
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - lookbackDays);
 
-    logger.info('Querying deleted recordings from active workspaces and projects', {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      lookbackDays,
-    });
+    logger.info(
+      {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        lookbackDays,
+      },
+      'Querying deleted recordings from active workspaces and projects'
+    );
 
     const deletedRecordings = await step.run('find-orphaned-recordings', async () => {
       return recordingRepo.findDeletedRecordingsFromActiveEntities(startDate, endDate);
     });
 
-    logger.info('Found deleted recordings from active entities', {
-      count: deletedRecordings.length,
-      recordingIds: deletedRecordings.map((r) => r.recordingId),
-    });
+    logger.info(
+      {
+        count: deletedRecordings.length,
+        recordingIds: deletedRecordings.map((r) => r.recordingId),
+      },
+      'Found deleted recordings from active entities'
+    );
 
     if (deletedRecordings.length > 0) {
       const recordingChunks = chunkArray(deletedRecordings, BATCH_LIMITS.MAX_BATCH_SIZE);
@@ -67,7 +72,7 @@ export const sweepOrphanedRecordings = inngest.createFunction(
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
             chunk.map((recording) => ({
-              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES as const,
+              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
               data: { recordingId: recording.recordingId },
               id: buildRecordingDeletionKey(recording.recordingId),
               ...(getPurgeDelayTimestamp(recording.uploadStatus)
@@ -77,11 +82,14 @@ export const sweepOrphanedRecordings = inngest.createFunction(
           );
         });
 
-        logger.info('Triggered recording cleanup batch', {
-          batchIndex: index + 1,
-          batchCount: recordingChunks.length,
-          recordingsInBatch: chunk.length,
-        });
+        logger.info(
+          {
+            batchIndex: index + 1,
+            batchCount: recordingChunks.length,
+            recordingsInBatch: chunk.length,
+          },
+          'Triggered recording cleanup batch'
+        );
       }
     }
 
@@ -91,7 +99,7 @@ export const sweepOrphanedRecordings = inngest.createFunction(
       dateRangeEnd: endDate.toISOString(),
     };
 
-    logger.info('Sweep completed', result);
+    logger.info(result, 'Sweep completed');
     return result;
-  })
+  }
 );
