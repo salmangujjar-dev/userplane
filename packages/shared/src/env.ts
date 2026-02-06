@@ -28,11 +28,9 @@ export type EnvFileName = `.env.${Environment}`;
  */
 export function getEnvFileName(environment: string): EnvFileName {
   switch (environment) {
-    // trigger.dev normalizes 'production' to 'prod' internally
     case 'prod':
     case 'production':
       return '.env.production';
-    // trigger.dev deploy uses 'staging' for non-production environments
     case 'staging':
     case 'development':
     default:

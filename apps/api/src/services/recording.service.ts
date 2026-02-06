@@ -3,7 +3,6 @@
  * Contains validation and business rules for recording management
  */
 
-import { tasks } from '@trigger.dev/sdk/v3';
 import { recordingError } from '@workspace/contract';
 import type {
   ClientActionsStorageClient,
@@ -13,13 +12,14 @@ import type {
   VideoStorageClient,
 } from '@workspace/storage';
 
+import { inngest } from '@/api/inngest/client';
+import { EVENT_NAMES } from '@/api/inngest/constants';
+import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
+import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import type { Transaction } from '@/api/repositories/recordings.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import { TASK_IDS } from '@/api/trigger/constants';
-import { getPurgeDelay } from '@/api/trigger/delay-calculator';
-import { buildRecordingDeletionKey } from '@/api/trigger/idempotency';
 import type {
   LinkProviderType,
   RecordingDetail,
@@ -153,17 +153,16 @@ export class RecordingService {
     }
 
     // Schedule recording resource cleanup
-    // Triggers background task to delete storage resources (video, thumbnail, logs, etc.)
-    // Note: Trigger.dev failures are non-blocking - recording soft delete has already succeeded
+    // Sends event to Inngest to delete storage resources (video, thumbnail, logs, etc.)
+    // Note: Inngest failures are non-blocking - recording soft delete has already succeeded
     try {
-      await tasks.trigger(
-        TASK_IDS.DELETE_RECORDING_RESOURCES,
-        { recordingId },
-        {
-          idempotencyKey: buildRecordingDeletionKey(recordingId),
-          delay: getPurgeDelay(existingRecording.uploadStatus),
-        }
-      );
+      const ts = getPurgeDelayTimestamp(existingRecording.uploadStatus);
+      await inngest.send({
+        name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
+        data: { recordingId },
+        id: buildRecordingDeletionKey(recordingId),
+        ...(ts ? { ts } : {}),
+      });
     } catch (error) {
       // Log but don't fail the request - cleanup is a background task
       // The recording has been soft deleted and cleanup can be retried later

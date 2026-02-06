@@ -102,14 +102,9 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)tunnel:stop$(WHITE)                   ║$(RESET) Stop Cloudflare tunnel                                             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)tunnel:status$(WHITE)                 ║$(RESET) Show tunnel status and URLs                                        $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
-	@echo "$(WHITE)║ $(CYAN)BACKGROUND JOBS (Trigger.dev)$(WHITE)                                                                    ║$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)BACKGROUND JOBS (Inngest)$(WHITE)                                                                        ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)trigger:login$(WHITE)                 ║$(RESET) Login to trigger.dev CLI                                          $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)trigger:whoami$(WHITE)                ║$(RESET) Show current trigger.dev user                                     $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)trigger:dev$(WHITE)                   ║$(RESET) Run trigger.dev dev server                                        $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)trigger:deploy$(WHITE)                ║$(RESET) Show deploy usage                                                 $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)trigger:deploy:staging$(WHITE)        ║$(RESET) Deploy tasks (staging)                                            $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)trigger:deploy:production$(WHITE)     ║$(RESET) Deploy tasks (production)                                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)inngest:dev$(WHITE)                   ║$(RESET) Run Inngest dev server (localhost:8288)                            $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)SDK PACKAGE$(WHITE)                                                                                        ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -456,49 +451,10 @@ db\:studio\:production: ## Open Drizzle Studio (production)
 	fi
 	@cd packages/db && set -a && . ../../apps/api/.env.production && set +a && bun run db:studio
 
-# Trigger.dev commands
-trigger\:login: ## Login to trigger.dev CLI
-	@echo "$(BLUE)Logging in to trigger.dev...$(RESET)"
-	@cd apps/api && npx trigger.dev@latest login
-	@echo "$(GREEN)Login complete!$(RESET)"
-
-trigger\:whoami: ## Show current trigger.dev user
-	@echo "$(BLUE)Checking trigger.dev identity...$(RESET)"
-	@cd apps/api && npx trigger.dev@latest whoami
-
-trigger\:dev: ## Run trigger.dev dev server
-	@echo "$(MAGENTA)Starting trigger.dev dev server...$(RESET)"
-	@if [ ! -f apps/api/.env.development ]; then \
-		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
-		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
-		exit 1; \
-	fi
-	@cd apps/api && set -a && . .env.development && set +a && npx trigger.dev@latest dev
-
-trigger\:deploy: ## Hint to use trigger:deploy:staging or trigger:deploy:production
-	@echo "$(YELLOW)Usage: make trigger:deploy:staging or make trigger:deploy:production$(RESET)"
-	@echo "$(YELLOW)For local development, run: make trigger:dev$(RESET)"
-
-trigger\:deploy\:staging: ## Deploy tasks to trigger.dev (staging)
-	@echo "$(BLUE)Deploying tasks to trigger.dev (staging)...$(RESET)"
-	@if [ ! -f apps/api/.env.development ]; then \
-		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
-		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
-		exit 1; \
-	fi
-	@cd apps/api && npx trigger.dev@latest deploy --env staging
-	@echo "$(GREEN)Deployment complete!$(RESET)"
-
-trigger\:deploy\:production: ## Deploy tasks to trigger.dev (production)
-	@echo "$(RED)Deploying tasks to trigger.dev (production)...$(RESET)"
-	@echo "$(RED)WARNING: This will deploy to PRODUCTION!$(RESET)"
-	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
-	@if [ ! -f apps/api/.env.production ]; then \
-		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd apps/api && npx trigger.dev@latest deploy --env production
-	@echo "$(GREEN)Deployment complete!$(RESET)"
+# Inngest commands
+inngest\:dev: ## Run Inngest dev server (localhost:8288)
+	@echo "$(MAGENTA)Starting Inngest dev server...$(RESET)"
+	@npx inngest-cli@latest dev
 
 # Tunnel commands (Cloudflare Tunnel)
 # Config file location

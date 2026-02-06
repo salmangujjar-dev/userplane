@@ -28,14 +28,19 @@ export interface RecordingContext {
 }
 
 /**
- * Context for Trigger.dev task events
+ * Context for background task events (Inngest)
  */
-export interface TriggerTaskContext {
+export interface BackgroundTaskContext {
   taskId: string;
   runId: string;
   attemptNumber: number;
   [key: string]: unknown;
 }
+
+/**
+ * @deprecated Use BackgroundTaskContext instead
+ */
+export type TriggerTaskContext = BackgroundTaskContext;
 
 /**
  * Context for webhook events

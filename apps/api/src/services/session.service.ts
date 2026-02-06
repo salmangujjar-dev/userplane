@@ -12,7 +12,6 @@
  * instead of invalidating all link caches (O(N)).
  */
 
-import { tasks } from '@trigger.dev/sdk/v3';
 import type {
   CacheService,
   DomainRecordingPrefs,
@@ -31,6 +30,10 @@ import type {
 import jwt from 'jsonwebtoken';
 
 import { env } from '@/api/env';
+import { inngest } from '@/api/inngest/client';
+import { EVENT_NAMES } from '@/api/inngest/constants';
+import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
+import { buildStaleRecordingCheckKey } from '@/api/inngest/idempotency';
 import { generateRecordingId, generateSessionId } from '@/api/lib/id';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import {
@@ -49,8 +52,6 @@ import {
 } from '@/api/schema/session.schema';
 import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { LinkService } from '@/api/services/link.service';
-import { TASK_IDS } from '@/api/trigger/constants';
-import { buildStaleRecordingCheckKey } from '@/api/trigger/idempotency';
 import type {
   PresignedUrlInfo,
   SessionPreferences,
@@ -58,8 +59,6 @@ import type {
   UploadFileType,
   UploadTokenPayload,
 } from '@/api/types';
-
-import { getPurgeDelay } from '../trigger/delay-calculator';
 
 export interface SessionServiceDeps {
   linkRepo: LinkRepository;
@@ -458,16 +457,15 @@ export class SessionService {
     // Schedule stale recording check
     // Delays execution by presignedUrlExpiry to check if recording is still pending
     // If so, marks it deleted and triggers cleanup
-    // Note: Trigger.dev failures are non-blocking - recording can still proceed
+    // Note: Inngest failures are non-blocking - recording can still proceed
     try {
-      await tasks.trigger(
-        TASK_IDS.CHECK_STALE_RECORDING,
-        { recordingId },
-        {
-          idempotencyKey: buildStaleRecordingCheckKey(recordingId),
-          delay: getPurgeDelay('pending'),
-        }
-      );
+      const ts = getPurgeDelayTimestamp('pending');
+      await inngest.send({
+        name: EVENT_NAMES.CHECK_STALE_RECORDING,
+        data: { recordingId },
+        id: buildStaleRecordingCheckKey(recordingId),
+        ...(ts ? { ts } : {}),
+      });
     } catch (error) {
       // Log but don't fail the request - stale check is a background task
       // The recording will still be created and can be uploaded

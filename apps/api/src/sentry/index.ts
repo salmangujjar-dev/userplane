@@ -4,12 +4,12 @@
  */
 
 export { initSentry } from './init';
+export { withSentryInngest } from './inngest';
 export {
   enrichSentryFullContext,
   enrichSentryUserContext,
   enrichSentryWorkspaceContext,
 } from './middleware';
-export { withSentryTrigger } from './trigger';
 
 // Re-export shared utilities for convenience
 export {

@@ -12,6 +12,7 @@ import {
   DEV_SECRETS,
   DEV_URLS,
   EMAIL,
+  INNGEST,
   PAYMENTS,
   RATE_LIMIT,
   RESTORATION,
@@ -21,7 +22,6 @@ import {
   STORAGE,
   SUPPORT,
   TOKEN_EXPIRY,
-  TRIGGER,
 } from './defaults';
 import {
   booleanWithDefault,
@@ -161,17 +161,18 @@ export const cacheEnvSchema = z.object({
   CACHE_ENABLED: booleanWithDefault(CACHE.ENABLED),
 });
 
-/** Trigger env vars schema */
-export const triggerEnvSchema = z.object({
-  TRIGGER_SECRET_KEY: requiredString('TRIGGER_SECRET_KEY'),
-  WORKSPACE_SWEEP_LOOKBACK_DAYS: integerWithDefault(TRIGGER.WORKSPACE_SWEEP_LOOKBACK_DAYS),
-  WORKSPACE_SWEEP_CRON_SCHEDULE: stringWithDefault(TRIGGER.CRON_SCHEDULE),
-  PROJECT_SWEEP_LOOKBACK_DAYS: integerWithDefault(TRIGGER.PROJECT_SWEEP_LOOKBACK_DAYS),
-  PROJECT_SWEEP_CRON_SCHEDULE: stringWithDefault(TRIGGER.CRON_SCHEDULE),
-  RECORDING_SWEEP_LOOKBACK_DAYS: integerWithDefault(TRIGGER.RECORDING_SWEEP_LOOKBACK_DAYS),
-  RECORDING_SWEEP_CRON_SCHEDULE: stringWithDefault(TRIGGER.CRON_SCHEDULE),
-  WORKSPACE_RESTORATION_WINDOW_DAYS: integerWithDefault(TRIGGER.WORKSPACE_RESTORATION_WINDOW_DAYS),
-  PROJECT_RESTORATION_WINDOW_DAYS: integerWithDefault(TRIGGER.PROJECT_RESTORATION_WINDOW_DAYS),
+/** Inngest env vars schema */
+export const inngestEnvSchema = z.object({
+  INNGEST_SIGNING_KEY: z.string().optional(),
+  INNGEST_EVENT_KEY: z.string().optional(),
+  WORKSPACE_SWEEP_LOOKBACK_DAYS: integerWithDefault(INNGEST.WORKSPACE_SWEEP_LOOKBACK_DAYS),
+  WORKSPACE_SWEEP_CRON_SCHEDULE: stringWithDefault(INNGEST.CRON_SCHEDULE),
+  PROJECT_SWEEP_LOOKBACK_DAYS: integerWithDefault(INNGEST.PROJECT_SWEEP_LOOKBACK_DAYS),
+  PROJECT_SWEEP_CRON_SCHEDULE: stringWithDefault(INNGEST.CRON_SCHEDULE),
+  RECORDING_SWEEP_LOOKBACK_DAYS: integerWithDefault(INNGEST.RECORDING_SWEEP_LOOKBACK_DAYS),
+  RECORDING_SWEEP_CRON_SCHEDULE: stringWithDefault(INNGEST.CRON_SCHEDULE),
+  WORKSPACE_RESTORATION_WINDOW_DAYS: integerWithDefault(INNGEST.WORKSPACE_RESTORATION_WINDOW_DAYS),
+  PROJECT_RESTORATION_WINDOW_DAYS: integerWithDefault(INNGEST.PROJECT_RESTORATION_WINDOW_DAYS),
 });
 
 /** Restoration env vars schema */
@@ -232,7 +233,7 @@ export const rawEnvSchema = serverEnvSchema
   .merge(rateLimitEnvSchema)
   .merge(redisEnvSchema)
   .merge(cacheEnvSchema)
-  .merge(triggerEnvSchema)
+  .merge(inngestEnvSchema)
   .merge(restorationEnvSchema)
   .merge(storageEnvSchema)
   .merge(sentryEnvSchema)
@@ -360,9 +361,10 @@ export const cacheConfigSchema = z.object({
   enabled: z.boolean(),
 });
 
-/** Trigger configuration schema */
-export const triggerConfigSchema = z.object({
-  secretKey: z.string(),
+/** Inngest configuration schema */
+export const inngestConfigSchema = z.object({
+  signingKey: z.string().optional(),
+  eventKey: z.string().optional(),
   workspaceSweepLookbackDays: z.number(),
   workspaceSweepCronSchedule: z.string(),
   projectSweepLookbackDays: z.number(),
@@ -428,7 +430,7 @@ export const envConfigSchema = z.object({
   rateLimit: rateLimitConfigSchema,
   redis: redisConfigSchema,
   cache: cacheConfigSchema,
-  trigger: triggerConfigSchema,
+  inngest: inngestConfigSchema,
   restoration: restorationConfigSchema,
   storage: storageConfigSchema,
   sentry: sentryConfigSchema,
@@ -455,7 +457,7 @@ export type EmailConfig = z.infer<typeof emailConfigSchema>;
 export type RateLimitConfig = z.infer<typeof rateLimitConfigSchema>;
 export type RedisConfig = z.infer<typeof redisConfigSchema>;
 export type CacheConfig = z.infer<typeof cacheConfigSchema>;
-export type TriggerConfig = z.infer<typeof triggerConfigSchema>;
+export type InngestConfig = z.infer<typeof inngestConfigSchema>;
 export type RestorationConfig = z.infer<typeof restorationConfigSchema>;
 export type BucketCredentials = z.infer<typeof bucketCredentialsSchema>;
 export type StorageConfig = z.infer<typeof storageConfigSchema>;
