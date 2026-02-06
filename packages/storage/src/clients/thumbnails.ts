@@ -18,7 +18,8 @@ export class ThumbnailsStorageClient extends BaseStorageClient {
 
   constructor(config: StorageConfig, options?: ThumbnailsClientOptions) {
     super(config, 'assets');
-    this.domain = options?.domain;
+    // Strip trailing slash for consistent URL joining
+    this.domain = options?.domain?.replace(/\/$/, '');
   }
 
   protected resolvePath(key: string): string {
@@ -52,7 +53,7 @@ export class ThumbnailsStorageClient extends BaseStorageClient {
     if (!this.domain) {
       throw new Error('Domain required for public thumbnail URLs');
     }
-    return `https://${this.domain}/${path}`;
+    return `${this.domain}/${path}`;
   }
 
   private getExtension(contentType: string): string {

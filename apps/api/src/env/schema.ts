@@ -183,8 +183,8 @@ export const restorationEnvSchema = z.object({
 
 /** Storage env vars schema */
 export const storageEnvSchema = z.object({
-  ASSETS_DOMAIN: requiredString('ASSETS_DOMAIN'),
-  CDN_DOMAIN: requiredString('CDN_DOMAIN'),
+  ASSETS_DOMAIN: requiredUrl('ASSETS_DOMAIN'),
+  CDN_DOMAIN: requiredUrl('CDN_DOMAIN'),
   CLOUDFLARE_IMAGE_ZONE: stringWithDefault(STORAGE.IMAGE_ZONE),
   SKIP_IMAGE_TRANSFORM: booleanWithDefault(false),
   // CDN bucket
@@ -391,8 +391,8 @@ export const bucketCredentialsSchema = z.object({
 
 /** Storage configuration schema */
 export const storageConfigSchema = z.object({
-  assetsDomain: z.string(),
-  cdnDomain: z.string(),
+  assetsDomain: z.string().url(),
+  cdnDomain: z.string().url(),
   imageZone: z.string(),
   skipTransform: z.boolean(),
   cdn: bucketCredentialsSchema,
