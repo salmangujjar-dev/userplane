@@ -151,10 +151,10 @@ export const CACHE = {
 } as const;
 
 // =============================================================================
-// Trigger (Background Jobs) Defaults
+// Inngest (Background Jobs) Defaults
 // =============================================================================
 
-export const TRIGGER = {
+export const INNGEST = {
   /** Workspace sweep lookback: 7 days */
   WORKSPACE_SWEEP_LOOKBACK_DAYS: 7,
   /** Project sweep lookback: 3 days */

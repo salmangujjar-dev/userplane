@@ -5,7 +5,7 @@
     "@orpc/openapi": "^1.12.3",
     "@orpc/server": "^1.12.3",
     "@sentry/node": "^10.37.0",
-    "@trigger.dev/sdk": "4.3.3",
+    "inngest": "^3.27.0",
     "@workspace/auth": "workspace:*",
     "@workspace/cache": "workspace:*",
     "@workspace/contract": "workspace:*",
@@ -31,7 +31,6 @@
     "@babel/preset-typescript": "^7.28.5",
     "@orpc/zod": "^1.13.0",
     "@sentry/esbuild-plugin": "^3.5.0",
-    "@trigger.dev/build": "^4.3.1",
     "@types/bun": "latest",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/react": "^19.2.7",
@@ -39,7 +38,6 @@
     "@types/uuid": "^11.0.0",
     "@workspace/eslint-config": "workspace:^",
     "@workspace/typescript-config": "workspace:*",
-    "concurrently": "^9.2.1",
     "eslint": "^9.32.0"
   },
   "exports": {
@@ -50,9 +48,9 @@
   "private": true,
   "scripts": {
     "build": "bun build src/index.ts --outdir ./dist --target bun",
-    "dev": "concurrently \"bun run dev:api\" \"bun run dev:trigger\" --names \"api,trigger\" --prefix-colors \"blue,yellow\"",
+    "dev": "bun run dev:api",
     "dev:api": "bun run --env-file=.env.development --watch src/index.ts",
-    "dev:trigger": "npx trigger.dev@latest dev",
+    "dev:inngest": "npx inngest-cli@latest dev",
     "dev:hot": "bun run --env-file=.env.development --hot src/index.ts",
     "start": "bun run dist/index.js",
     "start:production": "bun run --env-file=.env.production dist/index.js",

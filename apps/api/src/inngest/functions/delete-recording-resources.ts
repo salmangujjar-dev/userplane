@@ -1,8 +1,5 @@
-// Initialize Sentry for Trigger.dev workers - must be first import
-import './init';
-
 import * as Sentry from '@sentry/node';
-import { logger, task } from '@trigger.dev/sdk/v3';
+import { createAppLogger } from '@workspace/logger';
 
 import { db } from '@/api/clients/db';
 import {
@@ -12,65 +9,57 @@ import {
   getThumbnailsStorage,
   getVideoStorage,
 } from '@/api/clients/storage';
+import { inngest } from '@/api/inngest/client';
+import { EVENT_NAMES } from '@/api/inngest/constants';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { withSentryTrigger } from '@/api/sentry';
+import { withSentryInngest } from '@/api/sentry';
 
-import { MAX_DURATIONS, TASK_IDS } from './constants';
-
-interface DeleteRecordingResourcesPayload {
-  recordingId: string;
-}
-
-interface DeleteRecordingResourcesResult {
-  success: boolean;
-  recordingId: string;
-  skipped?: boolean;
-  reason?: string;
-  filesDeleted?: string[];
-  errors?: string[];
-}
+const logger = createAppLogger('inngest:delete-recording-resources');
 
 /**
- * deleteRecordingResources - Cleanup task for recording resources
- * Follows the same pattern as CleanupService
+ * deleteRecordingResources - Cleanup function for recording resources
  *
- * Task ID: TASK_IDS.DELETE_RECORDING_RESOURCES
+ * Event: recording/delete-resources
  * Input: { recordingId: string }
  *
  * Flow:
  * 1. Short-circuit check - skip if not found or already purged
- * 2. Mark recording as deleted if not already
- * 3. Delete R2 objects (video, thumbnail, logs)
- * 4. Mark recording as purged
+ * 2. Delete R2 objects (video, thumbnail, logs)
+ * 3. Mark recording as purged
  */
-export const deleteRecordingResources = task({
-  id: TASK_IDS.DELETE_RECORDING_RESOURCES,
-  maxDuration: MAX_DURATIONS.RECORDING_CLEANUP,
-  run: withSentryTrigger(
-    async (payload: DeleteRecordingResourcesPayload): Promise<DeleteRecordingResourcesResult> => {
-      const { recordingId } = payload;
+export const deleteRecordingResources = inngest.createFunction(
+  {
+    id: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
+    retries: 3,
+  },
+  { event: EVENT_NAMES.DELETE_RECORDING_RESOURCES },
+  withSentryInngest(async ({ event, step }) => {
+    const { recordingId } = event.data;
 
-      logger.info('Starting recording resource cleanup', { recordingId });
+    logger.info('Starting recording resource cleanup', { recordingId });
 
-      const recordingRepo = new RecordingRepository(db);
-      const videoStorage = getVideoStorage();
-      const thumbnailsStorage = getThumbnailsStorage();
-      const consoleLogsStorage = getConsoleLogsStorage();
-      const networkLogsStorage = getNetworkLogsStorage();
-      const clientActionsStorage = getClientActionsStorage();
+    const recordingRepo = new RecordingRepository(db);
+    const videoStorage = getVideoStorage();
+    const thumbnailsStorage = getThumbnailsStorage();
+    const consoleLogsStorage = getConsoleLogsStorage();
+    const networkLogsStorage = getNetworkLogsStorage();
+    const clientActionsStorage = getClientActionsStorage();
 
-      // 1. Short-circuit check
-      const recording = await recordingRepo.findByIdWithStatusGroup(recordingId, 'AVAILABLE');
+    // 1. Short-circuit check
+    const recording = await step.run('check-recording', async () => {
+      return recordingRepo.findByIdWithStatusGroup(recordingId, 'AVAILABLE');
+    });
 
-      if (!recording) {
-        logger.info('Recording not found, skipping', { recordingId });
-        return { success: true, recordingId, skipped: true, reason: 'not_found' };
-      }
+    if (!recording) {
+      logger.info('Recording not found, skipping', { recordingId });
+      return { success: true, recordingId, skipped: true, reason: 'not_found' };
+    }
 
-      const filesDeleted: string[] = [];
-      const errors: string[] = [];
+    const filesDeleted: string[] = [];
+    const errors: string[] = [];
 
-      // 2. Delete R2 objects (following CleanupService pattern)
+    // 2. Delete R2 objects
+    await step.run('delete-storage-objects', async () => {
       if (recording.recordingVideoRef) {
         try {
           await videoStorage.delete(recording.recordingVideoRef);
@@ -78,20 +67,12 @@ export const deleteRecordingResources = task({
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`video: ${message}`);
-
           Sentry.captureException(error, {
             level: 'warning',
             tags: {
               operation: 'storage_cleanup',
               resource_type: 'video',
               recording_id: recordingId,
-            },
-            contexts: {
-              cleanup: {
-                recording_id: recordingId,
-                file_type: 'video',
-                reference: recording.recordingVideoRef,
-              },
             },
           });
         }
@@ -104,20 +85,12 @@ export const deleteRecordingResources = task({
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`thumbnail: ${message}`);
-
           Sentry.captureException(error, {
             level: 'warning',
             tags: {
               operation: 'storage_cleanup',
               resource_type: 'thumbnail',
               recording_id: recordingId,
-            },
-            contexts: {
-              cleanup: {
-                recording_id: recordingId,
-                file_type: 'thumbnail',
-                reference: recording.recordingThumbnailRef,
-              },
             },
           });
         }
@@ -130,20 +103,12 @@ export const deleteRecordingResources = task({
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`console_log: ${message}`);
-
           Sentry.captureException(error, {
             level: 'warning',
             tags: {
               operation: 'storage_cleanup',
               resource_type: 'console_log',
               recording_id: recordingId,
-            },
-            contexts: {
-              cleanup: {
-                recording_id: recordingId,
-                file_type: 'console_log',
-                reference: recording.recordingConsoleLogRef,
-              },
             },
           });
         }
@@ -156,20 +121,12 @@ export const deleteRecordingResources = task({
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`network_log: ${message}`);
-
           Sentry.captureException(error, {
             level: 'warning',
             tags: {
               operation: 'storage_cleanup',
               resource_type: 'network_log',
               recording_id: recordingId,
-            },
-            contexts: {
-              cleanup: {
-                recording_id: recordingId,
-                file_type: 'network_log',
-                reference: recording.recordingNetworkLogsRef,
-              },
             },
           });
         }
@@ -182,7 +139,6 @@ export const deleteRecordingResources = task({
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`action: ${message}`);
-
           Sentry.captureException(error, {
             level: 'warning',
             tags: {
@@ -190,54 +146,35 @@ export const deleteRecordingResources = task({
               resource_type: 'action',
               recording_id: recordingId,
             },
-            contexts: {
-              cleanup: {
-                recording_id: recordingId,
-                file_type: 'action',
-                reference: recording.recordingActionRef,
-              },
-            },
           });
         }
       }
+    });
 
-      // 3. Mark as purged if storage cleanup was successful
-      const storageSuccess = errors.length === 0;
-      if (storageSuccess) {
+    // 3. Mark as purged if storage cleanup was successful
+    const storageSuccess = errors.length === 0;
+    if (storageSuccess) {
+      await step.run('mark-as-purged', async () => {
         try {
           await recordingRepo.markAsPurged(recordingId);
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`mark_as_purged: ${message}`);
-
           Sentry.captureException(error, {
             level: 'error',
-            tags: {
-              operation: 'mark_as_purged',
-              recording_id: recordingId,
-            },
-            contexts: {
-              cleanup: {
-                recording_id: recordingId,
-                step: 'mark_as_purged',
-              },
-            },
+            tags: { operation: 'mark_as_purged', recording_id: recordingId },
           });
         }
-      }
-
-      logger.info('Recording resource cleanup completed', {
-        recordingId,
-        filesDeleted,
-        errors,
       });
-
-      return {
-        success: errors.length === 0,
-        recordingId,
-        filesDeleted,
-        errors,
-      };
     }
-  ),
-});
+
+    logger.info('Recording resource cleanup completed', { recordingId, filesDeleted, errors });
+
+    return {
+      success: errors.length === 0,
+      recordingId,
+      filesDeleted,
+      errors,
+    };
+  })
+);

@@ -1,6 +1,7 @@
 /**
  * Delay calculation utilities for deletion tasks
  * Calculates appropriate delays based on upload status to allow pending operations to complete
+ * Returns epoch milliseconds for Inngest's `ts` field on send()
  */
 
 import type { Recording } from '@workspace/db';
@@ -9,18 +10,18 @@ import { env } from '@/api/env';
 import { RECORDING_STATUS_GROUPS } from '@/api/schema/recording.schema';
 
 /**
- * getPurgeDelay - get the delay for purging a recording
- * If the recording is in the STALE status group, return the delay for purging the recording
+ * getPurgeDelayTimestamp - get the timestamp for purging a recording
+ * If the recording is in the STALE status group, return a future timestamp
  * If the recording is in the AVAILABLE status group, return undefined i.e. no delay.
  * @param uploadStatus
- * @returns
+ * @returns epoch ms timestamp for Inngest's `ts` field, or undefined for immediate execution
  */
-export function getPurgeDelay(
+export function getPurgeDelayTimestamp(
   uploadStatus: Recording['uploadStatus'] = 'available'
-): string | undefined {
+): number | undefined {
   if (uploadStatus in RECORDING_STATUS_GROUPS.STALE) {
     const delayMinutes = Math.ceil(env.session.presignedUrlExpiry / 60);
-    return `${delayMinutes}m`; // Delay for STALE status group
+    return Date.now() + delayMinutes * 60 * 1000;
   }
   return undefined; // No delay for AVAILABLE status group
 }

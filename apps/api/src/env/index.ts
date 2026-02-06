@@ -20,6 +20,7 @@ import {
   type EmailConfig,
   type EmailInboxes,
   type EnvConfig,
+  type InngestConfig,
   type OAuthConfig,
   type PaymentsConfig,
   type RateLimitConfig,
@@ -34,7 +35,6 @@ import {
   type StorageConfig,
   type SupportConfig,
   type TokenConfig,
-  type TriggerConfig,
 } from './schema';
 
 // Re-export types for external use
@@ -49,6 +49,7 @@ export type {
   EmailConfig,
   EmailInboxes,
   EnvConfig,
+  InngestConfig,
   OAuthConfig,
   PaymentsConfig,
   RateLimitConfig,
@@ -61,7 +62,6 @@ export type {
   StorageConfig,
   SupportConfig,
   TokenConfig,
-  TriggerConfig,
 };
 
 // =============================================================================
@@ -190,8 +190,9 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     cache: {
       enabled: raw.CACHE_ENABLED,
     },
-    trigger: {
-      secretKey: raw.TRIGGER_SECRET_KEY,
+    inngest: {
+      signingKey: raw.INNGEST_SIGNING_KEY,
+      eventKey: raw.INNGEST_EVENT_KEY,
       workspaceSweepLookbackDays: raw.WORKSPACE_SWEEP_LOOKBACK_DAYS,
       workspaceSweepCronSchedule: raw.WORKSPACE_SWEEP_CRON_SCHEDULE,
       projectSweepLookbackDays: raw.PROJECT_SWEEP_LOOKBACK_DAYS,
@@ -368,7 +369,7 @@ function getConfigStatus(): {
   configured.push('Database');
   configured.push('Redis');
   configured.push('Payments');
-  configured.push('Trigger.dev');
+  configured.push('Inngest');
   configured.push('Storage (CDN)');
   configured.push('Storage (Assets)');
   configured.push('Storage (Reports)');
@@ -442,16 +443,16 @@ export function logConfig(): void {
         apiKeySet: env.email.provider !== 'localhost' ? !!env.email.providerApiKey : 'N/A',
         inboxes: env.email.inboxes,
       },
-      trigger: {
-        sweepSchedule: env.trigger.workspaceSweepCronSchedule,
+      inngest: {
+        sweepSchedule: env.inngest.workspaceSweepCronSchedule,
         lookbackDays: {
-          workspace: env.trigger.workspaceSweepLookbackDays,
-          project: env.trigger.projectSweepLookbackDays,
-          recording: env.trigger.recordingSweepLookbackDays,
+          workspace: env.inngest.workspaceSweepLookbackDays,
+          project: env.inngest.projectSweepLookbackDays,
+          recording: env.inngest.recordingSweepLookbackDays,
         },
         restorationWindow: {
-          workspace: `${env.trigger.workspaceRestorationWindowDays}d`,
-          project: `${env.trigger.projectRestorationWindowDays}d`,
+          workspace: `${env.inngest.workspaceRestorationWindowDays}d`,
+          project: `${env.inngest.projectRestorationWindowDays}d`,
         },
       },
       restoration: {

@@ -25,6 +25,7 @@ import {
   createMessengerSubmitHandler,
 } from '@/api/handlers/intercom-canvas.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
+import { inngestServeHandler } from '@/api/inngest/serve';
 import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
 import { apiRouter } from '@/api/routes/api.router';
@@ -210,6 +211,9 @@ logger.info('    → /api/v1/intercom/canvas/inbox/submit');
 app.post('/api/v1/workspace/:workspaceId/logo', handleWorkspaceLogoUpload);
 logger.info('Workspace logo upload route registered:');
 logger.info('    → POST /api/v1/workspace/:workspaceId/logo');
+
+// Inngest serve handler - handles background function invocations
+app.on(['GET', 'PUT', 'POST'], '/api/inngest', inngestServeHandler);
 
 // OpenAPI handler - handles RESTful requests
 // Respects HTTP methods and paths defined in the contract

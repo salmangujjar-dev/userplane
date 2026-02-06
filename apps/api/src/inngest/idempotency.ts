@@ -1,6 +1,7 @@
 /**
- * Idempotency key builders for Trigger.dev tasks
+ * Idempotency key builders for Inngest events
  * Ensures consistent and type-safe idempotency key generation
+ * Used as the `id` field on inngest.send() for deduplication
  */
 
 /**

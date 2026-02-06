@@ -25,7 +25,7 @@ export const TagNames = {
   RECORDING_STAGE: 'recording_stage',
   UPLOAD_STATUS: 'upload_status',
 
-  // Task context (Trigger.dev)
+  // Task context (Inngest)
   TASK_ID: 'task_id',
   RUN_ID: 'run_id',
 
