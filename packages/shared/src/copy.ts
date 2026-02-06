@@ -33,7 +33,7 @@ export const WEBSITE_URL = 'https://userplane.io' as const;
  *
  * If changed, manually update legal documents as well.
  */
-export const SUPPORT_EMAIL = 'support@mail.userplane.io' as const;
+export const SUPPORT_EMAIL = 'support@userplane.io' as const;
 
 /**
  * Contact email (mailto link)
