@@ -1,7 +1,7 @@
 // Initialize Sentry for Trigger.dev workers - must be first import
 import './init';
 
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import { logger, task } from '@trigger.dev/sdk/v3';
 
 import { db } from '@/api/clients/db';

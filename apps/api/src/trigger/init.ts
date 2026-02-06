@@ -5,7 +5,7 @@
  * It initializes Sentry SDK for the Trigger.dev worker environment
  * and registers a global onFailure hook that captures ALL task failures
  */
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import { tasks } from '@trigger.dev/sdk/v3';
 import {
   buildTaskTags,

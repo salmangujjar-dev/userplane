@@ -20,7 +20,7 @@
  * - Sentry breadcrumbs for operation tracing
  */
 
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import type { CacheService } from '@workspace/cache';
 import { createAppLogger } from '@workspace/logger';
 

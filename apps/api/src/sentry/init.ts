@@ -2,7 +2,7 @@
  * Sentry initialization for API
  * Must be imported and called at the very top of the entry point
  */
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import { createBeforeSendFilter, IGNORED_ERRORS_API } from '@workspace/sentry';
 
 import { env } from '@/api/env';

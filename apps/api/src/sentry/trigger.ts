@@ -2,7 +2,7 @@
  * Sentry instrumentation wrapper for Trigger.dev tasks
  * Provides automatic error capture with task context
  */
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import { buildTaskTags, TagNames, type TriggerTaskContext } from '@workspace/sentry';
 
 /**

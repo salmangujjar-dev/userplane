@@ -1,25 +1,25 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { sentryEsbuildPlugin } from '@sentry/esbuild-plugin';
-import { esbuildPlugin } from '@trigger.dev/build/extensions';
+// import { sentryEsbuildPlugin } from '@sentry/esbuild-plugin';
+// import { esbuildPlugin } from '@trigger.dev/build/extensions';
 import { syncEnvVars } from '@trigger.dev/build/extensions/core';
 import { defineConfig } from '@trigger.dev/sdk/v3';
 import { getEnvFileName } from '@workspace/shared/env';
 
-// Build Sentry plugin if credentials are available
-// Uses SENTRY_PROJECT_API for the API app's Sentry project
-const sentryPlugin =
-  process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT_API
-    ? sentryEsbuildPlugin({
-        org: process.env.SENTRY_ORG,
-        project: process.env.SENTRY_PROJECT_API,
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-        sourcemaps: {
-          assets: './**/*.js',
-        },
-      })
-    : null;
+// Sentry esbuild plugin disabled: causes source-map error with bun runtime
+// during trigger.dev indexing. See comment in build.extensions below.
+// const sentryPlugin =
+//   process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT_API
+//     ? sentryEsbuildPlugin({
+//         org: process.env.SENTRY_ORG,
+//         project: process.env.SENTRY_PROJECT_API,
+//         authToken: process.env.SENTRY_AUTH_TOKEN,
+//         sourcemaps: {
+//           assets: './**/*.js',
+//         },
+//       })
+//     : null;
 
 /**
  * Parse a .env file into an object
@@ -62,19 +62,40 @@ function parseEnvFile(filePath: string): Record<string, string> {
 }
 
 /**
- * Env vars that Trigger.dev tasks need
- * Only sync what's necessary to minimize exposure
+ * Env vars to sync to Trigger.dev task workers.
+ *
+ * Trigger tasks import the full env config (src/env/index.ts), which eagerly
+ * validates ALL env vars via rawEnvSchema. Every requiredString/requiredUrl
+ * field must be present or the env parse fails at task import time.
+ *
+ * When adding new required env vars to the schema, add them here too.
  */
 const TRIGGER_ENV_KEYS = [
+  // General
+  'NODE_ENV',
   // Database
   'DATABASE_URL',
-  // Sentry
-  'SENTRY_DSN',
-  'SENTRY_ORG',
-  'SENTRY_PROJECT_API',
-  'SENTRY_RELEASE',
-  'SENTRY_TRACES_SAMPLE_RATE',
-  // Storage (R2)
+  // Auth (required by authEnvSchema)
+  'BETTER_AUTH_SECRET',
+  'BETTER_AUTH_COOKIE_DOMAIN',
+  // Payments (both required by paymentsEnvSchema)
+  'DODO_PAYMENTS_API_KEY',
+  'DODO_PAYMENTS_WEBHOOK_SECRET',
+  'DODO_PAYMENTS_ENVIRONMENT',
+  // Redis (both required by redisEnvSchema)
+  'UPSTASH_REDIS_REST_URL',
+  'UPSTASH_REDIS_REST_TOKEN',
+  // Secrets (validated against dev defaults in production)
+  'INVITE_TOKEN_SECRET',
+  'SESSION_TOKEN_SECRET',
+  'UPLOAD_TOKEN_SECRET',
+  'RECORDER_TOKEN_SECRET',
+  // Trigger (TRIGGER_SECRET_KEY is required by triggerEnvSchema)
+  'TRIGGER_SECRET_KEY',
+  // Storage domains (both required by storageEnvSchema)
+  'ASSETS_DOMAIN',
+  'CDN_DOMAIN',
+  // Storage (R2) - all required by storageEnvSchema
   'R2_CDN_ACCOUNT_ID',
   'R2_CDN_ACCESS_KEY_ID',
   'R2_CDN_SECRET_ACCESS_KEY',
@@ -87,16 +108,17 @@ const TRIGGER_ENV_KEYS = [
   'R2_REPORTS_ACCESS_KEY_ID',
   'R2_REPORTS_SECRET_ACCESS_KEY',
   'R2_REPORTS_BUCKET_NAME',
-  // Payments (for subscription cancellation)
-  'DODO_PAYMENTS_API_KEY',
-  'DODO_PAYMENTS_ENVIRONMENT',
-  // General
-  'NODE_ENV',
+  // Sentry (used by init.ts runtime error tracking)
+  'SENTRY_DSN',
+  'SENTRY_RELEASE',
+  'SENTRY_TRACES_SAMPLE_RATE',
 ];
 
 export default defineConfig({
   project: 'proj_pftbudrujxtzedzxhqlg',
-  runtime: 'bun',
+  // bun runtime is experimental and causes source-map errors during indexing.
+  // Switch to node-22 until trigger.dev stabilizes bun support.
+  runtime: 'node-22',
   logLevel: 'log',
   maxDuration: 300,
   dirs: ['./src/trigger'],
@@ -134,14 +156,18 @@ export default defineConfig({
         return filtered;
       }),
 
-      // Upload source maps to Sentry during deployment
-      ...(sentryPlugin
-        ? [
-            esbuildPlugin(sentryPlugin, {
-              target: 'deploy',
-            }),
-          ]
-        : []),
+      // Sentry esbuild plugin disabled: causes "Column must be greater than or
+      // equal to 0" source-map error during trigger.dev indexing due to bun
+      // runtime + source-map-support incompatibility. The plugin also finds 0
+      // source map files to upload. Re-enable once trigger.dev resolves the
+      // bun source map issue.
+      // ...(sentryPlugin
+      //   ? [
+      //       esbuildPlugin(sentryPlugin, {
+      //         target: 'deploy',
+      //       }),
+      //     ]
+      //   : []),
     ],
   },
 });

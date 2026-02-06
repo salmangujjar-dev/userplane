@@ -12,7 +12,7 @@
  * @see https://developers.intercom.com/docs/canvas-kit
  */
 
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import { createAppLogger } from '@workspace/logger';
 import { buildWebhookTags } from '@workspace/sentry';
 import type { Context } from 'hono';

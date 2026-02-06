@@ -3,7 +3,7 @@
  * Handles all database operations for recording entities
  */
 
-import * as Sentry from '@sentry/bun';
+import * as Sentry from '@sentry/node';
 import type { DbClient, Recording } from '@workspace/db';
 import { and, asc, count, desc, eq, inArray, sql } from '@workspace/db';
 import {

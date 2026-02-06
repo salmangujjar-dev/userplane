@@ -8,12 +8,12 @@
  * - Breadcrumb builder helpers
  * - Tag builder utilities
  *
- * Note: Each app still initializes its own Sentry SDK (@sentry/bun, @sentry/nextjs, @sentry/astro)
+ * Note: Each app still initializes its own Sentry SDK (@sentry/node, @sentry/nextjs, @sentry/astro)
  * because each has different requirements. This package provides shared utilities.
  *
  * @example API app
  * ```ts
- * import * as Sentry from '@sentry/bun';
+ * import * as Sentry from '@sentry/node';
  * import { createBeforeSendFilter, IGNORED_ERRORS_API } from '@workspace/sentry';
  *
  * Sentry.init({
