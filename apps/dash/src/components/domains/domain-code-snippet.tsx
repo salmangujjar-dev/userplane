@@ -10,12 +10,11 @@ interface DomainCodeSnippetProps {
 export function DomainCodeSnippet({ workspaceId, domainUrl }: DomainCodeSnippetProps) {
   const [isCopied, setIsCopied] = useState(false);
 
-  const codeSnippet = `<!-- Lets users record their screen from your site -->
+  const codeSnippet = `<!-- Sets workspace ID for screen recording -->
 <meta name="userplane:workspace" content="${workspaceId}" />
-<script type="module" src="https://cdn.userplane.io/recorder.js"></script>
 
-<!-- Captures user events and developer logs -->
-<script type="module" src="https://cdn.userplane.io/capture.js"></script>`;
+<!-- Loads Userplane screen recording script -->
+<script src="https://cdn.userplane.com/embed/script.js"></script>`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(codeSnippet);

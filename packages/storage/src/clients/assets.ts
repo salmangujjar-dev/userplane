@@ -53,7 +53,8 @@ export class AssetsStorageClient extends BaseStorageClient {
 
   constructor(config: StorageConfig, options?: AssetsClientOptions) {
     super(config, 'assets');
-    this.domain = options?.domain;
+    // Strip trailing slash for consistent URL joining
+    this.domain = options?.domain?.replace(/\/$/, '');
     this.maxSizeBytes = options?.maxSizeBytes;
     this.imageZone = options?.imageZone ?? DEFAULT_IMAGE_ZONE;
     this.skipTransform = options?.skipTransform ?? false;
@@ -96,7 +97,7 @@ export class AssetsStorageClient extends BaseStorageClient {
     if (!this.domain) {
       throw new Error('Domain required for public asset URLs');
     }
-    return `https://${this.domain}/${path}`;
+    return `${this.domain}/${path}`;
   }
 
   /**
