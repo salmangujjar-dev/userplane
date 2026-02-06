@@ -14,16 +14,18 @@ import * as styles from '../../shared/styles';
 export interface RecoveryPartiallyEmailProps {
   workspaceName: string;
   dashboardUrl: string;
+  logoUrl?: string;
 }
 
 export const RecoveryPartiallyEmail = ({
   workspaceName,
   dashboardUrl,
+  logoUrl,
 }: RecoveryPartiallyEmailProps) => {
   const formattedWorkspaceName = getWorkspaceName(workspaceName);
 
   return (
-    <EmailLayout preview={copy.preview(formattedWorkspaceName)}>
+    <EmailLayout preview={copy.preview(formattedWorkspaceName)} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(formattedWorkspaceName)}</Text>
 

@@ -12,11 +12,12 @@ import * as styles from '../../shared/styles';
 
 export interface AccountRestoredEmailProps {
   loginUrl: string;
+  logoUrl?: string;
 }
 
-export const AccountRestoredEmail = ({ loginUrl }: AccountRestoredEmailProps) => {
+export const AccountRestoredEmail = ({ loginUrl, logoUrl }: AccountRestoredEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

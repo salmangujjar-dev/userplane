@@ -17,6 +17,7 @@ export interface AccessRequestEmailProps {
   requesterEmail: string;
   reviewUrl: string;
   expiryDate: string;
+  logoUrl?: string;
 }
 
 export const AccessRequestEmail = ({
@@ -25,6 +26,7 @@ export const AccessRequestEmail = ({
   requesterEmail,
   reviewUrl,
   expiryDate,
+  logoUrl,
 }: AccessRequestEmailProps) => {
   const formattedWorkspaceName = getWorkspaceName(workspaceName);
   const formattedRequesterName = getRequesterName(requesterName, requesterEmail);
@@ -33,6 +35,7 @@ export const AccessRequestEmail = ({
     <EmailLayout
       preview={copy.preview(formattedRequesterName, formattedWorkspaceName)}
       showSupport={false}
+      logoUrl={logoUrl}
     >
       <Text style={styles.title}>{copy.title}</Text>
 

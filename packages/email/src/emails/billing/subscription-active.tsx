@@ -14,15 +14,17 @@ export interface SubscriptionActiveEmailProps {
   planName: string;
   dashboardUrl: string;
   billingUrl: string;
+  logoUrl?: string;
 }
 
 export const SubscriptionActiveEmail = ({
   planName,
   dashboardUrl,
   billingUrl,
+  logoUrl,
 }: SubscriptionActiveEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview(planName)}>
+    <EmailLayout preview={copy.preview(planName)} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(planName)}</Text>
 

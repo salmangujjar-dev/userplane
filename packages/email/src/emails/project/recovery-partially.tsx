@@ -14,16 +14,18 @@ import * as styles from '../../shared/styles';
 export interface ProjectRecoveryPartiallyEmailProps {
   projectName: string;
   dashboardUrl: string;
+  logoUrl?: string;
 }
 
 export const ProjectRecoveryPartiallyEmail = ({
   projectName,
   dashboardUrl,
+  logoUrl,
 }: ProjectRecoveryPartiallyEmailProps) => {
   const formattedProjectName = getProjectName(projectName);
 
   return (
-    <EmailLayout preview={copy.preview(formattedProjectName)}>
+    <EmailLayout preview={copy.preview(formattedProjectName)} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(formattedProjectName)}</Text>
 

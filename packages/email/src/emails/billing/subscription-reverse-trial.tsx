@@ -14,15 +14,17 @@ export interface SubscriptionReverseTrialEmailProps {
   planName: string;
   trialDays: number;
   dashboardUrl: string;
+  logoUrl?: string;
 }
 
 export const SubscriptionReverseTrialEmail = ({
   planName,
   trialDays,
   dashboardUrl,
+  logoUrl,
 }: SubscriptionReverseTrialEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview(planName, trialDays)}>
+    <EmailLayout preview={copy.preview(planName, trialDays)} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title(planName)}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(trialDays)}</Text>
 

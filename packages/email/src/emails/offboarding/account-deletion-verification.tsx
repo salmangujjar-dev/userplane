@@ -13,13 +13,15 @@ import * as styles from '../../shared/styles';
 
 export interface AccountDeletionVerificationEmailProps {
   verificationUrl: string;
+  logoUrl?: string;
 }
 
 export const AccountDeletionVerificationEmail = ({
   verificationUrl,
+  logoUrl,
 }: AccountDeletionVerificationEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

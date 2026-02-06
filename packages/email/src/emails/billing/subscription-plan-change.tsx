@@ -15,6 +15,7 @@ export interface SubscriptionPlanChangeEmailProps {
   newPlan: string;
   effectiveDate: string;
   billingUrl: string;
+  logoUrl?: string;
 }
 
 export const SubscriptionPlanChangeEmail = ({
@@ -22,9 +23,10 @@ export const SubscriptionPlanChangeEmail = ({
   newPlan,
   effectiveDate,
   billingUrl,
+  logoUrl,
 }: SubscriptionPlanChangeEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview(previousPlan, newPlan)}>
+    <EmailLayout preview={copy.preview(previousPlan, newPlan)} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(previousPlan, newPlan)}</Text>
 

@@ -37,8 +37,10 @@ import {
   renderWorkspaceInvite,
 } from '@workspace/email';
 import { createAppLogger } from '@workspace/logger';
+import type { MediaClient } from '@workspace/storage/media';
 
 import { emailClient } from '@/api/clients/email';
+import { getMediaClient } from '@/api/clients/media';
 import {
   accessRequestSubject,
   accountDeletionSubject,
@@ -149,8 +151,9 @@ type ErrorHandler = (error: unknown, context: { method: string; params: unknown 
 
 export class EmailService {
   private readonly errorHandler: ErrorHandler;
+  private readonly mediaClient: MediaClient;
 
-  constructor(errorHandler?: ErrorHandler) {
+  constructor(errorHandler?: ErrorHandler, mediaClient?: MediaClient) {
     this.errorHandler =
       errorHandler ||
       ((error, context) => {
@@ -159,6 +162,18 @@ export class EmailService {
           error: error instanceof Error ? error.message : String(error),
         });
       });
+    this.mediaClient = mediaClient ?? getMediaClient();
+  }
+
+  /**
+   * Get the logo URL for email templates from the CDN.
+   * Uses raw CDN URL (skipTransform) because email clients need a direct
+   * image URL and may not support WebP/AVIF from Cloudflare format=auto.
+   */
+  private getLogoUrl(): string {
+    return this.mediaClient.getBrandMediaUrl('brand/userplane-icon-64.png', {
+      skipTransform: true,
+    });
   }
 
   /**
@@ -214,6 +229,7 @@ export class EmailService {
     const { html, text } = await renderEmailVerification({
       userName: emailContentParams.userName,
       verificationUrl: emailContentParams.verificationUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -278,6 +294,7 @@ export class EmailService {
 
     const { html, text } = await renderMagicLink({
       magicLinkUrl: emailContentParams.magicLinkUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -348,6 +365,7 @@ export class EmailService {
       requesterEmail: emailContentParams.requesterEmail,
       reviewUrl: emailContentParams.reviewUrl,
       expiryDate: emailContentParams.expiryDate,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -426,6 +444,7 @@ export class EmailService {
       previousEmail: emailContentParams.previousEmail,
       newEmail: emailContentParams.newEmail,
       billingUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -495,6 +514,7 @@ export class EmailService {
       verificationUrl: emailContentParams.verificationUrl,
       previousEmail: emailContentParams.previousEmail,
       newEmail: emailContentParams.newEmail,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -565,6 +585,7 @@ export class EmailService {
       planName: emailContentParams.planName,
       dashboardUrl,
       billingUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -632,6 +653,7 @@ export class EmailService {
     const { html, text } = await renderSubscriptionExpired({
       planName: emailContentParams.planName,
       renewUrl: emailContentParams.renewUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -698,6 +720,7 @@ export class EmailService {
     const { html, text } = await renderSubscriptionInactive({
       planName: emailContentParams.planName,
       reactivateUrl: emailContentParams.reactivateUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -770,6 +793,7 @@ export class EmailService {
       newPlan: emailContentParams.newPlan,
       effectiveDate: emailContentParams.effectiveDate,
       billingUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -841,6 +865,7 @@ export class EmailService {
       planName: emailContentParams.planName,
       trialDays: emailContentParams.trialDays,
       dashboardUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -917,6 +942,7 @@ export class EmailService {
       planName: emailContentParams.planName,
       billingUrl,
       customMessage: emailContentParams.customMessage,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1003,6 +1029,7 @@ export class EmailService {
       domainUrl: emailContentParams.domainUrl,
       verificationUrl,
       userName: emailContentParams.userName,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1075,6 +1102,7 @@ export class EmailService {
     const { html, text } = await renderTeammateInvited({
       workspaceName: emailContentParams.workspaceName,
       inviteUrl: emailContentParams.inviteUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1148,6 +1176,7 @@ export class EmailService {
 
     const { html, text } = await renderAccountDeletion({
       feedbackUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1212,6 +1241,7 @@ export class EmailService {
 
     const { html, text } = await renderAccountDeletionVerification({
       verificationUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1280,6 +1310,7 @@ export class EmailService {
 
     const { html, text } = await renderAccountRestored({
       loginUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1345,6 +1376,7 @@ export class EmailService {
     const { html, text } = await renderTosViolation({
       appealUrl,
       tosUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1413,6 +1445,7 @@ export class EmailService {
     const { html, text } = await renderSandboxInvite({
       sandboxUrl: emailContentParams.sandboxUrl,
       calendarUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1486,6 +1519,7 @@ export class EmailService {
     const { html, text } = await renderWorkspaceInvite({
       inviteUrl: emailContentParams.inviteUrl,
       calendarUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1549,6 +1583,7 @@ export class EmailService {
 
     const { html, text } = await renderRecordingReceived({
       recordingUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1625,6 +1660,7 @@ export class EmailService {
     const { html, text } = await renderWelcomeEmailMember({
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1697,6 +1733,7 @@ export class EmailService {
     const { html, text } = await renderWelcomeEmailSubscription({
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1771,6 +1808,7 @@ export class EmailService {
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
       calendarUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1844,6 +1882,7 @@ export class EmailService {
     const { html, text } = await renderWelcomeEmailRequester({
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1921,6 +1960,7 @@ export class EmailService {
       workspaceName: emailContentParams.workspaceName,
       deletionDate: emailContentParams.deletionDate,
       cancelUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -1997,6 +2037,7 @@ export class EmailService {
     const { html, text } = await renderRecoveryConfirmation({
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -2068,6 +2109,7 @@ export class EmailService {
     const { html, text } = await renderRecoveryPartially({
       workspaceName: emailContentParams.workspaceName,
       dashboardUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -2148,6 +2190,7 @@ export class EmailService {
       projectName: emailContentParams.projectName,
       deletionDate: emailContentParams.deletionDate,
       cancelUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -2227,6 +2270,7 @@ export class EmailService {
     const { html, text } = await renderProjectRecoveryConfirmation({
       projectName: emailContentParams.projectName,
       dashboardUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(
@@ -2300,6 +2344,7 @@ export class EmailService {
     const { html, text } = await renderProjectRecoveryPartially({
       projectName: emailContentParams.projectName,
       dashboardUrl,
+      logoUrl: this.getLogoUrl(),
     });
 
     await emailClient.send(

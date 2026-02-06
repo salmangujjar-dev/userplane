@@ -13,11 +13,16 @@ export interface WelcomeEmailPilotProps {
   workspaceName: string;
   dashboardUrl: string;
   calendarUrl: string;
+  logoUrl?: string;
 }
 
-export const WelcomeEmailPilotEmail = ({ dashboardUrl, calendarUrl }: WelcomeEmailPilotProps) => {
+export const WelcomeEmailPilotEmail = ({
+  dashboardUrl,
+  calendarUrl,
+  logoUrl,
+}: WelcomeEmailPilotProps) => {
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

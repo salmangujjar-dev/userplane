@@ -18,7 +18,7 @@ export function ComingSoonOverlay({ title, subtitle, children }: ComingSoonOverl
   const handleNotifyClick = () => {
     if (isNotified) return;
     setIsNotified(true);
-    toast.success(`We'll notify you when ${title} is ready`);
+    toast.success(`Requested access to ${title}. Stay tuned!`);
   };
 
   return (
@@ -75,7 +75,7 @@ export function ComingSoonOverlay({ title, subtitle, children }: ComingSoonOverl
             ) : (
               <>
                 <Bell className="h-4 w-4" />
-                Get Notified
+                Request Access
               </>
             )}
           </Button>

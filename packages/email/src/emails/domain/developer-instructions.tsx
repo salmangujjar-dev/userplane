@@ -14,17 +14,19 @@ export interface DomainDeveloperInstructionsEmailProps {
   domainUrl: string;
   verificationUrl: string;
   userName?: string;
+  logoUrl?: string;
 }
 
 export const DomainDeveloperInstructionsEmail = ({
   domainUrl,
   verificationUrl,
   userName,
+  logoUrl,
 }: DomainDeveloperInstructionsEmailProps) => {
   const greeting = copy.greeting(userName, domainUrl);
 
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

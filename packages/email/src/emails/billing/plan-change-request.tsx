@@ -18,6 +18,7 @@ export interface PlanChangeRequestEmailProps {
   planName: string;
   billingUrl: string;
   customMessage?: string;
+  logoUrl?: string;
 }
 
 export const PlanChangeRequestEmail = ({
@@ -27,12 +28,13 @@ export const PlanChangeRequestEmail = ({
   planName,
   billingUrl,
   customMessage,
+  logoUrl,
 }: PlanChangeRequestEmailProps) => {
   const formattedWorkspaceName = getWorkspaceName(workspaceName);
   const formattedRequesterName = getRequesterName(requesterName, requesterEmail);
 
   return (
-    <EmailLayout preview={copy.preview(formattedRequesterName, planName)}>
+    <EmailLayout preview={copy.preview(formattedRequesterName, planName)} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

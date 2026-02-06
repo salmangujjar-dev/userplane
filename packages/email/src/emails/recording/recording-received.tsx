@@ -12,11 +12,12 @@ import * as styles from '../../shared/styles';
 
 export interface RecordingReceivedEmailProps {
   recordingUrl: string;
+  logoUrl?: string;
 }
 
-export const RecordingReceivedEmail = ({ recordingUrl }: RecordingReceivedEmailProps) => {
+export const RecordingReceivedEmail = ({ recordingUrl, logoUrl }: RecordingReceivedEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>
