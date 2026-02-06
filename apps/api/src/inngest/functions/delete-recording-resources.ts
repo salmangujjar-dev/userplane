@@ -12,7 +12,6 @@ import {
 import { inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { withSentryInngest } from '@/api/sentry';
 
 const logger = createAppLogger('inngest:delete-recording-resources');
 
@@ -33,10 +32,10 @@ export const deleteRecordingResources = inngest.createFunction(
     retries: 3,
   },
   { event: EVENT_NAMES.DELETE_RECORDING_RESOURCES },
-  withSentryInngest(async ({ event, step }) => {
+  async ({ event, step }) => {
     const { recordingId } = event.data;
 
-    logger.info('Starting recording resource cleanup', { recordingId });
+    logger.info({ recordingId }, 'Starting recording resource cleanup');
 
     const recordingRepo = new RecordingRepository(db);
     const videoStorage = getVideoStorage();
@@ -51,7 +50,7 @@ export const deleteRecordingResources = inngest.createFunction(
     });
 
     if (!recording) {
-      logger.info('Recording not found, skipping', { recordingId });
+      logger.info({ recordingId }, 'Recording not found, skipping');
       return { success: true, recordingId, skipped: true, reason: 'not_found' };
     }
 
@@ -168,7 +167,7 @@ export const deleteRecordingResources = inngest.createFunction(
       });
     }
 
-    logger.info('Recording resource cleanup completed', { recordingId, filesDeleted, errors });
+    logger.info({ recordingId, filesDeleted, errors }, 'Recording resource cleanup completed');
 
     return {
       success: errors.length === 0,
@@ -176,5 +175,5 @@ export const deleteRecordingResources = inngest.createFunction(
       filesDeleted,
       errors,
     };
-  })
+  }
 );

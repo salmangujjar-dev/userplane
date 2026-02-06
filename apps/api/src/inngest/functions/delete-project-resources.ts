@@ -8,7 +8,6 @@ import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { chunkArray } from '@/api/lib/batch';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { withSentryInngest } from '@/api/sentry';
 
 const logger = createAppLogger('inngest:delete-project-resources');
 
@@ -29,10 +28,10 @@ export const deleteProjectResources = inngest.createFunction(
     retries: 3,
   },
   { event: EVENT_NAMES.DELETE_PROJECT_RESOURCES },
-  withSentryInngest(async ({ event, step }) => {
+  async ({ event, step }) => {
     const { projectId } = event.data;
 
-    logger.info('Starting project resource cleanup', { projectId });
+    logger.info({ projectId }, 'Starting project resource cleanup');
 
     const projectRepo = new ProjectRepository(db);
     const recordingRepo = new RecordingRepository(db);
@@ -43,7 +42,7 @@ export const deleteProjectResources = inngest.createFunction(
     });
 
     if (isDeleted === null) {
-      logger.info('Project not found, skipping', { projectId });
+      logger.info({ projectId }, 'Project not found, skipping');
       return {
         success: true,
         projectId,
@@ -54,7 +53,7 @@ export const deleteProjectResources = inngest.createFunction(
     }
 
     if (!isDeleted) {
-      logger.info('Project not deleted, skipping', { projectId });
+      logger.info({ projectId }, 'Project not deleted, skipping');
       return {
         success: true,
         projectId,
@@ -69,7 +68,7 @@ export const deleteProjectResources = inngest.createFunction(
       return recordingRepo.findByProjectId(projectId);
     });
 
-    logger.info('Found recordings to cleanup', { projectId, count: recordingsToCleanup.length });
+    logger.info({ projectId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
 
     // 3. Fan-out in batches of 500
     if (recordingsToCleanup.length > 0) {
@@ -79,7 +78,7 @@ export const deleteProjectResources = inngest.createFunction(
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
             chunk.map((recording) => ({
-              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES as const,
+              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
               data: { recordingId: recording.recordingId },
               id: buildRecordingDeletionKey(recording.recordingId),
               ...(getPurgeDelayTimestamp(recording.uploadStatus)
@@ -89,12 +88,15 @@ export const deleteProjectResources = inngest.createFunction(
           );
         });
 
-        logger.info('Triggered recording cleanup batch', {
-          projectId,
-          batchIndex: index + 1,
-          batchCount: recordingChunks.length,
-          recordingsInBatch: chunk.length,
-        });
+        logger.info(
+          {
+            projectId,
+            batchIndex: index + 1,
+            batchCount: recordingChunks.length,
+            recordingsInBatch: chunk.length,
+          },
+          'Triggered recording cleanup batch'
+        );
       }
     }
 
@@ -103,5 +105,5 @@ export const deleteProjectResources = inngest.createFunction(
       projectId,
       recordingsScheduled: recordingsToCleanup.length,
     };
-  })
+  }
 );

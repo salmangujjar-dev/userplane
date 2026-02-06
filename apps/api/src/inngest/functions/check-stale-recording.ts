@@ -5,7 +5,6 @@ import { inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
-import { withSentryInngest } from '@/api/sentry';
 
 const logger = createAppLogger('inngest:check-stale-recording');
 
@@ -25,10 +24,10 @@ export const checkStaleRecording = inngest.createFunction(
     retries: 3,
   },
   { event: EVENT_NAMES.CHECK_STALE_RECORDING },
-  withSentryInngest(async ({ event, step }) => {
+  async ({ event, step }) => {
     const { recordingId } = event.data;
 
-    logger.info('Starting stale recording check', { recordingId });
+    logger.info({ recordingId }, 'Starting stale recording check');
 
     const recordingRepo = new RecordingRepository(db);
 
@@ -37,7 +36,7 @@ export const checkStaleRecording = inngest.createFunction(
     });
 
     if (!recording) {
-      logger.info('Recording not found or not in STALE status, skipping', { recordingId });
+      logger.info({ recordingId }, 'Recording not found or not in STALE status, skipping');
       return { recordingId, action: 'not_found' };
     }
 
@@ -50,15 +49,18 @@ export const checkStaleRecording = inngest.createFunction(
       });
     });
 
-    logger.info('Stale recording marked as deleted and cleanup triggered', {
-      recordingId,
-      previousStatus: recording.uploadStatus,
-    });
+    logger.info(
+      {
+        recordingId,
+        previousStatus: recording.uploadStatus,
+      },
+      'Stale recording marked as deleted and cleanup triggered'
+    );
 
     return {
       recordingId,
       action: 'cleaned_up',
       previousStatus: recording.uploadStatus,
     };
-  })
+  }
 );

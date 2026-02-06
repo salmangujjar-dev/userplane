@@ -11,7 +11,6 @@ import { chunkArray } from '@/api/lib/batch';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { withSentryInngest } from '@/api/sentry';
 
 const logger = createAppLogger('inngest:delete-workspace-resources');
 
@@ -33,10 +32,10 @@ export const deleteWorkspaceResources = inngest.createFunction(
     retries: 3,
   },
   { event: EVENT_NAMES.DELETE_WORKSPACE_RESOURCES },
-  withSentryInngest(async ({ event, step }) => {
+  async ({ event, step }) => {
     const { workspaceId } = event.data;
 
-    logger.info('Starting workspace resource cleanup', { workspaceId });
+    logger.info({ workspaceId }, 'Starting workspace resource cleanup');
 
     const workspaceRepo = new WorkspaceRepository(db);
     const recordingRepo = new RecordingRepository(db);
@@ -49,7 +48,7 @@ export const deleteWorkspaceResources = inngest.createFunction(
     });
 
     if (isDeleted === null) {
-      logger.info('Workspace not found, skipping', { workspaceId });
+      logger.info({ workspaceId }, 'Workspace not found, skipping');
       return {
         success: true,
         workspaceId,
@@ -60,7 +59,7 @@ export const deleteWorkspaceResources = inngest.createFunction(
     }
 
     if (!isDeleted) {
-      logger.info('Workspace not deleted, skipping', { workspaceId });
+      logger.info({ workspaceId }, 'Workspace not deleted, skipping');
       return {
         success: true,
         workspaceId,
@@ -79,13 +78,16 @@ export const deleteWorkspaceResources = inngest.createFunction(
           await dodoClient.subscriptions.update(subscription.subscriptionId, {
             status: 'cancelled',
           });
-          logger.info('Subscription cancelled immediately', {
-            workspaceId,
-            subscriptionId: subscription.subscriptionId,
-          });
+          logger.info(
+            {
+              workspaceId,
+              subscriptionId: subscription.subscriptionId,
+            },
+            'Subscription cancelled immediately'
+          );
         }
       } catch (error) {
-        logger.error('Failed to cancel subscription during cleanup', { workspaceId, error });
+        logger.error({ workspaceId, error }, 'Failed to cancel subscription during cleanup');
         Sentry.captureException(error, {
           level: 'error',
           tags: { operation: 'subscription_cancellation', workspace_id: workspaceId },
@@ -101,7 +103,7 @@ export const deleteWorkspaceResources = inngest.createFunction(
       return recordingRepo.findByWorkspaceId(workspaceId);
     });
 
-    logger.info('Found recordings to cleanup', { workspaceId, count: recordingsToCleanup.length });
+    logger.info({ workspaceId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
 
     // 4. Fan-out in batches of 500
     if (recordingsToCleanup.length > 0) {
@@ -111,7 +113,7 @@ export const deleteWorkspaceResources = inngest.createFunction(
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
             chunk.map((recording) => ({
-              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES as const,
+              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
               data: { recordingId: recording.recordingId },
               id: buildRecordingDeletionKey(recording.recordingId),
               ...(getPurgeDelayTimestamp(recording.uploadStatus)
@@ -121,12 +123,15 @@ export const deleteWorkspaceResources = inngest.createFunction(
           );
         });
 
-        logger.info('Triggered recording cleanup batch', {
-          workspaceId,
-          batchIndex: index + 1,
-          batchCount: recordingChunks.length,
-          recordingsInBatch: chunk.length,
-        });
+        logger.info(
+          {
+            workspaceId,
+            batchIndex: index + 1,
+            batchCount: recordingChunks.length,
+            recordingsInBatch: chunk.length,
+          },
+          'Triggered recording cleanup batch'
+        );
       }
     }
 
@@ -135,5 +140,5 @@ export const deleteWorkspaceResources = inngest.createFunction(
       workspaceId,
       recordingsScheduled: recordingsToCleanup.length,
     };
-  })
+  }
 );
