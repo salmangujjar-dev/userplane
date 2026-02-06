@@ -48,7 +48,7 @@
   "name": "@workspace/api",
   "private": true,
   "scripts": {
-    "build": "bun build src/index.ts --outdir ./dist --target bun",
+    "build": "bun build src/index.ts --outdir ./dist --target bun --external inngest --external @inngest/middleware-sentry",
     "dev": "bun run dev:api",
     "dev:api": "bun run --env-file=.env.development --watch src/index.ts",
     "dev:inngest": "npx inngest-cli@latest dev",
