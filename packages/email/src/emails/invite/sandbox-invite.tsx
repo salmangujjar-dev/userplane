@@ -13,11 +13,16 @@ import * as styles from '../../shared/styles';
 export interface SandboxInviteEmailProps {
   sandboxUrl: string;
   calendarUrl: string;
+  logoUrl?: string;
 }
 
-export const SandboxInviteEmail = ({ sandboxUrl, calendarUrl }: SandboxInviteEmailProps) => {
+export const SandboxInviteEmail = ({
+  sandboxUrl,
+  calendarUrl,
+  logoUrl,
+}: SandboxInviteEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle}</Text>
 

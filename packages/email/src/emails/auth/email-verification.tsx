@@ -14,16 +14,18 @@ import * as styles from '../../shared/styles';
 export interface EmailVerificationEmailProps {
   userName: string;
   verificationUrl: string;
+  logoUrl?: string;
 }
 
 export const EmailVerificationEmail = ({
   userName,
   verificationUrl,
+  logoUrl,
 }: EmailVerificationEmailProps) => {
   const formattedUserName = getUserName(userName);
 
   return (
-    <EmailLayout preview={copy.preview} showSupport={false}>
+    <EmailLayout preview={copy.preview} showSupport={false} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

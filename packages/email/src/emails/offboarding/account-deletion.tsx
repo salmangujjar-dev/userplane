@@ -12,11 +12,12 @@ import * as styles from '../../shared/styles';
 
 export interface AccountDeletionEmailProps {
   feedbackUrl: string;
+  logoUrl?: string;
 }
 
-export const AccountDeletionEmail = ({ feedbackUrl }: AccountDeletionEmailProps) => {
+export const AccountDeletionEmail = ({ feedbackUrl, logoUrl }: AccountDeletionEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

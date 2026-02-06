@@ -14,16 +14,18 @@ import * as styles from '../../shared/styles';
 export interface WelcomeEmailRequesterProps {
   workspaceName: string;
   dashboardUrl: string;
+  logoUrl?: string;
 }
 
 export const WelcomeEmailRequesterEmail = ({
   workspaceName,
   dashboardUrl,
+  logoUrl,
 }: WelcomeEmailRequesterProps) => {
   const formattedWorkspaceName = getWorkspaceName(workspaceName);
 
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

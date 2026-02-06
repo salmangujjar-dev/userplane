@@ -13,11 +13,16 @@ import * as styles from '../../shared/styles';
 export interface WorkspaceInviteEmailProps {
   inviteUrl: string;
   calendarUrl: string;
+  logoUrl?: string;
 }
 
-export const WorkspaceInviteEmail = ({ inviteUrl, calendarUrl }: WorkspaceInviteEmailProps) => {
+export const WorkspaceInviteEmail = ({
+  inviteUrl,
+  calendarUrl,
+  logoUrl,
+}: WorkspaceInviteEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle}</Text>
 

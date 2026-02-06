@@ -15,18 +15,23 @@ export interface ProjectDeletionScheduledEmailProps {
   projectName: string;
   deletionDate: string;
   cancelUrl: string;
+  logoUrl?: string;
 }
 
 export const ProjectDeletionScheduledEmail = ({
   projectName,
   deletionDate,
   cancelUrl,
+  logoUrl,
 }: ProjectDeletionScheduledEmailProps) => {
   const formattedProjectName = getProjectName(projectName);
   const formattedDeletionDate = getDeletionDate(deletionDate);
 
   return (
-    <EmailLayout preview={copy.preview(formattedProjectName, formattedDeletionDate)}>
+    <EmailLayout
+      preview={copy.preview(formattedProjectName, formattedDeletionDate)}
+      logoUrl={logoUrl}
+    >
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>
         {copy.subtitle(formattedProjectName, formattedDeletionDate)}

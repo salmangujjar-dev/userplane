@@ -10,7 +10,7 @@
  *   --env=<env>     Load environment from apps/api/.env.<env>
  *                   (development, staging, production)
  *   --dry-run       Show what would be uploaded without actually uploading
- *   --force         Re-upload even if hash unchanged
+ *   --force         Re-upload all assets, skipping the existence check
  *   --manifest-only Generate manifest only (no upload)
  *   --verbose       Show detailed output
  *
@@ -26,7 +26,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join, relative } from 'node:path';
 
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 // =============================================================================
 // Types
@@ -270,7 +270,7 @@ Options:
                   Valid values: ${VALID_ENVIRONMENTS.join(', ')}
                   Checks packages/storage/.env.<env> first, falls back to apps/api/.env.<env>
   --dry-run       Show what would be uploaded without actually uploading
-  --force         Re-upload even if hash unchanged
+  --force         Re-upload all assets, skipping the existence check
   --manifest-only Generate manifest only (no upload, no R2 credentials needed)
   --verbose       Show detailed output
   --help, -h      Show this help message
@@ -476,6 +476,28 @@ async function uploadAsset(client: S3Client, bucket: string, entry: AssetEntry):
   await client.send(command);
 }
 
+/**
+ * Check if an asset already exists in R2 via HeadObject.
+ * Returns true if the object exists, false if not found.
+ * Throws on unexpected errors (permissions, network, etc.).
+ */
+async function assetExists(client: S3Client, bucket: string, key: string): Promise<boolean> {
+  try {
+    await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+    return true;
+  } catch (error: unknown) {
+    // R2/S3 returns NotFound or 404 when the object does not exist
+    if (
+      error instanceof Error &&
+      (('name' in error && error.name === 'NotFound') ||
+        ('$metadata' in error && (error as any).$metadata?.httpStatusCode === 404))
+    ) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 async function uploadAssets(entries: AssetEntry[], options: UploadOptions): Promise<UploadResult> {
   const result: UploadResult = {
     uploaded: [],
@@ -497,6 +519,22 @@ async function uploadAssets(entries: AssetEntry[], options: UploadOptions): Prom
   log('\nUploading assets...');
 
   for (const entry of entries) {
+    // Skip upload if the asset already exists in R2 (unless --force)
+    if (!options.force) {
+      try {
+        const exists = await assetExists(client, bucket, entry.hashedPath);
+        if (exists) {
+          result.skipped.push(entry);
+          verbose(`Skipped (exists) ${entry.key}`, options);
+          continue;
+        }
+      } catch (error) {
+        // If the HEAD check fails unexpectedly, log and fall through to upload
+        const message = error instanceof Error ? error.message : String(error);
+        verbose(`HEAD check failed for ${entry.key}: ${message}`, options);
+      }
+    }
+
     try {
       verbose(`Uploading ${entry.key}...`, options);
       await uploadAsset(client, bucket, entry);

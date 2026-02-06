@@ -13,14 +13,16 @@ import * as styles from '../../shared/styles';
 export interface SubscriptionInactiveEmailProps {
   planName: string;
   reactivateUrl: string;
+  logoUrl?: string;
 }
 
 export const SubscriptionInactiveEmail = ({
   planName,
   reactivateUrl,
+  logoUrl,
 }: SubscriptionInactiveEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(planName)}</Text>
 

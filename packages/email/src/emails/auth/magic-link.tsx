@@ -12,11 +12,12 @@ import * as styles from '../../shared/styles';
 
 export interface MagicLinkEmailProps {
   magicLinkUrl: string;
+  logoUrl?: string;
 }
 
-export const MagicLinkEmail = ({ magicLinkUrl }: MagicLinkEmailProps) => {
+export const MagicLinkEmail = ({ magicLinkUrl, logoUrl }: MagicLinkEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview} showSupport={false}>
+    <EmailLayout preview={copy.preview} showSupport={false} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

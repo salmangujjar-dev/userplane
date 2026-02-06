@@ -14,13 +14,18 @@ import * as styles from '../../shared/styles';
 export interface TeammateInvitedEmailProps {
   workspaceName: string;
   inviteUrl: string;
+  logoUrl?: string;
 }
 
-export const TeammateInvitedEmail = ({ workspaceName, inviteUrl }: TeammateInvitedEmailProps) => {
+export const TeammateInvitedEmail = ({
+  workspaceName,
+  inviteUrl,
+  logoUrl,
+}: TeammateInvitedEmailProps) => {
   const formattedWorkspaceName = getWorkspaceName(workspaceName);
 
   return (
-    <EmailLayout preview={copy.preview(formattedWorkspaceName)}>
+    <EmailLayout preview={copy.preview(formattedWorkspaceName)} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle(formattedWorkspaceName)}</Text>
 

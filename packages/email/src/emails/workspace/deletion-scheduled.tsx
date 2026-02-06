@@ -15,18 +15,23 @@ export interface DeletionScheduledEmailProps {
   workspaceName: string;
   deletionDate: string;
   cancelUrl: string;
+  logoUrl?: string;
 }
 
 export const DeletionScheduledEmail = ({
   workspaceName,
   deletionDate,
   cancelUrl,
+  logoUrl,
 }: DeletionScheduledEmailProps) => {
   const formattedWorkspaceName = getWorkspaceName(workspaceName);
   const formattedDeletionDate = getDeletionDate(deletionDate);
 
   return (
-    <EmailLayout preview={copy.preview(formattedWorkspaceName, formattedDeletionDate)}>
+    <EmailLayout
+      preview={copy.preview(formattedWorkspaceName, formattedDeletionDate)}
+      logoUrl={logoUrl}
+    >
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>
         {copy.subtitle(formattedWorkspaceName, formattedDeletionDate)}

@@ -13,11 +13,12 @@ import * as styles from '../../shared/styles';
 export interface TosViolationEmailProps {
   appealUrl: string;
   tosUrl: string;
+  logoUrl?: string;
 }
 
-export const TosViolationEmail = ({ appealUrl, tosUrl }: TosViolationEmailProps) => {
+export const TosViolationEmail = ({ appealUrl, tosUrl, logoUrl }: TosViolationEmailProps) => {
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
 
       <Section style={styles.messageSection}>

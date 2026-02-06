@@ -14,17 +14,19 @@ export interface BillingEmailUpdatedEmailProps {
   previousEmail: string;
   newEmail: string;
   billingUrl: string;
+  logoUrl?: string;
 }
 
 export const BillingEmailUpdatedEmail = ({
   previousEmail,
   newEmail,
   billingUrl,
+  logoUrl,
 }: BillingEmailUpdatedEmailProps) => {
   const bodyText = copy.body(previousEmail, newEmail);
 
   return (
-    <EmailLayout preview={copy.preview}>
+    <EmailLayout preview={copy.preview} logoUrl={logoUrl}>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.subtitle}>{copy.subtitle}</Text>
 
