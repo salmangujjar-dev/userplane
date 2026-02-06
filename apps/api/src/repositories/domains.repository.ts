@@ -36,6 +36,32 @@ export class DomainRepository {
   }
 
   /**
+   * Create multiple domains in a single insert
+   */
+  async createBatch(data: CreateDomainInput[], options?: { tx?: Transaction }) {
+    if (data.length === 0) {
+      return [];
+    }
+
+    const dbClient = options?.tx || this.db;
+
+    const createdDomains = await dbClient
+      .insert(domains)
+      .values(
+        data.map((d) => ({
+          domainId: d.domainId,
+          workspaceId: d.workspaceId,
+          domainUrl: d.url,
+          domainStatus: d.domainStatus,
+          isDeleted: false,
+        }))
+      )
+      .returning();
+
+    return createdDomains;
+  }
+
+  /**
    * Find domain by ID
    */
   async findById(domainId: string) {
