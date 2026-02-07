@@ -1,0 +1,63 @@
+---
+title: 'Domain Verification Guide'
+excerpt: 'Technical guide for developers: add the Userplane script to your site and verify domain ownership'
+order: 1
+lastUpdated: 2026-02-07
+---
+
+This guide is for developers who need to add the Userplane script to a website and verify domain ownership. A workspace admin will typically send you these instructions via the "Send to Developer" button in Workspace Settings.
+
+## Overview
+
+Userplane verifies domain ownership by checking for its script on your website. The process is:
+
+1. Add the Userplane meta tag and script to your site's HTML.
+2. The workspace admin clicks **Verify** in Userplane.
+3. Userplane checks your domain for the script and, if found, marks the domain as verified.
+
+## Step 1: Add the script
+
+Paste the following into the `<head>` of your site:
+
+```html
+<!-- Sets workspace ID for screen recording -->
+<meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+
+<!-- Loads Userplane screen recording script -->
+<script src="https://cdn.userplane.io/embed/script.js"></script>
+```
+
+Replace `YOUR_WORKSPACE_ID` with the workspace ID provided by your admin. You can also copy the exact snippet (with the workspace ID already filled in) from **Workspace Settings > Domains** in the Userplane dashboard.
+
+The `<script>` tag should be placed as early as possible in the `<head>` to ensure it initializes before other scripts run. See [Setting Up Userplane Scripts](/help/developer-docs/setting-up-userplane-scripts) for detailed placement guidance.
+
+## Step 2: Deploy
+
+Deploy the page with the script tag. The page must be publicly accessible — verification will fail if the page is behind a login wall or not yet deployed.
+
+## Step 3: Trigger verification
+
+After deploying, if you're a member of the workspace you can trigger verification yourself from **Workspace Settings > Domains**. Otherwise, let your workspace admin know the script is deployed and ask them to click **Verify** on your behalf. The verification check runs immediately.
+
+## Time limit
+
+The verification token expires after **5 minutes**. If the token expires before verification completes, the admin must generate a new token from Workspace Settings.
+
+## Troubleshooting
+
+| Issue                          | Solution                                                                                                                                                                                          |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Verification fails immediately | Check that the script tag is on a publicly accessible page and the page is deployed.                                                                                                              |
+| Token expired                  | The 5-minute window has passed. Ask the admin to generate a new token.                                                                                                                            |
+| Page behind authentication     | The verification page must be publicly accessible — no login wall.                                                                                                                                |
+| Script blocked by CSP          | If your site uses Content-Security-Policy headers, allow `*.userplane.io` in `script-src` and `frame-src`. See [Setting Up Userplane Scripts](/help/developer-docs/setting-up-userplane-scripts). |
+
+## After verification
+
+Once the domain is verified, **keep the script on your site** — it is needed for recordings to work. The meta tag and script serve double duty: they verify the domain and enable screen recording.
+
+## Related articles
+
+- [Setting Up Userplane Scripts](/help/developer-docs/setting-up-userplane-scripts) — detailed guide on script placement, CSP, redirects, and browser support.
+- [Domain Verification](/help/workspace/domain-verification) — the admin-side verification process.
+- [Domains Overview](/help/workspace/domains-overview) — why domains matter.
