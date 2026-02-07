@@ -24,7 +24,7 @@ export const NAV_LINKS = {
   integrations: getMarketingUrl('/#integrations'),
   roadmap: getMarketingUrl('/roadmap'),
   blog: getMarketingUrl('/blog'),
-  support: getMarketingUrl('/support'),
+  help: getMarketingUrl('/help'),
 } as const;
 
 /**
@@ -35,17 +35,17 @@ export const getBlogPostUrl = (slug: string): string => {
 };
 
 /**
- * Helper to get support topic URL
+ * Helper to get help topic URL
  */
-export const getSupportTopicUrl = (topicSlug: string): string => {
-  return getMarketingUrl(`/support/${topicSlug}`);
+export const getHelpTopicUrl = (topicSlug: string): string => {
+  return getMarketingUrl(`/help/${topicSlug}`);
 };
 
 /**
- * Helper to get support article URL
+ * Helper to get help article URL
  */
-export const getSupportArticleUrl = (topicSlug: string, articleSlug: string): string => {
-  return getMarketingUrl(`/support/${topicSlug}/${articleSlug}`);
+export const getHelpArticleUrl = (topicSlug: string, articleSlug: string): string => {
+  return getMarketingUrl(`/help/${topicSlug}/${articleSlug}`);
 };
 
 /**
@@ -60,7 +60,7 @@ export const FOOTER_LINKS = {
   company: [
     { label: 'Blog', href: NAV_LINKS.blog },
     { label: 'Roadmap', href: NAV_LINKS.roadmap },
-    { label: 'Support', href: NAV_LINKS.support },
+    { label: 'Help Center', href: NAV_LINKS.help },
   ],
   legal: [
     { label: 'Privacy Policy', href: getMarketingUrl('/privacy') },

@@ -1,15 +1,15 @@
-import { SUPPORT_HEADING, SUPPORT_HIGHLIGHTS } from '@/constants/support';
+import { HELP_HEADING, HELP_HIGHLIGHTS } from '@/constants/help';
 
 import Highlight from '../home/Highlight';
 
 /**
- * Support page header with highlighted title.
- * Mirrors the BlogHeader pattern but uses the support-specific
+ * Help page header with highlighted title.
+ * Mirrors the BlogHeader pattern but uses the help-specific
  * heading constants and word-level highlights.
  */
 export default function SupportHeader() {
-  const words = SUPPORT_HEADING.title.split(' ');
-  const highlightMap = new Map(SUPPORT_HIGHLIGHTS.map((h) => [h.wordIndex, h.color]));
+  const words = HELP_HEADING.title.split(' ');
+  const highlightMap = new Map(HELP_HIGHLIGHTS.map((h) => [h.wordIndex, h.color]));
 
   return (
     <div className="mb-12 flex flex-col items-center justify-center gap-6 text-center">
@@ -21,7 +21,7 @@ export default function SupportHeader() {
           );
         })}
       </h1>
-      <p className="md:text-lg max-w-2xl text-muted-foreground">{SUPPORT_HEADING.subtitle}</p>
+      <p className="md:text-lg max-w-2xl text-muted-foreground">{HELP_HEADING.subtitle}</p>
     </div>
   );
 }

@@ -1,9 +1,9 @@
-import type { SupportTopic } from '@/constants/support';
+import type { HelpTopic } from '@/constants/help';
 
 import TopicCard from './TopicCard';
 
 interface TopicWithCount {
-  topic: SupportTopic;
+  topic: HelpTopic;
   articleCount: number;
 }
 
@@ -12,7 +12,7 @@ interface TopicGridProps {
 }
 
 /**
- * Responsive grid of topic cards for the support index page.
+ * Responsive grid of topic cards for the help index page.
  */
 export default function TopicGrid({ topics }: TopicGridProps) {
   if (topics.length === 0) {

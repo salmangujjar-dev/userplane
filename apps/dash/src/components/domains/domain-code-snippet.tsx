@@ -14,7 +14,7 @@ export function DomainCodeSnippet({ workspaceId, domainUrl }: DomainCodeSnippetP
 <meta name="userplane:workspace" content="${workspaceId}" />
 
 <!-- Loads Userplane screen recording script -->
-<script src="https://cdn.userplane.com/embed/script.js"></script>`;
+<script src="https://cdn.userplane.io/embed/script.js"></script>`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(codeSnippet);
