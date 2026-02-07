@@ -36,6 +36,7 @@ import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
 import { SidebarProjectsSkeleton } from '@/components/skeleton';
+import { SUPPORT_LINKS } from '@/constants';
 import { useAccount } from '@/features/account';
 import { useSession } from '@/features/auth';
 import { useSubscriptionStatus } from '@/features/billing';
@@ -344,7 +345,7 @@ export function Sidebar() {
               )}
               <DropdownMenuSeparator className="-mx-2 my-2" />
               <a
-                href="https://docs.userplane.io"
+                href={SUPPORT_LINKS.helpCenter}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"

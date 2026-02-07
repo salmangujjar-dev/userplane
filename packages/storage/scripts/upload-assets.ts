@@ -490,7 +490,9 @@ async function assetExists(client: S3Client, bucket: string, key: string): Promi
     if (
       error instanceof Error &&
       (('name' in error && error.name === 'NotFound') ||
-        ('$metadata' in error && (error as any).$metadata?.httpStatusCode === 404))
+        ('$metadata' in error &&
+          (error as unknown as { $metadata?: { httpStatusCode?: number } }).$metadata
+            ?.httpStatusCode === 404))
     ) {
       return false;
     }

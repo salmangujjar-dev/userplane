@@ -26,6 +26,7 @@ import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
 import { DomainRecordingSettings } from '@/components/domains/domain-recording-settings';
 import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
 import { URLInput } from '@/components/url-input';
+import { SUPPORT_LINKS } from '@/constants';
 import { DomainUrlSchema } from '@/schemas';
 import {
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
@@ -90,7 +91,7 @@ function CreateDomainStep({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
-                      href="https://userplane.io/docs/domains"
+                      href={SUPPORT_LINKS.domains}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center"
@@ -191,7 +192,7 @@ function VerifyDomainStep({
       <DialogFooter className="mt-8">
         <button
           type="button"
-          onClick={() => window.open('https://docs.userplane.io/domains', '_blank')}
+          onClick={() => window.open(SUPPORT_LINKS.domainVerification, '_blank')}
           className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
         >
           <HelpCircle className="h-4 w-4" />

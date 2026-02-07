@@ -43,4 +43,5 @@ Disconnecting will make Userplane inoperable within Intercom. Your existing reco
 
 - [Intercom Integration](/help/integrations/intercom-integration) — a detailed overview of the integration.
 - [Using Userplane in Intercom](/help/integrations/intercom-inbox-app) — learn how to use the sidebar app.
+- [Intercom Shortcuts](/help/integrations/intercom-shortcuts) — create links fast with Cmd+K.
 - [Intercom Macros](/help/integrations/intercom-macros) — use reusable links in macros for quick insertion.

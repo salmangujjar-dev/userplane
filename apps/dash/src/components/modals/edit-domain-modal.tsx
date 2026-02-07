@@ -23,6 +23,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { URLInput } from '@/components/url-input';
+import { SUPPORT_LINKS } from '@/constants';
 import { DomainUrlSchema } from '@/schemas';
 
 interface EditDomainModalProps {
@@ -84,7 +85,7 @@ export function EditDomainModal({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href="https://userplane.io/docs/domains"
+                          href={SUPPORT_LINKS.domains}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center"

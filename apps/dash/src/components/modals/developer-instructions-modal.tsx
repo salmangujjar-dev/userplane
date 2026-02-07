@@ -20,6 +20,7 @@ import { HelpCircle, X } from 'lucide-react';
 import { KeyboardEvent, useState } from 'react';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { SUPPORT_LINKS } from '@/constants';
 
 interface DeveloperInstructionsModalProps {
   open: boolean;
@@ -97,7 +98,7 @@ export function DeveloperInstructionsModal({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href="https://userplane.io/docs/domains"
+                          href={SUPPORT_LINKS.domains}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center"

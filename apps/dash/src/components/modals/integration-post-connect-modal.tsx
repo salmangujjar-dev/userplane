@@ -2,11 +2,6 @@
 
 import { Button } from '@workspace/ui/components/button';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@workspace/ui/components/collapsible';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -14,9 +9,8 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import { ArrowLeftRight, ChevronDown, Loader2 } from 'lucide-react';
+import { ArrowLeftRight, CheckCircle2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
 
 import { getIntegrationConfig } from '@/constants/integration-permissions';
 import { useCanEditWorkspace } from '@/features/workspace';
@@ -38,30 +32,15 @@ export function IntegrationPostConnectModal({
   onDisconnect,
   isDisconnecting = false,
 }: IntegrationPostConnectModalProps) {
-  const [openSection, setOpenSection] = useState<number | null>(null);
   const config = getIntegrationConfig(integrationName);
   const { canEdit } = useCanEditWorkspace();
 
-  const toggleSection = (index: number) => {
-    setOpenSection((prev) => (prev === index ? null : index));
-  };
-
-  const guideSteps = [
-    {
-      title: 'Step 1',
-      content: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      isVideo: true,
-    },
-    {
-      title: 'Step 2',
-      content: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      isVideo: true,
-    },
-    {
-      title: 'Step 3',
-      content: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      isVideo: true,
-    },
+  const capabilities = [
+    'Request screen recordings directly from Intercom conversations',
+    'Create recording links and view recordings from the inbox sidebar',
+    'Use Cmd+K shortcut to create links without leaving the conversation',
+    'Insert reusable recording links into Intercom macros',
+    'Recordings are automatically linked to conversations for easy access',
   ];
 
   return (
@@ -93,45 +72,16 @@ export function IntegrationPostConnectModal({
             </div>
           </div>
 
-          <div className="space-y-3 w-full">
-            {guideSteps.map((step, index) => (
-              <Collapsible
-                key={index}
-                open={openSection === index}
-                onOpenChange={() => toggleSection(index)}
-                className="w-full"
-              >
-                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-muted/50 px-4 py-3 text-left hover:bg-muted transition-colors">
-                  <span className="text-sm font-medium">{step.title}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      openSection === index ? 'transform rotate-180' : ''
-                    }`}
-                  />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  <div className="rounded-lg border bg-background p-4">
-                    {step.isVideo ? (
-                      <div className="aspect-video w-full overflow-hidden rounded-md">
-                        <iframe
-                          width="100%"
-                          height="100%"
-                          src={step.content}
-                          title={step.title}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="border-0"
-                        />
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {step.content}
-                      </p>
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
+          <div className="space-y-4">
+            <p className="text-sm font-medium">You can now</p>
+            <div className="space-y-3">
+              {capabilities.map((capability, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground">{capability}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

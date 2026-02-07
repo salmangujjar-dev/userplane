@@ -21,6 +21,7 @@ import { cn } from '@workspace/ui/lib/utils';
 import { AlertCircle, HelpCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { SUPPORT_LINKS } from '@/constants';
 import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainConfigureModalProps {
@@ -99,7 +100,7 @@ export function DomainConfigureModal({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <a
-                        href="https://userplane.io/docs/domains"
+                        href={SUPPORT_LINKS.domains}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center"

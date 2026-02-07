@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { SUPPORT_LINKS } from '@/constants';
 import { ProjectTitleSchema } from '@/schemas';
 
 interface CreateProjectModalProps {
@@ -94,7 +95,7 @@ export function CreateProjectModal({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href="https://userplane.io/docs/projects"
+                          href={SUPPORT_LINKS.projects}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center"

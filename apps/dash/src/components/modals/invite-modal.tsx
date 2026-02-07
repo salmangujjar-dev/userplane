@@ -24,6 +24,7 @@ import validator from 'validator';
 import { z } from 'zod';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { SUPPORT_LINKS } from '@/constants';
 import {
   useIntercomSuggestions,
   useSendWorkspaceInvites,
@@ -362,7 +363,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href="https://userplane.io/docs/team-invites"
+                          href={SUPPORT_LINKS.teamInvites}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center"

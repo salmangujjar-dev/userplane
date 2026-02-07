@@ -13,6 +13,7 @@ import { ArrowLeftRight, CheckCircle2, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
+import { SUPPORT_LINKS } from '@/constants';
 import { getIntegrationConfig } from '@/constants/integration-permissions';
 
 interface IntegrationPreConnectModalProps {
@@ -44,7 +45,7 @@ export function IntegrationPreConnectModal({
   };
 
   const handleHowItWorks = () => {
-    window.open('https://docs.userplane.io/integrations', '_blank');
+    window.open(SUPPORT_LINKS.integrations, '_blank');
   };
 
   return (

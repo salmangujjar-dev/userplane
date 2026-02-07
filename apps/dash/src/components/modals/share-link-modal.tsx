@@ -19,6 +19,8 @@ import {
 import { Copy, HelpCircle } from 'lucide-react';
 import { useEffect } from 'react';
 
+import { SUPPORT_LINKS } from '@/constants';
+
 interface ShareLinkModalProps {
   link: string;
   open: boolean;
@@ -49,7 +51,7 @@ function ShareLinkView({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
-                      href="https://userplane.io/docs/sharing-links"
+                      href={SUPPORT_LINKS.sharingLinks}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center"
