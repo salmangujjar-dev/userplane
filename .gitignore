@@ -87,6 +87,7 @@ apps/api/localhost
 !README.md
 !CLAUDE.md
 !AGENTS.md
+!apps/home/src/content/**/*.md
 
 
 

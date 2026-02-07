@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL_MAILTO, TALLY_COMPLIANCE_FORM_URL } from './contact';
+import { TALLY_COMPLIANCE_FORM_URL } from './contact';
 import { NAV_LINKS } from './navigation';
 import { getMarketingUrl } from './urls';
 
@@ -27,7 +27,7 @@ export const FOOTER_LINKS = {
   company: [
     { label: 'Blog', href: NAV_LINKS.blog },
     { label: 'Roadmap', href: NAV_LINKS.roadmap },
-    { label: 'Support', href: CONTACT_EMAIL_MAILTO },
+    { label: 'Support', href: NAV_LINKS.support },
   ],
   legal: [
     { label: 'Privacy Policy', href: getMarketingUrl('/privacy') },
