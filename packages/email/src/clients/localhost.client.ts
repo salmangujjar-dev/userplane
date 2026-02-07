@@ -4,7 +4,7 @@
  * Mimics Resend's API but writes to local files
  */
 
-import { createAppLogger } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@workspace/logger';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
@@ -17,7 +17,11 @@ import type {
   SendEmailResponse,
 } from '../types';
 
-const logger = createAppLogger('localhost-email');
+const isDev = process.env.NODE_ENV !== 'production';
+const logger = createServerLogger('localhost-email', {
+  level: (process.env.LOG_LEVEL as LogLevel) || (isDev ? 'debug' : 'info'),
+  pretty: isDev,
+});
 
 interface EmailRecord {
   id: string;

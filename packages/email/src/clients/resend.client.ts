@@ -3,7 +3,7 @@
  * Official Resend API integration
  */
 
-import { createAppLogger } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@workspace/logger';
 import type { CreateEmailOptions, CreateEmailRequestOptions } from 'resend';
 import { Resend } from 'resend';
 
@@ -16,7 +16,11 @@ import type {
   SendEmailResponse,
 } from '../types';
 
-const logger = createAppLogger('resend-email');
+const isDev = process.env.NODE_ENV !== 'production';
+const logger = createServerLogger('resend-email', {
+  level: (process.env.LOG_LEVEL as LogLevel) || (isDev ? 'debug' : 'info'),
+  pretty: isDev,
+});
 
 export class ResendEmailClient implements EmailClient {
   private client: Resend;

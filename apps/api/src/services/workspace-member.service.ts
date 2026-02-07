@@ -8,9 +8,12 @@ import type { WorkspaceRole } from '@workspace/contract';
 import { workspaceError } from '@workspace/contract';
 
 import { generateWorkspaceMemberId } from '@/api/lib/id';
+import { createLogger } from '@/api/lib/logger';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { Transaction } from '@/api/types';
+
+const logger = createLogger('workspace-member-service');
 
 export interface WorkspaceMemberServiceDeps {
   memberRepo: WorkspaceMemberRepository;
@@ -154,7 +157,10 @@ export class WorkspaceMemberService {
       await this.deps.entitlementService.consumeSeats(params.workspaceId, 1, options);
     } catch (error) {
       // Log but don't fail - member is already added
-      console.error('Failed to track seat consumption:', error);
+      logger.error(
+        { err: error, workspaceId: params.workspaceId },
+        'Failed to track seat consumption'
+      );
     }
 
     // Warm cache with new membership
@@ -264,7 +270,7 @@ export class WorkspaceMemberService {
       await this.deps.entitlementService.releaseSeats(params.workspaceId, 1, options);
     } catch (error) {
       // Log but don't fail - member is already removed
-      console.error('Failed to release seat:', error);
+      logger.error({ err: error, workspaceId: params.workspaceId }, 'Failed to release seat');
     }
 
     // Invalidate membership cache - member removed
@@ -417,7 +423,7 @@ export class WorkspaceMemberService {
       await this.deps.entitlementService.releaseSeats(workspaceId, 1, options);
     } catch (error) {
       // Log but don't fail - member has already left
-      console.error('Failed to release seat:', error);
+      logger.error({ err: error, workspaceId }, 'Failed to release seat');
     }
 
     return { shouldDeleteWorkspace: false };

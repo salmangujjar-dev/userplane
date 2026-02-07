@@ -14,6 +14,7 @@ import { db } from '@/api/clients/db';
 import { cacheService } from '@/api/clients/redis';
 import { env } from '@/api/env';
 import { createBillingWebhookHandler } from '@/api/handlers/billing-webhook.handler';
+import { createLogger } from '@/api/lib/logger';
 import { getWebhookContext } from '@/api/lib/webhook-context';
 import { DisputeRepository } from '@/api/repositories/disputes.repository';
 import { RefundRepository } from '@/api/repositories/refunds.repository';
@@ -26,6 +27,7 @@ import { entitlementService } from '@/api/services/index';
 import { RefundProcessorService } from '@/api/services/refund-processor.service';
 import { WebhookProcessorService } from '@/api/services/webhook-processor.service';
 
+const authLogger = createLogger('auth');
 const workspaceRepository = new WorkspaceRepository(db);
 
 // Wire up webhook context provider so the Better Auth adapter can access
@@ -168,7 +170,7 @@ export const auth = createAuth({
         await db.delete(schema.session).where(eq(schema.session.userId, user.id));
       } catch (error) {
         // Log error but don't block deletion email
-        console.error('Failed to revoke sessions:', error);
+        authLogger.error({ err: error }, 'Failed to revoke sessions');
       }
 
       // Send account deletion confirmation email

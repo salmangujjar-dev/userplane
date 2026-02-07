@@ -1,18 +1,12 @@
 import { Button } from '@workspace/ui/components/button';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerTitle,
-  DrawerTrigger,
-} from '@workspace/ui/components/drawer';
 import Logo from '@workspace/ui/components/logo';
-import { AlignJustify, LogIn } from 'lucide-react';
+import { AlignJustify, LogIn, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { LOGO_LINK, NAV_LINKS } from '@/constants/navigation';
 import { SIGNUP_URL } from '@/constants/onboarding';
 
-function DrawerNavLink({
+function MobileNavLink({
   href,
   children,
   icon,
@@ -56,6 +50,32 @@ function DrawerNavLink({
 }
 
 export default function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
+  // Lock body scroll when menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeMenu();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [menuOpen, closeMenu]);
+
   return (
     <nav className="mx-auto mt-12 flex w-full max-w-7xl flex-wrap items-center justify-between gap-8 p-4 font-inter text-sm">
       <div className="flex flex-1 shrink-0 items-center justify-start gap-2">
@@ -97,38 +117,68 @@ export default function Header() {
         </Button>
       </div>
 
+      {/* Mobile menu trigger */}
       <div className="flex items-center md:hidden">
-        <Drawer>
-          <DrawerTrigger asChild>
-            <Button aria-label="open-sidebar" size="icon" variant="ghost">
-              <span className="sr-only">Open sidebar</span>
-              <AlignJustify className="h-6 w-6" />
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent className="flex flex-col gap-6 p-6 pt-10">
-            <div className="sr-only">
-              <DrawerTitle>Navigation Menu</DrawerTitle>
+        <Button
+          aria-label="open-sidebar"
+          size="icon"
+          variant="ghost"
+          onClick={() => setMenuOpen(true)}
+        >
+          <span className="sr-only">Open sidebar</span>
+          <AlignJustify className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Mobile menu overlay + panel */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-50 md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation Menu"
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 animate-in fade-in-0 duration-200"
+            onClick={closeMenu}
+          />
+          {/* Panel sliding up from bottom */}
+          <div className="absolute inset-x-0 bottom-0 max-h-[80vh] rounded-t-lg border-t bg-background animate-in slide-in-from-bottom duration-300 ease-out">
+            <div className="mx-auto mt-4 h-1.5 w-[100px] shrink-0 rounded-full bg-muted" />
+            <div className="flex justify-end px-4 pt-2">
+              <Button aria-label="close-sidebar" size="icon" variant="ghost" onClick={closeMenu}>
+                <X className="h-5 w-5" />
+              </Button>
             </div>
-            <div className="sr-only">
-              <DrawerDescription>
-                Main navigation links and user actions for Userplane.
-              </DrawerDescription>
-            </div>
-            <div className="flex w-full flex-col items-center gap-4">
-              <nav className="flex w-full flex-col">
-                <DrawerNavLink href="/#features">Features</DrawerNavLink>
-                <DrawerNavLink href="/#pricing">Pricing</DrawerNavLink>
-                <DrawerNavLink href={NAV_LINKS.roadmap}>Roadmap</DrawerNavLink>
-              </nav>
-              <div className="flex w-full flex-col">
-                <DrawerNavLink href={SIGNUP_URL} icon={<LogIn className="h-4 w-4" />} isButton>
-                  Get Started
-                </DrawerNavLink>
+            <div className="flex flex-col gap-6 p-6 pt-2">
+              <div className="flex w-full flex-col items-center gap-4">
+                <nav className="flex w-full flex-col">
+                  <MobileNavLink href="/#features" onClick={closeMenu}>
+                    Features
+                  </MobileNavLink>
+                  <MobileNavLink href="/#pricing" onClick={closeMenu}>
+                    Pricing
+                  </MobileNavLink>
+                  <MobileNavLink href={NAV_LINKS.roadmap} onClick={closeMenu}>
+                    Roadmap
+                  </MobileNavLink>
+                </nav>
+                <div className="flex w-full flex-col">
+                  <MobileNavLink
+                    href={SIGNUP_URL}
+                    icon={<LogIn className="h-4 w-4" />}
+                    isButton
+                    onClick={closeMenu}
+                  >
+                    Get Started
+                  </MobileNavLink>
+                </div>
               </div>
             </div>
-          </DrawerContent>
-        </Drawer>
-      </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

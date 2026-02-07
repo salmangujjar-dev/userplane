@@ -22,6 +22,7 @@ import {
 } from '@workspace/cache';
 import type { CacheType } from '@workspace/contract';
 
+import { createLogger } from '@/api/lib/logger';
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { DomainRepository } from '@/api/repositories/domains.repository';
@@ -29,6 +30,8 @@ import type { IntegrationRepository } from '@/api/repositories/integrations.repo
 import type { LinkRepository } from '@/api/repositories/links.repository';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+
+const logger = createLogger('diagnostics');
 
 /** All cache types except 'all' itself */
 const ALL_CACHE_TYPES: CacheType[] = [
@@ -81,7 +84,7 @@ const handleClearCache = async (
       const domainCacheKeys = domainIds.map((id) => domainRecordingKeys.preferences(id));
       keysToDelete = [...keysToDelete, ...domainCacheKeys];
     } catch (error) {
-      console.warn(`[Diagnostics] Failed to fetch domain IDs for cache clearing:`, error);
+      logger.warn({ err: error }, 'Failed to fetch domain IDs for cache clearing');
     }
   }
 
@@ -96,7 +99,7 @@ const handleClearCache = async (
       ]);
       keysToDelete = [...keysToDelete, ...linkCacheKeys];
     } catch (error) {
-      console.warn(`[Diagnostics] Failed to fetch link IDs for cache clearing:`, error);
+      logger.warn({ err: error }, 'Failed to fetch link IDs for cache clearing');
     }
   }
 
@@ -109,7 +112,7 @@ const handleClearCache = async (
         .map((i) => integrationKeys.byProviderWorkspace(i.provider, i.providerWorkspaceId));
       keysToDelete = [...keysToDelete, ...integrationCacheKeys];
     } catch (error) {
-      console.warn(`[Diagnostics] Failed to clear integration caches:`, error);
+      logger.warn({ err: error }, 'Failed to clear integration caches');
     }
   }
 

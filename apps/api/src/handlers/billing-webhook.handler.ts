@@ -20,10 +20,13 @@ import type { WebhookPayload } from '@workspace/payments/types';
 import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
 import { buildWebhookTags, type WebhookContext } from '@workspace/sentry';
 
+import { createLogger } from '@/api/lib/logger';
 import type { DisputeProcessorService } from '@/api/services/dispute-processor.service';
 import type { RefundProcessorService } from '@/api/services/refund-processor.service';
 import type { WebhookProcessorService } from '@/api/services/webhook-processor.service';
 import { determineWebhookHeaders, type WebhookHeaders } from '@/api/utils/webhook';
+
+const logger = createLogger('billing-webhook');
 
 export interface BillingWebhookHandlerDeps {
   webhookProcessor: WebhookProcessorService;
@@ -55,8 +58,9 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
 
     // Route subscription events to webhook processor
     if (isSubscriptionEvent(eventType)) {
-      console.log(
-        `[Billing Webhook] Processing subscription event: ${eventType} (webhook: ${webhookHeaders.webhookId})`
+      logger.info(
+        { eventType, webhookId: webhookHeaders.webhookId },
+        'Processing subscription event'
       );
 
       try {
@@ -75,18 +79,23 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         );
 
         if (result.skipped) {
-          console.log(
-            `[Billing Webhook] Skipped ${eventType}: ${result.skipReason}` +
-              (result.subscriptionId ? ` (subscription: ${result.subscriptionId})` : '')
+          logger.info(
+            { eventType, skipReason: result.skipReason, subscriptionId: result.subscriptionId },
+            'Skipped subscription event'
           );
         } else if (result.processed) {
-          console.log(
-            `[Billing Webhook] Processed ${eventType}: ${result.previousStatus || 'new'} → ${result.newStatus}` +
-              (result.subscriptionId ? ` (subscription: ${result.subscriptionId})` : '')
+          logger.info(
+            {
+              eventType,
+              previousStatus: result.previousStatus || 'new',
+              newStatus: result.newStatus,
+              subscriptionId: result.subscriptionId,
+            },
+            'Processed subscription event'
           );
         }
       } catch (error) {
-        console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
+        logger.error({ err: error, eventType }, 'Error processing subscription event');
         Sentry.captureException(error, {
           tags: buildWebhookTags({
             webhookType: 'subscription',
@@ -100,9 +109,7 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
 
     // Route dispute events to dispute processor
     if (isDisputeEvent(eventType)) {
-      console.log(
-        `[Billing Webhook] Processing dispute event: ${eventType} (webhook: ${webhookHeaders.webhookId})`
-      );
+      logger.info({ eventType, webhookId: webhookHeaders.webhookId }, 'Processing dispute event');
 
       try {
         const result = await Sentry.startSpan(
@@ -120,18 +127,18 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         );
 
         if (result.skipped) {
-          console.log(
-            `[Billing Webhook] Skipped ${eventType}: ${result.skipReason}` +
-              (result.disputeId ? ` (dispute: ${result.disputeId})` : '')
+          logger.info(
+            { eventType, skipReason: result.skipReason, disputeId: result.disputeId },
+            'Skipped dispute event'
           );
         } else if (result.processed) {
-          console.log(
-            `[Billing Webhook] Processed ${eventType} for dispute: ${result.disputeId}` +
-              (result.workspaceId ? ` (workspace: ${result.workspaceId})` : '')
+          logger.info(
+            { eventType, disputeId: result.disputeId, workspaceId: result.workspaceId },
+            'Processed dispute event'
           );
         }
       } catch (error) {
-        console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
+        logger.error({ err: error, eventType }, 'Error processing dispute event');
         Sentry.captureException(error, {
           tags: buildWebhookTags({
             webhookType: 'dispute',
@@ -145,9 +152,7 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
 
     // Route refund events to refund processor
     if (isRefundEvent(eventType)) {
-      console.log(
-        `[Billing Webhook] Processing refund event: ${eventType} (webhook: ${webhookHeaders.webhookId})`
-      );
+      logger.info({ eventType, webhookId: webhookHeaders.webhookId }, 'Processing refund event');
 
       try {
         const result = await Sentry.startSpan(
@@ -165,18 +170,18 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         );
 
         if (result.skipped) {
-          console.log(
-            `[Billing Webhook] Skipped ${eventType}: ${result.skipReason}` +
-              (result.refundId ? ` (refund: ${result.refundId})` : '')
+          logger.info(
+            { eventType, skipReason: result.skipReason, refundId: result.refundId },
+            'Skipped refund event'
           );
         } else if (result.processed) {
-          console.log(
-            `[Billing Webhook] Processed ${eventType} for refund: ${result.refundId}` +
-              (result.workspaceId ? ` (workspace: ${result.workspaceId})` : '')
+          logger.info(
+            { eventType, refundId: result.refundId, workspaceId: result.workspaceId },
+            'Processed refund event'
           );
         }
       } catch (error) {
-        console.error(`[Billing Webhook] Error processing ${eventType}:`, error);
+        logger.error({ err: error, eventType }, 'Error processing refund event');
         Sentry.captureException(error, {
           tags: buildWebhookTags({
             webhookType: 'refund',
@@ -189,6 +194,6 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
     }
 
     // Unknown event type - log and ignore
-    console.log(`[Billing Webhook] Ignoring unknown event: ${eventType}`);
+    logger.info({ eventType }, 'Ignoring unknown event');
   };
 }

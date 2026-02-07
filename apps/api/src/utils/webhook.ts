@@ -12,6 +12,10 @@ import type {
 } from '@workspace/payments/types';
 import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
 
+import { createLogger } from '@/api/lib/logger';
+
+const logger = createLogger('webhook');
+
 export interface WebhookHeaders {
   webhookId: string;
   webhookTimestamp: string;
@@ -64,10 +68,7 @@ export function determineWebhookHeaders(
   const fallbackId = generateFallbackWebhookId(payload);
   const fallbackTimestamp = Math.floor(Date.now() / 1000).toString();
 
-  console.warn(
-    `[Webhook] Missing webhook-id header, using fallback. ` +
-      `Event: ${payload.type}, Fallback ID: ${fallbackId}`
-  );
+  logger.warn({ eventType: payload.type, fallbackId }, 'Missing webhook-id header, using fallback');
 
   return {
     webhookId: fallbackId,

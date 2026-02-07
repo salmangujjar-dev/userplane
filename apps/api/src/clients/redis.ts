@@ -6,11 +6,11 @@
  */
 
 import { CacheService, createRedisClient, RateLimiter, type RedisConfig } from '@workspace/cache';
-import { createAppLogger } from '@workspace/logger';
 
 import { env } from '@/api/env';
+import { createLogger } from '@/api/lib/logger';
 
-const logger = createAppLogger('redis');
+const logger = createLogger('redis');
 
 /**
  * Get Redis configuration from environment

@@ -36,11 +36,11 @@ import {
   renderWelcomeEmailSubscription,
   renderWorkspaceInvite,
 } from '@workspace/email';
-import { createAppLogger } from '@workspace/logger';
 import type { MediaClient } from '@workspace/storage/media';
 
 import { emailClient } from '@/api/clients/email';
 import { getMediaClient } from '@/api/clients/media';
+import { createLogger } from '@/api/lib/logger';
 import {
   accessRequestSubject,
   accountDeletionSubject,
@@ -145,7 +145,7 @@ import {
   workspaceRecoveryPartiallyKey,
 } from '@/api/utils/idempotency-key';
 
-const logger = createAppLogger('email-service');
+const logger = createLogger('email-service');
 
 type ErrorHandler = (error: unknown, context: { method: string; params: unknown }) => void;
 
@@ -157,10 +157,13 @@ export class EmailService {
     this.errorHandler =
       errorHandler ||
       ((error, context) => {
-        console.warn('Email service error:', {
-          method: context.method,
-          error: error instanceof Error ? error.message : String(error),
-        });
+        logger.warn(
+          {
+            method: context.method,
+            error: error instanceof Error ? error.message : String(error),
+          },
+          'Email service error'
+        );
       });
     this.mediaClient = mediaClient ?? getMediaClient();
   }

@@ -4,7 +4,7 @@
  *
  * Types are inferred from Zod schemas in schema.ts to ensure consistency.
  */
-import { createAppLogger } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@workspace/logger';
 import { parseAppEnv } from '@workspace/shared/env';
 import { ZodError } from 'zod';
 
@@ -261,7 +261,14 @@ export const env = loadEnvConfig();
 /**
  * Logger instance for environment configuration
  */
-const logger = createAppLogger('env');
+// Uses createServerLogger directly (not the app-local wrapper) to avoid
+// a circular dependency: lib/logger imports env, so env cannot import lib/logger.
+const isDev = env.server.nodeEnv !== 'production';
+const logger = createServerLogger('env', {
+  level: (process.env.LOG_LEVEL as LogLevel) || (isDev ? 'debug' : 'info'),
+  pretty: isDev,
+  base: { env: env.server.nodeEnv, appEnv: env.server.appEnv },
+});
 
 // =============================================================================
 // Post-load Validation

@@ -3,15 +3,15 @@
  * Handles multipart form data uploads for workspace logos
  */
 
-import { createAppLogger } from '@workspace/logger';
 import { ASSETS_ALLOWED_CONTENT_TYPES, type AssetsContentType } from '@workspace/storage';
 import type { Context } from 'hono';
 
 import { auth } from '@/api/clients/auth';
 import { getAssetsStorage } from '@/api/clients/storage';
+import { createLogger } from '@/api/lib/logger';
 import { workspaceMemberService } from '@/api/services';
 
-const logger = createAppLogger('workspace-logo-handler');
+const logger = createLogger('workspace-logo-handler');
 
 /**
  * Maximum logo file size: 2MB

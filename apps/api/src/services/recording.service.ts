@@ -16,6 +16,7 @@ import { inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
+import { createLogger } from '@/api/lib/logger';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import type { Transaction } from '@/api/repositories/recordings.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
@@ -49,6 +50,8 @@ const DEFAULT_PER_PAGE = 10;
  * Presigned URL expiry time in seconds (1 hour)
  */
 const PRESIGNED_URL_EXPIRY = 3600;
+
+const logger = createLogger('recording-service');
 
 export class RecordingService {
   constructor(private deps: RecordingServiceDeps) {}
@@ -166,7 +169,7 @@ export class RecordingService {
     } catch (error) {
       // Log but don't fail the request - cleanup is a background task
       // The recording has been soft deleted and cleanup can be retried later
-      console.error('Error scheduling recording resource cleanup:', error);
+      logger.error({ err: error }, 'Error scheduling recording resource cleanup');
     }
 
     return deleted;

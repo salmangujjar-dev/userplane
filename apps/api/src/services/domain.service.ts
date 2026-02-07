@@ -8,6 +8,7 @@ import type { DomainStatus } from '@workspace/contract';
 import { domainError, workspaceError } from '@workspace/contract';
 
 import { generateDomainId } from '@/api/lib/id';
+import { createLogger } from '@/api/lib/logger';
 import { cleanUrl } from '@/api/lib/url';
 import {
   DomainRepository,
@@ -20,6 +21,8 @@ import { TokenService } from '@/api/services/token.service';
 import type { UserService } from '@/api/services/user.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { Transaction } from '@/api/types';
+
+const logger = createLogger('domain-service');
 
 export interface DomainServiceDeps {
   domainRepo: DomainRepository;
@@ -342,8 +345,7 @@ export class DomainService {
       throw domainError.DOMAIN_VERIFICATION_TOKEN_INVALID();
     }
 
-    console.log('[verifyDomain] Payload:', payload);
-    console.log('[verifyDomain] Workspace IDs from SDK:', workspaceIds);
+    logger.debug({ payload, workspaceIds }, 'Domain verification payload received');
 
     // Verify token's workspace ID is in the list from SDK
     if (!workspaceIds.includes(payload.workspaceId)) {

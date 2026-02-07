@@ -6,7 +6,10 @@
 import { implement } from '@orpc/server';
 import { contract, domainError } from '@workspace/contract';
 
+import { createLogger } from '@/api/lib/logger';
 import type { DomainService } from '@/api/services/domain.service';
+
+const logger = createLogger('domain-verification');
 
 /**
  * Initial context with headers
@@ -40,8 +43,10 @@ export const verifyDomainImpl = (domainService: DomainService) => {
       throw domainError.DOMAIN_ORIGIN_INVALID();
     }
 
-    console.log('[verifyDomainImpl] Origin hostname:', originHostname);
-    console.log('[verifyDomainImpl] Workspace IDs from body:', input.body.workspaceIds);
+    logger.debug(
+      { originHostname, workspaceIds: input.body.workspaceIds },
+      'Domain verification request received'
+    );
 
     const domain = await domainService.verifyDomain(
       input.body.token,
@@ -49,7 +54,7 @@ export const verifyDomainImpl = (domainService: DomainService) => {
       input.body.workspaceIds
     );
 
-    console.log('[verifyDomainImpl] Domain verified:', domain);
+    logger.debug({ domain }, 'Domain verified successfully');
 
     return {
       message: 'Domain verified successfully',

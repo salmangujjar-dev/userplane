@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/node';
-import { createAppLogger } from '@workspace/logger';
 
 import { db } from '@/api/clients/db';
 import {
@@ -11,9 +10,10 @@ import {
 } from '@/api/clients/storage';
 import { inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';
+import { createLogger } from '@/api/lib/logger';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 
-const logger = createAppLogger('inngest:delete-recording-resources');
+const logger = createLogger('inngest:delete-recording-resources');
 
 /**
  * deleteRecordingResources - Cleanup function for recording resources

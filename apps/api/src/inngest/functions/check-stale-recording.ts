@@ -1,12 +1,11 @@
-import { createAppLogger } from '@workspace/logger';
-
 import { db } from '@/api/clients/db';
 import { inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
+import { createLogger } from '@/api/lib/logger';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 
-const logger = createAppLogger('inngest:check-stale-recording');
+const logger = createLogger('inngest:check-stale-recording');
 
 /**
  * checkStaleRecording - Automatically cleans up recordings that never completed upload

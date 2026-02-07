@@ -6,10 +6,13 @@ import * as Sentry from '@sentry/node';
 import { createBeforeSendFilter, IGNORED_ERRORS_API } from '@workspace/sentry';
 
 import { env } from '@/api/env';
+import { createLogger } from '@/api/lib/logger';
+
+const logger = createLogger('sentry');
 
 export function initSentry() {
   if (!env.sentry.dsn) {
-    console.warn('Sentry DSN is not set, skipping initialization');
+    logger.warn('Sentry DSN is not set, skipping initialization');
     return;
   }
 

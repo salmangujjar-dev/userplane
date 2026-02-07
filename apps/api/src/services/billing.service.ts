@@ -13,9 +13,12 @@ import { getProductByPlanId } from '@workspace/payments/products';
 import type { PlanId } from '@workspace/pricing';
 import { PLAN_NAMES } from '@workspace/pricing';
 
+import { createLogger } from '@/api/lib/logger';
 import type { DisputeRepository } from '@/api/repositories/disputes.repository';
 import type { RefundRepository } from '@/api/repositories/refunds.repository';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
+
+const logger = createLogger('billing-service');
 
 // Grace period for on_hold status (14 days in milliseconds)
 const ON_HOLD_GRACE_PERIOD_MS = 14 * 24 * 60 * 60 * 1000;
@@ -372,7 +375,7 @@ export class BillingService {
         isUpgrade,
       };
     } catch (error) {
-      console.error('Failed to preview plan change:', error);
+      logger.error({ err: error, workspaceId }, 'Failed to preview plan change');
       const dodoError = error as {
         status?: number;
         error?: { code?: string; message?: string };
@@ -424,7 +427,7 @@ export class BillingService {
         newPlanName,
       };
     } catch (error) {
-      console.error('Failed to change plan:', error);
+      logger.error({ err: error, workspaceId }, 'Failed to change plan');
       const dodoError = error as {
         status?: number;
         error?: { code?: string; message?: string };

@@ -4,11 +4,11 @@
  */
 
 import type { IntercomRegion } from '@workspace/contract';
-import { createAppLogger } from '@workspace/logger';
 
 import { env } from '@/api/env';
+import { createLogger } from '@/api/lib/logger';
 
-const logger = createAppLogger('intercom-client');
+const logger = createLogger('intercom-client');
 
 /**
  * Intercom API regions and their base URLs

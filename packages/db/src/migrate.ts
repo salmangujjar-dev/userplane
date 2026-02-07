@@ -1,9 +1,13 @@
-import { createAppLogger } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@workspace/logger';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
 
-const logger = createAppLogger('db-migrate');
+const isDev = process.env.NODE_ENV !== 'production';
+const logger = createServerLogger('db-migrate', {
+  level: (process.env.LOG_LEVEL as LogLevel) || (isDev ? 'debug' : 'info'),
+  pretty: isDev,
+});
 
 const runMigrations = async () => {
   const databaseUrl = process.env.DATABASE_URL;

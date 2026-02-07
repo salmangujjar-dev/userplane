@@ -1,136 +1,89 @@
 # @workspace/logger
 
-Structured logging package using Pino with support for Node.js, Bun, Next.js, and Astro.
+Structured logging using Pino. Two exports: server and client. Both return `pino.Logger`.
 
-## Installation
+The package owns **structure** (formatters, base field shape, pretty-print config).
+Callers own **policy** (log level, pretty-printing, base metadata).
+The package does not read `process.env` -- each app passes config explicitly.
 
-```bash
-bun add @workspace/logger
-```
+## Exports
 
-## Usage
+### `@workspace/logger` -- `createServerLogger`
 
-### Server-side (Node.js/Bun/API routes)
-
-Simple one-line usage with automatic environment detection:
+Server-side logger using Pino with optional pretty-printing via pino-pretty transport.
 
 ```typescript
-import { createAppLogger } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@workspace/logger';
 
-const logger = createAppLogger('my-service');
+const logger = createServerLogger('my-service', {
+  level: 'debug',
+  pretty: true,
+  base: { env: 'development', appEnv: 'local' },
+});
 
 logger.info({ userId: 123 }, 'User logged in');
 logger.error({ err }, 'Something failed');
-logger.debug({ data }, 'Debug info');
 ```
 
-### Next.js Usage
+**`ServerLoggerOptions`:**
 
-#### Server Components / API Routes
+| Field    | Type                      | Required | Description                                     |
+| -------- | ------------------------- | -------- | ----------------------------------------------- |
+| `level`  | `LogLevel`                | yes      | Log level -- caller decides based on their env  |
+| `pretty` | `boolean`                 | no       | Enable pretty-printed output (default: `false`) |
+| `base`   | `Record<string, unknown>` | no       | Additional base fields on every log line        |
+
+### `@workspace/logger/browser` -- `createClientLogger`
+
+Client-side logger using Pino's native browser build. Outputs structured objects via `console.*` methods.
 
 ```typescript
-// app/api/users/route.ts
-import { createAppLogger } from '@workspace/logger';
+import { createClientLogger } from '@workspace/logger/browser';
 
-const logger = createAppLogger('api-users');
+const logger = createClientLogger('my-component', { level: 'info' });
 
-export async function GET() {
-  logger.info('Fetching users');
-  // ...
+logger.info({ action: 'click' }, 'Button clicked');
+```
+
+**`ClientLoggerOptions`:**
+
+| Field   | Type                      | Required | Description                                    |
+| ------- | ------------------------- | -------- | ---------------------------------------------- |
+| `level` | `LogLevel`                | yes      | Log level -- caller decides based on their env |
+| `base`  | `Record<string, unknown>` | no       | Additional base fields on every log line       |
+
+## App-local wrappers
+
+Each app should create a thin local wrapper that binds env-specific config once:
+
+```typescript
+// apps/api/src/lib/logger.ts
+import { createServerLogger, type LogLevel } from '@workspace/logger';
+import { env } from '@/api/env';
+
+const isDev = env.server.nodeEnv !== 'production';
+
+export function createLogger(context: string) {
+  return createServerLogger(context, {
+    level: (process.env.LOG_LEVEL as LogLevel) || (isDev ? 'debug' : 'info'),
+    pretty: isDev,
+    base: { env: env.server.nodeEnv, appEnv: env.server.appEnv },
+  });
 }
 ```
 
-#### Client Components
+Then all files in that app import from the local wrapper:
 
 ```typescript
-// app/components/MyComponent.tsx
-'use client';
+import { createLogger } from '@/api/lib/logger';
 
-import { createBrowserLogger } from '@workspace/logger/browser';
-
-const logger = createBrowserLogger('my-component');
-
-export default function MyComponent() {
-  const handleClick = () => {
-    logger.info({ action: 'click' }, 'Button clicked');
-  };
-
-  return <button onClick={handleClick}>Click me</button>;
-}
+const logger = createLogger('my-module');
 ```
 
-#### Universal (works everywhere)
+## Standardized behavior
 
-```typescript
-// Works in both server and client
-import { createUniversalLogger } from '@workspace/logger';
+Both loggers share the same structural conventions:
 
-const logger = await createUniversalLogger('my-context');
-logger.info('This works anywhere!');
-```
-
-### Astro Usage
-
-#### Server-side (pages, endpoints)
-
-```typescript
-// src/pages/api/hello.ts
-import { createAppLogger } from '@workspace/logger';
-
-const logger = createAppLogger('api-hello');
-
-export async function GET() {
-  logger.info('Hello endpoint called');
-  return new Response(JSON.stringify({ message: 'Hello' }));
-}
-```
-
-#### Client-side scripts
-
-```typescript
-// src/scripts/analytics.ts
-import { createBrowserLogger } from '@workspace/logger/browser';
-
-const logger = createBrowserLogger('analytics');
-
-logger.info({ page: window.location.pathname }, 'Page view');
-```
-
-## API
-
-### `createAppLogger(context: string, options?)`
-
-Creates a logger with automatic environment-aware configuration.
-
-**Options:**
-
-- `level`: Log level (default: 'debug' in dev, 'info' in prod)
-- `pretty`: Enable pretty printing (default: true in dev, false in prod)
-- `base`: Additional base data to include in all logs
-
-### `createBrowserLogger(context: string, level?)`
-
-Browser-compatible logger that uses console methods.
-
-### `createUniversalLogger(context: string, options?)`
-
-Async function that creates appropriate logger for the environment.
-
-### `createServerLogger(context: string, options?)`
-
-Server-only logger (throws error in browser).
-
-## Environment Variables
-
-- `NODE_ENV`: Environment mode (development/production)
-- `LOG_LEVEL`: Override log level (trace/debug/info/warn/error/fatal)
-
-## Features
-
-- ✅ Structured JSON logging
-- ✅ Pretty colored output in development
-- ✅ Works in Node.js, Bun, Next.js, and Astro
-- ✅ Browser-compatible logging
-- ✅ TypeScript support
-- ✅ Automatic environment detection
-- ✅ Context-based child loggers
+- Level formatted as label (`{ level: 'info' }` not `{ level: 30 }`)
+- `context` field in base for identifying the module
+- Returns `pino.Logger` -- same type, same API surface everywhere
