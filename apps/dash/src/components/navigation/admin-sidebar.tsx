@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { SUPPORT_LINKS } from '@/constants';
 import { useAccount } from '@/features/account';
 import { useWorkspaces } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
@@ -170,7 +171,7 @@ export function AdminSidebar() {
               </Link>
               <DropdownMenuSeparator className="-mx-2 my-2" />
               <a
-                href="https://docs.userplane.io"
+                href={SUPPORT_LINKS.helpCenter}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"

@@ -13,7 +13,7 @@ After [connecting Intercom](/help/integrations/intercom-integration), a Userplan
 2. Click the **Userplane** sidebar app.
 3. Click **Create Link**.
 4. Select a **project** from the dropdown.
-5. Select a **domain** from the dropdown (only verified domains appear).
+5. Select a **domain** from the dropdown.
 6. Click **Create** and send the link to the customer in the conversation.
 
 ## Viewing recordings
@@ -28,6 +28,10 @@ When a customer completes a recording from a link created in an Intercom convers
 ## Conversation linking
 
 Recordings created through the Intercom sidebar app are automatically linked to the Intercom conversation. This makes it easy to find the recording later from either Userplane or Intercom.
+
+## Using Cmd+K instead
+
+If you prefer keyboard shortcuts, you can also create recording links using the Intercom Cmd+K action menu. Press **Cmd+K** (or **Ctrl+K** on Windows), type **Userplane**, and follow the prompts. See [Intercom Shortcuts](/help/integrations/intercom-shortcuts) for details.
 
 ## Requirements
 

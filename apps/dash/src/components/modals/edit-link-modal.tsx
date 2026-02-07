@@ -31,6 +31,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { LinkReferenceInput } from '@/components/link-reference-input';
+import { SUPPORT_LINKS } from '@/constants';
 import { URLSchema } from '@/schemas';
 
 interface EditLinkModalProps {
@@ -143,7 +144,7 @@ export function EditLinkModal({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href="https://userplane.io/docs/recording-links"
+                          href={SUPPORT_LINKS.recordingLinks}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center"

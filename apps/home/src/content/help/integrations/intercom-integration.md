@@ -10,6 +10,7 @@ The Intercom integration lets your support team request and review screen record
 ## What the integration does
 
 - Installs a **sidebar app** in the Intercom inbox for creating links and viewing recordings.
+- Adds a **Cmd+K shortcut** so agents can type "Userplane" in the action menu to create recording links without navigating away from a conversation.
 - Associates recordings with Intercom conversations automatically.
 - Supports using [reusable recording links](/help/recording-links/reusable-recording-links) in [Intercom macros](/help/integrations/intercom-macros).
 
@@ -40,4 +41,5 @@ Disconnecting removes the sidebar app from Intercom. Existing recordings and lin
 
 - [Intercom Setup](/help/getting-started/intercom-setup) — quick setup guide.
 - [Using Userplane in Intercom](/help/integrations/intercom-inbox-app) — how the sidebar app works.
+- [Intercom Shortcuts](/help/integrations/intercom-shortcuts) — use Cmd+K to create links fast.
 - [Intercom Macros](/help/integrations/intercom-macros) — use reusable links in macros.

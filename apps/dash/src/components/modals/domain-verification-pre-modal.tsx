@@ -12,6 +12,7 @@ import { HelpCircle } from 'lucide-react';
 
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
 import { DomainVerificationHeader } from '@/components/domains/domain-verification-header';
+import { SUPPORT_LINKS } from '@/constants';
 
 interface DomainVerificationPreModalProps {
   open: boolean;
@@ -29,7 +30,7 @@ export function DomainVerificationPreModal({
   onVerify,
 }: DomainVerificationPreModalProps) {
   const handleHowItWorks = () => {
-    window.open('https://docs.userplane.io/domains', '_blank');
+    window.open(SUPPORT_LINKS.domainVerification, '_blank');
   };
 
   return (

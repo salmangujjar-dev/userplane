@@ -44,6 +44,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { LinkReferenceInput } from '@/components/link-reference-input';
+import { SUPPORT_LINKS } from '@/constants';
 import { useWorkspaceDomains } from '@/features/domains';
 import { useCreateLink } from '@/features/links';
 import { useWorkspaceProjects } from '@/features/projects';
@@ -280,7 +281,7 @@ function FormView({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
-                      href="https://userplane.io/docs/recording-links"
+                      href={SUPPORT_LINKS.recordingLinks}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center"
@@ -519,7 +520,7 @@ function ErrorView({
 
       <DialogFooter className="mt-8">
         <a
-          href="https://userplane.io/docs/troubleshooting/link-creation-errors"
+          href={SUPPORT_LINKS.linkCreationErrors}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
@@ -608,7 +609,7 @@ function ShareView({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
-                      href="https://userplane.io/docs/sharing-links"
+                      href={SUPPORT_LINKS.sharingLinks}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center"

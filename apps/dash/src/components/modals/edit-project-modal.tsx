@@ -21,6 +21,8 @@ import {
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { SUPPORT_LINKS } from '@/constants';
+
 interface EditProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -86,7 +88,7 @@ export function EditProjectModal({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <a
-                        href="https://userplane.io/docs/projects"
+                        href={SUPPORT_LINKS.projects}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center"
