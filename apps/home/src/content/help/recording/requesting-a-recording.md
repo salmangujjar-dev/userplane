@@ -9,7 +9,7 @@ A recording starts with a link. You create a recording link in Userplane, share 
 
 ## Create a recording link
 
-1. Click the **Create Link** button in the top right corner.
+1. Click the [Create Link](https://dash.userplane.io/_/recordings?create_link=true) button in the top right corner.
 2. Fill in the link details:
    - **Project** — choose which project this recording belongs to. This helps you organize and filter recordings later.
    - **Domain** — select a verified domain to brand the recording link with your site's identity. Optional but recommended.
@@ -25,7 +25,7 @@ If you use Intercom, you can create and send recording links directly from the [
 
 ## What happens next
 
-After the customer finishes recording, the recording appears in your **Recordings** page. You will also receive a notification if [incoming recording notifications](/help/account/notification-preferences) are enabled.
+After the customer finishes recording, the recording appears in your [Recordings](https://dash.userplane.io/_/recordings) page. You will also receive a notification if [incoming recording notifications](/help/account/notification-preferences) are enabled.
 
 ## Related articles
 

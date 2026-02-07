@@ -9,7 +9,7 @@ Branding lets you customize the recording page your customers see when they open
 
 ## Branding settings
 
-Go to **Workspace Settings > Recording Customization** to configure branding. The following fields are available:
+Go to [Workspace Settings > Recording Customization](https://dash.userplane.io/_/settings?tab=customization) to configure branding. The following fields are available:
 
 | Field                  | Description                                                                         | Limits                       |
 | ---------------------- | ----------------------------------------------------------------------------------- | ---------------------------- |

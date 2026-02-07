@@ -9,7 +9,7 @@ Can't find what you're looking for in the Help Center? No worries — we're happ
 
 ## Email us
 
-Drop us a line at **support@userplane.io** and we'll get back to you within one business day.
+Drop us a line at [support@userplane.io](mailto:support@userplane.io) and we'll get back to you within one business day.
 
 A few things that help us help you faster:
 

@@ -17,7 +17,7 @@ Your workspace's invite policy determines how new people can discover and join y
 
 ## Setting your invite policy
 
-1. Go to **Workspace Settings > General**.
+1. Go to [Workspace Settings > General](https://dash.userplane.io/_/settings?tab=workspace).
 2. Select the invite policy.
 3. If using **Whitelisted** or **Protected**, add the email domains you want to allow (e.g. `example.com`).
 

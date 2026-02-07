@@ -9,7 +9,7 @@ The Domains section in Workspace Settings lets you manage all domains in your wo
 
 ## Viewing domains
 
-Go to **Workspace Settings > Domains** to see all domains. Each domain shows its name, status (pending, verified, or revoked), and creation date.
+Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) to see all domains. Each domain shows its name, status (pending, verified, or revoked), and creation date.
 
 ## Sorting
 

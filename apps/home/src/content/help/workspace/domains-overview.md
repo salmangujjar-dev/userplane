@@ -23,7 +23,7 @@ Domains in Userplane represent the websites where your customers will use record
 
 ## Adding a domain
 
-1. Go to **Workspace Settings > Domains**.
+1. Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general).
 2. Click **Add Domain**.
 3. Enter your domain (e.g. `app.example.com`).
 4. Follow the [domain verification](/help/workspace/domain-verification) process to confirm ownership.

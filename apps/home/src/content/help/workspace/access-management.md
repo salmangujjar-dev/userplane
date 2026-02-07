@@ -13,7 +13,7 @@ When your workspace uses the **Protected** [invite policy](/help/workspace/invit
 2. Their email domain matches one of your whitelisted domains.
 3. They click **Request Access**.
 4. Workspace owners receive a notification about the pending request.
-5. The owner approves or declines the request from **Workspace Settings > Team**.
+5. The owner approves or declines the request from [Workspace Settings > Team](https://dash.userplane.io/_/settings?tab=team).
 
 ## Request expiry
 
@@ -21,19 +21,15 @@ Access requests expire after **7 days**. If an owner does not act on a request w
 
 ## Approving a request
 
-1. Go to **Workspace Settings > Team**.
-2. Find the pending request.
-3. Click **Approve**. The user becomes a workspace member.
+Workspace owners receive an email with the access request. Click the **Approve** link in the email to accept the user as a workspace member.
 
 ## Declining a request
 
-1. Go to **Workspace Settings > Team**.
-2. Find the pending request.
-3. Click **Decline**. The user is notified that their request was declined.
+Click the **Decline** link in the email notification. The user is notified that their request was declined.
 
 ## Domain whitelisting
 
-Only users whose email domain matches one of your whitelisted domains can request access. You can manage whitelisted domains (up to **5**) from **Workspace Settings > General**.
+Only users whose email domain matches one of your whitelisted domains can request access. You can manage whitelisted domains (up to **5**) from [Workspace Settings > General](https://dash.userplane.io/_/settings?tab=workspace).
 
 ## Related articles
 

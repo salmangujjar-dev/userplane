@@ -9,7 +9,7 @@ Projects can be deleted when they are no longer needed. Userplane uses a soft-de
 
 ## Deleting a project
 
-1. Go to **Workspace Settings > Projects**.
+1. Go to [Workspace Settings > Projects](https://dash.userplane.io/_/settings?tab=general).
 2. Select the project you want to delete.
 3. Click **Delete**.
 
@@ -34,7 +34,7 @@ After deleting a project, you have a limited time to restore it:
 
 If a project was recently deleted and is within the restoration window:
 
-1. Go to **Workspace Settings > Projects**.
+1. Go to [Workspace Settings > Projects](https://dash.userplane.io/_/settings?tab=general).
 2. Look for the deleted project in the deleted items section.
 3. Click **Restore**.
 

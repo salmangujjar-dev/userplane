@@ -36,4 +36,4 @@ This panel helps you identify failed API calls, slow responses, or unexpected re
 
 ## Enabling capture
 
-Console and network data capture is controlled per domain. Go to **Workspace Settings > Domains**, select a verified domain, and toggle the relevant preferences. See [Domain Recording Preferences](/help/recording-links/domain-recording-preferences) for details.
+Console and network data capture is controlled per domain. Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general), select a verified domain, and toggle the relevant preferences. See [Domain Recording Preferences](/help/recording-links/domain-recording-preferences) for details.

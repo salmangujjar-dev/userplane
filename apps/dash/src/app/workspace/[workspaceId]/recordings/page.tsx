@@ -19,13 +19,13 @@ import { usePagination } from '@/hooks/use-pagination';
 import { useSearchableLinks } from '@/hooks/use-searchable-links';
 import { useSearchableMembers } from '@/hooks/use-searchable-members';
 import { useSearchableProjects } from '@/hooks/use-searchable-projects';
-import { stringArrayParser } from '@/lib/parsers';
+import { booleanParser, stringArrayParser } from '@/lib/parsers';
 
 export default function RecordingsPage() {
   const [currentPage, setCurrentPage] = usePagination();
   const recordingsPerPage = 16; // 4 columns x 4 rows
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useQueryState('invite', booleanParser);
+  const [createLinkModalOpen, setCreateLinkModalOpen] = useQueryState('create_link', booleanParser);
 
   // Filter states (URL-synced)
   const [selectedProjects, setSelectedProjects] = useQueryState('projects', stringArrayParser);

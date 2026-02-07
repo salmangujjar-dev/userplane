@@ -71,7 +71,7 @@ For example, if your page already uses `data-hj-suppress` for Hotjar or `.sentry
 
 ## Enabling automatic redaction
 
-Automatic blur is controlled per domain. Go to **Workspace Settings > Domains**, select a verified domain, and enable the **Hide sensitive fields** preference. See [Domain Recording Preferences](/help/recording-links/domain-recording-preferences) for details.
+Automatic blur is controlled per domain. Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general), select a verified domain, and enable the **Hide sensitive fields** preference. See [Domain Recording Preferences](/help/recording-links/domain-recording-preferences) for details.
 
 ## Related articles
 

@@ -16,7 +16,7 @@ Your display name is shown to:
 
 To update your display name:
 
-1. Go to **Account Settings > Profile**.
+1. Go to [Account Settings > Profile](https://dash.userplane.io/_/account).
 2. Edit the **Display name** field.
 3. Save your changes.
 

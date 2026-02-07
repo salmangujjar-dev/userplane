@@ -20,7 +20,7 @@ When you create a recording link, select a **project** from the dropdown. If you
 
 ## Managing projects
 
-Projects are managed from **Workspace Settings > Projects**. See [Projects Overview](/help/workspace/projects-overview) for details on creating, editing, and deleting projects.
+Projects are managed from [Workspace Settings > Projects](https://dash.userplane.io/_/settings?tab=general). See [Projects Overview](/help/workspace/projects-overview) for details on creating, editing, and deleting projects.
 
 ## Default project
 

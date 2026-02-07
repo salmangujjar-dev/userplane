@@ -15,7 +15,7 @@ Userplane helps your support team request screen recordings from customers in ju
 
 ## Create your first recording link
 
-1. Click **Create Link** in the top right of the navbar.
+1. Click [Create Link](https://dash.userplane.io/_/recordings?create_link=true) in the top right of the navbar.
 2. Choose a **project** to organize the recording under.
 3. Select a **domain** if you'd like the link branded to your site.
 4. Add an optional **reference** (like a Jira ticket number or GitHub issue URL) to help you find the recording later.
@@ -24,7 +24,7 @@ Userplane helps your support team request screen recordings from customers in ju
 
 ## Review a recording
 
-1. Open the **Recordings** page from the sidebar.
+1. Open the [Recordings](https://dash.userplane.io/_/recordings) page from the sidebar.
 2. Browse recordings in the grid view, or filter by project, member, or link to find what you need.
 3. Click a recording to open the detail view with resizable panels.
 4. Use the right-hand tabs to dig into the details:

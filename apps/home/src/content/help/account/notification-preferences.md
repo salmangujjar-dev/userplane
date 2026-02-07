@@ -19,7 +19,7 @@ Userplane sends email notifications to keep you informed about recordings, billi
 
 ## Configuring preferences
 
-1. Go to **Account Settings > Notifications**.
+1. Go to [Account Settings > Notifications](https://dash.userplane.io/_/account?tab=workspaces).
 2. Toggle each notification type on or off.
 3. Changes are saved automatically.
 

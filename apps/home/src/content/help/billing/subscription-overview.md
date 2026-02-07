@@ -35,7 +35,7 @@ See [Understanding Usage Limits](/help/billing/understanding-usage-limits) for d
 
 ## Checking your current plan
 
-1. Go to **Workspace Settings > Billing**.
+1. Go to [Workspace Settings > Billing](https://dash.userplane.io/_/settings?tab=plan-usage).
 2. Your current plan, billing period, and next renewal date are displayed at the top.
 
 ## Changing your plan

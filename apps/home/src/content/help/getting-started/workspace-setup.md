@@ -9,7 +9,7 @@ A workspace is where your team manages recording links, reviews recordings, and 
 
 ## Create a workspace
 
-1. After signing in, click **Create Workspace**.
+1. After signing in, click [Create Workspace](https://dash.userplane.io/workspace/create).
 2. You'll be prompted to enter your **Company URL**.
 3. Once created, you can invite teammates and connect integrations like Intercom.
 
@@ -17,7 +17,7 @@ Post creation, you become the **owner** of the workspace and can manage all sett
 
 ## Invite teammates
 
-1. Go to **Workspace Settings > Team**.
+1. Go to [Workspace Settings > Team](https://dash.userplane.io/_/recordings?invite=true).
 2. Click **Invite Member**.
 3. Enter the email address of the person you want to invite.
 4. If you've connected Intercom, you'll see recommendations from your Intercom workspace.
@@ -29,7 +29,7 @@ Invited users will receive an email with a link to join. See [Team Management](/
 
 With Userplane's Intercom integration, your support agents can create recording links and view recordings directly from conversations.
 
-1. Go to **Workspace Settings > Integrations**.
+1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
 2. Click **Connect Intercom**.
 3. You'll be redirected to Intercom to authorize the connection.
 4. Userplane requests permissions to read conversations and manage the inbox sidebar app.

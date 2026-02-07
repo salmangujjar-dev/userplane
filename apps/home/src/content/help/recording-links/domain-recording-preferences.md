@@ -19,7 +19,7 @@ Each verified domain in your workspace can have its own recording preferences. T
 
 ## Configuring preferences
 
-1. Go to **Workspace Settings > Domains**.
+1. Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general).
 2. Select a **verified** domain.
 3. Toggle the preferences you want to enable or disable.
 4. Changes take effect immediately for new recordings.

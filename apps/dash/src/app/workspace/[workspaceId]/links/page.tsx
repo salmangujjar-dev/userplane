@@ -17,11 +17,11 @@ import { useWorkspaceLinks } from '@/features/links';
 import { usePagination } from '@/hooks/use-pagination';
 import { useSearchableMembers } from '@/hooks/use-searchable-members';
 import { useSearchableProjects } from '@/hooks/use-searchable-projects';
-import { stringArrayParser } from '@/lib/parsers';
+import { booleanParser, stringArrayParser } from '@/lib/parsers';
 
 export default function LinksPage() {
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useQueryState('invite', booleanParser);
+  const [createLinkModalOpen, setCreateLinkModalOpen] = useQueryState('create_link', booleanParser);
   const [currentPage, setCurrentPage] = usePagination();
   const linksPerPage = 10;
 

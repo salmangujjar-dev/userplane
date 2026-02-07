@@ -17,7 +17,7 @@ Every workspace has a **default project** that is created automatically. The def
 
 ## Creating a project
 
-1. Go to **Workspace Settings > Projects**.
+1. Go to [Workspace Settings > Projects](https://dash.userplane.io/_/settings?tab=general).
 2. Click **Create Project**.
 3. Enter a name for the project.
 4. Click **Save**.
