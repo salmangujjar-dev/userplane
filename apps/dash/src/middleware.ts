@@ -1,10 +1,10 @@
-import { createBrowserLogger } from '@workspace/logger/browser';
+import { createClientLogger } from '@workspace/logger/browser';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { env } from '@/env';
 
-const logger = createBrowserLogger('middleware');
+const logger = createClientLogger('middleware', { level: 'debug' });
 
 const authRoutes = ['/auth'];
 const publicRoutes = ['/accounts/delete/confirm', '/setup'];

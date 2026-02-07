@@ -9,6 +9,7 @@ import jwt, { type SignOptions } from 'jsonwebtoken';
 
 import { env } from '@/api/env';
 import { generateLinkId } from '@/api/lib/id';
+import { createLogger } from '@/api/lib/logger';
 import { parseLinkReference } from '@/api/lib/parser';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
@@ -23,6 +24,8 @@ import type {
   LinkSortOptions,
   Transaction,
 } from '@/api/types';
+
+const logger = createLogger('link-service');
 
 export interface LinkServiceDeps {
   linkRepo: LinkRepository;
@@ -268,7 +271,10 @@ export class LinkService {
     } catch (error) {
       // Log but don't fail - link is already created
       // Consumption tracking failure shouldn't block the link creation
-      console.error('Failed to track link consumption:', error);
+      logger.error(
+        { err: error, workspaceId: params.workspaceId },
+        'Failed to track link consumption'
+      );
     }
 
     // Warm caches for new link

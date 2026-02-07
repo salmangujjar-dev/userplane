@@ -6,12 +6,15 @@
 import { domainError, inviteError, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 
+import { createLogger } from '@/api/lib/logger';
 import { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
 import { UserService } from '@/api/services/user.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { formatDeletionDate } from '@/api/utils/format';
+
+const logger = createLogger('invite-service');
 
 /**
  * Internal invite action result type for service orchestration
@@ -397,7 +400,10 @@ export class InviteService {
       // Log any failed email sends but don't throw
       const failedCount = results.filter((r) => r.status === 'rejected').length;
       if (failedCount > 0) {
-        console.warn(`Failed to send ${failedCount} access request emails to workspace owners`);
+        logger.warn(
+          { failedCount, workspaceId },
+          'Failed to send access request emails to workspace owners'
+        );
       }
 
       return {

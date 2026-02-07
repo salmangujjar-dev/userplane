@@ -23,6 +23,7 @@ import type {
 import { isSubscriptionEvent, parseSubscriptionDates } from '@workspace/payments/webhooks';
 import type { PlanId } from '@workspace/pricing';
 
+import { createLogger } from '@/api/lib/logger';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import type { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
@@ -30,6 +31,8 @@ import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { Transaction } from '@/api/types';
 
 import { generateSubscriptionId } from '../lib/id';
+
+const logger = createLogger('webhook-processor');
 
 /**
  * Webhook headers from DodoPayments
@@ -77,12 +80,11 @@ export class WebhookProcessorService {
     // webhook-timestamp header is Unix seconds, convert to milliseconds for Date
     const eventTimestamp = new Date(parseInt(webhookTimestamp, 10) * 1000);
 
-    console.log(`[WebhookProcessor] Processing webhook: ${webhookId}`);
-    console.log(`[WebhookProcessor] Event type: ${eventType}, timestamp: ${webhookTimestamp}`);
+    logger.info({ webhookId, eventType, webhookTimestamp }, 'Processing webhook');
 
     // Skip non-subscription events
     if (!isSubscriptionEvent(eventType)) {
-      console.log(`[WebhookProcessor] Skipping non-subscription event: ${eventType}`);
+      logger.info({ eventType }, 'Skipping non-subscription event');
       return { processed: false, skipped: true, skipReason: 'Not a subscription event' };
     }
 
@@ -90,12 +92,12 @@ export class WebhookProcessorService {
     const subscriptionId = subscription.subscription_id;
     const customerId = subscription.customer.customer_id;
 
-    console.log(`[WebhookProcessor] Subscription: ${subscriptionId}, Customer: ${customerId}`);
+    logger.info({ subscriptionId, customerId }, 'Processing subscription webhook');
 
     // 1. Idempotency check - has this webhook already been processed?
     const alreadyProcessed = await this.deps.webhookEventsRepo.isProcessed(webhookId);
     if (alreadyProcessed) {
-      console.log(`[WebhookProcessor] SKIP: Webhook ${webhookId} already processed (idempotency)`);
+      logger.info({ webhookId }, 'Skipping already processed webhook (idempotency)');
       return {
         processed: false,
         skipped: true,
@@ -109,7 +111,7 @@ export class WebhookProcessorService {
     const businessId = (payload as { business_id?: string }).business_id || 'unknown';
     const existingEvent = await this.deps.webhookEventsRepo.exists(webhookId);
     if (!existingEvent) {
-      console.log(`[WebhookProcessor] Recording new webhook event: ${webhookId}`);
+      logger.info({ webhookId }, 'Recording new webhook event');
       await this.deps.webhookEventsRepo.create({
         id: webhookId,
         eventType,
@@ -123,13 +125,13 @@ export class WebhookProcessorService {
 
     // 3. Process in transaction
     try {
-      console.log(`[WebhookProcessor] Starting transaction for webhook: ${webhookId}`);
+      logger.info({ webhookId }, 'Starting transaction for webhook');
       return await this.deps.db.transaction(async (tx) => {
         return this.processInTransaction(tx, headers, payload, subscription);
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[WebhookProcessor] ERROR processing webhook ${webhookId}: ${errorMessage}`);
+      logger.error({ webhookId, err: errorMessage }, 'Error processing webhook');
       await this.deps.webhookEventsRepo.markFailed(webhookId, { error: errorMessage });
       throw error;
     }
@@ -152,20 +154,20 @@ export class WebhookProcessorService {
     const dates = parseSubscriptionDates(subscription);
 
     // Find existing subscription
-    console.log(`[WebhookProcessor] Looking up subscription: ${subscriptionId}`);
+    logger.info({ subscriptionId }, 'Looking up subscription');
     const current = await this.deps.subscriptionRepo.findBySubscriptionId(subscriptionId, {
       tx,
     });
 
     // Handle new subscription (subscription.active for new subscriptions)
     if (!current && eventType === 'subscription.active') {
-      console.log(`[WebhookProcessor] New subscription detected, handling creation`);
+      logger.info({ subscriptionId }, 'New subscription detected, handling creation');
       return this.handleNewSubscription(tx, headers, payload, subscription);
     }
 
     // If no existing subscription and not a new subscription event, skip
     if (!current) {
-      console.log(`[WebhookProcessor] SKIP: No existing subscription found for ${subscriptionId}`);
+      logger.info({ subscriptionId }, 'Skipping: no existing subscription found');
       await this.deps.webhookEventsRepo.markSkipped(webhookId, {
         skipReason: `No existing subscription found for ${subscriptionId}`,
       });
@@ -177,20 +179,25 @@ export class WebhookProcessorService {
       };
     }
 
-    console.log(
-      `[WebhookProcessor] Found subscription: status=${current.status}, periodEnd=${current.currentPeriodEnd}`
+    logger.info(
+      { subscriptionId, status: current.status, periodEnd: current.currentPeriodEnd },
+      'Found subscription'
     );
 
     // 4. Out-of-order detection
     const isStale = this.isStaleWebhook(current, subscription, eventTimestamp);
     if (isStale) {
-      console.log(`[WebhookProcessor] SKIP: Stale webhook detected (out-of-order)`);
-      console.log(`[WebhookProcessor] - Event timestamp: ${eventTimestamp.toISOString()}`);
-      console.log(
-        `[WebhookProcessor] - Last webhook timestamp: ${current.lastWebhookTimestamp?.toISOString() || 'none'}`
-      );
-      console.log(
-        `[WebhookProcessor] - Time difference: ${current.lastWebhookTimestamp ? (current.lastWebhookTimestamp.getTime() - eventTimestamp.getTime()) / 1000 : 0}s ahead`
+      const timeDiff = current.lastWebhookTimestamp
+        ? (current.lastWebhookTimestamp.getTime() - eventTimestamp.getTime()) / 1000
+        : 0;
+      logger.info(
+        {
+          webhookId,
+          eventTimestamp: eventTimestamp.toISOString(),
+          lastWebhookTimestamp: current.lastWebhookTimestamp?.toISOString() || null,
+          timeDiffSeconds: timeDiff,
+        },
+        'Skipping stale webhook (out-of-order)'
       );
       await this.deps.webhookEventsRepo.markSkipped(webhookId, {
         previousStatus: current.status,
@@ -207,11 +214,13 @@ export class WebhookProcessorService {
 
     // 5. Determine target status from subscription payload
     // The subscription object always contains the current status, so we read it directly
-    console.log(`[WebhookProcessor] Reading target status from subscription payload`);
     let targetStatus = subscription.status;
 
     if (!targetStatus) {
-      console.log(`[WebhookProcessor] SKIP: No status in subscription payload`);
+      logger.info(
+        { subscriptionId, currentStatus: current.status },
+        'Skipping: no status in subscription payload'
+      );
       await this.deps.webhookEventsRepo.markSkipped(webhookId, {
         previousStatus: current.status,
         skipReason: 'No status in subscription payload',
@@ -225,12 +234,16 @@ export class WebhookProcessorService {
       };
     }
 
-    console.log(
-      `[WebhookProcessor] Target status: ${targetStatus}, Current status: ${current.status}`
+    logger.info(
+      { subscriptionId, targetStatus, currentStatus: current.status },
+      'Determined target status from payload'
     );
 
     // 6. State machine validation
-    console.log(`[WebhookProcessor] Validating transition: ${current.status} → ${targetStatus}`);
+    logger.info(
+      { subscriptionId, fromStatus: current.status, toStatus: targetStatus },
+      'Validating transition'
+    );
     const validation = validateTransition(
       current.status as SubscriptionStatus,
       targetStatus,
@@ -238,14 +251,15 @@ export class WebhookProcessorService {
     );
 
     if (!validation.valid) {
-      console.log(`[WebhookProcessor] Transition invalid: ${validation.reason}`);
-      console.log(`[WebhookProcessor] Attempting upstream verification...`);
-
+      logger.info(
+        { subscriptionId, reason: validation.reason },
+        'Transition invalid, attempting upstream verification'
+      );
       // Try upstream verification for ambiguous cases
       const upstreamStatus = await this.verifyUpstream(subscriptionId);
 
       if (upstreamStatus) {
-        console.log(`[WebhookProcessor] Upstream status: ${upstreamStatus}`);
+        logger.info({ subscriptionId, upstreamStatus }, 'Retrieved upstream status');
         const upstreamValidation = validateTransition(
           current.status as SubscriptionStatus,
           upstreamStatus,
@@ -254,11 +268,14 @@ export class WebhookProcessorService {
 
         if (upstreamValidation.valid) {
           // Use upstream status instead
-          console.log(`[WebhookProcessor] Using upstream status: ${upstreamStatus}`);
+          logger.info({ subscriptionId, upstreamStatus }, 'Using upstream status');
           targetStatus = upstreamStatus;
         } else {
           // Both webhook and upstream are invalid
-          console.log(`[WebhookProcessor] SKIP: Both webhook and upstream transitions invalid`);
+          logger.info(
+            { subscriptionId, webhookStatus: targetStatus, upstreamStatus },
+            'Skipping: both webhook and upstream transitions invalid'
+          );
           await this.deps.webhookEventsRepo.markSkipped(webhookId, {
             previousStatus: current.status,
             skipReason: `Invalid transition: ${current.status} → ${targetStatus} (upstream: ${upstreamStatus})`,
@@ -273,7 +290,10 @@ export class WebhookProcessorService {
         }
       } else {
         // Upstream verification failed, reject the transition
-        console.log(`[WebhookProcessor] SKIP: Upstream verification failed, rejecting transition`);
+        logger.info(
+          { subscriptionId, reason: validation.reason },
+          'Skipping: upstream verification failed, rejecting transition'
+        );
         await this.deps.webhookEventsRepo.markSkipped(webhookId, {
           previousStatus: current.status,
           skipReason:
@@ -292,10 +312,16 @@ export class WebhookProcessorService {
 
     // 7. Apply the transition
     const planId = getPlanIdFromProductId(subscription.product_id);
-    console.log(`[WebhookProcessor] Applying transition: ${current.status} → ${targetStatus}`);
-    console.log(`[WebhookProcessor] - Plan ID: ${planId}`);
-    console.log(
-      `[WebhookProcessor] - Period: ${dates.currentPeriodStart} to ${dates.currentPeriodEnd}`
+    logger.info(
+      {
+        subscriptionId,
+        fromStatus: current.status,
+        toStatus: targetStatus,
+        planId,
+        periodStart: dates.currentPeriodStart,
+        periodEnd: dates.currentPeriodEnd,
+      },
+      'Applying transition'
     );
 
     await this.deps.subscriptionRepo.updateBySubscriptionId(
@@ -323,14 +349,15 @@ export class WebhookProcessorService {
 
       if (isRenewal) {
         // Reset period-based usage (recordings, logs) on renewal
-        console.log(`[WebhookProcessor] Resetting period usage for workspace: ${workspaceId}`);
+        logger.info({ workspaceId }, 'Resetting period usage for workspace');
         await this.deps.entitlementService.resetPeriodUsage(workspaceId, { tx });
       }
 
       // Handle plan changes
       if (planId && planId !== current.planId) {
-        console.log(
-          `[WebhookProcessor] Updating entitlements for plan change: ${current.planId} → ${planId}`
+        logger.info(
+          { workspaceId, fromPlan: current.planId, toPlan: planId },
+          'Updating entitlements for plan change'
         );
         await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
       }
@@ -351,7 +378,10 @@ export class WebhookProcessorService {
       await this.invalidateBillingCache(workspaceId);
     }
 
-    console.log(`[WebhookProcessor] SUCCESS: ${current.status} → ${targetStatus}`);
+    logger.info(
+      { subscriptionId, fromStatus: current.status, toStatus: targetStatus },
+      'Successfully processed webhook'
+    );
 
     return {
       processed: true,
@@ -379,16 +409,18 @@ export class WebhookProcessorService {
     const dates = parseSubscriptionDates(subscription);
     const planId = getPlanIdFromProductId(subscription.product_id);
 
-    console.log(`[WebhookProcessor] handleNewSubscription: ${subscriptionId}`);
+    logger.info({ subscriptionId }, 'Handling new subscription');
 
     // Extract workspace ID from metadata
     const workspaceId = subscription.metadata?.workspace_id || subscription.metadata?.workspaceId;
 
-    console.log(`[WebhookProcessor] - Workspace ID from metadata: ${workspaceId}`);
-    console.log(`[WebhookProcessor] - Product ID: ${subscription.product_id}, Plan ID: ${planId}`);
+    logger.info(
+      { subscriptionId, workspaceId, productId: subscription.product_id, planId },
+      'Extracted subscription metadata'
+    );
 
     if (!workspaceId) {
-      console.log(`[WebhookProcessor] SKIP: No workspace_id in metadata`);
+      logger.info({ subscriptionId }, 'Skipping: no workspace_id in metadata');
       await this.deps.webhookEventsRepo.markSkipped(webhookId, {
         skipReason: 'No workspace_id in metadata for new subscription',
       });
@@ -401,7 +433,10 @@ export class WebhookProcessorService {
     }
 
     if (!planId) {
-      console.log(`[WebhookProcessor] SKIP: Unknown product ID ${subscription.product_id}`);
+      logger.info(
+        { subscriptionId, productId: subscription.product_id },
+        'Skipping: unknown product ID'
+      );
       await this.deps.webhookEventsRepo.markSkipped(webhookId, {
         skipReason: `Unknown product ID: ${subscription.product_id}`,
       });
@@ -414,15 +449,14 @@ export class WebhookProcessorService {
     }
 
     // Check if workspace already has a subscription (might be a plan change)
-    console.log(`[WebhookProcessor] Checking for existing workspace subscription`);
     const existingWorkspaceSubscription =
       await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
 
     if (existingWorkspaceSubscription) {
-      console.log(
-        `[WebhookProcessor] Workspace has existing subscription: ${existingWorkspaceSubscription.subscriptionId}`
+      logger.info(
+        { workspaceId, existingSubscriptionId: existingWorkspaceSubscription.subscriptionId },
+        'Workspace has existing subscription, updating (plan change scenario)'
       );
-      console.log(`[WebhookProcessor] Updating existing subscription (plan change scenario)`);
 
       // Update existing subscription with new details
       await this.deps.subscriptionRepo.updateByWorkspaceId(
@@ -441,8 +475,13 @@ export class WebhookProcessorService {
 
       // Update subscription ID if it changed (plan change creates new subscription)
       if (existingWorkspaceSubscription.subscriptionId !== subscriptionId) {
-        console.log(
-          `[WebhookProcessor] Subscription ID changed: ${existingWorkspaceSubscription.subscriptionId} → ${subscriptionId}`
+        logger.info(
+          {
+            workspaceId,
+            oldSubscriptionId: existingWorkspaceSubscription.subscriptionId,
+            newSubscriptionId: subscriptionId,
+          },
+          'Subscription ID changed'
         );
 
         await (tx as unknown as DbClient)
@@ -465,14 +504,20 @@ export class WebhookProcessorService {
       );
 
       // Update entitlements for new plan (plan change scenario)
-      console.log(`[WebhookProcessor] Updating entitlements for plan change to: ${planId}`);
+      logger.info({ workspaceId, planId }, 'Updating entitlements for plan change');
       await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
 
       // Invalidate billing caches for this workspace
       await this.invalidateBillingCache(workspaceId);
 
-      console.log(
-        `[WebhookProcessor] SUCCESS: Updated existing subscription ${existingWorkspaceSubscription.status} → active`
+      logger.info(
+        {
+          workspaceId,
+          subscriptionId,
+          fromStatus: existingWorkspaceSubscription.status,
+          toStatus: 'active',
+        },
+        'Successfully updated existing subscription'
       );
 
       return {
@@ -485,7 +530,7 @@ export class WebhookProcessorService {
     }
 
     // Create new subscription
-    console.log(`[WebhookProcessor] Creating new subscription for workspace: ${workspaceId}`);
+    logger.info({ workspaceId, subscriptionId }, 'Creating new subscription for workspace');
     await this.deps.subscriptionRepo.create(
       {
         id: generateSubscriptionId(),
@@ -502,12 +547,12 @@ export class WebhookProcessorService {
     );
 
     // Update workspace customer ID
-    console.log(`[WebhookProcessor] Updating workspace customer ID: ${customerId}`);
+    logger.info({ workspaceId, customerId }, 'Updating workspace customer ID');
     await this.updateWorkspaceCustomerId(workspaceId, customerId, { tx });
 
     // Provision entitlements for the new plan
     // This updates existing free plan entitlements to the paid plan limits
-    console.log(`[WebhookProcessor] Provisioning entitlements for plan: ${planId}`);
+    logger.info({ workspaceId, planId }, 'Provisioning entitlements for plan');
     await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
 
     await this.deps.webhookEventsRepo.markProcessed(
@@ -522,7 +567,7 @@ export class WebhookProcessorService {
     // Invalidate billing caches for this workspace
     await this.invalidateBillingCache(workspaceId);
 
-    console.log(`[WebhookProcessor] SUCCESS: Created new subscription → active`);
+    logger.info({ workspaceId, subscriptionId }, 'Successfully created new subscription');
 
     return {
       processed: true,
@@ -568,7 +613,7 @@ export class WebhookProcessorService {
    */
   private async verifyUpstream(subscriptionId: string): Promise<SubscriptionStatus | null> {
     if (!this.deps.dodoClient) {
-      console.warn('[WebhookProcessor] No DodoPayments client available for upstream verification');
+      logger.warn({ subscriptionId }, 'No DodoPayments client available for upstream verification');
       return null;
     }
 
@@ -576,10 +621,7 @@ export class WebhookProcessorService {
       const upstream = await this.deps.dodoClient.subscriptions.retrieve(subscriptionId);
       return upstream.status;
     } catch (error) {
-      console.error(
-        `[WebhookProcessor] Upstream verification failed for ${subscriptionId}:`,
-        error
-      );
+      logger.error({ subscriptionId, err: error }, 'Upstream verification failed');
       return null;
     }
   }
@@ -621,13 +663,10 @@ export class WebhookProcessorService {
   private async invalidateBillingCache(workspaceId: string): Promise<void> {
     try {
       await this.deps.cacheService.invalidateWorkspaceBilling(workspaceId);
-      console.log(`[WebhookProcessor] Invalidated billing cache for workspace: ${workspaceId}`);
+      logger.info({ workspaceId }, 'Invalidated billing cache for workspace');
     } catch (error) {
       // Cache invalidation errors should not fail the webhook processing
-      console.warn(
-        `[WebhookProcessor] Failed to invalidate billing cache for workspace ${workspaceId}:`,
-        error
-      );
+      logger.warn({ workspaceId, err: error }, 'Failed to invalidate billing cache for workspace');
     }
   }
 }

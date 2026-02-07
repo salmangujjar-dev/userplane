@@ -6,7 +6,6 @@ import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { isDefinedError, onError } from '@orpc/server';
 import * as Sentry from '@sentry/node';
 import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@workspace/cache';
-import { createAppLogger } from '@workspace/logger';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
@@ -26,13 +25,14 @@ import {
 } from '@/api/handlers/intercom-canvas.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
+import { createLogger } from '@/api/lib/logger';
 import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
 import { apiRouter } from '@/api/routes/api.router';
 import { intercomCanvasService } from '@/api/services';
 
 const app = new Hono();
-const logger = createAppLogger('api');
+const logger = createLogger('api');
 
 const openAPIHandler = new OpenAPIHandler(apiRouter, {
   interceptors: [

@@ -19,9 +19,12 @@ import type { getDodoPaymentsClient } from '@workspace/payments/client';
 import type { DisputeEventType, DodoDispute, WebhookPayload } from '@workspace/payments/types';
 import { isDisputeResolutionEvent } from '@workspace/payments/types';
 
+import { createLogger } from '@/api/lib/logger';
 import type { DisputeRepository } from '@/api/repositories/disputes.repository';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import type { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
+
+const logger = createLogger('dispute-processor');
 
 /**
  * Webhook headers from DodoPayments
@@ -70,13 +73,15 @@ export class DisputeProcessorService {
     // Cast to unknown first since WebhookPayload.data type doesn't include disputes
     const dispute = payload.data as unknown as DodoDispute;
 
-    console.log(`[DisputeProcessor] Processing webhook: ${webhookId}`);
-    console.log(`[DisputeProcessor] Event type: ${eventType}, dispute: ${dispute.dispute_id}`);
+    logger.info(
+      { webhookId, eventType, disputeId: dispute.dispute_id },
+      'Processing dispute webhook'
+    );
 
     // 1. Idempotency check
     const alreadyProcessed = await this.deps.webhookEventsRepo.isProcessed(webhookId);
     if (alreadyProcessed) {
-      console.log(`[DisputeProcessor] SKIP: Webhook ${webhookId} already processed (idempotency)`);
+      logger.info({ webhookId }, 'Skipping already processed webhook (idempotency)');
       return {
         processed: false,
         skipped: true,
@@ -90,7 +95,7 @@ export class DisputeProcessorService {
     const businessId = dispute.business_id || 'unknown';
 
     if (!existingEvent) {
-      console.log(`[DisputeProcessor] Recording new webhook event: ${webhookId}`);
+      logger.info({ webhookId }, 'Recording new webhook event');
       await this.deps.webhookEventsRepo.create({
         id: webhookId,
         eventType,
@@ -106,12 +111,15 @@ export class DisputeProcessorService {
     let subscriptionId: string | null = null;
 
     try {
-      console.log(`[DisputeProcessor] Looking up payment: ${dispute.payment_id}`);
+      logger.info({ paymentId: dispute.payment_id }, 'Looking up payment');
       const payment = await this.deps.dodoClient.payments.retrieve(dispute.payment_id);
       subscriptionId = payment.subscription_id || null;
-      console.log(`[DisputeProcessor] Payment mapped to subscription: ${subscriptionId}`);
+      logger.info(
+        { paymentId: dispute.payment_id, subscriptionId },
+        'Payment mapped to subscription'
+      );
     } catch (error) {
-      console.warn(`[DisputeProcessor] Failed to retrieve payment ${dispute.payment_id}:`, error);
+      logger.warn({ paymentId: dispute.payment_id, err: error }, 'Failed to retrieve payment');
       // Continue processing - we can still record the dispute
     }
 
@@ -121,12 +129,12 @@ export class DisputeProcessorService {
     if (subscriptionId) {
       const subscription = await this.deps.subscriptionRepo.findBySubscriptionId(subscriptionId);
       workspaceId = subscription?.workspaceId || null;
-      console.log(`[DisputeProcessor] Subscription mapped to workspace: ${workspaceId}`);
+      logger.info({ subscriptionId, workspaceId }, 'Subscription mapped to workspace');
     }
 
     // 5. Determine if dispute is open or resolved
     const isOpen = !isDisputeResolutionEvent(eventType);
-    console.log(`[DisputeProcessor] Dispute isOpen: ${isOpen} (event: ${eventType})`);
+    logger.info({ disputeId: dispute.dispute_id, isOpen, eventType }, 'Determined dispute state');
 
     // 6. Record/update dispute in transaction
     try {
@@ -166,17 +174,15 @@ export class DisputeProcessorService {
       if (workspaceId) {
         try {
           await this.deps.cacheService.invalidateDispute(workspaceId);
-          console.log(`[DisputeProcessor] Invalidated dispute cache for workspace: ${workspaceId}`);
+          logger.info({ workspaceId }, 'Invalidated dispute cache for workspace');
         } catch (cacheError) {
-          console.warn(
-            `[DisputeProcessor] Failed to invalidate cache for workspace ${workspaceId}:`,
-            cacheError
-          );
+          logger.warn({ workspaceId, err: cacheError }, 'Failed to invalidate cache for workspace');
         }
       }
 
-      console.log(
-        `[DisputeProcessor] SUCCESS: Processed ${eventType} for dispute ${dispute.dispute_id}`
+      logger.info(
+        { disputeId: dispute.dispute_id, eventType },
+        'Successfully processed dispute webhook'
       );
 
       return {
@@ -188,7 +194,7 @@ export class DisputeProcessorService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[DisputeProcessor] ERROR processing dispute: ${errorMessage}`);
+      logger.error({ webhookId, err: errorMessage }, 'Error processing dispute');
       await this.deps.webhookEventsRepo.markFailed(webhookId, { error: errorMessage });
       throw error;
     }

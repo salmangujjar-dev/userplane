@@ -17,6 +17,7 @@ import {
 } from '@workspace/db';
 import { createDbBreadcrumb } from '@workspace/sentry';
 
+import { createLogger } from '@/api/lib/logger';
 import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
 import {
   type CustomMeta,
@@ -27,6 +28,8 @@ import {
 import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
 
 export type { CustomMeta, SystemMeta };
+
+const logger = createLogger('recording-repository');
 
 /**
  * Shape of recording list item with joined data
@@ -122,10 +125,7 @@ export class RecordingRepository {
     if (!raw) return null;
     const result = systemMetaSchema.safeParse(raw);
     if (!result.success) {
-      console.warn('[RecordingRepository] Invalid systemMeta', {
-        errors: result.error.errors,
-        raw,
-      });
+      logger.warn({ errors: result.error.errors, raw }, 'Invalid systemMeta');
       return null;
     }
     return result.data;
@@ -138,10 +138,7 @@ export class RecordingRepository {
     if (!raw) return null;
     const result = customMetaSchema.safeParse(raw);
     if (!result.success) {
-      console.warn('[RecordingRepository] Invalid customMeta', {
-        errors: result.error.errors,
-        raw,
-      });
+      logger.warn({ errors: result.error.errors, raw }, 'Invalid customMeta');
       return null;
     }
     return result.data;

@@ -13,11 +13,11 @@
  */
 
 import * as Sentry from '@sentry/node';
-import { createAppLogger } from '@workspace/logger';
 import { buildWebhookTags } from '@workspace/sentry';
 import type { Context } from 'hono';
 
 import { buildCanvasErrorCanvas } from '@/api/lib/intercom-canvas';
+import { createLogger } from '@/api/lib/logger';
 import { getParsedBody } from '@/api/middleware/intercom-signature';
 import type { IntercomCanvasService } from '@/api/services/intercom-canvas.service';
 import {
@@ -26,7 +26,7 @@ import {
   IntercomCanvasSubmitRequestSchema,
 } from '@/api/types/intercom-canvas';
 
-const logger = createAppLogger('intercom-canvas');
+const logger = createLogger('intercom-canvas');
 
 /**
  * Intercom context for Sentry tracking

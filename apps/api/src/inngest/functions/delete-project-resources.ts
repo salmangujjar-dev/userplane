@@ -1,15 +1,14 @@
-import { createAppLogger } from '@workspace/logger';
-
 import { db } from '@/api/clients/db';
 import { inngest } from '@/api/inngest/client';
 import { BATCH_LIMITS, EVENT_NAMES } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { chunkArray } from '@/api/lib/batch';
+import { createLogger } from '@/api/lib/logger';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 
-const logger = createAppLogger('inngest:delete-project-resources');
+const logger = createLogger('inngest:delete-project-resources');
 
 /**
  * deleteProjectResources - Cleanup function for project resources

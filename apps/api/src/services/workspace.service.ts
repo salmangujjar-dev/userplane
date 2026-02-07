@@ -11,6 +11,7 @@ import { isDisposableEmail, isDisposableEmailDomain } from '@workspace/shared';
 
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
 import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@/api/lib/id';
+import { createLogger } from '@/api/lib/logger';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
@@ -30,6 +31,8 @@ import {
 } from '@/api/utils/date';
 
 import { determineWorkspaceInvitePolicyFromEmail } from '../lib/email';
+
+const logger = createLogger('workspace-service');
 
 export interface WorkspaceServiceDeps {
   workspaceRepo: WorkspaceRepository;
@@ -503,13 +506,10 @@ export class WorkspaceService {
         }
       }
 
-      console.log(`[WorkspaceService] Cleaned up caches for deleted workspace: ${workspaceId}`);
+      logger.info({ workspaceId }, 'Cleaned up caches for deleted workspace');
     } catch (error) {
       // Don't fail deletion if cache cleanup fails
-      console.warn(
-        `[WorkspaceService] Failed to cleanup caches for workspace ${workspaceId}:`,
-        error
-      );
+      logger.warn({ err: error, workspaceId }, 'Failed to cleanup caches for workspace');
     }
   }
 
@@ -553,19 +553,21 @@ export class WorkspaceService {
         await this.deps.dodoClient.subscriptions.update(subscription.subscriptionId, {
           status: 'cancelled',
         });
-        console.log(
-          `Subscription ${subscription.subscriptionId} cancelled immediately for workspace ${workspaceId}`
+        logger.info(
+          { subscriptionId: subscription.subscriptionId, workspaceId },
+          'Subscription cancelled immediately for workspace'
         );
       } else {
         await this.deps.dodoClient.subscriptions.update(subscription.subscriptionId, {
           cancel_at_next_billing_date: true,
         });
-        console.log(
-          `Subscription ${subscription.subscriptionId} scheduled for cancellation at period end for workspace ${workspaceId}`
+        logger.info(
+          { subscriptionId: subscription.subscriptionId, workspaceId },
+          'Subscription scheduled for cancellation at period end for workspace'
         );
       }
     } catch (error) {
-      console.error(`Failed to cancel subscription for workspace ${workspaceId}:`, error);
+      logger.error({ err: error, workspaceId }, 'Failed to cancel subscription for workspace');
     }
   }
 
@@ -766,7 +768,7 @@ export class WorkspaceService {
         );
       } catch (error) {
         // Log but don't fail - best effort
-        console.error('Error restoring workspace projects:', error);
+        logger.error({ err: error, workspaceId }, 'Error restoring workspace projects');
       }
 
       // 6. Restore associated links (best effort)
@@ -781,7 +783,7 @@ export class WorkspaceService {
         );
       } catch (error) {
         // Log but don't fail - best effort
-        console.error('Error restoring workspace links:', error);
+        logger.error({ err: error, workspaceId }, 'Error restoring workspace links');
       }
 
       // 7. Restore all workspace members (best effort)
@@ -796,7 +798,7 @@ export class WorkspaceService {
         );
       } catch (error) {
         // Log but don't fail - best effort
-        console.error('Error restoring workspace members:', error);
+        logger.error({ err: error, workspaceId }, 'Error restoring workspace members');
       }
 
       // 8. Restore associated recordings (best effort)
@@ -811,7 +813,7 @@ export class WorkspaceService {
         );
       } catch (error) {
         // Log but don't fail - best effort
-        console.error('Error restoring workspace recordings:', error);
+        logger.error({ err: error, workspaceId }, 'Error restoring workspace recordings');
       }
 
       // 9. Restore intercom integration (best effort)
@@ -828,7 +830,7 @@ export class WorkspaceService {
         );
       } catch (error) {
         // Log but don't fail - best effort
-        console.error('Error restoring intercom integration:', error);
+        logger.error({ err: error, workspaceId }, 'Error restoring intercom integration');
       }
 
       return {
@@ -889,7 +891,7 @@ export class WorkspaceService {
       ]);
     } catch (error) {
       // Cache warming failure shouldn't fail the restore
-      console.warn(`[WorkspaceService] Failed to warm caches for restored workspace:`, error);
+      logger.warn({ err: error, workspaceId }, 'Failed to warm caches for restored workspace');
     }
   }
 

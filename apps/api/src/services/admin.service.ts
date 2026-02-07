@@ -6,9 +6,12 @@
 import { adminError } from '@workspace/contract';
 import type { WorkspaceRole } from '@workspace/db';
 
+import { createLogger } from '@/api/lib/logger';
 import type { AdminRepository, SearchUsersParams } from '@/api/repositories/admin.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { WorkspaceService } from '@/api/services/workspace.service';
+
+const logger = createLogger('admin-service');
 
 export interface AdminServiceDeps {
   adminRepo: AdminRepository;
@@ -162,18 +165,19 @@ export class AdminService {
           try {
             await this.deps.workspaceService.deleteWorkspace(workspaceId, deletedAt);
           } catch (error) {
-            console.error(
-              `Failed to delete workspace ${workspaceId} for banned user ${userId}:`,
-              error
+            logger.error(
+              { err: error, workspaceId, userId },
+              'Failed to delete workspace for banned user'
             );
           }
         }
 
-        console.log(
-          `Deleted ${workspacesToDelete.size} workspaces for banned user ${userId} (roles: ${deleteRoles.join(', ')})`
+        logger.info(
+          { deletedCount: workspacesToDelete.size, userId, roles: deleteRoles.join(', ') },
+          'Deleted workspaces for banned user'
         );
       } catch (error) {
-        console.error(`Failed to delete workspaces for banned user ${userId}:`, error);
+        logger.error({ err: error, userId }, 'Failed to delete workspaces for banned user');
       }
     }
 

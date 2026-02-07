@@ -1,74 +1,37 @@
 /**
- * Browser-compatible logger
- * Falls back to console methods with structured formatting
+ * Client-side logger using Pino's native browser support
+ *
+ * Uses pino's built-in browser build which maps to console.* methods.
+ * Returns the same pino.Logger type as the server logger -- consistent API everywhere.
+ * Callers own policy: log level and base metadata.
  */
+import pino, { type Logger as PinoLogger } from 'pino';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
-export interface LogData {
-  [key: string]: unknown;
+/** Re-exported pino Logger type so consumers can annotate without depending on pino directly */
+export type Logger = PinoLogger;
+
+export interface ClientLoggerOptions {
+  /** Log level -- caller decides based on their env */
+  level: LogLevel;
+  /** Additional base fields included in every log line */
+  base?: Record<string, unknown>;
 }
 
-export class BrowserLogger {
-  public context: string;
-  public level: LogLevel;
-  public baseData: LogData;
-
-  constructor(context: string, level: LogLevel = 'info', baseData: LogData = {}) {
-    this.context = context;
-    this.level = level;
-    this.baseData = baseData;
-  }
-
-  private log(level: LogLevel, data: LogData | string, message?: string) {
-    const logData = typeof data === 'string' ? { message: data } : data;
-    const logMessage = message || logData.message || '';
-
-    const output = {
-      level,
-      time: new Date().toISOString(),
-      context: this.context,
-      ...this.baseData,
-      ...logData,
-      ...(logMessage && { msg: logMessage }),
-    };
-
-    const consoleMethod = level === 'fatal' ? 'error' : level;
-
-    if (typeof console[consoleMethod] === 'function') {
-      console[consoleMethod](`[${level.toUpperCase()}]`, output);
-    }
-  }
-
-  trace(data: LogData | string, message?: string) {
-    this.log('trace', data, message);
-  }
-
-  debug(data: LogData | string, message?: string) {
-    this.log('debug', data, message);
-  }
-
-  info(data: LogData | string, message?: string) {
-    this.log('info', data, message);
-  }
-
-  warn(data: LogData | string, message?: string) {
-    this.log('warn', data, message);
-  }
-
-  error(data: LogData | string, message?: string) {
-    this.log('error', data, message);
-  }
-
-  fatal(data: LogData | string, message?: string) {
-    this.log('fatal', data, message);
-  }
-
-  child(data: LogData) {
-    return new BrowserLogger(this.context, this.level, { ...this.baseData, ...data });
-  }
-}
-
-export function createBrowserLogger(context: string, level: LogLevel = 'info') {
-  return new BrowserLogger(context, level, { env: 'browser' });
+/**
+ * Create a structured client-side logger.
+ *
+ * Uses pino's browser build which outputs structured objects via console methods.
+ * Does NOT read environment variables -- caller provides level and base fields.
+ */
+export function createClientLogger(context: string, options: ClientLoggerOptions) {
+  return pino({
+    browser: { asObject: true },
+    level: options.level,
+    base: { context, ...options.base },
+    formatters: {
+      level: (label) => ({ level: label }),
+    },
+  });
 }

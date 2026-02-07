@@ -22,7 +22,6 @@
 
 import * as Sentry from '@sentry/node';
 import type { CacheService } from '@workspace/cache';
-import { createAppLogger } from '@workspace/logger';
 
 import {
   buildAccessRequestedCanvas,
@@ -43,6 +42,7 @@ import {
   type ProjectOption,
   resolveRecordingMessage,
 } from '@/api/lib/intercom-canvas';
+import { createLogger } from '@/api/lib/logger';
 import type { DomainRepository } from '@/api/repositories/domains.repository';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import type { ProjectRepository } from '@/api/repositories/projects.repository';
@@ -67,7 +67,7 @@ import {
 // Service Dependencies & Types
 // =============================================================================
 
-const logger = createAppLogger('intercom-canvas-service');
+const logger = createLogger('intercom-canvas-service');
 
 export interface IntercomCanvasServiceDeps {
   integrationRepo: IntegrationRepository;

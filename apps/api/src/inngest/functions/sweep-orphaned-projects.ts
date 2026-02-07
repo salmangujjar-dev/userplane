@@ -1,5 +1,3 @@
-import { createAppLogger } from '@workspace/logger';
-
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
 import { inngest } from '@/api/inngest/client';
@@ -7,10 +5,11 @@ import { BATCH_LIMITS, EVENT_NAMES } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildProjectDeletionKey, buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { chunkArray } from '@/api/lib/batch';
+import { createLogger } from '@/api/lib/logger';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 
-const logger = createAppLogger('inngest:sweep-orphaned-projects');
+const logger = createLogger('inngest:sweep-orphaned-projects');
 
 /**
  * cleanupOrphanedProject - Cleanup function for orphaned project recordings

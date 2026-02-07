@@ -16,9 +16,12 @@ import type { DbClient } from '@workspace/db';
 import type { getDodoPaymentsClient } from '@workspace/payments/client';
 import type { DodoRefund, RefundEventType, WebhookPayload } from '@workspace/payments/types';
 
+import { createLogger } from '@/api/lib/logger';
 import type { RefundRepository } from '@/api/repositories/refunds.repository';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import type { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
+
+const logger = createLogger('refund-processor');
 
 /**
  * Webhook headers from DodoPayments
@@ -67,13 +70,13 @@ export class RefundProcessorService {
     // Cast to unknown first since WebhookPayload.data type doesn't include refunds
     const refund = payload.data as unknown as DodoRefund;
 
-    console.log(`[RefundProcessor] Processing webhook: ${webhookId}`);
-    console.log(`[RefundProcessor] Event type: ${eventType}, refund: ${refund.refund_id}`);
+    logger.info({ webhookId }, 'Processing webhook');
+    logger.info({ eventType, refundId: refund.refund_id }, 'Event details');
 
     // 1. Idempotency check
     const alreadyProcessed = await this.deps.webhookEventsRepo.isProcessed(webhookId);
     if (alreadyProcessed) {
-      console.log(`[RefundProcessor] SKIP: Webhook ${webhookId} already processed (idempotency)`);
+      logger.info({ webhookId }, 'Webhook already processed (idempotency)');
       return {
         processed: false,
         skipped: true,
@@ -87,7 +90,7 @@ export class RefundProcessorService {
     const businessId = refund.business_id || 'unknown';
 
     if (!existingEvent) {
-      console.log(`[RefundProcessor] Recording new webhook event: ${webhookId}`);
+      logger.info({ webhookId }, 'Recording new webhook event');
       await this.deps.webhookEventsRepo.create({
         id: webhookId,
         eventType,
@@ -103,12 +106,12 @@ export class RefundProcessorService {
     let subscriptionId: string | null = null;
 
     try {
-      console.log(`[RefundProcessor] Looking up payment: ${refund.payment_id}`);
+      logger.info({ paymentId: refund.payment_id }, 'Looking up payment');
       const payment = await this.deps.dodoClient.payments.retrieve(refund.payment_id);
       subscriptionId = payment.subscription_id || null;
-      console.log(`[RefundProcessor] Payment mapped to subscription: ${subscriptionId}`);
+      logger.info({ subscriptionId }, 'Payment mapped to subscription');
     } catch (error) {
-      console.warn(`[RefundProcessor] Failed to retrieve payment ${refund.payment_id}:`, error);
+      logger.warn({ err: error, paymentId: refund.payment_id }, 'Failed to retrieve payment');
       // Continue processing - we can still record the refund
     }
 
@@ -118,12 +121,12 @@ export class RefundProcessorService {
     if (subscriptionId) {
       const subscription = await this.deps.subscriptionRepo.findBySubscriptionId(subscriptionId);
       workspaceId = subscription?.workspaceId || null;
-      console.log(`[RefundProcessor] Subscription mapped to workspace: ${workspaceId}`);
+      logger.info({ workspaceId }, 'Subscription mapped to workspace');
     }
 
     // 5. Determine refund status from event type
     const status = eventType === 'refund.succeeded' ? 'succeeded' : 'failed';
-    console.log(`[RefundProcessor] Refund status: ${status} (event: ${eventType})`);
+    logger.info({ status, eventType }, 'Refund status');
 
     // 6. Record/update refund in transaction
     try {
@@ -163,18 +166,13 @@ export class RefundProcessorService {
       if (workspaceId && status === 'succeeded') {
         try {
           await this.deps.cacheService.invalidateRefund(workspaceId);
-          console.log(`[RefundProcessor] Invalidated refund cache for workspace: ${workspaceId}`);
+          logger.info({ workspaceId }, 'Invalidated refund cache for workspace');
         } catch (cacheError) {
-          console.warn(
-            `[RefundProcessor] Failed to invalidate cache for workspace ${workspaceId}:`,
-            cacheError
-          );
+          logger.warn({ err: cacheError, workspaceId }, 'Failed to invalidate cache for workspace');
         }
       }
 
-      console.log(
-        `[RefundProcessor] SUCCESS: Processed ${eventType} for refund ${refund.refund_id}`
-      );
+      logger.info({ eventType, refundId: refund.refund_id }, 'Successfully processed refund');
 
       return {
         processed: true,
@@ -185,7 +183,7 @@ export class RefundProcessorService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[RefundProcessor] ERROR processing refund: ${errorMessage}`);
+      logger.error({ err: error, errorMessage }, 'Error processing refund');
       await this.deps.webhookEventsRepo.markFailed(webhookId, { error: errorMessage });
       throw error;
     }

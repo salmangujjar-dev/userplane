@@ -35,6 +35,7 @@ import { EVENT_NAMES } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildStaleRecordingCheckKey } from '@/api/inngest/idempotency';
 import { generateRecordingId, generateSessionId } from '@/api/lib/id';
+import { createLogger } from '@/api/lib/logger';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import {
   LinkRepository,
@@ -59,6 +60,8 @@ import type {
   UploadFileType,
   UploadTokenPayload,
 } from '@/api/types';
+
+const logger = createLogger('session-service');
 
 export interface SessionServiceDeps {
   linkRepo: LinkRepository;
@@ -429,7 +432,7 @@ export class SessionService {
     // Extract file paths and sizes for database (only for files being uploaded)
     const filePaths = this.extractFilePaths(fileUploads);
 
-    console.log('custom metadata :', metadata.customMetadata ?? 'None');
+    logger.debug({ customMetadata: metadata.customMetadata ?? null }, 'Custom metadata received');
 
     // Create recording record in database
     try {
@@ -469,7 +472,7 @@ export class SessionService {
     } catch (error) {
       // Log but don't fail the request - stale check is a background task
       // The recording will still be created and can be uploaded
-      console.error('Error scheduling stale recording check:', error);
+      logger.error({ err: error }, 'Error scheduling stale recording check');
     }
 
     // Generate upload token scoped to this recording
@@ -557,7 +560,7 @@ export class SessionService {
     } catch (error) {
       // Log but don't fail - recording is already created
       // Consumption tracking failure shouldn't block the upload
-      console.error('Failed to track recording consumption:', error);
+      logger.error({ err: error }, 'Failed to track recording consumption');
     }
 
     return {

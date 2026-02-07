@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/node';
-import { createAppLogger } from '@workspace/logger';
 
 import { db } from '@/api/clients/db';
 import { getDodoClient } from '@/api/clients/dodo';
@@ -8,11 +7,12 @@ import { BATCH_LIMITS, EVENT_NAMES } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { chunkArray } from '@/api/lib/batch';
+import { createLogger } from '@/api/lib/logger';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 
-const logger = createAppLogger('inngest:delete-workspace-resources');
+const logger = createLogger('inngest:delete-workspace-resources');
 
 /**
  * deleteWorkspaceResources - Cleanup function for workspace resources
