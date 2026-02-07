@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@workspace/ui/components/table';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowRight, LogOut, MoreVertical } from 'lucide-react';
+import { ArrowRight, Bell, LogOut, MoreVertical } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -181,6 +181,16 @@ export function WorkspaceMembershipSection() {
                                 Switch to workspace
                               </DropdownMenuItem>
                             )}
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(
+                                  `/workspace/${workspace.workspaceId}/settings?tab=notifications`
+                                )
+                              }
+                            >
+                              <Bell className="h-4 w-4 mr-2" />
+                              Notification Settings
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-red-600"
                               onClick={() =>

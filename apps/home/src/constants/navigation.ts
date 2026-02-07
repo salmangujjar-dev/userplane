@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL_MAILTO, TALLY_COMPLIANCE_FORM_URL } from './contact';
+import { TALLY_COMPLIANCE_FORM_URL } from './contact';
 import { getMarketingUrl } from './urls';
 
 /**
@@ -24,6 +24,7 @@ export const NAV_LINKS = {
   integrations: getMarketingUrl('/#integrations'),
   roadmap: getMarketingUrl('/roadmap'),
   blog: getMarketingUrl('/blog'),
+  support: getMarketingUrl('/support'),
 } as const;
 
 /**
@@ -31,6 +32,20 @@ export const NAV_LINKS = {
  */
 export const getBlogPostUrl = (slug: string): string => {
   return getMarketingUrl(`/blog/${slug}`);
+};
+
+/**
+ * Helper to get support topic URL
+ */
+export const getSupportTopicUrl = (topicSlug: string): string => {
+  return getMarketingUrl(`/support/${topicSlug}`);
+};
+
+/**
+ * Helper to get support article URL
+ */
+export const getSupportArticleUrl = (topicSlug: string, articleSlug: string): string => {
+  return getMarketingUrl(`/support/${topicSlug}/${articleSlug}`);
 };
 
 /**
@@ -45,7 +60,7 @@ export const FOOTER_LINKS = {
   company: [
     { label: 'Blog', href: NAV_LINKS.blog },
     { label: 'Roadmap', href: NAV_LINKS.roadmap },
-    { label: 'Support', href: CONTACT_EMAIL_MAILTO },
+    { label: 'Support', href: NAV_LINKS.support },
   ],
   legal: [
     { label: 'Privacy Policy', href: getMarketingUrl('/privacy') },
