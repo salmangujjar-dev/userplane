@@ -1,4 +1,4 @@
-import { getSupportArticleUrl } from '@/constants/navigation';
+import { getHelpArticleUrl } from '@/constants/navigation';
 
 interface ArticleCardProps {
   slug: string;
@@ -12,7 +12,7 @@ interface ArticleCardProps {
  * Links through to the full markdown article.
  */
 export default function ArticleCard({ slug, topic, title, excerpt }: ArticleCardProps) {
-  const url = getSupportArticleUrl(topic, slug);
+  const url = getHelpArticleUrl(topic, slug);
 
   return (
     <article className="text-left border-b border-border/30 pb-6 last:border-b-0">

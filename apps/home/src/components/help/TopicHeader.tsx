@@ -1,15 +1,15 @@
-import type { SupportTopic } from '@/constants/support';
+import type { HelpTopic } from '@/constants/help';
 
 import Highlight from '../home/Highlight';
 
 interface TopicHeaderProps {
-  topic: SupportTopic;
+  topic: HelpTopic;
 }
 
 /**
  * Topic page header with word-level highlights.
  * Renders the topic title using the same highlight treatment
- * as the main support header and FAQ headings.
+ * as the main help header and FAQ headings.
  */
 export default function TopicHeader({ topic }: TopicHeaderProps) {
   const words = topic.title.split(' ');

@@ -1,21 +1,21 @@
 import { ChevronRight } from 'lucide-react';
 
-import type { SupportTopic } from '@/constants/support';
-import { getSupportTopicUrl } from '@/constants/navigation';
+import type { HelpTopic } from '@/constants/help';
+import { getHelpTopicUrl } from '@/constants/navigation';
 
 interface TopicCardProps {
-  topic: SupportTopic;
+  topic: HelpTopic;
   articleCount: number;
 }
 
 /**
- * Card linking to a support topic.
+ * Card linking to a help topic.
  * Shows title, subtitle, and article count with a chevron indicator.
  */
 export default function TopicCard({ topic, articleCount }: TopicCardProps) {
   return (
     <a
-      href={getSupportTopicUrl(topic.slug)}
+      href={getHelpTopicUrl(topic.slug)}
       className="group flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-6 text-left transition-all hover:border-zinc-300 hover:shadow-sm"
     >
       <h2 className="font-dm-sans font-semibold text-xl md:text-2xl text-zinc-900 group-hover:text-primary transition-colors">

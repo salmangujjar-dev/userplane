@@ -27,7 +27,7 @@ export const FOOTER_LINKS = {
   company: [
     { label: 'Blog', href: NAV_LINKS.blog },
     { label: 'Roadmap', href: NAV_LINKS.roadmap },
-    { label: 'Support', href: NAV_LINKS.support },
+    { label: 'Help Center', href: NAV_LINKS.help },
   ],
   legal: [
     { label: 'Privacy Policy', href: getMarketingUrl('/privacy') },

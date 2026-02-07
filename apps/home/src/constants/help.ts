@@ -1,10 +1,10 @@
 import type { HighlightConfig } from './types';
 
 /**
- * Support topic definition
- * Each topic maps to a directory under content/support/{slug}/
+ * Help topic definition
+ * Each topic maps to a directory under content/help/{slug}/
  */
-export interface SupportTopic {
+export interface HelpTopic {
   slug: string;
   title: string;
   subtitle: string;
@@ -12,26 +12,26 @@ export interface SupportTopic {
 }
 
 /**
- * Support page heading
+ * Help page heading
  */
-export const SUPPORT_HEADING = {
+export const HELP_HEADING = {
   title: 'Help Center',
   subtitle: 'Find answers, guides, and resources to get the most out of Userplane',
 };
 
 /**
- * Support heading highlights configuration
+ * Help heading highlights configuration
  * "Help" gets green highlight
  */
-export const SUPPORT_HIGHLIGHTS: HighlightConfig[] = [{ wordIndex: 0, color: 'green' }];
+export const HELP_HIGHLIGHTS: HighlightConfig[] = [{ wordIndex: 0, color: 'green' }];
 
 /**
- * Support topics
- * Order determines display order on the support index page.
- * Each slug must match a directory name under content/support/.
+ * Help topics
+ * Order determines display order on the help index page.
+ * Each slug must match a directory name under content/help/.
  * highlights: which words in the title get a colored background.
  */
-export const SUPPORT_TOPICS: SupportTopic[] = [
+export const HELP_TOPICS: HelpTopic[] = [
   {
     slug: 'getting-started',
     title: 'Getting Started',
@@ -92,6 +92,6 @@ export const SUPPORT_TOPICS: SupportTopic[] = [
  * Lookup a topic by its slug.
  * Returns undefined if no match is found.
  */
-export function getTopicBySlug(slug: string): SupportTopic | undefined {
-  return SUPPORT_TOPICS.find((t) => t.slug === slug);
+export function getTopicBySlug(slug: string): HelpTopic | undefined {
+  return HELP_TOPICS.find((t) => t.slug === slug);
 }
