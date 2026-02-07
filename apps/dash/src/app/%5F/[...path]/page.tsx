@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { useWorkspaces } from '@/features/workspace';
@@ -18,10 +18,15 @@ import { useWorkspaces } from '@/features/workspace';
 export default function UnderscoreCatchAllPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
 
   // Extract the catch-all path segments
   const pathSegments = params.path as string[];
   const fullPath = pathSegments ? pathSegments.join('/') : '';
+
+  // Preserve query parameters across the redirect
+  const queryString = searchParams.toString();
+  const suffix = queryString ? `?${queryString}` : '';
 
   const {
     data: workspacesData,
@@ -45,7 +50,7 @@ export default function UnderscoreCatchAllPage() {
     if (workspacesData.data.workspaces && workspacesData.data.workspaces.length > 0) {
       const firstWorkspace = workspacesData.data.workspaces[0];
       if (firstWorkspace) {
-        router.push(`/workspace/${firstWorkspace.workspaceId}/${fullPath}`);
+        router.push(`/workspace/${firstWorkspace.workspaceId}/${fullPath}${suffix}`);
       } else {
         router.push('/workspace/suggest');
       }
@@ -53,7 +58,7 @@ export default function UnderscoreCatchAllPage() {
       // No workspaces, redirect to suggest page
       router.push('/workspace/suggest');
     }
-  }, [workspacesData, isLoadingWorkspaces, isWorkspacesError, router, fullPath]);
+  }, [workspacesData, isLoadingWorkspaces, isWorkspacesError, router, fullPath, suffix]);
 
   // Show loading while checking workspaces
   return (

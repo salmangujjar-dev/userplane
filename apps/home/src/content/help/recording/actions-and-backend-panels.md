@@ -29,4 +29,4 @@ This panel doesn't capture backend logs directly. Instead, it associates the rec
 
 ## Enabling capture
 
-Client actions and backend log associations are controlled per domain. Go to **Workspace Settings > Domains**, select a verified domain, and toggle the relevant preferences. See [Domain Recording Preferences](/help/recording-links/domain-recording-preferences) for details.
+Client actions and backend log associations are controlled per domain. Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general), select a verified domain, and toggle the relevant preferences. See [Domain Recording Preferences](/help/recording-links/domain-recording-preferences) for details.

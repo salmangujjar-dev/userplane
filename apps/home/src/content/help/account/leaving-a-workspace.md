@@ -9,9 +9,9 @@ You can leave a workspace at any time if you no longer need access. Leaving is i
 
 ## How to leave
 
-1. Go to **Account Settings**.
+1. Go to [Account Settings](https://dash.userplane.io/_/account).
 2. Find the workspace you want to leave.
-3. Click **Leave Workspace** and confirm.
+3. Click [Leave Workspace](https://dash.userplane.io/_/settings?tab=workspace) and confirm.
 
 ## What happens when you leave
 
@@ -26,7 +26,7 @@ If you are the workspace **owner**, you must transfer ownership to another membe
 
 To transfer ownership:
 
-1. Go to **Workspace Settings > Team**.
+1. Go to [Workspace Settings > Team](https://dash.userplane.io/_/settings?tab=team).
 2. Select the member you want to make owner.
 3. Change their role to **Owner**.
 4. Once ownership is transferred, you can leave the workspace.

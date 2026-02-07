@@ -25,7 +25,7 @@ Any member can leave a workspace from their account settings. See [Leaving a Wor
 
 Only the workspace **owner** can delete a workspace.
 
-1. Go to **Workspace Settings > General**.
+1. Go to [Workspace Settings > General](https://dash.userplane.io/_/settings?tab=workspace).
 2. Scroll to the danger zone.
 3. Click **Delete Workspace** and confirm.
 
@@ -45,7 +45,7 @@ If the workspace was deleted within the restoration window, contact the workspac
 
 ## Updating workspace details
 
-Owners can update the following workspace details from **Workspace Settings > General**:
+Owners can update the following workspace details from [Workspace Settings > General](https://dash.userplane.io/_/settings?tab=workspace):
 
 - **Workspace name** — visible to members and in invitations.
 - **Billing email** — where subscription receipts and billing notifications are sent.

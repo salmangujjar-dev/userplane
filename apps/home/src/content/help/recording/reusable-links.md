@@ -21,7 +21,7 @@ A reusable link can be used multiple times by different customers. Each use crea
 
 ## Creating a reusable link
 
-1. Open the **Links** page and click **Create Link**.
+1. Open the [Links](https://dash.userplane.io/_/links) page and click [Create Link](https://dash.userplane.io/_/recordings?create_link=true).
 2. Toggle the **Reusable** option on.
 3. Fill in the other details (project, domain, reference) and click **Create**.
 

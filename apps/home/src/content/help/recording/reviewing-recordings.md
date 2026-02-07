@@ -5,7 +5,7 @@ order: 6
 lastUpdated: 2026-02-07
 ---
 
-The **Recordings** page gives you a grid view of all recordings in your workspace. From here you can browse, filter, sort, and open recordings for detailed review.
+The [Recordings](https://dash.userplane.io/_/recordings) page gives you a grid view of all recordings in your workspace. From here you can browse, filter, sort, and open recordings for detailed review.
 
 ## Grid layout
 

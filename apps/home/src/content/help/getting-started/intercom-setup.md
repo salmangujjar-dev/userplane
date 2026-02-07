@@ -9,7 +9,7 @@ Userplane integrates with Intercom through OAuth, so your support agents can cre
 
 ## Connect Intercom
 
-1. Go to **Workspace Settings > Integrations**.
+1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
 2. Click **Connect Intercom**.
 3. You'll be redirected to Intercom to authorize the connection. Userplane requests permissions to read conversations and manage the inbox sidebar app.
 4. After authorizing, you'll be redirected back to Userplane and the connection is active.
@@ -26,7 +26,7 @@ Only workspace **owners** and **admins** can manage the Intercom integration.
 
 Once connected, you'll be prompted to invite your Intercom admins as workspace members so they can use Userplane inside Intercom:
 
-1. Select which Intercom members you want to invite and click **Invite Member**.
+1. Select which Intercom members you want to invite and click [Invite Member](https://dash.userplane.io/_/recordings?invite=true).
 2. You can also enter the email addresses of your workspace members.
 3. Invited users will receive an email invitation to join your workspace.
 4. You can even whitelist specific email domains to enable org-wide access.
@@ -34,7 +34,7 @@ Once connected, you'll be prompted to invite your Intercom admins as workspace m
 
 ## Disconnect Intercom
 
-1. Go to **Workspace Settings > Integrations**.
+1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
 2. Click **Disconnect** next to the Intercom integration.
 
 Disconnecting will make Userplane inoperable within Intercom. Your existing recordings and links won't be affected.

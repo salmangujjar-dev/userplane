@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useQueryState } from 'nuqs';
 
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
 import { Sidebar } from '@/components/navigation/sidebar';
 import { TopActions } from '@/components/navigation/top-actions';
 import { SettingsTab } from '@/components/settings/settings-tab';
+import { booleanParser } from '@/lib/parsers';
 
 export default function SettingsPage() {
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useQueryState('invite', booleanParser);
+  const [createLinkModalOpen, setCreateLinkModalOpen] = useQueryState('create_link', booleanParser);
 
   return (
     <div className="flex h-screen bg-background">

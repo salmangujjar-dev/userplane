@@ -5,7 +5,7 @@ order: 1
 lastUpdated: 2026-02-07
 ---
 
-The **Links** page gives you a central view of all recording links in your workspace. From here you can create, share, edit, and delete links.
+The [Links](https://dash.userplane.io/_/links) page gives you a central view of all recording links in your workspace. From here you can create, share, edit, and delete links.
 
 ## List view
 
@@ -40,4 +40,4 @@ Each link supports the following actions:
 
 ## Creating a new link
 
-Click **Create Link** to open the creation form. See [Requesting a Recording](/help/recording/requesting-a-recording) for a walkthrough.
+Click [Create Link](https://dash.userplane.io/_/recordings?create_link=true) to open the creation form. See [Requesting a Recording](/help/recording/requesting-a-recording) for a walkthrough.

@@ -22,7 +22,7 @@ Reusable links work best when you want to collect recordings from multiple custo
 2. Share the link URL wherever you need it — help docs, macros, templates, anywhere.
 3. Each time a customer opens the link and completes a recording, a new recording is created.
 4. The link creator is notified for every incoming recording.
-5. All recordings collected through that link are grouped together. View them all by clicking the link on the **Links** page.
+5. All recordings collected through that link are grouped together. View them all by clicking the link on the [Links](https://dash.userplane.io/_/links) page.
 
 ## Choosing between one-time and reusable
 

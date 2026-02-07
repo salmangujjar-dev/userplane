@@ -18,7 +18,7 @@ Userplane uses a **token-based verification** process:
 
 ## Verification steps
 
-1. Go to **Workspace Settings > Domains** and select the domain you want to verify.
+1. Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) and select the domain you want to verify.
 2. Click **Verify**.
 3. Copy the verification instructions. You can also send these instructions to a developer via email using the **Send to Developer** button.
 4. Add the provided script tag to your website's HTML.

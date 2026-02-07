@@ -32,7 +32,7 @@ If payment is not resolved within 14 days, the subscription is cancelled.
 
 To manage your subscription, update payment details, or view invoices, use the DodoPayments customer portal:
 
-1. Go to **Workspace Settings > Billing**.
+1. Go to [Workspace Settings > Billing](https://dash.userplane.io/_/settings?tab=plan-usage&plan-modal=detailed).
 2. Click **Manage Subscription** to open the customer portal.
 
 ## Related articles

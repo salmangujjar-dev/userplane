@@ -24,7 +24,7 @@ When using Userplane native integrations like Intercom to create recording links
 
 ## Finding recordings by reference
 
-References appear in the recording list and detail views. You can use the search and filter controls on the **Recordings** and **Links** pages to find links and recordings by their reference. Additionally, Userplane uses these identifiers for recording and integration metadata.
+References appear in the recording list and detail views. You can use the search and filter controls on the [Recordings](https://dash.userplane.io/_/recordings) and [Links](https://dash.userplane.io/_/links) pages to find links and recordings by their reference. Additionally, Userplane uses these identifiers for recording and integration metadata.
 
 ## Tips
 

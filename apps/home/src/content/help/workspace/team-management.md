@@ -9,14 +9,13 @@ The Team section in Workspace Settings lets you manage who has access to your wo
 
 ## Viewing members
 
-Go to **Workspace Settings > Team** to see all current workspace members. Each member entry shows their name, avatar, email, and role.
+Go to [Workspace Settings > Team](https://dash.userplane.io/_/settings?tab=team) to see all current workspace members. Each member entry shows their name, avatar, email, and role.
 
 ## Inviting members
 
 1. Click **Invite Member**.
 2. Enter the email address of the person you want to invite.
-3. Select a role: **Admin** or **Member**.
-4. Click **Send Invite**.
+3. Click **Send Invite**.
 
 The invited person receives an email with a link to join the workspace. Invitations are tied to the workspace's [invite policy](/help/workspace/invite-policies).
 

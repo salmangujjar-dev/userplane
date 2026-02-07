@@ -19,7 +19,7 @@ The upgrade flow depends on your role:
 
 ## Upgrading as an owner
 
-1. Go to **Workspace Settings > Billing**.
+1. Go to [Workspace Settings > Billing](https://dash.userplane.io/_/settings?tab=plan-usage&plan-modal=detailed).
 2. Click **Upgrade** or select a higher plan.
 3. If this is your first paid subscription, you are redirected to the Stripe-powered checkout page to enter payment details.
 4. Complete the checkout. Your workspace is upgraded immediately.
@@ -30,7 +30,7 @@ Admins can view plan details and pricing but are redirected to the checkout flow
 
 ## Requesting as a member
 
-1. Go to **Workspace Settings > Billing**.
+1. Go to [Workspace Settings > Billing](https://dash.userplane.io/_/settings?tab=plan-usage&plan-modal=detailed).
 2. Click **Request Upgrade**.
 3. An email notification is sent to all workspace owners with details of the requested plan.
 4. An owner can then complete the upgrade.

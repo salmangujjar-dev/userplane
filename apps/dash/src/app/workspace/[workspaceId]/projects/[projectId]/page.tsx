@@ -25,13 +25,13 @@ import { useWorkspaceRecordings } from '@/features/recordings';
 import { usePagination } from '@/hooks/use-pagination';
 import { useSearchableLinks } from '@/hooks/use-searchable-links';
 import { useSearchableMembers } from '@/hooks/use-searchable-members';
-import { stringArrayParser, tabParser } from '@/lib/parsers';
+import { booleanParser, stringArrayParser, tabParser } from '@/lib/parsers';
 
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.projectId as string;
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [createLinkModalOpen, setCreateLinkModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useQueryState('invite', booleanParser);
+  const [createLinkModalOpen, setCreateLinkModalOpen] = useQueryState('create_link', booleanParser);
   const [activeTab, setActiveTab] = useQueryState('tab', tabParser.withDefault('recordings'));
 
   // Filter states (URL-synced)

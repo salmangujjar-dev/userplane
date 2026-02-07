@@ -15,7 +15,7 @@ The Intercom integration lets your support team request and review screen record
 
 ## Connecting Intercom
 
-1. Go to **Workspace Settings > Integrations**.
+1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
 2. Click **Connect Intercom**.
 3. Authorize the connection in Intercom. Userplane requests permissions to read conversations and manage the inbox sidebar app.
 4. After authorization, the sidebar app is installed in your Intercom inbox.
@@ -31,7 +31,7 @@ When you authorize the Intercom connection, Userplane receives the following per
 
 ## Disconnecting Intercom
 
-1. Go to **Workspace Settings > Integrations**.
+1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
 2. Click **Disconnect** next to Intercom.
 
 Disconnecting removes the sidebar app from Intercom. Existing recordings and links are preserved.

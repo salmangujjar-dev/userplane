@@ -9,7 +9,7 @@ The usage dashboard in Workspace Settings shows you how much of each resource yo
 
 ## Where to find usage
 
-Go to **Workspace Settings > Billing** to see the usage section. Each resource shows:
+Go to [Workspace Settings > Billing](https://dash.userplane.io/_/settings?tab=plan-usage) to see the usage section. Each resource shows:
 
 - A **progress bar** indicating how much has been used.
 - A **percentage** of the limit consumed.
