@@ -39,8 +39,17 @@ export function middleware(request: NextRequest) {
     'Middleware processing request'
   );
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages.
+  // When session_expired is set, the API returned 401 for a stale session cookie.
+  // Let the user through to /auth so they can re-authenticate instead of
+  // bouncing them back to a page that will 401 again (infinite loop).
   if (isAuthRoute && hasSession) {
+    const sessionExpired = request.nextUrl.searchParams.get('session_expired');
+    if (sessionExpired) {
+      logger.info({ path }, 'Allowing access to auth page for expired session');
+      return NextResponse.next();
+    }
+
     const redirectTo = request.nextUrl.searchParams.get('redirect_to');
     const destination = redirectTo || '/';
     logger.info({ path, redirectTo: destination }, 'Redirecting authenticated user from auth page');

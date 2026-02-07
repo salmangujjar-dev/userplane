@@ -1,7 +1,13 @@
 import * as Sentry from '@sentry/nextjs';
 import { createClient, createSafeClient } from '@workspace/client';
 
+import { authClient } from '@/client/auth';
 import { env } from '@/env';
+
+// Deduplication flag to prevent multiple concurrent 401 redirects.
+// When several in-flight requests all return 401, only the first one
+// triggers sign-out + redirect; the rest are no-ops.
+let isRedirectingToAuth = false;
 
 const baseClient = createClient({
   url: `${env.api.url}/api/v1`,
@@ -22,12 +28,26 @@ const baseClient = createClient({
       }
     }
 
-    // Handle 401 Unauthorized errors by redirecting to sign-in
+    // Handle 401 Unauthorized errors by signing out and redirecting to sign-in.
+    // The sign-out clears the stale session cookie so the middleware won't
+    // bounce the user back from /auth (which would cause an infinite loop).
+    // The session_expired param acts as a safety net: even if sign-out fails,
+    // the middleware will let the request through to the auth page.
     if (error && typeof error === 'object' && 'status' in error && error.status === 401) {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && !isRedirectingToAuth) {
+        isRedirectingToAuth = true;
         const currentPath = window.location.pathname + window.location.search;
-        const redirectUrl = `/auth?redirect_to=${encodeURIComponent(currentPath)}`;
-        window.location.href = redirectUrl;
+        const redirectUrl = `/auth?session_expired=true&redirect_to=${encodeURIComponent(currentPath)}`;
+
+        authClient
+          .signOut()
+          .catch(() => {
+            // Ignore sign-out errors -- the session_expired param in the
+            // redirect URL ensures the middleware won't redirect back.
+          })
+          .finally(() => {
+            window.location.href = redirectUrl;
+          });
       }
     }
   },
