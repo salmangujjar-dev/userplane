@@ -10,26 +10,17 @@ import * as Sentry from '@sentry/astro';
  */
 export async function generateVideoThumbnail(blob: Blob, seekTime?: number): Promise<Blob | null> {
   return new Promise((resolve) => {
-    console.log('[VideoThumbnail] Generating thumbnail from blob');
-
     const video = document.createElement('video');
     video.preload = 'metadata';
     video.muted = true;
     video.playsInline = true;
 
     video.onloadeddata = () => {
-      console.log('[VideoThumbnail] Video metadata loaded');
-      console.log('[VideoThumbnail] Video duration:', video.duration, 'seconds');
-      console.log('[VideoThumbnail] Video dimensions:', video.videoWidth, 'x', video.videoHeight);
-
       const targetSeekTime = seekTime ?? Math.min(1, video.duration * 0.1);
-      console.log('[VideoThumbnail] Seeking to:', targetSeekTime, 'seconds');
       video.currentTime = targetSeekTime;
     };
 
     video.onseeked = () => {
-      console.log('[VideoThumbnail] Video seek completed');
-
       try {
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
@@ -37,8 +28,6 @@ export async function generateVideoThumbnail(blob: Blob, seekTime?: number): Pro
 
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          console.error('[VideoThumbnail] Failed to get canvas context');
-
           // Capture canvas context failure - rare browser issue
           Sentry.captureMessage('Failed to get 2D canvas context for thumbnail', {
             level: 'warning',
@@ -58,12 +47,9 @@ export async function generateVideoThumbnail(blob: Blob, seekTime?: number): Pro
         canvas.toBlob(
           (blob) => {
             if (blob) {
-              console.log('[VideoThumbnail] Thumbnail generated, size:', blob.size, 'bytes');
               cleanup();
               resolve(blob);
             } else {
-              console.error('[VideoThumbnail] Failed to create blob');
-
               // Capture blob creation failure
               Sentry.captureMessage('Failed to create thumbnail blob from canvas', {
                 level: 'warning',
@@ -87,8 +73,6 @@ export async function generateVideoThumbnail(blob: Blob, seekTime?: number): Pro
           0.85
         );
       } catch (err) {
-        console.error('[VideoThumbnail] Error generating thumbnail:', err);
-
         // Capture general thumbnail generation errors
         Sentry.captureException(err, {
           level: 'warning',
@@ -111,9 +95,7 @@ export async function generateVideoThumbnail(blob: Blob, seekTime?: number): Pro
       }
     };
 
-    video.onerror = (e) => {
-      console.error('[VideoThumbnail] Failed to load video:', e);
-
+    video.onerror = () => {
       // Capture video load failures for thumbnail
       Sentry.captureMessage('Failed to load video for thumbnail generation', {
         level: 'warning',
@@ -134,12 +116,10 @@ export async function generateVideoThumbnail(blob: Blob, seekTime?: number): Pro
     };
 
     const objectUrl = URL.createObjectURL(blob);
-    console.log('[VideoThumbnail] Created object URL for video');
     video.src = objectUrl;
 
     function cleanup() {
       URL.revokeObjectURL(video.src);
-      console.log('[VideoThumbnail] Cleaned up object URL');
     }
   });
 }

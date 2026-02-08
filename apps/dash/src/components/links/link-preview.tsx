@@ -26,6 +26,7 @@ import { useState } from 'react';
 import { EditLinkModal } from '@/components/modals/edit-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { logger } from '@/logger';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 interface LinkPreviewProps {
@@ -112,8 +113,7 @@ export function LinkPreview({
     if (onEdit) {
       onEdit(title, reference, reusable);
     }
-    console.log('Link provider:', linkProvider);
-    console.log('Link provider ID:', linkProviderId);
+    logger.debug({ linkProvider, linkProviderId }, 'Fetched link provider and ID');
   };
 
   const formatDate = (date: Date) => {

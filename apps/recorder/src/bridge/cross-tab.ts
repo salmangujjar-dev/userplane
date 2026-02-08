@@ -9,6 +9,8 @@
 
 import { bridge, type BridgeConnection } from '@workspace/postbridge';
 
+import { createLogger } from '@/lib/logger';
+
 import { generateRequestId, isCaptureTab } from './constants';
 import type {
   AggregatedMetadata,
@@ -20,6 +22,8 @@ import type {
   TabMetadata,
   TabMetadataEntry,
 } from './types';
+
+const logger = createLogger('cross-tab');
 
 /**
  * Pending scatter-gather request
@@ -208,21 +212,20 @@ export class CrossTabCoordinator {
    */
   private async broadcastStateChange(tabId: string | null, state: RecordingState): Promise<void> {
     if (!this.connection) {
-      console.warn('[CrossTab][State] Cannot broadcast - not connected');
+      logger.warn('cannot broadcast - not connected');
       return;
     }
 
     try {
-      console.log('[CrossTab][State] Broadcasting state change:', { tabId, state });
+      logger.debug({ tabId, state }, 'broadcasting state change');
       // Call syncRecorderState with only serializable args
       // Postbridge automatically appends `remote` when executing locally
       const remote = this.connection.remote as unknown as {
         syncRecorderState: (tabId: string | null, state: RecordingState) => Promise<void>;
       };
       await remote.syncRecorderState(tabId, state);
-      console.log('[CrossTab][State] Broadcast complete');
     } catch (error) {
-      console.error('[CrossTab][State] Failed to broadcast state change:', error);
+      logger.error({ err: error }, 'broadcast failed');
     }
   }
 
@@ -232,21 +235,21 @@ export class CrossTabCoordinator {
    */
   private async broadcastCaptureRecorderState(state: CaptureRecorderState): Promise<void> {
     if (!this.connection) {
-      console.warn('[CrossTab][State] Cannot broadcast capture state - not connected');
+      logger.warn('cannot broadcast capture state - not connected');
       return;
     }
 
     try {
-      console.log('[CrossTab][State] Broadcasting capture state:', {
-        recorderTabId: state.recorderTabId,
-        recorderState: state.recorderState,
-      });
+      logger.debug(
+        { recorderTabId: state.recorderTabId, recorderState: state.recorderState },
+        'broadcasting capture state'
+      );
       const remote = this.connection.remote as unknown as {
         syncCaptureRecorderState: (state: CaptureRecorderState) => Promise<void>;
       };
       await remote.syncCaptureRecorderState(state);
     } catch (error) {
-      console.error('[CrossTab][State] Failed to broadcast capture recorder state:', error);
+      logger.error({ err: error }, 'capture state broadcast failed');
     }
   }
 
@@ -256,16 +259,13 @@ export class CrossTabCoordinator {
    */
   public async connect(tabId?: string): Promise<void> {
     if (this.connection) {
-      console.warn('[CrossTab][Connect] Already connected, skipping');
+      logger.warn('already connected');
       return;
     }
 
-    console.log(
-      '[CrossTab][Connect] Initiating connection to SharedWorker',
-      tabId ? `with tabId: ${tabId}` : '(auto-generated tabId)'
-    );
+    logger.debug('initiating connection');
 
-    // Reference to this for use in schema callbacks
+    // Reference of this for use in schema callbacks
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
@@ -304,11 +304,10 @@ export class CrossTabCoordinator {
         // This function runs in capture iframes when recorder state changes
         // Only notify capture tabs (not recorder tabs)
         if (self.localTabId && isCaptureTab(self.localTabId)) {
-          console.log('[CrossTab][Schema] Received capture state update:', {
-            recorderTabId: state.recorderTabId,
-            recorderState: state.recorderState,
-            localTabId: self.localTabId,
-          });
+          logger.debug(
+            { recorderTabId: state.recorderTabId, recorderState: state.recorderState },
+            'capture state update received'
+          );
           self.config.callbacks.onCaptureRecorderStateChanged?.(state);
         }
       },
@@ -327,11 +326,10 @@ export class CrossTabCoordinator {
           return;
         }
 
-        console.log('[CrossTab][Scatter] Received metadata request:', {
-          requestId: request.requestId,
-          from: request.requesterTabId,
-          localTabId: self.localTabId,
-        });
+        logger.debug(
+          { requestId: request.requestId, from: request.requesterTabId },
+          'metadata request received'
+        );
         self.config.callbacks.onMetadataRequested?.(request);
 
         // Extract metadata and respond
@@ -360,9 +358,14 @@ export class CrossTabCoordinator {
         }
 
         const responseTime = response.respondedAt - pending.requestedAt;
-        console.log(
-          `[CrossTab][Scatter] Response received: ${response.responderTabId} (${responseTime}ms) - ` +
-            `${pending.responses.size + 1}/${pending.expectedTabs.length} tabs`
+        logger.debug(
+          {
+            responderTabId: response.responderTabId,
+            responseTimeMs: responseTime,
+            received: pending.responses.size + 1,
+            expected: pending.expectedTabs.length,
+          },
+          'scatter-gather response received'
         );
 
         self.config.callbacks.onMetadataResponse?.(response);
@@ -372,7 +375,6 @@ export class CrossTabCoordinator {
 
         // Check if all expected responses received
         if (pending.responses.size >= pending.expectedTabs.length) {
-          console.log('[CrossTab][Scatter] All expected responses received, completing gather');
           self.completeScatterGather(response.requestId);
         }
       },
@@ -386,10 +388,7 @@ export class CrossTabCoordinator {
         if (!self.localTabId || !isCaptureTab(self.localTabId)) {
           return;
         }
-        console.log('[CrossTab][Blur] Received START blur command', {
-          localTabId: self.localTabId,
-          blurrEnabled: remote.blurrEnabled,
-        });
+        logger.debug({ localTabId: self.localTabId }, 'blur start received');
         self.config.callbacks.onBlurrStart?.();
       },
 
@@ -402,10 +401,7 @@ export class CrossTabCoordinator {
         if (!self.localTabId || !isCaptureTab(self.localTabId)) {
           return;
         }
-        console.log('[CrossTab][Blur] Received STOP blur command', {
-          localTabId: self.localTabId,
-          blurrEnabled: remote.blurrEnabled,
-        });
+        logger.debug({ localTabId: self.localTabId }, 'blur stop received');
         self.config.callbacks.onBlurrStop?.();
       },
     };
@@ -424,16 +420,17 @@ export class CrossTabCoordinator {
     this.localTabId = this.connection.id;
 
     const connectedTabs = await this.connection.getConnectedTabs();
-    const isCapture = isCaptureTab(this.localTabId);
-    console.log('[CrossTab][Connect] Connected successfully', {
-      localTabId: this.localTabId,
-      isCapture,
-      channel: this.config.channel,
-      totalConnectedTabs: connectedTabs.length,
-      connectedTabs,
-    });
+    logger.debug(
+      {
+        localTabId: this.localTabId,
+        channel: this.config.channel,
+        totalConnectedTabs: connectedTabs.length,
+      },
+      'connected'
+    );
 
     // Start health check for capture iframes
+    const isCapture = isCaptureTab(this.localTabId);
     if (isCapture) {
       this.startHealthCheck();
     }
@@ -445,29 +442,27 @@ export class CrossTabCoordinator {
    */
   public async disconnect(): Promise<void> {
     if (!this.connection) {
-      console.warn('[CrossTab][Connect] Not connected, nothing to disconnect');
+      logger.warn('not connected');
       return;
     }
 
     const tabId = this.localTabId;
     const wasOwner = this.isOwner;
-    console.log('[CrossTab][Connect] Disconnecting', { tabId, wasOwner });
+    logger.debug({ tabId, wasOwner }, 'disconnecting');
 
     // Stop health check if running
     this.stopHealthCheck();
 
     // Release lock if we own it
     if (wasOwner) {
-      console.log('[CrossTab][Connect] Releasing lock before disconnect');
       await this.releaseLock();
     }
 
-    console.log('[CrossTab][Connect] Closing connection');
     this.connection.close();
     this.connection = null;
     this.localTabId = null;
     this.isOwner = false;
-    console.log('[CrossTab][Connect] Disconnected successfully', { previousTabId: tabId });
+    logger.debug({ previousTabId: tabId }, 'disconnected');
   }
 
   /**
@@ -483,10 +478,7 @@ export class CrossTabCoordinator {
     // Clear existing interval if any
     this.stopHealthCheck();
 
-    console.log('[CrossTab][Health] Starting health check', {
-      localTabId: this.localTabId,
-      intervalMs: this.HEALTH_CHECK_INTERVAL_MS,
-    });
+    logger.debug('starting health check');
     this.healthCheckInterval = setInterval(async () => {
       await this.performHealthCheck();
     }, this.HEALTH_CHECK_INTERVAL_MS);
@@ -499,7 +491,6 @@ export class CrossTabCoordinator {
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
       this.healthCheckInterval = null;
-      console.log('[CrossTab][Health] Stopped health check');
     }
   }
 
@@ -516,7 +507,6 @@ export class CrossTabCoordinator {
    */
   private async performHealthCheck(): Promise<void> {
     if (!this.connection) {
-      console.warn('[CrossTab][Health] Skipping health check - not connected');
       return;
     }
 
@@ -524,19 +514,11 @@ export class CrossTabCoordinator {
       // Get current recorder state from shared worker
       const recorderTabId = this.getRecorderTabId();
       const recorderState = this.getRecorderState();
-      const blurrEnabled = this.isBlurrEnabled();
-
       // If no active recorder registered, nothing to check
       if (!recorderTabId) {
         // Only transition if we thought there was an active recorder before
         if (recorderState !== 'inactive') {
-          console.log(
-            '[CrossTab][Health] No recorder registered but state is not inactive, transitioning to idle',
-            {
-              recorderState,
-              blurrEnabled,
-            }
-          );
+          logger.debug('no recorder registered, transitioning to idle');
           this.transitionToIdleIfNeeded();
         }
         return;
@@ -547,26 +529,16 @@ export class CrossTabCoordinator {
       const isRecorderConnected = connectedTabs.includes(recorderTabId);
 
       if (!isRecorderConnected) {
-        console.warn('[CrossTab][Health] Recorder DISCONNECTED (tab closed/crashed)', {
-          recorderTabId,
-          recorderState,
-          connectedTabs,
-          action: 'transitioning to idle',
-        });
+        logger.warn({ recorderTabId, recorderState }, 'recorder disconnected');
         this.transitionToIdleIfNeeded();
         return;
       }
 
       // Recorder is still connected - trust it's alive
       // Log at debug level to avoid spam (every 5 seconds)
-      console.debug('[CrossTab][Health] Check passed', {
-        recorderTabId,
-        recorderState,
-        blurrEnabled,
-        connectedTabs: connectedTabs.length,
-      });
+      logger.debug({ recorderTabId, recorderState }, 'health check passed');
     } catch (error) {
-      console.error('[CrossTab][Health] Check failed with error:', error);
+      logger.error({ err: error }, 'health check failed');
     }
   }
 
@@ -579,9 +551,7 @@ export class CrossTabCoordinator {
     // Check if blur is currently enabled before transitioning
     const wasBlurrEnabled = this.isBlurrEnabled();
 
-    console.log('[CrossTab][Health] Transitioning local capture to idle state', {
-      wasBlurrEnabled,
-    });
+    logger.debug({ wasBlurrEnabled }, 'transitioning to idle');
 
     const captureState: CaptureRecorderState = {
       recorderTabId: null,
@@ -596,7 +566,6 @@ export class CrossTabCoordinator {
     // If blur was enabled, stop it locally
     // This prevents stuck blur when recorder crashes mid-recording
     if (wasBlurrEnabled) {
-      console.log('[CrossTab][Health] Stopping blur (recorder disconnected while blur was active)');
       this.config.callbacks.onBlurrStop?.();
     }
   }
@@ -613,13 +582,11 @@ export class CrossTabCoordinator {
 
     // No one has claimed the recorder
     if (tabId === null) {
-      console.log('[CrossTab][Lock] No recorder currently mounted');
       return false;
     }
 
     // We own it
     if (tabId === this.localTabId) {
-      console.log('[CrossTab][Lock] We already own the recorder');
       return false;
     }
 
@@ -627,11 +594,7 @@ export class CrossTabCoordinator {
     const connectedTabs = await this.connection.getConnectedTabs();
     const ownerIsAlive = connectedTabs.includes(tabId);
 
-    console.log('[CrossTab][Lock] Checking recorder ownership', {
-      claimedBy: tabId,
-      ownerIsAlive,
-      connectedTabs,
-    });
+    logger.debug({ claimedBy: tabId, ownerIsAlive }, 'checking ownership');
 
     return ownerIsAlive;
   }
@@ -683,14 +646,14 @@ export class CrossTabCoordinator {
    */
   public async acquireLock(): Promise<AcquireLockResult> {
     if (!this.connection || !this.localTabId) {
-      console.warn('[CrossTab][Lock] Cannot acquire - not connected');
+      logger.warn('cannot acquire lock - not connected');
       return {
         success: false,
         error: 'Not connected to cross-tab coordinator',
       };
     }
 
-    console.log('[CrossTab][Lock] Attempting to acquire lock', { localTabId: this.localTabId });
+    logger.debug({ localTabId: this.localTabId }, 'acquiring lock');
 
     let retries = 0;
     while (retries < this.config.maxRetries) {
@@ -701,13 +664,6 @@ export class CrossTabCoordinator {
       const { value: currentState, version: stateVersion } =
         this.connection.getVersionedState<RecordingState>('recorderState');
 
-      console.log('[CrossTab][Lock] Current state', {
-        attempt: retries + 1,
-        currentTabId,
-        currentState,
-        ourTabId: this.localTabId,
-      });
-
       // Check if another tab has the recorder mounted
       if (currentTabId !== null && currentTabId !== this.localTabId) {
         // Verify the owning tab is actually still connected
@@ -715,15 +671,9 @@ export class CrossTabCoordinator {
         const connectedTabs = await this.connection.getConnectedTabs();
         const ownerIsAlive = connectedTabs.includes(currentTabId);
 
-        console.log('[CrossTab][Lock] Checking current owner liveness', {
-          currentOwner: currentTabId,
-          ownerIsAlive,
-          connectedTabs,
-        });
-
         if (ownerIsAlive) {
           // Owner is still connected - block
-          console.log('[CrossTab][Lock] BLOCKED - Another recorder is mounted and alive');
+          logger.debug('lock blocked - another recorder active');
           return {
             success: false,
             error: 'Another recorder is already open. Only one recorder can be active at a time.',
@@ -733,20 +683,16 @@ export class CrossTabCoordinator {
         }
 
         // Owner tab is gone (crashed/closed without cleanup) - we can take over
-        console.log('[CrossTab][Lock] Previous owner is DEAD, taking over', {
-          deadOwner: currentTabId,
-        });
+        logger.debug({ deadOwner: currentTabId }, 'taking over from dead owner');
       }
 
       // If we already own it, just return success
       if (currentTabId === this.localTabId) {
-        console.log('[CrossTab][Lock] Already own the recorder');
         this.isOwner = true;
         return { success: true };
       }
 
       // Try to claim ownership atomically
-      console.log('[CrossTab][Lock] Attempting CAS to claim ownership');
       const tabIdResult = await this.connection.compareAndSwap(
         'recorderTabId',
         tabIdVersion,
@@ -756,10 +702,7 @@ export class CrossTabCoordinator {
       if (!tabIdResult.success) {
         // Someone else claimed it between our read and CAS
         retries++;
-        console.log('[CrossTab][Lock] CAS conflict, retrying', {
-          attempt: retries,
-          maxRetries: this.config.maxRetries,
-        });
+        logger.debug({ attempt: retries }, 'lock CAS conflict, retrying');
         continue;
       }
 
@@ -772,22 +715,17 @@ export class CrossTabCoordinator {
 
       if (!stateResult.success) {
         // State changed, but we have the lock - that's ok, we can update state separately
-        console.log('[CrossTab][Lock] CAS conflict on state, but lock acquired');
       }
 
       // Broadcast the change to other tabs
       await this.broadcastStateChange(this.localTabId, 'inactive');
 
       this.isOwner = true;
-      console.log('[CrossTab][Lock] SUCCESS - Acquired recorder lock', {
-        tabId: this.localTabId,
-      });
+      logger.debug({ tabId: this.localTabId }, 'lock acquired');
       return { success: true };
     }
 
-    console.error('[CrossTab][Lock] FAILED - Max retries exceeded', {
-      retries: this.config.maxRetries,
-    });
+    logger.error({ retries: this.config.maxRetries }, 'lock acquisition failed');
     return {
       success: false,
       error: `Failed to acquire lock after ${this.config.maxRetries} retries`,
@@ -800,16 +738,16 @@ export class CrossTabCoordinator {
    */
   public async releaseLock(): Promise<boolean> {
     if (!this.connection || !this.localTabId) {
-      console.warn('[CrossTab][Lock] Not connected, cannot release lock');
+      logger.warn('cannot release lock - not connected');
       return false;
     }
 
     if (!this.isOwner) {
-      console.warn('[CrossTab][Lock] Not the owner, cannot release lock');
+      logger.warn('cannot release lock - not owner');
       return false;
     }
 
-    console.log('[CrossTab][Lock] Releasing lock', { tabId: this.localTabId });
+    logger.debug({ tabId: this.localTabId }, 'releasing lock');
 
     let retries = 0;
     while (retries < this.config.maxRetries) {
@@ -819,10 +757,10 @@ export class CrossTabCoordinator {
 
       // Verify we still own it
       if (currentTabId !== this.localTabId) {
-        console.warn('[CrossTab][Lock] Lock was taken by another tab', {
-          expected: this.localTabId,
-          actual: currentTabId,
-        });
+        logger.warn(
+          { expected: this.localTabId, actual: currentTabId },
+          'lock taken by another tab'
+        );
         this.isOwner = false;
         return false;
       }
@@ -840,20 +778,14 @@ export class CrossTabCoordinator {
         await this.broadcastStateChange(null, 'inactive');
 
         this.isOwner = false;
-        console.log('[CrossTab][Lock] SUCCESS - Released recorder lock', {
-          previousTabId: this.localTabId,
-        });
+        logger.debug({ previousTabId: this.localTabId }, 'lock released');
         return true;
       }
 
       retries++;
-      console.log('[CrossTab][Lock] Release CAS conflict, retrying', {
-        attempt: retries,
-        maxRetries: this.config.maxRetries,
-      });
     }
 
-    console.error('[CrossTab][Lock] FAILED - Max retries exceeded while releasing');
+    logger.error('lock release failed - max retries');
     return false;
   }
 
@@ -863,21 +795,17 @@ export class CrossTabCoordinator {
    */
   public async updateState(newState: RecordingState): Promise<boolean> {
     if (!this.connection || !this.localTabId) {
-      console.warn('[CrossTab][State] Not connected, cannot update state');
+      logger.warn('cannot update state - not connected');
       return false;
     }
 
     if (!this.isOwner) {
-      console.warn('[CrossTab][State] Not the owner, cannot update state');
+      logger.warn('cannot update state - not owner');
       return false;
     }
 
     const currentState = this.getRecorderState();
-    console.log('[CrossTab][State] Updating state', {
-      from: currentState,
-      to: newState,
-      tabId: this.localTabId,
-    });
+    logger.debug({ from: currentState, to: newState }, 'updating state');
 
     let retries = 0;
     while (retries < this.config.maxRetries) {
@@ -897,21 +825,14 @@ export class CrossTabCoordinator {
         };
         await this.broadcastCaptureRecorderState(captureState);
 
-        console.log('[CrossTab][State] SUCCESS - State updated', {
-          newState,
-          tabId: this.localTabId,
-        });
+        logger.debug({ newState }, 'state updated');
         return true;
       }
 
       retries++;
-      console.log('[CrossTab][State] CAS conflict, retrying', {
-        attempt: retries,
-        maxRetries: this.config.maxRetries,
-      });
     }
 
-    console.error('[CrossTab][State] FAILED - Max retries exceeded');
+    logger.error('state update failed - max retries');
     return false;
   }
 
@@ -933,24 +854,19 @@ export class CrossTabCoordinator {
    */
   public async broadcastStartBlurr(): Promise<void> {
     if (!this.connection) {
-      console.warn('[CrossTab][Blur] Not connected, cannot broadcast start blur');
+      logger.warn('cannot broadcast blur - not connected');
       return;
     }
 
     const connectedTabs = await this.getConnectedTabs();
-    console.log('[CrossTab][Blur] Broadcasting START blur', {
-      fromTabId: this.localTabId,
-      totalTabs: connectedTabs.length,
-      connectedTabs,
-    });
+    logger.debug({ totalTabs: connectedTabs.length }, 'broadcasting start blur');
     try {
       const remote = this.connection.remote as unknown as {
         broadcastStartBlurr: () => Promise<void>;
       };
       await remote.broadcastStartBlurr();
-      console.log('[CrossTab][Blur] START blur broadcast complete');
     } catch (error) {
-      console.error('[CrossTab][Blur] Failed to broadcast start blur:', error);
+      logger.error({ err: error }, 'blur broadcast failed');
     }
   }
 
@@ -960,24 +876,19 @@ export class CrossTabCoordinator {
    */
   public async broadcastStopBlurr(): Promise<void> {
     if (!this.connection) {
-      console.warn('[CrossTab][Blur] Not connected, cannot broadcast stop blur');
+      logger.warn('cannot broadcast blur - not connected');
       return;
     }
 
     const connectedTabs = await this.getConnectedTabs();
-    console.log('[CrossTab][Blur] Broadcasting STOP blur', {
-      fromTabId: this.localTabId,
-      totalTabs: connectedTabs.length,
-      connectedTabs,
-    });
+    logger.debug({ totalTabs: connectedTabs.length }, 'broadcasting stop blur');
     try {
       const remote = this.connection.remote as unknown as {
         broadcastStopBlurr: () => Promise<void>;
       };
       await remote.broadcastStopBlurr();
-      console.log('[CrossTab][Blur] STOP blur broadcast complete');
     } catch (error) {
-      console.error('[CrossTab][Blur] Failed to broadcast stop blur:', error);
+      logger.error({ err: error }, 'blur broadcast failed');
     }
   }
 
@@ -1005,24 +916,16 @@ export class CrossTabCoordinator {
     const allTabs = await this.connection.getConnectedTabs();
     const captureTabs = allTabs.filter(isCaptureTab);
 
-    console.group(`[CrossTab][Scatter] Started (${requestId})`);
-    console.log('All connected tabs:', allTabs);
-    console.log('Capture tabs to query:', captureTabs);
-    console.log('Timeout:', `${timeout}ms`);
+    logger.debug({ captureTabs: captureTabs.length, timeout }, 'scatter-gather started');
 
     if (captureTabs.length === 0) {
-      console.log('[CrossTab][Scatter] No capture tabs found - returning empty result');
-      console.groupEnd();
+      logger.debug('no capture tabs found');
       return this.buildAggregatedMetadata(new Map(), [], [], requestedAt, Date.now());
     }
-
-    console.log(`[CrossTab][Scatter] Expecting responses from ${captureTabs.length} tabs...`);
-    console.groupEnd();
 
     // Create pending request
     return new Promise<AggregatedMetadata>((resolve) => {
       const timeoutId = setTimeout(() => {
-        console.log(`[CrossTab][Scatter] Timeout reached (${timeout}ms)`);
         this.completeScatterGather(requestId);
       }, timeout);
 
@@ -1045,7 +948,6 @@ export class CrossTabCoordinator {
         requestedAt,
       };
 
-      console.log('[CrossTab][Scatter] Broadcasting metadata request to all tabs...');
       this.broadcastMetadataRequest(request);
     });
   }
@@ -1062,7 +964,7 @@ export class CrossTabCoordinator {
       };
       await remote.requestMetadata(request);
     } catch (error) {
-      console.error('[CrossTab][Scatter] Failed to broadcast metadata request:', error);
+      logger.error({ err: error }, 'metadata request broadcast failed');
     }
   }
 
@@ -1077,9 +979,8 @@ export class CrossTabCoordinator {
         respondMetadata: (response: MetadataResponse) => Promise<void>;
       };
       await remote.respondMetadata(response);
-      console.log('[CrossTab][Scatter] Sent metadata response for:', response.requestId);
     } catch (error) {
-      console.error('[CrossTab][Scatter] Failed to send metadata response:', error);
+      logger.error({ err: error }, 'metadata response send failed');
     }
   }
 
@@ -1098,11 +999,13 @@ export class CrossTabCoordinator {
     const respondedTabs = Array.from(pending.responses.keys());
     const timedOutTabs = pending.expectedTabs.filter((tab) => !pending.responses.has(tab));
 
-    console.group(`[CrossTab][Scatter] Complete (${requestId})`);
-    console.log(`Responded: ${respondedTabs.length} tabs, Timed out: ${timedOutTabs.length} tabs`);
+    logger.debug(
+      { responded: respondedTabs.length, timedOut: timedOutTabs.length },
+      'scatter-gather completed'
+    );
 
     if (timedOutTabs.length > 0) {
-      console.warn('[CrossTab][Scatter] Timed out tabs:', timedOutTabs);
+      logger.warn({ timedOutTabs }, 'scatter-gather tabs timed out');
     }
 
     // Build aggregated result
@@ -1113,8 +1016,6 @@ export class CrossTabCoordinator {
       pending.requestedAt,
       Date.now()
     );
-
-    console.groupEnd();
 
     pending.resolve(result);
   }
@@ -1134,8 +1035,6 @@ export class CrossTabCoordinator {
     const durationMs = completedAt - requestedAt;
 
     if (responses.size === 0) {
-      console.log('[CrossTab][Scatter] No responses received');
-      console.log('[CrossTab][Scatter] Final Result: Empty (no tabs responded)');
       return {
         unified: null,
         perTab: null,
@@ -1148,8 +1047,6 @@ export class CrossTabCoordinator {
       };
     }
 
-    // Log each tab's response
-    console.group('Responses from each tab:');
     const perTabEntries: Record<string, TabMetadataEntry> = {};
     const customMetadataList: CustomMetadata[] = [];
 
@@ -1157,50 +1054,17 @@ export class CrossTabCoordinator {
       const { metadata } = response;
 
       // Extract custom metadata (everything except system keys)
-      const { _pageUrl, _pageTitle, ...customMeta } = metadata;
+      const { ...customMeta } = metadata;
       const customMetadata = Object.keys(customMeta).length > 0 ? customMeta : null;
-
-      console.group(`Tab: ${tabId}`);
-      console.log('Page URL:', _pageUrl);
-      console.log('Page Title:', _pageTitle);
-      console.log('Custom Metadata:', customMetadata);
-      console.log('Response Time:', `${response.respondedAt - requestedAt}ms`);
-      console.groupEnd();
 
       // Store flattened structure directly
       perTabEntries[tabId] = metadata;
       customMetadataList.push(customMetadata as CustomMetadata);
     }
-    console.groupEnd();
 
     // Check if all customMetadata are identical
     const isUnified = this.areAllMetadataIdentical(customMetadataList);
 
-    // Log the decision
-    console.group('Aggregation Decision:');
-    if (isUnified) {
-      console.log('Decision: UNIFIED');
-      console.log('Reason: All tabs returned identical customMetadata');
-      console.log('Unified Metadata:', customMetadataList[0] ?? null);
-    } else {
-      console.log('Decision: PER-TAB');
-      console.log('Reason: Tabs returned different customMetadata');
-      console.log('Differences detected between tabs');
-
-      // Show what's different
-      if (customMetadataList.length > 1) {
-        const first = JSON.stringify(customMetadataList[0]);
-        for (let i = 1; i < customMetadataList.length; i++) {
-          const current = JSON.stringify(customMetadataList[i]);
-          if (current !== first) {
-            console.log(`Tab ${respondedTabs[i]} differs from Tab ${respondedTabs[0]}`);
-          }
-        }
-      }
-    }
-    console.groupEnd();
-
-    // Build and log final result
     let result: AggregatedMetadata;
 
     if (isUnified) {
@@ -1227,19 +1091,7 @@ export class CrossTabCoordinator {
       };
     }
 
-    // Log final result summary
-    console.group('Final Aggregated Metadata:');
-    console.log('Is Unified:', result.isUnified);
-    console.log('Total Tabs:', result.totalTabs);
-    console.log('Responded:', result.respondedTabs.length);
-    console.log('Timed Out:', result.timedOutTabs.length);
-    console.log('Duration:', `${durationMs}ms`);
-    if (result.isUnified) {
-      console.log('Unified Data:', result.unified);
-    } else {
-      console.log('Per-Tab Data:', result.perTab);
-    }
-    console.groupEnd();
+    logger.debug({ respondedTabs: responses.size, isUnified, durationMs }, 'metadata aggregated');
 
     return result;
   }
@@ -1297,13 +1149,8 @@ let coordinatorInstance: CrossTabCoordinator | null = null;
  */
 export function getCrossTabCoordinator(config?: CrossTabCoordinatorConfig): CrossTabCoordinator {
   if (!coordinatorInstance) {
-    console.log('[CrossTab][Singleton] Creating new coordinator instance');
+    logger.debug('creating coordinator');
     coordinatorInstance = new CrossTabCoordinator(config);
-  } else {
-    console.debug('[CrossTab][Singleton] Returning existing coordinator instance', {
-      isConnected: coordinatorInstance.isConnected(),
-      localTabId: coordinatorInstance.getLocalTabId(),
-    });
   }
   return coordinatorInstance;
 }
@@ -1313,14 +1160,8 @@ export function getCrossTabCoordinator(config?: CrossTabCoordinatorConfig): Cros
  */
 export async function resetCrossTabCoordinator(): Promise<void> {
   if (coordinatorInstance) {
-    console.log('[CrossTab][Singleton] Resetting coordinator instance', {
-      previousTabId: coordinatorInstance.getLocalTabId(),
-      wasConnected: coordinatorInstance.isConnected(),
-    });
+    logger.debug({ previousTabId: coordinatorInstance.getLocalTabId() }, 'resetting coordinator');
     await coordinatorInstance.disconnect();
     coordinatorInstance = null;
-    console.log('[CrossTab][Singleton] Coordinator instance reset complete');
-  } else {
-    console.debug('[CrossTab][Singleton] No instance to reset');
   }
 }

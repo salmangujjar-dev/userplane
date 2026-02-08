@@ -14,12 +14,15 @@ import {
   useVerificationBridge,
 } from '@/contexts/AppModeContext';
 import { useVerificationFlow } from '@/hooks/useVerificationFlow';
+import { createLogger } from '@/lib/logger';
 import { createVerificationError } from '@/lib/verification-errors';
 import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
 
 import VerificationErrorScreen from './VerificationErrorScreen';
 import VerifiedScreen from './VerifiedScreen';
 import VerifyingScreen from './VerifyingScreen';
+
+const logger = createLogger('verification-app');
 
 /**
  * Root component that provides app mode context
@@ -52,12 +55,8 @@ function VerificationAppContent() {
 
   // Effect to extract URL params
   useEffect(() => {
-    console.log(
-      '[VerificationApp] App mode:',
-      mode,
-      isEmbedded ? '(running in iframe)' : '(standalone)'
-    );
-    console.log('[VerificationApp] Cross-tab lock status:', crossTabLock.status);
+    logger.debug({ mode, isEmbedded }, 'app initialized');
+    logger.debug({ lockStatus: crossTabLock.status }, 'cross-tab lock status');
 
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get(URL_PARAMS.TOKEN);
@@ -76,7 +75,7 @@ function VerificationAppContent() {
     if (!isEmbedded || !verificationBridge) return;
 
     if (state.state === 'verified' && state.result) {
-      console.log('[VerificationApp] Reporting verification success to parent');
+      logger.debug('verification success reported to parent');
       // Verification bridge handles the flow
     }
   }, [verificationBridge, isEmbedded, state.state, state.result]);
@@ -84,12 +83,10 @@ function VerificationAppContent() {
   // In embedded mode, check cross-tab status before showing UI
   if (isEmbedded) {
     if (crossTabLock.isPending) {
-      console.log('[VerificationApp] Waiting for cross-tab coordination...');
       return <VerifyingScreen />;
     }
 
     if (crossTabLock.isBlocked) {
-      console.log('[VerificationApp] Blocked by another process:', crossTabLock.error);
       return (
         <VerificationErrorScreen
           title="Process Already Active"
@@ -102,27 +99,21 @@ function VerificationAppContent() {
     }
   }
 
-  console.log('[VerificationApp] Current state:', state.state);
-
   switch (state.state) {
     case 'loading':
-      console.log('[VerificationApp] Rendering: VerifyingScreen (loading)');
       return <VerifyingScreen />;
 
     case 'verifying':
-      console.log('[VerificationApp] Rendering: VerifyingScreen');
       return <VerifyingScreen domainUrl={state.domainUrl ?? undefined} />;
 
     case 'verified':
-      console.log('[VerificationApp] Rendering: VerifiedScreen');
       if (!state.result) {
-        console.error('[VerificationApp] No result in verified state');
+        logger.error('no result in verified state');
         return <VerifyingScreen />;
       }
       return <VerifiedScreen domainUrl={state.result.domainUrl} />;
 
     case 'error': {
-      console.log('[VerificationApp] Rendering: VerificationErrorScreen');
       const error = state.error ?? createVerificationError('VERIFICATION_UNKNOWN_ERROR');
       return (
         <VerificationErrorScreen
@@ -135,7 +126,7 @@ function VerificationAppContent() {
     }
 
     default:
-      console.log('[VerificationApp] Unknown state, rendering: VerifyingScreen');
+      logger.warn({ state: state.state }, 'unknown state');
       return <VerifyingScreen />;
   }
 }

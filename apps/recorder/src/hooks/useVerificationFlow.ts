@@ -11,8 +11,11 @@ import * as Sentry from '@sentry/astro';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { VerificationBridgeConnection } from '@/bridge';
+import { createLogger } from '@/lib/logger';
 import { createVerificationError } from '@/lib/verification-errors';
 import type { VerificationError } from '@/types/errors';
+
+const logger = createLogger('verification-flow');
 
 /**
  * Verification flow states
@@ -112,7 +115,7 @@ export function useVerificationFlow(
     }
 
     if (!bridge) {
-      console.error('[useVerificationFlow] No bridge connection available');
+      logger.error('no bridge connection available');
 
       // Capture bridge connection issues - critical for embedded verification
       const error = new Error('No bridge connection available for verification');
@@ -135,23 +138,20 @@ export function useVerificationFlow(
     });
     setError(null);
 
-    console.log(
-      '[useVerificationFlow] Requesting verification via bridge with token and workspaceIds:',
-      workspaceIds
-    );
+    logger.debug({ workspaceIds }, 'requesting verification via bridge');
 
     // Request verification from parent SDK
     // Parent makes the API call so the origin header is the parent's domain
     const verificationResult = await bridge.requestVerification(token, workspaceIds);
 
     if (!verificationResult.success) {
-      console.error('[useVerificationFlow] Verification error:', verificationResult.error);
+      logger.error({ err: verificationResult.error }, 'verification failed');
       setError(verificationResult.error ?? null);
       setFlowState('error');
       return;
     }
 
-    console.log('[useVerificationFlow] Verification success:', verificationResult.data);
+    logger.debug({ data: verificationResult.data }, 'verification succeeded');
 
     setResult(verificationResult.data as VerificationResult);
     setDomainUrl(verificationResult.data?.domainUrl ?? null);
@@ -176,7 +176,7 @@ export function useVerificationFlow(
     if (verificationAttemptedRef.current) return;
     // Wait for bridge to be available before attempting verification
     if (!bridge?.isConnected()) {
-      console.log('[useVerificationFlow] Waiting for bridge connection...');
+      logger.debug('waiting for bridge connection');
       return;
     }
     verificationAttemptedRef.current = true;

@@ -6,6 +6,8 @@
 
 import { type Connection, guest } from '@workspace/postbridge';
 
+import { createLogger } from '@/lib/logger';
+
 import { type CrossTabCoordinator } from './cross-tab';
 import type {
   CustomMetadata,
@@ -14,6 +16,8 @@ import type {
   RecordingSessionInfo,
   RecordingState,
 } from './types';
+
+const logger = createLogger('bridge');
 
 /**
  * State tracked by the recorder for the bridge
@@ -52,11 +56,11 @@ export class RecorderBridgeConnection {
    */
   public async connect(): Promise<void> {
     if (this.connection) {
-      console.warn('[RecorderBridge] Already connected');
+      logger.warn('already connected');
       return;
     }
 
-    console.log('[RecorderBridge] Connecting to parent SDK');
+    logger.debug('connecting to parent SDK');
 
     // Create guest schema with methods exposed to the parent
     const schema: GuestSchema = {
@@ -67,12 +71,12 @@ export class RecorderBridgeConnection {
 
     try {
       this.connection = await guest.connect(schema);
-      console.log('[RecorderBridge] Connected to parent, connection ID:', this.connection.id);
+      logger.debug({ connectionId: this.connection.id }, 'connected to parent');
 
       // Fetch tab ref from parent
       await this.fetchTabRef();
     } catch (error) {
-      console.error('[RecorderBridge] Failed to connect:', error);
+      logger.error({ err: error }, 'connection failed');
       throw error;
     }
   }
@@ -88,9 +92,9 @@ export class RecorderBridgeConnection {
       // Remote calls via postbridge are async, must await
       // Promise.resolve wrapper silences ts(80007) warning since TS can't infer postbridge returns a Promise
       this.state.tabRef = await Promise.resolve(remote.getTabRef());
-      console.log('[RecorderBridge] Got tab ref from parent:', this.state.tabRef);
+      logger.debug({ tabRef: this.state.tabRef }, 'got tab ref');
     } catch (error) {
-      console.error('[RecorderBridge] Failed to fetch tab ref:', error);
+      logger.error({ err: error }, 'failed to fetch tab ref');
     }
   }
 
@@ -99,11 +103,11 @@ export class RecorderBridgeConnection {
    */
   public disconnect(): void {
     if (!this.connection) {
-      console.warn('[RecorderBridge] Not connected');
+      logger.warn('not connected');
       return;
     }
 
-    console.log('[RecorderBridge] Disconnecting from parent');
+    logger.debug('disconnecting');
     this.connection.close();
     this.connection = null;
   }
@@ -140,16 +144,16 @@ export class RecorderBridgeConnection {
   public async getPageUrl(): Promise<string | null> {
     const remote = this.getRemote();
     if (!remote) {
-      console.log('[RecorderBridge] Not connected, cannot get page URL');
+      logger.warn('not connected, cannot get page URL');
       return null;
     }
 
     try {
       const url = await Promise.resolve(remote.getPageUrl());
-      console.log('[RecorderBridge] Got page URL from parent:', url);
+      logger.debug({ pageUrl: url }, 'got page URL');
       return url;
     } catch (error) {
-      console.error('[RecorderBridge] Failed to get page URL:', error);
+      logger.error({ err: error }, 'failed to get page URL');
       return null;
     }
   }
@@ -166,7 +170,7 @@ export class RecorderBridgeConnection {
   public async getCustomMetadata(): Promise<CustomMetadata> {
     const remote = this.getRemote();
     if (!remote) {
-      console.log('[RecorderBridge] Not connected, cannot get custom metadata');
+      logger.warn('not connected, cannot get custom metadata');
       return null;
     }
 
@@ -174,10 +178,10 @@ export class RecorderBridgeConnection {
       // Remote calls via postbridge are async, must await
       // Promise.resolve wrapper silences ts(80007) warning since TS can't infer postbridge returns a Promise
       const metadata = await Promise.resolve(remote.getCustomMetadata());
-      console.log('[RecorderBridge] Got custom metadata from parent:', metadata);
+      logger.debug({ hasMetadata: !!metadata }, 'got custom metadata');
       return metadata;
     } catch (error) {
-      console.error('[RecorderBridge] Failed to get custom metadata:', error);
+      logger.error({ err: error }, 'failed to get custom metadata');
       return null;
     }
   }
@@ -197,12 +201,12 @@ export class RecorderBridgeConnection {
 
     const remote = this.getRemote();
     if (!remote) {
-      console.log('[RecorderBridge] Not connected, skipping initSession');
+      logger.warn('not connected, skipping initSession');
       return;
     }
 
     const sessionTitle = title ?? document.title;
-    console.log('[RecorderBridge] Initializing session:', { sessionInfo, title: sessionTitle });
+    logger.debug({ sessionTitle }, 'initializing session');
     remote.initSession(sessionInfo, sessionTitle);
   }
 
@@ -215,11 +219,11 @@ export class RecorderBridgeConnection {
 
     const remote = this.getRemote();
     if (!remote) {
-      console.log('[RecorderBridge] Not connected, skipping finishSession');
+      logger.warn('not connected, skipping finishSession');
       return;
     }
 
-    console.log('[RecorderBridge] Finishing session');
+    logger.debug('finishing session');
     remote.finishSession();
   }
 
@@ -236,9 +240,9 @@ export class RecorderBridgeConnection {
 
     try {
       await this.crossTab.updateState(state);
-      console.log('[RecorderBridge] Updated cross-tab state:', state);
+      logger.debug({ state }, 'updated cross-tab state');
     } catch (error) {
-      console.error('[RecorderBridge] Failed to update cross-tab state:', error);
+      logger.error({ err: error }, 'failed to update cross-tab state');
     }
   }
 
@@ -255,10 +259,10 @@ export class RecorderBridgeConnection {
 
     const remote = this.getRemote();
     if (!remote) {
-      console.log('[RecorderBridge] Not connected, skipping recordingActive');
+      logger.warn('not connected, skipping recordingActive');
       return;
     }
-    console.log('[RecorderBridge] Notifying parent: recording active');
+    logger.debug('notifying parent: recording active');
     remote.recordingActive();
   }
 
@@ -275,10 +279,10 @@ export class RecorderBridgeConnection {
 
     const remote = this.getRemote();
     if (!remote) {
-      console.log('[RecorderBridge] Not connected, skipping recordingRetained');
+      logger.warn('not connected, skipping recordingRetained');
       return;
     }
-    console.log('[RecorderBridge] Notifying parent: recording retained');
+    logger.debug('notifying parent: recording retained');
     remote.recordingRetained();
   }
 
@@ -295,10 +299,10 @@ export class RecorderBridgeConnection {
 
     const remote = this.getRemote();
     if (!remote) {
-      console.log('[RecorderBridge] Not connected, skipping recordingInactive');
+      logger.warn('not connected, skipping recordingInactive');
       return;
     }
-    console.log('[RecorderBridge] Notifying parent: recording inactive');
+    logger.debug('notifying parent: recording inactive');
     remote.recordingInactive();
   }
 }

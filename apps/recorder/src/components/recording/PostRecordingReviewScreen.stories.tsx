@@ -55,8 +55,8 @@ const meta: Meta<StoryArgs> = {
       isSubmitting={args.isSubmitting}
       errorMessage={args.errorMessage || undefined}
       preferences={argsToPreferences(args)}
-      onSubmit={() => console.log('Submit clicked')}
-      onStartOver={() => console.log('Start over clicked')}
+      onSubmit={() => {}}
+      onStartOver={() => {}}
     />
   ),
 };

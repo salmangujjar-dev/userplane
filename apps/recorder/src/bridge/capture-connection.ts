@@ -12,6 +12,8 @@
 
 import { type Connection, guest } from '@workspace/postbridge';
 
+import { createLogger } from '@/lib/logger';
+
 import type {
   BlurrState,
   CaptureGuestSchema,
@@ -21,6 +23,8 @@ import type {
   RecordingState,
   TabMetadata,
 } from './types';
+
+const logger = createLogger('capture-bridge');
 
 /**
  * Callbacks for capture bridge events
@@ -59,11 +63,11 @@ export class CaptureBridgeConnection {
    */
   public async connect(): Promise<void> {
     if (this.connection) {
-      console.log('[CaptureBridge] Already connected');
+      logger.warn('already connected');
       return;
     }
 
-    console.log('[CaptureBridge] Connecting to parent SDK');
+    logger.debug('connecting to parent SDK');
 
     // Create guest schema with methods exposed to host
     const schema: CaptureGuestSchema = {
@@ -78,12 +82,12 @@ export class CaptureBridgeConnection {
 
     try {
       this.connection = await guest.connect(schema);
-      console.log('[CaptureBridge] Connected to parent, connection ID:', this.connection.id);
+      logger.debug({ connectionId: this.connection.id }, 'connected to parent');
 
       // Fetch initial data from parent
       await this.fetchInitialData();
     } catch (error) {
-      console.error('[CaptureBridge] Failed to connect:', error);
+      logger.error({ err: error }, 'connection failed');
       throw error;
     }
   }
@@ -93,7 +97,7 @@ export class CaptureBridgeConnection {
    */
   public disconnect(): void {
     if (this.connection) {
-      console.log('[CaptureBridge] Disconnecting');
+      logger.debug('disconnecting');
       this.connection.close();
       this.connection = null;
     }
@@ -123,25 +127,25 @@ export class CaptureBridgeConnection {
   private async fetchInitialData(): Promise<void> {
     const remote = this.getRemote();
     if (!remote) {
-      console.warn('[CaptureBridge] No remote connection');
+      logger.warn('no remote connection');
       return;
     }
 
     try {
       // Fetch tab reference
       this.tabRef = await Promise.resolve(remote.getTabRef());
-      console.log('[CaptureBridge] Tab ref:', this.tabRef);
+      logger.debug({ tabRef: this.tabRef }, 'got tab ref');
 
       // Fetch page URL and title
       this.pageUrl = await Promise.resolve(remote.getPageUrl());
       this.pageTitle = await Promise.resolve(remote.getPageTitle());
-      console.log('[CaptureBridge] Page:', this.pageUrl);
+      logger.debug({ pageUrl: this.pageUrl }, 'got page info');
 
       // Fetch custom metadata
       this.customMetadata = await Promise.resolve(remote.extractMetadata());
-      console.log('[CaptureBridge] Custom metadata:', this.customMetadata ? 'present' : 'none');
+      logger.debug({ hasMetadata: !!this.customMetadata }, 'fetched custom metadata');
     } catch (error) {
-      console.error('[CaptureBridge] Failed to fetch initial data:', error);
+      logger.error({ err: error }, 'failed to fetch initial data');
     }
   }
 
@@ -208,7 +212,7 @@ export class CaptureBridgeConnection {
    * Handle set recorder state from host (cross-tab sync)
    */
   private handleSetRecorderState(state: CaptureRecorderState): void {
-    console.log('[CaptureBridge] Recorder state updated:', state);
+    logger.debug({ recorderState: state.recorderState }, 'recorder state updated');
     this.recorderState = { ...state };
     this.callbacks.onRecorderStateChange?.(state);
   }
@@ -251,10 +255,10 @@ export class CaptureBridgeConnection {
   private handleStartBlurr(): void {
     const remote = this.getRemote();
     if (!remote) {
-      console.warn('[CaptureBridge] Not connected, cannot start blur');
+      logger.warn('not connected, cannot control blur');
       return;
     }
-    console.log('[CaptureBridge] Relaying startBlurr to parent');
+    logger.debug('relaying start blur');
     remote.startBlurr();
   }
 
@@ -264,10 +268,10 @@ export class CaptureBridgeConnection {
   private handleStopBlurr(): void {
     const remote = this.getRemote();
     if (!remote) {
-      console.warn('[CaptureBridge] Not connected, cannot stop blur');
+      logger.warn('not connected, cannot control blur');
       return;
     }
-    console.log('[CaptureBridge] Relaying stopBlurr to parent');
+    logger.debug('relaying stop blur');
     remote.stopBlurr();
   }
 
@@ -277,7 +281,7 @@ export class CaptureBridgeConnection {
   private handleGetBlurrState(): BlurrState {
     const remote = this.getRemote();
     if (!remote) {
-      console.warn('[CaptureBridge] Not connected, returning disabled');
+      logger.warn('not connected, returning disabled blur state');
       return 'disabled';
     }
     return remote.getBlurrState();

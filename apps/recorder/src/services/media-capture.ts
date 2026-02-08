@@ -6,6 +6,7 @@
 import * as Sentry from '@sentry/astro';
 
 import { AUDIO_SAMPLE_RATE_HZ, MEDIA_RECORDER_TIMESLICE_MS, VIDEO_BITRATE_BPS } from '@/constants';
+import { createLogger } from '@/lib/logger';
 import { ClientError } from '@/sentry/client-errors';
 import {
   getBestMimeType,
@@ -20,6 +21,8 @@ export interface MediaCaptureOptions {
   onStop?: (blob: Blob) => void;
   onError?: (error: Error) => void;
 }
+
+const logger = createLogger('media-capture');
 
 export class MediaCapture {
   private mediaRecorder: MediaRecorder | null = null;
@@ -68,7 +71,6 @@ export class MediaCapture {
     try {
       const mode = options?.mode || this.mode;
 
-      console.log('[MediaCapture] Requesting display media permissions...');
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
         video: {
           cursor: 'always',
@@ -82,7 +84,6 @@ export class MediaCapture {
 
       if (mode === 'screen-voice') {
         try {
-          console.log('[MediaCapture] Requesting audio permissions...');
           const audioStream = await navigator.mediaDevices.getUserMedia({
             audio: {
               echoCancellation: true,
@@ -94,13 +95,8 @@ export class MediaCapture {
 
           const audioTrack = audioStream.getAudioTracks()[0];
           combinedStream.addTrack(audioTrack);
-
-          console.log('[MediaCapture] Audio track added');
         } catch (audioError) {
-          console.warn(
-            '[MediaCapture] Failed to get audio, continuing with video only:',
-            audioError
-          );
+          logger.warn({ err: audioError }, 'audio capture failed, continuing video-only');
         }
       }
 
@@ -111,8 +107,6 @@ export class MediaCapture {
         mimeType,
         videoBitsPerSecond: VIDEO_BITRATE_BPS,
       });
-
-      console.log(`[MediaCapture] MediaRecorder created with ${mimeType}`);
 
       this.recordedChunks = [];
       this.onStopCallback = options?.onStop || null;
@@ -131,7 +125,6 @@ export class MediaCapture {
         const blob = new Blob(this.recordedChunks, {
           type: this.mediaRecorder!.mimeType,
         });
-        console.log(`[MediaCapture] Recording stopped, size: ${blob.size} bytes`);
         this.cleanup();
         this.isStopping = false;
 
@@ -151,7 +144,7 @@ export class MediaCapture {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.mediaRecorder.onerror = (event: any) => {
         const error = new ClientError('CLIENT_MEDIA_CONNECTION_FAILED', event.error);
-        console.error('[MediaCapture] Error:', error.code);
+        logger.error({ err: error, code: error.code }, 'media recorder error');
 
         // Capture MediaRecorder errors in Sentry - critical runtime failures
         Sentry.captureException(error, {
@@ -177,13 +170,10 @@ export class MediaCapture {
       // When user clicks "Stop sharing" in browser, MediaRecorder will automatically
       // stop and fire the onstop event above
       combinedStream.getVideoTracks()[0].addEventListener('ended', () => {
-        console.log('[MediaCapture] User stopped sharing via browser UI');
         // No need to do anything here - onstop handler will fire automatically
       });
-
-      console.log('[MediaCapture] Permissions granted, ready to start recording');
     } catch (error) {
-      console.error('[MediaCapture] Failed to request permissions:', error);
+      logger.error({ err: error, mode: this.mode }, 'permission request failed');
 
       // Capture permission failures - critical for understanding recording start issues
       Sentry.captureException(error, {
@@ -214,14 +204,11 @@ export class MediaCapture {
     }
 
     if (this.mediaRecorder.state !== 'inactive') {
-      console.warn('[MediaCapture] Recording already started');
       return;
     }
 
-    console.log('[MediaCapture] Starting recording...');
     this.mediaRecorder.start(MEDIA_RECORDER_TIMESLICE_MS);
     this.startTime = Date.now();
-    console.log('[MediaCapture] Recording started at:', new Date(this.startTime).toISOString());
   }
 
   /**
@@ -254,7 +241,6 @@ export class MediaCapture {
 
       // Guard against concurrent stop calls
       if (this.isStopping) {
-        console.log('[MediaCapture] Stop already in progress, ignoring duplicate call');
         reject(new Error('Stop already in progress'));
         return;
       }
@@ -265,7 +251,6 @@ export class MediaCapture {
       this.stopPromiseResolve = resolve;
 
       // Trigger stop - onstop handler will create blob and resolve promise
-      console.log('[MediaCapture] Stopping MediaRecorder...');
       this.mediaRecorder.stop();
     });
   }
@@ -276,7 +261,6 @@ export class MediaCapture {
   pause(): void {
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
       this.mediaRecorder.pause();
-      console.log('[MediaCapture] Recording paused');
     }
   }
 
@@ -286,7 +270,6 @@ export class MediaCapture {
   resume(): void {
     if (this.mediaRecorder && this.mediaRecorder.state === 'paused') {
       this.mediaRecorder.resume();
-      console.log('[MediaCapture] Recording resumed');
     }
   }
 
@@ -321,10 +304,9 @@ export class MediaCapture {
   async destroy(): Promise<void> {
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
       try {
-        console.log('[MediaCapture] Awaiting stop before destroy...');
         await this.stop();
       } catch (err) {
-        console.warn('[MediaCapture] Error stopping during destroy:', err);
+        logger.warn({ err }, 'error stopping during destroy');
       }
     }
     this.cleanup();
@@ -355,7 +337,7 @@ export async function requestScreenRecordingPermission(): Promise<boolean> {
     stream.getTracks().forEach((track) => track.stop());
     return true;
   } catch (error) {
-    console.error('[MediaCapture] Screen recording permission denied:', error);
+    logger.error({ err: error }, 'screen recording permission denied');
 
     // Capture permission check failures for monitoring (info level - this is a test)
     Sentry.captureException(error, {

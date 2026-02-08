@@ -41,7 +41,7 @@ const meta: Meta<StoryArgs> = {
       requesterName={args.requesterName || undefined}
       isLoading={args.isLoading}
       preferences={argsToPreferences(args)}
-      onStartRecording={() => console.log('Start recording clicked')}
+      onStartRecording={() => {}}
     />
   ),
 };

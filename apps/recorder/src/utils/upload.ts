@@ -3,7 +3,11 @@
  * Generic object storage upload functions with progress tracking and retries
  */
 
+import { createLogger } from '@/lib/logger';
+
 import { withRetry } from './retry';
+
+const logger = createLogger('upload');
 
 export interface UploadProgress {
   loaded: number;
@@ -53,8 +57,10 @@ export async function uploadToObjectStore(
     backoffStrategy: 'exponential',
     totalTimeout,
     onRetry: (error, attempt, delay) => {
-      console.warn(`[Upload] Attempt ${attempt}/${maxRetries} failed:`, error);
-      console.log(`[Upload] Retrying in ${delay}ms...`);
+      logger.warn(
+        { err: error, attempt, maxRetries, retryDelayMs: delay },
+        'upload attempt failed, retrying'
+      );
     },
   });
 }

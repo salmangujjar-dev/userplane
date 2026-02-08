@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { RECORDING_LIMITS } from '@/constants';
+import { createLogger } from '@/lib/logger';
 import { createClientError, createClientErrorWithMessage } from '@/sentry/client-errors';
 import {
   isScreenRecordingSupported,
@@ -26,6 +27,8 @@ import { classifyError, type RecordingError } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
 import { DEFAULT_RECORDING_PREFERENCES } from '@/types/session-preferences';
 import { generateVideoThumbnail } from '@/utils/video-thumbnail';
+
+const logger = createLogger('recording-flow');
 
 export type FlowState =
   | 'loading'
@@ -142,47 +145,41 @@ export function useRecordingFlow(
   );
 
   useEffect(() => {
-    console.log('[Flow] Hook initialized');
-    console.log('[Flow] Link token:', linkToken ? 'Present' : 'Empty');
-    console.log('[Flow] Action:', action || 'Empty');
-    console.log('[Flow] Workspace IDs:', workspaceIds.length > 0 ? workspaceIds : 'Empty');
-
     if (!linkToken || linkToken.trim() === '') {
-      console.error('[Flow] Error: No link token provided');
+      logger.error('no link token provided');
       setError(createClientError('CLIENT_LINK_TOKEN_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (!action || action.trim() === '') {
-      console.error('[Flow] Error: No action provided');
+      logger.error('no action provided');
       setError(createClientError('CLIENT_LINK_ACTION_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (action !== 'recording') {
-      console.error('[Flow] Error: Invalid action:', action);
+      logger.error({ action }, 'invalid action');
       setError(createClientError('CLIENT_LINK_ACTION_INVALID'));
       setFlowState('error');
       return;
     }
 
     if (!workspaceIds || workspaceIds.length === 0) {
-      console.error('[Flow] Error: No workspace IDs provided');
+      logger.error('no workspace IDs provided');
       setError(createClientError('CLIENT_LINK_WORKSPACE_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (!isScreenRecordingSupported()) {
-      console.error('[Flow] Error: Screen recording not supported');
+      logger.error('screen recording not supported');
       setError(createClientError('CLIENT_BROWSER_UNSUPPORTED'));
       setFlowState('error');
       return;
     }
 
-    console.log('[Flow] Screen recording supported, initializing session...');
     initializeSession(linkToken, workspaceIds);
 
     return () => {
@@ -193,9 +190,7 @@ export function useRecordingFlow(
       if (mediaCaptureRef.current) {
         // Async destroy, but we can't await in cleanup
         // Trigger it and let it complete asynchronously
-        mediaCaptureRef.current.destroy().catch((err) => {
-          console.error('[Flow] Error during mediaCapture cleanup:', err);
-        });
+        mediaCaptureRef.current.destroy().catch(() => {});
       }
       if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
@@ -213,10 +208,7 @@ export function useRecordingFlow(
     const criticalStates: FlowState[] = ['countdown', 'recording', 'review', 'uploading'];
 
     if (criticalStates.includes(flowState)) {
-      console.log('[Flow] Enabling beforeunload protection');
-
       const handler = (e: BeforeUnloadEvent) => {
-        console.log('[Flow] beforeunload triggered - preventing accidental close');
         e.preventDefault();
       };
 
@@ -224,7 +216,6 @@ export function useRecordingFlow(
       window.addEventListener('beforeunload', handler);
 
       return () => {
-        console.log('[Flow] Removing beforeunload protection');
         if (beforeUnloadHandlerRef.current) {
           window.removeEventListener('beforeunload', beforeUnloadHandlerRef.current);
           beforeUnloadHandlerRef.current = null;
@@ -238,15 +229,12 @@ export function useRecordingFlow(
       return;
     }
 
-    console.log('[Flow] Setting up auto-stop timer for', maxRecordingDurationMs, 'ms');
-
     // Clear any existing timer
     if (autoStopTimerRef.current) {
       clearTimeout(autoStopTimerRef.current);
     }
 
     autoStopTimerRef.current = setTimeout(() => {
-      console.log('[Flow] Max duration reached, auto-stopping recording');
       if (stopRecordingRef.current) {
         stopRecordingRef.current();
       }
@@ -261,21 +249,16 @@ export function useRecordingFlow(
   }, [flowState, maxRecordingDurationMs]);
 
   async function initializeSession(linkToken: string, expectedWorkspaceIds: string[]) {
-    console.log('[Flow] Initializing session...');
-    console.log('[Flow] Link token (first 50 chars):', linkToken.substring(0, 50));
-    console.log('[Flow] Expected workspace IDs:', expectedWorkspaceIds);
-
     setFlowState('loading');
     setError(null);
 
     const session = new RecordingSession();
-    console.log('[Flow] RecordingSession instance created');
 
     // Initialize session - this exchanges link token for session token
     const result = await session.initialize(linkToken);
 
     if (!result.ok) {
-      console.error('[Flow] Session initialization failed:', result.error);
+      logger.error({ err: result.error }, 'session initialization failed');
       setError(result.error);
       setFlowState('error');
       return;
@@ -283,7 +266,6 @@ export function useRecordingFlow(
 
     // Validate workspace ID from the decoded session properties
     if (!session.workspaceId) {
-      console.error('[Flow] Session missing workspace ID');
       setError(createClientError('CLIENT_SESSION_WORKSPACE_MISSING'));
       setFlowState('error');
       return;
@@ -292,30 +274,12 @@ export function useRecordingFlow(
     // Check if at least one of the expected workspace IDs matches
     const workspaceMatch = expectedWorkspaceIds.includes(session.workspaceId);
     if (!workspaceMatch) {
-      console.error('[Flow] Workspace ID mismatch - none of the provided IDs match');
-      console.error('[Flow] Expected one of:', expectedWorkspaceIds);
-      console.error('[Flow] Session contains:', session.workspaceId);
       setError(createClientError('CLIENT_LINK_WORKSPACE_MISMATCH'));
       setFlowState('error');
       return;
     }
 
-    console.log('[Flow] Workspace ID validated successfully - matched:', session.workspaceId);
-    console.log('[Flow] Session properties:', {
-      workspaceId: session.workspaceId,
-      sessionId: session.sessionId,
-      linkId: session.linkId,
-    });
-
-    console.log('[Flow] Session initialized successfully');
-    console.log('[Flow] Session ID:', result.data.sessionId);
-    console.log('[Flow] Requester name:', result.data.requesterName);
-    console.log('[Flow] Max recording duration:', `${result.data.maxRecordingDurationMs}ms`);
-    console.log(
-      '[Flow] Max recording size:',
-      result.data.maxRecordingSize ? `${result.data.maxRecordingSize} bytes` : '(unlimited)'
-    );
-    console.log('[Flow] Preferences:', result.data.preferences);
+    logger.debug({ sessionId: result.data.sessionId }, 'session initialized');
 
     sessionRef.current = session;
     setPreferences(result.data.preferences);
@@ -330,14 +294,8 @@ export function useRecordingFlow(
         sessionId: session.sessionId,
         linkId: session.linkId ?? undefined,
       });
-      console.log('[Flow] Session info set:', {
-        workspaceId: session.workspaceId,
-        sessionId: session.sessionId,
-        linkId: session.linkId,
-      });
     }
 
-    console.log('[Flow] Transitioning to setup state');
     transitionToState('setup', {
       workspace_id: session.workspaceId,
       link_id: session.linkId,
@@ -346,39 +304,30 @@ export function useRecordingFlow(
 
   async function startRecording(mode: RecordingMode) {
     try {
-      console.log('[Flow] Preparing to start recording...');
-      console.log('[Flow] Recording mode:', mode);
+      logger.debug({ mode }, 'starting recording');
 
       setRecordingMode(mode);
 
       const mediaCapture = new MediaCapture(mode);
       mediaCaptureRef.current = mediaCapture;
-      console.log('[Flow] MediaCapture instance created');
 
-      console.log('[Flow] Requesting media permissions...');
       await mediaCapture.requestPermissions({
         mode,
         onStop: async () => {
           // User stopped sharing via browser UI - delegate to stopRecording
-          console.log('[Flow] User stopped sharing via browser UI');
           if (stopRecordingRef.current) {
             await stopRecordingRef.current();
           }
         },
         onError: (err) => {
-          console.error('[Flow] Recording error:', err);
           setError(classifyError(err));
           setFlowState('error');
         },
       });
 
-      console.log('[Flow] Media permissions granted');
-      console.log('[Flow] Getting media stream for preview');
       const stream = mediaCapture.getStream();
       setMediaStream(stream);
-      console.log('[Flow] Media stream:', stream ? 'Available' : 'Not available');
 
-      console.log('[Flow] Starting 3-second countdown...');
       transitionToState('countdown', { recording_mode: mode });
       setCountdownSeconds(3);
 
@@ -391,14 +340,12 @@ export function useRecordingFlow(
       countdownIntervalRef.current = setInterval(() => {
         countdown -= 1;
         setCountdownSeconds(countdown);
-        console.log('[Flow] Countdown:', countdown);
 
         if (countdown === 0) {
           if (countdownIntervalRef.current) {
             clearInterval(countdownIntervalRef.current);
             countdownIntervalRef.current = null;
           }
-          console.log('[Flow] Countdown complete, starting recording...');
           mediaCapture.startRecording();
           transitionToState('recording', {
             recording_mode: mode,
@@ -407,8 +354,7 @@ export function useRecordingFlow(
         }
       }, 1000);
     } catch (err) {
-      console.error('[Flow] Failed to start recording:', err);
-      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+      logger.error({ err, mode }, 'recording start failed');
 
       // Capture recording start failures in Sentry
       Sentry.captureException(err, {
@@ -430,7 +376,6 @@ export function useRecordingFlow(
   const stopRecording = useCallback(async () => {
     // Guard against concurrent calls
     if (isProcessing) {
-      console.log('[Flow] Stop already in progress, ignoring duplicate call');
       return;
     }
 
@@ -438,31 +383,18 @@ export function useRecordingFlow(
     let createdBlobUrl: string | null = null;
 
     try {
-      console.log('[Flow] Stopping recording...');
+      logger.debug('stopping recording');
 
       if (!mediaCaptureRef.current) {
         throw new Error('No active recording');
       }
 
       const durationMs = mediaCaptureRef.current.getDuration();
-      console.log('[Flow] Recording duration:', durationMs ? `${durationMs}ms` : 'unknown');
 
       const blob = await mediaCaptureRef.current.stop();
-      console.log('[Flow] Recording stopped successfully');
-      console.log('[Flow] Blob size:', blob.size, 'bytes');
-      console.log('[Flow] Blob type:', blob.type);
-      console.log('[Flow] Checking constraints...');
-      console.log('[Flow] Max duration limit:', maxRecordingDurationMs, 'ms');
-      console.log(
-        '[Flow] Max size limit:',
-        maxRecordingSize ? `${maxRecordingSize} bytes` : 'unlimited'
-      );
+      logger.debug({ size: blob.size, type: blob.type, durationMs }, 'recording stopped');
 
       if (durationMs && durationMs > maxRecordingDurationMs) {
-        console.warn('[Flow] Duration exceeds limit:', {
-          actual: durationMs,
-          limit: maxRecordingDurationMs,
-        });
         setError(
           createClientErrorWithMessage(
             'CLIENT_RECORDING_DURATION_EXCEEDED',
@@ -474,10 +406,6 @@ export function useRecordingFlow(
       }
 
       if (maxRecordingSize && blob.size > maxRecordingSize) {
-        console.warn('[Flow] Size exceeds limit:', {
-          actual: blob.size,
-          limit: maxRecordingSize,
-        });
         setError(
           createClientErrorWithMessage(
             'CLIENT_RECORDING_SIZE_EXCEEDED',
@@ -488,8 +416,6 @@ export function useRecordingFlow(
         return;
       }
 
-      console.log('[Flow] All constraints passed');
-
       // Store duration and blob
       setRecordingDurationMs(durationMs);
       setRecordingBlob(blob);
@@ -497,30 +423,20 @@ export function useRecordingFlow(
       // Create video URL for preview
       createdBlobUrl = URL.createObjectURL(blob);
       setVideoUrl(createdBlobUrl);
-      console.log('[Flow] Video blob URL created for preview:', createdBlobUrl);
 
       // Generate thumbnail for upload
-      console.log('[Flow] Generating thumbnail for upload...');
       const thumbnail = await generateVideoThumbnail(blob);
       if (thumbnail) {
         setThumbnailBlob(thumbnail);
-        console.log('[Flow] Thumbnail generated:', {
-          size: thumbnail.size,
-          type: thumbnail.type,
-        });
-      } else {
-        console.warn('[Flow] Thumbnail generation failed - will upload without thumbnail');
       }
 
-      console.log('[Flow] Transitioning to review state');
       transitionToState('review', {
         recording_duration_ms: recordingDurationMs,
         blob_size_bytes: blob.size,
         has_thumbnail: !!thumbnail,
       });
     } catch (err) {
-      console.error('[Flow] Failed to stop recording:', err);
-      console.error('[Flow] Error message:', err instanceof Error ? err.message : 'Unknown error');
+      logger.error({ err }, 'recording stop failed');
 
       // Capture recording stop failures in Sentry
       Sentry.captureException(err, {
@@ -533,7 +449,6 @@ export function useRecordingFlow(
 
       // Clean up blob URL if it was created but we're erroring out
       if (createdBlobUrl) {
-        console.log('[Flow] Revoking blob URL due to error');
         URL.revokeObjectURL(createdBlobUrl);
       }
 
@@ -552,10 +467,7 @@ export function useRecordingFlow(
 
   async function submitRecording(customMetadata?: Record<string, unknown> | null) {
     setIsProcessing(true);
-    console.log('[Flow] Submitting recording...');
-    if (customMetadata) {
-      console.log('[Flow] Custom metadata provided:', customMetadata);
-    }
+    logger.debug('submitting recording');
 
     if (!recordingBlob) {
       setError(createClientError('CLIENT_RECORDING_MISSING'));
@@ -571,9 +483,6 @@ export function useRecordingFlow(
       return;
     }
 
-    console.log('[Flow] Recording blob size:', recordingBlob.size, 'bytes');
-    console.log('[Flow] Recording blob type:', recordingBlob.type);
-
     transitionToState('uploading', {
       blob_size_bytes: recordingBlob.size,
       blob_type: recordingBlob.type,
@@ -588,20 +497,7 @@ export function useRecordingFlow(
       type: recordingBlob.type,
     });
 
-    console.log('[Flow] Created file:', fileName);
-    console.log('[Flow] File size:', file.size, 'bytes');
-    console.log('[Flow] File type:', file.type);
-    console.log(
-      '[Flow] Recording duration:',
-      recordingDurationMs ? `${recordingDurationMs}ms` : '0ms (will default to 0)'
-    );
-    console.log(
-      '[Flow] Thumbnail:',
-      thumbnailBlob ? `${thumbnailBlob.size} bytes, ${thumbnailBlob.type}` : 'none'
-    );
-
     // STEP 1: Initialize upload and get presigned URLs
-    console.log('[Flow] Step 1: Initializing upload...');
     const initResult = await sessionRef.current.initializeUpload(
       file,
       thumbnailBlob,
@@ -610,7 +506,7 @@ export function useRecordingFlow(
     );
 
     if (!initResult.ok) {
-      console.error('[Flow] Upload initialization failed:', initResult.error);
+      logger.error({ err: initResult.error }, 'upload initialization failed');
       setError(initResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -619,20 +515,17 @@ export function useRecordingFlow(
 
     const newUploadState = initResult.data;
     setUploadState(newUploadState);
-    console.log('[Flow] Upload initialized, state saved for retry');
 
     // STEP 2: Upload files to object storage (retryable)
-    console.log('[Flow] Step 2: Uploading files to storage...');
     const storageResult = await sessionRef.current.uploadToStorage(
       newUploadState,
       (progress: UploadProgress) => {
-        console.log('[Flow] Upload progress:', progress.percentage + '%');
         setUploadProgress(progress.percentage);
       }
     );
 
     if (!storageResult.ok) {
-      console.error('[Flow] Storage upload failed:', storageResult.error);
+      logger.error({ err: storageResult.error }, 'storage upload failed');
       setError(storageResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -640,14 +533,11 @@ export function useRecordingFlow(
       return;
     }
 
-    console.log('[Flow] Files uploaded to storage');
-
     // STEP 3: Acknowledge upload completion
-    console.log('[Flow] Step 3: Acknowledging upload...');
     const ackResult = await sessionRef.current.acknowledgeUpload(newUploadState);
 
     if (!ackResult.ok) {
-      console.error('[Flow] Upload acknowledgment failed:', ackResult.error);
+      logger.error({ err: ackResult.error }, 'upload acknowledgment failed');
       setError(ackResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -655,13 +545,10 @@ export function useRecordingFlow(
       return;
     }
 
-    console.log('[Flow] Upload acknowledged');
-
     // Clear upload state after successful completion
     setUploadState(null);
 
-    console.log('[Flow] Upload completed successfully');
-    console.log('[Flow] Transitioning to success state');
+    logger.debug({ recordingId: newUploadState.recordingId }, 'upload completed');
     transitionToState('success', {
       recording_id: newUploadState.recordingId,
     });
@@ -670,36 +557,32 @@ export function useRecordingFlow(
 
   async function retryUpload() {
     if (!uploadState) {
-      console.error('[Flow] No upload state available for retry');
+      logger.error('no upload state for retry');
       setError(createClientError('CLIENT_UPLOAD_STATE_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (!sessionRef.current) {
-      console.error('[Flow] No active session');
       setError(createClientError('CLIENT_SESSION_MISSING'));
       setFlowState('error');
       return;
     }
 
     setIsProcessing(true);
-    console.log('[Flow] Retrying upload from storage step...');
     setFlowState('uploading');
     setUploadProgress(0);
 
     // STEP 2: Upload files to object storage (retry)
-    console.log('[Flow] Step 2 (retry): Uploading files to storage...');
     const storageResult = await sessionRef.current.uploadToStorage(
       uploadState,
       (progress: UploadProgress) => {
-        console.log('[Flow] Upload progress:', progress.percentage + '%');
         setUploadProgress(progress.percentage);
       }
     );
 
     if (!storageResult.ok) {
-      console.error('[Flow] Retry storage upload failed:', storageResult.error);
+      logger.error({ err: storageResult.error }, 'retry storage upload failed');
       setError(storageResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -707,14 +590,11 @@ export function useRecordingFlow(
       return;
     }
 
-    console.log('[Flow] Files uploaded to storage');
-
     // STEP 3: Acknowledge upload completion
-    console.log('[Flow] Step 3: Acknowledging upload...');
     const ackResult = await sessionRef.current.acknowledgeUpload(uploadState);
 
     if (!ackResult.ok) {
-      console.error('[Flow] Retry acknowledgment failed:', ackResult.error);
+      logger.error({ err: ackResult.error }, 'retry acknowledgment failed');
       setError(ackResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -722,19 +602,15 @@ export function useRecordingFlow(
       return;
     }
 
-    console.log('[Flow] Upload acknowledged');
-
     // Clear upload state after successful completion
     setUploadState(null);
 
-    console.log('[Flow] Retry successful');
-    console.log('[Flow] Transitioning to success state');
     setFlowState('success');
     setIsProcessing(false);
   }
 
   async function startOver() {
-    console.log('[Flow] Starting over...');
+    logger.debug('starting over');
     setIsProcessing(true);
 
     try {
@@ -742,39 +618,31 @@ export function useRecordingFlow(
       if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
         countdownIntervalRef.current = null;
-        console.log('[Flow] Countdown interval cleared');
       }
 
       if (autoStopTimerRef.current) {
         clearTimeout(autoStopTimerRef.current);
         autoStopTimerRef.current = null;
-        console.log('[Flow] Auto-stop timer cleared');
       }
 
       if (mediaCaptureRef.current) {
         const currentState = mediaCaptureRef.current.getState();
-        console.log('[Flow] Current recording state:', currentState);
 
         if (currentState === 'recording' || currentState === 'paused') {
-          console.log('[Flow] Stopping active recording before restart');
           try {
             await mediaCaptureRef.current.stop();
-            console.log('[Flow] Recording stopped successfully');
           } catch (err) {
-            console.error('[Flow] Error stopping recording:', err);
+            // Ignore stop errors during start over
+            logger.debug({ err }, 'error stopping during start over');
           }
         }
 
-        console.log('[Flow] Destroying media capture');
         await mediaCaptureRef.current.destroy();
         mediaCaptureRef.current = null;
       }
 
-      console.log('[Flow] Resetting state');
-
       if (videoUrl) {
         URL.revokeObjectURL(videoUrl);
-        console.log('[Flow] Video blob URL revoked');
       }
 
       setRecordingBlob(null);
@@ -785,11 +653,9 @@ export function useRecordingFlow(
       setMediaStream(null);
       setRecordingDurationMs(null);
 
-      console.log('[Flow] Transitioning back to setup state');
       setFlowState('setup');
-      console.log('[Flow] Start over completed successfully');
     } catch (err) {
-      console.error('[Flow] Error during start over:', err);
+      logger.error({ err }, 'error during start over');
       setFlowState('setup');
     } finally {
       setIsProcessing(false);

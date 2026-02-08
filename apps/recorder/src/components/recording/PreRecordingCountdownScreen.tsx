@@ -29,16 +29,10 @@ export default function PreRecordingCountdownScreen({
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    console.log('[Countdown] Setting up video preview');
-    console.log('[Countdown] Media stream:', mediaStream ? 'Available' : 'Not available');
-
     const video = videoRef.current;
     if (video && mediaStream) {
       video.srcObject = mediaStream;
-      video.play().catch((err) => {
-        console.error('[Countdown] Failed to play video preview:', err);
-      });
-      console.log('[Countdown] Video preview started');
+      video.play().catch(() => {});
     }
 
     return () => {

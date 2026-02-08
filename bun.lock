@@ -179,6 +179,7 @@
         "@types/react-dom": "^19.2.3",
         "@workspace/client": "workspace:*",
         "@workspace/contract": "workspace:*",
+        "@workspace/logger": "workspace:*",
         "@workspace/postbridge": "workspace:*",
         "@workspace/sentry": "workspace:*",
         "@workspace/shared": "workspace:*",
