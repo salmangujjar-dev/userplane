@@ -10,6 +10,7 @@
 #      cloudflared tunnel route dns userplane-preview home-dev.userplane.io
 #      cloudflared tunnel route dns userplane-preview recorder-dev.userplane.io
 #      cloudflared tunnel route dns userplane-preview yc-dev.userplane.io
+#      cloudflared tunnel route dns userplane-preview ramp-dev.userplane.io
 #
 # Usage: make tunnel:start
 
@@ -27,5 +28,7 @@ ingress:
     service: http://localhost:4322
   - hostname: yc-dev.userplane.io
     service: http://localhost:4444
+  - hostname: ramp-dev.userplane.io
+    service: http://localhost:3002
   # Catch-all rule (required by cloudflared)
   - service: http_status:404
