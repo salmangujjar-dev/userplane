@@ -8,8 +8,7 @@ import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { LinksTab } from '@/components/links/links-tab';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
-import { Sidebar } from '@/components/navigation/sidebar';
-import { TopActions } from '@/components/navigation/top-actions';
+import { PageHeader } from '@/components/navigation/page-header';
 import { DinoError } from '@/components/shared/dino-error';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { useWorkspaceDomains } from '@/features/domains';
@@ -111,87 +110,83 @@ export default function LinksPage() {
   const totalPages = linksData?.pagination.totalPages || 1;
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <>
+      <PageHeader
+        title="Links"
+        description="Manage your recording links"
+        onInviteClick={() => setInviteModalOpen(true)}
+        onCreateLinkClick={() => setCreateLinkModalOpen(true)}
+      />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <TopActions
-          onInviteClick={() => setInviteModalOpen(true)}
-          onCreateLinkClick={() => setCreateLinkModalOpen(true)}
-        />
+      <main className="flex-1 overflow-y-auto px-6 pb-8">
+        <div className="mb-6">
+          <div className="flex items-center gap-2 -ml-2.5">
+            <FilterDropdown
+              label="Projects"
+              options={projectOptions}
+              selected={selectedProjects}
+              onSelectionChange={setSelectedProjects}
+              onSearchChange={setProjectSearchQuery}
+              isSearching={isSearchingProjects}
+              placeholder="Search projects..."
+              icon={FolderKanban}
+            />
+            <FilterDropdown
+              label="Member"
+              options={memberOptions}
+              selected={selectedCreators}
+              onSelectionChange={setSelectedCreators}
+              onSearchChange={setMemberSearchQuery}
+              isSearching={isSearchingMembers}
+              placeholder="Search members..."
+              icon={Users}
+              showAvatars
+            />
+            <FilterDropdown
+              label="Domain"
+              options={domainOptions}
+              selected={selectedDomains}
+              onSelectionChange={setSelectedDomains}
+              placeholder="Search domains..."
+              icon={Globe}
+            />
+          </div>
+        </div>
 
-        <main className="flex-1 overflow-y-auto px-6 pb-8">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold">Links</h2>
-            <p className="text-sm text-muted-foreground mt-1">Manage your recording links</p>
-            <div className="flex items-center gap-2 -ml-2.5 mt-3">
-              <FilterDropdown
-                label="Projects"
-                options={projectOptions}
-                selected={selectedProjects}
-                onSelectionChange={setSelectedProjects}
-                onSearchChange={setProjectSearchQuery}
-                isSearching={isSearchingProjects}
-                placeholder="Search projects..."
-                icon={FolderKanban}
-              />
-              <FilterDropdown
-                label="Member"
-                options={memberOptions}
-                selected={selectedCreators}
-                onSelectionChange={setSelectedCreators}
-                onSearchChange={setMemberSearchQuery}
-                isSearching={isSearchingMembers}
-                placeholder="Search members..."
-                icon={Users}
-                showAvatars
-              />
-              <FilterDropdown
-                label="Domain"
-                options={domainOptions}
-                selected={selectedDomains}
-                onSelectionChange={setSelectedDomains}
-                placeholder="Search domains..."
-                icon={Globe}
+        <div className="space-y-6">
+          {linksError || (linksResult && !linksResult.success) ? (
+            <div className="flex items-center justify-center py-12">
+              <DinoError
+                title="Failed to load links"
+                description={
+                  linksError instanceof Error
+                    ? linksError.message
+                    : linksResult && !linksResult.success
+                      ? linksResult.error.message
+                      : 'Something went wrong while loading links.'
+                }
+                onRetry={() => refetchLinks()}
+                showGoBack={false}
               />
             </div>
-          </div>
-
-          <div className="space-y-6">
-            {linksError || (linksResult && !linksResult.success) ? (
-              <div className="flex items-center justify-center py-12">
-                <DinoError
-                  title="Failed to load links"
-                  description={
-                    linksError instanceof Error
-                      ? linksError.message
-                      : linksResult && !linksResult.success
-                        ? linksResult.error.message
-                        : 'Something went wrong while loading links.'
-                  }
-                  onRetry={() => refetchLinks()}
-                  showGoBack={false}
+          ) : (
+            <>
+              <LinksTab
+                links={linksData?.links}
+                isLoading={isLoadingLinks}
+                onRequestRecording={() => setCreateLinkModalOpen(true)}
+              />
+              {!isLoadingLinks && linksData && linksData.links.length > 0 && (
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
                 />
-              </div>
-            ) : (
-              <>
-                <LinksTab
-                  links={linksData?.links}
-                  isLoading={isLoadingLinks}
-                  onRequestRecording={() => setCreateLinkModalOpen(true)}
-                />
-                {!isLoadingLinks && linksData && linksData.links.length > 0 && (
-                  <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                  />
-                )}
-              </>
-            )}
-          </div>
-        </main>
-      </div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
 
       <InviteModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
 
@@ -200,6 +195,6 @@ export default function LinksPage() {
         onOpenChange={setCreateLinkModalOpen}
         hideButton
       />
-    </div>
+    </>
   );
 }

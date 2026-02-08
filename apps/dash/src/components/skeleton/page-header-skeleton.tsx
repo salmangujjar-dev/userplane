@@ -1,25 +1,29 @@
+import { Separator } from '@workspace/ui/components/separator';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 
 interface PageHeaderSkeletonProps {
-  showFilters?: boolean;
-  filterCount?: number;
+  showDescription?: boolean;
 }
 
-export function PageHeaderSkeleton({
-  showFilters = false,
-  filterCount = 3,
-}: PageHeaderSkeletonProps) {
+export function PageHeaderSkeleton({ showDescription = true }: PageHeaderSkeletonProps) {
   return (
-    <div className="mb-6">
-      <Skeleton className="h-7 w-48 mb-2" />
-      <Skeleton className="h-4 w-64" />
-      {showFilters && (
-        <div className="flex items-center gap-2 -ml-2.5 mt-3">
-          {[...Array(filterCount)].map((_, i) => (
-            <Skeleton key={i} className="h-10 w-32" />
-          ))}
+    <div className="flex items-center justify-between gap-3 px-6 py-4">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <div className="flex items-baseline gap-2">
+          <Skeleton className="h-5 w-32" />
+          {showDescription && <Skeleton className="h-3.5 w-48" />}
         </div>
-      )}
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex -space-x-2">
+          <Skeleton className="h-7 w-7 rounded-full" />
+          <Skeleton className="h-7 w-7 rounded-full" />
+          <Skeleton className="h-7 w-7 rounded-full" />
+        </div>
+        <Skeleton className="h-9 w-28 rounded-full" />
+      </div>
     </div>
   );
 }

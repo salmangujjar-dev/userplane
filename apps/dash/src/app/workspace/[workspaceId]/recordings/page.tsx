@@ -7,8 +7,7 @@ import { useEffect, useState } from 'react';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
-import { Sidebar } from '@/components/navigation/sidebar';
-import { TopActions } from '@/components/navigation/top-actions';
+import { PageHeader } from '@/components/navigation/page-header';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
 import { DinoError } from '@/components/shared/dino-error';
 import { RecordingEmptyState } from '@/components/shared/empty-state';
@@ -124,99 +123,95 @@ export default function RecordingsPage() {
   const totalPages = recordingsData?.pagination.totalPages || 1;
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <>
+      <PageHeader
+        title="Recordings"
+        description="View received recordings"
+        onInviteClick={() => setInviteModalOpen(true)}
+        onCreateLinkClick={() => setCreateLinkModalOpen(true)}
+      />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <TopActions
-          onInviteClick={() => setInviteModalOpen(true)}
-          onCreateLinkClick={() => setCreateLinkModalOpen(true)}
-        />
-
-        <main className="flex-1 overflow-y-auto px-6 pb-8">
-          <div className="space-y-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold">Recordings</h2>
-              <p className="text-sm text-muted-foreground mt-1">View received recordings</p>
-              <div className="flex items-center gap-2 -ml-2.5 mt-3">
-                <FilterDropdown
-                  label="Projects"
-                  options={projectOptions}
-                  selected={selectedProjects}
-                  onSelectionChange={setSelectedProjects}
-                  onSearchChange={setProjectSearchQuery}
-                  isSearching={isSearchingProjects}
-                  placeholder="Search projects..."
-                  icon={FolderKanban}
-                />
-                <FilterDropdown
-                  label="Member"
-                  options={memberOptions}
-                  selected={selectedCreators}
-                  onSelectionChange={setSelectedCreators}
-                  onSearchChange={setMemberSearchQuery}
-                  isSearching={isSearchingMembers}
-                  placeholder="Search members..."
-                  icon={Users}
-                  showAvatars
-                />
-                <FilterDropdown
-                  label="Link"
-                  options={linkOptions}
-                  selected={selectedRecordingLinks}
-                  onSelectionChange={setSelectedRecordingLinks}
-                  onSearchChange={setLinkSearchQuery}
-                  isSearching={isSearchingLinks}
-                  placeholder="Search links..."
-                  icon={Link2}
-                />
-              </div>
-            </div>
-
-            {recordingsError || (recordingsResult && !recordingsResult.success) ? (
-              <div className="flex items-center justify-center py-12">
-                <DinoError
-                  title="Failed to load recordings"
-                  description={
-                    recordingsError instanceof Error
-                      ? recordingsError.message
-                      : recordingsResult && !recordingsResult.success
-                        ? recordingsResult.error.message
-                        : 'Something went wrong while loading recordings.'
-                  }
-                  onRetry={() => refetchRecordings()}
-                  showGoBack={false}
-                />
-              </div>
-            ) : isLoadingRecordings ? (
-              <RecordingGridSkeleton count={recordingsPerPage} />
-            ) : recordingsData?.recordings.length === 0 ? (
-              <RecordingEmptyState onRequestRecording={() => setCreateLinkModalOpen(true)} />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {recordingsData?.recordings.map((recording) => (
-                  <RecordingPreview
-                    key={recording.recordingId}
-                    recordingId={recording.recordingId}
-                    createdBy={recording.creator.name}
-                    createdAt={recording.createdAt}
-                    durationMs={recording.recordingDurationMs}
-                    thumbnailUrl={recording.recordingThumbnail}
-                  />
-                ))}
-              </div>
-            )}
-
-            {!isLoadingRecordings && recordingsData && recordingsData.recordings.length > 0 && (
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
+      <main className="flex-1 overflow-y-auto px-6 pb-8">
+        <div className="space-y-6">
+          <div className="mb-6">
+            <div className="flex items-center gap-2 -ml-2.5">
+              <FilterDropdown
+                label="Projects"
+                options={projectOptions}
+                selected={selectedProjects}
+                onSelectionChange={setSelectedProjects}
+                onSearchChange={setProjectSearchQuery}
+                isSearching={isSearchingProjects}
+                placeholder="Search projects..."
+                icon={FolderKanban}
               />
-            )}
+              <FilterDropdown
+                label="Member"
+                options={memberOptions}
+                selected={selectedCreators}
+                onSelectionChange={setSelectedCreators}
+                onSearchChange={setMemberSearchQuery}
+                isSearching={isSearchingMembers}
+                placeholder="Search members..."
+                icon={Users}
+                showAvatars
+              />
+              <FilterDropdown
+                label="Link"
+                options={linkOptions}
+                selected={selectedRecordingLinks}
+                onSelectionChange={setSelectedRecordingLinks}
+                onSearchChange={setLinkSearchQuery}
+                isSearching={isSearchingLinks}
+                placeholder="Search links..."
+                icon={Link2}
+              />
+            </div>
           </div>
-        </main>
-      </div>
+
+          {recordingsError || (recordingsResult && !recordingsResult.success) ? (
+            <div className="flex items-center justify-center py-12">
+              <DinoError
+                title="Failed to load recordings"
+                description={
+                  recordingsError instanceof Error
+                    ? recordingsError.message
+                    : recordingsResult && !recordingsResult.success
+                      ? recordingsResult.error.message
+                      : 'Something went wrong while loading recordings.'
+                }
+                onRetry={() => refetchRecordings()}
+                showGoBack={false}
+              />
+            </div>
+          ) : isLoadingRecordings ? (
+            <RecordingGridSkeleton count={recordingsPerPage} />
+          ) : recordingsData?.recordings.length === 0 ? (
+            <RecordingEmptyState onRequestRecording={() => setCreateLinkModalOpen(true)} />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {recordingsData?.recordings.map((recording) => (
+                <RecordingPreview
+                  key={recording.recordingId}
+                  recordingId={recording.recordingId}
+                  createdBy={recording.creator.name}
+                  createdAt={recording.createdAt}
+                  durationMs={recording.recordingDurationMs}
+                  thumbnailUrl={recording.recordingThumbnail}
+                />
+              ))}
+            </div>
+          )}
+
+          {!isLoadingRecordings && recordingsData && recordingsData.recordings.length > 0 && (
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </div>
+      </main>
 
       <InviteModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
 
@@ -225,6 +220,6 @@ export default function RecordingsPage() {
         onOpenChange={setCreateLinkModalOpen}
         hideButton
       />
-    </div>
+    </>
   );
 }
