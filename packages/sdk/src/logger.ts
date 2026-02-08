@@ -1,14 +1,9 @@
-/**
- * SDK-internal logger. Simple console wrapper with a module prefix.
- * The SDK is a publishable package and cannot depend on internal workspace packages.
- */
-function createPrefixedLogger(prefix: string) {
-  return {
-    debug: (...args: unknown[]) => console.debug(`[${prefix}]`, ...args),
-    info: (...args: unknown[]) => console.info(`[${prefix}]`, ...args),
-    warn: (...args: unknown[]) => console.warn(`[${prefix}]`, ...args),
-    error: (...args: unknown[]) => console.error(`[${prefix}]`, ...args),
-  };
-}
+import { createLogger } from '@workspace/console-logger';
 
-export const createSdkLogger = (module: string) => createPrefixedLogger(`Userplane:${module}`);
+declare const __DEV__: boolean;
+
+export const logger = createLogger('SDK', {
+  level: typeof __DEV__ !== 'undefined' && __DEV__ ? 'debug' : 'warn',
+});
+
+export const createSdkLogger = (module: string) => logger.child({ module });

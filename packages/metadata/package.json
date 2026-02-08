@@ -28,6 +28,9 @@
     "preview": "vite preview",
     "prepublishOnly": "bun run build:npm"
   },
+  "dependencies": {
+    "@workspace/console-logger": "workspace:*"
+  },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
     "@types/node": "^22.14.1",

@@ -5,6 +5,9 @@
 
 import { DEFAULTS, MEDIA_SELECTORS, TEXT_NODE_XPATH } from './constants';
 import type { BlurManagerOptions, ElementAnalysis } from './types';
+import { createLogger } from './utils';
+
+const log = createLogger('Calculator');
 
 /**
  * Calculate blur radius for an element
@@ -103,7 +106,7 @@ export function analyzeTextSize(element: Element, options: BlurManagerOptions = 
 
     return Math.max(minBlur, Math.ceil(maxFontSize / divisor));
   } catch (error) {
-    console.warn('Failed to analyze text size:', error);
+    log.warn({ err: error }, 'Failed to analyze text size');
     return minBlur;
   }
 }
@@ -159,7 +162,7 @@ export function analyzeMediaDimensions(element: Element, options: BlurManagerOpt
 
     return Math.max(minBlur, dimensionBlur, areaBlur);
   } catch (error) {
-    console.warn('Failed to analyze media dimensions:', error);
+    log.warn({ err: error }, 'Failed to analyze media dimensions');
     return minBlur;
   }
 }

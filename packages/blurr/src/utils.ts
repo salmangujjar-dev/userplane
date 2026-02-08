@@ -2,75 +2,22 @@
  * Utility functions
  */
 
-import type { Logger } from './types';
+import { createLogger as createConsoleLogger, type Logger } from '@workspace/console-logger';
 
-// ═══════════════════════════════════════════════════════════
-// GLOBAL DEBUG LOGGER
-// ═══════════════════════════════════════════════════════════
+declare const __DEV__: boolean;
 
-let globalDebugEnabled = false;
-
-/**
- * Enable/disable global debug mode
- */
-export function setGlobalDebug(enabled: boolean): void {
-  globalDebugEnabled = enabled;
-}
-
-/**
- * Check if global debug is enabled
- */
-export function isDebugEnabled(): boolean {
-  return globalDebugEnabled;
-}
-
-/**
- * Global debug log - only logs when debug is enabled
- */
-export function debugLog(module: string, message: string, data?: unknown): void {
-  if (globalDebugEnabled) {
-    const prefix = `[Blurr:${module}]`;
-    if (data !== undefined) {
-      console.debug(prefix, message, data);
-    } else {
-      console.debug(prefix, message);
-    }
-  }
-}
-
-/**
- * Global trace log - for detailed execution tracing
- */
-export function traceLog(
-  module: string,
-  fn: string,
-  phase: 'enter' | 'exit',
-  data?: unknown
-): void {
-  if (globalDebugEnabled) {
-    const prefix = `[Blurr:${module}]`;
-    const arrow = phase === 'enter' ? '→' : '←';
-    if (data !== undefined) {
-      console.debug(prefix, `${arrow} ${fn}`, data);
-    } else {
-      console.debug(prefix, `${arrow} ${fn}`);
-    }
-  }
-}
+const rootLogger = createConsoleLogger('Blurr', {
+  level: typeof __DEV__ !== 'undefined' && __DEV__ ? 'debug' : 'warn',
+});
 
 /**
  * Create a namespaced logger
  */
-export function createLogger(namespace: string, debug = false): Logger {
-  const prefix = `[${namespace}]`;
-
-  return {
-    log: debug ? console.log.bind(console, prefix) : () => {},
-    warn: console.warn.bind(console, prefix),
-    error: console.error.bind(console, prefix),
-    debug: debug ? console.debug.bind(console, prefix) : () => {},
-  };
+export function createLogger(namespace: string): Logger {
+  return rootLogger.child({ module: namespace });
 }
+
+export type { Logger };
 
 /**
  * Check if code is running in browser
@@ -122,7 +69,7 @@ export function matchesSelector(element: Element, selector: string): boolean {
   try {
     return element.matches(selector);
   } catch (error) {
-    console.warn(`Invalid selector: ${selector}`, error);
+    rootLogger.warn({ err: error, selector }, 'Invalid selector');
     return false;
   }
 }
@@ -134,7 +81,7 @@ export function querySelectorAllSafe(root: Element | Document, selector: string)
   try {
     return Array.from(root.querySelectorAll(selector));
   } catch (error) {
-    console.warn(`Invalid selector: ${selector}`, error);
+    rootLogger.warn({ err: error, selector }, 'Invalid selector');
     return [];
   }
 }
