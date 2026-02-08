@@ -1,6 +1,7 @@
 'use client';
 
 import { PlusIcon, ReceiptTextIcon } from 'lucide-react';
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useMemo, useState } from 'react';
 
 import { ExpenseFilters } from '@/components/expenses/ExpenseFilters';
@@ -33,42 +34,49 @@ type SortDirection = 'asc' | 'desc';
 
 const PAGE_SIZE = 10;
 
+// URL search param parsers -- all filter state lives in the URL
+const filterParsers = {
+  status: parseAsString.withDefault('all'),
+  categoryId: parseAsString.withDefault('all'),
+  employeeId: parseAsString.withDefault('all'),
+  search: parseAsString.withDefault(''),
+  sortField: parseAsString.withDefault('date'),
+  sortDir: parseAsString.withDefault('desc'),
+  page: parseAsInteger.withDefault(0),
+};
+
 export default function ExpensesPage() {
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useQueryStates(filterParsers, {
+    shallow: false,
+  });
+
   const [createOpen, setCreateOpen] = useState(false);
   const [editExpense, setEditExpense] = useState<ExpenseWithRelations | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [sortField, setSortField] = useState<SortField>('date');
-  const [sortDir, setSortDir] = useState<SortDirection>('desc');
-  const [page, setPage] = useState(0);
-
   const params = useMemo(() => {
     const p: Record<string, string> = {};
-    if (statusFilter !== 'all') p.status = statusFilter;
-    if (categoryFilter !== 'all') p.categoryId = categoryFilter;
-    if (search) p.search = search;
-    p.sortField = sortField;
-    p.sortDir = sortDir;
-    p.page = String(page);
+    if (filters.status !== 'all') p.status = filters.status;
+    if (filters.categoryId !== 'all') p.categoryId = filters.categoryId;
+    if (filters.employeeId !== 'all') p.employeeId = filters.employeeId;
+    if (filters.search) p.search = filters.search;
+    p.sortField = filters.sortField;
+    p.sortDir = filters.sortDir;
+    p.page = String(filters.page);
     p.pageSize = String(PAGE_SIZE);
     return p;
-  }, [statusFilter, categoryFilter, search, sortField, sortDir, page]);
+  }, [filters]);
 
   const { expenses, total, isLoading, mutate } = useExpenses(params);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    if (filters.sortField === field) {
+      setFilters({ sortDir: filters.sortDir === 'asc' ? 'desc' : 'asc', page: 0 });
     } else {
-      setSortField(field);
-      setSortDir('asc');
+      setFilters({ sortField: field, sortDir: 'asc', page: 0 });
     }
-    setPage(0);
   };
 
   const handleCreate = async (data: Record<string, unknown>) => {
@@ -124,21 +132,14 @@ export default function ExpensesPage() {
     <div className="p-4 md:p-6 space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <ExpenseFilters
-          status={statusFilter}
-          categoryId={categoryFilter}
-          search={search}
-          onStatusChange={(v) => {
-            setStatusFilter(v);
-            setPage(0);
-          }}
-          onCategoryChange={(v) => {
-            setCategoryFilter(v);
-            setPage(0);
-          }}
-          onSearchChange={(v) => {
-            setSearch(v);
-            setPage(0);
-          }}
+          status={filters.status}
+          categoryId={filters.categoryId}
+          employeeId={filters.employeeId}
+          search={filters.search}
+          onStatusChange={(v) => setFilters({ status: v, page: 0 })}
+          onCategoryChange={(v) => setFilters({ categoryId: v, page: 0 })}
+          onEmployeeChange={(v) => setFilters({ employeeId: v, page: 0 })}
+          onSearchChange={(v) => setFilters({ search: v, page: 0 })}
         />
         <Button onClick={() => setCreateOpen(true)} className="shrink-0">
           <PlusIcon /> New Expense
@@ -159,7 +160,10 @@ export default function ExpensesPage() {
           <EmptyHeader>
             <EmptyTitle>No expenses found</EmptyTitle>
             <EmptyDescription>
-              {search || statusFilter !== 'all' || categoryFilter !== 'all'
+              {filters.search ||
+              filters.status !== 'all' ||
+              filters.categoryId !== 'all' ||
+              filters.employeeId !== 'all'
                 ? 'Try adjusting your filters.'
                 : 'Create your first expense to get started.'}
             </EmptyDescription>
@@ -168,14 +172,14 @@ export default function ExpensesPage() {
       ) : (
         <ExpensesTable
           expenses={expenses}
-          sortField={sortField}
-          sortDir={sortDir}
-          page={page}
+          sortField={filters.sortField as SortField}
+          sortDir={filters.sortDir as SortDirection}
+          page={filters.page}
           pageSize={PAGE_SIZE}
           total={total}
           totalPages={totalPages}
           onSort={handleSort}
-          onPageChange={setPage}
+          onPageChange={(p) => setFilters({ page: p })}
           onApprove={handleApprove}
           onReject={handleReject}
           onEdit={setEditExpense}

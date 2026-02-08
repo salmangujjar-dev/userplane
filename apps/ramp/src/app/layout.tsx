@@ -2,6 +2,7 @@ import './globals.css';
 
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { IntercomProvider } from '@/components/providers/IntercomProvider';
@@ -40,13 +41,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <UserplaneProvider workspaceId={USERPLANE_WORKSPACE_ID}>
-          <IntercomProvider appId={INTERCOM_APP_ID}>
-            <ToastProvider>
-              <AppShell>{children}</AppShell>
-            </ToastProvider>
-          </IntercomProvider>
-        </UserplaneProvider>
+        <NuqsAdapter>
+          <UserplaneProvider workspaceId={USERPLANE_WORKSPACE_ID}>
+            <IntercomProvider appId={INTERCOM_APP_ID}>
+              <ToastProvider>
+                <AppShell>{children}</AppShell>
+              </ToastProvider>
+            </IntercomProvider>
+          </UserplaneProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );
