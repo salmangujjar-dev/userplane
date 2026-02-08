@@ -19,3 +19,13 @@ export type FeatureFlag = keyof typeof featureFlags;
 export function isFeatureEnabled(flag: FeatureFlag): boolean {
   return featureFlags[flag];
 }
+
+// Convert feature flags to a flat metadata object for the Userplane SDK.
+// Keys are prefixed with `flag_` to namespace them (matches YC app convention).
+export function getFeatureFlagsMetadata(): Record<string, boolean> {
+  const metadata: Record<string, boolean> = {};
+  for (const [key, value] of Object.entries(featureFlags)) {
+    metadata[`flag_${key}`] = value;
+  }
+  return metadata;
+}

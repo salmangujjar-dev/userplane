@@ -1,0 +1,39 @@
+---
+import HomepageLayout from '../layouts/HomepageLayout.astro';
+import Highlight from '../components/home/Highlight';
+---
+
+<HomepageLayout
+  title="Demo | Userplane - One Click Screen Recordings for Intercom"
+  description="See Userplane in action. Interactive product demo showing how to request and capture screen recordings from your Intercom customers."
+  keywords="intercom screen recording, intercom integration, screen recording for intercom, intercom support tool, userplane, product demo, interactive demo"
+>
+  <div
+    class="mx-auto flex w-full max-w-7xl flex-col items-center justify-start px-6 md:px-12 text-center py-12"
+  >
+    <div class="mb-12 flex flex-col items-center justify-center gap-6 text-center">
+      <h1 class="font-dm-sans font-medium text-4xl leading-tight tracking-[-2px] md:text-6xl">
+        See it in <Highlight color="blue">action</Highlight>
+      </h1>
+      <p class="md:text-lg max-w-2xl text-muted-foreground">
+        Request screen recordings from your customers showing exactly what went wrong
+      </p>
+    </div>
+
+    <div
+      class="relative w-full max-w-5xl"
+      style="padding-bottom: calc(49.895833333333336% + 41px);"
+    >
+      <iframe
+        src="https://demo.arcade.software/QT8yTBO40pXFNmpbVef4?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
+        title="Userplane interactive product demo"
+        loading="lazy"
+        allowfullscreen
+        allow="clipboard-write"
+        class="absolute inset-0 h-full w-full"
+        style="color-scheme: light; border: 0;"
+      >
+      </iframe>
+    </div>
+  </div>
+</HomepageLayout>

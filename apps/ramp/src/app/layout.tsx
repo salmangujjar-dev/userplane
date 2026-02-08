@@ -6,7 +6,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { IntercomProvider } from '@/components/providers/IntercomProvider';
-import { UserplaneProvider } from '@/components/providers/UserplaneProvider';
+import { type UserIdentity, UserplaneProvider } from '@/components/providers/UserplaneProvider';
 import { ToastProvider } from '@/components/ui/toast';
 
 const geistSans = Geist({
@@ -38,11 +38,19 @@ export default function RootLayout({
   const workspaceId = process.env.NEXT_PUBLIC_USERPLANE_WORKSPACE_ID!;
   const intercomAppId = process.env.NEXT_PUBLIC_INTERCOM_APP_ID!;
 
+  const user: UserIdentity = {
+    user_id: process.env.NEXT_PUBLIC_DEMO_USER_ID!,
+    user_name: process.env.NEXT_PUBLIC_DEMO_USER_NAME!,
+    user_email: process.env.NEXT_PUBLIC_DEMO_USER_EMAIL!,
+    user_company: process.env.NEXT_PUBLIC_DEMO_USER_COMPANY!,
+    user_created_at: process.env.NEXT_PUBLIC_DEMO_USER_CREATED_AT!,
+  };
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <NuqsAdapter>
-          <UserplaneProvider workspaceId={workspaceId}>
+          <UserplaneProvider workspaceId={workspaceId} user={user}>
             <IntercomProvider appId={intercomAppId}>
               <ToastProvider>
                 <AppShell>{children}</AppShell>

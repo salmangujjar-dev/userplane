@@ -99,12 +99,7 @@ export default function Hero() {
               variant="secondary"
               size="lg"
             >
-              <a
-                className="flex items-center gap-2 font-medium"
-                href={HERO_SECONDARY_BUTTON.href}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a className="flex items-center gap-2 font-medium" href={HERO_SECONDARY_BUTTON.href}>
                 {HERO_SECONDARY_BUTTON.text}
               </a>
             </Button>

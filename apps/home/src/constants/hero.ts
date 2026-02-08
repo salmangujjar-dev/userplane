@@ -1,4 +1,3 @@
-import { TALLY_SALES_FORM_URL } from './contact';
 import { SIGNUP_URL } from './onboarding';
 import type { HighlightConfig } from './types';
 
@@ -26,6 +25,5 @@ export const HERO_PRIMARY_BUTTON = {
 
 export const HERO_SECONDARY_BUTTON = {
   text: 'See Demo',
-  href: TALLY_SALES_FORM_URL,
-  isExternal: true,
+  href: '/demo',
 };
