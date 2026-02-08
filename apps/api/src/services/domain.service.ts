@@ -400,6 +400,9 @@ export class DomainService {
     // Mark as verified
     await this.deps.domainRepo.markAsVerified(payload.workspaceId, domain.domainUrl);
 
+    // Invalidate cached recording preferences so clients get fresh verified status
+    await this.deps.cacheService.invalidateDomainRecordingPrefs(payload.domainId);
+
     // Return updated domain
     const updatedDomain = await this.deps.domainRepo.findById(payload.domainId);
     if (!updatedDomain) {
