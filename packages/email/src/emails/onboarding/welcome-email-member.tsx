@@ -8,6 +8,7 @@ import * as React from 'react';
 
 import { copy } from '../../copy/onboarding/welcome-email-member';
 import { EmailLayout } from '../../shared/layout';
+import { LinkedText } from '../../shared/linked-text';
 import * as styles from '../../shared/styles';
 
 export interface WelcomeEmailMemberProps {
@@ -33,7 +34,11 @@ export const WelcomeEmailMemberEmail = ({ dashboardUrl, logoUrl }: WelcomeEmailM
       </Section>
 
       <Section style={styles.messageSection}>
-        <Text style={styles.smallText}>{copy.footer}</Text>
+        <LinkedText
+          text={copy.footer}
+          links={[{ start: 57, end: 84, href: 'https://www.userplane.io/help/support/contact-us' }]}
+          style={styles.smallText}
+        />
       </Section>
     </EmailLayout>
   );

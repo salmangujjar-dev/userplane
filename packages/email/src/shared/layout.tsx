@@ -5,6 +5,7 @@
 
 import {
   Body,
+  Column,
   Container,
   Head,
   Hr,
@@ -12,6 +13,7 @@ import {
   Img,
   Link,
   Preview,
+  Row,
   Section,
   Text,
 } from '@react-email/components';
@@ -48,14 +50,19 @@ export const EmailLayout = ({
       <Body style={styles.main}>
         <Container style={styles.container}>
           <Section style={styles.headerSection}>
-            <Img
-              src={logoUrl || DEFAULT_EMAIL_LOGO_URL}
-              alt="Userplane"
-              width={32}
-              height={32}
-              style={styles.logoImage}
-            />
-            <Text style={styles.logoText}>Userplane</Text>
+            <Row style={styles.logoRow}>
+              <Column style={styles.logoImageColumn}>
+                <Img
+                  src={logoUrl || DEFAULT_EMAIL_LOGO_URL}
+                  alt="Userplane"
+                  width={32}
+                  height={32}
+                />
+              </Column>
+              <Column style={styles.logoTextColumn}>
+                <Text style={styles.logoText}>Userplane</Text>
+              </Column>
+            </Row>
           </Section>
 
           {children}

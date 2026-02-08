@@ -11,6 +11,5 @@ export const copy = {
     'Userplane helps you capture customer issues with screen recordings and console logs, so you can see exactly what went wrong and resolve issues faster—without the back-and-forth.',
   ],
   cta: 'Go to workspace',
-  footer:
-    'Need help getting started? Check out our documentation or reach out to our support team.',
+  footer: "Need help getting started or have questions or feedback? We'd love to hear from you.",
 } as const;

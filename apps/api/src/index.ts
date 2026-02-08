@@ -55,9 +55,27 @@ app.get('/favicon.svg', serveStatic({ path: './public/favicon.svg' }));
 app.use('*', honoLogger());
 
 // Public endpoints that allow any origin (called from customer websites)
-// These need permissive CORS since the origin is the customer's domain being verified
+// These need permissive CORS since the origin is the customer's domain
 app.use(
   '/api/v1/domains/verify',
+  cors({
+    origin: '*',
+    credentials: false,
+    maxAge: env.cors.maxAge,
+  })
+);
+
+// Session endpoints are called by the embed script running on customer websites
+app.use(
+  '/api/v1/session/*',
+  cors({
+    origin: '*',
+    credentials: false,
+    maxAge: env.cors.maxAge,
+  })
+);
+app.use(
+  '/api/v1/session',
   cors({
     origin: '*',
     credentials: false,
@@ -395,4 +413,5 @@ export default {
   port: env.server.port,
   hostname: env.server.host,
   fetch: app.fetch,
+  idleTimeout: 30, // seconds -- prevent premature connection drops on slow upstream calls
 };

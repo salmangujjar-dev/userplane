@@ -14,7 +14,13 @@ export function DomainCodeSnippet({ workspaceId, domainUrl }: DomainCodeSnippetP
 <meta name="userplane:workspace" content="${workspaceId}" />
 
 <!-- Loads Userplane screen recording script -->
-<script src="https://cdn.userplane.io/embed/script.js"></script>`;
+<script src="https://cdn.userplane.io/embed/script.js"></script>
+
+<!-- If your site does not set CSP directives, you can skip this -->
+<meta
+  http-equiv="Content-Security-Policy"
+  content="frame-src 'self' *.userplane.io; script-src 'self' *.userplane.io;"
+/>`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(codeSnippet);
@@ -38,7 +44,7 @@ export function DomainCodeSnippet({ workspaceId, domainUrl }: DomainCodeSnippetP
         <div className="p-4 pr-12 rounded-lg bg-muted overflow-hidden text-xs font-mono leading-relaxed">
           <div className="whitespace-pre-wrap break-all">
             <div className="text-muted-foreground">
-              &lt;!-- Lets users record their screen from your site --&gt;
+              &lt;!-- Sets workspace ID for screen recording --&gt;
             </div>
             <div>
               <span className="text-blue-600">&lt;meta</span>{' '}
@@ -48,29 +54,38 @@ export function DomainCodeSnippet({ workspaceId, domainUrl }: DomainCodeSnippetP
               <span className="text-green-600">&quot;{workspaceId}&quot;</span>{' '}
               <span className="text-blue-600">/&gt;</span>
             </div>
+            <div className="h-3" />
+            <div className="text-muted-foreground">
+              &lt;!-- Loads Userplane screen recording script --&gt;
+            </div>
             <div>
               <span className="text-blue-600">&lt;script</span>{' '}
-              <span className="text-purple-600">type</span>=
-              <span className="text-green-600">&quot;module&quot;</span>{' '}
               <span className="text-purple-600">src</span>=
               <span className="text-green-600">
-                &quot;https://cdn.userplane.io/recorder.js&quot;
+                &quot;https://cdn.userplane.io/embed/script.js&quot;
               </span>
               <span className="text-blue-600">&gt;&lt;/script&gt;</span>
             </div>
             <div className="h-3" />
             <div className="text-muted-foreground">
-              &lt;!-- Captures user events and developer logs --&gt;
+              &lt;!-- If your site does not set CSP directives, you can skip this --&gt;
             </div>
             <div>
-              <span className="text-blue-600">&lt;script</span>{' '}
-              <span className="text-purple-600">type</span>=
-              <span className="text-green-600">&quot;module&quot;</span>{' '}
-              <span className="text-purple-600">src</span>=
+              <span className="text-blue-600">&lt;meta</span>
+            </div>
+            <div className="pl-4">
+              <span className="text-purple-600">http-equiv</span>=
+              <span className="text-green-600">&quot;Content-Security-Policy&quot;</span>
+            </div>
+            <div className="pl-4">
+              <span className="text-purple-600">content</span>=
               <span className="text-green-600">
-                &quot;https://cdn.userplane.io/capture.js&quot;
+                &quot;frame-src &apos;self&apos; *.userplane.io; script-src &apos;self&apos;
+                *.userplane.io;&quot;
               </span>
-              <span className="text-blue-600">&gt;&lt;/script&gt;</span>
+            </div>
+            <div>
+              <span className="text-blue-600">/&gt;</span>
             </div>
           </div>
         </div>
