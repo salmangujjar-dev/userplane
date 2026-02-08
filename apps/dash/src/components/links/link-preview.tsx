@@ -1,5 +1,6 @@
 'use client';
 
+import type { LinkProviderType } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -34,7 +35,7 @@ interface LinkPreviewProps {
   linkURL: string;
   title: string | null;
   reference: string | null;
-  linkProvider: string | null;
+  linkProvider: LinkProviderType | null;
   linkProviderId: string | null;
   createdBy: string;
   createdAt: Date;
