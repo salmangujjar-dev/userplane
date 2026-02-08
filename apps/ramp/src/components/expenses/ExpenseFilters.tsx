@@ -11,25 +11,31 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCategories } from '@/hooks/useCategories';
+import { useEmployees } from '@/hooks/useEmployees';
 
 interface ExpenseFiltersProps {
   status: string;
   categoryId: string;
+  employeeId: string;
   search: string;
   onStatusChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
+  onEmployeeChange: (value: string) => void;
   onSearchChange: (value: string) => void;
 }
 
 export function ExpenseFilters({
   status,
   categoryId,
+  employeeId,
   search,
   onStatusChange,
   onCategoryChange,
+  onEmployeeChange,
   onSearchChange,
 }: ExpenseFiltersProps) {
   const { categories } = useCategories();
+  const { employees } = useEmployees();
 
   const statusLabels: Record<string, string> = {
     all: 'All Statuses',
@@ -43,8 +49,13 @@ export function ExpenseFilters({
     return categories.find((cat) => cat.id === id)?.name ?? id;
   };
 
+  const getEmployeeLabel = (id: string) => {
+    if (id === 'all') return 'All Employees';
+    return employees.find((emp) => emp.id === id)?.name ?? id;
+  };
+
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center flex-wrap">
       <div className="relative flex-1 sm:max-w-xs">
         <SearchIcon className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -80,6 +91,22 @@ export function ExpenseFilters({
           {categories.map((cat) => (
             <SelectItem key={cat.id} value={cat.id}>
               {cat.name}
+            </SelectItem>
+          ))}
+        </SelectPopup>
+      </Select>
+
+      <Select value={employeeId} onValueChange={(val) => onEmployeeChange(val as string)}>
+        <SelectTrigger className="w-full sm:w-48">
+          <SelectValue placeholder="All Employees">
+            {() => getEmployeeLabel(employeeId)}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectPopup>
+          <SelectItem value="all">All Employees</SelectItem>
+          {employees.map((emp) => (
+            <SelectItem key={emp.id} value={emp.id}>
+              {emp.name}
             </SelectItem>
           ))}
         </SelectPopup>
