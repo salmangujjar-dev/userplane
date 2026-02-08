@@ -99,9 +99,9 @@ export default function Header() {
         </a>
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href={NAV_LINKS.roadmap}
+          href={NAV_LINKS.help}
         >
-          Roadmap
+          Support
         </a>
       </div>
 
@@ -160,8 +160,8 @@ export default function Header() {
                   <MobileNavLink href="/#pricing" onClick={closeMenu}>
                     Pricing
                   </MobileNavLink>
-                  <MobileNavLink href={NAV_LINKS.roadmap} onClick={closeMenu}>
-                    Roadmap
+                  <MobileNavLink href={NAV_LINKS.help} onClick={closeMenu}>
+                    Support
                   </MobileNavLink>
                 </nav>
                 <div className="flex w-full flex-col">

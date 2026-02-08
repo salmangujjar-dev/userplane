@@ -16,8 +16,8 @@ import {
   SALES_FORM_URL,
 } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
-import { Check, Minus, Plus, X } from 'lucide-react';
-import { useState } from 'react';
+import { Check, ChevronDown, Minus, Plus, X } from 'lucide-react';
+import { Fragment, useState } from 'react';
 
 import { SIGNUP_URL } from '@/constants/onboarding';
 import {
@@ -236,7 +236,184 @@ interface FeatureComparisonTableProps {
   onCycleChange: (cycle: PlanCycle) => void;
 }
 
-function FeatureComparisonTable({ cycle, onCycleChange }: FeatureComparisonTableProps) {
+// ---- Mobile: plan-selector + expandable feature categories ----
+
+function MobileFeatureValueDisplay({ value }: { value: FeatureValue }) {
+  if (typeof value === 'boolean') {
+    return value ? (
+      <Check className="w-4 h-4 text-blue-500" />
+    ) : (
+      <X className="w-4 h-4 text-zinc-300" />
+    );
+  }
+  return (
+    <span className="text-sm text-zinc-700">
+      {value === '-' ? <span className="text-zinc-300">-</span> : value}
+    </span>
+  );
+}
+
+function MobileFeatureComparison({ cycle, onCycleChange }: FeatureComparisonTableProps) {
+  const plans = filterPlansByCycle(BASE_PRICING_PLANS, cycle);
+  const planNames = ['Essential', 'Starter', 'Scale Up', 'Enterprise'] as const;
+
+  const displayPlans = planNames
+    .map((name) => plans.find((p) => p.name === name))
+    .filter((p): p is BasePricingPlan => p !== undefined);
+
+  const [selectedPlanIdx, setSelectedPlanIdx] = useState(
+    () => displayPlans.findIndex((p) => p.isPopular) ?? 0
+  );
+  const [openCategories, setOpenCategories] = useState<Set<string>>(
+    // Start with first category open
+    () => new Set([FEATURE_CATEGORIES[0]])
+  );
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const selectedPlan = displayPlans[selectedPlanIdx];
+  if (!selectedPlan) return null;
+
+  const toggleCategory = (category: string) => {
+    setOpenCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Billing toggle */}
+      <div className="flex justify-center">
+        <BillingToggle cycle={cycle} onCycleChange={onCycleChange} />
+      </div>
+
+      {/* Plan selector dropdown */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-white border border-zinc-200 rounded-xl text-left"
+        >
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-foreground">{selectedPlan.name}</span>
+            {selectedPlan.isPopular && (
+              <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+                Popular
+              </span>
+            )}
+            <span className="text-sm text-muted-foreground">
+              {formatPlanRate(selectedPlan)}
+              {selectedPlan.details.planRate !== null &&
+                selectedPlan.details.planRate !== 0 &&
+                '/mo'}
+            </span>
+          </div>
+          <ChevronDown
+            className={`w-4 h-4 text-zinc-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {dropdownOpen && (
+          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-zinc-200 rounded-xl shadow-lg overflow-hidden">
+            {displayPlans.map((plan, idx) => (
+              <button
+                key={plan.id}
+                type="button"
+                onClick={() => {
+                  setSelectedPlanIdx(idx);
+                  setDropdownOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-zinc-50 transition-colors ${
+                  idx === selectedPlanIdx ? 'bg-zinc-50' : ''
+                }`}
+              >
+                <span className="font-medium text-foreground">{plan.name}</span>
+                {plan.isPopular && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+                    Popular
+                  </span>
+                )}
+                <span className="text-sm text-muted-foreground ml-auto">
+                  {formatPlanRate(plan)}
+                  {plan.details.planRate !== null && plan.details.planRate !== 0 && '/mo'}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* CTA for selected plan */}
+      <Button
+        asChild
+        className={`w-full rounded-full ${
+          selectedPlan.isPopular
+            ? 'bg-foreground text-background hover:bg-foreground/90'
+            : 'bg-white text-foreground border border-zinc-300 hover:bg-zinc-50'
+        }`}
+        variant={selectedPlan.isPopular ? 'default' : 'outline'}
+      >
+        <a
+          href={selectedPlan.isEnterprise ? SALES_FORM_URL : SIGNUP_URL}
+          target={selectedPlan.isEnterprise ? '_blank' : undefined}
+          rel={selectedPlan.isEnterprise ? 'noopener noreferrer' : undefined}
+        >
+          {selectedPlan.isEnterprise ? 'Talk to sales' : 'Get started'}
+        </a>
+      </Button>
+
+      {/* Feature categories (accordion) */}
+      <div className="flex flex-col">
+        {FEATURE_CATEGORIES.map((category) => {
+          const features = CATEGORY_FEATURE_DEFINITIONS[category];
+          const categoryLabel = FEATURE_CATEGORY_LABELS[category];
+          const isOpen = openCategories.has(category);
+          const planFeatures = PLAN_CATEGORY_FEATURES[selectedPlan.name];
+
+          return (
+            <div key={category} className="border-b border-zinc-100 last:border-b-0">
+              <button
+                type="button"
+                onClick={() => toggleCategory(category)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-zinc-50/80 hover:bg-zinc-100/80 transition-colors"
+              >
+                <span className="text-sm font-semibold text-zinc-900">{categoryLabel}</span>
+                <ChevronDown
+                  className={`w-4 h-4 text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {isOpen && (
+                <div className="flex flex-col">
+                  {features.map((feature) => {
+                    const value = planFeatures?.[category]?.[feature.key] ?? false;
+                    return (
+                      <div
+                        key={feature.key}
+                        className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-50 last:border-b-0"
+                      >
+                        <span className="text-sm text-zinc-700">{feature.name}</span>
+                        <MobileFeatureValueDisplay value={value} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---- Desktop: full comparison table ----
+
+function DesktopFeatureComparisonTable({ cycle, onCycleChange }: FeatureComparisonTableProps) {
   const plans = filterPlansByCycle(BASE_PRICING_PLANS, cycle);
 
   const getPlan = (name: string): BasePricingPlan | undefined => {
@@ -257,7 +434,7 @@ function FeatureComparisonTable({ cycle, onCycleChange }: FeatureComparisonTable
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[800px]">
+      <table className="w-full">
         {/* Header with plan names */}
         <thead>
           <tr className="border-b border-zinc-200">
@@ -311,9 +488,9 @@ function FeatureComparisonTable({ cycle, onCycleChange }: FeatureComparisonTable
             const categoryLabel = FEATURE_CATEGORY_LABELS[category];
 
             return (
-              <>
+              <Fragment key={category}>
                 {/* Category Header */}
-                <tr key={category} className="bg-zinc-50">
+                <tr className="bg-zinc-50">
                   <td colSpan={5} className="px-4 py-3">
                     <span className="text-sm font-semibold text-zinc-900">{categoryLabel}</span>
                   </td>
@@ -336,12 +513,29 @@ function FeatureComparisonTable({ cycle, onCycleChange }: FeatureComparisonTable
                     })}
                   </tr>
                 ))}
-              </>
+              </Fragment>
             );
           })}
         </tbody>
       </table>
     </div>
+  );
+}
+
+// ---- Responsive wrapper: mobile vs desktop ----
+
+function FeatureComparisonTable({ cycle, onCycleChange }: FeatureComparisonTableProps) {
+  return (
+    <>
+      {/* Mobile: plan selector + accordion */}
+      <div className="block md:hidden p-4">
+        <MobileFeatureComparison cycle={cycle} onCycleChange={onCycleChange} />
+      </div>
+      {/* Desktop: full comparison table */}
+      <div className="hidden md:block">
+        <DesktopFeatureComparisonTable cycle={cycle} onCycleChange={onCycleChange} />
+      </div>
+    </>
   );
 }
 

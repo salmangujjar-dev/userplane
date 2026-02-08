@@ -165,13 +165,13 @@ export function FilterDropdown({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[240px] p-0" sideOffset={6}>
-        <div className="flex items-center border-b px-3 py-2">
-          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+        <div className="flex items-center border-b px-4 py-2">
+          <Search className="mr-2.5 h-4 w-4 shrink-0 opacity-50" />
           <Input
             placeholder={placeholder}
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="h-8 border-0 bg-transparent px-0 py-1 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="h-8 border-0 bg-transparent pl-2 pr-0 py-1 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
           />
         </div>
         <div className="max-h-[300px] overflow-y-auto p-1">
