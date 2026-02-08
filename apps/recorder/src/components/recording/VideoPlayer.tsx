@@ -44,7 +44,6 @@ export default function VideoPlayer({
   const handleVideoError = useCallback(() => {
     setHasError(true);
     const error = new Error('Failed to load video');
-    console.error('[VideoPlayer] Video load error:', error);
     onError?.(error);
   }, [onError]);
 

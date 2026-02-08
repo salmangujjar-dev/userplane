@@ -5,8 +5,11 @@
 
 import { isDefinedError } from '@workspace/client';
 
+import { createLogger } from '@/lib/logger';
 import { SessionErrors } from '@/types';
 import type { RecordingError } from '@/types/errors';
+
+const logger = createLogger('server-errors');
 
 /**
  * Type-safe session error codes from contract
@@ -205,12 +208,9 @@ function getSessionError(code: string): RecordingError {
  */
 export function handleServerResult<T>(error: unknown, data: T | undefined | null): ServerResult<T> {
   if (error) {
-    console.log('[Server] Error:', error);
-
     // Defined API error - use config
     if (isDefinedError(error)) {
       const err = error as { code: string };
-      console.log('[Server] Defined error:', err.code);
       return { ok: false, error: getSessionError(err.code) };
     }
 
@@ -220,7 +220,7 @@ export function handleServerResult<T>(error: unknown, data: T | undefined | null
     }
 
     // Unknown error
-    console.log('[Server] Unknown error');
+    logger.error({ err: error }, 'unclassified server error');
     return { ok: false, error: DEFAULT_SERVER_ERROR };
   }
 

@@ -37,16 +37,12 @@ export default function PostRecordingAckScreen({
     if (cleanupDoneRef.current) return;
     cleanupDoneRef.current = true;
 
-    console.log(`[PostRecordingAckScreen] Will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
-
     const timer = setTimeout(() => {
       if (isEmbedded && bridge) {
         // Embedded mode: finish session via bridge (host handles cleanup and close)
-        console.log('[PostRecordingAckScreen] Finishing session (embedded)');
         bridge.finishSession();
       } else if (isStandalone) {
         // Standalone mode: close the tab directly
-        console.log('[PostRecordingAckScreen] Closing tab (standalone)');
         window.close();
       }
     }, SUCCESS_AUTO_CLOSE_DELAY_MS);

@@ -8,6 +8,9 @@ import * as Sentry from '@sentry/astro';
 import { createClient, createSafeClient } from '@workspace/client';
 
 import { env } from '@/env';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('api-client');
 
 /**
  * Create a client instance for the recorder
@@ -27,12 +30,11 @@ export function createRecorderClient() {
       return `${window.location.origin}/api/1`;
     },
     headers: ({ context }) => {
-      console.log('[API Client] Building headers with context:', context?.headers);
       return context?.headers || {};
     },
     credentials: 'include',
     onError: (error) => {
-      console.error('[API Client] Error:', error);
+      logger.error({ err: error }, 'api client error');
 
       // Capture API errors in Sentry with context
       Sentry.captureException(error, {

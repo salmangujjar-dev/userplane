@@ -6,10 +6,13 @@
 
 import { type Connection, guest } from '@workspace/postbridge';
 
+import { createLogger } from '@/lib/logger';
 import { classifyVerificationApiError, createVerificationError } from '@/lib/verification-errors';
 import type { VerificationError } from '@/types/errors';
 
 import type { ParentVerificationResult, VerificationData, VerificationHostSchema } from './types';
+
+const logger = createLogger('verification-bridge');
 
 /**
  * Verification result returned to app code (with VerificationError)
@@ -42,20 +45,20 @@ export class VerificationBridgeConnection {
    */
   public async connect(): Promise<void> {
     if (this.connection) {
-      console.warn('[VerificationBridge] Already connected');
+      logger.warn('already connected');
       return;
     }
 
-    console.log('[VerificationBridge] Connecting to parent SDK');
+    logger.debug('connecting to parent SDK');
 
     // Minimal guest schema - verification doesn't expose methods to parent
     const schema: VerificationGuestSchema = {};
 
     try {
       this.connection = await guest.connect(schema);
-      console.log('[VerificationBridge] Connected to parent, connection ID:', this.connection.id);
+      logger.debug({ connectionId: this.connection.id }, 'connected to parent');
     } catch (error) {
-      console.error('[VerificationBridge] Failed to connect:', error);
+      logger.error({ err: error }, 'connection failed');
       throw error;
     }
   }
@@ -65,11 +68,11 @@ export class VerificationBridgeConnection {
    */
   public disconnect(): void {
     if (!this.connection) {
-      console.warn('[VerificationBridge] Not connected');
+      logger.warn('not connected');
       return;
     }
 
-    console.log('[VerificationBridge] Disconnecting from parent');
+    logger.debug('disconnecting');
     this.connection.close();
     this.connection = null;
   }
@@ -106,7 +109,7 @@ export class VerificationBridgeConnection {
   ): Promise<VerificationResult> {
     const remote = this.getRemote();
     if (!remote) {
-      console.log('[VerificationBridge] Not connected, cannot request verification');
+      logger.warn('not connected, cannot request verification');
       return {
         success: false,
         error: createVerificationError('VERIFICATION_BRIDGE_NOT_CONNECTED'),
@@ -114,12 +117,12 @@ export class VerificationBridgeConnection {
     }
 
     try {
-      console.log('[VerificationBridge] Requesting verification from parent');
+      logger.debug('requesting verification');
       const result: ParentVerificationResult = await remote.requestVerification(
         token,
         workspaceIds
       );
-      console.log('[VerificationBridge] Verification result from parent:', result);
+      logger.debug({ success: result.success }, 'verification result received');
 
       // Map raw API error to VerificationError
       if (!result.success && result.error) {
@@ -131,7 +134,7 @@ export class VerificationBridgeConnection {
 
       return { success: true, data: result.data };
     } catch (error) {
-      console.error('[VerificationBridge] Failed to request verification:', error);
+      logger.error({ err: error }, 'verification request failed');
       return {
         success: false,
         error: createVerificationError('VERIFICATION_BRIDGE_COMMUNICATION_ERROR'),
@@ -146,11 +149,11 @@ export class VerificationBridgeConnection {
   public requestClose(): void {
     const remote = this.getRemote();
     if (!remote) {
-      console.log('[VerificationBridge] Not connected, cannot request close');
+      logger.warn('not connected, cannot request close');
       return;
     }
 
-    console.log('[VerificationBridge] Requesting close from parent');
+    logger.debug('requesting close');
     remote.requestClose();
   }
 }

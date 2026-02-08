@@ -29,9 +29,8 @@ function extractHostname(url: string): string {
     const urlToParse = url.match(/^https?:\/\//) ? url : `https://${url}`;
     const parsedUrl = new URL(urlToParse);
     return parsedUrl.hostname;
-  } catch (error) {
+  } catch {
     // Fallback: if URL parsing fails, return the input cleaned up
-    console.warn('[VerifiedScreen] Failed to parse URL:', url, error);
     return url
       .replace(/^https?:\/\//, '')
       .split('/')[0]
@@ -55,16 +54,12 @@ export default function VerifiedScreen({
     if (cleanupDoneRef.current) return;
     cleanupDoneRef.current = true;
 
-    console.log(`[VerifiedScreen] Will auto-close in ${SUCCESS_AUTO_CLOSE_DELAY_MS}ms`);
-
     const timer = setTimeout(() => {
       if (isEmbedded && verificationBridge) {
         // Embedded mode: request close via verification bridge (host handles cleanup)
-        console.log('[VerifiedScreen] Requesting close (embedded)');
         verificationBridge.requestClose();
       } else if (isStandalone) {
         // Standalone mode: close the tab directly
-        console.log('[VerifiedScreen] Closing tab (standalone)');
         window.close();
       }
     }, SUCCESS_AUTO_CLOSE_DELAY_MS);

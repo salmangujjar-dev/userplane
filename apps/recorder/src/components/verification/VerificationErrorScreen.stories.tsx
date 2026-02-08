@@ -55,7 +55,7 @@ export const VerificationFailed: Story = {
   args: {
     ...getVerificationError('VERIFICATION_FAILED'),
     primaryActionText: 'Try again',
-    onPrimaryAction: () => console.log('Retry clicked'),
+    onPrimaryAction: () => {},
   },
 };
 
@@ -63,9 +63,9 @@ export const NetworkError: Story = {
   args: {
     ...getVerificationError('VERIFICATION_NETWORK_ERROR'),
     primaryActionText: 'Try again',
-    onPrimaryAction: () => console.log('Retry clicked'),
+    onPrimaryAction: () => {},
     secondaryActionText: 'Cancel',
-    onSecondaryAction: () => console.log('Cancel clicked'),
+    onSecondaryAction: () => {},
   },
 };
 
@@ -82,6 +82,6 @@ export const WithBranding: Story = {
     workspaceLogoUrl: '/logo-dark.svg',
     primaryColor: '#4F46E5',
     primaryActionText: 'Try again',
-    onPrimaryAction: () => console.log('Retry clicked'),
+    onPrimaryAction: () => {},
   },
 };

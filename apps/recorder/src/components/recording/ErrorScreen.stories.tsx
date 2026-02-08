@@ -55,11 +55,9 @@ const meta: Meta<StoryArgs> = {
       title={args.title}
       subtitle={args.subtitle}
       primaryActionText={args.primaryActionText || undefined}
-      onPrimaryAction={args.primaryActionText ? () => console.log('Primary action') : undefined}
+      onPrimaryAction={args.primaryActionText ? () => {} : undefined}
       secondaryActionText={args.secondaryActionText || undefined}
-      onSecondaryAction={
-        args.secondaryActionText ? () => console.log('Secondary action') : undefined
-      }
+      onSecondaryAction={args.secondaryActionText ? () => {} : undefined}
       preferences={argsToPreferences(args)}
     />
   ),

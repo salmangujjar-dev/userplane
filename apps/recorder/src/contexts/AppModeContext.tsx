@@ -26,7 +26,10 @@ import {
   type RecordingState,
   type VerificationBridgeConnection,
 } from '@/bridge';
+import { createLogger } from '@/lib/logger';
 import { type AppMode, detectAppMode } from '@/utils/browser';
+
+const logger = createLogger('app-mode');
 
 /**
  * Cross-tab lock status
@@ -108,19 +111,16 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
         workerURL: crossTabWorkerURL,
         callbacks: {
           onRecorderAcquiredByOtherTab: (tabId) => {
-            console.log('[AppModeContext] Another tab acquired recorder:', tabId);
+            logger.debug({ tabId }, 'another tab acquired recorder');
           },
           onRecorderReleasedByOtherTab: (previousTabId) => {
-            console.log('[AppModeContext] Another tab released recorder:', previousTabId);
+            logger.debug({ previousTabId }, 'another tab released recorder');
           },
           onRecorderStateChanged: (tabId, state) => {
-            console.log('[AppModeContext] Recorder state changed:', { tabId, state });
+            logger.debug({ tabId, state }, 'recorder state changed');
           },
           onMetadataResponse: (response) => {
-            console.log(
-              '[AppModeContext] Got metadata response from capture tab:',
-              response.responderTabId
-            );
+            logger.debug({ responderTabId: response.responderTabId }, 'metadata response received');
           },
         },
       });
@@ -158,16 +158,16 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
 
     async function connectVerificationBridge() {
       try {
-        console.log('[AppModeContext] Connecting verification bridge');
+        logger.debug('connecting verification bridge');
         await verificationBridge.connect();
         if (!mounted) return;
-        console.log('[AppModeContext] Verification bridge connected');
+        logger.debug('verification bridge connected');
         // For verification, we don't need cross-tab coordination
         // Set lock status to acquired so UI doesn't show waiting state
         setLockStatus('acquired');
       } catch (error) {
         if (!mounted) return;
-        console.error('[AppModeContext] Verification bridge connection failed:', error);
+        logger.error({ err: error }, 'verification bridge connection failed');
         setLockStatus('error');
         setLockError('Failed to connect to parent');
       }
@@ -199,18 +199,17 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
 
       try {
         // Step 1: Connect bridge to parent SDK to get tabRef
-        console.log('[AppModeContext] Connecting bridge to get tabRef from parent');
+        logger.debug('connecting bridge');
         await bridge.connect();
         if (!mounted) return;
 
         const tabRef = bridge.getTabRef();
-        console.log('[AppModeContext] Got tabRef from parent:', tabRef);
+        logger.debug({ tabRef }, 'got tab ref');
 
         // Step 2: Connect cross-tab coordinator using parent's tabRef
-        console.log('[AppModeContext] Connecting to cross-tab coordinator with tabRef');
         // Use rec_ prefix to identify as recorder on the userplane channel
         const recorderTabId = tabRef ? `rec_${tabRef}` : undefined;
-        console.log('[AppModeContext] Connecting to cross-tab with ID:', recorderTabId);
+        logger.debug({ recorderTabId }, 'connecting cross-tab coordinator');
         await crossTab.connect(recorderTabId);
         if (!mounted) return;
 
@@ -218,7 +217,7 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
         const isMounted = await crossTab.isRecorderMounted();
         if (isMounted) {
           const holderTabId = crossTab.getRecorderTabId();
-          console.log('[AppModeContext] Another recorder is already mounted in tab:', holderTabId);
+          logger.warn({ holderTabId }, 'blocked by another recorder');
           setLockStatus('blocked');
           setLockError(
             'Another recorder is already open. Only one recorder can be active at a time.'
@@ -228,17 +227,17 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
         }
 
         // Step 4: Attempt to acquire the lock using CAS
-        console.log('[AppModeContext] Attempting to acquire recorder lock');
+        logger.debug('acquiring recorder lock');
         const result: AcquireLockResult = await crossTab.acquireLock();
         if (!mounted) return;
 
         if (result.success) {
-          console.log('[AppModeContext] Recorder lock acquired successfully');
+          logger.debug('recorder lock acquired');
           // Wire up cross-tab coordinator to bridge for state sync
           bridge.setCrossTabCoordinator(crossTab);
           setLockStatus('acquired');
         } else {
-          console.log('[AppModeContext] Failed to acquire lock:', result.error);
+          logger.warn({ error: result.error }, 'failed to acquire lock');
           setLockStatus('blocked');
           setLockError(result.error ?? 'Failed to acquire recorder lock');
           setBlockingTabId(result.currentHolderTabId ?? null);
@@ -246,7 +245,7 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
       } catch (error) {
         if (!mounted) return;
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error('[AppModeContext] Connection failed:', error);
+        logger.error({ err: error }, 'connection failed');
         setLockStatus('error');
         setLockError(`Failed to connect: ${errorMessage}`);
       }
@@ -257,11 +256,11 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
     // Cleanup on unmount
     return () => {
       mounted = false;
-      console.log('[AppModeContext] Disconnecting');
+      logger.debug('disconnecting');
       bridge.setCrossTabCoordinator(null);
       bridge.disconnect();
       crossTab.disconnect().catch((err) => {
-        console.error('[AppModeContext] Error disconnecting cross-tab:', err);
+        logger.error({ err }, 'error disconnecting cross-tab');
       });
     };
   }, [isEmbedded, isRecording]);

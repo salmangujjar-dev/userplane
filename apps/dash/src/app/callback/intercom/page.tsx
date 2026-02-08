@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 
+import { logger } from '@/logger';
+
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
@@ -37,7 +39,7 @@ export default async function IntercomCallbackPage({ searchParams }: Props) {
     payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
   } catch (error) {
     // Failed to decode state - redirect to error page
-    console.error('Failed to decode OAuth state:', error);
+    logger.error({ err: error }, 'Failed to decode OAuth state');
     redirect('/workspace/create?error=invalid_state');
   }
 

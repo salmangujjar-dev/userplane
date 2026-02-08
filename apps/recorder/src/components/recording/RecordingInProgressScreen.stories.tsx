@@ -47,7 +47,7 @@ const meta: Meta<StoryArgs> = {
       subtitle={args.subtitle}
       isProcessing={args.isProcessing}
       preferences={argsToPreferences(args)}
-      onStopRecording={() => console.log('Stop recording clicked')}
+      onStopRecording={() => {}}
     />
   ),
 };

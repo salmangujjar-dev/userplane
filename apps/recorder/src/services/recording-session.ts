@@ -20,6 +20,7 @@ import {
   THUMBNAIL_UPLOAD_CONFIG,
   VIDEO_UPLOAD_CONFIG,
 } from '@/constants';
+import { createLogger } from '@/lib/logger';
 import { handleServerResult, type ServerResult } from '@/lib/server-errors';
 import { createRecordingSpan, setRecordingContext } from '@/sentry/recording';
 import type { RecordingPreferences, SessionTokenPayload } from '@/types/session-preferences';
@@ -64,6 +65,8 @@ export interface SessionData {
 
 export type { SystemMetadata };
 
+const logger = createLogger('recording-session');
+
 export class RecordingSession {
   private client: ReturnType<typeof getRecorderClient>;
   private sessionToken: string | null = null;
@@ -96,7 +99,7 @@ export class RecordingSession {
         },
       },
       async (span) => {
-        console.log('[Session] Initializing session');
+        logger.debug('initializing session');
 
         const startTime = Date.now();
         const [error, response] = await this.client.session.init({
@@ -114,7 +117,7 @@ export class RecordingSession {
         const result = handleServerResult(error, response?.data);
 
         if (!result.ok) {
-          console.log('[Session] Initialize failed:', result.error);
+          logger.error({ err: result.error }, 'initialization failed');
           return result;
         }
 
@@ -145,8 +148,6 @@ export class RecordingSession {
           };
         }
 
-        console.log('[Session] Session token payload:', payload);
-
         // Extract decoded properties from session token
         this.workspaceId = payload.wid || null;
         this.linkId = payload.lid || null;
@@ -163,23 +164,15 @@ export class RecordingSession {
           };
         }
 
-        console.log('[Session] Raw preferences from token:', payload.prefs);
-
         this.preferences = toRecordingPreferences(payload.prefs);
         this.maxRecordingDurationMs =
           this.preferences?.maxDurationMs ?? DEFAULT_MAX_RECORDING_DURATION_MS;
         this.requesterName = this.preferences?.requestedBy ?? null;
         this.maxRecordingSize = null; // Not currently used
 
-        console.log('[Session] Initialized successfully');
-        console.log('[Session] Workspace ID:', this.workspaceId);
-        console.log('[Session] Link ID:', this.linkId);
-        console.log('[Session] Session ID:', this.sessionId);
-        console.log('[Session] Preferences:', this.preferences);
-        console.log('[Session] Max recording duration:', `${this.maxRecordingDurationMs}ms`);
-        console.log(
-          '[Session] Max recording size:',
-          this.maxRecordingSize ? `${this.maxRecordingSize} bytes` : '(unlimited)'
+        logger.debug(
+          { sessionId: this.sessionId, workspaceId: this.workspaceId },
+          'session initialized'
         );
 
         // Set recording context in Sentry
@@ -253,20 +246,7 @@ export class RecordingSession {
     customMetadata?: Record<string, unknown> | null
   ): Promise<ServerResult<UploadState>> {
     return createRecordingSpan('session.initializeUpload', 'recording.upload', async () => {
-      console.log('[Upload:Init] Initializing upload');
-      console.log('[Upload:Init] Video file:', {
-        name: videoFile.name,
-        size: videoFile.size,
-        type: videoFile.type,
-      });
-      console.log(
-        '[Upload:Init] Recording duration:',
-        recordingDurationMs ? `${recordingDurationMs}ms` : '0ms (default)'
-      );
-      console.log(
-        '[Upload:Init] Thumbnail:',
-        thumbnailBlob ? `${thumbnailBlob.size} bytes` : 'none'
-      );
+      logger.debug('initializing upload');
 
       if (!this.sessionToken) {
         return {
@@ -280,7 +260,6 @@ export class RecordingSession {
       }
 
       const systemMetadata = captureSystemMetadata();
-      console.log('[Upload:Init] System metadata:', systemMetadata);
 
       // Set system metadata context for error tracking
       Sentry.setContext('system', systemMetadata as unknown as Record<string, unknown>);
@@ -308,11 +287,6 @@ export class RecordingSession {
         });
       }
 
-      console.log(
-        '[Upload:Init] Requesting presigned URLs with session token:',
-        this.sessionToken?.substring(0, 20) + '...'
-      );
-
       const uploadInitPayload = {
         body: {
           recording_duration: recordingDurationMs || 0,
@@ -323,10 +297,6 @@ export class RecordingSession {
           },
         },
       };
-      console.log('[Upload:Init] Upload init payload:', uploadInitPayload);
-      if (customMetadata) {
-        console.log('[Upload:Init] Custom metadata attached:', customMetadata);
-      }
 
       const startTime = Date.now();
       const [error, response] = await this.client.session.upload.init(uploadInitPayload, {
@@ -355,19 +325,13 @@ export class RecordingSession {
       const result = handleServerResult(error, response?.data);
 
       if (!result.ok) {
-        console.log('[Upload:Init] Failed:', result.error);
+        logger.error({ err: result.error }, 'upload initialization failed');
         return result;
       }
-
-      console.log('[Upload:Init] Received upload initialization response');
 
       this.recordingId = result.data.recordingId;
       const uploadToken = result.data.uploadToken;
       const presignedUrls = result.data.presignedUrls;
-
-      console.log('[Upload:Init] Recording ID:', this.recordingId);
-      console.log('[Upload:Init] Upload token received');
-      console.log('[Upload:Init] Presigned URLs count:', presignedUrls.length);
 
       // Update recording context with recordingId
       setRecordingContext({
@@ -398,8 +362,7 @@ export class RecordingSession {
     onProgress?: (progress: UploadProgress) => void
   ): Promise<ServerResult<void>> {
     return createRecordingSpan('session.uploadToStorage', 'recording.storage', async () => {
-      console.log('[Upload:Storage] Starting file uploads to object storage');
-      console.log('[Upload:Storage] Recording ID:', uploadState.recordingId);
+      logger.debug({ recordingId: uploadState.recordingId }, 'starting storage upload');
 
       const { videoFile, thumbnailBlob, presignedUrls } = uploadState;
 
@@ -448,8 +411,6 @@ export class RecordingSession {
         }
       };
 
-      console.log('[Upload:Storage] Uploading video file...');
-
       try {
         // Upload video file with unified configuration
         await uploadToObjectStore(videoFile, videoUrl.url, {
@@ -460,7 +421,7 @@ export class RecordingSession {
           },
         });
       } catch (err) {
-        console.error('[Upload:Storage] Video upload failed:', err);
+        logger.error({ err }, 'video upload failed');
 
         // Capture CRITICAL video upload failure in Sentry with detailed context
         const uploadCtx: UploadContext = {
@@ -497,7 +458,7 @@ export class RecordingSession {
         };
       }
 
-      console.log('[Upload:Storage] Video upload complete');
+      logger.debug('video upload complete');
 
       // Upload thumbnail if available
       // Thumbnail upload is non-critical: if it fails, we proceed with acknowledgment
@@ -505,7 +466,6 @@ export class RecordingSession {
       if (thumbnailBlob && thumbnailBlob.size > 0) {
         const thumbnailUrl = presignedUrls.find((u) => u.type === 'thumbnail');
         if (thumbnailUrl) {
-          console.log('[Upload:Storage] Uploading thumbnail...');
           try {
             const thumbnailFile = new File([thumbnailBlob], 'thumbnail.webp', {
               type: 'image/webp',
@@ -517,12 +477,8 @@ export class RecordingSession {
                 reportProgress();
               },
             });
-            console.log('[Upload:Storage] Thumbnail upload complete');
           } catch (err) {
-            console.warn(
-              '[Upload:Storage] Thumbnail upload failed, proceeding without thumbnail:',
-              err
-            );
+            logger.warn({ err }, 'thumbnail upload failed, proceeding without');
 
             // Capture thumbnail upload failures as quality degradation warnings
             const thumbCtx: UploadContext = {
@@ -560,7 +516,7 @@ export class RecordingSession {
         });
       }
 
-      console.log('[Upload:Storage] All files uploaded successfully');
+      logger.debug('all files uploaded');
       return { ok: true, data: undefined };
     });
   }
@@ -581,8 +537,7 @@ export class RecordingSession {
         },
       },
       async (span) => {
-        console.log('[Upload:Ack] Acknowledging upload completion');
-        console.log('[Upload:Ack] Recording ID:', uploadState.recordingId);
+        logger.debug({ recordingId: uploadState.recordingId }, 'acknowledging upload');
 
         const startTime = Date.now();
         const [error, response] = await this.client.session.upload.complete(
@@ -609,11 +564,11 @@ export class RecordingSession {
         const result = handleServerResult(error, response?.data);
 
         if (!result.ok) {
-          console.log('[Upload:Ack] Failed:', result.error);
+          logger.error({ err: result.error }, 'upload acknowledgment failed');
           return result;
         }
 
-        console.log('[Upload:Ack] Upload acknowledged successfully');
+        logger.debug('upload acknowledged');
         return { ok: true, data: undefined };
       }
     );

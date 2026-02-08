@@ -29,6 +29,7 @@
     "@workspace/contract": "workspace:*",
     "@workspace/shared": "workspace:*",
     "@workspace/storage": "workspace:*",
+    "@workspace/logger": "workspace:*",
     "@workspace/sentry": "workspace:*",
     "@workspace/postbridge": "workspace:*",
     "@workspace/ui": "workspace:*",

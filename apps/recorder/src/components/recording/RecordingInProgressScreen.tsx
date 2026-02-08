@@ -40,15 +40,9 @@ export default function RecordingInProgressScreen({
   const [isLocalProcessing, setIsLocalProcessing] = useState(false);
 
   useEffect(() => {
-    console.log('[RecordingInProgress] Setting up video preview');
-    console.log('[RecordingInProgress] Media stream:', mediaStream ? 'Available' : 'Not available');
-
     if (videoRef.current && mediaStream) {
       videoRef.current.srcObject = mediaStream;
-      videoRef.current.play().catch((err) => {
-        console.error('[RecordingInProgress] Failed to play video preview:', err);
-      });
-      console.log('[RecordingInProgress] Video preview started');
+      videoRef.current.play().catch(() => {});
     }
 
     const video = videoRef.current;
@@ -74,11 +68,9 @@ export default function RecordingInProgressScreen({
   const handleStopRecording = () => {
     // Prevent double-clicks with local state guard
     if (isLocalProcessing || isProcessing) {
-      console.log('[RecordingInProgress] Stop already in progress, ignoring click');
       return;
     }
 
-    console.log('[RecordingInProgress] Stop recording clicked');
     setIsLocalProcessing(true);
 
     if (onStopRecording) {

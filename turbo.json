@@ -142,7 +142,8 @@
         "PUBLIC_SKIP_IMAGE_TRANSFORM",
         "CLOUDFLARE_IMAGE_ZONE",
         "NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE",
-        "PUBLIC_CLOUDFLARE_IMAGE_ZONE"
+        "PUBLIC_CLOUDFLARE_IMAGE_ZONE",
+        "DEV"
       ]
     },
     "lint": {

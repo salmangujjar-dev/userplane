@@ -19,6 +19,7 @@ import {
   type RecordingFlowActions,
   useRecordingFlow,
 } from '@/hooks/useRecordingFlow';
+import { createLogger } from '@/lib/logger';
 import { classifyError, type ErrorAction, type RecordingError } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
 import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
@@ -32,6 +33,8 @@ import PreRecordingLoadingScreen from './PreRecordingLoadingScreen';
 import PreRecordingScreen from './PreRecordingScreen';
 import RecordingInProgressScreen from './RecordingInProgressScreen';
 import SettingsDropdown from './SettingsDropdown';
+
+const logger = createLogger('recording-app');
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface RecordingAppProps {}
@@ -82,18 +85,13 @@ function RecordingAppContent() {
 
   // Handle user blur toggle - sets override
   const handleBlurToggle = useCallback((enabled: boolean) => {
-    console.log('[RecordingApp][Blur] User toggled:', { enabled });
+    logger.debug({ enabled }, 'blur toggled');
     setBlurOverride(enabled);
   }, []);
 
   // Effect to extract URL params
   useEffect(() => {
-    console.log(
-      '[RecordingApp] App mode:',
-      mode,
-      isEmbedded ? '(running in iframe)' : '(standalone)'
-    );
-    console.log('[RecordingApp][CrossTab] Lock status:', crossTabLock.status);
+    logger.debug({ mode, isEmbedded, lockStatus: crossTabLock.status }, 'app initialized');
 
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get(URL_PARAMS.TOKEN);
@@ -119,7 +117,7 @@ function RecordingAppContent() {
     if (!bridge) return;
     if (state.state === prevFlowStateRef.current) return;
 
-    console.log('[RecordingApp] Flow state changed:', prevFlowStateRef.current, '->', state.state);
+    logger.debug({ from: prevFlowStateRef.current, to: state.state }, 'flow state changed');
     prevFlowStateRef.current = state.state;
 
     // Notify parent based on flow state
@@ -171,20 +169,18 @@ function RecordingAppContent() {
     const prevBlurState = prevBlurStateRef.current;
     prevBlurStateRef.current = blurState;
 
-    console.log('[RecordingApp][Blur] State changed:', {
-      from: prevBlurState,
-      to: blurState,
-      flowState: state.state,
-      effectiveBlurEnabled,
-    });
+    logger.debug(
+      { from: prevBlurState, to: blurState, flowState: state.state },
+      'blur state changed'
+    );
 
     if (blurState === 'active') {
       // Start blur when recording becomes active (and blur is enabled)
-      console.log('[RecordingApp][Blur] Broadcasting START');
+      logger.debug('broadcasting blur start');
       crossTab.broadcastStartBlurr();
     } else if (blurState === 'inactive' && prevBlurState === 'active') {
       // Stop blur when transitioning from active to inactive
-      console.log('[RecordingApp][Blur] Broadcasting STOP');
+      logger.debug('broadcasting blur stop');
       crossTab.broadcastStopBlurr();
     }
   }, [crossTab, isEmbedded, crossTabLock.isAcquired, state.state, effectiveBlurEnabled]);
@@ -198,7 +194,7 @@ function RecordingAppContent() {
 
     // Initialize session when we have session info and are in setup state
     if (sessionInfo && state.state === 'setup') {
-      console.log('[RecordingApp] Initializing session with parent');
+      logger.debug('initializing session with parent');
       bridge.initSession(sessionInfo);
       sessionReportedRef.current = true;
     }
@@ -212,10 +208,13 @@ function RecordingAppContent() {
     if (!crossTab) return null;
 
     const scatterResult = await crossTab.scatterGatherMetadata(3000);
-    console.log('[RecordingApp][Scatter] Gather complete:', {
-      respondedTabs: scatterResult.respondedTabs.length,
-      timedOutTabs: scatterResult.timedOutTabs.length,
-    });
+    logger.debug(
+      {
+        responded: scatterResult.respondedTabs.length,
+        timedOut: scatterResult.timedOutTabs.length,
+      },
+      'scatter-gather complete'
+    );
 
     // Build per-tab metadata map
     const allTabsMetadata: Record<string, Record<string, unknown>> = {};
@@ -235,7 +234,7 @@ function RecordingAppContent() {
     }
 
     if (Object.keys(allTabsMetadata).length === 0) {
-      console.log('[RecordingApp][Scatter] No metadata from any tab');
+      logger.debug('no metadata from any tab');
       return null;
     }
 
@@ -252,14 +251,11 @@ function RecordingAppContent() {
     );
 
     if (allIdentical && Object.keys(allCustomMetadata[0] || {}).length > 0) {
-      console.log(
-        '[RecordingApp][Scatter] All tabs identical - using unified:',
-        allCustomMetadata[0]
-      );
+      logger.debug({ unified: true }, 'metadata aggregated');
       return allCustomMetadata[0] as Record<string, unknown>;
     }
 
-    console.log('[RecordingApp][Scatter] Tabs differ - using per-tab:', allTabsMetadata);
+    logger.debug({ unified: false }, 'metadata aggregated');
     return allTabsMetadata;
   };
 
@@ -270,11 +266,11 @@ function RecordingAppContent() {
     let customMetadata: Record<string, unknown> | null = null;
 
     if (isEmbedded && crossTab) {
-      console.log('[RecordingApp][Scatter] Gathering metadata from capture tabs...');
+      logger.debug('gathering metadata from capture tabs');
       try {
         customMetadata = await gatherMetadataFromCaptureTabs();
       } catch (err) {
-        console.error('[RecordingApp][Scatter] Metadata collection failed (non-fatal):', err);
+        logger.warn({ err }, 'metadata collection failed (non-fatal)');
       }
     }
 
@@ -287,12 +283,10 @@ function RecordingAppContent() {
   // In embedded mode, check cross-tab status before showing recording UI
   if (isEmbedded) {
     if (crossTabLock.isPending) {
-      console.log('[RecordingApp][CrossTab] Waiting for coordination...');
       return <PreRecordingLoadingScreen />;
     }
 
     if (crossTabLock.isBlocked) {
-      console.log('[RecordingApp][CrossTab] Blocked by another recorder:', crossTabLock.error);
       return (
         <ErrorScreen
           title="Recorder Already Active"
@@ -305,8 +299,6 @@ function RecordingAppContent() {
     }
   }
 
-  console.log('[RecordingApp] Current state:', state.state);
-
   // Settings dropdown for embedded mode (blur control, etc.)
   // Only show when we have preferences and in embedded mode
   // Toggle is always enabled - blur can be toggled even during recording
@@ -318,37 +310,15 @@ function RecordingAppContent() {
 
   switch (state.state) {
     case 'loading':
-      console.log('[RecordingApp] Rendering: PreRecordingLoadingScreen');
       return <PreRecordingLoadingScreen />;
 
     case 'error': {
       const classifiedError = classifyError(state.error);
 
-      console.log('[RecordingApp] Rendering: ErrorScreen');
-      console.log('[RecordingApp] Has recording blob:', !!state.recordingBlob);
-      console.log('[RecordingApp] Error:', classifiedError.title);
-      console.log('[RecordingApp] Primary action:', classifiedError.primaryAction?.action);
-      console.log('[RecordingApp] Error message:', classifiedError.message);
-
       return renderErrorScreen(classifiedError, state.preferences, actions);
     }
 
     case 'setup':
-      console.log('[RecordingApp] Rendering: PreRecordingScreen');
-      console.log('[RecordingApp] Requester name:', state.requesterName);
-      console.log(
-        '[RecordingApp] Company name:',
-        state.preferences.companyName || '(not provided)'
-      );
-      console.log(
-        '[RecordingApp] Max duration:',
-        `${state.maxRecordingDurationMs}ms (${Math.round(state.maxRecordingDurationMs / 1000)}s)`
-      );
-      console.log(
-        '[RecordingApp] Max size:',
-        state.maxRecordingSize ? `${state.maxRecordingSize} bytes` : '(unlimited)'
-      );
-      console.log('[RecordingApp] Preferences:', state.preferences);
       return (
         <PreRecordingScreen
           requesterName={state.requesterName}
@@ -359,9 +329,6 @@ function RecordingAppContent() {
       );
 
     case 'countdown':
-      console.log('[RecordingApp] Rendering: PreRecordingCountdownScreen');
-      console.log('[RecordingApp] Countdown seconds:', state.countdownSeconds);
-      console.log('[RecordingApp] Media stream available:', !!state.mediaStream);
       return (
         <PreRecordingCountdownScreen
           countdownSeconds={state.countdownSeconds}
@@ -372,8 +339,6 @@ function RecordingAppContent() {
       );
 
     case 'recording':
-      console.log('[RecordingApp] Rendering: RecordingInProgressScreen');
-      console.log('[RecordingApp] Media stream available:', !!state.mediaStream);
       return (
         <RecordingInProgressScreen
           mediaStream={state.mediaStream}
@@ -385,11 +350,8 @@ function RecordingAppContent() {
       );
 
     case 'review':
-      console.log('[RecordingApp] Rendering: PostRecordingReviewScreen');
-      console.log('[RecordingApp] Video URL available:', !!state.videoUrl);
-
       if (!state.videoUrl) {
-        console.error('[RecordingApp] No video URL in review state');
+        logger.error('no video URL in review state');
         return <PreRecordingLoadingScreen />;
       }
 
@@ -404,11 +366,8 @@ function RecordingAppContent() {
       );
 
     case 'uploading':
-      console.log('[RecordingApp] Rendering: PostRecordingUploadScreen');
-      console.log('[RecordingApp] Upload progress:', state.uploadProgress + '%');
-
       if (!state.videoUrl) {
-        console.error('[RecordingApp] No video URL in uploading state');
+        logger.error('no video URL in uploading state');
         return <PreRecordingLoadingScreen />;
       }
 
@@ -422,13 +381,11 @@ function RecordingAppContent() {
       );
 
     case 'success':
-      console.log('[RecordingApp] Rendering: PostRecordingAckScreen');
       return (
         <PostRecordingAckScreen preferences={state.preferences} settingsElement={settingsElement} />
       );
 
     default:
-      console.log('[RecordingApp] Unknown state, rendering: PreRecordingLoadingScreen');
       return <PreRecordingLoadingScreen />;
   }
 }
@@ -442,7 +399,7 @@ function getActionHandler(action: ErrorAction, actions: RecordingFlowActions): (
       return actions.retryUpload;
     case 'reload':
       return () => {
-        console.log('[RecordingApp] Reloading page');
+        logger.debug('reloading page');
         window.location.reload();
       };
     case 'start-over':

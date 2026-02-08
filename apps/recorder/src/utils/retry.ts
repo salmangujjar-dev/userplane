@@ -5,6 +5,10 @@
 
 import * as Sentry from '@sentry/astro';
 
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('retry');
+
 export interface RetryOptions {
   /** Maximum number of retry attempts (default: 3) */
   maxRetries?: number;
@@ -145,9 +149,7 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
         }
         // If the delay would push us over the total timeout, cap it
         if (delay > remaining) {
-          console.warn(
-            `[Retry] Delay ${delay}ms would exceed total timeout, capping at ${remaining}ms`
-          );
+          logger.warn({ delay, remaining }, 'delay capped by total timeout');
           delay = remaining;
         }
       }
