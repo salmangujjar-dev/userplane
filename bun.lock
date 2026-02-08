@@ -237,6 +237,9 @@
     "packages/blurr": {
       "name": "@workspace/blurr",
       "version": "1.0.0",
+      "dependencies": {
+        "@workspace/console-logger": "workspace:*",
+      },
       "devDependencies": {
         "@chromatic-com/storybook": "^4.1.3",
         "@storybook/addon-docs": "^10.1.11",
@@ -292,6 +295,14 @@
         "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
         "eslint": "^9.32.0",
+        "typescript": "5.8.2",
+      },
+    },
+    "packages/console-logger": {
+      "name": "@workspace/console-logger",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@workspace/typescript-config": "workspace:*",
         "typescript": "5.8.2",
       },
     },
@@ -373,6 +384,7 @@
       "name": "@workspace/embed",
       "version": "0.0.1",
       "dependencies": {
+        "@workspace/console-logger": "workspace:*",
         "@workspace/metadata": "workspace:*",
         "@workspace/sdk": "workspace:*",
       },
@@ -426,6 +438,9 @@
     "packages/metadata": {
       "name": "@workspace/metadata",
       "version": "0.0.1",
+      "dependencies": {
+        "@workspace/console-logger": "workspace:*",
+      },
       "devDependencies": {
         "@rollup/plugin-terser": "^0.4.4",
         "@types/node": "^22.14.1",
@@ -457,6 +472,9 @@
     "packages/postbridge": {
       "name": "@workspace/postbridge",
       "version": "0.6.3",
+      "dependencies": {
+        "@workspace/console-logger": "workspace:*",
+      },
       "devDependencies": {
         "@chromatic-com/storybook": "^4.1.3",
         "@storybook/addon-docs": "^10.1.11",
@@ -494,6 +512,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@workspace/blurr": "workspace:*",
+        "@workspace/console-logger": "workspace:*",
         "@workspace/metadata": "workspace:*",
         "@workspace/postbridge": "workspace:*",
         "nanoid": "^5.1.6",
@@ -1976,6 +1995,8 @@
     "@workspace/cache": ["@workspace/cache@workspace:packages/cache"],
 
     "@workspace/client": ["@workspace/client@workspace:packages/client"],
+
+    "@workspace/console-logger": ["@workspace/console-logger@workspace:packages/console-logger"],
 
     "@workspace/contract": ["@workspace/contract@workspace:packages/contract"],
 
@@ -4500,6 +4521,8 @@
     "@workspace/blurr/typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
 
     "@workspace/client/typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
+
+    "@workspace/console-logger/typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
 
     "@workspace/contract/typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
 

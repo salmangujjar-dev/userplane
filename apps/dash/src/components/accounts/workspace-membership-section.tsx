@@ -16,7 +16,8 @@ import {
   TableRow,
 } from '@workspace/ui/components/table';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowRight, Bell, LogOut, MoreVertical } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Bell, LogOut, MoreVertical } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -240,6 +241,16 @@ export function WorkspaceMembershipSection() {
               </div>
             </div>
           )}
+        </div>
+
+        <div className="mt-3 flex justify-center">
+          <Link
+            href="/workspace/create"
+            className="text-sm text-muted-foreground underline hover:text-foreground transition-colors inline-flex items-center gap-1"
+          >
+            Create a new workspace
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
         </div>
       </div>
 
