@@ -47,6 +47,10 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
+import { logger as rootLogger } from './logger';
+
+const log = rootLogger.child({ module: 'Worker' });
+
 import {
   bridgeActions,
   BridgeBroadcastPayload,
@@ -138,9 +142,7 @@ function runHeartbeat() {
     for (const [tabID, connection] of channel.tabs.entries()) {
       // Check if tab has timed out (no pong received in time)
       if (now - connection.lastPong > HEARTBEAT_INTERVAL_MS + HEARTBEAT_TIMEOUT_MS) {
-        console.log(
-          `[Bridge Worker] Tab ${tabID} on "${channelName}" timed out (no pong), removing`
-        );
+        log.debug({ tabID, channel: channelName }, 'Tab timed out (no pong), removing');
         deadTabs.push(tabID);
         continue;
       }
@@ -150,7 +152,7 @@ function runHeartbeat() {
         connection.port.postMessage({ action: bridgeActions.BRIDGE_PING, timestamp: now });
       } catch {
         // Port is dead (tab closed/crashed)
-        console.log(`[Bridge Worker] Tab ${tabID} on "${channelName}" has dead port, removing`);
+        log.debug({ tabID, channel: channelName }, 'Tab has dead port, removing');
         deadTabs.push(tabID);
       }
     }
@@ -158,13 +160,13 @@ function runHeartbeat() {
     // Remove dead tabs
     for (const tabID of deadTabs) {
       channel.tabs.delete(tabID);
-      console.log(`[Bridge Worker] Removed dead tab ${tabID} from channel "${channelName}"`);
+      log.debug({ tabID, channel: channelName }, 'Removed dead tab');
     }
 
     // Cleanup empty channels
     if (channel.tabs.size === 0) {
       channels.delete(channelName);
-      console.log(`[Bridge Worker] Channel "${channelName}" cleaned up (no live tabs)`);
+      log.debug({ channel: channelName }, 'Channel cleaned up (no live tabs)');
     }
   }
 }
@@ -184,7 +186,7 @@ function getOrCreateChannel(channelName: string): ChannelState {
       tabs: new Map(),
       sharedState: {},
     });
-    console.log(`[Bridge Worker] Created channel: ${channelName}`);
+    log.debug({ channel: channelName }, 'Created channel');
   }
   return channels.get(channelName)!;
 }
@@ -259,7 +261,7 @@ function getOrCreateChannel(channelName: string): ChannelState {
               version: newVersion,
             });
           } catch {
-            console.log(`[Bridge Worker] Tab ${tabID} has dead port during state broadcast`);
+            log.debug({ tabID }, 'Tab has dead port during state broadcast');
             setStateDeadTabs.push(tabID);
           }
         }
@@ -324,9 +326,7 @@ function handleHandshake(port: MessagePort, payload: BridgeHandshakePayload) {
   if (channel.tabs.has(tabID)) {
     const existingConnection = channel.tabs.get(tabID)!;
 
-    console.warn(
-      `[Bridge Worker] Duplicate tabID "${tabID}" on channel "${channelName}". Disconnecting old connection.`
-    );
+    log.warn({ tabID, channel: channelName }, 'Duplicate tabID, disconnecting old connection');
 
     // Disconnect old connection
     try {
@@ -340,7 +340,7 @@ function handleHandshake(port: MessagePort, payload: BridgeHandshakePayload) {
       } as BridgeHandshakeErrorPayload);
       existingConnection.port.close();
     } catch (error) {
-      console.error(`[Bridge Worker] Failed to close old connection:`, error);
+      log.error({ err: error }, 'Failed to close old connection');
     }
 
     // Remove old connection
@@ -383,10 +383,7 @@ function handleHandshake(port: MessagePort, payload: BridgeHandshakePayload) {
   };
   port.postMessage(ackPayload);
 
-  console.log(
-    `[Bridge Worker] Tab ${tabID} connected to channel "${channelName}" with methods:`,
-    methodNames
-  );
+  log.debug({ tabID, channel: channelName, methods: methodNames }, 'Tab connected');
 }
 
 /**
@@ -422,7 +419,7 @@ function handleBroadcast(payload: BridgeBroadcastPayload) {
   // Get the channel (should exist since sender is on it)
   const channel = channels.get(channelName);
   if (!channel) {
-    console.error(`[Bridge Worker] Broadcast on non-existent channel: ${channelName}`);
+    log.error({ channel: channelName }, 'Broadcast on non-existent channel');
     return;
   }
 
@@ -452,9 +449,7 @@ function handleBroadcast(payload: BridgeBroadcastPayload) {
       relayCount++;
     } catch {
       // Port is dead - mark for removal
-      console.log(
-        `[Bridge Worker] Tab ${tabID} has dead port during broadcast, marking for removal`
-      );
+      log.debug({ tabID }, 'Tab has dead port during broadcast, marking for removal');
       deadTabs.push(tabID);
     }
   }
@@ -462,11 +457,12 @@ function handleBroadcast(payload: BridgeBroadcastPayload) {
   // Clean up dead tabs immediately
   for (const tabID of deadTabs) {
     channel.tabs.delete(tabID);
-    console.log(`[Bridge Worker] Removed dead tab ${tabID} from channel "${channelName}"`);
+    log.debug({ tabID, channel: channelName }, 'Removed dead tab');
   }
 
-  console.log(
-    `[Bridge Worker] Relayed ${methodName} from ${senderTabID} to ${relayCount} tabs on channel "${channelName}"`
+  log.debug(
+    { method: methodName, sender: senderTabID, relayCount, channel: channelName },
+    'Relayed broadcast'
   );
 }
 
@@ -505,9 +501,7 @@ function handleGetTabs(port: MessagePort, payload: BridgeGetTabsPayload) {
 
   port.postMessage(responsePayload);
 
-  console.log(
-    `[Bridge Worker] Tab ${requestingTabID} requested tabs on channel "${channelName}": [${tabIDs.join(', ')}]`
-  );
+  log.debug({ tabID: requestingTabID, channel: channelName, tabIDs }, 'Tabs requested');
 }
 
 /**
@@ -530,14 +524,15 @@ function handleDirectMessage(payload: BridgeDirectMessagePayload) {
 
   const channel = channels.get(channelName);
   if (!channel) {
-    console.warn(`[Bridge Worker] Channel "${channelName}" not found for direct message`);
+    log.warn({ channel: channelName }, 'Channel not found for direct message');
     return;
   }
 
   const targetConnection = channel.tabs.get(targetTabID);
   if (!targetConnection) {
-    console.warn(
-      `[Bridge Worker] Target tab ${targetTabID} not found on channel "${channelName}" for direct message from ${senderTabID}`
+    log.warn(
+      { targetTabID, channel: channelName, senderTabID },
+      'Target tab not found for direct message'
     );
     return;
   }
@@ -554,11 +549,12 @@ function handleDirectMessage(payload: BridgeDirectMessagePayload) {
 
   try {
     targetConnection.port.postMessage(relayPayload);
-    console.log(
-      `[Bridge Worker] Relayed direct message "${methodName}" from ${senderTabID} to ${targetTabID} on channel "${channelName}"`
+    log.debug(
+      { method: methodName, sender: senderTabID, target: targetTabID, channel: channelName },
+      'Relayed direct message'
     );
   } catch (err) {
-    console.error(`[Bridge Worker] Failed to send direct message to ${targetTabID}:`, err);
+    log.error({ err, targetTabID }, 'Failed to send direct message');
   }
 }
 
@@ -568,12 +564,12 @@ function handleDisconnect(payload: BridgeDisconnectPayload) {
   const channel = channels.get(channelName);
   if (channel && channel.tabs.has(tabID)) {
     channel.tabs.delete(tabID);
-    console.log(`[Bridge Worker] Tab ${tabID} disconnected from channel "${channelName}"`);
+    log.debug({ tabID, channel: channelName }, 'Tab disconnected');
 
     // Cleanup empty channels (optional optimization)
     if (channel.tabs.size === 0) {
       channels.delete(channelName);
-      console.log(`[Bridge Worker] Channel "${channelName}" cleaned up (no tabs remaining)`);
+      log.debug({ channel: channelName }, 'Channel cleaned up (no tabs remaining)');
     }
   }
 }
@@ -649,9 +645,7 @@ function handleCASState(port: MessagePort, payload: BridgeCASStatePayload) {
       currentValue,
     };
     port.postMessage(response);
-    console.log(
-      `[Bridge Worker] CAS failed for "${key}": expected v${expectedVersion}, current v${currentVersion}`
-    );
+    log.debug({ key, expectedVersion, currentVersion }, 'CAS failed');
     return;
   }
 
@@ -684,7 +678,7 @@ function handleCASState(port: MessagePort, payload: BridgeCASStatePayload) {
         version: newVersion,
       });
     } catch {
-      console.log(`[Bridge Worker] Tab ${connTabID} has dead port during CAS broadcast`);
+      log.debug({ tabID: connTabID }, 'Tab has dead port during CAS broadcast');
       casDeadTabs.push(connTabID);
     }
   }
@@ -693,9 +687,7 @@ function handleCASState(port: MessagePort, payload: BridgeCASStatePayload) {
     channel.tabs.delete(deadTabID);
   }
 
-  console.log(
-    `[Bridge Worker] CAS success for "${key}" by tab ${tabID}: v${expectedVersion} -> v${newVersion}`
-  );
+  log.debug({ key, tabID, oldVersion: expectedVersion, newVersion }, 'CAS success');
 }
 
 /**

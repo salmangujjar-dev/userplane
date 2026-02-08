@@ -36,6 +36,7 @@ import {
 import type { RecordingSessionInfo } from './bridge';
 import { FrameManagerFactory } from './frame/factory';
 import type { IFrameManager, IRecordingFrameManager } from './frame/types';
+import { logger } from './logger';
 import type {
   ActionType,
   InitializeOptions,
@@ -83,7 +84,7 @@ function getActionUrl(baseUrl: string, action: ActionType): string {
  * Handle close request from frame manager
  */
 function handleCloseRequest(): void {
-  console.log('[Userplane] Frame requested close');
+  logger.info('Frame requested close');
   currentManager?.unmount();
   currentManager = null;
 
@@ -95,7 +96,7 @@ function handleCloseRequest(): void {
  * Handle capture connection established
  */
 function handleCaptureConnected(): void {
-  console.log('[Userplane] Capture iframe connected');
+  logger.info('Capture iframe connected');
 }
 
 /**
@@ -109,7 +110,7 @@ function mountCaptureIfNeeded(): void {
 
   // Don't mount if main frame is already active
   if (currentManager?.isMounted()) {
-    console.log('[Userplane] Skipping capture mount - main frame active');
+    logger.debug('Skipping capture mount - main frame active');
     return;
   }
 
@@ -126,7 +127,7 @@ function mountCaptureIfNeeded(): void {
     action: 'capture',
   };
 
-  console.log('[Userplane] Mounting capture iframe');
+  logger.info('Mounting capture iframe');
   captureManager = factory.create('capture');
   captureManager.tryMount(params);
 }
@@ -136,7 +137,7 @@ function mountCaptureIfNeeded(): void {
  */
 function unmountCapture(): void {
   if (captureManager?.isMounted()) {
-    console.log('[Userplane] Unmounting capture iframe');
+    logger.info('Unmounting capture iframe');
     captureManager.unmount();
   }
 }
@@ -145,14 +146,14 @@ function unmountCapture(): void {
  * Handle session ready event
  */
 function handleSessionReady(info: RecordingSessionInfo): void {
-  console.log('[Userplane] Session ready:', info);
+  logger.info({ session: info }, 'Session ready');
 }
 
 /**
  * Handle recording state change
  */
 function handleRecordingStateChange(state: RecordingState): void {
-  console.log('[Userplane] Recording state changed:', state);
+  logger.info({ state }, 'Recording state changed');
 }
 
 /**
@@ -160,7 +161,7 @@ function handleRecordingStateChange(state: RecordingState): void {
  */
 function mountWithFactory(params: RecorderParams): boolean {
   if (!factory) {
-    console.error('[Userplane] Factory not initialized');
+    logger.error('Factory not initialized');
     return false;
   }
 
@@ -238,17 +239,17 @@ function parseUserplaneUrl(href: string): SerializableUserplaneData | null {
  */
 export function initialize(options: InitializeOptions = {}): void {
   if (initialized) {
-    console.warn('[Userplane] SDK is already initialized');
+    logger.warn('SDK is already initialized');
     return;
   }
 
-  console.log('[Userplane] Initializing SDK');
+  logger.info('Initializing SDK');
   initialized = true;
   initOptions = options;
 
   // Set up tab reference
   tabRef = getOrCreateTabRef();
-  console.log('[Userplane] Tab Ref:', tabRef);
+  logger.debug({ tabRef }, 'Tab Ref');
 
   // Set recorder base URL
   if (options.recorderBaseUrl) {
@@ -293,21 +294,22 @@ export function initialize(options: InitializeOptions = {}): void {
   // Check URL for recording/verification params
   const urlData = parseUserplaneUrl(window.location.href);
   if (!urlData || !urlData.token) {
-    console.log('[Userplane] No userplane action in URL');
+    logger.debug('No userplane action in URL');
     // No action in URL - mount capture iframe for background metadata collection
     mountCaptureIfNeeded();
     return;
   }
 
   const action: ActionType = urlData.action || 'recording';
-  console.log('[Userplane] Userplane action detected');
-  console.log('[Userplane] Token:', urlData.token.substring(0, 20) + '...');
-  console.log('[Userplane] Action:', action);
+  logger.info(
+    { action, token: urlData.token.substring(0, 20) + '...' },
+    'Userplane action detected'
+  );
 
   // Route to appropriate handler based on action
   if (action === 'verify') {
     // Verification always mounts immediately (no deferred mode)
-    console.log('[Userplane] Auto-mounting verification');
+    logger.info('Auto-mounting verification');
     mountVerification(urlData.token);
     return;
   }
@@ -326,7 +328,7 @@ export function initialize(options: InitializeOptions = {}): void {
   if (openImmediately !== false) {
     mountWithFactory(params);
   } else {
-    console.log('[Userplane] Deferring recorder mount (openImmediately: false)');
+    logger.debug('Deferring recorder mount (openImmediately: false)');
     pendingParams = params;
     // Mount capture while waiting for manual open()
     mountCaptureIfNeeded();
@@ -368,12 +370,12 @@ export function isInitialized(): boolean {
  */
 export function open(token?: string): boolean {
   if (!initialized || !factory) {
-    console.error('[Userplane] Not initialized. Call initialize() first.');
+    logger.error('Not initialized. Call initialize() first.');
     return false;
   }
 
   if (currentManager?.isMounted()) {
-    console.warn('[Userplane] Recorder is already open');
+    logger.warn('Recorder is already open');
     return false;
   }
 
@@ -390,23 +392,20 @@ export function open(token?: string): boolean {
   } else if (pendingParams) {
     // Only allow recording from pending params
     if (pendingParams.action !== 'recording') {
-      console.error(
-        '[Userplane] open() is only for recording. Pending action:',
-        pendingParams.action
-      );
+      logger.error({ action: pendingParams.action }, 'open() is only for recording');
       return false;
     }
     params = pendingParams;
   } else {
     const urlData = parseUserplaneUrl(window.location.href);
     if (!urlData || !urlData.token) {
-      console.error('[Userplane] No token provided and no recording action in URL');
+      logger.error('No token provided and no recording action in URL');
       return false;
     }
 
     // Only allow recording via open()
     if (urlData.action && urlData.action !== 'recording') {
-      console.error('[Userplane] open() is only for recording. URL action:', urlData.action);
+      logger.error({ action: urlData.action }, 'open() is only for recording');
       return false;
     }
 
@@ -419,7 +418,7 @@ export function open(token?: string): boolean {
     };
   }
 
-  console.log('[Userplane] Opening recorder');
+  logger.info('Opening recorder');
   return mountWithFactory(params);
 }
 
@@ -429,12 +428,12 @@ export function open(token?: string): boolean {
  */
 function mountVerification(token: string): boolean {
   if (!initialized || !factory) {
-    console.error('[Userplane] Not initialized. Call initialize() first.');
+    logger.error('Not initialized. Call initialize() first.');
     return false;
   }
 
   if (currentManager?.isMounted()) {
-    console.warn('[Userplane] Frame is already mounted');
+    logger.warn('Frame is already mounted');
     return false;
   }
 
@@ -446,7 +445,7 @@ function mountVerification(token: string): boolean {
     action: 'verify',
   };
 
-  console.log('[Userplane] Mounting verification');
+  logger.info('Mounting verification');
   return mountWithFactory(params);
 }
 
@@ -462,7 +461,7 @@ export function unmount(): void {
   if (currentManager) {
     currentManager.unmount();
     currentManager = null;
-    console.log('[Userplane] Frame unmounted');
+    logger.info('Frame unmounted');
   }
 }
 
@@ -546,7 +545,7 @@ export function getTabRef(): string | null {
 export function clearTabRef(): void {
   clearTabRefUtil();
   tabRef = null;
-  console.log('[Userplane] Tab Ref cleared');
+  logger.info('Tab Ref cleared');
 }
 
 /**

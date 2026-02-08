@@ -54,12 +54,13 @@ const standardTerserConfig = {
 const isCdnBuild = optimizeMode === 'cdn';
 const terserConfig = isCdnBuild ? cdnTerserConfig : standardTerserConfig;
 
+const isProduction = isCdnBuild;
+
 export default defineConfig({
-  define: isCdnBuild
-    ? {
-        __CDN_BASE_URL__: JSON.stringify(cdnBaseUrl),
-      }
-    : {},
+  define: {
+    __DEV__: JSON.stringify(!isProduction),
+    ...(isCdnBuild ? { __CDN_BASE_URL__: JSON.stringify(cdnBaseUrl) } : {}),
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,

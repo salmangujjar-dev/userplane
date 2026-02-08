@@ -20,6 +20,14 @@
  * ```
  */
 
+import { createLogger } from '@workspace/console-logger';
+
+declare const __DEV__: boolean;
+
+const logger = createLogger('Metadata', {
+  level: typeof __DEV__ !== 'undefined' && __DEV__ ? 'debug' : 'warn',
+});
+
 /**
  * Primitive types that can be safely serialized
  */
@@ -284,11 +292,11 @@ export function getCustomMetadata(): SerializableObject | null {
         result = { ...result, ...fnResult };
         hasData = true;
       } else {
-        console.warn('[Userplane] metadata function must return an object');
+        logger.warn('metadata function must return an object');
       }
     }
   } catch (error) {
-    console.error('[Userplane] Error executing metadata function:', error);
+    logger.error({ err: error }, 'Error executing metadata function');
   }
 
   return hasData ? result : null;

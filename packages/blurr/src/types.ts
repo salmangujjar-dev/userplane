@@ -3,14 +3,10 @@
  */
 
 /**
- * Logger interface matching console API
+ * Logger interface — re-exported from @workspace/console-logger
  */
-export interface Logger {
-  log(...args: unknown[]): void;
-  warn(...args: unknown[]): void;
-  error(...args: unknown[]): void;
-  debug(...args: unknown[]): void;
-}
+import type { Logger } from '@workspace/console-logger';
+export type { Logger };
 
 /**
  * Options for BlurManager constructor

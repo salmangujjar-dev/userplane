@@ -29,6 +29,9 @@
     "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6007",
     "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
   },
+  "dependencies": {
+    "@workspace/console-logger": "workspace:*"
+  },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.1.3",
     "@storybook/addon-docs": "^10.1.11",

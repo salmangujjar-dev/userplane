@@ -10,6 +10,14 @@
  * <script src="https://cdn.userplane.io/embed/script.js"></script>
  */
 
+import { createLogger } from '@workspace/console-logger';
+
+declare const __DEV__: boolean;
+
+const logger = createLogger('Embed', {
+  level: typeof __DEV__ !== 'undefined' && __DEV__ ? 'debug' : 'warn',
+});
+
 (function () {
   'use strict';
 
@@ -64,7 +72,7 @@
       // Inject into head
       (document.head || document.documentElement).appendChild(script);
     } catch (error) {
-      console.error('[Userplane] Failed to load embed:', error);
+      logger.error({ err: error }, 'Failed to load embed');
     }
   }
 

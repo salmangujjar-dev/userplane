@@ -79,6 +79,7 @@
  */
 
 import { extractMethods, generateId, set } from './helpers';
+import { logger } from './logger';
 import {
   bridgeActions,
   BridgeBroadcastPayload,
@@ -192,7 +193,7 @@ function createBroadcastProxy(
     try {
       port.postMessage(broadcastPayload);
     } catch (e) {
-      console.error(`[Bridge] Failed to broadcast ${methodName}:`, e);
+      logger.error({ err: e, method: methodName }, 'Failed to broadcast');
     }
 
     // Step 3: Return local result (or throw local error)
@@ -256,7 +257,7 @@ function createDirectMessageProxy(
     try {
       port.postMessage(directMessagePayload);
     } catch (e) {
-      console.error(`[Bridge] Failed to send direct message ${methodName} to ${targetTabID}:`, e);
+      logger.error({ err: e, method: methodName, targetTabID }, 'Failed to send direct message');
     }
 
     // Step 3: Return local result (or throw local error)
@@ -348,7 +349,7 @@ async function connect(
           case bridgeActions.BRIDGE_HANDSHAKE_ERROR: {
             // Handshake failed - reject connection
             const errorPayload = data as BridgeHandshakeErrorPayload;
-            console.error(`[Bridge] Handshake error (${errorPayload.code}):`, errorPayload.error);
+            logger.error({ code: errorPayload.code, err: errorPayload.error }, 'Handshake error');
             reject(new Error(`Bridge handshake failed: ${errorPayload.error}`));
             break;
           }
@@ -517,7 +518,7 @@ async function connect(
           // Get the method function
           const methodFn = methods[methodName];
           if (!methodFn) {
-            console.warn(`[Bridge] Method ${methodName} not found in schema`);
+            logger.warn({ method: methodName }, 'Method not found in schema');
             return;
           }
 
@@ -525,7 +526,7 @@ async function connect(
           try {
             await methodFn(...args, remote);
           } catch (error) {
-            console.error(`[Bridge] Error executing ${methodName}:`, error);
+            logger.error({ err: error, method: methodName }, 'Error executing method');
           }
         }
 

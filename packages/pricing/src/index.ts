@@ -309,10 +309,10 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
   // Free: Free evaluation tier
   free: {
     seats: {
-      quotedLimit: 5,
-      creditLimit: 10,
-      softLimit: 5,
-      hardLimit: 15,
+      quotedLimit: 3,
+      creditLimit: 0,
+      softLimit: 3,
+      hardLimit: 3,
     },
     recordings: {
       quotedLimit: 3,

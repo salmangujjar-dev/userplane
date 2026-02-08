@@ -70,6 +70,7 @@ import {
   postMessageToTarget,
   removeEventListener,
 } from './helpers';
+import { logger } from './logger';
 import { registerLocalMethods, registerRemoteMethods } from './rpc';
 import { actions, Connection, Connections, events, Guest, Schema } from './types';
 
@@ -151,7 +152,7 @@ function isValidTarget(guest: Guest, event: any) {
     // Allow if both checks pass, or if iframe has no src (about:blank)
     return (hasProperOrigin && hasProperSource) || !childURL;
   } catch (e) {
-    console.warn('Error checking iframe target:', e);
+    logger.warn({ err: e }, 'Error checking iframe target');
     return false;
   }
 }

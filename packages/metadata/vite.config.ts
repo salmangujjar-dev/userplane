@@ -54,7 +54,12 @@ const standardTerserConfig = {
 // Select terser config based on build mode
 const terserConfig = optimizeMode ? optimizedTerserConfig : standardTerserConfig;
 
+const isProduction = !!optimizeMode;
+
 export default defineConfig({
+  define: {
+    __DEV__: JSON.stringify(!isProduction),
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),

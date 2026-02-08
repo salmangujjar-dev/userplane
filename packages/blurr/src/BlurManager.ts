@@ -32,7 +32,6 @@ import {
   matchesSelector,
   measurePerformance,
   querySelectorAllSafe,
-  setGlobalDebug,
 } from './utils';
 
 /**
@@ -87,13 +86,8 @@ export class BlurManager {
       ...options,
     };
 
-    // Enable global debug if requested
-    if (options.debug) {
-      setGlobalDebug(true);
-    }
-
     // Create logger
-    this.logger = options.logger || createLogger('BlurManager', options.debug);
+    this.logger = options.logger || createLogger('BlurManager');
 
     // Store custom selectors
     this._customSelectors = customSelectors;
@@ -102,10 +96,12 @@ export class BlurManager {
     this.cachedMaskSelectors = getMaskSelectorsString(customSelectors);
     this.cachedUnmaskSelectors = getUnmaskSelectorsString();
 
-    this.logger.log('BlurManager initialized', {
-      customSelectors: customSelectors.length,
-      options: this.options,
-    });
+    this.logger.info(
+      {
+        customSelectors: customSelectors.length,
+      },
+      'BlurManager initialized'
+    );
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -121,7 +117,7 @@ export class BlurManager {
       return;
     }
 
-    this.logger.log('Starting...');
+    this.logger.info('Starting...');
 
     const { duration } = measurePerformance('blur-start', () => {
       // Find and blur all matching elements
@@ -139,10 +135,13 @@ export class BlurManager {
     this._isStarted = true;
     this.metrics.startTime = duration;
 
-    this.logger.log('Started successfully', {
-      duration: `${duration.toFixed(2)}ms`,
-      elementsBlurred: this.metrics.elementsBlurred,
-    });
+    this.logger.info(
+      {
+        duration: `${duration.toFixed(2)}ms`,
+        elementsBlurred: this.metrics.elementsBlurred,
+      },
+      'Started successfully'
+    );
 
     this.emit('start');
   }
@@ -156,7 +155,7 @@ export class BlurManager {
       return;
     }
 
-    this.logger.log('Stopping...');
+    this.logger.info('Stopping...');
 
     measurePerformance('blur-stop', () => {
       // Disconnect observers
@@ -176,7 +175,7 @@ export class BlurManager {
 
     this._isStarted = false;
 
-    this.logger.log('Stopped successfully');
+    this.logger.info('Stopped successfully');
 
     this.emit('stop');
   }
@@ -191,12 +190,12 @@ export class BlurManager {
     }
 
     if (this._shouldUnmask(element)) {
-      this.logger.debug('Element should not be blurred (unmask)', element);
+      this.logger.debug('Element should not be blurred (unmask)');
       return false;
     }
 
     if (hasBlurState(element)) {
-      this.logger.debug('Element already blurred', element);
+      this.logger.debug('Element already blurred');
       return false;
     }
 
@@ -209,7 +208,7 @@ export class BlurManager {
    */
   unblurElement(element: Element): boolean {
     if (!hasBlurState(element)) {
-      this.logger.debug('Element not blurred', element);
+      this.logger.debug('Element not blurred');
       return false;
     }
 
@@ -271,7 +270,7 @@ export class BlurManager {
     // Rebuild cached selectors
     this.cachedMaskSelectors = getMaskSelectorsString(this._customSelectors);
 
-    this.logger.log('Added custom selectors', selectors);
+    this.logger.info({ selectors }, 'Added custom selectors');
 
     // Re-scan if already started
     if (this._isStarted) {
@@ -288,7 +287,7 @@ export class BlurManager {
     // Rebuild cached selectors
     this.cachedMaskSelectors = getMaskSelectorsString(this._customSelectors);
 
-    this.logger.log('Removed custom selectors', selectors);
+    this.logger.info({ selectors }, 'Removed custom selectors');
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -325,7 +324,7 @@ export class BlurManager {
         try {
           listener(data);
         } catch (error) {
-          this.logger.error('Error in event listener', error);
+          this.logger.error({ err: error }, 'Error in event listener');
         }
       });
     }
@@ -341,7 +340,7 @@ export class BlurManager {
   private _blurInitialElements(): void {
     const elements = querySelectorAllSafe(document, this.cachedMaskSelectors);
 
-    this.logger.log(`Found ${elements.length} elements to blur`);
+    this.logger.info(`Found ${elements.length} elements to blur`);
 
     elements.forEach((element) => {
       this._applyBlur(element);
@@ -398,7 +397,7 @@ export class BlurManager {
     this.metrics.elementsBlurred++;
     this._didBlurElements = true;
 
-    this.logger.debug(`Blurred element with radius ${blurRadius}px`, element);
+    this.logger.debug({ blurRadius }, 'Blurred element');
 
     this.emit('blur', { element, blurRadius });
   }
@@ -429,7 +428,7 @@ export class BlurManager {
   private _restoreAllElements(): void {
     const elements = findAllBlurredElements();
 
-    this.logger.log(`Restoring ${elements.length} elements`);
+    this.logger.info(`Restoring ${elements.length} elements`);
 
     elements.forEach((element) => {
       restoreOriginalFilter(element);
@@ -449,7 +448,7 @@ export class BlurManager {
 
     observe(this.mutationObserver, document.documentElement);
 
-    this.logger.log('MutationObserver started', { useRAF });
+    this.logger.info({ useRAF }, 'MutationObserver started');
   }
 
   /**
@@ -461,10 +460,13 @@ export class BlurManager {
       return;
     }
 
-    this.logger.debug('Processing mutation batch', {
-      toBlur: batch.elementsToBlur.size,
-      toReevaluate: batch.elementsToReevaluate.size,
-    });
+    this.logger.debug(
+      {
+        toBlur: batch.elementsToBlur.size,
+        toReevaluate: batch.elementsToReevaluate.size,
+      },
+      'Processing mutation batch'
+    );
 
     const { duration } = measurePerformance('handle-mutations', () => {
       // Process elements to blur
@@ -518,7 +520,7 @@ export class BlurManager {
       }
     });
 
-    this.logger.log('IntersectionObserver started');
+    this.logger.info('IntersectionObserver started');
   }
 
   // ═══════════════════════════════════════════════════════════
