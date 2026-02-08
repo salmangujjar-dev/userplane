@@ -8,6 +8,6 @@ export const copy = {
   greeting: (userName: string) => `Hi ${userName},`,
   body: ['Click the button below to verify your email address and complete your registration.'],
   cta: 'Verify email',
-  fallbackText: 'Or copy this link:',
+  fallbackText: 'Or copy this link',
   footer: 'If you did not create an account, you can safely ignore this email.',
 } as const;

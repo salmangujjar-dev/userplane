@@ -16,25 +16,30 @@ export const container = {
 } as React.CSSProperties;
 
 export const headerSection = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginBottom: '40px',
   textAlign: 'center',
+  marginBottom: '40px',
 } as React.CSSProperties;
 
-export const logoImage = {
-  display: 'inline-block',
+export const logoRow = {
+  width: 'auto',
+  margin: '0 auto',
+} as React.CSSProperties;
+
+export const logoImageColumn = {
   verticalAlign: 'middle',
-  marginRight: '8px',
+  width: '40px',
+  paddingRight: '8px',
+} as React.CSSProperties;
+
+export const logoTextColumn = {
+  verticalAlign: 'middle',
 } as React.CSSProperties;
 
 export const logoText = {
-  display: 'inline-block',
-  verticalAlign: 'middle',
   fontSize: '24px',
   color: '#000',
   margin: '0',
+  whiteSpace: 'nowrap',
 } as React.CSSProperties;
 
 export const title = {

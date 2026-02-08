@@ -17,5 +17,5 @@ export const copy = {
     'Request and replay customer issues without the back-and-forth. Join your team and get started with Userplane immediately.',
   ],
   cta: 'Accept invitation',
-  fallbackText: 'Or copy this link:',
+  fallbackText: 'Or copy this link',
 } as const;

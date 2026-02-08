@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { LINK_PROVIDER_TYPE_OPTIONS, type LinkProviderType } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -32,7 +33,6 @@ import { z } from 'zod';
 
 import { LinkReferenceInput } from '@/components/link-reference-input';
 import { SUPPORT_LINKS } from '@/constants';
-import { URLSchema } from '@/schemas';
 
 interface EditLinkModalProps {
   open: boolean;
@@ -40,31 +40,21 @@ interface EditLinkModalProps {
   title: string;
   reference?: string;
   isReusable: boolean;
-  linkProvider?: string;
+  linkProvider?: LinkProviderType;
   linkProviderId?: string;
   onSave: (
     title: string,
     reference: string,
     isReusable: boolean,
-    linkProvider?: string,
+    linkProvider?: LinkProviderType,
     linkProviderId?: string
   ) => void;
 }
 
-const LINK_PROVIDERS = [
-  { id: 'intercom', name: 'Intercom' },
-  { id: 'zendesk', name: 'Zendesk' },
-  { id: 'jira', name: 'Jira' },
-  { id: 'linear', name: 'Linear' },
-  { id: 'slack', name: 'Slack' },
-  { id: 'asana', name: 'Asana' },
-  { id: 'github', name: 'GitHub' },
-  { id: 'gitlab', name: 'GitLab' },
-];
-
 const editLinkFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
-  reference: URLSchema.optional(),
+  // Allow empty string (no reference) or a valid URL; undefined also accepted
+  reference: z.string().optional(),
   linkProvider: z.string().optional(),
   providerId: z.string().optional(),
   isReusable: z.boolean(),
@@ -88,10 +78,10 @@ export function EditLinkModal({
     reset,
     setValue,
     watch,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isDirty },
   } = useForm({
     resolver: zodResolver(editLinkFormSchema),
-    mode: 'onTouched',
+    mode: 'onChange',
     defaultValues: {
       title: title,
       reference: reference,
@@ -119,7 +109,7 @@ export function EditLinkModal({
   const onSubmit = (data: {
     title: string;
     reference?: string;
-    linkProvider?: string;
+    linkProvider?: LinkProviderType;
     providerId?: string;
     isReusable: boolean;
   }) => {
@@ -138,7 +128,7 @@ export function EditLinkModal({
                 <DialogTitle className="text-xl font-semibold">Edit Recording Link</DialogTitle>
                 <div className="flex items-center gap-2">
                   <DialogDescription className="text-sm text-muted-foreground">
-                    Update the title and reusability settings for this recording link
+                    View and update the recording link
                   </DialogDescription>
                   <TooltipProvider>
                     <Tooltip>
@@ -233,20 +223,21 @@ export function EditLinkModal({
                             }
                           >
                             {selectedProvider
-                              ? LINK_PROVIDERS.find((p) => p.id === selectedProvider)?.name
+                              ? LINK_PROVIDER_TYPE_OPTIONS.find((p) => p.value === selectedProvider)
+                                  ?.label
                               : 'Select a provider'}
                           </span>
                           <ChevronDown className="h-4 w-4" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) max-h-[280px] overflow-y-auto">
-                        {LINK_PROVIDERS.map((provider) => (
+                        {LINK_PROVIDER_TYPE_OPTIONS.map((provider) => (
                           <DropdownMenuItem
-                            key={provider.id}
-                            onClick={() => setValue('linkProvider', provider.id)}
+                            key={provider.value}
+                            onClick={() => setValue('linkProvider', provider.value)}
                             className="cursor-pointer"
                           >
-                            {provider.name}
+                            {provider.label}
                           </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>
@@ -321,7 +312,9 @@ export function EditLinkModal({
                 </>
               )}
             </button>
-            <div className="flex gap-2">
+            <div
+              className={`flex gap-2 transition-opacity ${isDirty ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            >
               <Button
                 type="button"
                 variant="outline"

@@ -32,7 +32,7 @@ export function createRecorderClient() {
     headers: ({ context }) => {
       return context?.headers || {};
     },
-    credentials: 'include',
+    credentials: 'omit',
     onError: (error) => {
       logger.error({ err: error }, 'api client error');
 

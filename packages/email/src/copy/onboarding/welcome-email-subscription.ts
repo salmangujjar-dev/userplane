@@ -10,6 +10,5 @@ export const copy = {
     'Your workspace is ready. Start by creating your first one-click recording link and share it with your customers.',
   ],
   cta: 'Go to dashboard',
-  footer:
-    'Need help getting started? Check out our documentation or reach out to our support team.',
+  footer: "Need help getting started or have questions or feedback? We'd love to hear from you.",
 } as const;

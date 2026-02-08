@@ -17,7 +17,7 @@ export const copy = {
   },
   body: 'Just click the link below to get direct access to the code snippet and simple installation instructions.',
   cta: 'Get Started',
-  fallbackText: 'Or copy this link:',
+  fallbackText: 'Or copy this link',
   footer:
     'After adding the script, you can redact sensitive customer data and debug issues using console logs, and network activity capture.',
 } as const;

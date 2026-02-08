@@ -29,6 +29,7 @@ import type {
   AdminWorkspaceFilterStatus,
   AdminWorkspaceSortField,
   DomainStatus,
+  LinkProviderType,
   SortDirection,
   StreamingStatus,
   UploadStatus,
@@ -129,6 +130,53 @@ export const DOMAIN_STATUS_OPTIONS: SelectOption<DomainStatus>[] = [
   { value: 'pending', label: 'Pending Verification' },
   { value: 'verified', label: 'Verified' },
   { value: 'revoked', label: 'Revoked' },
+] as const;
+
+// ============================================================================
+// LINK PROVIDER OPTIONS
+// ============================================================================
+
+/**
+ * Link provider type options for dropdowns and filters
+ * Maps to LinkProviderType enum from schemas
+ *
+ * Grouped by category:
+ * - Support/Helpdesk providers
+ * - Project Management / Dev Tools
+ * - Fallback options
+ */
+export const LINK_PROVIDER_TYPE_OPTIONS: SelectOption<LinkProviderType>[] = [
+  // Support/Helpdesk
+  { value: 'intercom', label: 'Intercom' },
+  { value: 'zendesk', label: 'Zendesk' },
+  { value: 'hubspot', label: 'HubSpot' },
+  { value: 'freshdesk', label: 'Freshdesk' },
+  { value: 'freshchat', label: 'Freshchat' },
+  { value: 'jira_service_management', label: 'Jira Service Management' },
+  { value: 'helpscout', label: 'Help Scout' },
+  { value: 'happyfox', label: 'HappyFox' },
+  { value: 'ada', label: 'Ada' },
+  { value: 'forethought', label: 'Forethought' },
+  { value: 'servicenow', label: 'ServiceNow' },
+  { value: 'front', label: 'Front' },
+  { value: 'zoho_desk', label: 'Zoho Desk' },
+  { value: 'crisp', label: 'Crisp' },
+  { value: 'pylon', label: 'Pylon' },
+  { value: 'plain', label: 'Plain' },
+  // Project Management / Dev Tools
+  { value: 'asana', label: 'Asana' },
+  { value: 'azure_devops', label: 'Azure DevOps' },
+  { value: 'clickup', label: 'ClickUp' },
+  { value: 'github', label: 'GitHub' },
+  { value: 'gitlab', label: 'GitLab' },
+  { value: 'jira', label: 'Jira' },
+  { value: 'linear', label: 'Linear' },
+  { value: 'notion', label: 'Notion' },
+  { value: 'sentry', label: 'Sentry' },
+  { value: 'slack', label: 'Slack' },
+  // Fallback
+  { value: 'web', label: 'Web' },
+  { value: 'others', label: 'Others' },
 ] as const;
 
 // ============================================================================
