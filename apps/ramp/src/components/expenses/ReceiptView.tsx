@@ -79,7 +79,8 @@ function generateLineItems(merchant: string, amount: number, rng: () => number) 
       ? Math.round(remaining * 100) / 100
       : Math.round(remaining * (rng() * 0.5 + 0.15) * 100) / 100;
     remaining -= price;
-    items.push({ name: shuffled[i], price: Math.max(price, 0.01) });
+    const itemName = shuffled[i] ?? 'Item';
+    items.push({ name: itemName, price: Math.max(price, 0.01) });
   }
 
   return items;

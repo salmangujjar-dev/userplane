@@ -565,7 +565,10 @@ function randomAmount(min: number, max: number): number {
 }
 
 function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+  if (arr.length === 0) {
+    throw new Error('Cannot pick from empty array');
+  }
+  return arr[Math.floor(Math.random() * arr.length)] as T;
 }
 
 /** Simple deterministic-ish hex snippet for expense IDs */
@@ -880,6 +883,10 @@ function generateExpenses(): Expense[] {
   for (let i = 0; i < EXPENSE_COUNT; i++) {
     const categoryId = pickRandom(categories).id;
     const config = categoryConfig[categoryId];
+
+    // Skip if config doesn't exist for this category
+    if (!config) continue;
+
     const expenseDate = randomDate(365);
     const submittedDate = new Date(expenseDate);
     submittedDate.setHours(submittedDate.getHours() + Math.floor(Math.random() * 72));
