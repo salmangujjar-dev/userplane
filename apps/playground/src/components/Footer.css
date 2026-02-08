@@ -104,6 +104,7 @@
 
 .footer-apply-btn:hover {
   background-color: var(--yc-orange-hover);
+  color: var(--white);
   text-decoration: none;
 }
 

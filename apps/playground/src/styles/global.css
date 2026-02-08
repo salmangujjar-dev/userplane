@@ -91,13 +91,13 @@ strong, b {
   font-weight: var(--font-weight-bold);
 }
 
-a {
+:where(a) {
   color: var(--yc-orange);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-a:hover {
+:where(a):hover {
   color: var(--yc-orange-hover);
   text-decoration: underline;
 }
@@ -276,4 +276,112 @@ select {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* Toast notifications -- matches card/sidebar-box pattern */
+.toast-container {
+  position: fixed;
+  bottom: var(--spacing-xl);
+  right: var(--spacing-xl);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  min-width: 340px;
+  max-width: 420px;
+  padding: var(--spacing-lg);
+  background-color: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px var(--card-shadow);
+  font-family: var(--font-family);
+  transform: translateY(100%);
+  opacity: 0;
+  animation: toast-in 0.3s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.toast:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #d1d5db;
+}
+
+.toast.toast-exit {
+  animation: toast-out 0.2s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--yc-orange);
+  margin-top: 1px;
+}
+
+.toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.toast-description {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-light);
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+  line-height: 1.5;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s ease;
+}
+
+.toast-close:hover {
+  color: var(--text-primary);
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(8px);
+    opacity: 0;
+  }
 }

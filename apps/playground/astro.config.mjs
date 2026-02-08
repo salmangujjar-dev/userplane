@@ -1,4 +1,6 @@
 // @ts-check
+import { resolve } from 'node:path';
+
 import react from '@astrojs/react';
 import { defineConfig } from 'astro/config';
 
@@ -9,6 +11,13 @@ export default defineConfig({
     port: 4444
   },
   vite: {
+    resolve: {
+      alias: {
+        // Point directly at SDK source so playground works without building
+        // the SDK first. Vite handles the TS transpilation on the fly.
+        '@workspace/sdk': resolve(import.meta.dirname, '../../packages/sdk/src/index.ts'),
+      },
+    },
     optimizeDeps: {
       exclude: ['@workspace/sdk']
     },

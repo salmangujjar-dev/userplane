@@ -24,7 +24,11 @@ import { isEnabled } from '../flags';
           </a>
         )
       }
-      <a href="https://www.ycombinator.com/apply" class="apply-btn">Apply</a>
+      <a
+        href="https://www.ycombinator.com/apply"
+        class="apply-btn"
+        data-apply-blocked={isEnabled('applyFailure') ? 'true' : undefined}>Apply</a
+      >
     </nav>
   </div>
 </header>

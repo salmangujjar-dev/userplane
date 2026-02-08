@@ -82,5 +82,9 @@
   "resultsCount": {
     "enabled": true,
     "description": "Show results count info"
+  },
+  "applyFailure": {
+    "enabled": true,
+    "description": "Simulate apply button failure with an error toast"
   }
 }
