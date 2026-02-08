@@ -22,6 +22,7 @@ import { AlertCircle, HelpCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { SUPPORT_LINKS } from '@/constants';
+import { useSubscriptionStatus } from '@/features/billing';
 import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainConfigureModalProps {
@@ -48,6 +49,15 @@ export function DomainConfigureModal({
   onSendInstructions,
   loading = false,
 }: DomainConfigureModalProps) {
+  const { data: subscriptionResult } = useSubscriptionStatus();
+  const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
+  const effectivePlanId = subscriptionData?.accessDetail.effectivePlanId ?? 'free';
+  const isEnterprise =
+    effectivePlanId === 'enterprise_monthly' || effectivePlanId === 'enterprise_annual';
+
+  // Advanced recording toggles are only available on enterprise plans
+  const paidDisabled = loading || !verified || !isEnterprise;
+
   const [localSettings, setLocalSettings] = useState<DomainRecordingPreferences>(settings);
 
   useEffect(() => {
@@ -201,10 +211,19 @@ export function DomainConfigureModal({
                   />
                 </div>
 
+                {!isEnterprise && verified && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+                    <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      Upgrade your plan to configure advanced recording settings
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="console-logs"
-                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Capture console logs
                   </Label>
@@ -214,14 +233,14 @@ export function DomainConfigureModal({
                     onCheckedChange={(checked) =>
                       setLocalSettings((prev) => ({ ...prev, recordingCaptureClientLog: checked }))
                     }
-                    disabled={loading || !verified}
+                    disabled={paidDisabled}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="client-actions"
-                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Capture client actions
                   </Label>
@@ -234,14 +253,14 @@ export function DomainConfigureModal({
                         recordingCaptureClientAction: checked,
                       }))
                     }
-                    disabled={loading || !verified}
+                    disabled={paidDisabled}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="network-logs"
-                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Capture network logs
                   </Label>
@@ -251,14 +270,14 @@ export function DomainConfigureModal({
                     onCheckedChange={(checked) =>
                       setLocalSettings((prev) => ({ ...prev, recordingCaptureNetworkLog: checked }))
                     }
-                    disabled={loading || !verified}
+                    disabled={paidDisabled}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="backend-server"
-                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Capture backend and server logs
                   </Label>
@@ -268,7 +287,7 @@ export function DomainConfigureModal({
                     onCheckedChange={(checked) =>
                       setLocalSettings((prev) => ({ ...prev, recordingCaptureServerLog: checked }))
                     }
-                    disabled={loading || !verified}
+                    disabled={paidDisabled}
                   />
                 </div>
               </div>
