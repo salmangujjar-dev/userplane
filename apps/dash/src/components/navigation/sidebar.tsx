@@ -11,6 +11,19 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import Logo from '@workspace/ui/components/logo';
 import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  useSidebar,
+} from '@workspace/ui/components/sidebar';
+import {
   Building2,
   Check,
   ChevronLeft,
@@ -60,8 +73,9 @@ interface NavSection {
   items: NavItem[];
 }
 
-export function Sidebar() {
+export function AppSidebar() {
   const router = useRouter();
+  const { state: sidebarState } = useSidebar();
   const workspaceId = useWorkspaceId();
   const setWorkspaceStore = useWorkspaceStore((state) => state.setWorkspace);
   const { data: accountResult } = useAccount();
@@ -183,13 +197,13 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="flex h-screen w-64 flex-col shrink-0 bg-background">
-      <div className="px-6 py-6 shrink-0">
-        <div className="flex items-center gap-3">
+    <Sidebar variant="inset" collapsible="icon">
+      <SidebarHeader>
+        <div className="flex items-center gap-3 px-2 py-2">
           <Link href={`/workspace/${workspaceId}/recordings`}>
-            <Logo size="sm" />
+            <Logo size="sm" showText={sidebarState !== 'collapsed'} />
           </Link>
-          <button onClick={handlePlanClick}>
+          <button onClick={handlePlanClick} className="group-data-[collapsible=icon]:hidden">
             <Badge
               variant="secondary"
               className="rounded-md text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
@@ -198,172 +212,180 @@ export function Sidebar() {
             </Badge>
           </button>
         </div>
-      </div>
+      </SidebarHeader>
 
-      <nav className="flex-1 overflow-y-auto">
-        <div className="px-6 space-y-6">
-          {sections.map((section) => (
-            <div key={section.title}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-semibold text-foreground">{section.title}</div>
-                {section.title === 'Projects' && (hasPrevPage || hasNextPage) && (
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setProjectsPage((p) => Math.max(1, p - 1))}
-                      disabled={!hasPrevPage || isLoadingProjects}
-                      className="p-1 rounded hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      aria-label="Previous projects"
-                    >
-                      <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                    <button
-                      onClick={() => setProjectsPage((p) => p + 1)}
-                      disabled={!hasNextPage || isLoadingProjects}
-                      className="p-1 rounded hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      aria-label="Next projects"
-                    >
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1">
-                {section.title === 'Projects' && isLoadingProjects ? (
-                  <SidebarProjectsSkeleton count={3} />
-                ) : section.items.length === 0 && section.title === 'Projects' ? (
-                  <div className="text-sm text-muted-foreground px-0 py-2">No projects yet</div>
-                ) : (
-                  section.items.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="flex items-center gap-2 px-0 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Icon className="h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </nav>
+      <SidebarContent>
+        {sections.map((section) => (
+          <SidebarGroup key={section.title}>
+            <SidebarGroupLabel>
+              <span className="flex-1">{section.title}</span>
+              {section.title === 'Projects' && (hasPrevPage || hasNextPage) && (
+                <span className="flex items-center gap-1">
+                  <button
+                    onClick={() => setProjectsPage((p) => Math.max(1, p - 1))}
+                    disabled={!hasPrevPage || isLoadingProjects}
+                    className="p-0.5 rounded hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Previous projects"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                  <button
+                    onClick={() => setProjectsPage((p) => p + 1)}
+                    disabled={!hasNextPage || isLoadingProjects}
+                    className="p-0.5 rounded hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Next projects"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </span>
+              )}
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {section.title === 'Projects' && isLoadingProjects ? (
+                <SidebarProjectsSkeleton count={3} />
+              ) : section.items.length === 0 && section.title === 'Projects' ? (
+                <div className="text-sm text-muted-foreground px-2 py-2">No projects yet</div>
+              ) : (
+                section.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild tooltip={item.label}>
+                        <Link href={item.href}>
+                          <Icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })
+              )}
+            </SidebarMenu>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
 
       {account && (
-        <div className="px-4 py-4 shrink-0 flex justify-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 hover:bg-accent rounded-lg transition-colors w-full p-2">
-                <BoringAvatar size={32} name={account.userName} />
-                <div className="flex flex-col text-left flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">{account.userName}</div>
-                  <div className="text-xs text-muted-foreground truncate">{account.userEmail}</div>
-                </div>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64 p-2">
-              <div className="flex items-center gap-3 py-1.5 px-2">
-                <BoringAvatar size={32} name={account.userName} />
-                <div className="flex flex-col gap-1 flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">{account.userName}</div>
-                  <div className="text-xs text-muted-foreground truncate">{account.userEmail}</div>
-                </div>
-              </div>
-              <div className="py-1.5">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-accent transition-colors border border-border">
-                      <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="text-sm font-medium flex-1 truncate text-center">
-                        {workspace?.workspace.workspaceName || 'Select Workspace'}
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton size="lg" tooltip={account.userName}>
+                    <BoringAvatar size={32} name={account.userName} />
+                    <div className="flex flex-col text-left flex-1 min-w-0">
+                      <span className="text-sm font-semibold truncate">{account.userName}</span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {account.userEmail}
                       </span>
-                      <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56 p-2">
-                    <div className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                      Workspaces
                     </div>
-                    <div className="space-y-1 max-h-64 overflow-y-auto">
-                      {workspacesData?.workspaces?.map((ws) => (
-                        <button
-                          key={ws.workspaceId}
-                          onClick={() => {
-                            setWorkspaceStore(ws.workspaceId);
-                            router.push(`/workspace/${ws.workspaceId}/recordings`);
-                          }}
-                          className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left"
-                        >
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64 p-2" side="top">
+                  <div className="flex items-center gap-3 py-1.5 px-2">
+                    <BoringAvatar size={32} name={account.userName} />
+                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                      <div className="text-sm font-semibold truncate">{account.userName}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {account.userEmail}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="py-1.5">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-accent transition-colors border border-border">
                           <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm flex-1 truncate">{ws.workspaceName}</span>
-                          {ws.workspaceId === workspaceId && (
-                            <Check className="h-4 w-4 text-primary shrink-0" />
-                          )}
+                          <span className="text-sm font-medium flex-1 truncate text-center">
+                            {workspace?.workspace.workspaceName || 'Select Workspace'}
+                          </span>
+                          <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0" />
                         </button>
-                      ))}
-                    </div>
-                    <DropdownMenuSeparator className="-mx-2 my-2" />
-                    <button
-                      onClick={() =>
-                        router.push(`/workspace/${workspaceId}/account?tab=workspaces`)
-                      }
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-56 p-2">
+                        <div className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          Workspaces
+                        </div>
+                        <div className="space-y-1 max-h-64 overflow-y-auto">
+                          {workspacesData?.workspaces?.map((ws) => (
+                            <button
+                              key={ws.workspaceId}
+                              onClick={() => {
+                                setWorkspaceStore(ws.workspaceId);
+                                router.push(`/workspace/${ws.workspaceId}/recordings`);
+                              }}
+                              className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left"
+                            >
+                              <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <span className="text-sm flex-1 truncate">{ws.workspaceName}</span>
+                              {ws.workspaceId === workspaceId && (
+                                <Check className="h-4 w-4 text-primary shrink-0" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                        <DropdownMenuSeparator className="-mx-2 my-2" />
+                        <button
+                          onClick={() =>
+                            router.push(`/workspace/${workspaceId}/account?tab=workspaces`)
+                          }
+                          className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
+                        >
+                          <Folders className="h-4 w-4" />
+                          Show Workspaces
+                        </button>
+                        <button
+                          onClick={() => router.push('/workspace/create')}
+                          className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Create Workspace
+                        </button>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <DropdownMenuSeparator className="-mx-2 my-2" />
+                  <Link
+                    href={`/workspace/${workspaceId}/account`}
+                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                    Account
+                  </Link>
+                  {hasAdminAccess && (
+                    <Link
+                      href="/admin"
                       className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
                     >
-                      <Folders className="h-4 w-4" />
-                      Show Workspaces
-                    </button>
-                    <button
-                      onClick={() => router.push('/workspace/create')}
-                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create Workspace
-                    </button>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <DropdownMenuSeparator className="-mx-2 my-2" />
-              <Link
-                href={`/workspace/${workspaceId}/account`}
-                className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
-              >
-                <Settings2 className="h-4 w-4" />
-                Account
-              </Link>
-              {hasAdminAccess && (
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
-                >
-                  <Shield className="h-4 w-4" />
-                  Admin
-                </Link>
-              )}
-              <DropdownMenuSeparator className="-mx-2 my-2" />
-              <a
-                href={SUPPORT_LINKS.helpCenter}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
-              >
-                <HelpCircle className="h-4 w-4" />
-                Help
-              </a>
-              <DropdownMenuItem
-                onClick={signOut}
-                className="text-red-600 focus:text-red-600 cursor-pointer mx-0"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                      <Shield className="h-4 w-4" />
+                      Admin
+                    </Link>
+                  )}
+                  <DropdownMenuSeparator className="-mx-2 my-2" />
+                  <a
+                    href={SUPPORT_LINKS.helpCenter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-sm font-medium"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Help
+                  </a>
+                  <DropdownMenuItem
+                    onClick={signOut}
+                    className="text-red-600 focus:text-red-600 cursor-pointer mx-0"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
       )}
+
+      <SidebarRail />
 
       <PlanSelectionModal
         onPlanSelect={handlePlanSelect}
@@ -377,6 +399,6 @@ export function Sidebar() {
         onComplete={handlePlanChangeComplete}
         predictedFlow={getPredictedFlow()}
       />
-    </aside>
+    </Sidebar>
   );
 }

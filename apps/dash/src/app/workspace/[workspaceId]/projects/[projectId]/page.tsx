@@ -1,6 +1,5 @@
 'use client';
 
-import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import { Globe, Link as LinkIcon, Link2, Users, Video } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -11,8 +10,7 @@ import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { LinksList } from '@/components/links/links-list';
 import { CreateLinkModal } from '@/components/modals/create-link-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
-import { Sidebar } from '@/components/navigation/sidebar';
-import { TopActions } from '@/components/navigation/top-actions';
+import { PageHeader } from '@/components/navigation/page-header';
 import { RecordingPreview } from '@/components/recordings/recording-preview';
 import { DinoError } from '@/components/shared/dino-error';
 import { ProjectRecordingEmptyState } from '@/components/shared/empty-state';
@@ -184,194 +182,169 @@ export default function ProjectPage() {
   // Show loading state for project
   if (isLoadingProject) {
     return (
-      <div className="flex h-screen bg-background">
-        <Sidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <TopActions
-            onInviteClick={() => setInviteModalOpen(true)}
-            onCreateLinkClick={() => setCreateLinkModalOpen(true)}
-          />
-          <main className="flex-1 overflow-y-auto px-6 pb-8">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="space-y-2">
-                  <Skeleton className="h-7 w-48" />
-                  <Skeleton className="h-4 w-64" />
-                </div>
-              </div>
-              <RecordingGridSkeleton count={recordingsPerPage} />
-            </div>
-          </main>
-        </div>
-      </div>
+      <>
+        <PageHeader
+          onInviteClick={() => setInviteModalOpen(true)}
+          onCreateLinkClick={() => setCreateLinkModalOpen(true)}
+        />
+        <main className="flex-1 overflow-y-auto px-6 pb-8">
+          <div className="space-y-6">
+            <RecordingGridSkeleton count={recordingsPerPage} />
+          </div>
+        </main>
+      </>
     );
   }
 
   // Show error state for project
   if (projectError || (projectResult && !projectResult.success) || !project) {
     return (
-      <div className="flex h-screen bg-background">
-        <Sidebar />
-        <div className="flex flex-1 items-center justify-center">
-          <DinoError
-            title="Project not found"
-            description={
-              projectError instanceof Error
-                ? projectError.message
-                : projectResult && !projectResult.success
-                  ? projectResult.error.message
-                  : 'This project may have been deleted or you may not have access.'
-            }
-            onGoBack={() => window.history.back()}
-            showRetry={false}
-          />
-        </div>
+      <div className="flex flex-1 items-center justify-center">
+        <DinoError
+          title="Project not found"
+          description={
+            projectError instanceof Error
+              ? projectError.message
+              : projectResult && !projectResult.success
+                ? projectResult.error.message
+                : 'This project may have been deleted or you may not have access.'
+          }
+          onGoBack={() => window.history.back()}
+          showRetry={false}
+        />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <>
+      <PageHeader
+        title={projectTitle}
+        description="Manage recordings and links for this project"
+        onInviteClick={() => setInviteModalOpen(true)}
+        onCreateLinkClick={() => setCreateLinkModalOpen(true)}
+      />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <TopActions
-          onInviteClick={() => setInviteModalOpen(true)}
-          onCreateLinkClick={() => setCreateLinkModalOpen(true)}
-        />
+      <main className="flex-1 overflow-y-auto px-6 pb-8">
+        <div className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="flex items-center justify-between mb-6">
+              <TabsList>
+                <TabsTrigger value="recordings" className="gap-2">
+                  <Video className="h-4 w-4" />
+                  Recordings
+                </TabsTrigger>
+                <TabsTrigger value="links" className="gap-2">
+                  <LinkIcon className="h-4 w-4" />
+                  Links
+                </TabsTrigger>
+              </TabsList>
 
-        <main className="flex-1 overflow-y-auto px-6 pb-8">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-semibold">{projectTitle}</h2>
-                <p className="text-sm text-muted-foreground">
-                  Manage recordings and links for this project
-                </p>
-              </div>
+              {activeTab === 'recordings' && (
+                <div className="flex items-center gap-2">
+                  <FilterDropdown
+                    label="Member"
+                    options={memberOptions}
+                    selected={selectedCreators}
+                    onSelectionChange={setSelectedCreators}
+                    onSearchChange={setMemberSearchQuery}
+                    isSearching={isSearchingMembers}
+                    placeholder="Search members..."
+                    icon={Users}
+                    showAvatars
+                  />
+                  <FilterDropdown
+                    label="Link"
+                    options={linkOptions}
+                    selected={selectedRecordingLinks}
+                    onSelectionChange={setSelectedRecordingLinks}
+                    onSearchChange={setLinkSearchQuery}
+                    isSearching={isSearchingLinks}
+                    placeholder="Search links..."
+                    icon={Link2}
+                  />
+                </div>
+              )}
+
+              {activeTab === 'links' && (
+                <div className="flex items-center gap-2">
+                  <FilterDropdown
+                    label="Member"
+                    options={memberOptions}
+                    selected={selectedCreators}
+                    onSelectionChange={setSelectedCreators}
+                    onSearchChange={setMemberSearchQuery}
+                    isSearching={isSearchingMembers}
+                    placeholder="Search members..."
+                    icon={Users}
+                    showAvatars
+                  />
+                  <FilterDropdown
+                    label="Domain"
+                    options={domainOptions}
+                    selected={selectedDomains}
+                    onSelectionChange={setSelectedDomains}
+                    placeholder="Search domains..."
+                    icon={Globe}
+                  />
+                </div>
+              )}
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="flex items-center justify-between mb-6">
-                <TabsList>
-                  <TabsTrigger value="recordings" className="gap-2">
-                    <Video className="h-4 w-4" />
-                    Recordings
-                  </TabsTrigger>
-                  <TabsTrigger value="links" className="gap-2">
-                    <LinkIcon className="h-4 w-4" />
-                    Links
-                  </TabsTrigger>
-                </TabsList>
-
-                {activeTab === 'recordings' && (
-                  <div className="flex items-center gap-2">
-                    <FilterDropdown
-                      label="Member"
-                      options={memberOptions}
-                      selected={selectedCreators}
-                      onSelectionChange={setSelectedCreators}
-                      onSearchChange={setMemberSearchQuery}
-                      isSearching={isSearchingMembers}
-                      placeholder="Search members..."
-                      icon={Users}
-                      showAvatars
-                    />
-                    <FilterDropdown
-                      label="Link"
-                      options={linkOptions}
-                      selected={selectedRecordingLinks}
-                      onSelectionChange={setSelectedRecordingLinks}
-                      onSearchChange={setLinkSearchQuery}
-                      isSearching={isSearchingLinks}
-                      placeholder="Search links..."
-                      icon={Link2}
-                    />
+            <TabsContent value="recordings" className="space-y-6">
+              <div className="space-y-6">
+                {isLoadingRecordings ? (
+                  <RecordingGridSkeleton count={recordingsPerPage} />
+                ) : recordingsData?.recordings.length === 0 ? (
+                  <ProjectRecordingEmptyState
+                    onRequestRecording={() => setCreateLinkModalOpen(true)}
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {recordingsData?.recordings.map((recording) => (
+                      <RecordingPreview
+                        key={recording.recordingId}
+                        recordingId={recording.recordingId}
+                        createdBy={recording.creator.name}
+                        createdAt={recording.createdAt}
+                        durationMs={recording.recordingDurationMs}
+                        thumbnailUrl={recording.recordingThumbnail}
+                      />
+                    ))}
                   </div>
                 )}
 
-                {activeTab === 'links' && (
-                  <div className="flex items-center gap-2">
-                    <FilterDropdown
-                      label="Member"
-                      options={memberOptions}
-                      selected={selectedCreators}
-                      onSelectionChange={setSelectedCreators}
-                      onSearchChange={setMemberSearchQuery}
-                      isSearching={isSearchingMembers}
-                      placeholder="Search members..."
-                      icon={Users}
-                      showAvatars
-                    />
-                    <FilterDropdown
-                      label="Domain"
-                      options={domainOptions}
-                      selected={selectedDomains}
-                      onSelectionChange={setSelectedDomains}
-                      placeholder="Search domains..."
-                      icon={Globe}
-                    />
-                  </div>
+                {!isLoadingRecordings && recordingsData && recordingsData.recordings.length > 0 && (
+                  <PaginationControls
+                    currentPage={recordingsPage}
+                    totalPages={recordingsTotalPages}
+                    onPageChange={setRecordingsPage}
+                  />
                 )}
               </div>
+            </TabsContent>
 
-              <TabsContent value="recordings" className="space-y-6">
-                <div className="space-y-6">
-                  {isLoadingRecordings ? (
-                    <RecordingGridSkeleton count={recordingsPerPage} />
-                  ) : recordingsData?.recordings.length === 0 ? (
-                    <ProjectRecordingEmptyState
-                      onRequestRecording={() => setCreateLinkModalOpen(true)}
-                    />
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {recordingsData?.recordings.map((recording) => (
-                        <RecordingPreview
-                          key={recording.recordingId}
-                          recordingId={recording.recordingId}
-                          createdBy={recording.creator.name}
-                          createdAt={recording.createdAt}
-                          durationMs={recording.recordingDurationMs}
-                          thumbnailUrl={recording.recordingThumbnail}
-                        />
-                      ))}
-                    </div>
-                  )}
+            <TabsContent value="links" className="space-y-6">
+              <div className="space-y-6">
+                <LinksList
+                  links={linksData?.links}
+                  isLoading={isLoadingLinks}
+                  onRequestRecording={() => setCreateLinkModalOpen(true)}
+                  isProjectContext
+                />
 
-                  {!isLoadingRecordings &&
-                    recordingsData &&
-                    recordingsData.recordings.length > 0 && (
-                      <PaginationControls
-                        currentPage={recordingsPage}
-                        totalPages={recordingsTotalPages}
-                        onPageChange={setRecordingsPage}
-                      />
-                    )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="links" className="space-y-6">
-                <div className="space-y-6">
-                  <LinksList
-                    links={linksData?.links}
-                    isLoading={isLoadingLinks}
-                    onRequestRecording={() => setCreateLinkModalOpen(true)}
-                    isProjectContext
+                {!isLoadingLinks && linksData && linksData.links.length > 0 && (
+                  <PaginationControls
+                    currentPage={linksPage}
+                    totalPages={linksTotalPages}
+                    onPageChange={setLinksPage}
                   />
-
-                  {!isLoadingLinks && linksData && linksData.links.length > 0 && (
-                    <PaginationControls
-                      currentPage={linksPage}
-                      totalPages={linksTotalPages}
-                      onPageChange={setLinksPage}
-                    />
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </main>
-      </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
 
       <InviteModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
 
@@ -381,6 +354,6 @@ export default function ProjectPage() {
         hideButton
         defaultProjectId={projectId}
       />
-    </div>
+    </>
   );
 }

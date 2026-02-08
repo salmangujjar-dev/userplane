@@ -1,7 +1,7 @@
 'use client';
 
-import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { cn } from '@workspace/ui/lib/utils';
+import { Tooltip as TooltipPrimitive } from 'radix-ui';
 import * as React from 'react';
 
 function TooltipProvider({
@@ -18,11 +18,7 @@ function TooltipProvider({
 }
 
 function Tooltip({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return (
-    <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
-    </TooltipProvider>
-  );
+  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
 }
 
 function TooltipTrigger({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
