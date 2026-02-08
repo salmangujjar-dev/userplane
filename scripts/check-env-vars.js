@@ -21,7 +21,7 @@ const APPS = [
   { name: 'dash', path: 'apps/dash', type: 'next' },
   { name: 'home', path: 'apps/home', type: 'astro' },
   { name: 'recorder', path: 'apps/recorder', type: 'astro' },
-  { name: 'playground', path: 'apps/playground', type: 'astro' },
+  { name: 'yc', path: 'apps/yc', type: 'astro' },
 ];
 
 /**

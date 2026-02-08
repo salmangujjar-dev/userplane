@@ -13,7 +13,7 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
-        // Point directly at SDK source so playground works without building
+        // Point directly at SDK source so yc works without building
         // the SDK first. Vite handles the TS transpilation on the fly.
         '@workspace/sdk': resolve(import.meta.dirname, '../../packages/sdk/src/index.ts'),
       },
@@ -22,7 +22,7 @@ export default defineConfig({
       exclude: ['@workspace/sdk']
     },
     server: {
-      allowedHosts: ['playground-dev.userplane.io'],
+      allowedHosts: ['yc-dev.userplane.io'],
     }
   }
 });

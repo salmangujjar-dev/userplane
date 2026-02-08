@@ -55,7 +55,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:api$(WHITE)                       ║$(RESET) Run API only                                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:share$(WHITE)                     ║$(RESET) Run Share URL shortener only                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:email$(WHITE)                     ║$(RESET) Run Email preview server only                                     $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev:playground$(WHITE)                ║$(RESET) Run playground app only                                           $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:yc$(WHITE)                        ║$(RESET) Run yc app only                                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -172,9 +172,9 @@ dev\:email: ## Run Email preview server only
 	@echo "$(MAGENTA)Starting Email preview server...$(RESET)"
 	@cd packages/email && bun dev
 
-dev\:playground: ## Run playground app only
-	@echo "$(MAGENTA)Starting Playground app...$(RESET)"
-	@cd apps/playground && bun dev
+dev\:yc: ## Run yc app only
+	@echo "$(MAGENTA)Starting YC app...$(RESET)"
+	@cd apps/yc && bun dev
 
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
@@ -492,7 +492,7 @@ tunnel\:start: ## Start Cloudflare tunnel (all services)
 		echo "$(GREEN)Dash:$(RESET)       https://dash-dev.userplane.io"; \
 		echo "$(GREEN)Home:$(RESET)       https://home-dev.userplane.io"; \
 		echo "$(GREEN)Recorder:$(RESET)   https://recorder-dev.userplane.io"; \
-		echo "$(GREEN)Playground:$(RESET) https://playground-dev.userplane.io"; \
+		echo "$(GREEN)YC:$(RESET)         https://yc-dev.userplane.io"; \
 		echo "$(WHITE)-------------------------------------------$(RESET)"; \
 		echo ""; \
 		echo "$(YELLOW)Run 'make tunnel:stop' to stop the tunnel$(RESET)"; \
@@ -533,7 +533,7 @@ tunnel\:status: ## Show tunnel status and URLs
 	@echo "$(GREEN)Dash:$(RESET)       https://dash-dev.userplane.io"
 	@echo "$(GREEN)Home:$(RESET)       https://home-dev.userplane.io"
 	@echo "$(GREEN)Recorder:$(RESET)   https://recorder-dev.userplane.io"
-	@echo "$(GREEN)Playground:$(RESET) https://playground-dev.userplane.io"
+	@echo "$(GREEN)YC:$(RESET)         https://yc-dev.userplane.io"
 	@echo "$(WHITE)-------------------------------------------$(RESET)"
 
 # SDK Package commands
