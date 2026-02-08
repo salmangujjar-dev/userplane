@@ -118,7 +118,9 @@ export function ExpensesTable({
                     variant="beam"
                     colors={AVATAR_COLORS}
                   />
-                  <span className="truncate max-w-[120px]">{expense.employee?.name}</span>
+                  <span className="employee-name truncate max-w-[120px]">
+                    {expense.employee?.name}
+                  </span>
                 </div>
               </TableCell>
               <TableCell>{expense.category?.name}</TableCell>
@@ -127,10 +129,10 @@ export function ExpensesTable({
                   {expense.receiptUrl && (
                     <PaperclipIcon className="size-3 shrink-0 text-muted-foreground/60" />
                   )}
-                  <span className="truncate">{expense.description}</span>
+                  <span className="expense-description truncate">{expense.description}</span>
                 </span>
               </TableCell>
-              <TableCell className="text-right font-medium">
+              <TableCell className="expense-amount text-right font-medium">
                 {formatCurrency(expense.amount)}
               </TableCell>
               <TableCell>

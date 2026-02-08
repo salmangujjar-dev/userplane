@@ -66,8 +66,8 @@ export function TopSpendersCard({ expenses }: TopSpendersCardProps) {
               <BoringAvatar size={32} name={s.name} variant="beam" colors={AVATAR_COLORS} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium truncate">{s.name}</span>
-                  <span className="text-sm text-muted-foreground shrink-0 ml-2">
+                  <span className="employee-name text-sm font-medium truncate">{s.name}</span>
+                  <span className="expense-amount text-sm text-muted-foreground shrink-0 ml-2">
                     {formatCurrency(s.total)}
                   </span>
                 </div>

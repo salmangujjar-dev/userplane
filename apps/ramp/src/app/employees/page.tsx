@@ -138,7 +138,7 @@ export default function EmployeesPage() {
                 <div className="flex items-start gap-3">
                   <BoringAvatar size={40} name={emp.name} variant="beam" colors={AVATAR_COLORS} />
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-sm truncate">{emp.name}</p>
+                    <p className="employee-name font-semibold text-sm truncate">{emp.name}</p>
                     <p className="text-xs text-muted-foreground truncate">{emp.position}</p>
                   </div>
                   <Badge variant="secondary" size="sm">
@@ -148,11 +148,11 @@ export default function EmployeesPage() {
               </CardHeader>
               <CardPanel>
                 <div className="space-y-2 text-sm">
-                  <p className="text-muted-foreground truncate">{emp.email}</p>
+                  <p className="employee-email text-muted-foreground truncate">{emp.email}</p>
                   <div className="flex items-center justify-between pt-2">
                     <div>
                       <p className="text-xs text-muted-foreground">Total Spend</p>
-                      <p className="font-medium">{formatCurrency(emp.totalSpend)}</p>
+                      <p className="expense-amount font-medium">{formatCurrency(emp.totalSpend)}</p>
                     </div>
                     {emp.pendingCount > 0 && (
                       <div className="text-right">

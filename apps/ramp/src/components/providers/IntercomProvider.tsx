@@ -15,27 +15,31 @@ export function IntercomProvider({
   children,
 }: IntercomProviderProps) {
   useEffect(() => {
-    // Initialize Intercom on client-side
     const initializeIntercom = async () => {
       try {
-        // Try to fetch JWT from server-side API for secure authentication
+        // Fetch user identity and HMAC hash for Intercom identity verification
         const response = await fetch('/api/intercom-jwt');
         const data = await response.json();
 
-        if (data.token) {
-          // Initialize Intercom with JWT authentication
+        if (data.user_hash) {
+          // Initialize Intercom with verified user identity
           Intercom({
             app_id: appId,
             api_base: apiBase,
-            user_hash: data.token,
+            user_id: data.user_id,
+            email: data.email,
+            name: data.name,
+            company: data.company,
+            created_at: data.created_at,
+            user_hash: data.user_hash,
             session_duration: 86400000, // 1 day in ms
             alignment: 'right',
             horizontal_padding: 20,
             vertical_padding: 20,
           });
         } else {
-          console.error('Failed to get Intercom JWT:', data.error);
-          // Fallback: Initialize without JWT
+          console.error('Failed to get Intercom identity:', data.error);
+          // Fallback: Initialize as anonymous visitor
           Intercom({
             app_id: appId,
             alignment: 'right',
@@ -45,7 +49,7 @@ export function IntercomProvider({
         }
       } catch (error) {
         console.error('Error initializing Intercom:', error);
-        // Fallback: Initialize without JWT
+        // Fallback: Initialize as anonymous visitor
         Intercom({
           app_id: appId,
           alignment: 'right',
