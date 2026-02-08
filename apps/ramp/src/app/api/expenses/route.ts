@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { store } from '@/lib/data/store';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -40,6 +41,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Feature flag: reject expense creation when disabled
+  if (!isFeatureEnabled('createExpenseSubmit')) {
+    return NextResponse.json(
+      { success: false, error: 'Expense creation is temporarily unavailable' },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { employeeId, categoryId, amount, description, merchant, date, notes } = body;

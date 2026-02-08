@@ -25,25 +25,25 @@ export const metadata: Metadata = {
   other: {
     // Userplane configuration meta tags
     'userplane:workspace': 'ws_TpaxkXdKvlnr',
-    'userplane:blur': '.expense-amount, .company-name',
+    'userplane:blur':
+      '.expense-amount, .expense-description, .employee-name, .employee-email, .company-name',
   },
 };
-
-// Configuration - move to env vars in production
-const USERPLANE_WORKSPACE_ID = 'ws_TpaxkXdKvlnr';
-const INTERCOM_APP_ID = 'z5rq51gl';
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const workspaceId = process.env.NEXT_PUBLIC_USERPLANE_WORKSPACE_ID!;
+  const intercomAppId = process.env.NEXT_PUBLIC_INTERCOM_APP_ID!;
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <NuqsAdapter>
-          <UserplaneProvider workspaceId={USERPLANE_WORKSPACE_ID}>
-            <IntercomProvider appId={INTERCOM_APP_ID}>
+          <UserplaneProvider workspaceId={workspaceId}>
+            <IntercomProvider appId={intercomAppId}>
               <ToastProvider>
                 <AppShell>{children}</AppShell>
               </ToastProvider>

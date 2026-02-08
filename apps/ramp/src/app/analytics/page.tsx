@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckCircleIcon, ClockIcon, DollarSignIcon, ReceiptTextIcon } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { CategoryBreakdown } from '@/components/analytics/CategoryBreakdown';
 import { MetricCard } from '@/components/analytics/MetricCard';
@@ -10,11 +10,14 @@ import { TopSpendersCard } from '@/components/analytics/TopSpendersCard';
 import { Card, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs';
+import { toastManager } from '@/components/ui/toast';
 import { useExpenses } from '@/hooks/useExpenses';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 import { formatCurrency } from '@/lib/utils';
 
 export default function AnalyticsPage() {
   const { expenses, isLoading } = useExpenses();
+  const [trendPeriod, setTrendPeriod] = useState<string | number>('90');
 
   const metrics = useMemo(() => {
     const approved = expenses.filter((e) => e.status === 'approved');
@@ -78,7 +81,21 @@ export default function AnalyticsPage() {
           <CardTitle>Spending Trends</CardTitle>
         </CardHeader>
         <CardPanel>
-          <Tabs defaultValue="90">
+          <Tabs
+            value={trendPeriod}
+            onValueChange={(val) => {
+              if (!isFeatureEnabled('spendingTrendTabs')) {
+                toastManager.add({
+                  title: 'Unable to change time period',
+                  description:
+                    'Spending trend controls are temporarily unavailable. Please try again later.',
+                  type: 'error',
+                });
+                return;
+              }
+              setTrendPeriod(val);
+            }}
+          >
             <TabsList>
               <TabsTab value="30">30 Days</TabsTab>
               <TabsTab value="90">90 Days</TabsTab>

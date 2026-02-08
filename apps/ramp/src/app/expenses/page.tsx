@@ -28,6 +28,7 @@ import { toastManager } from '@/components/ui/toast';
 import { useExpenses } from '@/hooks/useExpenses';
 import { api } from '@/lib/api/client';
 import type { ExpenseWithRelations } from '@/lib/data/types';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 
 type SortField = 'date' | 'amount' | 'employee' | 'category' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -86,8 +87,13 @@ export default function ExpensesPage() {
       await mutate();
       setCreateOpen(false);
       toastManager.add({ title: 'Expense created', type: 'success' });
-    } catch {
-      toastManager.add({ title: 'Failed to create expense', type: 'error' });
+    } catch (err) {
+      toastManager.add({
+        title: 'Failed to create expense',
+        description:
+          err instanceof Error ? err.message : 'Something went wrong. Please try again later.',
+        type: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -141,7 +147,20 @@ export default function ExpensesPage() {
           onEmployeeChange={(v) => setFilters({ employeeId: v, page: 0 })}
           onSearchChange={(v) => setFilters({ search: v, page: 0 })}
         />
-        <Button onClick={() => setCreateOpen(true)} className="shrink-0">
+        <Button
+          onClick={() => {
+            if (!isFeatureEnabled('newExpenseButton')) {
+              toastManager.add({
+                title: 'Unable to create expense',
+                description: 'This action is temporarily unavailable. Please try again later.',
+                type: 'error',
+              });
+              return;
+            }
+            setCreateOpen(true);
+          }}
+          className="shrink-0"
+        >
           <PlusIcon /> New Expense
         </Button>
       </div>
