@@ -104,10 +104,10 @@ class DataStore {
     return expense;
   }
 
-  updateExpense(id: string, data: Partial<Expense>) {
+  updateExpense(id: string, data: Partial<Expense>): Expense | null {
     const index = this.expenses.findIndex((e) => e.id === id);
     if (index === -1) return null;
-    this.expenses[index] = { ...this.expenses[index], ...data };
+    this.expenses[index] = { ...this.expenses[index], ...data } as Expense;
     return this.expenses[index];
   }
 

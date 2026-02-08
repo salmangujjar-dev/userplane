@@ -40,7 +40,9 @@ export function SpendingChart({ expenses, days }: SpendingChartProps) {
       .filter((e) => e.status === 'approved' && isAfter(new Date(e.date), start))
       .forEach((e) => {
         const key = format(new Date(e.date), days > 90 ? 'MMM yyyy' : 'MMM d');
-        if (key in buckets) buckets[key] += e.amount;
+        if (key in buckets && buckets[key] !== undefined) {
+          buckets[key] += e.amount;
+        }
       });
 
     if (days > 90) {

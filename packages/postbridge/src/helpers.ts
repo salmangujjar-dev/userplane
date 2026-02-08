@@ -65,28 +65,15 @@ export function isWorker(): boolean {
 /**
  * Environment Detection: Node.js
  * ───────────────────────────────
- * Checks if the current code is running in Node.js (not browser).
+ * Note: Node.js worker thread support has been removed.
+ * PostBridge now only supports browser environments (Web Workers, iframes).
  *
- * How it works:
- * - Node.js has a global `process` object with version information
- * - `process.versions.node` exists only in Node.js
- * - Browsers don't have this property
+ * This function always returns false as Node.js support is disabled.
  *
- * Why this matters:
- * - Node.js has different APIs (no window, no DOM, but has fs, http, etc.)
- * - Worker threads in Node.js use different APIs than Web Workers
- * - Need to require() modules instead of importing browser APIs
- *
- * Example usage:
- * if (isNodeEnv()) {
- *   // Can use Node.js APIs like require('worker_threads')
- * }
- *
- * @returns true if running in Node.js, false otherwise
+ * @returns false (Node.js support removed)
  */
 export function isNodeEnv(): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return typeof process !== 'undefined' && !!(process as any).versions?.node;
+  return false;
 }
 
 /**
@@ -408,34 +395,13 @@ export function generateId(length: number = 10): string {
 }
 
 /**
- * Node.js Worker Thread Support
- * ──────────────────────────────
- * In Node.js, worker threads communicate via a parentPort (from 'worker_threads'
- * module). We need to detect and store this at module load time.
- *
- * Why at module load time?
- * - parentPort only exists in Node.js worker thread context
- * - It's undefined in the main thread
- * - We check once at startup and store it for later use
- *
- * Try/catch reasoning:
- * - require('worker_threads') will throw if:
- *   1. We're not in Node.js (browser)
- *   2. We're in Node.js main thread (not a worker)
- * - We catch these errors and leave parentPort as null
+ * Node.js Worker Thread Support - REMOVED
+ * ────────────────────────────────────────
+ * Node.js worker thread support has been removed to keep the library browser-only.
+ * PostBridge now only supports Web Workers and iframes in browser environments.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let parentPort: any = null;
-
-if (isNodeEnv()) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const workerThreads = require('worker_threads');
-    parentPort = workerThreads.parentPort; // Will be null if not in worker thread
-  } catch {
-    // Not in worker thread context, or worker_threads not available
-  }
-}
+const parentPort: any = null;
 
 /**
  * Message Passing: Get Target Host
