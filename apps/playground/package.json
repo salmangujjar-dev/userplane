@@ -16,15 +16,18 @@
   "dependencies": {
     "@astrojs/check": "^0.9.6",
     "@astrojs/react": "^4.4.2",
+    "@intercom/messenger-js-sdk": "^0.0.18",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@workspace/sdk": "workspace:*",
     "astro": "^5.16.6",
+    "jsonwebtoken": "^9.0.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "eslint": "^9.32.0"

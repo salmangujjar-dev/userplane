@@ -30,6 +30,7 @@ export interface Flags {
   industryTags: Flag;
   batchTag: Flag;
   resultsCount: Flag;
+  applyFailure: Flag;
 }
 
 export const flags: Flags = flagsData;

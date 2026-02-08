@@ -77,7 +77,11 @@ import { isEnabled } from '../flags';
 
     <div class="footer-cta">
       <span class="footer-tagline">Make something people want.</span>
-      <a href="https://www.ycombinator.com/apply" class="footer-apply-btn">Apply</a>
+      <a
+        href="https://www.ycombinator.com/apply"
+        class="footer-apply-btn"
+        data-apply-blocked={isEnabled('applyFailure') ? 'true' : undefined}>Apply</a
+      >
     </div>
   </div>
 </footer>

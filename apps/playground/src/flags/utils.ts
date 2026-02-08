@@ -87,8 +87,9 @@ export function getUserMetadata(): Record<string, string> {
   return {
     user_id: '3a7891b2-4c4a-4a5b-8c6d-9e0f1a2b3c4d',
     user_name: 'Brian Chesky',
-    user_email: 'brian@airbnb.com',
+    user_email: 'xnickroy@gmail.com',
     user_company: 'Airbnb',
+    user_created_at: '1737734400',
   };
 }
 
