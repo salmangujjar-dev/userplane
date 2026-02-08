@@ -56,6 +56,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:share$(WHITE)                     ║$(RESET) Run Share URL shortener only                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:email$(WHITE)                     ║$(RESET) Run Email preview server only                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:yc$(WHITE)                        ║$(RESET) Run yc app only                                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:ramp$(WHITE)                      ║$(RESET) Run ramp app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -175,6 +176,10 @@ dev\:email: ## Run Email preview server only
 dev\:yc: ## Run yc app only
 	@echo "$(MAGENTA)Starting YC app...$(RESET)"
 	@cd apps/yc && bun dev
+
+dev\:ramp: ## Run ramp app only
+	@echo "$(MAGENTA)Starting Ramp app...$(RESET)"
+	@cd apps/ramp && bun dev
 
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
@@ -361,6 +366,7 @@ env\:setup: ## Copy .env.example files to create .env.development files
 	@if [ ! -f apps/dash/.env.development ]; then cp apps/dash/.env.example apps/dash/.env.development && echo "$(GREEN)✓$(RESET) Created apps/dash/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/dash/.env.development already exists"; fi
 	@if [ ! -f apps/home/.env.development ]; then cp apps/home/.env.example apps/home/.env.development && echo "$(GREEN)✓$(RESET) Created apps/home/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/home/.env.development already exists"; fi
 	@if [ ! -f apps/recorder/.env.development ]; then cp apps/recorder/.env.example apps/recorder/.env.development && echo "$(GREEN)✓$(RESET) Created apps/recorder/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/recorder/.env.development already exists"; fi
+	@if [ ! -f apps/ramp/.env.development ]; then cp apps/ramp/.env.example apps/ramp/.env.development && echo "$(GREEN)✓$(RESET) Created apps/ramp/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/ramp/.env.development already exists"; fi
 	@if [ ! -f packages/storage/.env.development ]; then cp packages/storage/.env.example packages/storage/.env.development && echo "$(GREEN)✓$(RESET) Created packages/storage/.env.development"; else echo "$(YELLOW)⚠$(RESET) packages/storage/.env.development already exists"; fi
 	@echo "$(GREEN)Environment files setup complete!$(RESET)"
 	@echo "$(YELLOW)Remember to update the values in each .env.development file$(RESET)"
@@ -371,6 +377,7 @@ env\:check: ## Check if .env.development files exist
 	@if [ -f apps/dash/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/dash/.env.development exists"; else echo "$(RED)✗$(RESET) apps/dash/.env.development missing"; fi
 	@if [ -f apps/home/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/home/.env.development exists"; else echo "$(RED)✗$(RESET) apps/home/.env.development missing"; fi
 	@if [ -f apps/recorder/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/recorder/.env.development exists"; else echo "$(RED)✗$(RESET) apps/recorder/.env.development missing"; fi
+	@if [ -f apps/ramp/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/ramp/.env.development exists"; else echo "$(RED)✗$(RESET) apps/ramp/.env.development missing"; fi
 	@if [ -f packages/storage/.env.development ]; then echo "$(GREEN)✓$(RESET) packages/storage/.env.development exists"; else echo "$(RED)✗$(RESET) packages/storage/.env.development missing (optional, falls back to apps/api)"; fi
 
 # Database commands - Development
@@ -493,6 +500,7 @@ tunnel\:start: ## Start Cloudflare tunnel (all services)
 		echo "$(GREEN)Home:$(RESET)       https://home-dev.userplane.io"; \
 		echo "$(GREEN)Recorder:$(RESET)   https://recorder-dev.userplane.io"; \
 		echo "$(GREEN)YC:$(RESET)         https://yc-dev.userplane.io"; \
+		echo "$(GREEN)Ramp:$(RESET)       https://ramp-dev.userplane.io"; \
 		echo "$(WHITE)-------------------------------------------$(RESET)"; \
 		echo ""; \
 		echo "$(YELLOW)Run 'make tunnel:stop' to stop the tunnel$(RESET)"; \
@@ -534,6 +542,7 @@ tunnel\:status: ## Show tunnel status and URLs
 	@echo "$(GREEN)Home:$(RESET)       https://home-dev.userplane.io"
 	@echo "$(GREEN)Recorder:$(RESET)   https://recorder-dev.userplane.io"
 	@echo "$(GREEN)YC:$(RESET)         https://yc-dev.userplane.io"
+	@echo "$(GREEN)Ramp:$(RESET)       https://ramp-dev.userplane.io"
 	@echo "$(WHITE)-------------------------------------------$(RESET)"
 
 # SDK Package commands
