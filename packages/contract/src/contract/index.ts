@@ -111,10 +111,6 @@ export const workspaceContract = {
   search: workspace.workspaceSearch,
   suggest: workspace.suggestWorkspaces,
   join: workspace.joinWorkspace,
-  getWorkspaceBillingEmail: workspace.getWorkspaceBillingEmail,
-  updateWorkspaceBillingEmail: workspace.updateWorkspaceBillingEmail,
-  requestBillingEmailChange: workspace.requestBillingEmailChange,
-  verifyBillingEmailChange: workspace.verifyBillingEmailChange,
 
   preferences: {
     get: workspace.getWorkspacePreferences,

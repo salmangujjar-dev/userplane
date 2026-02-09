@@ -48,7 +48,6 @@ If the workspace was deleted within the restoration window, contact the workspac
 Owners can update the following workspace details from [Workspace Settings > General](https://dash.userplane.io/_/settings?tab=workspace):
 
 - **Workspace name** — visible to members and in invitations.
-- **Billing email** — where subscription receipts and billing notifications are sent.
 
 ## Workspace creation limits
 

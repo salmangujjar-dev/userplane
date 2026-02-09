@@ -145,7 +145,6 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       domainVerificationExpiresIn: raw.DOMAIN_VERIFICATION_TOKEN_EXPIRES_IN,
       accessRequestExpiresIn: raw.ACCESS_REQUEST_TOKEN_EXPIRES_IN,
       workspaceCreateInviteExpiresIn: raw.WORKSPACE_CREATE_INVITE_TOKEN_EXPIRES_IN,
-      billingEmailVerificationExpiresIn: raw.BILLING_EMAIL_VERIFICATION_TOKEN_EXPIRES_IN,
       recordingSecret: raw.RECORDER_TOKEN_SECRET,
       recordingTokenExpiresIn: raw.RECORDER_TOKEN_EXPIRES_IN,
     },
@@ -437,7 +436,6 @@ export function logConfig(): void {
         domainVerification: formatDuration(env.token.domainVerificationExpiresIn),
         accessRequest: formatDuration(env.token.accessRequestExpiresIn),
         workspaceCreateInvite: formatDuration(env.token.workspaceCreateInviteExpiresIn),
-        billingEmailVerification: formatDuration(env.token.billingEmailVerificationExpiresIn),
         recording: formatDuration(env.token.recordingTokenExpiresIn),
       },
       sessionExpiry: {

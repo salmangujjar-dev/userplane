@@ -86,8 +86,6 @@ export const TOKEN_EXPIRY = {
   ACCESS_REQUEST: 7 * TIME.DAY,
   /** Workspace create invite: 90 days */
   WORKSPACE_CREATE_INVITE: 90 * TIME.DAY,
-  /** Billing email verification: 10 minutes */
-  BILLING_EMAIL_VERIFICATION: 10 * TIME.MINUTE,
   /** Recording token: 180 days */
   RECORDING: 180 * TIME.DAY,
 } as const;

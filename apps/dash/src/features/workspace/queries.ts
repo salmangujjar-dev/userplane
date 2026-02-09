@@ -8,7 +8,6 @@ import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 import type {
   InvitePolicyData,
   SuggestedWorkspace,
-  WorkspaceBillingEmailData,
   WorkspaceMember,
   WorkspacePreferencesGetData,
   WorkspaceResourceCountsData,
@@ -24,7 +23,6 @@ import { workspaceKeys } from './query-keys';
 export type {
   InvitePolicyData,
   SuggestedWorkspace,
-  WorkspaceBillingEmailData,
   WorkspaceMember,
   WorkspacePreferencesGetData,
   WorkspaceResourceCountsData,
@@ -487,35 +485,6 @@ export function useWorkspaceCount() {
       return handleSafeResult(error, response?.data ?? null);
     },
     staleTime: 1 * 60 * 1000, // 1 minute
-    retry: 1,
-  });
-}
-
-/**
- * Hook to fetch workspace billing email
- * Returns the billing email
- *
- * Returns SafeResult - check result.success before using data
- */
-export function useWorkspaceBillingEmail(options?: { enabled?: boolean }) {
-  const workspaceId = useWorkspaceId();
-  const { enabled = true } = options || {};
-
-  return useQuery<SafeResult<WorkspaceBillingEmailData>>({
-    queryKey: workspaceKeys.billingEmail(workspaceId ?? ''),
-    queryFn: async () => {
-      if (!workspaceId) {
-        throw new Error('No workspace ID available');
-      }
-
-      const [error, response] = await apiClient.workspace.getWorkspaceBillingEmail({
-        params: { workspaceId },
-      });
-
-      return handleSafeResult(error, response?.data ?? null);
-    },
-    enabled: enabled && !!workspaceId,
-    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 }
