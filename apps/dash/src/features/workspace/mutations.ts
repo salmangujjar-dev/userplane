@@ -867,7 +867,10 @@ export function useUpdateWorkspaceName(
     SafeResult<UpdateWorkspaceNameData>,
     Error,
     string,
-    { previousWorkspace: WorkspaceData | undefined }
+    {
+      previousWorkspace: WorkspaceData | undefined;
+      previousListQueries: QuerySnapshot<WorkspacesQueryData>;
+    }
   >({
     mutationFn: async (newName: string) => {
       if (!workspaceId) throw new Error('No workspace ID');
@@ -878,10 +881,22 @@ export function useUpdateWorkspaceName(
       return handleSafeResult(error, response?.data ?? null);
     },
     onMutate: async (newName) => {
+      // Cancel both detail and list queries to prevent overwrites during optimistic update
       await queryClient.cancelQueries({ queryKey: workspaceKeys.detail(workspaceId ?? '') });
+      await queryClient.cancelQueries({ queryKey: workspaceKeys.lists() });
+
+      // Snapshot detail query for rollback
       const previousWorkspace = queryClient.getQueryData<WorkspaceData>(
         workspaceKeys.detail(workspaceId ?? '')
       );
+
+      // Snapshot all list queries for rollback
+      const previousListQueries: QuerySnapshot<WorkspacesQueryData> =
+        queryClient.getQueriesData<WorkspacesQueryData>({
+          queryKey: workspaceKeys.lists(),
+        });
+
+      // Optimistically update the detail query
       queryClient.setQueryData(
         workspaceKeys.detail(workspaceId ?? ''),
         (old: WorkspaceData | undefined) => {
@@ -895,10 +910,29 @@ export function useUpdateWorkspaceName(
           };
         }
       );
-      return { previousWorkspace };
+
+      // Optimistically update all list queries so the sidebar workspace list reflects the new name
+      queryClient.setQueriesData<WorkspacesQueryData>(
+        { queryKey: workspaceKeys.lists() },
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              workspaces: old.data.workspaces.map((ws) =>
+                ws.workspaceId === workspaceId ? { ...ws, workspaceName: newName } : ws
+              ),
+            },
+          };
+        }
+      );
+
+      return { previousWorkspace, previousListQueries };
     },
     onSuccess: (result, newName, context) => {
       if (!result.success) {
+        // Rollback detail query
         if (context?.previousWorkspace) {
           queryClient.setQueryData(
             workspaceKeys.detail(workspaceId ?? ''),
@@ -909,12 +943,17 @@ export function useUpdateWorkspaceName(
             onError(originalName);
           }
         }
+        // Rollback list queries
+        context?.previousListQueries?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
         showErrorToast(result.error);
         return;
       }
       toast.success('Workspace name updated successfully');
     },
     onError: (error: unknown, newName, context) => {
+      // Rollback detail query
       if (context?.previousWorkspace) {
         queryClient.setQueryData(
           workspaceKeys.detail(workspaceId ?? ''),
@@ -925,11 +964,15 @@ export function useUpdateWorkspaceName(
           onError(originalName);
         }
       }
+      // Rollback list queries
+      context?.previousListQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       handleUnknownError(error, 'Failed to update workspace name');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.detail(workspaceId ?? '') });
-      // Also invalidate workspaces list so sidebar updates
+      // Invalidate workspaces list to sync with server after mutation settles
       queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
     },
   });

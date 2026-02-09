@@ -98,11 +98,11 @@ function RequestDeleteContent() {
   };
 
   const handleCancel = () => {
-    router.push('/');
+    router.push('/_/account?tab=workspaces');
   };
 
   const handleViewWorkspaces = () => {
-    router.push('/');
+    router.push('/_/account?tab=workspaces');
   };
 
   if (isSuccess) {

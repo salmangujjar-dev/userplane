@@ -1,5 +1,12 @@
 'use client';
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import { useQueryState } from 'nuqs';
 
@@ -16,6 +23,16 @@ import { TeamSection } from './team-section';
 import { WorkspacePlanSection } from './workspace-plan-section';
 import { WorkspaceSection } from './workspace-section';
 
+const SETTINGS_TABS = [
+  { value: 'general', label: 'General' },
+  { value: 'team', label: 'Team' },
+  { value: 'integrations', label: 'Integrations' },
+  { value: 'plan-usage', label: 'Plans' },
+  { value: 'customization', label: 'Customization' },
+  { value: 'workspace', label: 'Workspace' },
+  { value: 'notifications', label: 'Notifications' },
+] as const;
+
 interface SettingsTabProps {
   onInviteClick?: () => void;
 }
@@ -26,14 +43,29 @@ export function SettingsTab({ onInviteClick }: SettingsTabProps) {
   return (
     <div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
-          <TabsTrigger value="integrations">Integrations</TabsTrigger>
-          <TabsTrigger value="plan-usage">Plans</TabsTrigger>
-          <TabsTrigger value="customization">Customization</TabsTrigger>
-          <TabsTrigger value="workspace">Workspace</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+        {/* Dropdown for narrow viewports (iPad Mini with sidebar, etc.) */}
+        <div className="mb-6 lg:hidden">
+          <Select value={activeTab} onValueChange={setActiveTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SETTINGS_TABS.map((tab) => (
+                <SelectItem key={tab.value} value={tab.value}>
+                  {tab.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Tab bar for wider viewports */}
+        <TabsList className="mb-6 hidden lg:inline-flex">
+          {SETTINGS_TABS.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value="general" className="space-y-8">

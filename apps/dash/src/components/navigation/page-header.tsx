@@ -67,7 +67,7 @@ export function PageHeader({
   const members = membersResult?.success ? membersResult.data.workspaceMembers : undefined;
 
   return (
-    <div className="flex items-start justify-between gap-3 px-6 py-4">
+    <div className="flex flex-wrap items-start justify-between gap-3 px-4 sm:px-6 py-4">
       <PageHeaderLeft title={title} description={description} />
       <PageHeaderActions
         members={members}
