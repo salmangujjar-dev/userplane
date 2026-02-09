@@ -376,12 +376,13 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
       if (connectionID !== eventData.connectionID) return;
 
       // Verify connection exists (should have been created in handleHandshake)
-      if (!connections[eventData.connectionID]) {
+      const connection = connections[eventData.connectionID];
+      if (!connection) {
         throw new Error('PostBridge Error: No connection found for this connectionID');
       }
 
       // Connection is ready! Resolve promise
-      return resolve(connections[eventData.connectionID]);
+      return resolve(connection);
     }
 
     // Start listening for confirmation HANDSHAKE_REPLY
