@@ -9,8 +9,6 @@ import {
   renderAccountDeletion,
   renderAccountDeletionVerification,
   renderAccountRestored,
-  renderBillingEmailUpdated,
-  renderBillingEmailVerification,
   renderDeletionScheduled,
   renderDomainDeveloperInstructions,
   renderEmailVerification,
@@ -46,8 +44,6 @@ import {
   accountDeletionSubject,
   accountDeletionVerificationSubject,
   accountRestoredSubject,
-  billingEmailUpdatedSubject,
-  billingEmailVerificationSubject,
   domainDeveloperInstructionsSubject,
   emailVerificationSubject,
   magicLinkSubject,
@@ -76,8 +72,6 @@ import {
 import type {
   AccessRequestEmailParams,
   AccountDeletionVerificationEmailParams,
-  BillingEmailUpdatedEmailParams,
-  BillingEmailVerificationEmailParams,
   DomainDeveloperInstructionsEmailParams,
   EmailVerificationEmailParams,
   MagicLinkEmailParams,
@@ -117,8 +111,6 @@ import {
   accountDeletionKey,
   accountDeletionVerificationKey,
   accountRestoredKey,
-  billingEmailUpdatedKey,
-  billingEmailVerificationKey,
   domainInstructionsKey,
   emailVerificationKey,
   magicLinkKey,
@@ -419,147 +411,6 @@ export class EmailService {
   // ============================================================================
   // BILLING EMAILS
   // ============================================================================
-
-  /**
-   * Send billing email updated notification
-   * Sent when workspace billing email address is changed
-   * URLs are built internally from workspaceId
-   * @private Use sendSafeBillingEmailUpdated instead
-   */
-  private async sendBillingEmailUpdated(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: BillingEmailUpdatedEmailParams
-  ): Promise<void> {
-    const recipients = Array.isArray(receipientParams.to)
-      ? receipientParams.to
-      : [receipientParams.to];
-    const useBatch = recipients.length > 1;
-
-    const idempotencyKey = billingEmailUpdatedKey({
-      to: receipientParams.to,
-      newEmail: emailContentParams.newEmail,
-      previousEmail: emailContentParams.previousEmail,
-    });
-
-    const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
-
-    const { html, text } = await renderBillingEmailUpdated({
-      previousEmail: emailContentParams.previousEmail,
-      newEmail: emailContentParams.newEmail,
-      billingUrl,
-      logoUrl: this.getLogoUrl(),
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: receipientParams.to,
-        subject: billingEmailUpdatedSubject,
-        html,
-        text,
-        batch: useBatch,
-        headers: antiThreadingHeaders(),
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: receipientParams.to,
-        batch: useBatch,
-        count: recipients.length,
-        previousEmail: emailContentParams.previousEmail,
-        newEmail: emailContentParams.newEmail,
-        workspaceId: emailContentParams.workspaceId,
-        provider: emailClient.getProvider(),
-      },
-      'Billing email updated notification sent'
-    );
-  }
-
-  /**
-   * Safe version: Send billing email updated notification
-   * Errors are handled by the configured error handler instead of throwing
-   */
-  async sendSafeBillingEmailUpdated(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: BillingEmailUpdatedEmailParams
-  ): Promise<void> {
-    await this.executeSafely(
-      'sendBillingEmailUpdated',
-      { receipientParams, emailContentParams },
-      () => this.sendBillingEmailUpdated(receipientParams, emailContentParams)
-    );
-  }
-
-  /**
-   * Send billing email verification request
-   * Sent when workspace billing email change is requested
-   * @private Use sendSafeBillingEmailVerification instead
-   */
-  private async sendBillingEmailVerification(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: BillingEmailVerificationEmailParams
-  ): Promise<void> {
-    const recipients = Array.isArray(receipientParams.to)
-      ? receipientParams.to
-      : [receipientParams.to];
-    const useBatch = recipients.length > 1;
-
-    const idempotencyKey = billingEmailVerificationKey({
-      to: receipientParams.to,
-      verificationUrl: emailContentParams.verificationUrl,
-    });
-
-    const { html, text } = await renderBillingEmailVerification({
-      verificationUrl: emailContentParams.verificationUrl,
-      previousEmail: emailContentParams.previousEmail,
-      newEmail: emailContentParams.newEmail,
-      logoUrl: this.getLogoUrl(),
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: receipientParams.to,
-        subject: billingEmailVerificationSubject,
-        html,
-        text,
-        batch: useBatch,
-        headers: antiThreadingHeaders(),
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: receipientParams.to,
-        batch: useBatch,
-        count: recipients.length,
-        provider: emailClient.getProvider(),
-      },
-      'Billing email verification sent'
-    );
-  }
-
-  /**
-   * Safe version: Send billing email verification request
-   * Errors are handled by the configured error handler instead of throwing
-   */
-  async sendSafeBillingEmailVerification(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: BillingEmailVerificationEmailParams
-  ): Promise<void> {
-    await this.executeSafely(
-      'sendBillingEmailVerification',
-      { receipientParams, emailContentParams },
-      () => this.sendBillingEmailVerification(receipientParams, emailContentParams)
-    );
-  }
 
   /**
    * Send subscription active email

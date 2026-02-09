@@ -60,10 +60,6 @@ export const workspaceKeys = {
     [...workspaceKeys.all, 'invite-policy', workspaceId] as const,
   validateInvite: (token: string) => [...workspaceKeys.all, 'validate-invite', token] as const,
 
-  // Billing
-  billingEmail: (workspaceId: string) =>
-    [...workspaceKeys.all, 'billing-email', workspaceId] as const,
-
   // Search & Suggestions
   suggestions: (pagination?: { page?: number; perPage?: number }) =>
     [...workspaceKeys.all, 'suggestions', pagination] as const,

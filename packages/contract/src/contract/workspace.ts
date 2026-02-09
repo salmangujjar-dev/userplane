@@ -30,7 +30,6 @@ import {
   GetIntercomSuggestionsSchema,
   GetInvitePolicySchema,
   GetNotificationPreferencesSchema,
-  GetWorkspaceBillingEmailSchema,
   GetWorkspaceMembershipSchema,
   GetWorkspaceRestoreInfoSchema,
   GetWorkspaceStatusSchema,
@@ -59,8 +58,6 @@ import {
   ProvisionerErrors,
   RemoveMemberSchema,
   ReplaceDomainRecordingPreferencesSchema,
-  RequestBillingEmailChangeDataSchema,
-  RequestBillingEmailChangeSchema,
   RestoreWorkspaceSchema,
   SendDomainInstructionsResultSchema,
   SendDomainInstructionsSchema,
@@ -74,16 +71,11 @@ import {
   UpdateLinkSettingsSchema,
   UpdateMemberRoleSchema,
   UpdateNotificationPreferencesSchema,
-  UpdateWorkspaceBillingEmailSchema,
   UpdateWorkspaceNameSchema,
   UpdateWorkspacePreferencesSchema,
   UploadWorkspaceLogoSchema,
   ValidateAccessRequestDataSchema,
   ValidateAccessRequestSchema,
-  VerifyBillingEmailChangeDataSchema,
-  VerifyBillingEmailChangeSchema,
-  WorkspaceBillingEmailDataSchema,
-  WorkspaceBillingEmailUpdateDataSchema,
   WorkspaceByIdDataSchema,
   WorkspaceByIdSchema,
   WorkspaceCountDataSchema,
@@ -465,98 +457,6 @@ export const getInviteUrl = oc
   })
   .input(InviteUrlSchema)
   .output(ApiResponseSchema(InviteUrlDataSchema));
-
-/**
- * GET /workspace/{workspaceId}/billing-email
- * Get workspace billing email
- * Available to all authenticated users (who can access the workspace, usually members)
- */
-export const getWorkspaceBillingEmail = oc
-  .route({
-    method: 'GET',
-    path: '/workspace/{workspaceId}/billing-email',
-    inputStructure: 'detailed',
-    summary: 'Get workspace billing email',
-    description: 'Retrieve workspace billing email',
-    tags: ['Workspaces'],
-  })
-  .errors({
-    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
-    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
-  })
-  .input(GetWorkspaceBillingEmailSchema)
-  .output(ApiResponseSchema(WorkspaceBillingEmailDataSchema));
-
-/**
- * PATCH /workspace/{workspaceId}/billing-email
- * Update workspace billing email
- * Available only to workspace admin and owners
- */
-export const updateWorkspaceBillingEmail = oc
-  .route({
-    method: 'PATCH',
-    path: '/workspace/{workspaceId}/billing-email',
-    inputStructure: 'detailed',
-    summary: 'Update workspace billing email',
-    description: 'Update workspace billing email address',
-    tags: ['Workspaces'],
-  })
-  .errors({
-    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
-    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
-  })
-  .input(UpdateWorkspaceBillingEmailSchema)
-  .output(ApiResponseSchema(WorkspaceBillingEmailUpdateDataSchema));
-
-/**
- * POST /workspace/{workspaceId}/billing-email/request-change
- * Request billing email change with verification
- * Available only to workspace admin and owners
- */
-export const requestBillingEmailChange = oc
-  .route({
-    method: 'POST',
-    path: '/workspace/{workspaceId}/billing-email/request-change',
-    inputStructure: 'detailed',
-    summary: 'Request billing email change',
-    description: 'Request a billing email change with email verification',
-    tags: ['Workspaces'],
-  })
-  .errors({
-    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
-    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
-  })
-  .input(RequestBillingEmailChangeSchema)
-  .output(ApiResponseSchema(RequestBillingEmailChangeDataSchema));
-
-/**
- * POST /workspace/billing-email/verify
- * Verify billing email change
- * Available to authenticated users with valid token
- */
-export const verifyBillingEmailChange = oc
-  .route({
-    method: 'POST',
-    path: '/workspace/billing-email/verify',
-    inputStructure: 'detailed',
-    summary: 'Verify billing email change',
-    description: 'Verify and complete billing email change',
-    tags: ['Workspaces'],
-  })
-  .errors({
-    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
-    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
-  })
-  .input(VerifyBillingEmailChangeSchema)
-  .output(ApiResponseSchema(VerifyBillingEmailChangeDataSchema));
 
 /**
  * POST /workspace/{workspaceId}/invite/rotate

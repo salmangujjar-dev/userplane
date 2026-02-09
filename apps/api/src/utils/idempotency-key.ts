@@ -93,19 +93,6 @@ type AccessRequestKeyParams = {
   requestId: string;
 };
 
-type BillingEmailUpdatedKeyParams = {
-  to: string | string[];
-  newEmail: string;
-  /** Previous email for uniqueness - one notification per email change */
-  previousEmail: string;
-};
-
-type BillingEmailVerificationKeyParams = {
-  to: string | string[];
-  /** The verification URL contains a unique token */
-  verificationUrl: string;
-};
-
 type SubscriptionActiveKeyParams = {
   to: string | string[];
   planName: string;
@@ -303,27 +290,6 @@ export function accessRequestKey(params: AccessRequestKeyParams): string {
   return ensureKeyLength(
     `access-request/${params.workspaceName}/${params.requesterEmail}/${recipients}/${params.requestId}`
   );
-}
-
-/**
- * Generate idempotency key for billing email updated
- * Uses both old and new email - one notification per change
- */
-export function billingEmailUpdatedKey(params: BillingEmailUpdatedKeyParams): string {
-  const recipients = formatRecipients(params.to);
-  return ensureKeyLength(
-    `billing-email-updated/${recipients}/${params.previousEmail}/${params.newEmail}`
-  );
-}
-
-/**
- * Generate idempotency key for billing email verification
- * Uses verificationUrl hash - stable across retries
- */
-export function billingEmailVerificationKey(params: BillingEmailVerificationKeyParams): string {
-  const recipients = formatRecipients(params.to);
-  const urlHash = hashValue(params.verificationUrl);
-  return ensureKeyLength(`billing-email-verification/${recipients}/${urlHash}`);
 }
 
 /**

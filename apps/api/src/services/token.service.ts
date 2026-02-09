@@ -9,7 +9,6 @@ import { nanoid } from 'nanoid';
 import { env } from '@/api/env';
 import type {
   AccessRequestTokenPayload,
-  BillingEmailVerificationTokenPayload,
   DomainVerificationTokenPayload,
   IntercomOAuthStatePayload,
   InviteTokenPayload,
@@ -28,7 +27,6 @@ export class TokenService {
   private domainVerificationExpiresIn: number;
   private accessRequestExpiresIn: number;
   private workspaceCreateInviteExpiresIn: number;
-  private billingEmailVerificationExpiresIn: number;
 
   constructor(config: {
     jwtSecret: string;
@@ -39,7 +37,6 @@ export class TokenService {
     domainVerificationExpiresIn: number;
     accessRequestExpiresIn: number;
     workspaceCreateInviteExpiresIn: number;
-    billingEmailVerificationExpiresIn: number;
   }) {
     this.jwtSecret = config.jwtSecret;
     this.dashboardUrl = config.dashboardUrl;
@@ -49,7 +46,6 @@ export class TokenService {
     this.domainVerificationExpiresIn = config.domainVerificationExpiresIn;
     this.accessRequestExpiresIn = config.accessRequestExpiresIn;
     this.workspaceCreateInviteExpiresIn = config.workspaceCreateInviteExpiresIn;
-    this.billingEmailVerificationExpiresIn = config.billingEmailVerificationExpiresIn;
   }
 
   /**
@@ -214,54 +210,6 @@ export class TokenService {
   }
 
   /**
-   * Generate billing email verification URL
-   * Token expires based on billingEmailVerificationExpiresIn config (default 10 minutes)
-   * Contains workspace ID, member ID, and new billing email
-   * URL points to dashboard app where the verification will be processed
-   */
-  generateBillingEmailVerificationUrl(
-    workspaceId: string,
-    memberId: string,
-    billingEmail: string
-  ): string {
-    const payload: Omit<BillingEmailVerificationTokenPayload, 'iss' | 'iat' | 'exp'> = {
-      wi: workspaceId,
-      mi: memberId,
-      be: billingEmail,
-    };
-
-    const fullPayload: BillingEmailVerificationTokenPayload = {
-      iss: this.jwtIssuer,
-      ...payload,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + this.billingEmailVerificationExpiresIn,
-    };
-
-    const token = jwt.sign(fullPayload, this.jwtSecret, { algorithm: 'HS256' });
-
-    return `${this.dashboardUrl}/billing-email/verify?token=${token}`;
-  }
-
-  /**
-   * Verify and decode billing email verification JWT
-   * Returns payload if valid, null if invalid or expired
-   */
-  verifyBillingEmailVerificationToken(token: string): BillingEmailVerificationTokenPayload | null {
-    try {
-      const payload = jwt.verify(token, this.jwtSecret, {
-        algorithms: ['HS256'],
-      }) as BillingEmailVerificationTokenPayload;
-      // Verify issuer
-      if (payload.iss !== this.jwtIssuer) {
-        return null;
-      }
-      return payload;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
    * Get access request expiry duration in seconds
    */
   getAccessRequestExpiresIn(): number {
@@ -338,5 +286,4 @@ export const tokenService = new TokenService({
   domainVerificationExpiresIn: env.token.domainVerificationExpiresIn,
   accessRequestExpiresIn: env.token.accessRequestExpiresIn,
   workspaceCreateInviteExpiresIn: env.token.workspaceCreateInviteExpiresIn,
-  billingEmailVerificationExpiresIn: env.token.billingEmailVerificationExpiresIn,
 });

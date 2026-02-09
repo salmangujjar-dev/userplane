@@ -7,7 +7,6 @@
 import type { DomainStatus, WorkspaceInvitePolicy, WorkspaceRole } from '@workspace/contract';
 import {
   AccessRequestTokenPayloadSchema,
-  BillingEmailVerificationTokenPayloadSchema,
   DomainVerificationTokenPayloadSchema,
   InviteTokenPayloadSchema,
   LinkItemSchema,
@@ -25,8 +24,6 @@ import type { Link } from '@workspace/db';
 import type {
   AccessRequestEmailProps,
   AccountDeletionVerificationEmailProps,
-  BillingEmailUpdatedEmailProps,
-  BillingEmailVerificationEmailProps,
   DeletionScheduledEmailProps,
   EmailVerificationEmailProps,
   MagicLinkEmailProps,
@@ -73,9 +70,6 @@ export type DomainVerificationTokenPayload = z.infer<typeof DomainVerificationTo
 export type AccessRequestTokenPayload = z.infer<typeof AccessRequestTokenPayloadSchema>;
 export type WorkspaceCreateInviteTokenPayload = z.infer<
   typeof WorkspaceCreateInviteTokenPayloadSchema
->;
-export type BillingEmailVerificationTokenPayload = z.infer<
-  typeof BillingEmailVerificationTokenPayloadSchema
 >;
 export type PresignedUrlInfo = z.infer<typeof PresignedUrlInfoSchema>;
 
@@ -156,7 +150,6 @@ export interface CreateWorkspaceInput {
   workspaceInviteToken: string;
   workspaceInvitePolicy: WorkspaceInvitePolicy;
   workspaceInviteDomains: string | null;
-  workspaceBillingEmail: string;
   recordingCompanyName?: string;
   recordingHeader?: string;
   recordingFootnote?: string | null;
@@ -266,19 +259,6 @@ export type SubscriptionActiveEmailParams = Omit<
 > & {
   workspaceId: string;
 };
-
-/**
- * Billing email updated email parameters
- * Service accepts workspaceId and builds URLs internally
- */
-export type BillingEmailUpdatedEmailParams = Omit<BillingEmailUpdatedEmailProps, 'billingUrl'> & {
-  workspaceId: string;
-};
-
-/**
- * Billing email verification email parameters
- */
-export type BillingEmailVerificationEmailParams = BillingEmailVerificationEmailProps;
 
 /**
  * Subscription expired email parameters
@@ -479,7 +459,6 @@ export interface CreateWorkspaceParams {
   recordingSlug?: string;
   userId: string;
   userEmail: string;
-  workspaceBillingEmail: string;
 }
 
 /**

@@ -22,7 +22,6 @@ export type {
   InviteUrlData,
   SuggestedWorkspaceItem,
   SuggestWorkspacesData,
-  WorkspaceBillingEmailData,
   WorkspaceInvitePolicy,
   WorkspaceItem,
   WorkspacePreferences,

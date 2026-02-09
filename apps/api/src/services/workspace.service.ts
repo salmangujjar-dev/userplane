@@ -97,7 +97,6 @@ export class WorkspaceService {
         recordingFootnote: defaultPrefs.recordingFootnote,
         recordingPrimaryColor: defaultPrefs.recordingPrimaryColor,
         recordingMaxDurationMs: defaultPrefs.recordingMaxDurationMs,
-        workspaceBillingEmail: params.workspaceBillingEmail,
       },
       options
     );
@@ -161,49 +160,6 @@ export class WorkspaceService {
     }
 
     return workspace;
-  }
-
-  /**
-   * Get workspace billing email
-   * Throws WORKSPACE_NOT_FOUND if workspace not found
-   */
-  async getWorkspaceBillingEmail(workspaceId: string) {
-    const result = await this.deps.workspaceRepo.findWorkspaceBillingEmailById(workspaceId);
-    if (!result) {
-      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
-      if (isSoftDeleted === true) {
-        throw workspaceError.WORKSPACE_GONE();
-      }
-      throw workspaceError.WORKSPACE_NOT_FOUND();
-    }
-    return result.workspaceBillingEmail;
-  }
-
-  /**
-   * Update workspace billing email
-   * Throws WORKSPACE_NOT_FOUND if workspace not found or update fails
-   */
-  async updateWorkspaceBillingEmail(
-    workspaceId: string,
-    email: string,
-    options?: { tx?: Transaction }
-  ) {
-    const workspace = await this.getById(workspaceId);
-    if (!workspace) {
-      throw workspaceError.WORKSPACE_NOT_FOUND();
-    }
-
-    const updated = await this.deps.workspaceRepo.updateWorkspaceBillingEmail(
-      workspaceId,
-      email,
-      options
-    );
-
-    if (!updated) {
-      throw workspaceError.WORKSPACE_NOT_FOUND();
-    }
-
-    return updated;
   }
 
   /**

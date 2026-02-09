@@ -99,9 +99,6 @@ export const tokenEnvSchema = z.object({
   WORKSPACE_CREATE_INVITE_TOKEN_EXPIRES_IN: integerWithDefault(
     TOKEN_EXPIRY.WORKSPACE_CREATE_INVITE
   ),
-  BILLING_EMAIL_VERIFICATION_TOKEN_EXPIRES_IN: integerWithDefault(
-    TOKEN_EXPIRY.BILLING_EMAIL_VERIFICATION
-  ),
   RECORDER_TOKEN_SECRET: stringWithDefault(DEV_SECRETS.RECORDER),
   RECORDER_TOKEN_EXPIRES_IN: integerWithDefault(TOKEN_EXPIRY.RECORDING),
 });
@@ -296,7 +293,6 @@ export const tokenConfigSchema = z.object({
   domainVerificationExpiresIn: z.number(),
   accessRequestExpiresIn: z.number(),
   workspaceCreateInviteExpiresIn: z.number(),
-  billingEmailVerificationExpiresIn: z.number(),
   recordingSecret: z.string(),
   recordingTokenExpiresIn: z.number(),
 });

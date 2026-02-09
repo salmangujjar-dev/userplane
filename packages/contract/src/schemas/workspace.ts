@@ -24,7 +24,6 @@ import {
   WorkspaceMemberIdSchema,
   WorkspaceRoleSchema,
 } from './common';
-import { FormEmailSchema } from './form';
 
 /**
  * Workspace schemas
@@ -1070,80 +1069,6 @@ export const WorkspaceAccessStatusSchema = z.enum([
 ]);
 
 /**
- * Get workspace billing email request (detailed mode)
- */
-export const GetWorkspaceBillingEmailSchema = z.object({
-  params: z.object({
-    workspaceId: WorkspaceIdSchema,
-  }),
-});
-
-/**
- * Get workspace billing email response
- */
-export const WorkspaceBillingEmailDataSchema = z.object({
-  workspaceId: WorkspaceIdSchema,
-  workspaceBillingEmail: z.string().email(),
-});
-
-/**
- * Update workspace billing email request (detailed mode)
- */
-export const UpdateWorkspaceBillingEmailSchema = z.object({
-  params: z.object({
-    workspaceId: WorkspaceIdSchema,
-  }),
-  body: z.object({
-    email: FormEmailSchema,
-  }),
-});
-
-/**
- * Update workspace billing email response
- */
-export const WorkspaceBillingEmailUpdateDataSchema = z.object({
-  workspaceId: WorkspaceIdSchema,
-  workspaceBillingEmail: z.string().email(),
-});
-
-/**
- * Request billing email change request (detailed mode)
- */
-export const RequestBillingEmailChangeSchema = z.object({
-  params: z.object({
-    workspaceId: WorkspaceIdSchema,
-  }),
-  body: z.object({
-    email: FormEmailSchema,
-  }),
-});
-
-/**
- * Request billing email change response
- */
-export const RequestBillingEmailChangeDataSchema = z.object({
-  workspaceId: WorkspaceIdSchema,
-  message: z.string(),
-});
-
-/**
- * Verify billing email change request (detailed mode)
- */
-export const VerifyBillingEmailChangeSchema = z.object({
-  body: z.object({
-    token: z.string(),
-  }),
-});
-
-/**
- * Verify billing email change response
- */
-export const VerifyBillingEmailChangeDataSchema = z.object({
-  workspaceId: WorkspaceIdSchema,
-  workspaceBillingEmail: z.string().email(),
-});
-
-/**
  * Get workspace status request (detailed mode)
  * Used to check access status without requiring membership
  */
@@ -1353,7 +1278,6 @@ export type SuggestedWorkspaceItem = z.infer<typeof SuggestedWorkspaceItemSchema
 export type SuggestWorkspacesData = z.infer<typeof SuggestWorkspacesDataSchema>;
 export type WorkspaceStatusData = z.infer<typeof WorkspaceStatusDataSchema>;
 export type InvitePolicyData = z.infer<typeof InvitePolicyDataSchema>;
-export type WorkspaceBillingEmailData = z.infer<typeof WorkspaceBillingEmailDataSchema>;
 export type InviteUrlData = z.infer<typeof InviteUrlDataSchema>;
 
 // Domain type exports
