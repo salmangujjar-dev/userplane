@@ -339,7 +339,7 @@ export function set(obj: any, path: string | (string | number)[], value: any): a
   let current = obj;
 
   for (let i = 0; i < pathArray.length; i++) {
-    const key = pathArray[i];
+    const key = pathArray[i] as string | number;
 
     if (i === pathArray.length - 1) {
       // Last key in path - set the value

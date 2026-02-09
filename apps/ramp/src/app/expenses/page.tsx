@@ -2,7 +2,7 @@
 
 import { PlusIcon, ReceiptTextIcon } from 'lucide-react';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 
 import { ExpenseFilters } from '@/components/expenses/ExpenseFilters';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
@@ -46,7 +46,29 @@ const filterParsers = {
   page: parseAsInteger.withDefault(0),
 };
 
+// Suspense boundary required because useQueryStates (nuqs) calls
+// useSearchParams internally, which Next.js cannot resolve at
+// static prerender time without one.
 export default function ExpensesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-4 md:p-6 space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <ExpensesContent />
+    </Suspense>
+  );
+}
+
+function ExpensesContent() {
   const [filters, setFilters] = useQueryStates(filterParsers, {
     shallow: false,
   });
