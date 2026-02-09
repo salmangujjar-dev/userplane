@@ -7,7 +7,8 @@
  * Also handles scatter-gather for cross-tab metadata aggregation.
  */
 
-import { bridge, type BridgeConnection } from '@workspace/postbridge';
+import type { BridgeConnection } from '@workspace/postbridge';
+import bridge from '@workspace/postbridge/bridge';
 
 import { createLogger } from '@/lib/logger';
 

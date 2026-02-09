@@ -6,6 +6,7 @@
 import type { CacheService } from '@workspace/cache';
 import type { DomainStatus } from '@workspace/contract';
 import { domainError, workspaceError } from '@workspace/contract';
+import type { FeatureGate } from '@workspace/pricing';
 
 import { generateDomainId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
@@ -16,6 +17,7 @@ import {
   type SortDirection,
 } from '@/api/repositories/domains.repository';
 import type { LinkRepository } from '@/api/repositories/links.repository';
+import type { BillingService } from '@/api/services/billing.service';
 import type { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
 import type { UserService } from '@/api/services/user.service';
@@ -27,6 +29,7 @@ const logger = createLogger('domain-service');
 export interface DomainServiceDeps {
   domainRepo: DomainRepository;
   tokenService: TokenService;
+  billingService: BillingService;
   emailService?: EmailService;
   workspaceService?: WorkspaceService;
   userService?: UserService;
@@ -457,6 +460,7 @@ export class DomainService {
    * Updates recording toggle settings for the domain
    * Only allows updates if domain is verified
    * Throws DOMAIN_GONE if soft-deleted, DOMAIN_NOT_FOUND if not found, or other domain-specific errors for validation
+   * Throws WORKSPACE_FEATURE_NOT_AVAILABLE if a gated recording feature is set
    */
   async updateRecordingPreferences(
     domainId: string,
@@ -488,6 +492,9 @@ export class DomainService {
       throw domainError.DOMAIN_UNVERIFIED();
     }
 
+    // Enforce feature gates on the update
+    await this.enforceRecordingPreferenceGates(workspaceId, updates);
+
     const updated = await this.deps.domainRepo.updateRecordingPreferences(
       domainId,
       updates,
@@ -508,6 +515,7 @@ export class DomainService {
    * Replaces all recording toggle settings for the domain
    * Only allows updates if domain is verified
    * Throws DOMAIN_GONE if soft-deleted, DOMAIN_NOT_FOUND if not found, or other domain-specific errors for validation
+   * Throws WORKSPACE_FEATURE_NOT_AVAILABLE if a gated recording feature is set
    */
   async replaceRecordingPreferences(
     domainId: string,
@@ -538,6 +546,9 @@ export class DomainService {
     if (domain.domainStatus !== 'verified') {
       throw domainError.DOMAIN_UNVERIFIED();
     }
+
+    // Enforce feature gates on the replacement
+    await this.enforceRecordingPreferenceGates(workspaceId, preferences);
 
     const updated = await this.deps.domainRepo.updateRecordingPreferences(
       domainId,
@@ -590,5 +601,46 @@ export class DomainService {
    */
   async countByWorkspace(workspaceId: string): Promise<number> {
     return this.deps.domainRepo.countByWorkspace(workspaceId);
+  }
+
+  // ===========================================================================
+  // Private helpers
+  // ===========================================================================
+
+  /**
+   * Map from recording preference field to the feature gate that controls it
+   * Fields not in this map are ungated (always allowed)
+   */
+  private static readonly RECORDING_PREF_GATE_MAP: Record<string, FeatureGate> = {
+    recordingHideSensitive: 'autoBlurSensitiveData',
+    recordingCaptureClientLog: 'requestConsoleLogs',
+    recordingCaptureClientAction: 'requestActionReplay',
+    recordingCaptureServerLog: 'requestServerLogs',
+    recordingCaptureNetworkLog: 'requestNetworkActivity',
+  };
+
+  /**
+   * Enforce feature gates on recording preference updates
+   * Only checks fields that are present in the update and set to true
+   * Throws WORKSPACE_FEATURE_NOT_AVAILABLE with the gated feature name
+   */
+  private async enforceRecordingPreferenceGates(
+    workspaceId: string,
+    updates: Partial<{
+      recordingHideSensitive: boolean;
+      recordingCaptureClientLog: boolean;
+      recordingCaptureClientAction: boolean;
+      recordingCaptureServerLog: boolean;
+      recordingCaptureNetworkLog: boolean;
+    }>
+  ): Promise<void> {
+    const featureGates = await this.deps.billingService.getFeatureGates(workspaceId);
+
+    for (const [field, gate] of Object.entries(DomainService.RECORDING_PREF_GATE_MAP)) {
+      const value = updates[field as keyof typeof updates];
+      if (value === true && !featureGates[gate]) {
+        throw workspaceError.WORKSPACE_FEATURE_NOT_AVAILABLE({ feature: gate });
+      }
+    }
   }
 }

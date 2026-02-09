@@ -156,9 +156,10 @@ export const workspaceService = new WorkspaceService({
   recordingRepo,
   projectService,
   subscriptionRepo,
+  integrationRepo,
+  billingService,
   dodoClient: getDodoClient(),
   cacheService,
-  integrationRepo,
 });
 
 // Admin service - initialized after workspace service is available
@@ -179,6 +180,7 @@ export const adminWorkspaceService = new AdminWorkspaceService({
 export const domainService = new DomainService({
   domainRepo,
   tokenService,
+  billingService,
   emailService,
   workspaceService,
   userService,

@@ -123,6 +123,11 @@
  * - withTransferable: For marking objects as transferable
  * - All types: Connection, Schema, GuestConnectOptions, etc.
  *
+ * SUBPATH EXPORTS:
+ * ───────────────
+ * - '@workspace/postbridge/bridge': Cross-tab broadcasting via SharedWorker
+ *   Separated because it uses new URL() worker pattern that requires Vite/Rollup.
+ *
  * SEE ALSO:
  * ────────
  * - types.ts: Type definitions and RPC fundamentals
@@ -133,13 +138,15 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
-import Bridge from './bridge';
 import guest from './guest';
 import host from './host';
 import { withTransferable } from './rpc';
 
 // Export main APIs
-export { Bridge as bridge, guest, host, withTransferable };
+// Note: bridge (cross-tab SharedWorker) is exported separately via
+// '@workspace/postbridge/bridge' to avoid pulling SharedWorker code
+// into bundlers that don't support the new URL() worker pattern (e.g. Turbopack).
+export { guest, host, withTransferable };
 
 // Export all types (Connection, Schema, etc.)
 export * from './types';

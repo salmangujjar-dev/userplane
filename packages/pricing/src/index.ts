@@ -1337,6 +1337,206 @@ export function getPlanName(planId: PlanId): PlanName {
 }
 
 // ============================================================================
+// Feature Gates
+// ============================================================================
+
+/**
+ * Feature gate keys - boolean flags for whether a feature is accessible on a plan
+ * Unlike resource limits (entitlements), these are on/off toggles per plan.
+ * Billing cycle (monthly/annual) does not affect feature access.
+ */
+export const FEATURE_GATE_KEYS = [
+  // Screen recordings
+  'replayRecordings',
+  'autoBlurSensitiveData',
+  // Screenshots
+  'requestScreenshots',
+  'annotateScreenshots',
+  // Files
+  'requestFileUploads',
+  // Logs and debugging
+  'requestConsoleLogs',
+  'requestNetworkActivity',
+  'requestServerLogs',
+  'requestActionReplay',
+  // Customization
+  'customizeWorkspace',
+  // Workspace
+  'requestAdditionalSeats',
+  // Bring your own storage
+  'bringYourOwnStorageRecordings',
+  'bringYourOwnStorageScreenshots',
+  'bringYourOwnStorageFiles',
+  // Privacy and compliance
+  'customizeDataRetention',
+  'enableEnterpriseCompliance',
+  'customizeDataResidency',
+  // Integrations
+  'integrateHelpDesks',
+  'integrateCRMs',
+  'integrateIssueTrackers',
+  'integrateAutomation',
+  'accessUserplaneAPI',
+] as const;
+
+export type FeatureGate = (typeof FEATURE_GATE_KEYS)[number];
+
+/**
+ * Feature gates for a plan - each gate is a boolean flag
+ */
+export type PlanFeatureGates = Record<FeatureGate, boolean>;
+
+/**
+ * Feature gates by plan name
+ * Keyed by PlanName since billing cycle does not affect feature access
+ */
+export const PLAN_FEATURE_GATES: Record<PlanName, PlanFeatureGates> = {
+  Free: {
+    replayRecordings: true,
+    autoBlurSensitiveData: true,
+    requestScreenshots: false,
+    annotateScreenshots: false,
+    requestFileUploads: false,
+    requestConsoleLogs: false,
+    requestNetworkActivity: false,
+    requestServerLogs: false,
+    requestActionReplay: false,
+    customizeWorkspace: false,
+    requestAdditionalSeats: false,
+    bringYourOwnStorageRecordings: false,
+    bringYourOwnStorageScreenshots: false,
+    bringYourOwnStorageFiles: false,
+    customizeDataRetention: false,
+    enableEnterpriseCompliance: false,
+    customizeDataResidency: false,
+    integrateHelpDesks: false,
+    integrateCRMs: false,
+    integrateIssueTrackers: false,
+    integrateAutomation: false,
+    accessUserplaneAPI: false,
+  },
+  Essential: {
+    replayRecordings: true,
+    autoBlurSensitiveData: true,
+    requestScreenshots: false,
+    annotateScreenshots: false,
+    requestFileUploads: false,
+    requestConsoleLogs: false,
+    requestNetworkActivity: false,
+    requestServerLogs: false,
+    requestActionReplay: false,
+    customizeWorkspace: false,
+    requestAdditionalSeats: true,
+    bringYourOwnStorageRecordings: false,
+    bringYourOwnStorageScreenshots: false,
+    bringYourOwnStorageFiles: false,
+    customizeDataRetention: true,
+    enableEnterpriseCompliance: true,
+    customizeDataResidency: false,
+    integrateHelpDesks: true,
+    integrateCRMs: false,
+    integrateIssueTrackers: false,
+    integrateAutomation: false,
+    accessUserplaneAPI: false,
+  },
+  Starter: {
+    replayRecordings: true,
+    autoBlurSensitiveData: true,
+    requestScreenshots: false,
+    annotateScreenshots: false,
+    requestFileUploads: false,
+    requestConsoleLogs: false,
+    requestNetworkActivity: false,
+    requestServerLogs: false,
+    requestActionReplay: false,
+    customizeWorkspace: true,
+    requestAdditionalSeats: true,
+    bringYourOwnStorageRecordings: false,
+    bringYourOwnStorageScreenshots: false,
+    bringYourOwnStorageFiles: false,
+    customizeDataRetention: true,
+    enableEnterpriseCompliance: true,
+    customizeDataResidency: false,
+    integrateHelpDesks: true,
+    integrateCRMs: false,
+    integrateIssueTrackers: false,
+    integrateAutomation: false,
+    accessUserplaneAPI: false,
+  },
+  'Scale Up': {
+    replayRecordings: true,
+    autoBlurSensitiveData: true,
+    requestScreenshots: true,
+    annotateScreenshots: true,
+    requestFileUploads: true,
+    requestConsoleLogs: false,
+    requestNetworkActivity: false,
+    requestServerLogs: false,
+    requestActionReplay: false,
+    customizeWorkspace: true,
+    requestAdditionalSeats: true,
+    bringYourOwnStorageRecordings: false,
+    bringYourOwnStorageScreenshots: false,
+    bringYourOwnStorageFiles: true,
+    customizeDataRetention: true,
+    enableEnterpriseCompliance: true,
+    customizeDataResidency: false,
+    integrateHelpDesks: true,
+    integrateCRMs: true,
+    integrateIssueTrackers: true,
+    integrateAutomation: true,
+    accessUserplaneAPI: false,
+  },
+  Enterprise: {
+    replayRecordings: true,
+    autoBlurSensitiveData: true,
+    requestScreenshots: true,
+    annotateScreenshots: true,
+    requestFileUploads: true,
+    requestConsoleLogs: true,
+    requestNetworkActivity: true,
+    requestServerLogs: true,
+    requestActionReplay: true,
+    customizeWorkspace: true,
+    requestAdditionalSeats: true,
+    bringYourOwnStorageRecordings: true,
+    bringYourOwnStorageScreenshots: true,
+    bringYourOwnStorageFiles: true,
+    customizeDataRetention: true,
+    enableEnterpriseCompliance: true,
+    customizeDataResidency: true,
+    integrateHelpDesks: true,
+    integrateCRMs: true,
+    integrateIssueTrackers: true,
+    integrateAutomation: true,
+    accessUserplaneAPI: true,
+  },
+};
+
+/**
+ * Check if a specific feature is accessible for a plan
+ *
+ * @param planId - The plan identifier (e.g. 'starter_monthly')
+ * @param feature - The feature gate to check (e.g. 'requestScreenshots')
+ * @returns true if the feature is accessible on the plan
+ */
+export function getFeatureGate(planId: PlanId, feature: FeatureGate): boolean {
+  const planName = getPlanName(planId);
+  return PLAN_FEATURE_GATES[planName][feature];
+}
+
+/**
+ * Get all feature gates for a plan
+ *
+ * @param planId - The plan identifier (e.g. 'starter_monthly')
+ * @returns All feature gates for the plan
+ */
+export function getFeatureGates(planId: PlanId): PlanFeatureGates {
+  const planName = getPlanName(planId);
+  return PLAN_FEATURE_GATES[planName];
+}
+
+// ============================================================================
 // Abuse Prevention Configuration
 // ============================================================================
 
