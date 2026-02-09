@@ -10,8 +10,8 @@ import type { CacheService } from '@workspace/cache';
 import { billingError, type SubscriptionAccessStatus } from '@workspace/contract';
 import type { DodoPayments } from '@workspace/payments/client';
 import { getProductByPlanId } from '@workspace/payments/products';
-import type { PlanId } from '@workspace/pricing';
-import { PLAN_NAMES } from '@workspace/pricing';
+import type { PlanFeatureGates, PlanId } from '@workspace/pricing';
+import { getFeatureGates, PLAN_NAMES } from '@workspace/pricing';
 
 import { createLogger } from '@/api/lib/logger';
 import type { DisputeRepository } from '@/api/repositories/disputes.repository';
@@ -151,6 +151,16 @@ export class BillingService {
     await this.deps.cacheService.setSubscriptionAccessStatus(workspaceId, result);
 
     return result;
+  }
+
+  /**
+   * Get feature gates for a workspace
+   * @param workspaceId - The workspace ID
+   * @returns Feature gates
+   */
+  async getFeatureGates(workspaceId: string): Promise<PlanFeatureGates> {
+    const subscriptionAccessStatus = await this.getSubscriptionAccessStatus(workspaceId);
+    return getFeatureGates(subscriptionAccessStatus.effectivePlanId);
   }
 
   /**

@@ -20,6 +20,7 @@ import type {
 } from '@workspace/cache';
 import { linkKeys, workspaceRecordingKeys } from '@workspace/cache';
 import { sessionError } from '@workspace/contract';
+import type { PlanFeatureGates } from '@workspace/pricing';
 import type {
   ClientActionsStorageClient,
   ConsoleLogsStorageClient,
@@ -61,6 +62,8 @@ import type {
   UploadTokenPayload,
 } from '@/api/types';
 
+import { BillingService } from './billing.service';
+
 const logger = createLogger('session-service');
 
 export interface SessionServiceDeps {
@@ -69,6 +72,7 @@ export interface SessionServiceDeps {
   projectRepo: ProjectRepository;
   workspaceRepo: WorkspaceRepository;
   domainRepo: DomainRepository;
+  billingService: BillingService;
   videoStorage: VideoStorageClient;
   thumbnailsStorage: ThumbnailsStorageClient;
   consoleLogsStorage: ConsoleLogsStorageClient;
@@ -317,6 +321,9 @@ export class SessionService {
       });
     }
 
+    // Pull feature gates from the billing service
+    const featureGates = await this.deps.billingService.getFeatureGates(linkData.workspaceId);
+
     // Generate session ID for tracking
     const sessionId = generateSessionId();
 
@@ -327,7 +334,7 @@ export class SessionService {
       lt: linkData.linkType,
       wid: linkData.workspaceId,
       sid: sessionId,
-      prefs: this.buildSessionPreferences(linkData),
+      prefs: this.buildSessionPreferences(linkData, featureGates),
     };
 
     // Sign token with session secret
@@ -583,21 +590,38 @@ export class SessionService {
 
   /**
    * Build session preferences from link data
+   * Includes feature gates to determine if the feature is accessible on the plan
+   * If the feature is not accessible, the value is set to null
+   * This is used to determine if the feature is accessible on the plan
+   * and to build the session preferences accordingly
+   *
+   * @param linkData - Link data from the database
+   * @param featureGates - Feature gates from the pricing service
+   * @returns Session preferences
    */
-  private buildSessionPreferences(linkData: LinkWithWorkspacePrefsRow): SessionPreferences {
+  private buildSessionPreferences(
+    linkData: LinkWithWorkspacePrefsRow,
+    featureGates: PlanFeatureGates
+  ): SessionPreferences {
     return {
-      rcl: linkData.recordingCustomizeLink,
-      rhs: linkData.recordingHideSensitive,
-      rccl: linkData.recordingCaptureClientLog,
-      rcca: linkData.recordingCaptureClientAction,
-      rcsl: linkData.recordingCaptureServerLog,
-      rcnl: linkData.recordingCaptureNetworkLog,
-      rcn: linkData.recordingCompanyName,
-      rclp: linkData.recordingCompanyLogoPath,
-      rh: linkData.recordingHeader,
-      rf: linkData.recordingFootnote,
-      rpc: linkData.recordingPrimaryColor,
+      // --- Branding ---
+      rcl: linkData.recordingCustomizeLink && featureGates.customizeWorkspace,
+      // --- Sensitive data ---
+      rhs: linkData.recordingHideSensitive && featureGates.autoBlurSensitiveData,
+      // --- Logs and debugging ---
+      rccl: linkData.recordingCaptureClientLog && featureGates.requestConsoleLogs,
+      rcca: linkData.recordingCaptureClientAction && featureGates.requestActionReplay,
+      rcsl: linkData.recordingCaptureServerLog && featureGates.requestServerLogs,
+      rcnl: linkData.recordingCaptureNetworkLog && featureGates.requestNetworkActivity,
+      // --- Customization ---
+      rcn: featureGates.customizeWorkspace ? linkData.recordingCompanyName : null,
+      rclp: featureGates.customizeWorkspace ? linkData.recordingCompanyLogoPath : null,
+      rh: featureGates.customizeWorkspace ? linkData.recordingHeader : null,
+      rf: featureGates.customizeWorkspace ? linkData.recordingFootnote : null,
+      rpc: featureGates.customizeWorkspace ? linkData.recordingPrimaryColor : null,
+      // --- Limits ---
       rmd: linkData.recordingMaxDurationMs,
+      // --- Creator ---
       rrb: linkData.createdByName || '',
     };
   }

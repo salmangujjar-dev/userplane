@@ -1,3 +1,4 @@
+import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { AlertCircle } from 'lucide-react';
@@ -20,12 +21,15 @@ export function DomainRecordingSettings({
 }: DomainRecordingSettingsProps) {
   const { data: subscriptionResult } = useSubscriptionStatus();
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const effectivePlanId = subscriptionData?.accessDetail.effectivePlanId ?? 'free';
-  const isEnterprise =
-    effectivePlanId === 'enterprise_monthly' || effectivePlanId === 'enterprise_annual';
+  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
+  const featureGates = getFeatureGates(effectivePlanId);
 
-  // Advanced recording toggles are only available on enterprise plans
-  const paidDisabled = disabled || !isEnterprise;
+  // Whether any advanced recording feature is gated on this plan
+  const hasAdvancedRecording =
+    featureGates.requestConsoleLogs ||
+    featureGates.requestActionReplay ||
+    featureGates.requestNetworkActivity ||
+    featureGates.requestServerLogs;
 
   const updateSetting = <K extends keyof DomainRecordingPreferences>(
     key: K,
@@ -54,7 +58,7 @@ export function DomainRecordingSettings({
           />
         </div>
 
-        {!isEnterprise && (
+        {!hasAdvancedRecording && (
           <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
             <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground">
@@ -66,7 +70,7 @@ export function DomainRecordingSettings({
         <div className="flex items-center justify-between">
           <Label
             htmlFor={`${idPrefix}-console-logs`}
-            className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`text-sm font-normal flex-1 ${disabled || !featureGates.requestConsoleLogs ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
           >
             Capture console logs
           </Label>
@@ -74,14 +78,14 @@ export function DomainRecordingSettings({
             id={`${idPrefix}-console-logs`}
             checked={settings.recordingCaptureClientLog}
             onCheckedChange={(checked) => updateSetting('recordingCaptureClientLog', checked)}
-            disabled={paidDisabled}
+            disabled={disabled || !featureGates.requestConsoleLogs}
           />
         </div>
 
         <div className="flex items-center justify-between">
           <Label
             htmlFor={`${idPrefix}-client-actions`}
-            className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`text-sm font-normal flex-1 ${disabled || !featureGates.requestActionReplay ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
           >
             Capture client actions
           </Label>
@@ -89,14 +93,14 @@ export function DomainRecordingSettings({
             id={`${idPrefix}-client-actions`}
             checked={settings.recordingCaptureClientAction}
             onCheckedChange={(checked) => updateSetting('recordingCaptureClientAction', checked)}
-            disabled={paidDisabled}
+            disabled={disabled || !featureGates.requestActionReplay}
           />
         </div>
 
         <div className="flex items-center justify-between">
           <Label
             htmlFor={`${idPrefix}-network-logs`}
-            className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`text-sm font-normal flex-1 ${disabled || !featureGates.requestNetworkActivity ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
           >
             Capture network logs
           </Label>
@@ -104,14 +108,14 @@ export function DomainRecordingSettings({
             id={`${idPrefix}-network-logs`}
             checked={settings.recordingCaptureNetworkLog}
             onCheckedChange={(checked) => updateSetting('recordingCaptureNetworkLog', checked)}
-            disabled={paidDisabled}
+            disabled={disabled || !featureGates.requestNetworkActivity}
           />
         </div>
 
         <div className="flex items-center justify-between">
           <Label
             htmlFor={`${idPrefix}-backend-server`}
-            className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`text-sm font-normal flex-1 ${disabled || !featureGates.requestServerLogs ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
           >
             Capture backend and server logs
           </Label>
@@ -119,7 +123,7 @@ export function DomainRecordingSettings({
             id={`${idPrefix}-backend-server`}
             checked={settings.recordingCaptureServerLog}
             onCheckedChange={(checked) => updateSetting('recordingCaptureServerLog', checked)}
-            disabled={paidDisabled}
+            disabled={disabled || !featureGates.requestServerLogs}
           />
         </div>
       </div>
