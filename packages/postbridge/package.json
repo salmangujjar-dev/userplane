@@ -11,6 +11,10 @@
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts"
+    },
+    "./bridge": {
+      "types": "./src/bridge.ts",
+      "import": "./src/bridge.ts"
     }
   },
   "files": [

@@ -20,6 +20,7 @@ import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import type { BillingService } from '@/api/services/billing.service';
 import type { ProjectService } from '@/api/services/project.service';
 import { TokenService } from '@/api/services/token.service';
 import type { CreateWorkspaceParams, Transaction } from '@/api/types';
@@ -46,6 +47,7 @@ export interface WorkspaceServiceDeps {
   projectService: ProjectService;
   subscriptionRepo: SubscriptionRepository;
   integrationRepo: IntegrationRepository;
+  billingService: BillingService;
   dodoClient?: DodoPayments;
   cacheService: CacheService;
 }
@@ -351,6 +353,7 @@ export class WorkspaceService {
    * Updates recording-related settings
    * Note: Recording toggle settings (hideSensitive, captureClientLog, captureServerLog) moved to domain level
    * Throws WORKSPACE_NOT_FOUND if workspace not found or update fails
+   * Throws WORKSPACE_FEATURE_NOT_AVAILABLE if customization fields are set but gated
    */
   async updatePreferences(
     workspaceId: string,
@@ -369,6 +372,9 @@ export class WorkspaceService {
     if (!workspace) {
       throw workspaceError.WORKSPACE_NOT_FOUND();
     }
+
+    // Enforce feature gates on the update
+    await this.enforcePreferenceGates(workspaceId, updates);
 
     const updated = await this.deps.workspaceRepo.updatePreferences(workspaceId, updates, options);
     if (!updated) {
@@ -1237,5 +1243,43 @@ export class WorkspaceService {
           ? ('can_join' as const)
           : ('can_request' as const),
     };
+  }
+
+  // ===========================================================================
+  // Private helpers
+  // ===========================================================================
+
+  /**
+   * Enforce feature gates on preference updates
+   * Throws WORKSPACE_FEATURE_NOT_AVAILABLE if the update includes fields
+   * that are gated on the workspace's current plan
+   */
+  private async enforcePreferenceGates(
+    workspaceId: string,
+    updates: Partial<{
+      recordingCustomizeLink: boolean;
+      recordingCompanyName: string | null;
+      recordingCompanyLogoPath: string | null;
+      recordingHeader: string | null;
+      recordingFootnote: string | null;
+      recordingPrimaryColor: string | null;
+      recordingMaxDurationMs: number | null;
+    }>
+  ): Promise<void> {
+    const featureGates = await this.deps.billingService.getFeatureGates(workspaceId);
+
+    const hasCustomizationUpdates =
+      updates.recordingCustomizeLink !== undefined ||
+      updates.recordingCompanyName !== undefined ||
+      updates.recordingCompanyLogoPath !== undefined ||
+      updates.recordingHeader !== undefined ||
+      updates.recordingFootnote !== undefined ||
+      updates.recordingPrimaryColor !== undefined;
+
+    if (hasCustomizationUpdates && !featureGates.customizeWorkspace) {
+      throw workspaceError.WORKSPACE_FEATURE_NOT_AVAILABLE({
+        feature: 'customizeWorkspace',
+      });
+    }
   }
 }
