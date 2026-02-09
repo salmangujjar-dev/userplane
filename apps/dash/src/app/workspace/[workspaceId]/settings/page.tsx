@@ -21,7 +21,7 @@ export default function SettingsPage() {
         onCreateLinkClick={() => setCreateLinkModalOpen(true)}
       />
 
-      <main className="flex-1 overflow-y-auto px-6 pb-8">
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 pb-8">
         <SettingsTab onInviteClick={() => setInviteModalOpen(true)} />
       </main>
 
