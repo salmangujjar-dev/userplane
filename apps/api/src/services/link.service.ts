@@ -4,6 +4,7 @@
  */
 
 import type { CacheService } from '@workspace/cache';
+import type { LinkProviderData } from '@workspace/contract';
 import { linkError } from '@workspace/contract';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 
@@ -68,6 +69,7 @@ export interface CreateLinkWithProviderParams {
   linkProviderType: LinkProviderType;
   linkProviderId?: string | null;
   linkProviderRef?: string | null;
+  linkProviderData?: LinkProviderData | null;
 }
 
 /**
@@ -236,6 +238,7 @@ export class LinkService {
       linkProviderType: LinkProviderType;
       linkProviderId: string | null;
       linkProviderRef: string | null;
+      linkProviderData?: unknown;
     },
     options?: { tx?: Transaction }
   ) {
@@ -257,6 +260,7 @@ export class LinkService {
         linkProviderType: params.linkProviderType,
         linkProviderId: params.linkProviderId,
         linkProviderRef: params.linkProviderRef,
+        linkProviderData: params.linkProviderData,
       },
       options
     );
@@ -395,6 +399,7 @@ export class LinkService {
         linkProviderType: params.linkProviderType,
         linkProviderId: params.linkProviderId ?? null,
         linkProviderRef: params.linkProviderRef ?? null,
+        linkProviderData: params.linkProviderData,
       },
       options
     );

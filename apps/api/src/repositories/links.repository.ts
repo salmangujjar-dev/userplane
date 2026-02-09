@@ -3,6 +3,7 @@
  * Handles all database operations for link entities
  */
 
+import type { LinkProviderData } from '@workspace/contract';
 import type { DbClient, Domain } from '@workspace/db';
 import { and, asc, count, desc, eq, inArray, sql } from '@workspace/db';
 import {
@@ -66,6 +67,7 @@ export interface CreateLinkInput {
   linkProviderType: LinkProviderType;
   linkProviderId: string | null;
   linkProviderRef: string | null;
+  linkProviderData?: LinkProviderData | null;
 }
 
 /**
@@ -128,6 +130,7 @@ export class LinkRepository {
         linkProviderType: data.linkProviderType,
         linkProviderId: data.linkProviderId,
         linkProviderRef: data.linkProviderRef,
+        linkProviderData: data.linkProviderData,
         isDeleted: false,
       })
       .returning();

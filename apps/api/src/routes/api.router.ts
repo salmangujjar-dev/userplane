@@ -42,6 +42,7 @@ import {
   workspaceMemberService,
   workspaceService,
 } from '@/api/services';
+import { IntercomNotificationService } from '@/api/services/intercom-notification.service';
 
 import { createAccountProcedures } from './account/account.impl';
 import { createAdminProcedures } from './admin/admin.impl';
@@ -65,11 +66,13 @@ export type { WorkspaceContext } from '@/api/middleware/workspace.orpc';
 /**
  * Implemented procedures
  */
+const intercomNotificationService = new IntercomNotificationService({ integrationRepo });
 const sessionProcedures = createSessionProcedures(
   sessionService,
   recordingRepo,
   workspaceMemberRepo,
-  emailService
+  emailService,
+  intercomNotificationService
 );
 const accountProcedures = createAccountProcedures(userService);
 const workspaceProcedures = createWorkspaceProcedures(

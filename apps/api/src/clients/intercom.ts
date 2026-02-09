@@ -218,6 +218,51 @@ export async function detectRegionAndGetMe(
 }
 
 /**
+ * Reply to an Intercom conversation with an admin note
+ * Used for posting internal notes (not visible to customers)
+ * Returns true on success, false on failure (fire-and-forget)
+ */
+export async function replyToConversation(
+  accessToken: string,
+  region: IntercomRegion,
+  conversationId: string,
+  adminId: string,
+  body: string
+): Promise<boolean> {
+  try {
+    const baseUrl = INTERCOM_REGIONS[region];
+    const response = await fetch(`${baseUrl}/conversations/${conversationId}/reply`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Intercom-Version': '2.14',
+      },
+      body: JSON.stringify({
+        message_type: 'note',
+        type: 'admin',
+        admin_id: adminId,
+        body,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error(
+        { status: response.status, error: errorText, region, conversationId },
+        'Reply to conversation failed'
+      );
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logger.error({ error, region, conversationId }, 'Reply to conversation error');
+    return false;
+  }
+}
+
+/**
  * Intercom admin from /admins endpoint
  */
 export interface IntercomAdmin {

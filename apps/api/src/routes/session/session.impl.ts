@@ -2,21 +2,29 @@
  * Session contract implementation using oRPC
  * Implements the session contract defined in @workspace/contract
  */
-
 import { implement } from '@orpc/server';
-import { sessionContract, sessionError } from '@workspace/contract';
+import * as Sentry from '@sentry/node';
+import { parseLinkProviderData, sessionContract, sessionError } from '@workspace/contract';
 
 import { REQUEST_HEADERS } from '@/api/constants/headers';
+import { createLogger } from '@/api/lib/logger';
 import type { InitialContext } from '@/api/middleware/auth.orpc';
 import type { RecordingRepository } from '@/api/repositories/recordings.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { EmailService } from '@/api/services/email.service';
+import type { IntercomNotificationService } from '@/api/services/intercom-notification.service';
 import type { SessionService } from '@/api/services/session.service';
+import { emailUrls } from '@/api/utils/email-urls';
 
 /**
  * Create the implementer from the session contract with initial context
  */
 const os = implement(sessionContract).$context<InitialContext>();
+
+/**
+ * Create a logger for session routes
+ */
+const sessionLogger = createLogger('session');
 
 /**
  * Middleware to extract and validate x-session-token header
@@ -109,16 +117,69 @@ export const initUploadImpl = (sessionService: SessionService) => {
 };
 
 /**
+ * Send post-upload notifications for a completed recording.
+ * - Email to the recording creator
+ * - Admin note to Intercom conversation (if link originated from Intercom)
+ */
+async function sendRecordingNotifications(
+  recordingId: string,
+  deps: {
+    recordingRepo: RecordingRepository;
+    workspaceMemberRepo: WorkspaceMemberRepository;
+    emailService: EmailService;
+    intercomNotificationService: IntercomNotificationService;
+  }
+): Promise<void> {
+  const recording = await deps.recordingRepo.findByIdWithDetailsAndStatusGroup(
+    recordingId,
+    'AVAILABLE'
+  );
+
+  if (!recording) {
+    sessionLogger.error({ recordingId }, 'Recording not available post upload notifications');
+    return;
+  }
+
+  // Email notification to the recording creator
+  const creator = await deps.workspaceMemberRepo.findByIdWithUser(recording.creatorId);
+  if (creator) {
+    await deps.emailService.sendSafeRecordingReceived(
+      { to: creator.userEmail },
+      {
+        workspaceId: recording.workspaceId,
+        recordingId: recording.recordingId,
+      }
+    );
+  }
+
+  // Admin note to Intercom conversation if link originated from Intercom
+  if (recording.linkProviderType === 'intercom' && recording.linkProviderId) {
+    const providerData = parseLinkProviderData('intercom', recording.linkProviderData);
+    if (providerData?.adminId) {
+      const recordingUrl = emailUrls.recording.view(recording.workspaceId, recording.recordingId);
+      await deps.intercomNotificationService.notifyRecordingReceived({
+        workspaceId: recording.workspaceId,
+        conversationId: recording.linkProviderId,
+        adminId: providerData.adminId,
+        recordingId: recording.recordingId,
+        recordingUrl,
+      });
+    }
+  }
+}
+
+/**
  * PATCH /session - Mark upload as available
  * Requires upload token from initUpload
  * Service throws ORPCError directly, no error mapping needed
- * Sends email notification to the recording creator if they are an active workspace member
+ * Sends post-upload notifications (email + provider-specific)
  */
 export const completeUploadImpl = (
   sessionService: SessionService,
   recordingRepo: RecordingRepository,
   workspaceMemberRepo: WorkspaceMemberRepository,
-  emailService: EmailService
+  emailService: EmailService,
+  intercomNotificationService: IntercomNotificationService
 ) => {
   return os.upload.complete.use(requireUploadToken).handler(async ({ input, context }) => {
     const result = await sessionService.markAsAvailable(
@@ -126,19 +187,16 @@ export const completeUploadImpl = (
       input.body.recording_id
     );
 
-    // Send email notification to the recording creator
-    const recording = await recordingRepo.findById(result.recordingId);
-    if (recording) {
-      const creator = await workspaceMemberRepo.findByIdWithUser(recording.createdBy);
-      if (creator) {
-        await emailService.sendSafeRecordingReceived(
-          { to: creator.userEmail },
-          {
-            workspaceId: recording.workspaceId,
-            recordingId: recording.recordingId,
-          }
-        );
-      }
+    try {
+      await sendRecordingNotifications(result.recordingId, {
+        recordingRepo,
+        workspaceMemberRepo,
+        emailService,
+        intercomNotificationService,
+      });
+    } catch (error) {
+      sessionLogger.error({ err: error }, 'Error sending recording notifications');
+      Sentry.captureException(error);
     }
 
     return {
@@ -161,7 +219,8 @@ export const createSessionProcedures = (
   sessionService: SessionService,
   recordingRepo: RecordingRepository,
   workspaceMemberRepo: WorkspaceMemberRepository,
-  emailService: EmailService
+  emailService: EmailService,
+  intercomNotificationService: IntercomNotificationService
 ) => {
   return {
     init: getSessionImpl(sessionService),
@@ -171,7 +230,8 @@ export const createSessionProcedures = (
         sessionService,
         recordingRepo,
         workspaceMemberRepo,
-        emailService
+        emailService,
+        intercomNotificationService
       ),
     },
   };
