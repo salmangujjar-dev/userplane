@@ -213,6 +213,7 @@ export const sessionService = new SessionService({
   projectRepo,
   workspaceRepo,
   domainRepo,
+  billingService,
   videoStorage: getVideoStorage(),
   thumbnailsStorage: getThumbnailsStorage(),
   consoleLogsStorage: getConsoleLogsStorage(),
