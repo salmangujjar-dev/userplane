@@ -4,6 +4,7 @@
  */
 
 import * as Sentry from '@sentry/node';
+import type { LinkProviderData } from '@workspace/contract';
 import type { DbClient, Recording } from '@workspace/db';
 import { and, asc, count, desc, eq, inArray, sql } from '@workspace/db';
 import {
@@ -25,7 +26,7 @@ import {
   type SystemMeta,
   systemMetaSchema,
 } from '@/api/schema/recording-meta.schema';
-import type { RecordingFilters, RecordingSortOptions } from '@/api/types';
+import type { LinkProviderType, RecordingFilters, RecordingSortOptions } from '@/api/types';
 
 export type { CustomMeta, SystemMeta };
 
@@ -68,10 +69,10 @@ export interface RecordingDetailRow {
   creatorName: string;
   // Recording link info
   linkTitle: string | null;
-  linkProviderType: string | null;
+  linkProviderType: LinkProviderType | null;
   linkProviderId: string | null;
   linkProviderRef: string | null;
-  linkProviderData: unknown;
+  linkProviderData: LinkProviderData | null;
   linkCreatedAt: Date;
   // Project info
   projectTitle: string;
@@ -407,6 +408,7 @@ export class RecordingRepository {
       ...result,
       systemMeta: this.transformSystemMeta(result.systemMeta),
       customMeta: this.transformCustomMeta(result.customMeta),
+      linkProviderData: result.linkProviderData as LinkProviderData | null,
     };
   }
 
@@ -475,6 +477,7 @@ export class RecordingRepository {
       ...result,
       systemMeta: this.transformSystemMeta(result.systemMeta),
       customMeta: this.transformCustomMeta(result.customMeta),
+      linkProviderData: result.linkProviderData as LinkProviderData | null,
     };
   }
 

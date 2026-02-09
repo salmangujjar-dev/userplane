@@ -7,7 +7,7 @@ const featureFlags = {
   newExpenseButton: true,
 
   // Server-side: controls whether the POST /api/expenses endpoint accepts creates
-  createExpenseSubmit: true,
+  createExpenseSubmit: false,
 
   // Client-side: controls whether the spending trend period tabs are switchable
   spendingTrendTabs: true,

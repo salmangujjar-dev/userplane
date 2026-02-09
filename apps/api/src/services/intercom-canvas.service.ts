@@ -22,6 +22,7 @@
 
 import * as Sentry from '@sentry/node';
 import type { CacheService } from '@workspace/cache';
+import { createLinkProviderData } from '@workspace/contract';
 
 import {
   buildAccessRequestedCanvas,
@@ -447,6 +448,7 @@ export class IntercomCanvasService {
         linkTitle: conversationRef.title,
         linkProviderId: conversationRef.id,
         linkProviderRef: conversationRef.url,
+        linkProviderData: createLinkProviderData('intercom', { adminId: teammate.id }),
       });
 
       const linkUrl = this.deps.linkService.generateLinkURL(
@@ -564,6 +566,7 @@ export class IntercomCanvasService {
         linkTitle: conversationRef.title,
         linkProviderId: conversationRef.id,
         linkProviderRef: conversationRef.url,
+        linkProviderData: createLinkProviderData('intercom', { adminId: teammate.id }),
       });
 
       const linkUrl = this.deps.linkService.generateLinkURL(
