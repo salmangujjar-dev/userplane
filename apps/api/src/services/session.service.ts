@@ -441,6 +441,11 @@ export class SessionService {
 
     logger.debug({ customMetadata: metadata.customMetadata ?? null }, 'Custom metadata received');
 
+    // Fetch project's retention days to compute expiresAt
+    const project = await this.deps.projectRepo.findById(linkData.projectId);
+    const retentionDays = project?.recordingRetentionDays ?? 30;
+    const expiresAt = new Date(Date.now() + retentionDays * 24 * 60 * 60 * 1000);
+
     // Create recording record in database
     try {
       await this.deps.recordingRepo.create({
@@ -459,6 +464,7 @@ export class SessionService {
         customMeta: {
           ...metadata.customMetadata,
         },
+        expiresAt,
       });
     } catch {
       throw sessionError.SESSION_DATABASE_ERROR();

@@ -3,7 +3,7 @@
  * Implements the project contract defined in @workspace/contract
  */
 
-import { projectError } from '@workspace/contract';
+import { projectError, type RetentionDays } from '@workspace/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import {
@@ -106,6 +106,7 @@ export const createProjectImpl = (
       const project = await projectService.createProject({
         workspaceId: input.params.workspaceId,
         projectTitle: input.body.projectTitle ?? null,
+        recordingRetentionDays: input.body.recordingRetentionDays,
       });
 
       if (!project) {
@@ -136,13 +137,20 @@ export const updateProjectImpl = (
   return authorizedRateLimited.project.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      const updates: Partial<{ projectTitle: string; isDefault: boolean }> = {};
+      const updates: Partial<{
+        projectTitle: string;
+        isDefault: boolean;
+        recordingRetentionDays: RetentionDays;
+      }> = {};
 
       if (input.body.projectTitle !== undefined) {
         updates.projectTitle = input.body.projectTitle || 'Untitled Project';
       }
       if (input.body.isDefault !== undefined) {
         updates.isDefault = input.body.isDefault;
+      }
+      if (input.body.recordingRetentionDays !== undefined) {
+        updates.recordingRetentionDays = input.body.recordingRetentionDays;
       }
 
       const project = await projectService.updateProject(input.params.projectId, updates);

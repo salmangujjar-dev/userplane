@@ -4,7 +4,7 @@
  */
 
 import type { CacheService } from '@workspace/cache';
-import { projectError, workspaceError } from '@workspace/contract';
+import { projectError, type RetentionDays, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 
 import { generateProjectId } from '@/api/lib/id';
@@ -46,7 +46,12 @@ export class ProjectService {
    * Project title defaults to "Untitled Project" if not provided or empty
    */
   async createProject(
-    params: { workspaceId: string; projectTitle: string | null; isDefault?: boolean },
+    params: {
+      workspaceId: string;
+      projectTitle: string | null;
+      isDefault?: boolean;
+      recordingRetentionDays?: RetentionDays;
+    },
     options?: { tx?: Transaction }
   ) {
     if (!params.workspaceId) {
@@ -88,6 +93,7 @@ export class ProjectService {
         workspaceId: params.workspaceId,
         projectTitle,
         isDefault,
+        recordingRetentionDays: params.recordingRetentionDays,
       },
       options
     );
@@ -188,7 +194,11 @@ export class ProjectService {
    */
   async updateProject(
     projectId: string,
-    updates: Partial<{ projectTitle: string; isDefault: boolean }>,
+    updates: Partial<{
+      projectTitle: string;
+      isDefault: boolean;
+      recordingRetentionDays: RetentionDays;
+    }>,
     options?: { tx?: Transaction }
   ) {
     const project = await this.getById(projectId);

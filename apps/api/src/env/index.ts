@@ -200,6 +200,7 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       recordingSweepCronSchedule: raw.RECORDING_SWEEP_CRON_SCHEDULE,
       workspaceRestorationWindowDays: raw.WORKSPACE_RESTORATION_WINDOW_DAYS,
       projectRestorationWindowDays: raw.PROJECT_RESTORATION_WINDOW_DAYS,
+      expiredRecordingSweepCronSchedule: raw.EXPIRED_RECORDING_SWEEP_CRON_SCHEDULE,
     },
     restoration: {
       gracePeriodDays: raw.RESTORATION_GRACE_PERIOD_DAYS,

@@ -3,6 +3,7 @@ import { deleteLinkResources } from './delete-link-resources';
 import { deleteProjectResources } from './delete-project-resources';
 import { deleteRecordingResources } from './delete-recording-resources';
 import { deleteWorkspaceResources } from './delete-workspace-resources';
+import { sweepExpiredRecordings } from './sweep-expired-recordings';
 import { cleanupOrphanedProject, sweepOrphanedProjects } from './sweep-orphaned-projects';
 import { sweepOrphanedRecordings } from './sweep-orphaned-recordings';
 import { cleanupOrphanedWorkspace, sweepOrphanedWorkspaces } from './sweep-orphaned-workspaces';
@@ -18,4 +19,5 @@ export const allFunctions = [
   cleanupOrphanedProject,
   sweepOrphanedProjects,
   sweepOrphanedRecordings,
+  sweepExpiredRecordings,
 ];

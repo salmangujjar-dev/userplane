@@ -26,6 +26,9 @@ type Events = {
   'project/cleanup-orphaned': {
     data: { projectId: string };
   };
+  'recording/sweep-expired': {
+    data: Record<string, never>;
+  };
 };
 
 export const inngest = new Inngest({

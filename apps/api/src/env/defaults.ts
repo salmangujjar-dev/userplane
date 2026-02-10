@@ -165,6 +165,8 @@ export const INNGEST = {
   WORKSPACE_RESTORATION_WINDOW_DAYS: 2,
   /** Project restoration window: 2 days */
   PROJECT_RESTORATION_WINDOW_DAYS: 2,
+  /** Expired recording sweep: daily at 2 AM UTC */
+  EXPIRED_RECORDING_SWEEP_CRON_SCHEDULE: '0 2 * * *',
 } as const;
 
 // =============================================================================

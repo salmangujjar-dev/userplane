@@ -170,6 +170,9 @@ export const inngestEnvSchema = z.object({
   RECORDING_SWEEP_CRON_SCHEDULE: stringWithDefault(INNGEST.CRON_SCHEDULE),
   WORKSPACE_RESTORATION_WINDOW_DAYS: integerWithDefault(INNGEST.WORKSPACE_RESTORATION_WINDOW_DAYS),
   PROJECT_RESTORATION_WINDOW_DAYS: integerWithDefault(INNGEST.PROJECT_RESTORATION_WINDOW_DAYS),
+  EXPIRED_RECORDING_SWEEP_CRON_SCHEDULE: stringWithDefault(
+    INNGEST.EXPIRED_RECORDING_SWEEP_CRON_SCHEDULE
+  ),
 });
 
 /** Restoration env vars schema */
@@ -369,6 +372,7 @@ export const inngestConfigSchema = z.object({
   recordingSweepCronSchedule: z.string(),
   workspaceRestorationWindowDays: z.number(),
   projectRestorationWindowDays: z.number(),
+  expiredRecordingSweepCronSchedule: z.string(),
 });
 
 /** Restoration configuration schema */

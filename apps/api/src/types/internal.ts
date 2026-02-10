@@ -4,7 +4,12 @@
  * These are NOT exposed via API contracts
  */
 
-import type { DomainStatus, WorkspaceInvitePolicy, WorkspaceRole } from '@workspace/contract';
+import type {
+  DomainStatus,
+  RetentionDays,
+  WorkspaceInvitePolicy,
+  WorkspaceRole,
+} from '@workspace/contract';
 import {
   AccessRequestTokenPayloadSchema,
   DomainVerificationTokenPayloadSchema,
@@ -175,6 +180,7 @@ export interface CreateProjectInput {
   workspaceId: string;
   projectTitle: string;
   isDefault: boolean;
+  recordingRetentionDays?: RetentionDays;
 }
 
 /**

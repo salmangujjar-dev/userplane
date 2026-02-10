@@ -39,6 +39,7 @@ export interface RecordingListRow {
   recordingId: string;
   recordingThumbnailRef: string | null;
   recordingDurationMs: number;
+  expiresAt: Date | null;
   createdAt: Date;
   creatorId: string;
   creatorName: string;
@@ -62,6 +63,7 @@ export interface RecordingDetailRow {
   systemMeta: SystemMeta | null;
   customMeta: CustomMeta | null;
   recordingDurationMs: number;
+  expiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   // Creator info
@@ -103,6 +105,7 @@ export interface CreateRecordingInput {
   recordingActionRef: string | null;
   systemMeta?: SystemMeta | null;
   customMeta?: CustomMeta | null;
+  expiresAt?: Date | null;
 }
 
 /**
@@ -211,6 +214,7 @@ export class RecordingRepository {
         recordingId: recordings.recordingId,
         recordingThumbnailRef: recordings.recordingThumbnailRef,
         recordingDurationMs: recordings.recordingDurationMs,
+        expiresAt: recordings.expiresAt,
         createdAt: recordings.createdAt,
         creatorId: workspaceMembers.workspaceMemberId,
         creatorName: user.name,
@@ -364,6 +368,7 @@ export class RecordingRepository {
         systemMeta: recordings.systemMeta,
         customMeta: recordings.customMeta,
         recordingDurationMs: recordings.recordingDurationMs,
+        expiresAt: recordings.expiresAt,
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
         // Creator info
@@ -434,6 +439,7 @@ export class RecordingRepository {
         systemMeta: recordings.systemMeta,
         customMeta: recordings.customMeta,
         recordingDurationMs: recordings.recordingDurationMs,
+        expiresAt: recordings.expiresAt,
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
         // Creator info
@@ -623,6 +629,7 @@ export class RecordingRepository {
         recordingActionRef: data.recordingActionRef,
         systemMeta: data.systemMeta,
         customMeta: data.customMeta,
+        expiresAt: data.expiresAt ?? undefined,
         uploadStatus: 'pending',
         isDeleted: true,
       })
@@ -925,6 +932,39 @@ export class RecordingRepository {
       );
 
     return results;
+  }
+
+  /**
+   * Soft-delete all expired recordings in a single atomic query
+   * Returns the IDs and upload statuses of deleted recordings for cleanup
+   */
+  async softDeleteExpired(): Promise<Array<{ recordingId: string; uploadStatus: string }>> {
+    const results = await this.db
+      .update(recordings)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+      })
+      .where(and(eq(recordings.isDeleted, false), sql`${recordings.expiresAt} <= now()`))
+      .returning({
+        recordingId: recordings.recordingId,
+        uploadStatus: recordings.uploadStatus,
+      });
+
+    return results;
+  }
+
+  /**
+   * Update the expiresAt timestamp for a recording
+   */
+  async updateExpiresAt(recordingId: string, expiresAt: Date | null) {
+    const [updated] = await this.db
+      .update(recordings)
+      .set({ expiresAt })
+      .where(and(eq(recordings.recordingId, recordingId), eq(recordings.isDeleted, false)))
+      .returning();
+
+    return updated || null;
   }
 
   /**
