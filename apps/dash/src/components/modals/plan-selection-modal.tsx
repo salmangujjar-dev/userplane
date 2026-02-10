@@ -8,13 +8,8 @@ import {
   PLAN_CARD_HIGHLIGHTS,
   type PlanCycle,
 } from '@workspace/pricing';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@workspace/ui/components/sheet';
 import { Check } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
@@ -144,15 +139,9 @@ function PlanCard({
 
       <p className="text-sm text-muted-foreground mb-4">{getBillingText()}</p>
 
-      <p className="text-sm text-muted-foreground mb-6 min-h-[2.5rem]">{description}</p>
+      <p className="text-sm text-muted-foreground mb-3 min-h-10">{description}</p>
 
-      <ul className="space-y-3 flex-1 mb-4" style={{ minHeight: `${minHeight}px` }}>
-        {highlights.map((highlight, index) => (
-          <PlanHighlight key={index} text={highlight} />
-        ))}
-      </ul>
-
-      <div className="h-9">
+      <div className="h-9 mb-4">
         {isCurrent ? (
           <button
             disabled
@@ -174,6 +163,12 @@ function PlanCard({
           )
         )}
       </div>
+
+      <ul className="space-y-3 flex-1" style={{ minHeight: `${minHeight}px` }}>
+        {highlights.map((highlight, index) => (
+          <PlanHighlight key={index} text={highlight} />
+        ))}
+      </ul>
     </div>
   );
 }
@@ -231,19 +226,20 @@ export function PlanSelectionModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className={`p-0 gap-0 overflow-hidden max-h-[calc(100vh-2rem)] overflow-y-auto ${showAllPlans ? 'sm:max-w-5xl' : 'sm:max-w-4xl'}`}
-        showCloseButton={false}
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="p-0 gap-0 max-h-[85vh] overflow-y-auto rounded-t-2xl"
+        showCloseButton={true}
       >
         <div className="p-6 pb-4">
           <div className="flex items-start gap-4 mb-6">
             <Logo variant="tiled" size="md" showText={false} />
             <div className="flex flex-col space-y-1">
-              <DialogTitle className="text-xl font-semibold">Choose Your Plan</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
+              <SheetTitle className="text-xl font-semibold">Choose Your Plan</SheetTitle>
+              <SheetDescription className="text-sm text-muted-foreground">
                 Select the plan that best fits your needs
-              </DialogDescription>
+              </SheetDescription>
             </div>
           </div>
 
@@ -309,7 +305,7 @@ export function PlanSelectionModal({
             See all plans
           </a>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
