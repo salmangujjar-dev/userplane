@@ -221,7 +221,7 @@ deploy\:home\:production: ## Deploy home app (production)
 	@echo "$(RED)Deploying Home app (production)...$(RESET)"
 	@echo "$(RED)WARNING: This will deploy to PRODUCTION!$(RESET)"
 	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
-	@bun run turbo build:production --filter=home && cd apps/home && bun run deploy:production
+	@bun run turbo build --filter=home^... && cd apps/home && bun run build:production && bun run deploy:production
 	@echo "$(GREEN)Home app deployed (production)!$(RESET)"
 
 lint: ## Run linter
