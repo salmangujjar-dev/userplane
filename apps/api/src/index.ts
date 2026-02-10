@@ -23,13 +23,14 @@ import {
   createMessengerInitializeHandler,
   createMessengerSubmitHandler,
 } from '@/api/handlers/intercom-canvas.handler';
+import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
 import { createLogger } from '@/api/lib/logger';
 import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
 import { apiRouter } from '@/api/routes/api.router';
-import { intercomCanvasService } from '@/api/services';
+import { intercomCanvasService, intercomHealthCheckService } from '@/api/services';
 
 const app = new Hono();
 const logger = createLogger('api');
@@ -211,9 +212,18 @@ if (intercomRateLimitMiddleware) {
 inboxRouter.post('/initialize', createInboxInitializeHandler(intercomCanvasService));
 inboxRouter.post('/submit', createInboxSubmitHandler(intercomCanvasService));
 
+// Health check route (installation health check)
+const healthCheckRouter = new Hono();
+healthCheckRouter.use('*', verifyIntercomSignature(env.intercom.clientSecret));
+if (intercomRateLimitMiddleware) {
+  healthCheckRouter.use('*', intercomRateLimitMiddleware);
+}
+healthCheckRouter.post('/', createHealthCheckHandler(intercomHealthCheckService));
+
 // Mount canvas routes
 app.route('/api/v1/intercom/canvas/messenger', messengerRouter);
 app.route('/api/v1/intercom/canvas/inbox', inboxRouter);
+app.route('/api/v1/intercom/health-check', healthCheckRouter);
 
 logger.info('Intercom Canvas Kit routes registered:');
 logger.info('  Messenger (for users, leads, and visitors):');
@@ -223,6 +233,8 @@ logger.info('    → /api/v1/intercom/canvas/messenger/submit');
 logger.info('  Inbox (for teammates):');
 logger.info('    → /api/v1/intercom/canvas/inbox/initialize');
 logger.info('    → /api/v1/intercom/canvas/inbox/submit');
+logger.info('  Health Check (installation status):');
+logger.info('    → POST /api/v1/intercom/health-check');
 
 // Workspace logo upload route (multipart/form-data - handled before OpenAPI)
 // This route handles file uploads which require special multipart handling

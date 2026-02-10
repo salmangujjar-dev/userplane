@@ -45,6 +45,7 @@ import { DomainService } from '@/api/services/domain.service';
 import { emailService } from '@/api/services/email.service';
 import { EntitlementService } from '@/api/services/entitlement.service';
 import { IntercomCanvasService } from '@/api/services/intercom-canvas.service';
+import { IntercomHealthCheckService } from '@/api/services/intercom-health-check.service';
 import { IntercomService } from '@/api/services/intercom-oauth.service';
 import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
@@ -234,6 +235,13 @@ export const intercomService = new IntercomService({
   inviteService,
   cacheService,
   memberRepo: workspaceMemberRepo,
+});
+
+// Intercom Health Check service
+export const intercomHealthCheckService = new IntercomHealthCheckService({
+  integrationRepo,
+  cacheService,
+  dashboardBaseUrl: env.dashboard.baseUrl,
 });
 
 // Intercom Canvas service
