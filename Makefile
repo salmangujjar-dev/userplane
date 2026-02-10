@@ -43,7 +43,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)db:migrate$(WHITE)                    ║$(RESET) Run migrations (dev)                                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:migrate:production$(WHITE)         ║$(RESET) Run migrations (production)                                       $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:push$(WHITE)                       ║$(RESET) Push schema directly (dev)                                        $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)db:push:production$(WHITE)            ║$(RESET) Push schema directly (production)                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)db:generate:production$(WHITE)        ║$(RESET) Generate migrations (production)                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:studio$(WHITE)                     ║$(RESET) Open Drizzle Studio (dev)                                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:studio:production$(WHITE)          ║$(RESET) Open Drizzle Studio (production)                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -439,16 +439,10 @@ db\:migrate\:production: ## Run database migrations (production)
 	@cd packages/db && set -a && . ../../apps/api/.env.production && set +a && bun run db:migrate
 	@echo "$(GREEN)Migrations complete!$(RESET)"
 
-db\:push\:production: ## Push schema directly to DB (production)
-	@echo "$(RED)Pushing schema to database (production)...$(RESET)"
-	@echo "$(RED)WARNING: This will push schema directly to PRODUCTION database!$(RESET)"
-	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
-	@if [ ! -f apps/api/.env.production ]; then \
-		echo "$(RED)Error: apps/api/.env.production not found$(RESET)"; \
-		exit 1; \
-	fi
-	@cd packages/db && set -a && . ../../apps/api/.env.production && set +a && bun run db:push
-	@echo "$(GREEN)Schema pushed!$(RESET)"
+db\:push\:production: ## Disabled - use db:migrate:production instead
+	@echo "$(RED)db:push:production is disabled. Use 'make db:migrate:production' instead.$(RESET)"
+	@echo "$(RED)Push bypasses migration tracking and can cause data loss.$(RESET)"
+	@exit 1
 
 db\:studio\:production: ## Open Drizzle Studio (production)
 	@echo "$(MAGENTA)Opening Drizzle Studio (production)...$(RESET)"

@@ -1,13 +1,43 @@
-CREATE TYPE "public"."domain_status" AS ENUM('pending', 'verified', 'revoked');--> statement-breakpoint
-CREATE TYPE "public"."resource_type" AS ENUM('seats', 'links', 'recordings', 'screenshots', 'files');--> statement-breakpoint
-CREATE TYPE "public"."link_provider_type" AS ENUM('intercom', 'zendesk', 'hubspot', 'freshdesk', 'freshchat', 'jira_service_management', 'helpscout', 'happyfox', 'ada', 'forethought', 'servicenow', 'front', 'zoho_desk', 'crisp', 'pylon', 'plain', 'asana', 'azure_devops', 'clickup', 'github', 'gitlab', 'jira', 'linear', 'notion', 'sentry', 'slack', 'web', 'others');--> statement-breakpoint
-CREATE TYPE "public"."link_type" AS ENUM('file', 'recording', 'session', 'screenshot');--> statement-breakpoint
-CREATE TYPE "public"."stream_provider" AS ENUM('cloudflare', 'mux');--> statement-breakpoint
-CREATE TYPE "public"."streaming_status" AS ENUM('pending', 'available', 'failed', 'expired', 'purged');--> statement-breakpoint
-CREATE TYPE "public"."upload_status" AS ENUM('pending', 'available', 'expired', 'purged');--> statement-breakpoint
-CREATE TYPE "public"."subscription_status" AS ENUM('pending', 'active', 'on_hold', 'cancelled', 'failed', 'expired');--> statement-breakpoint
-CREATE TYPE "public"."workspace_role" AS ENUM('owner', 'admin', 'member');--> statement-breakpoint
-CREATE TYPE "public"."workspace_invite_policy" AS ENUM('private', 'whitelisted', 'protected');--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."domain_status" AS ENUM('pending', 'verified', 'revoked');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."resource_type" AS ENUM('seats', 'links', 'recordings', 'screenshots', 'files');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."link_provider_type" AS ENUM('intercom', 'zendesk', 'hubspot', 'freshdesk', 'freshchat', 'jira_service_management', 'helpscout', 'happyfox', 'ada', 'forethought', 'servicenow', 'front', 'zoho_desk', 'crisp', 'pylon', 'plain', 'asana', 'azure_devops', 'clickup', 'github', 'gitlab', 'jira', 'linear', 'notion', 'sentry', 'slack', 'web', 'others');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."link_type" AS ENUM('file', 'recording', 'session', 'screenshot');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."stream_provider" AS ENUM('cloudflare', 'mux');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."streaming_status" AS ENUM('pending', 'available', 'failed', 'expired', 'purged');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."upload_status" AS ENUM('pending', 'available', 'expired', 'purged');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."subscription_status" AS ENUM('pending', 'active', 'on_hold', 'cancelled', 'failed', 'expired');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."workspace_role" AS ENUM('owner', 'admin', 'member');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."workspace_invite_policy" AS ENUM('private', 'whitelisted', 'protected');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "account" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
