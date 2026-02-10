@@ -25,6 +25,7 @@ export const EVENT_NAMES = {
   SWEEP_ORPHANED_PROJECTS: 'project/sweep-orphaned',
   SWEEP_ORPHANED_RECORDINGS: 'recording/sweep-orphaned',
   CHECK_STALE_RECORDING: 'recording/check-stale',
+  SWEEP_EXPIRED_RECORDINGS: 'recording/sweep-expired',
 } as const;
 
 /**
@@ -44,4 +45,5 @@ export const MAX_DURATIONS = {
   ORPHANED_PROJECT_SWEEP: 600, // 10 minutes
   ORPHANED_RECORDING_SWEEP: 600, // 10 minutes
   STALE_CHECK: 120, // 2 minutes
+  EXPIRED_RECORDING_SWEEP: 600, // 10 minutes
 } as const;

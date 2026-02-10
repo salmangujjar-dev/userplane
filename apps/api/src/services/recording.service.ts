@@ -108,6 +108,7 @@ export class RecordingService {
       recordingId: row.recordingId,
       recordingThumbnail: this.getThumbnailUrl(row.recordingThumbnailRef),
       recordingDurationMs: row.recordingDurationMs,
+      expiresAt: row.expiresAt,
       createdAt: row.createdAt,
       creator: {
         workspaceMemberId: row.creatorId,
@@ -226,6 +227,7 @@ export class RecordingService {
         status: row.uploadStatus,
         systemMeta: row.systemMeta,
         customMeta: row.customMeta,
+        expiresAt: row.expiresAt,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
       },
@@ -436,6 +438,33 @@ export class RecordingService {
     }
 
     return recording;
+  }
+
+  /**
+   * Update the expiresAt date for a recording
+   * Validates workspace membership before updating
+   */
+  async updateExpiresAt(recordingId: string, workspaceId: string, expiresAt: Date | null) {
+    const recording = await this.deps.recordingRepo.findByIdWithStatusGroup(recordingId);
+
+    if (!recording) {
+      const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
+      if (isSoftDeleted === true) {
+        throw recordingError.RECORDING_GONE();
+      }
+      throw recordingError.RECORDING_NOT_FOUND();
+    }
+
+    if (recording.workspaceId !== workspaceId) {
+      throw recordingError.RECORDING_WORKSPACE_MISMATCH();
+    }
+
+    const updated = await this.deps.recordingRepo.updateExpiresAt(recordingId, expiresAt);
+    if (!updated) {
+      throw recordingError.RECORDING_UPDATE_FAILED();
+    }
+
+    return updated;
   }
 
   /**

@@ -130,6 +130,39 @@ export const deleteRecordingImpl = (
 };
 
 /**
+ * PATCH /workspace/:workspaceId/recordings/:recordingId - Update recording
+ * Requires workspace member
+ */
+export const updateRecordingImpl = (
+  recordingService: RecordingService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorizedRateLimited.recording.update
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const expiresAt = input.body.expiresAt;
+
+      const updated = await recordingService.updateExpiresAt(
+        input.params.recordingId,
+        input.params.workspaceId,
+        expiresAt !== undefined ? expiresAt : null
+      );
+
+      return {
+        message: 'Recording updated successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          recordingId: input.params.recordingId,
+          expiresAt: updated.expiresAt,
+        },
+      };
+    });
+};
+
+/**
  * GET /workspace/:workspaceId/recordings/:recordingId/video - Get recording video
  * Requires workspace member
  */
@@ -285,6 +318,7 @@ export const createRecordingProcedures = (
   return {
     list: getRecordingsImpl(recordingService, workspaceMemberService, workspaceService),
     getById: getRecordingByIdImpl(recordingService, workspaceMemberService, workspaceService),
+    update: updateRecordingImpl(recordingService, workspaceMemberService, workspaceService),
     delete: deleteRecordingImpl(recordingService, workspaceMemberService, workspaceService),
     resources: {
       video: getRecordingVideoImpl(recordingService, workspaceMemberService, workspaceService),

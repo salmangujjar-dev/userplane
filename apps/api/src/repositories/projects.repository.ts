@@ -29,6 +29,9 @@ export class ProjectRepository {
         projectTitle: data.projectTitle,
         isDefault: data.isDefault,
         isDeleted: false,
+        ...(data.recordingRetentionDays !== undefined && {
+          recordingRetentionDays: data.recordingRetentionDays,
+        }),
       })
       .returning();
 
@@ -102,7 +105,9 @@ export class ProjectRepository {
    */
   async update(
     projectId: string,
-    data: Partial<Pick<CreateProjectInput, 'projectTitle' | 'isDefault'>>,
+    data: Partial<
+      Pick<CreateProjectInput, 'projectTitle' | 'isDefault' | 'recordingRetentionDays'>
+    >,
     options?: { tx?: Transaction }
   ) {
     const dbClient = options?.tx || this.db;
