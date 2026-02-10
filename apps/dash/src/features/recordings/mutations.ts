@@ -89,3 +89,37 @@ export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?:
     },
   });
 }
+
+interface UpdateRecordingExpiryInput {
+  recordingId: string;
+  expiresAt: Date | null;
+}
+
+export function useUpdateRecordingExpiry(workspaceId: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ recordingId, expiresAt }: UpdateRecordingExpiryInput) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      const [error, response] = await apiClient.recording.update({
+        params: { workspaceId, recordingId },
+        body: { expiresAt },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToast(result.error);
+        return;
+      }
+      toast.success('Recording expiration updated');
+    },
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to update recording expiration');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: recordingKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: recordingKeys.all });
+    },
+  });
+}

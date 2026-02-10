@@ -1,5 +1,6 @@
 'use client';
 
+import type { RetentionDays } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   DropdownMenu,
@@ -71,6 +72,7 @@ export function ProjectsSection() {
     projectId: string;
     projectTitle: string;
     isDefault: boolean;
+    recordingRetentionDays: RetentionDays;
   } | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [deletingProject, setDeletingProject] = useState<{
@@ -106,12 +108,19 @@ export function ProjectsSection() {
     roleResult?.success &&
     (roleResult.data.workspaceRole === 'admin' || roleResult.data.workspaceRole === 'owner');
 
-  const handleCreateProject = (newProject: { title: string; isDefault: boolean }) => {
-    createProjectMutation.mutate(newProject.title, {
-      onSuccess: () => {
-        setShowModal(false);
-      },
-    });
+  const handleCreateProject = (newProject: {
+    title: string;
+    isDefault: boolean;
+    recordingRetentionDays: RetentionDays;
+  }) => {
+    createProjectMutation.mutate(
+      { title: newProject.title, recordingRetentionDays: newProject.recordingRetentionDays },
+      {
+        onSuccess: () => {
+          setShowModal(false);
+        },
+      }
+    );
   };
 
   const handleDeleteProject = (projectId: string, projectTitle: string) => {
@@ -138,18 +147,24 @@ export function ProjectsSection() {
     projectId: string;
     projectTitle: string;
     isDefault: boolean;
+    recordingRetentionDays: RetentionDays;
   }) => {
     setEditingProject(project);
     setShowEditModal(true);
   };
 
-  const handleSaveEdit = (updatedProject: { title: string; isDefault: boolean }) => {
+  const handleSaveEdit = (updatedProject: {
+    title: string;
+    isDefault: boolean;
+    recordingRetentionDays: RetentionDays;
+  }) => {
     if (!editingProject) return;
     updateProjectMutation.mutate(
       {
         projectId: editingProject.projectId,
         title: updatedProject.title,
         isDefault: updatedProject.isDefault,
+        recordingRetentionDays: updatedProject.recordingRetentionDays,
       },
       {
         onSuccess: () => {
@@ -365,6 +380,7 @@ export function ProjectsSection() {
             id: parseInt(editingProject.projectId),
             title: editingProject.projectTitle || '',
             isDefault: editingProject.isDefault,
+            recordingRetentionDays: editingProject.recordingRetentionDays,
           }}
           onSave={(projectId, updatedProject) => handleSaveEdit(updatedProject)}
           loading={updateProjectMutation.isPending}

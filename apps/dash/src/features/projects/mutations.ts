@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { RetentionDays } from '@workspace/contract';
 import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
@@ -17,19 +18,24 @@ import { projectKeys } from './query-keys';
 
 type ProjectsQueryData = QueryData<ProjectsData>;
 
+interface CreateProjectInput {
+  title: string;
+  recordingRetentionDays?: RetentionDays;
+}
+
 export function useCreateProject(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (title: string) => {
+    mutationFn: async ({ title, recordingRetentionDays }: CreateProjectInput) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.project.create({
         params: { workspaceId },
-        body: { projectTitle: title || null },
+        body: { projectTitle: title || null, recordingRetentionDays },
       });
       return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async (title: string) => {
+    onMutate: async ({ title, recordingRetentionDays }: CreateProjectInput) => {
       await queryClient.cancelQueries({ queryKey: projectKeys.lists() });
 
       // Snapshot ALL matching queries for rollback
@@ -42,6 +48,7 @@ export function useCreateProject(workspaceId: string | null) {
         projectId: `temp-${Date.now()}`,
         projectTitle: title || 'Untitled Project',
         isDefault: false,
+        recordingRetentionDays: recordingRetentionDays ?? 30,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -64,7 +71,7 @@ export function useCreateProject(workspaceId: string | null) {
 
       return { previousQueries };
     },
-    onSuccess: (result, title, context) => {
+    onSuccess: (result, _input, context) => {
       if (!result.success) {
         // Rollback all queries
         context?.previousQueries?.forEach(([queryKey, data]) => {
@@ -75,7 +82,7 @@ export function useCreateProject(workspaceId: string | null) {
       }
       toast.success('Project created successfully');
     },
-    onError: (error: unknown, title, context) => {
+    onError: (error: unknown, _input, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
@@ -93,24 +100,36 @@ interface UpdateProjectInput {
   projectId: string;
   title: string;
   isDefault?: boolean;
+  recordingRetentionDays?: RetentionDays;
 }
 
 export function useUpdateProject(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ projectId, title, isDefault }: UpdateProjectInput) => {
+    mutationFn: async ({
+      projectId,
+      title,
+      isDefault,
+      recordingRetentionDays,
+    }: UpdateProjectInput) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.project.update({
         params: { workspaceId, projectId },
         body: {
           projectTitle: title || 'Untitled Project',
           isDefault,
+          recordingRetentionDays,
         },
       });
       return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async ({ projectId, title, isDefault }: UpdateProjectInput) => {
+    onMutate: async ({
+      projectId,
+      title,
+      isDefault,
+      recordingRetentionDays,
+    }: UpdateProjectInput) => {
       await queryClient.cancelQueries({ queryKey: projectKeys.lists() });
 
       // Snapshot ALL matching queries for rollback
@@ -132,6 +151,7 @@ export function useUpdateProject(workspaceId: string | null) {
                   ...project,
                   projectTitle: title || 'Untitled Project',
                   ...(isDefault !== undefined && { isDefault }),
+                  ...(recordingRetentionDays !== undefined && { recordingRetentionDays }),
                 };
               }
               // When setting this project as default, unset all others

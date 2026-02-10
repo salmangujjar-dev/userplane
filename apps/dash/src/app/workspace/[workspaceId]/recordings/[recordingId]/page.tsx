@@ -10,6 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
+import { EditRecordingModal } from '@/components/modals/edit-recording-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
@@ -21,6 +22,7 @@ import {
   useRecording,
   useRecordingThumbnail,
   useRecordingVideo,
+  useUpdateRecordingExpiry,
 } from '@/features/recordings';
 import { useWorkspaceRole } from '@/features/workspace';
 import { useWorkspaceId } from '@/stores/workspace';
@@ -31,6 +33,7 @@ export default function RecordingDetailPage() {
   const workspaceId = useWorkspaceId();
   const recordingId = params.recordingId as string;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
 
   const {
@@ -52,6 +55,8 @@ export default function RecordingDetailPage() {
   const deleteRecordingMutation = useDeleteRecording(workspaceId, () => {
     router.push(`/workspace/${workspaceId}/recordings`);
   });
+
+  const updateExpiryMutation = useUpdateRecordingExpiry(workspaceId);
 
   const { data: roleResult } = useWorkspaceRole();
   const membership = roleResult?.success ? roleResult.data : null;
@@ -83,10 +88,11 @@ export default function RecordingDetailPage() {
 
   const recording = recordingData.recording;
 
-  // Check permission: admin/owner OR creator can delete
+  // Check permission: admin/owner OR creator can edit/delete
   const isAdminOrOwner =
     membership?.workspaceRole === 'admin' || membership?.workspaceRole === 'owner';
   const isCreator = membership?.workspaceMemberId === recording.meta.creator.workspaceMemberId;
+  const canEdit = isAdminOrOwner || isCreator;
   const canDelete = isAdminOrOwner || isCreator;
 
   const handleCopyLink = async () => {
@@ -109,6 +115,7 @@ export default function RecordingDetailPage() {
       <RecordingDetailNav
         onCopyLink={handleCopyLink}
         onShare={handleShare}
+        onEdit={canEdit ? () => setShowEditModal(true) : undefined}
         onDelete={canDelete ? () => setShowDeleteModal(true) : undefined}
       />
 
@@ -133,6 +140,14 @@ export default function RecordingDetailPage() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </main>
+
+      <EditRecordingModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        currentExpiresAt={recording.meta.expiresAt}
+        onSave={(expiresAt) => updateExpiryMutation.mutate({ recordingId, expiresAt })}
+        isLoading={updateExpiryMutation.isPending}
+      />
 
       <DeleteConfirmationModal
         open={showDeleteModal}

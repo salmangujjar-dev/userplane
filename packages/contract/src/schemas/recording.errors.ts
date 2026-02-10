@@ -46,4 +46,8 @@ export const RecordingErrors = {
     status: 500,
     message: 'Failed to delete recording',
   },
+  RECORDING_UPDATE_FAILED: {
+    status: 500,
+    message: 'Failed to update recording',
+  },
 } as const;

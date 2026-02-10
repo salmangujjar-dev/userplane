@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
 import Logo from '@workspace/ui/components/logo';
-import { Link as LinkIcon, MoreVertical, Share2, Trash2 } from 'lucide-react';
+import { Link as LinkIcon, MoreVertical, Pencil, Share2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -16,10 +16,16 @@ import { useWorkspaceStore } from '@/stores/workspace';
 interface RecordingDetailNavProps {
   onCopyLink?: () => void;
   onShare?: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
 }
 
-export function RecordingDetailNav({ onCopyLink, onShare, onDelete }: RecordingDetailNavProps) {
+export function RecordingDetailNav({
+  onCopyLink,
+  onShare,
+  onEdit,
+  onDelete,
+}: RecordingDetailNavProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
   return (
@@ -37,7 +43,7 @@ export function RecordingDetailNav({ onCopyLink, onShare, onDelete }: RecordingD
             <Share2 className="h-4 w-4" />
             Share link
           </Button>
-          {onDelete && (
+          {(onEdit || onDelete) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -45,10 +51,18 @@ export function RecordingDetailNav({ onCopyLink, onShare, onDelete }: RecordingD
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onDelete}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Recording
-                </DropdownMenuItem>
+                {onEdit && (
+                  <DropdownMenuItem onClick={onEdit}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit Recording
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <DropdownMenuItem onClick={onDelete}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Recording
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}

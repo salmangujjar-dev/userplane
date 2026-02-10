@@ -1,5 +1,6 @@
 'use client';
 
+import { RETENTION_DAYS_VALUES, type RetentionDays } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -11,6 +12,13 @@ import {
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
 import { Switch } from '@workspace/ui/components/switch';
 import {
   Tooltip,
@@ -30,8 +38,12 @@ interface EditProjectModalProps {
     id: number;
     title: string;
     isDefault: boolean;
+    recordingRetentionDays: RetentionDays;
   } | null;
-  onSave: (projectId: number, project: { title: string; isDefault: boolean }) => void;
+  onSave: (
+    projectId: number,
+    project: { title: string; isDefault: boolean; recordingRetentionDays: RetentionDays }
+  ) => void;
   loading?: boolean;
 }
 
@@ -45,6 +57,7 @@ export function EditProjectModal({
   const [editedProject, setEditedProject] = useState({
     title: '',
     isDefault: false,
+    recordingRetentionDays: 30 as RetentionDays,
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -53,6 +66,7 @@ export function EditProjectModal({
       setEditedProject({
         title: project.title,
         isDefault: project.isDefault,
+        recordingRetentionDays: project.recordingRetentionDays,
       });
       setShowAdvanced(false);
     }
@@ -138,6 +152,38 @@ export function EditProjectModal({
                     }
                     disabled={loading}
                   />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="retention-days" className="text-sm font-medium">
+                      Recording retention
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Auto-delete recordings after this period
+                    </p>
+                  </div>
+                  <Select
+                    value={String(editedProject.recordingRetentionDays)}
+                    onValueChange={(value) =>
+                      setEditedProject((prev) => ({
+                        ...prev,
+                        recordingRetentionDays: Number(value) as RetentionDays,
+                      }))
+                    }
+                    disabled={loading}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RETENTION_DAYS_VALUES.map((days) => (
+                        <SelectItem key={days} value={String(days)}>
+                          {days} {days === 1 ? 'day' : 'days'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             )}

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { PROJECT_PAGINATION } from '../constants';
+import { PROJECT_PAGINATION, RETENTION_DAYS_VALUES } from '../constants';
+import type { RetentionDays } from '../constants/retention';
 import {
   PaginationMetaSchema,
   ProjectIdSchema,
@@ -28,6 +29,17 @@ export const ProjectTitleSchema = z
   .min(2, 'Project title must be at least 2 characters')
   .max(200, 'Project title must be less than 200 characters');
 
+/**
+ * Schema for recording retention days validation
+ * Only allows predefined values from RETENTION_DAYS_VALUES
+ */
+export const RetentionDaysSchema = z
+  .number()
+  .int()
+  .refine((v): v is RetentionDays => (RETENTION_DAYS_VALUES as readonly number[]).includes(v), {
+    message: `Must be one of: ${RETENTION_DAYS_VALUES.join(', ')}`,
+  });
+
 // ============================================================================
 // PROJECT DATA SCHEMAS
 // ============================================================================
@@ -39,6 +51,7 @@ export const ProjectItemSchema = z.object({
   projectId: ProjectIdSchema,
   projectTitle: z.string(),
   isDefault: z.boolean(),
+  recordingRetentionDays: RetentionDaysSchema,
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -54,6 +67,7 @@ export const CreateProjectSchema = z.object({
   }),
   body: z.object({
     projectTitle: ProjectTitleSchema.nullable().optional(),
+    recordingRetentionDays: RetentionDaysSchema.optional(),
   }),
 });
 
@@ -113,6 +127,7 @@ export const UpdateProjectSchema = z.object({
   body: z.object({
     projectTitle: ProjectTitleSchema.nullable().optional(),
     isDefault: z.boolean().optional(),
+    recordingRetentionDays: RetentionDaysSchema.optional(),
   }),
 });
 
@@ -136,6 +151,7 @@ export const ReplaceProjectSchema = z.object({
   body: z.object({
     projectTitle: ProjectTitleSchema,
     isDefault: z.boolean(),
+    recordingRetentionDays: RetentionDaysSchema.optional(),
   }),
 });
 
@@ -246,3 +262,4 @@ export type ProjectRestoreData = z.infer<typeof ProjectRestoreDataSchema>;
 // Additional type exports
 export type ProjectItem = z.infer<typeof ProjectItemSchema>;
 export type ProjectsListData = z.infer<typeof ProjectsListDataSchema>;
+export type { RetentionDays };

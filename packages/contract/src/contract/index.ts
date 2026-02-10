@@ -234,6 +234,7 @@ export const linkContract = {
 export const recordingContract = {
   list: recording.getRecordings,
   getById: recording.getRecordingById,
+  update: recording.updateRecording,
   delete: recording.deleteRecording,
   resources: {
     video: recording.getRecordingVideo,

@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { links } from './links';
 import { recordings } from './recordings';
@@ -17,6 +17,7 @@ export const projects = pgTable(
     // Project configuration
     projectTitle: text('project_title').notNull(),
     isDefault: boolean('is_default').default(false).notNull(),
+    recordingRetentionDays: integer('recording_retention_days').notNull().default(30),
 
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),

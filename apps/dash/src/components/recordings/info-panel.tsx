@@ -31,6 +31,7 @@ interface InfoPanelProps {
       status: string;
       systemMeta: Record<string, unknown> | null;
       customMeta?: Record<string, unknown> | null;
+      expiresAt: Date | null;
       createdAt: Date;
       updatedAt: Date;
     };
@@ -74,6 +75,12 @@ export function InfoPanel({ recording }: InfoPanelProps) {
           <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
             <span className="text-muted-foreground">Requested At</span>
             <span className="font-mono">{format(meta.createdAt, 'MMM dd, yyyy HH:mm:ss')}</span>
+          </div>
+          <div className="grid grid-cols-[140px_1fr] gap-4 text-sm">
+            <span className="text-muted-foreground">Expires At</span>
+            <span className="font-mono">
+              {meta.expiresAt ? format(meta.expiresAt, 'MMM dd, yyyy HH:mm:ss') : 'No expiration'}
+            </span>
           </div>
         </div>
       </div>

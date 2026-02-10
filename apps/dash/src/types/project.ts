@@ -6,7 +6,7 @@
  * automatically coerced to Date objects during parsing.
  */
 
-export type { ProjectItem, ProjectsListData } from '@workspace/contract';
+export type { ProjectItem, ProjectsListData, RetentionDays } from '@workspace/contract';
 
 // Aliases for backward compatibility
 export type { ProjectItem as Project } from '@workspace/contract';
