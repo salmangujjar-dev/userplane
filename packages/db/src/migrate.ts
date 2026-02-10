@@ -9,6 +9,19 @@ const logger = createServerLogger('db-migrate', {
   pretty: isDev,
 });
 
+// Strip sslrootcert=system from the URL to avoid pg-connection-string
+// trying to open a file literally named 'system'. Cloud providers like
+// Neon append this parameter, but the pg driver handles SSL without it.
+function sanitizeDatabaseUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete('sslrootcert');
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 const runMigrations = async () => {
   const databaseUrl = process.env.DATABASE_URL;
 
@@ -20,7 +33,7 @@ const runMigrations = async () => {
   logger.info('Running migrations...');
 
   const pool = new Pool({
-    connectionString: databaseUrl,
+    connectionString: sanitizeDatabaseUrl(databaseUrl),
     max: 1,
   });
 
