@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:astro dev\:api dev\:share dev\:email build build\:web build\:astro build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:astro update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:studio db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email build build\:web build\:home build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:studio db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -51,21 +51,23 @@ help: ## Show this help message
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev$(WHITE)                           ║$(RESET) Run all apps in development mode                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:web$(WHITE)                       ║$(RESET) Run web app only                                                  $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev:astro$(WHITE)                     ║$(RESET) Run astro app only                                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:api$(WHITE)                       ║$(RESET) Run API only                                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:share$(WHITE)                     ║$(RESET) Run Share URL shortener only                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:email$(WHITE)                     ║$(RESET) Run Email preview server only                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:yc$(WHITE)                        ║$(RESET) Run yc app only                                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:ramp$(WHITE)                      ║$(RESET) Run ramp app only                                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:home$(WHITE)                      ║$(RESET) Run home app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build$(WHITE)                         ║$(RESET) Build all apps                                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:web$(WHITE)                     ║$(RESET) Build web app only                                                $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)build:astro$(WHITE)                   ║$(RESET) Build astro app only                                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:api$(WHITE)                     ║$(RESET) Build API only                                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:share$(WHITE)                   ║$(RESET) Build Share URL shortener only                                    $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)preview:astro$(WHITE)                 ║$(RESET) Preview astro production build                                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)build:home$(WHITE)                    ║$(RESET) Build home app only                                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)preview:home$(WHITE)                  ║$(RESET) Preview home production build (Cloudflare)                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)deploy:home$(WHITE)                   ║$(RESET) Deploy home app (preview)                                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)deploy:home:production$(WHITE)        ║$(RESET) Deploy home app (production)                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)CODE QUALITY$(WHITE)                                                                                      ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -157,10 +159,6 @@ dev\:web: ## Run web app only
 	@echo "$(MAGENTA)Starting web app (Next.js)...$(RESET)"
 	@cd apps/web && bun dev
 
-dev\:astro: ## Run astro app only
-	@echo "$(MAGENTA)Starting Astro app...$(RESET)"
-	@cd apps/astro-app && bun dev
-
 dev\:api: ## Run API only
 	@echo "$(MAGENTA)Starting Hono API...$(RESET)"
 	@cd apps/api && bun dev
@@ -181,6 +179,10 @@ dev\:ramp: ## Run ramp app only
 	@echo "$(MAGENTA)Starting Ramp app...$(RESET)"
 	@cd apps/ramp && bun dev
 
+dev\:home: ## Run home app only
+	@echo "$(MAGENTA)Starting Home app (Astro)...$(RESET)"
+	@cd apps/home && bun dev
+
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
 	@bun run build
@@ -191,11 +193,6 @@ build\:web: ## Build web app only
 	@cd apps/web && bun run build
 	@echo "$(GREEN)Web app built!$(RESET)"
 
-build\:astro: ## Build astro app only
-	@echo "$(BLUE)Building Astro app...$(RESET)"
-	@cd apps/astro-app && bun run build
-	@echo "$(GREEN)Astro app built!$(RESET)"
-
 build\:api: ## Build API only
 	@echo "$(BLUE)Building API...$(RESET)"
 	@cd apps/api && bun run build
@@ -205,6 +202,27 @@ build\:share: ## Build Share URL shortener only
 	@echo "$(BLUE)Building Share URL shortener...$(RESET)"
 	@cd apps/share && bun run build
 	@echo "$(GREEN)Share URL shortener built!$(RESET)"
+
+build\:home: ## Build home app only
+	@echo "$(BLUE)Building Home app...$(RESET)"
+	@cd apps/home && bun run build
+	@echo "$(GREEN)Home app built!$(RESET)"
+
+preview\:home: ## Preview home production build (Cloudflare)
+	@echo "$(MAGENTA)Previewing Home production build...$(RESET)"
+	@cd apps/home && bun run build && bun run preview:cf
+
+deploy\:home: ## Deploy home app (preview)
+	@echo "$(BLUE)Deploying Home app (preview)...$(RESET)"
+	@cd apps/home && bun run build && bun run deploy
+	@echo "$(GREEN)Home app deployed (preview)!$(RESET)"
+
+deploy\:home\:production: ## Deploy home app (production)
+	@echo "$(RED)Deploying Home app (production)...$(RESET)"
+	@echo "$(RED)WARNING: This will deploy to PRODUCTION!$(RESET)"
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
+	@cd apps/home && bun run build:production && bun run deploy:production
+	@echo "$(GREEN)Home app deployed (production)!$(RESET)"
 
 lint: ## Run linter
 	@echo "$(YELLOW)Running linter...$(RESET)"
@@ -277,10 +295,6 @@ clean\:deep: ## Remove all node_modules and reinstall
 
 reset: clean\:all install ## Clean and reinstall everything
 	@echo "$(GREEN)Project reset complete!$(RESET)"
-
-preview\:astro: ## Preview astro production build
-	@echo "$(MAGENTA)Previewing Astro production build...$(RESET)"
-	@cd apps/astro-app && bun run preview
 
 test\:api: ## Test API endpoints
 	@echo "$(CYAN)Testing API endpoints...$(RESET)"
