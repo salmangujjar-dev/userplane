@@ -205,23 +205,23 @@ build\:share: ## Build Share URL shortener only
 
 build\:home: ## Build home app only
 	@echo "$(BLUE)Building Home app...$(RESET)"
-	@cd apps/home && bun run build
+	@bun run turbo build --filter=home
 	@echo "$(GREEN)Home app built!$(RESET)"
 
 preview\:home: ## Preview home production build (Cloudflare)
 	@echo "$(MAGENTA)Previewing Home production build...$(RESET)"
-	@cd apps/home && bun run build && bun run preview:cf
+	@bun run turbo build --filter=home && cd apps/home && bun run preview:cf
 
 deploy\:home: ## Deploy home app (preview)
 	@echo "$(BLUE)Deploying Home app (preview)...$(RESET)"
-	@cd apps/home && bun run build && bun run deploy
+	@bun run turbo build --filter=home && cd apps/home && bun run deploy
 	@echo "$(GREEN)Home app deployed (preview)!$(RESET)"
 
 deploy\:home\:production: ## Deploy home app (production)
 	@echo "$(RED)Deploying Home app (production)...$(RESET)"
 	@echo "$(RED)WARNING: This will deploy to PRODUCTION!$(RESET)"
 	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
-	@cd apps/home && bun run build:production && bun run deploy:production
+	@bun run turbo build:production --filter=home && cd apps/home && bun run deploy:production
 	@echo "$(GREEN)Home app deployed (production)!$(RESET)"
 
 lint: ## Run linter
@@ -231,7 +231,7 @@ lint: ## Run linter
 
 lint\:fix: ## Run linter and fix issues
 	@echo "$(YELLOW)Running linter with auto-fix...$(RESET)"
-	@bunx turbo lint -- --fix
+	@bun run turbo lint -- --fix
 	@echo "$(GREEN)Linting and fixes complete!$(RESET)"
 
 format: ## Format all files
@@ -251,17 +251,17 @@ fmt\:fix: format\:fix ## Shortcut for format:fix
 
 typecheck: ## Type check all packages
 	@echo "$(BLUE)Running type check...$(RESET)"
-	@bunx turbo typecheck
+	@bun run turbo typecheck
 	@echo "$(GREEN)Type check complete!$(RESET)"
 
 test: ## Run all tests
 	@echo "$(CYAN)Running tests...$(RESET)"
-	@bunx turbo test
+	@bun run turbo test
 	@echo "$(GREEN)Tests complete!$(RESET)"
 
 test\:watch: ## Run tests in watch mode
 	@echo "$(CYAN)Running tests in watch mode...$(RESET)"
-	@bunx turbo test -- --watch
+	@bun run turbo test -- --watch
 
 check: lint typecheck format\:check ## Run all checks
 	@echo "$(GREEN)All checks passed!$(RESET)"
