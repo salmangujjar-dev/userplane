@@ -61,6 +61,9 @@ export const recordings = pgTable(
       .notNull()
       .default(RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS),
 
+    // Retention
+    expiresAt: timestamp('expires_at'),
+
     // Timestamps
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
@@ -80,6 +83,7 @@ export const recordings = pgTable(
     index('recordings_project_id_idx').on(table.projectId),
     index('recordings_workspace_created_at_idx').on(table.workspaceId, table.createdAt),
     index('recordings_stream_id_idx').on(table.streamId),
+    index('recordings_expires_at_idx').on(table.expiresAt),
   ]
 );
 

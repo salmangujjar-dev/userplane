@@ -71,6 +71,7 @@ export const RecordingItemSchema = z.object({
   recordingId: RecordingIdSchema,
   recordingThumbnail: z.string().nullable(),
   recordingDurationMs: z.number().int().nullable(),
+  expiresAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
   creator: RecordingCreatorSchema,
 });
@@ -145,6 +146,7 @@ export const RecordingDetailMetaSchema = z.object({
   status: UploadStatusSchema,
   systemMeta: SystemMetaSchema.nullable(),
   customMeta: CustomMetaSchema.nullable(),
+  expiresAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -192,6 +194,28 @@ export const DeleteRecordingSchema = z.object({
     workspaceId: WorkspaceIdSchema,
     recordingId: RecordingIdSchema,
   }),
+});
+
+/**
+ * Update recording request (PATCH)
+ */
+export const UpdateRecordingSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+    recordingId: RecordingIdSchema,
+  }),
+  body: z.object({
+    expiresAt: z.coerce.date().nullable().optional(),
+  }),
+});
+
+/**
+ * Recording update response
+ */
+export const RecordingUpdateDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  recordingId: RecordingIdSchema,
+  expiresAt: z.coerce.date().nullable(),
 });
 
 /**

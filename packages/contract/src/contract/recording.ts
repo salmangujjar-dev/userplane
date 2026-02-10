@@ -10,6 +10,8 @@ import {
   RecordingErrors,
   RecordingResourceDataSchema,
   RecordingsListDataSchema,
+  RecordingUpdateDataSchema,
+  UpdateRecordingSchema,
 } from '../schemas';
 
 /**
@@ -83,6 +85,30 @@ export const deleteRecording = oc
   })
   .input(DeleteRecordingSchema)
   .output(ApiResponseSchema(RecordingDeleteDataSchema));
+
+/**
+ * PATCH /workspace/{workspaceId}/recordings/{recordingId}
+ * Update a recording
+ */
+export const updateRecording = oc
+  .route({
+    method: 'PATCH',
+    path: '/workspace/{workspaceId}/recordings/{recordingId}',
+    inputStructure: 'detailed',
+    summary: 'Update recording',
+    description: 'Update recording fields such as expiration date',
+    tags: ['Recordings'],
+  })
+  .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
+    RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
+    RECORDING_GONE: RecordingErrors.RECORDING_GONE,
+    RECORDING_WORKSPACE_MISMATCH: RecordingErrors.RECORDING_WORKSPACE_MISMATCH,
+    RECORDING_UPDATE_FAILED: RecordingErrors.RECORDING_UPDATE_FAILED,
+  })
+  .input(UpdateRecordingSchema)
+  .output(ApiResponseSchema(RecordingUpdateDataSchema));
 
 /**
  * GET /workspace/{workspaceId}/recordings/{recordingId}/video

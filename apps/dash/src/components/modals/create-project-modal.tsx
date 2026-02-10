@@ -1,6 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  DEFAULT_RETENTION_DAYS,
+  RETENTION_DAYS_VALUES,
+  type RetentionDays,
+} from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -12,6 +17,13 @@ import {
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
 import { Switch } from '@workspace/ui/components/switch';
 import {
   Tooltip,
@@ -30,13 +42,18 @@ import { ProjectTitleSchema } from '@/schemas';
 interface CreateProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateProject: (project: { title: string; isDefault: boolean }) => void;
+  onCreateProject: (project: {
+    title: string;
+    isDefault: boolean;
+    recordingRetentionDays: RetentionDays;
+  }) => void;
   loading?: boolean;
 }
 
 const createProjectFormSchema = z.object({
   title: ProjectTitleSchema,
   isDefault: z.boolean(),
+  recordingRetentionDays: z.coerce.number().int() as z.ZodType<RetentionDays>,
 });
 
 export function CreateProjectModal({
@@ -58,6 +75,7 @@ export function CreateProjectModal({
     defaultValues: {
       title: '',
       isDefault: false,
+      recordingRetentionDays: DEFAULT_RETENTION_DAYS,
     },
   });
 
@@ -68,7 +86,11 @@ export function CreateProjectModal({
     }
   }, [open, reset]);
 
-  const onSubmit = (data: { title: string; isDefault: boolean }) => {
+  const onSubmit = (data: {
+    title: string;
+    isDefault: boolean;
+    recordingRetentionDays: RetentionDays;
+  }) => {
     onCreateProject(data);
   };
 
@@ -155,6 +177,39 @@ export function CreateProjectModal({
                           onCheckedChange={field.onChange}
                           disabled={loading}
                         />
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="retention-days" className="text-sm font-medium">
+                        Recording retention
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Auto-delete recordings after this period
+                      </p>
+                    </div>
+                    <Controller
+                      name="recordingRetentionDays"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          value={String(field.value)}
+                          onValueChange={(value) => field.onChange(Number(value))}
+                          disabled={loading}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {RETENTION_DAYS_VALUES.map((days) => (
+                              <SelectItem key={days} value={String(days)}>
+                                {days} {days === 1 ? 'day' : 'days'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       )}
                     />
                   </div>
