@@ -25,3 +25,9 @@ Projects are managed from [Workspace Settings > Projects](https://dash.userplane
 ## Default project
 
 Every workspace has a default project that cannot be deleted. Links created without an explicit project selection are assigned to the default project.
+
+## Related articles
+
+- [Projects Overview](/help/workspace/projects-overview) — creating and using projects.
+- [Project Retention](/help/workspace/project-retention) — configure automatic retention policies for recordings.
+- [Recording Expiry](/help/recording/recording-expiry) — manually set expiration dates for individual recordings.

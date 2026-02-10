@@ -41,4 +41,5 @@ If a project was recently deleted and is within the restoration window:
 ## Related articles
 
 - [Projects Overview](/help/workspace/projects-overview) — creating and using projects.
+- [Project Retention](/help/workspace/project-retention) — configure automatic retention policies for recordings.
 - [Workspace Lifecycle](/help/workspace/workspace-lifecycle) — deletion and restoration for the workspace itself.
