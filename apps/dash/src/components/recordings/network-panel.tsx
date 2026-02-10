@@ -1,8 +1,7 @@
 'use client';
 
 import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
-import { Search } from 'lucide-react';
+import { SearchInput } from '@workspace/ui/components/search-input';
 import { useState } from 'react';
 
 import { NetworkEntry } from './network-entry';
@@ -527,15 +526,11 @@ export function NetworkPanel() {
   return (
     <div className="h-full flex flex-col">
       <div className="border-b p-3 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Filter by URL or method"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
-          />
-        </div>
+        <SearchInput
+          placeholder="Filter by URL or method"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
 
         <div className="flex items-center gap-1 flex-wrap">
           <Button

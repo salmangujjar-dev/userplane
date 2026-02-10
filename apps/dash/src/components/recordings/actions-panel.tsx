@@ -1,7 +1,6 @@
 'use client';
 
-import { Input } from '@workspace/ui/components/input';
-import { Search } from 'lucide-react';
+import { SearchInput } from '@workspace/ui/components/search-input';
 import { useState } from 'react';
 
 import { ActionEntry } from './action-entry';
@@ -258,15 +257,11 @@ export function ActionsPanel() {
   return (
     <div className="h-full flex flex-col">
       <div className="border-b p-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Filter by element, class, id, or text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
-          />
-        </div>
+        <SearchInput
+          placeholder="Filter by element, class, id, or text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto font-mono">
