@@ -1,5 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 
+import type { RecordingDetail } from '@/types';
+
 import { ActionsPanel } from './actions-panel';
 import { BackendPanel } from './backend-panel';
 import { ComingSoonOverlay } from './coming-soon-overlay';
@@ -9,39 +11,7 @@ import { NetworkPanel } from './network-panel';
 
 interface RecordingLogReplayPanelProps {
   recordingId: string;
-  recording: {
-    recordingId: string;
-    recordingDurationMs: number;
-    meta: {
-      link: {
-        linkId: string;
-        title: string | null;
-        providerType: string | null;
-        providerId: string | null;
-        providerRef: string | null;
-        providerData: Record<string, unknown> | null;
-      };
-      creator: {
-        workspaceMemberId: string;
-        name: string;
-      };
-      project: {
-        projectId: string | null;
-        title: string | null;
-      };
-      domain: {
-        domainId: string;
-        url: string;
-      };
-      workspaceId: string;
-      status: string;
-      systemMeta: Record<string, unknown> | null;
-      customMeta?: Record<string, unknown> | null;
-      expiresAt: Date | null;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-  };
+  recording: RecordingDetail;
 }
 
 export function RecordingLogReplayPanel({ recording }: RecordingLogReplayPanelProps) {
