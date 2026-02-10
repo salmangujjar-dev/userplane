@@ -1,6 +1,6 @@
 'use client';
 
-import { RETENTION_DAYS_VALUES } from '@workspace/contract';
+import { RETENTION_DAYS_VALUES, type RetentionDays } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -32,7 +32,7 @@ function getInitialValue(expiresAt: Date | null): string {
   const remainingDays = differenceInDays(expiresAt, new Date());
   if (remainingDays <= 0) return String(RETENTION_DAYS_VALUES[0]);
 
-  let closest = RETENTION_DAYS_VALUES[0];
+  let closest: RetentionDays = RETENTION_DAYS_VALUES[0];
   let minDiff = Math.abs(remainingDays - closest);
   for (const days of RETENTION_DAYS_VALUES) {
     const diff = Math.abs(remainingDays - days);

@@ -6,7 +6,14 @@
  * automatically coerced to Date objects during parsing.
  */
 
-export type { RecordingCreator, RecordingItem, RecordingsListData } from '@workspace/contract';
+export type {
+  LinkRef,
+  RecordingCreator,
+  RecordingDetail,
+  RecordingDetailMeta,
+  RecordingItem,
+  RecordingsListData,
+} from '@workspace/contract';
 
 // Aliases for backward compatibility
 export type { RecordingItem as Recording } from '@workspace/contract';

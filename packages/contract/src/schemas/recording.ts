@@ -4,6 +4,7 @@ import { RECORDING_PAGINATION } from '../constants';
 import {
   DomainIdSchema,
   LinkIdSchema,
+  LinkProviderTypeSchema,
   PaginationMetaSchema,
   ProjectIdSchema,
   RecordingIdSchema,
@@ -12,6 +13,7 @@ import {
   WorkspaceIdSchema,
   WorkspaceMemberIdSchema,
 } from './common';
+import type { LinkProviderData } from './link-provider';
 
 /**
  * Recording schemas
@@ -107,14 +109,21 @@ export const RecordingResourceSchema = z.object({
 
 /**
  * Link reference in recording detail
+ *
+ * providerType uses the LinkProviderType enum for compile-time safety.
+ * providerData is validated as a JSON object at the schema level; for
+ * provider-specific narrowing use parseLinkProviderData from link-provider.ts.
  */
 export const LinkRefSchema = z.object({
   linkId: LinkIdSchema,
   title: z.string().nullable(),
-  providerType: z.string().nullable(),
+  providerType: LinkProviderTypeSchema.nullable(),
   providerId: z.string().nullable(),
   providerRef: z.string().nullable(),
-  providerData: z.unknown(),
+  providerData: z
+    .record(z.string(), z.unknown())
+    .nullable()
+    .transform((v) => v as LinkProviderData | null),
   createdAt: z.coerce.date(),
 });
 
@@ -227,7 +236,10 @@ export const RecordingDeleteDataSchema = z.object({
 });
 
 // Type exports
+export type LinkRef = z.infer<typeof LinkRefSchema>;
 export type RecordingCreator = z.infer<typeof RecordingCreatorSchema>;
+export type RecordingDetailMeta = z.infer<typeof RecordingDetailMetaSchema>;
+export type RecordingDetail = z.infer<typeof RecordingDetailSchema>;
 export type RecordingItem = z.infer<typeof RecordingItemSchema>;
 export type RecordingsListData = z.infer<typeof RecordingsListDataSchema>;
 export type RecordingResourceData = z.infer<typeof RecordingResourceDataSchema>;
