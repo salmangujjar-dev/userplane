@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description: 'B2B expense management demo application',
   other: {
     // Userplane configuration meta tags
-    'userplane:workspace': 'ws_TpaxkXdKvlnr',
+    'userplane:workspace': 'ws_cyqt7SPbjszW',
     'userplane:blur':
       '.expense-amount, .expense-description, .employee-name, .employee-email, .company-name',
   },

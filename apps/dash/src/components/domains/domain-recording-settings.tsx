@@ -11,6 +11,7 @@ interface DomainRecordingSettingsProps {
   onSettingsChange: (settings: DomainRecordingPreferences) => void;
   disabled?: boolean;
   idPrefix?: string;
+  hideHideSensitiveField?: boolean;
 }
 
 export function DomainRecordingSettings({
@@ -18,6 +19,7 @@ export function DomainRecordingSettings({
   onSettingsChange,
   disabled = false,
   idPrefix = 'domain',
+  hideHideSensitiveField = false,
 }: DomainRecordingSettingsProps) {
   const { data: subscriptionResult } = useSubscriptionStatus();
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
@@ -43,20 +45,22 @@ export function DomainRecordingSettings({
       <div className="text-sm font-medium">Recording Settings</div>
 
       <div className="space-y-4 pl-1">
-        <div className="flex items-center justify-between">
-          <Label
-            htmlFor={`${idPrefix}-hide-sensitive`}
-            className={`text-sm font-normal flex-1 ${disabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            Hide sensitive fields
-          </Label>
-          <Switch
-            id={`${idPrefix}-hide-sensitive`}
-            checked={settings.recordingHideSensitive}
-            onCheckedChange={(checked) => updateSetting('recordingHideSensitive', checked)}
-            disabled={disabled}
-          />
-        </div>
+        {!hideHideSensitiveField && (
+          <div className="flex items-center justify-between">
+            <Label
+              htmlFor={`${idPrefix}-hide-sensitive`}
+              className={`text-sm font-normal flex-1 ${disabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              Hide sensitive fields
+            </Label>
+            <Switch
+              id={`${idPrefix}-hide-sensitive`}
+              checked={settings.recordingHideSensitive}
+              onCheckedChange={(checked) => updateSetting('recordingHideSensitive', checked)}
+              disabled={disabled}
+            />
+          </div>
+        )}
 
         {!hasAdvancedRecording && (
           <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
