@@ -8,6 +8,8 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import { Label } from '@workspace/ui/components/label';
+import { Switch } from '@workspace/ui/components/switch';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -83,13 +85,35 @@ export function DomainVerificationPostModal({
             </div>
           </div>
 
-          {verified && showSettings && (
-            <DomainRecordingSettings
-              settings={localSettings}
-              onSettingsChange={setLocalSettings}
-              disabled={loadingSettings}
-              idPrefix="post"
-            />
+          {verified && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
+                <Label
+                  htmlFor="post-hide-sensitive-main"
+                  className={`text-sm font-medium flex-1 ${loadingSettings ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  Hide sensitive fields
+                </Label>
+                <Switch
+                  id="post-hide-sensitive-main"
+                  checked={localSettings.recordingHideSensitive}
+                  onCheckedChange={(checked) =>
+                    setLocalSettings({ ...localSettings, recordingHideSensitive: checked })
+                  }
+                  disabled={loadingSettings}
+                />
+              </div>
+
+              {showSettings && (
+                <DomainRecordingSettings
+                  settings={localSettings}
+                  onSettingsChange={setLocalSettings}
+                  disabled={loadingSettings}
+                  idPrefix="post"
+                  hideHideSensitiveField
+                />
+              )}
+            </div>
           )}
 
           {!verified && <DomainCodeSnippet workspaceId={workspaceId} domainUrl={domainUrl} />}
@@ -106,12 +130,12 @@ export function DomainVerificationPostModal({
               {showSettings ? (
                 <>
                   <ChevronUp className="h-4 w-4" />
-                  Recording Settings
+                  Advanced Settings
                 </>
               ) : (
                 <>
                   <ChevronDown className="h-4 w-4" />
-                  Recording Settings
+                  Advanced Settings
                 </>
               )}
             </button>
