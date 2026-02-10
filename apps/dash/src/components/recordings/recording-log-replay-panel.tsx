@@ -17,6 +17,9 @@ interface RecordingLogReplayPanelProps {
         linkId: string;
         title: string | null;
         providerType: string | null;
+        providerId: string | null;
+        providerRef: string | null;
+        providerData: Record<string, unknown> | null;
       };
       creator: {
         workspaceMemberId: string;
