@@ -26,6 +26,8 @@ export function UserplaneProvider({ workspaceId, user, children }: UserplaneProv
     // Initialize Userplane SDK
     userplane.initialize({
       workspaceId: [workspaceId],
+      verificationBaseUrl: process.env.NEXT_PUBLIC_VERIFICATION_BASE_URL,
+      recorderBaseUrl: process.env.NEXT_PUBLIC_RECORDER_BASE_URL,
     });
 
     // Register user identity so sessions are not anonymous

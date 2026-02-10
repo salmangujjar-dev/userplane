@@ -67,9 +67,16 @@ const terserConfig = optimizeMode ? optimizedTerserConfig : standardTerserConfig
 
 const isProduction = !!optimizeMode || !!obfuscateMode;
 
+// SDK endpoint URLs - configurable via env vars, defaults to production
+const recorderBaseUrl = process.env.SDK_RECORDER_BASE_URL || 'https://recorder.userplane.io';
+const verificationBaseUrl =
+  process.env.SDK_VERIFICATION_BASE_URL || 'https://api.userplane.io/api/v1';
+
 export default defineConfig({
   define: {
     __DEV__: JSON.stringify(!isProduction),
+    __RECORDER_BASE_URL__: JSON.stringify(recorderBaseUrl),
+    __VERIFICATION_BASE_URL__: JSON.stringify(verificationBaseUrl),
   },
   build: {
     lib: {

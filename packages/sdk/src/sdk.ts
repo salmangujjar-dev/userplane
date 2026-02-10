@@ -49,12 +49,24 @@ import { readWorkspaceIds } from './utils/meta';
 import { clearTabRef as clearTabRefUtil, getOrCreateTabRef } from './utils/tab';
 import { parseUrlParams } from './utils/url';
 
+// Compile-time constants injected by Vite define (see vite.config.ts).
+// When consumed from source by other bundlers (e.g. Next.js/Turbopack in dev),
+// the defines don't exist, so we guard with typeof and fall back to production defaults.
+declare const __RECORDER_BASE_URL__: string;
+declare const __VERIFICATION_BASE_URL__: string;
+
 // Internal state
 let factory: FrameManagerFactory | null = null;
 let currentManager: IFrameManager | null = null;
 let captureManager: IFrameManager | null = null;
-let recorderBaseUrl = 'http://localhost:4322';
-let verificationBaseUrl = 'http://localhost:3001/api/v1';
+let recorderBaseUrl =
+  typeof __RECORDER_BASE_URL__ !== 'undefined'
+    ? __RECORDER_BASE_URL__
+    : 'https://recorder.userplane.io';
+let verificationBaseUrl =
+  typeof __VERIFICATION_BASE_URL__ !== 'undefined'
+    ? __VERIFICATION_BASE_URL__
+    : 'https://api.userplane.io/api/v1';
 let initialized = false;
 let pendingParams: RecorderParams | null = null;
 let tabRef: string | null = null;
