@@ -3,9 +3,9 @@
 import type {
   PlanId, // Used for create invite (includes all plans including sandbox/free)
 } from '@workspace/pricing';
-import { Input } from '@workspace/ui/components/input';
+import { SearchInput } from '@workspace/ui/components/search-input';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { ArrowDown, ArrowUp, ArrowUpDown, Building2, Clock, Search } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Building2, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { Suspense, useEffect, useState } from 'react';
@@ -283,16 +283,12 @@ function AdminRecordingsPageContent() {
                 <p className="text-sm text-muted-foreground mt-1">Manage userplane workspaces</p>
               </div>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
-                <div className="relative w-80">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search by name or ID..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+                <SearchInput
+                  placeholder="Search by name or ID..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-80"
+                />
                 <div className="flex items-center gap-2">
                   <FilterDropdown
                     label="Status"

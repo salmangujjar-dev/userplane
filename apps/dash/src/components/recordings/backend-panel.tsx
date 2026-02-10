@@ -7,8 +7,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { Input } from '@workspace/ui/components/input';
-import { AlertCircle, AlertTriangle, Bug, Filter, Info, Search, Skull } from 'lucide-react';
+import { SearchInput } from '@workspace/ui/components/search-input';
+import { AlertCircle, AlertTriangle, Bug, Filter, Info, Skull } from 'lucide-react';
 import { useState } from 'react';
 
 import { BackendLogEntry } from './backend-log-entry';
@@ -298,15 +298,12 @@ export function BackendPanel() {
     <div className="h-full flex flex-col">
       <div className="border-b p-3">
         <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Filter"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9"
-            />
-          </div>
+          <SearchInput
+            placeholder="Filter"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

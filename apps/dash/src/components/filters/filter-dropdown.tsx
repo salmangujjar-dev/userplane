@@ -5,9 +5,9 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { Input } from '@workspace/ui/components/input';
+import { SearchInput } from '@workspace/ui/components/search-input';
 import { cn } from '@workspace/ui/lib/utils';
-import { Check, ChevronDown, LucideIcon, Search, X } from 'lucide-react';
+import { Check, ChevronDown, LucideIcon, X } from 'lucide-react';
 import { useState } from 'react';
 
 import { BoringAvatar } from '@/components/shared/boring-avatar';
@@ -165,15 +165,13 @@ export function FilterDropdown({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[240px] p-0" sideOffset={6}>
-        <div className="flex items-center border-b px-4 py-2">
-          <Search className="mr-2.5 h-4 w-4 shrink-0 opacity-50" />
-          <Input
-            placeholder={placeholder}
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="h-8 border-0 bg-transparent pl-2 pr-0 py-1 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
-          />
-        </div>
+        <SearchInput
+          placeholder={placeholder}
+          value={searchQuery}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          className="rounded-none border-0 border-b shadow-none ring-0! focus-within:ring-0! focus-within:border-b focus-within:border-border!"
+          inputClassName="text-sm"
+        />
         <div className="max-h-[300px] overflow-y-auto p-1">
           {isSearching ? (
             <div className="py-6 text-center text-sm text-muted-foreground">Searching...</div>

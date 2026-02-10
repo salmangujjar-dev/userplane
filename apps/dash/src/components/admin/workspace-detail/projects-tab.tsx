@@ -7,7 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
-import { Input } from '@workspace/ui/components/input';
 import {
   Pagination,
   PaginationContent,
@@ -17,6 +16,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@workspace/ui/components/pagination';
+import { SearchInput } from '@workspace/ui/components/search-input';
 import {
   ArrowDown,
   ArrowUp,
@@ -26,7 +26,6 @@ import {
   Folder,
   MoreVertical,
   RotateCcw,
-  Search,
   Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -201,16 +200,12 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
           View all projects in this workspace ({total} total)
         </p>
         <div className="flex items-center gap-2 mt-3">
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search by name or ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search by name or ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-80"
+          />
           <div className="flex items-center gap-2 ml-2">
             <FilterDropdown
               label="Status"

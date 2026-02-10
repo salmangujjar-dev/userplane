@@ -70,7 +70,7 @@ export function ComingSoonOverlay({ title, subtitle, children }: ComingSoonOverl
             {isNotified ? (
               <>
                 <Check className="h-4 w-4" />
-                You&apos;re in
+                Access Requested
               </>
             ) : (
               <>
