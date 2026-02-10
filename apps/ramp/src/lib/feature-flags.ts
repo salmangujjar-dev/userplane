@@ -4,7 +4,7 @@
 
 const featureFlags = {
   // Client-side: controls whether the "New Expense" button opens the dialog
-  newExpenseButton: true,
+  newExpenseButton: false,
 
   // Server-side: controls whether the POST /api/expenses endpoint accepts creates
   createExpenseSubmit: false,

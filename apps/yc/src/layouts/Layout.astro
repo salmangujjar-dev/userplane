@@ -38,7 +38,10 @@ const defaultDescription =
       });
     </script> -->
     <!-- Try the embed script for production use -->
-    <script src="https://cdn-dev.userplane.io/embed/script.js"></script>
+    <script
+      is:inline
+      src={import.meta.env.PUBLIC_CDN_URL || 'https://cdn.userplane.io' + '/embed/script.js'}
+    ></script>
     <script>
       import Intercom from '@intercom/messenger-js-sdk';
 

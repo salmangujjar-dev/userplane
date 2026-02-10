@@ -35,7 +35,7 @@ export const DEV_URLS = {
   DASH: 'https://dash-dev.userplane.io',
   HOME: 'https://home-dev.userplane.io',
   RECORDER: 'https://recorder-dev.userplane.io',
-  DOCS: 'https://userplane.io/help',
+  DOCS: 'https://home-dev.userplane.io/help',
   CALENDAR: 'https://cal.com/userplane/intro',
 } as const;
 

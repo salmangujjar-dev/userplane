@@ -554,34 +554,43 @@ tunnel\:status: ## Show tunnel status and URLs
 	@echo "$(WHITE)-------------------------------------------$(RESET)"
 
 # SDK Package commands
+# Override these to point the SDK at different endpoints:
+#   make sdk:build SDK_RECORDER_BASE_URL=https://recorder-dev.userplane.io SDK_VERIFICATION_BASE_URL=https://api-dev.userplane.io/api/v1
+SDK_RECORDER_BASE_URL ?=
+SDK_VERIFICATION_BASE_URL ?=
+
+# Build env: forward URL overrides to Vite define (empty values use defaults in vite.config.ts)
+SDK_BUILD_ENV := $(if $(SDK_RECORDER_BASE_URL),SDK_RECORDER_BASE_URL=$(SDK_RECORDER_BASE_URL)) \
+                 $(if $(SDK_VERIFICATION_BASE_URL),SDK_VERIFICATION_BASE_URL=$(SDK_VERIFICATION_BASE_URL))
+
 sdk\:build: ## Build SDK (standard dev build)
 	@$(MAKE) metadata:build
 	@echo "$(BLUE)Building SDK...$(RESET)"
-	@cd packages/sdk && bun run build
+	@cd packages/sdk && $(SDK_BUILD_ENV) bun run build
 	@echo "$(GREEN)SDK built!$(RESET)"
 
 sdk\:build\:npm: ## Build SDK (size-optimized for npm)
 	@$(MAKE) metadata:build:npm
 	@echo "$(BLUE)Building SDK (npm optimized)...$(RESET)"
-	@cd packages/sdk && bun run build:npm
+	@cd packages/sdk && $(SDK_BUILD_ENV) bun run build:npm
 	@echo "$(GREEN)SDK built (npm optimized)!$(RESET)"
 
 sdk\:build\:cdn: ## Build SDK (size-optimized for CDN)
 	@$(MAKE) metadata:build:cdn
 	@echo "$(BLUE)Building SDK (CDN optimized)...$(RESET)"
-	@cd packages/sdk && bun run build:cdn
+	@cd packages/sdk && $(SDK_BUILD_ENV) bun run build:cdn
 	@echo "$(GREEN)SDK built (CDN optimized)!$(RESET)"
 
 sdk\:build\:npm\:obfuscate: ## Build SDK (obfuscated for npm)
 	@$(MAKE) metadata:build:npm
 	@echo "$(BLUE)Building SDK (npm obfuscated)...$(RESET)"
-	@cd packages/sdk && bun run build:npm:obfuscate
+	@cd packages/sdk && $(SDK_BUILD_ENV) bun run build:npm:obfuscate
 	@echo "$(GREEN)SDK built (npm obfuscated)!$(RESET)"
 
 sdk\:build\:cdn\:obfuscate: ## Build SDK (obfuscated for CDN)
 	@$(MAKE) metadata:build:cdn
 	@echo "$(BLUE)Building SDK (CDN obfuscated)...$(RESET)"
-	@cd packages/sdk && bun run build:cdn:obfuscate
+	@cd packages/sdk && $(SDK_BUILD_ENV) bun run build:cdn:obfuscate
 	@echo "$(GREEN)SDK built (CDN obfuscated)!$(RESET)"
 
 # Metadata Package commands
@@ -601,8 +610,14 @@ metadata\:build\:cdn: ## Build Metadata (size-optimized for CDN)
 	@echo "$(GREEN)Metadata built (CDN optimized)!$(RESET)"
 
 # Embed Package commands
+# SDK endpoint URLs per environment (dev uses tunnel subdomains, production uses bare domains)
+SDK_RECORDER_URL_DEV := https://recorder-dev.userplane.io
+SDK_RECORDER_URL_PROD := https://recorder.userplane.io
+SDK_VERIFICATION_URL_DEV := https://api-dev.userplane.io/api/v1
+SDK_VERIFICATION_URL_PROD := https://api.userplane.io/api/v1
+
 embed\:build: ## Build Embed (standard dev build)
-	@$(MAKE) sdk:build
+	@$(MAKE) sdk:build SDK_RECORDER_BASE_URL=$(SDK_RECORDER_URL_DEV) SDK_VERIFICATION_BASE_URL=$(SDK_VERIFICATION_URL_DEV)
 	@echo "$(BLUE)Building Embed...$(RESET)"
 	@cd packages/embed && bun run build
 	@echo "$(GREEN)Embed built!$(RESET)"
@@ -639,7 +654,7 @@ embed\:build\:cdn\:dev: ## Build Embed for CDN with dev CDN configuration
 		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
 		exit 1; \
 	fi
-	@$(MAKE) sdk:build:cdn
+	@$(MAKE) sdk:build:cdn SDK_RECORDER_BASE_URL=$(SDK_RECORDER_URL_DEV) SDK_VERIFICATION_BASE_URL=$(SDK_VERIFICATION_URL_DEV)
 	@echo "$(BLUE)Building Embed (CDN) for development...$(RESET)"
 	$(eval CDN_DOMAIN_VAL := $(call get_cdn_domain,development))
 	$(eval CDN_PREFIX_VAL := $(call get_cdn_prefix,development))
@@ -656,7 +671,7 @@ embed\:build\:cdn\:production: ## Build Embed for CDN with production CDN config
 		echo "$(RED)Error: .env.production not found$(RESET)"; \
 		exit 1; \
 	fi
-	@$(MAKE) sdk:build:cdn
+	@$(MAKE) sdk:build:cdn SDK_RECORDER_BASE_URL=$(SDK_RECORDER_URL_PROD) SDK_VERIFICATION_BASE_URL=$(SDK_VERIFICATION_URL_PROD)
 	@echo "$(BLUE)Building Embed (CDN) for production...$(RESET)"
 	$(eval CDN_DOMAIN_VAL := $(call get_cdn_domain,production))
 	$(eval CDN_PREFIX_VAL := $(call get_cdn_prefix,production))
