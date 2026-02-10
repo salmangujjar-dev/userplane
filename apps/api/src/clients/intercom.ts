@@ -285,6 +285,46 @@ export interface IntercomAdminsResponse {
 }
 
 /**
+ * Proactively update installation health status with Intercom
+ * POST to /app_install/status with Intercom-Version 2.2+
+ * Returns true on success, false on failure (fire-and-forget)
+ *
+ * @see https://developers.intercom.com/docs/build-an-integration/learn-more/installation-health-check
+ */
+export async function updateInstallStatus(
+  accessToken: string,
+  region: IntercomRegion,
+  status: { state: 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN'; message?: string }
+): Promise<boolean> {
+  try {
+    const baseUrl = INTERCOM_REGIONS[region];
+    const response = await fetch(`${baseUrl}/app_install/status`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Intercom-Version': '2.2',
+      },
+      body: JSON.stringify(status),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error(
+        { status: response.status, error: errorText, region },
+        'Update install status failed'
+      );
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logger.error({ error, region }, 'Update install status error');
+    return false;
+  }
+}
+
+/**
  * List all admins in the Intercom workspace
  */
 export async function listAdmins(
