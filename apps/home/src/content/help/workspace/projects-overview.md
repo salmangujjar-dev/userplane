@@ -32,4 +32,5 @@ Every workspace has a **default project** that is created automatically. The def
 ## Related articles
 
 - [Project Lifecycle](/help/workspace/project-lifecycle) — deleting and restoring projects.
+- [Project Retention](/help/workspace/project-retention) — configure automatic retention policies for recordings.
 - [Recording Projects](/help/recording/recording-projects) — how projects work with recording links.
