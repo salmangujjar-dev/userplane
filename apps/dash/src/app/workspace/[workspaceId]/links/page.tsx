@@ -149,6 +149,7 @@ export default function LinksPage() {
               onSelectionChange={setSelectedDomains}
               placeholder="Search domains..."
               icon={Globe}
+              showTooltip
             />
           </div>
         </div>

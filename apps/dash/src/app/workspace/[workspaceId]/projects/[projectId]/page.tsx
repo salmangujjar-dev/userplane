@@ -262,6 +262,7 @@ export default function ProjectPage() {
                     isSearching={isSearchingLinks}
                     placeholder="Search links..."
                     icon={Link2}
+                    showTooltip
                   />
                 </div>
               )}
@@ -286,6 +287,7 @@ export default function ProjectPage() {
                     onSelectionChange={setSelectedDomains}
                     placeholder="Search domains..."
                     icon={Globe}
+                    showTooltip
                   />
                 </div>
               )}

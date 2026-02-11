@@ -17,7 +17,7 @@ export function BoringAvatar({ name, size = 40, className }: BoringAvatarProps) 
         size={size}
         name={name}
         variant="beam"
-        colors={['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51']}
+        colors={['#0f0f0f', '#5597dd', '#2d7dd2', '#f5d547', '#f2f2f2']}
       />
     </div>
   );

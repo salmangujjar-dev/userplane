@@ -6,6 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
 import { SearchInput } from '@workspace/ui/components/search-input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import { cn } from '@workspace/ui/lib/utils';
 import { Check, ChevronDown, LucideIcon, X } from 'lucide-react';
 import { useState } from 'react';
@@ -30,6 +31,7 @@ interface FilterDropdownProps {
   singleSelect?: boolean;
   onSearchChange?: (query: string) => void;
   isSearching?: boolean;
+  showTooltip?: boolean;
 }
 
 export function FilterDropdown({
@@ -44,6 +46,7 @@ export function FilterDropdown({
   singleSelect = false,
   onSearchChange,
   isSearching = false,
+  showTooltip = false,
 }: FilterDropdownProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -145,7 +148,7 @@ export function FilterDropdown({
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-2 px-2.5 py-1.5 text-sm font-normal transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md border',
+            'inline-flex items-center gap-2 px-2.5 py-1.5 text-sm font-normal transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md border max-w-[200px]',
             selected.length > 0
               ? 'bg-background text-foreground border-border hover:bg-accent'
               : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground',
@@ -153,7 +156,7 @@ export function FilterDropdown({
           )}
         >
           {renderTriggerIcon()}
-          <span>{getDisplayLabel()}</span>
+          <span className="truncate">{getDisplayLabel()}</span>
           {selected.length > 0 ? (
             <>
               <div className="h-4 w-px bg-border" />
@@ -180,7 +183,7 @@ export function FilterDropdown({
           ) : (
             filteredOptions.map((option) => {
               const isSelected = selected.includes(option.value);
-              return (
+              const optionButton = (
                 <button
                   key={option.value}
                   type="button"
@@ -203,11 +206,22 @@ export function FilterDropdown({
                   {showAvatars && option.avatar && (
                     <BoringAvatar name={option.label} size={24} className="mr-2 shrink-0" />
                   )}
-                  <span className="flex-1 text-left">{option.label}</span>
+                  <span className="flex-1 text-left truncate">{option.label}</span>
                   {Icon && !showAvatars && (
                     <Icon className="h-3.5 w-3.5 ml-2 text-muted-foreground shrink-0" />
                   )}
                 </button>
+              );
+
+              if (!showTooltip) return optionButton;
+
+              return (
+                <Tooltip key={option.value}>
+                  <TooltipTrigger asChild>{optionButton}</TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={8}>
+                    {option.label}
+                  </TooltipContent>
+                </Tooltip>
               );
             })
           )}

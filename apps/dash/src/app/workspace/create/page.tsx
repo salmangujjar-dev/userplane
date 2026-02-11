@@ -223,6 +223,10 @@ function PostCreationInviteView({
 function IntercomConnectFlow() {
   const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
+  const { data: accountResult } = useAccount();
+  const { signOut } = useAuth();
+
+  const account = accountResult?.success ? accountResult.data : null;
 
   const handleConnect = async () => {
     setIsConnecting(true);
@@ -247,8 +251,10 @@ function IntercomConnectFlow() {
   };
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
+    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 pb-32 lg:pb-12 bg-background overflow-hidden">
       <AuthIcons />
+
+      {account && <AccountLogoutFooter userName={account.userName} onSignOut={signOut} />}
 
       <div className="w-full max-w-md space-y-10 relative z-10">
         <div className="flex flex-col items-center gap-6">

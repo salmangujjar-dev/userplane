@@ -8,11 +8,15 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@workspace/ui/components/dialog';
+import { Input } from '@workspace/ui/components/input';
+import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
+import { useEffect, useState } from 'react';
 
 interface DeleteAccountModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  email: string;
   onConfirm: () => void;
   isLoading?: boolean;
 }
@@ -20,25 +24,37 @@ interface DeleteAccountModalProps {
 export function DeleteAccountModal({
   open,
   onOpenChange,
+  email,
   onConfirm,
   isLoading = false,
 }: DeleteAccountModalProps) {
+  const [confirmEmail, setConfirmEmail] = useState('');
+
+  // Reset input when the modal closes
+  useEffect(() => {
+    if (!open) {
+      setConfirmEmail('');
+    }
+  }, [open]);
+
+  const isConfirmDisabled = confirmEmail !== email || isLoading;
+
+  const handleConfirm = () => {
+    if (!isConfirmDisabled) {
+      onConfirm();
+    }
+  };
+
   const consequences = [
     {
-      title: 'Account Deleted',
-      description: 'Your Userplane account will be permanently deleted',
+      title: 'Your account will be permanently removed',
+      description:
+        'When you delete your Userplane account, your access will be permanently removed. This action cannot be undone',
     },
     {
-      title: 'All Data Lost',
-      description: 'Your recordings, links, and workspace settings will be permanently removed',
-    },
-    {
-      title: 'Verification Required',
-      description: 'A verification email will be sent to confirm this action',
-    },
-    {
-      title: 'Cannot be Undone',
-      description: 'This action is permanent and cannot be reversed',
+      title: 'What happens to your data',
+      description:
+        'Your recordings and shared links are kept until your workspace is deleted or according to its data retention policy.',
     },
   ];
 
@@ -69,6 +85,20 @@ export function DeleteAccountModal({
               ))}
             </div>
           </div>
+
+          <div>
+            <Label htmlFor="confirm-email" className="mb-2 block">
+              Type <strong>{email}</strong> to confirm
+            </Label>
+            <Input
+              id="confirm-email"
+              value={confirmEmail}
+              onChange={(e) => setConfirmEmail(e.target.value)}
+              placeholder={email}
+              disabled={isLoading}
+              autoComplete="off"
+            />
+          </div>
         </div>
 
         <DialogFooter>
@@ -85,8 +115,8 @@ export function DeleteAccountModal({
             <Button
               type="button"
               className="rounded-full px-6"
-              onClick={onConfirm}
-              disabled={isLoading}
+              onClick={handleConfirm}
+              disabled={isConfirmDisabled}
             >
               {isLoading ? 'Processing...' : 'Delete Account'}
             </Button>
