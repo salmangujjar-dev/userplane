@@ -24,12 +24,23 @@ export const workspaceMembers = pgTable(
 
     // Notification preferences
     // For accepting feature highlights
+    // Members, Admins and Owners can opt in and opt out of this notification
     notifyFeatureHighlights: boolean('notify_feature_highlights').default(true).notNull(),
     // For accepting usage related emails
+    // This includes alert emails and upsell nudges
+    // Admins and members can opt out of this notification
+    // Owners cannot opt out of this notification
     notifyUsageEvents: boolean('notify_usage_events').default(true).notNull(),
     // For accepting emails for incoming recordings and screenshots
-    notifyIncomingEvents: boolean('notify_incoming_events').default(true).notNull(),
+    // This includes notifications for new recordings and screenshots
+    // This is disabled by default to avoid spamming users
+    // Members, Admins and Owners can opt in and opt out of this notification
+    notifyIncomingEvents: boolean('notify_incoming_events').default(false).notNull(),
     // For accepting admin emails related to workspace
+    // This includes notifications for new members, access requests, and role changes
+    // Admins are not notified by default to avoid spamming them
+    // Owners cannot opt out of this notification
+    // Members cannot opt in to this notification
     notifyAdminEvents: boolean('notify_admin_events').default(false).notNull(),
 
     // Timestamps

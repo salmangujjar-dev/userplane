@@ -1,0 +1,1 @@
+ALTER TABLE "workspace_members" ALTER COLUMN "notify_incoming_events" SET DEFAULT false;
