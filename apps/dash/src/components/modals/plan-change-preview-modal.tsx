@@ -592,7 +592,7 @@ function RequestSentView({ planName, onClose }: { planName: string; onClose: () 
         <div className="text-center space-y-1">
           <DialogTitle className="text-xl font-semibold">Almost There</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Reach out to a workspace owner or admin to complete the plan change
+            Reach out to a workspace owner or admin to complete the plan change to {planName}
           </DialogDescription>
         </div>
       </div>

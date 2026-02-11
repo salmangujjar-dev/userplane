@@ -1,6 +1,7 @@
 /**
  * TokenService - Infrastructure service for JWT token management
- * Handles generation and verification of JWT tokens for invites, workspace access, and domain verification
+ * Handles generation and verification of all JWT tokens in the application.
+ * This is the sole owner of jsonwebtoken -- no other service should import jwt directly.
  */
 
 import jwt, { type SignOptions } from 'jsonwebtoken';
@@ -12,6 +13,8 @@ import type {
   DomainVerificationTokenPayload,
   IntercomOAuthStatePayload,
   InviteTokenPayload,
+  SessionTokenPayload,
+  UploadTokenPayload,
   WorkspaceCreateInviteTokenPayload,
 } from '@/api/types';
 
@@ -27,6 +30,12 @@ export class TokenService {
   private domainVerificationExpiresIn: number;
   private accessRequestExpiresIn: number;
   private workspaceCreateInviteExpiresIn: number;
+  private recordingLinkSecret: string;
+  private recordingLinkExpiresIn: number;
+  private sessionSecret: string;
+  private sessionExpiresIn: number;
+  private uploadSecret: string;
+  private uploadExpiresIn: number;
 
   constructor(config: {
     jwtSecret: string;
@@ -37,6 +46,12 @@ export class TokenService {
     domainVerificationExpiresIn: number;
     accessRequestExpiresIn: number;
     workspaceCreateInviteExpiresIn: number;
+    recordingLinkSecret: string;
+    recordingLinkExpiresIn: number;
+    sessionSecret: string;
+    sessionExpiresIn: number;
+    uploadSecret: string;
+    uploadExpiresIn: number;
   }) {
     this.jwtSecret = config.jwtSecret;
     this.dashboardUrl = config.dashboardUrl;
@@ -46,6 +61,12 @@ export class TokenService {
     this.domainVerificationExpiresIn = config.domainVerificationExpiresIn;
     this.accessRequestExpiresIn = config.accessRequestExpiresIn;
     this.workspaceCreateInviteExpiresIn = config.workspaceCreateInviteExpiresIn;
+    this.recordingLinkSecret = config.recordingLinkSecret;
+    this.recordingLinkExpiresIn = config.recordingLinkExpiresIn;
+    this.sessionSecret = config.sessionSecret;
+    this.sessionExpiresIn = config.sessionExpiresIn;
+    this.uploadSecret = config.uploadSecret;
+    this.uploadExpiresIn = config.uploadExpiresIn;
   }
 
   /**
@@ -275,15 +296,113 @@ export class TokenService {
       return null;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Recording link tokens
+  // Used by LinkService to generate shareable recording URLs
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Sign a recording link token containing the link ID
+   * Token expires based on recordingLinkExpiresIn config (default 180 days)
+   */
+  signLinkToken(linkId: string): string {
+    const payload = { lid: linkId };
+    const options: SignOptions = { expiresIn: this.recordingLinkExpiresIn };
+    return jwt.sign(payload, this.recordingLinkSecret, options);
+  }
+
+  /**
+   * Verify and decode a recording link token
+   * Returns the decoded payload with lid (link ID) if valid
+   * Throws jwt.TokenExpiredError if token has expired
+   * Throws jwt.JsonWebTokenError if token is invalid
+   */
+  verifyLinkToken(token: string): { lid: string } {
+    const decoded = jwt.verify(token, this.recordingLinkSecret) as { lid: string };
+    return decoded;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Session tokens
+  // Used by SessionService to manage recording session lifecycle
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Sign a session token for an active recording session
+   * Token expires based on sessionExpiresIn config
+   * Adds iss (issuer) claim automatically
+   */
+  signSessionToken(payload: Omit<SessionTokenPayload, 'iat' | 'exp' | 'iss'>): string {
+    const fullPayload = { iss: this.jwtIssuer, ...payload };
+    return jwt.sign(fullPayload, this.sessionSecret, {
+      expiresIn: this.sessionExpiresIn,
+    });
+  }
+
+  /**
+   * Verify and decode a session token
+   * Returns payload if valid and issuer matches, null otherwise
+   */
+  verifySessionToken(token: string): SessionTokenPayload | null {
+    try {
+      const payload = jwt.verify(token, this.sessionSecret) as SessionTokenPayload;
+      if (payload.iss !== this.jwtIssuer) {
+        return null;
+      }
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Upload tokens
+  // Used by SessionService to authorize recording uploads
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Sign an upload token for a recording upload
+   * Token expires based on uploadExpiresIn config
+   * Adds iss (issuer) claim automatically
+   */
+  signUploadToken(payload: Omit<UploadTokenPayload, 'iat' | 'exp' | 'iss'>): string {
+    const fullPayload = { iss: this.jwtIssuer, ...payload };
+    return jwt.sign(fullPayload, this.uploadSecret, {
+      expiresIn: this.uploadExpiresIn,
+    });
+  }
+
+  /**
+   * Verify and decode an upload token
+   * Returns payload if valid and issuer matches, null otherwise
+   */
+  verifyUploadToken(token: string): UploadTokenPayload | null {
+    try {
+      const payload = jwt.verify(token, this.uploadSecret) as UploadTokenPayload;
+      if (payload.iss !== this.jwtIssuer) {
+        return null;
+      }
+      return payload;
+    } catch {
+      return null;
+    }
+  }
 }
 
 export const tokenService = new TokenService({
   jwtSecret: env.token.inviteSecret,
   dashboardUrl: env.dashboard.baseUrl,
   expiresIn: env.token.inviteExpiresIn,
-  domainVerificationSecret: env.token.recordingSecret,
+  domainVerificationSecret: env.token.domainVerificationSecret,
   jwtIssuer: env.auth.jwtIssuer,
   domainVerificationExpiresIn: env.token.domainVerificationExpiresIn,
   accessRequestExpiresIn: env.token.accessRequestExpiresIn,
   workspaceCreateInviteExpiresIn: env.token.workspaceCreateInviteExpiresIn,
+  recordingLinkSecret: env.token.recordingSecret,
+  recordingLinkExpiresIn: env.token.recordingTokenExpiresIn,
+  sessionSecret: env.session.tokenSecret,
+  sessionExpiresIn: env.session.tokenExpiry,
+  uploadSecret: env.session.uploadTokenSecret,
+  uploadExpiresIn: env.session.uploadTokenExpiry,
 });

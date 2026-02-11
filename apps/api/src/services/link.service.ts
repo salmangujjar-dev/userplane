@@ -6,7 +6,6 @@
 import type { CacheService } from '@workspace/cache';
 import type { LinkProviderData } from '@workspace/contract';
 import { linkError } from '@workspace/contract';
-import jwt, { type SignOptions } from 'jsonwebtoken';
 
 import { env } from '@/api/env';
 import { generateLinkId } from '@/api/lib/id';
@@ -18,6 +17,7 @@ import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { EntitlementService } from '@/api/services/entitlement.service';
+import type { TokenService } from '@/api/services/token.service';
 import type {
   LinkFilters,
   LinkItem,
@@ -35,6 +35,7 @@ export interface LinkServiceDeps {
   domainRepo: DomainRepository;
   workspaceRepo: WorkspaceRepository;
   entitlementService: EntitlementService;
+  tokenService: TokenService;
   cacheService: CacheService;
 }
 
@@ -98,7 +99,7 @@ export class LinkService {
 
   /**
    * Generate a JWT-encoded link URL for accessing recordings
-   * Token expires in 180 days
+   * Token expires based on recording link config (default 180 days)
    * Payload contains lid (link ID) for link identification
    * Uses custom domain if verified AND recording features are enabled, otherwise falls back to recorder URL
    * Recording features: hide sensitive fields, capture client logs, capture server logs, capture network logs
@@ -114,14 +115,7 @@ export class LinkService {
     recordingCaptureServerLog?: boolean,
     recordingCaptureNetworkLog?: boolean
   ): string {
-    const payload = {
-      lid: linkId,
-    };
-
-    const options: SignOptions = {
-      expiresIn: env.token.recordingTokenExpiresIn,
-    };
-    const token = jwt.sign(payload, env.token.recordingSecret, options);
+    const token = this.deps.tokenService.signLinkToken(linkId);
 
     // Use custom domain only if:
     // 1. Domain is verified
@@ -149,20 +143,21 @@ export class LinkService {
    * Throws LINK_TOKEN_MISSING_ID, LINK_TOKEN_EXPIRED, or LINK_TOKEN_INVALID if token is invalid or expired
    */
   verifyLinkToken(token: string): string {
+    let decoded: { lid: string };
     try {
-      const decoded = jwt.verify(token, env.token.recordingSecret) as { lid: string };
-      if (!decoded.lid) {
-        throw linkError.LINK_TOKEN_MISSING_ID();
-      }
-      return decoded.lid;
+      decoded = this.deps.tokenService.verifyLinkToken(token);
     } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
+      // Map JWT errors to domain-specific link errors
+      if (error instanceof Error && error.name === 'TokenExpiredError') {
         throw linkError.LINK_TOKEN_EXPIRED();
       }
       // JsonWebTokenError, SyntaxError (malformed/tampered token), or any other error
-      // All indicate an invalid token
       throw linkError.LINK_TOKEN_INVALID();
     }
+    if (!decoded.lid) {
+      throw linkError.LINK_TOKEN_MISSING_ID();
+    }
+    return decoded.lid;
   }
 
   /**

@@ -505,6 +505,30 @@ export class RecordingRepository {
   }
 
   /**
+   * Get the upload status and ownership info for a recording by ID.
+   * Lightweight query with no joins or status filter.
+   */
+  async findRecordingStatusById(recordingId: string): Promise<{
+    recordingId: string;
+    recordingLinkId: string;
+    uploadStatus: Recording['uploadStatus'];
+    isDeleted: boolean;
+  } | null> {
+    const [result] = await this.db
+      .select({
+        recordingId: recordings.recordingId,
+        recordingLinkId: recordings.recordingLinkId,
+        uploadStatus: recordings.uploadStatus,
+        isDeleted: recordings.isDeleted,
+      })
+      .from(recordings)
+      .where(eq(recordings.recordingId, recordingId))
+      .limit(1);
+
+    return result || null;
+  }
+
+  /**
    * Soft delete a recording
    * Marks the recording as deleted without removing it from the database
    */

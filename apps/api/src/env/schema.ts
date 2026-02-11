@@ -94,6 +94,7 @@ export const paymentsEnvSchema = z.object({
 export const tokenEnvSchema = z.object({
   INVITE_TOKEN_SECRET: stringWithDefault(DEV_SECRETS.INVITE),
   INVITE_TOKEN_EXPIRES_IN: integerWithDefault(TOKEN_EXPIRY.INVITE),
+  DOMAIN_VERIFICATION_TOKEN_SECRET: stringWithDefault(DEV_SECRETS.DOMAIN_VERIFICATION),
   DOMAIN_VERIFICATION_TOKEN_EXPIRES_IN: integerWithDefault(TOKEN_EXPIRY.DOMAIN_VERIFICATION),
   ACCESS_REQUEST_TOKEN_EXPIRES_IN: integerWithDefault(TOKEN_EXPIRY.ACCESS_REQUEST),
   WORKSPACE_CREATE_INVITE_TOKEN_EXPIRES_IN: integerWithDefault(
@@ -293,6 +294,7 @@ export const paymentsConfigSchema = z.object({
 export const tokenConfigSchema = z.object({
   inviteSecret: z.string(),
   inviteExpiresIn: z.number(),
+  domainVerificationSecret: z.string(),
   domainVerificationExpiresIn: z.number(),
   accessRequestExpiresIn: z.number(),
   workspaceCreateInviteExpiresIn: z.number(),

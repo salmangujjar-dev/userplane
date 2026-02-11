@@ -142,6 +142,7 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     token: {
       inviteSecret: raw.INVITE_TOKEN_SECRET,
       inviteExpiresIn: raw.INVITE_TOKEN_EXPIRES_IN,
+      domainVerificationSecret: raw.DOMAIN_VERIFICATION_TOKEN_SECRET,
       domainVerificationExpiresIn: raw.DOMAIN_VERIFICATION_TOKEN_EXPIRES_IN,
       accessRequestExpiresIn: raw.ACCESS_REQUEST_TOKEN_EXPIRES_IN,
       workspaceCreateInviteExpiresIn: raw.WORKSPACE_CREATE_INVITE_TOKEN_EXPIRES_IN,
@@ -298,6 +299,11 @@ function validateSecrets(config: EnvConfig): void {
       value: config.session.uploadTokenSecret,
       devValue: DEV_SECRETS.UPLOAD,
       envVar: 'UPLOAD_TOKEN_SECRET',
+    },
+    {
+      value: config.token.domainVerificationSecret,
+      devValue: DEV_SECRETS.DOMAIN_VERIFICATION,
+      envVar: 'DOMAIN_VERIFICATION_TOKEN_SECRET',
     },
     {
       value: config.token.recordingSecret,
