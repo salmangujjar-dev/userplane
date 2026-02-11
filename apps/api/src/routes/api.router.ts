@@ -129,8 +129,7 @@ const billingProcedures = createBillingProcedures(
   billingService,
   workspaceMemberService,
   workspaceService,
-  entitlementService,
-  emailService
+  entitlementService
 );
 const diagnosticsProcedures = createDiagnosticsProcedures(
   cacheService,

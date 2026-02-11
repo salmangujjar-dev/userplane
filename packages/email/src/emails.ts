@@ -9,23 +9,6 @@ import React from 'react';
 import type { EmailVerificationEmailProps, MagicLinkEmailProps } from './emails/auth';
 // Auth emails
 import { EmailVerificationEmail, MagicLinkEmail } from './emails/auth';
-import type {
-  PlanChangeRequestEmailProps,
-  SubscriptionActiveEmailProps,
-  SubscriptionExpiredEmailProps,
-  SubscriptionInactiveEmailProps,
-  SubscriptionPlanChangeEmailProps,
-  SubscriptionReverseTrialEmailProps,
-} from './emails/billing';
-// Billing emails
-import {
-  PlanChangeRequestEmail,
-  SubscriptionActiveEmail,
-  SubscriptionExpiredEmail,
-  SubscriptionInactiveEmail,
-  SubscriptionPlanChangeEmail,
-  SubscriptionReverseTrialEmail,
-} from './emails/billing';
 import type { DomainDeveloperInstructionsEmailProps } from './emails/domain';
 // Domain emails
 import { DomainDeveloperInstructionsEmail } from './emails/domain';
@@ -269,58 +252,6 @@ export async function renderDomainDeveloperInstructions(
 }
 
 // ============================================================================
-// BILLING EMAILS
-// ============================================================================
-
-export async function renderSubscriptionActive(
-  props: SubscriptionActiveEmailProps
-): Promise<RenderResult> {
-  const element = React.createElement(SubscriptionActiveEmail, props);
-  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
-  return { html, text };
-}
-
-export async function renderSubscriptionInactive(
-  props: SubscriptionInactiveEmailProps
-): Promise<RenderResult> {
-  const element = React.createElement(SubscriptionInactiveEmail, props);
-  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
-  return { html, text };
-}
-
-export async function renderSubscriptionPlanChange(
-  props: SubscriptionPlanChangeEmailProps
-): Promise<RenderResult> {
-  const element = React.createElement(SubscriptionPlanChangeEmail, props);
-  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
-  return { html, text };
-}
-
-export async function renderSubscriptionExpired(
-  props: SubscriptionExpiredEmailProps
-): Promise<RenderResult> {
-  const element = React.createElement(SubscriptionExpiredEmail, props);
-  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
-  return { html, text };
-}
-
-export async function renderSubscriptionReverseTrial(
-  props: SubscriptionReverseTrialEmailProps
-): Promise<RenderResult> {
-  const element = React.createElement(SubscriptionReverseTrialEmail, props);
-  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
-  return { html, text };
-}
-
-export async function renderPlanChangeRequest(
-  props: PlanChangeRequestEmailProps
-): Promise<RenderResult> {
-  const element = React.createElement(PlanChangeRequestEmail, props);
-  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
-  return { html, text };
-}
-
-// ============================================================================
 // OFFBOARDING EMAILS
 // ============================================================================
 
@@ -371,7 +302,6 @@ export type {
   // Auth
   EmailVerificationEmailProps,
   MagicLinkEmailProps,
-  PlanChangeRequestEmailProps,
   // Project
   ProjectDeletionScheduledEmailProps,
   ProjectRecoveryConfirmationEmailProps,
@@ -382,11 +312,6 @@ export type {
   RecoveryPartiallyEmailProps,
   // Pilot
   SandboxInviteEmailProps,
-  SubscriptionActiveEmailProps,
-  SubscriptionExpiredEmailProps,
-  SubscriptionInactiveEmailProps,
-  SubscriptionPlanChangeEmailProps,
-  SubscriptionReverseTrialEmailProps,
   // Invite
   TeammateInvitedEmailProps,
   TosViolationEmailProps,

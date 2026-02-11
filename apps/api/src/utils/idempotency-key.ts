@@ -93,48 +93,6 @@ type AccessRequestKeyParams = {
   requestId: string;
 };
 
-type SubscriptionActiveKeyParams = {
-  to: string | string[];
-  planName: string;
-  /** Subscription or event ID to prevent duplicate activation emails */
-  subscriptionId: string;
-};
-
-type SubscriptionExpiredKeyParams = {
-  to: string | string[];
-  planName: string;
-  /** Subscription or event ID */
-  subscriptionId: string;
-};
-
-type SubscriptionInactiveKeyParams = {
-  to: string | string[];
-  planName: string;
-  /** Subscription or event ID */
-  subscriptionId: string;
-};
-
-type SubscriptionPlanChangeKeyParams = {
-  to: string | string[];
-  newPlan: string;
-  previousPlan: string;
-  /** Subscription or event ID */
-  subscriptionId: string;
-};
-
-type PlanChangeRequestKeyParams = {
-  to: string | string[];
-  workspaceId: string;
-  planId: string;
-  requesterEmail: string;
-};
-
-type SubscriptionReverseTrialKeyParams = {
-  to: string | string[];
-  /** Subscription or workspace ID */
-  subscriptionId: string;
-};
-
 type DomainInstructionsKeyParams = {
   domainUrl: string;
   recipients: string[];
@@ -289,71 +247,6 @@ export function accessRequestKey(params: AccessRequestKeyParams): string {
   const recipients = formatRecipients(params.to);
   return ensureKeyLength(
     `access-request/${params.workspaceName}/${params.requesterEmail}/${recipients}/${params.requestId}`
-  );
-}
-
-/**
- * Generate idempotency key for subscription active
- * Uses subscriptionId - one activation email per subscription event
- */
-export function subscriptionActiveKey(params: SubscriptionActiveKeyParams): string {
-  const recipients = formatRecipients(params.to);
-  return ensureKeyLength(
-    `subscription-active/${recipients}/${params.planName}/${params.subscriptionId}`
-  );
-}
-
-/**
- * Generate idempotency key for subscription expired
- * Uses subscriptionId - one expiry email per subscription event
- */
-export function subscriptionExpiredKey(params: SubscriptionExpiredKeyParams): string {
-  const recipients = formatRecipients(params.to);
-  return ensureKeyLength(
-    `subscription-expired/${recipients}/${params.planName}/${params.subscriptionId}`
-  );
-}
-
-/**
- * Generate idempotency key for subscription inactive
- * Uses subscriptionId - one inactive email per subscription event
- */
-export function subscriptionInactiveKey(params: SubscriptionInactiveKeyParams): string {
-  const recipients = formatRecipients(params.to);
-  return ensureKeyLength(
-    `subscription-inactive/${recipients}/${params.planName}/${params.subscriptionId}`
-  );
-}
-
-/**
- * Generate idempotency key for subscription plan change
- * Uses subscriptionId and both plans - one email per plan change
- */
-export function subscriptionPlanChangeKey(params: SubscriptionPlanChangeKeyParams): string {
-  const recipients = formatRecipients(params.to);
-  return ensureKeyLength(
-    `subscription-plan-change/${recipients}/${params.previousPlan}/${params.newPlan}/${params.subscriptionId}`
-  );
-}
-
-/**
- * Generate idempotency key for subscription reverse trial
- * Uses subscriptionId - one trial email per subscription
- */
-export function subscriptionReverseTrialKey(params: SubscriptionReverseTrialKeyParams): string {
-  const recipients = formatRecipients(params.to);
-  return ensureKeyLength(`subscription-reverse-trial/${recipients}/${params.subscriptionId}`);
-}
-
-/**
- * Generate idempotency key for plan change request
- * Uses workspaceId, planId, and requesterEmail - one request per plan per requester
- */
-export function planChangeRequestKey(params: PlanChangeRequestKeyParams): string {
-  const recipients = formatRecipients(params.to);
-  const requesterHash = hashValue(params.requesterEmail);
-  return ensureKeyLength(
-    `plan-change-request/${recipients}/${params.workspaceId}/${params.planId}/${requesterHash}`
   );
 }
 

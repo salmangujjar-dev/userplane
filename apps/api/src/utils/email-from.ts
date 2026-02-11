@@ -14,14 +14,6 @@ export function authFrom(): string {
 }
 
 /**
- * Generate "from" field for billing emails
- * Uses billing inbox for subscription and payment-related communications
- */
-export function billingFrom(): string {
-  return `Userplane <${env.email.inboxes.billing}>`;
-}
-
-/**
  * Generate "from" field for notification emails
  * Uses notification inbox for general system notifications
  */

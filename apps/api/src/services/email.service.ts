@@ -13,7 +13,6 @@ import {
   renderDomainDeveloperInstructions,
   renderEmailVerification,
   renderMagicLink,
-  renderPlanChangeRequest,
   renderProjectDeletionScheduled,
   renderProjectRecoveryConfirmation,
   renderProjectRecoveryPartially,
@@ -21,11 +20,6 @@ import {
   renderRecoveryConfirmation,
   renderRecoveryPartially,
   renderSandboxInvite,
-  renderSubscriptionActive,
-  renderSubscriptionExpired,
-  renderSubscriptionInactive,
-  renderSubscriptionPlanChange,
-  renderSubscriptionReverseTrial,
   renderTeammateInvited,
   renderTosViolation,
   renderWelcomeEmailMember,
@@ -47,17 +41,11 @@ import {
   domainDeveloperInstructionsSubject,
   emailVerificationSubject,
   magicLinkSubject,
-  planChangeRequestSubject,
   projectDeletionScheduledSubject,
   projectRecoveryConfirmationSubject,
   projectRecoveryPartiallySubject,
   recordingReceivedSubject,
   sandboxInviteSubject,
-  subscriptionActiveSubject,
-  subscriptionExpiredSubject,
-  subscriptionInactiveSubject,
-  subscriptionPlanChangeSubject,
-  subscriptionReverseTrialSubject,
   teammateInvitedSubject,
   tosViolationSubject,
   welcomeEmailMemberSubject,
@@ -76,17 +64,11 @@ import type {
   EmailVerificationEmailParams,
   MagicLinkEmailParams,
   PilotSandboxInviteEmailParams,
-  PlanChangeRequestEmailParams,
   ProjectDeletionScheduledEmailParams,
   ProjectRecoveryConfirmationEmailParams,
   ProjectRecoveryPartiallyEmailParams,
   ReceipientEmailParams,
   RecordingReceivedEmailParams,
-  SubscriptionActiveEmailParams,
-  SubscriptionExpiredEmailParams,
-  SubscriptionInactiveEmailParams,
-  SubscriptionPlanChangeEmailParams,
-  SubscriptionReverseTrialEmailParams,
   TeammateInvitedEmailParams,
   WelcomeEmailMemberParams,
   WelcomeEmailPilotParams,
@@ -97,13 +79,7 @@ import type {
   WorkspaceRecoveryConfirmationEmailParams,
   WorkspaceRecoveryPartiallyEmailParams,
 } from '@/api/types';
-import {
-  authFrom,
-  billingFrom,
-  domainFrom,
-  inviteFrom,
-  notificationFrom,
-} from '@/api/utils/email-from';
+import { authFrom, domainFrom, inviteFrom, notificationFrom } from '@/api/utils/email-from';
 import { antiThreadingHeaders } from '@/api/utils/email-headers';
 import { emailUrls } from '@/api/utils/email-urls';
 import {
@@ -115,16 +91,10 @@ import {
   emailVerificationKey,
   magicLinkKey,
   pilotSandboxInviteKey,
-  planChangeRequestKey,
   projectDeletionScheduledKey,
   projectRecoveryConfirmationKey,
   projectRecoveryPartiallyKey,
   recordingReceivedKey,
-  subscriptionActiveKey,
-  subscriptionExpiredKey,
-  subscriptionInactiveKey,
-  subscriptionPlanChangeKey,
-  subscriptionReverseTrialKey,
   teammateInvitedKey,
   tosViolationKey,
   welcomeEmailMemberKey,
@@ -405,444 +375,6 @@ export class EmailService {
   ): Promise<void> {
     await this.executeSafely('sendAccessRequest', { receipientParams, emailContentParams }, () =>
       this.sendAccessRequest(receipientParams, emailContentParams)
-    );
-  }
-
-  // ============================================================================
-  // BILLING EMAILS
-  // ============================================================================
-
-  /**
-   * Send subscription active email
-   * URLs are built internally from workspaceId
-   * @private Use sendSafeSubscriptionActive instead
-   */
-  private async sendSubscriptionActive(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionActiveEmailParams
-  ): Promise<void> {
-    const recipients = Array.isArray(receipientParams.to)
-      ? receipientParams.to
-      : [receipientParams.to];
-    const useBatch = recipients.length > 1;
-
-    const idempotencyKey = subscriptionActiveKey({
-      to: receipientParams.to,
-      planName: emailContentParams.planName,
-      subscriptionId: emailContentParams.workspaceId,
-    });
-
-    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
-    const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
-
-    const { html, text } = await renderSubscriptionActive({
-      planName: emailContentParams.planName,
-      dashboardUrl,
-      billingUrl,
-      logoUrl: this.getLogoUrl(),
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: receipientParams.to,
-        subject: subscriptionActiveSubject(emailContentParams.planName),
-        html,
-        text,
-        batch: useBatch,
-        headers: antiThreadingHeaders(),
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: receipientParams.to,
-        batch: useBatch,
-        count: recipients.length,
-        planName: emailContentParams.planName,
-        workspaceId: emailContentParams.workspaceId,
-        provider: emailClient.getProvider(),
-      },
-      'Subscription active email sent'
-    );
-  }
-
-  /**
-   * Safe version: Send subscription active email
-   * Errors are handled by the configured error handler instead of throwing
-   */
-  async sendSafeSubscriptionActive(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionActiveEmailParams
-  ): Promise<void> {
-    await this.executeSafely(
-      'sendSubscriptionActive',
-      { receipientParams, emailContentParams },
-      () => this.sendSubscriptionActive(receipientParams, emailContentParams)
-    );
-  }
-
-  /**
-   * Send subscription expired email
-   * @private Use sendSafeSubscriptionExpired instead
-   */
-  private async sendSubscriptionExpired(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionExpiredEmailParams
-  ): Promise<void> {
-    const recipients = Array.isArray(receipientParams.to)
-      ? receipientParams.to
-      : [receipientParams.to];
-    const useBatch = recipients.length > 1;
-
-    const idempotencyKey = subscriptionExpiredKey({
-      to: receipientParams.to,
-      planName: emailContentParams.planName,
-      subscriptionId: emailContentParams.renewUrl, // renewUrl contains workspace identifier
-    });
-
-    const { html, text } = await renderSubscriptionExpired({
-      planName: emailContentParams.planName,
-      renewUrl: emailContentParams.renewUrl,
-      logoUrl: this.getLogoUrl(),
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: receipientParams.to,
-        subject: subscriptionExpiredSubject(emailContentParams.planName),
-        html,
-        text,
-        batch: useBatch,
-        headers: antiThreadingHeaders(),
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: receipientParams.to,
-        batch: useBatch,
-        count: recipients.length,
-        planName: emailContentParams.planName,
-        provider: emailClient.getProvider(),
-      },
-      'Subscription expired email sent'
-    );
-  }
-
-  /**
-   * Safe version: Send subscription expired email
-   * Errors are handled by the configured error handler instead of throwing
-   */
-  async sendSafeSubscriptionExpired(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionExpiredEmailParams
-  ): Promise<void> {
-    await this.executeSafely(
-      'sendSubscriptionExpired',
-      { receipientParams, emailContentParams },
-      () => this.sendSubscriptionExpired(receipientParams, emailContentParams)
-    );
-  }
-
-  /**
-   * Send subscription inactive email
-   * @private Use sendSafeSubscriptionInactive instead
-   */
-  private async sendSubscriptionInactive(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionInactiveEmailParams
-  ): Promise<void> {
-    const recipients = Array.isArray(receipientParams.to)
-      ? receipientParams.to
-      : [receipientParams.to];
-    const useBatch = recipients.length > 1;
-
-    const idempotencyKey = subscriptionInactiveKey({
-      to: receipientParams.to,
-      planName: emailContentParams.planName,
-      subscriptionId: emailContentParams.reactivateUrl, // reactivateUrl contains workspace identifier
-    });
-
-    const { html, text } = await renderSubscriptionInactive({
-      planName: emailContentParams.planName,
-      reactivateUrl: emailContentParams.reactivateUrl,
-      logoUrl: this.getLogoUrl(),
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: receipientParams.to,
-        subject: subscriptionInactiveSubject(emailContentParams.planName),
-        html,
-        text,
-        batch: useBatch,
-        headers: antiThreadingHeaders(),
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: receipientParams.to,
-        batch: useBatch,
-        count: recipients.length,
-        planName: emailContentParams.planName,
-        provider: emailClient.getProvider(),
-      },
-      'Subscription inactive email sent'
-    );
-  }
-
-  /**
-   * Safe version: Send subscription inactive email
-   * Errors are handled by the configured error handler instead of throwing
-   */
-  async sendSafeSubscriptionInactive(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionInactiveEmailParams
-  ): Promise<void> {
-    await this.executeSafely(
-      'sendSubscriptionInactive',
-      { receipientParams, emailContentParams },
-      () => this.sendSubscriptionInactive(receipientParams, emailContentParams)
-    );
-  }
-
-  /**
-   * Send subscription plan change email
-   * URLs are built internally from workspaceId
-   * @private Use sendSafeSubscriptionPlanChange instead
-   */
-  private async sendSubscriptionPlanChange(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionPlanChangeEmailParams
-  ): Promise<void> {
-    const recipients = Array.isArray(receipientParams.to)
-      ? receipientParams.to
-      : [receipientParams.to];
-    const useBatch = recipients.length > 1;
-
-    const idempotencyKey = subscriptionPlanChangeKey({
-      to: receipientParams.to,
-      newPlan: emailContentParams.newPlan,
-      previousPlan: emailContentParams.previousPlan,
-      subscriptionId: emailContentParams.workspaceId,
-    });
-
-    const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
-
-    const { html, text } = await renderSubscriptionPlanChange({
-      previousPlan: emailContentParams.previousPlan,
-      newPlan: emailContentParams.newPlan,
-      effectiveDate: emailContentParams.effectiveDate,
-      billingUrl,
-      logoUrl: this.getLogoUrl(),
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: receipientParams.to,
-        subject: subscriptionPlanChangeSubject(emailContentParams.newPlan),
-        html,
-        text,
-        batch: useBatch,
-        headers: antiThreadingHeaders(),
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: receipientParams.to,
-        batch: useBatch,
-        count: recipients.length,
-        previousPlan: emailContentParams.previousPlan,
-        newPlan: emailContentParams.newPlan,
-        workspaceId: emailContentParams.workspaceId,
-        provider: emailClient.getProvider(),
-      },
-      'Subscription plan change email sent'
-    );
-  }
-
-  /**
-   * Safe version: Send subscription plan change email
-   * Errors are handled by the configured error handler instead of throwing
-   */
-  async sendSafeSubscriptionPlanChange(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionPlanChangeEmailParams
-  ): Promise<void> {
-    await this.executeSafely(
-      'sendSubscriptionPlanChange',
-      { receipientParams, emailContentParams },
-      () => this.sendSubscriptionPlanChange(receipientParams, emailContentParams)
-    );
-  }
-
-  /**
-   * Send subscription reverse trial email
-   * URLs are built internally from workspaceId
-   * @private Use sendSafeSubscriptionReverseTrial instead
-   */
-  private async sendSubscriptionReverseTrial(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionReverseTrialEmailParams
-  ): Promise<void> {
-    const recipients = Array.isArray(receipientParams.to)
-      ? receipientParams.to
-      : [receipientParams.to];
-    const useBatch = recipients.length > 1;
-
-    const idempotencyKey = subscriptionReverseTrialKey({
-      to: receipientParams.to,
-      subscriptionId: emailContentParams.workspaceId,
-    });
-
-    const dashboardUrl = emailUrls.workspace.dashboard(emailContentParams.workspaceId);
-
-    const { html, text } = await renderSubscriptionReverseTrial({
-      planName: emailContentParams.planName,
-      trialDays: emailContentParams.trialDays,
-      dashboardUrl,
-      logoUrl: this.getLogoUrl(),
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: receipientParams.to,
-        subject: subscriptionReverseTrialSubject(emailContentParams.planName),
-        html,
-        text,
-        batch: useBatch,
-        headers: antiThreadingHeaders(),
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: receipientParams.to,
-        batch: useBatch,
-        count: recipients.length,
-        planName: emailContentParams.planName,
-        trialDays: emailContentParams.trialDays,
-        workspaceId: emailContentParams.workspaceId,
-        provider: emailClient.getProvider(),
-      },
-      'Subscription reverse trial email sent'
-    );
-  }
-
-  /**
-   * Safe version: Send subscription reverse trial email
-   * Errors are handled by the configured error handler instead of throwing
-   */
-  async sendSafeSubscriptionReverseTrial(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: SubscriptionReverseTrialEmailParams
-  ): Promise<void> {
-    await this.executeSafely(
-      'sendSubscriptionReverseTrial',
-      { receipientParams, emailContentParams },
-      () => this.sendSubscriptionReverseTrial(receipientParams, emailContentParams)
-    );
-  }
-
-  /**
-   * Send plan change request email to workspace owners
-   * Sent when a team member requests a plan upgrade/downgrade
-   * @private Use sendSafePlanChangeRequest instead
-   */
-  private async sendPlanChangeRequest(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: PlanChangeRequestEmailParams
-  ): Promise<void> {
-    const recipients = Array.isArray(receipientParams.to)
-      ? receipientParams.to
-      : [receipientParams.to];
-    const useBatch = recipients.length > 1;
-
-    const idempotencyKey = planChangeRequestKey({
-      to: receipientParams.to,
-      workspaceId: emailContentParams.workspaceId,
-      planId: emailContentParams.planId,
-      requesterEmail: emailContentParams.requesterEmail,
-    });
-
-    const billingUrl = emailUrls.settings.billing(emailContentParams.workspaceId);
-
-    const { html, text } = await renderPlanChangeRequest({
-      workspaceName: emailContentParams.workspaceName,
-      requesterName: emailContentParams.requesterName,
-      requesterEmail: emailContentParams.requesterEmail,
-      planName: emailContentParams.planName,
-      billingUrl,
-      customMessage: emailContentParams.customMessage,
-      logoUrl: this.getLogoUrl(),
-    });
-
-    await emailClient.send(
-      {
-        from: billingFrom(),
-        to: receipientParams.to,
-        subject: planChangeRequestSubject(
-          emailContentParams.requesterName,
-          emailContentParams.planName
-        ),
-        html,
-        text,
-        batch: useBatch,
-        headers: antiThreadingHeaders(),
-      },
-      {
-        idempotencyKey,
-      }
-    );
-
-    logger.info(
-      {
-        to: receipientParams.to,
-        batch: useBatch,
-        count: recipients.length,
-        workspaceId: emailContentParams.workspaceId,
-        planId: emailContentParams.planId,
-        requesterEmail: emailContentParams.requesterEmail,
-        provider: emailClient.getProvider(),
-      },
-      'Plan change request email sent'
-    );
-  }
-
-  /**
-   * Safe version: Send plan change request email to workspace owners
-   * Errors are handled by the configured error handler instead of throwing
-   */
-  async sendSafePlanChangeRequest(
-    receipientParams: ReceipientEmailParams,
-    emailContentParams: PlanChangeRequestEmailParams
-  ): Promise<void> {
-    await this.executeSafely(
-      'sendPlanChangeRequest',
-      { receipientParams, emailContentParams },
-      () => this.sendPlanChangeRequest(receipientParams, emailContentParams)
     );
   }
 

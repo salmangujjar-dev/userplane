@@ -327,7 +327,6 @@ export const RequestPlanChangeSchema = z.object({
   }),
   body: z.object({
     planId: z.enum(PLAN_IDS),
-    message: z.string().max(500).optional(),
   }),
 });
 
@@ -361,7 +360,6 @@ export const ManagePlanSchema = z.object({
   body: z.object({
     planId: z.enum(PLAN_IDS),
     action: z.enum(['preview', 'execute']).optional(),
-    message: z.string().max(500).optional(),
   }),
 });
 

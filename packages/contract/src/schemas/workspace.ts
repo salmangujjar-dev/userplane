@@ -89,7 +89,6 @@ export const HexColorSchema = z
  */
 export const WorkspaceNotificationPreferencesSchema = z.object({
   notifyFeatureHighlights: z.boolean(),
-  notifyBillingEvents: z.boolean(),
   notifyUsageEvents: z.boolean(),
   notifyIncomingEvents: z.boolean(),
   notifyAdminEvents: z.boolean(),
@@ -133,18 +132,6 @@ export const NOTIFICATION_FIELDS: readonly NotificationFieldMetadata[] = [
       owner: true,
       admin: true,
       member: true,
-    },
-  },
-  {
-    key: 'notifyBillingEvents',
-    id: 'billing-events',
-    label: 'Billing updates',
-    description: 'Receive notifications about billing and subscription changes',
-    visibleForRoles: ['owner'],
-    defaultForRoles: {
-      owner: true,
-      admin: false,
-      member: false,
     },
   },
   {
@@ -525,7 +512,6 @@ export const UpdateNotificationPreferencesSchema = z.object({
   }),
   body: z.object({
     notifyFeatureHighlights: z.boolean().optional(),
-    notifyBillingEvents: z.boolean().optional(),
     notifyUsageEvents: z.boolean().optional(),
     notifyIncomingEvents: z.boolean().optional(),
     notifyAdminEvents: z.boolean().optional(),

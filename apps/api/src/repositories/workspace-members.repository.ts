@@ -405,7 +405,6 @@ export class WorkspaceMemberRepository {
     memberId: string,
     preferences: Partial<{
       notifyFeatureHighlights: boolean;
-      notifyBillingEvents: boolean;
       notifyUsageEvents: boolean;
       notifyIncomingEvents: boolean;
       notifyAdminEvents: boolean;

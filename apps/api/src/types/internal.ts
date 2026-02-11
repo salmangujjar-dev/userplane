@@ -32,7 +32,6 @@ import type {
   DeletionScheduledEmailProps,
   EmailVerificationEmailProps,
   MagicLinkEmailProps,
-  PlanChangeRequestEmailProps,
   ProjectDeletionScheduledEmailProps,
   ProjectRecoveryConfirmationEmailProps,
   ProjectRecoveryPartiallyEmailProps,
@@ -40,11 +39,6 @@ import type {
   RecoveryConfirmationEmailProps,
   RecoveryPartiallyEmailProps,
   SandboxInviteEmailProps,
-  SubscriptionActiveEmailProps,
-  SubscriptionExpiredEmailProps,
-  SubscriptionInactiveEmailProps,
-  SubscriptionPlanChangeEmailProps,
-  SubscriptionReverseTrialEmailProps,
   TeammateInvitedEmailProps,
   WelcomeEmailMemberProps,
   WelcomeEmailPilotProps,
@@ -224,16 +218,6 @@ export interface ScheduledEmailParams {
 export type AccessRequestEmailParams = AccessRequestEmailProps;
 
 /**
- * Plan change request email parameters
- * Sent to workspace owners when a team member requests a plan upgrade/downgrade
- * Extends email props with workspaceId and planId for idempotency key and billing URL generation
- */
-export interface PlanChangeRequestEmailParams extends PlanChangeRequestEmailProps {
-  workspaceId: string;
-  planId: string;
-}
-
-/**
  * Domain developer instructions email parameters
  * Service accepts workspaceId, domainUrl, verificationToken, and optional userName
  * Builds verificationUrl internally
@@ -254,49 +238,6 @@ export type EmailVerificationEmailParams = EmailVerificationEmailProps;
  * Magic link email parameters
  */
 export type MagicLinkEmailParams = MagicLinkEmailProps;
-
-/**
- * Subscription active email parameters
- * Service accepts workspaceId and builds URLs internally
- */
-export type SubscriptionActiveEmailParams = Omit<
-  SubscriptionActiveEmailProps,
-  'dashboardUrl' | 'billingUrl'
-> & {
-  workspaceId: string;
-};
-
-/**
- * Subscription expired email parameters
- */
-export type SubscriptionExpiredEmailParams = SubscriptionExpiredEmailProps;
-
-/**
- * Subscription inactive email parameters
- */
-export type SubscriptionInactiveEmailParams = SubscriptionInactiveEmailProps;
-
-/**
- * Subscription plan change email parameters
- * Service accepts workspaceId and builds URLs internally
- */
-export type SubscriptionPlanChangeEmailParams = Omit<
-  SubscriptionPlanChangeEmailProps,
-  'billingUrl'
-> & {
-  workspaceId: string;
-};
-
-/**
- * Subscription reverse trial email parameters
- * Service accepts workspaceId and builds URLs internally
- */
-export type SubscriptionReverseTrialEmailParams = Omit<
-  SubscriptionReverseTrialEmailProps,
-  'dashboardUrl'
-> & {
-  workspaceId: string;
-};
 
 /**
  * Teammate invited email parameters
