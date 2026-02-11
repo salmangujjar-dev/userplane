@@ -188,16 +188,20 @@ export const completeUploadImpl = (
       input.body.recording_id
     );
 
-    try {
-      await sendRecordingNotifications(result.recordingId, {
-        recordingRepo,
-        workspaceMemberRepo,
-        notificationService,
-        intercomNotificationService,
-      });
-    } catch (error) {
-      sessionLogger.error({ err: error }, 'Error sending recording notifications');
-      Sentry.captureException(error);
+    // Only send notifications on the first successful transition to available,
+    // not on idempotent replays, to avoid duplicate emails and provider messages
+    if (result.created) {
+      try {
+        await sendRecordingNotifications(result.recordingId, {
+          recordingRepo,
+          workspaceMemberRepo,
+          notificationService,
+          intercomNotificationService,
+        });
+      } catch (error) {
+        sessionLogger.error({ err: error }, 'Error sending recording notifications');
+        Sentry.captureException(error);
+      }
     }
 
     return {
