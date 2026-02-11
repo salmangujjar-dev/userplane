@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@/constants';
 import { useJoinWorkspace, useWorkspaceSuggestions } from '@/features/workspace';
@@ -187,12 +187,6 @@ function WorkspaceSuggestPageContent() {
 
   // Show success state when access has been requested
   if (requestedWorkspace) {
-    const avatarNames = [
-      `${requestedWorkspace.workspaceName}-member-1`,
-      `${requestedWorkspace.workspaceName}-member-2`,
-      `${requestedWorkspace.workspaceName}-member-3`,
-    ];
-
     return (
       <WorkspaceSuggestLayout>
         <div className="flex flex-col items-center gap-3">
@@ -205,9 +199,9 @@ function WorkspaceSuggestPageContent() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex -space-x-2 shrink-0 cursor-default">
-                  {avatarNames.map((name, index) => (
-                    <div key={index} className="rounded-full border-2 border-card overflow-hidden">
-                      <BoringAvatar name={name} size={28} />
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <div key={i} className="rounded-full border-2 border-card overflow-hidden">
+                      <BoringAvatar size={AVATAR_SIZES.GROUP} />
                     </div>
                   ))}
                 </div>
@@ -244,11 +238,6 @@ function WorkspaceSuggestPageContent() {
         <div className="space-y-4">
           {suggestionsData.data.workspaces.map((workspace) => {
             const isSelected = selectedWorkspaceId === workspace.workspaceId;
-            const avatarNames = [
-              `${workspace.workspaceName}-member-1`,
-              `${workspace.workspaceName}-member-2`,
-              `${workspace.workspaceName}-member-3`,
-            ];
             const PolicyIcon = workspace.workspaceInvitePolicy === 'protected' ? Shield : Globe;
             const policyLabel =
               workspace.workspaceInvitePolicy === 'protected'
@@ -274,12 +263,12 @@ function WorkspaceSuggestPageContent() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex -space-x-2 shrink-0 cursor-pointer">
-                        {avatarNames.map((name, index) => (
+                        {Array.from({ length: 3 }, (_, i) => (
                           <div
-                            key={index}
+                            key={i}
                             className="rounded-full border-2 border-card overflow-hidden"
                           >
-                            <BoringAvatar name={name} size={24} />
+                            <BoringAvatar size={AVATAR_SIZES.INLINE} />
                           </div>
                         ))}
                       </div>

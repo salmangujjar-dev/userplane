@@ -31,7 +31,7 @@ import {
   XCircle,
 } from 'lucide-react';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { AdminUserDetail, AdminUserSession, AdminUserWorkspace } from '@/types';
 
@@ -141,7 +141,7 @@ export function UserDetailSheet({
       <div className="flex flex-col h-full">
         <SheetHeader className="px-6 py-4">
           <div className="flex items-center gap-3">
-            <BoringAvatar size={32} name={user.email} />
+            <BoringAvatar size={AVATAR_SIZES.USER} name={user.name} email={user.email} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <SheetTitle className="text-base">{user.name || 'No name'}</SheetTitle>

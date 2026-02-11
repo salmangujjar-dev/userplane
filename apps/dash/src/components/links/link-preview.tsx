@@ -26,7 +26,7 @@ import { useState } from 'react';
 
 import { EditLinkModal } from '@/components/modals/edit-link-modal';
 import { ShareLinkModal } from '@/components/modals/share-link-modal';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { logger } from '@/logger';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -189,7 +189,7 @@ export function LinkPreview({
               </Tooltip>
             </div>
             <div className="flex items-center gap-2">
-              <BoringAvatar name={createdBy} size={20} />
+              <BoringAvatar name={createdBy} size={AVATAR_SIZES.TAG} />
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>Created by {createdBy}</span>
                 <span>•</span>

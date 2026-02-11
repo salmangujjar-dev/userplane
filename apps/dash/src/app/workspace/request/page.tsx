@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import {
   useApproveAccessRequest,
   useDeclineAccessRequest,
@@ -104,8 +104,9 @@ function AccessRequestPageContent() {
           <div className="flex items-center justify-between gap-8 p-6 rounded-xl border bg-card">
             <div className="flex items-center gap-3 min-w-0">
               <BoringAvatar
-                name={requestInfo?.requesterName || requestInfo?.requesterEmail || 'User'}
-                size={40}
+                name={requestInfo?.requesterName}
+                email={requestInfo?.requesterEmail}
+                size={AVATAR_SIZES.USER}
               />
               <div className="flex flex-col min-w-0">
                 <span className="text-sm font-medium text-foreground truncate">
@@ -248,8 +249,9 @@ function AccessRequestPageContent() {
         <div className="flex items-center justify-between gap-8 p-6 rounded-xl border bg-card">
           <div className="flex items-center gap-3 min-w-0">
             <BoringAvatar
-              name={requestInfo.requesterName || requestInfo.requesterEmail}
-              size={40}
+              name={requestInfo.requesterName}
+              email={requestInfo.requesterEmail}
+              size={AVATAR_SIZES.USER}
             />
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-medium text-foreground truncate">

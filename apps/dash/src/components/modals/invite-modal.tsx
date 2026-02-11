@@ -23,7 +23,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import validator from 'validator';
 import { z } from 'zod';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SUPPORT_LINKS } from '@/constants';
 import {
   useIntercomSuggestions,
@@ -69,7 +69,7 @@ function EmailTag({ email, isValid, onRemove }: EmailTagProps) {
       }`}
     >
       {isValid ? (
-        <BoringAvatar size={20} name={email} />
+        <BoringAvatar size={AVATAR_SIZES.TAG} email={email} />
       ) : (
         <AlertCircle className="h-4 w-4 text-destructive" />
       )}
@@ -207,7 +207,7 @@ function SuggestionsPills({
             onClick={() => onSelect(s.email)}
             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            <BoringAvatar size={16} name={s.email} />
+            <BoringAvatar size={AVATAR_SIZES.COMPACT} name={s.name} email={s.email} />
             <span className="truncate max-w-[120px]">{s.name || s.email}</span>
           </button>
         ))}
@@ -217,9 +217,9 @@ function SuggestionsPills({
             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <div className="flex -space-x-1.5">
-              <BoringAvatar size={16} name="more-1" />
-              <BoringAvatar size={16} name="more-2" />
-              <BoringAvatar size={16} name="more-3" />
+              {Array.from({ length: 3 }, (_, i) => (
+                <BoringAvatar key={i} size={AVATAR_SIZES.COMPACT} />
+              ))}
             </div>
             <span>More</span>
           </a>

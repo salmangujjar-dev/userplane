@@ -20,7 +20,7 @@ import {
   UserCog,
 } from 'lucide-react';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { usePermissions } from '@/hooks/use-permissions';
 
 interface UserCardProps {
@@ -76,7 +76,7 @@ export function UserCard({
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <BoringAvatar name={email} size={32} />
+            <BoringAvatar name={displayName} email={email} size={AVATAR_SIZES.USER} />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-medium truncate">{displayName}</h3>

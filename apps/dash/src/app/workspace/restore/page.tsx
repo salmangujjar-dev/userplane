@@ -11,7 +11,7 @@ import { useQueryState } from 'nuqs';
 import { Suspense, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { useProjectRestoreInfo, useRestoreProject } from '@/features/projects';
 import { useRestoreWorkspace, useWorkspaceRestoreInfo } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
@@ -113,7 +113,6 @@ function SuccessState({
         {restoreType === 'project' && restoredProjectData && (
           <ProjectCard
             projectName={restoredProjectData.projectName}
-            workspaceId={restoredProjectData.workspaceId}
             linksRestored={restoredProjectData.restoredLinks}
             recordingsRestored={restoredProjectData.restoredRecordings}
           />
@@ -307,7 +306,6 @@ function ConfirmationState({
         {restoreType === 'project' && projectInfo && (
           <ProjectCard
             projectName={projectInfo.projectName}
-            workspaceId={projectInfo.workspaceId}
             linksRestored={projectInfo.linksToRestore}
             recordingsRestored={projectInfo.recordingsToRestore}
           />
@@ -557,12 +555,6 @@ function WorkspaceCard({
   membersRestored: number;
   recordingsRestored: number;
 }) {
-  const avatarNames = [
-    `${workspaceName}-member-1`,
-    `${workspaceName}-member-2`,
-    `${workspaceName}-member-3`,
-  ];
-
   return (
     <div className="w-full p-4 rounded-xl border bg-card">
       <div className="flex items-center gap-4">
@@ -570,9 +562,9 @@ function WorkspaceCard({
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex -space-x-2 shrink-0 cursor-default">
-                {avatarNames.map((name, index) => (
-                  <div key={index} className="rounded-full border-2 border-card overflow-hidden">
-                    <BoringAvatar name={name} size={28} />
+                {Array.from({ length: 3 }, (_, i) => (
+                  <div key={i} className="rounded-full border-2 border-card overflow-hidden">
+                    <BoringAvatar size={AVATAR_SIZES.GROUP} />
                   </div>
                 ))}
               </div>
@@ -648,23 +640,19 @@ function WorkspaceCard({
  */
 function ProjectCard({
   projectName,
-  workspaceId,
   linksRestored,
   recordingsRestored,
 }: {
   projectName: string;
-  workspaceId: string;
   linksRestored: number;
   recordingsRestored: number;
 }) {
-  const avatarName = `${workspaceId}-${projectName}`;
-
   return (
     <div className="w-full p-4 rounded-xl border bg-card">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="rounded-full border-2 border-card overflow-hidden shrink-0">
-            <BoringAvatar name={avatarName} size={28} />
+            <BoringAvatar name={projectName} size={AVATAR_SIZES.GROUP} />
           </div>
           <span className="text-sm font-medium text-foreground truncate">{projectName}</span>
         </div>

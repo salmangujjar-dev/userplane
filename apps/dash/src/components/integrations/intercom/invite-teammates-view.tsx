@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { PaginationControls } from '@/components/shared/pagination-controls';
 import { useAccount } from '@/features/account';
 import { useCreateDomain, useUpdateDomain } from '@/features/domains';
@@ -439,7 +439,11 @@ export function InviteTeammatesView({
                       }
                       disabled={teammate.isCurrentUser}
                     />
-                    <BoringAvatar name={teammate.email} size={28} />
+                    <BoringAvatar
+                      name={teammate.name}
+                      email={teammate.email}
+                      size={AVATAR_SIZES.GROUP}
+                    />
                     <div className="flex flex-col min-w-0 flex-1">
                       {teammate.name ? (
                         <>
