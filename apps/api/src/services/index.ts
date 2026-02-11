@@ -148,6 +148,7 @@ export const linkService = new LinkService({
   domainRepo,
   workspaceRepo,
   entitlementService,
+  tokenService,
   cacheService,
 });
 
@@ -230,6 +231,7 @@ export const sessionService = new SessionService({
   networkLogsStorage: getNetworkLogsStorage(),
   clientActionsStorage: getClientActionsStorage(),
   linkService,
+  tokenService,
   entitlementService,
   cacheService,
 });

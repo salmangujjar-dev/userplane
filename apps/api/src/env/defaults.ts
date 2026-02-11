@@ -50,6 +50,7 @@ export const DEV_SECRETS = {
   SESSION: 'dev-session-secret-change-in-production',
   UPLOAD: 'dev-upload-secret-change-in-production',
   RECORDER: 'dev-recorder-secret-change-in-production',
+  DOMAIN_VERIFICATION: 'dev-domain-verification-secret-change-in-production',
 } as const;
 
 // =============================================================================
@@ -230,5 +231,6 @@ export function getDevSecretNames(): Record<string, string> {
     [DEV_SECRETS.SESSION]: 'SESSION_TOKEN_SECRET',
     [DEV_SECRETS.UPLOAD]: 'UPLOAD_TOKEN_SECRET',
     [DEV_SECRETS.RECORDER]: 'RECORDER_TOKEN_SECRET',
+    [DEV_SECRETS.DOMAIN_VERIFICATION]: 'DOMAIN_VERIFICATION_TOKEN_SECRET',
   };
 }

@@ -28,9 +28,7 @@ import type {
   ThumbnailsStorageClient,
   VideoStorageClient,
 } from '@workspace/storage';
-import jwt from 'jsonwebtoken';
 
-import { env } from '@/api/env';
 import { inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
@@ -54,6 +52,7 @@ import {
 } from '@/api/schema/session.schema';
 import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { LinkService } from '@/api/services/link.service';
+import type { TokenService } from '@/api/services/token.service';
 import type {
   PresignedUrlInfo,
   SessionPreferences,
@@ -79,6 +78,7 @@ export interface SessionServiceDeps {
   networkLogsStorage: NetworkLogsStorageClient;
   clientActionsStorage: ClientActionsStorageClient;
   linkService: LinkService;
+  tokenService: TokenService;
   entitlementService: EntitlementService;
   cacheService: CacheService;
 }
@@ -112,11 +112,13 @@ export interface UploadInitResult {
 
 /**
  * Result of marking upload as available
+ * created: true on first successful transition to available, false on idempotent replay
  */
 export interface UploadCompleteResult {
   success: boolean;
   recordingId: string;
   status: 'available';
+  created: boolean;
 }
 
 /**
@@ -130,15 +132,7 @@ interface FileUploadInfo {
 }
 
 export class SessionService {
-  private sessionSecret: string;
-  private uploadSecret: string;
-  private jwtIssuer: string;
-
-  constructor(private deps: SessionServiceDeps) {
-    this.sessionSecret = env.session.tokenSecret;
-    this.uploadSecret = env.session.uploadTokenSecret;
-    this.jwtIssuer = env.auth.jwtIssuer;
-  }
+  constructor(private deps: SessionServiceDeps) {}
 
   /**
    * Fetch link with workspace preferences using TRUE cache-first pattern
@@ -327,19 +321,13 @@ export class SessionService {
     // Generate session ID for tracking
     const sessionId = generateSessionId();
 
-    // Build session token payload
-    const payload: Omit<SessionTokenPayload, 'iat' | 'exp'> = {
-      iss: this.jwtIssuer,
+    // Build session token payload and sign via TokenService
+    const sessionToken = this.deps.tokenService.signSessionToken({
       lid: linkData.linkId,
       lt: linkData.linkType,
       wid: linkData.workspaceId,
       sid: sessionId,
       prefs: this.buildSessionPreferences(linkData, featureGates),
-    };
-
-    // Sign token with session secret
-    const sessionToken = jwt.sign(payload, this.sessionSecret, {
-      expiresIn: SESSION_CONSTRAINTS.SESSION_TOKEN_EXPIRY,
     });
 
     return {
@@ -544,11 +532,36 @@ export class SessionService {
     const recording =
       await this.deps.recordingRepo.findPendingRecordingByIdWithFilePaths(recordingId);
     if (!recording) {
-      // Check if soft deleted
-      const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
-      if (isSoftDeleted === true) {
+      // Recording not in 'pending' state — determine why
+      const recordingStatus = await this.deps.recordingRepo.findRecordingStatusById(recordingId);
+
+      if (!recordingStatus) {
+        throw sessionError.SESSION_RECORDING_NOT_FOUND();
+      }
+
+      if (recordingStatus.isDeleted) {
         throw sessionError.SESSION_RECORDING_GONE();
       }
+
+      // Already available AND belongs to same link → idempotent success
+      if (
+        recordingStatus.uploadStatus === 'available' &&
+        recordingStatus.recordingLinkId === uploadPayload.lid
+      ) {
+        // Skip consumeRecordings and notifications — already handled on first call
+        return {
+          success: true,
+          recordingId: recordingStatus.recordingId,
+          status: 'available',
+          created: false,
+        };
+      }
+
+      if (recordingStatus.recordingLinkId !== uploadPayload.lid) {
+        throw sessionError.SESSION_UPLOAD_TOKEN_MISMATCH();
+      }
+
+      // Terminal states (expired, purged)
       throw sessionError.SESSION_RECORDING_NOT_FOUND();
     }
 
@@ -580,6 +593,7 @@ export class SessionService {
       success: true,
       recordingId: recording.recordingId,
       status: 'available',
+      created: true,
     };
   }
 
@@ -634,50 +648,30 @@ export class SessionService {
 
   /**
    * Verify session token signature and expiry
+   * Delegates to TokenService which also verifies the issuer claim
    */
   private verifySessionToken(token: string): SessionTokenPayload | null {
-    try {
-      const payload = jwt.verify(token, this.sessionSecret) as SessionTokenPayload;
-      // Verify issuer
-      if (payload.iss !== this.jwtIssuer) {
-        return null;
-      }
-      return payload;
-    } catch {
-      return null;
-    }
+    return this.deps.tokenService.verifySessionToken(token);
   }
 
   /**
    * Generate upload token for a recording
+   * Delegates to TokenService which adds the issuer claim
    */
   private generateUploadToken(recordingId: string, linkId: string, linkType: string): string {
-    const payload: Omit<UploadTokenPayload, 'iat' | 'exp'> = {
-      iss: this.jwtIssuer,
+    return this.deps.tokenService.signUploadToken({
       rid: recordingId,
       lid: linkId,
       lt: linkType as UploadTokenPayload['lt'],
-    };
-
-    return jwt.sign(payload, this.uploadSecret, {
-      expiresIn: SESSION_CONSTRAINTS.UPLOAD_TOKEN_EXPIRY,
     });
   }
 
   /**
    * Verify upload token signature and expiry
+   * Delegates to TokenService which also verifies the issuer claim
    */
   private verifyUploadToken(token: string): UploadTokenPayload | null {
-    try {
-      const payload = jwt.verify(token, this.uploadSecret) as UploadTokenPayload;
-      // Verify issuer
-      if (payload.iss !== this.jwtIssuer) {
-        return null;
-      }
-      return payload;
-    } catch {
-      return null;
-    }
+    return this.deps.tokenService.verifyUploadToken(token);
   }
 
   /**
