@@ -4,11 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import Link from 'next/link';
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { DeleteAccountModal } from '@/components/modals/delete-account-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { AccountSettingsSectionSkeleton } from '@/components/skeleton';
 import { useAccount, useUpdateAccountName } from '@/features/account';
@@ -19,6 +20,8 @@ const accountNameFormSchema = z.object({
 });
 
 export function AccountSettingsSection() {
+  const router = useRouter();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { data: accountResult, isLoading, error, refetch } = useAccount();
 
   const accountData = accountResult?.success ? accountResult.data : null;
@@ -128,10 +131,17 @@ export function AccountSettingsSection() {
               Permanently delete your account and all associated data
             </p>
           </div>
-          <Link href="/accounts/delete/request">
-            <Button variant="secondary">Delete Account</Button>
-          </Link>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(true)}>
+            Delete Account
+          </Button>
         </div>
+
+        <DeleteAccountModal
+          open={showDeleteModal}
+          onOpenChange={setShowDeleteModal}
+          email={email}
+          onConfirm={() => router.push('/accounts/delete/request')}
+        />
       </div>
     </div>
   );

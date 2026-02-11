@@ -165,6 +165,7 @@ export default function RecordingsPage() {
                 isSearching={isSearchingLinks}
                 placeholder="Search links..."
                 icon={Link2}
+                showTooltip
               />
             </div>
           </div>
