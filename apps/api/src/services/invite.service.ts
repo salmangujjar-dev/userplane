@@ -5,9 +5,11 @@
 
 import { domainError, inviteError, workspaceError } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
+import { getEmailDomain } from '@workspace/shared';
 
 import { createLogger } from '@/api/lib/logger';
 import { EmailService } from '@/api/services/email.service';
+import { NotificationService } from '@/api/services/notification.service';
 import { TokenService } from '@/api/services/token.service';
 import { UserService } from '@/api/services/user.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
@@ -34,6 +36,7 @@ export interface InviteServiceDeps {
   workspaceService: WorkspaceService;
   userService: UserService;
   emailService: EmailService;
+  notificationService: NotificationService;
   tokenService: TokenService;
   db: DbClient;
 }
@@ -322,10 +325,7 @@ export class InviteService {
     }
 
     // Extract user's email domain
-    const userDomain = userEmail.split('@')[1]?.toLowerCase();
-    if (!userDomain) {
-      throw workspaceError.WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH();
-    }
+    const userDomain = getEmailDomain(userEmail);
 
     // Check if user's domain matches workspace invite domains
     const allowedDomains = workspace.workspaceInviteDomains || [];
@@ -384,7 +384,8 @@ export class InviteService {
             userEmail
           );
 
-          return this.deps.emailService.sendSafeAccessRequest(
+          return this.deps.notificationService.sendSafeAccessRequest(
+            workspaceId,
             { to: owner.email },
             {
               workspaceName: workspace.workspaceName,

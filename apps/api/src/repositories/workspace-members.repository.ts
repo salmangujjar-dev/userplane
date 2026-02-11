@@ -4,7 +4,8 @@
  */
 
 import type { DbClient, WorkspaceRole } from '@workspace/db';
-import { and, asc, count, eq, gte, ilike, sql } from '@workspace/db';
+import type { WorkspaceNotificationPreferences } from '@workspace/contract';
+import { and, asc, count, eq, gte, ilike, inArray, sql } from '@workspace/db';
 import { user, workspaceMembers } from '@workspace/db';
 
 import type { CreateWorkspaceMemberInput, Transaction } from '@/api/types';
@@ -13,7 +14,9 @@ export class WorkspaceMemberRepository {
   constructor(private db: DbClient) {}
 
   /**
-   * Create a new workspace member
+   * Create a new workspace member.
+   * If notificationDefaults are provided, they override DB column defaults
+   * so that role-specific preferences (e.g. owner always on for admin events) are set correctly.
    */
   async create(data: CreateWorkspaceMemberInput, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
@@ -26,6 +29,7 @@ export class WorkspaceMemberRepository {
         workspaceId: data.workspaceId,
         workspaceRole: data.workspaceRole,
         isDeleted: false,
+        ...data.notificationDefaults,
       })
       .returning();
 
@@ -67,14 +71,23 @@ export class WorkspaceMemberRepository {
   }
 
   /**
-   * Update member role
+   * Update member role, optionally setting notification preference overrides atomically.
+   * notificationOverrides are used to force correct values for the new role
+   * (e.g. owners always have notifyAdminEvents and notifyUsageEvents enabled).
    */
-  async updateRole(memberId: string, newRole: WorkspaceRole, options?: { tx?: Transaction }) {
+  async updateRole(
+    memberId: string,
+    newRole: WorkspaceRole,
+    options?: {
+      tx?: Transaction;
+      notificationOverrides?: Partial<WorkspaceNotificationPreferences>;
+    }
+  ) {
     const dbClient = options?.tx || this.db;
 
     const [updated] = await dbClient
       .update(workspaceMembers)
-      .set({ workspaceRole: newRole })
+      .set({ workspaceRole: newRole, ...options?.notificationOverrides })
       .where(
         and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, false))
       )
@@ -250,10 +263,18 @@ export class WorkspaceMemberRepository {
   }
 
   /**
-   * Restore a soft-deleted workspace member
-   * Resets isDeleted to false and clears deletedAt
+   * Restore a soft-deleted workspace member.
+   * Resets isDeleted to false, clears deletedAt, and applies role-appropriate
+   * notification defaults so stale preferences from the previous membership are overwritten.
    */
-  async restore(memberId: string, newRole: WorkspaceRole, options?: { tx?: Transaction }) {
+  async restore(
+    memberId: string,
+    newRole: WorkspaceRole,
+    options?: {
+      tx?: Transaction;
+      notificationDefaults?: WorkspaceNotificationPreferences;
+    }
+  ) {
     const dbClient = options?.tx || this.db;
 
     const [restored] = await dbClient
@@ -262,6 +283,7 @@ export class WorkspaceMemberRepository {
         isDeleted: false,
         deletedAt: null,
         workspaceRole: newRole,
+        ...options?.notificationDefaults,
       })
       .where(
         and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, true))
@@ -469,6 +491,39 @@ export class WorkspaceMemberRepository {
       .where(and(eq(workspaceMembers.userId, userId), gte(workspaceMembers.createdAt, cutoffDate)));
 
     return Number(result?.count || 0);
+  }
+
+  /**
+   * Find active members whose email is in the given list AND have the
+   * specified notification preference enabled.
+   * Returns only the matching lowercase emails — callers use this as the
+   * final recipient list (non-members are handled separately by the caller).
+   */
+  async findMembersWithPreferenceEnabled(
+    workspaceId: string,
+    emails: string[],
+    preferenceColumn: 'notifyIncomingEvents' | 'notifyAdminEvents'
+  ): Promise<Set<string>> {
+    if (emails.length === 0) return new Set();
+
+    const normalizedEmails = emails.map((e) => e.toLowerCase());
+
+    const rows = await this.db
+      .select({
+        email: sql<string>`LOWER(${user.email})`,
+      })
+      .from(workspaceMembers)
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.isDeleted, false),
+          eq(workspaceMembers[preferenceColumn], true),
+          inArray(sql`LOWER(${user.email})`, normalizedEmails)
+        )
+      );
+
+    return new Set(rows.map((r) => r.email));
   }
 
   /**

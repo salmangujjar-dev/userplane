@@ -49,6 +49,7 @@ import { IntercomHealthCheckService } from '@/api/services/intercom-health-check
 import { IntercomService } from '@/api/services/intercom-oauth.service';
 import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
+import { NotificationService } from '@/api/services/notification.service';
 import { ProjectService } from '@/api/services/project.service';
 import { ProvisionerService } from '@/api/services/provisioner.service';
 import { RecordingService } from '@/api/services/recording.service';
@@ -117,6 +118,11 @@ export const recordingService = new RecordingService({
   consoleLogsStorage: getConsoleLogsStorage(),
   networkLogsStorage: getNetworkLogsStorage(),
   clientActionsStorage: getClientActionsStorage(),
+});
+
+export const notificationService = new NotificationService({
+  emailService,
+  memberRepo: workspaceMemberRepo,
 });
 
 // Level 2: Services that depend on level 1
@@ -194,6 +200,7 @@ export const inviteService = new InviteService({
   workspaceService,
   userService,
   emailService,
+  notificationService,
   tokenService,
   db,
 });

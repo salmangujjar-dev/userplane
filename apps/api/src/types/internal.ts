@@ -8,6 +8,7 @@ import type {
   DomainStatus,
   RetentionDays,
   WorkspaceInvitePolicy,
+  WorkspaceNotificationPreferences,
   WorkspaceRole,
 } from '@workspace/contract';
 import {
@@ -164,6 +165,7 @@ export interface CreateWorkspaceMemberInput {
   userId: string;
   workspaceId: string;
   workspaceRole: WorkspaceRole;
+  notificationDefaults?: WorkspaceNotificationPreferences;
 }
 
 /**

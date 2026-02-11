@@ -11,8 +11,8 @@ import { createLogger } from '@/api/lib/logger';
 import type { InitialContext } from '@/api/middleware/auth.orpc';
 import type { RecordingRepository } from '@/api/repositories/recordings.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import type { EmailService } from '@/api/services/email.service';
 import type { IntercomNotificationService } from '@/api/services/intercom-notification.service';
+import type { NotificationService } from '@/api/services/notification.service';
 import type { SessionService } from '@/api/services/session.service';
 import { emailUrls } from '@/api/utils/email-urls';
 
@@ -126,7 +126,7 @@ async function sendRecordingNotifications(
   deps: {
     recordingRepo: RecordingRepository;
     workspaceMemberRepo: WorkspaceMemberRepository;
-    emailService: EmailService;
+    notificationService: NotificationService;
     intercomNotificationService: IntercomNotificationService;
   }
 ): Promise<void> {
@@ -143,7 +143,8 @@ async function sendRecordingNotifications(
   // Email notification to the recording creator
   const creator = await deps.workspaceMemberRepo.findByIdWithUser(recording.creatorId);
   if (creator) {
-    await deps.emailService.sendSafeRecordingReceived(
+    await deps.notificationService.sendSafeRecordingReceived(
+      recording.workspaceId,
       { to: creator.userEmail },
       {
         workspaceId: recording.workspaceId,
@@ -178,7 +179,7 @@ export const completeUploadImpl = (
   sessionService: SessionService,
   recordingRepo: RecordingRepository,
   workspaceMemberRepo: WorkspaceMemberRepository,
-  emailService: EmailService,
+  notificationService: NotificationService,
   intercomNotificationService: IntercomNotificationService
 ) => {
   return os.upload.complete.use(requireUploadToken).handler(async ({ input, context }) => {
@@ -191,7 +192,7 @@ export const completeUploadImpl = (
       await sendRecordingNotifications(result.recordingId, {
         recordingRepo,
         workspaceMemberRepo,
-        emailService,
+        notificationService,
         intercomNotificationService,
       });
     } catch (error) {
@@ -219,7 +220,7 @@ export const createSessionProcedures = (
   sessionService: SessionService,
   recordingRepo: RecordingRepository,
   workspaceMemberRepo: WorkspaceMemberRepository,
-  emailService: EmailService,
+  notificationService: NotificationService,
   intercomNotificationService: IntercomNotificationService
 ) => {
   return {
@@ -230,7 +231,7 @@ export const createSessionProcedures = (
         sessionService,
         recordingRepo,
         workspaceMemberRepo,
-        emailService,
+        notificationService,
         intercomNotificationService
       ),
     },

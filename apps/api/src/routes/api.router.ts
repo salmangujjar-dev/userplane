@@ -31,6 +31,7 @@ import {
   inviteService,
   linkRepo,
   linkService,
+  notificationService,
   projectService,
   provisionerService,
   recordingRepo,
@@ -71,7 +72,7 @@ const sessionProcedures = createSessionProcedures(
   sessionService,
   recordingRepo,
   workspaceMemberRepo,
-  emailService,
+  notificationService,
   intercomNotificationService
 );
 const accountProcedures = createAccountProcedures(userService);
