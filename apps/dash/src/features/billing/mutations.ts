@@ -18,7 +18,6 @@ interface ManagePlanInput {
   planId: PlanId;
   workspaceId: string;
   action?: 'preview' | 'execute';
-  message?: string;
 }
 
 /**
@@ -34,7 +33,6 @@ export function useManagePlan(callbacks?: ManagePlanCallbacks) {
         body: {
           planId: input.planId,
           action: input.action,
-          message: input.message,
         },
       });
 

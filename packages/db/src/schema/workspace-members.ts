@@ -25,8 +25,6 @@ export const workspaceMembers = pgTable(
     // Notification preferences
     // For accepting feature highlights
     notifyFeatureHighlights: boolean('notify_feature_highlights').default(true).notNull(),
-    // For accepting billing related emails
-    notifyBillingEvents: boolean('notify_billing_events').default(false).notNull(),
     // For accepting usage related emails
     notifyUsageEvents: boolean('notify_usage_events').default(true).notNull(),
     // For accepting emails for incoming recordings and screenshots

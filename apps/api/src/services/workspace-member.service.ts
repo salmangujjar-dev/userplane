@@ -446,7 +446,6 @@ export class WorkspaceMemberService {
 
     return {
       notifyFeatureHighlights: member.notifyFeatureHighlights,
-      notifyBillingEvents: member.notifyBillingEvents,
       notifyUsageEvents: member.notifyUsageEvents,
       notifyIncomingEvents: member.notifyIncomingEvents,
       notifyAdminEvents: member.notifyAdminEvents,
@@ -463,7 +462,6 @@ export class WorkspaceMemberService {
     workspaceId: string,
     preferences: Partial<{
       notifyFeatureHighlights: boolean;
-      notifyBillingEvents: boolean;
       notifyUsageEvents: boolean;
       notifyIncomingEvents: boolean;
       notifyAdminEvents: boolean;

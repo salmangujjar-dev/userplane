@@ -21,9 +21,6 @@ export * from './recording';
 // Domain emails
 export * from './domain';
 
-// Billing emails
-export * from './billing';
-
 // Project emails
 export * from './project';
 

@@ -22,7 +22,6 @@ import { authorized } from '@/api/middleware/auth.orpc';
 import { billingRateLimitMiddleware } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
 import type { BillingService } from '@/api/services/billing.service';
-import type { EmailService } from '@/api/services/email.service';
 import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
@@ -123,8 +122,7 @@ export const getUsageImpl = (
 export const managePlanImpl = (
   billingService: BillingService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService,
-  emailService: EmailService
+  workspaceService: WorkspaceService
 ) => {
   const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
@@ -133,7 +131,7 @@ export const managePlanImpl = (
     .use(billingRateLimitMiddleware)
     .handler(async ({ input, context }) => {
       const { workspaceId } = input.params;
-      const { planId, action, message: customMessage } = input.body;
+      const { planId, action } = input.body;
       const userRole = context.workspaceRole;
 
       // Get subscription status to determine flow
@@ -171,34 +169,7 @@ export const managePlanImpl = (
       // Route 2: Active subscription + member -> Request
       if (userRole !== 'owner' && userRole !== 'admin') {
         const planName = PLAN_NAMES[planId as PlanId] || 'Unknown';
-        const owners = await workspaceMemberService.getOwners(workspaceId);
-
-        if (owners.length === 0) {
-          throw billingError.PLAN_CHANGE_REQUEST_FAILED();
-        }
-
-        const workspace = await workspaceService.getById(workspaceId);
-        if (!workspace) {
-          throw billingError.SUBSCRIPTION_NOT_FOUND();
-        }
-
-        const requesterEmail = context.user.email;
-        const requesterName = context.user.name || requesterEmail;
         const requestId = nanoid();
-
-        await emailService.sendSafePlanChangeRequest(
-          { to: owners.map((o) => o.email) },
-          {
-            workspaceName: workspace.workspaceName,
-            requesterName,
-            requesterEmail,
-            planName,
-            billingUrl: '',
-            customMessage,
-            workspaceId,
-            planId: planId as PlanId,
-          }
-        );
 
         return {
           message: 'Plan change request submitted',
@@ -247,8 +218,7 @@ export function createBillingProcedures(
   billingService: BillingService,
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService,
-  entitlementService: EntitlementService,
-  emailService: EmailService
+  entitlementService: EntitlementService
 ) {
   return {
     getStatus: getSubscriptionStatusImpl(billingService, workspaceMemberService, workspaceService),
@@ -259,11 +229,6 @@ export function createBillingProcedures(
       workspaceMemberService,
       workspaceService
     ),
-    managePlan: managePlanImpl(
-      billingService,
-      workspaceMemberService,
-      workspaceService,
-      emailService
-    ),
+    managePlan: managePlanImpl(billingService, workspaceMemberService, workspaceService),
   };
 }

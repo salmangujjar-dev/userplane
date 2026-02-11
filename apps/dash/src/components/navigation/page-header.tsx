@@ -37,7 +37,7 @@ function PageHeaderActions({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <WorkspaceMemberAvatars members={members} onInviteClick={onInviteClick} />
+      {onInviteClick && <WorkspaceMemberAvatars members={members} onInviteClick={onInviteClick} />}
       {onCreateLinkClick && (
         <Button
           variant="default"
@@ -59,9 +59,11 @@ export function PageHeader({
   onInviteClick,
   onCreateLinkClick,
 }: PageHeaderProps) {
+  const hasActions = !!(onInviteClick || onCreateLinkClick);
+
   const { data: membersResult } = useWorkspaceMembers({
     perPage: 3,
-    enabled: true,
+    enabled: hasActions,
   });
 
   const members = membersResult?.success ? membersResult.data.workspaceMembers : undefined;
@@ -69,11 +71,13 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 px-4 sm:px-6 py-4">
       <PageHeaderLeft title={title} description={description} />
-      <PageHeaderActions
-        members={members}
-        onInviteClick={onInviteClick}
-        onCreateLinkClick={onCreateLinkClick}
-      />
+      {hasActions && (
+        <PageHeaderActions
+          members={members}
+          onInviteClick={onInviteClick}
+          onCreateLinkClick={onCreateLinkClick}
+        />
+      )}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import { ArrowLeftRight, CheckCircle2, ExternalLink, Loader2, Mail, Sparkles } from 'lucide-react';
+import { ArrowLeftRight, CheckCircle2, ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
@@ -585,37 +585,31 @@ function RequestSentView({ planName, onClose }: { planName: string; onClose: () 
           <Logo variant="tiled" size="md" showText={false} />
           <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
           <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
-            <Mail className="h-8 w-8 text-primary" />
+            <CheckCircle2 className="h-8 w-8 text-primary" />
           </div>
         </div>
 
         <div className="text-center space-y-1">
-          <DialogTitle className="text-xl font-semibold">Request Sent</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Almost There</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Your request to change to {planName} has been sent
+            Reach out to a workspace owner or admin to complete the plan change
           </DialogDescription>
         </div>
       </div>
 
       <div className="space-y-4">
-        <p className="text-sm font-medium">What happens next</p>
+        <p className="text-sm font-medium">How to upgrade</p>
         <div className="space-y-3">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
             <p className="text-sm text-muted-foreground">
-              Workspace owners will be notified of your request
+              Ask a workspace owner or admin to upgrade your plan
             </p>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
             <p className="text-sm text-muted-foreground">
-              They&apos;ll review and approve or decline the plan change
-            </p>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-            <p className="text-sm text-muted-foreground">
-              You&apos;ll receive an email notification once your request is processed
+              They can change the plan from workspace billing settings
             </p>
           </div>
         </div>

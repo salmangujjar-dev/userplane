@@ -32,7 +32,6 @@ export type {
   // Auth
   EmailVerificationEmailProps,
   MagicLinkEmailProps,
-  PlanChangeRequestEmailProps,
   // Project
   ProjectDeletionScheduledEmailProps,
   ProjectRecoveryConfirmationEmailProps,
@@ -44,11 +43,6 @@ export type {
   RenderResult,
   // Pilot
   SandboxInviteEmailProps,
-  SubscriptionActiveEmailProps,
-  SubscriptionExpiredEmailProps,
-  SubscriptionInactiveEmailProps,
-  SubscriptionPlanChangeEmailProps,
-  SubscriptionReverseTrialEmailProps,
   // Invite
   TeammateInvitedEmailProps,
   TosViolationEmailProps,
@@ -73,7 +67,6 @@ export {
   // Auth
   renderEmailVerification,
   renderMagicLink,
-  renderPlanChangeRequest,
   // Project
   renderProjectDeletionScheduled,
   renderProjectRecoveryConfirmation,
@@ -84,11 +77,6 @@ export {
   renderRecoveryPartially,
   // Pilot
   renderSandboxInvite,
-  renderSubscriptionActive,
-  renderSubscriptionExpired,
-  renderSubscriptionInactive,
-  renderSubscriptionPlanChange,
-  renderSubscriptionReverseTrial,
   // Invite
   renderTeammateInvited,
   renderTosViolation,
