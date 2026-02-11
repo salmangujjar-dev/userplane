@@ -5,7 +5,12 @@
 
 import type { CacheService } from '@workspace/cache';
 import type { WorkspaceRole } from '@workspace/contract';
-import { workspaceError } from '@workspace/contract';
+import {
+  getDefaultNotificationPreferences,
+  getEditableNotificationKeys,
+  getLockedNotificationOverrides,
+  workspaceError,
+} from '@workspace/contract';
 
 import { generateWorkspaceMemberId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
@@ -53,14 +58,14 @@ export class WorkspaceMemberService {
     );
 
     let member;
+    const notificationDefaults = getDefaultNotificationPreferences('owner');
 
     // If soft-deleted member exists, restore them as owner
     if (deletedMember && deletedMember.isDeleted) {
-      member = await this.deps.memberRepo.restore(
-        deletedMember.workspaceMemberId,
-        'owner',
-        options
-      );
+      member = await this.deps.memberRepo.restore(deletedMember.workspaceMemberId, 'owner', {
+        ...options,
+        notificationDefaults,
+      });
     } else {
       // Otherwise, create new member as owner
       member = await this.deps.memberRepo.create(
@@ -69,6 +74,7 @@ export class WorkspaceMemberService {
           userId: params.userId,
           workspaceId: params.workspaceId,
           workspaceRole: 'owner',
+          notificationDefaults,
         },
         options
       );
@@ -131,14 +137,14 @@ export class WorkspaceMemberService {
     }
 
     let member;
+    const notificationDefaults = getDefaultNotificationPreferences(params.role);
 
     // If soft-deleted member exists, restore them
     if (deletedMember && deletedMember.isDeleted) {
-      member = await this.deps.memberRepo.restore(
-        deletedMember.workspaceMemberId,
-        params.role,
-        options
-      );
+      member = await this.deps.memberRepo.restore(deletedMember.workspaceMemberId, params.role, {
+        ...options,
+        notificationDefaults,
+      });
     } else {
       // Otherwise, create new member
       member = await this.deps.memberRepo.create(
@@ -147,6 +153,7 @@ export class WorkspaceMemberService {
           userId: params.userId,
           workspaceId: params.workspaceId,
           workspaceRole: params.role,
+          notificationDefaults,
         },
         options
       );
@@ -209,7 +216,15 @@ export class WorkspaceMemberService {
       }
     }
 
-    const updated = await this.deps.memberRepo.updateRole(params.memberId, params.newRole, options);
+    // Compute locked notification overrides for the new role.
+    // Hidden preferences are forced to their default (e.g. owner always gets
+    // notifyAdminEvents=true, member always gets notifyAdminEvents=false).
+    const notificationOverrides = getLockedNotificationOverrides(params.newRole);
+
+    const updated = await this.deps.memberRepo.updateRole(params.memberId, params.newRole, {
+      ...options,
+      notificationOverrides,
+    });
 
     // Invalidate membership cache - role has changed
     if (updated) {
@@ -454,7 +469,8 @@ export class WorkspaceMemberService {
 
   /**
    * Update notification preferences for authenticated user in workspace
-   * Member can only update their own preferences
+   * Member can only update their own preferences.
+   * Keys the member's role cannot edit are silently stripped.
    * Throws WORKSPACE_MEMBER_IDS_REQUIRED, WORKSPACE_MEMBER_NOT_IN_WORKSPACE for validation errors
    */
   async updateNotificationPreferences(
@@ -477,9 +493,23 @@ export class WorkspaceMemberService {
       throw workspaceError.WORKSPACE_MEMBER_NOT_IN_WORKSPACE();
     }
 
+    // Strip keys the role cannot edit (hidden = non-editable)
+    const editableKeys = new Set(getEditableNotificationKeys(member.workspaceRole));
+    const filtered: typeof preferences = {};
+    for (const [key, value] of Object.entries(preferences)) {
+      if (editableKeys.has(key as keyof typeof preferences) && value !== undefined) {
+        (filtered as Record<string, boolean>)[key] = value;
+      }
+    }
+
+    // Nothing editable after filtering -- skip the DB write
+    if (Object.keys(filtered).length === 0) {
+      return null;
+    }
+
     return this.deps.memberRepo.updateNotificationPreferences(
       member.workspaceMemberId,
-      preferences,
+      filtered,
       options
     );
   }

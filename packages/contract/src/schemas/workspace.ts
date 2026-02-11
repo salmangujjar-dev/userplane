@@ -139,7 +139,8 @@ export const NOTIFICATION_FIELDS: readonly NotificationFieldMetadata[] = [
     id: 'usage-events',
     label: 'Usage notifications',
     description: 'Get alerts about workspace usage and quota limits',
-    visibleForRoles: ['owner', 'admin', 'member'],
+    // Owners cannot opt out of this notification, so it is hidden from them
+    visibleForRoles: ['admin', 'member'],
     defaultForRoles: {
       owner: true,
       admin: true,
@@ -152,10 +153,11 @@ export const NOTIFICATION_FIELDS: readonly NotificationFieldMetadata[] = [
     label: 'Incoming recordings',
     description: 'Notify about new recordings and screenshots',
     visibleForRoles: ['owner', 'admin', 'member'],
+    // Disabled by default to avoid spamming users
     defaultForRoles: {
-      owner: true,
-      admin: true,
-      member: true,
+      owner: false,
+      admin: false,
+      member: false,
     },
   },
   {
@@ -163,10 +165,14 @@ export const NOTIFICATION_FIELDS: readonly NotificationFieldMetadata[] = [
     id: 'admin-events',
     label: 'Admin notifications',
     description: 'Receive workspace administration and member activity alerts',
-    visibleForRoles: ['owner', 'admin'],
+    // Owners cannot opt out (always on, hidden from them)
+    // Members cannot opt in (always off, hidden from them)
+    // Only admins can toggle this preference
+    visibleForRoles: ['admin'],
+    // Admins are not notified by default to avoid spamming them
     defaultForRoles: {
       owner: true,
-      admin: true,
+      admin: false,
       member: false,
     },
   },
@@ -191,6 +197,34 @@ export function getVisibleNotificationFields(
   role: 'owner' | 'admin' | 'member'
 ): readonly NotificationFieldMetadata[] {
   return NOTIFICATION_FIELDS.filter((field) => field.visibleForRoles.includes(role));
+}
+
+/**
+ * Helper to get notification keys a role is allowed to change.
+ * visible = editable; hidden fields are enforced by the backend.
+ */
+export function getEditableNotificationKeys(
+  role: 'owner' | 'admin' | 'member'
+): Array<keyof WorkspaceNotificationPreferences> {
+  return NOTIFICATION_FIELDS.filter((f) => f.visibleForRoles.includes(role)).map((f) => f.key);
+}
+
+/**
+ * Helper to get the locked (non-editable) notification overrides for a role.
+ * Returns the default values for keys the role cannot edit.
+ * Used to force correct values on role transitions.
+ */
+export function getLockedNotificationOverrides(
+  role: 'owner' | 'admin' | 'member'
+): Partial<WorkspaceNotificationPreferences> {
+  const editable = new Set(getEditableNotificationKeys(role));
+  const overrides: Partial<WorkspaceNotificationPreferences> = {};
+  for (const field of NOTIFICATION_FIELDS) {
+    if (!editable.has(field.key)) {
+      overrides[field.key] = field.defaultForRoles[role];
+    }
+  }
+  return overrides;
 }
 
 /**
