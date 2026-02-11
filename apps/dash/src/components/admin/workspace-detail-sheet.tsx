@@ -37,7 +37,7 @@ import {
   XCircle,
 } from 'lucide-react';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { AdminWorkspaceDetail, AdminWorkspaceMember } from '@/types';
 
@@ -273,7 +273,11 @@ export function WorkspaceDetailSheet({
                         key={member.userId}
                         className="flex items-center gap-3 p-2 rounded-lg bg-muted/50"
                       >
-                        <BoringAvatar name={member.userEmail} size={32} />
+                        <BoringAvatar
+                          name={member.userName}
+                          email={member.userEmail}
+                          size={AVATAR_SIZES.USER}
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{member.userName}</p>
                           <p className="text-xs text-muted-foreground truncate">

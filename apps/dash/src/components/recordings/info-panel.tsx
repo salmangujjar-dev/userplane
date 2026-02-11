@@ -31,7 +31,7 @@ import { useState } from 'react';
 
 import type { RecordingDetail, RecordingDetailMeta } from '@/types';
 
-import { BoringAvatar } from '../shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '../shared/boring-avatar';
 
 // ---------------------------------------------------------------------------
 // Shared types -- derived from contract schemas
@@ -165,7 +165,7 @@ function AboutSection({ meta }: { meta: RecordingMeta }) {
 
       <InfoRow icon={User} label="Requested By">
         <div className="flex items-center gap-2">
-          <BoringAvatar size={24} name={meta.creator.name} />
+          <BoringAvatar size={AVATAR_SIZES.INLINE} name={meta.creator.name} />
           <span className="font-medium">{meta.creator.name}</span>
         </div>
       </InfoRow>

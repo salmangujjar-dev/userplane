@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 function ThumbnailFallback() {
@@ -154,7 +154,7 @@ export function RecordingPreview({
         <div className="pt-2 mt-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <BoringAvatar name={createdBy} size={24} />
+              <BoringAvatar name={createdBy} size={AVATAR_SIZES.INLINE} />
               <span className="text-sm font-medium truncate">{createdBy}</span>
             </div>
             <span className="text-sm text-muted-foreground shrink-0">{formatDate(createdAt)}</span>

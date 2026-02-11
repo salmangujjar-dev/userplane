@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { useJoinWorkspace, useWorkspaceStatus } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
 import type { WorkspaceInvitePolicy } from '@/types';
@@ -159,13 +159,6 @@ function WorkspaceCard({
   workspaceName: string;
   invitePolicy: WorkspaceInvitePolicy | null;
 }) {
-  // Generate consistent "member" names based on workspace name for avatars
-  const avatarNames = [
-    `${workspaceName}-member-1`,
-    `${workspaceName}-member-2`,
-    `${workspaceName}-member-3`,
-  ];
-
   const getPolicyLabel = () => {
     switch (invitePolicy) {
       case 'whitelisted':
@@ -185,9 +178,9 @@ function WorkspaceCard({
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex -space-x-2 shrink-0 cursor-default">
-              {avatarNames.map((name, index) => (
-                <div key={index} className="rounded-full border-2 border-card overflow-hidden">
-                  <BoringAvatar name={name} size={28} />
+              {Array.from({ length: 3 }, (_, i) => (
+                <div key={i} className="rounded-full border-2 border-card overflow-hidden">
+                  <BoringAvatar size={AVATAR_SIZES.GROUP} />
                 </div>
               ))}
             </div>
@@ -369,13 +362,6 @@ function WorkspaceAccessRequest({
  * Confirmation UI after access has been requested
  */
 function WorkspaceAccessRequested({ workspaceName }: { workspaceName: string }) {
-  // Generate consistent "member" names based on workspace name for avatars
-  const avatarNames = [
-    `${workspaceName}-member-1`,
-    `${workspaceName}-member-2`,
-    `${workspaceName}-member-3`,
-  ];
-
   return (
     <WorkspaceAccessLayout>
       <div className="flex flex-col items-center gap-3">
@@ -388,9 +374,9 @@ function WorkspaceAccessRequested({ workspaceName }: { workspaceName: string }) 
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex -space-x-2 shrink-0 cursor-default">
-                {avatarNames.map((name, index) => (
-                  <div key={index} className="rounded-full border-2 border-card overflow-hidden">
-                    <BoringAvatar name={name} size={28} />
+                {Array.from({ length: 3 }, (_, i) => (
+                  <div key={i} className="rounded-full border-2 border-card overflow-hidden">
+                    <BoringAvatar size={AVATAR_SIZES.GROUP} />
                   </div>
                 ))}
               </div>

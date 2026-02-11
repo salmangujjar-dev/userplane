@@ -2,7 +2,7 @@
 
 import { Plus } from 'lucide-react';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 
 interface WorkspaceMember {
   workspaceMemberId: string;
@@ -31,7 +31,11 @@ export function WorkspaceMemberAvatars({
           title={`${member.memberName} (${member.memberEmail})`}
           onClick={onInviteClick}
         >
-          <BoringAvatar size={36} name={member.memberName} />
+          <BoringAvatar
+            size={AVATAR_SIZES.GROUP_WITH_BORDER}
+            name={member.memberName}
+            email={member.memberEmail}
+          />
         </button>
       ))}
       {remainingCount > 0 && (

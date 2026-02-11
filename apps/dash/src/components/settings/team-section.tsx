@@ -19,7 +19,7 @@ import { ArrowUpRight, ChevronUp, MoreVertical, UserMinus } from 'lucide-react';
 import { useState } from 'react';
 
 import { TeamMemberActionModal } from '@/components/modals/team-member-action-modal';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SectionError } from '@/components/shared/section-error';
 import { TeamSectionSkeleton } from '@/components/skeleton';
 import { WORKSPACE_MEMBERS_PAGINATION } from '@/constants';
@@ -141,7 +141,11 @@ export function TeamSection({ onInviteClick }: TeamSectionProps) {
                   <TableRow key={member.workspaceMemberId}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <BoringAvatar size={32} name={member.memberEmail} />
+                        <BoringAvatar
+                          size={AVATAR_SIZES.USER}
+                          name={member.memberName}
+                          email={member.memberEmail}
+                        />
                         <div>
                           <div className="font-medium text-sm">{member.memberName}</div>
                           <div className="text-xs text-muted-foreground">{member.memberEmail}</div>

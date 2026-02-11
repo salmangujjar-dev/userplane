@@ -11,7 +11,7 @@ import { cn } from '@workspace/ui/lib/utils';
 import { Check, ChevronDown, LucideIcon, X } from 'lucide-react';
 import { useState } from 'react';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 
 export interface FilterOption {
   value: string;
@@ -111,7 +111,13 @@ export function FilterDropdown({
 
     if (selected.length === 1 && selectedOption) {
       if (showAvatars && selectedOption.avatar) {
-        return <BoringAvatar name={selectedOption.label} size={16} className="shrink-0" />;
+        return (
+          <BoringAvatar
+            name={selectedOption.label}
+            size={AVATAR_SIZES.COMPACT}
+            className="shrink-0"
+          />
+        );
       }
       if (Icon) {
         return <Icon className="h-3.5 w-3.5 shrink-0" />;
@@ -126,8 +132,8 @@ export function FilterDropdown({
             {firstTwoSelected.slice(0, 2).map((opt, idx) => (
               <BoringAvatar
                 key={idx}
-                name={opt?.label || ''}
-                size={16}
+                name={opt?.label}
+                size={AVATAR_SIZES.COMPACT}
                 className="ring-1 ring-background"
               />
             ))}
@@ -204,7 +210,11 @@ export function FilterDropdown({
                     <Check className="h-3 w-3" />
                   </div>
                   {showAvatars && option.avatar && (
-                    <BoringAvatar name={option.label} size={24} className="mr-2 shrink-0" />
+                    <BoringAvatar
+                      name={option.label}
+                      size={AVATAR_SIZES.INLINE}
+                      className="mr-2 shrink-0"
+                    />
                   )}
                   <span className="flex-1 text-left truncate">{option.label}</span>
                   {Icon && !showAvatars && (

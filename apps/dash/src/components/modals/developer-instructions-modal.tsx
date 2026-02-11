@@ -19,7 +19,7 @@ import {
 import { HelpCircle, X } from 'lucide-react';
 import { KeyboardEvent, useState } from 'react';
 
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SUPPORT_LINKS } from '@/constants';
 
 interface DeveloperInstructionsModalProps {
@@ -126,7 +126,7 @@ export function DeveloperInstructionsModal({
                       key={email}
                       className="inline-flex items-center gap-2 bg-background rounded-md px-2 py-1 text-sm"
                     >
-                      <BoringAvatar size={20} name={email} />
+                      <BoringAvatar size={AVATAR_SIZES.TAG} email={email} />
                       <span>{email}</span>
                       <button
                         type="button"

@@ -47,7 +47,7 @@ import { useState } from 'react';
 
 import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-modal';
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
-import { BoringAvatar } from '@/components/shared/boring-avatar';
+import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SidebarProjectsSkeleton } from '@/components/skeleton';
 import { SUPPORT_LINKS } from '@/constants';
 import { useAccount } from '@/features/account';
@@ -272,7 +272,11 @@ export function AppSidebar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton size="lg" tooltip={account.userName}>
-                    <BoringAvatar size={32} name={account.userName} />
+                    <BoringAvatar
+                      size={AVATAR_SIZES.USER}
+                      name={account.userName}
+                      email={account.userEmail}
+                    />
                     <div className="flex flex-col text-left flex-1 min-w-0">
                       <span className="text-sm font-semibold truncate">{account.userName}</span>
                       <span className="text-xs text-muted-foreground truncate">
@@ -283,7 +287,11 @@ export function AppSidebar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-64 p-2" side="top">
                   <div className="flex items-center gap-3 py-1.5 px-2">
-                    <BoringAvatar size={32} name={account.userName} />
+                    <BoringAvatar
+                      size={AVATAR_SIZES.USER}
+                      name={account.userName}
+                      email={account.userEmail}
+                    />
                     <div className="flex flex-col gap-1 flex-1 min-w-0">
                       <div className="text-sm font-semibold truncate">{account.userName}</div>
                       <div className="text-xs text-muted-foreground truncate">
