@@ -2,19 +2,19 @@
 title: 'Notification Preferences'
 excerpt: 'Control which email notifications you receive from Userplane'
 order: 1
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-11
 ---
 
-Userplane sends email notifications to keep you informed about recordings, usage, and workspace activity. You can enable or disable each notification type from your account settings.
+Userplane sends email notifications to keep you informed about recordings, usage, and workspace activity. You can enable or disable each notification type from your workspace settings, subject to your role.
 
 ## Notification toggles
 
-| Notification            | Description                                                                    | Visible to           |
+| Notification            | Description                                                                    | Configurable by      |
 | ----------------------- | ------------------------------------------------------------------------------ | -------------------- |
 | **Feature highlights**  | Updates about new features and product improvements.                           | Owner, Admin, Member |
-| **Usage notifications** | Alerts when your workspace approaches or exceeds usage limits.                 | Owner, Admin, Member |
+| **Usage notifications** | Alerts when your workspace approaches or exceeds usage limits.                 | Admin, Member        |
 | **Incoming recordings** | Notifications when a new recording is submitted.                               | Owner, Admin, Member |
-| **Admin notifications** | Workspace administration events (member joins, access requests, role changes). | Owner, Admin         |
+| **Admin notifications** | Workspace administration events (member joins, access requests, role changes). | Admin                |
 
 ## Configuring preferences
 
@@ -22,13 +22,23 @@ Userplane sends email notifications to keep you informed about recordings, usage
 2. Toggle each notification type on or off.
 3. Changes are saved automatically.
 
-## Role-based visibility
+Only toggles your role can control are shown. If you do not see a notification type, it is either always enabled or not applicable for your role.
 
-Not all notification types are visible to all roles:
+## Role-based rules
 
-- **Admin notifications** appear for **owners** and **admins**. Members do not see this toggle.
-- All other toggles are visible to everyone.
+- **Usage notifications** -- Owners always receive these and cannot opt out. Admins and members can toggle them freely.
+- **Admin notifications** -- Owners always receive these and cannot opt out. Members never receive them. Only admins see this toggle and can opt in or out.
+- **Feature highlights** and **Incoming recordings** -- All roles can toggle these.
 
 ## Defaults
 
-All notification types that are visible to your role are **enabled by default**. You can disable any of them at any time.
+| Notification            | Default state                                                 |
+| ----------------------- | ------------------------------------------------------------- |
+| **Feature highlights**  | Enabled for all roles                                         |
+| **Usage notifications** | Enabled for all roles                                         |
+| **Incoming recordings** | Disabled for all roles                                        |
+| **Admin notifications** | Enabled for owners (locked), disabled for admins (can opt in) |
+
+## Role changes
+
+When a member's role changes (promotion or demotion), notification preferences that the new role cannot control are automatically set to their correct value. For example, promoting someone to owner forces usage and admin notifications on. Demoting an owner to member forces admin notifications off. Preferences the new role can control are left unchanged.

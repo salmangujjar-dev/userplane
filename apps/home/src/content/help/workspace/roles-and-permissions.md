@@ -2,7 +2,7 @@
 title: 'Roles & Permissions'
 excerpt: 'Understand what owners, admins, and members can do in a workspace'
 order: 8
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-11
 ---
 
 Every workspace member has one of three roles: **Owner**, **Admin**, or **Member**. Each role has a different level of access and control.
@@ -49,10 +49,12 @@ Admins can manage most workspace resources — projects, domains, integrations, 
 
 Members can view recordings, create recording links, and manage their own links. They cannot manage workspace settings, invite members, or configure resources. Members can request a plan upgrade, which sends an email notification to workspace owners.
 
-## Notification visibility by role
+## Notification preferences by role
 
-Some [notification preferences](/help/account/notification-preferences) are only visible to certain roles:
+Some [notification preferences](/help/account/notification-preferences) are locked or hidden depending on role:
 
-- **Billing updates** — visible to owners only.
-- **Admin notifications** — visible to owners and admins.
-- **Feature highlights, usage, incoming recordings** — visible to all roles.
+- **Usage notifications** -- always on for owners (hidden). Configurable by admins and members.
+- **Admin notifications** -- always on for owners (hidden), never available to members (hidden). Only admins can toggle this.
+- **Feature highlights, incoming recordings** -- configurable by all roles.
+
+When a member's role changes, locked preferences are automatically set to the correct value for the new role.
