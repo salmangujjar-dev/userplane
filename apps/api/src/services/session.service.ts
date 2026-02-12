@@ -452,6 +452,7 @@ export class SessionService {
         customMeta: {
           ...metadata.customMetadata,
         },
+        notes: metadata.notes ?? null,
         expiresAt,
       });
     } catch {

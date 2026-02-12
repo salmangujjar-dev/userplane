@@ -227,6 +227,7 @@ export class RecordingService {
         status: row.uploadStatus,
         systemMeta: row.systemMeta,
         customMeta: row.customMeta,
+        notes: row.notes,
         expiresAt: row.expiresAt,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,

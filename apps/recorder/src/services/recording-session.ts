@@ -243,7 +243,8 @@ export class RecordingSession {
     videoFile: File,
     thumbnailBlob: Blob | null,
     recordingDurationMs: number | null,
-    customMetadata?: Record<string, unknown> | null
+    customMetadata?: Record<string, unknown> | null,
+    notes?: string
   ): Promise<ServerResult<UploadState>> {
     return createRecordingSpan('session.initializeUpload', 'recording.upload', async () => {
       logger.debug('initializing upload');
@@ -294,6 +295,7 @@ export class RecordingSession {
           metadata: {
             systemMetadata: prettySystemMetadata(systemMetadata),
             customMetadata: customMetadata ?? {},
+            ...(notes ? { notes } : {}),
           },
         },
       };

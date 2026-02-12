@@ -2,7 +2,7 @@
  * Session schema - Zod schemas for session/upload API validation
  */
 
-import { SESSION_CONSTANTS } from '@workspace/contract';
+import { RecordingNotesSchema, SESSION_CONSTANTS } from '@workspace/contract';
 import { z } from 'zod';
 
 import { env } from '@/api/env';
@@ -52,6 +52,7 @@ export const customMetadataSchema = z.record(z.string(), z.unknown()).optional()
 export const recordingMetaInputSchema = z.object({
   systemMetadata: systemMetadataSchema,
   customMetadata: customMetadataSchema,
+  notes: RecordingNotesSchema.optional(),
 });
 
 /**

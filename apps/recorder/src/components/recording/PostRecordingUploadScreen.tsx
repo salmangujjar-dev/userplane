@@ -52,7 +52,7 @@ export default function PostRecordingUploadScreen({
           <VideoPlayer src={videoUrl} showControls={false} muted={true} opacity={0.75} />
         </div>
 
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md min-h-[140px] flex flex-col justify-center">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs sm:text-sm font-medium text-gray-700">Uploading</span>
             <span className="text-xs sm:text-sm font-medium text-gray-900">{progress}%</span>
