@@ -6,7 +6,6 @@ import { Suspense, useEffect, useState } from 'react';
 
 import { apiClient } from '@/client';
 import {
-  InviteEmptyState,
   InviteErrorState,
   InviteLoadingState,
   InviteTeammatesView,
@@ -18,6 +17,7 @@ import { useIntercomAdmins } from '@/features/integrations';
 import { type DefinedError, handleSafeResult } from '@/lib/errors';
 import {
   INTERCOM_APP_STORE_REDIRECT_URL,
+  INTERCOM_INSTALL_SOURCE_APP_STORE,
   INTERCOM_INSTALL_SOURCE_KEY,
 } from '@/lib/intercom-install';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -25,9 +25,33 @@ import { useWorkspaceStore } from '@/stores/workspace';
 /**
  * View shown after workspace is created to invite teammates.
  * Fetches Intercom teammates and first domain in parallel.
+ * Always shows the full invite view (even with 0 teammates) so users can add people manually.
+ * When isAppStoreInstall is true, completion/skip redirects to Intercom App Store.
  */
-function PostCreationInviteView({ workspaceId }: { workspaceId: string }) {
+function PostCreationInviteView({
+  workspaceId,
+  isAppStoreInstall,
+}: {
+  workspaceId: string;
+  isAppStoreInstall: boolean;
+}) {
   const router = useRouter();
+
+  const handleComplete = () => {
+    if (isAppStoreInstall) {
+      window.location.href = INTERCOM_APP_STORE_REDIRECT_URL;
+    } else {
+      router.push(`/workspace/${workspaceId}`);
+    }
+  };
+
+  const handleSkip = () => {
+    if (isAppStoreInstall) {
+      window.location.href = INTERCOM_APP_STORE_REDIRECT_URL;
+    } else {
+      router.push(`/workspace/${workspaceId}/recordings`);
+    }
+  };
 
   // Fetch teammates and first domain in parallel
   const {
@@ -62,10 +86,6 @@ function PostCreationInviteView({ workspaceId }: { workspaceId: string }) {
   // API already filters out @intercom.io emails
   const teammates = teammatesData.data.admins;
 
-  if (teammates.length === 0) {
-    return <InviteEmptyState workspaceId={workspaceId} />;
-  }
-
   // Extract first domain if exists
   const firstDomain = domainsData?.success ? domainsData.data.domains[0] : null;
 
@@ -77,8 +97,9 @@ function PostCreationInviteView({ workspaceId }: { workspaceId: string }) {
       allowedDomains={teammatesData.data.allowedDomains}
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
-      onComplete={() => router.push(`/workspace/${workspaceId}`)}
-      onSkip={() => router.push(`/workspace/${workspaceId}/settings`)}
+      completionLabel={isAppStoreInstall ? 'Go to Intercom' : 'Go to workspace'}
+      onComplete={handleComplete}
+      onSkip={handleSkip}
     />
   );
 }
@@ -89,6 +110,7 @@ function IntercomCallbackContent() {
   const [createdWorkspace, setCreatedWorkspace] = useState<{
     workspaceId: string;
     workspaceName: string;
+    isAppStoreInstall: boolean;
   } | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -127,16 +149,18 @@ function IntercomCallbackContent() {
           // Set workspace in store so hooks can access it
           setWorkspaceStore(result.data.workspaceId);
 
-          // If user came from Intercom App Store, redirect back after successful install
-          if (sessionStorage.getItem(INTERCOM_INSTALL_SOURCE_KEY) === 'appstore') {
+          // Detect App Store install source and clean up sessionStorage
+          const isAppStoreInstall =
+            sessionStorage.getItem(INTERCOM_INSTALL_SOURCE_KEY) ===
+            INTERCOM_INSTALL_SOURCE_APP_STORE;
+          if (isAppStoreInstall) {
             sessionStorage.removeItem(INTERCOM_INSTALL_SOURCE_KEY);
-            window.location.href = INTERCOM_APP_STORE_REDIRECT_URL;
-            return;
           }
 
           setCreatedWorkspace({
             workspaceId: result.data.workspaceId,
             workspaceName: result.data.workspaceName,
+            isAppStoreInstall,
           });
           setIsLoading(false);
         } else {
@@ -165,7 +189,12 @@ function IntercomCallbackContent() {
 
   // Show invite view after workspace creation
   if (createdWorkspace) {
-    return <PostCreationInviteView workspaceId={createdWorkspace.workspaceId} />;
+    return (
+      <PostCreationInviteView
+        workspaceId={createdWorkspace.workspaceId}
+        isAppStoreInstall={createdWorkspace.isAppStoreInstall}
+      />
+    );
   }
 
   // Show loading during OAuth callback processing
