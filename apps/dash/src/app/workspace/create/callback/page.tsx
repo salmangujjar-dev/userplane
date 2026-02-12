@@ -16,6 +16,10 @@ import {
 import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useIntercomAdmins } from '@/features/integrations';
 import { type DefinedError, handleSafeResult } from '@/lib/errors';
+import {
+  INTERCOM_APP_STORE_REDIRECT_URL,
+  INTERCOM_INSTALL_SOURCE_KEY,
+} from '@/lib/intercom-install';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 /**
@@ -122,6 +126,14 @@ function IntercomCallbackContent() {
         if (result.data.created) {
           // Set workspace in store so hooks can access it
           setWorkspaceStore(result.data.workspaceId);
+
+          // If user came from Intercom App Store, redirect back after successful install
+          if (sessionStorage.getItem(INTERCOM_INSTALL_SOURCE_KEY) === 'appstore') {
+            sessionStorage.removeItem(INTERCOM_INSTALL_SOURCE_KEY);
+            window.location.href = INTERCOM_APP_STORE_REDIRECT_URL;
+            return;
+          }
+
           setCreatedWorkspace({
             workspaceId: result.data.workspaceId,
             workspaceName: result.data.workspaceName,
