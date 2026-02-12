@@ -11,6 +11,7 @@ import { env } from '@/api/env';
 import type {
   AccessRequestTokenPayload,
   DomainVerificationTokenPayload,
+  IntercomOAuthSource,
   IntercomOAuthStatePayload,
   InviteTokenPayload,
   SessionTokenPayload,
@@ -243,13 +244,19 @@ export class TokenService {
    * Token expires in 15 minutes
    * @param userId - The user initiating the OAuth flow
    * @param workspaceId - Optional workspace ID for workspace integration flow (absent for onboarding)
+   * @param source - Origin of the OAuth flow for callback routing
    */
-  signIntercomOAuthState(userId: string, workspaceId?: string): string {
+  signIntercomOAuthState(
+    userId: string,
+    workspaceId?: string,
+    source?: IntercomOAuthSource
+  ): string {
     const now = Math.floor(Date.now() / 1000);
     const payload: IntercomOAuthStatePayload = {
       iss: this.jwtIssuer,
       userId,
       ...(workspaceId && { workspaceId }),
+      ...(source && { source }),
       timestamp: now,
       nonce: nanoid(16),
       iat: now,

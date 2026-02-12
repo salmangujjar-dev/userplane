@@ -12,11 +12,6 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { apiClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { type DefinedError, handleSafeResult } from '@/lib/errors';
-import {
-  INTERCOM_APP_STORE_REDIRECT_URL,
-  INTERCOM_INSTALL_SOURCE_APP_STORE,
-  INTERCOM_INSTALL_SOURCE_KEY,
-} from '@/lib/intercom-install';
 import { mediaClient } from '@/lib/media';
 
 function LoadingState() {
@@ -229,16 +224,6 @@ function IntercomIntegrationCallbackContent() {
         }
 
         if (result.data.connected) {
-          // If user came from Intercom App Store, redirect back after successful install
-          if (
-            sessionStorage.getItem(INTERCOM_INSTALL_SOURCE_KEY) ===
-            INTERCOM_INSTALL_SOURCE_APP_STORE
-          ) {
-            sessionStorage.removeItem(INTERCOM_INSTALL_SOURCE_KEY);
-            window.location.href = INTERCOM_APP_STORE_REDIRECT_URL;
-            return;
-          }
-
           setIsConnected(true);
           setIsLoading(false);
         } else {

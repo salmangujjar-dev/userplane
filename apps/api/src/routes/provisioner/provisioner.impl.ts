@@ -72,14 +72,20 @@ export const createWorkspaceImpl = (
  * Returns authorization URL and state token for CSRF protection
  */
 export const intercomAuthorizeImpl = (intercomService: IntercomService) => {
-  return authorizedRateLimited.provisioner.intercom.authorize.handler(async ({ context }) => {
-    const { authorizationUrl, state } = intercomService.generateAuthorizationUrl(context.user.id);
+  return authorizedRateLimited.provisioner.intercom.authorize.handler(
+    async ({ input, context }) => {
+      const { authorizationUrl, state } = intercomService.generateAuthorizationUrl(
+        context.user.id,
+        undefined,
+        input.query.source
+      );
 
-    return {
-      message: 'Authorization URL generated',
-      data: { authorizationUrl, state },
-    };
-  });
+      return {
+        message: 'Authorization URL generated',
+        data: { authorizationUrl, state },
+      };
+    }
+  );
 };
 
 /**

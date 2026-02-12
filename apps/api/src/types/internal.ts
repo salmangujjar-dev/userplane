@@ -411,14 +411,25 @@ export interface CreateWorkspaceParams {
 }
 
 /**
+ * Source of the Intercom OAuth flow.
+ * Determines callback routing and post-completion behavior.
+ * - inapp: user initiated from /workspace/create (onboarding)
+ * - marketplace: user came from Intercom App Store (/install/intercom)
+ * - integration: user connecting Intercom to an existing workspace
+ */
+export type IntercomOAuthSource = 'inapp' | 'marketplace' | 'integration';
+
+/**
  * Intercom OAuth state payload for CSRF protection
  * Signed JWT with 15 minute expiry
  * workspaceId is optional - present for workspace integration flow, absent for onboarding flow
+ * source identifies the origin of the flow for callback routing
  */
 export interface IntercomOAuthStatePayload {
   iss: string;
   userId: string;
   workspaceId?: string;
+  source?: IntercomOAuthSource;
   timestamp: number;
   nonce: string;
   iat: number;
