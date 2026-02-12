@@ -59,6 +59,11 @@ export const SystemMetaSchema = z.record(z.string(), z.unknown());
 export const CustomMetaSchema = z.record(z.string(), z.unknown());
 
 /**
+ * Recording notes - customer-provided notes
+ */
+export const RecordingNotesSchema = z.string();
+
+/**
  * Recording creator information
  */
 export const RecordingCreatorSchema = z.object({
@@ -155,6 +160,7 @@ export const RecordingDetailMetaSchema = z.object({
   status: UploadStatusSchema,
   systemMeta: SystemMetaSchema.nullable(),
   customMeta: CustomMetaSchema.nullable(),
+  notes: RecordingNotesSchema.nullable(),
   expiresAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),

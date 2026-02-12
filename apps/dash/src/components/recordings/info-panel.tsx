@@ -24,11 +24,13 @@ import {
   Monitor,
   Plug,
   SquareArrowOutUpRight,
+  StickyNote,
   Tags,
   User,
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { isValidUrl } from '@/lib/urls';
 import type { RecordingDetail, RecordingDetailMeta } from '@/types';
 
 import { AVATAR_SIZES, BoringAvatar } from '../shared/boring-avatar';
@@ -183,6 +185,16 @@ function AboutSection({ meta }: { meta: RecordingMeta }) {
   );
 }
 
+function NotesSection({ notes }: { notes: string }) {
+  return (
+    <InfoSection title="Notes">
+      <InfoRow icon={StickyNote} label="Customer Note">
+        <p className="text-sm font-medium whitespace-pre-wrap">{notes}</p>
+      </InfoRow>
+    </InfoSection>
+  );
+}
+
 function IntegrationSection({ link }: { link: RecordingMeta['link'] }) {
   if (!link.providerType) return null;
 
@@ -201,14 +213,18 @@ function IntegrationSection({ link }: { link: RecordingMeta['link'] }) {
 
       {link.providerRef && (
         <InfoRow icon={ExternalLink} label="Reference">
-          <a
-            href={link.providerRef}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline truncate"
-          >
-            {link.providerRef}
-          </a>
+          {isValidUrl(link.providerRef) ? (
+            <a
+              href={link.providerRef}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline truncate"
+            >
+              {link.providerRef}
+            </a>
+          ) : (
+            <span className="font-medium truncate">{link.providerRef}</span>
+          )}
         </InfoRow>
       )}
 
@@ -332,6 +348,7 @@ export function InfoPanel({ recording }: InfoPanelProps) {
   return (
     <div className="h-full overflow-y-auto p-6 space-y-6">
       <AboutSection meta={meta} />
+      {meta.notes && <NotesSection notes={meta.notes} />}
       <IntegrationSection link={meta.link} />
       {hasSystemMeta && <SystemSection systemMeta={systemMeta} />}
       {hasCustomMeta && <CustomMetadataSection customMeta={meta.customMeta!} />}

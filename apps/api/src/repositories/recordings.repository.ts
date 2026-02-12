@@ -62,6 +62,7 @@ export interface RecordingDetailRow {
   recordingActionRef: string | null;
   systemMeta: SystemMeta | null;
   customMeta: CustomMeta | null;
+  notes: string | null;
   recordingDurationMs: number;
   expiresAt: Date | null;
   createdAt: Date;
@@ -105,6 +106,7 @@ export interface CreateRecordingInput {
   recordingActionRef: string | null;
   systemMeta?: SystemMeta | null;
   customMeta?: CustomMeta | null;
+  notes?: string | null;
   expiresAt?: Date | null;
 }
 
@@ -367,6 +369,7 @@ export class RecordingRepository {
         recordingActionRef: recordings.recordingActionRef,
         systemMeta: recordings.systemMeta,
         customMeta: recordings.customMeta,
+        notes: recordings.notes,
         recordingDurationMs: recordings.recordingDurationMs,
         expiresAt: recordings.expiresAt,
         createdAt: recordings.createdAt,
@@ -413,6 +416,7 @@ export class RecordingRepository {
       ...result,
       systemMeta: this.transformSystemMeta(result.systemMeta),
       customMeta: this.transformCustomMeta(result.customMeta),
+      notes: result.notes ?? null,
       linkProviderData: result.linkProviderData as LinkProviderData | null,
     };
   }
@@ -438,6 +442,7 @@ export class RecordingRepository {
         recordingActionRef: recordings.recordingActionRef,
         systemMeta: recordings.systemMeta,
         customMeta: recordings.customMeta,
+        notes: recordings.notes,
         recordingDurationMs: recordings.recordingDurationMs,
         expiresAt: recordings.expiresAt,
         createdAt: recordings.createdAt,
@@ -483,6 +488,7 @@ export class RecordingRepository {
       ...result,
       systemMeta: this.transformSystemMeta(result.systemMeta),
       customMeta: this.transformCustomMeta(result.customMeta),
+      notes: result.notes ?? null,
       linkProviderData: result.linkProviderData as LinkProviderData | null,
     };
   }
@@ -653,6 +659,7 @@ export class RecordingRepository {
         recordingActionRef: data.recordingActionRef,
         systemMeta: data.systemMeta,
         customMeta: data.customMeta,
+        notes: data.notes ?? null,
         expiresAt: data.expiresAt ?? undefined,
         uploadStatus: 'pending',
         isDeleted: true,

@@ -281,7 +281,7 @@ export function parseLinkReference(reference: string): ParsedLinkReference {
       linkTitle: trimmed || null,
       linkProviderType: 'others',
       linkProviderId: null,
-      linkProviderRef: reference,
+      linkProviderRef: null,
     };
   }
 

@@ -100,7 +100,7 @@ export default function PreRecordingCountdownScreen({
           </div>
         )}
 
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md min-h-[140px] flex items-start justify-center pt-4">
           <div className="flex items-center justify-center gap-2 text-gray-600">
             <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" />
             <span className="text-sm font-medium">Preparing to record</span>

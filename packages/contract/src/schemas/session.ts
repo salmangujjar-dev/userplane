@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { RECORDING_DURATION_LIMITS } from '../constants/session';
 import { FileTypeSchema, RecordingIdSchema, TokenSchema, UploadStatusSchema } from './common';
+import { RecordingNotesSchema } from './recording';
 
 /**
  * Session schemas
@@ -45,6 +46,7 @@ export const SessionSystemMetadataSchema = z.record(z.string(), z.unknown());
 export const SessionRecordingMetaSchema = z.object({
   systemMetadata: SessionSystemMetadataSchema,
   customMetadata: z.record(z.string(), z.unknown()).optional(),
+  notes: RecordingNotesSchema.optional(),
 });
 
 /**

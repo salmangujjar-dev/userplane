@@ -96,18 +96,20 @@ export default function RecordingInProgressScreen({
         <p className="text-sm sm:text-base text-gray-600 text-center mb-6 sm:mb-8">{subtitle}</p>
 
         {mediaStream ? (
-          <div className="w-full max-w-md mb-6 sm:mb-8 aspect-video border-2 border-gray-300 rounded-xl overflow-hidden bg-white shadow-lg p-2">
-            <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-full object-contain"
-              />
-              <div className="absolute top-3 right-3 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-md">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse-fast" />
-                <span className="text-xs font-semibold">REC</span>
+          <div className="w-full max-w-md mb-6 sm:mb-8">
+            <div className="aspect-video border-2 border-gray-300 rounded-xl overflow-hidden bg-white shadow-lg p-2">
+              <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-contain"
+                />
+                <div className="absolute top-3 right-3 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-md">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse-fast" />
+                  <span className="text-xs font-semibold">REC</span>
+                </div>
               </div>
             </div>
           </div>
@@ -121,18 +123,20 @@ export default function RecordingInProgressScreen({
           </div>
         )}
 
-        <Button
-          onClick={handleStopRecording}
-          disabled={isProcessing || isLocalProcessing}
-          className="w-full max-w-md h-11 sm:h-12 text-sm sm:text-base font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            backgroundColor: primaryColor,
-          }}
-        >
-          {isProcessing || isLocalProcessing
-            ? 'Stopping recording'
-            : RECORDING_IN_PROGRESS_COPY.stopButton}
-        </Button>
+        <div className="w-full max-w-md min-h-[140px] flex flex-col items-center justify-center">
+          <Button
+            onClick={handleStopRecording}
+            disabled={isProcessing || isLocalProcessing}
+            className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: primaryColor,
+            }}
+          >
+            {isProcessing || isLocalProcessing
+              ? 'Stopping recording'
+              : RECORDING_IN_PROGRESS_COPY.stopButton}
+          </Button>
+        </div>
       </div>
     </RecordingScreenLayout>
   );

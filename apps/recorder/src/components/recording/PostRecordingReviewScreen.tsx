@@ -4,7 +4,7 @@
  */
 
 import { Button } from '@workspace/ui/components/button';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import {
   DEFAULT_COMPANY_NAME,
@@ -26,7 +26,7 @@ interface PostRecordingReviewScreenProps {
   /** Error message to display inline (for upload failures) */
   errorMessage?: string | null;
   /** Callback when user clicks submit */
-  onSubmit?: () => void;
+  onSubmit?: (notes?: string) => void;
   /** Callback when user clicks start over */
   onStartOver?: () => void;
   /** Optional element for top-right corner (e.g., settings dropdown) */
@@ -42,9 +42,12 @@ export default function PostRecordingReviewScreen({
   onStartOver,
   settingsElement,
 }: PostRecordingReviewScreenProps) {
+  const [notes, setNotes] = useState('');
+
   const handleSubmit = () => {
     if (onSubmit && !isSubmitting) {
-      onSubmit();
+      const trimmed = notes.trim();
+      onSubmit(trimmed || undefined);
     }
   };
 
@@ -79,34 +82,44 @@ export default function PostRecordingReviewScreen({
           {POST_RECORDING_REVIEW_COPY.subtitle}
         </p>
 
-        <div className="w-full max-w-md mb-6 sm:mb-8">
+        <div className="w-full max-w-md mb-3 sm:mb-4">
           <VideoPlayer src={videoUrl} showControls={true} />
+          <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Share additional context (optional)"
+            disabled={isSubmitting}
+            className={`w-full mt-2 px-3 py-2 text-sm rounded-lg focus:outline-none focus:border focus:border-gray-300 focus:ring-1 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed ${notes ? 'border border-gray-300' : 'border border-transparent'}`}
+          />
         </div>
 
-        {errorMessage && (
-          <div className="w-full max-w-md mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800">{errorMessage}</p>
-          </div>
-        )}
+        <div className="w-full max-w-md flex flex-col items-center">
+          {errorMessage && (
+            <div className="w-full mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-800">{errorMessage}</p>
+            </div>
+          )}
 
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="w-full max-w-md h-11 sm:h-12 text-sm sm:text-base font-semibold mb-3 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            backgroundColor: primaryColor,
-          }}
-        >
-          {getSubmitButtonText()}
-        </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold mb-3 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: primaryColor,
+            }}
+          >
+            {getSubmitButtonText()}
+          </Button>
 
-        <button
-          onClick={handleStartOver}
-          disabled={isSubmitting}
-          className="text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {POST_RECORDING_REVIEW_COPY.startOverLink}
-        </button>
+          <button
+            onClick={handleStartOver}
+            disabled={isSubmitting}
+            className="text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {POST_RECORDING_REVIEW_COPY.startOverLink}
+          </button>
+        </div>
       </div>
     </RecordingScreenLayout>
   );

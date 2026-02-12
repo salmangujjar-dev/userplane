@@ -262,7 +262,7 @@ function RecordingAppContent() {
   /**
    * Submit recording with metadata from capture iframes
    */
-  const handleSubmitRecording = async () => {
+  const handleSubmitRecording = async (notes?: string) => {
     let customMetadata: Record<string, unknown> | null = null;
 
     if (isEmbedded && crossTab) {
@@ -274,7 +274,7 @@ function RecordingAppContent() {
       }
     }
 
-    await actions.submitRecording(customMetadata);
+    await actions.submitRecording(customMetadata, notes);
   };
 
   // === ALL HOOKS ABOVE THIS LINE ===
