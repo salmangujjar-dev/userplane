@@ -56,6 +56,7 @@ interface InviteTeammatesViewProps {
   initialDomainId: string | null;
   initialDomainUrl: string;
   variant?: 'direct' | 'intercom';
+  completionLabel?: string;
   onComplete: () => void;
   onSkip: () => void;
 }
@@ -73,6 +74,7 @@ export function InviteTeammatesView({
   initialDomainId,
   initialDomainUrl,
   variant = 'intercom',
+  completionLabel = 'Go to workspace',
   onComplete,
   onSkip,
 }: InviteTeammatesViewProps) {
@@ -390,7 +392,7 @@ export function InviteTeammatesView({
           {variant === 'direct' ? <Logo /> : <IntercomInviteHeader />}
 
           <div className="flex flex-col items-center gap-2">
-            <h1 className="text-xl font-medium text-foreground">Invite your teammates</h1>
+            <h1 className="text-xl font-medium text-foreground">Almost there</h1>
             <p className="text-sm text-muted-foreground text-center">
               Select team members to invite to your workspace
             </p>
@@ -531,7 +533,7 @@ export function InviteTeammatesView({
                     : 'Sending invites...'}
               </>
             ) : (
-              "Let's go"
+              completionLabel
             )}
           </Button>
 
