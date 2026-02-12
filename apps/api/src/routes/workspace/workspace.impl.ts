@@ -1502,7 +1502,8 @@ export const intercomIntegrationAuthorizeImpl = (
 
       const { authorizationUrl, state } = intercomService.generateAuthorizationUrl(
         context.user.id,
-        input.params.workspaceId
+        input.params.workspaceId,
+        'integration'
       );
 
       return {

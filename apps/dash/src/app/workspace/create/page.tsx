@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
@@ -9,19 +10,24 @@ import { ArrowLeftRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Control, Controller, FieldErrors, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { apiClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { InviteLoadingState, InviteTeammatesView } from '@/components/integrations/intercom';
+import {
+  InviteLoadingState,
+  InviteTeammatesView,
+  OAuthErrorState,
+  OAuthLoadingState,
+} from '@/components/integrations/intercom';
 import { URLInput } from '@/components/url-input';
 import { useAccount } from '@/features/account';
 import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { handleSafeResult, showErrorToast } from '@/lib/errors';
+import { type DefinedError, handleSafeResult, showErrorToast } from '@/lib/errors';
 import { mediaClient } from '@/lib/media';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -231,7 +237,9 @@ function IntercomConnectFlow() {
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
-      const [error, response] = await apiClient.provisioner.intercom.authorize({});
+      const [error, response] = await apiClient.provisioner.intercom.authorize({
+        query: { source: 'inapp' },
+      });
       const result = handleSafeResult(error, response?.data ?? null);
 
       if (!result.success) {
@@ -305,15 +313,79 @@ function IntercomConnectFlow() {
   );
 }
 
-export default function CreateWorkspacePage() {
-  const [flow] = useQueryState('flow', { defaultValue: 'intercom' });
+/**
+ * Marketplace install flow -- auto-initiates Intercom OAuth on mount.
+ * Entry point for users coming from the Intercom App Store via /install/intercom.
+ */
+function IntercomMarketplaceFlow() {
+  const [error, setError] = useState<DefinedError | null>(null);
+  const hasExecutedRef = useRef(false);
 
-  // Render Intercom connect flow if flow=intercom
-  if (flow === 'intercom') {
+  useEffect(() => {
+    if (hasExecutedRef.current) {
+      return;
+    }
+    hasExecutedRef.current = true;
+
+    const initiateOAuth = async () => {
+      try {
+        const [apiError, response] = await apiClient.provisioner.intercom.authorize({
+          query: { source: 'marketplace' },
+        });
+        const result = handleSafeResult(apiError, response?.data ?? null);
+
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
+
+        window.location.href = result.data.authorizationUrl;
+      } catch (err) {
+        setError({
+          defined: true,
+          code: 'UNKNOWN_ERROR',
+          status: 500,
+          message: err instanceof Error ? err.message : 'An unexpected error occurred',
+        });
+      }
+    };
+
+    initiateOAuth();
+  }, []);
+
+  if (error) {
+    return (
+      <OAuthErrorState
+        error={error}
+        errorActionPrimary={{
+          label: 'Try Again',
+          callback: () => window.location.reload(),
+        }}
+        errorActionSecondary={{
+          label: 'Contact Support',
+          callback: () => {
+            window.open(SUPPORT_EMAIL_MAILTO, '_blank');
+          },
+        }}
+      />
+    );
+  }
+
+  return <OAuthLoadingState />;
+}
+
+export default function CreateWorkspacePage() {
+  const [flow] = useQueryState('flow', { defaultValue: 'intercom-inapp' });
+
+  if (flow === 'intercom-marketplace') {
+    return <IntercomMarketplaceFlow />;
+  }
+
+  if (flow === 'intercom-inapp') {
     return <IntercomConnectFlow />;
   }
 
-  // Otherwise render the direct create flow
+  // Direct create flow (flow=direct or any other value)
   return <DirectCreateFlow />;
 }
 
@@ -449,7 +521,7 @@ function DirectCreateFlow() {
           isValid={isValid}
           isPending={isPending}
           onSubmit={handleSubmit(handleUrlSubmit)}
-          onConnectIntercom={() => router.push('/workspace/create?flow=intercom')}
+          onConnectIntercom={() => router.push('/workspace/create?flow=intercom-inapp')}
         />
       </div>
     </div>

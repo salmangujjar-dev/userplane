@@ -15,30 +15,30 @@ import {
 import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useIntercomAdmins } from '@/features/integrations';
 import { type DefinedError, handleSafeResult } from '@/lib/errors';
-import {
-  INTERCOM_APP_STORE_REDIRECT_URL,
-  INTERCOM_INSTALL_SOURCE_APP_STORE,
-  INTERCOM_INSTALL_SOURCE_KEY,
-} from '@/lib/intercom-install';
+import { INTERCOM_APP_STORE_REDIRECT_URL } from '@/lib/intercom-install';
 import { useWorkspaceStore } from '@/stores/workspace';
+
+/** Valid Intercom callback flow types */
+type IntercomFlow = 'intercom-inapp' | 'intercom-marketplace';
 
 /**
  * View shown after workspace is created to invite teammates.
  * Fetches Intercom teammates and first domain in parallel.
  * Always shows the full invite view (even with 0 teammates) so users can add people manually.
- * When isAppStoreInstall is true, completion/skip redirects to Intercom App Store.
+ * The flow param determines completion behavior and button labels.
  */
 function PostCreationInviteView({
   workspaceId,
-  isAppStoreInstall,
+  flow,
 }: {
   workspaceId: string;
-  isAppStoreInstall: boolean;
+  flow: IntercomFlow;
 }) {
   const router = useRouter();
+  const isMarketplace = flow === 'intercom-marketplace';
 
   const handleComplete = () => {
-    if (isAppStoreInstall) {
+    if (isMarketplace) {
       window.location.href = INTERCOM_APP_STORE_REDIRECT_URL;
     } else {
       router.push(`/workspace/${workspaceId}`);
@@ -46,7 +46,7 @@ function PostCreationInviteView({
   };
 
   const handleSkip = () => {
-    if (isAppStoreInstall) {
+    if (isMarketplace) {
       window.location.href = INTERCOM_APP_STORE_REDIRECT_URL;
     } else {
       router.push(`/workspace/${workspaceId}/recordings`);
@@ -97,20 +97,19 @@ function PostCreationInviteView({
       allowedDomains={teammatesData.data.allowedDomains}
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
-      completionLabel={isAppStoreInstall ? 'Go to Intercom' : 'Go to workspace'}
+      completionLabel={isMarketplace ? 'Go to Intercom' : 'Go to workspace'}
       onComplete={handleComplete}
       onSkip={handleSkip}
     />
   );
 }
 
-function IntercomCallbackContent() {
+function IntercomCallbackContent({ flow }: { flow: IntercomFlow }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<DefinedError | null>(null);
   const [createdWorkspace, setCreatedWorkspace] = useState<{
     workspaceId: string;
     workspaceName: string;
-    isAppStoreInstall: boolean;
   } | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -149,18 +148,9 @@ function IntercomCallbackContent() {
           // Set workspace in store so hooks can access it
           setWorkspaceStore(result.data.workspaceId);
 
-          // Detect App Store install source and clean up sessionStorage
-          const isAppStoreInstall =
-            sessionStorage.getItem(INTERCOM_INSTALL_SOURCE_KEY) ===
-            INTERCOM_INSTALL_SOURCE_APP_STORE;
-          if (isAppStoreInstall) {
-            sessionStorage.removeItem(INTERCOM_INSTALL_SOURCE_KEY);
-          }
-
           setCreatedWorkspace({
             workspaceId: result.data.workspaceId,
             workspaceName: result.data.workspaceName,
-            isAppStoreInstall,
           });
           setIsLoading(false);
         } else {
@@ -189,12 +179,7 @@ function IntercomCallbackContent() {
 
   // Show invite view after workspace creation
   if (createdWorkspace) {
-    return (
-      <PostCreationInviteView
-        workspaceId={createdWorkspace.workspaceId}
-        isAppStoreInstall={createdWorkspace.isAppStoreInstall}
-      />
-    );
+    return <PostCreationInviteView workspaceId={createdWorkspace.workspaceId} flow={flow} />;
   }
 
   // Show loading during OAuth callback processing
@@ -228,8 +213,8 @@ function CallbackContent() {
   const searchParams = useSearchParams();
   const flow = searchParams.get('flow');
 
-  if (flow === 'intercom') {
-    return <IntercomCallbackContent />;
+  if (flow === 'intercom-inapp' || flow === 'intercom-marketplace') {
+    return <IntercomCallbackContent flow={flow} />;
   }
 
   // Invalid callback flow - redirect to create page with error

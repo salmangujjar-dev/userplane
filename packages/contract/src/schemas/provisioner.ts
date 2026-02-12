@@ -43,6 +43,25 @@ export const WorkspaceCreateDataSchema = z.discriminatedUnion('created', [
 ]);
 
 /**
+ * Intercom OAuth source
+ * Identifies the origin of the OAuth flow for callback routing:
+ * - inapp: user initiated from /workspace/create (onboarding)
+ * - marketplace: user came from Intercom App Store
+ */
+export const IntercomOAuthSourceSchema = z
+  .enum(['inapp', 'marketplace'])
+  .optional()
+  .default('inapp');
+
+/**
+ * Intercom OAuth authorize request
+ * Optional source to identify the flow origin
+ */
+export const IntercomAuthorizeQuerySchema = z.object({
+  source: IntercomOAuthSourceSchema,
+});
+
+/**
  * Intercom OAuth authorize response
  * Returns the authorization URL and state for CSRF protection
  */

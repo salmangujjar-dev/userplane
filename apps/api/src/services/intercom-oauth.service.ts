@@ -34,6 +34,7 @@ import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-mem
 import type { InviteService } from '@/api/services/invite.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
+import type { IntercomOAuthSource } from '@/api/types';
 
 export interface IntercomServiceDeps {
   tokenService: TokenService;
@@ -75,12 +76,14 @@ export class IntercomService {
    * Generate OAuth authorization URL with signed state token
    * @param userId - The user initiating the OAuth flow
    * @param workspaceId - Optional workspace ID for workspace integration flow
+   * @param source - Origin of the OAuth flow for callback routing
    */
   generateAuthorizationUrl(
     userId: string,
-    workspaceId?: string
+    workspaceId?: string,
+    source?: IntercomOAuthSource
   ): { authorizationUrl: string; state: string } {
-    const state = this.deps.tokenService.signIntercomOAuthState(userId, workspaceId);
+    const state = this.deps.tokenService.signIntercomOAuthState(userId, workspaceId, source);
     const authorizationUrl = getAuthorizationUrl(state);
 
     return { authorizationUrl, state };

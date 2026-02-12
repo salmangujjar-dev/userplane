@@ -8,9 +8,10 @@ type Props = {
 
 /**
  * Generic Intercom OAuth callback dispatcher
- * Decodes the state token and redirects to the appropriate callback page:
- * - Onboarding flow (no workspaceId): /workspace/create/callback?flow=intercom
- * - Integration flow (has workspaceId): /:workspaceId/settings/integrations/intercom/callback
+ * Decodes the JWT state token and redirects to the appropriate callback page based on:
+ * - workspaceId: present -> existing workspace integration flow
+ * - source: 'marketplace' -> workspace creation via Intercom App Store
+ * - source: 'inapp' or absent -> workspace creation via in-app onboarding
  *
  * This keeps separation of concerns:
  * - This page: Simple redirect logic based on state
@@ -27,7 +28,8 @@ export default async function IntercomCallbackPage({ searchParams }: Props) {
   }
 
   // Decode JWT state token (naive base64 decode of payload)
-  let payload: { workspaceId?: string };
+  // Full cryptographic verification happens on the API when the callback is processed
+  let payload: { workspaceId?: string; source?: string };
   try {
     // JWT format: header.payload.signature
     const parts = state.split('.');
@@ -49,14 +51,14 @@ export default async function IntercomCallbackPage({ searchParams }: Props) {
     state,
   });
 
-  // Check if workspaceId exists in payload to determine flow
   if (payload.workspaceId) {
     // Integration flow - redirect to workspace integration callback
     redirect(
       `/workspace/${payload.workspaceId}/settings/integrations/intercom/callback?${queryParams.toString()}`
     );
-  } else {
-    // Onboarding flow - redirect to workspace creation callback
-    redirect(`/workspace/create/callback?flow=intercom&${queryParams.toString()}`);
   }
+
+  // Workspace creation flow - route based on source
+  const flow = payload.source === 'marketplace' ? 'intercom-marketplace' : 'intercom-inapp';
+  redirect(`/workspace/create/callback?flow=${flow}&${queryParams.toString()}`);
 }

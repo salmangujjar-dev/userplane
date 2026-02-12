@@ -4,6 +4,7 @@ import { z } from 'zod';
 import {
   ApiResponseSchema,
   CreateWorkspaceSchema,
+  IntercomAuthorizeQuerySchema,
   IntercomAuthorizeResponseSchema,
   IntercomCallbackQuerySchema,
   ProvisionerErrors,
@@ -47,6 +48,7 @@ export const intercomAuthorize = oc
   .route({
     method: 'GET',
     path: '/provisioner/intercom/authorize',
+    inputStructure: 'detailed',
     summary: 'Initiate Intercom OAuth',
     description: 'Generate Intercom OAuth authorization URL with CSRF state token',
     tags: ['Provisioner', 'Intercom'],
@@ -54,7 +56,7 @@ export const intercomAuthorize = oc
   .errors({
     UNAUTHORIZED: ProvisionerErrors.UNAUTHORIZED,
   })
-  .input(z.object({}))
+  .input(z.object({ query: IntercomAuthorizeQuerySchema }))
   .output(ApiResponseSchema(IntercomAuthorizeResponseSchema));
 
 /**
