@@ -15,6 +15,7 @@ import { prettyJSON } from 'hono/pretty-json';
 
 import { auth } from '@/api/clients/auth';
 import { rateLimiter } from '@/api/clients/redis';
+import { cacheService } from '@/api/clients/redis';
 import { env, logConfig } from '@/api/env';
 import {
   createInboxInitializeHandler,
@@ -24,13 +25,14 @@ import {
   createMessengerSubmitHandler,
 } from '@/api/handlers/intercom-canvas.handler';
 import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.handler';
+import { createUninstallHandler } from '@/api/handlers/intercom-uninstall.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
 import { createLogger } from '@/api/lib/logger';
 import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
 import { apiRouter } from '@/api/routes/api.router';
-import { intercomCanvasService, intercomHealthCheckService } from '@/api/services';
+import { integrationRepo, intercomCanvasService, intercomHealthCheckService } from '@/api/services';
 
 const app = new Hono();
 const logger = createLogger('api');
@@ -220,10 +222,19 @@ if (intercomRateLimitMiddleware) {
 }
 healthCheckRouter.post('/', createHealthCheckHandler(intercomHealthCheckService));
 
+// Uninstall webhook route (app uninstalled from Intercom)
+const uninstallRouter = new Hono();
+uninstallRouter.use('*', verifyIntercomSignature(env.intercom.clientSecret));
+if (intercomRateLimitMiddleware) {
+  uninstallRouter.use('*', intercomRateLimitMiddleware);
+}
+uninstallRouter.post('/', createUninstallHandler({ integrationRepo, cacheService }));
+
 // Mount canvas routes
 app.route('/api/v1/intercom/canvas/messenger', messengerRouter);
 app.route('/api/v1/intercom/canvas/inbox', inboxRouter);
 app.route('/api/v1/intercom/health-check', healthCheckRouter);
+app.route('/api/v1/intercom/uninstall', uninstallRouter);
 
 logger.info('Intercom Canvas Kit routes registered:');
 logger.info('  Messenger (for users, leads, and visitors):');
@@ -235,6 +246,8 @@ logger.info('    → /api/v1/intercom/canvas/inbox/initialize');
 logger.info('    → /api/v1/intercom/canvas/inbox/submit');
 logger.info('  Health Check (installation status):');
 logger.info('    → POST /api/v1/intercom/health-check');
+logger.info('  Uninstall (app removal notification):');
+logger.info('    → POST /api/v1/intercom/uninstall');
 
 // Workspace logo upload route (multipart/form-data - handled before OpenAPI)
 // This route handles file uploads which require special multipart handling
