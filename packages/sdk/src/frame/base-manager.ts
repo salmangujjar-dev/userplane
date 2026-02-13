@@ -123,6 +123,13 @@ export abstract class BaseFrameManager implements IFrameManager {
       url.searchParams.set(URL_PARAMS.WORKSPACE, params.workspaceIds.join(','));
     }
 
+    // Forward userplane-meta from host page URL to recorder iframe
+    const hostParams = new URLSearchParams(window.location.search);
+    const meta = hostParams.get(URL_PARAMS.META);
+    if (meta) {
+      url.searchParams.set(URL_PARAMS.META, meta);
+    }
+
     const managerName = this.getManagerName();
 
     return new FrameConfigBuilder()

@@ -9,6 +9,7 @@ export const URL_PARAMS = {
   TOKEN: 'userplane-token',
   ACTION: 'userplane-action',
   WORKSPACE: 'userplane-workspace',
+  META: 'userplane-meta',
 } as const;
 
 /**
