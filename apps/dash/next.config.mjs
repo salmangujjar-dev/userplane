@@ -1,9 +1,7 @@
 /* global process */
-import dotenv from 'dotenv';
-
-import { withSentryConfig } from '@sentry/nextjs';
-
+import { withPostHogConfig } from '@posthog/nextjs-config';
 import { getEnvFileName } from '@workspace/shared/env';
+import dotenv from 'dotenv';
 
 // Load environment-specific .env file based on APP_ENV
 // APP_ENV=development (default) -> .env.development
@@ -13,10 +11,9 @@ const appEnv = process.env.APP_ENV || 'development';
 const envFile = getEnvFileName(appEnv);
 dotenv.config({ path: envFile, override: true });
 
-// Skip Sentry build instrumentation in development to speed up builds
-// Sentry adds significant webpack overhead even without source map uploads
-// Enable Sentry when: production build OR SENTRY_AUTH_TOKEN is set (for source map uploads)
-const shouldUseSentry = appEnv === 'production' || !!process.env.SENTRY_AUTH_TOKEN;
+// Skip PostHog build instrumentation in development to speed up builds
+// Enable PostHog when: production build OR POSTHOG_PERSONAL_API_KEY is set (for source map uploads)
+const shouldUsePostHog = appEnv === 'production' || !!process.env.POSTHOG_PERSONAL_API_KEY;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -78,29 +75,13 @@ const nextConfig = {
   // It properly handles server-only imports out of the box
 }
 
-// Sentry config for production builds and source map uploads
-// Skipped in development to avoid ~30-40s of webpack overhead
-const sentryConfig = {
-  // Sentry webpack plugin options
-  silent: true, // Suppresses all logs
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT_DASH,
-
-  // Source maps upload configuration
-  widenClientFileUpload: true,
-  hideSourceMaps: true,
-
-  // Webpack-specific options
-  webpack: {
-    treeshake: {
-      removeDebugLogging: true,
-    },
-    automaticVercelMonitors: true,
-  },
-};
-
-// Export with or without Sentry based on environment
-// Development builds skip Sentry instrumentation for faster iteration
-export default shouldUseSentry
-  ? withSentryConfig(nextConfig, sentryConfig)
+// Export with or without PostHog based on environment
+// Development builds skip PostHog instrumentation for faster iteration
+export default shouldUsePostHog
+  ? withPostHogConfig(nextConfig, {
+      personalApiKey: process.env.POSTHOG_PERSONAL_API_KEY,
+      projectId: process.env.POSTHOG_PROJECT_ID,
+      host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+      sourcemaps: { enabled: true, deleteAfterUpload: true },
+    })
   : nextConfig;

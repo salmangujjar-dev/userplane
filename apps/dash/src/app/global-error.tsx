@@ -1,9 +1,8 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
-import { buildErrorTags, type ReactErrorContext } from '@workspace/sentry';
 import { Button } from '@workspace/ui/components/button';
 import Image from 'next/image';
+import posthog from 'posthog-js';
 import { useEffect } from 'react';
 
 import { mediaClient } from '@/lib/media';
@@ -16,13 +15,9 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Capture error in Sentry
-    const reactCtx: ReactErrorContext = { digest: error.digest };
-    Sentry.captureException(error, {
-      tags: buildErrorTags({ errorBoundary: 'global' }),
-      contexts: {
-        react: reactCtx,
-      },
+    posthog.captureException(error, {
+      error_boundary: 'global',
+      digest: error.digest,
     });
   }, [error]);
 

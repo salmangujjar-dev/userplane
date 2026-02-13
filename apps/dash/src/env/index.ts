@@ -7,17 +7,16 @@
 import { isSecureEnvironment } from '@workspace/shared/env';
 import { ZodError } from 'zod';
 
-import { SENTRY } from './defaults';
 import {
   type ApiConfig,
   type AuthConfig,
   type DashboardConfig,
   type EnvConfig,
   type HomeConfig,
+  type PostHogConfig,
   type RawEnvConfig,
   rawEnvSchema,
   type RecorderConfig,
-  type SentryConfig,
   type StorageConfig,
 } from './schema';
 
@@ -28,8 +27,8 @@ export type {
   DashboardConfig,
   EnvConfig,
   HomeConfig,
+  PostHogConfig,
   RecorderConfig,
-  SentryConfig,
   StorageConfig,
 };
 
@@ -66,20 +65,13 @@ function getExplicitEnv(): Record<string, string | undefined> {
     NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE: process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE,
     NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM: process.env.NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM,
 
-    // Sentry (client)
-    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
-    NEXT_PUBLIC_SENTRY_RELEASE: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
-    NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE: process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
-    NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE:
-      process.env.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
-    NEXT_PUBLIC_SENTRY_REPLAYS_ERROR_SAMPLE_RATE:
-      process.env.NEXT_PUBLIC_SENTRY_REPLAYS_ERROR_SAMPLE_RATE,
-
-    // Sentry (server) -- runtime-only, no inlining needed, but included for
-    // completeness so the schema can validate them from the same input object
-    SENTRY_DSN: process.env.SENTRY_DSN,
-    SENTRY_RELEASE: process.env.SENTRY_RELEASE,
-    SENTRY_TRACES_SAMPLE_RATE: process.env.SENTRY_TRACES_SAMPLE_RATE,
+    // PostHog
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE:
+      process.env.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE,
+    NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE:
+      process.env.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE,
   };
 }
 
@@ -117,13 +109,6 @@ function formatZodErrors(error: ZodError): string {
  * Transform raw environment config into structured application config
  */
 function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
-  const isProduction = raw.APP_ENV === 'production';
-
-  // Use production sample rate in production, otherwise use configured or default
-  const tracesSampleRate = isProduction
-    ? SENTRY.TRACES_SAMPLE_RATE_PROD
-    : raw.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE;
-
   return {
     appEnv: raw.APP_ENV,
     useSecureCookies: isSecureEnvironment(raw.APP_ENV),
@@ -148,12 +133,11 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       imageZone: raw.NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE,
       skipTransform: raw.NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM,
     },
-    sentry: {
-      dsn: raw.NEXT_PUBLIC_SENTRY_DSN,
-      release: raw.NEXT_PUBLIC_SENTRY_RELEASE,
-      tracesSampleRate,
-      replaysSessionSampleRate: raw.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
-      replaysErrorSampleRate: raw.NEXT_PUBLIC_SENTRY_REPLAYS_ERROR_SAMPLE_RATE,
+    posthog: {
+      apiKey: raw.NEXT_PUBLIC_POSTHOG_KEY,
+      host: raw.NEXT_PUBLIC_POSTHOG_HOST,
+      sessionReplaySampleRate: raw.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE,
+      sessionReplayErrorSampleRate: raw.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE,
     },
   };
 }

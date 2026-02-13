@@ -58,33 +58,21 @@ export function useCreateLink(workspaceId: string | null) {
           queryClient.setQueryData(queryKey, data);
         });
 
-        // If error code is in throwErrors list, throw it so caller can catch in onError
-        const shouldThrow = throwErrors?.includes(result.error.code as keyof typeof LinkErrors);
-        if (shouldThrow) {
-          throw result.error;
+        // Errors in throwErrors are handled by the caller in their onSuccess (no toast here)
+        const callerHandles = throwErrors?.includes(result.error.code as keyof typeof LinkErrors);
+        if (!callerHandles) {
+          showErrorToast(result.error);
         }
-
-        // Otherwise show default toast
-        showErrorToast(result.error);
         return;
       }
       toast.success('Link created successfully');
     },
-    onError: (error: unknown, { throwErrors }, context) => {
+    onError: (error: unknown, _variables, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-
-      // Check if this is an error we intentionally threw (should be handled by caller)
-      const err = error as { code?: string };
-      const isIntentionalThrow =
-        err.code && throwErrors?.includes(err.code as keyof typeof LinkErrors);
-
-      // Only show toast for unexpected errors, not intentionally thrown ones
-      if (!isIntentionalThrow) {
-        handleUnknownError(error, 'Failed to process link operation');
-      }
+      handleUnknownError(error, 'Failed to process link operation');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: linkKeys.lists() });

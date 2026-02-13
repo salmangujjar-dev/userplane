@@ -5,7 +5,7 @@
  */
 import { z } from 'zod';
 
-import { AUTH, DEV_URLS, SENTRY, STORAGE } from './defaults';
+import { AUTH, DEV_URLS, POSTHOG, STORAGE } from './defaults';
 
 // =============================================================================
 // Parse Utilities
@@ -85,30 +85,19 @@ export const storageEnvSchema = z.object({
   NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM: booleanWithDefault(false),
 });
 
-/** Client-side Sentry env vars schema */
-export const sentryClientEnvSchema = z.object({
-  NEXT_PUBLIC_SENTRY_DSN: z
+/** PostHog env vars schema */
+export const posthogEnvSchema = z.object({
+  NEXT_PUBLIC_POSTHOG_KEY: z
     .string()
     .optional()
-    .transform((val): string | undefined => val || undefined)
-    .pipe(z.string().url().optional()),
-  NEXT_PUBLIC_SENTRY_RELEASE: z.string().optional(),
-  NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE: floatWithDefault(SENTRY.TRACES_SAMPLE_RATE_DEV),
-  NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE: floatWithDefault(
-    SENTRY.REPLAYS_SESSION_SAMPLE_RATE
+    .transform((val): string | undefined => val || undefined),
+  NEXT_PUBLIC_POSTHOG_HOST: stringWithDefault(POSTHOG.HOST),
+  NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE: floatWithDefault(
+    POSTHOG.SESSION_REPLAY_SAMPLE_RATE
   ),
-  NEXT_PUBLIC_SENTRY_REPLAYS_ERROR_SAMPLE_RATE: floatWithDefault(SENTRY.REPLAYS_ERROR_SAMPLE_RATE),
-});
-
-/** Server-side Sentry env vars schema */
-export const sentryServerEnvSchema = z.object({
-  SENTRY_DSN: z
-    .string()
-    .optional()
-    .transform((val): string | undefined => val || undefined)
-    .pipe(z.string().url().optional()),
-  SENTRY_RELEASE: z.string().optional(),
-  SENTRY_TRACES_SAMPLE_RATE: floatWithDefault(SENTRY.TRACES_SAMPLE_RATE_DEV),
+  NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE: floatWithDefault(
+    POSTHOG.SESSION_REPLAY_ERROR_SAMPLE_RATE
+  ),
 });
 
 /** Combined raw environment variables schema */
@@ -116,8 +105,7 @@ export const rawEnvSchema = appEnvSchema
   .merge(urlEnvSchema)
   .merge(authEnvSchema)
   .merge(storageEnvSchema)
-  .merge(sentryClientEnvSchema)
-  .merge(sentryServerEnvSchema);
+  .merge(posthogEnvSchema);
 
 /** Raw parsed environment type */
 export type RawEnvConfig = z.infer<typeof rawEnvSchema>;
@@ -159,13 +147,12 @@ export const storageConfigSchema = z.object({
   skipTransform: z.boolean(),
 });
 
-/** Sentry configuration schema */
-export const sentryConfigSchema = z.object({
-  dsn: z.string().url().optional(),
-  release: z.string().optional(),
-  tracesSampleRate: z.number(),
-  replaysSessionSampleRate: z.number(),
-  replaysErrorSampleRate: z.number(),
+/** PostHog configuration schema */
+export const posthogConfigSchema = z.object({
+  apiKey: z.string().optional(),
+  host: z.string().url(),
+  sessionReplaySampleRate: z.number(),
+  sessionReplayErrorSampleRate: z.number(),
 });
 
 /** Complete environment configuration schema */
@@ -178,7 +165,7 @@ export const envConfigSchema = z.object({
   recorder: recorderConfigSchema,
   auth: authConfigSchema,
   storage: storageConfigSchema,
-  sentry: sentryConfigSchema,
+  posthog: posthogConfigSchema,
 });
 
 // =============================================================================
@@ -191,5 +178,5 @@ export type HomeConfig = z.infer<typeof homeConfigSchema>;
 export type RecorderConfig = z.infer<typeof recorderConfigSchema>;
 export type AuthConfig = z.infer<typeof authConfigSchema>;
 export type StorageConfig = z.infer<typeof storageConfigSchema>;
-export type SentryConfig = z.infer<typeof sentryConfigSchema>;
+export type PostHogConfig = z.infer<typeof posthogConfigSchema>;
 export type EnvConfig = z.infer<typeof envConfigSchema>;

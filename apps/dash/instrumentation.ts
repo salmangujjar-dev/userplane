@@ -1,53 +1,37 @@
 /**
  * Next.js instrumentation file
- * This file is used to initialize Sentry on the server and edge runtimes
+ * This file is used to initialize PostHog on the server for error capture
  * Learn more: https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
  */
+import { PostHog } from 'posthog-node';
 
-import * as Sentry from '@sentry/nextjs';
-import { createBeforeSendFilter, IGNORED_ERRORS_SERVER } from '@workspace/sentry';
+let serverPostHog: PostHog | null = null;
 
 export async function register() {
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
-    // Server-side Sentry initialization
+  if (process.env.NEXT_RUNTIME === 'nodejs' || process.env.NEXT_RUNTIME === 'edge') {
     const { env } = await import('./src/lib/env');
-
-    Sentry.init({
-      dsn: env.sentry.dsn,
-      environment: env.nodeEnv,
-      release: env.sentry.release,
-
-      // Performance monitoring
-      tracesSampleRate: env.sentry.tracesSampleRate,
-
-      // Filter sensitive data
-      beforeSend: createBeforeSendFilter(),
-
-      // Ignore expected errors
-      ignoreErrors: [...IGNORED_ERRORS_SERVER],
-    });
-  }
-
-  if (process.env.NEXT_RUNTIME === 'edge') {
-    // Edge runtime Sentry initialization
-    const { env } = await import('./src/lib/env');
-
-    Sentry.init({
-      dsn: env.sentry.dsn,
-      environment: env.nodeEnv,
-      release: env.sentry.release,
-
-      // Performance monitoring
-      tracesSampleRate: env.sentry.tracesSampleRate,
-
-      // Filter sensitive data
-      beforeSend: createBeforeSendFilter(),
-    });
+    if (env.posthog.apiKey) {
+      serverPostHog = new PostHog(env.posthog.apiKey, {
+        host: env.posthog.host,
+        flushAt: 1,
+        flushInterval: 0,
+      });
+    }
   }
 }
 
-/**
- * Capture errors from nested React Server Components
- * @see https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#errors-from-nested-react-server-components
- */
-export const onRequestError = Sentry.captureRequestError;
+export async function onRequestError(
+  error: { digest?: string } & Error,
+  request: { method: string },
+  context: { routePath: string; routeType: string; renderSource: string }
+) {
+  if (serverPostHog) {
+    serverPostHog.captureException(error, undefined, {
+      request_method: request.method,
+      route_path: context.routePath,
+      route_type: context.routeType,
+      render_source: context.renderSource,
+    });
+    await serverPostHog.flush();
+  }
+}

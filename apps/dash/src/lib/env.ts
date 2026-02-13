@@ -2,20 +2,16 @@
  * Environment configuration for Dashboard
  * Centralizes all environment variable access with type safety and validation
  */
-import { type Environment, isProductionLike, parseAppEnv } from '@workspace/shared/env';
+import { type Environment, parseAppEnv } from '@workspace/shared/env';
 
-interface SentryConfig {
-  // Runtime configuration
-  dsn?: string;
-  release?: string;
-  tracesSampleRate: number;
-  replaysSessionSampleRate: number;
-  replaysOnErrorSampleRate: number;
-
-  // Build-time only (for source map uploads)
-  org?: string;
-  project?: string;
-  authToken?: string;
+interface PostHogConfig {
+  apiKey?: string;
+  host: string;
+  sessionReplaySampleRate: number;
+  sessionReplayErrorSampleRate: number;
+  // Build-time only
+  personalApiKey?: string;
+  projectId?: string;
 }
 
 interface MediaConfig {
@@ -35,7 +31,7 @@ interface EnvConfig {
   homeUrl: string;
   authCookiePrefix: string;
   media: MediaConfig;
-  sentry: SentryConfig;
+  posthog: PostHogConfig;
 }
 
 /**
@@ -52,10 +48,7 @@ function parseFloat(value: string | undefined, defaultValue: number): number {
  */
 export function loadEnvConfig(): EnvConfig {
   const nodeEnv = (process.env.NODE_ENV || 'development') as EnvConfig['nodeEnv'];
-  // APP_ENV is set via next.config.mjs (e.g., APP_ENV=development next dev)
   const appEnv = parseAppEnv(process.env.APP_ENV);
-  // Use appEnv to determine production-like behavior for Sentry sampling
-  const isProdLike = isProductionLike(appEnv);
 
   const config: EnvConfig = {
     nodeEnv,
@@ -68,27 +61,19 @@ export function loadEnvConfig(): EnvConfig {
       imageZone: process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE || 'userplane.io',
       skipTransform: process.env.NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM === 'true',
     },
-    sentry: {
-      // Runtime configuration
-      dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN,
-      release: process.env.NEXT_PUBLIC_SENTRY_RELEASE || process.env.SENTRY_RELEASE,
-      tracesSampleRate: parseFloat(
-        process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE || process.env.SENTRY_TRACES_SAMPLE_RATE,
-        isProdLike ? 0.1 : 1.0
-      ),
-      replaysSessionSampleRate: parseFloat(
-        process.env.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
+    posthog: {
+      apiKey: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+      host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+      sessionReplaySampleRate: parseFloat(
+        process.env.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE,
         0.1
       ),
-      replaysOnErrorSampleRate: parseFloat(
-        process.env.NEXT_PUBLIC_SENTRY_REPLAYS_ERROR_SAMPLE_RATE,
+      sessionReplayErrorSampleRate: parseFloat(
+        process.env.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE,
         1.0
       ),
-
-      // Build-time only (for source map uploads)
-      org: process.env.SENTRY_ORG,
-      project: process.env.SENTRY_PROJECT_DASH,
-      authToken: process.env.SENTRY_AUTH_TOKEN,
+      personalApiKey: process.env.POSTHOG_PERSONAL_API_KEY,
+      projectId: process.env.POSTHOG_PROJECT_ID,
     },
   };
 
@@ -111,11 +96,10 @@ export const clientEnv = {
   homeUrl: env.homeUrl,
   authCookiePrefix: env.authCookiePrefix,
   media: env.media,
-  sentry: {
-    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-    release: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
-    tracesSampleRate: env.sentry.tracesSampleRate,
-    replaysSessionSampleRate: env.sentry.replaysSessionSampleRate,
-    replaysOnErrorSampleRate: env.sentry.replaysOnErrorSampleRate,
+  posthog: {
+    apiKey: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+    sessionReplaySampleRate: env.posthog.sessionReplaySampleRate,
+    sessionReplayErrorSampleRate: env.posthog.sessionReplayErrorSampleRate,
   },
 } as const;

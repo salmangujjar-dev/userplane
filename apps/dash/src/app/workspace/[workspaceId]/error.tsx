@@ -1,14 +1,8 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
-import {
-  buildErrorTags,
-  buildWorkspaceTags,
-  type ReactErrorContext,
-  type WorkspaceContext,
-} from '@workspace/sentry';
 import { toast } from '@workspace/ui/components/sonner';
 import { useParams, useRouter } from 'next/navigation';
+import posthog from 'posthog-js';
 import { useEffect } from 'react';
 
 import { DinoError } from '@/components/shared/dino-error';
@@ -28,18 +22,10 @@ export default function WorkspaceError({
   useEffect(() => {
     logger.error({ err: error, digest: error.digest }, 'Workspace error boundary caught error');
 
-    // Capture error in Sentry with workspace context
-    const reactCtx: ReactErrorContext = { digest: error.digest };
-    const workspaceCtx: WorkspaceContext = { workspace_id: workspaceId || '' };
-    Sentry.captureException(error, {
-      tags: {
-        ...buildErrorTags({ errorBoundary: 'workspace' }),
-        ...buildWorkspaceTags({ workspaceId }),
-      },
-      contexts: {
-        react: reactCtx,
-        workspace: workspaceCtx,
-      },
+    posthog.captureException(error, {
+      error_boundary: 'workspace',
+      workspace_id: workspaceId || '',
+      digest: error.digest,
     });
 
     toast.error('Something went wrong', {
