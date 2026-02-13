@@ -47,7 +47,7 @@ import type {
 } from './types';
 import { readWorkspaceIds } from './utils/meta';
 import { clearTabRef as clearTabRefUtil, getOrCreateTabRef } from './utils/tab';
-import { parseUrlParams } from './utils/url';
+import { parseMetaParams, parseUrlParams } from './utils/url';
 
 // Compile-time constants injected by Vite define (see vite.config.ts).
 // When consumed from source by other bundlers (e.g. Next.js/Turbopack in dev),
@@ -275,6 +275,15 @@ export function initialize(options: InitializeOptions = {}): void {
 
   // Set capture enabled (default: true)
   captureEnabled = options.captureEnabled !== false;
+
+  // Inject URL meta params into static metadata
+  const metaParams = parseMetaParams();
+  if (metaParams) {
+    for (const [key, value] of Object.entries(metaParams)) {
+      setMetadataValue(key, value);
+    }
+    logger.debug({ keys: Object.keys(metaParams) }, 'Injected URL meta params');
+  }
 
   // Create frame manager factory with callbacks
   factory = new FrameManagerFactory({

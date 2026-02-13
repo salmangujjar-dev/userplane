@@ -35,6 +35,7 @@ import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildStaleRecordingCheckKey } from '@/api/inngest/idempotency';
 import { generateRecordingId, generateSessionId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
+import { sanitizeMetadataObject, sanitizeNotes } from '@/api/lib/metadata';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import {
   LinkRepository,
@@ -427,7 +428,12 @@ export class SessionService {
     // Extract file paths and sizes for database (only for files being uploaded)
     const filePaths = this.extractFilePaths(fileUploads);
 
-    logger.debug({ customMetadata: metadata.customMetadata ?? null }, 'Custom metadata received');
+    // Sanitize metadata before persistence
+    const sanitizedNotes = sanitizeNotes(metadata.notes);
+    const sanitizedCustomMeta = sanitizeMetadataObject(metadata.customMetadata, 'custom');
+    const sanitizedSystemMeta = sanitizeMetadataObject(metadata.systemMetadata, 'system');
+
+    logger.debug({ customMetadata: sanitizedCustomMeta ?? null }, 'Custom metadata received');
 
     // Fetch project's retention days to compute expiresAt
     const project = await this.deps.projectRepo.findById(linkData.projectId);
@@ -448,11 +454,9 @@ export class SessionService {
         recordingConsoleLogRef: filePaths.consoleLogPath,
         recordingNetworkLogsRef: filePaths.networkLogPath,
         recordingActionRef: filePaths.actionPath,
-        systemMeta: metadata.systemMetadata,
-        customMeta: {
-          ...metadata.customMetadata,
-        },
-        notes: metadata.notes ?? null,
+        systemMeta: sanitizedSystemMeta,
+        customMeta: sanitizedCustomMeta ? { ...sanitizedCustomMeta } : {},
+        notes: sanitizedNotes,
         expiresAt,
       });
     } catch {
