@@ -28,34 +28,3 @@ export function parseUrlParams(): URLParams | null {
 
   return null;
 }
-
-/**
- * Parse `userplane-meta` query parameter into key-value pairs.
- *
- * Format: `?userplane-meta=key1%3Dval1,key2%3Dval2`
- * After decoding: `key1=val1,key2=val2`
- *
- * @returns Record of key-value pairs, or null if param is absent
- */
-export function parseMetaParams(): Record<string, string> | null {
-  const params = new URLSearchParams(window.location.search);
-  const raw = params.get(URL_PARAMS.META);
-
-  if (!raw) return null;
-
-  const result: Record<string, string> = {};
-
-  for (const entry of raw.split(',')) {
-    const eqIndex = entry.indexOf('=');
-    if (eqIndex === -1) continue;
-
-    const key = decodeURIComponent(entry.slice(0, eqIndex)).trim();
-    const value = decodeURIComponent(entry.slice(eqIndex + 1));
-
-    if (key) {
-      result[key] = value;
-    }
-  }
-
-  return Object.keys(result).length > 0 ? result : null;
-}

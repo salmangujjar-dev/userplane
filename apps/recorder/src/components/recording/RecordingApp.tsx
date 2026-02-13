@@ -22,7 +22,7 @@ import {
 import { createLogger } from '@/lib/logger';
 import { classifyError, type ErrorAction, type RecordingError } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
-import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
+import { getUrlParams, parseMetaParams, parseWorkspaceIds } from '@/utils/url';
 
 import ErrorScreen from './ErrorScreen';
 import PostRecordingAckScreen from './PostRecordingAckScreen';
@@ -263,15 +263,21 @@ function RecordingAppContent() {
    * Submit recording with metadata from capture iframes
    */
   const handleSubmitRecording = async (notes?: string) => {
-    let customMetadata: Record<string, unknown> | null = null;
+    const urlMeta = parseMetaParams();
 
+    let bridgeMetadata: Record<string, unknown> | null = null;
     if (isEmbedded && crossTab) {
       logger.debug('gathering metadata from capture tabs');
       try {
-        customMetadata = await gatherMetadataFromCaptureTabs();
+        bridgeMetadata = await gatherMetadataFromCaptureTabs();
       } catch (err) {
         logger.warn({ err }, 'metadata collection failed (non-fatal)');
       }
+    }
+
+    let customMetadata: Record<string, unknown> | null = null;
+    if (urlMeta || bridgeMetadata) {
+      customMetadata = { ...(urlMeta ?? {}), ...(bridgeMetadata ?? {}) };
     }
 
     await actions.submitRecording(customMetadata, notes);
