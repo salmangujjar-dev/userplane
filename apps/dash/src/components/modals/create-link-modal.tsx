@@ -170,7 +170,16 @@ export function CreateLinkModal({
       },
       {
         onSuccess: (result) => {
-          if (!result.success) return;
+          if (!result.success) {
+            setState({
+              view: 'error',
+              error: {
+                message: result.error.message || 'Failed to create link',
+                code: result.error.code,
+              },
+            });
+            return;
+          }
           setState({
             view: 'share',
             linkUrl: result.data.link.linkURL,
@@ -489,7 +498,7 @@ function ErrorView({
 
   const handleUpgrade = () => {
     if (workspaceId) {
-      window.location.href = `/workspace/${workspaceId}/settings?tab=billing`;
+      window.location.href = `/workspace/${workspaceId}/settings?tab=plan-usage`;
     }
   };
 

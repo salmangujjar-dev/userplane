@@ -3,8 +3,8 @@ import type { PlanId } from '@workspace/pricing';
 
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
-import { handleUnknownError } from '@/lib/errors';
-import type { ManagePlanData, PlanChangePreviewData } from '@/types';
+import { handleSafeResult, handleUnknownError } from '@/lib/errors';
+import type { PlanChangePreviewData } from '@/types';
 
 interface ManagePlanCallbacks {
   onCheckout?: (data: { slug: string }) => void;
@@ -26,7 +26,7 @@ interface ManagePlanInput {
  * Server routes to appropriate flow based on subscription status and user role
  */
 export function useManagePlan(callbacks?: ManagePlanCallbacks) {
-  return useMutation<ManagePlanData, Error, ManagePlanInput>({
+  return useMutation({
     mutationFn: async (input: ManagePlanInput) => {
       const [error, response] = await apiClient.billing.managePlan({
         params: { workspaceId: input.workspaceId },
@@ -35,18 +35,27 @@ export function useManagePlan(callbacks?: ManagePlanCallbacks) {
           action: input.action,
         },
       });
-
-      if (error) {
-        throw error;
-      }
-
-      if (!response?.data) {
+      const result = handleSafeResult(error, response?.data ?? null);
+      if (result.success && result.data === null) {
         throw new Error('No data returned from manage plan');
       }
-
-      return response.data;
+      return result;
     },
-    onSuccess: (data) => {
+    onSuccess: (result) => {
+      if (!result.success) {
+        if (callbacks?.onError) {
+          callbacks.onError(
+            result.error as unknown as Error & {
+              code?: string;
+              data?: { code?: string; message?: string };
+            }
+          );
+        } else {
+          handleUnknownError(result.error, 'Failed to manage plan');
+        }
+        return;
+      }
+      const data = result.data;
       if (data.type === 'checkout' && callbacks?.onCheckout) {
         callbacks.onCheckout({ slug: data.data.slug });
       } else if (data.type === 'preview' && callbacks?.onPreview) {
@@ -73,11 +82,15 @@ export function useManagePlan(callbacks?: ManagePlanCallbacks) {
  * Redirects user to portal for managing subscription, payment methods, etc.
  */
 export function useOpenCustomerPortal() {
-  return useMutation<void, Error, void>({
+  return useMutation({
     mutationFn: async () => {
       const result = await authClient.dodopayments.customer.portal();
-      if (result.error) {
-        throw new Error(result.error.message || 'Failed to open customer portal');
+      return handleSafeResult(result.error, result.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        handleUnknownError(result.error, 'Failed to open customer portal');
+        return;
       }
       if (result.data?.url) {
         window.location.href = result.data.url;

@@ -1,7 +1,6 @@
-import * as Sentry from '@sentry/nextjs';
 import { isDefinedError } from '@workspace/client';
-import { buildErrorTags, ErrorTypes } from '@workspace/sentry';
 import { toast } from '@workspace/ui/components/sonner';
+import posthog from 'posthog-js';
 
 /**
  * Re-export isDefinedError from @workspace/client for convenience
@@ -29,7 +28,11 @@ export type { ORPCDefinedError as DefinedError };
  * - Success: contains data, no error
  * - Failure: contains known error, no data
  *
- * Unknown errors are thrown and should be caught by error boundaries/handlers
+ * Unknown errors are thrown and should be caught by error boundaries/handlers.
+ *
+ * Convention: defined API errors must be returned as SafeResult (via handleSafeResult)
+ * and handled in the UI; do not throw them. In development, Next.js may still show
+ * the error overlay when a boundary catches an error; production only shows boundary UI.
  */
 export type SafeResult<T> =
   | { success: true; data: T; error?: never }
@@ -39,7 +42,7 @@ export type SafeResult<T> =
  * Process API response into SafeResult
  *
  * - Known errors (isDefinedError): returned as SafeResult with success=false
- * - Unknown errors: thrown (will trigger Sentry, error boundaries, etc.)
+ * - Unknown errors: thrown (will trigger PostHog, error boundaries, etc.)
  *
  * Use this for both queries and mutations.
  *
@@ -77,10 +80,8 @@ export function handleSafeResult<T>(error: unknown, response: T | null): SafeRes
     if (isDefinedError(error)) {
       return { success: false, error };
     }
-    // Unknown error - capture in Sentry and throw to be caught by React Query onError
-    Sentry.captureException(error, {
-      tags: buildErrorTags({ errorType: ErrorTypes.API_UNKNOWN_ERROR }),
-    });
+    // Unknown error - capture in PostHog and throw to be caught by React Query onError
+    posthog.captureException(error, { error_type: 'api_unknown_error' });
     throw error;
   }
   return { success: true, data: response as T };
@@ -116,14 +117,9 @@ export function showErrorToast(error: ORPCDefinedError): void {
  * ```
  */
 export function handleUnknownError(error: unknown, fallbackMessage: string): void {
-  // Capture unknown errors in Sentry
-  Sentry.captureException(error, {
-    tags: buildErrorTags({ errorType: ErrorTypes.UNKNOWN_ERROR }),
-    contexts: {
-      error_handling: {
-        fallbackMessage,
-      },
-    },
+  posthog.captureException(error, {
+    error_type: 'unknown_error',
+    fallback_message: fallbackMessage,
   });
 
   if (error instanceof Error) {

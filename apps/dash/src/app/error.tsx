@@ -1,8 +1,7 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
-import { buildErrorTags, type ReactErrorContext } from '@workspace/sentry';
 import { toast } from '@workspace/ui/components/sonner';
+import posthog from 'posthog-js';
 import { useEffect } from 'react';
 
 import { DinoError } from '@/components/shared/dino-error';
@@ -18,13 +17,9 @@ export default function AppError({
   useEffect(() => {
     logger.error({ err: error, digest: error.digest }, 'App error boundary caught error');
 
-    // Capture error in Sentry
-    const reactCtx: ReactErrorContext = { digest: error.digest };
-    Sentry.captureException(error, {
-      tags: buildErrorTags({ errorBoundary: 'app' }),
-      contexts: {
-        react: reactCtx,
-      },
+    posthog.captureException(error, {
+      error_boundary: 'app',
+      digest: error.digest,
     });
 
     toast.error('Something went wrong', {

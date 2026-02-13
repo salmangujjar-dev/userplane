@@ -6,7 +6,12 @@ import { toast } from 'sonner';
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
 import { ADMIN_WORKSPACE_PROJECTS_PAGINATION } from '@/constants';
-import { handleSafeResult, type SafeResult, showErrorToast } from '@/lib/errors';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  type SafeResult,
+  showErrorToast,
+} from '@/lib/errors';
 import type {
   AdminCreateWorkspaceInviteData,
   AdminNotifyDuration,
@@ -172,7 +177,7 @@ export function useAdminUsers({
 } = {}) {
   return useQuery({
     queryKey: adminKeys.userSearch({ search, limit, offset }),
-    queryFn: async (): Promise<AdminUsersResponse | null> => {
+    queryFn: async () => {
       const result = await authClient.admin.listUsers({
         query: {
           limit,
@@ -188,12 +193,10 @@ export function useAdminUsers({
           sortDirection: 'desc' as const,
         },
       });
-
-      if (result.error) {
-        throw new Error(result.error.message || 'Failed to fetch users');
-      }
-
-      return result.data as AdminUsersResponse | null;
+      return handleSafeResult(
+        result.error,
+        result.data != null ? (result.data as AdminUsersResponse) : null
+      );
     },
     enabled,
     staleTime: 30 * 1000,
@@ -946,22 +949,21 @@ export function useImpersonation() {
       const result = await authClient.admin.impersonateUser({
         userId,
       });
-
-      if (result.error) {
-        throw new Error(result.error.message || 'Failed to impersonate user');
-      }
-
-      return result.data;
+      return handleSafeResult(result.error, result.data ?? null);
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (result, variables) => {
+      if (!result.success) {
+        toast.error(result.error.message || 'Failed to impersonate user');
+        return;
+      }
       toast.success(`Now impersonating ${variables.userName || 'user'}`);
       // Invalidate all queries to refresh with the new session
       queryClient.invalidateQueries();
       // Redirect to home to start fresh with the impersonated session
       window.location.href = '/';
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to impersonate user');
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to impersonate user');
     },
   });
 
