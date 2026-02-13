@@ -126,6 +126,20 @@ export const ALLOWED_VIDEO_CONTAINERS = [
 ] as const;
 
 /**
+ * Recording metadata limits for API-layer sanitization
+ * Applied silently before persistence — oversized data is truncated, not rejected
+ */
+export const RECORDING_METADATA_LIMITS = {
+  MAX_NOTES_LENGTH: 2000,
+  MAX_CUSTOM_METADATA_KEYS: 50,
+  MAX_CUSTOM_METADATA_KEY_LENGTH: 128,
+  MAX_CUSTOM_METADATA_VALUE_LENGTH: 1024,
+  MAX_SYSTEM_METADATA_KEYS: 50,
+  MAX_SYSTEM_METADATA_KEY_LENGTH: 128,
+  MAX_SYSTEM_METADATA_VALUE_LENGTH: 2048,
+} as const;
+
+/**
  * Complete session constants
  * Combines duration limits, file size limits, and allowed MIME types
  */

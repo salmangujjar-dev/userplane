@@ -233,6 +233,7 @@ export class RecorderBridgeConnection {
     url.searchParams.delete(URL_PARAMS.TOKEN);
     url.searchParams.delete(URL_PARAMS.ACTION);
     url.searchParams.delete(URL_PARAMS.WORKSPACE);
+    url.searchParams.delete(URL_PARAMS.META);
     window.history.replaceState({}, '', url.toString());
 
     // Set state to inactive and disable protection
