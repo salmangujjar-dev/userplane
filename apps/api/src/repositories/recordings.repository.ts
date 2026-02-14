@@ -26,6 +26,8 @@ import {
 } from '@/api/schema/recording-meta.schema';
 import type { LinkProviderType, RecordingFilters, RecordingSortOptions } from '@/api/types';
 
+import { captureException } from '../posthog';
+
 export type { CustomMeta, SystemMeta };
 
 const logger = createLogger('recording-repository');
@@ -125,11 +127,17 @@ export class RecordingRepository {
   /**
    * Transform and validate system metadata from database
    */
-  private transformSystemMeta(raw: unknown): SystemMeta | null {
+  private transformSystemMeta(raw: unknown, recordingId: string): SystemMeta | null {
     if (!raw) return null;
     const result = systemMetaSchema.safeParse(raw);
     if (!result.success) {
       logger.warn({ errors: result.error.errors, raw }, 'Invalid systemMeta');
+      captureException(new Error('invalid systemMeta'), undefined, {
+        operation: 'transform_system_meta',
+        errors: result.error.errors,
+        raw,
+        recordingId,
+      });
       return null;
     }
     return result.data;
@@ -138,11 +146,17 @@ export class RecordingRepository {
   /**
    * Transform and validate custom metadata from database
    */
-  private transformCustomMeta(raw: unknown): CustomMeta | null {
+  private transformCustomMeta(raw: unknown, recordingId: string): CustomMeta | null {
     if (!raw) return null;
     const result = customMetaSchema.safeParse(raw);
     if (!result.success) {
       logger.warn({ errors: result.error.errors, raw }, 'Invalid customMeta');
+      captureException(new Error('invalid custom metadata'), undefined, {
+        operation: 'transform_system_meta',
+        errors: result.error.errors,
+        raw,
+        recordingId,
+      });
       return null;
     }
     return result.data;
@@ -391,8 +405,8 @@ export class RecordingRepository {
 
     return {
       ...result,
-      systemMeta: this.transformSystemMeta(result.systemMeta),
-      customMeta: this.transformCustomMeta(result.customMeta),
+      systemMeta: this.transformSystemMeta(result.systemMeta, result.recordingId),
+      customMeta: this.transformCustomMeta(result.customMeta, result.recordingId),
       notes: result.notes ?? null,
       linkProviderData: result.linkProviderData as LinkProviderData | null,
     };
@@ -463,8 +477,8 @@ export class RecordingRepository {
 
     return {
       ...result,
-      systemMeta: this.transformSystemMeta(result.systemMeta),
-      customMeta: this.transformCustomMeta(result.customMeta),
+      systemMeta: this.transformSystemMeta(result.systemMeta, result.recordingId),
+      customMeta: this.transformCustomMeta(result.customMeta, result.recordingId),
       notes: result.notes ?? null,
       linkProviderData: result.linkProviderData as LinkProviderData | null,
     };
@@ -705,8 +719,8 @@ export class RecordingRepository {
 
     return {
       ...result,
-      systemMeta: this.transformSystemMeta(result.systemMeta),
-      customMeta: this.transformCustomMeta(result.customMeta),
+      systemMeta: this.transformSystemMeta(result.systemMeta, result.recordingId),
+      customMeta: this.transformCustomMeta(result.customMeta, result.recordingId),
     };
   }
 
@@ -748,8 +762,8 @@ export class RecordingRepository {
 
     return {
       ...result,
-      systemMeta: this.transformSystemMeta(result.systemMeta),
-      customMeta: this.transformCustomMeta(result.customMeta),
+      systemMeta: this.transformSystemMeta(result.systemMeta, result.recordingId),
+      customMeta: this.transformCustomMeta(result.customMeta, result.recordingId),
     };
   }
 

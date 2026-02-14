@@ -3,10 +3,12 @@
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
+import { toast } from '@workspace/ui/components/sonner';
 import { Check, Loader2, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import posthog from 'posthog-js';
 import { Suspense, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
@@ -17,7 +19,6 @@ import {
   useValidateAccessRequest,
 } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
-import { logger } from '@/logger';
 
 function AccessRequestLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -52,12 +53,16 @@ function AccessRequestPageContent() {
     approveRequest(token, {
       onSuccess: (result) => {
         if (result.success) {
-          logger.info({ workspaceId: result.data.workspaceId }, 'Access request approved');
           setActionComplete('approved');
         }
       },
       onError: (error) => {
-        logger.error({ err: error }, 'Failed to approve access request');
+        posthog.captureException(error, {
+          error_boundary: 'access-request',
+        });
+        toast.error('Failed to approve access request', {
+          description: error instanceof Error ? error.message : 'Please try again.',
+        });
       },
     });
   };
@@ -68,12 +73,16 @@ function AccessRequestPageContent() {
     declineRequest(token, {
       onSuccess: (result) => {
         if (result.success) {
-          logger.info({ workspaceId: result.data.workspaceId }, 'Access request declined');
           setActionComplete('declined');
         }
       },
       onError: (error) => {
-        logger.error({ err: error }, 'Failed to decline access request');
+        posthog.captureException(error, {
+          error_boundary: 'access-request',
+        });
+        toast.error('Failed to decline access request', {
+          description: error instanceof Error ? error.message : 'Please try again.',
+        });
       },
     });
   };
@@ -148,15 +157,22 @@ function AccessRequestPageContent() {
 
   // Show error state
   if (!token || validationError || (validateResult && !validateResult.success)) {
-    logger.error(
+    toast.error(
       !token
         ? 'No access request token provided'
         : validationError
-          ? { err: validationError }
+          ? validationError.message
           : validateResult && !validateResult.success
-            ? { code: validateResult.error.code, message: validateResult.error.message }
+            ? validateResult.error.message
             : 'Unknown validation error',
-      'Invalid access request'
+      {
+        description: !token
+          ? 'No access request token provided'
+          : validationError?.message ||
+            (validateResult && !validateResult.success
+              ? validateResult.error.message
+              : 'Unknown validation error'),
+      }
     );
 
     return (

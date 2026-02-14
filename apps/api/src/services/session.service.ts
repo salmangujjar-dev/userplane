@@ -36,6 +36,7 @@ import { buildStaleRecordingCheckKey } from '@/api/inngest/idempotency';
 import { generateRecordingId, generateSessionId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import { sanitizeMetadataObject, sanitizeNotes } from '@/api/lib/metadata';
+import { captureException } from '@/api/posthog';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import {
   LinkRepository,
@@ -479,6 +480,7 @@ export class SessionService {
       // Log but don't fail the request - stale check is a background task
       // The recording will still be created and can be uploaded
       logger.error({ err: error }, 'Error scheduling stale recording check');
+      captureException(error, undefined, { operation: 'schedule_stale_check' });
     }
 
     // Generate upload token scoped to this recording
@@ -592,6 +594,7 @@ export class SessionService {
       // Log but don't fail - recording is already created
       // Consumption tracking failure shouldn't block the upload
       logger.error({ err: error }, 'Failed to track recording consumption');
+      captureException(error, undefined, { operation: 'track_recording_consumption' });
     }
 
     return {

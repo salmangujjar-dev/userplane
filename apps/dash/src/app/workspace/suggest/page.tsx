@@ -3,11 +3,13 @@
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
+import { toast } from '@workspace/ui/components/sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import { Globe, Loader2, Shield } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import posthog from 'posthog-js';
 import { Suspense, useEffect, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
@@ -16,7 +18,6 @@ import { PaginationControls } from '@/components/shared/pagination-controls';
 import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@/constants';
 import { useJoinWorkspace, useWorkspaceSuggestions } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
-import { logger } from '@/logger';
 
 const ITEMS_PER_PAGE = WORKSPACE_SUGGESTIONS_PAGINATION.DEFAULT_PER_PAGE;
 
@@ -48,11 +49,9 @@ function WorkspaceSuggestPageContent() {
   const joinMutation = useJoinWorkspace({
     onSuccess: (status) => {
       if (status === 'joined') {
-        logger.info({ workspaceId: selectedWorkspaceId }, 'Successfully joined workspace');
         router.push('/');
         router.refresh();
       } else if (status === 'requested') {
-        logger.info({ workspaceId: selectedWorkspaceId }, 'Access request sent');
         // Find the workspace name
         const workspace = suggestionsData?.data?.workspaces.find(
           (w) => w.workspaceId === selectedWorkspaceId
@@ -72,7 +71,6 @@ function WorkspaceSuggestPageContent() {
     if (isLoading) return;
 
     if (!suggestionsData?.success || suggestionsData.data.workspaces.length === 0) {
-      logger.info('No workspace suggestions available, redirecting to create workspace');
       router.push('/workspace/create');
     } else if (suggestionsData.data.workspaces.length > 0 && !selectedWorkspaceId) {
       setSelectedWorkspaceId(suggestionsData.data.workspaces[0]?.workspaceId ?? null);
@@ -137,14 +135,12 @@ function WorkspaceSuggestPageContent() {
   }
 
   if (error || (suggestionsData && !suggestionsData.success)) {
-    logger.error(
-      error
-        ? { err: error }
-        : suggestionsData && !suggestionsData.success
-          ? { code: suggestionsData.error.code, message: suggestionsData.error.message }
-          : 'Unknown error',
-      'Failed to load workspace suggestions'
-    );
+    posthog.captureException(error, {
+      error_boundary: 'workspace-suggest',
+    });
+    toast.error('Failed to load workspace suggestions', {
+      description: error instanceof Error ? error.message : 'Please try again.',
+    });
 
     return (
       <WorkspaceSuggestLayout>

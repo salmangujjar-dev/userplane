@@ -14,13 +14,13 @@ import { toast } from '@workspace/ui/components/sonner';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import posthog from 'posthog-js';
 import { Suspense, useState } from 'react';
 import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import * as z from 'zod';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useAuth } from '@/hooks';
-import { logger } from '@/logger';
 
 const magicLinkSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
@@ -228,11 +228,12 @@ function AuthPageContent() {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      logger.info({ provider: 'google', redirectTo }, 'Initiating Google authentication');
       await signInWithGoogle(redirectTo || undefined);
-      logger.info({ provider: 'google' }, 'Google authentication successful');
     } catch (error) {
-      logger.error({ err: error, provider: 'google' }, 'Authentication failed');
+      posthog.captureException(error, {
+        error_boundary: 'auth',
+        provider: 'google',
+      });
       toast.error('Failed to authenticate. Please try again.');
       setIsLoading(false);
     }
@@ -241,7 +242,6 @@ function AuthPageContent() {
   const handleMagicLinkSignIn = async (data: MagicLinkFormData) => {
     try {
       setIsLoading(true);
-      logger.info({ email: data.email, redirectTo }, 'Initiating magic link authentication');
 
       const result = await signInWithMagicLink({
         email: data.email,
@@ -249,17 +249,22 @@ function AuthPageContent() {
       });
 
       if (result?.error) {
-        logger.error({ err: result.error, email: data.email }, 'Magic link authentication failed');
+        posthog.captureException(result.error, {
+          error_boundary: 'auth',
+          email: data.email,
+        });
         toast.error(result.error.message || 'Failed to send magic link. Please try again.');
         return;
       }
 
       setSentEmail(data.email);
       setMagicLinkSent(true);
-      logger.info({ email: data.email }, 'Magic link sent successfully');
       toast.success('Check your email for the magic link');
     } catch (error) {
-      logger.error({ err: error, email: data.email }, 'Magic link authentication failed');
+      posthog.captureException(error, {
+        error_boundary: 'auth',
+        email: data.email,
+      });
       toast.error('Failed to send magic link. Please try again.');
     } finally {
       setIsLoading(false);

@@ -27,6 +27,8 @@ import { entitlementService } from '@/api/services/index';
 import { RefundProcessorService } from '@/api/services/refund-processor.service';
 import { WebhookProcessorService } from '@/api/services/webhook-processor.service';
 
+import { captureException } from '../posthog';
+
 const authLogger = createLogger('auth');
 const workspaceRepository = new WorkspaceRepository(db);
 
@@ -171,6 +173,7 @@ export const auth = createAuth({
       } catch (error) {
         // Log error but don't block deletion email
         authLogger.error({ err: error }, 'Failed to revoke sessions');
+        captureException(error, undefined, { operation: 'auth_delete_user_revoke_sessions' });
       }
 
       // Send account deletion confirmation email

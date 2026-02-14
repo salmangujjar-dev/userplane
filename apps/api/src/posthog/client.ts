@@ -4,6 +4,11 @@
  */
 import { PostHog } from 'posthog-node';
 
+declare global {
+  // Populated by posthog-cli sourcemap inject at build time
+  var _posthogChunkIds: Record<string, string> | undefined;
+}
+
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
 
@@ -19,6 +24,12 @@ export function initPostHog(): void {
   if (!env.posthog.apiKey) {
     logger.warn('PostHog API key is not set, skipping initialization');
     return;
+  }
+
+  // Silence "No chunk id map found" console.error in dev.
+  // In production, posthog-cli sourcemap inject populates this with real chunk IDs.
+  if (!globalThis._posthogChunkIds && env.server.nodeEnv === 'development') {
+    globalThis._posthogChunkIds = {};
   }
 
   posthogClient = new PostHog(env.posthog.apiKey, {

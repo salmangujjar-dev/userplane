@@ -5,7 +5,6 @@ import posthog from 'posthog-js';
 import { useEffect } from 'react';
 
 import { DinoError } from '@/components/shared/dino-error';
-import { logger } from '@/logger';
 
 export default function AppError({
   error,
@@ -15,8 +14,6 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    logger.error({ err: error, digest: error.digest }, 'App error boundary caught error');
-
     posthog.captureException(error, {
       error_boundary: 'app',
       digest: error.digest,

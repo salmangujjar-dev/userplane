@@ -2,6 +2,7 @@
 
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
+import { toast } from '@workspace/ui/components/sonner';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,7 +11,6 @@ import { Suspense } from 'react';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useAcceptInvite, useValidateInvite } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
-import { logger } from '@/logger';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 function InviteLayout({ children }: { children: React.ReactNode }) {
@@ -49,32 +49,35 @@ function InvitePageContent() {
         onSuccess: (result) => {
           // Error already handled by mutation's onSuccess
           if (!result.success) return;
-
-          const logMessage = result.data.alreadyMember
-            ? 'User is already a member, redirecting'
-            : 'Successfully joined workspace';
-
-          logger.info({ workspaceId: result.data.workspaceId }, logMessage);
           setWorkspaceStore(result.data.workspaceId);
           router.push(`/workspace/${result.data.workspaceId}`);
         },
         onError: (error) => {
-          logger.error({ err: error }, 'Failed to accept invite');
+          toast.error('Failed to accept invite', {
+            description: error instanceof Error ? error.message : 'Please try again.',
+          });
         },
       }
     );
   };
 
   if (!token || validationError || (inviteResult && !inviteResult.success)) {
-    logger.error(
+    toast.error(
       !token
         ? 'No invite token provided'
         : validationError
-          ? { err: validationError }
+          ? validationError.message
           : inviteResult && !inviteResult.success
-            ? { code: inviteResult.error.code, message: inviteResult.error.message }
+            ? inviteResult.error.message
             : 'Unknown validation error',
-      'Invalid invite attempt'
+      {
+        description: !token
+          ? 'No invite token provided'
+          : validationError?.message ||
+            (inviteResult && !inviteResult.success
+              ? inviteResult.error.message
+              : 'Unknown validation error'),
+      }
     );
 
     return (

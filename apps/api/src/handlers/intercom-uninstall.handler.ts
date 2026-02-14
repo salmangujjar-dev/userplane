@@ -38,6 +38,11 @@ export function createUninstallHandler(deps: IntercomUninstallHandlerDeps) {
 
       if (!parseResult.success) {
         logger.warn({ errors: parseResult.error.flatten(), endpoint }, 'Invalid uninstall request');
+        captureException(new Error('received invalid uninstall request'), undefined, {
+          operation: 'intercom_uninstall',
+          errors: parseResult.error.flatten(),
+          endpoint,
+        });
         return c.json({}, 200);
       }
 
@@ -50,6 +55,8 @@ export function createUninstallHandler(deps: IntercomUninstallHandlerDeps) {
 
       if (!integration) {
         logger.warn({ appId: app_id }, 'No active integration found for uninstall, ignoring');
+        // No need to capture exception for this case since it is possible
+        // that the integration is removed prior to the uninstall webhook being received
         return c.json({}, 200);
       }
 

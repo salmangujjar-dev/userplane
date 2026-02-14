@@ -107,6 +107,8 @@ import {
   workspaceRecoveryPartiallyKey,
 } from '@/api/utils/idempotency-key';
 
+import { captureException } from '../posthog';
+
 const logger = createLogger('email-service');
 
 type ErrorHandler = (error: unknown, context: { method: string; params: unknown }) => void;
@@ -126,6 +128,9 @@ export class EmailService {
           },
           'Email service error'
         );
+        captureException(error, undefined, {
+          operation: 'email_service_dispatcher',
+        });
       });
     this.mediaClient = mediaClient ?? getMediaClient();
   }

@@ -66,6 +66,11 @@ export function createMessengerInitializeHandler(service: IntercomCanvasService)
           { errors: parseResult.error.flatten(), endpoint },
           'Invalid messenger initialize request'
         );
+        captureException(new Error('received invalid messenger initialize request'), undefined, {
+          operation: 'intercom_canvas_messenger_initialize',
+          errors: parseResult.error.flatten(),
+          endpoint,
+        });
         return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
       }
 
@@ -103,6 +108,11 @@ export function createMessengerSubmitHandler(service: IntercomCanvasService) {
           { errors: parseResult.error.flatten(), endpoint },
           'Invalid messenger submit request'
         );
+        captureException(new Error('received invalid messenger submit request'), undefined, {
+          operation: 'intercom_canvas_messenger_submit',
+          errors: parseResult.error.flatten(),
+          endpoint,
+        });
         return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
       }
 
@@ -140,6 +150,11 @@ export function createMessengerConfigureHandler(service: IntercomCanvasService) 
           { errors: parseResult.error.flatten(), endpoint },
           'Invalid messenger configure request'
         );
+        captureException(new Error('received invalid messenger configure request'), undefined, {
+          operation: 'intercom_canvas_messenger_configure',
+          errors: parseResult.error.flatten(),
+          endpoint,
+        });
         return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
       }
 
@@ -186,6 +201,11 @@ export function createInboxInitializeHandler(service: IntercomCanvasService) {
           { errors: parseResult.error.flatten(), endpoint },
           'Invalid inbox initialize request'
         );
+        captureException(new Error('received invalid inbox initialize request'), undefined, {
+          operation: 'intercom_canvas_inbox_initialize',
+          errors: parseResult.error.flatten(),
+          endpoint,
+        });
         return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
       }
 
@@ -227,6 +247,11 @@ export function createInboxSubmitHandler(service: IntercomCanvasService) {
           { errors: parseResult.error.flatten(), endpoint },
           'Invalid inbox submit request'
         );
+        captureException(new Error('received invalid inbox submit request'), undefined, {
+          operation: 'intercom_canvas_inbox_submit',
+          errors: parseResult.error.flatten(),
+          endpoint,
+        });
         return c.json({ canvas: buildCanvasErrorCanvas() }, 200);
       }
 

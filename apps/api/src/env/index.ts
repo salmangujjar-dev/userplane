@@ -228,8 +228,10 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       },
     },
     posthog: {
-      apiKey: raw.POSTHOG_API_KEY,
+      apiKey: raw.POSTHOG_PROJECT_API_KEY,
       host: raw.POSTHOG_HOST,
+      personalApiKey: raw.POSTHOG_PERSONAL_API_KEY,
+      projectId: raw.POSTHOG_PROJECT_ID,
     },
     admin: {
       userIds: raw.ADMIN_USER_IDS,

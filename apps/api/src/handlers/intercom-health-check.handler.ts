@@ -36,6 +36,11 @@ export function createHealthCheckHandler(service: IntercomHealthCheckService) {
           { errors: parseResult.error.flatten(), endpoint },
           'Invalid health check request'
         );
+        captureException(new Error('received invalid health check request'), undefined, {
+          operation: 'intercom_health_check',
+          errors: parseResult.error.flatten(),
+          endpoint,
+        });
         return c.json(UNKNOWN_RESPONSE, 200);
       }
 
