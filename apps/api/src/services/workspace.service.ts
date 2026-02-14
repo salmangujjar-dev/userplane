@@ -468,7 +468,7 @@ export class WorkspaceService {
         }
       }
 
-      logger.info({ workspaceId }, 'Cleaned up caches for deleted workspace');
+      logger.debug({ workspaceId }, 'Cleaned up caches for deleted workspace');
     } catch (error) {
       // Don't fail deletion if cache cleanup fails
       logger.warn({ err: error, workspaceId }, 'Failed to cleanup caches for workspace');
@@ -515,7 +515,7 @@ export class WorkspaceService {
         await this.deps.dodoClient.subscriptions.update(subscription.subscriptionId, {
           status: 'cancelled',
         });
-        logger.info(
+        logger.debug(
           { subscriptionId: subscription.subscriptionId, workspaceId },
           'Subscription cancelled immediately for workspace'
         );
@@ -523,7 +523,7 @@ export class WorkspaceService {
         await this.deps.dodoClient.subscriptions.update(subscription.subscriptionId, {
           cancel_at_next_billing_date: true,
         });
-        logger.info(
+        logger.debug(
           { subscriptionId: subscription.subscriptionId, workspaceId },
           'Subscription scheduled for cancellation at period end for workspace'
         );

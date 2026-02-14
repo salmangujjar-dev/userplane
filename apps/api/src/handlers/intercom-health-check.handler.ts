@@ -7,12 +7,11 @@
  * @see https://developers.intercom.com/docs/build-an-integration/learn-more/installation-health-check
  */
 
-import * as Sentry from '@sentry/node';
-import { buildWebhookTags } from '@workspace/sentry';
 import type { Context } from 'hono';
 
 import { createLogger } from '@/api/lib/logger';
 import { getParsedBody } from '@/api/middleware/intercom-signature';
+import { captureException } from '@/api/posthog';
 import type { IntercomHealthCheckService } from '@/api/services/intercom-health-check.service';
 import type { IntercomHealthCheckResponse } from '@/api/types/intercom-health-check';
 import { IntercomHealthCheckRequestSchema } from '@/api/types/intercom-health-check';
@@ -42,29 +41,16 @@ export function createHealthCheckHandler(service: IntercomHealthCheckService) {
 
       const body = parseResult.data;
 
-      Sentry.setContext('intercom', {
-        intercom_workspace_id: body.workspace_id,
-        endpoint,
-      });
-      Sentry.setTags(
-        buildWebhookTags({
-          webhookType: 'intercom_health_check',
-          eventType: endpoint,
-        })
-      );
-
-      logger.info({ workspaceId: body.workspace_id }, 'Health check request');
+      logger.debug({ workspaceId: body.workspace_id }, 'Health check request');
 
       const response = await service.checkHealth(body.workspace_id);
       return c.json(response, 200);
     } catch (error) {
       logger.error({ err: error, endpoint }, 'Health check error');
 
-      Sentry.captureException(error, {
-        tags: buildWebhookTags({
-          webhookType: 'intercom_health_check',
-          eventType: endpoint,
-        }),
+      captureException(error, undefined, {
+        webhook_type: 'intercom_health_check',
+        event_type: endpoint,
       });
 
       return c.json(UNKNOWN_RESPONSE, 200);

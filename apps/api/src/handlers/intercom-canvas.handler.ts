@@ -7,18 +7,17 @@
  * Features:
  * - Zod validation at request boundaries
  * - Structured logging with request context
- * - Sentry error tracking with Intercom-specific tags
+ * - PostHog error tracking with Intercom-specific properties
  *
  * @see https://developers.intercom.com/docs/canvas-kit
  */
 
-import * as Sentry from '@sentry/node';
-import { buildWebhookTags } from '@workspace/sentry';
 import type { Context } from 'hono';
 
 import { buildCanvasErrorCanvas } from '@/api/lib/intercom-canvas';
 import { createLogger } from '@/api/lib/logger';
 import { getParsedBody } from '@/api/middleware/intercom-signature';
+import { captureException } from '@/api/posthog';
 import type { IntercomCanvasService } from '@/api/services/intercom-canvas.service';
 import {
   IntercomCanvasConfigureRequestSchema,
@@ -29,31 +28,7 @@ import {
 const logger = createLogger('intercom-canvas');
 
 /**
- * Intercom context for Sentry tracking
- */
-interface IntercomSentryContext {
-  intercom_workspace_id?: string;
-  teammate_email?: string;
-  component_id?: string;
-  endpoint: string;
-  [key: string]: unknown;
-}
-
-/**
- * Set Sentry context for Intercom requests
- */
-function setIntercomSentryContext(ctx: IntercomSentryContext): void {
-  Sentry.setContext('intercom', ctx);
-  Sentry.setTags(
-    buildWebhookTags({
-      webhookType: 'intercom_canvas',
-      eventType: ctx.endpoint,
-    })
-  );
-}
-
-/**
- * Handle errors with Sentry capture and logging
+ * Handle errors with PostHog capture and logging
  */
 function handleError(
   error: unknown,
@@ -62,14 +37,10 @@ function handleError(
 ): void {
   logger.error({ err: error, endpoint, ...context }, `Canvas ${endpoint} error`);
 
-  Sentry.captureException(error, {
-    tags: buildWebhookTags({
-      webhookType: 'intercom_canvas',
-      eventType: endpoint,
-    }),
-    contexts: {
-      intercom: context,
-    },
+  captureException(error, undefined, {
+    webhook_type: 'intercom_canvas',
+    event_type: endpoint,
+    ...context,
   });
 }
 
@@ -100,12 +71,7 @@ export function createMessengerInitializeHandler(service: IntercomCanvasService)
 
       const body = parseResult.data;
 
-      setIntercomSentryContext({
-        intercom_workspace_id: body.workspace_id,
-        endpoint,
-      });
-
-      logger.info(
+      logger.debug(
         { workspaceId: body.workspace_id, hasLinkUrl: !!body.card_creation_options?.link_url },
         'Messenger initialize request'
       );
@@ -142,13 +108,7 @@ export function createMessengerSubmitHandler(service: IntercomCanvasService) {
 
       const body = parseResult.data;
 
-      setIntercomSentryContext({
-        intercom_workspace_id: body.workspace_id,
-        component_id: body.component_id,
-        endpoint,
-      });
-
-      logger.info(
+      logger.debug(
         { workspaceId: body.workspace_id, componentId: body.component_id },
         'Messenger submit request'
       );
@@ -185,14 +145,7 @@ export function createMessengerConfigureHandler(service: IntercomCanvasService) 
 
       const body = parseResult.data;
 
-      setIntercomSentryContext({
-        intercom_workspace_id: body.workspace_id,
-        teammate_email: body.admin.email,
-        component_id: body.component_id,
-        endpoint,
-      });
-
-      logger.info(
+      logger.debug(
         {
           workspaceId: body.workspace_id,
           teammateEmail: body.admin.email,
@@ -238,13 +191,7 @@ export function createInboxInitializeHandler(service: IntercomCanvasService) {
 
       const body = parseResult.data;
 
-      setIntercomSentryContext({
-        intercom_workspace_id: body.workspace_id,
-        teammate_email: body.admin?.email,
-        endpoint,
-      });
-
-      logger.info(
+      logger.debug(
         {
           workspaceId: body.workspace_id,
           teammateEmail: body.admin?.email,
@@ -285,14 +232,7 @@ export function createInboxSubmitHandler(service: IntercomCanvasService) {
 
       const body = parseResult.data;
 
-      setIntercomSentryContext({
-        intercom_workspace_id: body.workspace_id,
-        teammate_email: body.admin?.email,
-        component_id: body.component_id,
-        endpoint,
-      });
-
-      logger.info(
+      logger.debug(
         {
           workspaceId: body.workspace_id,
           teammateEmail: body.admin?.email,

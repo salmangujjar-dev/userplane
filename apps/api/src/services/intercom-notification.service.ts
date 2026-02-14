@@ -3,10 +3,9 @@
  * when recordings are received for links created via Intercom
  */
 
-import * as Sentry from '@sentry/node';
-
 import { replyToConversation } from '@/api/clients/intercom';
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import {
   IntegrationHelper,
   type IntegrationRepository,
@@ -29,13 +28,6 @@ export class IntercomNotificationService {
     recordingUrl: string;
   }): Promise<void> {
     const { workspaceId, conversationId, adminId, recordingId, recordingUrl } = params;
-
-    Sentry.addBreadcrumb({
-      category: 'intercom',
-      message: 'Posting recording received note',
-      level: 'info',
-      data: { workspaceId, conversationId, recordingId },
-    });
 
     try {
       const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
@@ -63,7 +55,10 @@ export class IntercomNotificationService {
       const success = await replyToConversation(accessToken, region, conversationId, adminId, body);
 
       if (success) {
-        logger.info({ workspaceId, conversationId, recordingId }, 'Intercom recording note posted');
+        logger.debug(
+          { workspaceId, conversationId, recordingId },
+          'Intercom recording note posted'
+        );
       } else {
         logger.warn(
           { workspaceId, conversationId, recordingId },
@@ -75,14 +70,12 @@ export class IntercomNotificationService {
         { err: error, workspaceId, conversationId, recordingId },
         'Error posting Intercom recording note'
       );
-      Sentry.captureException(error, {
-        tags: {
-          component: 'intercom_notification',
-          operation: 'notify_recording_received',
-        },
-        contexts: {
-          intercom: { workspaceId, conversationId, recordingId },
-        },
+      captureException(error, undefined, {
+        component: 'intercom_notification',
+        operation: 'notify_recording_received',
+        workspace_id: workspaceId,
+        conversation_id: conversationId,
+        recording_id: recordingId,
       });
     }
   }

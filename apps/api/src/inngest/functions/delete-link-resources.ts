@@ -30,7 +30,7 @@ export const deleteLinkResources = inngest.createFunction(
   async ({ event, step }) => {
     const { linkId } = event.data;
 
-    logger.info({ linkId }, 'Starting link resource cleanup');
+    logger.debug({ linkId }, 'Starting link resource cleanup');
 
     const linkRepo = new LinkRepository(db);
     const recordingRepo = new RecordingRepository(db);
@@ -41,12 +41,12 @@ export const deleteLinkResources = inngest.createFunction(
     });
 
     if (isDeleted === null) {
-      logger.info({ linkId }, 'Link not found, skipping');
+      logger.debug({ linkId }, 'Link not found, skipping');
       return { success: true, linkId, recordingsScheduled: 0, skipped: true, reason: 'not_found' };
     }
 
     if (!isDeleted) {
-      logger.info({ linkId }, 'Link not deleted, skipping');
+      logger.debug({ linkId }, 'Link not deleted, skipping');
       return {
         success: true,
         linkId,
@@ -61,7 +61,7 @@ export const deleteLinkResources = inngest.createFunction(
       return recordingRepo.findByLinkId(linkId);
     });
 
-    logger.info({ linkId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
+    logger.debug({ linkId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
 
     // 3. Fan-out in batches of 500
     if (recordingsToCleanup.length > 0) {
@@ -81,7 +81,7 @@ export const deleteLinkResources = inngest.createFunction(
           );
         });
 
-        logger.info(
+        logger.debug(
           {
             linkId,
             batchIndex: index + 1,

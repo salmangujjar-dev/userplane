@@ -8,14 +8,13 @@
  * @see https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/installing-uninstalling-apps#uninstallation
  */
 
-import * as Sentry from '@sentry/node';
 import type { CacheService } from '@workspace/cache';
-import { buildWebhookTags } from '@workspace/sentry';
 import type { Context } from 'hono';
 import { z } from 'zod';
 
 import { createLogger } from '@/api/lib/logger';
 import { getParsedBody } from '@/api/middleware/intercom-signature';
+import { captureException } from '@/api/posthog';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 
 const logger = createLogger('intercom-uninstall');
@@ -44,24 +43,13 @@ export function createUninstallHandler(deps: IntercomUninstallHandlerDeps) {
 
       const { app_id } = parseResult.data;
 
-      Sentry.setContext('intercom', {
-        intercom_app_id: app_id,
-        endpoint,
-      });
-      Sentry.setTags(
-        buildWebhookTags({
-          webhookType: 'intercom_uninstall',
-          eventType: endpoint,
-        })
-      );
-
-      logger.info({ appId: app_id }, 'Uninstall webhook received');
+      logger.debug({ appId: app_id }, 'Uninstall webhook received');
 
       // Look up the integration by Intercom app_id (stored as providerWorkspaceId)
       const integration = await deps.integrationRepo.findByProviderWorkspaceId('intercom', app_id);
 
       if (!integration) {
-        logger.info({ appId: app_id }, 'No active integration found for uninstall, ignoring');
+        logger.warn({ appId: app_id }, 'No active integration found for uninstall, ignoring');
         return c.json({}, 200);
       }
 
@@ -79,7 +67,7 @@ export function createUninstallHandler(deps: IntercomUninstallHandlerDeps) {
       // Invalidate caches
       await deps.cacheService.invalidateIntercom(integration.workspaceId, app_id);
 
-      logger.info(
+      logger.debug(
         { appId: app_id, workspaceId: integration.workspaceId },
         'Integration disconnected via uninstall webhook'
       );
@@ -88,11 +76,9 @@ export function createUninstallHandler(deps: IntercomUninstallHandlerDeps) {
     } catch (error) {
       logger.error({ err: error, endpoint }, 'Uninstall webhook error');
 
-      Sentry.captureException(error, {
-        tags: buildWebhookTags({
-          webhookType: 'intercom_uninstall',
-          eventType: endpoint,
-        }),
+      captureException(error, undefined, {
+        webhook_type: 'intercom_uninstall',
+        event_type: endpoint,
       });
 
       // Always return 200 to acknowledge receipt

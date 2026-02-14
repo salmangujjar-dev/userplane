@@ -212,7 +212,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -277,7 +277,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -351,7 +351,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -434,7 +434,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -508,7 +508,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -581,7 +581,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -646,7 +646,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -714,7 +714,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -781,7 +781,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -851,7 +851,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -987,7 +987,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1065,7 +1065,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1138,7 +1138,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1213,7 +1213,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1287,7 +1287,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1369,7 +1369,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1442,7 +1442,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1514,7 +1514,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1599,7 +1599,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1675,7 +1675,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,
@@ -1749,7 +1749,7 @@ export class EmailService {
       }
     );
 
-    logger.info(
+    logger.debug(
       {
         to: receipientParams.to,
         batch: useBatch,

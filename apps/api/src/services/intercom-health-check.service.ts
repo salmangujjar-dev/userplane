@@ -51,7 +51,7 @@ export class IntercomHealthCheckService {
     );
 
     if (!dbIntegration) {
-      logger.info({ providerWorkspaceId }, 'Integration not found — unhealthy');
+      logger.debug({ providerWorkspaceId }, 'Integration not found — unhealthy');
       return {
         state: 'UNHEALTHY',
         message: 'Userplane integration is not connected. Please reconnect from the dashboard.',

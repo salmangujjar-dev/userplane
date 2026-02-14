@@ -17,10 +17,9 @@
  * Features:
  * - Cache-first integration lookup with graceful degradation
  * - Structured logging with Pino
- * - Sentry breadcrumbs for operation tracing
+ * - PostHog error tracking
  */
 
-import * as Sentry from '@sentry/node';
 import type { CacheService } from '@workspace/cache';
 import { createLinkProviderData } from '@workspace/contract';
 
@@ -44,6 +43,7 @@ import {
   resolveRecordingMessage,
 } from '@/api/lib/intercom-canvas';
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import type { DomainRepository } from '@/api/repositories/domains.repository';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import type { ProjectRepository } from '@/api/repositories/projects.repository';
@@ -138,13 +138,6 @@ export class IntercomCanvasService {
       return { canvas: buildCanvasErrorCanvas() };
     }
 
-    Sentry.addBreadcrumb({
-      category: 'intercom',
-      message: 'Messenger initialize - showing recording canvas',
-      level: 'info',
-      data: { workspaceId: req.workspace_id, hasLinkUrl: true },
-    });
-
     return {
       canvas: buildRecordingCanvas({
         linkUrl: card_creation_options.link_url,
@@ -169,13 +162,6 @@ export class IntercomCanvasService {
       { componentId: component_id, workspaceId: workspace_id },
       'Messenger submit (unexpected)'
     );
-
-    Sentry.addBreadcrumb({
-      category: 'intercom',
-      message: 'Messenger submit - unexpected action',
-      level: 'warning',
-      data: { workspaceId: workspace_id, componentId: component_id },
-    });
 
     // Parse stored_data with Zod for type safety
     const storedDataResult = RecordingCanvasStoredDataSchema.safeParse(current_canvas?.stored_data);
@@ -218,13 +204,6 @@ export class IntercomCanvasService {
       return { canvas: buildCanvasErrorCanvas() };
     }
 
-    Sentry.addBreadcrumb({
-      category: 'intercom',
-      message: 'Inbox initialize',
-      level: 'info',
-      data: { intercomWorkspaceId, teammateEmail: teammate.email },
-    });
-
     return this.showOpenerCanvas(intercomWorkspaceId, teammate);
   }
 
@@ -251,13 +230,6 @@ export class IntercomCanvasService {
       );
       return { canvas: buildCanvasErrorCanvas() };
     }
-
-    Sentry.addBreadcrumb({
-      category: 'intercom',
-      message: `Inbox submit - ${componentId}`,
-      level: 'info',
-      data: { intercomWorkspaceId, teammateEmail: teammate.email, componentId },
-    });
 
     switch (componentId) {
       case InboxComponentId.REQUEST_RECORDING:
@@ -411,13 +383,6 @@ export class IntercomCanvasService {
     teammate: IntercomTeammate,
     inputValues: CanvasInputValues | undefined
   ): Promise<CanvasResponse> {
-    Sentry.addBreadcrumb({
-      category: 'intercom',
-      message: 'Creating link (inbox flow)',
-      level: 'info',
-      data: { intercomWorkspaceId, teammateEmail: teammate.email },
-    });
-
     const formValues = extractLinkCreatorFormValues(inputValues);
     if (!formValues) {
       logger.warn({ intercomWorkspaceId }, 'Link creation failed: invalid form values');
@@ -465,13 +430,7 @@ export class IntercomCanvasService {
 
       const message = resolveRecordingMessage(formValues.custom_message, teammate, 'inbox');
 
-      logger.info({ workspaceId, linkId: link.linkId }, 'Link created successfully (inbox flow)');
-      Sentry.addBreadcrumb({
-        category: 'intercom',
-        message: 'Link created successfully',
-        level: 'info',
-        data: { workspaceId, linkId: link.linkId },
-      });
+      logger.debug({ workspaceId, linkId: link.linkId }, 'Link created successfully (inbox flow)');
 
       // Use logo URL directly from workspace preferences (stored as full CDN URL)
       const logoUrl = workspacePreferences?.recordingCompanyLogoPath ?? null;
@@ -529,13 +488,6 @@ export class IntercomCanvasService {
     conversationId: string | undefined,
     inputValues: CanvasInputValues | undefined
   ): Promise<ConfigureResponse | CanvasResponse> {
-    Sentry.addBreadcrumb({
-      category: 'intercom',
-      message: 'Creating link (configure flow)',
-      level: 'info',
-      data: { intercomWorkspaceId, teammateEmail: teammate.email },
-    });
-
     const formValues = extractLinkCreatorFormValues(inputValues);
     if (!formValues) {
       logger.warn({ intercomWorkspaceId }, 'Link creation failed: invalid form values');
@@ -583,17 +535,10 @@ export class IntercomCanvasService {
 
       const message = resolveRecordingMessage(formValues.custom_message, teammate, 'configure');
 
-      logger.info(
+      logger.debug(
         { workspaceId, linkId: link.linkId },
         'Link created successfully (configure flow)'
       );
-      Sentry.addBreadcrumb({
-        category: 'intercom',
-        message: 'Link created successfully',
-        level: 'info',
-        data: { workspaceId, linkId: link.linkId },
-      });
-
       // Use logo URL directly from workspace preferences (stored as full CDN URL)
       const logoUrl = workspacePreferences?.recordingCompanyLogoPath ?? null;
 
@@ -625,13 +570,6 @@ export class IntercomCanvasService {
     intercomWorkspaceId: string,
     teammateEmail: string
   ): Promise<TeammateAccessResult> {
-    Sentry.addBreadcrumb({
-      category: 'intercom',
-      message: 'Verifying teammate access',
-      level: 'info',
-      data: { intercomWorkspaceId, teammateEmail },
-    });
-
     // Cache-first integration lookup
     let integration =
       await this.deps.cacheService.getIntegrationByProviderWorkspace<CachedIntegration>(
@@ -657,11 +595,11 @@ export class IntercomCanvasService {
         // Integration not found - check if user exists to show appropriate canvas
         const user = await this.deps.userRepo.findByEmail(teammateEmail);
         if (!user) {
-          logger.info({ teammateEmail }, 'Teammate access denied: user not found');
+          logger.debug({ teammateEmail }, 'Teammate access denied: user not found');
           return { status: 'user_not_found' };
         }
         // User exists but integration not connected - prompt to connect
-        logger.info(
+        logger.debug(
           { teammateEmail, intercomWorkspaceId },
           'Teammate access denied: integration not found'
         );
@@ -684,7 +622,7 @@ export class IntercomCanvasService {
     // Find user by email
     const user = await this.deps.userRepo.findByEmail(teammateEmail);
     if (!user) {
-      logger.info({ teammateEmail }, 'Teammate access denied: user not found');
+      logger.debug({ teammateEmail }, 'Teammate access denied: user not found');
       return { status: 'user_not_found' };
     }
 
@@ -695,19 +633,12 @@ export class IntercomCanvasService {
     );
 
     if (!member) {
-      logger.info(
+      logger.debug(
         { teammateEmail, workspaceId: integration.workspaceId },
         'Teammate access denied: not workspace member'
       );
       return { status: 'not_workspace_member' };
     }
-
-    Sentry.addBreadcrumb({
-      category: 'intercom',
-      message: 'Teammate access granted',
-      level: 'info',
-      data: { workspaceId: integration.workspaceId },
-    });
 
     return {
       status: 'granted',
@@ -747,27 +678,17 @@ export class IntercomCanvasService {
     if (error && typeof error === 'object' && 'code' in error) {
       const errorWithCode = error as { code: string };
       if (errorWithCode.code === 'LINK_LIMIT_EXCEEDED') {
-        logger.info({ workspaceId }, 'Link creation failed: limit exceeded');
-        Sentry.addBreadcrumb({
-          category: 'intercom',
-          message: 'Link creation failed - limit exceeded',
-          level: 'warning',
-          data: { workspaceId },
-        });
+        logger.debug({ workspaceId }, 'Link creation failed: limit exceeded');
         return { canvas: buildLimitExceededCanvas({ workspaceId, limitType: 'links' }) };
       }
     }
 
-    // Unexpected error - log and capture in Sentry
+    // Unexpected error - log and capture in PostHog
     logger.error({ err: error, workspaceId }, 'Link creation failed unexpectedly');
-    Sentry.captureException(error, {
-      tags: {
-        component: 'intercom_canvas',
-        operation: 'link_creation',
-      },
-      contexts: {
-        intercom: { workspaceId },
-      },
+    captureException(error, undefined, {
+      component: 'intercom_canvas',
+      operation: 'link_creation',
+      workspace_id: workspaceId,
     });
 
     return { canvas: buildCanvasErrorCanvas() };

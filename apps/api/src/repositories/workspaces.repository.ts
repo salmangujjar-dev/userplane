@@ -3,7 +3,6 @@
  * Handles all database operations for workspace entities
  */
 
-import * as Sentry from '@sentry/node';
 import type { DbClient, WorkspaceInvitePolicy, WorkspaceRole } from '@workspace/db';
 import { and, count, eq, ilike, ne, notInArray, or, sql } from '@workspace/db';
 import { workspaceMembers, workspaces } from '@workspace/db';
@@ -49,16 +48,6 @@ export class WorkspaceRepository {
    * Returns only basic workspace info
    */
   async findById(workspaceId: string) {
-    Sentry.addBreadcrumb({
-      category: 'db.query',
-      message: 'Query workspace by ID',
-      level: 'info',
-      data: {
-        workspace_id: workspaceId,
-        operation: 'select',
-      },
-    });
-
     const [workspace] = await this.db
       .select({
         workspaceId: workspaces.workspaceId,
@@ -69,15 +58,6 @@ export class WorkspaceRepository {
       .from(workspaces)
       .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .limit(1);
-
-    if (!workspace) {
-      Sentry.addBreadcrumb({
-        category: 'db.query',
-        message: 'Workspace not found',
-        level: 'warning',
-        data: { workspace_id: workspaceId },
-      });
-    }
 
     return workspace || null;
   }
@@ -390,17 +370,6 @@ export class WorkspaceRepository {
    * Sets isDeleted to true and updates deletedAt timestamp
    */
   async softDelete(workspaceId: string, deletedAt: Date, options?: { tx?: Transaction }) {
-    Sentry.addBreadcrumb({
-      category: 'db.query',
-      message: 'Soft delete workspace',
-      level: 'info',
-      data: {
-        workspace_id: workspaceId,
-        operation: 'update',
-        deleted_at: deletedAt.toISOString(),
-      },
-    });
-
     const dbClient = options?.tx || this.db;
 
     const [deleted] = await dbClient
@@ -411,15 +380,6 @@ export class WorkspaceRepository {
       })
       .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
       .returning();
-
-    if (!deleted) {
-      Sentry.addBreadcrumb({
-        category: 'db.query',
-        message: 'Failed to soft delete workspace - workspace not found or already deleted',
-        level: 'warning',
-        data: { workspace_id: workspaceId },
-      });
-    }
 
     return deleted || null;
   }

@@ -73,7 +73,7 @@ export class DisputeProcessorService {
     // Cast to unknown first since WebhookPayload.data type doesn't include disputes
     const dispute = payload.data as unknown as DodoDispute;
 
-    logger.info(
+    logger.debug(
       { webhookId, eventType, disputeId: dispute.dispute_id },
       'Processing dispute webhook'
     );
@@ -81,7 +81,7 @@ export class DisputeProcessorService {
     // 1. Idempotency check
     const alreadyProcessed = await this.deps.webhookEventsRepo.isProcessed(webhookId);
     if (alreadyProcessed) {
-      logger.info({ webhookId }, 'Skipping already processed webhook (idempotency)');
+      logger.debug({ webhookId }, 'Skipping already processed webhook (idempotency)');
       return {
         processed: false,
         skipped: true,
@@ -95,7 +95,7 @@ export class DisputeProcessorService {
     const businessId = dispute.business_id || 'unknown';
 
     if (!existingEvent) {
-      logger.info({ webhookId }, 'Recording new webhook event');
+      logger.debug({ webhookId }, 'Recording new webhook event');
       await this.deps.webhookEventsRepo.create({
         id: webhookId,
         eventType,
@@ -111,10 +111,10 @@ export class DisputeProcessorService {
     let subscriptionId: string | null = null;
 
     try {
-      logger.info({ paymentId: dispute.payment_id }, 'Looking up payment');
+      logger.debug({ paymentId: dispute.payment_id }, 'Looking up payment');
       const payment = await this.deps.dodoClient.payments.retrieve(dispute.payment_id);
       subscriptionId = payment.subscription_id || null;
-      logger.info(
+      logger.debug(
         { paymentId: dispute.payment_id, subscriptionId },
         'Payment mapped to subscription'
       );
@@ -129,12 +129,12 @@ export class DisputeProcessorService {
     if (subscriptionId) {
       const subscription = await this.deps.subscriptionRepo.findBySubscriptionId(subscriptionId);
       workspaceId = subscription?.workspaceId || null;
-      logger.info({ subscriptionId, workspaceId }, 'Subscription mapped to workspace');
+      logger.debug({ subscriptionId, workspaceId }, 'Subscription mapped to workspace');
     }
 
     // 5. Determine if dispute is open or resolved
     const isOpen = !isDisputeResolutionEvent(eventType);
-    logger.info({ disputeId: dispute.dispute_id, isOpen, eventType }, 'Determined dispute state');
+    logger.debug({ disputeId: dispute.dispute_id, isOpen, eventType }, 'Determined dispute state');
 
     // 6. Record/update dispute in transaction
     try {
@@ -174,13 +174,13 @@ export class DisputeProcessorService {
       if (workspaceId) {
         try {
           await this.deps.cacheService.invalidateDispute(workspaceId);
-          logger.info({ workspaceId }, 'Invalidated dispute cache for workspace');
+          logger.debug({ workspaceId }, 'Invalidated dispute cache for workspace');
         } catch (cacheError) {
           logger.warn({ workspaceId, err: cacheError }, 'Failed to invalidate cache for workspace');
         }
       }
 
-      logger.info(
+      logger.debug(
         { disputeId: dispute.dispute_id, eventType },
         'Successfully processed dispute webhook'
       );

@@ -26,7 +26,7 @@ export const checkStaleRecording = inngest.createFunction(
   async ({ event, step }) => {
     const { recordingId } = event.data;
 
-    logger.info({ recordingId }, 'Starting stale recording check');
+    logger.debug({ recordingId }, 'Starting stale recording check');
 
     const recordingRepo = new RecordingRepository(db);
 
@@ -35,7 +35,7 @@ export const checkStaleRecording = inngest.createFunction(
     });
 
     if (!recording) {
-      logger.info({ recordingId }, 'Recording not found or not in STALE status, skipping');
+      logger.debug({ recordingId }, 'Recording not found or not in STALE status, skipping');
       return { recordingId, action: 'not_found' };
     }
 
@@ -48,7 +48,7 @@ export const checkStaleRecording = inngest.createFunction(
       });
     });
 
-    logger.info(
+    logger.debug(
       {
         recordingId,
         previousStatus: recording.uploadStatus,

@@ -1,5 +1,3 @@
-import * as Sentry from '@sentry/node';
-
 import { db } from '@/api/clients/db';
 import {
   getClientActionsStorage,
@@ -11,6 +9,7 @@ import {
 import { inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 
 const logger = createLogger('inngest:delete-recording-resources');
@@ -35,7 +34,7 @@ export const deleteRecordingResources = inngest.createFunction(
   async ({ event, step }) => {
     const { recordingId } = event.data;
 
-    logger.info({ recordingId }, 'Starting recording resource cleanup');
+    logger.debug({ recordingId }, 'Starting recording resource cleanup');
 
     const recordingRepo = new RecordingRepository(db);
     const videoStorage = getVideoStorage();
@@ -50,7 +49,7 @@ export const deleteRecordingResources = inngest.createFunction(
     });
 
     if (!recording) {
-      logger.info({ recordingId }, 'Recording not found, skipping');
+      logger.debug({ recordingId }, 'Recording not found, skipping');
       return { success: true, recordingId, skipped: true, reason: 'not_found' };
     }
 
@@ -66,13 +65,11 @@ export const deleteRecordingResources = inngest.createFunction(
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`video: ${message}`);
-          Sentry.captureException(error, {
+          captureException(error, undefined, {
             level: 'warning',
-            tags: {
-              operation: 'storage_cleanup',
-              resource_type: 'video',
-              recording_id: recordingId,
-            },
+            operation: 'storage_cleanup',
+            resource_type: 'video',
+            recording_id: recordingId,
           });
         }
       }
@@ -84,13 +81,11 @@ export const deleteRecordingResources = inngest.createFunction(
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`thumbnail: ${message}`);
-          Sentry.captureException(error, {
+          captureException(error, undefined, {
             level: 'warning',
-            tags: {
-              operation: 'storage_cleanup',
-              resource_type: 'thumbnail',
-              recording_id: recordingId,
-            },
+            operation: 'storage_cleanup',
+            resource_type: 'thumbnail',
+            recording_id: recordingId,
           });
         }
       }
@@ -102,13 +97,11 @@ export const deleteRecordingResources = inngest.createFunction(
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`console_log: ${message}`);
-          Sentry.captureException(error, {
+          captureException(error, undefined, {
             level: 'warning',
-            tags: {
-              operation: 'storage_cleanup',
-              resource_type: 'console_log',
-              recording_id: recordingId,
-            },
+            operation: 'storage_cleanup',
+            resource_type: 'console_log',
+            recording_id: recordingId,
           });
         }
       }
@@ -120,13 +113,11 @@ export const deleteRecordingResources = inngest.createFunction(
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`network_log: ${message}`);
-          Sentry.captureException(error, {
+          captureException(error, undefined, {
             level: 'warning',
-            tags: {
-              operation: 'storage_cleanup',
-              resource_type: 'network_log',
-              recording_id: recordingId,
-            },
+            operation: 'storage_cleanup',
+            resource_type: 'network_log',
+            recording_id: recordingId,
           });
         }
       }
@@ -138,13 +129,11 @@ export const deleteRecordingResources = inngest.createFunction(
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`action: ${message}`);
-          Sentry.captureException(error, {
+          captureException(error, undefined, {
             level: 'warning',
-            tags: {
-              operation: 'storage_cleanup',
-              resource_type: 'action',
-              recording_id: recordingId,
-            },
+            operation: 'storage_cleanup',
+            resource_type: 'action',
+            recording_id: recordingId,
           });
         }
       }
@@ -159,15 +148,16 @@ export const deleteRecordingResources = inngest.createFunction(
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`mark_as_purged: ${message}`);
-          Sentry.captureException(error, {
+          captureException(error, undefined, {
             level: 'error',
-            tags: { operation: 'mark_as_purged', recording_id: recordingId },
+            operation: 'mark_as_purged',
+            recording_id: recordingId,
           });
         }
       });
     }
 
-    logger.info({ recordingId, filesDeleted, errors }, 'Recording resource cleanup completed');
+    logger.debug({ recordingId, filesDeleted, errors }, 'Recording resource cleanup completed');
 
     return {
       success: errors.length === 0,

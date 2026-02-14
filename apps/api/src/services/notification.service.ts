@@ -51,7 +51,7 @@ export class NotificationService {
 
     const removedCount = emails.length - filtered.length;
     if (removedCount > 0) {
-      logger.info(
+      logger.debug(
         { workspaceId, preferenceKey, removedCount, totalRecipients: emails.length },
         'Filtered recipients by notification preference'
       );

@@ -3,12 +3,12 @@
  * Implements the session contract defined in @workspace/contract
  */
 import { implement } from '@orpc/server';
-import * as Sentry from '@sentry/node';
 import { parseLinkProviderData, sessionContract, sessionError } from '@workspace/contract';
 
 import { REQUEST_HEADERS } from '@/api/constants/headers';
 import { createLogger } from '@/api/lib/logger';
 import type { InitialContext } from '@/api/middleware/auth.orpc';
+import { captureException } from '@/api/posthog';
 import type { RecordingRepository } from '@/api/repositories/recordings.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { IntercomNotificationService } from '@/api/services/intercom-notification.service';
@@ -200,7 +200,7 @@ export const completeUploadImpl = (
         });
       } catch (error) {
         sessionLogger.error({ err: error }, 'Error sending recording notifications');
-        Sentry.captureException(error);
+        captureException(error);
       }
     }
 

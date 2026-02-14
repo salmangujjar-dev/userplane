@@ -30,7 +30,7 @@ export const deleteProjectResources = inngest.createFunction(
   async ({ event, step }) => {
     const { projectId } = event.data;
 
-    logger.info({ projectId }, 'Starting project resource cleanup');
+    logger.debug({ projectId }, 'Starting project resource cleanup');
 
     const projectRepo = new ProjectRepository(db);
     const recordingRepo = new RecordingRepository(db);
@@ -41,7 +41,7 @@ export const deleteProjectResources = inngest.createFunction(
     });
 
     if (isDeleted === null) {
-      logger.info({ projectId }, 'Project not found, skipping');
+      logger.debug({ projectId }, 'Project not found, skipping');
       return {
         success: true,
         projectId,
@@ -52,7 +52,7 @@ export const deleteProjectResources = inngest.createFunction(
     }
 
     if (!isDeleted) {
-      logger.info({ projectId }, 'Project not deleted, skipping');
+      logger.debug({ projectId }, 'Project not deleted, skipping');
       return {
         success: true,
         projectId,
@@ -67,7 +67,7 @@ export const deleteProjectResources = inngest.createFunction(
       return recordingRepo.findByProjectId(projectId);
     });
 
-    logger.info({ projectId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
+    logger.debug({ projectId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
 
     // 3. Fan-out in batches of 500
     if (recordingsToCleanup.length > 0) {
@@ -87,7 +87,7 @@ export const deleteProjectResources = inngest.createFunction(
           );
         });
 
-        logger.info(
+        logger.debug(
           {
             projectId,
             batchIndex: index + 1,
