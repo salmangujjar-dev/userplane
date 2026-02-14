@@ -3,11 +3,10 @@
  * Handles screen and audio recording using MediaRecorder API
  */
 
-import * as Sentry from '@sentry/astro';
-
 import { AUDIO_SAMPLE_RATE_HZ, MEDIA_RECORDER_TIMESLICE_MS, VIDEO_BITRATE_BPS } from '@/constants';
 import { createLogger } from '@/lib/logger';
-import { ClientError } from '@/sentry/client-errors';
+import { posthog } from '@/posthog/client';
+import { ClientError } from '@/posthog/client-errors';
 import {
   getBestMimeType,
   isScreenRecordingSupported as checkScreenRecordingSupport,
@@ -146,20 +145,12 @@ export class MediaCapture {
         const error = new ClientError('CLIENT_MEDIA_CONNECTION_FAILED', event.error);
         logger.error({ err: error, code: error.code }, 'media recorder error');
 
-        // Capture MediaRecorder errors in Sentry - critical runtime failures
-        Sentry.captureException(error, {
-          level: 'error',
-          tags: {
-            error_type: 'media_recorder_error',
-            error_source: 'media_capture',
-            error_code: error.code,
-          },
-          contexts: {
-            mediaRecorder: {
-              state: this.mediaRecorder?.state || 'unknown',
-              mimeType: this.mediaRecorder?.mimeType || 'unknown',
-            },
-          },
+        posthog.captureException(error, {
+          error_type: 'media_recorder_error',
+          error_source: 'media_capture',
+          error_code: error.code,
+          recorder_state: this.mediaRecorder?.state || 'unknown',
+          recorder_mime_type: this.mediaRecorder?.mimeType || 'unknown',
         });
 
         if (this.onErrorCallback) {
@@ -175,20 +166,11 @@ export class MediaCapture {
     } catch (error) {
       logger.error({ err: error, mode: this.mode }, 'permission request failed');
 
-      // Capture permission failures - critical for understanding recording start issues
-      Sentry.captureException(error, {
-        level: 'error',
-        tags: {
-          error_type: 'media_permission_denied',
-          error_source: 'media_capture',
-          recording_mode: this.mode,
-        },
-        contexts: {
-          permission: {
-            mode: this.mode,
-            browserSupported: checkScreenRecordingSupport(),
-          },
-        },
+      posthog.captureException(error, {
+        error_type: 'media_permission_denied',
+        error_source: 'media_capture',
+        recording_mode: this.mode,
+        browser_supported: checkScreenRecordingSupport(),
       });
 
       throw ClientError.fromBrowserError(error as Error);
@@ -339,13 +321,9 @@ export async function requestScreenRecordingPermission(): Promise<boolean> {
   } catch (error) {
     logger.error({ err: error }, 'screen recording permission denied');
 
-    // Capture permission check failures for monitoring (info level - this is a test)
-    Sentry.captureException(error, {
-      level: 'info',
-      tags: {
-        error_type: 'permission_check_failed',
-        error_source: 'media_capture_test',
-      },
+    posthog.captureException(error, {
+      error_type: 'permission_check_failed',
+      error_source: 'media_capture_test',
     });
 
     return false;

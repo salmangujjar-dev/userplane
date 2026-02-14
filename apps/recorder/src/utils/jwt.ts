@@ -5,7 +5,7 @@
  * Uses types from @workspace/contract for type safety
  */
 
-import * as Sentry from '@sentry/astro';
+import { posthog } from '@/posthog/client';
 
 /**
  * Base JWT payload with standard claims
@@ -41,20 +41,11 @@ export function decodeJwtPayload<T extends BaseJwtPayload = BaseJwtPayload>(toke
       `Invalid JWT: failed to decode payload - ${err instanceof Error ? err.message : 'unknown error'}`
     );
 
-    // Capture JWT decode errors for monitoring session initialization failures
-    Sentry.captureException(error, {
-      level: 'error',
-      tags: {
-        error_type: 'jwt_decode_error',
-        error_source: 'recorder_jwt_utils',
-      },
-      contexts: {
-        jwt: {
-          token_format_valid: parts.length === 3,
-          payload_length: payload.length,
-          has_payload: !!payload,
-        },
-      },
+    posthog.captureException(error, {
+      error_type: 'jwt_decode_error',
+      error_source: 'recorder_jwt_utils',
+      token_format_valid: parts.length === 3,
+      payload_length: payload.length,
     });
 
     throw error;

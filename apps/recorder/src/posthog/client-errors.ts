@@ -3,10 +3,9 @@
  * Type-locked config for browser/media errors
  */
 
-import * as Sentry from '@sentry/astro';
-import { buildClientErrorTags, createBrowserErrorBreadcrumb, ErrorTypes } from '@workspace/sentry';
-
 import type { RecordingError } from '@/types/errors';
+
+import { posthog } from './client';
 
 /**
  * Client error codes - descriptive, self-documenting
@@ -69,16 +68,6 @@ export class ClientError extends Error {
   static fromBrowserError(error: Error): ClientError {
     const code = browserErrorToCode(error.name);
 
-    // Add breadcrumb for browser errors
-    Sentry.addBreadcrumb(
-      createBrowserErrorBreadcrumb({
-        errorName: error.name,
-        errorCode: code,
-        errorMessage: error.message,
-      })
-    );
-
-    // Capture critical browser errors in Sentry
     const criticalErrors: ClientErrorCode[] = [
       'CLIENT_BROWSER_UNSUPPORTED',
       'CLIENT_MEDIA_CONNECTION_FAILED',
@@ -86,11 +75,10 @@ export class ClientError extends Error {
     ];
 
     if (criticalErrors.includes(code)) {
-      Sentry.captureException(error, {
-        tags: buildClientErrorTags({
-          errorType: ErrorTypes.CRITICAL_BROWSER_ERROR,
-          clientErrorCode: code,
-        }),
+      posthog.captureException(error, {
+        error_type: 'critical_browser_error',
+        client_error_code: code,
+        browser_error_name: error.name,
       });
     }
 
@@ -107,54 +95,22 @@ export class ClientError extends Error {
  */
 function browserErrorToCode(name: string): ClientErrorCode {
   switch (name) {
-    // User denied permission, or permission was previously denied and remembered.
-    // Can also occur if the document isn't fully active or doesn't have focus.
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMException#notallowederror
     case 'NotAllowedError':
       return 'CLIENT_PERMISSION_DENIED';
-
-    // User dismissed the screen picker dialog without selecting a screen,
-    // or cancelled the permission prompt.
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMException#aborterror
     case 'AbortError':
       return 'CLIENT_RECORDING_ABORTED';
-
-    // Media support is disabled (e.g., document not loaded securely),
-    // or blocked by Feature-Policy/Permissions-Policy.
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMException#securityerror
     case 'SecurityError':
       return 'CLIENT_SECURITY_BLOCKED';
-
-    // No media tracks of the requested type (audio/video) were found.
-    // The user may not have a camera/microphone connected.
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMException#notfounderror
     case 'NotFoundError':
       return 'CLIENT_DEVICE_NOT_FOUND';
-
-    // Hardware device is already in use by another application.
-    // Operating system, browser, or webpage has locked the device.
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMException#notreadableerror
     case 'NotReadableError':
       return 'CLIENT_DEVICE_IN_USE';
-
-    // No device matches the requested constraints (resolution, frame rate, etc.).
-    // The device cannot satisfy the mandatory constraints specified.
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMException#overconstrainederror
     case 'OverconstrainedError':
       return 'CLIENT_DEVICE_INCOMPATIBLE';
-
-    // Browser doesn't support the requested media type or getDisplayMedia/getUserMedia API.
-    // May also indicate the constraints include unsupported properties.
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMException#notsupportederror
     case 'NotSupportedError':
       return 'CLIENT_BROWSER_UNSUPPORTED';
-
-    // Constraints object is empty, or has all tracks set to false,
-    // or an invalid constraints configuration was provided.
-    // @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError
     case 'TypeError':
       return 'CLIENT_MEDIA_CONNECTION_FAILED';
-
     default:
       return 'CLIENT_MEDIA_CONNECTION_FAILED';
   }
@@ -268,12 +224,10 @@ const CLIENT_ERROR_CONFIG: Record<ClientErrorCode, RecordingError> = {
  * Get error config for client error
  */
 export function getClientError(error: Error): RecordingError {
-  // If it's already a ClientError, use its code directly
   if (error instanceof ClientError) {
     return CLIENT_ERROR_CONFIG[error.code];
   }
 
-  // Otherwise map from browser error name
   const code = browserErrorToCode(error.name);
   return CLIENT_ERROR_CONFIG[code];
 }
