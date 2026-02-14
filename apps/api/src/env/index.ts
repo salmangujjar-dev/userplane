@@ -8,7 +8,7 @@ import { createServerLogger, type LogLevel } from '@workspace/logger';
 import { parseAppEnv } from '@workspace/shared/env';
 import { ZodError } from 'zod';
 
-import { DEV_SECRETS, SENTRY } from './defaults';
+import { DEV_SECRETS } from './defaults';
 import {
   type AdminConfig,
   type AuthConfig,
@@ -23,13 +23,13 @@ import {
   type InngestConfig,
   type OAuthConfig,
   type PaymentsConfig,
+  type PostHogConfig,
   type RateLimitConfig,
   type RawEnvConfig,
   rawEnvSchema,
   type RecorderConfig,
   type RedisConfig,
   type RestorationConfig,
-  type SentryConfig,
   type ServerConfig,
   type SessionConfig,
   type StorageConfig,
@@ -52,11 +52,11 @@ export type {
   InngestConfig,
   OAuthConfig,
   PaymentsConfig,
+  PostHogConfig,
   RateLimitConfig,
   RecorderConfig,
   RedisConfig,
   RestorationConfig,
-  SentryConfig,
   ServerConfig,
   SessionConfig,
   StorageConfig,
@@ -98,10 +98,6 @@ function formatZodErrors(error: ZodError): string {
  * Transform raw env vars into structured EnvConfig
  */
 function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
-  // Adjust Sentry sample rate based on environment
-  const sentryTracesSampleRate =
-    raw.NODE_ENV === 'production' ? SENTRY.TRACES_SAMPLE_RATE_PROD : raw.SENTRY_TRACES_SAMPLE_RATE;
-
   return {
     server: {
       port: raw.PORT,
@@ -231,10 +227,9 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
         bucketName: raw.R2_REPORTS_BUCKET_NAME,
       },
     },
-    sentry: {
-      dsn: raw.SENTRY_DSN,
-      release: raw.SENTRY_RELEASE,
-      tracesSampleRate: sentryTracesSampleRate,
+    posthog: {
+      apiKey: raw.POSTHOG_API_KEY,
+      host: raw.POSTHOG_HOST,
     },
     admin: {
       userIds: raw.ADMIN_USER_IDS,
@@ -394,8 +389,8 @@ function getConfigStatus(): {
   if (env.intercom.clientId && env.intercom.clientSecret) configured.push('Intercom');
   else notConfigured.push('Intercom');
 
-  if (env.sentry.dsn) configured.push('Sentry');
-  else notConfigured.push('Sentry');
+  if (env.posthog.apiKey) configured.push('PostHog');
+  else notConfigured.push('PostHog');
 
   if (env.email.provider !== 'localhost') configured.push('Email (Resend)');
   else usingDefaults.push('Email (localhost)');
@@ -414,7 +409,7 @@ function getConfigStatus(): {
 export function logConfig(): void {
   const status = getConfigStatus();
 
-  logger.info(
+  logger.debug(
     {
       server: {
         nodeEnv: env.server.nodeEnv,
@@ -493,10 +488,9 @@ export function logConfig(): void {
       cache: {
         enabled: env.cache.enabled,
       },
-      sentry: {
-        configured: !!env.sentry.dsn,
-        release: env.sentry.release || 'Not set',
-        tracesSampleRate: env.sentry.tracesSampleRate,
+      posthog: {
+        configured: !!env.posthog.apiKey,
+        host: env.posthog.host,
       },
       status: {
         configured: status.configured,

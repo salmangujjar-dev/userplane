@@ -27,11 +27,11 @@ export const sweepOrphanedRecordings = inngest.createFunction(
   async ({ step }) => {
     // Environment guard: only run in production
     if (env.server.appEnv !== 'production') {
-      logger.info('Skipping orphaned recording sweep in non-production environment');
+      logger.debug('Skipping orphaned recording sweep in non-production environment');
       return { recordingsTriggered: 0, dateRangeStart: '', dateRangeEnd: '' };
     }
 
-    logger.info('Starting sweep for orphaned recordings');
+    logger.debug('Starting sweep for orphaned recordings');
 
     const recordingRepo = new RecordingRepository(db);
     const lookbackDays = env.inngest.recordingSweepLookbackDays;
@@ -43,7 +43,7 @@ export const sweepOrphanedRecordings = inngest.createFunction(
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - lookbackDays);
 
-    logger.info(
+    logger.debug(
       {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -56,7 +56,7 @@ export const sweepOrphanedRecordings = inngest.createFunction(
       return recordingRepo.findDeletedRecordingsFromActiveEntities(startDate, endDate);
     });
 
-    logger.info(
+    logger.debug(
       {
         count: deletedRecordings.length,
         recordingIds: deletedRecordings.map((r) => r.recordingId),
@@ -81,7 +81,7 @@ export const sweepOrphanedRecordings = inngest.createFunction(
           );
         });
 
-        logger.info(
+        logger.debug(
           {
             batchIndex: index + 1,
             batchCount: recordingChunks.length,
@@ -98,7 +98,7 @@ export const sweepOrphanedRecordings = inngest.createFunction(
       dateRangeEnd: endDate.toISOString(),
     };
 
-    logger.info(result, 'Sweep completed');
+    logger.debug(result, 'Sweep completed');
     return result;
   }
 );

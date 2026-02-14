@@ -17,7 +17,7 @@ const logger = createLogger('redis');
  */
 function getRedisConfig(): RedisConfig | null {
   if (!env.redis.url || !env.redis.token) {
-    logger.info('Redis not configured - caching and rate limiting disabled');
+    logger.warn('Redis not configured - caching and rate limiting disabled');
     return null;
   }
   return {
@@ -46,7 +46,7 @@ export const rateLimiter = new RateLimiter(redis, env.rateLimit.enabled);
 
 // Log initialization status
 if (redis) {
-  logger.info(
+  logger.debug(
     {
       cacheEnabled: env.cache.enabled,
       rateLimitEnabled: env.rateLimit.enabled,

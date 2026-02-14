@@ -26,7 +26,7 @@ export const cleanupOrphanedWorkspace = inngest.createFunction(
   async ({ event, step }) => {
     const { workspaceId } = event.data;
 
-    logger.info({ workspaceId }, 'Starting orphan workspace resource cleanup');
+    logger.debug({ workspaceId }, 'Starting orphan workspace resource cleanup');
 
     const workspaceRepo = new WorkspaceRepository(db);
     const recordingRepo = new RecordingRepository(db);
@@ -37,7 +37,7 @@ export const cleanupOrphanedWorkspace = inngest.createFunction(
     });
 
     if (isDeleted === null) {
-      logger.info({ workspaceId }, 'Workspace not found, skipping');
+      logger.debug({ workspaceId }, 'Workspace not found, skipping');
       return {
         success: true,
         workspaceId,
@@ -48,7 +48,7 @@ export const cleanupOrphanedWorkspace = inngest.createFunction(
     }
 
     if (!isDeleted) {
-      logger.info({ workspaceId }, 'Workspace not deleted, skipping');
+      logger.debug({ workspaceId }, 'Workspace not deleted, skipping');
       return {
         success: true,
         workspaceId,
@@ -63,7 +63,7 @@ export const cleanupOrphanedWorkspace = inngest.createFunction(
       return recordingRepo.findByWorkspaceId(workspaceId, 'ORPHAN');
     });
 
-    logger.info({ workspaceId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
+    logger.debug({ workspaceId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
 
     // 3. Fan-out in batches of 500
     if (recordingsToCleanup.length > 0) {
@@ -81,7 +81,7 @@ export const cleanupOrphanedWorkspace = inngest.createFunction(
           );
         });
 
-        logger.info(
+        logger.debug(
           {
             workspaceId,
             batchIndex: index + 1,
@@ -116,11 +116,11 @@ export const sweepOrphanedWorkspaces = inngest.createFunction(
   async ({ step }) => {
     // Environment guard: only run in production
     if (env.server.appEnv !== 'production') {
-      logger.info('Skipping orphaned workspace sweep in non-production environment');
+      logger.debug('Skipping orphaned workspace sweep in non-production environment');
       return { workspacesTriggered: 0 };
     }
 
-    logger.info('Starting sweep for orphaned workspace recordings');
+    logger.debug('Starting sweep for orphaned workspace recordings');
 
     const recordingRepo = new RecordingRepository(db);
     const lookbackDays = env.inngest.workspaceSweepLookbackDays;
@@ -132,7 +132,7 @@ export const sweepOrphanedWorkspaces = inngest.createFunction(
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - lookbackDays);
 
-    logger.info(
+    logger.debug(
       {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -145,7 +145,7 @@ export const sweepOrphanedWorkspaces = inngest.createFunction(
       return recordingRepo.findWorkspacesWithOrphanedRecordings(startDate, endDate);
     });
 
-    logger.info(
+    logger.debug(
       {
         count: workspacesWithOrphans.length,
         workspaceIds: workspacesWithOrphans.map((w) => w.workspaceId),
@@ -167,7 +167,7 @@ export const sweepOrphanedWorkspaces = inngest.createFunction(
           );
         });
 
-        logger.info(
+        logger.debug(
           {
             batchIndex: index + 1,
             batchCount: workspaceChunks.length,
@@ -179,7 +179,7 @@ export const sweepOrphanedWorkspaces = inngest.createFunction(
     }
 
     const result = { workspacesTriggered: workspacesWithOrphans.length };
-    logger.info(result, 'Sweep completed');
+    logger.debug(result, 'Sweep completed');
     return result;
   }
 );

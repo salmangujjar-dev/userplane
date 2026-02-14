@@ -1,10 +1,9 @@
-// Initialize Sentry first, before all other imports
-import { initSentry } from '@/api/sentry';
-initSentry();
+// Initialize PostHog first, before all other imports
+import { initPostHog } from '@/api/posthog';
+initPostHog();
 
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { isDefinedError, onError } from '@orpc/server';
-import * as Sentry from '@sentry/node';
 import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@workspace/cache';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
@@ -28,20 +27,19 @@ import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.h
 import { createUninstallHandler } from '@/api/handlers/intercom-uninstall.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
-import { createLogger } from '@/api/lib/logger';
 import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
+import { captureException } from '@/api/posthog';
 import { apiRouter } from '@/api/routes/api.router';
 import { integrationRepo, intercomCanvasService, intercomHealthCheckService } from '@/api/services';
 
 const app = new Hono();
-const logger = createLogger('api');
 
 const openAPIHandler = new OpenAPIHandler(apiRouter, {
   interceptors: [
     onError((error) => {
       if (!isDefinedError(error)) {
-        Sentry.captureException(error);
+        captureException(error);
       }
     }),
   ],
@@ -126,8 +124,6 @@ if (rateLimiter.isAvailable()) {
 
   // Note: Intercom Canvas rate limiting is handled inside the routers
   // after signature verification, using workspace_id as identifier
-
-  logger.info('Rate limiting middleware enabled');
 }
 
 // Better Auth routes - must come before API routes
@@ -236,24 +232,9 @@ app.route('/api/v1/intercom/canvas/inbox', inboxRouter);
 app.route('/api/v1/intercom/health-check', healthCheckRouter);
 app.route('/api/v1/intercom/uninstall', uninstallRouter);
 
-logger.info('Intercom Canvas Kit routes registered:');
-logger.info('  Messenger (for users, leads, and visitors):');
-logger.info('    → /api/v1/intercom/canvas/messenger/configure');
-logger.info('    → /api/v1/intercom/canvas/messenger/initialize');
-logger.info('    → /api/v1/intercom/canvas/messenger/submit');
-logger.info('  Inbox (for teammates):');
-logger.info('    → /api/v1/intercom/canvas/inbox/initialize');
-logger.info('    → /api/v1/intercom/canvas/inbox/submit');
-logger.info('  Health Check (installation status):');
-logger.info('    → POST /api/v1/intercom/health-check');
-logger.info('  Uninstall (app removal notification):');
-logger.info('    → POST /api/v1/intercom/uninstall');
-
 // Workspace logo upload route (multipart/form-data - handled before OpenAPI)
 // This route handles file uploads which require special multipart handling
 app.post('/api/v1/workspace/:workspaceId/logo', handleWorkspaceLogoUpload);
-logger.info('Workspace logo upload route registered:');
-logger.info('    → POST /api/v1/workspace/:workspaceId/logo');
 
 // Inngest serve handler - handles background function invocations
 app.on(['GET', 'PUT', 'POST'], '/api/inngest', inngestServeHandler);
@@ -394,8 +375,6 @@ if (env.server.nodeEnv === 'development') {
 
     return c.html(html);
   });
-
-  logger.info('API documentation available at /docs and /spec.json');
 }
 
 // 404 handler
@@ -411,17 +390,11 @@ app.notFound((c) => {
 
 // Error handler
 app.onError((err, c) => {
-  logger.error({ err, path: c.req.path }, 'Internal server error');
-
-  // Capture application level error in Sentry with request context
+  // Capture application level error in PostHog with request context
   if (!isDefinedError(err)) {
-    Sentry.captureException(err, {
-      contexts: {
-        request: {
-          path: c.req.path,
-          method: c.req.method,
-        },
-      },
+    captureException(err, undefined, {
+      request_path: c.req.path,
+      request_method: c.req.method,
     });
   }
 

@@ -113,7 +113,7 @@ export async function handleWorkspaceLogoUpload(c: Context) {
     );
     logoUrl = assetsStorage.getWorkspaceLogoUrl(result.path);
 
-    logger.info({ workspaceId, path: result.path, logoUrl }, 'Logo uploaded to R2');
+    logger.debug({ workspaceId, path: result.path, logoUrl }, 'Logo uploaded to R2');
   } catch (error) {
     logger.error({ error, workspaceId }, 'Failed to upload logo to R2');
     return c.json({ error: 'Failed to upload logo' }, 500);

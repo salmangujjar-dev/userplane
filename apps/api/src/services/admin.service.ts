@@ -172,7 +172,7 @@ export class AdminService {
           }
         }
 
-        logger.info(
+        logger.debug(
           { deletedCount: workspacesToDelete.size, userId, roles: deleteRoles.join(', ') },
           'Deleted workspaces for banned user'
         );

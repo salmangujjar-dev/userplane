@@ -26,11 +26,11 @@ export const sweepExpiredRecordings = inngest.createFunction(
   async ({ step }) => {
     // Environment guard: only run in production
     if (env.server.appEnv !== 'production') {
-      logger.info('Skipping expired recording sweep in non-production environment');
+      logger.debug('Skipping expired recording sweep in non-production environment');
       return { recordingsDeleted: 0 };
     }
 
-    logger.info('Starting sweep for expired recordings');
+    logger.debug('Starting sweep for expired recordings');
 
     const recordingRepo = new RecordingRepository(db);
 
@@ -39,7 +39,7 @@ export const sweepExpiredRecordings = inngest.createFunction(
       return recordingRepo.softDeleteExpired();
     });
 
-    logger.info(
+    logger.debug(
       {
         count: deletedRecordings.length,
         recordingIds: deletedRecordings.map((r) => r.recordingId),
@@ -62,7 +62,7 @@ export const sweepExpiredRecordings = inngest.createFunction(
           );
         });
 
-        logger.info(
+        logger.debug(
           {
             batchIndex: index + 1,
             batchCount: recordingChunks.length,
@@ -77,7 +77,7 @@ export const sweepExpiredRecordings = inngest.createFunction(
       recordingsDeleted: deletedRecordings.length,
     };
 
-    logger.info(result, 'Expired recording sweep completed');
+    logger.debug(result, 'Expired recording sweep completed');
     return result;
   }
 );

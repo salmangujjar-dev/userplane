@@ -14,7 +14,6 @@ import { ORPCError } from '@orpc/server';
 import type { RateLimiter, RateLimitTier } from '@workspace/cache';
 
 import { rateLimiter } from '@/api/clients/redis';
-import { enrichSentryUserContext } from '@/api/sentry';
 
 import type { AuthContext } from './auth.orpc';
 import { authMiddleware, authorized, base } from './auth.orpc';
@@ -142,19 +141,11 @@ export const billingRateLimitMiddleware = createBillingRateLimitMiddleware(rateL
 /**
  * Authenticated base with rate limiting for general authenticated routes
  * Use this instead of `authorized` for routes that need rate limiting
- * Also enriches Sentry events with user context
  */
-export const authorizedRateLimited = authorized.use(authenticatedRateLimitMiddleware).use(
-  // @ts-expect-error - Type mismatch between simplified AuthContext and full Better Auth session type
-  enrichSentryUserContext
-);
+export const authorizedRateLimited = authorized.use(authenticatedRateLimitMiddleware);
 
 /**
  * Combined auth + admin rate limit middleware
  * For admin routes that need the higher rate limit
- * Also enriches Sentry events with user context
  */
-export const authWithAdminRateLimit = base.use(authMiddleware).use(adminRateLimitMiddleware).use(
-  // @ts-expect-error - Type mismatch between simplified AuthContext and full Better Auth session type
-  enrichSentryUserContext
-);
+export const authWithAdminRateLimit = base.use(authMiddleware).use(adminRateLimitMiddleware);

@@ -1,4 +1,3 @@
-import { sentryMiddleware } from '@inngest/middleware-sentry';
 import { EventSchemas, Inngest } from 'inngest';
 
 /**
@@ -34,5 +33,4 @@ type Events = {
 export const inngest = new Inngest({
   id: 'userplane-api',
   schemas: new EventSchemas().fromRecord<Events>(),
-  middleware: [sentryMiddleware()],
 });

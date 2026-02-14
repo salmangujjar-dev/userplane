@@ -15,12 +15,11 @@
  * - Refund events → RefundProcessorService
  */
 
-import * as Sentry from '@sentry/node';
 import type { WebhookPayload } from '@workspace/payments/types';
 import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
-import { buildWebhookTags, type WebhookContext } from '@workspace/sentry';
 
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import type { DisputeProcessorService } from '@/api/services/dispute-processor.service';
 import type { RefundProcessorService } from '@/api/services/refund-processor.service';
 import type { WebhookProcessorService } from '@/api/services/webhook-processor.service';
@@ -48,43 +47,23 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
     const { type: eventType } = webhookPayload;
     const webhookHeaders = determineWebhookHeaders(webhookPayload, headers);
 
-    // Set webhook context for Sentry
-    const webhookCtx: WebhookContext = {
-      webhookId: webhookHeaders.webhookId,
-      eventType,
-      timestamp: webhookHeaders.webhookTimestamp,
-    };
-    Sentry.setContext('webhook', webhookCtx);
-
     // Route subscription events to webhook processor
     if (isSubscriptionEvent(eventType)) {
-      logger.info(
+      logger.debug(
         { eventType, webhookId: webhookHeaders.webhookId },
         'Processing subscription event'
       );
 
       try {
-        const result = await Sentry.startSpan(
-          {
-            name: 'webhook.process.subscription',
-            op: 'webhook',
-            attributes: {
-              'webhook.type': eventType,
-              'webhook.id': webhookHeaders.webhookId,
-            },
-          },
-          async () => {
-            return await webhookProcessor.processWebhook(webhookHeaders, webhookPayload);
-          }
-        );
+        const result = await webhookProcessor.processWebhook(webhookHeaders, webhookPayload);
 
         if (result.skipped) {
-          logger.info(
+          logger.warn(
             { eventType, skipReason: result.skipReason, subscriptionId: result.subscriptionId },
             'Skipped subscription event'
           );
         } else if (result.processed) {
-          logger.info(
+          logger.debug(
             {
               eventType,
               previousStatus: result.previousStatus || 'new',
@@ -96,11 +75,11 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         }
       } catch (error) {
         logger.error({ err: error, eventType }, 'Error processing subscription event');
-        Sentry.captureException(error, {
-          tags: buildWebhookTags({
-            webhookType: 'subscription',
-            eventType,
-          }),
+        captureException(error, undefined, {
+          webhook_type: 'subscription',
+          event_type: eventType,
+          webhook_id: webhookHeaders.webhookId,
+          webhook_timestamp: webhookHeaders.webhookTimestamp,
         });
         throw error;
       }
@@ -109,41 +88,29 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
 
     // Route dispute events to dispute processor
     if (isDisputeEvent(eventType)) {
-      logger.info({ eventType, webhookId: webhookHeaders.webhookId }, 'Processing dispute event');
+      logger.debug({ eventType, webhookId: webhookHeaders.webhookId }, 'Processing dispute event');
 
       try {
-        const result = await Sentry.startSpan(
-          {
-            name: 'webhook.process.dispute',
-            op: 'webhook',
-            attributes: {
-              'webhook.type': eventType,
-              'webhook.id': webhookHeaders.webhookId,
-            },
-          },
-          async () => {
-            return await disputeProcessor.processDispute(webhookHeaders, webhookPayload);
-          }
-        );
+        const result = await disputeProcessor.processDispute(webhookHeaders, webhookPayload);
 
         if (result.skipped) {
-          logger.info(
+          logger.warn(
             { eventType, skipReason: result.skipReason, disputeId: result.disputeId },
             'Skipped dispute event'
           );
         } else if (result.processed) {
-          logger.info(
+          logger.debug(
             { eventType, disputeId: result.disputeId, workspaceId: result.workspaceId },
             'Processed dispute event'
           );
         }
       } catch (error) {
         logger.error({ err: error, eventType }, 'Error processing dispute event');
-        Sentry.captureException(error, {
-          tags: buildWebhookTags({
-            webhookType: 'dispute',
-            eventType,
-          }),
+        captureException(error, undefined, {
+          webhook_type: 'dispute',
+          event_type: eventType,
+          webhook_id: webhookHeaders.webhookId,
+          webhook_timestamp: webhookHeaders.webhookTimestamp,
         });
         throw error;
       }
@@ -152,41 +119,29 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
 
     // Route refund events to refund processor
     if (isRefundEvent(eventType)) {
-      logger.info({ eventType, webhookId: webhookHeaders.webhookId }, 'Processing refund event');
+      logger.debug({ eventType, webhookId: webhookHeaders.webhookId }, 'Processing refund event');
 
       try {
-        const result = await Sentry.startSpan(
-          {
-            name: 'webhook.process.refund',
-            op: 'webhook',
-            attributes: {
-              'webhook.type': eventType,
-              'webhook.id': webhookHeaders.webhookId,
-            },
-          },
-          async () => {
-            return await refundProcessor.processRefund(webhookHeaders, webhookPayload);
-          }
-        );
+        const result = await refundProcessor.processRefund(webhookHeaders, webhookPayload);
 
         if (result.skipped) {
-          logger.info(
+          logger.warn(
             { eventType, skipReason: result.skipReason, refundId: result.refundId },
             'Skipped refund event'
           );
         } else if (result.processed) {
-          logger.info(
+          logger.debug(
             { eventType, refundId: result.refundId, workspaceId: result.workspaceId },
             'Processed refund event'
           );
         }
       } catch (error) {
         logger.error({ err: error, eventType }, 'Error processing refund event');
-        Sentry.captureException(error, {
-          tags: buildWebhookTags({
-            webhookType: 'refund',
-            eventType,
-          }),
+        captureException(error, undefined, {
+          webhook_type: 'refund',
+          event_type: eventType,
+          webhook_id: webhookHeaders.webhookId,
+          webhook_timestamp: webhookHeaders.webhookTimestamp,
         });
         throw error;
       }
@@ -194,6 +149,6 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
     }
 
     // Unknown event type - log and ignore
-    logger.info({ eventType }, 'Ignoring unknown event');
+    logger.warn({ eventType }, 'Ignoring unknown event');
   };
 }

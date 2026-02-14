@@ -26,7 +26,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
   async ({ event, step }) => {
     const { projectId } = event.data;
 
-    logger.info({ projectId }, 'Starting orphan project resource cleanup');
+    logger.debug({ projectId }, 'Starting orphan project resource cleanup');
 
     const projectRepo = new ProjectRepository(db);
     const recordingRepo = new RecordingRepository(db);
@@ -37,7 +37,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
     });
 
     if (isDeleted === null) {
-      logger.info({ projectId }, 'Project not found, skipping');
+      logger.debug({ projectId }, 'Project not found, skipping');
       return {
         success: true,
         projectId,
@@ -48,7 +48,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
     }
 
     if (!isDeleted) {
-      logger.info({ projectId }, 'Project not deleted, skipping');
+      logger.debug({ projectId }, 'Project not deleted, skipping');
       return {
         success: true,
         projectId,
@@ -63,7 +63,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
       return recordingRepo.findByProjectId(projectId, 'ORPHAN');
     });
 
-    logger.info({ projectId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
+    logger.debug({ projectId, count: recordingsToCleanup.length }, 'Found recordings to cleanup');
 
     // 3. Fan-out in batches of 500
     if (recordingsToCleanup.length > 0) {
@@ -81,7 +81,7 @@ export const cleanupOrphanedProject = inngest.createFunction(
           );
         });
 
-        logger.info(
+        logger.debug(
           {
             projectId,
             batchIndex: index + 1,
@@ -116,11 +116,11 @@ export const sweepOrphanedProjects = inngest.createFunction(
   async ({ step }) => {
     // Environment guard: only run in production
     if (env.server.appEnv !== 'production') {
-      logger.info('Skipping orphaned project sweep in non-production environment');
+      logger.debug('Skipping orphaned project sweep in non-production environment');
       return { projectsTriggered: 0, dateRangeStart: '', dateRangeEnd: '' };
     }
 
-    logger.info('Starting sweep for orphaned project recordings');
+    logger.debug('Starting sweep for orphaned project recordings');
 
     const recordingRepo = new RecordingRepository(db);
     const lookbackDays = env.inngest.projectSweepLookbackDays;
@@ -132,7 +132,7 @@ export const sweepOrphanedProjects = inngest.createFunction(
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - lookbackDays);
 
-    logger.info(
+    logger.debug(
       {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -145,7 +145,7 @@ export const sweepOrphanedProjects = inngest.createFunction(
       return recordingRepo.findProjectsWithOrphanedRecordings(startDate, endDate);
     });
 
-    logger.info(
+    logger.debug(
       {
         count: projectsWithOrphans.length,
         projectIds: projectsWithOrphans.map((p) => p.projectId),
@@ -167,7 +167,7 @@ export const sweepOrphanedProjects = inngest.createFunction(
           );
         });
 
-        logger.info(
+        logger.debug(
           {
             batchIndex: index + 1,
             batchCount: projectChunks.length,
@@ -184,7 +184,7 @@ export const sweepOrphanedProjects = inngest.createFunction(
       dateRangeEnd: endDate.toISOString(),
     };
 
-    logger.info(result, 'Sweep completed');
+    logger.debug(result, 'Sweep completed');
     return result;
   }
 );

@@ -14,9 +14,9 @@ import {
   EMAIL,
   INNGEST,
   PAYMENTS,
+  POSTHOG,
   RATE_LIMIT,
   RESTORATION,
-  SENTRY,
   SERVER,
   SESSION,
   STORAGE,
@@ -28,7 +28,6 @@ import {
   commaSeparatedArray,
   commaSeparatedUrls,
   emailWithDefault,
-  floatWithDefault,
   integerWithDefault,
   requiredString,
   requiredUrl,
@@ -205,11 +204,10 @@ export const storageEnvSchema = z.object({
   R2_REPORTS_BUCKET_NAME: requiredString('R2_REPORTS_BUCKET_NAME'),
 });
 
-/** Sentry env vars schema */
-export const sentryEnvSchema = z.object({
-  SENTRY_DSN: z.string().url().optional(),
-  SENTRY_RELEASE: z.string().optional(),
-  SENTRY_TRACES_SAMPLE_RATE: floatWithDefault(SENTRY.TRACES_SAMPLE_RATE_DEV),
+/** PostHog env vars schema */
+export const posthogEnvSchema = z.object({
+  POSTHOG_API_KEY: z.string().optional(),
+  POSTHOG_HOST: stringWithDefault(POSTHOG.HOST),
 });
 
 /** Admin env vars schema */
@@ -237,7 +235,7 @@ export const rawEnvSchema = serverEnvSchema
   .merge(inngestEnvSchema)
   .merge(restorationEnvSchema)
   .merge(storageEnvSchema)
-  .merge(sentryEnvSchema)
+  .merge(posthogEnvSchema)
   .merge(adminEnvSchema);
 
 /** Raw parsed environment type */
@@ -402,11 +400,10 @@ export const storageConfigSchema = z.object({
   reports: bucketCredentialsSchema,
 });
 
-/** Sentry configuration schema */
-export const sentryConfigSchema = z.object({
-  dsn: z.string().url().optional(),
-  release: z.string().optional(),
-  tracesSampleRate: z.number(),
+/** PostHog configuration schema */
+export const posthogConfigSchema = z.object({
+  apiKey: z.string().optional(),
+  host: z.string(),
 });
 
 /** Admin configuration schema */
@@ -435,7 +432,7 @@ export const envConfigSchema = z.object({
   inngest: inngestConfigSchema,
   restoration: restorationConfigSchema,
   storage: storageConfigSchema,
-  sentry: sentryConfigSchema,
+  posthog: posthogConfigSchema,
   admin: adminConfigSchema,
 });
 
@@ -463,6 +460,6 @@ export type InngestConfig = z.infer<typeof inngestConfigSchema>;
 export type RestorationConfig = z.infer<typeof restorationConfigSchema>;
 export type BucketCredentials = z.infer<typeof bucketCredentialsSchema>;
 export type StorageConfig = z.infer<typeof storageConfigSchema>;
-export type SentryConfig = z.infer<typeof sentryConfigSchema>;
+export type PostHogConfig = z.infer<typeof posthogConfigSchema>;
 export type AdminConfig = z.infer<typeof adminConfigSchema>;
 export type EnvConfig = z.infer<typeof envConfigSchema>;
