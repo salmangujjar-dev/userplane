@@ -251,7 +251,7 @@ function parseUserplaneUrl(href: string): SerializableUserplaneData | null {
  */
 export function initialize(options: InitializeOptions = {}): void {
   if (initialized) {
-    logger.warn('SDK is already initialized');
+    logger.debug('SDK is already initialized');
     return;
   }
 
@@ -387,7 +387,7 @@ export function open(token?: string): boolean {
   }
 
   if (currentManager?.isMounted()) {
-    logger.warn('Recorder is already open');
+    logger.debug('Recorder is already open');
     return false;
   }
 
@@ -445,7 +445,7 @@ function mountVerification(token: string): boolean {
   }
 
   if (currentManager?.isMounted()) {
-    logger.warn('Frame is already mounted');
+    logger.debug('Frame is already mounted');
     return false;
   }
 

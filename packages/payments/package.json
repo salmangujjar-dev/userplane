@@ -45,8 +45,9 @@
   },
   "dependencies": {
     "@dodopayments/better-auth": "^1.4.2",
-    "dodopayments": "^2.16.0",
-    "@workspace/pricing": "workspace:*"
+    "@workspace/console-logger": "workspace:*",
+    "@workspace/pricing": "workspace:*",
+    "dodopayments": "^2.16.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

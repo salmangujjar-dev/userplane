@@ -8,6 +8,8 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import type { Redis } from '@upstash/redis';
 
+import { createCacheLogger } from '../logger';
+
 /**
  * Rate limit tiers
  */
@@ -98,6 +100,7 @@ export interface RateLimitResult {
 export class RateLimiter {
   private limiters: Map<RateLimitTier, Ratelimit>;
   private enabled: boolean;
+  private logger = createCacheLogger('RateLimiter');
 
   constructor(redis: Redis | null, enabled: boolean = true) {
     this.limiters = new Map();
@@ -148,7 +151,7 @@ export class RateLimiter {
 
     if (!limiter) {
       // Fail open if limiter not found
-      console.warn(`[RateLimit] No limiter found for tier: ${tier}`);
+      this.logger.warn({ tier }, 'No limiter found for tier');
       return {
         success: true,
         limit: TIER_CONFIGS[tier].limit,
@@ -176,7 +179,7 @@ export class RateLimiter {
       return response;
     } catch (error) {
       // Fail open on errors
-      console.warn(`[RateLimit] Error checking rate limit for ${tier}:${identifier}:`, error);
+      this.logger.warn({ err: error, tier, identifier }, 'Error checking rate limit');
       return {
         success: true,
         limit: TIER_CONFIGS[tier].limit,

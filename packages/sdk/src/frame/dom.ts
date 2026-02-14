@@ -3,7 +3,10 @@
  * Handles creation and styling of overlay and iframe elements.
  */
 
+import { createSdkLogger } from '../logger';
 import type { FrameConfig } from '../types';
+
+const logger = createSdkLogger('FrameDOM');
 
 /**
  * Creates the overlay container element.
@@ -58,14 +61,14 @@ export function createIframe(config: FrameConfig): HTMLIFrameElement {
 
   if (config.onLoad) {
     iframe.addEventListener('load', () => {
-      console.log('[FrameManager] Iframe loaded successfully');
+      logger.debug('Iframe loaded successfully');
       config.onLoad?.();
     });
   }
 
   if (config.onError) {
     iframe.addEventListener('error', () => {
-      console.error('[FrameManager] Error loading iframe');
+      logger.error('Error loading iframe');
       config.onError?.();
     });
   }

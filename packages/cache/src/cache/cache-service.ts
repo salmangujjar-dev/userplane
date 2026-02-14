@@ -8,6 +8,8 @@
  */
 
 import type { Redis } from '@upstash/redis';
+
+import { createCacheLogger } from '../logger';
 import type {
   DomainRecordingPrefs,
   LinkCore,
@@ -73,6 +75,7 @@ export function getCacheOptionsFromHeaders(headers: Headers): CacheOptions {
 export class CacheService {
   private redis: Redis | null;
   private enabled: boolean;
+  private logger = createCacheLogger('CacheService');
 
   constructor(config: CacheServiceConfig) {
     this.redis = config.redis;
@@ -98,7 +101,7 @@ export class CacheService {
       const value = await this.redis.get<T>(key);
       return value;
     } catch (error) {
-      console.warn(`[Cache] GET error for ${key}:`, error);
+      this.logger.warn({ err: error, key }, 'GET error');
       return null;
     }
   }
@@ -110,7 +113,7 @@ export class CacheService {
     try {
       await this.redis.set(key, value, { ex: ttlSeconds });
     } catch (error) {
-      console.warn(`[Cache] SET error for ${key}:`, error);
+      this.logger.warn({ err: error, key }, 'SET error');
     }
   }
 
@@ -127,7 +130,7 @@ export class CacheService {
       const values = await this.redis.mget<(T | null)[]>(...keys);
       return values;
     } catch (error) {
-      console.warn(`[Cache] MGET error for ${keys.length} keys:`, error);
+      this.logger.warn({ err: error, keyCount: keys.length }, 'MGET error');
       return keys.map(() => null);
     }
   }
@@ -146,7 +149,7 @@ export class CacheService {
       }
       await pipeline.exec();
     } catch (error) {
-      console.warn(`[Cache] MSET error for ${entries.length} entries:`, error);
+      this.logger.warn({ err: error, entryCount: entries.length }, 'MSET error');
     }
   }
 
@@ -160,7 +163,7 @@ export class CacheService {
     try {
       await this.redis.del(...keys);
     } catch (error) {
-      console.warn(`[Cache] DEL error for ${keys.join(', ')}:`, error);
+      this.logger.warn({ err: error, keys }, 'DEL error');
     }
   }
 

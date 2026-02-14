@@ -33,11 +33,11 @@ export class VerificationFrameManager
 
   protected establishBridge(): void {
     if (!this.frame) {
-      console.error('[VerificationFrameManager] No frame to connect bridge to');
+      this.logger.error('No frame to connect bridge to');
       return;
     }
 
-    console.log('[VerificationFrameManager] Establishing verification bridge');
+    this.logger.debug('Establishing verification bridge');
 
     this.bridge = new VerificationBridgeConnection({
       verificationBaseUrl: this.verificationConfig.verificationBaseUrl,
@@ -48,7 +48,7 @@ export class VerificationFrameManager
     });
 
     this.bridge.connect(this.frame.iframe).catch((error) => {
-      console.error('[VerificationFrameManager] Bridge connection failed:', error);
+      this.logger.error({ err: error }, 'Bridge connection failed');
     });
   }
 
@@ -56,7 +56,7 @@ export class VerificationFrameManager
     if (this.bridge) {
       this.bridge.disconnect();
       this.bridge = null;
-      console.log('[VerificationFrameManager] Bridge disconnected');
+      this.logger.debug('Bridge disconnected');
     }
   }
 }

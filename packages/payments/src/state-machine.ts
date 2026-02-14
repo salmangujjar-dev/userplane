@@ -13,7 +13,10 @@
  * - expired   → (terminal)
  */
 
+import { createPaymentsLogger } from './logger';
 import type { SubscriptionStatus } from './types';
+
+const logger = createPaymentsLogger('StateMachine');
 
 /**
  * Valid state transitions for subscription statuses
@@ -89,13 +92,11 @@ export function validateTransition(
   to: SubscriptionStatus,
   cancelAtPeriodEnd?: boolean
 ): TransitionValidationResult {
-  console.log(
-    `[StateMachine] validateTransition: ${from} → ${to} (cancelAtPeriodEnd=${cancelAtPeriodEnd})`
-  );
+  logger.debug({ from, to, cancelAtPeriodEnd }, 'validateTransition');
 
   // Same state is always valid
   if (from === to) {
-    console.log(`[StateMachine] validateTransition: VALID (idempotent, same state)`);
+    logger.debug('validateTransition: VALID (idempotent, same state)');
     return { valid: true };
   }
 
@@ -105,7 +106,7 @@ export function validateTransition(
       valid: false,
       reason: `Cannot transition from terminal state '${from}'`,
     };
-    console.log(`[StateMachine] validateTransition: INVALID - ${result.reason}`);
+    logger.debug({ reason: result.reason }, 'validateTransition: INVALID');
     return result;
   }
 
@@ -116,12 +117,10 @@ export function validateTransition(
         valid: false,
         reason: `Transition '${from}' → '${to}' requires cancel_at_period_end=true`,
       };
-      console.log(`[StateMachine] validateTransition: INVALID - ${result.reason}`);
+      logger.debug({ reason: result.reason }, 'validateTransition: INVALID');
       return result;
     }
-    console.log(
-      `[StateMachine] validateTransition: VALID (cancelled → expired with cancelAtPeriodEnd)`
-    );
+    logger.debug('validateTransition: VALID (cancelled → expired with cancelAtPeriodEnd)');
     return { valid: true };
   }
 
@@ -131,10 +130,10 @@ export function validateTransition(
       valid: false,
       reason: `Invalid transition: '${from}' → '${to}'`,
     };
-    console.log(`[StateMachine] validateTransition: INVALID - ${result.reason}`);
+    logger.debug({ reason: result.reason }, 'validateTransition: INVALID');
     return result;
   }
 
-  console.log(`[StateMachine] validateTransition: VALID`);
+  logger.debug('validateTransition: VALID');
   return { valid: true };
 }

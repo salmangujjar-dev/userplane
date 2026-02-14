@@ -5,6 +5,7 @@
 
 import { FrameConfigBuilder } from '../config/builder';
 import { URL_PARAMS } from '../constants';
+import { createSdkLogger } from '../logger';
 import type { FrameConfig, RecorderFrame, RecorderParams } from '../types';
 import { createIframe, createOverlay, hasExistingRecorder } from './dom';
 import type { FrameManagerConfig, IFrameManager } from './types';
@@ -16,6 +17,7 @@ import type { FrameManagerConfig, IFrameManager } from './types';
 export abstract class BaseFrameManager implements IFrameManager {
   protected frame: RecorderFrame | null = null;
   protected config: FrameManagerConfig;
+  protected logger = createSdkLogger('FrameManager');
 
   constructor(config: FrameManagerConfig) {
     this.config = config;
@@ -26,28 +28,27 @@ export abstract class BaseFrameManager implements IFrameManager {
    * Performs common validation before delegating to subclass
    */
   public tryMount(params: RecorderParams): boolean {
-    const managerName = this.getManagerName();
-    console.log(`[${managerName}] Attempting to mount`);
+    this.logger.debug('Attempting to mount');
 
     if (this.isMounted()) {
-      console.warn(`[${managerName}] Frame is already mounted`);
+      this.logger.debug('Frame is already mounted');
       return false;
     }
 
     if (hasExistingRecorder()) {
-      console.error(`[${managerName}] Another Userplane frame is already open`);
+      this.logger.error('Another Userplane frame is already open');
       return false;
     }
 
     if (params.workspaceIds.length === 0) {
-      console.error(`[${managerName}] No workspace IDs provided`);
+      this.logger.error('No workspace IDs provided');
       return false;
     }
 
-    console.log(`[${managerName}] Workspace IDs:`, params.workspaceIds);
+    this.logger.debug({ workspaceIds: params.workspaceIds }, 'Workspace IDs');
 
     const frameConfig = this.buildFrameConfig(params);
-    console.log(`[${managerName}] Frame URL:`, frameConfig.url);
+    this.logger.debug({ url: frameConfig.url }, 'Frame URL');
 
     this.createFrame(frameConfig);
     this.mountToDOM();
@@ -59,19 +60,17 @@ export abstract class BaseFrameManager implements IFrameManager {
    * Unmount and cleanup the frame
    */
   public unmount(): void {
-    const managerName = this.getManagerName();
-
     // Disconnect bridge first (implemented by subclass)
     this.disconnectBridge();
 
     if (!this.frame) {
-      console.warn(`[${managerName}] No frame to unmount`);
+      this.logger.debug('No frame to unmount');
       return;
     }
 
     if (document.contains(this.frame.overlay)) {
       document.body.removeChild(this.frame.overlay);
-      console.log(`[${managerName}] Frame unmounted from DOM`);
+      this.logger.debug('Frame unmounted from DOM');
     }
 
     this.frame = null;
@@ -130,15 +129,13 @@ export abstract class BaseFrameManager implements IFrameManager {
       url.searchParams.set(URL_PARAMS.META, meta);
     }
 
-    const managerName = this.getManagerName();
-
     return new FrameConfigBuilder()
       .withUrl(url.toString())
       .withOnLoad(() => {
-        console.log(`[${managerName}] Frame loaded successfully`);
+        this.logger.debug('Frame loaded successfully');
         this.establishBridge();
       })
-      .withOnError(() => console.error(`[${managerName}] Failed to load frame`))
+      .withOnError(() => this.logger.error('Failed to load frame'))
       .build();
   }
 
@@ -147,11 +144,11 @@ export abstract class BaseFrameManager implements IFrameManager {
    */
   protected createFrame(config: FrameConfig): RecorderFrame {
     if (this.frame) {
-      console.warn(`[${this.getManagerName()}] Frame already exists`);
+      this.logger.debug('Frame already exists');
       return this.frame;
     }
 
-    console.log(`[${this.getManagerName()}] Creating frame`);
+    this.logger.debug('Creating frame');
 
     const overlay = createOverlay(config);
     const iframe = createIframe(config);
@@ -170,19 +167,18 @@ export abstract class BaseFrameManager implements IFrameManager {
     }
 
     if (document.contains(this.frame.overlay)) {
-      console.warn(`[${this.getManagerName()}] Frame already in DOM`);
+      this.logger.debug('Frame already in DOM');
       return;
     }
 
     const frame = this.frame;
-    const managerName = this.getManagerName();
 
     const mountFn = () => {
       if (document.readyState !== 'loading') {
         document.body.appendChild(frame.overlay);
         document.removeEventListener('readystatechange', mountFn);
         frame.iframe.focus();
-        console.log(`[${managerName}] Frame mounted to DOM`);
+        this.logger.debug('Frame mounted to DOM');
       }
     };
 
@@ -194,7 +190,7 @@ export abstract class BaseFrameManager implements IFrameManager {
    * Handle close request from bridge
    */
   protected handleCloseRequest(): void {
-    console.log(`[${this.getManagerName()}] Close requested via bridge`);
+    this.logger.debug('Close requested via bridge');
     this.config.onRequestClose?.();
     this.unmount();
   }

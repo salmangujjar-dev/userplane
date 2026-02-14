@@ -7,6 +7,7 @@
 
 import type DodoPayments from 'dodopayments';
 
+import { createPaymentsLogger } from './logger';
 import type {
   DisputeEventType,
   DodoSubscription,
@@ -14,6 +15,8 @@ import type {
   SubscriptionStatus,
   WebhookPayload,
 } from './types';
+
+const logger = createPaymentsLogger('Webhooks');
 
 /**
  * Subscription webhook event types from DodoPayments
@@ -202,7 +205,7 @@ export async function processWebhookPayload(
   handlers: WebhookHandlers
 ): Promise<void> {
   if (!isSubscriptionWebhook(payload)) {
-    console.warn(`Ignoring non-subscription webhook event: ${payload.type}`);
+    logger.warn({ eventType: payload.type }, 'Ignoring non-subscription webhook event');
     return;
   }
 
@@ -234,6 +237,6 @@ export async function processWebhookPayload(
       await handlers.onSubscriptionExpired?.(data);
       break;
     default:
-      console.warn(`Unknown subscription webhook event type: ${eventType}`);
+      logger.warn({ eventType }, 'Unknown subscription webhook event type');
   }
 }

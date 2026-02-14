@@ -20,6 +20,7 @@ import { getCustomMetadata } from '@workspace/metadata';
 import { type Connection, host } from '@workspace/postbridge';
 
 import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
+import { createSdkLogger } from '../logger';
 import type {
   BlurrState,
   CaptureGuestSchema,
@@ -59,6 +60,7 @@ export class CaptureBridgeConnection {
   private tabRef: string;
   private callbacks: CaptureBridgeCallbacks;
   private connectionId: string;
+  private logger = createSdkLogger('CaptureBridge');
 
   // BlurManager instance for privacy blur
   private blurManager: BlurManager | null = null;
@@ -80,9 +82,9 @@ export class CaptureBridgeConnection {
     // BlurManager reads custom selectors from <meta name="userplane-blur-selectors">
     try {
       this.blurManager = BlurManager.fromMetaTags();
-      console.log('[CaptureBridge] BlurManager initialized');
+      this.logger.debug('BlurManager initialized');
     } catch (error) {
-      console.warn('[CaptureBridge] BlurManager initialization failed:', error);
+      this.logger.warn({ err: error }, 'BlurManager initialization failed');
       this.blurManager = null;
     }
   }
@@ -102,11 +104,11 @@ export class CaptureBridgeConnection {
    */
   public async connect(iframe: HTMLIFrameElement): Promise<void> {
     if (this.connection) {
-      console.warn('[CaptureBridge] Already connected');
+      this.logger.debug('Already connected');
       return;
     }
 
-    console.log('[CaptureBridge] Connecting to capture iframe');
+    this.logger.debug('Connecting to capture iframe');
 
     // Create host schema with methods for capture iframe
     const schema: CaptureHostSchema = {
@@ -117,7 +119,7 @@ export class CaptureBridgeConnection {
         try {
           return getCustomMetadata();
         } catch (error) {
-          console.error('[CaptureBridge] Error extracting metadata:', error);
+          this.logger.error({ err: error }, 'Error extracting metadata');
           return null;
         }
       },
@@ -134,10 +136,10 @@ export class CaptureBridgeConnection {
 
     try {
       this.connection = await host.connect(iframe, schema);
-      console.log('[CaptureBridge] Connected to capture, connection ID:', this.connection.id);
+      this.logger.debug({ connectionId: this.connection.id }, 'Connected to capture');
       this.callbacks.onConnected?.();
     } catch (error) {
-      console.error('[CaptureBridge] Failed to connect:', error);
+      this.logger.error({ err: error }, 'Failed to connect');
       throw error;
     }
   }
@@ -147,11 +149,11 @@ export class CaptureBridgeConnection {
    */
   public disconnect(): void {
     if (!this.connection) {
-      console.warn('[CaptureBridge] Not connected');
+      this.logger.debug('Not connected');
       return;
     }
 
-    console.log('[CaptureBridge] Disconnecting from capture iframe');
+    this.logger.debug('Disconnecting from capture iframe');
     this.connection.close();
     this.connection = null;
     this.callbacks.onDisconnected?.();
@@ -180,7 +182,7 @@ export class CaptureBridgeConnection {
    */
   public updateRecorderState(state: CaptureRecorderState): void {
     this.recorderState = { ...state };
-    console.log('[CaptureBridge] Recorder state updated:', this.recorderState);
+    this.logger.debug({ recorderState: this.recorderState }, 'Recorder state updated');
     this.callbacks.onRecorderStateChange?.(this.recorderState);
   }
 
@@ -226,16 +228,16 @@ export class CaptureBridgeConnection {
   public async extractMetadata(): Promise<TabMetadata | null> {
     const remote = this.getRemote();
     if (!remote) {
-      console.warn('[CaptureBridge] Not connected, cannot extract metadata');
+      this.logger.debug('Not connected, cannot extract metadata');
       return null;
     }
 
     try {
       const metadata = await Promise.resolve(remote.extractMetadata());
-      console.log('[CaptureBridge] Extracted metadata:', metadata);
+      this.logger.debug({ metadata }, 'Extracted metadata');
       return metadata;
     } catch (error) {
-      console.error('[CaptureBridge] Failed to extract metadata:', error);
+      this.logger.error({ err: error }, 'Failed to extract metadata');
       return null;
     }
   }
@@ -267,16 +269,16 @@ export class CaptureBridgeConnection {
    */
   public startBlurr(): void {
     if (!this.blurManager) {
-      console.warn('[CaptureBridge] BlurManager not available, cannot start blur');
+      this.logger.debug('BlurManager not available, cannot start blur');
       return;
     }
 
     if (this.blurManager.isStarted) {
-      console.log('[CaptureBridge] Blur already started');
+      this.logger.debug('Blur already started');
       return;
     }
 
-    console.log('[CaptureBridge] Starting privacy blur');
+    this.logger.debug('Starting privacy blur');
     this.blurManager.start();
   }
 
@@ -286,16 +288,16 @@ export class CaptureBridgeConnection {
    */
   public stopBlurr(): void {
     if (!this.blurManager) {
-      console.warn('[CaptureBridge] BlurManager not available, cannot stop blur');
+      this.logger.debug('BlurManager not available, cannot stop blur');
       return;
     }
 
     if (!this.blurManager.isStarted) {
-      console.log('[CaptureBridge] Blur already stopped');
+      this.logger.debug('Blur already stopped');
       return;
     }
 
-    console.log('[CaptureBridge] Stopping privacy blur');
+    this.logger.debug('Stopping privacy blur');
     this.blurManager.stop();
   }
 
