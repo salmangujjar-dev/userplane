@@ -27,6 +27,7 @@ export async function onRequestError(
 ) {
   if (serverPostHog) {
     serverPostHog.captureException(error, undefined, {
+      app: 'dash',
       request_method: request.method,
       route_path: context.routePath,
       route_type: context.routeType,

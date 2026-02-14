@@ -38,8 +38,4 @@ export const STORAGE = {
 
 export const POSTHOG = {
   HOST: 'https://us.i.posthog.com',
-  /** Session replay sample rate */
-  SESSION_REPLAY_SAMPLE_RATE: 0.1,
-  /** Error replay sample rate */
-  SESSION_REPLAY_ERROR_SAMPLE_RATE: 1.0,
 } as const;

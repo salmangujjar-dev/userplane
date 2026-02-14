@@ -7,8 +7,6 @@ import { type Environment, parseAppEnv } from '@workspace/shared/env';
 interface PostHogConfig {
   apiKey?: string;
   host: string;
-  sessionReplaySampleRate: number;
-  sessionReplayErrorSampleRate: number;
   // Build-time only
   personalApiKey?: string;
   projectId?: string;
@@ -35,15 +33,6 @@ interface EnvConfig {
 }
 
 /**
- * Parse float with fallback
- */
-function parseFloat(value: string | undefined, defaultValue: number): number {
-  if (!value) return defaultValue;
-  const parsed = Number.parseFloat(value);
-  return isNaN(parsed) ? defaultValue : parsed;
-}
-
-/**
  * Load and validate environment configuration
  */
 export function loadEnvConfig(): EnvConfig {
@@ -64,14 +53,6 @@ export function loadEnvConfig(): EnvConfig {
     posthog: {
       apiKey: process.env.NEXT_PUBLIC_POSTHOG_KEY,
       host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
-      sessionReplaySampleRate: parseFloat(
-        process.env.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE,
-        0.1
-      ),
-      sessionReplayErrorSampleRate: parseFloat(
-        process.env.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE,
-        1.0
-      ),
       personalApiKey: process.env.POSTHOG_PERSONAL_API_KEY,
       projectId: process.env.POSTHOG_PROJECT_ID,
     },
@@ -99,7 +80,5 @@ export const clientEnv = {
   posthog: {
     apiKey: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
-    sessionReplaySampleRate: env.posthog.sessionReplaySampleRate,
-    sessionReplayErrorSampleRate: env.posthog.sessionReplayErrorSampleRate,
   },
 } as const;

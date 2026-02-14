@@ -31,19 +31,6 @@ const urlWithDefault = (defaultValue: string) =>
     .pipe(z.string().url());
 
 /**
- * Float with default value
- */
-const floatWithDefault = (defaultValue: number) =>
-  z
-    .string()
-    .optional()
-    .transform((val): number => {
-      if (!val) return defaultValue;
-      const parsed = Number.parseFloat(val);
-      return isNaN(parsed) ? defaultValue : parsed;
-    });
-
-/**
  * Boolean with default value
  */
 const booleanWithDefault = (defaultValue: boolean) =>
@@ -92,12 +79,6 @@ export const posthogEnvSchema = z.object({
     .optional()
     .transform((val): string | undefined => val || undefined),
   NEXT_PUBLIC_POSTHOG_HOST: stringWithDefault(POSTHOG.HOST),
-  NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE: floatWithDefault(
-    POSTHOG.SESSION_REPLAY_SAMPLE_RATE
-  ),
-  NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE: floatWithDefault(
-    POSTHOG.SESSION_REPLAY_ERROR_SAMPLE_RATE
-  ),
 });
 
 /** Combined raw environment variables schema */
@@ -151,8 +132,6 @@ export const storageConfigSchema = z.object({
 export const posthogConfigSchema = z.object({
   apiKey: z.string().optional(),
   host: z.string().url(),
-  sessionReplaySampleRate: z.number(),
-  sessionReplayErrorSampleRate: z.number(),
 });
 
 /** Complete environment configuration schema */
