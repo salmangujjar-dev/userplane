@@ -4,6 +4,9 @@
  */
 
 import { META_SELECTORS } from '../constants';
+import { createSdkLogger } from '../logger';
+
+const logger = createSdkLogger('Meta');
 
 /**
  * Read workspace IDs from meta tags in the document.
@@ -15,8 +18,8 @@ export function readWorkspaceIds(): string[] {
   const metaTags = document.querySelectorAll(META_SELECTORS.WORKSPACE);
 
   if (metaTags.length === 0) {
-    console.warn(
-      '[Userplane] No workspace meta tag found. Add: <meta name="userplane:workspace" content="ws_xxx" />'
+    logger.warn(
+      'No workspace meta tag found. Add: <meta name="userplane:workspace" content="ws_xxx" />'
     );
     return [];
   }
@@ -29,6 +32,6 @@ export function readWorkspaceIds(): string[] {
     }
   });
 
-  console.log('[Userplane] Workspace IDs found:', workspaceIds);
+  logger.debug({ workspaceIds }, 'Workspace IDs found');
   return workspaceIds;
 }

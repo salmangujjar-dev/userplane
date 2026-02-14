@@ -51,11 +51,11 @@ export class RecordingFrameManager extends BaseFrameManager implements IRecordin
 
   protected establishBridge(): void {
     if (!this.frame) {
-      console.error('[RecordingFrameManager] No frame to connect bridge to');
+      this.logger.error('No frame to connect bridge to');
       return;
     }
 
-    console.log('[RecordingFrameManager] Establishing recorder bridge');
+    this.logger.debug('Establishing recorder bridge');
 
     this.bridge = new RecorderBridgeConnection({
       tabRef: this.recordingConfig.tabRef,
@@ -67,7 +67,7 @@ export class RecordingFrameManager extends BaseFrameManager implements IRecordin
     });
 
     this.bridge.connect(this.frame.iframe).catch((error) => {
-      console.error('[RecordingFrameManager] Bridge connection failed:', error);
+      this.logger.error({ err: error }, 'Bridge connection failed');
     });
   }
 
@@ -75,7 +75,7 @@ export class RecordingFrameManager extends BaseFrameManager implements IRecordin
     if (this.bridge) {
       this.bridge.disconnect();
       this.bridge = null;
-      console.log('[RecordingFrameManager] Bridge disconnected');
+      this.logger.debug('Bridge disconnected');
     }
   }
 }

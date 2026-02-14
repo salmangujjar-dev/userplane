@@ -7,6 +7,7 @@
 import { type Connection, host } from '@workspace/postbridge';
 
 import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
+import { createSdkLogger } from '../logger';
 import type { VerificationHostSchema, VerificationResult } from './types';
 
 /**
@@ -36,6 +37,7 @@ export class VerificationBridgeConnection {
   private callbacks: VerificationBridgeCallbacks;
   private tabRef: string;
   private connectionId: string;
+  private logger = createSdkLogger('VerificationBridge');
 
   constructor(options: VerificationBridgeConnectionOptions) {
     this.verificationBaseUrl = options.verificationBaseUrl;
@@ -60,11 +62,11 @@ export class VerificationBridgeConnection {
    */
   public async connect(iframe: HTMLIFrameElement): Promise<void> {
     if (this.connection) {
-      console.warn('[VerificationBridge] Already connected');
+      this.logger.debug('Already connected');
       return;
     }
 
-    console.log('[VerificationBridge] Connecting to verification iframe');
+    this.logger.debug('Connecting to verification iframe');
 
     // Create host schema with verification methods
     const schema: VerificationHostSchema = {
@@ -74,12 +76,9 @@ export class VerificationBridgeConnection {
 
     try {
       this.connection = await host.connect(iframe, schema);
-      console.log(
-        '[VerificationBridge] Connected to verification iframe, connection ID:',
-        this.connection.id
-      );
+      this.logger.debug({ connectionId: this.connection.id }, 'Connected to verification iframe');
     } catch (error) {
-      console.error('[VerificationBridge] Failed to connect:', error);
+      this.logger.error({ err: error }, 'Failed to connect');
       throw error;
     }
   }
@@ -89,11 +88,11 @@ export class VerificationBridgeConnection {
    */
   public disconnect(): void {
     if (!this.connection) {
-      console.warn('[VerificationBridge] Not connected');
+      this.logger.debug('Not connected');
       return;
     }
 
-    console.log('[VerificationBridge] Disconnecting from verification iframe');
+    this.logger.debug('Disconnecting from verification iframe');
     this.connection.close();
     this.connection = null;
   }
@@ -110,7 +109,7 @@ export class VerificationBridgeConnection {
    * Called when verification is complete and the iframe should be closed
    */
   private handleRequestClose(): void {
-    console.log('[VerificationBridge] Close requested from iframe');
+    this.logger.debug('Close requested from iframe');
     this.callbacks.onRequestClose?.();
   }
 
@@ -128,9 +127,9 @@ export class VerificationBridgeConnection {
     token: string,
     workspaceIds: string[]
   ): Promise<VerificationResult> {
-    console.log('[VerificationBridge] Handling verification request');
-    console.log('[VerificationBridge] Token:', token.substring(0, 20) + '...');
-    console.log('[VerificationBridge] Workspace IDs:', workspaceIds);
+    this.logger.debug('Handling verification request');
+    this.logger.debug({ token: token.substring(0, 20) + '...' }, 'Verification token');
+    this.logger.debug({ workspaceIds }, 'Verification workspace IDs');
 
     try {
       const response = await fetch(`${this.verificationBaseUrl}/domains/verify`, {
@@ -150,7 +149,7 @@ export class VerificationBridgeConnection {
 
       return this.parseVerificationSuccess(json);
     } catch (error) {
-      console.error('[VerificationBridge] Verification request error:', error);
+      this.logger.error({ err: error }, 'Verification request error');
 
       return {
         success: false,
@@ -169,7 +168,7 @@ export class VerificationBridgeConnection {
   private parseVerificationSuccess(json: unknown): VerificationResult {
     // Type guard for API response structure: { message: string, data: {...} }
     if (!this.isValidApiResponse(json)) {
-      console.error('[VerificationBridge] Invalid API response structure:', json);
+      this.logger.error('Invalid API response structure');
       return {
         success: false,
         error: {
@@ -188,7 +187,7 @@ export class VerificationBridgeConnection {
     const domainUrl = this.extractString(data, 'domainUrl');
 
     if (!domainStatus || !workspaceId || !domainId || !domainUrl) {
-      console.error('[VerificationBridge] Missing required fields in verification data:', data);
+      this.logger.error('Missing required fields in verification data');
       return {
         success: false,
         error: {
@@ -198,12 +197,10 @@ export class VerificationBridgeConnection {
       };
     }
 
-    console.log('[VerificationBridge] Verification successful:', {
-      domainStatus,
-      workspaceId,
-      domainId,
-      domainUrl,
-    });
+    this.logger.debug(
+      { domainStatus, workspaceId, domainId, domainUrl },
+      'Verification successful'
+    );
 
     return {
       success: true,
@@ -225,7 +222,7 @@ export class VerificationBridgeConnection {
     const errorCode = this.extractString(json, 'code') ?? `HTTP_${status}`;
     const errorMessage = this.extractString(json, 'message') ?? `Verification failed (${status})`;
 
-    console.error('[VerificationBridge] Verification failed:', { errorCode, errorMessage, status });
+    this.logger.error({ errorCode, errorMessage, status }, 'Verification failed');
 
     return {
       success: false,

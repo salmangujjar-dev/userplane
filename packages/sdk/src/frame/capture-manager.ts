@@ -11,6 +11,7 @@
 
 import { CaptureBridgeConnection, type CaptureRecorderState, type TabMetadata } from '../bridge';
 import { URL_PARAMS } from '../constants';
+import { createSdkLogger } from '../logger';
 import type { FrameConfig, RecorderFrame, RecorderParams } from '../types';
 import type { CaptureFrameManagerConfig, ICaptureFrameManager } from './types';
 
@@ -22,6 +23,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
   private frame: RecorderFrame | null = null;
   private bridge: CaptureBridgeConnection | null = null;
   private config: CaptureFrameManagerConfig;
+  private logger = createSdkLogger('CaptureFrameManager');
 
   constructor(config: CaptureFrameManagerConfig) {
     this.config = config;
@@ -31,29 +33,29 @@ export class CaptureFrameManager implements ICaptureFrameManager {
    * Attempt to mount the capture iframe
    */
   public tryMount(params: RecorderParams): boolean {
-    console.log('[CaptureFrameManager] Attempting to mount');
+    this.logger.debug('Attempting to mount');
 
     if (this.isMounted()) {
-      console.warn('[CaptureFrameManager] Frame is already mounted');
+      this.logger.debug('Frame is already mounted');
       return false;
     }
 
     // Don't check for existing recorder - capture runs alongside
     // But don't mount multiple capture iframes
     if (this.hasExistingCapture()) {
-      console.warn('[CaptureFrameManager] Another capture iframe already exists');
+      this.logger.debug('Another capture iframe already exists');
       return false;
     }
 
     if (params.workspaceIds.length === 0) {
-      console.error('[CaptureFrameManager] No workspace IDs provided');
+      this.logger.error('No workspace IDs provided');
       return false;
     }
 
-    console.log('[CaptureFrameManager] Workspace IDs:', params.workspaceIds);
+    this.logger.debug({ workspaceIds: params.workspaceIds }, 'Workspace IDs');
 
     const frameConfig = this.buildFrameConfig(params);
-    console.log('[CaptureFrameManager] Frame URL:', frameConfig.url);
+    this.logger.debug({ url: frameConfig.url }, 'Frame URL');
 
     this.createFrame(frameConfig);
     this.mountToDOM();
@@ -68,14 +70,14 @@ export class CaptureFrameManager implements ICaptureFrameManager {
     this.disconnectBridge();
 
     if (!this.frame) {
-      console.warn('[CaptureFrameManager] No frame to unmount');
+      this.logger.debug('No frame to unmount');
       return;
     }
 
     // Remove just the iframe (no overlay for capture)
     if (document.contains(this.frame.iframe)) {
       document.body.removeChild(this.frame.iframe);
-      console.log('[CaptureFrameManager] Frame unmounted from DOM');
+      this.logger.debug('Frame unmounted from DOM');
     }
 
     this.frame = null;
@@ -160,11 +162,11 @@ export class CaptureFrameManager implements ICaptureFrameManager {
       allow: '',
       allowFullscreen: false,
       onLoad: () => {
-        console.log('[CaptureFrameManager] Frame loaded successfully');
+        this.logger.debug('Frame loaded successfully');
         this.establishBridge();
       },
       onError: () => {
-        console.error('[CaptureFrameManager] Failed to load frame');
+        this.logger.error('Failed to load frame');
       },
     };
   }
@@ -175,11 +177,11 @@ export class CaptureFrameManager implements ICaptureFrameManager {
    */
   private createFrame(config: FrameConfig): RecorderFrame {
     if (this.frame) {
-      console.warn('[CaptureFrameManager] Frame already exists');
+      this.logger.debug('Frame already exists');
       return this.frame;
     }
 
-    console.log('[CaptureFrameManager] Creating hidden capture frame');
+    this.logger.debug('Creating hidden capture frame');
 
     const iframe = document.createElement('iframe');
 
@@ -226,7 +228,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
     }
 
     if (document.contains(this.frame.iframe)) {
-      console.warn('[CaptureFrameManager] Frame already in DOM');
+      this.logger.debug('Frame already in DOM');
       return;
     }
 
@@ -237,7 +239,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
         // Append iframe directly to body (no overlay needed)
         document.body.appendChild(frame.iframe);
         document.removeEventListener('readystatechange', mountFn);
-        console.log('[CaptureFrameManager] Frame mounted to DOM (hidden)');
+        this.logger.debug('Frame mounted to DOM (hidden)');
       }
     };
 
@@ -250,11 +252,11 @@ export class CaptureFrameManager implements ICaptureFrameManager {
    */
   private establishBridge(): void {
     if (!this.frame) {
-      console.error('[CaptureFrameManager] No frame to connect bridge to');
+      this.logger.error('No frame to connect bridge to');
       return;
     }
 
-    console.log('[CaptureFrameManager] Establishing capture bridge');
+    this.logger.debug('Establishing capture bridge');
 
     this.bridge = new CaptureBridgeConnection({
       tabRef: this.config.tabRef,
@@ -265,7 +267,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
     });
 
     this.bridge.connect(this.frame.iframe).catch((error) => {
-      console.error('[CaptureFrameManager] Bridge connection failed:', error);
+      this.logger.error({ err: error }, 'Bridge connection failed');
     });
   }
 
@@ -276,7 +278,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
     if (this.bridge) {
       this.bridge.disconnect();
       this.bridge = null;
-      console.log('[CaptureFrameManager] Bridge disconnected');
+      this.logger.debug('Bridge disconnected');
     }
   }
 

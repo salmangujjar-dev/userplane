@@ -29,6 +29,7 @@
   "dependencies": {
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.34.3",
+    "@workspace/console-logger": "workspace:*",
     "@workspace/contract": "workspace:*"
   },
   "devDependencies": {

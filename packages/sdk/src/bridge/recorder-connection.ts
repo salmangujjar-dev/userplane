@@ -8,6 +8,7 @@ import { getCustomMetadata } from '@workspace/metadata';
 import { type Connection, host } from '@workspace/postbridge';
 
 import { CONNECTION_PREFIXES, generateConnectionId, URL_PARAMS } from '../constants';
+import { createSdkLogger } from '../logger';
 import type {
   GuestSchema,
   RecorderHostSchema,
@@ -44,6 +45,7 @@ export class RecorderBridgeConnection {
   private tabRef: string;
   private callbacks: RecorderBridgeCallbacks;
   private connectionId: string;
+  private logger = createSdkLogger('RecorderBridge');
 
   private context: RecordingContext = {
     state: 'inactive',
@@ -77,11 +79,11 @@ export class RecorderBridgeConnection {
    */
   public async connect(iframe: HTMLIFrameElement): Promise<void> {
     if (this.connection) {
-      console.warn('[RecorderBridge] Already connected');
+      this.logger.debug('Already connected');
       return;
     }
 
-    console.log('[RecorderBridge] Connecting to recorder iframe');
+    this.logger.debug('Connecting to recorder iframe');
 
     // Store original title for restoration
     this.originalTitle = document.title;
@@ -93,7 +95,7 @@ export class RecorderBridgeConnection {
         try {
           return window.location.href;
         } catch (error) {
-          console.error('[RecorderBridge] Error getting page URL:', error);
+          this.logger.error({ err: error }, 'Error getting page URL');
           return '';
         }
       },
@@ -101,7 +103,7 @@ export class RecorderBridgeConnection {
         try {
           return getCustomMetadata();
         } catch (error) {
-          console.error('[RecorderBridge] Error getting custom metadata:', error);
+          this.logger.error({ err: error }, 'Error getting custom metadata');
           return null;
         }
       },
@@ -114,9 +116,9 @@ export class RecorderBridgeConnection {
 
     try {
       this.connection = await host.connect(iframe, schema);
-      console.log('[RecorderBridge] Connected to recorder, connection ID:', this.connection.id);
+      this.logger.debug({ connectionId: this.connection.id }, 'Connected to recorder');
     } catch (error) {
-      console.error('[RecorderBridge] Failed to connect:', error);
+      this.logger.error({ err: error }, 'Failed to connect');
       throw error;
     }
   }
@@ -126,11 +128,11 @@ export class RecorderBridgeConnection {
    */
   public disconnect(): void {
     if (!this.connection) {
-      console.warn('[RecorderBridge] Not connected');
+      this.logger.debug('Not connected');
       return;
     }
 
-    console.log('[RecorderBridge] Disconnecting from recorder');
+    this.logger.debug('Disconnecting from recorder');
 
     // Disable tab unload protection
     this.disableTabUnloadProtection();
@@ -199,7 +201,7 @@ export class RecorderBridgeConnection {
    * Sets title, stores session info, and notifies callbacks
    */
   private handleInitSession(info: RecordingSessionInfo, title: string): void {
-    console.log('[RecorderBridge] Initializing session:', { info, title });
+    this.logger.debug({ info, title }, 'Initializing session');
 
     // Set parent title
     document.title = title;
@@ -221,7 +223,7 @@ export class RecorderBridgeConnection {
    * Resets title, clears URL params, disables protection, and closes recorder
    */
   private handleFinishSession(): void {
-    console.log('[RecorderBridge] Finishing session');
+    this.logger.debug('Finishing session');
 
     // Reset title to original
     if (this.originalTitle) {
@@ -249,7 +251,7 @@ export class RecorderBridgeConnection {
    * Enables tab unload protection and updates state
    */
   private handleRecordingActive(): void {
-    console.log('[RecorderBridge] Recording active');
+    this.logger.debug('Recording active');
     this.updateState('active');
     this.enableTabUnloadProtection();
   }
@@ -259,7 +261,7 @@ export class RecorderBridgeConnection {
    * Keeps tab unload protection enabled and updates state
    */
   private handleRecordingRetained(): void {
-    console.log('[RecorderBridge] Recording retained');
+    this.logger.debug('Recording retained');
     this.updateState('retained');
     this.enableTabUnloadProtection();
   }
@@ -269,7 +271,7 @@ export class RecorderBridgeConnection {
    * Disables tab unload protection and updates state
    */
   private handleRecordingInactive(): void {
-    console.log('[RecorderBridge] Recording inactive');
+    this.logger.debug('Recording inactive');
     this.updateState('inactive');
     this.disableTabUnloadProtection();
   }
@@ -291,7 +293,7 @@ export class RecorderBridgeConnection {
     }
 
     this.beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      console.log('[RecorderBridge] beforeunload triggered - preventing accidental close');
+      this.logger.debug('beforeunload triggered - preventing accidental close');
       e.preventDefault();
     };
 

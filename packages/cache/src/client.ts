@@ -7,6 +7,8 @@
 
 import { Redis } from '@upstash/redis';
 
+import { logger } from './logger';
+
 export interface RedisConfig {
   url: string;
   token: string;
@@ -30,7 +32,7 @@ export function createRedisClient(config: RedisConfig | null): Redis | null {
     });
     return redisClient;
   } catch (error) {
-    console.warn('[Cache] Failed to create Redis client:', error);
+    logger.warn({ err: error }, 'Failed to create Redis client');
     return null;
   }
 }

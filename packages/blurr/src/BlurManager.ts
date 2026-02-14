@@ -113,7 +113,7 @@ export class BlurManager {
    */
   start(): void {
     if (this._isStarted) {
-      this.logger.warn('Already started');
+      this.logger.debug('Already started');
       return;
     }
 
@@ -151,7 +151,7 @@ export class BlurManager {
    */
   stop(): void {
     if (!this._isStarted) {
-      this.logger.warn('Not started');
+      this.logger.debug('Not started');
       return;
     }
 
@@ -185,7 +185,7 @@ export class BlurManager {
    */
   blurElement(element: Element): boolean {
     if (!this._isStarted) {
-      this.logger.warn('Not started - cannot blur element');
+      this.logger.debug('Not started - cannot blur element');
       return false;
     }
 
