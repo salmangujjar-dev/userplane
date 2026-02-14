@@ -22,12 +22,9 @@ export const STORAGE = {
 } as const;
 
 // =============================================================================
-// Sentry Defaults
+// PostHog Defaults
 // =============================================================================
 
-export const SENTRY = {
-  /** Production traces sample rate */
-  TRACES_SAMPLE_RATE_PROD: 0.1,
-  /** Development traces sample rate */
-  TRACES_SAMPLE_RATE_DEV: 1.0,
+export const POSTHOG = {
+  HOST: 'https://us.i.posthog.com',
 } as const;

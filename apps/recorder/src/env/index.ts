@@ -6,21 +6,19 @@
  *
  * Note: This app uses Astro with import.meta.env (PUBLIC_ prefix)
  */
-import { isProductionLike } from '@workspace/shared/env';
 import { ZodError } from 'zod';
 
-import { SENTRY } from './defaults';
 import {
   type ApiConfig,
   type EnvConfig,
+  type PostHogConfig,
   type RawEnvConfig,
   rawEnvSchema,
-  type SentryConfig,
   type StorageConfig,
 } from './schema';
 
 // Re-export types for external use
-export type { ApiConfig, EnvConfig, SentryConfig, StorageConfig };
+export type { ApiConfig, EnvConfig, PostHogConfig, StorageConfig };
 
 // =============================================================================
 // Environment Parsing
@@ -39,9 +37,8 @@ function getRawEnv(): Record<string, string | undefined> {
     PUBLIC_ASSETS_DOMAIN: import.meta.env.PUBLIC_ASSETS_DOMAIN,
     PUBLIC_CLOUDFLARE_IMAGE_ZONE: import.meta.env.PUBLIC_CLOUDFLARE_IMAGE_ZONE,
     PUBLIC_SKIP_IMAGE_TRANSFORM: import.meta.env.PUBLIC_SKIP_IMAGE_TRANSFORM,
-    PUBLIC_SENTRY_DSN: import.meta.env.PUBLIC_SENTRY_DSN,
-    PUBLIC_SENTRY_RELEASE: import.meta.env.PUBLIC_SENTRY_RELEASE,
-    PUBLIC_SENTRY_TRACES_SAMPLE_RATE: import.meta.env.PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
+    PUBLIC_POSTHOG_KEY: import.meta.env.PUBLIC_POSTHOG_KEY,
+    PUBLIC_POSTHOG_HOST: import.meta.env.PUBLIC_POSTHOG_HOST,
   };
 }
 
@@ -80,12 +77,6 @@ function formatZodErrors(error: ZodError): string {
  * Transform raw environment config into structured application config
  */
 function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
-  // Use appEnv to determine production-like behavior for Sentry sampling
-  const isProdLike = isProductionLike(raw.MODE);
-  const tracesSampleRate = isProdLike
-    ? SENTRY.TRACES_SAMPLE_RATE_PROD
-    : raw.PUBLIC_SENTRY_TRACES_SAMPLE_RATE;
-
   return {
     nodeEnv: raw.NODE_ENV,
     appEnv: raw.MODE,
@@ -98,10 +89,9 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       imageZone: raw.PUBLIC_CLOUDFLARE_IMAGE_ZONE,
       skipTransform: raw.PUBLIC_SKIP_IMAGE_TRANSFORM,
     },
-    sentry: {
-      dsn: raw.PUBLIC_SENTRY_DSN,
-      release: raw.PUBLIC_SENTRY_RELEASE,
-      tracesSampleRate,
+    posthog: {
+      apiKey: raw.PUBLIC_POSTHOG_KEY,
+      host: raw.PUBLIC_POSTHOG_HOST,
     },
   };
 }

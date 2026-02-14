@@ -3,19 +3,12 @@
  * Manages the state machine for the entire recording flow
  */
 
-import * as Sentry from '@sentry/astro';
-import {
-  buildErrorTags,
-  createFlowBreadcrumb,
-  ErrorSources,
-  ErrorTypes,
-  type RecordingContext,
-} from '@workspace/sentry';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { RECORDING_LIMITS } from '@/constants';
 import { createLogger } from '@/lib/logger';
-import { createClientError, createClientErrorWithMessage } from '@/sentry/client-errors';
+import { posthog } from '@/posthog/client';
+import { createClientError, createClientErrorWithMessage } from '@/posthog/client-errors';
 import {
   isScreenRecordingSupported,
   MediaCapture,
@@ -120,33 +113,9 @@ export function useRecordingFlow(
   const autoStopTimerRef = useRef<NodeJS.Timeout | null>(null);
   const stopRecordingRef = useRef<(() => Promise<void>) | null>(null);
 
-  // Helper to track state transitions with Sentry breadcrumbs
-  const transitionToState = useCallback(
-    (newState: FlowState, context?: Record<string, unknown>) => {
-      const previousState = flowState;
-
-      Sentry.addBreadcrumb(
-        createFlowBreadcrumb({
-          previous_state: previousState,
-          new_state: newState,
-          session_id: sessionInfo?.sessionId,
-          ...context,
-        })
-      );
-
-      // Update recording context in Sentry
-      if (sessionInfo?.sessionId) {
-        const recordingCtx: RecordingContext = {
-          session_id: sessionInfo.sessionId,
-          stage: newState as RecordingContext['stage'],
-        };
-        Sentry.setContext('recording', recordingCtx);
-      }
-
-      setFlowState(newState);
-    },
-    [flowState, sessionInfo]
-  );
+  const transitionToState = useCallback((newState: FlowState) => {
+    setFlowState(newState);
+  }, []);
 
   useEffect(() => {
     if (!linkToken || linkToken.trim() === '') {
@@ -300,10 +269,7 @@ export function useRecordingFlow(
       });
     }
 
-    transitionToState('setup', {
-      workspace_id: session.workspaceId,
-      link_id: session.linkId,
-    });
+    transitionToState('setup');
   }
 
   async function startRecording(mode: RecordingMode) {
@@ -332,7 +298,7 @@ export function useRecordingFlow(
       const stream = mediaCapture.getStream();
       setMediaStream(stream);
 
-      transitionToState('countdown', { recording_mode: mode });
+      transitionToState('countdown');
       setCountdownSeconds(3);
 
       // Clear any existing countdown interval
@@ -351,25 +317,16 @@ export function useRecordingFlow(
             countdownIntervalRef.current = null;
           }
           mediaCapture.startRecording();
-          transitionToState('recording', {
-            recording_mode: mode,
-            max_duration_ms: maxRecordingDurationMs,
-          });
+          transitionToState('recording');
         }
       }, 1000);
     } catch (err) {
       logger.error({ err, mode }, 'recording start failed');
 
-      // Capture recording start failures in Sentry
-      Sentry.captureException(err, {
-        level: 'error',
-        tags: {
-          ...buildErrorTags({
-            errorType: ErrorTypes.RECORDING_START_FAILED,
-            errorSource: ErrorSources.RECORDING_FLOW,
-          }),
-          recording_mode: mode,
-        },
+      posthog.captureException(err, {
+        error_type: 'recording_start_failed',
+        error_source: 'recording_flow',
+        recording_mode: mode,
       });
 
       setError(classifyError(err as Error));
@@ -434,21 +391,13 @@ export function useRecordingFlow(
         setThumbnailBlob(thumbnail);
       }
 
-      transitionToState('review', {
-        recording_duration_ms: recordingDurationMs,
-        blob_size_bytes: blob.size,
-        has_thumbnail: !!thumbnail,
-      });
+      transitionToState('review');
     } catch (err) {
       logger.error({ err }, 'recording stop failed');
 
-      // Capture recording stop failures in Sentry
-      Sentry.captureException(err, {
-        level: 'error',
-        tags: buildErrorTags({
-          errorType: ErrorTypes.RECORDING_STOP_FAILED,
-          errorSource: ErrorSources.RECORDING_FLOW,
-        }),
+      posthog.captureException(err, {
+        error_type: 'recording_stop_failed',
+        error_source: 'recording_flow',
       });
 
       // Clean up blob URL if it was created but we're erroring out
@@ -487,11 +436,7 @@ export function useRecordingFlow(
       return;
     }
 
-    transitionToState('uploading', {
-      blob_size_bytes: recordingBlob.size,
-      blob_type: recordingBlob.type,
-      has_thumbnail: !!thumbnailBlob,
-    });
+    transitionToState('uploading');
     setUploadProgress(0);
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -554,9 +499,7 @@ export function useRecordingFlow(
     setUploadState(null);
 
     logger.debug({ recordingId: newUploadState.recordingId }, 'upload completed');
-    transitionToState('success', {
-      recording_id: newUploadState.recordingId,
-    });
+    transitionToState('success');
     setIsProcessing(false);
   }
 

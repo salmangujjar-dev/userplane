@@ -35,5 +35,9 @@ const title = content?.title || meta.title;
   </head>
   <body class="bg-background text-foreground antialiased">
     <slot />
+    <script>
+      import { initPostHog } from '@/posthog/client';
+      initPostHog();
+    </script>
   </body>
 </html>

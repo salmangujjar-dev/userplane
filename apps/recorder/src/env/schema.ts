@@ -7,7 +7,7 @@
  */
 import { z } from 'zod';
 
-import { DEV_URLS, SENTRY, STORAGE } from './defaults';
+import { DEV_URLS, POSTHOG, STORAGE } from './defaults';
 
 // =============================================================================
 // Parse Utilities
@@ -31,19 +31,6 @@ const urlWithDefault = (defaultValue: string) =>
     .optional()
     .transform((val): string => val || defaultValue)
     .pipe(z.string().url());
-
-/**
- * Float with default value
- */
-const floatWithDefault = (defaultValue: number) =>
-  z
-    .string()
-    .optional()
-    .transform((val): number => {
-      if (!val) return defaultValue;
-      const parsed = Number.parseFloat(val);
-      return isNaN(parsed) ? defaultValue : parsed;
-    });
 
 /**
  * Boolean with default value
@@ -81,18 +68,17 @@ export const storageEnvSchema = z.object({
   PUBLIC_SKIP_IMAGE_TRANSFORM: booleanWithDefault(false),
 });
 
-/** Sentry env vars schema */
-export const sentryEnvSchema = z.object({
-  PUBLIC_SENTRY_DSN: z.string().url().optional(),
-  PUBLIC_SENTRY_RELEASE: z.string().optional(),
-  PUBLIC_SENTRY_TRACES_SAMPLE_RATE: floatWithDefault(SENTRY.TRACES_SAMPLE_RATE_DEV),
+/** PostHog env vars schema */
+export const posthogEnvSchema = z.object({
+  PUBLIC_POSTHOG_KEY: z.string().optional(),
+  PUBLIC_POSTHOG_HOST: urlWithDefault(POSTHOG.HOST),
 });
 
 /** Combined raw environment variables schema */
 export const rawEnvSchema = appEnvSchema
   .merge(apiEnvSchema)
   .merge(storageEnvSchema)
-  .merge(sentryEnvSchema);
+  .merge(posthogEnvSchema);
 
 /** Raw parsed environment type */
 export type RawEnvConfig = z.infer<typeof rawEnvSchema>;
@@ -114,11 +100,10 @@ export const storageConfigSchema = z.object({
   skipTransform: z.boolean(),
 });
 
-/** Sentry configuration schema */
-export const sentryConfigSchema = z.object({
-  dsn: z.string().url().optional(),
-  release: z.string().optional(),
-  tracesSampleRate: z.number(),
+/** PostHog configuration schema */
+export const posthogConfigSchema = z.object({
+  apiKey: z.string().optional(),
+  host: z.string().url(),
 });
 
 /** Complete environment configuration schema */
@@ -127,7 +112,7 @@ export const envConfigSchema = z.object({
   appEnv: z.enum(['development', 'production']),
   api: apiConfigSchema,
   storage: storageConfigSchema,
-  sentry: sentryConfigSchema,
+  posthog: posthogConfigSchema,
 });
 
 // =============================================================================
@@ -136,5 +121,5 @@ export const envConfigSchema = z.object({
 
 export type ApiConfig = z.infer<typeof apiConfigSchema>;
 export type StorageConfig = z.infer<typeof storageConfigSchema>;
-export type SentryConfig = z.infer<typeof sentryConfigSchema>;
+export type PostHogConfig = z.infer<typeof posthogConfigSchema>;
 export type EnvConfig = z.infer<typeof envConfigSchema>;
