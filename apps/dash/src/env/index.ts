@@ -68,10 +68,6 @@ function getExplicitEnv(): Record<string, string | undefined> {
     // PostHog
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE:
-      process.env.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE,
-    NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE:
-      process.env.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE,
   };
 }
 
@@ -136,8 +132,6 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     posthog: {
       apiKey: raw.NEXT_PUBLIC_POSTHOG_KEY,
       host: raw.NEXT_PUBLIC_POSTHOG_HOST,
-      sessionReplaySampleRate: raw.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_SAMPLE_RATE,
-      sessionReplayErrorSampleRate: raw.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ERROR_SAMPLE_RATE,
     },
   };
 }
