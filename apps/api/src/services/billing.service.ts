@@ -14,6 +14,7 @@ import type { PlanFeatureGates, PlanId } from '@workspace/pricing';
 import { getFeatureGates, PLAN_NAMES } from '@workspace/pricing';
 
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import type { DisputeRepository } from '@/api/repositories/disputes.repository';
 import type { RefundRepository } from '@/api/repositories/refunds.repository';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
@@ -386,6 +387,10 @@ export class BillingService {
       };
     } catch (error) {
       logger.error({ err: error, workspaceId }, 'Failed to preview plan change');
+      captureException(error, undefined, {
+        operation: 'preview_plan_change',
+        workspace_id: workspaceId,
+      });
       const dodoError = error as {
         status?: number;
         error?: { code?: string; message?: string };
@@ -438,6 +443,7 @@ export class BillingService {
       };
     } catch (error) {
       logger.error({ err: error, workspaceId }, 'Failed to change plan');
+      captureException(error, undefined, { operation: 'change_plan', workspace_id: workspaceId });
       const dodoError = error as {
         status?: number;
         error?: { code?: string; message?: string };

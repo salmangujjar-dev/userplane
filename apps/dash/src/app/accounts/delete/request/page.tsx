@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 
 import { authClient } from '@/client';
@@ -16,7 +17,6 @@ import { useAccount } from '@/features/account';
 import { useWorkspaceCount } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
 import { mediaClient } from '@/lib/media';
-import { logger } from '@/logger';
 
 function RequestDeleteHeader() {
   return (
@@ -68,25 +68,27 @@ function RequestDeleteContent() {
   const handleRequestDeletion = async () => {
     try {
       setIsRequesting(true);
-      logger.info('Initiating account deletion request');
 
       const result = await authClient.deleteUser({
         callbackURL: '/goodbye',
       });
 
       if (result.error) {
-        logger.error({ err: result.error }, 'Account deletion request failed');
+        posthog.captureException(result.error, {
+          error_boundary: 'account-delete',
+        });
         toast.error('Failed to send deletion email', {
           description: result.error.message || 'Please try again later.',
         });
         return;
       }
 
-      logger.info('Account deletion email sent successfully');
       setIsSuccess(true);
       toast.success('Check your email for the confirmation link');
     } catch (err) {
-      logger.error({ err }, 'Account deletion request failed with exception');
+      posthog.captureException(err, {
+        error_boundary: 'account-delete',
+      });
       const errorMessage =
         err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
       toast.error('Failed to send deletion email', {

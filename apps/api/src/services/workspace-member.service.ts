@@ -14,6 +14,7 @@ import {
 
 import { generateWorkspaceMemberId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { Transaction } from '@/api/types';
@@ -168,6 +169,10 @@ export class WorkspaceMemberService {
         { err: error, workspaceId: params.workspaceId },
         'Failed to track seat consumption'
       );
+      captureException(error, undefined, {
+        operation: 'track_seat_consumption',
+        workspace_id: params.workspaceId,
+      });
     }
 
     // Warm cache with new membership
@@ -286,6 +291,10 @@ export class WorkspaceMemberService {
     } catch (error) {
       // Log but don't fail - member is already removed
       logger.error({ err: error, workspaceId: params.workspaceId }, 'Failed to release seat');
+      captureException(error, undefined, {
+        operation: 'release_seat',
+        workspace_id: params.workspaceId,
+      });
     }
 
     // Invalidate membership cache - member removed
@@ -439,6 +448,7 @@ export class WorkspaceMemberService {
     } catch (error) {
       // Log but don't fail - member has already left
       logger.error({ err: error, workspaceId }, 'Failed to release seat');
+      captureException(error, undefined, { operation: 'release_seat', workspace_id: workspaceId });
     }
 
     return { shouldDeleteWorkspace: false };

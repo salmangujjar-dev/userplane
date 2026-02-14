@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
-
-import { logger } from '@/logger';
+import posthog from 'posthog-js';
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -41,7 +40,9 @@ export default async function IntercomCallbackPage({ searchParams }: Props) {
     payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
   } catch (error) {
     // Failed to decode state - redirect to error page
-    logger.error({ err: error }, 'Failed to decode OAuth state');
+    posthog.captureException(error, {
+      error_boundary: 'intercom-callback',
+    });
     redirect('/workspace/create?error=invalid_state');
   }
 

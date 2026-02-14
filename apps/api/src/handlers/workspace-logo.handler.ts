@@ -9,6 +9,7 @@ import type { Context } from 'hono';
 import { auth } from '@/api/clients/auth';
 import { getAssetsStorage } from '@/api/clients/storage';
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import { workspaceMemberService } from '@/api/services';
 
 const logger = createLogger('workspace-logo-handler');
@@ -61,6 +62,10 @@ export async function handleWorkspaceLogoUpload(c: Context) {
     }
   } catch (error) {
     logger.error({ error, workspaceId, userId }, 'Error checking workspace membership');
+    captureException(error, undefined, {
+      operation: 'check_workspace_membership',
+      workspace_id: workspaceId,
+    });
     return c.json({ error: 'Workspace not found' }, 404);
   }
 
@@ -69,7 +74,7 @@ export async function handleWorkspaceLogoUpload(c: Context) {
   try {
     formData = await c.req.formData();
   } catch (error) {
-    logger.error({ error, workspaceId }, 'Failed to parse form data');
+    logger.warn({ error, workspaceId }, 'Failed to parse form data');
     return c.json({ error: 'Invalid form data' }, 400);
   }
 
@@ -116,6 +121,7 @@ export async function handleWorkspaceLogoUpload(c: Context) {
     logger.debug({ workspaceId, path: result.path, logoUrl }, 'Logo uploaded to R2');
   } catch (error) {
     logger.error({ error, workspaceId }, 'Failed to upload logo to R2');
+    captureException(error, undefined, { operation: 'upload_logo_r2', workspace_id: workspaceId });
     return c.json({ error: 'Failed to upload logo' }, 500);
   }
 

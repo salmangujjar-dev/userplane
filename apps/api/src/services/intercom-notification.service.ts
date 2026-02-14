@@ -64,6 +64,12 @@ export class IntercomNotificationService {
           { workspaceId, conversationId, recordingId },
           'Failed to post Intercom recording note'
         );
+        captureException(new Error('failed to post intercom recording note'), undefined, {
+          operation: 'create_link_intercom',
+          conversationId,
+          workspaceId,
+          recordingId,
+        });
       }
     } catch (error) {
       logger.error(

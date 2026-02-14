@@ -24,6 +24,7 @@ import { isSubscriptionEvent, parseSubscriptionDates } from '@workspace/payments
 import type { PlanId } from '@workspace/pricing';
 
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import type { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
@@ -614,6 +615,14 @@ export class WebhookProcessorService {
   private async verifyUpstream(subscriptionId: string): Promise<SubscriptionStatus | null> {
     if (!this.deps.dodoClient) {
       logger.warn({ subscriptionId }, 'No DodoPayments client available for upstream verification');
+      captureException(
+        new Error('dodopayment client missing for upstream verification'),
+        undefined,
+        {
+          operation: 'webhook_processor_verify_upstream',
+          subscriptionId,
+        }
+      );
       return null;
     }
 
@@ -622,6 +631,10 @@ export class WebhookProcessorService {
       return upstream.status;
     } catch (error) {
       logger.error({ subscriptionId, err: error }, 'Upstream verification failed');
+      captureException(error, undefined, {
+        operation: 'upstream_verification',
+        subscription_id: subscriptionId,
+      });
       return null;
     }
   }
@@ -667,6 +680,10 @@ export class WebhookProcessorService {
     } catch (error) {
       // Cache invalidation errors should not fail the webhook processing
       logger.warn({ workspaceId, err: error }, 'Failed to invalidate billing cache for workspace');
+      captureException(error, undefined, {
+        operation: 'invalidate_billing_cache',
+        workspaceId,
+      });
     }
   }
 }

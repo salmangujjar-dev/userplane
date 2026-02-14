@@ -17,6 +17,7 @@ import { EVENT_NAMES } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import type { Transaction } from '@/api/repositories/recordings.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
@@ -171,6 +172,7 @@ export class RecordingService {
       // Log but don't fail the request - cleanup is a background task
       // The recording has been soft deleted and cleanup can be retried later
       logger.error({ err: error }, 'Error scheduling recording resource cleanup');
+      captureException(error, undefined, { operation: 'schedule_recording_cleanup' });
     }
 
     return deleted;

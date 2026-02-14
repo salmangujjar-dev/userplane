@@ -6,7 +6,6 @@ import posthog from 'posthog-js';
 import { useEffect } from 'react';
 
 import { DinoError } from '@/components/shared/dino-error';
-import { logger } from '@/logger';
 
 export default function WorkspaceError({
   error,
@@ -20,8 +19,6 @@ export default function WorkspaceError({
   const workspaceId = params?.workspaceId as string | undefined;
 
   useEffect(() => {
-    logger.error({ err: error, digest: error.digest }, 'Workspace error boundary caught error');
-
     posthog.captureException(error, {
       error_boundary: 'workspace',
       workspace_id: workspaceId || '',

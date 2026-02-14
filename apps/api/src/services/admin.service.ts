@@ -7,6 +7,7 @@ import { adminError } from '@workspace/contract';
 import type { WorkspaceRole } from '@workspace/db';
 
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import type { AdminRepository, SearchUsersParams } from '@/api/repositories/admin.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { WorkspaceService } from '@/api/services/workspace.service';
@@ -169,6 +170,11 @@ export class AdminService {
               { err: error, workspaceId, userId },
               'Failed to delete workspace for banned user'
             );
+            captureException(error, undefined, {
+              operation: 'ban_delete_workspace',
+              workspace_id: workspaceId,
+              user_id: userId,
+            });
           }
         }
 
@@ -178,6 +184,7 @@ export class AdminService {
         );
       } catch (error) {
         logger.error({ err: error, userId }, 'Failed to delete workspaces for banned user');
+        captureException(error, undefined, { operation: 'ban_delete_workspaces', user_id: userId });
       }
     }
 

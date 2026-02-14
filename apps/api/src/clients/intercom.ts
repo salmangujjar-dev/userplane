@@ -7,6 +7,7 @@ import type { IntercomRegion } from '@workspace/contract';
 
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 
 const logger = createLogger('intercom-client');
 
@@ -94,7 +95,12 @@ export async function exchangeCodeForToken(code: string): Promise<IntercomTokenR
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error({ status: response.status, error: errorText }, 'Token exchange failed');
+      logger.warn({ status: response.status, error: errorText }, 'Token exchange failed');
+      captureException(new Error('token exchange failed with intercom'), undefined, {
+        operation: 'intercom_token_exchange',
+        status: response.status,
+        error_text: errorText,
+      });
       return null;
     }
 
@@ -102,6 +108,7 @@ export async function exchangeCodeForToken(code: string): Promise<IntercomTokenR
     return data;
   } catch (error) {
     logger.error({ error }, 'Token exchange error');
+    captureException(error, undefined, { operation: 'intercom_token_exchange' });
     return null;
   }
 }
@@ -124,7 +131,13 @@ export async function getMe(
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error({ status: response.status, error: errorText, region }, 'Get /me failed');
+      logger.warn({ status: response.status, error: errorText, region }, 'Get /me failed');
+      captureException(new Error('failed to resolve admin info from Intercom'), undefined, {
+        operation: 'intercom_get_me',
+        status: response.status,
+        error_text: errorText,
+        region,
+      });
       return null;
     }
 
@@ -132,6 +145,7 @@ export async function getMe(
     return data;
   } catch (error) {
     logger.error({ error, region }, 'Get /me error');
+    captureException(error, undefined, { operation: 'intercom_get_me' });
     return null;
   }
 }
@@ -248,16 +262,32 @@ export async function replyToConversation(
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error(
+      logger.warn(
         { status: response.status, error: errorText, region, conversationId },
         'Reply to conversation failed'
       );
+      captureException(new Error('failed to reply to conversation'), undefined, {
+        operation: 'intercom_reply_conversation',
+        status: response.status,
+        error_text: errorText,
+        region,
+        conversation_id: conversationId,
+        admin_id: adminId,
+        body,
+      });
       return false;
     }
 
     return true;
   } catch (error) {
     logger.error({ error, region, conversationId }, 'Reply to conversation error');
+    captureException(error, undefined, {
+      operation: 'intercom_reply_conversation',
+      region,
+      conversation_id: conversationId,
+      admin_id: adminId,
+      body,
+    });
     return false;
   }
 }
@@ -310,16 +340,30 @@ export async function updateInstallStatus(
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error(
+      logger.warn(
         { status: response.status, error: errorText, region },
         'Update install status failed'
       );
+      captureException(new Error('failed to update install status'), undefined, {
+        operation: 'intercom_update_install_status',
+        status: response.status,
+        error_text: errorText,
+        region,
+        status_state: status.state,
+        status_message: status.message,
+      });
       return false;
     }
 
     return true;
   } catch (error) {
     logger.error({ error, region }, 'Update install status error');
+    captureException(error, undefined, {
+      operation: 'intercom_update_install_status',
+      region,
+      status_state: status.state,
+      status_message: status.message,
+    });
     return false;
   }
 }
@@ -343,7 +387,13 @@ export async function listAdmins(
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error({ status: response.status, error: errorText, region }, 'List admins failed');
+      logger.warn({ status: response.status, error: errorText, region }, 'List admins failed');
+      captureException(new Error('failed to list admins from Intercom'), undefined, {
+        operation: 'intercom_list_admins',
+        status: response.status,
+        error_text: errorText,
+        region,
+      });
       return null;
     }
 
@@ -351,6 +401,7 @@ export async function listAdmins(
     return data.admins;
   } catch (error) {
     logger.error({ error, region }, 'List admins error');
+    captureException(error, undefined, { operation: 'intercom_list_admins' });
     return null;
   }
 }

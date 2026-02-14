@@ -21,6 +21,8 @@ import type { RefundRepository } from '@/api/repositories/refunds.repository';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import type { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 
+import { captureException } from '../posthog';
+
 const logger = createLogger('refund-processor');
 
 /**
@@ -112,6 +114,11 @@ export class RefundProcessorService {
       logger.debug({ subscriptionId }, 'Payment mapped to subscription');
     } catch (error) {
       logger.warn({ err: error, paymentId: refund.payment_id }, 'Failed to retrieve payment');
+      captureException(error, undefined, {
+        operation: 'refund_processing',
+        subscriptionId,
+        paymentId: refund.payment_id,
+      });
       // Continue processing - we can still record the refund
     }
 
@@ -169,6 +176,11 @@ export class RefundProcessorService {
           logger.debug({ workspaceId }, 'Invalidated refund cache for workspace');
         } catch (cacheError) {
           logger.warn({ err: cacheError, workspaceId }, 'Failed to invalidate cache for workspace');
+          captureException(cacheError, undefined, {
+            operation: 'refund_cache_processing',
+            subscriptionId,
+            paymentId: refund.payment_id,
+          });
         }
       }
 

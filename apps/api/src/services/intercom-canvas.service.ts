@@ -135,6 +135,13 @@ export class IntercomCanvasService {
         { workspaceId: req.workspace_id },
         'Messenger card missing link_url - card misconfigured'
       );
+      captureException(
+        new Error('messenger card missing link_url - card misconfigured'),
+        undefined,
+        {
+          operation: 'initalize_messenger_handler',
+        }
+      );
       return { canvas: buildCanvasErrorCanvas() };
     }
 
@@ -201,6 +208,9 @@ export class IntercomCanvasService {
         { intercomWorkspaceId },
         'Inbox initialize called without teammate - invalid request routing'
       );
+      captureException(new Error('inbox initialize called without teammate'), undefined, {
+        operation: 'initalize_inbox_handler',
+      });
       return { canvas: buildCanvasErrorCanvas() };
     }
 
@@ -228,6 +238,9 @@ export class IntercomCanvasService {
         { componentId, intercomWorkspaceId },
         'Inbox submit called without teammate - invalid request routing'
       );
+      captureException(new Error('inbox submit called without teammate'), undefined, {
+        operation: 'initalize_messenger_handler',
+      });
       return { canvas: buildCanvasErrorCanvas() };
     }
 
@@ -253,6 +266,11 @@ export class IntercomCanvasService {
 
       default:
         logger.warn({ componentId, intercomWorkspaceId }, 'Unknown inbox component_id');
+        captureException(new Error('inbox submit called without teammate'), undefined, {
+          operation: 'handle_inbox_submit',
+          componentId,
+          intercomWorkspaceId,
+        });
         return { canvas: buildCanvasErrorCanvas() };
     }
   }
@@ -280,6 +298,15 @@ export class IntercomCanvasService {
     // Configure schema requires admin, but defensive check for type narrowing
     if (!teammate || !intercomWorkspaceId) {
       logger.warn('Configure called with missing teammate or workspace_id');
+      captureException(
+        new Error('configure called with missing teammate or workspace_id'),
+        undefined,
+        {
+          operation: 'handle_canvas_configure',
+          componentId,
+          intercomWorkspaceId,
+        }
+      );
       return { canvas: buildCanvasErrorCanvas() };
     }
 
@@ -386,6 +413,13 @@ export class IntercomCanvasService {
     const formValues = extractLinkCreatorFormValues(inputValues);
     if (!formValues) {
       logger.warn({ intercomWorkspaceId }, 'Link creation failed: invalid form values');
+      captureException(new Error('link creation called with invalid form values'), undefined, {
+        operation: 'create_link_intercom',
+        conversation,
+        teammate,
+        inputValues,
+        intercomWorkspaceId,
+      });
       return { canvas: buildCanvasErrorCanvas() };
     }
 
@@ -491,6 +525,13 @@ export class IntercomCanvasService {
     const formValues = extractLinkCreatorFormValues(inputValues);
     if (!formValues) {
       logger.warn({ intercomWorkspaceId }, 'Link creation failed: invalid form values');
+      captureException(new Error('link creation called with invalid form values'), undefined, {
+        operation: 'create_link_intercom',
+        conversationId,
+        teammate,
+        inputValues,
+        intercomWorkspaceId,
+      });
       return { canvas: buildCanvasErrorCanvas() };
     }
 

@@ -12,6 +12,7 @@ import { isDisposableEmail, isDisposableEmailDomain } from '@workspace/shared';
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
 import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
@@ -472,6 +473,10 @@ export class WorkspaceService {
     } catch (error) {
       // Don't fail deletion if cache cleanup fails
       logger.warn({ err: error, workspaceId }, 'Failed to cleanup caches for workspace');
+      captureException(error, undefined, {
+        operation: 'invalidate_workspace_cache',
+        workspaceId,
+      });
     }
   }
 
@@ -530,6 +535,10 @@ export class WorkspaceService {
       }
     } catch (error) {
       logger.error({ err: error, workspaceId }, 'Failed to cancel subscription for workspace');
+      captureException(error, undefined, {
+        operation: 'cancel_subscription',
+        workspace_id: workspaceId,
+      });
     }
   }
 
@@ -731,6 +740,10 @@ export class WorkspaceService {
       } catch (error) {
         // Log but don't fail - best effort
         logger.error({ err: error, workspaceId }, 'Error restoring workspace projects');
+        captureException(error, undefined, {
+          operation: 'restore_projects',
+          workspace_id: workspaceId,
+        });
       }
 
       // 6. Restore associated links (best effort)
@@ -746,6 +759,10 @@ export class WorkspaceService {
       } catch (error) {
         // Log but don't fail - best effort
         logger.error({ err: error, workspaceId }, 'Error restoring workspace links');
+        captureException(error, undefined, {
+          operation: 'restore_links',
+          workspace_id: workspaceId,
+        });
       }
 
       // 7. Restore all workspace members (best effort)
@@ -761,6 +778,10 @@ export class WorkspaceService {
       } catch (error) {
         // Log but don't fail - best effort
         logger.error({ err: error, workspaceId }, 'Error restoring workspace members');
+        captureException(error, undefined, {
+          operation: 'restore_members',
+          workspace_id: workspaceId,
+        });
       }
 
       // 8. Restore associated recordings (best effort)
@@ -776,6 +797,10 @@ export class WorkspaceService {
       } catch (error) {
         // Log but don't fail - best effort
         logger.error({ err: error, workspaceId }, 'Error restoring workspace recordings');
+        captureException(error, undefined, {
+          operation: 'restore_recordings',
+          workspace_id: workspaceId,
+        });
       }
 
       // 9. Restore intercom integration (best effort)
@@ -793,6 +818,10 @@ export class WorkspaceService {
       } catch (error) {
         // Log but don't fail - best effort
         logger.error({ err: error, workspaceId }, 'Error restoring intercom integration');
+        captureException(error, undefined, {
+          operation: 'restore_integration',
+          workspace_id: workspaceId,
+        });
       }
 
       return {
@@ -854,6 +883,10 @@ export class WorkspaceService {
     } catch (error) {
       // Cache warming failure shouldn't fail the restore
       logger.warn({ err: error, workspaceId }, 'Failed to warm caches for restored workspace');
+      captureException(error, undefined, {
+        operation: 'warmup_workspace_cache',
+        workspaceId,
+      });
     }
   }
 

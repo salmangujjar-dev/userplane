@@ -11,6 +11,7 @@ import { env } from '@/api/env';
 import { generateLinkId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import { parseLinkReference } from '@/api/lib/parser';
+import { captureException } from '@/api/posthog';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
@@ -274,6 +275,10 @@ export class LinkService {
         { err: error, workspaceId: params.workspaceId },
         'Failed to track link consumption'
       );
+      captureException(error, undefined, {
+        operation: 'track_link_consumption',
+        workspace_id: params.workspaceId,
+      });
     }
 
     // Warm caches for new link

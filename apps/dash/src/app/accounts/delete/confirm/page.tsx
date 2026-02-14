@@ -13,6 +13,7 @@ import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import posthog from 'posthog-js';
 import { Suspense, useEffect, useState } from 'react';
 
 import { authClient } from '@/client';
@@ -21,7 +22,6 @@ import { DinoError } from '@/components/shared/dino-error';
 import { useAccount } from '@/features/account';
 import { useAuth } from '@/hooks/use-auth';
 import { mediaClient } from '@/lib/media';
-import { logger } from '@/logger';
 
 function DeleteAccountLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -78,7 +78,6 @@ function DeleteAccountContent() {
 
   useEffect(() => {
     if (!token) {
-      logger.error({ token }, 'No token provided for account deletion');
       setError('Invalid or missing deletion token. Please check your email and try again.');
     }
   }, [token]);
@@ -92,14 +91,15 @@ function DeleteAccountContent() {
     try {
       setIsDeleting(true);
       setError(null);
-      logger.info({ token: token.substring(0, 10) + '...' }, 'Initiating account deletion');
-
       const result = await authClient.deleteUser({
         token,
       });
 
       if (result.error) {
-        logger.error({ err: result.error }, 'Account deletion failed');
+        posthog.captureException(result.error, {
+          error_boundary: 'account-delete',
+          token,
+        });
         setError(result.error.message || 'Failed to delete account. Please try again.');
         toast.error('Deletion failed', {
           description: result.error.message || 'Failed to delete account. Please try again.',
@@ -107,7 +107,6 @@ function DeleteAccountContent() {
         return;
       }
 
-      logger.info('Account deletion successful');
       setIsSuccess(true);
       toast.success('Account deleted successfully');
 
@@ -115,7 +114,10 @@ function DeleteAccountContent() {
         window.location.href = '/';
       }, 3000);
     } catch (err) {
-      logger.error({ err }, 'Account deletion failed with exception');
+      posthog.captureException(err, {
+        error_boundary: 'account-delete',
+        token,
+      });
       const errorMessage =
         err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
       setError(errorMessage);

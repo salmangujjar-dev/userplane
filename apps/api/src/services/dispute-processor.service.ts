@@ -24,6 +24,8 @@ import type { DisputeRepository } from '@/api/repositories/disputes.repository';
 import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import type { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 
+import { captureException } from '../posthog';
+
 const logger = createLogger('dispute-processor');
 
 /**
@@ -120,6 +122,11 @@ export class DisputeProcessorService {
       );
     } catch (error) {
       logger.warn({ paymentId: dispute.payment_id, err: error }, 'Failed to retrieve payment');
+      captureException(error, undefined, {
+        operation: 'dispute_processing',
+        subscriptionId,
+        paymentId: dispute.payment_id,
+      });
       // Continue processing - we can still record the dispute
     }
 
@@ -177,6 +184,10 @@ export class DisputeProcessorService {
           logger.debug({ workspaceId }, 'Invalidated dispute cache for workspace');
         } catch (cacheError) {
           logger.warn({ workspaceId, err: cacheError }, 'Failed to invalidate cache for workspace');
+          captureException(cacheError, undefined, {
+            operation: 'invalidate_dispute_cache',
+            workspaceId,
+          });
         }
       }
 
