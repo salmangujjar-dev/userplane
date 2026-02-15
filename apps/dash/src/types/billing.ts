@@ -6,11 +6,11 @@
 export type {
   // Subscription
   AccessDetail,
+  // Error types
+  BillingErrors,
   // Plan management
   ManagePlanData,
   PlanChangePreviewData,
-  // Recording limits
-  RecordingLimitStatus,
   // Usage
   ResourceUsage,
   SubscriptionStatus,

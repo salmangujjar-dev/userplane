@@ -26,17 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import {
-  AlertTriangle,
-  ArrowUpCircle,
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  FolderKanban,
-  Globe,
-  HelpCircle,
-  Plus,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, FolderKanban, Globe, HelpCircle, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import type { Control, UseFormHandleSubmit, UseFormSetValue } from 'react-hook-form';
@@ -48,9 +38,9 @@ import { SUPPORT_LINKS } from '@/constants';
 import { useWorkspaceDomains } from '@/features/domains';
 import { useCreateLink } from '@/features/links';
 import { useWorkspaceProjects } from '@/features/projects';
+import { usePlanLimitHandler } from '@/hooks/use-plan-limit-handler';
 import { mediaClient } from '@/lib/media';
 import { useWorkspaceStore } from '@/stores/workspace';
-import type { RecordingLimitStatus } from '@/types';
 
 interface CreateLinkModalProps {
   open?: boolean;
@@ -71,7 +61,7 @@ type CreateLinkFormValues = z.infer<typeof createLinkFormSchema>;
 type ModalState =
   | { view: 'create' }
   | { view: 'error'; error: { message: string; code?: string } }
-  | { view: 'share'; linkUrl: string; recordingLimitStatus: RecordingLimitStatus };
+  | { view: 'share'; linkUrl: string };
 
 export function CreateLinkModal({
   open: controlledOpen,
@@ -87,6 +77,8 @@ export function CreateLinkModal({
 
   const [state, setState] = useState<ModalState>({ view: 'create' });
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const { handlePlanLimit } = usePlanLimitHandler();
 
   const {
     control,
@@ -166,11 +158,15 @@ export function CreateLinkModal({
           linkReference: data.reference || undefined,
           linkReusable: data.isReusable,
         },
-        throwErrors: ['LINK_LIMIT_EXCEEDED'],
+        throwErrors: ['PLAN_LIMIT_EXCEEDED'],
       },
       {
         onSuccess: (result) => {
           if (!result.success) {
+            if (handlePlanLimit(result.error)) {
+              setOpen(false);
+              return;
+            }
             setState({
               view: 'error',
               error: {
@@ -183,7 +179,6 @@ export function CreateLinkModal({
           setState({
             view: 'share',
             linkUrl: result.data.link.linkURL,
-            recordingLimitStatus: result.data.recordingLimitStatus,
           });
         },
         onError: (err: unknown) => {
@@ -230,9 +225,7 @@ export function CreateLinkModal({
           />
         )}
         {state.view === 'error' && <ErrorView error={state.error} onClose={handleClose} />}
-        {state.view === 'share' && (
-          <ShareView linkUrl={state.linkUrl} recordingLimitStatus={state.recordingLimitStatus} />
-        )}
+        {state.view === 'share' && <ShareView linkUrl={state.linkUrl} />}
       </DialogContent>
     </Dialog>
   );
@@ -494,14 +487,6 @@ function ErrorView({
   error: { message: string; code?: string };
   onClose: () => void;
 }) {
-  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
-
-  const handleUpgrade = () => {
-    if (workspaceId) {
-      window.location.href = `/workspace/${workspaceId}/settings?tab=plan-usage`;
-    }
-  };
-
   return (
     <>
       <div className="space-y-6 py-4">
@@ -537,14 +522,9 @@ function ErrorView({
           <HelpCircle className="h-4 w-4" />
           Link issues
         </a>
-        <div className="flex gap-2">
-          <Button variant="outline" className="rounded-full px-6" onClick={onClose}>
-            Close
-          </Button>
-          <Button variant="secondary" className="rounded-full px-6" onClick={handleUpgrade}>
-            Upgrade
-          </Button>
-        </div>
+        <Button variant="outline" className="rounded-full px-6" onClick={onClose}>
+          Close
+        </Button>
       </DialogFooter>
     </>
   );
@@ -554,15 +534,7 @@ function ErrorView({
 // Share View
 // ============================================================================
 
-function ShareView({
-  linkUrl,
-  recordingLimitStatus,
-}: {
-  linkUrl: string;
-  recordingLimitStatus: RecordingLimitStatus;
-}) {
-  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
-
+function ShareView({ linkUrl }: { linkUrl: string }) {
   // Auto-copy on mount (silent — "Link created" toast is already showing)
   useEffect(() => {
     navigator.clipboard.writeText(linkUrl).catch(() => {});
@@ -574,29 +546,6 @@ function ShareView({
       toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
     } catch {
       toast.error('Failed to copy link');
-    }
-  };
-
-  const handleUpgrade = () => {
-    if (workspaceId) {
-      window.location.href = `/workspace/${workspaceId}/recordings?plan-modal=detailed`;
-    }
-  };
-
-  const showWarning = recordingLimitStatus !== 'safe';
-
-  const getWarningMessage = (status: RecordingLimitStatus): string => {
-    switch (status) {
-      case 'hard-exceeded':
-        return 'You have exceeded your fair use limit';
-      case 'hard-warning':
-        return 'You are approaching your fair use limit';
-      case 'soft-exceeded':
-        return 'You have exceeded your recomended recording limit';
-      case 'soft-warning':
-        return 'You are approaching your recomended recording limit';
-      default:
-        return '';
     }
   };
 
@@ -639,29 +588,10 @@ function ShareView({
             readOnly
             className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
-
-          {showWarning && (
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                {getWarningMessage(recordingLimitStatus)}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
       <DialogFooter>
-        {showWarning && (
-          <button
-            type="button"
-            onClick={handleUpgrade}
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
-          >
-            <ArrowUpCircle className="h-4 w-4" />
-            Upgrade
-          </button>
-        )}
         <Button variant="default" onClick={handleCopy} className="rounded-full px-6">
           <Copy className="h-4 w-4 mr-2" />
           Copy Link
