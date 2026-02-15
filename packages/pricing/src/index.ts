@@ -1546,6 +1546,7 @@ export function getFeatureGates(planId: PlanId): PlanFeatureGates {
 export const ABUSE_PREVENTION = {
   workspaceCreation: {
     maxPerYear: 3,
+    adminMaxPerYear: 90,
     lookbackDays: 365,
   },
 } as const;

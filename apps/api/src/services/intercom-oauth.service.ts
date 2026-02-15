@@ -108,8 +108,9 @@ export class IntercomService {
     userId: string;
     userName?: string;
     userAuthEmail: string;
+    userRole?: string | null;
   }): Promise<WorkspaceCreationResult> {
-    const { me, region, accessToken, userId, userName, userAuthEmail } = params;
+    const { me, region, accessToken, userId, userName, userAuthEmail, userRole } = params;
 
     // 1. Derive workspace URL and name from Intercom email domain and app name
     const workspaceUrl = deriveWorkspaceUrl(me.email);
@@ -125,6 +126,7 @@ export class IntercomService {
       userName,
       // Use user email for creating the workspace
       userEmail: userAuthEmail,
+      userRole,
     });
 
     // Handle discriminated union: check if workspace was created
@@ -179,8 +181,9 @@ export class IntercomService {
     userId: string;
     userName?: string;
     userEmail: string;
+    userRole?: string | null;
   }): Promise<WorkspaceCreationResult> {
-    const { code, state, userId, userName, userEmail } = params;
+    const { code, state, userId, userName, userEmail, userRole } = params;
 
     // 1. Validate state token
     if (!this.validateState(state, userId)) {
@@ -230,6 +233,7 @@ export class IntercomService {
       userId,
       userName,
       userAuthEmail: userEmail,
+      userRole,
     });
   }
 

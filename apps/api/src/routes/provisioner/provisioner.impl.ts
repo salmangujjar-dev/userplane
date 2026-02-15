@@ -28,12 +28,14 @@ export const createWorkspaceImpl = (
             userId: context.user.id,
             userName: context.user.name,
             userEmail: context.user.email,
+            userRole: context.user.role,
           })
         : await provisionerService.createWorkspaceByURL({
             url: input.body.url,
             userId: context.user.id,
             userName: context.user.name,
             userEmail: context.user.email,
+            userRole: context.user.role,
           });
 
     // Send welcome email based on creation type
@@ -103,6 +105,7 @@ export const intercomCallbackImpl = (
       userId: context.user.id,
       userName: context.user.name,
       userEmail: context.user.email,
+      userRole: context.user.role,
     });
 
     // Send welcome email if workspace was created
