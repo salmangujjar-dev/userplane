@@ -232,6 +232,7 @@ export const updateWorkspacePreferences = oc
     FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_FEATURE_NOT_AVAILABLE: WorkspaceErrors.WORKSPACE_FEATURE_NOT_AVAILABLE,
   })
   .input(UpdateWorkspacePreferencesSchema)
   .output(ApiResponseSchema(WorkspacePreferencesUpdateDataSchema));
