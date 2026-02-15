@@ -1,5 +1,6 @@
 'use client';
 
+import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -23,6 +24,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { SUPPORT_LINKS } from '@/constants';
 import { useSubscriptionStatus } from '@/features/billing';
+import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
+import type { UpsellFeatureKey } from '@/lib/upsell-config';
 import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainConfigureModalProps {
@@ -51,12 +54,9 @@ export function DomainConfigureModal({
 }: DomainConfigureModalProps) {
   const { data: subscriptionResult } = useSubscriptionStatus();
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const effectivePlanId = subscriptionData?.accessDetail.effectivePlanId ?? 'free';
-  const isEnterprise =
-    effectivePlanId === 'enterprise_monthly' || effectivePlanId === 'enterprise_annual';
-
-  // Advanced recording toggles are only available on enterprise plans
-  const paidDisabled = loading || !verified || !isEnterprise;
+  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
+  const featureGates = getFeatureGates(effectivePlanId);
+  const { triggerUpsell } = useFeatureUpsell();
 
   const [localSettings, setLocalSettings] = useState<DomainRecordingPreferences>(settings);
 
@@ -92,6 +92,45 @@ export function DomainConfigureModal({
   const handleSendInstructions = () => {
     onOpenChange(false);
     onSendInstructions();
+  };
+
+  const renderGatedToggle = (
+    id: string,
+    label: string,
+    checked: boolean,
+    onChange: (checked: boolean) => void,
+    featureKey: UpsellFeatureKey
+  ) => {
+    const gated = !featureGates[featureKey];
+    const isDisabled = loading || !verified;
+    return (
+      <div
+        className={cn(
+          'flex items-center justify-between',
+          gated && !isDisabled && 'cursor-pointer'
+        )}
+        onClick={gated && !isDisabled ? () => triggerUpsell(featureKey) : undefined}
+      >
+        <Label
+          htmlFor={!gated ? id : undefined}
+          className={cn(
+            'text-sm font-normal flex-1',
+            isDisabled || gated ? 'text-muted-foreground' : 'cursor-pointer',
+            gated && !isDisabled && 'cursor-pointer'
+          )}
+        >
+          {label}
+        </Label>
+        <span className={cn(gated && 'pointer-events-none')}>
+          <Switch
+            id={id}
+            checked={checked}
+            onCheckedChange={onChange}
+            disabled={isDisabled || gated}
+          />
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -197,7 +236,10 @@ export function DomainConfigureModal({
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="hide-sensitive"
-                    className={`text-sm font-normal flex-1 ${!verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={cn(
+                      'text-sm font-normal flex-1',
+                      !verified ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'
+                    )}
                   >
                     Hide sensitive fields
                   </Label>
@@ -211,85 +253,44 @@ export function DomainConfigureModal({
                   />
                 </div>
 
-                {!isEnterprise && verified && (
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
-                    <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <p className="text-xs text-muted-foreground">
-                      Upgrade your plan to configure advanced recording settings
-                    </p>
-                  </div>
+                {renderGatedToggle(
+                  'console-logs',
+                  'Capture console logs',
+                  localSettings.recordingCaptureClientLog,
+                  (checked) =>
+                    setLocalSettings((prev) => ({ ...prev, recordingCaptureClientLog: checked })),
+                  'requestConsoleLogs'
                 )}
 
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="console-logs"
-                    className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    Capture console logs
-                  </Label>
-                  <Switch
-                    id="console-logs"
-                    checked={localSettings.recordingCaptureClientLog}
-                    onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({ ...prev, recordingCaptureClientLog: checked }))
-                    }
-                    disabled={paidDisabled}
-                  />
-                </div>
+                {renderGatedToggle(
+                  'client-actions',
+                  'Capture client actions',
+                  localSettings.recordingCaptureClientAction,
+                  (checked) =>
+                    setLocalSettings((prev) => ({
+                      ...prev,
+                      recordingCaptureClientAction: checked,
+                    })),
+                  'requestActionReplay'
+                )}
 
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="client-actions"
-                    className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    Capture client actions
-                  </Label>
-                  <Switch
-                    id="client-actions"
-                    checked={localSettings.recordingCaptureClientAction}
-                    onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({
-                        ...prev,
-                        recordingCaptureClientAction: checked,
-                      }))
-                    }
-                    disabled={paidDisabled}
-                  />
-                </div>
+                {renderGatedToggle(
+                  'network-logs',
+                  'Capture network logs',
+                  localSettings.recordingCaptureNetworkLog,
+                  (checked) =>
+                    setLocalSettings((prev) => ({ ...prev, recordingCaptureNetworkLog: checked })),
+                  'requestNetworkActivity'
+                )}
 
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="network-logs"
-                    className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    Capture network logs
-                  </Label>
-                  <Switch
-                    id="network-logs"
-                    checked={localSettings.recordingCaptureNetworkLog}
-                    onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({ ...prev, recordingCaptureNetworkLog: checked }))
-                    }
-                    disabled={paidDisabled}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="backend-server"
-                    className={`text-sm font-normal flex-1 ${paidDisabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    Capture backend and server logs
-                  </Label>
-                  <Switch
-                    id="backend-server"
-                    checked={localSettings.recordingCaptureServerLog}
-                    onCheckedChange={(checked) =>
-                      setLocalSettings((prev) => ({ ...prev, recordingCaptureServerLog: checked }))
-                    }
-                    disabled={paidDisabled}
-                  />
-                </div>
+                {renderGatedToggle(
+                  'backend-server',
+                  'Capture backend and server logs',
+                  localSettings.recordingCaptureServerLog,
+                  (checked) =>
+                    setLocalSettings((prev) => ({ ...prev, recordingCaptureServerLog: checked })),
+                  'requestServerLogs'
+                )}
               </div>
             </div>
           </div>

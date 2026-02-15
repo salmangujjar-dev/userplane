@@ -15,7 +15,8 @@ import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
 import { env } from '@/env';
-import { planModalParser } from '@/lib/parsers';
+import { planModalParser, upsellFeatureParser } from '@/lib/parsers';
+import { UPSELL_CONFIGS, type UpsellFeatureKey } from '@/lib/upsell-config';
 
 interface PlanSelectionModalProps {
   onPlanSelect: (planId: string) => void;
@@ -179,8 +180,13 @@ export function PlanSelectionModal({
   currentPlanName,
 }: PlanSelectionModalProps) {
   const [planModal, setPlanModal] = useQueryState('plan-modal', planModalParser);
+  const [upsellFeature, setUpsellFeature] = useQueryState('upsell-feature', upsellFeatureParser);
   const [billingCycle, setBillingCycle] = useState<PlanCycle>('annual');
   const [selectedPlanName, setSelectedPlanName] = useState<string>(defaultPlan);
+
+  const upsellConfig = upsellFeature
+    ? UPSELL_CONFIGS[upsellFeature as UpsellFeatureKey]
+    : undefined;
 
   const open = planModal !== null;
   const showAllPlans = planModal === 'detailed';
@@ -222,6 +228,7 @@ export function PlanSelectionModal({
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       setPlanModal(null);
+      setUpsellFeature(null);
     }
   };
 
@@ -236,9 +243,11 @@ export function PlanSelectionModal({
           <div className="flex items-start gap-4 mb-6">
             <Logo variant="tiled" size="md" showText={false} />
             <div className="flex flex-col space-y-1">
-              <SheetTitle className="text-xl font-semibold">Choose Your Plan</SheetTitle>
+              <SheetTitle className="text-xl font-semibold">
+                {upsellConfig?.title ?? 'Choose Your Plan'}
+              </SheetTitle>
               <SheetDescription className="text-sm text-muted-foreground">
-                Select the plan that best fits your needs
+                {upsellConfig?.subtitle ?? 'Select the plan that best fits your needs'}
               </SheetDescription>
             </div>
           </div>

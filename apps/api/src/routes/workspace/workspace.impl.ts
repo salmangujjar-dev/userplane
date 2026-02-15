@@ -752,7 +752,8 @@ export const rotateInviteTokenImpl = (
 
 /**
  * POST /workspace/:id/invite/send - Send workspace invitations
- * Requires workspace member
+ * Requires workspace member.
+ * Email validity is enforced by SendWorkspaceInvitesSchema (EmailSchema); invalid emails are rejected at validation.
  */
 export const sendWorkspaceInvitesImpl = (
   inviteService: InviteService,
@@ -1154,7 +1155,8 @@ export const replaceDomainRecordingPreferencesImpl = (
 
 /**
  * POST /workspace/:workspaceId/domains/:domainId/instructions - Send domain developer instructions
- * Requires workspace member
+ * Requires workspace member.
+ * Email validity is enforced by SendDomainInstructionsSchema (EmailSchema); invalid emails are rejected at validation.
  */
 export const sendDomainInstructionsImpl = (
   domainService: DomainService,

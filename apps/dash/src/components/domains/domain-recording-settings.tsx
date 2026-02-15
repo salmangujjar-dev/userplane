@@ -1,9 +1,11 @@
 import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
-import { AlertCircle } from 'lucide-react';
+import { cn } from '@workspace/ui/lib/utils';
 
 import { useSubscriptionStatus } from '@/features/billing';
+import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
+import type { UpsellFeatureKey } from '@/lib/upsell-config';
 import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainRecordingSettingsProps {
@@ -25,19 +27,48 @@ export function DomainRecordingSettings({
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
   const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
   const featureGates = getFeatureGates(effectivePlanId);
-
-  // Whether any advanced recording feature is gated on this plan
-  const hasAdvancedRecording =
-    featureGates.requestConsoleLogs ||
-    featureGates.requestActionReplay ||
-    featureGates.requestNetworkActivity ||
-    featureGates.requestServerLogs;
+  const { triggerUpsell } = useFeatureUpsell();
 
   const updateSetting = <K extends keyof DomainRecordingPreferences>(
     key: K,
     value: DomainRecordingPreferences[K]
   ) => {
     onSettingsChange({ ...settings, [key]: value });
+  };
+
+  const gatedToggle = (
+    id: string,
+    label: string,
+    checked: boolean,
+    onChange: (checked: boolean) => void,
+    featureKey: UpsellFeatureKey
+  ) => {
+    const gated = !featureGates[featureKey];
+    return (
+      <div
+        className={cn('flex items-center justify-between', gated && !disabled && 'cursor-pointer')}
+        onClick={gated && !disabled ? () => triggerUpsell(featureKey) : undefined}
+      >
+        <Label
+          htmlFor={!gated ? id : undefined}
+          className={cn(
+            'text-sm font-normal flex-1',
+            disabled || gated ? 'text-muted-foreground' : 'cursor-pointer',
+            gated && !disabled && 'cursor-pointer'
+          )}
+        >
+          {label}
+        </Label>
+        <span className={cn(gated && 'pointer-events-none')}>
+          <Switch
+            id={id}
+            checked={checked}
+            onCheckedChange={onChange}
+            disabled={disabled || gated}
+          />
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -49,7 +80,10 @@ export function DomainRecordingSettings({
           <div className="flex items-center justify-between">
             <Label
               htmlFor={`${idPrefix}-hide-sensitive`}
-              className={`text-sm font-normal flex-1 ${disabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+              className={cn(
+                'text-sm font-normal flex-1',
+                disabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'
+              )}
             >
               Hide sensitive fields
             </Label>
@@ -62,74 +96,37 @@ export function DomainRecordingSettings({
           </div>
         )}
 
-        {!hasAdvancedRecording && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
-            <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              Upgrade your plan to configure advanced recording settings
-            </p>
-          </div>
+        {gatedToggle(
+          `${idPrefix}-console-logs`,
+          'Capture console logs',
+          settings.recordingCaptureClientLog,
+          (checked) => updateSetting('recordingCaptureClientLog', checked),
+          'requestConsoleLogs'
         )}
 
-        <div className="flex items-center justify-between">
-          <Label
-            htmlFor={`${idPrefix}-console-logs`}
-            className={`text-sm font-normal flex-1 ${disabled || !featureGates.requestConsoleLogs ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            Capture console logs
-          </Label>
-          <Switch
-            id={`${idPrefix}-console-logs`}
-            checked={settings.recordingCaptureClientLog}
-            onCheckedChange={(checked) => updateSetting('recordingCaptureClientLog', checked)}
-            disabled={disabled || !featureGates.requestConsoleLogs}
-          />
-        </div>
+        {gatedToggle(
+          `${idPrefix}-client-actions`,
+          'Capture client actions',
+          settings.recordingCaptureClientAction,
+          (checked) => updateSetting('recordingCaptureClientAction', checked),
+          'requestActionReplay'
+        )}
 
-        <div className="flex items-center justify-between">
-          <Label
-            htmlFor={`${idPrefix}-client-actions`}
-            className={`text-sm font-normal flex-1 ${disabled || !featureGates.requestActionReplay ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            Capture client actions
-          </Label>
-          <Switch
-            id={`${idPrefix}-client-actions`}
-            checked={settings.recordingCaptureClientAction}
-            onCheckedChange={(checked) => updateSetting('recordingCaptureClientAction', checked)}
-            disabled={disabled || !featureGates.requestActionReplay}
-          />
-        </div>
+        {gatedToggle(
+          `${idPrefix}-network-logs`,
+          'Capture network logs',
+          settings.recordingCaptureNetworkLog,
+          (checked) => updateSetting('recordingCaptureNetworkLog', checked),
+          'requestNetworkActivity'
+        )}
 
-        <div className="flex items-center justify-between">
-          <Label
-            htmlFor={`${idPrefix}-network-logs`}
-            className={`text-sm font-normal flex-1 ${disabled || !featureGates.requestNetworkActivity ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            Capture network logs
-          </Label>
-          <Switch
-            id={`${idPrefix}-network-logs`}
-            checked={settings.recordingCaptureNetworkLog}
-            onCheckedChange={(checked) => updateSetting('recordingCaptureNetworkLog', checked)}
-            disabled={disabled || !featureGates.requestNetworkActivity}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <Label
-            htmlFor={`${idPrefix}-backend-server`}
-            className={`text-sm font-normal flex-1 ${disabled || !featureGates.requestServerLogs ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            Capture backend and server logs
-          </Label>
-          <Switch
-            id={`${idPrefix}-backend-server`}
-            checked={settings.recordingCaptureServerLog}
-            onCheckedChange={(checked) => updateSetting('recordingCaptureServerLog', checked)}
-            disabled={disabled || !featureGates.requestServerLogs}
-          />
-        </div>
+        {gatedToggle(
+          `${idPrefix}-backend-server`,
+          'Capture backend and server logs',
+          settings.recordingCaptureServerLog,
+          (checked) => updateSetting('recordingCaptureServerLog', checked),
+          'requestServerLogs'
+        )}
       </div>
     </div>
   );

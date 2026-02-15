@@ -8,8 +8,6 @@
  */
 
 import type { Redis } from '@upstash/redis';
-
-import { createCacheLogger } from '../logger';
 import type {
   DomainRecordingPrefs,
   LinkCore,
@@ -19,6 +17,7 @@ import type {
   WorkspaceRecordingPrefs,
 } from '@workspace/contract';
 
+import { createCacheLogger } from '../logger';
 import {
   billingKeys,
   disputeKeys,
