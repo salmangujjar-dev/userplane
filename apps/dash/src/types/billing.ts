@@ -6,8 +6,6 @@
 export type {
   // Subscription
   AccessDetail,
-  // Error types
-  BillingErrors,
   // Plan management
   ManagePlanData,
   PlanChangePreviewData,
