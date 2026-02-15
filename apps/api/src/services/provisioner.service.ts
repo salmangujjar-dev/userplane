@@ -55,8 +55,9 @@ export class ProvisionerService {
     userId: string;
     userName?: string;
     userEmail: string;
+    userRole?: string | null;
   }): Promise<WorkspaceCreationResult> {
-    const { inviteToken, userId, userName, userEmail } = params;
+    const { inviteToken, userId, userName, userEmail, userRole } = params;
 
     const workspaceDetails = extractWorkspaceDetailsFromInviteToken(
       this.deps.tokenService,
@@ -85,6 +86,7 @@ export class ProvisionerService {
       userId,
       userName,
       userEmail,
+      userRole,
     });
   }
 
@@ -99,8 +101,9 @@ export class ProvisionerService {
     userId: string;
     userName?: string;
     userEmail: string;
+    userRole?: string | null;
   }): Promise<WorkspaceCreationResult> {
-    const { url, userId, userName, userEmail } = params;
+    const { url, userId, userName, userEmail, userRole } = params;
 
     return this.provisionWorkspace({
       url,
@@ -109,6 +112,7 @@ export class ProvisionerService {
       userId,
       userName,
       userEmail,
+      userRole,
     });
   }
 
@@ -124,8 +128,9 @@ export class ProvisionerService {
     userId: string;
     userName?: string;
     userEmail: string;
+    userRole?: string | null;
   }): Promise<WorkspaceCreationResult> {
-    const { url, workspaceName, userId, userName, userEmail } = params;
+    const { url, workspaceName, userId, userName, userEmail, userRole } = params;
     return this.provisionWorkspace({
       url,
       predeterminedWorkspaceId: undefined,
@@ -133,6 +138,7 @@ export class ProvisionerService {
       userId,
       userName,
       userEmail,
+      userRole,
     });
   }
 
@@ -151,6 +157,7 @@ export class ProvisionerService {
     userId: string;
     userName?: string;
     userEmail: string;
+    userRole?: string | null;
   }): Promise<WorkspaceCreationResult> {
     const {
       url,
@@ -159,6 +166,7 @@ export class ProvisionerService {
       userId,
       userName,
       userEmail,
+      userRole,
     } = params;
 
     // Check workspace creation rate limit (abuse prevention)
@@ -167,10 +175,15 @@ export class ProvisionerService {
       ABUSE_PREVENTION.workspaceCreation.lookbackDays
     );
 
-    if (workspaceCount >= ABUSE_PREVENTION.workspaceCreation.maxPerYear) {
+    const isAdmin = userRole === 'admin';
+    const limit = isAdmin
+      ? ABUSE_PREVENTION.workspaceCreation.adminMaxPerYear
+      : ABUSE_PREVENTION.workspaceCreation.maxPerYear;
+
+    if (workspaceCount >= limit) {
       throw provisionerError.WORKSPACE_CREATION_LIMIT_EXCEEDED({
         current: workspaceCount,
-        limit: ABUSE_PREVENTION.workspaceCreation.maxPerYear,
+        limit,
       });
     }
 
