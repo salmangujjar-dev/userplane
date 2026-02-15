@@ -16,5 +16,12 @@ export function useFeatureUpsell() {
     });
   };
 
-  return { triggerUpsell };
+  const triggerResourceUpsell = (resource: string) => {
+    setParams({
+      'plan-modal': 'suggested',
+      'upsell-feature': `limit:${resource}`,
+    });
+  };
+
+  return { triggerUpsell, triggerResourceUpsell };
 }

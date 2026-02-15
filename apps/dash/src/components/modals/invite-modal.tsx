@@ -30,6 +30,7 @@ import {
   useSendWorkspaceInvites,
   useWorkspaceInvite,
 } from '@/features/workspace';
+import { usePlanLimitHandler } from '@/hooks/use-plan-limit-handler';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 const inviteFormSchema = z.object({
@@ -233,6 +234,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState('');
   const MAX_EMAILS = 10;
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
+  const { handlePlanLimit } = usePlanLimitHandler();
 
   const { data: inviteResult, isLoading: isLoadingInvite } = useWorkspaceInvite();
   const { mutate: sendInvites, isPending } = useSendWorkspaceInvites(workspaceId);
@@ -337,10 +339,16 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     }
 
     sendInvites(validEmails, {
-      onSuccess: () => {
-        reset();
-        setEmailInput('');
-        onOpenChange(false);
+      onSuccess: (result) => {
+        if (!result.success && handlePlanLimit(result.error)) {
+          onOpenChange(false);
+          return;
+        }
+        if (result.success) {
+          reset();
+          setEmailInput('');
+          onOpenChange(false);
+        }
       },
     });
   };

@@ -29,3 +29,18 @@ export const UPSELL_CONFIGS: Partial<Record<FeatureGate, UpsellConfig>> = {
 } as const;
 
 export type UpsellFeatureKey = keyof typeof UPSELL_CONFIGS;
+
+export const RESOURCE_UPSELL_CONFIGS: Record<string, UpsellConfig> = {
+  links: {
+    title: 'Link Limit Reached',
+    subtitle: 'Upgrade your plan to create more recording links',
+  },
+  recordings: {
+    title: 'Recording Limit Reached',
+    subtitle: 'Upgrade your plan to capture more recordings',
+  },
+  seats: {
+    title: 'Seat Limit Reached',
+    subtitle: 'Upgrade your plan to invite more team members',
+  },
+} as const;

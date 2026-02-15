@@ -162,7 +162,7 @@ const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
   },
 
   // Entitlement errors — no recovery
-  SESSION_RECORDING_LIMIT_EXCEEDED: {
+  PLAN_LIMIT_EXCEEDED: {
     title: 'Recording limit reached',
     message: 'Upgrade your plan to record more.',
   },

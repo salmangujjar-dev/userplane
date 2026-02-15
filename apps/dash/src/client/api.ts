@@ -30,7 +30,7 @@ const baseClient = createClient({
   url: `${env.api.url}/api/v1`,
   credentials: 'include',
   onError: (error) => {
-    // Defined API errors (e.g. LINK_LIMIT_EXCEEDED, UNAUTHORIZED) are expected
+    // Defined API errors (e.g. PLAN_LIMIT_EXCEEDED, UNAUTHORIZED) are expected
     // and handled in the UI; do not log or report them. Still redirect on 401.
     if (isDefinedError(error)) {
       const status =

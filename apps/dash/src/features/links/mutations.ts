@@ -3,7 +3,7 @@ import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
-import type { LinkErrors } from '@/types';
+import type { BillingErrors, LinkErrors } from '@/types';
 import type { QueryData, QuerySnapshot } from '@/types';
 
 import { workspaceKeys } from '../workspace/query-keys';
@@ -21,7 +21,7 @@ type LinksQueryData = QueryData<LinksData>;
 
 interface CreateLinkOptions {
   data: CreateLinkInput;
-  throwErrors?: Array<keyof typeof LinkErrors>;
+  throwErrors?: Array<keyof typeof LinkErrors | keyof typeof BillingErrors>;
 }
 
 export function useCreateLink(workspaceId: string | null) {
