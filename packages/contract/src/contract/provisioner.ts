@@ -36,6 +36,7 @@ export const createWorkspace = oc
     PROVISIONER_INVITE_TOKEN_INVALID: ProvisionerErrors.PROVISIONER_INVITE_TOKEN_INVALID,
     PROVISIONER_WORKSPACE_EXISTS: ProvisionerErrors.PROVISIONER_WORKSPACE_EXISTS,
     PROVISIONER_URL_REQUIRED: ProvisionerErrors.PROVISIONER_URL_REQUIRED,
+    WORKSPACE_CREATION_LIMIT_EXCEEDED: ProvisionerErrors.WORKSPACE_CREATION_LIMIT_EXCEEDED,
   })
   .input(CreateWorkspaceSchema)
   .output(ApiResponseSchema(WorkspaceCreateDataSchema));

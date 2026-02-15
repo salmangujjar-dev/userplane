@@ -594,6 +594,7 @@ export const addDomain = oc
     DOMAIN_ALREADY_EXISTS: DomainErrors.DOMAIN_ALREADY_EXISTS,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    DOMAIN_CREATE_FAILED: DomainErrors.DOMAIN_CREATE_FAILED,
   })
   .input(AddDomainSchema)
   .output(ApiResponseSchema(DomainAddDataSchema));

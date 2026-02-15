@@ -7,7 +7,9 @@ import {
   AdminDeactivateProjectDataSchema,
   AdminDeactivateProjectInputSchema,
   AdminDeactivateWorkspaceInputSchema,
+  AdminEntitlementsDataSchema,
   AdminErrors,
+  AdminGetEntitlementsInputSchema,
   AdminGetUserInputSchema,
   AdminGetWorkspaceInputSchema,
   AdminGetWorkspaceMemberRecordingStatsInputSchema,
@@ -26,6 +28,7 @@ import {
   AdminSearchUsersInputSchema,
   AdminSearchWorkspacesInputSchema,
   AdminUnbanUserInputSchema,
+  AdminUpdateEntitlementsInputSchema,
   AdminUserDetailSchema,
   AdminUserSessionsDataSchema,
   AdminUsersListDataSchema,
@@ -463,6 +466,52 @@ export const getWorkspaceMemberRecordingStats = oc
   })
   .input(AdminGetWorkspaceMemberRecordingStatsInputSchema)
   .output(ApiResponseSchema(AdminWorkspaceMemberRecordingStatsSchema));
+
+// ============================================
+// WORKSPACE ENTITLEMENTS
+// ============================================
+
+/**
+ * GET /admin/workspaces/:workspaceId/entitlements
+ * Get all entitlements for a workspace
+ */
+export const getWorkspaceEntitlements = oc
+  .route({
+    method: 'GET',
+    path: '/admin/workspaces/{workspaceId}/entitlements',
+    inputStructure: 'detailed',
+    summary: 'Get workspace entitlements',
+    description: 'Get all resource entitlements for a workspace',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    WORKSPACE_NOT_FOUND: AdminErrors.WORKSPACE_NOT_FOUND,
+  })
+  .input(AdminGetEntitlementsInputSchema)
+  .output(ApiResponseSchema(AdminEntitlementsDataSchema));
+
+/**
+ * PATCH /admin/workspaces/:workspaceId/entitlements
+ * Update entitlement limits for a workspace
+ */
+export const updateWorkspaceEntitlements = oc
+  .route({
+    method: 'PATCH',
+    path: '/admin/workspaces/{workspaceId}/entitlements',
+    inputStructure: 'detailed',
+    summary: 'Update workspace entitlements',
+    description: 'Update resource entitlement limits for a workspace',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    WORKSPACE_NOT_FOUND: AdminErrors.WORKSPACE_NOT_FOUND,
+  })
+  .input(AdminUpdateEntitlementsInputSchema)
+  .output(ApiResponseSchema(AdminEntitlementsDataSchema));
 
 /**
  * POST /admin/workspace/create/invite
