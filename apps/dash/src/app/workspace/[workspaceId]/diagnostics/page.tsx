@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@workspace/ui/components/button';
+import { toast } from '@workspace/ui/components/sonner';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -18,16 +19,21 @@ export default function DiagnosticsPage() {
   const clearClientCache = useClearClientCache();
 
   const handleClearServerCache = (types: CacheType[]) => {
-    clearServerCache.mutate(
-      { workspaceId, types },
-      {
-        onSettled: () => setShowClearCacheModal(false),
-      }
-    );
+    const promise = clearServerCache.mutateAsync({ workspaceId, types });
+    toast.promise(promise, {
+      loading: 'Clearing server cache...',
+      success: 'Server cache cleared successfully',
+      error: 'Failed to clear server cache',
+    });
+    promise.finally(() => setShowClearCacheModal(false)).catch(() => {});
   };
 
   const handleClearClientCache = () => {
-    clearClientCache.mutate();
+    toast.promise(clearClientCache.mutateAsync(), {
+      loading: 'Clearing client cache...',
+      success: 'Client cache cleared successfully',
+      error: 'Failed to clear client cache',
+    });
   };
 
   return (

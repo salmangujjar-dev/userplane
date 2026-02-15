@@ -86,7 +86,10 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
         options?.onError?.();
         return;
       }
-      toast.success('Notification preferences updated');
+      toast.success('Notification preferences updated', {
+        id: 'notification-prefs',
+        description: 'Changes saved',
+      });
     },
     onError: (error: unknown, variables, context) => {
       // Rollback on network error
@@ -120,7 +123,9 @@ export function useRotateInvite() {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Invite token reset successfully');
+      toast.success('Invite token reset successfully', {
+        description: 'Previous invite links are now invalid',
+      });
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to process operation');
@@ -183,7 +188,9 @@ export function useDeleteWorkspace(
         return;
       }
 
-      toast.success('Workspace deleted successfully');
+      toast.success('Workspace deleted successfully', {
+        description: 'All workspace data has been removed',
+      });
 
       // Redirect to root so it can handle workspace selection
       if (deletedWorkspaceId === currentWorkspaceId) {
@@ -258,7 +265,10 @@ export function useUpdateInvitePolicy(options?: { onError?: () => void; onSucces
         options?.onError?.();
         return;
       }
-      toast.success('Invite policy updated');
+      toast.success('Invite policy updated', {
+        id: 'invite-policy',
+        description: 'Changes saved',
+      });
       options?.onSuccess?.();
     },
     onError: (error: unknown, variables, context) => {
@@ -470,7 +480,9 @@ export function useUpdateMemberRole(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Member role updated successfully');
+      toast.success('Member role updated successfully', {
+        description: `Role changed to ${variables.newRole}`,
+      });
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
@@ -534,7 +546,9 @@ export function useRemoveMember(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Member removed successfully');
+      toast.success('Member removed successfully', {
+        description: 'They will no longer have access to this workspace',
+      });
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
@@ -682,7 +696,10 @@ export function useUpdateToggle(workspaceId: string | null, onError?: () => void
         onError?.();
         return;
       }
-      toast.success('Recording link customization updated');
+      toast.success('Recording link customization updated', {
+        id: 'link-customization',
+        description: 'Changes saved',
+      });
     },
     onError: (error: unknown, enabled, context) => {
       // Rollback on network error
@@ -757,7 +774,10 @@ export function useUpdateAppearance(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Appearance settings updated successfully');
+      toast.success('Appearance settings updated successfully', {
+        id: 'appearance',
+        description: 'Changes saved',
+      });
     },
     onError: (error: unknown, variables, context) => {
       if (context?.previousPreferences) {
@@ -831,14 +851,7 @@ export function useUploadWorkspaceLogo(workspaceId: string | null) {
       const data = (await response.json()) as LogoUploadResponse;
       return { url: data.data.url };
     },
-    onSuccess: () => {
-      toast.success('Logo uploaded successfully');
-    },
-    onError: (error: Error) => {
-      toast.error('Failed to upload logo', {
-        description: error.message,
-      });
-    },
+    // Toast handling moved to component using toast.promise
   });
 }
 
@@ -950,7 +963,9 @@ export function useUpdateWorkspaceName(
         showErrorToast(result.error);
         return;
       }
-      toast.success('Workspace name updated successfully');
+      toast.success('Workspace name updated successfully', {
+        description: newName,
+      });
     },
     onError: (error: unknown, newName, context) => {
       // Rollback detail query

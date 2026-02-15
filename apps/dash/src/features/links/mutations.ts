@@ -65,7 +65,9 @@ export function useCreateLink(workspaceId: string | null) {
         }
         return;
       }
-      toast.success('Link created successfully');
+      toast.success('Link created successfully', {
+        description: 'Short link is ready to share',
+      });
     },
     onError: (error: unknown, _variables, context) => {
       // Rollback all queries
@@ -144,7 +146,9 @@ export function useUpdateLink(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Link updated successfully');
+      toast.success('Link updated successfully', {
+        description: 'Changes saved',
+      });
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
@@ -207,7 +211,9 @@ export function useDeleteLink(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Link deleted successfully');
+      toast.success('Link deleted successfully', {
+        description: 'Link has been permanently removed',
+      });
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries

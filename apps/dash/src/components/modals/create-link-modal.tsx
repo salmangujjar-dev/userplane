@@ -563,18 +563,15 @@ function ShareView({
 }) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
-  // Auto-copy on mount
+  // Auto-copy on mount (silent — "Link created" toast is already showing)
   useEffect(() => {
-    navigator.clipboard
-      .writeText(linkUrl)
-      .then(() => toast.success('Link copied to clipboard'))
-      .catch(() => toast.error('Failed to copy link'));
+    navigator.clipboard.writeText(linkUrl).catch(() => {});
   }, [linkUrl]);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(linkUrl);
-      toast.success('Link copied to clipboard');
+      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
     } catch {
       toast.error('Failed to copy link');
     }

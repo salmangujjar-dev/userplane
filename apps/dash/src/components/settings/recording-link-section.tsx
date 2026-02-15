@@ -4,6 +4,7 @@ import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
+import { toast } from '@workspace/ui/components/sonner';
 import { cn } from '@workspace/ui/lib/utils';
 import { Loader2, Upload } from 'lucide-react';
 import Image from 'next/image';
@@ -89,11 +90,16 @@ export function RecordingLinkSection() {
     if (!file) return;
 
     try {
-      // Upload to R2 storage - returns CDN URL on success, throws on error
-      const result = await uploadLogoMutation.mutateAsync(file);
+      const promise = uploadLogoMutation.mutateAsync(file);
+      toast.promise(promise, {
+        loading: 'Uploading logo...',
+        success: 'Logo uploaded successfully',
+        error: 'Failed to upload logo',
+      });
+      const result = await promise;
       setWorkspaceImage(result.url);
     } catch {
-      // Error already handled by mutation's onError
+      // Error already handled by toast.promise
     } finally {
       // Reset file input so the same file can be selected again
       if (fileInputRef.current) {

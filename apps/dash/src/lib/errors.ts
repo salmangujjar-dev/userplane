@@ -101,8 +101,12 @@ export function handleSafeResult<T>(error: unknown, response: T | null): SafeRes
  * }
  * ```
  */
-export function showErrorToast(error: ORPCDefinedError): void {
-  toast.error(error.message);
+export function showErrorToast(error: ORPCDefinedError, options?: { retry?: () => void }): void {
+  toast.error(error.message, {
+    ...(options?.retry && {
+      action: { label: 'Retry', onClick: options.retry },
+    }),
+  });
 }
 
 /**
@@ -122,11 +126,13 @@ export function handleUnknownError(error: unknown, fallbackMessage: string): voi
     fallback_message: fallbackMessage,
   });
 
-  if (error instanceof Error) {
-    toast.error(fallbackMessage, {
-      description: error.message,
-    });
-  } else {
-    toast.error(fallbackMessage);
-  }
+  toast.error(fallbackMessage, {
+    description: error instanceof Error ? error.message : 'An unexpected error occurred',
+    action: {
+      label: 'Contact support',
+      onClick: () => {
+        window.location.href = 'mailto:support@userplane.com';
+      },
+    },
+  });
 }

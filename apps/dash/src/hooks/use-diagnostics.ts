@@ -1,10 +1,8 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 import { apiClient } from '@/client';
-import { handleUnknownError } from '@/lib/errors';
 import type { CacheType } from '@/types';
 
 interface ClearServerCacheInput {
@@ -41,12 +39,7 @@ export function useClearServerCache() {
 
       return response;
     },
-    onSuccess: () => {
-      toast.success('Server cache cleared successfully');
-    },
-    onError: (error) => {
-      handleUnknownError(error, 'Failed to clear server cache');
-    },
+    // Toast handling moved to component using toast.promise
   });
 }
 
@@ -62,11 +55,6 @@ export function useClearClientCache() {
       queryClient.clear();
       return { success: true };
     },
-    onSuccess: () => {
-      toast.success('Client cache cleared successfully');
-    },
-    onError: (error) => {
-      handleUnknownError(error, 'Failed to clear client cache');
-    },
+    // Toast handling moved to component using toast.promise
   });
 }

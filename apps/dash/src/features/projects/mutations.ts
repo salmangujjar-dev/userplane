@@ -80,7 +80,9 @@ export function useCreateProject(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Project created successfully');
+      toast.success('Project created successfully', {
+        description: 'Your project is ready',
+      });
     },
     onError: (error: unknown, _input, context) => {
       // Rollback all queries
@@ -178,7 +180,9 @@ export function useUpdateProject(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Project updated successfully');
+      toast.success('Project updated successfully', {
+        description: 'Changes saved',
+      });
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
@@ -241,7 +245,9 @@ export function useDeleteProject(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Project deleted successfully');
+      toast.success('Project deleted successfully', {
+        description: 'Project has been permanently removed',
+      });
     },
     onError: (error: unknown, projectId, context) => {
       // Rollback all queries

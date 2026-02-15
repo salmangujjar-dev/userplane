@@ -81,7 +81,7 @@ export function RecordingPreview({
     try {
       const recordingUrl = `${window.location.origin}/workspace/${workspaceId}/recordings/${recordingId}`;
       await navigator.clipboard.writeText(recordingUrl);
-      toast.success('Link copied to clipboard');
+      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
     } catch {
       toast.error('Failed to copy link');
     }

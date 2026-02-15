@@ -20,6 +20,8 @@ export function BillingSection() {
     openCustomerPortal();
   };
 
+  if (!hasSubscription || !canEdit) return null;
+
   return (
     <div>
       <div className="mb-4">
@@ -28,37 +30,35 @@ export function BillingSection() {
       </div>
       <div className="max-w-2xl space-y-6">
         {/* Manage Billing Section */}
-        {hasSubscription && canEdit && (
-          <div className="space-y-3">
-            <div>
-              <Label>Manage billing</Label>
-              <p className="text-sm text-muted-foreground mt-1">
-                Update payment methods, view billing history, or change your plan
-              </p>
-            </div>
-            <button
-              onClick={handleManageBilling}
-              disabled={isPortalPending}
-              className={`w-full max-w-md flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors ${
-                isPortalPending
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'cursor-pointer hover:border-primary/50'
-              }`}
-            >
-              {isPortalPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Loading...</span>
-                </>
-              ) : (
-                <>
-                  <CreditCard className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Manage billing</span>
-                </>
-              )}
-            </button>
+        <div className="space-y-3">
+          <div>
+            <Label>Manage billing</Label>
+            <p className="text-sm text-muted-foreground mt-1">
+              Update payment methods, view billing history, or change your plan
+            </p>
           </div>
-        )}
+          <button
+            onClick={handleManageBilling}
+            disabled={isPortalPending}
+            className={`w-full max-w-md flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors ${
+              isPortalPending
+                ? 'opacity-50 cursor-not-allowed'
+                : 'cursor-pointer hover:border-primary/50'
+            }`}
+          >
+            {isPortalPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Loading...</span>
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Manage billing</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
