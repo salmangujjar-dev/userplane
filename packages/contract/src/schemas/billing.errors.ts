@@ -43,4 +43,8 @@ export const BillingErrors = {
     message: 'Failed to submit plan change request',
     status: 500,
   },
+  PLAN_LIMIT_EXCEEDED: {
+    status: 403,
+    message: 'You have reached your plan limit. Upgrade for more.',
+  },
 } as const;

@@ -19,7 +19,7 @@ import type {
   WorkspaceRecordingPrefs,
 } from '@workspace/cache';
 import { linkKeys, workspaceRecordingKeys } from '@workspace/cache';
-import { sessionError } from '@workspace/contract';
+import { billingError, sessionError } from '@workspace/contract';
 import type { PlanFeatureGates } from '@workspace/pricing';
 import type {
   ClientActionsStorageClient,
@@ -310,7 +310,8 @@ export class SessionService {
     // Check recording entitlement before initializing session
     const canRecord = await this.deps.entitlementService.canConsumeRecordings(linkData.workspaceId);
     if (!canRecord.allowed) {
-      throw sessionError.SESSION_RECORDING_LIMIT_EXCEEDED({
+      throw billingError.PLAN_LIMIT_EXCEEDED({
+        resource: 'recordings',
         current: canRecord.current,
         limit: canRecord.limit,
         reason: canRecord.reason,
@@ -403,7 +404,8 @@ export class SessionService {
     // Check recording entitlement before creating
     const canRecord = await this.deps.entitlementService.canConsumeRecordings(sessionPayload.wid);
     if (!canRecord.allowed) {
-      throw sessionError.SESSION_RECORDING_LIMIT_EXCEEDED({
+      throw billingError.PLAN_LIMIT_EXCEEDED({
+        resource: 'recordings',
         current: canRecord.current,
         limit: canRecord.limit,
         reason: canRecord.reason,

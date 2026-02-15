@@ -718,8 +718,8 @@ export class IntercomCanvasService {
     // Handle expected business errors
     if (error && typeof error === 'object' && 'code' in error) {
       const errorWithCode = error as { code: string };
-      if (errorWithCode.code === 'LINK_LIMIT_EXCEEDED') {
-        logger.debug({ workspaceId }, 'Link creation failed: limit exceeded');
+      if (errorWithCode.code === 'PLAN_LIMIT_EXCEEDED') {
+        logger.debug({ workspaceId }, 'Link creation failed: plan limit exceeded');
         return { canvas: buildLimitExceededCanvas({ workspaceId, limitType: 'links' }) };
       }
     }

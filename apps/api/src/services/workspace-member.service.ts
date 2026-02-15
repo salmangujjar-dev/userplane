@@ -6,6 +6,7 @@
 import type { CacheService } from '@workspace/cache';
 import type { WorkspaceRole } from '@workspace/contract';
 import {
+  billingError,
   getDefaultNotificationPreferences,
   getEditableNotificationKeys,
   getLockedNotificationOverrides,
@@ -99,7 +100,7 @@ export class WorkspaceMemberService {
    * If user was previously soft-deleted, restores them instead
    * Throws WORKSPACE_MEMBER_IDS_REQUIRED if params are invalid
    * Throws WORKSPACE_MEMBER_ALREADY_EXISTS if user is already a member
-   * Throws WORKSPACE_SEAT_LIMIT_EXCEEDED if seat limit reached
+   * Throws PLAN_LIMIT_EXCEEDED if seat limit reached
    */
   async addMember(
     params: { userId: string; workspaceId: string; role: WorkspaceRole },
@@ -129,7 +130,8 @@ export class WorkspaceMemberService {
     if (!deletedMember?.isDeleted) {
       const canAddSeat = await this.deps.entitlementService.canConsumeSeats(params.workspaceId);
       if (!canAddSeat.allowed) {
-        throw workspaceError.WORKSPACE_SEAT_LIMIT_EXCEEDED({
+        throw billingError.PLAN_LIMIT_EXCEEDED({
+          resource: 'seats',
           current: canAddSeat.current,
           limit: canAddSeat.limit,
           reason: canAddSeat.reason,

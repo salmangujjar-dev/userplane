@@ -130,29 +130,11 @@ export const CreateLinkSchema = z.object({
 });
 
 /**
- * Recording limit status values
- * - safe: within soft limit
- * - soft-warning: around 83.4% of soft limit
- * - soft-exceeded: exceeded soft limit
- * - hard-warning: around 83.4% of hard limit
- * - hard-exceeded: exceeded hard limit
- */
-export const RecordingLimitStatusSchema = z.enum([
-  'safe',
-  'soft-warning',
-  'soft-exceeded',
-  'hard-warning',
-  'hard-exceeded',
-]);
-export type RecordingLimitStatus = z.infer<typeof RecordingLimitStatusSchema>;
-
-/**
  * Link create response
  */
 export const LinkCreateDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   link: LinkItemSchema,
-  recordingLimitStatus: RecordingLimitStatusSchema,
 });
 
 /**

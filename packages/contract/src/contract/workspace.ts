@@ -7,6 +7,7 @@ import {
   ApiResponseSchema,
   ApproveAccessRequestDataSchema,
   ApproveAccessRequestSchema,
+  BillingErrors,
   CountWorkspacesQuerySchema,
   DeclineAccessRequestDataSchema,
   DeclineAccessRequestSchema,
@@ -499,6 +500,7 @@ export const sendWorkspaceInvites = oc
     FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    PLAN_LIMIT_EXCEEDED: BillingErrors.PLAN_LIMIT_EXCEEDED,
   })
   .input(SendWorkspaceInvitesSchema)
   .output(ApiResponseSchema(SendInvitesResultSchema));
@@ -520,6 +522,7 @@ export const acceptInvite = oc
     UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
     INVITE_TOKEN_INVALID: InviteErrors.INVITE_TOKEN_INVALID,
     INVITE_TOKEN_INVALIDATED: InviteErrors.INVITE_TOKEN_INVALIDATED,
+    PLAN_LIMIT_EXCEEDED: BillingErrors.PLAN_LIMIT_EXCEEDED,
   })
   .input(AcceptInviteSchema)
   .output(ApiResponseSchema(AcceptInviteDataSchema));

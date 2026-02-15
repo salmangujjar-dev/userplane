@@ -2,6 +2,7 @@ import { oc } from '@orpc/contract';
 
 import {
   ApiResponseSchema,
+  BillingErrors,
   CreateLinkSchema,
   DeleteLinkSchema,
   LinkByIdSchema,
@@ -57,7 +58,7 @@ export const createLink = oc
   .errors({
     UNAUTHORIZED: LinkErrors.UNAUTHORIZED,
     FORBIDDEN: LinkErrors.FORBIDDEN,
-    LINK_LIMIT_EXCEEDED: LinkErrors.LINK_LIMIT_EXCEEDED,
+    PLAN_LIMIT_EXCEEDED: BillingErrors.PLAN_LIMIT_EXCEEDED,
     LINK_WORKSPACE_DELETED: LinkErrors.LINK_WORKSPACE_DELETED,
     LINK_MEMBER_NOT_FOUND: LinkErrors.LINK_MEMBER_NOT_FOUND,
     LINK_MEMBER_WORKSPACE_MISMATCH: LinkErrors.LINK_MEMBER_WORKSPACE_MISMATCH,
