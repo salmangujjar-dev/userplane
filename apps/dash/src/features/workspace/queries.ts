@@ -513,7 +513,10 @@ export function useSendWorkspaceInvites(workspaceId: string | null) {
     },
     onSuccess: (result, emails) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        // PLAN_LIMIT_EXCEEDED is handled by the caller via upsell sheet
+        if (result.error.code !== 'PLAN_LIMIT_EXCEEDED') {
+          showErrorToast(result.error);
+        }
         return;
       }
       queryClient.invalidateQueries({ queryKey: workspaceKeys.members(workspaceId ?? '') });

@@ -152,13 +152,10 @@ export function CreateLinkModal({
   const onSubmit = (data: CreateLinkFormValues) => {
     createLinkMutation.mutate(
       {
-        data: {
-          domainId: data.domainId,
-          projectId: data.projectId || undefined,
-          linkReference: data.reference || undefined,
-          linkReusable: data.isReusable,
-        },
-        throwErrors: ['PLAN_LIMIT_EXCEEDED'],
+        domainId: data.domainId,
+        projectId: data.projectId || undefined,
+        linkReference: data.reference || undefined,
+        linkReusable: data.isReusable,
       },
       {
         onSuccess: (result) => {

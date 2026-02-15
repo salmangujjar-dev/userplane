@@ -3,7 +3,6 @@ import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
-import type { BillingErrors, LinkErrors } from '@/types';
 import type { QueryData, QuerySnapshot } from '@/types';
 
 import { workspaceKeys } from '../workspace/query-keys';
@@ -19,16 +18,13 @@ interface CreateLinkInput {
 
 type LinksQueryData = QueryData<LinksData>;
 
-interface CreateLinkOptions {
-  data: CreateLinkInput;
-  throwErrors?: Array<keyof typeof LinkErrors | keyof typeof BillingErrors>;
-}
+type CreateLinkOptions = CreateLinkInput;
 
 export function useCreateLink(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ data }: CreateLinkOptions) => {
+    mutationFn: async (data: CreateLinkOptions) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.link.create({
         params: { workspaceId },
@@ -51,16 +47,15 @@ export function useCreateLink(workspaceId: string | null) {
 
       return { previousQueries };
     },
-    onSuccess: (result, { throwErrors }, context) => {
+    onSuccess: (result, _variables, context) => {
       if (!result.success) {
         // Rollback all queries
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
 
-        // Errors in throwErrors are handled by the caller in their onSuccess (no toast here)
-        const callerHandles = throwErrors?.includes(result.error.code as keyof typeof LinkErrors);
-        if (!callerHandles) {
+        // PLAN_LIMIT_EXCEEDED is handled by the caller via upsell sheet
+        if (result.error.code !== 'PLAN_LIMIT_EXCEEDED') {
           showErrorToast(result.error);
         }
         return;
