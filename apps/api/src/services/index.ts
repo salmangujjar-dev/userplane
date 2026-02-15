@@ -20,6 +20,7 @@ import {
   getVideoStorage,
 } from '@/api/clients/storage';
 import { env } from '@/api/env';
+import { getSubscriptionAccessStatusFeatureFlagOverride } from '@/api/posthog/feature-flags';
 import { AdminRepository } from '@/api/repositories/admin.repository';
 import { AdminRecordingRepository } from '@/api/repositories/admin-recording.repository';
 import { AdminWorkspaceRepository } from '@/api/repositories/admin-workspace.repository';
@@ -85,6 +86,7 @@ export const billingService = new BillingService({
   refundRepo,
   dodoClient: getDodoClient(),
   cacheService,
+  getSubscriptionAccessStatusFeatureFlagOverride,
 });
 
 export const entitlementService = new EntitlementService({

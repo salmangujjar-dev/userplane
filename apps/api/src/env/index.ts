@@ -232,6 +232,7 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       host: raw.POSTHOG_HOST,
       personalApiKey: raw.POSTHOG_PERSONAL_API_KEY,
       projectId: raw.POSTHOG_PROJECT_ID,
+      featureFlagsKey: raw.POSTHOG_FEATURE_FLAGS_KEY,
     },
     admin: {
       userIds: raw.ADMIN_USER_IDS,
@@ -394,6 +395,9 @@ function getConfigStatus(): {
   if (env.posthog.apiKey) configured.push('PostHog');
   else notConfigured.push('PostHog');
 
+  if (env.posthog.featureFlagsKey) configured.push('PostHog Feature Flags');
+  else notConfigured.push('PostHog Feature Flags');
+
   if (env.email.provider !== 'localhost') configured.push('Email (Resend)');
   else usingDefaults.push('Email (localhost)');
 
@@ -493,6 +497,7 @@ export function logConfig(): void {
       posthog: {
         configured: !!env.posthog.apiKey,
         host: env.posthog.host,
+        featureFlags: !!env.posthog.featureFlagsKey,
       },
       status: {
         configured: status.configured,
