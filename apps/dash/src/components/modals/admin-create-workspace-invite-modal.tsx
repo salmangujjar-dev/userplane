@@ -318,7 +318,7 @@ export function AdminCreateWorkspaceInviteSuccessModal({
       await navigator.clipboard.writeText(result.inviteUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast.success('Link copied to clipboard');
+      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
     } catch {
       toast.error('Failed to copy link');
     }

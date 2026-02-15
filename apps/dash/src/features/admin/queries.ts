@@ -1,7 +1,7 @@
 'use client';
 
 import { type QueryKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
@@ -813,7 +813,9 @@ export function useAdminResetInviteToken() {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Invite token reset successfully');
+      toast.success('Invite token reset successfully', {
+        description: 'Previous invite links are now invalid',
+      });
       queryClient.invalidateQueries({ queryKey: adminKeys.workspaceDetail(workspaceId) });
     },
     onError: (error: unknown) => {

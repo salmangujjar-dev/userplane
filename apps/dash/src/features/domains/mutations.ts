@@ -84,7 +84,9 @@ export function useCreateDomain(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Domain added successfully');
+      toast.success('Domain added successfully', {
+        description: 'Domain is pending verification',
+      });
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
@@ -151,7 +153,9 @@ export function useUpdateDomain(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Domain updated successfully');
+      toast.success('Domain updated successfully', {
+        description: 'Changes saved',
+      });
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
@@ -219,7 +223,9 @@ export function useDeleteDomain(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Domain deleted successfully');
+      toast.success('Domain deleted successfully', {
+        description: 'Domain has been permanently removed',
+      });
     },
     onError: (error: unknown, domainId, context) => {
       // Rollback all queries
@@ -292,7 +298,10 @@ export function useUpdateDomainPreferences(
         return;
       }
 
-      toast.success('Domain settings updated successfully');
+      toast.success('Domain settings updated successfully', {
+        id: 'domain-settings',
+        description: 'Changes saved',
+      });
 
       if (workspaceId) {
         try {

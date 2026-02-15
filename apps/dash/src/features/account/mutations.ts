@@ -51,7 +51,9 @@ export function useUpdateAccountName(onError?: (originalName: string) => void) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Account name updated successfully');
+      toast.success('Account name updated successfully', {
+        description: 'Your profile has been updated',
+      });
     },
     onError: (error: unknown, newName, context) => {
       if (context?.previousAccount) {

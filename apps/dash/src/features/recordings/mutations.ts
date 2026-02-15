@@ -71,7 +71,9 @@ export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?:
         showErrorToast(result.error);
         return;
       }
-      toast.success('Recording deleted successfully');
+      toast.success('Recording deleted successfully', {
+        description: 'Recording has been permanently removed',
+      });
       if (onDeleteSuccess) {
         onDeleteSuccess();
       }
@@ -112,7 +114,9 @@ export function useUpdateRecordingExpiry(workspaceId: string | null) {
         showErrorToast(result.error);
         return;
       }
-      toast.success('Recording expiration updated');
+      toast.success('Recording expiration updated', {
+        description: 'New expiration has been set',
+      });
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to update recording expiration');

@@ -108,7 +108,9 @@ function DeleteAccountContent() {
       }
 
       setIsSuccess(true);
-      toast.success('Account deleted successfully');
+      toast.success('Account deleted successfully', {
+        description: 'Your account and data have been removed',
+      });
 
       setTimeout(() => {
         window.location.href = '/';

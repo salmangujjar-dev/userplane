@@ -99,7 +99,7 @@ export default function RecordingDetailPage() {
     try {
       const currentUrl = window.location.href;
       await navigator.clipboard.writeText(currentUrl);
-      toast.success('Link copied to clipboard');
+      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
     } catch {
       toast.error('Failed to copy link');
     }

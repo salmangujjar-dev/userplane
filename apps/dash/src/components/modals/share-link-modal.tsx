@@ -97,7 +97,7 @@ export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
       navigator.clipboard
         .writeText(link)
         .then(() => {
-          toast.success('Link copied to clipboard');
+          toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
         })
         .catch(() => {
           toast.error('Failed to copy link');
@@ -108,7 +108,7 @@ export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(link);
-      toast.success('Link copied to clipboard');
+      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
     } catch {
       toast.error('Failed to copy link');
     }

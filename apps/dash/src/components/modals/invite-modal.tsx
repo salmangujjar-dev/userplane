@@ -272,7 +272,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(inviteLink);
-      toast.success('Invite link copied to clipboard');
+      toast.success('Invite link copied to clipboard', { id: 'clipboard-copy' });
     } catch {
       toast.error('Failed to copy link');
     }

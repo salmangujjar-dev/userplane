@@ -156,7 +156,7 @@ export function DomainsSection() {
         const isVerified = response.data.domain.domainStatus === 'verified';
         if (isVerified) {
           await queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
-          toast.success('Domain verified successfully');
+          toast.success('Domain verified successfully', { id: 'domain-verify' });
         }
         return isVerified;
       } catch {

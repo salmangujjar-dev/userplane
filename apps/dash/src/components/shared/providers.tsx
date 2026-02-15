@@ -2,6 +2,7 @@
 
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@workspace/ui/components/sonner';
+import { TooltipProvider } from '@workspace/ui/components/tooltip';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import posthog from 'posthog-js';
 import * as React from 'react';
@@ -74,12 +75,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <NuqsAdapter>
-        <PostHogIdentifyProvider>
-          <ImpersonationBanner />
-          <WorkspaceProvider>{children}</WorkspaceProvider>
-        </PostHogIdentifyProvider>
+        <TooltipProvider>
+          <PostHogIdentifyProvider>
+            <ImpersonationBanner />
+            <WorkspaceProvider>{children}</WorkspaceProvider>
+          </PostHogIdentifyProvider>
+        </TooltipProvider>
       </NuqsAdapter>
-      <Toaster />
+      <Toaster closeButton position="bottom-right" toastOptions={{ duration: 5000 }} />
     </QueryClientProvider>
   );
 }
