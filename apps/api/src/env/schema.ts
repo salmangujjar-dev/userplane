@@ -210,6 +210,7 @@ export const posthogEnvSchema = z.object({
   POSTHOG_HOST: stringWithDefault(POSTHOG.HOST),
   POSTHOG_PERSONAL_API_KEY: z.string().optional(),
   POSTHOG_PROJECT_ID: z.string().optional(),
+  POSTHOG_FEATURE_FLAGS_KEY: z.string().optional(),
 });
 
 /** Admin env vars schema */
@@ -408,6 +409,7 @@ export const posthogConfigSchema = z.object({
   host: z.string(),
   personalApiKey: z.string().optional(),
   projectId: z.string().optional(),
+  featureFlagsKey: z.string().optional(),
 });
 
 /** Admin configuration schema */

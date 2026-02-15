@@ -30,6 +30,9 @@ export interface BillingServiceDeps {
   refundRepo: RefundRepository;
   dodoClient: DodoPayments;
   cacheService: CacheService;
+  getSubscriptionAccessStatusFeatureFlagOverride: (
+    workspaceId: string
+  ) => Promise<SubscriptionAccessStatus | null>;
 }
 
 /**
@@ -87,6 +90,7 @@ export class BillingService {
    */
   private async _computeSubscriptionStatus(workspaceId: string) {
     const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+    const accessDetail = await this._computeSubscriptionAccessStatus(workspaceId);
 
     if (!subscription) {
       return {
@@ -100,15 +104,11 @@ export class BillingService {
           cancelledAt: null,
           onHoldSince: null,
         },
-        accessDetail: {
-          effectivePlanId: 'free' as const,
-          accessStatus: 'inactive' as const,
-        },
+        accessDetail,
       };
     }
 
     const planId = subscription.planId as PlanId;
-    const accessStatus = this.calculateAccessStatus(subscription);
 
     return {
       contractDetail: {
@@ -121,7 +121,7 @@ export class BillingService {
         cancelledAt: subscription.cancelledAt,
         onHoldSince: subscription.status === 'on_hold' ? subscription.updatedAt : null,
       },
-      accessDetail: accessStatus,
+      accessDetail,
     };
   }
 
@@ -196,14 +196,26 @@ export class BillingService {
     // Normal subscription status flow
     const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
 
+    let dbResult: SubscriptionAccessStatus;
     if (!subscription) {
-      return {
+      dbResult = {
         effectivePlanId: 'free',
         accessStatus: 'inactive',
       };
+    } else {
+      dbResult = this.calculateAccessStatus(subscription);
     }
 
-    return this.calculateAccessStatus(subscription);
+    // Apply PostHog feature flag override (skip for safety-critical statuses)
+    if (dbResult.accessStatus !== 'disputed' && dbResult.accessStatus !== 'refunded') {
+      const override = await this.deps.getSubscriptionAccessStatusFeatureFlagOverride(workspaceId);
+      if (override) {
+        logger.debug({ workspaceId, override, dbResult }, 'Feature flag override applied');
+        return override;
+      }
+    }
+
+    return dbResult;
   }
 
   /**

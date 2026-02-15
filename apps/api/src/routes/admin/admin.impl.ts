@@ -15,6 +15,7 @@ import type { AdminProjectService } from '@/api/services/admin-project.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import type { EmailService } from '@/api/services/email.service';
+import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { TokenService } from '@/api/services/token.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
@@ -903,6 +904,75 @@ const createWorkspaceInviteImpl = (
     });
 };
 
+// ============================================
+// ENTITLEMENT PROCEDURES
+// ============================================
+
+/**
+ * Get workspace entitlements implementation
+ */
+const getWorkspaceEntitlementsImpl = (
+  adminService: AdminService,
+  entitlementService: EntitlementService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized
+    .use(adminMiddleware)
+    .admin.workspaces.entitlements.get.handler(async ({ input }) => {
+      const entitlements = await entitlementService.getAllEntitlements(input.params.workspaceId);
+
+      return {
+        message: 'Entitlements retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          entitlements: entitlements.map((e) => ({
+            resourceType: e.resourceType,
+            creditLimit: e.creditLimit,
+            softLimit: e.softLimit,
+            hardLimit: e.hardLimit,
+            resourceConsumed: e.resourceConsumed,
+            resourceCredited: e.resourceCredited,
+          })),
+        },
+      };
+    });
+};
+
+/**
+ * Update workspace entitlements implementation
+ */
+const updateWorkspaceEntitlementsImpl = (
+  adminService: AdminService,
+  entitlementService: EntitlementService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspaces.entitlements.update.handler(async ({ input }) => {
+      const entitlements = await entitlementService.adminUpdateEntitlements(
+        input.params.workspaceId,
+        input.body.entitlements
+      );
+
+      return {
+        message: 'Entitlements updated successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          entitlements: entitlements.map((e) => ({
+            resourceType: e.resourceType,
+            creditLimit: e.creditLimit,
+            softLimit: e.softLimit,
+            hardLimit: e.hardLimit,
+            resourceConsumed: e.resourceConsumed,
+            resourceCredited: e.resourceCredited,
+          })),
+        },
+      };
+    });
+};
+
 /**
  * Create admin procedures
  */
@@ -915,7 +985,8 @@ export const createAdminProcedures = (
   workspaceMemberService: WorkspaceMemberService,
   projectService: ProjectService,
   tokenService: TokenService,
-  emailService: EmailService
+  emailService: EmailService,
+  entitlementService: EntitlementService
 ) => {
   return {
     users: {
@@ -961,6 +1032,10 @@ export const createAdminProcedures = (
         adminService,
         adminRecordingService
       ),
+      entitlements: {
+        get: getWorkspaceEntitlementsImpl(adminService, entitlementService),
+        update: updateWorkspaceEntitlementsImpl(adminService, entitlementService),
+      },
     },
     projects: {
       deactivate: deactivateProjectImpl(

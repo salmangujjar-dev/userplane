@@ -1,6 +1,7 @@
 // Initialize PostHog first, before all other imports
-import { initPostHog } from '@/api/posthog';
+import { initPostHog, initPostHogFeatureFlags } from '@/api/posthog';
 initPostHog();
+initPostHogFeatureFlags();
 
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { isDefinedError, onError } from '@orpc/server';

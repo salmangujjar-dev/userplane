@@ -113,7 +113,8 @@ const adminProcedures = createAdminProcedures(
   workspaceMemberService,
   projectService,
   tokenService,
-  emailService
+  emailService,
+  entitlementService
 );
 const projectProcedures = createProjectProcedures(
   projectService,

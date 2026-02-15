@@ -11,7 +11,7 @@
  */
 
 import type { CacheService } from '@workspace/cache';
-import type { SubscriptionAccessStatus } from '@workspace/contract';
+import type { AdminUpdateEntitlementItem, SubscriptionAccessStatus } from '@workspace/contract';
 import type { PlanId, PlanName, ResourceType } from '@workspace/pricing';
 import {
   getCooldownMultiplier,
@@ -519,5 +519,46 @@ export class EntitlementService {
 
     // Invalidate usage cache after reset
     await this.deps.cacheService.invalidateUsage(workspaceId);
+  }
+
+  /**
+   * Get all raw entitlements for a workspace (admin use)
+   */
+  async getAllEntitlements(workspaceId: string) {
+    return this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
+  }
+
+  /**
+   * Admin update entitlement limits for a workspace
+   * Applies partial updates (only specified fields) per resource type.
+   * Invalidates usage cache and returns fresh state.
+   */
+  async adminUpdateEntitlements(workspaceId: string, updates: AdminUpdateEntitlementItem[]) {
+    for (const update of updates) {
+      const existing = await this.deps.entitlementRepo.findByWorkspaceAndResource(
+        workspaceId,
+        update.resourceType as ResourceType
+      );
+
+      if (!existing) continue;
+
+      const newLimits = {
+        creditLimit: update.creditLimit ?? existing.creditLimit,
+        softLimit: update.softLimit ?? existing.softLimit,
+        hardLimit: update.hardLimit ?? existing.hardLimit,
+      };
+
+      await this.deps.entitlementRepo.updateLimits(
+        workspaceId,
+        update.resourceType as ResourceType,
+        newLimits
+      );
+    }
+
+    // Invalidate usage cache after update
+    await this.deps.cacheService.invalidateUsage(workspaceId);
+
+    // Return fresh state
+    return this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
   }
 }
