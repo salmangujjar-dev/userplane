@@ -46,6 +46,10 @@ export const adminKeys = {
     }
   ) => [...adminKeys.workspaces(), 'projects', workspaceId, params] as const,
 
+  // Entitlements
+  workspaceEntitlements: (workspaceId: string) =>
+    [...adminKeys.workspaces(), 'entitlements', workspaceId] as const,
+
   // Recordings
   recordings: () => [...adminKeys.all, 'recordings'] as const,
   recordingDetail: (recordingId: string) =>

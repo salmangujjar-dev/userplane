@@ -14,9 +14,11 @@ import {
 } from '@/lib/errors';
 import type {
   AdminCreateWorkspaceInviteData,
+  AdminEntitlementsData,
   AdminNotifyDuration,
   AdminRestoreProjectData,
   AdminRestoreWorkspaceData,
+  AdminUpdateEntitlementItem,
   AdminUserDetail,
   AdminUserSession,
   AdminUserSessionsData,
@@ -397,6 +399,63 @@ export function useAdminWorkspaceMemberRecordingStats(
     },
     enabled: !!workspaceId,
     staleTime: 30 * 1000,
+  });
+}
+
+// ============================================
+// ENTITLEMENT QUERIES
+// ============================================
+
+export function useAdminWorkspaceEntitlements(workspaceId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: adminKeys.workspaceEntitlements(workspaceId ?? ''),
+    queryFn: async () => {
+      if (!workspaceId) return null;
+      const [error, response] = await apiClient.admin.workspaces.entitlements.get({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: enabled && !!workspaceId,
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+}
+
+// ============================================
+// ENTITLEMENT MUTATIONS
+// ============================================
+
+export function useAdminUpdateEntitlements() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    SafeResult<AdminEntitlementsData>,
+    Error,
+    { workspaceId: string; entitlements: AdminUpdateEntitlementItem[] }
+  >({
+    mutationFn: async ({ workspaceId, entitlements }) => {
+      const [error, response] = await apiClient.admin.workspaces.entitlements.update({
+        params: { workspaceId },
+        body: { entitlements },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result, { workspaceId }) => {
+      if (!result.success) {
+        showErrorToast(result.error);
+        return;
+      }
+      toast.success('Entitlements updated successfully');
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.workspaceEntitlements(workspaceId),
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error('Failed to update entitlements', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    },
   });
 }
 

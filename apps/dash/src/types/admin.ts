@@ -14,6 +14,10 @@ export type {
   AdminDeactivateProjectData,
   AdminDeactivateProjectInput,
   AdminDeactivateWorkspaceInput,
+  // Entitlement types
+  AdminEntitlement,
+  AdminEntitlementsData,
+  AdminGetEntitlementsInput,
   AdminGetUserInput,
   AdminGetWorkspaceInput,
   AdminGetWorkspaceRecordingStatsInput,
@@ -37,6 +41,8 @@ export type {
   // Workspace input types
   AdminSearchWorkspacesInput,
   AdminUnbanUserInput,
+  AdminUpdateEntitlementItem,
+  AdminUpdateEntitlementsInput,
   AdminUserDetail,
   // User types
   AdminUserListItem,

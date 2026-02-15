@@ -1,3 +1,4 @@
+import { RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 import { z } from 'zod';
 
 import {
@@ -653,6 +654,57 @@ export type AdminGetWorkspaceRecordingStatsInput = z.infer<
 >;
 
 // ============================================
+// ADMIN ENTITLEMENT SCHEMAS
+// ============================================
+
+/**
+ * Admin entitlement item (for response)
+ */
+export const AdminEntitlementSchema = z.object({
+  resourceType: z.enum(RESOURCE_TYPE_VALUES),
+  creditLimit: z.number(),
+  softLimit: z.number(),
+  hardLimit: z.number(),
+  resourceConsumed: z.number(),
+  resourceCredited: z.number(),
+});
+
+/**
+ * Get entitlements input
+ */
+export const AdminGetEntitlementsInputSchema = z.object({
+  params: z.object({ workspaceId: WorkspaceIdSchema }),
+});
+
+/**
+ * Entitlements response data
+ */
+export const AdminEntitlementsDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  entitlements: z.array(AdminEntitlementSchema),
+});
+
+/**
+ * Update entitlement item (partial limit updates)
+ */
+export const AdminUpdateEntitlementItemSchema = z.object({
+  resourceType: z.enum(RESOURCE_TYPE_VALUES),
+  creditLimit: z.number().int().nonnegative().optional(),
+  softLimit: z.number().int().nonnegative().optional(),
+  hardLimit: z.number().int().optional(), // -1 allowed for unlimited
+});
+
+/**
+ * Update entitlements input
+ */
+export const AdminUpdateEntitlementsInputSchema = z.object({
+  params: z.object({ workspaceId: WorkspaceIdSchema }),
+  body: z.object({
+    entitlements: z.array(AdminUpdateEntitlementItemSchema).min(1),
+  }),
+});
+
+// ============================================
 // WORKSPACE INVITE SCHEMAS
 // ============================================
 
@@ -682,3 +734,12 @@ export const AdminCreateWorkspaceInviteDataSchema = z.object({
  */
 export type AdminCreateWorkspaceInviteInput = z.infer<typeof AdminCreateWorkspaceInviteInputSchema>;
 export type AdminCreateWorkspaceInviteData = z.infer<typeof AdminCreateWorkspaceInviteDataSchema>;
+
+/**
+ * Types - Entitlements
+ */
+export type AdminEntitlement = z.infer<typeof AdminEntitlementSchema>;
+export type AdminGetEntitlementsInput = z.infer<typeof AdminGetEntitlementsInputSchema>;
+export type AdminEntitlementsData = z.infer<typeof AdminEntitlementsDataSchema>;
+export type AdminUpdateEntitlementItem = z.infer<typeof AdminUpdateEntitlementItemSchema>;
+export type AdminUpdateEntitlementsInput = z.infer<typeof AdminUpdateEntitlementsInputSchema>;
