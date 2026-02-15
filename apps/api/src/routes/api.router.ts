@@ -94,12 +94,7 @@ const recordingProcedures = createRecordingProcedures(
   workspaceMemberService,
   workspaceService
 );
-const linkProcedures = createLinkProcedures(
-  linkService,
-  workspaceMemberService,
-  workspaceService,
-  entitlementService
-);
+const linkProcedures = createLinkProcedures(linkService, workspaceMemberService, workspaceService);
 const domainProcedures = createDomainProcedures(domainService);
 const inviteProcedures = createInviteProcedures(inviteService);
 const provisionerProcedures = createProvisionerProcedures(

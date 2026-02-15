@@ -147,10 +147,6 @@ export const WorkspaceErrors = {
   },
 
   // Entitlement errors
-  WORKSPACE_SEAT_LIMIT_EXCEEDED: {
-    status: 403,
-    message: "You've reached your seat limit. Upgrade your plan to add more members.",
-  },
   WORKSPACE_FEATURE_NOT_AVAILABLE: {
     status: 403,
     message: 'This feature is not available on your current plan. Upgrade to access it.',

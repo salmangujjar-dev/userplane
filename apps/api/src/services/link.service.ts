@@ -5,7 +5,7 @@
 
 import type { CacheService } from '@workspace/cache';
 import type { LinkProviderData } from '@workspace/contract';
-import { linkError } from '@workspace/contract';
+import { billingError, linkError } from '@workspace/contract';
 
 import { env } from '@/api/env';
 import { generateLinkId } from '@/api/lib/id';
@@ -208,10 +208,22 @@ export class LinkService {
     // Check link entitlement before creating
     const canAddLink = await this.deps.entitlementService.canConsumeLinks(workspaceId);
     if (!canAddLink.allowed) {
-      throw linkError.LINK_LIMIT_EXCEEDED({
+      throw billingError.PLAN_LIMIT_EXCEEDED({
+        resource: 'links',
         current: canAddLink.current,
         limit: canAddLink.limit,
         reason: canAddLink.reason,
+      });
+    }
+
+    // Check recording entitlement — creating a link when recordings are exhausted is pointless
+    const canRecord = await this.deps.entitlementService.canConsumeRecordings(workspaceId);
+    if (!canRecord.allowed) {
+      throw billingError.PLAN_LIMIT_EXCEEDED({
+        resource: 'recordings',
+        current: canRecord.current,
+        limit: canRecord.limit,
+        reason: canRecord.reason,
       });
     }
 

@@ -2,6 +2,7 @@ import { oc } from '@orpc/contract';
 
 import {
   ApiResponseSchema,
+  BillingErrors,
   CompleteUploadSchema,
   GetSessionQuerySchema,
   InitUploadSchema,
@@ -40,7 +41,7 @@ export const getSession = oc
     SESSION_LINK_NOT_FOUND: SessionErrors.SESSION_LINK_NOT_FOUND,
     SESSION_LINK_INVALID_TYPE: SessionErrors.SESSION_LINK_INVALID_TYPE,
     SESSION_LINK_ALREADY_USED: SessionErrors.SESSION_LINK_ALREADY_USED,
-    SESSION_RECORDING_LIMIT_EXCEEDED: SessionErrors.SESSION_RECORDING_LIMIT_EXCEEDED,
+    PLAN_LIMIT_EXCEEDED: BillingErrors.PLAN_LIMIT_EXCEEDED,
   })
   .input(GetSessionQuerySchema)
   .output(ApiResponseSchema(SessionInitDataSchema));
@@ -74,7 +75,7 @@ export const initUpload = oc
     SESSION_VIDEO_EMPTY: SessionErrors.SESSION_VIDEO_EMPTY,
     SESSION_FILE_FORMAT_UNSUPPORTED: SessionErrors.SESSION_FILE_FORMAT_UNSUPPORTED,
     SESSION_FILE_TOO_LARGE: SessionErrors.SESSION_FILE_TOO_LARGE,
-    SESSION_RECORDING_LIMIT_EXCEEDED: SessionErrors.SESSION_RECORDING_LIMIT_EXCEEDED,
+    PLAN_LIMIT_EXCEEDED: BillingErrors.PLAN_LIMIT_EXCEEDED,
     SESSION_STORAGE_ERROR: SessionErrors.SESSION_STORAGE_ERROR,
     SESSION_DATABASE_ERROR: SessionErrors.SESSION_DATABASE_ERROR,
   })

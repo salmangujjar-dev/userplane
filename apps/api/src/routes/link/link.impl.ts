@@ -7,7 +7,6 @@ import { linkError } from '@workspace/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
-import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { LinkService } from '@/api/services/link.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
@@ -70,8 +69,7 @@ export const getLinksImpl = (
 export const createLinkImpl = (
   linkService: LinkService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService,
-  entitlementService: EntitlementService
+  workspaceService: WorkspaceService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
@@ -89,16 +87,11 @@ export const createLinkImpl = (
 
       const link = await linkService.getById(createdLink.linkId, input.params.workspaceId);
 
-      const recordingLimitStatus = await entitlementService.checkRecordingLimitStatus(
-        input.params.workspaceId
-      );
-
       return {
         message: 'Link created successfully',
         data: {
           workspaceId: input.params.workspaceId,
           link,
-          recordingLimitStatus,
         },
       };
     });
@@ -207,17 +200,11 @@ export const deleteLinkImpl = (
 export const createLinkProcedures = (
   linkService: LinkService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService,
-  entitlementService: EntitlementService
+  workspaceService: WorkspaceService
 ) => {
   return {
     list: getLinksImpl(linkService, workspaceMemberService, workspaceService),
-    create: createLinkImpl(
-      linkService,
-      workspaceMemberService,
-      workspaceService,
-      entitlementService
-    ),
+    create: createLinkImpl(linkService, workspaceMemberService, workspaceService),
     getById: getLinkByIdImpl(linkService, workspaceMemberService, workspaceService),
     update: updateLinkImpl(linkService, workspaceMemberService, workspaceService),
     delete: deleteLinkImpl(linkService, workspaceMemberService, workspaceService),
