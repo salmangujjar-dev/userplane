@@ -10,7 +10,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import { useQueryState } from 'nuqs';
 
-import { tabParser } from '@/lib/parsers';
+import { settingsTabParser, type SettingsTabValue } from '@/lib/parsers';
 
 import { BillingSection } from './billing-section';
 import { DomainsSection } from './domains-section';
@@ -38,14 +38,15 @@ interface SettingsTabProps {
 }
 
 export function SettingsTab({ onInviteClick }: SettingsTabProps) {
-  const [activeTab, setActiveTab] = useQueryState('tab', tabParser.withDefault('general'));
+  const [activeTab, setActiveTab] = useQueryState('tab', settingsTabParser);
+  const handleTabChange = (value: string) => setActiveTab(value as SettingsTabValue);
 
   return (
     <div>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         {/* Dropdown for narrow viewports (iPad Mini with sidebar, etc.) */}
         <div className="mb-6 lg:hidden">
-          <Select value={activeTab} onValueChange={setActiveTab}>
+          <Select value={activeTab} onValueChange={handleTabChange}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>

@@ -1,10 +1,11 @@
 'use client';
 
+import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { Switch } from '@workspace/ui/components/switch';
 import { toast } from '@workspace/ui/components/sonner';
+import { Switch } from '@workspace/ui/components/switch';
 import { cn } from '@workspace/ui/lib/utils';
 import { Loader2, Upload } from 'lucide-react';
 import Image from 'next/image';
@@ -12,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { SectionError } from '@/components/shared/section-error';
 import { RecordingLinkSectionSkeleton } from '@/components/skeleton';
+import { useSubscriptionStatus } from '@/features/billing';
 import {
   useUpdateAppearance,
   useUpdateToggle,
@@ -19,6 +21,7 @@ import {
   useWorkspacePreferences,
 } from '@/features/workspace';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
+import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
 import { useWorkspaceId } from '@/stores/workspace';
 
 import { RecordingLinkPreview } from './recording-link-preview';
@@ -26,6 +29,11 @@ import { RecordingLinkPreview } from './recording-link-preview';
 export function RecordingLinkSection() {
   const workspaceId = useWorkspaceId();
   const { data: preferencesResult, isLoading, error, refetch } = useWorkspacePreferences();
+  const { data: subscriptionResult } = useSubscriptionStatus();
+  const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
+  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
+  const featureGates = getFeatureGates(effectivePlanId);
+  const { triggerUpsell } = useFeatureUpsell();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const preferences = preferencesResult?.success ? preferencesResult.data : null;
@@ -180,18 +188,36 @@ export function RecordingLinkSection() {
 
         <div className="space-y-4">
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-6 rounded-xl border bg-card">
+            <div
+              className={cn(
+                'flex items-center justify-between p-6 rounded-xl border bg-card',
+                !featureGates.customizeWorkspace && 'cursor-pointer'
+              )}
+              onClick={
+                !featureGates.customizeWorkspace
+                  ? () => triggerUpsell('customizeWorkspace')
+                  : undefined
+              }
+            >
               <Label
-                htmlFor="customize-recording-link"
-                className="text-sm font-medium cursor-pointer"
+                htmlFor={featureGates.customizeWorkspace ? 'customize-recording-link' : undefined}
+                className={cn(
+                  'text-sm font-medium',
+                  featureGates.customizeWorkspace
+                    ? 'cursor-pointer'
+                    : 'text-muted-foreground cursor-pointer'
+                )}
               >
                 Customize recording link
               </Label>
-              <Switch
-                id="customize-recording-link"
-                checked={customizeRecordingLink}
-                onCheckedChange={handleToggleChange}
-              />
+              <span className={cn(!featureGates.customizeWorkspace && 'pointer-events-none')}>
+                <Switch
+                  id="customize-recording-link"
+                  checked={customizeRecordingLink}
+                  onCheckedChange={handleToggleChange}
+                  disabled={!featureGates.customizeWorkspace}
+                />
+              </span>
             </div>
 
             {customizeRecordingLink && (

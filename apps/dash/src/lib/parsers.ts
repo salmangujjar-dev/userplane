@@ -13,6 +13,24 @@ export const tabParser = createParser({
   serialize: (value) => value,
 });
 
+const SETTINGS_TAB_VALUES = [
+  'general',
+  'team',
+  'integrations',
+  'plan-usage',
+  'customization',
+  'workspace',
+  'notifications',
+] as const;
+
+export type SettingsTabValue = (typeof SETTINGS_TAB_VALUES)[number];
+
+export const settingsTabParser = createParser<SettingsTabValue>({
+  parse: (value) =>
+    SETTINGS_TAB_VALUES.includes(value as SettingsTabValue) ? (value as SettingsTabValue) : null,
+  serialize: (value) => value,
+}).withDefault('general');
+
 export const searchParser = createParser({
   parse: (value) => value,
   serialize: (value) => value,
@@ -112,5 +130,10 @@ export const planModalParser = createParser<'suggested' | 'detailed' | null>({
     if (value === 'suggested' || value === 'detailed') return value;
     return null;
   },
+  serialize: (value) => value || '',
+});
+
+export const upsellFeatureParser = createParser<string | null>({
+  parse: (value) => value || null,
   serialize: (value) => value || '',
 });

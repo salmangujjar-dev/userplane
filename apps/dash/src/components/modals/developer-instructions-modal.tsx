@@ -16,11 +16,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { HelpCircle, X } from 'lucide-react';
+import { AlertCircle, HelpCircle, X } from 'lucide-react';
 import { KeyboardEvent, useState } from 'react';
+import validator from 'validator';
 
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SUPPORT_LINKS } from '@/constants';
+
+interface EmailEntry {
+  email: string;
+  isValid: boolean;
+}
 
 interface DeveloperInstructionsModalProps {
   open: boolean;
@@ -28,6 +34,34 @@ interface DeveloperInstructionsModalProps {
   domainUrl: string;
   onSend: (emails: string[]) => void;
   loading?: boolean;
+}
+
+function EmailTag({
+  email,
+  isValid,
+  onRemove,
+}: {
+  email: string;
+  isValid: boolean;
+  onRemove: () => void;
+}) {
+  return (
+    <div
+      className={`inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm ${
+        isValid ? 'bg-background' : 'bg-destructive/10 border border-destructive'
+      }`}
+    >
+      {isValid ? (
+        <BoringAvatar size={AVATAR_SIZES.TAG} email={email} />
+      ) : (
+        <AlertCircle className="h-4 w-4 text-destructive" />
+      )}
+      <span className={isValid ? '' : 'text-destructive'}>{email}</span>
+      <button type="button" onClick={onRemove} className="hover:bg-muted rounded-sm p-0.5">
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
 }
 
 export function DeveloperInstructionsModal({
@@ -38,19 +72,30 @@ export function DeveloperInstructionsModal({
   loading = false,
 }: DeveloperInstructionsModalProps) {
   const [emailInput, setEmailInput] = useState('');
-  const [emails, setEmails] = useState<string[]>([]);
+  const [emails, setEmails] = useState<EmailEntry[]>([]);
   const MAX_EMAILS = 10;
 
+  const validateEmail = (email: string): boolean => validator.isEmail(email);
+
   const addEmail = (email: string) => {
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+
     if (emails.length >= MAX_EMAILS) {
       toast.error(`You can only send to up to ${MAX_EMAILS} people at once`);
       return;
     }
-    if (trimmedEmail && !emails.includes(trimmedEmail)) {
-      setEmails([...emails, trimmedEmail]);
-      setEmailInput('');
+
+    if (!trimmedEmail) return;
+
+    const exists = emails.some((e) => e.email.toLowerCase() === trimmedEmail);
+    if (exists) {
+      toast.error('This email has already been added');
+      return;
     }
+
+    const isValid = validateEmail(trimmedEmail);
+    setEmails((prev) => [...prev, { email: trimmedEmail, isValid }]);
+    setEmailInput('');
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -58,13 +103,16 @@ export function DeveloperInstructionsModal({
       e.preventDefault();
       addEmail(emailInput);
     } else if (e.key === 'Backspace' && !emailInput && emails.length > 0) {
-      setEmails(emails.slice(0, -1));
+      setEmails((prev) => prev.slice(0, -1));
     }
   };
 
-  const removeEmail = (emailToRemove: string) => {
-    setEmails(emails.filter((email) => email !== emailToRemove));
+  const removeEmail = (index: number) => {
+    setEmails((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const validEmails = emails.filter((e) => e.isValid).map((e) => e.email);
+  const hasError = emails.length > 0 && validEmails.length === 0;
 
   const handleSendInstructions = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,11 +120,13 @@ export function DeveloperInstructionsModal({
       addEmail(emailInput);
       return;
     }
-    if (emails.length > 0) {
-      onSend(emails);
-      setEmails([]);
-      setEmailInput('');
+    if (validEmails.length === 0) {
+      toast.error('Please add at least one valid email address');
+      return;
     }
+    onSend(validEmails);
+    setEmails([]);
+    setEmailInput('');
   };
 
   return (
@@ -115,27 +165,23 @@ export function DeveloperInstructionsModal({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label htmlFor="emails" className="text-sm font-medium">
                 Developer email addresses
               </label>
-              <div className="w-full rounded-lg bg-muted px-3 py-2 min-h-[100px] focus-within:ring-2 focus-within:ring-ring">
+              <div
+                className={`w-full rounded-lg bg-muted px-3 py-2 min-h-[100px] focus-within:ring-2 focus-within:ring-ring ${
+                  hasError ? 'border border-destructive' : ''
+                }`}
+              >
                 <div className="flex flex-wrap gap-2">
-                  {emails.map((email) => (
-                    <div
-                      key={email}
-                      className="inline-flex items-center gap-2 bg-background rounded-md px-2 py-1 text-sm"
-                    >
-                      <BoringAvatar size={AVATAR_SIZES.TAG} email={email} />
-                      <span>{email}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeEmail(email)}
-                        className="hover:bg-muted rounded-sm p-0.5"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
+                  {emails.map((entry, index) => (
+                    <EmailTag
+                      key={`${entry.email}-${index}`}
+                      email={entry.email}
+                      isValid={entry.isValid}
+                      onRemove={() => removeEmail(index)}
+                    />
                   ))}
                   <input
                     id="emails"
@@ -149,9 +195,16 @@ export function DeveloperInstructionsModal({
                   />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Press space, enter, or comma after each email ({emails.length}/{MAX_EMAILS})
-              </p>
+              <div className="h-4 flex items-center justify-between">
+                <div>
+                  {hasError && (
+                    <p className="text-xs text-destructive">At least one valid email is required</p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {emails.length}/{MAX_EMAILS}
+                </p>
+              </div>
             </div>
           </div>
           <DialogFooter className="mt-6">
@@ -166,7 +219,7 @@ export function DeveloperInstructionsModal({
             <Button
               type="submit"
               className="rounded-full px-6"
-              disabled={loading || emails.length === 0}
+              disabled={loading || validEmails.length === 0}
             >
               {loading ? 'Sending...' : 'Send Instructions'}
             </Button>
