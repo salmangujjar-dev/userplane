@@ -1,6 +1,7 @@
 'use client';
 
 import { RETENTION_DAYS_VALUES, type RetentionDays } from '@workspace/contract';
+import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -26,10 +27,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
+import { cn } from '@workspace/ui/lib/utils';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { SUPPORT_LINKS } from '@/constants';
+import { useSubscriptionStatus } from '@/features/billing';
+import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
 
 interface EditProjectModalProps {
   open: boolean;
@@ -60,6 +64,11 @@ export function EditProjectModal({
     recordingRetentionDays: 30 as RetentionDays,
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { data: subscriptionResult } = useSubscriptionStatus();
+  const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
+  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
+  const featureGates = getFeatureGates(effectivePlanId);
+  const { triggerUpsell } = useFeatureUpsell();
 
   useEffect(() => {
     if (open && project) {
@@ -154,36 +163,57 @@ export function EditProjectModal({
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div
+                  className={cn(
+                    'flex items-center justify-between',
+                    !featureGates.customizeDataRetention && 'cursor-pointer'
+                  )}
+                  onClick={
+                    !featureGates.customizeDataRetention
+                      ? () => triggerUpsell('customizeDataRetention')
+                      : undefined
+                  }
+                >
                   <div className="space-y-0.5">
-                    <Label htmlFor="retention-days" className="text-sm font-medium">
+                    <Label
+                      htmlFor={featureGates.customizeDataRetention ? 'retention-days' : undefined}
+                      className={cn(
+                        'text-sm font-medium',
+                        !featureGates.customizeDataRetention &&
+                          'text-muted-foreground cursor-pointer'
+                      )}
+                    >
                       Recording retention
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       Auto-delete recordings after this period
                     </p>
                   </div>
-                  <Select
-                    value={String(editedProject.recordingRetentionDays)}
-                    onValueChange={(value) =>
-                      setEditedProject((prev) => ({
-                        ...prev,
-                        recordingRetentionDays: Number(value) as RetentionDays,
-                      }))
-                    }
-                    disabled={loading}
+                  <span
+                    className={cn(!featureGates.customizeDataRetention && 'pointer-events-none')}
                   >
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {RETENTION_DAYS_VALUES.map((days) => (
-                        <SelectItem key={days} value={String(days)}>
-                          {days} {days === 1 ? 'day' : 'days'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <Select
+                      value={String(editedProject.recordingRetentionDays)}
+                      onValueChange={(value) =>
+                        setEditedProject((prev) => ({
+                          ...prev,
+                          recordingRetentionDays: Number(value) as RetentionDays,
+                        }))
+                      }
+                      disabled={loading || !featureGates.customizeDataRetention}
+                    >
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RETENTION_DAYS_VALUES.map((days) => (
+                          <SelectItem key={days} value={String(days)}>
+                            {days} {days === 1 ? 'day' : 'days'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </span>
                 </div>
               </div>
             )}

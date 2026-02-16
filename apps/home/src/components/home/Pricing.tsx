@@ -40,7 +40,7 @@ function PricingFeatureItem({ text, included, subFeatures }: PlanFeatureHighligh
 
 export default function Pricing() {
   // Get the Scale Up plan (annual) - popular plan for home page
-  const featuredPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'starter_annual');
+  const featuredPlan = BASE_PRICING_PLANS.find((plan) => plan.id === 'starter_monthly');
 
   if (!featuredPlan) {
     return null;

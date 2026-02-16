@@ -261,16 +261,16 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
       hardLimit: 450,
     },
     screenshots: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      quotedLimit: 0,
       creditLimit: 0,
-      softLimit: 100,
-      hardLimit: 200,
+      softLimit: 0,
+      hardLimit: 0,
     },
     files: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      quotedLimit: 0,
       creditLimit: 0,
-      softLimit: 50,
-      hardLimit: 100,
+      softLimit: 0,
+      hardLimit: 0,
     },
   },
   scale_up_annual: {
@@ -293,16 +293,16 @@ export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
       hardLimit: 450,
     },
     screenshots: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      quotedLimit: 0,
       creditLimit: 0,
-      softLimit: 100,
-      hardLimit: 200,
+      softLimit: 0,
+      hardLimit: 0,
     },
     files: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
+      quotedLimit: 0,
       creditLimit: 0,
-      softLimit: 50,
-      hardLimit: 100,
+      softLimit: 0,
+      hardLimit: 0,
     },
   },
 
@@ -839,14 +839,14 @@ const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     byos: false,
   },
   screenshots: {
-    screenshots: 'Unlimited',
-    screenshotAnnotation: true,
+    screenshots: false,
+    screenshotAnnotation: false,
     byos: false,
   },
   files: {
-    fileUploads: true,
-    maxFileSize: '100 GB',
-    byos: true,
+    fileUploads: false,
+    maxFileSize: '-',
+    byos: false,
   },
   logsDebugging: {
     consoleLogs: false,
@@ -883,11 +883,11 @@ const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
  */
 const SCALE_UP_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
   {
-    text: 'Request Unlimited Screen Recordings & Screenshots',
+    text: 'Request Unlimited Screen Recordings',
     included: true,
     subFeatures: [
       {
-        text: 'Request unlimited recordings and screenshots for any customer issue',
+        text: 'Request unlimited recordings for any customer issue',
         included: true,
       },
     ],
@@ -1048,7 +1048,6 @@ export function getPlanCategoryFeatures(planName: string): PlanAllCategoryFeatur
  */
 export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
   Essential: [
-    'Everything in Basic',
     'Up to 15 seats in workspace',
     'Up to 25 recordings per month',
     'Unlimited recording links',
@@ -1066,9 +1065,9 @@ export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
     'Everything in Starter',
     'Up to 30 seats in workspace',
     'Request unlimited recordings',
-    'Screenshots & file uploads (100GB)',
+    'Customize Userplane workspace branding',
+    'Custom data retention policies',
     'Priority support',
-    'Advanced data and governance controls',
     'Additional integrations (CRM, issue trackers)',
   ],
   Enterprise: [
@@ -1430,7 +1429,7 @@ export const PLAN_FEATURE_GATES: Record<PlanName, PlanFeatureGates> = {
     bringYourOwnStorageRecordings: false,
     bringYourOwnStorageScreenshots: false,
     bringYourOwnStorageFiles: false,
-    customizeDataRetention: true,
+    customizeDataRetention: false,
     enableEnterpriseCompliance: true,
     customizeDataResidency: false,
     integrateHelpDesks: true,
@@ -1466,9 +1465,9 @@ export const PLAN_FEATURE_GATES: Record<PlanName, PlanFeatureGates> = {
   'Scale Up': {
     replayRecordings: true,
     autoBlurSensitiveData: true,
-    requestScreenshots: true,
-    annotateScreenshots: true,
-    requestFileUploads: true,
+    requestScreenshots: false,
+    annotateScreenshots: false,
+    requestFileUploads: false,
     requestConsoleLogs: false,
     requestNetworkActivity: false,
     requestServerLogs: false,
@@ -1477,7 +1476,7 @@ export const PLAN_FEATURE_GATES: Record<PlanName, PlanFeatureGates> = {
     requestAdditionalSeats: true,
     bringYourOwnStorageRecordings: false,
     bringYourOwnStorageScreenshots: false,
-    bringYourOwnStorageFiles: true,
+    bringYourOwnStorageFiles: false,
     customizeDataRetention: true,
     enableEnterpriseCompliance: true,
     customizeDataResidency: false,

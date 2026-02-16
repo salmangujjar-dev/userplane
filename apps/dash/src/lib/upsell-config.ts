@@ -10,6 +10,10 @@ export const UPSELL_CONFIGS: Partial<Record<FeatureGate, UpsellConfig>> = {
     title: 'Customize Your Brand',
     subtitle: 'Add your logo, colors, and messaging to recording links',
   },
+  customizeDataRetention: {
+    title: 'Customize Data Retention',
+    subtitle: 'Set custom retention periods for recordings to meet your compliance needs',
+  },
   requestConsoleLogs: {
     title: 'Capture Console Logs',
     subtitle: 'Debug faster with full console output from user sessions',

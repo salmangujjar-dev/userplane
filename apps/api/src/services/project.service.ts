@@ -4,8 +4,15 @@
  */
 
 import type { CacheService } from '@workspace/cache';
-import { projectError, type RetentionDays, workspaceError } from '@workspace/contract';
+import {
+  billingError,
+  DEFAULT_RETENTION_DAYS,
+  projectError,
+  type RetentionDays,
+  workspaceError,
+} from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
+import { getFeatureGates, type PlanId } from '@workspace/pricing';
 
 import { generateProjectId } from '@/api/lib/id';
 import type { LinkRepository } from '@/api/repositories/links.repository';
@@ -52,7 +59,7 @@ export class ProjectService {
       isDefault?: boolean;
       recordingRetentionDays?: RetentionDays;
     },
-    options?: { tx?: Transaction }
+    options?: { tx?: Transaction; effectivePlanId?: PlanId }
   ) {
     if (!params.workspaceId) {
       throw projectError.PROJECT_WORKSPACE_ID_REQUIRED();
@@ -85,6 +92,21 @@ export class ProjectService {
         params.workspaceId
       );
       isDefault = !existingDefault;
+    }
+
+    // Validate feature gate for custom retention
+    if (
+      params.recordingRetentionDays !== undefined &&
+      params.recordingRetentionDays !== DEFAULT_RETENTION_DAYS
+    ) {
+      const planId = options?.effectivePlanId ?? 'free';
+      const featureGates = getFeatureGates(planId);
+
+      if (!featureGates.customizeDataRetention) {
+        throw billingError.PLAN_FEATURE_UNAVAILABLE({
+          feature: 'customizeDataRetention',
+        });
+      }
     }
 
     return this.deps.projectRepo.create(
@@ -199,9 +221,24 @@ export class ProjectService {
       isDefault: boolean;
       recordingRetentionDays: RetentionDays;
     }>,
-    options?: { tx?: Transaction }
+    options?: { tx?: Transaction; effectivePlanId?: PlanId }
   ) {
     const project = await this.getById(projectId);
+
+    // Validate feature gate for custom retention
+    if (
+      updates.recordingRetentionDays !== undefined &&
+      updates.recordingRetentionDays !== DEFAULT_RETENTION_DAYS
+    ) {
+      const planId = options?.effectivePlanId ?? 'free';
+      const featureGates = getFeatureGates(planId);
+
+      if (!featureGates.customizeDataRetention) {
+        throw billingError.PLAN_FEATURE_UNAVAILABLE({
+          feature: 'customizeDataRetention',
+        });
+      }
+    }
 
     const performUpdate = async (tx: Transaction) => {
       // Ensure projectTitle defaults to "Untitled Project" if empty
