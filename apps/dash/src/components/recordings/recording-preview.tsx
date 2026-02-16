@@ -1,6 +1,5 @@
 'use client';
 
-import { toast } from '@workspace/ui/components/sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import { Clock, Link2, Play } from 'lucide-react';
 import Image from 'next/image';
@@ -8,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
+import { showCopiedToClipboardToast, showCopyFailedToast } from '@/lib/toasts';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 function ThumbnailFallback() {
@@ -81,9 +81,9 @@ export function RecordingPreview({
     try {
       const recordingUrl = `${window.location.origin}/workspace/${workspaceId}/recordings/${recordingId}`;
       await navigator.clipboard.writeText(recordingUrl);
-      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
+      showCopiedToClipboardToast();
     } catch {
-      toast.error('Failed to copy link');
+      showCopyFailedToast();
     }
   };
 

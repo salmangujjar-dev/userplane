@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToast,
+  showErrorToastToast,
 } from '@/lib/errors';
+import { showDeletedToast, showUpdatedToast } from '@/lib/toasts';
 import type { DeleteResponse, QueryData, QuerySnapshot } from '@/types';
 
 import { workspaceKeys } from '../workspace/query-keys';
@@ -68,12 +68,10 @@ export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?:
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Recording deleted successfully', {
-        description: 'Recording has been permanently removed',
-      });
+      showDeletedToast('Recording', 'Recording has been permanently removed');
       if (onDeleteSuccess) {
         onDeleteSuccess();
       }
@@ -111,12 +109,10 @@ export function useUpdateRecordingExpiry(workspaceId: string | null) {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Recording expiration updated', {
-        description: 'New expiration has been set',
-      });
+      showUpdatedToast('Recording expiration', 'New expiration has been set');
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to update recording expiration');

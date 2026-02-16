@@ -3,7 +3,6 @@
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { toast } from '@workspace/ui/components/sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import { Globe, Loader2, Shield } from 'lucide-react';
 import Image from 'next/image';
@@ -18,6 +17,7 @@ import { PaginationControls } from '@/components/shared/pagination-controls';
 import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@/constants';
 import { useJoinWorkspace, useWorkspaceSuggestions } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
+import { showWorkspaceSuggestionsLoadFailedToast } from '@/lib/toasts';
 
 const ITEMS_PER_PAGE = WORKSPACE_SUGGESTIONS_PAGINATION.DEFAULT_PER_PAGE;
 
@@ -138,9 +138,7 @@ function WorkspaceSuggestPageContent() {
     posthog.captureException(error, {
       error_boundary: 'workspace-suggest',
     });
-    toast.error('Failed to load workspace suggestions', {
-      description: error instanceof Error ? error.message : 'Please try again.',
-    });
+    showWorkspaceSuggestionsLoadFailedToast(error instanceof Error ? error.message : undefined);
 
     return (
       <WorkspaceSuggestLayout>

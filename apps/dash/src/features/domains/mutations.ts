@@ -1,13 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToast,
+  showErrorToastToast,
 } from '@/lib/errors';
+import {
+  showCreatedToast,
+  showDeletedToast,
+  showInvitesSentToast,
+  showSettingsSavedToast,
+  showUpdatedToast,
+} from '@/lib/toasts';
 import { useWorkspaceId } from '@/stores/workspace';
 import type {
   DomainRecordingPreferences,
@@ -81,19 +87,17 @@ export function useCreateDomain(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Domain added successfully', {
-        description: 'Domain is pending verification',
-      });
+      showCreatedToast('Domain', 'Domain is pending verification');
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process domain operation');
+      handleUnknownError(error, 'Failed to create domain');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: domainKeys.lists() });
@@ -150,19 +154,17 @@ export function useUpdateDomain(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Domain updated successfully', {
-        description: 'Changes saved',
-      });
+      showUpdatedToast('Domain');
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process domain operation');
+      handleUnknownError(error, 'Failed to update domain');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: domainKeys.lists() });
@@ -220,19 +222,17 @@ export function useDeleteDomain(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Domain deleted successfully', {
-        description: 'Domain has been permanently removed',
-      });
+      showDeletedToast('Domain', 'Domain has been permanently removed');
     },
     onError: (error: unknown, domainId, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process domain operation');
+      handleUnknownError(error, 'Failed to delete domain');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: domainKeys.lists() });
@@ -294,14 +294,11 @@ export function useUpdateDomainPreferences(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
 
-      toast.success('Domain settings updated successfully', {
-        id: 'domain-settings',
-        description: 'Changes saved',
-      });
+      showSettingsSavedToast('domain-settings', 'Domain settings updated successfully');
 
       if (workspaceId) {
         try {
@@ -322,7 +319,7 @@ export function useUpdateDomainPreferences(
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process domain operation');
+      handleUnknownError(error, 'Failed to update domain preferences');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: domainKeys.lists() });
@@ -363,10 +360,10 @@ export function useSendDomainInstructions() {
     },
     onSuccess: (result, { emails }) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success(`Instructions sent to ${emails.length} email${emails.length > 1 ? 's' : ''}`);
+      showInvitesSentToast(emails.length);
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to send developer instructions');

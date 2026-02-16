@@ -1,9 +1,9 @@
 'use client';
 
-import { toast } from '@workspace/ui/components/sonner';
 import { useCallback, useReducer } from 'react';
 
 import { apiClient } from '@/client';
+import { showDomainSettingsLoadFailedToast } from '@/lib/toasts';
 import { useWorkspaceId } from '@/stores/workspace';
 import {
   type ConfiguringDomain,
@@ -235,7 +235,7 @@ export function useDomainSectionState() {
           payload: { domainId, url: domainUrl, status, settings: response.data },
         });
       } catch {
-        toast.error('Failed to load domain settings');
+        showDomainSettingsLoadFailedToast();
         // Fall back to default settings
         dispatch({
           type: 'SET_CONFIGURING_DOMAIN',

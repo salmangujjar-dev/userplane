@@ -5,7 +5,6 @@ import { Button } from '@workspace/ui/components/button';
 import { Checkbox } from '@workspace/ui/components/checkbox';
 import { Input } from '@workspace/ui/components/input';
 import Logo from '@workspace/ui/components/logo';
-import { toast } from '@workspace/ui/components/sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import { cn } from '@workspace/ui/lib/utils';
 import { Loader2, Plus } from 'lucide-react';
@@ -19,7 +18,8 @@ import { PaginationControls } from '@/components/shared/pagination-controls';
 import { useAccount } from '@/features/account';
 import { useCreateDomain, useUpdateDomain } from '@/features/domains';
 import { useSendWorkspaceInvites, useUpdateInvitePolicy } from '@/features/workspace';
-import { showErrorToast } from '@/lib/errors';
+import { showErrorToastToast } from '@/lib/errors';
+import { showTeammatesInvitedToast } from '@/lib/toasts';
 import { FormEmailSchema } from '@/schemas';
 import type { WorkspaceInvitePolicy } from '@/types';
 
@@ -288,7 +288,7 @@ export function InviteTeammatesView({
           {
             onSuccess: (result) => {
               if (!result.success) {
-                showErrorToast(result.error);
+                showErrorToastToast(result.error);
                 resolve(false);
                 return;
               }
@@ -302,7 +302,7 @@ export function InviteTeammatesView({
         createDomainMutation.mutate(domainUrl, {
           onSuccess: (result) => {
             if (!result.success) {
-              showErrorToast(result.error);
+              showErrorToastToast(result.error);
               resolve(false);
               return;
             }
@@ -331,7 +331,7 @@ export function InviteTeammatesView({
         {
           onSuccess: (result) => {
             if (!result.success) {
-              showErrorToast(result.error);
+              showErrorToastToast(result.error);
               resolve(false);
               return;
             }
@@ -368,12 +368,10 @@ export function InviteTeammatesView({
       sendInvites.mutate(allEmailsToInvite, {
         onSuccess: (result) => {
           if (!result.success) {
-            showErrorToast(result.error);
+            showErrorToastToast(result.error);
             return;
           }
-          toast.success(
-            `Invites sent to ${allEmailsToInvite.length} teammate${allEmailsToInvite.length > 1 ? 's' : ''}`
-          );
+          showTeammatesInvitedToast(allEmailsToInvite.length);
           onComplete();
         },
       });

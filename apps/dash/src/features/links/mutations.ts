@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
-import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
+import { handleSafeResult, handleUnknownError, showErrorToastToast } from '@/lib/errors';
+import { showCreatedToast, showDeletedToast, showUpdatedToast } from '@/lib/toasts';
 import type { QueryData, QuerySnapshot } from '@/types';
 
 import { workspaceKeys } from '../workspace/query-keys';
@@ -56,20 +56,18 @@ export function useCreateLink(workspaceId: string | null) {
 
         // PLAN_LIMIT_EXCEEDED is handled by the caller via upsell sheet
         if (result.error.code !== 'PLAN_LIMIT_EXCEEDED') {
-          showErrorToast(result.error);
+          showErrorToastToast(result.error);
         }
         return;
       }
-      toast.success('Link created successfully', {
-        description: 'Short link is ready to share',
-      });
+      showCreatedToast('Link', 'Short link is ready to share');
     },
     onError: (error: unknown, _variables, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process link operation');
+      handleUnknownError(error, 'Failed to create link');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: linkKeys.lists() });
@@ -138,19 +136,17 @@ export function useUpdateLink(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Link updated successfully', {
-        description: 'Changes saved',
-      });
+      showUpdatedToast('Link');
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process link operation');
+      handleUnknownError(error, 'Failed to update link');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: linkKeys.lists() });
@@ -203,19 +199,17 @@ export function useDeleteLink(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Link deleted successfully', {
-        description: 'Link has been permanently removed',
-      });
+      showDeletedToast('Link', 'Link has been permanently removed');
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process link operation');
+      handleUnknownError(error, 'Failed to delete link');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: linkKeys.lists() });

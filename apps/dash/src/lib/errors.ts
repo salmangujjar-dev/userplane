@@ -1,3 +1,4 @@
+// See also: @/lib/toasts for pattern-based toast helpers (clipboard, CRUD, settings, validation)
 import { isDefinedError } from '@workspace/client';
 import { toast } from '@workspace/ui/components/sonner';
 import posthog from 'posthog-js';
@@ -54,7 +55,7 @@ export type SafeResult<T> =
  * },
  * onSuccess: (result) => {
  *   if (!result.success) {
- *     showErrorToast(result.error);
+ *     showErrorToastToast(result.error);
  *     return;
  *   }
  *   toast.success('Done!');
@@ -95,13 +96,16 @@ export function handleSafeResult<T>(error: unknown, response: T | null): SafeRes
  * ```ts
  * onSuccess: (result) => {
  *   if (!result.success) {
- *     showErrorToast(result.error);
+ *     showErrorToastToast(result.error);
  *     return;
  *   }
  * }
  * ```
  */
-export function showErrorToast(error: ORPCDefinedError, options?: { retry?: () => void }): void {
+export function showErrorToastToast(
+  error: ORPCDefinedError,
+  options?: { retry?: () => void }
+): void {
   toast.error(error.message, {
     ...(options?.retry && {
       action: { label: 'Retry', onClick: options.retry },

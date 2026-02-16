@@ -1,10 +1,10 @@
 'use client';
 
-import { toast } from '@workspace/ui/components/sonner';
 import { useCallback, useReducer } from 'react';
 
 import { apiClient } from '@/client';
 import { useDomainStatusPolling } from '@/features/domains';
+import { showVerificationStartFailedToast } from '@/lib/toasts';
 import { useWorkspaceId } from '@/stores/workspace';
 import {
   DEFAULT_DOMAIN_RECORDING_PREFERENCES,
@@ -138,7 +138,7 @@ export function useVerificationFlow(): UseVerificationFlowReturn {
       );
     } catch {
       dispatch({ type: 'RESET' });
-      toast.error('Failed to start verification');
+      showVerificationStartFailedToast();
     }
   }, [workspaceId, state.domain, pollStatus]);
 

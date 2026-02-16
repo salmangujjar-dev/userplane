@@ -2,7 +2,6 @@
 
 import { Button } from '@workspace/ui/components/button';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { toast } from '@workspace/ui/components/sonner';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -15,6 +14,7 @@ import {
   useIntercomIntegration,
 } from '@/features/integrations';
 import { mediaClient } from '@/lib/media';
+import { showIntercomDisconnectedToast } from '@/lib/toasts';
 
 export function IntegrationsSection() {
   const [showModal, setShowModal] = useState(false);
@@ -33,7 +33,7 @@ export function IntegrationsSection() {
     disconnectIntercom.mutate(undefined, {
       onSuccess: (result) => {
         if (result.success) {
-          toast.success('Intercom disconnected successfully');
+          showIntercomDisconnectedToast();
           setShowModal(false);
         }
       },
