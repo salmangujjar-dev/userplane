@@ -5,7 +5,6 @@ import { SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
-import { toast } from '@workspace/ui/components/sonner';
 import { ArrowLeftRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -27,8 +26,9 @@ import { useAccount } from '@/features/account';
 import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { type DefinedError, handleSafeResult, showErrorToast } from '@/lib/errors';
+import { type DefinedError, handleSafeResult, showErrorToastToast } from '@/lib/errors';
 import { mediaClient } from '@/lib/media';
+import { showIntercomConnectionFailedToast } from '@/lib/toasts';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -243,16 +243,14 @@ function IntercomConnectFlow() {
       const result = handleSafeResult(error, response?.data ?? null);
 
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
 
       // Redirect to Intercom OAuth page
       window.location.href = result.data.authorizationUrl;
     } catch (error) {
-      toast.error('Failed to connect to Intercom', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      showIntercomConnectionFailedToast(error instanceof Error ? error.message : undefined);
     } finally {
       setIsConnecting(false);
     }

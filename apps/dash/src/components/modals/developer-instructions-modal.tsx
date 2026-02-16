@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import { toast } from '@workspace/ui/components/sonner';
 import {
   Tooltip,
   TooltipContent,
@@ -22,6 +21,11 @@ import validator from 'validator';
 
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SUPPORT_LINKS } from '@/constants';
+import {
+  showDuplicateEmailErrorToast,
+  showMaxSendErrorToast,
+  showNoEmailsErrorToast,
+} from '@/lib/toasts';
 
 interface EmailEntry {
   email: string;
@@ -81,7 +85,7 @@ export function DeveloperInstructionsModal({
     const trimmedEmail = email.trim().toLowerCase();
 
     if (emails.length >= MAX_EMAILS) {
-      toast.error(`You can only send to up to ${MAX_EMAILS} people at once`);
+      showMaxSendErrorToast(MAX_EMAILS);
       return;
     }
 
@@ -89,7 +93,7 @@ export function DeveloperInstructionsModal({
 
     const exists = emails.some((e) => e.email.toLowerCase() === trimmedEmail);
     if (exists) {
-      toast.error('This email has already been added');
+      showDuplicateEmailErrorToast();
       return;
     }
 
@@ -121,7 +125,7 @@ export function DeveloperInstructionsModal({
       return;
     }
     if (validEmails.length === 0) {
-      toast.error('Please add at least one valid email address');
+      showNoEmailsErrorToast();
       return;
     }
     onSend(validEmails);

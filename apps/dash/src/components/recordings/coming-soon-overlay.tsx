@@ -1,9 +1,10 @@
 'use client';
 
 import { Button } from '@workspace/ui/components/button';
-import { toast } from '@workspace/ui/components/sonner';
 import { Bell, Check } from 'lucide-react';
 import { useState } from 'react';
+
+import { showFeatureAccessRequestedToast } from '@/lib/toasts';
 
 interface ComingSoonOverlayProps {
   title: string;
@@ -18,7 +19,7 @@ export function ComingSoonOverlay({ title, subtitle, children }: ComingSoonOverl
   const handleNotifyClick = () => {
     if (isNotified) return;
     setIsNotified(true);
-    toast.success(`Requested access to ${title}. Stay tuned!`);
+    showFeatureAccessRequestedToast();
   };
 
   return (

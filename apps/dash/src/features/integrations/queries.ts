@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/client';
-import { handleSafeResult, showErrorToast } from '@/lib/errors';
+import { handleSafeResult, showErrorToastToast } from '@/lib/errors';
 import { useWorkspaceId } from '@/stores/workspace';
 
 import { integrationKeys } from './query-keys';
@@ -50,7 +50,7 @@ export function useIntercomAuthorize() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
       // Redirect to Intercom OAuth page
@@ -82,7 +82,7 @@ export function useIntercomDisconnect() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
       // Invalidate integration status after disconnect

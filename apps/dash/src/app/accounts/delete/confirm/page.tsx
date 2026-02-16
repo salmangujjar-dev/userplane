@@ -8,7 +8,6 @@ import {
 } from '@workspace/ui/components/accordion';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
-import { toast } from '@workspace/ui/components/sonner';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -22,6 +21,7 @@ import { DinoError } from '@/components/shared/dino-error';
 import { useAccount } from '@/features/account';
 import { useAuth } from '@/hooks/use-auth';
 import { mediaClient } from '@/lib/media';
+import { showAccountDeletedToast, showAccountDeletionFailedToast } from '@/lib/toasts';
 
 function DeleteAccountLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -101,16 +101,12 @@ function DeleteAccountContent() {
           token,
         });
         setError(result.error.message || 'Failed to delete account. Please try again.');
-        toast.error('Deletion failed', {
-          description: result.error.message || 'Failed to delete account. Please try again.',
-        });
+        showAccountDeletionFailedToast(result.error.message);
         return;
       }
 
       setIsSuccess(true);
-      toast.success('Account deleted successfully', {
-        description: 'Your account and data have been removed',
-      });
+      showAccountDeletedToast();
 
       setTimeout(() => {
         window.location.href = '/';
@@ -123,9 +119,7 @@ function DeleteAccountContent() {
       const errorMessage =
         err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
       setError(errorMessage);
-      toast.error('Deletion failed', {
-        description: errorMessage,
-      });
+      showAccountDeletionFailedToast(errorMessage);
     } finally {
       setIsDeleting(false);
     }

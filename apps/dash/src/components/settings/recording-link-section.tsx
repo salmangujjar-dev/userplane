@@ -4,7 +4,6 @@ import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { toast } from '@workspace/ui/components/sonner';
 import { Switch } from '@workspace/ui/components/switch';
 import { cn } from '@workspace/ui/lib/utils';
 import { Loader2, Upload } from 'lucide-react';
@@ -22,6 +21,7 @@ import {
 } from '@/features/workspace';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
 import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
+import { showPromise } from '@/lib/toasts';
 import { useWorkspaceId } from '@/stores/workspace';
 
 import { RecordingLinkPreview } from './recording-link-preview';
@@ -99,7 +99,7 @@ export function RecordingLinkSection() {
 
     try {
       const promise = uploadLogoMutation.mutateAsync(file);
-      toast.promise(promise, {
+      showPromise(promise, {
         loading: 'Uploading logo...',
         success: 'Logo uploaded successfully',
         error: 'Failed to upload logo',

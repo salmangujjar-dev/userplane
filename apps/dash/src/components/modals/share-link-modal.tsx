@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import { toast } from '@workspace/ui/components/sonner';
 import {
   Tooltip,
   TooltipContent,
@@ -20,6 +19,7 @@ import { Copy, HelpCircle } from 'lucide-react';
 import { useEffect } from 'react';
 
 import { SUPPORT_LINKS } from '@/constants';
+import { showCopiedToClipboardToast, showCopyFailedToast } from '@/lib/toasts';
 
 interface ShareLinkModalProps {
   link: string;
@@ -97,10 +97,10 @@ export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
       navigator.clipboard
         .writeText(link)
         .then(() => {
-          toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
+          showCopiedToClipboardToast();
         })
         .catch(() => {
-          toast.error('Failed to copy link');
+          showCopyFailedToast();
         });
     }
   }, [open, link]);
@@ -108,9 +108,9 @@ export function ShareLinkModal({ link, open, onClose }: ShareLinkModalProps) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(link);
-      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
+      showCopiedToClipboardToast();
     } catch {
-      toast.error('Failed to copy link');
+      showCopyFailedToast();
     }
   };
 

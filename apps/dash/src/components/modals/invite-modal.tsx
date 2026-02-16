@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import { toast } from '@workspace/ui/components/sonner';
 import {
   Tooltip,
   TooltipContent,
@@ -31,6 +30,13 @@ import {
   useWorkspaceInvite,
 } from '@/features/workspace';
 import { usePlanLimitHandler } from '@/hooks/use-plan-limit-handler';
+import {
+  showCopiedToClipboardToast,
+  showCopyFailedToast,
+  showDuplicateEmailErrorToast,
+  showMaxEmailsErrorToast,
+  showNoEmailsErrorToast,
+} from '@/lib/toasts';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 const inviteFormSchema = z.object({
@@ -274,9 +280,9 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(inviteLink);
-      toast.success('Invite link copied to clipboard', { id: 'clipboard-copy' });
+      showCopiedToClipboardToast('Invite link');
     } catch {
-      toast.error('Failed to copy link');
+      showCopyFailedToast();
     }
   };
 
@@ -288,7 +294,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     const trimmedEmail = email.trim().toLowerCase();
 
     if (fields.length >= MAX_EMAILS) {
-      toast.error(`You can only invite up to ${MAX_EMAILS} people at once`);
+      showMaxEmailsErrorToast(MAX_EMAILS);
       return;
     }
 
@@ -297,7 +303,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     // Check if email already exists
     const emailExists = fields.some((field) => field.email.toLowerCase() === trimmedEmail);
     if (emailExists) {
-      toast.error('This email has already been added');
+      showDuplicateEmailErrorToast();
       return;
     }
 
@@ -334,7 +340,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     const validEmails = data.emails.filter((e) => e.isValid).map((e) => e.email);
 
     if (validEmails.length === 0) {
-      toast.error('Please add at least one valid email address');
+      showNoEmailsErrorToast();
       return;
     }
 

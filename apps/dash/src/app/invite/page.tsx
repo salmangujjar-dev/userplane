@@ -2,7 +2,6 @@
 
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
-import { toast } from '@workspace/ui/components/sonner';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -11,6 +10,7 @@ import { Suspense } from 'react';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useAcceptInvite, useValidateInvite } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
+import { showInviteAcceptFailedToast, showInviteValidationErrorToast } from '@/lib/toasts';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 function InviteLayout({ children }: { children: React.ReactNode }) {
@@ -53,33 +53,15 @@ function InvitePageContent() {
           router.push(`/workspace/${result.data.workspaceId}`);
         },
         onError: (error) => {
-          toast.error('Failed to accept invite', {
-            description: error instanceof Error ? error.message : 'Please try again.',
-          });
+          showInviteAcceptFailedToast(error instanceof Error ? error.message : undefined);
         },
       }
     );
   };
 
-  if (!token || validationError || (inviteResult && !inviteResult.success)) {
-    toast.error(
-      !token
-        ? 'No invite token provided'
-        : validationError
-          ? validationError.message
-          : inviteResult && !inviteResult.success
-            ? inviteResult.error.message
-            : 'Unknown validation error',
-      {
-        description: !token
-          ? 'No invite token provided'
-          : validationError?.message ||
-            (inviteResult && !inviteResult.success
-              ? inviteResult.error.message
-              : 'Unknown validation error'),
-      }
-    );
-
+  // Show error state - check each condition separately
+  if (!token) {
+    showInviteValidationErrorToast('No invite token provided');
     return (
       <InviteLayout>
         <div className="flex flex-col items-center gap-3">
@@ -91,11 +73,63 @@ function InvitePageContent() {
             className="mb-2"
           />
           <h1 className="text-xl font-medium text-foreground">Invalid Invite</h1>
-          <p className="text-sm text-muted-foreground text-center">
-            {inviteResult && !inviteResult.success
-              ? inviteResult.error.message
-              : 'This invite link is invalid or has expired. Please request a new one.'}
-          </p>
+          <p className="text-sm text-muted-foreground text-center">No invite token provided</p>
+        </div>
+        <div className="space-y-6">
+          <Button
+            onClick={() => router.push('/')}
+            size="lg"
+            className="w-full rounded-full px-7 py-6"
+          >
+            Go to Dashboard
+          </Button>
+        </div>
+      </InviteLayout>
+    );
+  }
+
+  if (validationError) {
+    showInviteValidationErrorToast(validationError.message);
+    return (
+      <InviteLayout>
+        <div className="flex flex-col items-center gap-3">
+          <Image
+            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+            alt="Dino"
+            width={120}
+            height={120}
+            className="mb-2"
+          />
+          <h1 className="text-xl font-medium text-foreground">Invalid Invite</h1>
+          <p className="text-sm text-muted-foreground text-center">{validationError.message}</p>
+        </div>
+        <div className="space-y-6">
+          <Button
+            onClick={() => router.push('/')}
+            size="lg"
+            className="w-full rounded-full px-7 py-6"
+          >
+            Go to Dashboard
+          </Button>
+        </div>
+      </InviteLayout>
+    );
+  }
+
+  if (inviteResult && !inviteResult.success) {
+    showInviteValidationErrorToast(inviteResult.error.message);
+    return (
+      <InviteLayout>
+        <div className="flex flex-col items-center gap-3">
+          <Image
+            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+            alt="Dino"
+            width={120}
+            height={120}
+            className="mb-2"
+          />
+          <h1 className="text-xl font-medium text-foreground">Invalid Invite</h1>
+          <p className="text-sm text-muted-foreground text-center">{inviteResult.error.message}</p>
         </div>
         <div className="space-y-6">
           <Button

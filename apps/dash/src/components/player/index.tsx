@@ -5,9 +5,10 @@ import 'videojs-contrib-quality-levels';
 import 'videojs-hls-quality-selector';
 import './stream-player.css';
 
-import { toast } from '@workspace/ui/components/sonner';
 import React, { useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
+
+import { showRecordingCannotBePlayedToast } from '@/lib/toasts';
 
 import StreamControls from './StreamControls';
 import type { Player, PlayerOptions, VideoMarker } from './types';
@@ -96,7 +97,7 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
       // Track video errors
       player.on('error', () => {
         setHasError(true);
-        toast.error('This recording cannot be played');
+        showRecordingCannotBePlayedToast();
       });
     } else if (playerRef.current) {
       const player = playerRef.current;

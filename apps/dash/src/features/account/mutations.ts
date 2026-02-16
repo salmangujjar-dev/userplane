@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToast,
+  showErrorToastToast,
 } from '@/lib/errors';
+import { showUpdatedToast } from '@/lib/toasts';
 import type { AccountData, UpdateAccountData } from '@/types';
 
 import { accountKeys } from './query-keys';
@@ -48,12 +48,10 @@ export function useUpdateAccountName(onError?: (originalName: string) => void) {
             onError(originalName);
           }
         }
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Account name updated successfully', {
-        description: 'Your profile has been updated',
-      });
+      showUpdatedToast('Account name', 'Your profile has been updated');
     },
     onError: (error: unknown, newName, context) => {
       if (context?.previousAccount) {

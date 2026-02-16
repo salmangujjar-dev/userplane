@@ -1,13 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToast,
+  showErrorToastToast,
 } from '@/lib/errors';
+import {
+  showAccessRequestSentToast,
+  showDeletedToast,
+  showSettingsSavedToast,
+  showUpdatedToast,
+  showWorkspaceJoinedToast,
+  showWorkspaceLeftToast,
+} from '@/lib/toasts';
 import type { WorkspaceInvitePolicy } from '@/types';
 import type {
   DeleteResponse,
@@ -82,14 +89,11 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
             context.previousNotifications
           );
         }
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         options?.onError?.();
         return;
       }
-      toast.success('Notification preferences updated', {
-        id: 'notification-prefs',
-        description: 'Changes saved',
-      });
+      showSettingsSavedToast('notification-prefs', 'Notification preferences updated');
     },
     onError: (error: unknown, variables, context) => {
       // Rollback on network error
@@ -99,7 +103,7 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
           context.previousNotifications
         );
       }
-      handleUnknownError(error, 'Failed to process operation');
+      handleUnknownError(error, 'Failed to update notification preferences');
       options?.onError?.();
     },
     onSettled: (_, __, variables) => {
@@ -120,15 +124,13 @@ export function useRotateInvite() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Invite token reset successfully', {
-        description: 'Previous invite links are now invalid',
-      });
+      showUpdatedToast('Invite token', 'Previous invite links are now invalid');
     },
     onError: (error: unknown) => {
-      handleUnknownError(error, 'Failed to process operation');
+      handleUnknownError(error, 'Failed to rotate invite token');
     },
   });
 }
@@ -184,13 +186,11 @@ export function useDeleteWorkspace(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
 
-      toast.success('Workspace deleted successfully', {
-        description: 'All workspace data has been removed',
-      });
+      showDeletedToast('Workspace', 'All workspace data has been removed');
 
       // Redirect to root so it can handle workspace selection
       if (deletedWorkspaceId === currentWorkspaceId) {
@@ -202,7 +202,7 @@ export function useDeleteWorkspace(
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process operation');
+      handleUnknownError(error, 'Failed to delete workspace');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
@@ -261,14 +261,11 @@ export function useUpdateInvitePolicy(options?: { onError?: () => void; onSucces
             context.previousPolicy
           );
         }
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         options?.onError?.();
         return;
       }
-      toast.success('Invite policy updated', {
-        id: 'invite-policy',
-        description: 'Changes saved',
-      });
+      showSettingsSavedToast('invite-policy', 'Invite policy updated');
       options?.onSuccess?.();
     },
     onError: (error: unknown, variables, context) => {
@@ -278,7 +275,7 @@ export function useUpdateInvitePolicy(options?: { onError?: () => void; onSucces
           context.previousPolicy
         );
       }
-      handleUnknownError(error, 'Failed to process operation');
+      handleUnknownError(error, 'Failed to update invite policy');
       options?.onError?.();
     },
     onSettled: (_, __, variables) => {
@@ -303,7 +300,7 @@ export function useJoinWorkspace(options?: {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
 
@@ -316,22 +313,18 @@ export function useJoinWorkspace(options?: {
       }
 
       if (result.data.status === 'joined') {
-        toast.success('Joined workspace successfully', {
-          description: `You are now a member of ${result.data.workspaceName}`,
-        });
+        showWorkspaceJoinedToast(result.data.workspaceName);
         // Invalidate workspaces list to include the new workspace
         queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
       } else {
-        toast.success('Access request sent', {
-          description: 'The workspace owner will be notified of your request.',
-        });
+        showAccessRequestSentToast();
       }
       // Invalidate suggestions since we've joined/requested
       queryClient.invalidateQueries({ queryKey: workspaceKeys.suggestions() });
       options?.onSuccess?.(result.data.status);
     },
     onError: (error: unknown) => {
-      handleUnknownError(error, 'Failed to process operation');
+      handleUnknownError(error, 'Failed to join workspace');
     },
   });
 }
@@ -387,15 +380,11 @@ export function useLeaveWorkspace(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
 
-      if (result.data.workspaceDeleted) {
-        toast.success('Left and deactivated workspace');
-      } else {
-        toast.success('Left workspace successfully');
-      }
+      showWorkspaceLeftToast(result.data.workspaceDeleted);
 
       // Redirect to root so it can handle workspace selection
       if (leftWorkspaceId === currentWorkspaceId) {
@@ -407,7 +396,7 @@ export function useLeaveWorkspace(
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process operation');
+      handleUnknownError(error, 'Failed to leave workspace');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
@@ -477,12 +466,10 @@ export function useUpdateMemberRole(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Member role updated successfully', {
-        description: `Role changed to ${variables.newRole}`,
-      });
+      showUpdatedToast('Member role', `Role changed to ${variables.newRole}`);
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
@@ -543,12 +530,10 @@ export function useRemoveMember(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Member removed successfully', {
-        description: 'They will no longer have access to this workspace',
-      });
+      showDeletedToast('Member', 'They will no longer have access to this workspace');
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
@@ -617,7 +602,7 @@ export function useCreateWorkspace() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
     },
@@ -692,14 +677,11 @@ export function useUpdateToggle(workspaceId: string | null, onError?: () => void
             context.previousPreferences
           );
         }
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         onError?.();
         return;
       }
-      toast.success('Recording link customization updated', {
-        id: 'link-customization',
-        description: 'Changes saved',
-      });
+      showSettingsSavedToast('link-customization', 'Recording link customization updated');
     },
     onError: (error: unknown, enabled, context) => {
       // Rollback on network error
@@ -771,13 +753,10 @@ export function useUpdateAppearance(workspaceId: string | null) {
             context.previousPreferences
           );
         }
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Appearance settings updated successfully', {
-        id: 'appearance',
-        description: 'Changes saved',
-      });
+      showSettingsSavedToast('appearance', 'Appearance settings updated successfully');
     },
     onError: (error: unknown, variables, context) => {
       if (context?.previousPreferences) {
@@ -960,12 +939,10 @@ export function useUpdateWorkspaceName(
         context?.previousListQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Workspace name updated successfully', {
-        description: newName,
-      });
+      showUpdatedToast('Workspace name', newName);
     },
     onError: (error: unknown, newName, context) => {
       // Rollback detail query
@@ -1019,7 +996,7 @@ export function useRestoreWorkspace() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
     },

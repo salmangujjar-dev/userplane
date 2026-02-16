@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import { toast } from '@workspace/ui/components/sonner';
 import { Check, ChevronDown, ChevronUp, Copy, LinkIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -27,6 +26,7 @@ import { z } from 'zod';
 
 import { URLInput } from '@/components/url-input';
 import { ADMIN_NOTIFY_DURATION_OPTIONS, ADMIN_NOTIFY_DURATION_VALUES } from '@/constants/admin';
+import { showCopiedToClipboardToast, showCopyFailedToast } from '@/lib/toasts';
 import { DomainUrlSchema, EmailSchema } from '@/schemas';
 import type { AdminNotifyDuration } from '@/types';
 import type { AdminCreateWorkspaceInviteData } from '@/types';
@@ -318,9 +318,9 @@ export function AdminCreateWorkspaceInviteSuccessModal({
       await navigator.clipboard.writeText(result.inviteUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
+      showCopiedToClipboardToast();
     } catch {
-      toast.error('Failed to copy link');
+      showCopyFailedToast();
     }
   };
 

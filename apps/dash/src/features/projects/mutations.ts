@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RetentionDays } from '@workspace/contract';
-import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToast,
+  showErrorToastToast,
 } from '@/lib/errors';
+import { showCreatedToast, showDeletedToast, showUpdatedToast } from '@/lib/toasts';
 import type { ProjectRestoreData, RestorationStatus } from '@/types';
 import type { ProjectsData, QueryData, QuerySnapshot } from '@/types';
 
@@ -77,19 +77,17 @@ export function useCreateProject(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Project created successfully', {
-        description: 'Your project is ready',
-      });
+      showCreatedToast('Project', 'Your project is ready');
     },
     onError: (error: unknown, _input, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process project operation');
+      handleUnknownError(error, 'Failed to create project');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
@@ -177,19 +175,17 @@ export function useUpdateProject(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Project updated successfully', {
-        description: 'Changes saved',
-      });
+      showUpdatedToast('Project');
     },
     onError: (error: unknown, variables, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process project operation');
+      handleUnknownError(error, 'Failed to update project');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
@@ -242,19 +238,17 @@ export function useDeleteProject(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Project deleted successfully', {
-        description: 'Project has been permanently removed',
-      });
+      showDeletedToast('Project', 'Project has been permanently removed');
     },
     onError: (error: unknown, projectId, context) => {
       // Rollback all queries
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      handleUnknownError(error, 'Failed to process project operation');
+      handleUnknownError(error, 'Failed to delete project');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
@@ -287,7 +281,7 @@ export function useRestoreProject() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
     },

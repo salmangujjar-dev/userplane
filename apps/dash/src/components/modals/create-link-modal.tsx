@@ -18,7 +18,6 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
-import { toast } from '@workspace/ui/components/sonner';
 import { Switch } from '@workspace/ui/components/switch';
 import {
   Tooltip,
@@ -40,6 +39,7 @@ import { useCreateLink } from '@/features/links';
 import { useWorkspaceProjects } from '@/features/projects';
 import { usePlanLimitHandler } from '@/hooks/use-plan-limit-handler';
 import { mediaClient } from '@/lib/media';
+import { showCopiedToClipboardToast, showCopyFailedToast } from '@/lib/toasts';
 import { useWorkspaceStore } from '@/stores/workspace';
 
 interface CreateLinkModalProps {
@@ -540,9 +540,9 @@ function ShareView({ linkUrl }: { linkUrl: string }) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(linkUrl);
-      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
+      showCopiedToClipboardToast();
     } catch {
-      toast.error('Failed to copy link');
+      showCopyFailedToast();
     }
   };
 

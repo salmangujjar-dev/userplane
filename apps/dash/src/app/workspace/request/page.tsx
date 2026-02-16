@@ -3,7 +3,6 @@
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { toast } from '@workspace/ui/components/sonner';
 import { Check, Loader2, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -19,6 +18,11 @@ import {
   useValidateAccessRequest,
 } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
+import {
+  showAccessRequestApproveFailedToast,
+  showAccessRequestDeclineFailedToast,
+  showInviteValidationErrorToast,
+} from '@/lib/toasts';
 
 function AccessRequestLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -60,9 +64,7 @@ function AccessRequestPageContent() {
         posthog.captureException(error, {
           error_boundary: 'access-request',
         });
-        toast.error('Failed to approve access request', {
-          description: error instanceof Error ? error.message : 'Please try again.',
-        });
+        showAccessRequestApproveFailedToast(error instanceof Error ? error.message : undefined);
       },
     });
   };
@@ -80,9 +82,7 @@ function AccessRequestPageContent() {
         posthog.captureException(error, {
           error_boundary: 'access-request',
         });
-        toast.error('Failed to decline access request', {
-          description: error instanceof Error ? error.message : 'Please try again.',
-        });
+        showAccessRequestDeclineFailedToast(error instanceof Error ? error.message : undefined);
       },
     });
   };
@@ -155,26 +155,9 @@ function AccessRequestPageContent() {
     );
   }
 
-  // Show error state
-  if (!token || validationError || (validateResult && !validateResult.success)) {
-    toast.error(
-      !token
-        ? 'No access request token provided'
-        : validationError
-          ? validationError.message
-          : validateResult && !validateResult.success
-            ? validateResult.error.message
-            : 'Unknown validation error',
-      {
-        description: !token
-          ? 'No access request token provided'
-          : validationError?.message ||
-            (validateResult && !validateResult.success
-              ? validateResult.error.message
-              : 'Unknown validation error'),
-      }
-    );
-
+  // Show error state - check each condition separately
+  if (!token) {
+    showInviteValidationErrorToast('No access request token provided');
     return (
       <AccessRequestLayout>
         <div className="flex flex-col items-center gap-3">
@@ -187,9 +170,65 @@ function AccessRequestPageContent() {
           />
           <h1 className="text-xl font-medium text-foreground">Invalid Request</h1>
           <p className="text-sm text-muted-foreground text-center">
-            {validateResult && !validateResult.success
-              ? validateResult.error.message
-              : 'This access request link is invalid or has expired.'}
+            No access request token provided
+          </p>
+        </div>
+        <div className="flex justify-center pt-2">
+          <button
+            type="button"
+            onClick={() => router.push('/')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Back to Home
+          </button>
+        </div>
+      </AccessRequestLayout>
+    );
+  }
+
+  if (validationError) {
+    showInviteValidationErrorToast(validationError.message);
+    return (
+      <AccessRequestLayout>
+        <div className="flex flex-col items-center gap-3">
+          <Image
+            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+            alt="Dino"
+            width={120}
+            height={120}
+            className="mb-2"
+          />
+          <h1 className="text-xl font-medium text-foreground">Invalid Request</h1>
+          <p className="text-sm text-muted-foreground text-center">{validationError.message}</p>
+        </div>
+        <div className="flex justify-center pt-2">
+          <button
+            type="button"
+            onClick={() => router.push('/')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Back to Home
+          </button>
+        </div>
+      </AccessRequestLayout>
+    );
+  }
+
+  if (validateResult && !validateResult.success) {
+    showInviteValidationErrorToast(validateResult.error.message);
+    return (
+      <AccessRequestLayout>
+        <div className="flex flex-col items-center gap-3">
+          <Image
+            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+            alt="Dino"
+            width={120}
+            height={120}
+            className="mb-2"
+          />
+          <h1 className="text-xl font-medium text-foreground">Invalid Request</h1>
+          <p className="text-sm text-muted-foreground text-center">
+            {validateResult.error.message}
           </p>
         </div>
         <div className="flex justify-center pt-2">

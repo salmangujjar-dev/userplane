@@ -5,7 +5,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@workspace/ui/components/resizable';
-import { toast } from '@workspace/ui/components/sonner';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -25,6 +24,7 @@ import {
   useUpdateRecordingExpiry,
 } from '@/features/recordings';
 import { useWorkspaceRole } from '@/features/workspace';
+import { showCopiedToClipboardToast, showCopyFailedToast } from '@/lib/toasts';
 import { useWorkspaceId } from '@/stores/workspace';
 
 export default function RecordingDetailPage() {
@@ -99,9 +99,9 @@ export default function RecordingDetailPage() {
     try {
       const currentUrl = window.location.href;
       await navigator.clipboard.writeText(currentUrl);
-      toast.success('Link copied to clipboard', { id: 'clipboard-copy' });
+      showCopiedToClipboardToast();
     } catch {
-      toast.error('Failed to copy link');
+      showCopyFailedToast();
     }
   };
 

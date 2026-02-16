@@ -1,9 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import { DEFAULT_MEMBERS_PER_PAGE, DEFAULT_WORKSPACES_PER_PAGE } from '@/constants/pagination';
-import { handleSafeResult, type SafeResult, showErrorToast } from '@/lib/errors';
+import {
+  handleSafeResult,
+  handleUnknownError,
+  type SafeResult,
+  showErrorToastToast,
+} from '@/lib/errors';
+import {
+  showAccessRequestApprovedToast,
+  showAccessRequestDeclinedToast,
+  showInvitesAcceptedToast,
+  showInvitesSentToast,
+} from '@/lib/toasts';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 import type {
   InvitePolicyData,
@@ -515,7 +525,7 @@ export function useSendWorkspaceInvites(workspaceId: string | null) {
       if (!result.success) {
         // PLAN_LIMIT_EXCEEDED is handled by the caller via upsell sheet
         if (result.error.code !== 'PLAN_LIMIT_EXCEEDED') {
-          showErrorToast(result.error);
+          showErrorToastToast(result.error);
         }
         return;
       }
@@ -523,13 +533,10 @@ export function useSendWorkspaceInvites(workspaceId: string | null) {
       queryClient.invalidateQueries({
         queryKey: workspaceKeys.resourceCounts(workspaceId ?? ''),
       });
-      toast.success(`Invites sent to ${emails.length} email${emails.length > 1 ? 's' : ''}`);
+      showInvitesSentToast(emails.length);
     },
     onError: (error: unknown) => {
-      // Only unknown errors reach here
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to send workspace invitations');
     },
   });
 }
@@ -563,7 +570,7 @@ export function useAcceptInvite() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
 
@@ -575,13 +582,10 @@ export function useAcceptInvite() {
         return;
       }
 
-      toast.success(`Successfully joined ${result.data.workspaceName}`);
+      showInvitesAcceptedToast(result.data.workspaceName);
     },
     onError: (error: unknown) => {
-      // Only unknown errors reach here
-      toast.error('An unexpected error occurred', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to accept workspace invitation');
     },
   });
 }
@@ -698,13 +702,12 @@ export function useApproveAccessRequest() {
     },
     onSuccess: (result) => {
       if (result.success) {
-        toast.success('Access request approved');
+        showAccessRequestApprovedToast();
         queryClient.invalidateQueries({ queryKey: workspaceKeys.accessRequests() });
       }
     },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Failed to approve access request';
-      toast.error(message);
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to approve access request');
     },
   });
 }
@@ -725,13 +728,12 @@ export function useDeclineAccessRequest() {
     },
     onSuccess: (result) => {
       if (result.success) {
-        toast.success('Access request declined');
+        showAccessRequestDeclinedToast();
         queryClient.invalidateQueries({ queryKey: workspaceKeys.accessRequests() });
       }
     },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Failed to decline access request';
-      toast.error(message);
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to decline access request');
     },
   });
 }

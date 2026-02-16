@@ -1,7 +1,6 @@
 'use client';
 
 import { type QueryKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@workspace/ui/components/sonner';
 
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
@@ -10,8 +9,15 @@ import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToast,
+  showErrorToastToast,
 } from '@/lib/errors';
+import {
+  showCreatedToast,
+  showDeletedToast,
+  showImpersonatingToast,
+  showUpdatedToast,
+  showWorkspaceRestoredToast,
+} from '@/lib/toasts';
 import type {
   AdminCreateWorkspaceInviteData,
   AdminEntitlementsData,
@@ -443,18 +449,16 @@ export function useAdminUpdateEntitlements() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Entitlements updated successfully');
+      showUpdatedToast('Entitlements');
       queryClient.invalidateQueries({
         queryKey: adminKeys.workspaceEntitlements(workspaceId),
       });
     },
     onError: (error: unknown) => {
-      toast.error('Failed to update entitlements', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to update entitlements');
     },
   });
 }
@@ -513,10 +517,10 @@ export function useAdminBanUser() {
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('User banned successfully');
+      showUpdatedToast('User ban status');
       queryClient.invalidateQueries({ queryKey: adminKeys.userDetail(userId) });
       queryClient.invalidateQueries({ queryKey: adminKeys.userSessions(userId) });
     },
@@ -524,9 +528,7 @@ export function useAdminBanUser() {
       if (context?.previousUserDetail) {
         queryClient.setQueryData(adminKeys.userDetail(userId), context.previousUserDetail);
       }
-      toast.error('Failed to ban user', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to ban user');
     },
   });
 }
@@ -573,19 +575,17 @@ export function useAdminUnbanUser() {
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('User unbanned successfully');
+      showUpdatedToast('User ban status');
       queryClient.invalidateQueries({ queryKey: adminKeys.userDetail(userId) });
     },
     onError: (error: unknown, { userId }, context) => {
       if (context?.previousUserDetail) {
         queryClient.setQueryData(adminKeys.userDetail(userId), context.previousUserDetail);
       }
-      toast.error('Failed to unban user', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to unban user');
     },
   });
 }
@@ -638,10 +638,10 @@ export function useAdminRevokeSession() {
             queryClient.setQueryData(queryKey, data);
           });
         }
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Session revoked successfully');
+      showDeletedToast('Session');
       queryClient.invalidateQueries({ queryKey: adminKeys.userSessions(userId) });
     },
     onError: (error: unknown, _variables, context) => {
@@ -650,9 +650,7 @@ export function useAdminRevokeSession() {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      toast.error('Failed to revoke session', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to revoke session');
     },
   });
 }
@@ -705,10 +703,10 @@ export function useAdminRevokeAllSessions() {
             queryClient.setQueryData(queryKey, data);
           });
         }
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('All sessions revoked successfully');
+      showDeletedToast('All sessions');
       queryClient.invalidateQueries({ queryKey: adminKeys.userSessions(userId) });
     },
     onError: (error: unknown, _variables, context) => {
@@ -717,9 +715,7 @@ export function useAdminRevokeAllSessions() {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      toast.error('Failed to revoke all sessions', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to revoke all sessions');
     },
   });
 }
@@ -770,10 +766,10 @@ export function useAdminDeactivateWorkspace() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Workspace deactivated successfully');
+      showDeletedToast('Workspace');
       queryClient.invalidateQueries({ queryKey: adminKeys.workspaceDetail(workspaceId) });
       queryClient.invalidateQueries({ queryKey: adminKeys.workspaces() });
     },
@@ -784,9 +780,7 @@ export function useAdminDeactivateWorkspace() {
           context.previousWorkspaceDetail
         );
       }
-      toast.error('Failed to deactivate workspace', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to deactivate workspace');
     },
   });
 }
@@ -833,13 +827,11 @@ export function useAdminRestoreWorkspace() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
       const { restoredProjects, restoredLinks } = result.data;
-      toast.success('Workspace restored successfully', {
-        description: `Restored ${restoredProjects} project(s) and ${restoredLinks} link(s)`,
-      });
+      showWorkspaceRestoredToast(restoredProjects, restoredLinks);
       queryClient.invalidateQueries({ queryKey: adminKeys.workspaceDetail(workspaceId) });
       queryClient.invalidateQueries({ queryKey: adminKeys.workspaces() });
     },
@@ -850,9 +842,7 @@ export function useAdminRestoreWorkspace() {
           context.previousWorkspaceDetail
         );
       }
-      toast.error('Failed to restore workspace', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to restore workspace');
     },
   });
 }
@@ -869,18 +859,14 @@ export function useAdminResetInviteToken() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Invite token reset successfully', {
-        description: 'Previous invite links are now invalid',
-      });
+      showUpdatedToast('Invite token', 'Previous invite links are now invalid');
       queryClient.invalidateQueries({ queryKey: adminKeys.workspaceDetail(workspaceId) });
     },
     onError: (error: unknown) => {
-      toast.error('Failed to reset invite token', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to reset invite token');
     },
   });
 }
@@ -903,17 +889,13 @@ export function useAdminCreateWorkspaceInvite() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Workspace invite created successfully', {
-        description: 'Invite URL has been generated',
-      });
+      showCreatedToast('Workspace invite', 'Invite URL has been generated');
     },
     onError: (error: unknown) => {
-      toast.error('Failed to create workspace invite', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to create workspace invite');
     },
   });
 }
@@ -939,10 +921,10 @@ export function useAdminDeactivateProject(workspaceId: string) {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Project deactivated successfully');
+      showDeletedToast('Project');
       queryClient.invalidateQueries({
         queryKey: adminKeys.workspaceProjects(workspaceId),
       });
@@ -951,9 +933,7 @@ export function useAdminDeactivateProject(workspaceId: string) {
       });
     },
     onError: (error: unknown) => {
-      toast.error('Failed to deactivate project', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to deactivate project');
     },
   });
 }
@@ -975,10 +955,10 @@ export function useAdminRestoreProject(workspaceId: string) {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToast(result.error);
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success('Project restored successfully');
+      showUpdatedToast('Project');
       queryClient.invalidateQueries({
         queryKey: adminKeys.workspaceProjects(workspaceId),
       });
@@ -987,9 +967,7 @@ export function useAdminRestoreProject(workspaceId: string) {
       });
     },
     onError: (error: unknown) => {
-      toast.error('Failed to restore project', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      handleUnknownError(error, 'Failed to restore project');
     },
   });
 }
@@ -1014,10 +992,10 @@ export function useImpersonation() {
     },
     onSuccess: (result, variables) => {
       if (!result.success) {
-        toast.error(result.error.message || 'Failed to impersonate user');
+        showErrorToastToast(result.error);
         return;
       }
-      toast.success(`Now impersonating ${variables.userName || 'user'}`);
+      showImpersonatingToast(variables.userName);
       // Invalidate all queries to refresh with the new session
       queryClient.invalidateQueries();
       // Redirect to home to start fresh with the impersonated session

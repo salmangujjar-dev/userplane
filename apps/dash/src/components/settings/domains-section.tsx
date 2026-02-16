@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import { toast } from '@workspace/ui/components/sonner';
 import { ArrowUpDown } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
@@ -27,6 +26,7 @@ import {
 } from '@/features/domains';
 import { useWorkspaceRole } from '@/features/workspace';
 import { useDomainSectionState } from '@/hooks/use-domain-section-state';
+import { showDomainVerifiedToast, showVerificationStartFailedToast } from '@/lib/toasts';
 import { useWorkspaceId } from '@/stores/workspace';
 import type { SortDirection } from '@/types';
 import type { DomainResponse } from '@/types';
@@ -156,7 +156,7 @@ export function DomainsSection() {
         const isVerified = response.data.domain.domainStatus === 'verified';
         if (isVerified) {
           await queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
-          toast.success('Domain verified successfully', { id: 'domain-verify' });
+          showDomainVerifiedToast();
         }
         return isVerified;
       } catch {
@@ -211,7 +211,7 @@ export function DomainsSection() {
       );
     } catch {
       actions.closeVerification();
-      toast.error('Failed to start verification');
+      showVerificationStartFailedToast();
     }
   }, [workspaceId, state.verifyingDomain, actions, pollStatus]);
 

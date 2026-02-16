@@ -10,7 +10,6 @@ import {
   InputGroupInput,
 } from '@workspace/ui/components/input-group';
 import Logo from '@workspace/ui/components/logo';
-import { toast } from '@workspace/ui/components/sonner';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -21,6 +20,11 @@ import * as z from 'zod';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { useAuth } from '@/hooks';
+import {
+  showAuthenticationFailedToast,
+  showMagicLinkFailedToast,
+  showMagicLinkSentToast,
+} from '@/lib/toasts';
 
 const magicLinkSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
@@ -234,7 +238,7 @@ function AuthPageContent() {
         error_boundary: 'auth',
         provider: 'google',
       });
-      toast.error('Failed to authenticate. Please try again.');
+      showAuthenticationFailedToast();
       setIsLoading(false);
     }
   };
@@ -253,19 +257,19 @@ function AuthPageContent() {
           error_boundary: 'auth',
           email: data.email,
         });
-        toast.error(result.error.message || 'Failed to send magic link. Please try again.');
+        showMagicLinkFailedToast(result.error.message);
         return;
       }
 
       setSentEmail(data.email);
       setMagicLinkSent(true);
-      toast.success('Check your email for the magic link');
+      showMagicLinkSentToast();
     } catch (error) {
       posthog.captureException(error, {
         error_boundary: 'auth',
         email: data.email,
       });
-      toast.error('Failed to send magic link. Please try again.');
+      showMagicLinkFailedToast();
     } finally {
       setIsLoading(false);
     }

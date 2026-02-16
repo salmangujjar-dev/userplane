@@ -3,7 +3,6 @@
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { toast } from '@workspace/ui/components/sonner';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -17,6 +16,10 @@ import { useAccount } from '@/features/account';
 import { useWorkspaceCount } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
 import { mediaClient } from '@/lib/media';
+import {
+  showAccountDeletionEmailFailedToast,
+  showAccountDeletionEmailSentToast,
+} from '@/lib/toasts';
 
 function RequestDeleteHeader() {
   return (
@@ -77,23 +80,19 @@ function RequestDeleteContent() {
         posthog.captureException(result.error, {
           error_boundary: 'account-delete',
         });
-        toast.error('Failed to send deletion email', {
-          description: result.error.message || 'Please try again later.',
-        });
+        showAccountDeletionEmailFailedToast(result.error.message);
         return;
       }
 
       setIsSuccess(true);
-      toast.success('Check your email for the confirmation link');
+      showAccountDeletionEmailSentToast();
     } catch (err) {
       posthog.captureException(err, {
         error_boundary: 'account-delete',
       });
       const errorMessage =
         err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
-      toast.error('Failed to send deletion email', {
-        description: errorMessage,
-      });
+      showAccountDeletionEmailFailedToast(errorMessage);
     } finally {
       setIsRequesting(false);
     }
