@@ -1,6 +1,7 @@
 'use client';
 
 import { RETENTION_DAYS_VALUES, type RetentionDays } from '@workspace/contract';
+import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -18,8 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
+import { cn } from '@workspace/ui/lib/utils';
 import { addDays, differenceInDays, format, formatDistanceToNow } from 'date-fns';
 import { useEffect, useState } from 'react';
+
+import { useSubscriptionStatus } from '@/features/billing';
+import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
 
 /**
  * Find the closest retention value matching the remaining days until expiration.
@@ -61,6 +66,11 @@ export function EditRecordingModal({
 }: EditRecordingModalProps) {
   const [selectedValue, setSelectedValue] = useState<string>('');
   const [hasChanged, setHasChanged] = useState(false);
+  const { data: subscriptionResult } = useSubscriptionStatus();
+  const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
+  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
+  const featureGates = getFeatureGates(effectivePlanId);
+  const { triggerUpsell } = useFeatureUpsell();
 
   // Pre-select the closest matching value when modal opens
   useEffect(() => {
@@ -101,9 +111,22 @@ export function EditRecordingModal({
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-2">
+            <div
+              className={cn('space-y-2', !featureGates.customizeDataRetention && 'cursor-pointer')}
+              onClick={
+                !featureGates.customizeDataRetention
+                  ? () => triggerUpsell('customizeDataRetention')
+                  : undefined
+              }
+            >
               <div className="space-y-0.5">
-                <Label htmlFor="expires-at" className="text-sm font-medium">
+                <Label
+                  htmlFor={featureGates.customizeDataRetention ? 'expires-at' : undefined}
+                  className={cn(
+                    'text-sm font-medium',
+                    !featureGates.customizeDataRetention && 'text-muted-foreground cursor-pointer'
+                  )}
+                >
                   Expiration
                 </Label>
                 <p className="text-xs text-muted-foreground">
@@ -112,19 +135,25 @@ export function EditRecordingModal({
                     : 'Currently set to no expiration'}
                 </p>
               </div>
-              <Select value={selectedValue} onValueChange={handleValueChange} disabled={isLoading}>
-                <SelectTrigger id="expires-at" className="w-full">
-                  <SelectValue placeholder="Select new expiration..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {RETENTION_DAYS_VALUES.map((days) => (
-                    <SelectItem key={days} value={String(days)}>
-                      {days} {days === 1 ? 'day' : 'days'} from now
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="never">No expiration</SelectItem>
-                </SelectContent>
-              </Select>
+              <span className={cn(!featureGates.customizeDataRetention && 'pointer-events-none')}>
+                <Select
+                  value={selectedValue}
+                  onValueChange={handleValueChange}
+                  disabled={isLoading || !featureGates.customizeDataRetention}
+                >
+                  <SelectTrigger id="expires-at" className="w-full">
+                    <SelectValue placeholder="Select new expiration..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RETENTION_DAYS_VALUES.map((days) => (
+                      <SelectItem key={days} value={String(days)}>
+                        {days} {days === 1 ? 'day' : 'days'} from now
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="never">No expiration</SelectItem>
+                  </SelectContent>
+                </Select>
+              </span>
             </div>
           </div>
         </div>

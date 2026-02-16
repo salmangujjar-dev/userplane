@@ -47,4 +47,8 @@ export const BillingErrors = {
     status: 403,
     message: 'You have reached your plan limit. Upgrade for more.',
   },
+  PLAN_FEATURE_UNAVAILABLE: {
+    status: 403,
+    message: 'This feature is not available on your current plan. Upgrade to access it.',
+  },
 } as const;

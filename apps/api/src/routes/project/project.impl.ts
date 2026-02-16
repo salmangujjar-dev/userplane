@@ -4,6 +4,7 @@
  */
 
 import { projectError, type RetentionDays } from '@workspace/contract';
+import type { PlanId } from '@workspace/pricing';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import {
@@ -11,6 +12,7 @@ import {
   createWorkspaceRestoreMiddleware,
   createWorkspaceRoleMiddleware,
 } from '@/api/middleware/workspace.orpc';
+import type { BillingService } from '@/api/services/billing.service';
 import type { EmailService } from '@/api/services/email.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
@@ -96,18 +98,28 @@ export const getProjectByIdImpl = (
 export const createProjectImpl = (
   projectService: ProjectService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  billingService: BillingService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorizedRateLimited.project.create
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      const project = await projectService.createProject({
-        workspaceId: input.params.workspaceId,
-        projectTitle: input.body.projectTitle ?? null,
-        recordingRetentionDays: input.body.recordingRetentionDays,
-      });
+      // Get effective plan ID for feature gate validation
+      const subscriptionStatus = await billingService.getSubscriptionStatus(
+        input.params.workspaceId
+      );
+      const effectivePlanId = (subscriptionStatus.accessDetail.effectivePlanId ?? 'free') as PlanId;
+
+      const project = await projectService.createProject(
+        {
+          workspaceId: input.params.workspaceId,
+          projectTitle: input.body.projectTitle ?? null,
+          recordingRetentionDays: input.body.recordingRetentionDays,
+        },
+        { effectivePlanId }
+      );
 
       if (!project) {
         throw projectError.PROJECT_CREATE_FAILED();
@@ -130,7 +142,8 @@ export const createProjectImpl = (
 export const updateProjectImpl = (
   projectService: ProjectService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  billingService: BillingService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
@@ -153,7 +166,15 @@ export const updateProjectImpl = (
         updates.recordingRetentionDays = input.body.recordingRetentionDays;
       }
 
-      const project = await projectService.updateProject(input.params.projectId, updates);
+      // Get effective plan ID for feature gate validation
+      const subscriptionStatus = await billingService.getSubscriptionStatus(
+        input.params.workspaceId
+      );
+      const effectivePlanId = (subscriptionStatus.accessDetail.effectivePlanId ?? 'free') as PlanId;
+
+      const project = await projectService.updateProject(input.params.projectId, updates, {
+        effectivePlanId,
+      });
 
       if (!project) {
         throw projectError.PROJECT_UPDATE_FAILED();
@@ -360,13 +381,24 @@ export const createProjectProcedures = (
   projectService: ProjectService,
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService,
-  emailService: EmailService
+  emailService: EmailService,
+  billingService: BillingService
 ) => {
   return {
     list: getProjectsImpl(projectService, workspaceMemberService, workspaceService),
-    create: createProjectImpl(projectService, workspaceMemberService, workspaceService),
+    create: createProjectImpl(
+      projectService,
+      workspaceMemberService,
+      workspaceService,
+      billingService
+    ),
     getById: getProjectByIdImpl(projectService, workspaceMemberService, workspaceService),
-    update: updateProjectImpl(projectService, workspaceMemberService, workspaceService),
+    update: updateProjectImpl(
+      projectService,
+      workspaceMemberService,
+      workspaceService,
+      billingService
+    ),
     replace: replaceProjectImpl(projectService, workspaceMemberService, workspaceService),
     delete: deleteProjectImpl(
       projectService,

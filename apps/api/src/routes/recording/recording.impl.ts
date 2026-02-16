@@ -4,9 +4,11 @@
  */
 
 import { recordingError } from '@workspace/contract';
+import type { PlanId } from '@workspace/pricing';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
+import type { BillingService } from '@/api/services/billing.service';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
@@ -136,7 +138,8 @@ export const deleteRecordingImpl = (
 export const updateRecordingImpl = (
   recordingService: RecordingService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  billingService: BillingService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
@@ -145,10 +148,17 @@ export const updateRecordingImpl = (
     .handler(async ({ input }) => {
       const expiresAt = input.body.expiresAt;
 
+      // Get effective plan ID for feature gate validation
+      const subscriptionStatus = await billingService.getSubscriptionStatus(
+        input.params.workspaceId
+      );
+      const effectivePlanId = (subscriptionStatus.accessDetail.effectivePlanId ?? 'free') as PlanId;
+
       const updated = await recordingService.updateExpiresAt(
         input.params.recordingId,
         input.params.workspaceId,
-        expiresAt !== undefined ? expiresAt : null
+        expiresAt !== undefined ? expiresAt : null,
+        { effectivePlanId }
       );
 
       return {
@@ -313,12 +323,18 @@ export const getRecordingActionImpl = (
 export const createRecordingProcedures = (
   recordingService: RecordingService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  billingService: BillingService
 ) => {
   return {
     list: getRecordingsImpl(recordingService, workspaceMemberService, workspaceService),
     getById: getRecordingByIdImpl(recordingService, workspaceMemberService, workspaceService),
-    update: updateRecordingImpl(recordingService, workspaceMemberService, workspaceService),
+    update: updateRecordingImpl(
+      recordingService,
+      workspaceMemberService,
+      workspaceService,
+      billingService
+    ),
     delete: deleteRecordingImpl(recordingService, workspaceMemberService, workspaceService),
     resources: {
       video: getRecordingVideoImpl(recordingService, workspaceMemberService, workspaceService),

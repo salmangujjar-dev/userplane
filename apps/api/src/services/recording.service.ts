@@ -3,7 +3,8 @@
  * Contains validation and business rules for recording management
  */
 
-import { recordingError } from '@workspace/contract';
+import { billingError, recordingError } from '@workspace/contract';
+import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import type {
   ClientActionsStorageClient,
   ConsoleLogsStorageClient,
@@ -447,7 +448,12 @@ export class RecordingService {
    * Update the expiresAt date for a recording
    * Validates workspace membership before updating
    */
-  async updateExpiresAt(recordingId: string, workspaceId: string, expiresAt: Date | null) {
+  async updateExpiresAt(
+    recordingId: string,
+    workspaceId: string,
+    expiresAt: Date | null,
+    options?: { effectivePlanId?: PlanId }
+  ) {
     const recording = await this.deps.recordingRepo.findByIdWithStatusGroup(recordingId);
 
     if (!recording) {
@@ -460,6 +466,18 @@ export class RecordingService {
 
     if (recording.workspaceId !== workspaceId) {
       throw recordingError.RECORDING_WORKSPACE_MISMATCH();
+    }
+
+    // Validate feature gate for custom expiration
+    if (expiresAt !== null) {
+      const planId = options?.effectivePlanId ?? 'free';
+      const featureGates = getFeatureGates(planId);
+
+      if (!featureGates.customizeDataRetention) {
+        throw billingError.PLAN_FEATURE_UNAVAILABLE({
+          feature: 'customizeDataRetention',
+        });
+      }
     }
 
     const updated = await this.deps.recordingRepo.updateExpiresAt(recordingId, expiresAt);

@@ -92,7 +92,8 @@ const workspaceProcedures = createWorkspaceProcedures(
 const recordingProcedures = createRecordingProcedures(
   recordingService,
   workspaceMemberService,
-  workspaceService
+  workspaceService,
+  billingService
 );
 const linkProcedures = createLinkProcedures(linkService, workspaceMemberService, workspaceService);
 const domainProcedures = createDomainProcedures(domainService);
@@ -120,7 +121,8 @@ const projectProcedures = createProjectProcedures(
   projectService,
   workspaceMemberService,
   workspaceService,
-  emailService
+  emailService,
+  billingService
 );
 const billingProcedures = createBillingProcedures(
   billingService,
