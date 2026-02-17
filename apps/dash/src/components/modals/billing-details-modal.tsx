@@ -10,7 +10,7 @@ import {
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
 import { format } from 'date-fns';
-import { AlertCircle, CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, Loader2, MoveUpRight, XCircle } from 'lucide-react';
 
 import type { AccessDetail, SubscriptionStatus } from '@/types';
 
@@ -31,6 +31,7 @@ interface BillingDetailsModalProps {
     accessStatus?: AccessDetail;
   } | null;
   onManagePortal: () => void;
+  onUpgradePlan?: () => void;
   isPortalLoading?: boolean;
 }
 
@@ -133,6 +134,7 @@ export function BillingDetailsModal({
   onOpenChange,
   subscription,
   onManagePortal,
+  onUpgradePlan,
   isPortalLoading = false,
 }: BillingDetailsModalProps) {
   if (!subscription) return null;
@@ -267,18 +269,32 @@ export function BillingDetailsModal({
               />
             </div>
 
-            {/* Action */}
-            <button
-              onClick={() => {
-                onManagePortal();
-                onOpenChange(false);
-              }}
-              disabled={isPortalLoading}
-              className="w-full mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isPortalLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Manage in Portal
-            </button>
+            {/* Actions */}
+            <div className="flex flex-col gap-2 mt-4">
+              <button
+                onClick={() => {
+                  onManagePortal();
+                  onOpenChange(false);
+                }}
+                disabled={isPortalLoading}
+                className="w-full px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isPortalLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                Manage in Portal
+              </button>
+              {onUpgradePlan && (
+                <button
+                  onClick={() => {
+                    onUpgradePlan();
+                    onOpenChange(false);
+                  }}
+                  className="w-full px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center justify-center gap-2"
+                >
+                  <MoveUpRight className="h-4 w-4" />
+                  Upgrade Plan
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>

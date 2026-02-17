@@ -2,15 +2,14 @@ import { useMutation } from '@tanstack/react-query';
 import type { PlanId } from '@workspace/pricing';
 
 import { apiClient } from '@/client';
-import { authClient } from '@/client/auth';
 import { handleSafeResult, handleUnknownError } from '@/lib/errors';
+import { useWorkspaceId } from '@/stores/workspace';
 import type { PlanChangePreviewData } from '@/types';
 
 interface ManagePlanCallbacks {
-  onCheckout?: (data: { slug: string }) => void;
+  onCheckout?: (data: { checkoutUrl: string; slug: string }) => void;
   onPreview?: (data: PlanChangePreviewData) => void;
   onExecute?: (data: { newPlanName: string }) => void;
-  onRequest?: (data: { planName: string }) => void;
   onError?: (error: Error & { code?: string; data?: { code?: string; message?: string } }) => void;
 }
 
@@ -57,13 +56,11 @@ export function useManagePlan(callbacks?: ManagePlanCallbacks) {
       }
       const data = result.data;
       if (data.type === 'checkout' && callbacks?.onCheckout) {
-        callbacks.onCheckout({ slug: data.data.slug });
+        callbacks.onCheckout({ checkoutUrl: data.data.checkoutUrl, slug: data.data.slug });
       } else if (data.type === 'preview' && callbacks?.onPreview) {
         callbacks.onPreview(data.data);
       } else if (data.type === 'execute' && callbacks?.onExecute) {
         callbacks.onExecute({ newPlanName: data.data.newPlanName });
-      } else if (data.type === 'request' && callbacks?.onRequest) {
-        callbacks.onRequest({ planName: data.data.planName });
       }
     },
     onError: (error: unknown) => {
@@ -81,19 +78,30 @@ export function useManagePlan(callbacks?: ManagePlanCallbacks) {
  * Hook to open the DodoPayments customer portal
  * Redirects user to portal for managing subscription, payment methods, etc.
  */
-export function useOpenCustomerPortal() {
+export function useOpenCustomerPortal(options?: { onPermissionDenied?: () => void }) {
+  const workspaceId = useWorkspaceId();
+
   return useMutation({
     mutationFn: async () => {
-      const result = await authClient.dodopayments.customer.portal();
-      return handleSafeResult(result.error, result.data ?? null);
+      const [error, response] = await apiClient.billing.getPortal({
+        params: { workspaceId: workspaceId! },
+      });
+      return handleSafeResult(error, response?.data ?? null);
     },
     onSuccess: (result) => {
       if (!result.success) {
+        if (
+          result.error.code === 'BILLING_MANAGEMENT_UNAVAILABLE_FOR_MEMBER' &&
+          options?.onPermissionDenied
+        ) {
+          options.onPermissionDenied();
+          return;
+        }
         handleUnknownError(result.error, 'Failed to open customer portal');
         return;
       }
-      if (result.data?.url) {
-        window.location.href = result.data.url;
+      if (result.data?.portalUrl) {
+        window.location.href = result.data.portalUrl;
       }
     },
     onError: (error: unknown) => {

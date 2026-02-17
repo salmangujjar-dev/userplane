@@ -119,7 +119,7 @@ export function AppSidebar() {
   );
 
   // Predict which flow the modal will take to show appropriate loading skeleton
-  const getPredictedFlow = (): 'checkout' | 'preview' | 'request' | 'unknown' => {
+  const getPredictedFlow = (): 'checkout' | 'preview' | 'unknown' => {
     // Need subscription data to predict
     if (!subscriptionResult?.success) return 'unknown';
 
@@ -132,13 +132,13 @@ export function AppSidebar() {
       return 'checkout';
     }
 
-    // Have subscription, check role
+    // Have subscription, check role — members will get an error, owners/admins get preview
     if (roleResult?.success) {
       const role = roleResult.data.workspaceRole;
       if (role === 'owner' || role === 'admin') {
         return 'preview';
       }
-      return 'request';
+      return 'unknown';
     }
 
     // Have subscription but no role data yet → likely preview (most common)

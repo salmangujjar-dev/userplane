@@ -1,6 +1,13 @@
 'use client';
 
 import { type PlanId, type PlanName, UNLIMITED_QUOTED_LIMIT } from '@workspace/pricing';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
+import Logo from '@workspace/ui/components/logo';
 import { Progress } from '@workspace/ui/components/progress';
 import {
   Tooltip,
@@ -8,7 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { FileText, Info, MoveUpRight } from 'lucide-react';
+import { CheckCircle2, FileText, Info, MoveUpRight, ShieldCheck } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
@@ -239,7 +246,7 @@ export function WorkspacePlanSection() {
   );
 
   // Predict which flow the modal will take to show appropriate loading skeleton
-  const getPredictedFlow = (): 'checkout' | 'preview' | 'request' | 'unknown' => {
+  const getPredictedFlow = (): 'checkout' | 'preview' | 'unknown' => {
     // Need subscription data to predict
     if (!subscriptionResult?.success) return 'unknown';
 
@@ -252,13 +259,13 @@ export function WorkspacePlanSection() {
       return 'checkout';
     }
 
-    // Have subscription, check role
+    // Have subscription, check role — members will get an error, owners/admins get preview
     if (roleResult?.success) {
       const role = roleResult.data.workspaceRole;
       if (role === 'owner' || role === 'admin') {
         return 'preview';
       }
-      return 'request';
+      return 'unknown';
     }
 
     // Have subscription but no role data yet → likely preview (most common)
@@ -269,8 +276,11 @@ export function WorkspacePlanSection() {
   const [showBillingDetails, setShowBillingDetails] = useState(false);
   const [showPlanChangePreview, setShowPlanChangePreview] = useState(false);
   const [selectedPlanIdForChange, setSelectedPlanIdForChange] = useState<PlanId | null>(null);
+  const [showContactAdmin, setShowContactAdmin] = useState(false);
 
-  const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
+  const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal({
+    onPermissionDenied: () => setShowContactAdmin(true),
+  });
 
   const handlePlanSelect = (planId: string) => {
     if (!workspaceId) return;
@@ -452,6 +462,7 @@ export function WorkspacePlanSection() {
                 accessStatus: subscriptionData.accessDetail,
               }}
               onManagePortal={handleManageBilling}
+              onUpgradePlan={() => setPlanModal('suggested')}
               isPortalLoading={isPortalPending}
             />
           )}
@@ -463,6 +474,53 @@ export function WorkspacePlanSection() {
           onComplete={handlePlanChangeComplete}
           predictedFlow={getPredictedFlow()}
         />
+
+        <Dialog open={showContactAdmin} onOpenChange={setShowContactAdmin}>
+          <DialogContent className="sm:max-w-md" showCloseButton={false}>
+            <div className="space-y-8 py-4">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="flex items-center gap-4">
+                  <Logo variant="tiled" size="md" showText={false} />
+                  <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
+                    <ShieldCheck className="h-8 w-8 text-primary" />
+                  </div>
+                </div>
+
+                <div className="text-center space-y-1">
+                  <DialogTitle className="text-xl font-semibold">Admin Access Required</DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground">
+                    Only workspace owners and admins can manage billing settings
+                  </DialogDescription>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm font-medium">How to proceed</p>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-sm text-muted-foreground">
+                      Ask a workspace owner or admin to manage billing
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-sm text-muted-foreground">
+                      They can update the plan from workspace billing settings
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowContactAdmin(false)}
+                className="w-full px-6 py-2.5 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );

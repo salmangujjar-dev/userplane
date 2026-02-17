@@ -1,6 +1,6 @@
 'use client';
 
-import type { PlanId } from '@workspace/pricing';
+import { PLAN_NAMES, type PlanId } from '@workspace/pricing';
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,6 @@ import { ArrowLeftRight, CheckCircle2, ExternalLink, Loader2, Sparkles } from 'l
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
-import { authClient } from '@/client/auth';
-import { env } from '@/env';
 import { useManagePlan, useOpenCustomerPortal } from '@/features/billing';
 import { mediaClient } from '@/lib/media';
 import { useWorkspaceId } from '@/stores/workspace';
@@ -28,7 +26,7 @@ type ModalState =
   | 'request-sent'
   | 'checkout';
 
-type PredictedFlow = 'checkout' | 'preview' | 'request' | 'unknown';
+type PredictedFlow = 'checkout' | 'preview' | 'unknown';
 
 interface PlanChangePreviewModalProps {
   open: boolean;
@@ -78,40 +76,186 @@ function PreviewView({
   };
 
   if (!preview.immediateCharge) {
+    const creditCurrency = preview.creditAmount?.currency ?? 'USD';
+
     return (
-      <div className="space-y-6 py-4">
-        <div className="flex items-start gap-4">
-          <Logo variant="tiled" size="md" showText={false} />
-          <div className="flex flex-col space-y-1">
-            <DialogTitle className="text-xl font-semibold">Change Your Plan</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              Review the details of your plan change
-            </DialogDescription>
+      <div className="px-6 pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Left Panel */}
+          <div className="flex flex-col h-full md:col-span-1">
+            {/* Header with Back Button */}
+            <div className="flex items-center gap-2 mb-8 pt-6">
+              <button
+                onClick={onCancel}
+                disabled={isConfirming}
+                className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                aria-label="Go back"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </button>
+              <h3 className="text-base font-semibold text-foreground">Review your plan change</h3>
+            </div>
+
+            {/* Plan & Billing Info */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-zinc-600">Current Plan</span>
+                <span className="text-sm text-foreground font-semibold">
+                  {preview.currentPlan.planName}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-zinc-600">New Plan</span>
+                <span className="text-sm text-foreground font-semibold">
+                  {preview.newPlan.planName}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-zinc-600">Billing</span>
+                <span className="text-sm text-foreground font-semibold capitalize">
+                  {preview.newPlan.billingInterval}
+                </span>
+              </div>
+            </div>
+
+            {/* Spacer to push content to bottom */}
+            <div className="flex-1" />
+
+            {/* How Your Plan Change Works */}
+            <div className="pb-6">
+              <h4 className="text-base font-semibold text-foreground mb-4">
+                How your plan change works
+              </h4>
+
+              <div className="relative space-y-4">
+                {/* Timeline connector line */}
+                <div className="absolute left-1.5 top-6 bottom-6 w-px bg-zinc-200" />
+
+                {/* Today */}
+                <div className="relative flex items-start gap-3">
+                  <div className="relative z-10 w-3 h-3 rounded-full bg-foreground shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-foreground mb-1">Today</div>
+                    <div className="text-xs text-zinc-600 leading-relaxed">
+                      Your plan changes immediately.
+                      {preview.creditAmount
+                        ? ' The unused time on your current plan will be credited to your account.'
+                        : ' No additional charges apply.'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Next Billing Date */}
+                <div className="relative flex items-start gap-3">
+                  <div className="relative z-10 w-3 h-3 rounded-full bg-foreground shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-foreground mb-1">
+                      Next Billing Date
+                    </div>
+                    <div className="text-xs text-zinc-600 leading-relaxed">
+                      Starting{' '}
+                      <span className="font-semibold text-foreground">
+                        {formatDate(preview.newPlan.nextBillingDate)}
+                      </span>
+                      , you&apos;ll be charged{' '}
+                      <span className="font-semibold text-foreground">
+                        {formatCurrency(preview.newPlan.recurringPreTaxAmount, creditCurrency)}
+                      </span>{' '}
+                      per {preview.newPlan.paymentFrequencyInterval.toLowerCase()}.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="rounded-lg border bg-muted/30 p-4">
-          <p className="text-sm text-muted-foreground text-center">
-            Your plan change will take effect immediately.
-          </p>
-        </div>
+          {/* Right Panel */}
+          <div className="flex flex-col pt-6 md:col-span-2">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 flex flex-col h-full">
+              {/* Credit or No Charge */}
+              <div className="text-center pb-6 mb-6 border-b border-zinc-100">
+                <div className="text-sm text-zinc-600 mb-3">Amount due today</div>
+                <div className="text-4xl font-bold text-foreground">
+                  {formatCurrency(0, creditCurrency)}
+                </div>
+              </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            disabled={isConfirming}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isConfirming}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isConfirming && <Loader2 className="h-4 w-4 animate-spin" />}
-            Confirm Change
-          </button>
+              {/* Credit Details */}
+              {preview.creditAmount && (
+                <div className="mb-6">
+                  <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
+                    Credit Details
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                      <span className="text-sm text-zinc-700">Account Credit</span>
+                      <span className="text-sm font-semibold text-green-600 ml-4 text-right">
+                        +
+                        {formatCurrency(preview.creditAmount.amount, preview.creditAmount.currency)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-500">{preview.creditAmount.summary}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Separator */}
+              <div className="border-t border-zinc-100 my-6" />
+
+              {/* New Subscription */}
+              <div className="mb-6">
+                <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
+                  New Subscription
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-zinc-700">Recurring Amount</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {formatCurrency(preview.newPlan.recurringPreTaxAmount, creditCurrency)}/
+                      {preview.newPlan.paymentFrequencyInterval.toLowerCase()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-zinc-700">Next Billing Date</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {formatDate(preview.newPlan.nextBillingDate)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Spacer to push button to bottom */}
+              <div className="flex-1" />
+
+              {/* Confirm Button */}
+              <button
+                onClick={onConfirm}
+                disabled={isConfirming}
+                className="w-full rounded-full px-6 py-3 font-medium transition-colors bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+              >
+                {isConfirming ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </span>
+                ) : (
+                  'Confirm'
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -662,45 +806,12 @@ export function PlanChangePreviewModal({
   const [completedPlanName, setCompletedPlanName] = useState<string>('');
 
   const { mutate: managePlan, isPending: isManagePlanPending } = useManagePlan({
-    onCheckout: async (data) => {
-      // Got checkout response - need to create session with Better Auth
-      if (!workspaceId) {
-        setErrorInfo({ message: 'Workspace ID is required for checkout' });
-        setModalState('error');
-        return;
-      }
-
-      setModalState('checkout');
-      try {
-        const result = await authClient.dodopayments.checkoutSession({
-          slug: data.slug,
-          referenceId: workspaceId,
-          metadata: {
-            workspace_id: workspaceId,
-          },
-          customization: {
-            theme: 'light',
-            show_order_details: true,
-            show_on_demand_tag: false,
-          },
-          return_url: `${env.dashboard.url}/${workspaceId}/settings?tab=plan-usage`,
-        });
-
-        if (result.error) {
-          throw new Error(result.error.message || 'Failed to create checkout session');
-        }
-
-        if (!result.data?.url) {
-          throw new Error('No checkout URL returned');
-        }
-
-        // Redirect to checkout
-        window.location.href = result.data.url;
-      } catch (error) {
-        const err = error as Error;
-        setErrorInfo({
-          message: err.message || 'Failed to create checkout session',
-        });
+    onCheckout: (data) => {
+      if (data.checkoutUrl) {
+        setModalState('checkout');
+        window.location.href = data.checkoutUrl;
+      } else {
+        setErrorInfo({ message: 'No checkout URL returned' });
         setModalState('error');
       }
     },
@@ -712,14 +823,19 @@ export function PlanChangePreviewModal({
       setCompletedPlanName(data.newPlanName);
       setModalState('success');
     },
-    onRequest: (data) => {
-      setCompletedPlanName(data.planName);
-      setModalState('request-sent');
-    },
     onError: (error) => {
+      const errorCode = (error as { code?: string }).code;
+
+      // Member without billing permissions → show request-sent view
+      if (errorCode === 'BILLING_MANAGEMENT_UNAVAILABLE_FOR_MEMBER') {
+        const planName = newPlanId ? (PLAN_NAMES[newPlanId] ?? 'this plan') : 'this plan';
+        setCompletedPlanName(planName);
+        setModalState('request-sent');
+        return;
+      }
+
       // Extract structured error data if available (from UPSTREAM_PAYMENT_ERROR)
       const errorData = (error as { data?: { code?: string; message?: string } }).data;
-      const errorCode = (error as { code?: string }).code;
       setErrorInfo({
         message: error.message,
         code: errorCode,
@@ -738,7 +854,7 @@ export function PlanChangePreviewModal({
       setPreviewData(null);
       setErrorInfo({ message: '' });
       // Call without action - server will route appropriately
-      // (checkout, preview, or request based on subscription status and user role)
+      // (checkout or preview for owners/admins, error for members)
       managePlan({ planId: newPlanId, workspaceId });
     }
     // managePlan is a mutation function that changes on every render
