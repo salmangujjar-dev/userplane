@@ -298,6 +298,27 @@ export class BillingService {
   }
 
   /**
+   * Get customer portal URL for a workspace
+   */
+  async getCustomerPortalUrl(workspaceId: string): Promise<string> {
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+    if (!subscription) {
+      throw billingError.SUBSCRIPTION_NOT_FOUND();
+    }
+
+    const withWorkspace = await this.deps.subscriptionRepo.findWithWorkspace(
+      subscription.subscriptionId
+    );
+    const customerId = withWorkspace?.workspace.dodoCustomerId;
+    if (!customerId) {
+      throw billingError.PORTAL_UNAVAILABLE();
+    }
+
+    const portal = await this.deps.dodoClient.customers.customerPortal.create(customerId);
+    return portal.link;
+  }
+
+  /**
    * Preview plan change - shows proration details before confirming
    */
   async previewPlanChange(workspaceId: string, newPlanId: PlanId) {
@@ -328,6 +349,7 @@ export class BillingService {
           product_id: product.productId,
           proration_billing_mode: 'prorated_immediately',
           quantity: 1,
+          on_payment_failure: 'prevent_change',
         }
       );
 
@@ -443,6 +465,7 @@ export class BillingService {
         product_id: product.productId,
         proration_billing_mode: 'prorated_immediately',
         quantity: 1,
+        on_payment_failure: 'prevent_change',
       });
 
       // Note: DB update happens via webhook handler for subscription.plan_changed

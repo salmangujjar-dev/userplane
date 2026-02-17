@@ -14,9 +14,9 @@
  */
 
 import { billingError } from '@workspace/contract';
+import type { DodoPayments } from '@workspace/payments/client';
 import { getProductByPlanId } from '@workspace/payments/products';
-import { PLAN_NAMES, type PlanId } from '@workspace/pricing';
-import { nanoid } from 'nanoid';
+import type { PlanId } from '@workspace/pricing';
 
 import { authorized } from '@/api/middleware/auth.orpc';
 import { billingRateLimitMiddleware } from '@/api/middleware/rate-limit.orpc';
@@ -66,20 +66,18 @@ export const getCustomerPortalImpl = (
   return authorized.billing.getPortal
     .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .use(billingRateLimitMiddleware)
-    .handler(async ({ context }) => {
+    .handler(async ({ input, context }) => {
       // Check if user is owner or admin
       if (context.workspaceRole !== 'owner' && context.workspaceRole !== 'admin') {
-        throw billingError.PORTAL_UNAVAILABLE();
+        throw billingError.BILLING_MANAGEMENT_UNAVAILABLE_FOR_MEMBER();
       }
 
-      // The customer portal is accessed via Better Auth's DodoPayments plugin
-      // This endpoint provides the portal URL
-      // The frontend should use: authClient.dodopayments.customer.portal()
+      const portalUrl = await billingService.getCustomerPortalUrl(input.params.workspaceId);
 
       return {
         message: 'Customer portal URL retrieved',
         data: {
-          portalUrl: '/api/auth/dodopayments/portal',
+          portalUrl,
         },
       };
     });
@@ -122,7 +120,9 @@ export const getUsageImpl = (
 export const managePlanImpl = (
   billingService: BillingService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  dodoClient: DodoPayments,
+  dashboardBaseUrl: string
 ) => {
   const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
@@ -142,50 +142,40 @@ export const managePlanImpl = (
           (subscriptionStatus.contractDetail.status === 'cancelled' &&
             subscriptionStatus.contractDetail.cancelAtPeriodEnd));
 
-      // Route 1: No active subscription -> Checkout (owner/admin only)
-      if (!hasActiveSubscription) {
-        if (userRole !== 'owner' && userRole !== 'admin') {
-          throw billingError.PORTAL_UNAVAILABLE();
-        }
+      // Members cannot manage billing — owner/admin only
+      if (userRole !== 'owner' && userRole !== 'admin') {
+        throw billingError.BILLING_MANAGEMENT_UNAVAILABLE_FOR_MEMBER();
+      }
 
+      // Route 1: No active subscription -> Checkout
+      if (!hasActiveSubscription) {
         const product = getProductByPlanId(planId as PlanId);
         if (!product) {
           throw billingError.INVALID_PLAN();
         }
 
+        const session = await dodoClient.checkoutSessions.create({
+          product_cart: [{ product_id: product.productId, quantity: 1 }],
+          metadata: { workspace_id: workspaceId },
+          return_url: `${dashboardBaseUrl}/workspace/${workspaceId}/settings?tab=plan-usage`,
+          customization: { theme: 'light', show_order_details: true, show_on_demand_tag: false },
+          customer: { email: context.user.email, name: context.user.name },
+        });
+
         return {
-          message: 'Checkout session details retrieved',
+          message: 'Checkout session created',
           data: {
             type: 'checkout' as const,
             data: {
-              checkoutUrl: `/api/auth/dodopayments/checkout?slug=${product.slug}&metadata[workspace_id]=${workspaceId}`,
+              checkoutUrl: session.checkout_url ?? '',
               slug: product.slug,
-              sessionId: undefined,
+              sessionId: session.session_id,
             },
           },
         };
       }
 
-      // Route 2: Active subscription + member -> Request
-      if (userRole !== 'owner' && userRole !== 'admin') {
-        const planName = PLAN_NAMES[planId as PlanId] || 'Unknown';
-        const requestId = nanoid();
-
-        return {
-          message: 'Plan change request submitted',
-          data: {
-            type: 'request' as const,
-            data: {
-              requestId,
-              status: 'submitted' as const,
-              planId: planId as PlanId,
-              planName,
-            },
-          },
-        };
-      }
-
-      // Route 3: Active subscription + owner/admin + execute -> Execute
+      // Route 2: Active subscription + execute -> Execute
       if (action === 'execute') {
         const result = await billingService.changePlan(workspaceId, planId as PlanId);
 
@@ -198,7 +188,7 @@ export const managePlanImpl = (
         };
       }
 
-      // Route 4: Active subscription + owner/admin + (no action or 'preview') -> Preview
+      // Route 3: Active subscription + (no action or 'preview') -> Preview
       const preview = await billingService.previewPlanChange(workspaceId, planId as PlanId);
 
       return {
@@ -218,7 +208,9 @@ export function createBillingProcedures(
   billingService: BillingService,
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService,
-  entitlementService: EntitlementService
+  entitlementService: EntitlementService,
+  dodoClient: DodoPayments,
+  dashboardBaseUrl: string
 ) {
   return {
     getStatus: getSubscriptionStatusImpl(billingService, workspaceMemberService, workspaceService),
@@ -229,6 +221,12 @@ export function createBillingProcedures(
       workspaceMemberService,
       workspaceService
     ),
-    managePlan: managePlanImpl(billingService, workspaceMemberService, workspaceService),
+    managePlan: managePlanImpl(
+      billingService,
+      workspaceMemberService,
+      workspaceService,
+      dodoClient,
+      dashboardBaseUrl
+    ),
   };
 }

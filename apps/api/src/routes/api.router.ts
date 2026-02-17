@@ -15,7 +15,9 @@
  */
 
 // Services and Repositories
+import { getDodoClient } from '@/api/clients/dodo';
 import { cacheService } from '@/api/clients/redis';
+import { env } from '@/api/env';
 import {
   adminProjectService,
   adminRecordingService,
@@ -128,7 +130,9 @@ const billingProcedures = createBillingProcedures(
   billingService,
   workspaceMemberService,
   workspaceService,
-  entitlementService
+  entitlementService,
+  getDodoClient(),
+  env.dashboard.baseUrl
 );
 const diagnosticsProcedures = createDiagnosticsProcedures(
   cacheService,

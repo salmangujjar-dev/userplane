@@ -23,7 +23,11 @@ import { captureException } from '@/api/posthog';
 import type { DisputeProcessorService } from '@/api/services/dispute-processor.service';
 import type { RefundProcessorService } from '@/api/services/refund-processor.service';
 import type { WebhookProcessorService } from '@/api/services/webhook-processor.service';
-import { determineWebhookHeaders, type WebhookHeaders } from '@/api/utils/webhook';
+
+export interface WebhookHeaders {
+  webhookId: string;
+  webhookTimestamp: string;
+}
 
 const logger = createLogger('billing-webhook');
 
@@ -42,20 +46,15 @@ export interface BillingWebhookHandlerDeps {
 export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
   const { webhookProcessor, disputeProcessor, refundProcessor } = deps;
 
-  return async (payload: unknown, headers?: WebhookHeaders): Promise<void> => {
-    const webhookPayload = payload as WebhookPayload;
-    const { type: eventType } = webhookPayload;
-    const webhookHeaders = determineWebhookHeaders(webhookPayload, headers);
+  return async (payload: WebhookPayload, headers: WebhookHeaders): Promise<void> => {
+    const { type: eventType } = payload;
 
     // Route subscription events to webhook processor
     if (isSubscriptionEvent(eventType)) {
-      logger.debug(
-        { eventType, webhookId: webhookHeaders.webhookId },
-        'Processing subscription event'
-      );
+      logger.debug({ eventType, webhookId: headers.webhookId }, 'Processing subscription event');
 
       try {
-        const result = await webhookProcessor.processWebhook(webhookHeaders, webhookPayload);
+        const result = await webhookProcessor.processWebhook(headers, payload);
 
         if (result.skipped) {
           logger.warn(
@@ -78,8 +77,8 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         captureException(error, undefined, {
           webhook_type: 'subscription',
           event_type: eventType,
-          webhook_id: webhookHeaders.webhookId,
-          webhook_timestamp: webhookHeaders.webhookTimestamp,
+          webhook_id: headers.webhookId,
+          webhook_timestamp: headers.webhookTimestamp,
         });
         throw error;
       }
@@ -88,10 +87,10 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
 
     // Route dispute events to dispute processor
     if (isDisputeEvent(eventType)) {
-      logger.debug({ eventType, webhookId: webhookHeaders.webhookId }, 'Processing dispute event');
+      logger.debug({ eventType, webhookId: headers.webhookId }, 'Processing dispute event');
 
       try {
-        const result = await disputeProcessor.processDispute(webhookHeaders, webhookPayload);
+        const result = await disputeProcessor.processDispute(headers, payload);
 
         if (result.skipped) {
           logger.warn(
@@ -109,8 +108,8 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         captureException(error, undefined, {
           webhook_type: 'dispute',
           event_type: eventType,
-          webhook_id: webhookHeaders.webhookId,
-          webhook_timestamp: webhookHeaders.webhookTimestamp,
+          webhook_id: headers.webhookId,
+          webhook_timestamp: headers.webhookTimestamp,
         });
         throw error;
       }
@@ -119,10 +118,10 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
 
     // Route refund events to refund processor
     if (isRefundEvent(eventType)) {
-      logger.debug({ eventType, webhookId: webhookHeaders.webhookId }, 'Processing refund event');
+      logger.debug({ eventType, webhookId: headers.webhookId }, 'Processing refund event');
 
       try {
-        const result = await refundProcessor.processRefund(webhookHeaders, webhookPayload);
+        const result = await refundProcessor.processRefund(headers, payload);
 
         if (result.skipped) {
           logger.warn(
@@ -140,8 +139,8 @@ export function createBillingWebhookHandler(deps: BillingWebhookHandlerDeps) {
         captureException(error, undefined, {
           webhook_type: 'refund',
           event_type: eventType,
-          webhook_id: webhookHeaders.webhookId,
-          webhook_timestamp: webhookHeaders.webhookTimestamp,
+          webhook_id: headers.webhookId,
+          webhook_timestamp: headers.webhookTimestamp,
         });
         throw error;
       }
