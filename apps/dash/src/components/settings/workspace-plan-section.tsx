@@ -1,14 +1,9 @@
 'use client';
 
 import { type PlanId, type PlanName, UNLIMITED_QUOTED_LIMIT } from '@workspace/pricing';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
 import { Progress } from '@workspace/ui/components/progress';
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@workspace/ui/components/sheet';
 import {
   Tooltip,
   TooltipContent,
@@ -57,7 +52,7 @@ function BillingActionButton({
   return (
     <button
       onClick={handleClick}
-      className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center gap-2"
+      className="px-4 py-2 text-sm font-medium rounded-full border border-border hover:bg-accent transition-colors flex items-center gap-2"
     >
       <Icon className="h-4 w-4" />
       {shouldShowUpgrade ? 'Upgrade Plan' : 'Review Plan'}
@@ -464,6 +459,10 @@ export function WorkspacePlanSection() {
               onManagePortal={handleManageBilling}
               onUpgradePlan={() => setPlanModal('suggested')}
               isPortalLoading={isPortalPending}
+              usage={resources.map(([resourceType, resourceUsage]) => ({
+                label: RESOURCE_METADATA[resourceType]?.label ?? resourceType,
+                usage: resourceUsage,
+              }))}
             />
           )}
 
@@ -475,52 +474,54 @@ export function WorkspacePlanSection() {
           predictedFlow={getPredictedFlow()}
         />
 
-        <Dialog open={showContactAdmin} onOpenChange={setShowContactAdmin}>
-          <DialogContent className="sm:max-w-md" showCloseButton={false}>
-            <div className="space-y-8 py-4">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="flex items-center gap-4">
-                  <Logo variant="tiled" size="md" showText={false} />
-                  <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
-                    <ShieldCheck className="h-8 w-8 text-primary" />
-                  </div>
-                </div>
-
-                <div className="text-center space-y-1">
-                  <DialogTitle className="text-xl font-semibold">Admin Access Required</DialogTitle>
-                  <DialogDescription className="text-sm text-muted-foreground">
+        <Sheet open={showContactAdmin} onOpenChange={setShowContactAdmin}>
+          <SheetContent
+            side="bottom"
+            className="p-0 gap-0 max-h-[85vh] overflow-y-auto rounded-t-2xl"
+            showCloseButton={true}
+          >
+            <div className="p-6 pb-4">
+              <div className="flex items-start gap-4">
+                <Logo variant="tiled" size="md" showText={false} />
+                <div className="flex flex-col space-y-1">
+                  <SheetTitle className="text-xl font-semibold">Admin Access Required</SheetTitle>
+                  <SheetDescription className="text-sm text-muted-foreground">
                     Only workspace owners and admins can manage billing settings
-                  </DialogDescription>
+                  </SheetDescription>
                 </div>
               </div>
-
-              <div className="space-y-4">
-                <p className="text-sm font-medium">How to proceed</p>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                    <p className="text-sm text-muted-foreground">
-                      Ask a workspace owner or admin to manage billing
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                    <p className="text-sm text-muted-foreground">
-                      They can update the plan from workspace billing settings
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowContactAdmin(false)}
-                className="w-full px-6 py-2.5 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
-              >
-                Done
-              </button>
             </div>
-          </DialogContent>
-        </Dialog>
+
+            <div className="px-6 pb-6">
+              <div className="max-w-md mx-auto space-y-6">
+                <div className="space-y-4">
+                  <p className="text-sm font-medium">How to proceed</p>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                      <p className="text-sm text-muted-foreground">
+                        Ask a workspace owner or admin to manage billing
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                      <p className="text-sm text-muted-foreground">
+                        They can update the plan from workspace billing settings
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowContactAdmin(false)}
+                  className="w-full px-6 py-3 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </TooltipProvider>
   );
