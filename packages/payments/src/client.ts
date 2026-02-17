@@ -17,6 +17,7 @@ export function createDodoPaymentsClient(config: DodoPaymentsConfig): DodoPaymen
   return new DodoPayments({
     bearerToken: config.apiKey,
     environment: config.environment,
+    webhookKey: config.webhookKey || config.webhookSecret,
   });
 }
 

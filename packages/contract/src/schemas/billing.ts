@@ -330,28 +330,14 @@ export const RequestPlanChangeSchema = z.object({
   }),
 });
 
-/**
- * Plan change request response data
- */
-export const PlanChangeRequestDataSchema = z.object({
-  requestId: z.string(),
-  status: z.literal('submitted'),
-  planId: z.string(),
-  planName: z.string(),
-});
-
-/**
- * Plan change request response
- */
-export const PlanChangeRequestResponseSchema = ApiResponseSchema(PlanChangeRequestDataSchema);
-
 // ============================================================================
 // Unified Plan Management
 // ============================================================================
 
 /**
  * Unified plan management input
- * Handles checkout, preview, execute, and request flows
+ * Handles checkout, preview, and execute flows
+ * Members without billing permissions receive BILLING_MANAGEMENT_UNAVAILABLE_FOR_MEMBER error
  */
 export const ManagePlanSchema = z.object({
   params: z.object({
@@ -379,10 +365,6 @@ export const ManagePlanDataSchema = z.discriminatedUnion('type', [
     type: z.literal('execute'),
     data: PlanChangeResultDataSchema,
   }),
-  z.object({
-    type: z.literal('request'),
-    data: PlanChangeRequestDataSchema,
-  }),
 ]);
 
 /**
@@ -406,7 +388,5 @@ export type ResourceUsage = z.infer<typeof ResourceUsageSchema>;
 export type UsageSummaryData = z.infer<typeof UsageSummaryDataSchema>;
 export type PlanChangePreviewData = z.infer<typeof PlanChangePreviewDataSchema>;
 export type PlanChangeResultData = z.infer<typeof PlanChangeResultDataSchema>;
-export type UpstreamPaymentErrorData = z.infer<typeof UpstreamPaymentErrorDataSchema>;
-export type PlanChangeRequestData = z.infer<typeof PlanChangeRequestDataSchema>;
 export type ManagePlanData = z.infer<typeof ManagePlanDataSchema>; // Alias for internal service layer compatibility
 export type SubscriptionAccessStatus = AccessDetail;

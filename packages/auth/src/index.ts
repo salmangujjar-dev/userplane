@@ -1,7 +1,7 @@
 import type { DbClient } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
 import { type Environment, isSecureEnvironment } from '@workspace/shared/env';
-import { APIError, betterAuth, type BetterAuthPlugin } from 'better-auth';
+import { APIError, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, magicLink, openAPI } from 'better-auth/plugins';
 
@@ -95,8 +95,8 @@ export interface AuthConfig {
   deleteUser?: DeleteUserConfig;
   /** Feature flags configuration - overrides environment variables */
   featureFlags?: FeatureFlagsConfig;
-  /** Additional plugins to include (e.g., DodoPayments) */
-  plugins?: BetterAuthPlugin[];
+  /** Callback after user is created (e.g., create payment customer) */
+  onUserCreated?: (user: { id: string; email: string; name: string }) => Promise<void>;
 }
 
 export function createAuth(config: AuthConfig) {
@@ -167,8 +167,6 @@ export function createAuth(config: AuthConfig) {
       }),
       // Only include openAPI plugin in non-production environments
       ...(isProduction ? [] : [openAPI()]),
-      // Include any additional plugins (e.g., DodoPayments)
-      ...(config.plugins ?? []),
     ],
     socialProviders: {
       google: {
@@ -220,7 +218,16 @@ export function createAuth(config: AuthConfig) {
     },
     databaseHooks: {
       user: {
-        create: userCreateHook,
+        create: {
+          ...userCreateHook,
+          ...(config.onUserCreated
+            ? {
+                after: async (user: { id: string; email: string; name: string }) => {
+                  await config.onUserCreated!(user);
+                },
+              }
+            : {}),
+        },
       },
     },
     hooks: {
@@ -230,7 +237,3 @@ export function createAuth(config: AuthConfig) {
 }
 
 export type Auth = ReturnType<typeof createAuth>;
-
-// Re-export DodoPayments types for convenience
-export type { DodoPaymentsAuthConfig, WebhookHeaders } from './dodopayments';
-export { createDodoPaymentsPlugin, setWebhookContextProvider } from './dodopayments';
