@@ -68,6 +68,12 @@ export type ProrationBillingMode =
   DodoPayments.SubscriptionChangePlanParams['proration_billing_mode'];
 
 /**
+ * On payment failure behavior type from DodoPayments
+ * Extracted from SubscriptionChangePlanParams
+ */
+export type OnPaymentFailure = DodoPayments.SubscriptionChangePlanParams['on_payment_failure'];
+
+/**
  * Subscription status values as a readonly array
  * Derived from the official DodoPayments.SubscriptionStatus type
  * Use this array to create database enums and validation schemas
@@ -93,11 +99,22 @@ export const PRORATION_BILLING_MODES = [
 ] as const satisfies readonly ProrationBillingMode[];
 
 /**
+ * On payment failure behavior values as a readonly array
+ * Derived from the official DodoPayments.SubscriptionChangePlanParams type
+ * Use this array to create validation schemas
+ */
+export const ON_PAYMENT_FAILURE_MODES = [
+  'prevent_change',
+  'apply_change',
+] as const satisfies readonly NonNullable<OnPaymentFailure>[];
+
+/**
  * Configuration for DodoPayments client
  */
 export interface DodoPaymentsConfig {
   apiKey: string;
   webhookSecret: string;
+  webhookKey?: string;
   environment: 'test_mode' | 'live_mode';
 }
 

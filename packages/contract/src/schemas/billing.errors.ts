@@ -18,6 +18,10 @@ export const BillingErrors = {
     message: 'Customer portal is not available for this workspace',
     status: 400,
   },
+  BILLING_MANAGEMENT_UNAVAILABLE_FOR_MEMBER: {
+    message: 'Only workspace owners and admins can manage billing',
+    status: 403,
+  },
   PLAN_CHANGE_NOT_ALLOWED: {
     message: 'Plan change is not allowed for this subscription',
     status: 400,

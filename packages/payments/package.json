@@ -44,10 +44,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@dodopayments/better-auth": "^1.4.2",
     "@workspace/console-logger": "workspace:*",
     "@workspace/pricing": "workspace:*",
-    "dodopayments": "^2.16.0"
+    "dodopayments": "^2.19.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
