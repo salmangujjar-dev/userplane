@@ -28,10 +28,10 @@ import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.h
 import { createUninstallHandler } from '@/api/handlers/intercom-uninstall.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
-import { runWithWebhookContext } from '@/api/lib/webhook-context';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
 import { captureException } from '@/api/posthog';
 import { apiRouter } from '@/api/routes/api.router';
+import { billingWebhookRoute } from '@/api/routes/billing/billing-webhook.route.setup';
 import { integrationRepo, intercomCanvasService, intercomHealthCheckService } from '@/api/services';
 
 const app = new Hono();
@@ -116,7 +116,7 @@ if (rateLimiter.isAvailable()) {
 
   // Webhook endpoints (high limit to ensure processing)
   app.use(
-    '/api/auth/dodopayments/webhooks/*',
+    '/api/webhooks/billing',
     createRateLimitMiddleware(rateLimiter, {
       tier: 'webhook',
       getIdentifier: getClientIP,
@@ -127,25 +127,11 @@ if (rateLimiter.isAvailable()) {
   // after signature verification, using workspace_id as identifier
 }
 
+// Billing webhook route - direct DodoPayments webhook processing
+app.post('/api/webhooks/billing', billingWebhookRoute);
+
 // Better Auth routes - must come before API routes
-// For webhook routes, intercept headers and store in AsyncLocalStorage
-// so they can be accessed in the onPayload callback
-app.on(['POST', 'GET'], '/api/auth/*', (c) => {
-  const path = c.req.path;
-
-  // Check if this is the DodoPayments webhook endpoint
-  if (path.includes('/dodopayments/webhooks')) {
-    const webhookId = c.req.header('webhook-id');
-    const webhookTimestamp = c.req.header('webhook-timestamp');
-
-    if (webhookId && webhookTimestamp) {
-      // Run the auth handler within webhook context so onPayload can access headers
-      return runWithWebhookContext({ webhookId, webhookTimestamp }, () => auth.handler(c.req.raw));
-    }
-  }
-
-  return auth.handler(c.req.raw);
-});
+app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw));
 
 // Intercom Canvas Kit Routes
 // ===========================

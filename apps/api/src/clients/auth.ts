@@ -1,105 +1,17 @@
-import {
-  APIError,
-  createAuth,
-  createDodoPaymentsPlugin,
-  setWebhookContextProvider,
-} from '@workspace/auth';
+import { APIError, createAuth } from '@workspace/auth';
 import { eq } from '@workspace/db';
 import * as schema from '@workspace/db/schema';
-import { getDodoPaymentsClient } from '@workspace/payments/client';
-import { CHECKOUT_PRODUCTS } from '@workspace/payments/products';
-import type { DodoPaymentsConfig } from '@workspace/payments/types';
 
 import { db } from '@/api/clients/db';
-import { cacheService } from '@/api/clients/redis';
+import { getDodoClient } from '@/api/clients/dodo';
 import { env } from '@/api/env';
-import { createBillingWebhookHandler } from '@/api/handlers/billing-webhook.handler';
 import { createLogger } from '@/api/lib/logger';
-import { getWebhookContext } from '@/api/lib/webhook-context';
-import { DisputeRepository } from '@/api/repositories/disputes.repository';
-import { RefundRepository } from '@/api/repositories/refunds.repository';
-import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
-import { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
+import { captureException } from '@/api/posthog';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
-import { DisputeProcessorService } from '@/api/services/dispute-processor.service';
 import { emailService } from '@/api/services/email.service';
-import { entitlementService } from '@/api/services/index';
-import { RefundProcessorService } from '@/api/services/refund-processor.service';
-import { WebhookProcessorService } from '@/api/services/webhook-processor.service';
-
-import { captureException } from '../posthog';
 
 const authLogger = createLogger('auth');
 const workspaceRepository = new WorkspaceRepository(db);
-
-// Wire up webhook context provider so the Better Auth adapter can access
-// webhook headers (webhook-id, webhook-timestamp) from AsyncLocalStorage
-setWebhookContextProvider(getWebhookContext);
-
-// DodoPayments configuration
-const dodoConfig: DodoPaymentsConfig = {
-  apiKey: env.payments.apiKey || '',
-  webhookSecret: env.payments.webhookSecret || '',
-  environment: env.payments.environment,
-};
-
-// Get singleton DodoPayments client
-const dodoClient = getDodoPaymentsClient(dodoConfig);
-
-// Create repositories
-const subscriptionRepo = new SubscriptionRepository(db);
-const webhookEventsRepo = new WebhookEventsRepository(db);
-const disputeRepo = new DisputeRepository(db);
-const refundRepo = new RefundRepository(db);
-
-// Create webhook processor service with all dependencies
-const webhookProcessor = new WebhookProcessorService({
-  subscriptionRepo,
-  webhookEventsRepo,
-  workspaceRepo: workspaceRepository,
-  entitlementService,
-  db,
-  dodoClient, // For upstream verification
-  cacheService, // For cache invalidation
-});
-
-// Create dispute processor service for handling payment disputes
-const disputeProcessor = new DisputeProcessorService({
-  disputeRepo,
-  subscriptionRepo,
-  webhookEventsRepo,
-  db,
-  dodoClient, // For payment → subscription mapping
-  cacheService, // For cache invalidation
-});
-
-// Create refund processor service for handling payment refunds
-const refundProcessor = new RefundProcessorService({
-  refundRepo,
-  subscriptionRepo,
-  webhookEventsRepo,
-  db,
-  dodoClient, // For payment → subscription mapping
-  cacheService, // For cache invalidation
-});
-
-// Create billing webhook handler
-const handleBillingWebhook = createBillingWebhookHandler({
-  webhookProcessor,
-  disputeProcessor,
-  refundProcessor,
-});
-
-// Create DodoPayments plugin for Better Auth
-const dodoPaymentsPlugin = createDodoPaymentsPlugin({
-  client: dodoClient,
-  createCustomerOnSignUp: true,
-  products: CHECKOUT_PRODUCTS,
-  successUrl: `${env.dashboard.baseUrl}/`,
-  webhookSecret: dodoConfig.webhookSecret,
-  authenticatedUsersOnly: true,
-  onWebhookPayload: handleBillingWebhook,
-});
 
 export const auth = createAuth({
   database: db,
@@ -123,10 +35,20 @@ export const auth = createAuth({
   admin: {
     adminUserIds: env.admin.userIds,
   },
-  plugins: [dodoPaymentsPlugin],
   featureFlags: {
     enableEmailNormalization: true,
     enableNameNormalization: true,
+  },
+  onUserCreated: async (user) => {
+    try {
+      await getDodoClient().customers.create({
+        email: user.email,
+        name: user.name,
+      });
+    } catch (error) {
+      authLogger.error({ err: error, userId: user.id }, 'Failed to create DodoPayments customer');
+      captureException(error);
+    }
   },
   email: {
     sendVerificationEmail: async ({ user, url }) => {
