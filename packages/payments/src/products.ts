@@ -113,10 +113,11 @@ export function getProductByProductId(productId: string): ProductConfig | undefi
 
 /**
  * Get plan ID from DodoPayments product ID
+ * Returns the matching predefined plan ID, or 'custom' for unknown product IDs (sales-led plans)
  */
-export function getPlanIdFromProductId(productId: string): PlanId | undefined {
+export function getPlanIdFromProductId(productId: string): PlanId {
   const product = getProductByProductId(productId);
-  return product?.planId;
+  return product?.planId ?? ('custom' as PlanId);
 }
 
 /**

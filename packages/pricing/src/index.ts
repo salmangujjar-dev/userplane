@@ -18,6 +18,7 @@ export const PLAN_IDS = [
   'free',
   'enterprise_monthly',
   'enterprise_annual',
+  'custom',
 ] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
@@ -70,10 +71,8 @@ export const PERIOD_BASED_RESOURCES: readonly ResourceType[] = [
  * Resource limit configuration for a plan
  */
 export interface ResourceLimits {
-  // The advertised limit (what customers see and are not used for entitlement checks or customer warnings)
+  // The advertised limit (what customers see, not used for entitlement checks)
   quotedLimit: number;
-  // Additional capacity available beyond quotedLimit (for paid upgrades or admin-managed credits)
-  creditLimit: number;
   // Used for entitlement checks and customer warnings - when current usage >= softLimit, a warning is triggered
   softLimit: number;
   // Used for entitlement checks and customer warnings - when current usage >= hardLimit, consumption is blocked
@@ -96,357 +95,58 @@ export const UNLIMITED_QUOTED_LIMIT = -1;
 export type EntitlementAction = 'allow' | 'warn' | 'block';
 
 /**
- * Default entitlements per plan
- * Used when provisioning a new workspace
- *
- * Limits explanation:
- * - quotedLimit: What we advertise to customers (included seats/recordings)
- * - creditLimit: Additional capacity available beyond quotedLimit (for paid upgrades)
- * - softLimit: Warning threshold (usage alerts)
- * - hardLimit: Absolute maximum (requests blocked, "up to X members" limit)
- *
- * Use -1 for unlimited
+ * Free plan entitlements - hardcoded since free plan has no Dodo product
+ * All paid plan entitlements come from Dodo product metadata
  */
-export const PLAN_ENTITLEMENTS: Record<PlanId, PlanEntitlements> = {
-  // Essential: $59/mo - Entry-level paid plan
-  essential_monthly: {
-    seats: {
-      quotedLimit: 5,
-      creditLimit: 10,
-      softLimit: 5,
-      hardLimit: 15,
-    },
-    recordings: {
-      quotedLimit: 25,
-      creditLimit: 0,
-      softLimit: 25,
-      hardLimit: 35,
-    },
-    links: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 70,
-      hardLimit: 90,
-    },
-    screenshots: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-    files: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
+export const FREE_PLAN_ENTITLEMENTS: PlanEntitlements = {
+  seats: {
+    quotedLimit: 3,
+    softLimit: 3,
+    hardLimit: 3,
   },
-  essential_annual: {
-    seats: {
-      quotedLimit: 5,
-      creditLimit: 10,
-      softLimit: 5,
-      hardLimit: 15,
-    },
-    recordings: {
-      quotedLimit: 25,
-      creditLimit: 0,
-      softLimit: 25,
-      hardLimit: 35,
-    },
-    links: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 70,
-      hardLimit: 90,
-    },
-    screenshots: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-    files: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
+  recordings: {
+    quotedLimit: 3,
+    softLimit: 3,
+    hardLimit: 3,
   },
-
-  // Starter: $99/mo - For growing teams
-  starter_monthly: {
-    seats: {
-      quotedLimit: 10,
-      creditLimit: 10,
-      softLimit: 10,
-      hardLimit: 20,
-    },
-    recordings: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 45,
-      hardLimit: 85,
-    },
-    links: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 170,
-      hardLimit: 215,
-    },
-    screenshots: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-    files: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
+  links: {
+    quotedLimit: 3,
+    softLimit: 6,
+    hardLimit: 8,
   },
-  starter_annual: {
-    seats: {
-      quotedLimit: 10,
-      creditLimit: 10,
-      softLimit: 10,
-      hardLimit: 20,
-    },
-    recordings: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 45,
-      hardLimit: 85,
-    },
-    links: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 170,
-      hardLimit: 215,
-    },
-    screenshots: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-    files: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
+  screenshots: {
+    quotedLimit: 0,
+    softLimit: 0,
+    hardLimit: 0,
   },
-
-  // Scale Up: $249/mo - For scaling teams
-  scale_up_monthly: {
-    seats: {
-      quotedLimit: 15,
-      creditLimit: 15,
-      softLimit: 15,
-      hardLimit: 30,
-    },
-    recordings: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 75,
-      hardLimit: 180,
-    },
-    links: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 360,
-      hardLimit: 450,
-    },
-    screenshots: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-    files: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-  },
-  scale_up_annual: {
-    seats: {
-      quotedLimit: 15,
-      creditLimit: 15,
-      softLimit: 15,
-      hardLimit: 30,
-    },
-    recordings: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 75,
-      hardLimit: 180,
-    },
-    links: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 360,
-      hardLimit: 450,
-    },
-    screenshots: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-    files: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-  },
-
-  // Free: Free evaluation tier
-  free: {
-    seats: {
-      quotedLimit: 3,
-      creditLimit: 0,
-      softLimit: 3,
-      hardLimit: 3,
-    },
-    recordings: {
-      quotedLimit: 3,
-      creditLimit: 0,
-      softLimit: 3,
-      hardLimit: 3,
-    },
-    links: {
-      quotedLimit: 3,
-      creditLimit: 0,
-      softLimit: 6,
-      hardLimit: 8,
-    },
-    screenshots: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-    files: {
-      quotedLimit: 0,
-      creditLimit: 0,
-      softLimit: 0,
-      hardLimit: 0,
-    },
-  },
-
-  // Enterprise: $650/mo - For large organizations
-  enterprise_monthly: {
-    seats: {
-      quotedLimit: 30,
-      creditLimit: 15,
-      softLimit: 30,
-      hardLimit: 45,
-    },
-    recordings: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 150,
-      hardLimit: 700,
-    },
-    links: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 1400,
-      hardLimit: 1750,
-    },
-    screenshots: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 500,
-      hardLimit: 1000,
-    },
-    files: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 200,
-      hardLimit: 400,
-    },
-  },
-  enterprise_annual: {
-    seats: {
-      quotedLimit: 30,
-      creditLimit: 15,
-      softLimit: 30,
-      hardLimit: 45,
-    },
-    recordings: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 150,
-      hardLimit: 700,
-    },
-    links: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 1400,
-      hardLimit: 1750,
-    },
-    screenshots: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 500,
-      hardLimit: 1000,
-    },
-    files: {
-      quotedLimit: UNLIMITED_QUOTED_LIMIT,
-      creditLimit: 0,
-      softLimit: 200,
-      hardLimit: 400,
-    },
+  files: {
+    quotedLimit: 0,
+    softLimit: 0,
+    hardLimit: 0,
   },
 };
 
 /**
- * Helper to get entitlement action for a plan
+ * Helper to get entitlement action based on actual limits
  *
- * @param planId - The plan ID
- * @param resourceType - The resource type
  * @param currentUsage - The current usage of the resource
- * @param consumptionUnits - The number of units to consume
- * @param hardLimit - Optional overrides for hard limit
- * @param softLimit - Optional overrides for soft limit
+ * @param requestedConsumptionUnits - The number of units to consume
+ * @param hardLimit - The hard limit for the resource
+ * @param softLimit - The soft limit for the resource
  * @returns The entitlement action
  */
 export function getEntitlementAction(
-  // The plan ID
-  planId: PlanId,
-  // The resource type
-  resourceType: ResourceType,
-  // The current usage of the resource
   currentUsage: number,
-  // The number of units to consume
   requestedConsumptionUnits: number,
-  // Optional overrides for hard and soft limits
-  // Unless specified, use the plan's default values
-  hardLimit: number = PLAN_ENTITLEMENTS[planId][resourceType].hardLimit,
-  softLimit: number = PLAN_ENTITLEMENTS[planId][resourceType].softLimit,
-  // Optional overrides for the number of units that have been credited
-  // The number of units that have been credited
-  resourceCredited: number = 0
+  hardLimit: number,
+  softLimit: number
 ): { entitlementAction: EntitlementAction; resourceConsumed: number } {
-  // Update the hard and soft limits with the number of units that have been credited
-  hardLimit = hardLimit + resourceCredited;
-  softLimit = softLimit + resourceCredited;
-
   // If the current usage + consumption units exceeds the hard limit, block the request
-  // and return the current usage as the amount consumed
   if (currentUsage + requestedConsumptionUnits > hardLimit) {
     return { entitlementAction: 'block', resourceConsumed: currentUsage };
   }
 
   // If the current usage + consumption units exceeds the soft limit, warn the user
-  // and return the current usage including the consumption units as the amount consumed
   if (currentUsage + requestedConsumptionUnits > softLimit) {
     return {
       entitlementAction: 'warn',
@@ -454,8 +154,7 @@ export function getEntitlementAction(
     };
   }
 
-  // If the current usage + consumption units is within the soft limit, allow the request
-  // and return the current usage including the consumption units as the amount consumed
+  // Within limits, allow the request
   return {
     entitlementAction: 'allow',
     resourceConsumed: currentUsage + requestedConsumptionUnits,
@@ -463,16 +162,16 @@ export function getEntitlementAction(
 }
 
 /**
- * Helper to get entitlements for a plan
- */
-export function getPlanEntitlements(planId: PlanId): PlanEntitlements {
-  return PLAN_ENTITLEMENTS[planId];
-}
-
-/**
  * Unique plan name values for type safety
  */
-export const PLAN_NAME_VALUES = ['Essential', 'Starter', 'Scale Up', 'Free', 'Enterprise'] as const;
+export const PLAN_NAME_VALUES = [
+  'Essential',
+  'Starter',
+  'Scale Up',
+  'Free',
+  'Enterprise',
+  'Custom',
+] as const;
 export type PlanName = (typeof PLAN_NAME_VALUES)[number];
 
 /**
@@ -488,6 +187,7 @@ export const PLAN_NAMES: Record<PlanId, PlanName> = {
   free: 'Free',
   enterprise_monthly: 'Enterprise',
   enterprise_annual: 'Enterprise',
+  custom: 'Custom',
 };
 
 /**
@@ -1386,154 +1086,33 @@ export type FeatureGate = (typeof FEATURE_GATE_KEYS)[number];
 export type PlanFeatureGates = Record<FeatureGate, boolean>;
 
 /**
- * Feature gates by plan name
- * Keyed by PlanName since billing cycle does not affect feature access
+ * Free plan feature gates - hardcoded since free plan has no Dodo product
+ * All paid plan feature gates come from Dodo product metadata (stored on subscription record)
  */
-export const PLAN_FEATURE_GATES: Record<PlanName, PlanFeatureGates> = {
-  Free: {
-    replayRecordings: true,
-    autoBlurSensitiveData: true,
-    requestScreenshots: false,
-    annotateScreenshots: false,
-    requestFileUploads: false,
-    requestConsoleLogs: false,
-    requestNetworkActivity: false,
-    requestServerLogs: false,
-    requestActionReplay: false,
-    customizeWorkspace: false,
-    requestAdditionalSeats: false,
-    bringYourOwnStorageRecordings: false,
-    bringYourOwnStorageScreenshots: false,
-    bringYourOwnStorageFiles: false,
-    customizeDataRetention: false,
-    enableEnterpriseCompliance: false,
-    customizeDataResidency: false,
-    integrateHelpDesks: false,
-    integrateCRMs: false,
-    integrateIssueTrackers: false,
-    integrateAutomation: false,
-    accessUserplaneAPI: false,
-  },
-  Essential: {
-    replayRecordings: true,
-    autoBlurSensitiveData: true,
-    requestScreenshots: false,
-    annotateScreenshots: false,
-    requestFileUploads: false,
-    requestConsoleLogs: false,
-    requestNetworkActivity: false,
-    requestServerLogs: false,
-    requestActionReplay: false,
-    customizeWorkspace: false,
-    requestAdditionalSeats: true,
-    bringYourOwnStorageRecordings: false,
-    bringYourOwnStorageScreenshots: false,
-    bringYourOwnStorageFiles: false,
-    customizeDataRetention: false,
-    enableEnterpriseCompliance: true,
-    customizeDataResidency: false,
-    integrateHelpDesks: true,
-    integrateCRMs: false,
-    integrateIssueTrackers: false,
-    integrateAutomation: false,
-    accessUserplaneAPI: false,
-  },
-  Starter: {
-    replayRecordings: true,
-    autoBlurSensitiveData: true,
-    requestScreenshots: false,
-    annotateScreenshots: false,
-    requestFileUploads: false,
-    requestConsoleLogs: false,
-    requestNetworkActivity: false,
-    requestServerLogs: false,
-    requestActionReplay: false,
-    customizeWorkspace: true,
-    requestAdditionalSeats: true,
-    bringYourOwnStorageRecordings: false,
-    bringYourOwnStorageScreenshots: false,
-    bringYourOwnStorageFiles: false,
-    customizeDataRetention: true,
-    enableEnterpriseCompliance: true,
-    customizeDataResidency: false,
-    integrateHelpDesks: true,
-    integrateCRMs: false,
-    integrateIssueTrackers: false,
-    integrateAutomation: false,
-    accessUserplaneAPI: false,
-  },
-  'Scale Up': {
-    replayRecordings: true,
-    autoBlurSensitiveData: true,
-    requestScreenshots: false,
-    annotateScreenshots: false,
-    requestFileUploads: false,
-    requestConsoleLogs: false,
-    requestNetworkActivity: false,
-    requestServerLogs: false,
-    requestActionReplay: false,
-    customizeWorkspace: true,
-    requestAdditionalSeats: true,
-    bringYourOwnStorageRecordings: false,
-    bringYourOwnStorageScreenshots: false,
-    bringYourOwnStorageFiles: false,
-    customizeDataRetention: true,
-    enableEnterpriseCompliance: true,
-    customizeDataResidency: false,
-    integrateHelpDesks: true,
-    integrateCRMs: true,
-    integrateIssueTrackers: true,
-    integrateAutomation: true,
-    accessUserplaneAPI: false,
-  },
-  Enterprise: {
-    replayRecordings: true,
-    autoBlurSensitiveData: true,
-    requestScreenshots: true,
-    annotateScreenshots: true,
-    requestFileUploads: true,
-    requestConsoleLogs: true,
-    requestNetworkActivity: true,
-    requestServerLogs: true,
-    requestActionReplay: true,
-    customizeWorkspace: true,
-    requestAdditionalSeats: true,
-    bringYourOwnStorageRecordings: true,
-    bringYourOwnStorageScreenshots: true,
-    bringYourOwnStorageFiles: true,
-    customizeDataRetention: true,
-    enableEnterpriseCompliance: true,
-    customizeDataResidency: true,
-    integrateHelpDesks: true,
-    integrateCRMs: true,
-    integrateIssueTrackers: true,
-    integrateAutomation: true,
-    accessUserplaneAPI: true,
-  },
+export const FREE_PLAN_FEATURE_GATES: PlanFeatureGates = {
+  replayRecordings: true,
+  autoBlurSensitiveData: true,
+  requestScreenshots: false,
+  annotateScreenshots: false,
+  requestFileUploads: false,
+  requestConsoleLogs: false,
+  requestNetworkActivity: false,
+  requestServerLogs: false,
+  requestActionReplay: false,
+  customizeWorkspace: false,
+  requestAdditionalSeats: false,
+  bringYourOwnStorageRecordings: false,
+  bringYourOwnStorageScreenshots: false,
+  bringYourOwnStorageFiles: false,
+  customizeDataRetention: false,
+  enableEnterpriseCompliance: false,
+  customizeDataResidency: false,
+  integrateHelpDesks: false,
+  integrateCRMs: false,
+  integrateIssueTrackers: false,
+  integrateAutomation: false,
+  accessUserplaneAPI: false,
 };
-
-/**
- * Check if a specific feature is accessible for a plan
- *
- * @param planId - The plan identifier (e.g. 'starter_monthly')
- * @param feature - The feature gate to check (e.g. 'requestScreenshots')
- * @returns true if the feature is accessible on the plan
- */
-export function getFeatureGate(planId: PlanId, feature: FeatureGate): boolean {
-  const planName = getPlanName(planId);
-  return PLAN_FEATURE_GATES[planName][feature];
-}
-
-/**
- * Get all feature gates for a plan
- *
- * @param planId - The plan identifier (e.g. 'starter_monthly')
- * @returns All feature gates for the plan
- */
-export function getFeatureGates(planId: PlanId): PlanFeatureGates {
-  const planName = getPlanName(planId);
-  return PLAN_FEATURE_GATES[planName];
-}
 
 // ============================================================================
 // Abuse Prevention Configuration
@@ -1646,6 +1225,12 @@ export const COOLDOWN_CONFIG: Record<PlanId | 'default', CooldownConfig> = {
 
   // Free plan - no cooldown
   free: {
+    durationDays: 0,
+    schedule: [{ days: 0, multiplier: 1.0 }],
+  },
+
+  // Custom plan - no cooldown (sales-led, pre-negotiated)
+  custom: {
     durationDays: 0,
     schedule: [{ days: 0, multiplier: 1.0 }],
   },

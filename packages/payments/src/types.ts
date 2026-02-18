@@ -235,3 +235,14 @@ export type DodoRefundStatus = DodoPayments.RefundStatus;
 export const REFUND_EVENT_TYPES = ['refund.succeeded', 'refund.failed'] as const;
 
 export type RefundEventType = (typeof REFUND_EVENT_TYPES)[number];
+
+// Re-export metadata types and functions
+export type { DodoFeatureLimits, ProductPlanMetadata } from './metadata';
+export {
+  decodeMetadataValue,
+  encodeFeatureGates,
+  encodeFeatureLimits,
+  fetchProductMetadata,
+  parseFeatureGates,
+  parseFeatureLimits,
+} from './metadata';
