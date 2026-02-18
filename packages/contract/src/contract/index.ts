@@ -84,6 +84,12 @@ export const adminContract = {
   workspace: {
     createInvite: admin.createWorkspaceInvite,
   },
+  plans: {
+    list: admin.listPlans,
+    get: admin.getPlan,
+    create: admin.createPlan,
+    update: admin.updatePlan,
+  },
 };
 
 /**

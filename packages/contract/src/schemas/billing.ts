@@ -3,7 +3,7 @@
  */
 
 import { SUBSCRIPTION_STATUSES } from '@workspace/payments/types';
-import { PLAN_IDS } from '@workspace/pricing';
+import { FEATURE_GATE_KEYS, PLAN_IDS } from '@workspace/pricing';
 import { z } from 'zod';
 
 import { ApiResponseSchema } from './common';
@@ -65,6 +65,15 @@ export const AccessDetailSchema = z.object({
 });
 
 /**
+ * Feature gate schema - record of feature keys to boolean values
+ */
+export const FeatureGatesSchema = z.object(
+  Object.fromEntries(FEATURE_GATE_KEYS.map((key) => [key, z.boolean()])) as {
+    [K in (typeof FEATURE_GATE_KEYS)[number]]: z.ZodBoolean;
+  }
+);
+
+/**
  * Subscription status response data
  *
  * Note: To check if a subscription exists, check if contractDetail.planId is not null
@@ -73,6 +82,7 @@ export const AccessDetailSchema = z.object({
 export const SubscriptionStatusDataSchema = z.object({
   contractDetail: ContractDetailSchema,
   accessDetail: AccessDetailSchema,
+  featureGates: FeatureGatesSchema,
 });
 
 /**

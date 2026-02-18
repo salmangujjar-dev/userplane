@@ -2,6 +2,7 @@ import { oc } from '@orpc/contract';
 
 import {
   AdminBanUserInputSchema,
+  AdminCreatePlanInputSchema,
   AdminCreateWorkspaceInviteDataSchema,
   AdminCreateWorkspaceInviteInputSchema,
   AdminDeactivateProjectDataSchema,
@@ -10,6 +11,7 @@ import {
   AdminEntitlementsDataSchema,
   AdminErrors,
   AdminGetEntitlementsInputSchema,
+  AdminGetPlanInputSchema,
   AdminGetUserInputSchema,
   AdminGetWorkspaceInputSchema,
   AdminGetWorkspaceMemberRecordingStatsInputSchema,
@@ -18,6 +20,8 @@ import {
   AdminListUserWorkspacesInputSchema,
   AdminListWorkspaceMembersInputSchema,
   AdminListWorkspaceProjectsInputSchema,
+  AdminPlanProductSchema,
+  AdminPlansListDataSchema,
   AdminResetInviteTokenInputSchema,
   AdminRestoreProjectDataSchema,
   AdminRestoreProjectInputSchema,
@@ -29,6 +33,7 @@ import {
   AdminSearchWorkspacesInputSchema,
   AdminUnbanUserInputSchema,
   AdminUpdateEntitlementsInputSchema,
+  AdminUpdatePlanInputSchema,
   AdminUserDetailSchema,
   AdminUserSessionsDataSchema,
   AdminUsersListDataSchema,
@@ -532,3 +537,90 @@ export const createWorkspaceInvite = oc
   })
   .input(AdminCreateWorkspaceInviteInputSchema)
   .output(ApiResponseSchema(AdminCreateWorkspaceInviteDataSchema));
+
+// ============================================
+// PLAN MANAGEMENT
+// ============================================
+
+/**
+ * GET /admin/plans
+ * List all DodoPayments products
+ */
+export const listPlans = oc
+  .route({
+    method: 'GET',
+    path: '/admin/plans',
+    inputStructure: 'detailed',
+    summary: 'List plan products',
+    description: 'List all DodoPayments products with decoded metadata',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+  })
+  .output(ApiResponseSchema(AdminPlansListDataSchema));
+
+/**
+ * GET /admin/plans/{productId}
+ * Get a single DodoPayments product
+ */
+export const getPlan = oc
+  .route({
+    method: 'GET',
+    path: '/admin/plans/{productId}',
+    inputStructure: 'detailed',
+    summary: 'Get plan product',
+    description: 'Get a single DodoPayments product with decoded metadata',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    PLAN_NOT_FOUND: AdminErrors.PLAN_NOT_FOUND,
+  })
+  .input(AdminGetPlanInputSchema)
+  .output(ApiResponseSchema(AdminPlanProductSchema));
+
+/**
+ * POST /admin/plans
+ * Create a new DodoPayments product
+ */
+export const createPlan = oc
+  .route({
+    method: 'POST',
+    path: '/admin/plans',
+    inputStructure: 'detailed',
+    summary: 'Create plan product',
+    description: 'Create a new DodoPayments product with feature metadata',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    PLAN_CREATE_FAILED: AdminErrors.PLAN_CREATE_FAILED,
+  })
+  .input(AdminCreatePlanInputSchema)
+  .output(ApiResponseSchema(AdminPlanProductSchema));
+
+/**
+ * PATCH /admin/plans/{productId}
+ * Update a DodoPayments product
+ */
+export const updatePlan = oc
+  .route({
+    method: 'PATCH',
+    path: '/admin/plans/{productId}',
+    inputStructure: 'detailed',
+    summary: 'Update plan product',
+    description: 'Update a DodoPayments product and its feature metadata',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    PLAN_NOT_FOUND: AdminErrors.PLAN_NOT_FOUND,
+    PLAN_UPDATE_FAILED: AdminErrors.PLAN_UPDATE_FAILED,
+  })
+  .input(AdminUpdatePlanInputSchema)
+  .output(ApiResponseSchema(AdminPlanProductSchema));

@@ -109,4 +109,20 @@ export const AdminErrors = {
     status: 400,
     message: 'Recording is not deleted',
   },
+
+  // Plan errors
+  PLAN_NOT_FOUND: {
+    status: 404,
+    message: 'Plan product not found',
+  },
+
+  PLAN_CREATE_FAILED: {
+    status: 502,
+    message: 'Failed to create plan product in DodoPayments',
+  },
+
+  PLAN_UPDATE_FAILED: {
+    status: 502,
+    message: 'Failed to update plan product in DodoPayments',
+  },
 } as const;

@@ -1,4 +1,4 @@
-import { RESOURCE_TYPE_VALUES } from '@workspace/pricing';
+import { FEATURE_GATE_KEYS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 import { z } from 'zod';
 
 import {
@@ -662,11 +662,10 @@ export type AdminGetWorkspaceRecordingStatsInput = z.infer<
  */
 export const AdminEntitlementSchema = z.object({
   resourceType: z.enum(RESOURCE_TYPE_VALUES),
-  creditLimit: z.number(),
+  quotedLimit: z.number(),
   softLimit: z.number(),
   hardLimit: z.number(),
   resourceConsumed: z.number(),
-  resourceCredited: z.number(),
 });
 
 /**
@@ -689,7 +688,7 @@ export const AdminEntitlementsDataSchema = z.object({
  */
 export const AdminUpdateEntitlementItemSchema = z.object({
   resourceType: z.enum(RESOURCE_TYPE_VALUES),
-  creditLimit: z.number().int().nonnegative().optional(),
+  quotedLimit: z.number().int().optional(), // -1 allowed for unlimited
   softLimit: z.number().int().nonnegative().optional(),
   hardLimit: z.number().int().optional(), // -1 allowed for unlimited
 });
@@ -743,3 +742,130 @@ export type AdminGetEntitlementsInput = z.infer<typeof AdminGetEntitlementsInput
 export type AdminEntitlementsData = z.infer<typeof AdminEntitlementsDataSchema>;
 export type AdminUpdateEntitlementItem = z.infer<typeof AdminUpdateEntitlementItemSchema>;
 export type AdminUpdateEntitlementsInput = z.infer<typeof AdminUpdateEntitlementsInputSchema>;
+
+// ============================================
+// ADMIN PLAN MANAGEMENT SCHEMAS
+// ============================================
+
+const TIME_INTERVAL_VALUES = ['Day', 'Week', 'Month', 'Year'] as const;
+
+/** Price configuration for plan product */
+export const AdminPlanPriceSchema = z.object({
+  type: z.enum(['one_time_price', 'recurring_price']),
+  currency: z.string(),
+  price: z.number(),
+  discount: z.number().default(0),
+  taxInclusive: z.boolean().nullable().optional(),
+  paymentFrequencyCount: z.number().optional(),
+  paymentFrequencyInterval: z.enum(TIME_INTERVAL_VALUES).optional(),
+  subscriptionPeriodCount: z.number().optional(),
+  subscriptionPeriodInterval: z.enum(TIME_INTERVAL_VALUES).optional(),
+  trialPeriodDays: z.number().optional(),
+});
+
+/** Resource limit in plan metadata (decoded) */
+export const AdminPlanResourceLimitSchema = z.object({
+  resourceType: z.enum(RESOURCE_TYPE_VALUES),
+  quotedLimit: z.number().int(),
+  softLimit: z.number().int(),
+  hardLimit: z.number().int(),
+});
+
+/** Feature gate in plan metadata (decoded) */
+export const AdminPlanFeatureGateSchema = z.object({
+  gate: z.string(),
+  label: z.string(),
+  enabled: z.boolean(),
+});
+
+/** Plan product in list/detail response */
+export const AdminPlanProductSchema = z.object({
+  productId: z.string(),
+  name: z.string().nullable(),
+  description: z.string().nullable(),
+  isRecurring: z.boolean(),
+  price: AdminPlanPriceSchema.nullable(),
+  featureLimits: z.array(AdminPlanResourceLimitSchema).nullable(),
+  featureGates: z.array(AdminPlanFeatureGateSchema).nullable(),
+  hasMetadata: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/** List plans response */
+export const AdminPlansListDataSchema = z.object({
+  products: z.array(AdminPlanProductSchema),
+});
+
+/** Get plan input */
+export const AdminGetPlanInputSchema = z.object({
+  params: z.object({ productId: z.string() }),
+});
+
+/** Create plan input */
+export const AdminCreatePlanInputSchema = z.object({
+  body: z.object({
+    name: z.string().min(1).max(100),
+    description: z.string().max(1000).optional(),
+    price: AdminPlanPriceSchema,
+    taxCategory: z.string().default('saas'),
+    featureLimits: z
+      .array(
+        z.object({
+          resourceType: z.enum(RESOURCE_TYPE_VALUES),
+          quotedLimit: z.number().int(),
+          softLimit: z.number().int(),
+          hardLimit: z.number().int(),
+        })
+      )
+      .optional(),
+    featureGates: z
+      .array(
+        z.object({
+          gate: z.enum(FEATURE_GATE_KEYS),
+          enabled: z.boolean(),
+        })
+      )
+      .optional(),
+  }),
+});
+
+/** Update plan input */
+export const AdminUpdatePlanInputSchema = z.object({
+  params: z.object({ productId: z.string() }),
+  body: z.object({
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().max(1000).nullable().optional(),
+    price: AdminPlanPriceSchema.optional(),
+    featureLimits: z
+      .array(
+        z.object({
+          resourceType: z.enum(RESOURCE_TYPE_VALUES),
+          quotedLimit: z.number().int(),
+          softLimit: z.number().int(),
+          hardLimit: z.number().int(),
+        })
+      )
+      .optional(),
+    featureGates: z
+      .array(
+        z.object({
+          gate: z.enum(FEATURE_GATE_KEYS),
+          enabled: z.boolean(),
+        })
+      )
+      .optional(),
+  }),
+});
+
+/**
+ * Types - Plans
+ */
+export type AdminPlanPrice = z.infer<typeof AdminPlanPriceSchema>;
+export type AdminPlanResourceLimit = z.infer<typeof AdminPlanResourceLimitSchema>;
+export type AdminPlanFeatureGate = z.infer<typeof AdminPlanFeatureGateSchema>;
+export type AdminPlanProduct = z.infer<typeof AdminPlanProductSchema>;
+export type AdminPlansListData = z.infer<typeof AdminPlansListDataSchema>;
+export type AdminGetPlanInput = z.infer<typeof AdminGetPlanInputSchema>;
+export type AdminCreatePlanInput = z.infer<typeof AdminCreatePlanInputSchema>;
+export type AdminUpdatePlanInput = z.infer<typeof AdminUpdatePlanInputSchema>;

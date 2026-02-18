@@ -1,6 +1,15 @@
 import { SUBSCRIPTION_STATUSES } from '@workspace/payments/types';
 import { relations } from 'drizzle-orm';
-import { boolean, index, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 
 import { workspaces } from './workspaces';
 
@@ -42,6 +51,9 @@ export const subscriptions = pgTable(
     // Cancellation info
     cancelledAt: timestamp('cancelled_at'),
     cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
+
+    // Feature gates (from Dodo product metadata)
+    featureGates: jsonb('feature_gates').$type<Record<string, boolean>>(),
 
     // Webhook tracking for out-of-order detection
     lastWebhookId: text('last_webhook_id'),
