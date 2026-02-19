@@ -1,0 +1,38 @@
+{
+  "products": [
+    { "envkey": "DODO_PRODUCT_STARTER_MONTHLY", "label": "Starter Monthly" },
+    { "envkey": "DODO_PRODUCT_STARTER_ANNUAL", "label": "Starter Annual" }
+  ],
+  "feature_limits": {
+    "seats": { "q": 10, "s": 10, "h": 20 },
+    "recordings": { "q": -1, "s": 45, "h": 85 },
+    "links": { "q": -1, "s": 170, "h": 215 },
+    "screenshots": { "q": 0, "s": 0, "h": 0 },
+    "files": { "q": 0, "s": 0, "h": 0 }
+  },
+  "feature_gates": {
+    "rRec": true,
+    "blur": true,
+    "sess": true,
+    "scrn": false,
+    "ann": false,
+    "file": false,
+    "cons": false,
+    "net": false,
+    "srvL": false,
+    "arpl": false,
+    "cWs": true,
+    "seat": true,
+    "bsR": false,
+    "bsS": false,
+    "bsF": false,
+    "ret": true,
+    "comp": true,
+    "res": false,
+    "help": true,
+    "crm": false,
+    "iss": false,
+    "auto": false,
+    "api": false
+  }
+}

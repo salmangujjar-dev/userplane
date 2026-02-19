@@ -294,6 +294,7 @@ export const CATEGORY_FEATURE_DEFINITIONS: Record<FeatureCategory, CategoryFeatu
   screenRecordings: [
     { name: 'Recording links', key: 'recordingLinks' },
     { name: 'Recordings per month', key: 'recordingsPerMonth' },
+    { name: 'Request sessions', key: 'requestSessions' },
     { name: 'Replay recordings', key: 'replayRecordings' },
     { name: 'Auto-blur sensitive data', key: 'autoBlur' },
     { name: 'Bring your own storage (BYOS)', key: 'byos' },
@@ -350,6 +351,7 @@ const ESSENTIAL_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
   screenRecordings: {
     recordingLinks: 'Unlimited',
     recordingsPerMonth: '25',
+    requestSessions: false,
     replayRecordings: true,
     autoBlur: true,
     byos: false,
@@ -442,6 +444,7 @@ const STARTER_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
   screenRecordings: {
     recordingLinks: 'Unlimited',
     recordingsPerMonth: 'Unlimited',
+    requestSessions: true,
     replayRecordings: true,
     autoBlur: true,
     byos: false,
@@ -534,6 +537,7 @@ const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
   screenRecordings: {
     recordingLinks: 'Unlimited',
     recordingsPerMonth: 'Unlimited',
+    requestSessions: true,
     replayRecordings: true,
     autoBlur: true,
     byos: false,
@@ -626,6 +630,7 @@ const ENTERPRISE_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
   screenRecordings: {
     recordingLinks: 'Unlimited',
     recordingsPerMonth: 'Unlimited',
+    requestSessions: true,
     replayRecordings: true,
     autoBlur: true,
     byos: true,
@@ -1048,6 +1053,7 @@ export const FEATURE_GATE_KEYS = [
   // Screen recordings
   'replayRecordings',
   'autoBlurSensitiveData',
+  'requestSessions',
   // Screenshots
   'requestScreenshots',
   'annotateScreenshots',
@@ -1086,6 +1092,7 @@ export type FeatureGate = (typeof FEATURE_GATE_KEYS)[number];
 export const FEATURE_GATE_LABELS: Record<FeatureGate, string> = {
   replayRecordings: 'Replay Recordings',
   autoBlurSensitiveData: 'Auto-blur Sensitive Data',
+  requestSessions: 'Request Sessions',
   requestScreenshots: 'Request Screenshots',
   annotateScreenshots: 'Annotate Screenshots',
   requestFileUploads: 'Request File Uploads',
@@ -1120,6 +1127,7 @@ export type PlanFeatureGates = Record<FeatureGate, boolean>;
 export const FREE_PLAN_FEATURE_GATES: PlanFeatureGates = {
   replayRecordings: true,
   autoBlurSensitiveData: true,
+  requestSessions: false,
   requestScreenshots: false,
   annotateScreenshots: false,
   requestFileUploads: false,
