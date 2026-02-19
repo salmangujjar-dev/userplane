@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { AdminUserDetail, AdminUserSession, AdminUserWorkspace } from '@/types';
 
@@ -272,7 +273,11 @@ export function UserDetailSheet({
                     key={ws.workspaceId}
                     className="flex items-center gap-3 p-2 rounded-lg bg-muted/50"
                   >
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <WorkspaceAvatar
+                      workspaceId={ws.workspaceId}
+                      workspaceName={ws.workspaceName}
+                      size={WORKSPACE_AVATAR_SIZES.COMPACT}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{ws.workspaceName}</p>
                       <p className="text-xs text-muted-foreground capitalize">{ws.workspaceRole}</p>

@@ -63,13 +63,13 @@ function EditEntitlementModal({
   onConfirm,
   isPending,
 }: EditEntitlementModalProps) {
-  const [creditLimit, setCreditLimit] = useState('');
+  const [quotedLimit, setQuotedLimit] = useState('');
   const [softLimit, setSoftLimit] = useState('');
   const [hardLimit, setHardLimit] = useState('');
 
   useEffect(() => {
     if (open && entitlement) {
-      setCreditLimit(entitlement.creditLimit.toString());
+      setQuotedLimit(entitlement.quotedLimit.toString());
       setSoftLimit(entitlement.softLimit.toString());
       setHardLimit(entitlement.hardLimit.toString());
     }
@@ -82,12 +82,12 @@ function EditEntitlementModal({
       resourceType: entitlement.resourceType as AdminUpdateEntitlementItem['resourceType'],
     };
 
-    const newCreditLimit = parseInt(creditLimit, 10);
+    const newQuotedLimit = parseInt(quotedLimit, 10);
     const newSoftLimit = parseInt(softLimit, 10);
     const newHardLimit = parseInt(hardLimit, 10);
 
-    if (!isNaN(newCreditLimit) && newCreditLimit !== entitlement.creditLimit) {
-      update.creditLimit = newCreditLimit;
+    if (!isNaN(newQuotedLimit) && newQuotedLimit !== entitlement.quotedLimit) {
+      update.quotedLimit = newQuotedLimit;
     }
     if (!isNaN(newSoftLimit) && newSoftLimit !== entitlement.softLimit) {
       update.softLimit = newSoftLimit;
@@ -97,7 +97,7 @@ function EditEntitlementModal({
     }
 
     if (
-      update.creditLimit === undefined &&
+      update.quotedLimit === undefined &&
       update.softLimit === undefined &&
       update.hardLimit === undefined
     ) {
@@ -121,25 +121,27 @@ function EditEntitlementModal({
             <div className="flex flex-col space-y-1">
               <DialogTitle className="text-xl font-semibold">Edit Entitlement</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                Update limits for <strong>{resourceLabel}</strong>. Use -1 for unlimited hard
-                limits.
+                Update limits for <strong>{resourceLabel}</strong>. Use -1 for unlimited.
               </DialogDescription>
             </div>
           </div>
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="creditLimit" className="mb-2 block">
-                Credit Limit
+              <Label htmlFor="quotedLimit" className="mb-2 block">
+                Quoted Limit
               </Label>
               <Input
-                id="creditLimit"
+                id="quotedLimit"
                 type="number"
-                value={creditLimit}
-                onChange={(e) => setCreditLimit(e.target.value)}
-                min={0}
+                value={quotedLimit}
+                onChange={(e) => setQuotedLimit(e.target.value)}
+                min={-1}
                 disabled={isPending}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Advertised limit shown to customers. Use -1 for unlimited.
+              </p>
             </div>
 
             <div>
@@ -221,7 +223,7 @@ export function EntitlementsTab({ workspaceId }: EntitlementsTabProps) {
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Entitlements</h2>
         <p className="text-sm text-muted-foreground">
-          Manage resource limits for this workspace. Use -1 for unlimited hard limits.
+          Manage resource limits for this workspace. Use -1 for unlimited.
         </p>
       </div>
 
@@ -232,8 +234,7 @@ export function EntitlementsTab({ workspaceId }: EntitlementsTabProps) {
               <TableRow>
                 <TableHead>Resource</TableHead>
                 <TableHead className="text-right">Consumed</TableHead>
-                <TableHead className="text-right">Credited</TableHead>
-                <TableHead className="text-right">Credit Limit</TableHead>
+                <TableHead className="text-right">Quoted Limit</TableHead>
                 <TableHead className="text-right">Soft Limit</TableHead>
                 <TableHead className="text-right">Hard Limit</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
@@ -258,9 +259,6 @@ export function EntitlementsTab({ workspaceId }: EntitlementsTabProps) {
                     <TableCell className="text-right">
                       <Skeleton className="h-4 w-12 ml-auto" />
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Skeleton className="h-4 w-12 ml-auto" />
-                    </TableCell>
                     <TableCell>
                       <Skeleton className="h-8 w-8 ml-auto" />
                     </TableCell>
@@ -268,7 +266,7 @@ export function EntitlementsTab({ workspaceId }: EntitlementsTabProps) {
                 ))
               ) : entitlements.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No entitlements found
                   </TableCell>
                 </TableRow>
@@ -282,10 +280,7 @@ export function EntitlementsTab({ workspaceId }: EntitlementsTabProps) {
                       <span className="text-sm">{entitlement.resourceConsumed}</span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="text-sm">{entitlement.resourceCredited}</span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className="text-sm">{entitlement.creditLimit}</span>
+                      <span className="text-sm">{formatLimit(entitlement.quotedLimit)}</span>
                     </TableCell>
                     <TableCell className="text-right">
                       <span className="text-sm">{entitlement.softLimit}</span>

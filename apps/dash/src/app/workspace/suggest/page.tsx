@@ -12,8 +12,8 @@ import posthog from 'posthog-js';
 import { Suspense, useEffect, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
-import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { PaginationControls } from '@/components/shared/pagination-controls';
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@/constants';
 import { useJoinWorkspace, useWorkspaceSuggestions } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
@@ -192,12 +192,12 @@ function WorkspaceSuggestPageContent() {
           <div className="flex flex-col items-center gap-3">
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex -space-x-2 shrink-0 cursor-default">
-                  {Array.from({ length: 3 }, (_, i) => (
-                    <div key={i} className="rounded-full border-2 border-card overflow-hidden">
-                      <BoringAvatar size={AVATAR_SIZES.GROUP} />
-                    </div>
-                  ))}
+                <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-default">
+                  <WorkspaceAvatar
+                    workspaceId={requestedWorkspace.workspaceId}
+                    workspaceName={requestedWorkspace.workspaceName}
+                    size={WORKSPACE_AVATAR_SIZES.GROUP}
+                  />
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -256,15 +256,12 @@ function WorkspaceSuggestPageContent() {
                   </div>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex -space-x-2 shrink-0 cursor-pointer">
-                        {Array.from({ length: 3 }, (_, i) => (
-                          <div
-                            key={i}
-                            className="rounded-full border-2 border-card overflow-hidden"
-                          >
-                            <BoringAvatar size={AVATAR_SIZES.INLINE} />
-                          </div>
-                        ))}
+                      <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-pointer">
+                        <WorkspaceAvatar
+                          workspaceId={workspace.workspaceId}
+                          workspaceName={workspace.workspaceName}
+                          size={WORKSPACE_AVATAR_SIZES.INLINE}
+                        />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>

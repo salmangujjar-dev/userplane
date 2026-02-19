@@ -21,7 +21,6 @@ import { VisuallyHidden } from '@workspace/ui/components/visually-hidden';
 import {
   AlertCircle,
   Ban,
-  Building2,
   CheckCircle,
   ChevronLeft,
   ChevronRight,
@@ -38,6 +37,7 @@ import {
 } from 'lucide-react';
 
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { AdminWorkspaceDetail, AdminWorkspaceMember } from '@/types';
 
@@ -123,7 +123,11 @@ export function WorkspaceDetailSheet({
             <SheetHeader className="px-6 py-4">
               <div>
                 <div className="flex items-center gap-3">
-                  <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <WorkspaceAvatar
+                    workspaceId={workspace.workspaceId}
+                    workspaceName={workspace.workspaceName}
+                    size={WORKSPACE_AVATAR_SIZES.COMPACT}
+                  />
                   <SheetTitle className="text-base">{workspace.workspaceName}</SheetTitle>
                   <Tooltip>
                     <TooltipTrigger asChild>
