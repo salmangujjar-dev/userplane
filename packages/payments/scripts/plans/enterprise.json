@@ -1,0 +1,38 @@
+{
+  "products": [
+    { "envkey": "DODO_PRODUCT_ENTERPRISE_MONTHLY", "label": "Enterprise Monthly" },
+    { "envkey": "DODO_PRODUCT_ENTERPRISE_ANNUAL", "label": "Enterprise Annual" }
+  ],
+  "feature_limits": {
+    "seats": { "q": 30, "s": 30, "h": 45 },
+    "recordings": { "q": -1, "s": 150, "h": 700 },
+    "links": { "q": -1, "s": 1400, "h": 1750 },
+    "screenshots": { "q": -1, "s": 500, "h": 1000 },
+    "files": { "q": -1, "s": 200, "h": 400 }
+  },
+  "feature_gates": {
+    "rRec": true,
+    "blur": true,
+    "sess": true,
+    "scrn": true,
+    "ann": true,
+    "file": true,
+    "cons": true,
+    "net": true,
+    "srvL": true,
+    "arpl": true,
+    "cWs": true,
+    "seat": true,
+    "bsR": true,
+    "bsS": true,
+    "bsF": true,
+    "ret": true,
+    "comp": true,
+    "res": true,
+    "help": true,
+    "crm": true,
+    "iss": true,
+    "auto": true,
+    "api": true
+  }
+}

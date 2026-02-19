@@ -1,0 +1,38 @@
+{
+  "products": [
+    { "envkey": "DODO_PRODUCT_ESSENTIAL_MONTHLY", "label": "Essential Monthly" },
+    { "envkey": "DODO_PRODUCT_ESSENTIAL_ANNUAL", "label": "Essential Annual" }
+  ],
+  "feature_limits": {
+    "seats": { "q": 5, "s": 5, "h": 15 },
+    "recordings": { "q": 25, "s": 25, "h": 35 },
+    "links": { "q": -1, "s": 70, "h": 90 },
+    "screenshots": { "q": 0, "s": 0, "h": 0 },
+    "files": { "q": 0, "s": 0, "h": 0 }
+  },
+  "feature_gates": {
+    "rRec": true,
+    "blur": true,
+    "sess": true,
+    "scrn": false,
+    "ann": false,
+    "file": false,
+    "cons": false,
+    "net": false,
+    "srvL": false,
+    "arpl": false,
+    "cWs": false,
+    "seat": true,
+    "bsR": false,
+    "bsS": false,
+    "bsF": false,
+    "ret": false,
+    "comp": true,
+    "res": false,
+    "help": true,
+    "crm": false,
+    "iss": false,
+    "auto": false,
+    "api": false
+  }
+}

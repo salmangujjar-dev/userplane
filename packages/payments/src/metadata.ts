@@ -22,6 +22,7 @@ import type DodoPayments from 'dodopayments';
 const FEATURE_GATE_SHORT_KEY_MAP: Record<string, FeatureGate> = {
   rRec: 'replayRecordings',
   blur: 'autoBlurSensitiveData',
+  sess: 'requestSessions',
   scrn: 'requestScreenshots',
   ann: 'annotateScreenshots',
   file: 'requestFileUploads',
