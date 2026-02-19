@@ -2,6 +2,7 @@
  * Onboarding email subjects
  */
 
+export { subject as welcomeEmailCustomSubscriptionSubject } from './welcome-email-custom-subscription';
 export { subject as welcomeEmailMemberSubject } from './welcome-email-member';
 export { subject as welcomeEmailPilotSubject } from './welcome-email-pilot';
 export { subject as welcomeEmailRequesterSubject } from './welcome-email-requester';

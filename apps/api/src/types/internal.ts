@@ -41,6 +41,7 @@ import type {
   RecoveryPartiallyEmailProps,
   SandboxInviteEmailProps,
   TeammateInvitedEmailProps,
+  WelcomeEmailCustomSubscriptionProps,
   WelcomeEmailMemberProps,
   WelcomeEmailPilotProps,
   WelcomeEmailRequesterProps,
@@ -293,6 +294,17 @@ export type WelcomeEmailMemberParams = Omit<WelcomeEmailMemberProps, 'dashboardU
  * Service accepts workspaceId and builds URLs internally
  */
 export type WelcomeEmailSubscriptionParams = Omit<WelcomeEmailSubscriptionProps, 'dashboardUrl'> & {
+  workspaceId: string;
+};
+
+/**
+ * Welcome email custom subscription parameters
+ * Service accepts checkoutUrl directly for admin-provisioned custom plans
+ */
+export type WelcomeEmailCustomSubscriptionParams = Omit<
+  WelcomeEmailCustomSubscriptionProps,
+  'calendarUrl'
+> & {
   workspaceId: string;
 };
 

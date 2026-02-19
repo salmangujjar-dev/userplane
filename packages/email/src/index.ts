@@ -47,6 +47,7 @@ export type {
   TeammateInvitedEmailProps,
   TosViolationEmailProps,
   // Trial
+  WelcomeEmailCustomSubscriptionProps,
   WelcomeEmailMemberProps,
   // Onboarding
   WelcomeEmailPilotProps,
@@ -81,6 +82,7 @@ export {
   renderTeammateInvited,
   renderTosViolation,
   // Trial
+  renderWelcomeEmailCustomSubscription,
   renderWelcomeEmailMember,
   // Onboarding
   renderWelcomeEmailPilot,
