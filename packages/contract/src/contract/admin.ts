@@ -16,6 +16,7 @@ import {
   AdminGetWorkspaceInputSchema,
   AdminGetWorkspaceMemberRecordingStatsInputSchema,
   AdminGetWorkspaceRecordingStatsInputSchema,
+  AdminListPlansInputSchema,
   AdminListUserSessionsInputSchema,
   AdminListUserWorkspacesInputSchema,
   AdminListWorkspaceMembersInputSchema,
@@ -42,6 +43,8 @@ import {
   AdminWorkspaceMemberRecordingStatsSchema,
   AdminWorkspaceMembersListDataSchema,
   AdminWorkspaceProjectsListDataSchema,
+  AdminWorkspaceProvisionDataSchema,
+  AdminWorkspaceProvisionInputSchema,
   AdminWorkspaceRecordingStatsSchema,
   AdminWorkspacesListDataSchema,
   ApiResponseSchema,
@@ -378,6 +381,10 @@ export const deactivateProject = oc
     UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
     NOT_ADMIN: AdminErrors.NOT_ADMIN,
     PROJECT_NOT_FOUND: AdminErrors.PROJECT_NOT_FOUND,
+    PROJECT_GONE: AdminErrors.PROJECT_GONE,
+    PROJECT_WORKSPACE_MISMATCH: AdminErrors.PROJECT_WORKSPACE_MISMATCH,
+    PROJECT_LAST_PROJECT_DELETE_FORBIDDEN: AdminErrors.PROJECT_LAST_PROJECT_DELETE_FORBIDDEN,
+    PROJECT_DELETE_FAILED: AdminErrors.PROJECT_DELETE_FAILED,
   })
   .input(AdminDeactivateProjectInputSchema)
   .output(ApiResponseSchema(AdminDeactivateProjectDataSchema));
@@ -399,6 +406,7 @@ export const restoreProject = oc
     UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
     NOT_ADMIN: AdminErrors.NOT_ADMIN,
     PROJECT_NOT_FOUND: AdminErrors.PROJECT_NOT_FOUND,
+    PROJECT_RESTORE_WORKSPACE_DELETED: AdminErrors.PROJECT_RESTORE_WORKSPACE_DELETED,
     PROJECT_RESTORE_TIME_EXPIRED: AdminErrors.PROJECT_RESTORE_TIME_EXPIRED,
     PROJECT_RESTORE_FAILED: AdminErrors.PROJECT_RESTORE_FAILED,
   })
@@ -559,6 +567,7 @@ export const listPlans = oc
     UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
     NOT_ADMIN: AdminErrors.NOT_ADMIN,
   })
+  .input(AdminListPlansInputSchema)
   .output(ApiResponseSchema(AdminPlansListDataSchema));
 
 /**
@@ -624,3 +633,38 @@ export const updatePlan = oc
   })
   .input(AdminUpdatePlanInputSchema)
   .output(ApiResponseSchema(AdminPlanProductSchema));
+
+// ============================================
+// WORKSPACE PROVISIONING
+// ============================================
+
+/**
+ * POST /admin/workspaces/provision
+ * Provision a workspace for an admin workflow
+ */
+export const provisionWorkspace = oc
+  .route({
+    method: 'POST',
+    path: '/admin/workspaces/provision',
+    inputStructure: 'detailed',
+    summary: 'Admin workspace provisioning',
+    description:
+      'Create or resolve user, provision workspace, and optionally generate a checkout link',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    ADMIN_WORKSPACE_PROVISION_USER_CREATE_FAILED:
+      AdminErrors.ADMIN_WORKSPACE_PROVISION_USER_CREATE_FAILED,
+    ADMIN_WORKSPACE_PROVISION_PLAN_CREATE_FAILED:
+      AdminErrors.ADMIN_WORKSPACE_PROVISION_PLAN_CREATE_FAILED,
+    ADMIN_WORKSPACE_PROVISION_CHECKOUT_FAILED:
+      AdminErrors.ADMIN_WORKSPACE_PROVISION_CHECKOUT_FAILED,
+    ADMIN_WORKSPACE_PROVISION_WORKSPACE_EXISTS:
+      AdminErrors.ADMIN_WORKSPACE_PROVISION_WORKSPACE_EXISTS,
+    ADMIN_WORKSPACE_PROVISION_PRODUCT_NOT_FOUND:
+      AdminErrors.ADMIN_WORKSPACE_PROVISION_PRODUCT_NOT_FOUND,
+  })
+  .input(AdminWorkspaceProvisionInputSchema)
+  .output(ApiResponseSchema(AdminWorkspaceProvisionDataSchema));

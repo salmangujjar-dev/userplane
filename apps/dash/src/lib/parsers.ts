@@ -1,3 +1,4 @@
+import { isProductId, PLAN_IDS, type PlanId } from '@workspace/pricing';
 import { createParser } from 'nuqs';
 
 export const pageParser = createParser({
@@ -135,5 +136,15 @@ export const planModalParser = createParser<'suggested' | 'detailed' | null>({
 
 export const upsellFeatureParser = createParser<string | null>({
   parse: (value) => value || null,
+  serialize: (value) => value || '',
+});
+
+export const planChangePreviewParser = createParser<string | null>({
+  parse: (value) => {
+    if (!value) return null;
+    if (PLAN_IDS.includes(value as PlanId)) return value;
+    if (isProductId(value)) return value;
+    return null;
+  },
   serialize: (value) => value || '',
 });

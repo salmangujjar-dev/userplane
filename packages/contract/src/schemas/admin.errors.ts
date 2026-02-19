@@ -15,11 +15,6 @@ export const AdminErrors = {
   },
 
   // Authorization errors
-  FORBIDDEN: {
-    status: 403,
-    message: 'You do not have permission to perform this action',
-  },
-
   NOT_ADMIN: {
     status: 403,
     message: 'Admin access required',
@@ -63,11 +58,6 @@ export const AdminErrors = {
     message: 'Workspace is already deactivated',
   },
 
-  WORKSPACE_NOT_DEACTIVATED: {
-    status: 400,
-    message: 'Workspace is not deactivated',
-  },
-
   WORKSPACE_RESTORE_TIME_EXPIRED: {
     status: 410,
     message: 'Workspace restoration window has expired',
@@ -84,6 +74,31 @@ export const AdminErrors = {
     message: 'Project not found',
   },
 
+  PROJECT_GONE: {
+    status: 410,
+    message: 'Project has been deleted',
+  },
+
+  PROJECT_WORKSPACE_MISMATCH: {
+    status: 403,
+    message: 'Project does not belong to this workspace',
+  },
+
+  PROJECT_LAST_PROJECT_DELETE_FORBIDDEN: {
+    status: 403,
+    message: 'Cannot delete the only project in a workspace',
+  },
+
+  PROJECT_DELETE_FAILED: {
+    status: 500,
+    message: 'Failed to delete project',
+  },
+
+  PROJECT_RESTORE_WORKSPACE_DELETED: {
+    status: 410,
+    message: 'Cannot restore project because its workspace is deleted',
+  },
+
   PROJECT_RESTORE_TIME_EXPIRED: {
     status: 410,
     message: 'Project restoration window has expired',
@@ -92,22 +107,6 @@ export const AdminErrors = {
   PROJECT_RESTORE_FAILED: {
     status: 500,
     message: 'Failed to restore project',
-  },
-
-  // Recording errors
-  RECORDING_NOT_FOUND: {
-    status: 404,
-    message: 'Recording not found',
-  },
-
-  RECORDING_ALREADY_DELETED: {
-    status: 400,
-    message: 'Recording is already deleted',
-  },
-
-  RECORDING_NOT_DELETED: {
-    status: 400,
-    message: 'Recording is not deleted',
   },
 
   // Plan errors
@@ -124,5 +123,31 @@ export const AdminErrors = {
   PLAN_UPDATE_FAILED: {
     status: 502,
     message: 'Failed to update plan product in DodoPayments',
+  },
+
+  // Admin workspace provisioning errors
+  ADMIN_WORKSPACE_PROVISION_USER_CREATE_FAILED: {
+    status: 502,
+    message: 'Failed to create user account',
+  },
+
+  ADMIN_WORKSPACE_PROVISION_PLAN_CREATE_FAILED: {
+    status: 502,
+    message: 'Failed to create plan product in DodoPayments',
+  },
+
+  ADMIN_WORKSPACE_PROVISION_CHECKOUT_FAILED: {
+    status: 502,
+    message: 'Failed to create checkout session',
+  },
+
+  ADMIN_WORKSPACE_PROVISION_WORKSPACE_EXISTS: {
+    status: 409,
+    message: 'A workspace with this domain already exists',
+  },
+
+  ADMIN_WORKSPACE_PROVISION_PRODUCT_NOT_FOUND: {
+    status: 404,
+    message: 'Plan product not found',
   },
 } as const;

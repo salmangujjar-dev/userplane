@@ -1081,6 +1081,34 @@ export const FEATURE_GATE_KEYS = [
 export type FeatureGate = (typeof FEATURE_GATE_KEYS)[number];
 
 /**
+ * Human-readable labels for feature gates
+ */
+export const FEATURE_GATE_LABELS: Record<FeatureGate, string> = {
+  replayRecordings: 'Replay Recordings',
+  autoBlurSensitiveData: 'Auto-blur Sensitive Data',
+  requestScreenshots: 'Request Screenshots',
+  annotateScreenshots: 'Annotate Screenshots',
+  requestFileUploads: 'Request File Uploads',
+  requestConsoleLogs: 'Request Console Logs',
+  requestNetworkActivity: 'Request Network Activity',
+  requestServerLogs: 'Request Server Logs',
+  requestActionReplay: 'Request Action Replay',
+  customizeWorkspace: 'Customize Workspace',
+  requestAdditionalSeats: 'Request Additional Seats',
+  bringYourOwnStorageRecordings: 'BYOS Recordings',
+  bringYourOwnStorageScreenshots: 'BYOS Screenshots',
+  bringYourOwnStorageFiles: 'BYOS Files',
+  customizeDataRetention: 'Custom Data Retention',
+  enableEnterpriseCompliance: 'Enterprise Compliance',
+  customizeDataResidency: 'Custom Data Residency',
+  integrateHelpDesks: 'Helpdesk Integrations',
+  integrateCRMs: 'CRM Integrations',
+  integrateIssueTrackers: 'Issue Tracker Integrations',
+  integrateAutomation: 'Automation Integrations',
+  accessUserplaneAPI: 'API Access',
+};
+
+/**
  * Feature gates for a plan - each gate is a boolean flag
  */
 export type PlanFeatureGates = Record<FeatureGate, boolean>;
@@ -1246,6 +1274,13 @@ export const COOLDOWN_CONFIG: Record<PlanId | 'default', CooldownConfig> = {
     ],
   },
 } as const;
+
+/**
+ * Check if a value is a DodoPayments product ID (starts with 'pdt_')
+ */
+export function isProductId(value: string): boolean {
+  return value.startsWith('pdt_');
+}
 
 /**
  * Calculate cooldown multiplier based on subscription age and plan ID
