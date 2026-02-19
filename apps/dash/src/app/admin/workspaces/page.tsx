@@ -17,6 +17,10 @@ import {
   AdminCreateWorkspaceInviteSuccessModal,
 } from '@/components/modals/admin-create-workspace-invite-modal';
 import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';
+import {
+  AdminProvisionWorkspaceModal,
+  AdminProvisionWorkspaceSuccessModal,
+} from '@/components/modals/admin-provision-workspace-modal';
 import { AdminRestoreWorkspaceModal } from '@/components/modals/admin-restore-workspace-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
@@ -34,6 +38,7 @@ import {
   useAdminResetInviteToken,
   useAdminRestoreWorkspace,
   useAdminSearchWorkspaces,
+  useAdminWorkspaceProvision,
 } from '@/features/admin';
 import { useSession } from '@/features/auth';
 import {
@@ -113,12 +118,24 @@ function AdminRecordingsPageContent() {
   const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
   const [inviteResult, setInviteResult] = useState<AdminCreateWorkspaceInviteData | null>(null);
 
+  const [showProvisionModal, setShowProvisionModal] = useState(false);
+  const [showProvisionSuccessModal, setShowProvisionSuccessModal] = useState(false);
+  const [provisionResult, setProvisionResult] = useState<{
+    checkoutUrl: string | null;
+    workspaceUrl: string;
+    workspaceId: string;
+    workspaceName: string;
+    userId: string;
+    isNewUser: boolean;
+  } | null>(null);
+
   // Mutations
   const deactivateMutation = useAdminDeactivateWorkspace();
   const restoreMutation = useAdminRestoreWorkspace();
   const resetTokenMutation = useAdminResetInviteToken();
 
   const createInviteMutation = useAdminCreateWorkspaceInvite();
+  const provisionMutation = useAdminWorkspaceProvision();
 
   // Debounce all filter changes (search, status, sort) together
   useEffect(() => {
@@ -262,6 +279,18 @@ function AdminRecordingsPageContent() {
     });
   };
 
+  const handleProvision = (data: Parameters<typeof provisionMutation.mutate>[0]) => {
+    provisionMutation.mutate(data, {
+      onSuccess: (result) => {
+        setShowProvisionModal(false);
+        if (result.success) {
+          setProvisionResult(result.data);
+          setShowProvisionSuccessModal(true);
+        }
+      },
+    });
+  };
+
   const getSortDirectionIcon = () => {
     if (selectedSortDirection[0] === 'asc') return ArrowUp;
     if (selectedSortDirection[0] === 'desc') return ArrowDown;
@@ -273,7 +302,10 @@ function AdminRecordingsPageContent() {
       <AdminSidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <AdminTopActions onCreateInviteClick={() => setShowCreateInviteModal(true)} />
+        <AdminTopActions
+          onCreateInviteClick={() => setShowCreateInviteModal(true)}
+          onProvisionClick={() => setShowProvisionModal(true)}
+        />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="space-y-6">
@@ -341,6 +373,7 @@ function AdminRecordingsPageContent() {
                 {workspaces.map((workspace) => (
                   <WorkspaceCard
                     key={workspace.workspaceId}
+                    workspaceId={workspace.workspaceId}
                     workspaceName={workspace.workspaceName}
                     memberCount={workspace.memberCount}
                     projectCount={workspace.projectCount}
@@ -408,6 +441,19 @@ function AdminRecordingsPageContent() {
         open={showInviteSuccessModal}
         onOpenChange={setShowInviteSuccessModal}
         result={inviteResult}
+      />
+
+      <AdminProvisionWorkspaceModal
+        open={showProvisionModal}
+        onOpenChange={setShowProvisionModal}
+        onSubmit={handleProvision}
+        isPending={provisionMutation.isPending}
+      />
+
+      <AdminProvisionWorkspaceSuccessModal
+        open={showProvisionSuccessModal}
+        onOpenChange={setShowProvisionSuccessModal}
+        result={provisionResult}
       />
     </div>
   );
