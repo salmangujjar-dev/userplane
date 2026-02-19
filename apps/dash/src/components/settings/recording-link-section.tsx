@@ -1,6 +1,5 @@
 'use client';
 
-import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
@@ -31,8 +30,7 @@ export function RecordingLinkSection() {
   const { data: preferencesResult, isLoading, error, refetch } = useWorkspacePreferences();
   const { data: subscriptionResult } = useSubscriptionStatus();
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
-  const featureGates = getFeatureGates(effectivePlanId);
+  const featureGates = subscriptionData?.featureGates;
   const { triggerUpsell } = useFeatureUpsell();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -191,31 +189,31 @@ export function RecordingLinkSection() {
             <div
               className={cn(
                 'flex items-center justify-between p-6 rounded-xl border bg-card',
-                !featureGates.customizeWorkspace && 'cursor-pointer'
+                !featureGates?.customizeWorkspace && 'cursor-pointer'
               )}
               onClick={
-                !featureGates.customizeWorkspace
+                !featureGates?.customizeWorkspace
                   ? () => triggerUpsell('customizeWorkspace')
                   : undefined
               }
             >
               <Label
-                htmlFor={featureGates.customizeWorkspace ? 'customize-recording-link' : undefined}
+                htmlFor={featureGates?.customizeWorkspace ? 'customize-recording-link' : undefined}
                 className={cn(
                   'text-sm font-medium',
-                  featureGates.customizeWorkspace
+                  featureGates?.customizeWorkspace
                     ? 'cursor-pointer'
                     : 'text-muted-foreground cursor-pointer'
                 )}
               >
                 Customize recording link
               </Label>
-              <span className={cn(!featureGates.customizeWorkspace && 'pointer-events-none')}>
+              <span className={cn(!featureGates?.customizeWorkspace && 'pointer-events-none')}>
                 <Switch
                   id="customize-recording-link"
                   checked={customizeRecordingLink}
                   onCheckedChange={handleToggleChange}
-                  disabled={!featureGates.customizeWorkspace}
+                  disabled={!featureGates?.customizeWorkspace}
                 />
               </span>
             </div>

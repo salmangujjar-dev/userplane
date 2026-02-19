@@ -1,6 +1,5 @@
 'use client';
 
-import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -54,8 +53,7 @@ export function DomainConfigureModal({
 }: DomainConfigureModalProps) {
   const { data: subscriptionResult } = useSubscriptionStatus();
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
-  const featureGates = getFeatureGates(effectivePlanId);
+  const featureGates = subscriptionData?.featureGates;
   const { triggerUpsell } = useFeatureUpsell();
 
   const [localSettings, setLocalSettings] = useState<DomainRecordingPreferences>(settings);
@@ -101,7 +99,7 @@ export function DomainConfigureModal({
     onChange: (checked: boolean) => void,
     featureKey: UpsellFeatureKey
   ) => {
-    const gated = !featureGates[featureKey];
+    const gated = !featureGates?.[featureKey];
     const isDisabled = loading || !verified;
     return (
       <div

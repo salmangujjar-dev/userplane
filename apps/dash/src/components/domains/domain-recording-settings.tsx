@@ -1,4 +1,3 @@
-import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { cn } from '@workspace/ui/lib/utils';
@@ -25,8 +24,7 @@ export function DomainRecordingSettings({
 }: DomainRecordingSettingsProps) {
   const { data: subscriptionResult } = useSubscriptionStatus();
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
-  const featureGates = getFeatureGates(effectivePlanId);
+  const featureGates = subscriptionData?.featureGates;
   const { triggerUpsell } = useFeatureUpsell();
 
   const updateSetting = <K extends keyof DomainRecordingPreferences>(
@@ -43,7 +41,7 @@ export function DomainRecordingSettings({
     onChange: (checked: boolean) => void,
     featureKey: UpsellFeatureKey
   ) => {
-    const gated = !featureGates[featureKey];
+    const gated = !featureGates?.[featureKey];
     return (
       <div
         className={cn('flex items-center justify-between', gated && !disabled && 'cursor-pointer')}

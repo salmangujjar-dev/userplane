@@ -1,12 +1,15 @@
 'use client';
 
-import { PLAN_NAMES, type PlanId } from '@workspace/pricing';
+import { isProductId, PLAN_NAMES, type PlanId } from '@workspace/pricing';
 import Logo from '@workspace/ui/components/logo';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@workspace/ui/components/sheet';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { ArrowRight, CheckCircle2, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { useQueryState } from 'nuqs';
 import { useEffect, useState } from 'react';
 
 import { useManagePlan, useOpenCustomerPortal } from '@/features/billing';
+import { planChangePreviewParser } from '@/lib/parsers';
 import { useWorkspaceId } from '@/stores/workspace';
 import type { PlanChangePreviewData } from '@/types';
 
@@ -19,14 +22,8 @@ type ModalState =
   | 'request-sent'
   | 'checkout';
 
-type PredictedFlow = 'checkout' | 'preview' | 'unknown';
-
 interface PlanChangePreviewModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  newPlanId: PlanId | null;
   onComplete?: () => void;
-  predictedFlow?: PredictedFlow;
 }
 
 function PreviewView({
@@ -678,20 +675,6 @@ function SuccessView({
   );
 }
 
-function MinimalLoadingView() {
-  return (
-    <div className="p-6">
-      <SheetTitle className="sr-only">Loading</SheetTitle>
-      <SheetDescription className="sr-only">Processing your request...</SheetDescription>
-      <div className="flex flex-col items-center justify-center py-8 space-y-4">
-        <Logo variant="tiled" size="md" showText={false} />
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Preparing your plan details...</p>
-      </div>
-    </div>
-  );
-}
-
 function PreviewLoadingView() {
   return (
     <>
@@ -701,10 +684,10 @@ function PreviewLoadingView() {
           Calculating your plan change details...
         </SheetDescription>
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-zinc-200 animate-pulse shrink-0" />
+          <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
           <div className="flex flex-col space-y-2">
-            <div className="h-5 w-48 bg-zinc-200 rounded animate-pulse" />
-            <div className="h-3 w-64 bg-zinc-200 rounded animate-pulse" />
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-3 w-64" />
           </div>
         </div>
       </div>
@@ -716,12 +699,12 @@ function PreviewLoadingView() {
             {/* Plan & Billing Info */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <div className="h-3 w-12 bg-zinc-200 rounded animate-pulse" />
-                <div className="h-3 w-24 bg-zinc-200 rounded animate-pulse" />
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-3 w-24" />
               </div>
               <div className="flex justify-between items-center">
-                <div className="h-3 w-16 bg-zinc-200 rounded animate-pulse" />
-                <div className="h-3 w-20 bg-zinc-200 rounded animate-pulse" />
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-20" />
               </div>
             </div>
 
@@ -730,7 +713,7 @@ function PreviewLoadingView() {
 
             {/* Timeline Section */}
             <div className="pt-6">
-              <div className="h-4 w-48 bg-zinc-200 rounded animate-pulse mb-4" />
+              <Skeleton className="h-4 w-48 mb-4" />
 
               <div className="relative space-y-4">
                 {/* Timeline connector line */}
@@ -738,24 +721,24 @@ function PreviewLoadingView() {
 
                 {/* Timeline Item 1 */}
                 <div className="relative flex items-start gap-3">
-                  <div className="relative z-10 w-3 h-3 rounded-full bg-zinc-300 shrink-0 mt-0.5 animate-pulse" />
+                  <Skeleton className="relative z-10 w-3 h-3 rounded-full shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0 space-y-2">
-                    <div className="h-3 w-16 bg-zinc-200 rounded animate-pulse" />
+                    <Skeleton className="h-3 w-16" />
                     <div className="space-y-1">
-                      <div className="h-2 w-full bg-zinc-200 rounded animate-pulse" />
-                      <div className="h-2 w-4/5 bg-zinc-200 rounded animate-pulse" />
+                      <Skeleton className="h-2 w-full" />
+                      <Skeleton className="h-2 w-4/5" />
                     </div>
                   </div>
                 </div>
 
                 {/* Timeline Item 2 */}
                 <div className="relative flex items-start gap-3">
-                  <div className="relative z-10 w-3 h-3 rounded-full bg-zinc-300 shrink-0 mt-0.5 animate-pulse" />
+                  <Skeleton className="relative z-10 w-3 h-3 rounded-full shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0 space-y-2">
-                    <div className="h-3 w-32 bg-zinc-200 rounded animate-pulse" />
+                    <Skeleton className="h-3 w-32" />
                     <div className="space-y-1">
-                      <div className="h-2 w-full bg-zinc-200 rounded animate-pulse" />
-                      <div className="h-2 w-3/4 bg-zinc-200 rounded animate-pulse" />
+                      <Skeleton className="h-2 w-full" />
+                      <Skeleton className="h-2 w-3/4" />
                     </div>
                   </div>
                 </div>
@@ -768,18 +751,18 @@ function PreviewLoadingView() {
             <div className="rounded-2xl border border-zinc-200 bg-white p-6 flex flex-col h-full">
               {/* Amount Due Today */}
               <div className="text-center pb-6 mb-6 border-b border-zinc-100">
-                <div className="h-3 w-32 bg-zinc-200 rounded animate-pulse mx-auto mb-3" />
-                <div className="h-10 w-48 bg-zinc-200 rounded animate-pulse mx-auto" />
+                <Skeleton className="h-3 w-32 mx-auto mb-3" />
+                <Skeleton className="h-10 w-48 mx-auto" />
               </div>
 
               {/* Proration Details */}
               <div className="mb-6">
-                <div className="h-3 w-32 bg-zinc-200 rounded animate-pulse mb-4" />
+                <Skeleton className="h-3 w-32 mb-4" />
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="flex justify-between items-start">
-                      <div className="h-3 w-40 bg-zinc-200 rounded animate-pulse" />
-                      <div className="h-3 w-20 bg-zinc-200 rounded animate-pulse" />
+                      <Skeleton className="h-3 w-40" />
+                      <Skeleton className="h-3 w-20" />
                     </div>
                   ))}
                 </div>
@@ -790,15 +773,15 @@ function PreviewLoadingView() {
 
               {/* New Subscription */}
               <div className="mb-6">
-                <div className="h-3 w-32 bg-zinc-200 rounded animate-pulse mb-4" />
+                <Skeleton className="h-3 w-32 mb-4" />
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <div className="h-3 w-32 bg-zinc-200 rounded animate-pulse" />
-                    <div className="h-3 w-24 bg-zinc-200 rounded animate-pulse" />
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-3 w-24" />
                   </div>
                   <div className="flex justify-between">
-                    <div className="h-3 w-28 bg-zinc-200 rounded animate-pulse" />
-                    <div className="h-3 w-32 bg-zinc-200 rounded animate-pulse" />
+                    <Skeleton className="h-3 w-28" />
+                    <Skeleton className="h-3 w-32" />
                   </div>
                 </div>
               </div>
@@ -808,8 +791,8 @@ function PreviewLoadingView() {
 
               {/* Button Skeletons */}
               <div className="flex gap-2 mt-6">
-                <div className="flex-1 h-12 rounded-full bg-zinc-200 animate-pulse" />
-                <div className="flex-1 h-12 rounded-full bg-zinc-200 animate-pulse" />
+                <Skeleton className="flex-1 h-12 rounded-full" />
+                <Skeleton className="flex-1 h-12 rounded-full" />
               </div>
             </div>
           </div>
@@ -1178,14 +1161,12 @@ function CheckoutView() {
   );
 }
 
-export function PlanChangePreviewModal({
-  open,
-  onOpenChange,
-  newPlanId,
-  onComplete,
-  predictedFlow = 'unknown',
-}: PlanChangePreviewModalProps) {
+export function PlanChangePreviewModal({ onComplete }: PlanChangePreviewModalProps) {
   const workspaceId = useWorkspaceId();
+  const [planPreview, setPlanPreview] = useQueryState('plan-preview', planChangePreviewParser);
+  const open = planPreview !== null;
+  const newPlanId = planPreview;
+
   const [modalState, setModalState] = useState<ModalState>('loading');
   const [previewData, setPreviewData] = useState<PlanChangePreviewData | null>(null);
   const [errorInfo, setErrorInfo] = useState<{
@@ -1218,7 +1199,12 @@ export function PlanChangePreviewModal({
 
       // Member without billing permissions → show request-sent view
       if (errorCode === 'BILLING_MANAGEMENT_UNAVAILABLE_FOR_MEMBER') {
-        const planName = newPlanId ? (PLAN_NAMES[newPlanId] ?? 'this plan') : 'this plan';
+        const planName =
+          newPlanId && !isProductId(newPlanId)
+            ? (PLAN_NAMES[newPlanId as PlanId] ?? 'this plan')
+            : newPlanId && isProductId(newPlanId)
+              ? 'Custom Plan'
+              : 'this plan';
         setCompletedPlanName(planName);
         setModalState('request-sent');
         return;
@@ -1237,6 +1223,16 @@ export function PlanChangePreviewModal({
 
   const { mutate: openCustomerPortal, isPending: isPortalLoading } = useOpenCustomerPortal();
 
+  // Build mutation input based on whether planPreview is a productId or planId
+  const buildMutationInput = (action?: 'preview' | 'execute') => {
+    if (!newPlanId || !workspaceId) return null;
+    const base = { workspaceId, action };
+    if (isProductId(newPlanId)) {
+      return { ...base, productId: newPlanId };
+    }
+    return { ...base, planId: newPlanId as PlanId };
+  };
+
   // Fetch preview/initiate flow when modal opens with a new plan
   useEffect(() => {
     if (open && newPlanId && workspaceId) {
@@ -1245,22 +1241,24 @@ export function PlanChangePreviewModal({
       setErrorInfo({ message: '' });
       // Call without action - server will route appropriately
       // (checkout or preview for owners/admins, error for members)
-      managePlan({ planId: newPlanId, workspaceId });
+      const input = buildMutationInput();
+      if (input) managePlan(input);
     }
     // managePlan is a mutation function that changes on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, newPlanId, workspaceId]);
 
   const handleConfirm = () => {
-    if (!newPlanId || !workspaceId) return;
+    const input = buildMutationInput('execute');
+    if (!input) return;
     setModalState('confirming');
-    // Execute the plan change
-    managePlan({ planId: newPlanId, workspaceId, action: 'execute' });
+    managePlan(input);
   };
 
   const handleClose = () => {
-    onOpenChange(false);
-    if (modalState === 'success') {
+    const wasSuccess = modalState === 'success';
+    setPlanPreview(null);
+    if (wasSuccess) {
       onComplete?.();
     }
     // Reset state after modal closes
@@ -1273,14 +1271,13 @@ export function PlanChangePreviewModal({
   };
 
   return (
-    <Sheet open={open} onOpenChange={handleClose}>
+    <Sheet open={open} onOpenChange={() => handleClose()}>
       <SheetContent
         side="bottom"
         className="p-0 gap-0 max-h-[85vh] overflow-y-auto rounded-t-2xl"
         showCloseButton={true}
       >
-        {modalState === 'loading' &&
-          (predictedFlow === 'preview' ? <PreviewLoadingView /> : <MinimalLoadingView />)}
+        {modalState === 'loading' && <PreviewLoadingView />}
         {modalState === 'checkout' && <CheckoutView />}
         {modalState === 'preview' && previewData && (
           <PreviewView

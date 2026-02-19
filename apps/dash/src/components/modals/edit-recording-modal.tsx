@@ -1,7 +1,6 @@
 'use client';
 
 import { RETENTION_DAYS_VALUES, type RetentionDays } from '@workspace/contract';
-import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -68,8 +67,7 @@ export function EditRecordingModal({
   const [hasChanged, setHasChanged] = useState(false);
   const { data: subscriptionResult } = useSubscriptionStatus();
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
-  const featureGates = getFeatureGates(effectivePlanId);
+  const featureGates = subscriptionData?.featureGates;
   const { triggerUpsell } = useFeatureUpsell();
 
   // Pre-select the closest matching value when modal opens
@@ -112,19 +110,19 @@ export function EditRecordingModal({
 
           <div className="space-y-4">
             <div
-              className={cn('space-y-2', !featureGates.customizeDataRetention && 'cursor-pointer')}
+              className={cn('space-y-2', !featureGates?.customizeDataRetention && 'cursor-pointer')}
               onClick={
-                !featureGates.customizeDataRetention
+                !featureGates?.customizeDataRetention
                   ? () => triggerUpsell('customizeDataRetention')
                   : undefined
               }
             >
               <div className="space-y-0.5">
                 <Label
-                  htmlFor={featureGates.customizeDataRetention ? 'expires-at' : undefined}
+                  htmlFor={featureGates?.customizeDataRetention ? 'expires-at' : undefined}
                   className={cn(
                     'text-sm font-medium',
-                    !featureGates.customizeDataRetention && 'text-muted-foreground cursor-pointer'
+                    !featureGates?.customizeDataRetention && 'text-muted-foreground cursor-pointer'
                   )}
                 >
                   Expiration
@@ -135,11 +133,11 @@ export function EditRecordingModal({
                     : 'Currently set to no expiration'}
                 </p>
               </div>
-              <span className={cn(!featureGates.customizeDataRetention && 'pointer-events-none')}>
+              <span className={cn(!featureGates?.customizeDataRetention && 'pointer-events-none')}>
                 <Select
                   value={selectedValue}
                   onValueChange={handleValueChange}
-                  disabled={isLoading || !featureGates.customizeDataRetention}
+                  disabled={isLoading || !featureGates?.customizeDataRetention}
                 >
                   <SelectTrigger id="expires-at" className="w-full">
                     <SelectValue placeholder="Select new expiration..." />

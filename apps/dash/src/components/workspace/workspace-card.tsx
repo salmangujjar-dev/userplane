@@ -1,23 +1,24 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 
-import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 
 interface WorkspaceCardProps {
+  workspaceId?: string;
   workspaceName: string;
 }
 
-export function WorkspaceCard({ workspaceName }: WorkspaceCardProps) {
+export function WorkspaceCard({ workspaceId, workspaceName }: WorkspaceCardProps) {
   return (
     <div className="w-full p-6 rounded-xl border bg-card">
       <div className="flex flex-col items-center gap-3">
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex -space-x-2 shrink-0 cursor-default">
-              {Array.from({ length: 3 }, (_, i) => (
-                <div key={i} className="rounded-full border-2 border-card overflow-hidden">
-                  <BoringAvatar size={AVATAR_SIZES.GROUP} />
-                </div>
-              ))}
+            <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-default">
+              <WorkspaceAvatar
+                workspaceId={workspaceId}
+                workspaceName={workspaceName}
+                size={WORKSPACE_AVATAR_SIZES.GROUP}
+              />
             </div>
           </TooltipTrigger>
           <TooltipContent>

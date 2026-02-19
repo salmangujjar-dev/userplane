@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { useJoinWorkspace, useWorkspaceStatus } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
 import type { WorkspaceInvitePolicy } from '@/types';
@@ -73,7 +73,12 @@ export function WorkspaceAccessGate({ children }: WorkspaceAccessGateProps) {
 
   // Show "access requested" confirmation if user just requested access
   if (requestedWorkspace) {
-    return <WorkspaceAccessRequested workspaceName={requestedWorkspace.workspaceName} />;
+    return (
+      <WorkspaceAccessRequested
+        workspaceId={requestedWorkspace.workspaceId}
+        workspaceName={requestedWorkspace.workspaceName}
+      />
+    );
   }
 
   // No access (private or domain mismatch) - show 404
@@ -85,6 +90,7 @@ export function WorkspaceAccessGate({ children }: WorkspaceAccessGateProps) {
   if (accessStatus === 'can_join') {
     return (
       <WorkspaceAccessJoin
+        workspaceId={workspaceId}
         workspaceName={workspaceName}
         invitePolicy={invitePolicy}
         onJoin={() => joinMutation.mutate(workspaceId)}
@@ -97,6 +103,7 @@ export function WorkspaceAccessGate({ children }: WorkspaceAccessGateProps) {
   if (accessStatus === 'can_request') {
     return (
       <WorkspaceAccessRequest
+        workspaceId={workspaceId}
         workspaceName={workspaceName}
         invitePolicy={invitePolicy}
         onRequestAccess={() => joinMutation.mutate(workspaceId)}
@@ -153,9 +160,11 @@ function WorkspaceAccessLoading() {
  * Workspace card with avatars and policy indicator
  */
 function WorkspaceCard({
+  workspaceId,
   workspaceName,
   invitePolicy,
 }: {
+  workspaceId?: string;
   workspaceName: string;
   invitePolicy: WorkspaceInvitePolicy | null;
 }) {
@@ -177,12 +186,12 @@ function WorkspaceCard({
       <div className="flex flex-col items-center gap-3">
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex -space-x-2 shrink-0 cursor-default">
-              {Array.from({ length: 3 }, (_, i) => (
-                <div key={i} className="rounded-full border-2 border-card overflow-hidden">
-                  <BoringAvatar size={AVATAR_SIZES.GROUP} />
-                </div>
-              ))}
+            <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-default">
+              <WorkspaceAvatar
+                workspaceId={workspaceId}
+                workspaceName={workspaceName}
+                size={WORKSPACE_AVATAR_SIZES.GROUP}
+              />
             </div>
           </TooltipTrigger>
           <TooltipContent>
@@ -272,11 +281,13 @@ function WorkspaceAccessDeleted({ onGoBack }: { onGoBack?: () => void }) {
  * Join workspace UI for whitelisted workspaces
  */
 function WorkspaceAccessJoin({
+  workspaceId,
   workspaceName,
   invitePolicy,
   onJoin,
   isJoining,
 }: {
+  workspaceId: string;
   workspaceName: string;
   invitePolicy: WorkspaceInvitePolicy | null;
   onJoin: () => void;
@@ -292,7 +303,11 @@ function WorkspaceAccessJoin({
         </p>
       </div>
 
-      <WorkspaceCard workspaceName={workspaceName} invitePolicy={invitePolicy} />
+      <WorkspaceCard
+        workspaceId={workspaceId}
+        workspaceName={workspaceName}
+        invitePolicy={invitePolicy}
+      />
 
       <Button
         onClick={onJoin}
@@ -317,11 +332,13 @@ function WorkspaceAccessJoin({
  * Request access UI for protected workspaces
  */
 function WorkspaceAccessRequest({
+  workspaceId,
   workspaceName,
   invitePolicy,
   onRequestAccess,
   isRequesting,
 }: {
+  workspaceId: string;
   workspaceName: string;
   invitePolicy: WorkspaceInvitePolicy | null;
   onRequestAccess: () => void;
@@ -337,7 +354,11 @@ function WorkspaceAccessRequest({
         </p>
       </div>
 
-      <WorkspaceCard workspaceName={workspaceName} invitePolicy={invitePolicy} />
+      <WorkspaceCard
+        workspaceId={workspaceId}
+        workspaceName={workspaceName}
+        invitePolicy={invitePolicy}
+      />
 
       <Button
         onClick={onRequestAccess}
@@ -361,7 +382,13 @@ function WorkspaceAccessRequest({
 /**
  * Confirmation UI after access has been requested
  */
-function WorkspaceAccessRequested({ workspaceName }: { workspaceName: string }) {
+function WorkspaceAccessRequested({
+  workspaceId,
+  workspaceName,
+}: {
+  workspaceId: string;
+  workspaceName: string;
+}) {
   return (
     <WorkspaceAccessLayout>
       <div className="flex flex-col items-center gap-3">
@@ -373,12 +400,12 @@ function WorkspaceAccessRequested({ workspaceName }: { workspaceName: string }) 
         <div className="flex flex-col items-center gap-3">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex -space-x-2 shrink-0 cursor-default">
-                {Array.from({ length: 3 }, (_, i) => (
-                  <div key={i} className="rounded-full border-2 border-card overflow-hidden">
-                    <BoringAvatar size={AVATAR_SIZES.GROUP} />
-                  </div>
-                ))}
+              <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-default">
+                <WorkspaceAvatar
+                  workspaceId={workspaceId}
+                  workspaceName={workspaceName}
+                  size={WORKSPACE_AVATAR_SIZES.GROUP}
+                />
               </div>
             </TooltipTrigger>
             <TooltipContent>

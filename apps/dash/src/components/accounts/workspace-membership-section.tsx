@@ -22,8 +22,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { LeaveWorkspaceModal } from '@/components/modals/leave-workspace-modal';
-import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SectionError } from '@/components/shared/section-error';
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { WorkspaceMembershipSkeleton } from '@/components/skeleton';
 import { WORKSPACE_PAGINATION } from '@/constants';
 import { useLeaveWorkspace, useWorkspaces } from '@/features/workspace';
@@ -137,15 +137,12 @@ export function WorkspaceMembershipSection() {
                     <TableRow key={workspace.workspaceId}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center -space-x-2">
-                            {Array.from({ length: 3 }, (_, i) => (
-                              <div
-                                key={i}
-                                className="h-8 w-8 rounded-full border-2 border-background overflow-hidden"
-                              >
-                                <BoringAvatar size={AVATAR_SIZES.USER} />
-                              </div>
-                            ))}
+                          <div className="rounded-full border-2 border-background overflow-hidden">
+                            <WorkspaceAvatar
+                              workspaceId={workspace.workspaceId}
+                              workspaceName={workspace.workspaceName}
+                              size={WORKSPACE_AVATAR_SIZES.USER}
+                            />
                           </div>
                           <div>
                             <div className="font-medium text-sm flex items-center gap-2">
