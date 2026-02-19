@@ -3,12 +3,16 @@
  * Handles all database operations for subscription entities
  */
 
+import { FeatureGatesSchema } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
 import { eq } from '@workspace/db';
 import { subscriptions, workspaces } from '@workspace/db';
-import type { PlanId } from '@workspace/pricing';
+import type { PlanFeatureGates, PlanId } from '@workspace/pricing';
 
+import { createLogger } from '@/api/lib/logger';
 import type { Transaction } from '@/api/types';
+
+const logger = createLogger('subscription-repository');
 
 export interface CreateSubscriptionData {
   id: string;
@@ -20,6 +24,7 @@ export interface CreateSubscriptionData {
   status: 'pending' | 'active' | 'on_hold' | 'cancelled' | 'failed' | 'expired';
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
+  featureGates: PlanFeatureGates;
 }
 
 export interface UpdateSubscriptionData {
@@ -32,10 +37,30 @@ export interface UpdateSubscriptionData {
   cancelAtPeriodEnd?: boolean;
   lastWebhookId?: string;
   lastWebhookTimestamp?: Date;
+  featureGates?: PlanFeatureGates;
 }
 
 export class SubscriptionRepository {
   constructor(private db: DbClient) {}
+
+  private parseFeatureGates(raw: unknown): PlanFeatureGates | null {
+    if (!raw) return null;
+    const result = FeatureGatesSchema.safeParse(raw);
+    if (!result.success) {
+      logger.warn({ errors: result.error.errors }, 'Invalid featureGates in subscription');
+      return null;
+    }
+    return result.data;
+  }
+
+  private transformSubscription<T extends { featureGates: unknown }>(
+    row: T
+  ): Omit<T, 'featureGates'> & { featureGates: PlanFeatureGates | null } {
+    return {
+      ...row,
+      featureGates: this.parseFeatureGates(row.featureGates),
+    };
+  }
 
   /**
    * Create a new subscription
@@ -55,6 +80,7 @@ export class SubscriptionRepository {
         status: data.status,
         currentPeriodStart: data.currentPeriodStart,
         currentPeriodEnd: data.currentPeriodEnd,
+        featureGates: data.featureGates,
       })
       .returning();
 
@@ -62,7 +88,7 @@ export class SubscriptionRepository {
       throw new Error('Failed to create subscription');
     }
 
-    return subscription;
+    return this.transformSubscription(subscription);
   }
 
   /**
@@ -75,7 +101,7 @@ export class SubscriptionRepository {
       .where(eq(subscriptions.workspaceId, workspaceId))
       .limit(1);
 
-    return subscription || null;
+    return subscription ? this.transformSubscription(subscription) : null;
   }
 
   /**
@@ -90,7 +116,7 @@ export class SubscriptionRepository {
       .where(eq(subscriptions.subscriptionId, subscriptionId))
       .limit(1);
 
-    return subscription || null;
+    return subscription ? this.transformSubscription(subscription) : null;
   }
 
   /**
@@ -103,7 +129,7 @@ export class SubscriptionRepository {
       .where(eq(subscriptions.customerId, customerId))
       .limit(1);
 
-    return subscription || null;
+    return subscription ? this.transformSubscription(subscription) : null;
   }
 
   /**
@@ -125,7 +151,7 @@ export class SubscriptionRepository {
       .where(eq(subscriptions.subscriptionId, subscriptionId))
       .returning();
 
-    return updated || null;
+    return updated ? this.transformSubscription(updated) : null;
   }
 
   /**
@@ -147,7 +173,7 @@ export class SubscriptionRepository {
       .where(eq(subscriptions.workspaceId, workspaceId))
       .returning();
 
-    return updated || null;
+    return updated ? this.transformSubscription(updated) : null;
   }
 
   /**
@@ -161,7 +187,7 @@ export class SubscriptionRepository {
       .where(eq(subscriptions.workspaceId, workspaceId))
       .returning();
 
-    return deleted || null;
+    return deleted ? this.transformSubscription(deleted) : null;
   }
 
   /**
@@ -182,6 +208,11 @@ export class SubscriptionRepository {
       .where(eq(subscriptions.subscriptionId, subscriptionId))
       .limit(1);
 
-    return result[0] || null;
+    if (!result[0]) return null;
+
+    return {
+      subscription: this.transformSubscription(result[0].subscription),
+      workspace: result[0].workspace,
+    };
   }
 }

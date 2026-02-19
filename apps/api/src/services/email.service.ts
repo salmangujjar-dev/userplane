@@ -22,6 +22,7 @@ import {
   renderSandboxInvite,
   renderTeammateInvited,
   renderTosViolation,
+  renderWelcomeEmailCustomSubscription,
   renderWelcomeEmailMember,
   renderWelcomeEmailPilot,
   renderWelcomeEmailRequester,
@@ -48,6 +49,7 @@ import {
   sandboxInviteSubject,
   teammateInvitedSubject,
   tosViolationSubject,
+  welcomeEmailCustomSubscriptionSubject,
   welcomeEmailMemberSubject,
   welcomeEmailPilotSubject,
   welcomeEmailRequesterSubject,
@@ -70,6 +72,7 @@ import type {
   ReceipientEmailParams,
   RecordingReceivedEmailParams,
   TeammateInvitedEmailParams,
+  WelcomeEmailCustomSubscriptionParams,
   WelcomeEmailMemberParams,
   WelcomeEmailPilotParams,
   WelcomeEmailRequesterParams,
@@ -97,6 +100,7 @@ import {
   recordingReceivedKey,
   teammateInvitedKey,
   tosViolationKey,
+  welcomeEmailCustomSubscriptionKey,
   welcomeEmailMemberKey,
   welcomeEmailPilotKey,
   welcomeEmailRequesterKey,
@@ -1168,6 +1172,79 @@ export class EmailService {
       'sendWelcomeEmailSubscription',
       { receipientParams, emailContentParams },
       () => this.sendWelcomeEmailSubscription(receipientParams, emailContentParams)
+    );
+  }
+
+  /**
+   * Send welcome email for custom subscription users
+   * Sent after admin workspace provisioning when checkout is required
+   * @private Use sendSafeWelcomeEmailCustomSubscription instead
+   */
+  private async sendWelcomeEmailCustomSubscription(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailCustomSubscriptionParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+    const finalParams = this.ensureReplyTo(receipientParams);
+
+    const idempotencyKey = welcomeEmailCustomSubscriptionKey({
+      to: receipientParams.to,
+      workspaceId: emailContentParams.workspaceId,
+      checkoutUrl: emailContentParams.checkoutUrl,
+    });
+    const calendarUrl = emailUrls.support.calendar();
+
+    const { html, text } = await renderWelcomeEmailCustomSubscription({
+      workspaceName: emailContentParams.workspaceName,
+      checkoutUrl: emailContentParams.checkoutUrl,
+      calendarUrl,
+      logoUrl: this.getLogoUrl(),
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: finalParams.to,
+        subject: welcomeEmailCustomSubscriptionSubject,
+        html,
+        text,
+        batch: useBatch,
+        replyTo: finalParams.replyTo,
+        headers: antiThreadingHeaders(),
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.debug(
+      {
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceName: emailContentParams.workspaceName,
+        workspaceId: emailContentParams.workspaceId,
+        provider: emailClient.getProvider(),
+      },
+      'Welcome email custom subscription sent'
+    );
+  }
+
+  /**
+   * Safe version: Send welcome email for custom subscription users
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeWelcomeEmailCustomSubscription(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: WelcomeEmailCustomSubscriptionParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendWelcomeEmailCustomSubscription',
+      { receipientParams, emailContentParams },
+      () => this.sendWelcomeEmailCustomSubscription(receipientParams, emailContentParams)
     );
   }
 

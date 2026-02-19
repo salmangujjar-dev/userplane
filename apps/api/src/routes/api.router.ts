@@ -19,6 +19,7 @@ import { getDodoClient } from '@/api/clients/dodo';
 import { cacheService } from '@/api/clients/redis';
 import { env } from '@/api/env';
 import {
+  adminPlanService,
   adminProjectService,
   adminRecordingService,
   adminService,
@@ -94,8 +95,7 @@ const workspaceProcedures = createWorkspaceProcedures(
 const recordingProcedures = createRecordingProcedures(
   recordingService,
   workspaceMemberService,
-  workspaceService,
-  billingService
+  workspaceService
 );
 const linkProcedures = createLinkProcedures(linkService, workspaceMemberService, workspaceService);
 const domainProcedures = createDomainProcedures(domainService);
@@ -117,14 +117,14 @@ const adminProcedures = createAdminProcedures(
   projectService,
   tokenService,
   emailService,
-  entitlementService
+  entitlementService,
+  adminPlanService
 );
 const projectProcedures = createProjectProcedures(
   projectService,
   workspaceMemberService,
   workspaceService,
-  emailService,
-  billingService
+  emailService
 );
 const billingProcedures = createBillingProcedures(
   billingService,

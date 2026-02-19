@@ -11,6 +11,7 @@ import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { authWithAdminRateLimit } from '@/api/middleware/rate-limit.orpc';
 import type { AdminService } from '@/api/services/admin.service';
+import type { AdminPlanService } from '@/api/services/admin-plan.service';
 import type { AdminProjectService } from '@/api/services/admin-project.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
@@ -266,7 +267,7 @@ const revokeSessionImpl = (adminService: AdminService) => {
 const revokeAllSessionsImpl = (adminService: AdminService) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized
+  return authWithAdminRateLimit
     .use(adminMiddleware)
     .admin.users.sessions.revokeAll.handler(async ({ input }) => {
       const result = await adminService.revokeAllSessions(input.params.userId);
@@ -770,7 +771,7 @@ const resetInviteTokenImpl = (
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
-  return authorized
+  return authWithAdminRateLimit
     .use(adminMiddleware)
     .admin.workspaces.resetInviteToken.handler(async ({ input }) => {
       const workspaceDetail = await adminWorkspaceService.resetInviteToken(
@@ -928,11 +929,10 @@ const getWorkspaceEntitlementsImpl = (
           workspaceId: input.params.workspaceId,
           entitlements: entitlements.map((e) => ({
             resourceType: e.resourceType,
-            creditLimit: e.creditLimit,
+            quotedLimit: e.quotedLimit,
             softLimit: e.softLimit,
             hardLimit: e.hardLimit,
             resourceConsumed: e.resourceConsumed,
-            resourceCredited: e.resourceCredited,
           })),
         },
       };
@@ -962,13 +962,127 @@ const updateWorkspaceEntitlementsImpl = (
           workspaceId: input.params.workspaceId,
           entitlements: entitlements.map((e) => ({
             resourceType: e.resourceType,
-            creditLimit: e.creditLimit,
+            quotedLimit: e.quotedLimit,
             softLimit: e.softLimit,
             hardLimit: e.hardLimit,
             resourceConsumed: e.resourceConsumed,
-            resourceCredited: e.resourceCredited,
           })),
         },
+      };
+    });
+};
+
+// ============================================
+// PLAN MANAGEMENT PROCEDURES
+// ============================================
+
+/**
+ * List plans implementation
+ */
+const listPlansImpl = (adminService: AdminService, adminPlanService: AdminPlanService) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized.use(adminMiddleware).admin.plans.list.handler(async ({ input }) => {
+    const result = await adminPlanService.listPlans({
+      pageNumber: input.query.pageNumber,
+      pageSize: input.query.pageSize,
+    });
+
+    return {
+      message: 'Plans retrieved successfully',
+      data: result,
+    };
+  });
+};
+
+/**
+ * Get plan implementation
+ */
+const getPlanImpl = (adminService: AdminService, adminPlanService: AdminPlanService) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized.use(adminMiddleware).admin.plans.get.handler(async ({ input }) => {
+    const product = await adminPlanService.getPlan(input.params.productId);
+
+    return {
+      message: 'Plan retrieved successfully',
+      data: product,
+    };
+  });
+};
+
+/**
+ * Create plan implementation
+ */
+const createPlanImpl = (adminService: AdminService, adminPlanService: AdminPlanService) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.plans.create.handler(async ({ input }) => {
+      const product = await adminPlanService.createPlan(input.body);
+
+      return {
+        message: 'Plan created successfully',
+        data: product,
+      };
+    });
+};
+
+/**
+ * Update plan implementation
+ */
+const updatePlanImpl = (adminService: AdminService, adminPlanService: AdminPlanService) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.plans.update.handler(async ({ input }) => {
+      const product = await adminPlanService.updatePlan(input.params.productId, input.body);
+
+      return {
+        message: 'Plan updated successfully',
+        data: product,
+      };
+    });
+};
+
+// ============================================
+// WORKSPACE PROVISIONING PROCEDURES
+// ============================================
+
+/**
+ * Admin workspace provision implementation
+ */
+const adminProvisionWorkspaceImpl = (
+  adminService: AdminService,
+  adminWorkspaceService: AdminWorkspaceService,
+  emailService: EmailService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspaces.provision.handler(async ({ input, context }) => {
+      const result = await adminWorkspaceService.provisionWorkspace({
+        ...input.body,
+        adminRequestHeaders: context.headers,
+      });
+
+      if (result.checkoutUrl) {
+        await emailService.sendSafeWelcomeEmailCustomSubscription(
+          { to: input.body.email },
+          {
+            workspaceId: result.workspaceId,
+            workspaceName: result.workspaceName,
+            checkoutUrl: result.checkoutUrl,
+          }
+        );
+      }
+
+      return {
+        message: 'Workspace provisioned successfully',
+        data: result,
       };
     });
 };
@@ -986,7 +1100,8 @@ export const createAdminProcedures = (
   projectService: ProjectService,
   tokenService: TokenService,
   emailService: EmailService,
-  entitlementService: EntitlementService
+  entitlementService: EntitlementService,
+  adminPlanService: AdminPlanService
 ) => {
   return {
     users: {
@@ -1036,6 +1151,7 @@ export const createAdminProcedures = (
         get: getWorkspaceEntitlementsImpl(adminService, entitlementService),
         update: updateWorkspaceEntitlementsImpl(adminService, entitlementService),
       },
+      provision: adminProvisionWorkspaceImpl(adminService, adminWorkspaceService, emailService),
     },
     projects: {
       deactivate: deactivateProjectImpl(
@@ -1054,6 +1170,12 @@ export const createAdminProcedures = (
     },
     workspace: {
       createInvite: createWorkspaceInviteImpl(adminService, tokenService, emailService),
+    },
+    plans: {
+      list: listPlansImpl(adminService, adminPlanService),
+      get: getPlanImpl(adminService, adminPlanService),
+      create: createPlanImpl(adminService, adminPlanService),
+      update: updatePlanImpl(adminService, adminPlanService),
     },
   };
 };

@@ -3,19 +3,34 @@
  * Handles workspace management, deactivation, and token reset
  */
 
+import type {
+  AdminWorkspaceProvisionData,
+  AdminWorkspaceProvisionInput,
+} from '@workspace/contract';
 import { adminError } from '@workspace/contract';
 
 import { generateInviteToken } from '@/api/lib/id';
+import { createLogger } from '@/api/lib/logger';
+import { deriveWorkspaceName } from '@/api/lib/workspace';
 import type {
   AdminWorkspaceRepository,
   SearchWorkspaceProjectsParams,
   SearchWorkspacesParams,
 } from '@/api/repositories/admin-workspace.repository';
+import type { AdminPlanService } from '@/api/services/admin-plan.service';
+import type { ProvisionerService } from '@/api/services/provisioner.service';
+import type { UserService } from '@/api/services/user.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
+
+const logger = createLogger('admin-workspace-service');
 
 export interface AdminWorkspaceServiceDeps {
   adminWorkspaceRepo: AdminWorkspaceRepository;
   workspaceService: WorkspaceService;
+  userService: UserService;
+  adminPlanService: AdminPlanService;
+  provisionerService: ProvisionerService;
+  dashboardBaseUrl: string;
 }
 
 export class AdminWorkspaceService {
@@ -121,5 +136,135 @@ export class AdminWorkspaceService {
 
     // Return full detail
     return this.getWorkspaceDetail(workspaceId);
+  }
+
+  /**
+   * Provision a workspace for an admin workflow
+   */
+  async provisionWorkspace(
+    params: AdminWorkspaceProvisionInput['body'] & { adminRequestHeaders: Headers }
+  ): Promise<AdminWorkspaceProvisionData> {
+    const { email, name, workspaceDomain, workspaceName, adminRequestHeaders } = params;
+
+    // Get or create a user
+    let user: { id: string; name: string; email: string };
+    let isNewUser: boolean;
+    try {
+      const userResult = await this.deps.userService.getOrCreateUser({
+        email,
+        name,
+        headers: adminRequestHeaders,
+      });
+      user = userResult.user;
+      isNewUser = userResult.isNewUser;
+    } catch (error) {
+      logger.error({ err: error, email }, 'Failed to create user during admin workspace provision');
+      throw adminError.ADMIN_WORKSPACE_PROVISION_USER_CREATE_FAILED({ email });
+    }
+
+    // Resolve the workspace name
+    const resolvedWorkspaceName = workspaceName || deriveWorkspaceName(workspaceDomain, name);
+
+    // Provision the workspace
+    const result = await this.deps.provisionerService.createWorkspaceByURLAndName({
+      url: workspaceDomain,
+      workspaceName: resolvedWorkspaceName,
+      userId: user.id,
+      userName: user.name,
+      userEmail: user.email,
+    });
+
+    if (!result.created) {
+      throw adminError.ADMIN_WORKSPACE_PROVISION_WORKSPACE_EXISTS();
+    }
+
+    const workspaceUrl = `${this.deps.dashboardBaseUrl}/workspace/${result.workspaceId}/recordings`;
+
+    // Resolve the product id
+    const resolvedProductId = await this.resolveProductId(params, resolvedWorkspaceName);
+
+    if (!resolvedProductId) {
+      return {
+        checkoutUrl: null,
+        workspaceUrl,
+        workspaceId: result.workspaceId,
+        workspaceName: result.workspaceName,
+        userId: user.id,
+        isNewUser,
+      };
+    }
+
+    // Now checkout for the product and return the checkout url
+    const checkoutUrl = await this.createCheckout(
+      resolvedProductId,
+      result.workspaceId,
+      email,
+      name
+    );
+
+    return {
+      checkoutUrl,
+      workspaceUrl,
+      workspaceId: result.workspaceId,
+      workspaceName: result.workspaceName,
+      userId: user.id,
+      isNewUser,
+    };
+  }
+
+  private async resolveProductId(
+    params: AdminWorkspaceProvisionInput['body'],
+    workspaceName: string
+  ) {
+    if (params.planMode === 'free') {
+      return undefined;
+    }
+
+    if (params.planMode === 'existing') {
+      return params.productId;
+    }
+
+    try {
+      const createdPlan = await this.deps.adminPlanService.createPlan({
+        name: workspaceName,
+        description: `${workspaceName}'s custom plan`,
+        price: params.customPlan.price,
+        featureLimits: params.customPlan.featureLimits,
+        featureGates: params.customPlan.featureGates,
+      });
+      return createdPlan.productId;
+    } catch (error) {
+      logger.error({ err: error }, 'Failed to create plan during admin workspace provision');
+      throw adminError.ADMIN_WORKSPACE_PROVISION_PLAN_CREATE_FAILED();
+    }
+  }
+
+  private async createCheckout(
+    productId: string,
+    workspaceId: string,
+    email: string,
+    name: string
+  ) {
+    try {
+      await this.deps.adminPlanService.verifyProductExists(productId);
+    } catch {
+      throw adminError.ADMIN_WORKSPACE_PROVISION_PRODUCT_NOT_FOUND({ productId });
+    }
+
+    try {
+      return await this.deps.adminPlanService.createCheckoutSession({
+        productId,
+        workspaceId,
+        email,
+        name,
+        returnUrl: `${this.deps.dashboardBaseUrl}/workspace/${workspaceId}/settings?tab=plan-usage`,
+      });
+    } catch (error) {
+      logger.error(
+        { err: error, productId },
+        'Failed to create checkout during admin workspace provision'
+      );
+      throw adminError.ADMIN_WORKSPACE_PROVISION_CHECKOUT_FAILED({ productId });
+    }
   }
 }

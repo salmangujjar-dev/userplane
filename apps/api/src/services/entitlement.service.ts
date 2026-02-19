@@ -2,8 +2,8 @@
  * EntitlementService - Business logic for entitlement operations
  *
  * Handles:
- * - Provisioning entitlements for new workspaces
- * - Updating entitlements on plan changes
+ * - Provisioning entitlements for new workspaces (free plan from config, paid plans from metadata)
+ * - Updating entitlements on plan changes (from Dodo product metadata)
  * - Checking and enforcing resource limits
  * - Tracking resource consumption
  * - Providing usage summaries for UI
@@ -12,10 +12,11 @@
 
 import type { CacheService } from '@workspace/cache';
 import type { AdminUpdateEntitlementItem, SubscriptionAccessStatus } from '@workspace/contract';
+import type { DodoFeatureLimits } from '@workspace/payments/types';
 import type { PlanId, PlanName, ResourceType } from '@workspace/pricing';
 import {
+  FREE_PLAN_ENTITLEMENTS,
   getCooldownMultiplier,
-  PLAN_ENTITLEMENTS,
   PLAN_NAMES,
   RESOURCE_TYPE_VALUES,
   UNLIMITED_QUOTED_LIMIT,
@@ -90,66 +91,72 @@ export class EntitlementService {
   }
 
   /**
-   * Provision entitlements for a workspace based on plan
-   * Called when: workspace created, subscription activated
-   * Invalidates usage summary cache after provisioning
+   * Provision entitlements for free plan
+   * Called when a new workspace is created (before any subscription)
+   * Uses hardcoded FREE_PLAN_ENTITLEMENTS since free plan has no Dodo product
    */
-  async provisionForPlan(
-    workspaceId: string,
-    planId: PlanId,
-    options?: { tx?: Transaction }
-  ): Promise<void> {
-    const planEntitlements = PLAN_ENTITLEMENTS[planId];
-
-    if (!planEntitlements) {
-      throw new Error(`Unknown plan ID: ${planId}`);
-    }
-
+  async provisionFreePlan(workspaceId: string, options?: { tx?: Transaction }): Promise<void> {
     const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
       resourceType,
-      creditLimit: planEntitlements[resourceType].creditLimit,
-      softLimit: planEntitlements[resourceType].softLimit,
-      hardLimit: planEntitlements[resourceType].hardLimit,
+      quotedLimit: FREE_PLAN_ENTITLEMENTS[resourceType].quotedLimit,
+      softLimit: FREE_PLAN_ENTITLEMENTS[resourceType].softLimit,
+      hardLimit: FREE_PLAN_ENTITLEMENTS[resourceType].hardLimit,
     }));
 
     await this.deps.entitlementRepo.upsertMany(workspaceId, entitlementData, {
       tx: options?.tx,
-      preserveConsumed: false, // New provisioning, start fresh
+      preserveConsumed: false,
     });
 
-    // Invalidate usage cache after provisioning
     await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
   /**
-   * Update entitlements when plan changes (upgrade/downgrade)
-   * Preserves consumption but updates limits
-   * Invalidates usage summary cache after update
+   * Provision entitlements from Dodo product metadata
+   * Called when a new subscription is created
+   * Reads limits from the featureLimits parameter (fetched from Dodo API)
    */
-  async updateForPlan(
+  async provisionFromMetadata(
     workspaceId: string,
-    newPlanId: PlanId,
+    featureLimits: DodoFeatureLimits,
     options?: { tx?: Transaction }
   ): Promise<void> {
-    const planEntitlements = PLAN_ENTITLEMENTS[newPlanId];
-
-    if (!planEntitlements) {
-      throw new Error(`Unknown plan ID: ${newPlanId}`);
-    }
-
     const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
       resourceType,
-      creditLimit: planEntitlements[resourceType].creditLimit,
-      softLimit: planEntitlements[resourceType].softLimit,
-      hardLimit: planEntitlements[resourceType].hardLimit,
+      quotedLimit: featureLimits[resourceType].quotedLimit,
+      softLimit: featureLimits[resourceType].softLimit,
+      hardLimit: featureLimits[resourceType].hardLimit,
     }));
 
     await this.deps.entitlementRepo.upsertMany(workspaceId, entitlementData, {
       tx: options?.tx,
-      preserveConsumed: true, // Plan change, preserve usage
+      preserveConsumed: false,
     });
 
-    // Invalidate usage cache after update
+    await this.deps.cacheService.invalidateUsage(workspaceId);
+  }
+
+  /**
+   * Update entitlements from Dodo product metadata on plan change
+   * Preserves consumption but updates limits from metadata
+   */
+  async updateFromMetadata(
+    workspaceId: string,
+    featureLimits: DodoFeatureLimits,
+    options?: { tx?: Transaction }
+  ): Promise<void> {
+    const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
+      resourceType,
+      quotedLimit: featureLimits[resourceType].quotedLimit,
+      softLimit: featureLimits[resourceType].softLimit,
+      hardLimit: featureLimits[resourceType].hardLimit,
+    }));
+
+    await this.deps.entitlementRepo.upsertMany(workspaceId, entitlementData, {
+      tx: options?.tx,
+      preserveConsumed: true,
+    });
+
     await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
@@ -159,13 +166,6 @@ export class EntitlementService {
    * Enforcement logic:
    * - Checks subscription access status (cancellation, on_hold grace period)
    * - Enforces: current usage + amount <= hardLimit (absolute ceiling)
-   * - Limits are clean values that may have been adjusted via applyCredits()
-   *
-   * Credit system:
-   * - creditLimit: Additional capacity from plan (pool of unused credits)
-   * - Use applyCredits() to consume from creditLimit and increase soft/hard limits
-   * - This keeps enforcement simple: just check current usage vs adjusted limits
-   * - Invariant: current usage < softLimit < hardLimit
    *
    * Soft limit warnings:
    * - TODO: Trigger warning email when current usage >= softLimit
@@ -186,7 +186,6 @@ export class EntitlementService {
     );
 
     if (!entitlement) {
-      // No entitlement found - default to disallowed
       return {
         allowed: false,
         reason: 'No entitlement found for this resource',
@@ -223,9 +222,7 @@ export class EntitlementService {
       amount
     );
 
-    // If consumption is not allowed, return the reason
     if (!thresholds.canConsume) {
-      // If subscription is active and access is denied
       const reason = this.getSubscriptionAccessDeniedReason(
         accessStatus.accessStatus,
         cooldownMultiplier,
@@ -241,11 +238,6 @@ export class EntitlementService {
       };
     }
 
-    // TODO: Check soft limit warning threshold
-    // if (thresholds.exceedsSoftLimit) {
-    //   // Trigger warning email in background
-    // }
-
     return {
       allowed: true,
       current,
@@ -255,12 +247,6 @@ export class EntitlementService {
 
   /**
    * Get user-friendly reason for access denial based on subscription status
-   * - If subscription is active and in ramp-up period, return the ramp-up period reason
-   * - If subscription is active and resource limit is reached, return the resource limit reached reason
-   * - If subscription is not active, return the subscription access denied reason
-   * - If subscription is in grace period, return the grace period reason
-   * - If subscription is under dispute, return the dispute reason
-   * - If subscription is refunded, return the refunded reason
    */
   private getSubscriptionAccessDeniedReason(
     accessStatus: SubscriptionAccessStatus['accessStatus'],
@@ -298,8 +284,6 @@ export class EntitlementService {
     options?: { tx?: Transaction }
   ): Promise<void> {
     await this.deps.entitlementRepo.incrementConsumed(workspaceId, resourceType, amount, options);
-
-    // Invalidate usage cache after consumption
     await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
@@ -376,61 +360,7 @@ export class EntitlementService {
     options?: { tx?: Transaction }
   ): Promise<void> {
     await this.deps.entitlementRepo.decrementConsumed(workspaceId, 'seats', amount, options);
-
-    // Invalidate usage cache after release
     await this.deps.cacheService.invalidateUsage(workspaceId);
-  }
-
-  /**
-   * Apply credits to increase limits
-   * Consumes from creditLimit pool and increases soft/hard limits
-   *
-   * Process:
-   * 1. Atomically checks if creditLimit >= amount
-   * 2. If yes: creditLimit -= amount, softLimit += amount, hardLimit += amount
-   * 3. This makes enforcement clean: just check current < hardLimit
-   *
-   * Uses atomic repository operation to prevent race conditions
-   * Multiple concurrent calls are safe - only one will succeed if creditLimit is limited
-   * Invalidates usage summary cache if credits were applied
-   *
-   * @returns true if credits were applied, false if insufficient creditLimit
-   */
-  async applyCredits(
-    workspaceId: string,
-    resourceType: ResourceType,
-    amount: number,
-    options?: { tx?: Transaction }
-  ): Promise<boolean> {
-    // Atomic update with creditLimit >= amount check in WHERE clause
-    const updated = await this.deps.entitlementRepo.applyCredits(
-      workspaceId,
-      resourceType,
-      amount,
-      options
-    );
-
-    // If no row was updated, either entitlement doesn't exist or insufficient creditLimit
-    if (!updated) {
-      // Check if entitlement exists to provide better error message
-      const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
-        workspaceId,
-        resourceType,
-        options
-      );
-
-      if (!entitlement) {
-        throw new Error('No entitlement found for this resource');
-      }
-
-      // Entitlement exists but insufficient creditLimit
-      return false;
-    }
-
-    // Invalidate usage cache after applying credits
-    await this.deps.cacheService.invalidateUsage(workspaceId);
-
-    return true;
   }
 
   /**
@@ -456,7 +386,7 @@ export class EntitlementService {
 
   /**
    * Internal method to compute usage summary from database
-   * Called when cache miss occurs
+   * Reads quotedLimit from the entitlement row's DB column (not hardcoded config)
    */
   private async _computeUsageSummary(workspaceId: string): Promise<UsageSummary> {
     const entitlementsList = await this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
@@ -471,9 +401,8 @@ export class EntitlementService {
 
     for (const resourceType of RESOURCE_TYPE_VALUES) {
       const entitlement = entitlementsList.find((e) => e.resourceType === resourceType);
-      // Get quotedLimit from PLAN_ENTITLEMENTS config for UI display
-      const planLimits = PLAN_ENTITLEMENTS[effectivePlanId]?.[resourceType];
-      const quotedLimit = planLimits?.quotedLimit ?? 0;
+      // Read quotedLimit from DB column (populated by metadata or free plan config)
+      const quotedLimit = entitlement?.quotedLimit ?? 0;
 
       if (entitlement) {
         const consumed = entitlement.resourceConsumed;
@@ -493,7 +422,6 @@ export class EntitlementService {
           percentUsed,
         };
       } else {
-        // No entitlement - use plan defaults or zeros
         resources[resourceType] = {
           consumed: 0,
           limit: quotedLimit,
@@ -516,8 +444,6 @@ export class EntitlementService {
    */
   async resetPeriodUsage(workspaceId: string, options?: { tx?: Transaction }): Promise<void> {
     await this.deps.entitlementRepo.resetPeriodResources(workspaceId, options);
-
-    // Invalidate usage cache after reset
     await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
@@ -543,7 +469,7 @@ export class EntitlementService {
       if (!existing) continue;
 
       const newLimits = {
-        creditLimit: update.creditLimit ?? existing.creditLimit,
+        quotedLimit: update.quotedLimit ?? existing.quotedLimit,
         softLimit: update.softLimit ?? existing.softLimit,
         hardLimit: update.hardLimit ?? existing.hardLimit,
       };

@@ -89,7 +89,7 @@ export class RefundProcessorService {
 
     // 2. Record webhook event for audit trail
     const existingEvent = await this.deps.webhookEventsRepo.exists(webhookId);
-    const businessId = refund.business_id || 'unknown';
+    const businessId = refund.business_id;
 
     if (!existingEvent) {
       logger.debug({ webhookId }, 'Recording new webhook event');
