@@ -10,7 +10,6 @@ import {
 } from '@workspace/ui/components/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
 import {
-  Building2,
   FolderKanban,
   Globe,
   KeyRound,
@@ -22,9 +21,11 @@ import {
   Video,
 } from 'lucide-react';
 
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { usePermissions } from '@/hooks/use-permissions';
 
 interface WorkspaceCardProps {
+  workspaceId?: string;
   workspaceName: string;
   memberCount: number;
   projectCount: number;
@@ -40,6 +41,7 @@ interface WorkspaceCardProps {
 }
 
 export function WorkspaceCard({
+  workspaceId,
   workspaceName,
   memberCount,
   projectCount,
@@ -62,79 +64,83 @@ export function WorkspaceCard({
       }`}
       onClick={onClick}
     >
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="flex items-start gap-3">
+            <WorkspaceAvatar
+              workspaceId={workspaceId}
+              workspaceName={workspaceName}
+              size={WORKSPACE_AVATAR_SIZES.USER}
+            />
+            <div className="min-w-0 flex-1">
               <h3 className="text-sm font-medium truncate">{workspaceName}</h3>
-            </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5" />
-                    <span>{memberCount}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span>
-                    {memberCount} member{memberCount !== 1 ? 's' : ''}
-                  </span>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1">
-                    <FolderKanban className="h-3.5 w-3.5" />
-                    <span>{projectCount}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span>
-                    {projectCount} project{projectCount !== 1 ? 's' : ''}
-                  </span>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1">
-                    <Globe className="h-3.5 w-3.5" />
-                    <span>{domainCount}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span>
-                    {domainCount} domain{domainCount !== 1 ? 's' : ''}
-                  </span>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1">
-                    <Link2 className="h-3.5 w-3.5" />
-                    <span>{linkCount}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span>
-                    {linkCount} link{linkCount !== 1 ? 's' : ''}
-                  </span>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1">
-                    <Video className="h-3.5 w-3.5" />
-                    <span>{recordingCount}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span>
-                    {recordingCount} recording{recordingCount !== 1 ? 's' : ''}
-                  </span>
-                </TooltipContent>
-              </Tooltip>
+              <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5" />
+                      <span>{memberCount}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {memberCount} member{memberCount !== 1 ? 's' : ''}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <FolderKanban className="h-3.5 w-3.5" />
+                      <span>{projectCount}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {projectCount} project{projectCount !== 1 ? 's' : ''}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <Globe className="h-3.5 w-3.5" />
+                      <span>{domainCount}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {domainCount} domain{domainCount !== 1 ? 's' : ''}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <Link2 className="h-3.5 w-3.5" />
+                      <span>{linkCount}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {linkCount} link{linkCount !== 1 ? 's' : ''}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <Video className="h-3.5 w-3.5" />
+                      <span>{recordingCount}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {recordingCount} recording{recordingCount !== 1 ? 's' : ''}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             </div>
           </div>
         </div>

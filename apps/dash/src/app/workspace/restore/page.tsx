@@ -12,6 +12,7 @@ import { Suspense, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { useProjectRestoreInfo, useRestoreProject } from '@/features/projects';
 import { useRestoreWorkspace, useWorkspaceRestoreInfo } from '@/features/workspace';
 import { mediaClient } from '@/lib/media';
@@ -69,6 +70,7 @@ function SuccessState({
 }: {
   restoreType: RestoreType;
   restoredWorkspaceData: {
+    workspaceId: string;
     workspaceName: string;
     restoredProjects: number;
     restoredLinks: number;
@@ -102,6 +104,7 @@ function SuccessState({
 
         {restoreType === 'workspace' && restoredWorkspaceData && (
           <WorkspaceCard
+            workspaceId={restoredWorkspaceData.workspaceId}
             workspaceName={restoredWorkspaceData.workspaceName}
             projectsRestored={restoredWorkspaceData.restoredProjects}
             linksRestored={restoredWorkspaceData.restoredLinks}
@@ -145,11 +148,7 @@ function LoadingState({ restoreType }: { restoreType: RestoreType }) {
           <div className="w-full p-4 rounded-xl border bg-card">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="flex -space-x-2 shrink-0">
-                  <div className="h-7 w-7 animate-pulse rounded-full bg-muted" />
-                  <div className="h-7 w-7 animate-pulse rounded-full bg-muted" />
-                  <div className="h-7 w-7 animate-pulse rounded-full bg-muted" />
-                </div>
+                <div className="h-7 w-7 animate-pulse rounded-full bg-muted shrink-0" />
                 <div className="h-4 w-32 animate-pulse rounded bg-muted" />
               </div>
               <div className="flex items-center gap-3 shrink-0">
@@ -245,6 +244,7 @@ function ConfirmationState({
   restoreType: RestoreType;
   restorationStatus?: RestorationStatus;
   workspaceInfo?: {
+    workspaceId?: string;
     workspaceName: string;
     projectsToRestore: number;
     linksToRestore: number;
@@ -295,6 +295,7 @@ function ConfirmationState({
 
         {restoreType === 'workspace' && workspaceInfo && (
           <WorkspaceCard
+            workspaceId={workspaceInfo.workspaceId}
             workspaceName={workspaceInfo.workspaceName}
             projectsRestored={workspaceInfo.projectsToRestore}
             linksRestored={workspaceInfo.linksToRestore}
@@ -350,6 +351,7 @@ function RestorePageContent() {
   const [projectId] = useQueryState('projectId'); // For project restore
   const [restored, setRestored] = useState(false);
   const [restoredWorkspaceData, setRestoredWorkspaceData] = useState<{
+    workspaceId: string;
     workspaceName: string;
     restoredProjects: number;
     restoredLinks: number;
@@ -415,6 +417,7 @@ function RestorePageContent() {
             if (result.success) {
               setWorkspaceStore(result.data.workspace.workspaceId);
               setRestoredWorkspaceData({
+                workspaceId: result.data.workspace.workspaceId,
                 workspaceName: result.data.workspace.workspaceName,
                 restoredProjects: result.data.restoredProjects,
                 restoredLinks: result.data.restoredLinks,
@@ -514,6 +517,7 @@ function RestorePageContent() {
       workspaceInfo={
         restoreType === 'workspace' && workspaceRestoreInfo.data?.success
           ? {
+              workspaceId: workspaceRestoreInfo.data.data.workspace.workspaceId,
               workspaceName: workspaceRestoreInfo.data.data.workspace.workspaceName,
               projectsToRestore: workspaceRestoreInfo.data.data.projectsToRestore,
               linksToRestore: workspaceRestoreInfo.data.data.linksToRestore,
@@ -543,12 +547,14 @@ function RestorePageContent() {
  * Workspace card with restoration info
  */
 function WorkspaceCard({
+  workspaceId,
   workspaceName,
   projectsRestored,
   linksRestored,
   membersRestored,
   recordingsRestored,
 }: {
+  workspaceId?: string;
   workspaceName: string;
   projectsRestored: number;
   linksRestored: number;
@@ -561,12 +567,12 @@ function WorkspaceCard({
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex -space-x-2 shrink-0 cursor-default">
-                {Array.from({ length: 3 }, (_, i) => (
-                  <div key={i} className="rounded-full border-2 border-card overflow-hidden">
-                    <BoringAvatar size={AVATAR_SIZES.GROUP} />
-                  </div>
-                ))}
+              <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-default">
+                <WorkspaceAvatar
+                  workspaceId={workspaceId}
+                  workspaceName={workspaceName}
+                  size={WORKSPACE_AVATAR_SIZES.GROUP}
+                />
               </div>
             </TooltipTrigger>
             <TooltipContent>

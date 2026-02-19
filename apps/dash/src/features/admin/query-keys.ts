@@ -54,6 +54,12 @@ export const adminKeys = {
   recordings: () => [...adminKeys.all, 'recordings'] as const,
   recordingDetail: (recordingId: string) =>
     [...adminKeys.recordings(), 'detail', recordingId] as const,
+
+  // Plans
+  plans: () => [...adminKeys.all, 'plans'] as const,
+  plansList: (params?: { pageNumber?: number; pageSize?: number }) =>
+    [...adminKeys.plans(), 'list', params ?? {}] as const,
+  planDetail: (productId: string) => [...adminKeys.plans(), 'detail', productId] as const,
 } as const;
 
 // Type helpers for query key inference

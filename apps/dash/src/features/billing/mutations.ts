@@ -14,7 +14,8 @@ interface ManagePlanCallbacks {
 }
 
 interface ManagePlanInput {
-  planId: PlanId;
+  planId?: PlanId;
+  productId?: string;
   workspaceId: string;
   action?: 'preview' | 'execute';
 }
@@ -30,7 +31,8 @@ export function useManagePlan(callbacks?: ManagePlanCallbacks) {
       const [error, response] = await apiClient.billing.managePlan({
         params: { workspaceId: input.workspaceId },
         body: {
-          planId: input.planId,
+          ...(input.planId ? { planId: input.planId } : {}),
+          ...(input.productId ? { productId: input.productId } : {}),
           action: input.action,
         },
       });

@@ -1,6 +1,7 @@
 'use client';
 
 import { type QueryKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { FeatureGate, ResourceType } from '@workspace/pricing';
 
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
@@ -968,6 +969,191 @@ export function useAdminRestoreProject(workspaceId: string) {
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to restore project');
+    },
+  });
+}
+
+// ============================================
+// PLAN QUERIES
+// ============================================
+
+export function useAdminPlans(
+  params: { pageNumber?: number; pageSize?: number } = {},
+  enabled = true
+) {
+  return useQuery({
+    queryKey: adminKeys.plansList(params),
+    queryFn: async () => {
+      const [error, response] = await apiClient.admin.plans.list({
+        query: {
+          pageNumber: params.pageNumber ?? 0,
+          pageSize: params.pageSize ?? 5,
+        },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled,
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+}
+
+export function useAdminPlan(productId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: adminKeys.planDetail(productId ?? ''),
+    queryFn: async () => {
+      if (!productId) return null;
+      const [error, response] = await apiClient.admin.plans.get({
+        params: { productId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: enabled && !!productId,
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+}
+
+// ============================================
+// PLAN MUTATIONS
+// ============================================
+
+export function useAdminCreatePlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      name: string;
+      description?: string;
+      price: {
+        amountCents: number;
+        billingCycle: 'monthly' | 'annual';
+        taxInclusive?: boolean | null;
+      };
+      featureLimits: Array<{
+        resourceType: ResourceType;
+        quotedLimit: number;
+        softLimit: number;
+        hardLimit: number;
+      }>;
+      featureGates: Array<{ gate: FeatureGate; enabled: boolean }>;
+    }) => {
+      const [error, response] = await apiClient.admin.plans.create({
+        body: input,
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      showCreatedToast('Plan');
+      queryClient.invalidateQueries({ queryKey: adminKeys.plansList() });
+    },
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to create plan');
+    },
+  });
+}
+
+export function useAdminUpdatePlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      productId,
+      ...body
+    }: {
+      productId: string;
+      name?: string;
+      description?: string | null;
+      price?: {
+        amountCents: number;
+        billingCycle: 'monthly' | 'annual';
+        taxInclusive?: boolean | null;
+      };
+      featureLimits?: Array<{
+        resourceType: ResourceType;
+        quotedLimit: number;
+        softLimit: number;
+        hardLimit: number;
+      }>;
+      featureGates?: Array<{ gate: FeatureGate; enabled: boolean }>;
+    }) => {
+      const [error, response] = await apiClient.admin.plans.update({
+        params: { productId },
+        body,
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      showUpdatedToast('Plan');
+      queryClient.invalidateQueries({ queryKey: adminKeys.plansList() });
+      if (result.data?.productId) {
+        queryClient.invalidateQueries({
+          queryKey: adminKeys.planDetail(result.data.productId),
+        });
+      }
+    },
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to update plan');
+    },
+  });
+}
+
+// ============================================
+// WORKSPACE PROVISIONING
+// ============================================
+
+export type AdminWorkspaceProvisionMutationInput = {
+  email: string;
+  name: string;
+  workspaceDomain: string;
+  workspaceName?: string;
+} & (
+  | { planMode: 'free' }
+  | { planMode: 'existing'; productId: string }
+  | {
+      planMode: 'custom';
+      customPlan: {
+        price: {
+          amountCents: number;
+          billingCycle: 'monthly' | 'annual';
+          taxInclusive?: boolean | null;
+        };
+        featureLimits: Array<{
+          resourceType: ResourceType;
+          quotedLimit: number;
+          softLimit: number;
+          hardLimit: number;
+        }>;
+        featureGates: Array<{ gate: FeatureGate; enabled: boolean }>;
+      };
+    }
+);
+
+export function useAdminWorkspaceProvision() {
+  return useMutation({
+    mutationFn: async (input: AdminWorkspaceProvisionMutationInput) => {
+      const [error, response] = await apiClient.admin.workspaces.provision({
+        body: input,
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      showCreatedToast('Workspace', 'Workspace provisioned successfully');
+    },
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to provision workspace');
     },
   });
 }
