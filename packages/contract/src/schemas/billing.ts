@@ -312,6 +312,123 @@ export const PlanChangeResultDataSchema = z.object({
 export const PlanChangeResultResponseSchema = ApiResponseSchema(PlanChangeResultDataSchema);
 
 // ============================================================================
+// Add-ons
+// ============================================================================
+
+export const SEATS_ADDON_PACK_SIZE = 5;
+export const SEATS_ADDON_MAX_PACKS = 5;
+
+/**
+ * Add-on item
+ */
+export const AddonItemSchema = z.object({
+  addonId: z.string(),
+  quantity: z.number().int().min(0),
+});
+
+/**
+ * Add-on item aliases for persistence boundaries
+ */
+export const AddonItemDbSchema = AddonItemSchema;
+export const AddonItemsSchema = z.array(AddonItemSchema);
+export const AddonItemsDbSchema = AddonItemsSchema.default([]);
+
+/**
+ * Add-ons status data
+ */
+export const AddonsStatusDataSchema = z.object({
+  subscriptionId: z.string(),
+  seatsQuantity: z.number().int().min(0),
+  additionalSeats: z.number().int().min(0).multipleOf(SEATS_ADDON_PACK_SIZE),
+  addons: AddonItemsSchema,
+});
+
+/**
+ * Get add-ons status input
+ */
+export const GetAddonsStatusSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+});
+
+/**
+ * Get add-ons status response
+ */
+export const AddonsStatusResponseSchema = ApiResponseSchema(AddonsStatusDataSchema);
+
+/**
+ * Preview add-on change input
+ */
+export const PreviewAddonChangeSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    seatsQuantity: z.number().int().min(0).max(SEATS_ADDON_MAX_PACKS),
+  }),
+});
+
+/**
+ * Preview add-on change response
+ */
+export const PreviewAddonChangeResponseSchema = ApiResponseSchema(PlanChangePreviewDataSchema);
+
+/**
+ * Change add-on input
+ */
+export const ChangeAddonSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    seatsQuantity: z.number().int().min(0).max(SEATS_ADDON_MAX_PACKS),
+  }),
+});
+
+/**
+ * Change add-on response
+ */
+export const ChangeAddonResponseSchema = ApiResponseSchema(PlanChangeResultDataSchema);
+
+// ============================================================================
+// Unified Add-on Management
+// ============================================================================
+
+/**
+ * Unified add-on management input
+ * Handles preview and execute flows for seat add-ons
+ */
+export const ManageAddonsSchema = z.object({
+  params: z.object({
+    workspaceId: z.string(),
+  }),
+  body: z.object({
+    seatsQuantity: z.number().int().min(0).max(SEATS_ADDON_MAX_PACKS),
+    action: z.enum(['preview', 'execute']).optional(),
+  }),
+});
+
+/**
+ * Unified add-on management response data
+ */
+export const ManageAddonsDataSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('preview'),
+    data: PlanChangePreviewDataSchema,
+  }),
+  z.object({
+    type: z.literal('execute'),
+    data: PlanChangeResultDataSchema,
+  }),
+]);
+
+/**
+ * Unified add-on management response
+ */
+export const ManageAddonsResponseSchema = ApiResponseSchema(ManageAddonsDataSchema);
+
+// ============================================================================
 // Upstream Payment Error Data
 // ============================================================================
 
@@ -406,5 +523,9 @@ export type ResourceUsage = z.infer<typeof ResourceUsageSchema>;
 export type UsageSummaryData = z.infer<typeof UsageSummaryDataSchema>;
 export type PlanChangePreviewData = z.infer<typeof PlanChangePreviewDataSchema>;
 export type PlanChangeResultData = z.infer<typeof PlanChangeResultDataSchema>;
+export type AddonItem = z.infer<typeof AddonItemSchema>;
+export type AddonItems = z.infer<typeof AddonItemsSchema>;
+export type AddonsStatusData = z.infer<typeof AddonsStatusDataSchema>;
 export type ManagePlanData = z.infer<typeof ManagePlanDataSchema>; // Alias for internal service layer compatibility
+export type ManageAddonsData = z.infer<typeof ManageAddonsDataSchema>;
 export type SubscriptionAccessStatus = AccessDetail;

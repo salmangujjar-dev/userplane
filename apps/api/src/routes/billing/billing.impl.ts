@@ -113,6 +113,80 @@ export const getUsageImpl = (
 };
 
 /**
+ * GET /billing/:workspaceId/addons
+ * Get current add-ons status for a workspace
+ * Requires workspace membership
+ */
+export const getAddonsImpl = (
+  billingService: BillingService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.billing.getAddons
+    .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(billingRateLimitMiddleware)
+    .handler(async ({ input }) => {
+      const data = await billingService.getAddonsStatus(input.params.workspaceId);
+
+      return {
+        message: 'Add-ons status retrieved successfully',
+        data,
+      };
+    });
+};
+
+/**
+ * POST /billing/:workspaceId/addons
+ * Unified add-on management endpoint
+ * Supports preview and execute flows for seat add-ons
+ */
+export const manageAddonsImpl = (
+  billingService: BillingService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const workspaceMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorized.billing.manageAddons
+    .use(workspaceMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .use(billingRateLimitMiddleware)
+    .handler(async ({ input, context }) => {
+      const { workspaceId } = input.params;
+      const { seatsQuantity, action } = input.body;
+      const userRole = context.workspaceRole;
+
+      // Members cannot manage billing — owner/admin only
+      if (userRole !== 'owner' && userRole !== 'admin') {
+        throw billingError.BILLING_MANAGEMENT_UNAVAILABLE_FOR_MEMBER();
+      }
+
+      const resolvedAction = action ?? 'preview';
+
+      if (resolvedAction === 'execute') {
+        const result = await billingService.changeAddons(workspaceId, seatsQuantity);
+        return {
+          message: 'Add-ons changed successfully',
+          data: {
+            type: 'execute' as const,
+            data: result,
+          },
+        };
+      }
+
+      const preview = await billingService.previewAddonChange(workspaceId, seatsQuantity);
+      return {
+        message: 'Add-on change preview retrieved successfully',
+        data: {
+          type: 'preview' as const,
+          data: preview,
+        },
+      };
+    });
+};
+
+/**
  * POST /billing/:workspaceId/plan
  * Unified plan management endpoint
  * Routes to appropriate flow based on subscription status and user role
@@ -246,6 +320,8 @@ export function createBillingProcedures(
       workspaceMemberService,
       workspaceService
     ),
+    getAddons: getAddonsImpl(billingService, workspaceMemberService, workspaceService),
+    manageAddons: manageAddonsImpl(billingService, workspaceMemberService, workspaceService),
     managePlan: managePlanImpl(
       billingService,
       workspaceMemberService,

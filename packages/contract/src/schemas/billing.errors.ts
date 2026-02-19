@@ -34,6 +34,18 @@ export const BillingErrors = {
     message: 'You are already on this plan',
     status: 400,
   },
+  ADDON_CHANGE_NOT_ALLOWED: {
+    message: 'Add-on changes are not allowed for this subscription',
+    status: 400,
+  },
+  INVALID_ADDON_QUANTITY: {
+    message: 'Invalid add-on quantity',
+    status: 400,
+  },
+  ADDON_MAPPING_MISSING_FOR_INTERVAL: {
+    message: 'Seat add-on mapping is missing for this billing interval',
+    status: 500,
+  },
   /**
    * Upstream payment service error with structured data
    * UI should use data.code and data.message for display

@@ -64,6 +64,7 @@ type BillingCycle = 'monthly' | 'annual';
 const FEATURE_GATE_LABELS: Record<FeatureGate, string> = {
   replayRecordings: 'Replay Recordings',
   autoBlurSensitiveData: 'Auto-blur Sensitive Data',
+  requestSessions: 'Request Sessions',
   requestScreenshots: 'Request Screenshots',
   annotateScreenshots: 'Annotate Screenshots',
   requestFileUploads: 'Request File Uploads',

@@ -3,10 +3,8 @@
  * Handles all database operations for subscription entities
  */
 
-import { FeatureGatesSchema } from '@workspace/contract';
-import type { DbClient } from '@workspace/db';
-import { eq } from '@workspace/db';
-import { subscriptions, workspaces } from '@workspace/db';
+import { type AddonItems, AddonItemsDbSchema, FeatureGatesSchema } from '@workspace/contract';
+import { type DbClient, eq, subscriptions, workspaces } from '@workspace/db';
 import type { PlanFeatureGates, PlanId } from '@workspace/pricing';
 
 import { createLogger } from '@/api/lib/logger';
@@ -25,6 +23,7 @@ export interface CreateSubscriptionData {
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   featureGates: PlanFeatureGates;
+  addons?: AddonItems;
 }
 
 export interface UpdateSubscriptionData {
@@ -38,6 +37,7 @@ export interface UpdateSubscriptionData {
   lastWebhookId?: string;
   lastWebhookTimestamp?: Date;
   featureGates?: PlanFeatureGates;
+  addons?: AddonItems;
 }
 
 export class SubscriptionRepository {
@@ -53,12 +53,22 @@ export class SubscriptionRepository {
     return result.data;
   }
 
-  private transformSubscription<T extends { featureGates: unknown }>(
+  private transformSubscription<T extends { featureGates: unknown; addons?: unknown }>(
     row: T
-  ): Omit<T, 'featureGates'> & { featureGates: PlanFeatureGates | null } {
+  ): Omit<T, 'featureGates' | 'addons'> & {
+    featureGates: PlanFeatureGates | null;
+    addons: AddonItems;
+  } {
+    const parsedAddonsResult = AddonItemsDbSchema.safeParse(row.addons);
+    if (!parsedAddonsResult.success) {
+      logger.warn({ errors: parsedAddonsResult.error.errors }, 'Invalid addons in subscription');
+    }
+    const parsedAddons = parsedAddonsResult.success ? parsedAddonsResult.data : [];
+
     return {
       ...row,
       featureGates: this.parseFeatureGates(row.featureGates),
+      addons: parsedAddons,
     };
   }
 
@@ -81,6 +91,7 @@ export class SubscriptionRepository {
         currentPeriodStart: data.currentPeriodStart,
         currentPeriodEnd: data.currentPeriodEnd,
         featureGates: data.featureGates,
+        addons: data.addons,
       })
       .returning();
 

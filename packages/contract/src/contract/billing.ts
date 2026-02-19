@@ -7,11 +7,15 @@
 import { oc } from '@orpc/contract';
 
 import {
+  AddonsStatusResponseSchema,
   BillingErrors,
   CustomerPortalResponseSchema,
+  GetAddonsStatusSchema,
   GetCustomerPortalSchema,
   GetSubscriptionStatusSchema,
   GetUsageSummarySchema,
+  ManageAddonsResponseSchema,
+  ManageAddonsSchema,
   ManagePlanResponseSchema,
   ManagePlanSchema,
   SubscriptionStatusResponseSchema,
@@ -71,6 +75,41 @@ export const billingContract = oc.router({
     })
     .input(GetUsageSummarySchema)
     .output(UsageSummaryResponseSchema)
+    .errors(BillingErrors),
+
+  /**
+   * GET /billing/:workspaceId/addons
+   * Get current add-ons status for a workspace
+   * Requires workspace membership
+   */
+  getAddons: oc
+    .route({
+      method: 'GET',
+      path: '/billing/{workspaceId}/addons',
+      inputStructure: 'detailed',
+      summary: 'Get add-ons status',
+      description: 'Get current subscription add-ons for a workspace',
+    })
+    .input(GetAddonsStatusSchema)
+    .output(AddonsStatusResponseSchema)
+    .errors(BillingErrors),
+
+  /**
+   * POST /billing/:workspaceId/addons
+   * Manage seat add-ons for active subscription
+   * - action=preview: Returns proration preview
+   * - action=execute: Executes add-on change
+   */
+  manageAddons: oc
+    .route({
+      method: 'POST',
+      path: '/billing/{workspaceId}/addons',
+      inputStructure: 'detailed',
+      summary: 'Manage subscription add-ons',
+      description: 'Preview or execute seat add-on changes for active subscription',
+    })
+    .input(ManageAddonsSchema)
+    .output(ManageAddonsResponseSchema)
     .errors(BillingErrors),
 
   /**

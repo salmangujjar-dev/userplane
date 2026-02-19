@@ -57,3 +57,27 @@ export function useUsageSummary() {
     retry: 1,
   });
 }
+
+/**
+ * Hook to fetch add-ons status for the current workspace
+ * Returns current seats add-on quantity and computed additional seats
+ */
+export function useAddonsStatus() {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery({
+    queryKey: billingKeys.addons(workspaceId ?? ''),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.billing.getAddons({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: !!workspaceId,
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
+}

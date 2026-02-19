@@ -9,6 +9,7 @@ import type {
   AdminUpdatePlanInput,
 } from '@workspace/contract';
 import { adminError } from '@workspace/contract';
+import { getSeatsAddonIdForInterval } from '@workspace/payments';
 import type { DodoPayments } from '@workspace/payments/client';
 import type { DodoFeatureLimits } from '@workspace/payments/metadata';
 import {
@@ -31,6 +32,15 @@ export interface AdminPlanServiceDeps {
 
 export class AdminPlanService {
   constructor(private deps: AdminPlanServiceDeps) {}
+
+  private getRequiredSeatsAddonIdForBillingCycle(billingCycle: 'monthly' | 'annual'): string {
+    const addonId = getSeatsAddonIdForInterval(billingCycle);
+    if (!addonId) {
+      logger.error({ billingCycle }, 'Seats add-on ID missing for billing cycle');
+      throw adminError.PLAN_CREATE_FAILED();
+    }
+    return addonId;
+  }
 
   /**
    * List subscription products from DodoPayments with pagination
@@ -107,10 +117,12 @@ export class AdminPlanService {
 
     try {
       const dodoPrice = this.buildRecurringPrice(input.price);
+      const seatsAddonId = this.getRequiredSeatsAddonIdForBillingCycle(input.price.billingCycle);
       const product = await this.deps.dodoClient.products.create({
         name: input.name,
         description: input.description ?? null,
         price: dodoPrice,
+        addons: [seatsAddonId],
         tax_category: 'saas',
         ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
       });
@@ -147,6 +159,8 @@ export class AdminPlanService {
     }
     if (input.price) {
       updateParams.price = this.buildRecurringPrice(input.price);
+      const seatsAddonId = this.getRequiredSeatsAddonIdForBillingCycle(input.price.billingCycle);
+      updateParams.addons = [seatsAddonId];
     }
 
     // Handle metadata updates

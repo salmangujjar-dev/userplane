@@ -11,7 +11,12 @@
  */
 
 import type { CacheService } from '@workspace/cache';
-import type { AdminUpdateEntitlementItem, SubscriptionAccessStatus } from '@workspace/contract';
+import type {
+  AddonItem,
+  AdminUpdateEntitlementItem,
+  SubscriptionAccessStatus,
+} from '@workspace/contract';
+import { isSeatsAddonId } from '@workspace/payments';
 import type { DodoFeatureLimits } from '@workspace/payments/types';
 import type { PlanId, PlanName, ResourceType } from '@workspace/pricing';
 import {
@@ -72,6 +77,34 @@ export interface UsageSummary {
 export class EntitlementService {
   constructor(private deps: EntitlementServiceDeps) {}
 
+  private getAdditionalSeatsFromAddons(addons: AddonItem[] = []): number {
+    const seatsAddon = addons.find((addon) => isSeatsAddonId(addon.addonId));
+    return (seatsAddon?.quantity ?? 0) * 5;
+  }
+
+  private buildEntitlementData(featureLimits: DodoFeatureLimits, addons: AddonItem[] = []) {
+    const additionalSeats = this.getAdditionalSeatsFromAddons(addons);
+
+    return RESOURCE_TYPE_VALUES.map((resourceType) => {
+      const base = featureLimits[resourceType];
+      if (resourceType !== 'seats') {
+        return {
+          resourceType,
+          quotedLimit: base.quotedLimit,
+          softLimit: base.softLimit,
+          hardLimit: base.hardLimit,
+        };
+      }
+
+      return {
+        resourceType,
+        quotedLimit: base.quotedLimit + additionalSeats,
+        softLimit: base.softLimit + additionalSeats,
+        hardLimit: base.hardLimit + additionalSeats,
+      };
+    });
+  }
+
   /**
    * Reusable function for entitlement threshold math
    * Computes whether consumption is allowed and which thresholds are exceeded
@@ -119,14 +152,9 @@ export class EntitlementService {
   async provisionFromMetadata(
     workspaceId: string,
     featureLimits: DodoFeatureLimits,
-    options?: { tx?: Transaction }
+    options?: { tx?: Transaction; addons?: AddonItem[] }
   ): Promise<void> {
-    const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
-      resourceType,
-      quotedLimit: featureLimits[resourceType].quotedLimit,
-      softLimit: featureLimits[resourceType].softLimit,
-      hardLimit: featureLimits[resourceType].hardLimit,
-    }));
+    const entitlementData = this.buildEntitlementData(featureLimits, options?.addons);
 
     await this.deps.entitlementRepo.upsertMany(workspaceId, entitlementData, {
       tx: options?.tx,
@@ -143,14 +171,9 @@ export class EntitlementService {
   async updateFromMetadata(
     workspaceId: string,
     featureLimits: DodoFeatureLimits,
-    options?: { tx?: Transaction }
+    options?: { tx?: Transaction; addons?: AddonItem[] }
   ): Promise<void> {
-    const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
-      resourceType,
-      quotedLimit: featureLimits[resourceType].quotedLimit,
-      softLimit: featureLimits[resourceType].softLimit,
-      hardLimit: featureLimits[resourceType].hardLimit,
-    }));
+    const entitlementData = this.buildEntitlementData(featureLimits, options?.addons);
 
     await this.deps.entitlementRepo.upsertMany(workspaceId, entitlementData, {
       tx: options?.tx,
