@@ -353,10 +353,18 @@ export const ManagePlanSchema = z.object({
   params: z.object({
     workspaceId: z.string(),
   }),
-  body: z.object({
-    planId: z.enum(PLAN_IDS),
-    action: z.enum(['preview', 'execute']).optional(),
-  }),
+  body: z
+    .object({
+      planId: z.enum(PLAN_IDS).optional(),
+      productId: z.string().optional(),
+      action: z.enum(['preview', 'execute']).optional(),
+    })
+    .refine((data) => data.planId || data.productId, {
+      message: 'Either planId or productId must be provided',
+    })
+    .refine((data) => !(data.planId && data.productId), {
+      message: 'Only one of planId or productId should be provided',
+    }),
 });
 
 /**

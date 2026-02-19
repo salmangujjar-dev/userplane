@@ -18,13 +18,16 @@ import {
   ADMIN_USER_SORT_FIELDS,
   ADMIN_WORKSPACE_FILTER_STATUS_VALUES,
   ADMIN_WORKSPACE_SORT_FIELDS,
+  DomainUrlSchema,
   EmailSchema,
+  NameSchema,
   ProjectIdSchema,
   ReasonTextSchema,
   SessionIdSchema,
   SortDirectionSchema,
   STREAMING_STATUS_VALUES,
   UPLOAD_STATUS_VALUES,
+  URLSchema,
   UserIdSchema,
   WORKSPACE_ROLE_VALUES,
   WorkspaceIdSchema,
@@ -748,6 +751,9 @@ export type AdminUpdateEntitlementsInput = z.infer<typeof AdminUpdateEntitlement
 // ============================================
 
 const TIME_INTERVAL_VALUES = ['Day', 'Week', 'Month', 'Year'] as const;
+const AdminPlanNameSchema = NameSchema.max(100);
+const AdminPlanDescriptionSchema = z.string().max(1000);
+export const AdminPlanBillingCycleSchema = z.enum(['monthly', 'annual']);
 
 /** Price configuration for plan product */
 export const AdminPlanPriceSchema = z.object({
@@ -761,6 +767,13 @@ export const AdminPlanPriceSchema = z.object({
   subscriptionPeriodCount: z.number().optional(),
   subscriptionPeriodInterval: z.enum(TIME_INTERVAL_VALUES).optional(),
   trialPeriodDays: z.number().optional(),
+});
+
+/** Constrained recurring price input for admin plan creation/update */
+export const AdminPlanRecurringPriceInputSchema = z.object({
+  amountCents: z.number().int().nonnegative(),
+  billingCycle: AdminPlanBillingCycleSchema,
+  taxInclusive: z.boolean().nullable().optional(),
 });
 
 /** Resource limit in plan metadata (decoded) */
@@ -778,6 +791,12 @@ export const AdminPlanFeatureGateSchema = z.object({
   enabled: z.boolean(),
 });
 
+/** Feature gate input shape for create/update plan payloads */
+export const AdminPlanFeatureGateInputSchema = z.object({
+  gate: z.enum(FEATURE_GATE_KEYS),
+  enabled: z.boolean(),
+});
+
 /** Plan product in list/detail response */
 export const AdminPlanProductSchema = z.object({
   productId: z.string(),
@@ -792,9 +811,22 @@ export const AdminPlanProductSchema = z.object({
   updatedAt: z.string(),
 });
 
+/** List plans input */
+export const AdminListPlansInputSchema = z.object({
+  query: z
+    .object({
+      pageNumber: z.coerce.number().int().min(0).optional().default(0),
+      pageSize: z.coerce.number().int().min(1).max(10).optional().default(5),
+    })
+    .optional()
+    .default({}),
+});
+
 /** List plans response */
 export const AdminPlansListDataSchema = z.object({
   products: z.array(AdminPlanProductSchema),
+  pageNumber: z.number(),
+  pageSize: z.number(),
 });
 
 /** Get plan input */
@@ -805,28 +837,11 @@ export const AdminGetPlanInputSchema = z.object({
 /** Create plan input */
 export const AdminCreatePlanInputSchema = z.object({
   body: z.object({
-    name: z.string().min(1).max(100),
-    description: z.string().max(1000).optional(),
-    price: AdminPlanPriceSchema,
-    taxCategory: z.string().default('saas'),
-    featureLimits: z
-      .array(
-        z.object({
-          resourceType: z.enum(RESOURCE_TYPE_VALUES),
-          quotedLimit: z.number().int(),
-          softLimit: z.number().int(),
-          hardLimit: z.number().int(),
-        })
-      )
-      .optional(),
-    featureGates: z
-      .array(
-        z.object({
-          gate: z.enum(FEATURE_GATE_KEYS),
-          enabled: z.boolean(),
-        })
-      )
-      .optional(),
+    name: AdminPlanNameSchema,
+    description: AdminPlanDescriptionSchema.optional(),
+    price: AdminPlanRecurringPriceInputSchema,
+    featureLimits: z.array(AdminPlanResourceLimitSchema),
+    featureGates: z.array(AdminPlanFeatureGateInputSchema),
   }),
 });
 
@@ -834,38 +849,89 @@ export const AdminCreatePlanInputSchema = z.object({
 export const AdminUpdatePlanInputSchema = z.object({
   params: z.object({ productId: z.string() }),
   body: z.object({
-    name: z.string().min(1).max(100).optional(),
-    description: z.string().max(1000).nullable().optional(),
-    price: AdminPlanPriceSchema.optional(),
-    featureLimits: z
-      .array(
-        z.object({
-          resourceType: z.enum(RESOURCE_TYPE_VALUES),
-          quotedLimit: z.number().int(),
-          softLimit: z.number().int(),
-          hardLimit: z.number().int(),
-        })
-      )
-      .optional(),
-    featureGates: z
-      .array(
-        z.object({
-          gate: z.enum(FEATURE_GATE_KEYS),
-          enabled: z.boolean(),
-        })
-      )
-      .optional(),
+    name: AdminPlanNameSchema.optional(),
+    description: AdminPlanDescriptionSchema.nullable().optional(),
+    price: AdminPlanRecurringPriceInputSchema.optional(),
+    featureLimits: z.array(AdminPlanResourceLimitSchema).optional(),
+    featureGates: z.array(AdminPlanFeatureGateInputSchema).optional(),
   }),
 });
+
+// ============================================
+// ADMIN WORKSPACE PROVISIONING SCHEMAS
+// ============================================
+
+const AdminProvisionNameSchema = NameSchema.max(100);
+const AdminProvisionWorkspaceDomainSchema = DomainUrlSchema;
+
+/** Custom plan input (for inline plan creation during workspace provisioning) */
+export const AdminWorkspaceProvisionCustomPlanSchema = z
+  .object({
+    price: AdminPlanRecurringPriceInputSchema,
+    featureLimits: z.array(AdminPlanResourceLimitSchema),
+    featureGates: z.array(AdminPlanFeatureGateInputSchema),
+  })
+  .strict();
+
+const AdminWorkspaceProvisionBaseBodySchema = z
+  .object({
+    email: EmailSchema,
+    name: AdminProvisionNameSchema,
+    workspaceDomain: AdminProvisionWorkspaceDomainSchema,
+    workspaceName: AdminProvisionNameSchema.optional(),
+  })
+  .strict();
+
+const AdminWorkspaceProvisionPlanSelectionSchema = z.discriminatedUnion('planMode', [
+  z.object({ planMode: z.literal('free') }).strict(),
+  z
+    .object({
+      planMode: z.literal('existing'),
+      productId: z.string().min(1),
+    })
+    .strict(),
+  z
+    .object({
+      planMode: z.literal('custom'),
+      customPlan: AdminWorkspaceProvisionCustomPlanSchema,
+    })
+    .strict(),
+]);
+
+/** Workspace provisioning input */
+export const AdminWorkspaceProvisionInputSchema = z.object({
+  body: AdminWorkspaceProvisionBaseBodySchema.and(AdminWorkspaceProvisionPlanSelectionSchema),
+});
+
+/** Workspace provisioning response data */
+export const AdminWorkspaceProvisionDataSchema = z.object({
+  checkoutUrl: z.string().nullable(),
+  workspaceUrl: URLSchema,
+  workspaceId: WorkspaceIdSchema,
+  workspaceName: AdminProvisionNameSchema,
+  userId: UserIdSchema,
+  isNewUser: z.boolean(),
+});
+
+/**
+ * Types - Workspace Provisioning
+ */
+export type AdminWorkspaceProvisionInput = z.infer<typeof AdminWorkspaceProvisionInputSchema>;
+export type AdminWorkspaceProvisionData = z.infer<typeof AdminWorkspaceProvisionDataSchema>;
 
 /**
  * Types - Plans
  */
 export type AdminPlanPrice = z.infer<typeof AdminPlanPriceSchema>;
+export type AdminPlanRecurringPriceInput = z.infer<typeof AdminPlanRecurringPriceInputSchema>;
 export type AdminPlanResourceLimit = z.infer<typeof AdminPlanResourceLimitSchema>;
 export type AdminPlanFeatureGate = z.infer<typeof AdminPlanFeatureGateSchema>;
 export type AdminPlanProduct = z.infer<typeof AdminPlanProductSchema>;
 export type AdminPlansListData = z.infer<typeof AdminPlansListDataSchema>;
+export type AdminListPlansInput = z.infer<typeof AdminListPlansInputSchema>;
 export type AdminGetPlanInput = z.infer<typeof AdminGetPlanInputSchema>;
 export type AdminCreatePlanInput = z.infer<typeof AdminCreatePlanInputSchema>;
 export type AdminUpdatePlanInput = z.infer<typeof AdminUpdatePlanInputSchema>;
+export type AdminWorkspaceProvisionCustomPlan = z.infer<
+  typeof AdminWorkspaceProvisionCustomPlanSchema
+>;

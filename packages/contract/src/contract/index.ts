@@ -61,6 +61,7 @@ export const adminContract = {
   workspaces: {
     search: admin.searchWorkspaces,
     get: admin.getWorkspace,
+    provision: admin.provisionWorkspace,
     members: {
       list: admin.listWorkspaceMembers,
     },
