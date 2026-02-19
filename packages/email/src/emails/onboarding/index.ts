@@ -2,6 +2,8 @@
  * Onboarding emails
  */
 
+export type { WelcomeEmailCustomSubscriptionProps } from './welcome-email-custom-subscription';
+export { WelcomeEmailCustomSubscriptionEmail } from './welcome-email-custom-subscription';
 export type { WelcomeEmailMemberProps } from './welcome-email-member';
 export { WelcomeEmailMemberEmail } from './welcome-email-member';
 export type { WelcomeEmailPilotProps } from './welcome-email-pilot';

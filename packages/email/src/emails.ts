@@ -32,6 +32,7 @@ import {
   TosViolationEmail,
 } from './emails/offboarding';
 import type {
+  WelcomeEmailCustomSubscriptionProps,
   WelcomeEmailMemberProps,
   WelcomeEmailPilotProps,
   WelcomeEmailRequesterProps,
@@ -39,6 +40,7 @@ import type {
 } from './emails/onboarding';
 // Onboarding emails
 import {
+  WelcomeEmailCustomSubscriptionEmail,
   WelcomeEmailMemberEmail,
   WelcomeEmailPilotEmail,
   WelcomeEmailRequesterEmail,
@@ -129,6 +131,14 @@ export async function renderWelcomeEmailSubscription(
   return { html, text };
 }
 
+export async function renderWelcomeEmailCustomSubscription(
+  props: WelcomeEmailCustomSubscriptionProps
+): Promise<RenderResult> {
+  const element = React.createElement(WelcomeEmailCustomSubscriptionEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
 export async function renderWelcomeEmailPilot(
   props: WelcomeEmailPilotProps
 ): Promise<RenderResult> {
@@ -180,7 +190,7 @@ export async function renderRecoveryPartially(
 }
 
 // ============================================================================
-// PROJECT EMAILS
+// BILLING EMAILS
 // ============================================================================
 
 export async function renderProjectDeletionScheduled(
@@ -316,6 +326,7 @@ export type {
   TeammateInvitedEmailProps,
   TosViolationEmailProps,
   // Onboarding
+  WelcomeEmailCustomSubscriptionProps,
   WelcomeEmailMemberProps,
   WelcomeEmailPilotProps,
   WelcomeEmailRequesterProps,

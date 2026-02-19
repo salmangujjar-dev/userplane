@@ -164,6 +164,14 @@ type WelcomeEmailSubscriptionKeyParams = {
   workspaceId: string;
 };
 
+type WelcomeEmailCustomSubscriptionKeyParams = {
+  to: string | string[];
+  /** Workspace ID - one custom subscription welcome email per workspace */
+  workspaceId: string;
+  /** Checkout URL contains unique checkout session identifier */
+  checkoutUrl: string;
+};
+
 type WelcomeEmailPilotKeyParams = {
   to: string | string[];
   /** Workspace ID - one welcome email per workspace creation */
@@ -357,6 +365,20 @@ export function welcomeEmailMemberKey(params: WelcomeEmailMemberKeyParams): stri
 export function welcomeEmailSubscriptionKey(params: WelcomeEmailSubscriptionKeyParams): string {
   const recipients = formatRecipients(params.to);
   return ensureKeyLength(`welcome-email-subscription/${recipients}/${params.workspaceId}`);
+}
+
+/**
+ * Generate idempotency key for welcome email custom subscription
+ * Uses workspaceId and checkoutUrl hash for uniqueness
+ */
+export function welcomeEmailCustomSubscriptionKey(
+  params: WelcomeEmailCustomSubscriptionKeyParams
+): string {
+  const recipients = formatRecipients(params.to);
+  const checkoutHash = hashValue(params.checkoutUrl);
+  return ensureKeyLength(
+    `welcome-email-custom-subscription/${recipients}/${params.workspaceId}/${checkoutHash}`
+  );
 }
 
 /**
