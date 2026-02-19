@@ -4,7 +4,9 @@
  */
 
 import { accountError } from '@workspace/contract';
+import { randomBytes } from 'crypto';
 
+import { auth } from '@/api/clients/auth';
 import { UserRepository } from '@/api/repositories/users.repository';
 
 export interface UserServiceDeps {
@@ -13,6 +15,63 @@ export interface UserServiceDeps {
 
 export class UserService {
   constructor(private deps: UserServiceDeps) {}
+
+  /**
+   * Resolve an existing user by email, or create one if missing.
+   */
+  async getOrCreateUser(params: {
+    email: string;
+    name: string;
+    headers: Headers;
+  }): Promise<{ user: { id: string; name: string; email: string }; isNewUser: boolean }> {
+    const existingUser = await this.findByEmail(params.email);
+    if (existingUser) {
+      return {
+        user: {
+          id: existingUser.id,
+          name: existingUser.name,
+          email: existingUser.email,
+        },
+        isNewUser: false,
+      };
+    }
+
+    const password = randomBytes(32).toString('hex');
+    const createdUser = await this.createUser(
+      { email: params.email, name: params.name, password, role: 'user' },
+      params.headers
+    );
+    const userPayload = createdUser.user;
+
+    return {
+      user: {
+        id: userPayload.id,
+        name: userPayload.name,
+        email: userPayload.email,
+      },
+      isNewUser: true,
+    };
+  }
+
+  /**
+   * Find user by email
+   */
+  async findByEmail(email: string) {
+    return this.deps.userRepo.findByEmail(email);
+  }
+
+  /**
+   * Create user through auth admin API
+   */
+  async createUser(
+    params: { email: string; name: string; password: string; role: 'user' | 'admin' },
+    headers: Headers
+  ) {
+    return auth.api.createUser({
+      body: params,
+      headers,
+    });
+  }
 
   /**
    * Get user by ID

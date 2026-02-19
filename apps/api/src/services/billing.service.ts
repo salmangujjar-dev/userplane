@@ -9,9 +9,8 @@
 import type { CacheService } from '@workspace/cache';
 import { billingError, type SubscriptionAccessStatus } from '@workspace/contract';
 import type { DodoPayments } from '@workspace/payments/client';
-import { getProductByPlanId } from '@workspace/payments/products';
 import type { PlanFeatureGates, PlanId } from '@workspace/pricing';
-import { getFeatureGates, PLAN_NAMES } from '@workspace/pricing';
+import { FREE_PLAN_FEATURE_GATES, PLAN_NAMES } from '@workspace/pricing';
 
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';
@@ -105,16 +104,24 @@ export class BillingService {
           onHoldSince: null,
         },
         accessDetail,
+        featureGates: FREE_PLAN_FEATURE_GATES,
       };
     }
 
     const planId = subscription.planId as PlanId;
 
+    // Feature gates: only grant paid plan gates when access is active or grace
+    const hasAccess =
+      accessDetail.accessStatus === 'active' || accessDetail.accessStatus === 'grace';
+    const featureGates = hasAccess
+      ? (subscription.featureGates ?? FREE_PLAN_FEATURE_GATES)
+      : FREE_PLAN_FEATURE_GATES;
+
     return {
       contractDetail: {
         status: subscription.status,
         planId,
-        planName: PLAN_NAMES[planId] || 'Unknown',
+        planName: PLAN_NAMES[planId] || 'Custom',
         currentPeriodEnd: subscription.currentPeriodEnd,
         currentPeriodStart: subscription.currentPeriodStart,
         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
@@ -122,6 +129,7 @@ export class BillingService {
         onHoldSince: subscription.status === 'on_hold' ? subscription.updatedAt : null,
       },
       accessDetail,
+      featureGates,
     };
   }
 
@@ -156,12 +164,25 @@ export class BillingService {
 
   /**
    * Get feature gates for a workspace
-   * @param workspaceId - The workspace ID
-   * @returns Feature gates
+   * Free plan: returns hardcoded gates
+   * Paid plans: reads from subscription record (populated from Dodo product metadata)
    */
   async getFeatureGates(workspaceId: string): Promise<PlanFeatureGates> {
-    const subscriptionAccessStatus = await this.getSubscriptionAccessStatus(workspaceId);
-    return getFeatureGates(subscriptionAccessStatus.effectivePlanId);
+    const accessStatus = await this.getSubscriptionAccessStatus(workspaceId);
+
+    // Free plan: hardcoded (no subscription)
+    if (accessStatus.effectivePlanId === 'free') {
+      return FREE_PLAN_FEATURE_GATES;
+    }
+
+    // Paid plans: read from subscription record (repo parses via zod)
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+    if (!subscription) {
+      logger.warn({ workspaceId }, 'No subscription found for paid workspace, defaulting to free');
+      return FREE_PLAN_FEATURE_GATES;
+    }
+
+    return subscription.featureGates ?? FREE_PLAN_FEATURE_GATES;
   }
 
   /**
@@ -320,8 +341,10 @@ export class BillingService {
 
   /**
    * Preview plan change - shows proration details before confirming
+   * @param productId - The resolved DodoPayments product ID
+   * @param newPlanId - The resolved plan ID (may be 'custom' for sales-led products)
    */
-  async previewPlanChange(workspaceId: string, newPlanId: PlanId) {
+  async previewPlanChange(workspaceId: string, productId: string, newPlanId: PlanId) {
     const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
 
     if (!subscription) {
@@ -330,23 +353,23 @@ export class BillingService {
 
     this.validateSubscriptionForChange(subscription);
 
-    if (subscription.planId === newPlanId) {
+    // Same-plan guard: for custom plans, compare productId; for standard plans, compare planId
+    if (newPlanId === 'custom') {
+      if (subscription.productId === productId) {
+        throw billingError.SAME_PLAN_SELECTED();
+      }
+    } else if (subscription.planId === newPlanId) {
       throw billingError.SAME_PLAN_SELECTED();
     }
 
-    const product = getProductByPlanId(newPlanId);
-    if (!product) {
-      throw billingError.INVALID_PLAN();
-    }
-
-    const currentPlanName = PLAN_NAMES[subscription.planId as PlanId] || 'Unknown';
-    const newPlanName = PLAN_NAMES[newPlanId] || 'Unknown';
+    const currentPlanName = PLAN_NAMES[subscription.planId as PlanId] || 'Custom';
+    const newPlanName = PLAN_NAMES[newPlanId] || 'Custom';
 
     try {
       const preview = await this.deps.dodoClient.subscriptions.previewChangePlan(
         subscription.subscriptionId,
         {
-          product_id: product.productId,
+          product_id: productId,
           proration_billing_mode: 'prorated_immediately',
           quantity: 1,
           on_payment_failure: 'prevent_change',
@@ -439,8 +462,10 @@ export class BillingService {
 
   /**
    * Execute plan change
+   * @param productId - The resolved DodoPayments product ID
+   * @param newPlanId - The resolved plan ID (may be 'custom' for sales-led products)
    */
-  async changePlan(workspaceId: string, newPlanId: PlanId) {
+  async changePlan(workspaceId: string, productId: string, newPlanId: PlanId) {
     const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
 
     if (!subscription) {
@@ -449,20 +474,20 @@ export class BillingService {
 
     this.validateSubscriptionForChange(subscription);
 
-    if (subscription.planId === newPlanId) {
+    // Same-plan guard: for custom plans, compare productId; for standard plans, compare planId
+    if (newPlanId === 'custom') {
+      if (subscription.productId === productId) {
+        throw billingError.SAME_PLAN_SELECTED();
+      }
+    } else if (subscription.planId === newPlanId) {
       throw billingError.SAME_PLAN_SELECTED();
     }
 
-    const product = getProductByPlanId(newPlanId);
-    if (!product) {
-      throw billingError.INVALID_PLAN();
-    }
-
-    const newPlanName = PLAN_NAMES[newPlanId] || 'Unknown';
+    const newPlanName = PLAN_NAMES[newPlanId] || 'Custom';
 
     try {
       await this.deps.dodoClient.subscriptions.changePlan(subscription.subscriptionId, {
-        product_id: product.productId,
+        product_id: productId,
         proration_billing_mode: 'prorated_immediately',
         quantity: 1,
         on_payment_failure: 'prevent_change',

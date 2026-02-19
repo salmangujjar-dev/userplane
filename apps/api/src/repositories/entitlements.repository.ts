@@ -5,7 +5,7 @@
  */
 
 import type { DbClient } from '@workspace/db';
-import { and, eq, gte, inArray, sql } from '@workspace/db';
+import { and, eq, inArray, sql } from '@workspace/db';
 import { entitlements } from '@workspace/db';
 import { PERIOD_BASED_RESOURCES, type ResourceType } from '@workspace/pricing';
 
@@ -15,16 +15,15 @@ import type { Transaction } from '@/api/types';
 export interface CreateEntitlementData {
   workspaceId: string;
   resourceType: ResourceType;
-  creditLimit: number;
+  quotedLimit: number;
   softLimit: number;
   hardLimit: number;
-  resourceCredited?: number;
   resourceConsumed?: number;
 }
 
 export interface EntitlementData {
   resourceType: ResourceType;
-  creditLimit: number;
+  quotedLimit: number;
   softLimit: number;
   hardLimit: number;
 }
@@ -44,10 +43,9 @@ export class EntitlementRepository {
         id: generateEntitlementId(),
         workspaceId: data.workspaceId,
         resourceType: data.resourceType,
-        creditLimit: data.creditLimit,
+        quotedLimit: data.quotedLimit,
         softLimit: data.softLimit,
         hardLimit: data.hardLimit,
-        resourceCredited: data.resourceCredited ?? 0,
         resourceConsumed: data.resourceConsumed ?? 0,
       })
       .returning();
@@ -119,7 +117,7 @@ export class EntitlementRepository {
       if (existing) {
         // Update existing entitlement
         const updateData: Record<string, unknown> = {
-          creditLimit: data.creditLimit,
+          quotedLimit: data.quotedLimit,
           softLimit: data.softLimit,
           hardLimit: data.hardLimit,
           updatedAt: new Date(),
@@ -143,7 +141,7 @@ export class EntitlementRepository {
           {
             workspaceId,
             resourceType: data.resourceType,
-            creditLimit: data.creditLimit,
+            quotedLimit: data.quotedLimit,
             softLimit: data.softLimit,
             hardLimit: data.hardLimit,
           },
@@ -235,44 +233,6 @@ export class EntitlementRepository {
   }
 
   /**
-   * Atomically apply credits to increase limits
-   * Consumes from creditLimit pool and increases soft/hard limits
-   *
-   * Uses SQL-level operations with WHERE clause check to prevent race conditions
-   * Only succeeds if creditLimit >= amount at execution time
-   *
-   * @returns Updated entitlement if successful, null if insufficient creditLimit
-   */
-  async applyCredits(
-    workspaceId: string,
-    resourceType: ResourceType,
-    amount: number,
-    options?: { tx?: Transaction }
-  ) {
-    const dbClient = options?.tx || this.db;
-
-    const [updated] = await dbClient
-      .update(entitlements)
-      .set({
-        creditLimit: sql`${entitlements.creditLimit} - ${amount}`,
-        softLimit: sql`${entitlements.softLimit} + ${amount}`,
-        hardLimit: sql`${entitlements.hardLimit} + ${amount}`,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(entitlements.workspaceId, workspaceId),
-          eq(entitlements.resourceType, resourceType),
-          eq(entitlements.isDeleted, false),
-          gte(entitlements.creditLimit, amount) // Atomic check: creditLimit >= amount
-        )
-      )
-      .returning();
-
-    return updated || null;
-  }
-
-  /**
    * Reset consumed resources for a workspace
    * If resourceType is provided, only resets that resource
    * Otherwise resets all resources
@@ -335,7 +295,7 @@ export class EntitlementRepository {
   async updateLimits(
     workspaceId: string,
     resourceType: ResourceType,
-    limits: { creditLimit: number; softLimit: number; hardLimit: number },
+    limits: { quotedLimit: number; softLimit: number; hardLimit: number },
     options?: { tx?: Transaction }
   ) {
     const dbClient = options?.tx || this.db;
@@ -343,7 +303,7 @@ export class EntitlementRepository {
     const [updated] = await dbClient
       .update(entitlements)
       .set({
-        creditLimit: limits.creditLimit,
+        quotedLimit: limits.quotedLimit,
         softLimit: limits.softLimit,
         hardLimit: limits.hardLimit,
         updatedAt: new Date(),

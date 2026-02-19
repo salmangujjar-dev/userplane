@@ -94,7 +94,7 @@ export class DisputeProcessorService {
 
     // 2. Record webhook event for audit trail
     const existingEvent = await this.deps.webhookEventsRepo.exists(webhookId);
-    const businessId = dispute.business_id || 'unknown';
+    const businessId = dispute.business_id;
 
     if (!existingEvent) {
       logger.debug({ webhookId }, 'Recording new webhook event');

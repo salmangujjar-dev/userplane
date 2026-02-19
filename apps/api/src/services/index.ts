@@ -38,6 +38,7 @@ import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.
 // Repositories
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import { AdminService } from '@/api/services/admin.service';
+import { AdminPlanService } from '@/api/services/admin-plan.service';
 import { AdminProjectService } from '@/api/services/admin-project.service';
 import { AdminRecordingService } from '@/api/services/admin-recording.service';
 import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
@@ -89,6 +90,10 @@ export const billingService = new BillingService({
   getSubscriptionAccessStatusFeatureFlagOverride,
 });
 
+export const adminPlanService = new AdminPlanService({
+  dodoClient: getDodoClient(),
+});
+
 export const entitlementService = new EntitlementService({
   entitlementRepo,
   billingService,
@@ -120,6 +125,7 @@ export const recordingService = new RecordingService({
   consoleLogsStorage: getConsoleLogsStorage(),
   networkLogsStorage: getNetworkLogsStorage(),
   clientActionsStorage: getClientActionsStorage(),
+  billingService,
 });
 
 export const notificationService = new NotificationService({
@@ -136,6 +142,7 @@ export const projectService = new ProjectService({
   recordingRepo,
   workspaceRepo,
   cacheService,
+  billingService,
 });
 
 // Admin project service - initialized after project service is available
@@ -180,12 +187,6 @@ export const adminService = new AdminService({
   workspaceMemberRepo,
 });
 
-// Admin workspace service - initialized after workspace service is available
-export const adminWorkspaceService = new AdminWorkspaceService({
-  adminWorkspaceRepo,
-  workspaceService,
-});
-
 // Domain service - initialized after workspace and user services are available
 export const domainService = new DomainService({
   domainRepo,
@@ -218,6 +219,16 @@ export const provisionerService = new ProvisionerService({
   workspaceRepo,
   memberRepo: workspaceMemberRepo,
   db,
+});
+
+// Admin workspace service - initialized after provisioner service is available
+export const adminWorkspaceService = new AdminWorkspaceService({
+  adminWorkspaceRepo,
+  workspaceService,
+  userService,
+  adminPlanService,
+  provisionerService,
+  dashboardBaseUrl: env.dashboard.baseUrl,
 });
 
 export const sessionService = new SessionService({

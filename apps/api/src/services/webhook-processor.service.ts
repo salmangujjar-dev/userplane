@@ -8,11 +8,13 @@
  * - Upstream verification (fetch from DodoPayments API when ambiguous)
  * - Audit trail (store all webhook events)
  * - Cache invalidation on subscription state changes
+ * - Dodo product metadata fetching for entitlements and feature gates
  */
 
 import type { CacheService } from '@workspace/cache';
 import { type DbClient, eq, subscriptions, workspaces } from '@workspace/db';
 import { getDodoPaymentsClient } from '@workspace/payments/client';
+import { fetchProductMetadata } from '@workspace/payments/metadata';
 import { getPlanIdFromProductId } from '@workspace/payments/products';
 import { validateTransition } from '@workspace/payments/state-machine';
 import type {
@@ -25,7 +27,10 @@ import type { PlanId } from '@workspace/pricing';
 
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';
-import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
+import type {
+  SubscriptionRepository,
+  UpdateSubscriptionData,
+} from '@/api/repositories/subscriptions.repository';
 import type { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { EntitlementService } from '@/api/services/entitlement.service';
@@ -108,8 +113,7 @@ export class WebhookProcessorService {
     }
 
     // 2. Record the webhook event (even if we skip it later)
-    // business_id is at the payload level, not on the subscription data
-    const businessId = (payload as { business_id?: string }).business_id || 'unknown';
+    const businessId = payload.business_id;
     const existingEvent = await this.deps.webhookEventsRepo.exists(webhookId);
     if (!existingEvent) {
       logger.debug({ webhookId }, 'Recording new webhook event');
@@ -214,7 +218,6 @@ export class WebhookProcessorService {
     }
 
     // 5. Determine target status from subscription payload
-    // The subscription object always contains the current status, so we read it directly
     let targetStatus = subscription.status;
 
     if (!targetStatus) {
@@ -256,7 +259,6 @@ export class WebhookProcessorService {
         { subscriptionId, reason: validation.reason },
         'Transition invalid, attempting upstream verification'
       );
-      // Try upstream verification for ambiguous cases
       const upstreamStatus = await this.verifyUpstream(subscriptionId);
 
       if (upstreamStatus) {
@@ -268,11 +270,9 @@ export class WebhookProcessorService {
         );
 
         if (upstreamValidation.valid) {
-          // Use upstream status instead
           logger.debug({ subscriptionId, upstreamStatus }, 'Using upstream status');
           targetStatus = upstreamStatus;
         } else {
-          // Both webhook and upstream are invalid
           logger.debug(
             { subscriptionId, webhookStatus: targetStatus, upstreamStatus },
             'Skipping: both webhook and upstream transitions invalid'
@@ -290,7 +290,6 @@ export class WebhookProcessorService {
           };
         }
       } else {
-        // Upstream verification failed, reject the transition
         logger.debug(
           { subscriptionId, reason: validation.reason },
           'Skipping: upstream verification failed, rejecting transition'
@@ -325,17 +324,39 @@ export class WebhookProcessorService {
       'Applying transition'
     );
 
+    // Fetch Dodo product metadata for plan changes (outside critical section to avoid holding locks)
+    let metadata = null;
+    if (planId && planId !== current.planId) {
+      try {
+        if (this.deps.dodoClient) {
+          metadata = await fetchProductMetadata(this.deps.dodoClient, subscription.product_id);
+        }
+      } catch (error) {
+        logger.error(
+          { err: error, productId: subscription.product_id },
+          'Failed to fetch product metadata for plan change'
+        );
+        captureException(error, undefined, {
+          operation: 'fetch_product_metadata',
+          productId: subscription.product_id,
+        });
+      }
+    }
+
+    const subscriptionUpdateData: UpdateSubscriptionData = {
+      status: targetStatus,
+      currentPeriodStart: dates.currentPeriodStart,
+      currentPeriodEnd: dates.currentPeriodEnd,
+      cancelledAt: dates.cancelledAt,
+      ...(planId && { planId, productId: subscription.product_id }),
+      lastWebhookId: webhookId,
+      lastWebhookTimestamp: eventTimestamp,
+      ...(metadata?.featureGates && { featureGates: metadata.featureGates }),
+    };
+
     await this.deps.subscriptionRepo.updateBySubscriptionId(
       subscriptionId,
-      {
-        status: targetStatus,
-        currentPeriodStart: dates.currentPeriodStart,
-        currentPeriodEnd: dates.currentPeriodEnd,
-        cancelledAt: dates.cancelledAt,
-        ...(planId && { planId, productId: subscription.product_id }),
-        lastWebhookId: webhookId,
-        lastWebhookTimestamp: eventTimestamp,
-      },
+      subscriptionUpdateData,
       { tx }
     );
 
@@ -349,18 +370,34 @@ export class WebhookProcessorService {
         dates.currentPeriodStart > current.currentPeriodStart;
 
       if (isRenewal) {
-        // Reset period-based usage (recordings, logs) on renewal
         logger.debug({ workspaceId }, 'Resetting period usage for workspace');
         await this.deps.entitlementService.resetPeriodUsage(workspaceId, { tx });
       }
 
-      // Handle plan changes
+      // Handle plan changes with metadata
       if (planId && planId !== current.planId) {
-        logger.debug(
-          { workspaceId, fromPlan: current.planId, toPlan: planId },
-          'Updating entitlements for plan change'
-        );
-        await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
+        if (metadata?.featureLimits) {
+          logger.debug(
+            { workspaceId, fromPlan: current.planId, toPlan: planId },
+            'Updating entitlements from metadata for plan change'
+          );
+          await this.deps.entitlementService.updateFromMetadata(
+            workspaceId,
+            metadata.featureLimits,
+            { tx }
+          );
+        } else {
+          logger.error(
+            { workspaceId, planId, productId: subscription.product_id },
+            'Plan change without feature_limits metadata - entitlements NOT updated'
+          );
+          captureException(new Error('Plan change without feature_limits metadata'), undefined, {
+            operation: 'webhook_plan_change_no_metadata',
+            workspaceId,
+            planId,
+            productId: subscription.product_id,
+          });
+        }
       }
     }
 
@@ -403,7 +440,6 @@ export class WebhookProcessorService {
     subscription: DodoSubscription
   ): Promise<ProcessingResult> {
     const { webhookId, webhookTimestamp } = headers;
-    // webhook-timestamp header is Unix seconds, convert to milliseconds for Date
     const eventTimestamp = new Date(parseInt(webhookTimestamp, 10) * 1000);
     const subscriptionId = subscription.subscription_id;
     const customerId = subscription.customer.customer_id;
@@ -433,18 +469,38 @@ export class WebhookProcessorService {
       };
     }
 
-    if (!planId) {
-      logger.debug(
+    // Fetch Dodo product metadata (outside DB transaction to avoid holding locks)
+    let metadata = null;
+    try {
+      if (this.deps.dodoClient) {
+        metadata = await fetchProductMetadata(this.deps.dodoClient, subscription.product_id);
+      }
+    } catch (error) {
+      logger.error(
+        { err: error, productId: subscription.product_id },
+        'Failed to fetch product metadata for new subscription'
+      );
+      captureException(error, undefined, {
+        operation: 'fetch_product_metadata_new_subscription',
+        productId: subscription.product_id,
+      });
+    }
+
+    console.log(metadata, subscription.product_id);
+
+    // Validate metadata is present
+    if (!metadata?.featureLimits || !metadata?.featureGates) {
+      logger.error(
         { subscriptionId, productId: subscription.product_id },
-        'Skipping: unknown product ID'
+        'Skipping new subscription: missing feature_limits or feature_gates in product metadata'
       );
       await this.deps.webhookEventsRepo.markSkipped(webhookId, {
-        skipReason: `Unknown product ID: ${subscription.product_id}`,
+        skipReason: `Missing product metadata (feature_limits/feature_gates) for product: ${subscription.product_id}`,
       });
       return {
         processed: false,
         skipped: true,
-        skipReason: `Unknown product ID: ${subscription.product_id}`,
+        skipReason: `Missing product metadata for product: ${subscription.product_id}`,
         subscriptionId,
       };
     }
@@ -459,7 +515,7 @@ export class WebhookProcessorService {
         'Workspace has existing subscription, updating (plan change scenario)'
       );
 
-      // Update existing subscription with new details
+      // Update existing subscription with new details including featureGates
       await this.deps.subscriptionRepo.updateByWorkspaceId(
         workspaceId,
         {
@@ -470,6 +526,7 @@ export class WebhookProcessorService {
           currentPeriodEnd: dates.currentPeriodEnd,
           lastWebhookId: webhookId,
           lastWebhookTimestamp: eventTimestamp,
+          featureGates: metadata.featureGates,
         },
         { tx }
       );
@@ -504,9 +561,11 @@ export class WebhookProcessorService {
         { tx }
       );
 
-      // Update entitlements for new plan (plan change scenario)
-      logger.debug({ workspaceId, planId }, 'Updating entitlements for plan change');
-      await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
+      // Update entitlements from metadata
+      logger.debug({ workspaceId, planId }, 'Updating entitlements from metadata for plan change');
+      await this.deps.entitlementService.updateFromMetadata(workspaceId, metadata.featureLimits, {
+        tx,
+      });
 
       // Invalidate billing caches for this workspace
       await this.invalidateBillingCache(workspaceId);
@@ -530,7 +589,7 @@ export class WebhookProcessorService {
       };
     }
 
-    // Create new subscription
+    // Create new subscription with featureGates
     logger.debug({ workspaceId, subscriptionId }, 'Creating new subscription for workspace');
     await this.deps.subscriptionRepo.create(
       {
@@ -543,6 +602,7 @@ export class WebhookProcessorService {
         status: 'active',
         currentPeriodStart: dates.currentPeriodStart,
         currentPeriodEnd: dates.currentPeriodEnd,
+        featureGates: metadata.featureGates,
       },
       { tx }
     );
@@ -551,10 +611,11 @@ export class WebhookProcessorService {
     logger.debug({ workspaceId, customerId }, 'Updating workspace customer ID');
     await this.updateWorkspaceCustomerId(workspaceId, customerId, { tx });
 
-    // Provision entitlements for the new plan
-    // This updates existing free plan entitlements to the paid plan limits
-    logger.debug({ workspaceId, planId }, 'Provisioning entitlements for plan');
-    await this.deps.entitlementService.updateForPlan(workspaceId, planId as PlanId, { tx });
+    // Provision entitlements from metadata
+    logger.debug({ workspaceId, planId }, 'Provisioning entitlements from metadata');
+    await this.deps.entitlementService.updateFromMetadata(workspaceId, metadata.featureLimits, {
+      tx,
+    });
 
     await this.deps.webhookEventsRepo.markProcessed(
       webhookId,
@@ -581,31 +642,15 @@ export class WebhookProcessorService {
 
   /**
    * Check if a webhook is stale (older than last processed)
-   *
-   * A webhook is considered stale if its event timestamp is older than the last
-   * processed webhook timestamp for this subscription.
-   *
-   * Important: We do NOT compare billing periods because multiple webhooks can
-   * occur within the same billing period:
-   * - Plan upgrades/downgrades (same period, different plan)
-   * - Subscription cancellations (same period, status change)
-   * - Metadata updates (same period, no status change)
-   *
-   * The webhook-timestamp header from DodoPayments is the canonical source of truth
-   * for event ordering. It represents when the event occurred on DodoPayments' side.
    */
   private isStaleWebhook(
     current: { lastWebhookTimestamp: Date | null; currentPeriodEnd: Date },
     incoming: DodoSubscription,
     eventTimestamp: Date
   ): boolean {
-    // Only check: is this webhook older than the last one we processed?
-    // If we haven't processed any webhooks yet (lastWebhookTimestamp is null),
-    // then this webhook is not stale.
     if (current.lastWebhookTimestamp && eventTimestamp < current.lastWebhookTimestamp) {
       return true;
     }
-
     return false;
   }
 
@@ -678,7 +723,6 @@ export class WebhookProcessorService {
       await this.deps.cacheService.invalidateWorkspaceBilling(workspaceId);
       logger.debug({ workspaceId }, 'Invalidated billing cache for workspace');
     } catch (error) {
-      // Cache invalidation errors should not fail the webhook processing
       logger.warn({ workspaceId, err: error }, 'Failed to invalidate billing cache for workspace');
       captureException(error, undefined, {
         operation: 'invalidate_billing_cache',

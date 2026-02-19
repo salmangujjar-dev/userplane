@@ -4,7 +4,6 @@
  */
 
 import { billingError, recordingError } from '@workspace/contract';
-import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import type {
   ClientActionsStorageClient,
   ConsoleLogsStorageClient,
@@ -23,6 +22,7 @@ import { LinkRepository } from '@/api/repositories/links.repository';
 import type { Transaction } from '@/api/repositories/recordings.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
+import type { BillingService } from '@/api/services/billing.service';
 import type {
   LinkProviderType,
   RecordingDetail,
@@ -41,6 +41,7 @@ export interface RecordingServiceDeps {
   consoleLogsStorage: ConsoleLogsStorageClient;
   networkLogsStorage: NetworkLogsStorageClient;
   clientActionsStorage: ClientActionsStorageClient;
+  billingService: BillingService;
 }
 
 /**
@@ -448,12 +449,7 @@ export class RecordingService {
    * Update the expiresAt date for a recording
    * Validates workspace membership before updating
    */
-  async updateExpiresAt(
-    recordingId: string,
-    workspaceId: string,
-    expiresAt: Date | null,
-    options?: { effectivePlanId?: PlanId }
-  ) {
+  async updateExpiresAt(recordingId: string, workspaceId: string, expiresAt: Date | null) {
     const recording = await this.deps.recordingRepo.findByIdWithStatusGroup(recordingId);
 
     if (!recording) {
@@ -470,8 +466,7 @@ export class RecordingService {
 
     // Validate feature gate for custom expiration
     if (expiresAt !== null) {
-      const planId = options?.effectivePlanId ?? 'free';
-      const featureGates = getFeatureGates(planId);
+      const featureGates = await this.deps.billingService.getFeatureGates(workspaceId);
 
       if (!featureGates.customizeDataRetention) {
         throw billingError.PLAN_FEATURE_UNAVAILABLE({

@@ -255,7 +255,7 @@ export class ProvisionerService {
 
       // Provision entitlements for free plan
       // All new workspaces start on free plan
-      await this.deps.entitlementService.provisionForPlan(createdWorkspace.workspaceId!, 'free', {
+      await this.deps.entitlementService.provisionFreePlan(createdWorkspace.workspaceId!, {
         tx,
       });
 

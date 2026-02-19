@@ -12,7 +12,6 @@ import {
   workspaceError,
 } from '@workspace/contract';
 import type { DbClient } from '@workspace/db';
-import { getFeatureGates, type PlanId } from '@workspace/pricing';
 
 import { generateProjectId } from '@/api/lib/id';
 import type { LinkRepository } from '@/api/repositories/links.repository';
@@ -23,6 +22,7 @@ import {
 } from '@/api/repositories/projects.repository';
 import type { RecordingRepository } from '@/api/repositories/recordings.repository';
 import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import type { BillingService } from '@/api/services/billing.service';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { Transaction } from '@/api/types';
 import {
@@ -40,6 +40,7 @@ export interface ProjectServiceDeps {
   recordingRepo: RecordingRepository;
   workspaceRepo: WorkspaceRepository;
   cacheService: CacheService;
+  billingService: BillingService;
 }
 
 export class ProjectService {
@@ -59,39 +60,10 @@ export class ProjectService {
       isDefault?: boolean;
       recordingRetentionDays?: RetentionDays;
     },
-    options?: { tx?: Transaction; effectivePlanId?: PlanId }
+    options?: { tx?: Transaction }
   ) {
     if (!params.workspaceId) {
       throw projectError.PROJECT_WORKSPACE_ID_REQUIRED();
-    }
-
-    // Ensure projectTitle defaults to "Untitled Project" if null or empty
-    const projectTitle = params.projectTitle?.trim() || 'Untitled Project';
-
-    let isDefault: boolean;
-
-    if (params.isDefault !== undefined) {
-      isDefault = params.isDefault;
-
-      // If setting as default, unset current default
-      if (isDefault) {
-        const currentDefault = await this.deps.projectRepo.findDefaultByWorkspace(
-          params.workspaceId
-        );
-        if (currentDefault) {
-          await this.deps.projectRepo.update(
-            currentDefault.projectId,
-            { isDefault: false },
-            options
-          );
-        }
-      }
-    } else {
-      // Auto-determine: first project becomes default
-      const existingDefault = await this.deps.projectRepo.findDefaultByWorkspace(
-        params.workspaceId
-      );
-      isDefault = !existingDefault;
     }
 
     // Validate feature gate for custom retention
@@ -99,8 +71,7 @@ export class ProjectService {
       params.recordingRetentionDays !== undefined &&
       params.recordingRetentionDays !== DEFAULT_RETENTION_DAYS
     ) {
-      const planId = options?.effectivePlanId ?? 'free';
-      const featureGates = getFeatureGates(planId);
+      const featureGates = await this.deps.billingService.getFeatureGates(params.workspaceId);
 
       if (!featureGates.customizeDataRetention) {
         throw billingError.PLAN_FEATURE_UNAVAILABLE({
@@ -109,16 +80,44 @@ export class ProjectService {
       }
     }
 
-    return this.deps.projectRepo.create(
-      {
-        projectId: generateProjectId(),
-        workspaceId: params.workspaceId,
-        projectTitle,
-        isDefault,
-        recordingRetentionDays: params.recordingRetentionDays,
-      },
-      options
-    );
+    // Ensure projectTitle defaults to "Untitled Project" if null or empty
+    const projectTitle = params.projectTitle?.trim() || 'Untitled Project';
+
+    const performCreate = async (tx: Transaction) => {
+      let isDefault: boolean;
+
+      if (params.isDefault !== undefined) {
+        isDefault = params.isDefault;
+
+        // If setting as default, unset current default
+        if (isDefault) {
+          await this.deps.projectRepo.unsetAllDefaultProjects(params.workspaceId, { tx });
+        }
+      } else {
+        // Auto-determine: first project becomes default
+        const existingDefault = await this.deps.projectRepo.findDefaultByWorkspace(
+          params.workspaceId
+        );
+        isDefault = !existingDefault;
+      }
+
+      return this.deps.projectRepo.create(
+        {
+          projectId: generateProjectId(),
+          workspaceId: params.workspaceId,
+          projectTitle,
+          isDefault,
+          recordingRetentionDays: params.recordingRetentionDays,
+        },
+        { tx }
+      );
+    };
+
+    if (options?.tx) {
+      return performCreate(options.tx);
+    }
+
+    return this.deps.db.transaction(performCreate);
   }
 
   /**
@@ -199,14 +198,19 @@ export class ProjectService {
   async setDefaultProject(projectId: string, options?: { tx?: Transaction }) {
     const project = await this.getById(projectId);
 
-    // Unset current default
-    const currentDefault = await this.deps.projectRepo.findDefaultByWorkspace(project.workspaceId);
-    if (currentDefault && currentDefault.projectId !== projectId) {
-      await this.deps.projectRepo.update(currentDefault.projectId, { isDefault: false }, options);
+    const performSetDefault = async (tx: Transaction) => {
+      // Unset current default
+      await this.deps.projectRepo.unsetAllDefaultProjects(project.workspaceId, { tx });
+
+      // Set new default
+      await this.deps.projectRepo.update(projectId, { isDefault: true }, { tx });
+    };
+
+    if (options?.tx) {
+      return performSetDefault(options.tx);
     }
 
-    // Set new default
-    await this.deps.projectRepo.update(projectId, { isDefault: true }, options);
+    return this.deps.db.transaction(performSetDefault);
   }
 
   /**
@@ -221,7 +225,7 @@ export class ProjectService {
       isDefault: boolean;
       recordingRetentionDays: RetentionDays;
     }>,
-    options?: { tx?: Transaction; effectivePlanId?: PlanId }
+    options?: { tx?: Transaction }
   ) {
     const project = await this.getById(projectId);
 
@@ -230,8 +234,7 @@ export class ProjectService {
       updates.recordingRetentionDays !== undefined &&
       updates.recordingRetentionDays !== DEFAULT_RETENTION_DAYS
     ) {
-      const planId = options?.effectivePlanId ?? 'free';
-      const featureGates = getFeatureGates(planId);
+      const featureGates = await this.deps.billingService.getFeatureGates(project.workspaceId);
 
       if (!featureGates.customizeDataRetention) {
         throw billingError.PLAN_FEATURE_UNAVAILABLE({

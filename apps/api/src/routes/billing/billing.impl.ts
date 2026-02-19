@@ -15,7 +15,7 @@
 
 import { billingError } from '@workspace/contract';
 import type { DodoPayments } from '@workspace/payments/client';
-import { getProductByPlanId } from '@workspace/payments/products';
+import { getProductByPlanId, getProductByProductId } from '@workspace/payments/products';
 import type { PlanId } from '@workspace/pricing';
 
 import { authorized } from '@/api/middleware/auth.orpc';
@@ -131,8 +131,30 @@ export const managePlanImpl = (
     .use(billingRateLimitMiddleware)
     .handler(async ({ input, context }) => {
       const { workspaceId } = input.params;
-      const { planId, action } = input.body;
+      const { planId, productId, action } = input.body;
       const userRole = context.workspaceRole;
+
+      // Resolve planId/productId to concrete values
+      let resolvedProductId: string;
+      let resolvedPlanId: PlanId;
+      let resolvedSlug: string;
+
+      if (planId) {
+        const product = getProductByPlanId(planId as PlanId);
+        if (!product) {
+          throw billingError.INVALID_PLAN();
+        }
+        resolvedProductId = product.productId;
+        resolvedPlanId = planId as PlanId;
+        resolvedSlug = product.slug;
+      } else if (productId) {
+        const knownProduct = getProductByProductId(productId);
+        resolvedProductId = productId;
+        resolvedPlanId = knownProduct?.planId ?? ('custom' as PlanId);
+        resolvedSlug = knownProduct?.slug ?? productId;
+      } else {
+        throw billingError.INVALID_PLAN();
+      }
 
       // Get subscription status to determine flow
       const subscriptionStatus = await billingService.getSubscriptionStatus(workspaceId);
@@ -149,13 +171,8 @@ export const managePlanImpl = (
 
       // Route 1: No active subscription -> Checkout
       if (!hasActiveSubscription) {
-        const product = getProductByPlanId(planId as PlanId);
-        if (!product) {
-          throw billingError.INVALID_PLAN();
-        }
-
         const session = await dodoClient.checkoutSessions.create({
-          product_cart: [{ product_id: product.productId, quantity: 1 }],
+          product_cart: [{ product_id: resolvedProductId, quantity: 1 }],
           metadata: { workspace_id: workspaceId },
           return_url: `${dashboardBaseUrl}/workspace/${workspaceId}/settings?tab=plan-usage`,
           customization: { theme: 'light', show_order_details: true, show_on_demand_tag: false },
@@ -168,7 +185,7 @@ export const managePlanImpl = (
             type: 'checkout' as const,
             data: {
               checkoutUrl: session.checkout_url ?? '',
-              slug: product.slug,
+              slug: resolvedSlug,
               sessionId: session.session_id,
             },
           },
@@ -177,7 +194,11 @@ export const managePlanImpl = (
 
       // Route 2: Active subscription + execute -> Execute
       if (action === 'execute') {
-        const result = await billingService.changePlan(workspaceId, planId as PlanId);
+        const result = await billingService.changePlan(
+          workspaceId,
+          resolvedProductId,
+          resolvedPlanId
+        );
 
         return {
           message: 'Plan changed successfully',
@@ -189,7 +210,11 @@ export const managePlanImpl = (
       }
 
       // Route 3: Active subscription + (no action or 'preview') -> Preview
-      const preview = await billingService.previewPlanChange(workspaceId, planId as PlanId);
+      const preview = await billingService.previewPlanChange(
+        workspaceId,
+        resolvedProductId,
+        resolvedPlanId
+      );
 
       return {
         message: 'Plan change preview retrieved successfully',
