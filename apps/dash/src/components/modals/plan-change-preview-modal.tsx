@@ -1,8 +1,13 @@
 'use client';
 
 import { isProductId, PLAN_NAMES, type PlanId } from '@workspace/pricing';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@workspace/ui/components/sheet';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { ArrowRight, CheckCircle2, ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import { useQueryState } from 'nuqs';
@@ -74,10 +79,10 @@ function PreviewView({
           <div className="flex items-start gap-4">
             <Logo variant="tiled" size="md" showText={false} />
             <div className="flex flex-col space-y-1">
-              <SheetTitle className="text-xl font-semibold">Review your plan change</SheetTitle>
-              <SheetDescription className="text-sm text-muted-foreground">
+              <DialogTitle className="text-xl font-semibold">Review your plan change</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
                 Review the details below before confirming your plan change
-              </SheetDescription>
+              </DialogDescription>
             </div>
           </div>
         </div>
@@ -261,12 +266,12 @@ function PreviewView({
         <div className="flex items-start gap-4">
           <Logo variant="tiled" size="md" showText={false} />
           <div className="flex flex-col space-y-1">
-            <SheetTitle className="text-xl font-semibold">
+            <DialogTitle className="text-xl font-semibold">
               {preview.isUpgrade ? 'Review your upgrade' : 'Review your plan change'}
-            </SheetTitle>
-            <SheetDescription className="text-sm text-muted-foreground">
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               Review the details below before confirming
-            </SheetDescription>
+            </DialogDescription>
           </div>
         </div>
       </div>
@@ -475,10 +480,10 @@ function SuccessView({
         <div className="flex items-start gap-4">
           <Logo variant="tiled" size="md" showText={false} />
           <div className="flex flex-col space-y-1">
-            <SheetTitle className="text-xl font-semibold">Plan Change Processing</SheetTitle>
-            <SheetDescription className="text-sm text-muted-foreground">
+            <DialogTitle className="text-xl font-semibold">Plan Change Processing</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               Your plan change to {newPlanName} is being processed
-            </SheetDescription>
+            </DialogDescription>
           </div>
         </div>
       </div>
@@ -679,10 +684,10 @@ function PreviewLoadingView() {
   return (
     <>
       <div className="p-6 pb-4">
-        <SheetTitle className="sr-only">Loading plan preview</SheetTitle>
-        <SheetDescription className="sr-only">
+        <DialogTitle className="sr-only">Loading plan preview</DialogTitle>
+        <DialogDescription className="sr-only">
           Calculating your plan change details...
-        </SheetDescription>
+        </DialogDescription>
         <div className="flex items-start gap-4">
           <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
           <div className="flex flex-col space-y-2">
@@ -822,12 +827,12 @@ function ErrorView({
         <div className="flex items-start gap-4">
           <Logo variant="tiled" size="md" showText={false} />
           <div className="flex flex-col space-y-1">
-            <SheetTitle className="text-xl font-semibold">Unable to Change Plan</SheetTitle>
-            <SheetDescription className="text-sm text-muted-foreground">
+            <DialogTitle className="text-xl font-semibold">Unable to Change Plan</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               {errorMessage ||
                 (errorCode && `Error: ${errorCode}`) ||
                 'An unexpected error occurred'}
-            </SheetDescription>
+            </DialogDescription>
           </div>
         </div>
       </div>
@@ -997,10 +1002,10 @@ function RequestSentView({ planName, onClose }: { planName: string; onClose: () 
         <div className="flex items-start gap-4">
           <Logo variant="tiled" size="md" showText={false} />
           <div className="flex flex-col space-y-1">
-            <SheetTitle className="text-xl font-semibold">Almost There</SheetTitle>
-            <SheetDescription className="text-sm text-muted-foreground">
+            <DialogTitle className="text-xl font-semibold">Almost There</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               Reach out to a workspace owner or admin to complete the plan change to {planName}
-            </SheetDescription>
+            </DialogDescription>
           </div>
         </div>
       </div>
@@ -1145,10 +1150,10 @@ function CheckoutView() {
         <div className="flex items-start gap-4">
           <Logo variant="tiled" size="md" showText={false} />
           <div className="flex flex-col space-y-1">
-            <SheetTitle className="text-xl font-semibold">Redirecting to Checkout</SheetTitle>
-            <SheetDescription className="text-sm text-muted-foreground">
+            <DialogTitle className="text-xl font-semibold">Redirecting to Checkout</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               Please wait while we prepare your checkout session...
-            </SheetDescription>
+            </DialogDescription>
           </div>
         </div>
       </div>
@@ -1271,10 +1276,9 @@ export function PlanChangePreviewModal({ onComplete }: PlanChangePreviewModalPro
   };
 
   return (
-    <Sheet open={open} onOpenChange={() => handleClose()}>
-      <SheetContent
-        side="bottom"
-        className="p-0 gap-0 max-h-[85vh] overflow-y-auto rounded-t-2xl"
+    <Dialog open={open} onOpenChange={() => handleClose()}>
+      <DialogContent
+        className="p-0 gap-0 max-w-[calc(100%-2rem)] sm:max-w-4xl max-h-[85vh] overflow-y-auto"
         showCloseButton={true}
       >
         {modalState === 'loading' && <PreviewLoadingView />}
@@ -1315,7 +1319,7 @@ export function PlanChangePreviewModal({ onComplete }: PlanChangePreviewModalPro
             isPortalLoading={isPortalLoading}
           />
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

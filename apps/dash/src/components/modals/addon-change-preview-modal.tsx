@@ -1,11 +1,16 @@
 'use client';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@workspace/ui/components/sheet';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { CheckCircle2, ExternalLink, Loader2, Minus, Plus } from 'lucide-react';
+import { CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
 import { useQueryState } from 'nuqs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useManageAddons, useOpenCustomerPortal } from '@/features/billing';
 import { useAddonsStatus } from '@/features/billing/queries';
@@ -42,10 +47,10 @@ function LoadingView() {
   return (
     <>
       <div className="p-6 pb-4">
-        <SheetTitle className="sr-only">Loading add-on preview</SheetTitle>
-        <SheetDescription className="sr-only">
+        <DialogTitle className="sr-only">Loading add-on preview</DialogTitle>
+        <DialogDescription className="sr-only">
           Loading your current add-ons and preparing the sheet.
-        </SheetDescription>
+        </DialogDescription>
         <div className="flex items-start gap-4">
           <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
           <div className="flex flex-col space-y-2">
@@ -164,190 +169,6 @@ function LoadingView() {
   );
 }
 
-function EditView({
-  currentQuantity,
-  newQuantity,
-  hasUnsavedChange,
-  isSubmitting,
-  onDecrease,
-  onIncrease,
-  onPreview,
-  onCancel,
-}: {
-  currentQuantity: number;
-  newQuantity: number;
-  hasUnsavedChange: boolean;
-  isSubmitting: boolean;
-  onDecrease: () => void;
-  onIncrease: () => void;
-  onPreview: () => void;
-  onCancel: () => void;
-}) {
-  const additionalSeats = newQuantity * SEATS_PER_PACK;
-
-  return (
-    <>
-      <div className="p-6 pb-4">
-        <div className="flex items-start gap-4">
-          <Logo variant="tiled" size="md" showText={false} />
-          <div className="flex flex-col space-y-1">
-            <SheetTitle className="text-xl font-semibold">Billing Add-ons</SheetTitle>
-            <SheetDescription className="text-sm text-muted-foreground">
-              Manage additional seat packs for your current subscription.
-            </SheetDescription>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-6 pb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex flex-col h-full md:col-span-1">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-zinc-600">Current Add-on Packs</span>
-                <span className="text-sm text-foreground font-semibold">{currentQuantity}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-zinc-600">New Add-on Packs</span>
-                <span className="text-sm text-foreground font-semibold">{newQuantity}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-zinc-600">Additional Seats</span>
-                <span className="text-sm text-foreground font-semibold">+{additionalSeats}</span>
-              </div>
-            </div>
-
-            <div className="pt-6">
-              <div className="inline-flex items-center rounded-full border border-zinc-300 bg-white px-1 py-1">
-                <button
-                  onClick={onDecrease}
-                  disabled={isSubmitting || newQuantity <= 0}
-                  className="h-8 w-8 rounded-full hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-14 text-center text-sm font-semibold">{newQuantity}</span>
-                <button
-                  onClick={onIncrease}
-                  disabled={isSubmitting || newQuantity >= MAX_SEAT_PACKS}
-                  className="h-8 w-8 rounded-full hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1" />
-
-            <div className="pt-6">
-              <h4 className="text-base font-semibold text-foreground mb-4">What changes</h4>
-              <div className="relative space-y-4">
-                <div className="absolute left-1.5 top-6 bottom-6 w-px bg-zinc-200" />
-
-                <div className="relative flex items-start gap-3">
-                  <div className="relative z-10 w-3 h-3 rounded-full bg-foreground shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-foreground mb-1">Today</div>
-                    <div className="text-xs text-zinc-600 leading-relaxed">
-                      You choose a new seat add-on pack quantity.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="relative flex items-start gap-3">
-                  <div className="relative z-10 w-3 h-3 rounded-full bg-foreground shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-foreground mb-1">
-                      After Confirmation
-                    </div>
-                    <div className="text-xs text-zinc-600 leading-relaxed">
-                      The add-on updates immediately and billing preview reflects proration.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:col-span-2">
-            <div className="rounded-2xl border border-zinc-200 bg-white p-6 flex flex-col h-full">
-              <div className="text-center pb-6 mb-6 border-b border-zinc-100">
-                <div className="text-sm text-zinc-600 mb-3">Add-on Packs</div>
-                <div className="text-4xl font-bold text-foreground">
-                  {currentQuantity} → {newQuantity}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
-                  Summary
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-zinc-700">Current Packs</span>
-                    <span className="text-sm font-semibold text-foreground">{currentQuantity}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-zinc-700">New Packs</span>
-                    <span className="text-sm font-semibold text-foreground">{newQuantity}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-zinc-700">Additional Seats</span>
-                    <span className="text-sm font-semibold text-foreground">
-                      +{additionalSeats}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-zinc-100 my-6" />
-
-              <div className="mb-6">
-                <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
-                  Usage
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-zinc-700">Seats Included by Add-on</span>
-                    <span className="text-sm font-semibold text-foreground">
-                      +{additionalSeats}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-zinc-700">Pack Change</span>
-                    <span className="text-sm font-semibold text-foreground">
-                      {currentQuantity} → {newQuantity}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1" />
-
-              <div className="flex gap-2 mt-6">
-                <button
-                  onClick={onPreview}
-                  disabled={!hasUnsavedChange || isSubmitting}
-                  className="flex-1 px-6 py-3 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Calculating Preview...' : 'Preview'}
-                </button>
-                <button
-                  onClick={onCancel}
-                  disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 text-sm font-medium rounded-full border border-border hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
 function AddonPreviewView({
   currentQuantity,
   newQuantity,
@@ -377,10 +198,10 @@ function AddonPreviewView({
         <div className="flex items-start gap-4">
           <Logo variant="tiled" size="md" showText={false} />
           <div className="flex flex-col space-y-1">
-            <SheetTitle className="text-xl font-semibold">Review seat add-on changes</SheetTitle>
-            <SheetDescription className="text-sm text-muted-foreground">
+            <DialogTitle className="text-xl font-semibold">Review seat add-on changes</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               Adjust your seat packs and confirm billing changes.
-            </SheetDescription>
+            </DialogDescription>
           </div>
         </div>
       </div>
@@ -568,10 +389,10 @@ function SuccessView({
         <div className="flex items-start gap-4">
           <Logo variant="tiled" size="md" showText={false} />
           <div className="flex flex-col space-y-1">
-            <SheetTitle className="text-xl font-semibold">Add-on change processing</SheetTitle>
-            <SheetDescription className="text-sm text-muted-foreground">
+            <DialogTitle className="text-xl font-semibold">Add-on change processing</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               Your seat add-on update is being processed.
-            </SheetDescription>
+            </DialogDescription>
           </div>
         </div>
       </div>
@@ -735,10 +556,10 @@ function ErrorView({
         <div className="flex items-start gap-4">
           <Logo variant="tiled" size="md" showText={false} />
           <div className="flex flex-col space-y-1">
-            <SheetTitle className="text-xl font-semibold">Unable to change add-ons</SheetTitle>
-            <SheetDescription className="text-sm text-muted-foreground">
+            <DialogTitle className="text-xl font-semibold">Unable to change add-ons</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               {error.message}
-            </SheetDescription>
+            </DialogDescription>
           </div>
         </div>
       </div>
@@ -877,7 +698,13 @@ function ErrorView({
   );
 }
 
-export function AddonChangePreviewModal({ onComplete }: { onComplete?: () => void }) {
+export function AddonChangePreviewModal({
+  requestedQuantity,
+  onComplete,
+}: {
+  requestedQuantity?: number;
+  onComplete?: () => void;
+}) {
   const workspaceId = useWorkspaceId();
   const [addonModal, setAddonModal] = useQueryState('addon-modal', billingAddonModalParser);
   const open = addonModal === 'seats';
@@ -891,9 +718,6 @@ export function AddonChangePreviewModal({ onComplete }: { onComplete?: () => voi
   const [errorInfo, setErrorInfo] = useState<AddonErrorInfo>({ message: '' });
   const [currentQuantity, setCurrentQuantity] = useState(0);
   const [newQuantity, setNewQuantity] = useState(0);
-
-  const inputReady = open && !!workspaceId && !!addonsData;
-  const hasUnsavedChange = newQuantity !== currentQuantity;
 
   const { mutate: manageAddons, isPending } = useManageAddons({
     onPreview: (data) => {
@@ -914,31 +738,33 @@ export function AddonChangePreviewModal({ onComplete }: { onComplete?: () => voi
     },
   });
 
+  const manageAddonsRef = useRef(manageAddons);
+  manageAddonsRef.current = manageAddons;
+
   useEffect(() => {
     if (!open) return;
     if (isAddonsLoading) {
       setState('loading');
       return;
     }
-    if (addonsData) {
+    if (addonsData && workspaceId) {
       const initialSeatsQuantity = Math.min(addonsData.seatsQuantity, MAX_SEAT_PACKS);
       setCurrentQuantity(initialSeatsQuantity);
-      setNewQuantity(initialSeatsQuantity);
       setPreviewData(null);
       setErrorInfo({ message: '' });
-      setState('preview');
-    }
-  }, [open, addonsData, isAddonsLoading]);
 
-  const triggerPreview = () => {
-    if (!workspaceId) return;
-    setState('loading');
-    manageAddons({
-      workspaceId,
-      seatsQuantity: newQuantity,
-      action: 'preview',
-    });
-  };
+      const qty = requestedQuantity ?? initialSeatsQuantity;
+      setNewQuantity(qty);
+
+      // Auto-trigger preview when modal opens
+      setState('loading');
+      manageAddonsRef.current({
+        workspaceId,
+        seatsQuantity: qty,
+        action: 'preview',
+      });
+    }
+  }, [open, addonsData, isAddonsLoading, workspaceId, requestedQuantity]);
 
   const handleConfirm = () => {
     if (!workspaceId) return;
@@ -962,16 +788,15 @@ export function AddonChangePreviewModal({ onComplete }: { onComplete?: () => voi
   };
 
   return (
-    <Sheet open={open} onOpenChange={() => handleClose()}>
-      <SheetContent
-        side="bottom"
-        className="p-0 gap-0 max-h-[85vh] overflow-y-auto rounded-t-2xl"
+    <Dialog open={open} onOpenChange={() => handleClose()}>
+      <DialogContent
+        className="p-0 gap-0 max-w-[calc(100%-2rem)] sm:max-w-4xl max-h-[85vh] overflow-y-auto"
         showCloseButton={true}
       >
-        <SheetTitle className="sr-only">Billing Add-ons</SheetTitle>
-        <SheetDescription className="sr-only">
+        <DialogTitle className="sr-only">Billing Add-ons</DialogTitle>
+        <DialogDescription className="sr-only">
           Manage and confirm seat add-on billing changes.
-        </SheetDescription>
+        </DialogDescription>
 
         {state === 'loading' && <LoadingView />}
 
@@ -982,19 +807,6 @@ export function AddonChangePreviewModal({ onComplete }: { onComplete?: () => voi
             preview={previewData}
             isConfirming={state === 'confirming' || isPending}
             onConfirm={handleConfirm}
-            onCancel={handleClose}
-          />
-        ) : null}
-
-        {state === 'preview' && !previewData && inputReady ? (
-          <EditView
-            currentQuantity={currentQuantity}
-            newQuantity={newQuantity}
-            hasUnsavedChange={hasUnsavedChange}
-            isSubmitting={isPending}
-            onDecrease={() => setNewQuantity((prev) => Math.max(0, prev - 1))}
-            onIncrease={() => setNewQuantity((prev) => Math.min(MAX_SEAT_PACKS, prev + 1))}
-            onPreview={triggerPreview}
             onCancel={handleClose}
           />
         ) : null}
@@ -1018,7 +830,7 @@ export function AddonChangePreviewModal({ onComplete }: { onComplete?: () => voi
             isPortalLoading={isPortalPending}
           />
         ) : null}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
