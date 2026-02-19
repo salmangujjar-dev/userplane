@@ -12,6 +12,7 @@ import Logo from '@workspace/ui/components/logo';
 import {
   Building2,
   ChevronsUpDown,
+  CreditCard,
   HelpCircle,
   LogOut,
   Settings2,
@@ -22,6 +23,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { SUPPORT_LINKS } from '@/constants';
 import { useAccount } from '@/features/account';
 import { useWorkspaces } from '@/features/workspace';
@@ -45,6 +47,7 @@ const sections: NavSection[] = [
     items: [
       { label: 'Users', href: '/admin/users', icon: Users },
       { label: 'Workspaces', href: '/admin/workspaces', icon: Building2 },
+      { label: 'Plans', href: '/admin/plans', icon: CreditCard },
     ],
   },
 ];
@@ -154,7 +157,11 @@ export function AdminSidebar() {
                           }}
                           className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left"
                         >
-                          <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <WorkspaceAvatar
+                            workspaceId={ws.workspaceId}
+                            workspaceName={ws.workspaceName}
+                            size={WORKSPACE_AVATAR_SIZES.COMPACT}
+                          />
                           <span className="text-sm flex-1 truncate">{ws.workspaceName}</span>
                         </button>
                       ))}

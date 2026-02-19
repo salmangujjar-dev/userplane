@@ -48,15 +48,16 @@ import { useState } from 'react';
 import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-modal';
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
+import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { SidebarProjectsSkeleton } from '@/components/skeleton';
 import { SUPPORT_LINKS } from '@/constants';
 import { useAccount } from '@/features/account';
 import { useSession } from '@/features/auth';
 import { useSubscriptionStatus } from '@/features/billing';
 import { useWorkspaceProjects } from '@/features/projects';
-import { useWorkspace, useWorkspaceRole, useWorkspaces } from '@/features/workspace';
+import { useWorkspace, useWorkspaces } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { planModalParser } from '@/lib/parsers';
+import { planChangePreviewParser, planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 
@@ -87,7 +88,6 @@ export function AppSidebar() {
   });
   const { data: workspaceResult } = useWorkspace();
   const { data: subscriptionResult } = useSubscriptionStatus();
-  const { data: roleResult } = useWorkspaceRole();
   const { data: workspacesResult } = useWorkspaces({
     page: 1,
     perPage: 20,
@@ -107,9 +107,7 @@ export function AppSidebar() {
   const hasPrevPage = projectsPage > 1;
   const hasNextPage = projectsPagination ? projectsPage < projectsPagination.totalPages : false;
 
-  // State for plan change preview modal
-  const [showPlanChangePreview, setShowPlanChangePreview] = useState(false);
-  const [selectedPlanIdForChange, setSelectedPlanIdForChange] = useState<PlanId | null>(null);
+  const [, setPlanPreview] = useQueryState('plan-preview', planChangePreviewParser);
 
   // Get plan display based on subscription status
   const planDisplay = getPlanDisplay(
@@ -117,33 +115,6 @@ export function AppSidebar() {
     subscriptionData?.contractDetail.status ?? null,
     subscriptionData?.contractDetail.cancelAtPeriodEnd
   );
-
-  // Predict which flow the modal will take to show appropriate loading skeleton
-  const getPredictedFlow = (): 'checkout' | 'preview' | 'unknown' => {
-    // Need subscription data to predict
-    if (!subscriptionResult?.success) return 'unknown';
-
-    const hasActiveSubscription =
-      subscriptionData?.contractDetail.planId &&
-      subscriptionData?.accessDetail.accessStatus === 'active';
-
-    // No active subscription → checkout flow
-    if (!hasActiveSubscription) {
-      return 'checkout';
-    }
-
-    // Have subscription, check role — members will get an error, owners/admins get preview
-    if (roleResult?.success) {
-      const role = roleResult.data.workspaceRole;
-      if (role === 'owner' || role === 'admin') {
-        return 'preview';
-      }
-      return 'unknown';
-    }
-
-    // Have subscription but no role data yet → likely preview (most common)
-    return 'preview';
-  };
 
   /**
    * Handle plan badge click - shows plan selection modal for all users
@@ -166,13 +137,12 @@ export function AppSidebar() {
     // - No subscription + owner/admin: checkout
     // - Active subscription + owner/admin: preview + execute
     // - Active subscription + member: request
-    setSelectedPlanIdForChange(planId as PlanId);
-    setShowPlanChangePreview(true);
+    setPlanPreview(planId as PlanId);
     setPlanModal(null);
   };
 
   const handlePlanChangeComplete = () => {
-    setSelectedPlanIdForChange(null);
+    setPlanPreview(null);
   };
 
   const sections: NavSection[] = [
@@ -324,7 +294,11 @@ export function AppSidebar() {
                               }}
                               className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left"
                             >
-                              <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <WorkspaceAvatar
+                                workspaceId={ws.workspaceId}
+                                workspaceName={ws.workspaceName}
+                                size={WORKSPACE_AVATAR_SIZES.COMPACT}
+                              />
                               <span className="text-sm flex-1 truncate">{ws.workspaceName}</span>
                               {ws.workspaceId === workspaceId && (
                                 <Check className="h-4 w-4 text-primary shrink-0" />
@@ -400,13 +374,7 @@ export function AppSidebar() {
         currentPlanName={subscriptionData?.contractDetail.planName ?? null}
       />
 
-      <PlanChangePreviewModal
-        open={showPlanChangePreview}
-        onOpenChange={setShowPlanChangePreview}
-        newPlanId={selectedPlanIdForChange}
-        onComplete={handlePlanChangeComplete}
-        predictedFlow={getPredictedFlow()}
-      />
+      <PlanChangePreviewModal onComplete={handlePlanChangeComplete} />
     </Sidebar>
   );
 }

@@ -6,7 +6,6 @@ import {
   RETENTION_DAYS_VALUES,
   type RetentionDays,
 } from '@workspace/contract';
-import { getFeatureGates, type PlanId } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -69,8 +68,7 @@ export function CreateProjectModal({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const { data: subscriptionResult } = useSubscriptionStatus();
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
-  const effectivePlanId = (subscriptionData?.accessDetail.effectivePlanId ?? 'free') as PlanId;
-  const featureGates = getFeatureGates(effectivePlanId);
+  const featureGates = subscriptionData?.featureGates;
   const { triggerUpsell } = useFeatureUpsell();
 
   const {
@@ -193,20 +191,22 @@ export function CreateProjectModal({
                   <div
                     className={cn(
                       'flex items-center justify-between',
-                      !featureGates.customizeDataRetention && 'cursor-pointer'
+                      !featureGates?.customizeDataRetention && 'cursor-pointer'
                     )}
                     onClick={
-                      !featureGates.customizeDataRetention
+                      !featureGates?.customizeDataRetention
                         ? () => triggerUpsell('customizeDataRetention')
                         : undefined
                     }
                   >
                     <div className="space-y-0.5">
                       <Label
-                        htmlFor={featureGates.customizeDataRetention ? 'retention-days' : undefined}
+                        htmlFor={
+                          featureGates?.customizeDataRetention ? 'retention-days' : undefined
+                        }
                         className={cn(
                           'text-sm font-medium',
-                          !featureGates.customizeDataRetention &&
+                          !featureGates?.customizeDataRetention &&
                             'text-muted-foreground cursor-pointer'
                         )}
                       >
@@ -217,7 +217,7 @@ export function CreateProjectModal({
                       </p>
                     </div>
                     <span
-                      className={cn(!featureGates.customizeDataRetention && 'pointer-events-none')}
+                      className={cn(!featureGates?.customizeDataRetention && 'pointer-events-none')}
                     >
                       <Controller
                         name="recordingRetentionDays"
@@ -226,7 +226,7 @@ export function CreateProjectModal({
                           <Select
                             value={String(field.value)}
                             onValueChange={(value) => field.onChange(Number(value))}
-                            disabled={loading || !featureGates.customizeDataRetention}
+                            disabled={loading || !featureGates?.customizeDataRetention}
                           >
                             <SelectTrigger className="w-[140px]">
                               <SelectValue />
