@@ -225,7 +225,7 @@ function DeleteAccountContent() {
           )}
 
           <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="account-data">
+            <AccordionItem value="account-data" className="border-b last:border-b-0">
               <AccordionTrigger>Account Data</AccordionTrigger>
               <AccordionContent className="text-xs text-muted-foreground">
                 All personal information including name, email, and profile details will be
@@ -233,7 +233,7 @@ function DeleteAccountContent() {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="workspace-access">
+            <AccordionItem value="workspace-access" className="border-b last:border-b-0">
               <AccordionTrigger>Workspace Access</AccordionTrigger>
               <AccordionContent className="text-xs text-muted-foreground">
                 You will be removed from all workspaces. Any workspaces you own will need to be
@@ -241,7 +241,7 @@ function DeleteAccountContent() {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="recording-access">
+            <AccordionItem value="recording-access" className="border-b last:border-b-0">
               <AccordionTrigger>Recording Access</AccordionTrigger>
               <AccordionContent className="text-xs text-muted-foreground">
                 Access to all recordings and session replays will be lost. Download any important
@@ -249,7 +249,7 @@ function DeleteAccountContent() {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="link-access">
+            <AccordionItem value="link-access" className="border-b last:border-b-0">
               <AccordionTrigger>Link Access</AccordionTrigger>
               <AccordionContent className="text-xs text-muted-foreground">
                 All shared links and access tokens associated with your account will be invalidated
@@ -257,7 +257,7 @@ function DeleteAccountContent() {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="project-access">
+            <AccordionItem value="project-access" className="border-b last:border-b-0">
               <AccordionTrigger>Project Access</AccordionTrigger>
               <AccordionContent className="text-xs text-muted-foreground">
                 You will lose access to all projects and associated data. Project ownership will

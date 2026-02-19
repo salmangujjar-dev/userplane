@@ -8,8 +8,13 @@ import {
   PLAN_CARD_HIGHLIGHTS,
   type PlanCycle,
 } from '@workspace/pricing';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@workspace/ui/components/sheet';
 import { Check } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
@@ -239,22 +244,21 @@ export function PlanSelectionModal({
   };
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="p-0 gap-0 max-h-[85vh] overflow-y-auto rounded-t-2xl"
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className="p-0 gap-0 max-w-[calc(100%-2rem)] sm:max-w-6xl max-h-[85vh] overflow-y-auto"
         showCloseButton={true}
       >
         <div className="p-6 pb-4">
           <div className="flex items-start gap-4 mb-6">
             <Logo variant="tiled" size="md" showText={false} />
             <div className="flex flex-col space-y-1">
-              <SheetTitle className="text-xl font-semibold">
+              <DialogTitle className="text-xl font-semibold">
                 {upsellConfig?.title ?? 'Choose Your Plan'}
-              </SheetTitle>
-              <SheetDescription className="text-sm text-muted-foreground">
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
                 {upsellConfig?.subtitle ?? 'Select the plan that best fits your needs'}
-              </SheetDescription>
+              </DialogDescription>
             </div>
           </div>
 
@@ -320,7 +324,7 @@ export function PlanSelectionModal({
             See all plans
           </a>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

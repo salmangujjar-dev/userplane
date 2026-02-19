@@ -114,7 +114,7 @@ export const WORKSPACE_INVITE_POLICY_OPTIONS: SelectOptionWithDescription<Worksp
     {
       value: 'protected',
       label: 'Protected',
-      description: 'Users with matching domains can request access (owner approval required)',
+      description: 'Users with matching domains can request access',
     },
   ] as const;
 

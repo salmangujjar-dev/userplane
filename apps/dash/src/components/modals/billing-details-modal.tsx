@@ -3,9 +3,14 @@
 import type { PlanId, PlanName } from '@workspace/pricing';
 import { UNLIMITED_QUOTED_LIMIT } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
 import { Progress } from '@workspace/ui/components/progress';
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@workspace/ui/components/sheet';
 import { format } from 'date-fns';
 import { AlertCircle, CheckCircle, Clock, Loader2, MoveUpRight, XCircle } from 'lucide-react';
 
@@ -194,20 +199,19 @@ export function BillingDetailsModal({
   const StatusIcon = statusConfig.icon;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="p-0 gap-0 max-h-[85vh] overflow-y-auto rounded-t-2xl"
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="p-0 gap-0 max-w-[calc(100%-2rem)] sm:max-w-4xl max-h-[85vh] overflow-y-auto"
         showCloseButton={true}
       >
         <div className="p-6 pb-4">
           <div className="flex items-start gap-4">
             <Logo variant="tiled" size="md" showText={false} />
             <div className="flex flex-col space-y-1">
-              <SheetTitle className="text-xl font-semibold">Subscription Details</SheetTitle>
-              <SheetDescription className="text-sm text-muted-foreground">
+              <DialogTitle className="text-xl font-semibold">Subscription Details</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
                 View and manage your subscription information
-              </SheetDescription>
+              </DialogDescription>
             </div>
           </div>
         </div>
@@ -423,7 +427,7 @@ export function BillingDetailsModal({
             </div>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
