@@ -4,13 +4,14 @@ import { Label } from '@workspace/ui/components/label';
 import { CreditCard, Loader2, MoveUpRight } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 
+import { AddonChangePreviewModal } from '@/components/modals/addon-change-preview-modal';
 import { useOpenCustomerPortal, useSubscriptionStatus } from '@/features/billing';
-import { useCanEditWorkspace } from '@/features/workspace';
-import { planModalParser } from '@/lib/parsers';
+import { useAddonsStatus } from '@/features/billing/queries';
+import { billingAddonModalParser, planModalParser } from '@/lib/parsers';
 
 export function BillingSection() {
   const { data: subscriptionResult } = useSubscriptionStatus();
-  const { canEdit } = useCanEditWorkspace();
+  useAddonsStatus();
 
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
   // Infer subscription status from contractDetail.planId
@@ -18,12 +19,13 @@ export function BillingSection() {
 
   const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
   const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
+  const [, setAddonModal] = useQueryState('addon-modal', billingAddonModalParser);
 
   const handleManageBilling = () => {
     openCustomerPortal();
   };
 
-  if (!hasSubscription || !canEdit) return null;
+  if (!hasSubscription) return null;
 
   return (
     <div>
@@ -71,7 +73,28 @@ export function BillingSection() {
             </button>
           </div>
         </div>
+
+        {/* Billing Add-ons Section */}
+        <div className="space-y-3">
+          <div>
+            <Label>Billing add-ons</Label>
+            <p className="text-sm text-muted-foreground mt-1">
+              Manage seat add-on packs for your active subscription.
+            </p>
+          </div>
+          <div className="flex gap-3 max-w-md">
+            <button
+              onClick={() => setAddonModal('seats')}
+              className="flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors cursor-pointer hover:border-primary/50"
+            >
+              <MoveUpRight className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Manage Add-ons</span>
+            </button>
+          </div>
+        </div>
       </div>
+
+      <AddonChangePreviewModal />
     </div>
   );
 }

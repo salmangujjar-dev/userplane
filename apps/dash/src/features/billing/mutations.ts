@@ -1,10 +1,12 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlanId } from '@workspace/pricing';
 
 import { apiClient } from '@/client';
 import { handleSafeResult, handleUnknownError } from '@/lib/errors';
 import { useWorkspaceId } from '@/stores/workspace';
 import type { PlanChangePreviewData } from '@/types';
+
+import { billingKeys } from './query-keys';
 
 interface ManagePlanCallbacks {
   onCheckout?: (data: { checkoutUrl: string; slug: string }) => void;
@@ -108,6 +110,81 @@ export function useOpenCustomerPortal(options?: { onPermissionDenied?: () => voi
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to open customer portal');
+    },
+  });
+}
+
+interface ManageAddonsCallbacks {
+  onPreview?: (data: PlanChangePreviewData) => void;
+  onExecute?: (data: { newPlanName: string }) => void;
+  onError?: (error: Error & { code?: string; data?: { code?: string; message?: string } }) => void;
+}
+
+interface ManageAddonsInput {
+  seatsQuantity: number;
+  workspaceId: string;
+  action?: 'preview' | 'execute';
+}
+
+export function useManageAddons(callbacks?: ManageAddonsCallbacks) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: ManageAddonsInput) => {
+      const [error, response] = await apiClient.billing.manageAddons({
+        params: { workspaceId: input.workspaceId },
+        body: {
+          seatsQuantity: input.seatsQuantity,
+          action: input.action,
+        },
+      });
+      const result = handleSafeResult(error, response?.data ?? null);
+      if (result.success && result.data === null) {
+        throw new Error('No data returned from manage add-ons');
+      }
+      return result;
+    },
+    onSuccess: (result, variables) => {
+      if (!result.success) {
+        if (callbacks?.onError) {
+          callbacks.onError(
+            result.error as unknown as Error & {
+              code?: string;
+              data?: { code?: string; message?: string };
+            }
+          );
+        } else {
+          handleUnknownError(result.error, 'Failed to manage add-ons');
+        }
+        return;
+      }
+
+      const data = result.data;
+      if (data.type === 'execute') {
+        void queryClient.invalidateQueries({
+          queryKey: billingKeys.addons(variables.workspaceId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: billingKeys.usage(variables.workspaceId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: billingKeys.subscription(variables.workspaceId),
+        });
+      }
+
+      if (data.type === 'preview' && callbacks?.onPreview) {
+        callbacks.onPreview(data.data);
+      } else if (data.type === 'execute' && callbacks?.onExecute) {
+        callbacks.onExecute({ newPlanName: data.data.newPlanName });
+      }
+    },
+    onError: (error: unknown) => {
+      const err = error as Error & { code?: string; data?: { code?: string; message?: string } };
+      if (callbacks?.onError) {
+        callbacks.onError(err);
+      } else {
+        handleUnknownError(error, 'Failed to manage add-ons');
+      }
     },
   });
 }

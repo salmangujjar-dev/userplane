@@ -12,6 +12,7 @@
  */
 
 import type { CacheService } from '@workspace/cache';
+import { type AddonItems, AddonItemsSchema } from '@workspace/contract';
 import { type DbClient, eq, subscriptions, workspaces } from '@workspace/db';
 import { getDodoPaymentsClient } from '@workspace/payments/client';
 import { fetchProductMetadata } from '@workspace/payments/metadata';
@@ -24,6 +25,7 @@ import type {
 } from '@workspace/payments/types';
 import { isSubscriptionEvent, parseSubscriptionDates } from '@workspace/payments/webhooks';
 import type { PlanId } from '@workspace/pricing';
+import { z } from 'zod';
 
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';
@@ -39,6 +41,14 @@ import type { Transaction } from '@/api/types';
 import { generateSubscriptionId } from '../lib/id';
 
 const logger = createLogger('webhook-processor');
+
+const WebhookAddonItemInputSchema = z.object({
+  addon_id: z.string().optional(),
+  addonId: z.string().optional(),
+  quantity: z.number().int().min(0).optional().default(0),
+});
+
+const WebhookAddonsInputSchema = z.array(WebhookAddonItemInputSchema);
 
 /**
  * Webhook headers from DodoPayments
@@ -73,6 +83,22 @@ export interface WebhookProcessorDeps {
 
 export class WebhookProcessorService {
   constructor(private deps: WebhookProcessorDeps) {}
+
+  private parseSubscriptionAddons(subscription: DodoSubscription): AddonItems {
+    const raw = (subscription as { addons?: unknown }).addons;
+
+    if (!Array.isArray(raw)) return [];
+
+    const rawParsed = WebhookAddonsInputSchema.safeParse(raw);
+    if (!rawParsed.success) return [];
+
+    const normalized = rawParsed.data.map((item) => ({
+      addonId: item.addon_id ?? item.addonId ?? '',
+      quantity: item.quantity,
+    }));
+    const parsed = AddonItemsSchema.safeParse(normalized);
+    return parsed.success ? parsed.data : [];
+  }
 
   /**
    * Process a webhook event with full validation
@@ -157,6 +183,7 @@ export class WebhookProcessorService {
     const eventTimestamp = new Date(parseInt(webhookTimestamp, 10) * 1000);
     const subscriptionId = subscription.subscription_id;
     const dates = parseSubscriptionDates(subscription);
+    const incomingAddons = this.parseSubscriptionAddons(subscription);
 
     // Find existing subscription
     logger.debug({ subscriptionId }, 'Looking up subscription');
@@ -312,12 +339,17 @@ export class WebhookProcessorService {
 
     // 7. Apply the transition
     const planId = getPlanIdFromProductId(subscription.product_id);
+    const planChanged = !!planId && planId !== current.planId;
+    const addonsChanged =
+      JSON.stringify(current.addons ?? []) !== JSON.stringify(incomingAddons ?? []);
     logger.debug(
       {
         subscriptionId,
         fromStatus: current.status,
         toStatus: targetStatus,
         planId,
+        planChanged,
+        addonsChanged,
         periodStart: dates.currentPeriodStart,
         periodEnd: dates.currentPeriodEnd,
       },
@@ -326,7 +358,7 @@ export class WebhookProcessorService {
 
     // Fetch Dodo product metadata for plan changes (outside critical section to avoid holding locks)
     let metadata = null;
-    if (planId && planId !== current.planId) {
+    if ((planId && planChanged) || addonsChanged) {
       try {
         if (this.deps.dodoClient) {
           metadata = await fetchProductMetadata(this.deps.dodoClient, subscription.product_id);
@@ -349,6 +381,7 @@ export class WebhookProcessorService {
       currentPeriodEnd: dates.currentPeriodEnd,
       cancelledAt: dates.cancelledAt,
       ...(planId && { planId, productId: subscription.product_id }),
+      addons: incomingAddons,
       lastWebhookId: webhookId,
       lastWebhookTimestamp: eventTimestamp,
       ...(metadata?.featureGates && { featureGates: metadata.featureGates }),
@@ -374,29 +407,46 @@ export class WebhookProcessorService {
         await this.deps.entitlementService.resetPeriodUsage(workspaceId, { tx });
       }
 
-      // Handle plan changes with metadata
-      if (planId && planId !== current.planId) {
+      // Handle plan/add-on changes with metadata
+      if (planChanged || addonsChanged) {
         if (metadata?.featureLimits) {
           logger.debug(
-            { workspaceId, fromPlan: current.planId, toPlan: planId },
-            'Updating entitlements from metadata for plan change'
+            {
+              workspaceId,
+              fromPlan: current.planId,
+              toPlan: planId ?? current.planId,
+              addonsChanged,
+            },
+            'Updating entitlements from metadata for plan/add-on change'
           );
           await this.deps.entitlementService.updateFromMetadata(
             workspaceId,
             metadata.featureLimits,
-            { tx }
+            {
+              tx,
+              addons: incomingAddons,
+            }
           );
         } else {
           logger.error(
-            { workspaceId, planId, productId: subscription.product_id },
-            'Plan change without feature_limits metadata - entitlements NOT updated'
+            {
+              workspaceId,
+              planId: planId ?? current.planId,
+              productId: subscription.product_id,
+              addonsChanged,
+            },
+            'Plan/add-on change without feature_limits metadata - entitlements NOT updated'
           );
-          captureException(new Error('Plan change without feature_limits metadata'), undefined, {
-            operation: 'webhook_plan_change_no_metadata',
-            workspaceId,
-            planId,
-            productId: subscription.product_id,
-          });
+          captureException(
+            new Error('Plan/add-on change without feature_limits metadata'),
+            undefined,
+            {
+              operation: 'webhook_addon_change_no_metadata',
+              workspaceId,
+              planId: planId ?? current.planId,
+              productId: subscription.product_id,
+            }
+          );
         }
       }
     }
@@ -445,6 +495,7 @@ export class WebhookProcessorService {
     const customerId = subscription.customer.customer_id;
     const dates = parseSubscriptionDates(subscription);
     const planId = getPlanIdFromProductId(subscription.product_id);
+    const incomingAddons = this.parseSubscriptionAddons(subscription);
 
     logger.debug({ subscriptionId }, 'Handling new subscription');
 
@@ -486,8 +537,6 @@ export class WebhookProcessorService {
       });
     }
 
-    console.log(metadata, subscription.product_id);
-
     // Validate metadata is present
     if (!metadata?.featureLimits || !metadata?.featureGates) {
       logger.error(
@@ -527,6 +576,7 @@ export class WebhookProcessorService {
           lastWebhookId: webhookId,
           lastWebhookTimestamp: eventTimestamp,
           featureGates: metadata.featureGates,
+          addons: incomingAddons,
         },
         { tx }
       );
@@ -565,6 +615,7 @@ export class WebhookProcessorService {
       logger.debug({ workspaceId, planId }, 'Updating entitlements from metadata for plan change');
       await this.deps.entitlementService.updateFromMetadata(workspaceId, metadata.featureLimits, {
         tx,
+        addons: incomingAddons,
       });
 
       // Invalidate billing caches for this workspace
@@ -603,6 +654,7 @@ export class WebhookProcessorService {
         currentPeriodStart: dates.currentPeriodStart,
         currentPeriodEnd: dates.currentPeriodEnd,
         featureGates: metadata.featureGates,
+        addons: incomingAddons,
       },
       { tx }
     );
@@ -615,6 +667,7 @@ export class WebhookProcessorService {
     logger.debug({ workspaceId, planId }, 'Provisioning entitlements from metadata');
     await this.deps.entitlementService.updateFromMetadata(workspaceId, metadata.featureLimits, {
       tx,
+      addons: incomingAddons,
     });
 
     await this.deps.webhookEventsRepo.markProcessed(

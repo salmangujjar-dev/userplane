@@ -134,6 +134,10 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       apiKey: raw.DODO_PAYMENTS_API_KEY,
       webhookSecret: raw.DODO_PAYMENTS_WEBHOOK_SECRET,
       environment: raw.DODO_PAYMENTS_ENVIRONMENT,
+      addons: {
+        seatsMonthly: raw.DODO_ADD_ON_SEATS_MONTHLY,
+        seatsAnnual: raw.DODO_ADD_ON_SEATS_ANNUAL,
+      },
     },
     token: {
       inviteSecret: raw.INVITE_TOKEN_SECRET,

@@ -34,6 +34,16 @@ export {
   processWebhookPayload,
 } from './webhooks';
 
+// Add-ons
+export type { BillingInterval } from './addons';
+export {
+  DODO_ADDON_IDS,
+  getBillingIntervalFromPlanId,
+  getSeatsAddonIdForInterval,
+  getSeatsAddonIdForPlanId,
+  isSeatsAddonId,
+} from './addons';
+
 // State Machine
 export type { TransitionValidationResult } from './state-machine';
 export {

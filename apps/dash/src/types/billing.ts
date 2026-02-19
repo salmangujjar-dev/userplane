@@ -6,6 +6,8 @@
 export type {
   // Subscription
   AccessDetail,
+  AddonsStatusData,
+  ManageAddonsData,
   // Plan management
   ManagePlanData,
   PlanChangePreviewData,

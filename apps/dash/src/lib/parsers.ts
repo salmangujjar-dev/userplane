@@ -148,3 +148,8 @@ export const planChangePreviewParser = createParser<string | null>({
   },
   serialize: (value) => value || '',
 });
+
+export const billingAddonModalParser = createParser<'seats' | null>({
+  parse: (value) => (value === 'seats' ? value : null),
+  serialize: (value) => value || '',
+});

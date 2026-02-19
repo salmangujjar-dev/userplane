@@ -1,3 +1,4 @@
+import type { AddonItems } from '@workspace/contract';
 import { SUBSCRIPTION_STATUSES } from '@workspace/payments/types';
 import { relations } from 'drizzle-orm';
 import {
@@ -54,6 +55,8 @@ export const subscriptions = pgTable(
 
     // Feature gates (from Dodo product metadata)
     featureGates: jsonb('feature_gates').$type<Record<string, boolean>>(),
+    // Subscription add-ons (from Dodo subscription payload)
+    addons: jsonb('addons').$type<AddonItems>(),
 
     // Webhook tracking for out-of-order detection
     lastWebhookId: text('last_webhook_id'),

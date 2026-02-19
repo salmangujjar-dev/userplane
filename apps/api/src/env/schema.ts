@@ -87,6 +87,8 @@ export const paymentsEnvSchema = z.object({
   DODO_PAYMENTS_API_KEY: requiredString('DODO_PAYMENTS_API_KEY'),
   DODO_PAYMENTS_WEBHOOK_SECRET: requiredString('DODO_PAYMENTS_WEBHOOK_SECRET'),
   DODO_PAYMENTS_ENVIRONMENT: z.enum(['test_mode', 'live_mode']).default(PAYMENTS.ENVIRONMENT),
+  DODO_ADD_ON_SEATS_MONTHLY: z.string().optional().default(''),
+  DODO_ADD_ON_SEATS_ANNUAL: z.string().optional().default(''),
 });
 
 /** Token env vars schema */
@@ -289,6 +291,10 @@ export const paymentsConfigSchema = z.object({
   apiKey: z.string(),
   webhookSecret: z.string(),
   environment: z.enum(['test_mode', 'live_mode']),
+  addons: z.object({
+    seatsMonthly: z.string(),
+    seatsAnnual: z.string(),
+  }),
 });
 
 /** Token configuration schema */

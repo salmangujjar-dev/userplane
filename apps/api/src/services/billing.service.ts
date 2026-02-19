@@ -7,7 +7,16 @@
  */
 
 import type { CacheService } from '@workspace/cache';
-import { billingError, type SubscriptionAccessStatus } from '@workspace/contract';
+import {
+  type AddonItems,
+  billingError,
+  type PlanChangePreviewData,
+  type PlanChangeResultData,
+  SEATS_ADDON_MAX_PACKS,
+  SEATS_ADDON_PACK_SIZE,
+  type SubscriptionAccessStatus,
+} from '@workspace/contract';
+import { getSeatsAddonIdForPlanId, isSeatsAddonId } from '@workspace/payments';
 import type { DodoPayments } from '@workspace/payments/client';
 import type { PlanFeatureGates, PlanId } from '@workspace/pricing';
 import { FREE_PLAN_FEATURE_GATES, PLAN_NAMES } from '@workspace/pricing';
@@ -318,6 +327,246 @@ export class BillingService {
     }
   }
 
+  private getSeatsAddonQuantity(addons: AddonItems): number {
+    const seatsAddon = addons.find((addon) => isSeatsAddonId(addon.addonId));
+    return seatsAddon?.quantity ?? 0;
+  }
+
+  private toDodoAddonPayload(addons: AddonItems): Array<{ addon_id: string; quantity: number }> {
+    return addons
+      .filter((addon) => addon.quantity > 0)
+      .map((addon) => ({
+        addon_id: addon.addonId,
+        quantity: addon.quantity,
+      }));
+  }
+
+  private buildAddonsForTargetPlan(
+    currentAddons: AddonItems,
+    targetPlanId: string,
+    nextSeatsQuantity?: number
+  ): AddonItems {
+    const currentSeatsQuantity = this.getSeatsAddonQuantity(currentAddons);
+    const seatsQuantity = nextSeatsQuantity ?? currentSeatsQuantity;
+    const nonSeatAddons = currentAddons.filter((addon) => !isSeatsAddonId(addon.addonId));
+
+    if (seatsQuantity <= 0) {
+      return nonSeatAddons;
+    }
+
+    const targetSeatsAddonId = getSeatsAddonIdForPlanId(targetPlanId);
+    if (!targetSeatsAddonId) {
+      throw billingError.ADDON_MAPPING_MISSING_FOR_INTERVAL();
+    }
+
+    return [
+      ...nonSeatAddons,
+      {
+        addonId: targetSeatsAddonId,
+        quantity: seatsQuantity,
+      },
+    ];
+  }
+
+  private mapPreviewResponse(
+    preview: Awaited<ReturnType<DodoPayments['subscriptions']['previewChangePlan']>>,
+    currentPlanId: string,
+    currentPlanName: string,
+    newPlanId: PlanId,
+    newPlanName: string
+  ): PlanChangePreviewData {
+    const summary = preview.immediate_charge.summary;
+    const totalAmount = summary.total_amount;
+    const currency = summary.currency;
+    const lineItems = preview.immediate_charge.line_items || [];
+    const isUpgrade = totalAmount > 0;
+    const hasCredit = summary.customer_credits > 0;
+
+    const mappedLineItems = lineItems
+      .filter((item): item is Extract<typeof item, { unit_price: number }> => 'unit_price' in item)
+      .map((item) => ({
+        name: item.name || 'Subscription',
+        description: item.description || null,
+        unitPrice: item.unit_price / 100,
+        quantity: item.quantity,
+        tax: item.tax ? item.tax / 100 : null,
+        taxRate: item.tax_rate || null,
+        prorationFactor: item.proration_factor || null,
+        type: item.type,
+      }));
+
+    return {
+      immediateCharge: isUpgrade
+        ? {
+            currency,
+            total: totalAmount / 100,
+            summary: `${currency} ${(totalAmount / 100).toFixed(2)} due today`,
+            lineItems: mappedLineItems,
+            chargeSummary: {
+              currency,
+              totalAmount: totalAmount / 100,
+              tax: summary.tax ? summary.tax / 100 : null,
+              customerCredits: summary.customer_credits / 100,
+            },
+          }
+        : null,
+      creditAmount: hasCredit
+        ? {
+            currency,
+            amount: summary.customer_credits / 100,
+            summary: `${currency} ${(summary.customer_credits / 100).toFixed(2)} credit applied to future billing`,
+          }
+        : null,
+      newPlan: {
+        planId: newPlanId,
+        planName: newPlanName,
+        billingInterval: newPlanId.includes('annual') ? 'annual' : 'monthly',
+        nextBillingDate: new Date(preview.new_plan.next_billing_date),
+        recurringPreTaxAmount: preview.new_plan.recurring_pre_tax_amount / 100,
+        paymentFrequencyInterval: preview.new_plan.payment_frequency_interval,
+      },
+      currentPlan: {
+        planId: currentPlanId,
+        planName: currentPlanName,
+      },
+      isUpgrade,
+    };
+  }
+
+  async getAddonsStatus(workspaceId: string) {
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+    if (!subscription) {
+      throw billingError.SUBSCRIPTION_NOT_FOUND();
+    }
+
+    const addons = subscription.addons ?? [];
+    const seatsQuantity = this.getSeatsAddonQuantity(addons);
+
+    return {
+      subscriptionId: subscription.subscriptionId,
+      seatsQuantity,
+      additionalSeats: seatsQuantity * SEATS_ADDON_PACK_SIZE,
+      addons,
+    };
+  }
+
+  async previewAddonChange(workspaceId: string, seatsQuantity: number) {
+    if (
+      !Number.isInteger(seatsQuantity) ||
+      seatsQuantity < 0 ||
+      seatsQuantity > SEATS_ADDON_MAX_PACKS
+    ) {
+      throw billingError.INVALID_ADDON_QUANTITY();
+    }
+
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+    if (!subscription) {
+      throw billingError.SUBSCRIPTION_NOT_FOUND();
+    }
+
+    this.validateSubscriptionForAddonChange(subscription);
+
+    const nextAddons = this.buildAddonsForTargetPlan(
+      subscription.addons ?? [],
+      subscription.planId,
+      seatsQuantity
+    );
+
+    try {
+      const preview = await this.deps.dodoClient.subscriptions.previewChangePlan(
+        subscription.subscriptionId,
+        {
+          product_id: subscription.productId,
+          proration_billing_mode: 'prorated_immediately',
+          quantity: 1,
+          on_payment_failure: 'prevent_change',
+          addons: this.toDodoAddonPayload(nextAddons),
+        }
+      );
+
+      const currentPlanId = subscription.planId;
+      const currentPlanName = PLAN_NAMES[subscription.planId as PlanId] || 'Custom';
+      return this.mapPreviewResponse(
+        preview,
+        currentPlanId,
+        currentPlanName,
+        subscription.planId as PlanId,
+        currentPlanName
+      );
+    } catch (error) {
+      logger.error({ err: error, workspaceId }, 'Failed to preview addon change');
+      captureException(error, undefined, {
+        operation: 'preview_addon_change',
+        workspace_id: workspaceId,
+      });
+      const dodoError = error as {
+        status?: number;
+        error?: { code?: string; message?: string };
+        message?: string;
+      };
+      throw billingError.UPSTREAM_PAYMENT_ERROR({
+        code: dodoError?.error?.code || `HTTP_${dodoError?.status}` || 'ADDON_PREVIEW_FAILED',
+        message:
+          dodoError?.error?.message || dodoError?.message || 'Failed to preview add-on change',
+      });
+    }
+  }
+
+  async changeAddons(workspaceId: string, seatsQuantity: number): Promise<PlanChangeResultData> {
+    if (
+      !Number.isInteger(seatsQuantity) ||
+      seatsQuantity < 0 ||
+      seatsQuantity > SEATS_ADDON_MAX_PACKS
+    ) {
+      throw billingError.INVALID_ADDON_QUANTITY();
+    }
+
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+    if (!subscription) {
+      throw billingError.SUBSCRIPTION_NOT_FOUND();
+    }
+
+    this.validateSubscriptionForAddonChange(subscription);
+
+    const nextAddons = this.buildAddonsForTargetPlan(
+      subscription.addons ?? [],
+      subscription.planId,
+      seatsQuantity
+    );
+
+    try {
+      await this.deps.dodoClient.subscriptions.changePlan(subscription.subscriptionId, {
+        product_id: subscription.productId,
+        proration_billing_mode: 'prorated_immediately',
+        quantity: 1,
+        on_payment_failure: 'prevent_change',
+        addons: this.toDodoAddonPayload(nextAddons),
+      });
+
+      return {
+        subscriptionId: subscription.subscriptionId,
+        status: 'processing',
+        newPlanId: subscription.planId,
+        newPlanName: PLAN_NAMES[subscription.planId as PlanId] || 'Custom',
+      };
+    } catch (error) {
+      logger.error({ err: error, workspaceId }, 'Failed to change addons');
+      captureException(error, undefined, {
+        operation: 'change_addons',
+        workspace_id: workspaceId,
+      });
+      const dodoError = error as {
+        status?: number;
+        error?: { code?: string; message?: string };
+        message?: string;
+      };
+      throw billingError.UPSTREAM_PAYMENT_ERROR({
+        code: dodoError?.error?.code || `HTTP_${dodoError?.status}` || 'ADDON_CHANGE_FAILED',
+        message: dodoError?.error?.message || dodoError?.message || 'Failed to change add-ons',
+      });
+    }
+  }
+
   /**
    * Get customer portal URL for a workspace
    */
@@ -364,6 +613,7 @@ export class BillingService {
 
     const currentPlanName = PLAN_NAMES[subscription.planId as PlanId] || 'Custom';
     const newPlanName = PLAN_NAMES[newPlanId] || 'Custom';
+    const nextAddons = this.buildAddonsForTargetPlan(subscription.addons ?? [], newPlanId);
 
     try {
       const preview = await this.deps.dodoClient.subscriptions.previewChangePlan(
@@ -373,75 +623,16 @@ export class BillingService {
           proration_billing_mode: 'prorated_immediately',
           quantity: 1,
           on_payment_failure: 'prevent_change',
+          addons: this.toDodoAddonPayload(nextAddons),
         }
       );
-
-      const summary = preview.immediate_charge.summary;
-      const totalAmount = summary.total_amount;
-      const currency = summary.currency;
-      const lineItems = preview.immediate_charge.line_items || [];
-
-      // Determine if this is an upgrade by checking if total_amount is positive
-      // Positive = upgrade (charge), negative or zero with credits = downgrade
-      const isUpgrade = totalAmount > 0;
-
-      // For downgrades with prorated_immediately, credits may be applied
-      // The customer_credits field in summary indicates credits applied
-      const hasCredit = summary.customer_credits > 0;
-
-      // Map line items from DodoPayments format to our format
-      // Filter for subscription/addon line items (exclude meters)
-      const mappedLineItems = lineItems
-        .filter(
-          (item): item is Extract<typeof item, { unit_price: number }> => 'unit_price' in item
-        )
-        .map((item) => ({
-          name: item.name || 'Subscription',
-          description: item.description || null,
-          unitPrice: item.unit_price / 100, // Convert from cents to dollars
-          quantity: item.quantity,
-          tax: item.tax ? item.tax / 100 : null, // Convert from cents to dollars
-          taxRate: item.tax_rate || null,
-          prorationFactor: item.proration_factor || null,
-          type: item.type,
-        }));
-
-      return {
-        immediateCharge: isUpgrade
-          ? {
-              currency,
-              total: totalAmount / 100, // Convert from cents to dollars
-              summary: `${currency} ${(totalAmount / 100).toFixed(2)} due today`,
-              lineItems: mappedLineItems,
-              chargeSummary: {
-                currency,
-                totalAmount: totalAmount / 100, // Convert from cents to dollars
-                tax: summary.tax ? summary.tax / 100 : null, // Convert from cents to dollars
-                customerCredits: summary.customer_credits / 100, // Convert from cents to dollars
-              },
-            }
-          : null,
-        creditAmount: hasCredit
-          ? {
-              currency,
-              amount: summary.customer_credits / 100, // Convert from cents to dollars
-              summary: `${currency} ${(summary.customer_credits / 100).toFixed(2)} credit applied to future billing`,
-            }
-          : null,
-        newPlan: {
-          planId: newPlanId,
-          planName: newPlanName,
-          billingInterval: newPlanId.includes('annual') ? 'annual' : 'monthly',
-          nextBillingDate: new Date(preview.new_plan.next_billing_date),
-          recurringPreTaxAmount: preview.new_plan.recurring_pre_tax_amount / 100, // Convert from cents to dollars
-          paymentFrequencyInterval: preview.new_plan.payment_frequency_interval,
-        },
-        currentPlan: {
-          planId: subscription.planId,
-          planName: currentPlanName,
-        },
-        isUpgrade,
-      };
+      return this.mapPreviewResponse(
+        preview,
+        subscription.planId,
+        currentPlanName,
+        newPlanId,
+        newPlanName
+      );
     } catch (error) {
       logger.error({ err: error, workspaceId }, 'Failed to preview plan change');
       captureException(error, undefined, {
@@ -484,6 +675,7 @@ export class BillingService {
     }
 
     const newPlanName = PLAN_NAMES[newPlanId] || 'Custom';
+    const nextAddons = this.buildAddonsForTargetPlan(subscription.addons ?? [], newPlanId);
 
     try {
       await this.deps.dodoClient.subscriptions.changePlan(subscription.subscriptionId, {
@@ -491,6 +683,7 @@ export class BillingService {
         proration_billing_mode: 'prorated_immediately',
         quantity: 1,
         on_payment_failure: 'prevent_change',
+        addons: this.toDodoAddonPayload(nextAddons),
       });
 
       // Note: DB update happens via webhook handler for subscription.plan_changed
@@ -537,6 +730,30 @@ export class BillingService {
 
     if (!isActive && !isCancelledWithAccess) {
       throw billingError.PLAN_CHANGE_NOT_ALLOWED();
+    }
+  }
+
+  /**
+   * Validate subscription is in a state that allows add-on changes
+   */
+  private validateSubscriptionForAddonChange(subscription: {
+    status: string;
+    cancelAtPeriodEnd: boolean;
+  }): void {
+    // Block if subscription is on hold (payment failed)
+    if (subscription.status === 'on_hold') {
+      throw billingError.SUBSCRIPTION_ON_HOLD();
+    }
+
+    // Allow add-on changes for:
+    // 1. Active subscriptions
+    // 2. Cancelled subscriptions with cancelAtPeriodEnd=true
+    const isActive = subscription.status === 'active';
+    const isCancelledWithAccess =
+      subscription.status === 'cancelled' && subscription.cancelAtPeriodEnd;
+
+    if (!isActive && !isCancelledWithAccess) {
+      throw billingError.ADDON_CHANGE_NOT_ALLOWED();
     }
   }
 }
