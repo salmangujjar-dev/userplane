@@ -15,6 +15,7 @@ import type { AdminPlanService } from '@/api/services/admin-plan.service';
 import type { AdminProjectService } from '@/api/services/admin-project.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
+import type { BillingService } from '@/api/services/billing.service';
 import type { EmailService } from '@/api/services/email.service';
 import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { ProjectService } from '@/api/services/project.service';
@@ -930,8 +931,7 @@ const getWorkspaceEntitlementsImpl = (
           entitlements: entitlements.map((e) => ({
             resourceType: e.resourceType,
             quotedLimit: e.quotedLimit,
-            softLimit: e.softLimit,
-            hardLimit: e.hardLimit,
+            actualLimit: e.actualLimit,
             resourceConsumed: e.resourceConsumed,
           })),
         },
@@ -963,8 +963,7 @@ const updateWorkspaceEntitlementsImpl = (
           entitlements: entitlements.map((e) => ({
             resourceType: e.resourceType,
             quotedLimit: e.quotedLimit,
-            softLimit: e.softLimit,
-            hardLimit: e.hardLimit,
+            actualLimit: e.actualLimit,
             resourceConsumed: e.resourceConsumed,
           })),
         },
@@ -1087,6 +1086,56 @@ const adminProvisionWorkspaceImpl = (
     });
 };
 
+// ============================================
+// WORKSPACE SUBSCRIPTION PROCEDURES
+// ============================================
+
+/**
+ * Get workspace subscription implementation
+ */
+const getWorkspaceSubscriptionImpl = (
+  adminService: AdminService,
+  billingService: BillingService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authorized
+    .use(adminMiddleware)
+    .admin.workspaces.subscription.get.handler(async ({ input }) => {
+      const { contractDetail, accessDetail, featureGates } =
+        await billingService.getSubscriptionStatus(input.params.workspaceId);
+
+      let addons: {
+        subscriptionId?: string;
+        seatsQuantity: number;
+        additionalSeats: number;
+        addons: Array<{ addonId: string; quantity: number }>;
+      } | null = null;
+
+      try {
+        const addonsResult = await billingService.getAddonsStatus(input.params.workspaceId);
+        addons = {
+          subscriptionId: addonsResult.subscriptionId,
+          seatsQuantity: addonsResult.seatsQuantity,
+          additionalSeats: addonsResult.additionalSeats,
+          addons: addonsResult.addons,
+        };
+      } catch {
+        // No subscription — addons stays null
+      }
+
+      return {
+        message: 'Subscription retrieved successfully',
+        data: {
+          contractDetail,
+          accessDetail,
+          featureGates,
+          addons,
+        },
+      };
+    });
+};
+
 /**
  * Create admin procedures
  */
@@ -1101,7 +1150,8 @@ export const createAdminProcedures = (
   tokenService: TokenService,
   emailService: EmailService,
   entitlementService: EntitlementService,
-  adminPlanService: AdminPlanService
+  adminPlanService: AdminPlanService,
+  billingService: BillingService
 ) => {
   return {
     users: {
@@ -1150,6 +1200,9 @@ export const createAdminProcedures = (
       entitlements: {
         get: getWorkspaceEntitlementsImpl(adminService, entitlementService),
         update: updateWorkspaceEntitlementsImpl(adminService, entitlementService),
+      },
+      subscription: {
+        get: getWorkspaceSubscriptionImpl(adminService, billingService),
       },
       provision: adminProvisionWorkspaceImpl(adminService, adminWorkspaceService, emailService),
     },

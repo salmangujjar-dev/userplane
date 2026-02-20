@@ -7,7 +7,7 @@
 import type { DbClient } from '@workspace/db';
 import { and, eq, inArray, sql } from '@workspace/db';
 import { entitlements } from '@workspace/db';
-import { PERIOD_BASED_RESOURCES, type ResourceType } from '@workspace/pricing';
+import { type BillingCadence, PERIOD_BASED_RESOURCES, type ResourceType } from '@workspace/pricing';
 
 import { generateEntitlementId } from '@/api/lib/id';
 import type { Transaction } from '@/api/types';
@@ -16,16 +16,15 @@ export interface CreateEntitlementData {
   workspaceId: string;
   resourceType: ResourceType;
   quotedLimit: number;
-  softLimit: number;
-  hardLimit: number;
+  actualLimit: number;
   resourceConsumed?: number;
 }
 
 export interface EntitlementData {
   resourceType: ResourceType;
   quotedLimit: number;
-  softLimit: number;
-  hardLimit: number;
+  actualLimit: number;
+  billingCadence?: BillingCadence | null;
 }
 
 export class EntitlementRepository {
@@ -44,8 +43,7 @@ export class EntitlementRepository {
         workspaceId: data.workspaceId,
         resourceType: data.resourceType,
         quotedLimit: data.quotedLimit,
-        softLimit: data.softLimit,
-        hardLimit: data.hardLimit,
+        actualLimit: data.actualLimit,
         resourceConsumed: data.resourceConsumed ?? 0,
       })
       .returning();
@@ -118,10 +116,13 @@ export class EntitlementRepository {
         // Update existing entitlement
         const updateData: Record<string, unknown> = {
           quotedLimit: data.quotedLimit,
-          softLimit: data.softLimit,
-          hardLimit: data.hardLimit,
+          actualLimit: data.actualLimit,
           updatedAt: new Date(),
         };
+
+        if (data.billingCadence !== undefined) {
+          updateData.billingCadence = data.billingCadence;
+        }
 
         // If not preserving consumed, reset to 0
         if (!preserveConsumed) {
@@ -137,16 +138,22 @@ export class EntitlementRepository {
         results.push(updated);
       } else {
         // Create new entitlement
-        const created = await this.create(
-          {
+        const [created] = await dbClient
+          .insert(entitlements)
+          .values({
+            id: generateEntitlementId(),
             workspaceId,
             resourceType: data.resourceType,
             quotedLimit: data.quotedLimit,
-            softLimit: data.softLimit,
-            hardLimit: data.hardLimit,
-          },
-          { tx: options?.tx }
-        );
+            actualLimit: data.actualLimit,
+            resourceConsumed: 0,
+            ...(data.billingCadence !== undefined && { billingCadence: data.billingCadence }),
+          })
+          .returning();
+
+        if (!created) {
+          throw new Error('Failed to create entitlement');
+        }
         results.push(created);
       }
     }
@@ -295,7 +302,7 @@ export class EntitlementRepository {
   async updateLimits(
     workspaceId: string,
     resourceType: ResourceType,
-    limits: { quotedLimit: number; softLimit: number; hardLimit: number },
+    limits: { quotedLimit: number; actualLimit: number },
     options?: { tx?: Transaction }
   ) {
     const dbClient = options?.tx || this.db;
@@ -304,8 +311,7 @@ export class EntitlementRepository {
       .update(entitlements)
       .set({
         quotedLimit: limits.quotedLimit,
-        softLimit: limits.softLimit,
-        hardLimit: limits.hardLimit,
+        actualLimit: limits.actualLimit,
         updatedAt: new Date(),
       })
       .where(
