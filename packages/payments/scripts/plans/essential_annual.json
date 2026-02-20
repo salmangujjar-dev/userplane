@@ -1,0 +1,33 @@
+{
+  "products": [
+    {
+      "envkey": "DODO_PRODUCT_ESSENTIAL_ANNUAL",
+      "label": "Essential Annual"
+    }
+  ],
+  "metadata": {
+    "billing_cadence": "annual",
+    "seats_quoted_limit": "60",
+    "seats_actual_limit": "180",
+    "recordings_quoted_limit": "300",
+    "recordings_actual_limit": "420",
+    "links_quoted_limit": "-1",
+    "links_actual_limit": "1080",
+    "screenshots_quoted_limit": "0",
+    "screenshots_actual_limit": "0",
+    "files_quoted_limit": "0",
+    "files_actual_limit": "0",
+    "request_recordings_enabled": "true",
+    "request_sessions_enabled": "true",
+    "request_screenshots_enabled": "false",
+    "request_files_enabled": "false",
+    "redact_sensitive_data_enabled": "true",
+    "capture_console_log_enabled": "false",
+    "capture_network_activity_enabled": "false",
+    "capture_user_actions_enabled": "false",
+    "capture_server_logs_enabled": "false",
+    "customize_recording_link_enabled": "false",
+    "customize_retention_policy_enabled": "false",
+    "send_outbound_emails_enabled": "false"
+  }
+}

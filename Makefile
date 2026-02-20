@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email build build\:web build\:home build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:studio db\:studio\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email build build\:web build\:home build\:api build\:share lint lint\:fix format format\:check typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:studio db\:studio\:production pricing\:sync pricing\:sync\:production trigger\:login trigger\:whoami trigger\:dev trigger\:deploy trigger\:deploy\:production storybook\:recorder storybook\:recorder\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -46,6 +46,11 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)db:generate:production$(WHITE)        ║$(RESET) Generate migrations (production)                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:studio$(WHITE)                     ║$(RESET) Open Drizzle Studio (dev)                                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)db:studio:production$(WHITE)          ║$(RESET) Open Drizzle Studio (production)                                  $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)PRICING$(WHITE)                                                                                           ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)pricing:sync$(WHITE)                  ║$(RESET) Sync plan metadata to DodoPayments (dev)                            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)pricing:sync:production$(WHITE)       ║$(RESET) Sync plan metadata to DodoPayments (production)                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)DEVELOPMENT$(WHITE)                                                                                       ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -465,6 +470,28 @@ db\:studio\:production: ## Open Drizzle Studio (production)
 		exit 1; \
 	fi
 	@cd packages/db && set -a && . ../../apps/api/.env.production && set +a && bun run db:studio
+
+# Pricing commands
+SEED_SCRIPT := packages/payments/scripts/seed-product-metadata.ts
+PLANS := essential starter scale-up enterprise
+
+pricing\:sync: ## Sync plan metadata to DodoPayments (dev)
+	@echo "$(BLUE)Syncing plan metadata → development...$(RESET)"
+	@for plan in $(PLANS); do \
+		bun run $(SEED_SCRIPT) --env development --plan plans/$${plan}_monthly.json && \
+		bun run $(SEED_SCRIPT) --env development --plan plans/$${plan}_annual.json; \
+	done
+	@echo "$(GREEN)Plan metadata synced (development)!$(RESET)"
+
+pricing\:sync\:production: ## Sync plan metadata to DodoPayments (production)
+	@echo "$(RED)Syncing plan metadata → production...$(RESET)"
+	@echo "$(RED)WARNING: This will update product metadata in PRODUCTION!$(RESET)"
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
+	@for plan in $(PLANS); do \
+		bun run $(SEED_SCRIPT) --env production --plan plans/$${plan}_monthly.json && \
+		bun run $(SEED_SCRIPT) --env production --plan plans/$${plan}_annual.json; \
+	done
+	@echo "$(GREEN)Plan metadata synced (production)!$(RESET)"
 
 # Inngest commands
 inngest\:dev: ## Run Inngest dev server (localhost:8288)

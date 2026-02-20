@@ -2,16 +2,11 @@
   "products": [
     {
       "envkey": "DODO_PRODUCT_ENTERPRISE_MONTHLY",
-      "label": "Enterprise Monthly",
-      "metadata": { "billing_cadence": "monthly" }
-    },
-    {
-      "envkey": "DODO_PRODUCT_ENTERPRISE_ANNUAL",
-      "label": "Enterprise Annual",
-      "metadata": { "billing_cadence": "annual" }
+      "label": "Enterprise Monthly"
     }
   ],
   "metadata": {
+    "billing_cadence": "monthly",
     "seats_quoted_limit": "30",
     "seats_actual_limit": "45",
     "recordings_quoted_limit": "-1",
