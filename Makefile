@@ -59,7 +59,6 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:api$(WHITE)                       ║$(RESET) Run API only                                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:share$(WHITE)                     ║$(RESET) Run Share URL shortener only                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:email$(WHITE)                     ║$(RESET) Run Email preview server only                                     $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev:yc$(WHITE)                        ║$(RESET) Run yc app only                                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:ramp$(WHITE)                      ║$(RESET) Run ramp app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:home$(WHITE)                      ║$(RESET) Run home app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -175,10 +174,6 @@ dev\:share: ## Run Share URL shortener only
 dev\:email: ## Run Email preview server only
 	@echo "$(MAGENTA)Starting Email preview server...$(RESET)"
 	@cd packages/email && bun dev
-
-dev\:yc: ## Run yc app only
-	@echo "$(MAGENTA)Starting YC app...$(RESET)"
-	@cd apps/yc && bun dev
 
 dev\:ramp: ## Run ramp app only
 	@echo "$(MAGENTA)Starting Ramp app...$(RESET)"
@@ -545,7 +540,6 @@ tunnel\:start: ## Start Cloudflare tunnel (all services)
 		echo "$(GREEN)Dash:$(RESET)       https://dash-dev.userplane.io"; \
 		echo "$(GREEN)Home:$(RESET)       https://home-dev.userplane.io"; \
 		echo "$(GREEN)Recorder:$(RESET)   https://recorder-dev.userplane.io"; \
-		echo "$(GREEN)YC:$(RESET)         https://yc-dev.userplane.io"; \
 		echo "$(GREEN)Ramp:$(RESET)       https://ramp-dev.userplane.io"; \
 		echo "$(WHITE)-------------------------------------------$(RESET)"; \
 		echo ""; \
@@ -587,7 +581,6 @@ tunnel\:status: ## Show tunnel status and URLs
 	@echo "$(GREEN)Dash:$(RESET)       https://dash-dev.userplane.io"
 	@echo "$(GREEN)Home:$(RESET)       https://home-dev.userplane.io"
 	@echo "$(GREEN)Recorder:$(RESET)   https://recorder-dev.userplane.io"
-	@echo "$(GREEN)YC:$(RESET)         https://yc-dev.userplane.io"
 	@echo "$(GREEN)Ramp:$(RESET)       https://ramp-dev.userplane.io"
 	@echo "$(WHITE)-------------------------------------------$(RESET)"
 

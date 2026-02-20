@@ -15,6 +15,7 @@ import { apiClient } from '@/client';
 import { SectionError } from '@/components/shared/section-error';
 import { DomainsSectionSkeleton } from '@/components/skeleton';
 import { DOMAIN_PAGINATION } from '@/constants';
+import { env } from '@/env';
 import {
   type DomainSortField,
   useCreateDomain,
@@ -73,7 +74,8 @@ export function DomainsSection() {
   });
 
   const domainsData = domainsResult?.success ? domainsResult.data : null;
-  const domains = domainsData?.domains ?? [];
+  // Hiding default recorder domain from view
+  const domains = (domainsData?.domains ?? []).filter((d) => d.domainUrl !== env.recorder.url);
   const paginationMeta = domainsData?.pagination;
   const totalPages = paginationMeta?.totalPages ?? 1;
 

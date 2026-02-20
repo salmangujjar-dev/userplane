@@ -556,7 +556,7 @@ export function SubscriptionTab({ workspaceId }: SubscriptionTabProps) {
           contractDetail={subscription.contractDetail}
           accessDetail={subscription.accessDetail}
           featureGates={subscription.featureGates}
-          addons={subscription.addons}
+          addons={subscription.addons ?? undefined}
         />
       )}
 
