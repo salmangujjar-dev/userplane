@@ -1,11 +1,21 @@
 import type { HighlightConfig } from './types';
 
 /**
+ * FAQ link configuration
+ * `text` is matched within the answer string and rendered as a link
+ */
+export interface FAQLink {
+  text: string;
+  href: string;
+}
+
+/**
  * FAQ item interface
  */
 export interface FAQItem {
   question: string;
   answer: string;
+  link?: FAQLink;
 }
 
 /**
@@ -59,19 +69,34 @@ export const FAQ_ITEMS: FAQItem[] = [
       'Yes, Userplane has a best-in-class Intercom integration. You can request and receive screen recordings without leaving Intercom.',
   },
   {
-    question: 'Can I try Userplane for free?',
-    answer:
-      'While most teams prefer to start with a paid plan to get the most out of Userplane, we offer a free plan to help customers evaluate Userplane and see if it works for their team.',
-  },
-  {
     question: 'How much does Userplane cost?',
     answer:
       'Simple pricing starting at $79/month. No tiers, no quotas, no hidden fees. Month-to-month with no long-term contracts.',
   },
   {
-    question: 'How does Userplane pricing work?',
+    question: 'Which plan would work best for my team?',
     answer:
-      'Userplane operates on a straightforward pricing model with a flat rate for all plans. Which means you pay a consistent price month-to-month with no hidden fees, no tiers, no quotas, no hidden fees.',
+      "Starter is a great fit for most teams getting started. For a detailed breakdown of what's included in each plan, take a look at our pricing page.",
+    link: { text: 'pricing page', href: '/pricing' },
+  },
+  {
+    question: 'Can I try Userplane for free?',
+    answer:
+      'While most teams prefer to start with a paid plan to get the most out of Userplane, we offer a free plan to help customers evaluate Userplane and see if it works for their team.',
+  },
+  {
+    question: 'Can I request a trial for the paid plans?',
+    answer: 'Yes! Every paid plan comes with a 14-day free trial. Cancel anytime.',
+  },
+  {
+    question: 'Can I add more seats to my plan?',
+    answer:
+      'Absolutely. You can request additional seats via add-ons. New seats are prorated for the rest of your billing cycle, so you never overpay.',
+  },
+  {
+    question: 'Do you offer custom pricing for larger teams?',
+    answer:
+      "We do! If you have a larger team or specific requirements, reach out and we'll put together a custom quote that fits your needs.",
   },
   {
     question: 'Are there any cancellation fees or contracts?',

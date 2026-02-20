@@ -1,4 +1,4 @@
-export type HighlightColor = 'blue' | 'yellow' | 'green' | 'purple';
+export type HighlightColor = 'blue' | 'yellow' | 'green' | 'purple' | 'red';
 
 export interface HighlightConfig {
   wordIndex: number;

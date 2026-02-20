@@ -13,6 +13,6 @@ export const PRICING_HEADING = {
  * Pricing heading highlights configuration
  */
 export const PRICING_HIGHLIGHTS: HighlightConfig[] = [
-  { wordIndex: 0, color: 'yellow' },
-  { wordIndex: 2, color: 'blue' },
+  { wordIndex: 0, color: 'blue' },
+  { wordIndex: 2, color: 'yellow' },
 ];

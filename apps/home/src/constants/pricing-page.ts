@@ -115,4 +115,18 @@ export const PRICING_FAQ_ITEMS: PricingFAQItem[] = [
     answer:
       'While most teams prefer to start with a paid plan to get the most out of Userplane, we offer a free plan to help customers evaluate Userplane and see if it works for their team.',
   },
+  {
+    question: 'Can I request a trial for the paid plans?',
+    answer: 'Yes! Every paid plan comes with a 14-day free trial. Cancel anytime.',
+  },
+  {
+    question: 'Can I add more seats to my plan?',
+    answer:
+      'Absolutely. You can request additional seats via add-ons. New seats are prorated for the rest of your billing cycle, so you never overpay.',
+  },
+  {
+    question: 'Do you offer custom pricing for larger teams?',
+    answer:
+      "We do! If you have a larger team or specific requirements, reach out and we'll put together a custom quote that fits your needs.",
+  },
 ];

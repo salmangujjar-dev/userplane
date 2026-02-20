@@ -5,7 +5,6 @@ import {
   HERO_DESCRIPTION,
   HERO_HEADING,
   HERO_HIGHLIGHTS,
-  HERO_ICON,
   HERO_PRIMARY_BUTTON,
   HERO_SECONDARY_BUTTON,
 } from '@/constants/hero';
@@ -48,40 +47,15 @@ export default function Hero() {
       <div className="mx-auto max-w-7xl flex flex-col gap-12">
         <div className="z-20 flex h-full grow flex-col items-center gap-12 text-center">
           <h1 className="text-center font-dm-sans font-medium text-4xl leading-tight tracking-[-2px] md:max-w-4xl md:text-6xl">
-            {segments.map((segment, index) => {
-              const firstWordIndex = words.slice(
-                0,
-                segments.slice(0, index).reduce((acc, s) => acc + s.text.split(' ').length, 0)
-              ).length;
-              const showIconBefore = firstWordIndex === HERO_ICON.beforeWordIndex;
-
-              return (
-                <span key={index}>
-                  {showIconBefore ? (
-                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                      <img
-                        src={HERO_ICON.src}
-                        alt={HERO_ICON.alt}
-                        className="inline-block w-8 h-8 md:w-12 md:h-12"
-                      />
-                      {segment.color ? (
-                        <Highlight color={segment.color}>{segment.text}</Highlight>
-                      ) : (
-                        segment.text
-                      )}
-                    </span>
-                  ) : (
-                    <>
-                      {segment.color ? (
-                        <Highlight color={segment.color}>{segment.text}</Highlight>
-                      ) : (
-                        segment.text
-                      )}
-                    </>
-                  )}{' '}
-                </span>
-              );
-            })}
+            {segments.map((segment, index) => (
+              <span key={index}>
+                {segment.color ? (
+                  <Highlight color={segment.color}>{segment.text}</Highlight>
+                ) : (
+                  segment.text
+                )}{' '}
+              </span>
+            ))}
           </h1>
 
           <p className="md:text-lg max-w-2xl">{HERO_DESCRIPTION}</p>
