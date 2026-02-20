@@ -224,7 +224,7 @@ export class EntitlementService {
     let effectiveActualLimit = entitlement.actualLimit;
 
     // Apply fair-share for annual cadence on period-based resources
-    const billingCadence = entitlement.billingCadence as BillingCadence | null;
+    const billingCadence = entitlement.billingCadence;
     if (
       billingCadence === 'annual' &&
       (PERIOD_BASED_RESOURCES as readonly string[]).includes(resourceType)
@@ -363,7 +363,7 @@ export class EntitlementService {
       let quotedLimit = entitlement?.quotedLimit ?? 0;
 
       // For annual plans on period-based resources, show monthly fair share (limit / 12)
-      const billingCadence = entitlement?.billingCadence as BillingCadence | null;
+      const billingCadence = entitlement?.billingCadence ?? null;
       if (
         billingCadence === 'annual' &&
         quotedLimit > 0 &&

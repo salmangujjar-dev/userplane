@@ -12,6 +12,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
+import { billingCadenceEnum } from './enums';
 import { workspaces } from './workspaces';
 
 /**
@@ -60,6 +61,9 @@ export const subscriptions = pgTable(
 
     // Trial period
     trialEnd: timestamp('trial_end'),
+
+    // Billing cadence: 'monthly' | 'annual' | null (null = free/unknown)
+    billingCadence: billingCadenceEnum('billing_cadence'),
 
     // Webhook tracking for out-of-order detection
     lastWebhookId: text('last_webhook_id'),

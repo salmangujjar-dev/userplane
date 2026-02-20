@@ -10,6 +10,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
+import { billingCadenceEnum } from './enums';
 import { workspaces } from './workspaces';
 
 export const resourceTypeEnum = pgEnum('resource_type', RESOURCE_TYPE_VALUES);
@@ -43,7 +44,7 @@ export const entitlements = pgTable(
       .notNull(),
 
     // Billing cadence: 'monthly' | 'annual' | null (null = free plan)
-    billingCadence: text('billing_cadence'),
+    billingCadence: billingCadenceEnum('billing_cadence'),
 
     // Soft delete
     isDeleted: boolean('is_deleted').default(false).notNull(),

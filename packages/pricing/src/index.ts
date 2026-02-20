@@ -1120,7 +1120,8 @@ export function isProductId(value: string): boolean {
 /**
  * Billing cadence stored in product metadata and entitlement records
  */
-export type BillingCadence = 'monthly' | 'annual';
+export const BILLING_CADENCES = ['monthly', 'annual'] as const;
+export type BillingCadence = (typeof BILLING_CADENCES)[number];
 
 /**
  * Get how many months have elapsed in the current billing period.

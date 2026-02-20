@@ -384,6 +384,7 @@ export class WebhookProcessorService {
           featureGates: metadata.featureGates,
           addons: incomingAddons,
           trialEnd,
+          billingCadence: metadata.billingCadence ?? null,
         },
         { tx }
       );
@@ -425,6 +426,7 @@ export class WebhookProcessorService {
           featureGates: metadata.featureGates,
           addons: incomingAddons,
           trialEnd,
+          billingCadence: metadata.billingCadence ?? null,
         },
         { tx }
       );
@@ -579,6 +581,7 @@ export class WebhookProcessorService {
       lastWebhookId: webhookId,
       lastWebhookTimestamp: eventTimestamp,
       ...(metadata?.featureGates && { featureGates: metadata.featureGates }),
+      ...(metadata?.billingCadence !== undefined && { billingCadence: metadata.billingCadence }),
     };
 
     await this.deps.subscriptionRepo.updateBySubscriptionId(

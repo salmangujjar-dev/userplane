@@ -5,7 +5,7 @@
 
 import { type AddonItems, AddonItemsDbSchema, FeatureGatesSchema } from '@workspace/contract';
 import { type DbClient, eq, subscriptions, workspaces } from '@workspace/db';
-import type { PlanFeatureGates, PlanId } from '@workspace/pricing';
+import type { BillingCadence, PlanFeatureGates, PlanId } from '@workspace/pricing';
 
 import { createLogger } from '@/api/lib/logger';
 import type { Transaction } from '@/api/types';
@@ -25,6 +25,7 @@ export interface CreateSubscriptionData {
   featureGates: PlanFeatureGates;
   addons?: AddonItems;
   trialEnd?: Date | null;
+  billingCadence?: BillingCadence | null;
 }
 
 export interface UpdateSubscriptionData {
@@ -40,6 +41,7 @@ export interface UpdateSubscriptionData {
   featureGates?: PlanFeatureGates;
   addons?: AddonItems;
   trialEnd?: Date | null;
+  billingCadence?: BillingCadence | null;
 }
 
 export class SubscriptionRepository {
@@ -95,6 +97,7 @@ export class SubscriptionRepository {
         featureGates: data.featureGates,
         addons: data.addons,
         trialEnd: data.trialEnd,
+        billingCadence: data.billingCadence,
       })
       .returning();
 
