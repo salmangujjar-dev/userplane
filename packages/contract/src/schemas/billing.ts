@@ -3,7 +3,7 @@
  */
 
 import { SUBSCRIPTION_STATUSES } from '@workspace/payments/types';
-import { FEATURE_GATE_KEYS, PLAN_IDS } from '@workspace/pricing';
+import { BILLING_CADENCES, FEATURE_GATE_KEYS, PLAN_IDS } from '@workspace/pricing';
 import { z } from 'zod';
 
 import { ApiResponseSchema } from './common';
@@ -32,6 +32,7 @@ export const ContractDetailSchema = z.object({
   cancelledAt: z.coerce.date().nullable(),
   onHoldSince: z.coerce.date().nullable(),
   trialEnd: z.coerce.date().nullable(),
+  billingCadence: z.enum(BILLING_CADENCES).nullable(),
 });
 
 /**
