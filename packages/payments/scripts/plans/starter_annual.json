@@ -1,23 +1,18 @@
 {
   "products": [
     {
-      "envkey": "DODO_PRODUCT_STARTER_MONTHLY",
-      "label": "Starter Monthly",
-      "metadata": { "billing_cadence": "monthly" }
-    },
-    {
       "envkey": "DODO_PRODUCT_STARTER_ANNUAL",
-      "label": "Starter Annual",
-      "metadata": { "billing_cadence": "annual" }
+      "label": "Starter Annual"
     }
   ],
   "metadata": {
-    "seats_quoted_limit": "10",
-    "seats_actual_limit": "20",
+    "billing_cadence": "annual",
+    "seats_quoted_limit": "120",
+    "seats_actual_limit": "240",
     "recordings_quoted_limit": "-1",
-    "recordings_actual_limit": "85",
+    "recordings_actual_limit": "1020",
     "links_quoted_limit": "-1",
-    "links_actual_limit": "215",
+    "links_actual_limit": "2580",
     "screenshots_quoted_limit": "0",
     "screenshots_actual_limit": "0",
     "files_quoted_limit": "0",

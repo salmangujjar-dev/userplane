@@ -1,23 +1,18 @@
 {
   "products": [
     {
-      "envkey": "DODO_PRODUCT_SCALE_UP_MONTHLY",
-      "label": "Scale Up Monthly",
-      "metadata": { "billing_cadence": "monthly" }
-    },
-    {
       "envkey": "DODO_PRODUCT_SCALE_UP_ANNUAL",
-      "label": "Scale Up Annual",
-      "metadata": { "billing_cadence": "annual" }
+      "label": "Scale Up Annual"
     }
   ],
   "metadata": {
-    "seats_quoted_limit": "15",
-    "seats_actual_limit": "30",
+    "billing_cadence": "annual",
+    "seats_quoted_limit": "180",
+    "seats_actual_limit": "360",
     "recordings_quoted_limit": "-1",
-    "recordings_actual_limit": "180",
+    "recordings_actual_limit": "2160",
     "links_quoted_limit": "-1",
-    "links_actual_limit": "450",
+    "links_actual_limit": "5400",
     "screenshots_quoted_limit": "0",
     "screenshots_actual_limit": "0",
     "files_quoted_limit": "0",

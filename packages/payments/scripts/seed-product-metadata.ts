@@ -6,8 +6,8 @@
  * human-readable strings directly visible in the DodoPayments dashboard.
  *
  * Usage:
- *   bun run packages/payments/scripts/seed-product-metadata.ts --env development --plan plans/essential.json
- *   bun run packages/payments/scripts/seed-product-metadata.ts --env production  --plan plans/starter.json
+ *   bun run packages/payments/scripts/seed-product-metadata.ts --env development --plan plans/essential_monthly.json
+ *   bun run packages/payments/scripts/seed-product-metadata.ts --env production  --plan plans/starter_annual.json
  */
 
 import fs from 'node:fs';
@@ -27,7 +27,7 @@ function argAfter(flag: string): string | undefined {
 const envArg = argAfter('--env');
 if (!envArg || (envArg !== 'development' && envArg !== 'production')) {
   console.error(
-    'Usage: bun run seed-product-metadata.ts --env <development|production> --plan <plans/essential.json>'
+    'Usage: bun run seed-product-metadata.ts --env <development|production> --plan <plans/essential_monthly.json>'
   );
   process.exit(1);
 }
@@ -35,7 +35,7 @@ if (!envArg || (envArg !== 'development' && envArg !== 'production')) {
 const planArg = argAfter('--plan');
 if (!planArg) {
   console.error(
-    'Usage: bun run seed-product-metadata.ts --env <development|production> --plan <plans/essential.json>'
+    'Usage: bun run seed-product-metadata.ts --env <development|production> --plan <plans/essential_monthly.json>'
   );
   process.exit(1);
 }
@@ -79,7 +79,6 @@ function requireEnv(key: string): string {
 interface Product {
   envkey: string;
   label: string;
-  metadata?: Record<string, string>;
 }
 
 interface PlanFile {
@@ -117,14 +116,13 @@ console.log(
 
 console.log(`  Pushing ${Object.keys(plan.metadata).length} flat metadata keys\n`);
 
-for (const { envkey, label, metadata: productMetadata } of plan.products) {
+for (const { envkey, label } of plan.products) {
   const productId = requireEnv(envkey);
-  const mergedMetadata = { ...plan.metadata, ...productMetadata };
 
   process.stdout.write(`  ${label.padEnd(24)} ${productId}  ...`);
 
   try {
-    await client.products.update(productId, { metadata: mergedMetadata });
+    await client.products.update(productId, { metadata: plan.metadata });
     console.log('  ✓');
   } catch (err) {
     console.log('  ✗');

@@ -1,23 +1,18 @@
 {
   "products": [
     {
-      "envkey": "DODO_PRODUCT_ESSENTIAL_MONTHLY",
-      "label": "Essential Monthly",
-      "metadata": { "billing_cadence": "monthly" }
-    },
-    {
-      "envkey": "DODO_PRODUCT_ESSENTIAL_ANNUAL",
-      "label": "Essential Annual",
-      "metadata": { "billing_cadence": "annual" }
+      "envkey": "DODO_PRODUCT_STARTER_MONTHLY",
+      "label": "Starter Monthly"
     }
   ],
   "metadata": {
-    "seats_quoted_limit": "5",
-    "seats_actual_limit": "15",
-    "recordings_quoted_limit": "25",
-    "recordings_actual_limit": "35",
+    "billing_cadence": "monthly",
+    "seats_quoted_limit": "10",
+    "seats_actual_limit": "20",
+    "recordings_quoted_limit": "-1",
+    "recordings_actual_limit": "85",
     "links_quoted_limit": "-1",
-    "links_actual_limit": "90",
+    "links_actual_limit": "215",
     "screenshots_quoted_limit": "0",
     "screenshots_actual_limit": "0",
     "files_quoted_limit": "0",
@@ -31,8 +26,8 @@
     "capture_network_activity_enabled": "false",
     "capture_user_actions_enabled": "false",
     "capture_server_logs_enabled": "false",
-    "customize_recording_link_enabled": "false",
-    "customize_retention_policy_enabled": "false",
+    "customize_recording_link_enabled": "true",
+    "customize_retention_policy_enabled": "true",
     "send_outbound_emails_enabled": "false"
   }
 }
