@@ -420,6 +420,17 @@ db\:migrate: ## Run database migrations (dev)
 	@cd packages/db && set -a && . ../../apps/api/.env.development && set +a && bun run db:migrate
 	@echo "$(GREEN)Migrations complete!$(RESET)"
 
+db\:reset: ## Drop all tables and re-run migrations (dev)
+	@echo "$(RED)Resetting dev database (drop all tables + migrate)...$(RESET)"
+	@if [ ! -f apps/api/.env.development ]; then \
+		echo "$(RED)Error: apps/api/.env.development not found$(RESET)"; \
+		echo "$(YELLOW)Run 'make env:setup' first$(RESET)"; \
+		exit 1; \
+	fi
+	@cd packages/db && set -a && . ../../apps/api/.env.development && set +a && bun run db:reset
+	@cd packages/db && set -a && . ../../apps/api/.env.development && set +a && bun run db:migrate
+	@echo "$(GREEN)Database reset and migrations complete!$(RESET)"
+
 db\:push: ## Push schema directly to DB (dev)
 	@echo "$(YELLOW)Pushing schema to database (development)...$(RESET)"
 	@if [ ! -f apps/api/.env.development ]; then \
