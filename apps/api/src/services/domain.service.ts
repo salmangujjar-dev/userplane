@@ -612,11 +612,11 @@ export class DomainService {
    * Fields not in this map are ungated (always allowed)
    */
   private static readonly RECORDING_PREF_GATE_MAP: Record<string, FeatureGate> = {
-    recordingHideSensitive: 'autoBlurSensitiveData',
-    recordingCaptureClientLog: 'requestConsoleLogs',
-    recordingCaptureClientAction: 'requestActionReplay',
-    recordingCaptureServerLog: 'requestServerLogs',
-    recordingCaptureNetworkLog: 'requestNetworkActivity',
+    recordingHideSensitive: 'redactSensitiveData',
+    recordingCaptureClientLog: 'captureConsoleLog',
+    recordingCaptureClientAction: 'captureUserActions',
+    recordingCaptureServerLog: 'captureServerLogs',
+    recordingCaptureNetworkLog: 'captureNetworkActivity',
   };
 
   /**

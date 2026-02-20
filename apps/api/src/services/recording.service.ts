@@ -468,9 +468,9 @@ export class RecordingService {
     if (expiresAt !== null) {
       const featureGates = await this.deps.billingService.getFeatureGates(workspaceId);
 
-      if (!featureGates.customizeDataRetention) {
+      if (!featureGates.customizeRetentionPolicy) {
         throw billingError.PLAN_FEATURE_UNAVAILABLE({
-          feature: 'customizeDataRetention',
+          feature: 'customizeRetentionPolicy',
         });
       }
     }

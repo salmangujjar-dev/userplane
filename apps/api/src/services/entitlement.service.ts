@@ -4,7 +4,7 @@
  * Handles:
  * - Provisioning entitlements for new workspaces (free plan from config, paid plans from metadata)
  * - Updating entitlements on plan changes (from Dodo product metadata)
- * - Checking and enforcing resource limits
+ * - Checking and enforcing resource limits (generic canConsume / consume)
  * - Tracking resource consumption
  * - Providing usage summaries for UI
  * - Caching usage summaries for dashboard performance
@@ -16,26 +16,27 @@ import type {
   AdminUpdateEntitlementItem,
   SubscriptionAccessStatus,
 } from '@workspace/contract';
-import { isSeatsAddonId } from '@workspace/payments';
 import type { DodoFeatureLimits } from '@workspace/payments/types';
-import type { PlanId, PlanName, ResourceType } from '@workspace/pricing';
+import type { BillingCadence, PlanId, PlanName, ResourceType } from '@workspace/pricing';
 import {
+  calculateFairShareLimit,
   FREE_PLAN_ENTITLEMENTS,
-  getCooldownMultiplier,
+  PERIOD_BASED_RESOURCES,
   PLAN_NAMES,
   RESOURCE_TYPE_VALUES,
   UNLIMITED_QUOTED_LIMIT,
 } from '@workspace/pricing';
 
 import type { EntitlementRepository } from '@/api/repositories/entitlements.repository';
-import type { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import type { BillingService } from '@/api/services/billing.service';
 import type { Transaction } from '@/api/types';
+
+import type { AddonMapper } from './addon-mapper';
 
 export interface EntitlementServiceDeps {
   entitlementRepo: EntitlementRepository;
   billingService: BillingService;
-  subscriptionRepo: SubscriptionRepository;
+  addonMapper: AddonMapper;
   cacheService: CacheService;
 }
 
@@ -77,13 +78,12 @@ export interface UsageSummary {
 export class EntitlementService {
   constructor(private deps: EntitlementServiceDeps) {}
 
-  private getAdditionalSeatsFromAddons(addons: AddonItem[] = []): number {
-    const seatsAddon = addons.find((addon) => isSeatsAddonId(addon.addonId));
-    return (seatsAddon?.quantity ?? 0) * 5;
-  }
-
-  private buildEntitlementData(featureLimits: DodoFeatureLimits, addons: AddonItem[] = []) {
-    const additionalSeats = this.getAdditionalSeatsFromAddons(addons);
+  private buildEntitlementData(
+    featureLimits: DodoFeatureLimits,
+    addons: AddonItem[] = [],
+    billingCadence?: BillingCadence | null
+  ) {
+    const additionalSeats = this.deps.addonMapper.getAdditionalSeats(addons);
 
     return RESOURCE_TYPE_VALUES.map((resourceType) => {
       const base = featureLimits[resourceType];
@@ -91,35 +91,32 @@ export class EntitlementService {
         return {
           resourceType,
           quotedLimit: base.quotedLimit,
-          softLimit: base.softLimit,
-          hardLimit: base.hardLimit,
+          actualLimit: base.actualLimit,
+          ...(billingCadence !== undefined && { billingCadence }),
         };
       }
 
       return {
         resourceType,
         quotedLimit: base.quotedLimit + additionalSeats,
-        softLimit: base.softLimit + additionalSeats,
-        hardLimit: base.hardLimit + additionalSeats,
+        actualLimit: base.actualLimit + additionalSeats,
+        ...(billingCadence !== undefined && { billingCadence }),
       };
     });
   }
 
   /**
    * Reusable function for entitlement threshold math
-   * Computes whether consumption is allowed and which thresholds are exceeded
+   * Computes whether consumption is allowed based on the actual limit
    */
   private checkLimitThresholds(
     consumed: number,
-    softLimit: number,
-    hardLimit: number,
+    actualLimit: number,
     amount: number
-  ): { canConsume: boolean; exceedsSoftLimit: boolean; exceedsHardLimit: boolean } {
+  ): { canConsume: boolean } {
     const newTotal = consumed + amount;
     return {
-      canConsume: newTotal <= hardLimit,
-      exceedsSoftLimit: newTotal > softLimit,
-      exceedsHardLimit: newTotal > hardLimit,
+      canConsume: newTotal <= actualLimit,
     };
   }
 
@@ -132,8 +129,8 @@ export class EntitlementService {
     const entitlementData = RESOURCE_TYPE_VALUES.map((resourceType) => ({
       resourceType,
       quotedLimit: FREE_PLAN_ENTITLEMENTS[resourceType].quotedLimit,
-      softLimit: FREE_PLAN_ENTITLEMENTS[resourceType].softLimit,
-      hardLimit: FREE_PLAN_ENTITLEMENTS[resourceType].hardLimit,
+      actualLimit: FREE_PLAN_ENTITLEMENTS[resourceType].actualLimit,
+      billingCadence: null as BillingCadence | null,
     }));
 
     await this.deps.entitlementRepo.upsertMany(workspaceId, entitlementData, {
@@ -152,9 +149,13 @@ export class EntitlementService {
   async provisionFromMetadata(
     workspaceId: string,
     featureLimits: DodoFeatureLimits,
-    options?: { tx?: Transaction; addons?: AddonItem[] }
+    options?: { tx?: Transaction; addons?: AddonItem[]; billingCadence?: BillingCadence | null }
   ): Promise<void> {
-    const entitlementData = this.buildEntitlementData(featureLimits, options?.addons);
+    const entitlementData = this.buildEntitlementData(
+      featureLimits,
+      options?.addons,
+      options?.billingCadence
+    );
 
     await this.deps.entitlementRepo.upsertMany(workspaceId, entitlementData, {
       tx: options?.tx,
@@ -171,9 +172,13 @@ export class EntitlementService {
   async updateFromMetadata(
     workspaceId: string,
     featureLimits: DodoFeatureLimits,
-    options?: { tx?: Transaction; addons?: AddonItem[] }
+    options?: { tx?: Transaction; addons?: AddonItem[]; billingCadence?: BillingCadence | null }
   ): Promise<void> {
-    const entitlementData = this.buildEntitlementData(featureLimits, options?.addons);
+    const entitlementData = this.buildEntitlementData(
+      featureLimits,
+      options?.addons,
+      options?.billingCadence
+    );
 
     await this.deps.entitlementRepo.upsertMany(workspaceId, entitlementData, {
       tx: options?.tx,
@@ -183,24 +188,22 @@ export class EntitlementService {
     await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
+  // --- Generic resource consumption methods ---
+
   /**
-   * Internal method to check if workspace can consume a resource (enforcement)
+   * Check if workspace can consume a resource (enforcement)
    *
    * Enforcement logic:
    * - Checks subscription access status (cancellation, on_hold grace period)
-   * - Enforces: current usage + amount <= hardLimit (absolute ceiling)
+   * - Enforces: current usage + amount <= actualLimit (absolute ceiling)
    *
-   * Soft limit warnings:
-   * - TODO: Trigger warning email when current usage >= softLimit
-   *
-   * Returns -1 hardLimit as unlimited
+   * Returns -1 actualLimit as unlimited
    */
-  private async checkCanConsume(
+  async canConsume(
     workspaceId: string,
     resourceType: ResourceType,
     amount: number = 1
   ): Promise<CanConsumeResult> {
-    // Check subscription access status first
     const accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
 
     const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
@@ -218,89 +221,53 @@ export class EntitlementService {
     }
 
     const current = entitlement.resourceConsumed;
-    let effectiveHardLimit = entitlement.hardLimit;
-    let effectiveSoftLimit = entitlement.softLimit;
+    let effectiveActualLimit = entitlement.actualLimit;
 
-    // Apply cooldown if subscription is active (progressive unlock for new subscriptions)
-    let cooldownMultiplier = 1.0;
-    if (accessStatus.accessStatus === 'active') {
-      const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
-      if (subscription?.createdAt && subscription?.planId) {
-        cooldownMultiplier = getCooldownMultiplier(
-          subscription.createdAt,
-          subscription.planId as PlanId
-        );
-        if (cooldownMultiplier < 1.0) {
-          effectiveHardLimit = Math.floor(effectiveHardLimit * cooldownMultiplier);
-          effectiveSoftLimit = Math.floor(effectiveSoftLimit * cooldownMultiplier);
-        }
-      }
+    // Apply fair-share for annual cadence on period-based resources
+    const billingCadence = entitlement.billingCadence as BillingCadence | null;
+    if (
+      billingCadence === 'annual' &&
+      (PERIOD_BASED_RESOURCES as readonly string[]).includes(resourceType)
+    ) {
+      const subscriptionStatus = await this.deps.billingService.getSubscriptionStatus(workspaceId);
+      const currentPeriodStart = subscriptionStatus.contractDetail.currentPeriodStart;
+      effectiveActualLimit = calculateFairShareLimit(
+        entitlement.actualLimit,
+        billingCadence,
+        currentPeriodStart
+      );
     }
 
-    // Use reusable threshold function for consistent math
-    const thresholds = this.checkLimitThresholds(
-      current,
-      effectiveSoftLimit,
-      effectiveHardLimit,
-      amount
-    );
+    const thresholds = this.checkLimitThresholds(current, effectiveActualLimit, amount);
 
     if (!thresholds.canConsume) {
       const reason = this.getSubscriptionAccessDeniedReason(
         accessStatus.accessStatus,
-        cooldownMultiplier,
         current,
-        effectiveHardLimit
+        effectiveActualLimit
       );
 
       return {
         allowed: false,
         reason,
         current,
-        limit: effectiveHardLimit,
+        limit: effectiveActualLimit,
       };
     }
 
     return {
       allowed: true,
       current,
-      limit: effectiveHardLimit,
+      limit: effectiveActualLimit,
     };
   }
 
   /**
-   * Get user-friendly reason for access denial based on subscription status
-   */
-  private getSubscriptionAccessDeniedReason(
-    accessStatus: SubscriptionAccessStatus['accessStatus'],
-    cooldownMultiplier: number,
-    currentUsage: number,
-    effectiveHardLimit: number
-  ): string {
-    switch (accessStatus) {
-      case 'active':
-        return cooldownMultiplier < 1.0
-          ? `Subscription in ramp-up period (${Math.floor(cooldownMultiplier * 100)}% capacity). Limit: ${effectiveHardLimit}`
-          : `Resource limit reached (${currentUsage}/${effectiveHardLimit})`;
-      case 'inactive':
-        return 'No active subscription. Upgrade to access more resources.';
-      case 'grace':
-        return 'Subscription in grace period. Update payment or reactivate to continue.';
-      case 'disputed':
-        return 'Your subscription is under review due to a payment dispute. Please contact support.';
-      case 'refunded':
-        return 'Your subscription payment was refunded. Please contact support to reactivate.';
-      default:
-        return 'Subscription access denied.';
-    }
-  }
-
-  /**
-   * Internal method to record resource consumption
+   * Record resource consumption
    * Called after successful resource creation
    * Invalidates usage summary cache after consumption
    */
-  private async recordConsumption(
+  async consume(
     workspaceId: string,
     resourceType: ResourceType,
     amount: number = 1,
@@ -310,10 +277,10 @@ export class EntitlementService {
     await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
-  // Explicit consumption methods for each resource type
+  // --- Resource-specific aliases (retained for existing callers) ---
 
   async canConsumeSeats(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
-    return this.checkCanConsume(workspaceId, 'seats', amount);
+    return this.canConsume(workspaceId, 'seats', amount);
   }
 
   async consumeSeats(
@@ -321,11 +288,11 @@ export class EntitlementService {
     amount: number = 1,
     options?: { tx?: Transaction }
   ): Promise<void> {
-    await this.recordConsumption(workspaceId, 'seats', amount, options);
+    await this.consume(workspaceId, 'seats', amount, options);
   }
 
   async canConsumeRecordings(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
-    return this.checkCanConsume(workspaceId, 'recordings', amount);
+    return this.canConsume(workspaceId, 'recordings', amount);
   }
 
   async consumeRecordings(
@@ -333,35 +300,11 @@ export class EntitlementService {
     amount: number = 1,
     options?: { tx?: Transaction }
   ): Promise<void> {
-    await this.recordConsumption(workspaceId, 'recordings', amount, options);
-  }
-
-  async canConsumeScreenshots(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
-    return this.checkCanConsume(workspaceId, 'screenshots', amount);
-  }
-
-  async consumeScreenshots(
-    workspaceId: string,
-    amount: number = 1,
-    options?: { tx?: Transaction }
-  ): Promise<void> {
-    await this.recordConsumption(workspaceId, 'screenshots', amount, options);
-  }
-
-  async canConsumeFiles(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
-    return this.checkCanConsume(workspaceId, 'files', amount);
-  }
-
-  async consumeFiles(
-    workspaceId: string,
-    amount: number = 1,
-    options?: { tx?: Transaction }
-  ): Promise<void> {
-    await this.recordConsumption(workspaceId, 'files', amount, options);
+    await this.consume(workspaceId, 'recordings', amount, options);
   }
 
   async canConsumeLinks(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
-    return this.checkCanConsume(workspaceId, 'links', amount);
+    return this.canConsume(workspaceId, 'links', amount);
   }
 
   async consumeLinks(
@@ -369,7 +312,7 @@ export class EntitlementService {
     amount: number = 1,
     options?: { tx?: Transaction }
   ): Promise<void> {
-    await this.recordConsumption(workspaceId, 'links', amount, options);
+    await this.consume(workspaceId, 'links', amount, options);
   }
 
   /**
@@ -392,18 +335,13 @@ export class EntitlementService {
    * Supports caching for dashboard performance
    */
   async getUsageSummary(workspaceId: string): Promise<UsageSummary> {
-    // Try cache first
     const cached = await this.deps.cacheService.getUsageSummary(workspaceId);
     if (cached) {
       return cached as UsageSummary;
     }
 
-    // Compute usage summary from database
     const result = await this._computeUsageSummary(workspaceId);
-
-    // Cache the result
     await this.deps.cacheService.setUsageSummary(workspaceId, result);
-
     return result;
   }
 
@@ -414,27 +352,33 @@ export class EntitlementService {
   private async _computeUsageSummary(workspaceId: string): Promise<UsageSummary> {
     const entitlementsList = await this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
 
-    // Get effective plan from billing service (handles subscription state logic)
     const accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
     const effectivePlanId = accessStatus.effectivePlanId as PlanId;
     const planName = (PLAN_NAMES[effectivePlanId] || 'Free') as PlanName;
 
-    // Build resource usage map
     const resources = {} as Record<ResourceType, ResourceUsage>;
 
     for (const resourceType of RESOURCE_TYPE_VALUES) {
       const entitlement = entitlementsList.find((e) => e.resourceType === resourceType);
-      // Read quotedLimit from DB column (populated by metadata or free plan config)
-      const quotedLimit = entitlement?.quotedLimit ?? 0;
+      let quotedLimit = entitlement?.quotedLimit ?? 0;
+
+      // For annual plans on period-based resources, show monthly fair share (limit / 12)
+      const billingCadence = entitlement?.billingCadence as BillingCadence | null;
+      if (
+        billingCadence === 'annual' &&
+        quotedLimit > 0 &&
+        quotedLimit !== UNLIMITED_QUOTED_LIMIT &&
+        (PERIOD_BASED_RESOURCES as readonly string[]).includes(resourceType)
+      ) {
+        quotedLimit = Math.floor(quotedLimit / 12);
+      }
 
       if (entitlement) {
         const consumed = entitlement.resourceConsumed;
 
-        // Calculate percent used against quotedLimit for user-facing display
-        // Handle -1 (unlimited) by showing small arbitrary percentage (13%) for clean UI rendering
         let percentUsed = 0;
         if (quotedLimit === UNLIMITED_QUOTED_LIMIT) {
-          percentUsed = 13; // Small arbitrary percentage for "unlimited" plans
+          percentUsed = 13;
         } else if (quotedLimit > 0) {
           percentUsed = Math.round((consumed / quotedLimit) * 100);
         }
@@ -493,8 +437,7 @@ export class EntitlementService {
 
       const newLimits = {
         quotedLimit: update.quotedLimit ?? existing.quotedLimit,
-        softLimit: update.softLimit ?? existing.softLimit,
-        hardLimit: update.hardLimit ?? existing.hardLimit,
+        actualLimit: update.actualLimit ?? existing.actualLimit,
       };
 
       await this.deps.entitlementRepo.updateLimits(
@@ -504,10 +447,33 @@ export class EntitlementService {
       );
     }
 
-    // Invalidate usage cache after update
     await this.deps.cacheService.invalidateUsage(workspaceId);
-
-    // Return fresh state
     return this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
+  }
+
+  /**
+   * Get user-friendly reason for access denial based on subscription status
+   */
+  private getSubscriptionAccessDeniedReason(
+    accessStatus: SubscriptionAccessStatus['accessStatus'],
+    currentUsage: number,
+    effectiveActualLimit: number
+  ): string {
+    switch (accessStatus) {
+      case 'active':
+        return `Resource limit reached (${currentUsage}/${effectiveActualLimit})`;
+      case 'trial':
+        return `Resource limit reached (${currentUsage}/${effectiveActualLimit})`;
+      case 'inactive':
+        return 'No active subscription. Upgrade to access more resources.';
+      case 'grace':
+        return 'Subscription in grace period. Update payment or reactivate to continue.';
+      case 'disputed':
+        return 'Your subscription is under review due to a payment dispute. Please contact support.';
+      case 'refunded':
+        return 'Your subscription payment was refunded. Please contact support to reactivate.';
+      default:
+        return 'Subscription access denied.';
+    }
   }
 }

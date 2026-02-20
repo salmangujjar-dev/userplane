@@ -73,9 +73,9 @@ export class ProjectService {
     ) {
       const featureGates = await this.deps.billingService.getFeatureGates(params.workspaceId);
 
-      if (!featureGates.customizeDataRetention) {
+      if (!featureGates.customizeRetentionPolicy) {
         throw billingError.PLAN_FEATURE_UNAVAILABLE({
-          feature: 'customizeDataRetention',
+          feature: 'customizeRetentionPolicy',
         });
       }
     }
@@ -236,9 +236,9 @@ export class ProjectService {
     ) {
       const featureGates = await this.deps.billingService.getFeatureGates(project.workspaceId);
 
-      if (!featureGates.customizeDataRetention) {
+      if (!featureGates.customizeRetentionPolicy) {
         throw billingError.PLAN_FEATURE_UNAVAILABLE({
-          feature: 'customizeDataRetention',
+          feature: 'customizeRetentionPolicy',
         });
       }
     }
