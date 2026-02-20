@@ -23,6 +23,7 @@
     "dev": "tsc --watch",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun run src/migrate.ts",
+    "db:reset": "bun run src/reset.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint . --max-warnings 0",
@@ -35,7 +36,7 @@
     "@workspace/payments": "workspace:*",
     "@workspace/pricing": "workspace:*",
     "better-auth": "^1.4.17",
-    "drizzle-orm": "^0.36.4",
+    "drizzle-orm": "^0.45.1",
     "pg": "^8.13.1"
   },
   "devDependencies": {
@@ -44,7 +45,7 @@
     "@types/pg": "8.11.10",
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
-    "drizzle-kit": "^0.28.1",
+    "drizzle-kit": "^0.31.9",
     "eslint": "^9.32.0",
     "typescript": "^5.5.4"
   }
