@@ -16,6 +16,7 @@ import {
   AdminGetWorkspaceInputSchema,
   AdminGetWorkspaceMemberRecordingStatsInputSchema,
   AdminGetWorkspaceRecordingStatsInputSchema,
+  AdminGetWorkspaceSubscriptionInputSchema,
   AdminListPlansInputSchema,
   AdminListUserSessionsInputSchema,
   AdminListUserWorkspacesInputSchema,
@@ -47,6 +48,7 @@ import {
   AdminWorkspaceProvisionInputSchema,
   AdminWorkspaceRecordingStatsSchema,
   AdminWorkspacesListDataSchema,
+  AdminWorkspaceSubscriptionDataSchema,
   ApiResponseSchema,
 } from '../schemas';
 
@@ -545,6 +547,31 @@ export const createWorkspaceInvite = oc
   })
   .input(AdminCreateWorkspaceInviteInputSchema)
   .output(ApiResponseSchema(AdminCreateWorkspaceInviteDataSchema));
+
+// ============================================
+// WORKSPACE SUBSCRIPTION
+// ============================================
+
+/**
+ * GET /admin/workspaces/:workspaceId/subscription
+ * Get subscription status and add-ons for a workspace
+ */
+export const getWorkspaceSubscription = oc
+  .route({
+    method: 'GET',
+    path: '/admin/workspaces/{workspaceId}/subscription',
+    inputStructure: 'detailed',
+    summary: 'Get workspace subscription',
+    description: 'Get subscription status, feature gates, and add-ons for a workspace',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    WORKSPACE_NOT_FOUND: AdminErrors.WORKSPACE_NOT_FOUND,
+  })
+  .input(AdminGetWorkspaceSubscriptionInputSchema)
+  .output(ApiResponseSchema(AdminWorkspaceSubscriptionDataSchema));
 
 // ============================================
 // PLAN MANAGEMENT

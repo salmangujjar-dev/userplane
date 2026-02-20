@@ -73,10 +73,8 @@ export const PERIOD_BASED_RESOURCES: readonly ResourceType[] = [
 export interface ResourceLimits {
   // The advertised limit (what customers see, not used for entitlement checks)
   quotedLimit: number;
-  // Used for entitlement checks and customer warnings - when current usage >= softLimit, a warning is triggered
-  softLimit: number;
-  // Used for entitlement checks and customer warnings - when current usage >= hardLimit, consumption is blocked
-  hardLimit: number;
+  // Used for entitlement checks — when current usage >= actualLimit, consumption is blocked
+  actualLimit: number;
 }
 
 /**
@@ -92,7 +90,7 @@ export const UNLIMITED_QUOTED_LIMIT = -1;
 /**
  * Entitlement action values
  */
-export type EntitlementAction = 'allow' | 'warn' | 'block';
+export type EntitlementAction = 'allow' | 'block';
 
 /**
  * Free plan entitlements - hardcoded since free plan has no Dodo product
@@ -101,28 +99,23 @@ export type EntitlementAction = 'allow' | 'warn' | 'block';
 export const FREE_PLAN_ENTITLEMENTS: PlanEntitlements = {
   seats: {
     quotedLimit: 3,
-    softLimit: 3,
-    hardLimit: 3,
+    actualLimit: 3,
   },
   recordings: {
     quotedLimit: 3,
-    softLimit: 3,
-    hardLimit: 3,
+    actualLimit: 3,
   },
   links: {
     quotedLimit: 3,
-    softLimit: 6,
-    hardLimit: 8,
+    actualLimit: 8,
   },
   screenshots: {
     quotedLimit: 0,
-    softLimit: 0,
-    hardLimit: 0,
+    actualLimit: 0,
   },
   files: {
     quotedLimit: 0,
-    softLimit: 0,
-    hardLimit: 0,
+    actualLimit: 0,
   },
 };
 
@@ -131,27 +124,17 @@ export const FREE_PLAN_ENTITLEMENTS: PlanEntitlements = {
  *
  * @param currentUsage - The current usage of the resource
  * @param requestedConsumptionUnits - The number of units to consume
- * @param hardLimit - The hard limit for the resource
- * @param softLimit - The soft limit for the resource
+ * @param actualLimit - The actual limit for the resource
  * @returns The entitlement action
  */
 export function getEntitlementAction(
   currentUsage: number,
   requestedConsumptionUnits: number,
-  hardLimit: number,
-  softLimit: number
+  actualLimit: number
 ): { entitlementAction: EntitlementAction; resourceConsumed: number } {
-  // If the current usage + consumption units exceeds the hard limit, block the request
-  if (currentUsage + requestedConsumptionUnits > hardLimit) {
+  // If the current usage + consumption units exceeds the actual limit, block the request
+  if (currentUsage + requestedConsumptionUnits > actualLimit) {
     return { entitlementAction: 'block', resourceConsumed: currentUsage };
-  }
-
-  // If the current usage + consumption units exceeds the soft limit, warn the user
-  if (currentUsage + requestedConsumptionUnits > softLimit) {
-    return {
-      entitlementAction: 'warn',
-      resourceConsumed: currentUsage + requestedConsumptionUnits,
-    };
   }
 
   // Within limits, allow the request
@@ -1050,38 +1033,18 @@ export function getPlanName(planId: PlanId): PlanName {
  * Billing cycle (monthly/annual) does not affect feature access.
  */
 export const FEATURE_GATE_KEYS = [
-  // Screen recordings
-  'replayRecordings',
-  'autoBlurSensitiveData',
+  'requestRecordings',
   'requestSessions',
-  // Screenshots
   'requestScreenshots',
-  'annotateScreenshots',
-  // Files
-  'requestFileUploads',
-  // Logs and debugging
-  'requestConsoleLogs',
-  'requestNetworkActivity',
-  'requestServerLogs',
-  'requestActionReplay',
-  // Customization
-  'customizeWorkspace',
-  // Workspace
-  'requestAdditionalSeats',
-  // Bring your own storage
-  'bringYourOwnStorageRecordings',
-  'bringYourOwnStorageScreenshots',
-  'bringYourOwnStorageFiles',
-  // Privacy and compliance
-  'customizeDataRetention',
-  'enableEnterpriseCompliance',
-  'customizeDataResidency',
-  // Integrations
-  'integrateHelpDesks',
-  'integrateCRMs',
-  'integrateIssueTrackers',
-  'integrateAutomation',
-  'accessUserplaneAPI',
+  'requestFiles',
+  'redactSensitiveData',
+  'captureConsoleLog',
+  'captureNetworkActivity',
+  'captureUserActions',
+  'captureServerLogs',
+  'customizeRecordingLink',
+  'customizeRetentionPolicy',
+  'sendOutboundEmails',
 ] as const;
 
 export type FeatureGate = (typeof FEATURE_GATE_KEYS)[number];
@@ -1090,29 +1053,18 @@ export type FeatureGate = (typeof FEATURE_GATE_KEYS)[number];
  * Human-readable labels for feature gates
  */
 export const FEATURE_GATE_LABELS: Record<FeatureGate, string> = {
-  replayRecordings: 'Replay Recordings',
-  autoBlurSensitiveData: 'Auto-blur Sensitive Data',
+  requestRecordings: 'Request Recordings',
   requestSessions: 'Request Sessions',
   requestScreenshots: 'Request Screenshots',
-  annotateScreenshots: 'Annotate Screenshots',
-  requestFileUploads: 'Request File Uploads',
-  requestConsoleLogs: 'Request Console Logs',
-  requestNetworkActivity: 'Request Network Activity',
-  requestServerLogs: 'Request Server Logs',
-  requestActionReplay: 'Request Action Replay',
-  customizeWorkspace: 'Customize Workspace',
-  requestAdditionalSeats: 'Request Additional Seats',
-  bringYourOwnStorageRecordings: 'BYOS Recordings',
-  bringYourOwnStorageScreenshots: 'BYOS Screenshots',
-  bringYourOwnStorageFiles: 'BYOS Files',
-  customizeDataRetention: 'Custom Data Retention',
-  enableEnterpriseCompliance: 'Enterprise Compliance',
-  customizeDataResidency: 'Custom Data Residency',
-  integrateHelpDesks: 'Helpdesk Integrations',
-  integrateCRMs: 'CRM Integrations',
-  integrateIssueTrackers: 'Issue Tracker Integrations',
-  integrateAutomation: 'Automation Integrations',
-  accessUserplaneAPI: 'API Access',
+  requestFiles: 'Request Files',
+  redactSensitiveData: 'Redact Sensitive Data',
+  captureConsoleLog: 'Capture Console Logs',
+  captureNetworkActivity: 'Capture Network Activity',
+  captureUserActions: 'Capture User Actions',
+  captureServerLogs: 'Capture Server Logs',
+  customizeRecordingLink: 'Customize Recording Link',
+  customizeRetentionPolicy: 'Custom Retention Policy',
+  sendOutboundEmails: 'Send Outbound Emails',
 };
 
 /**
@@ -1125,29 +1077,18 @@ export type PlanFeatureGates = Record<FeatureGate, boolean>;
  * All paid plan feature gates come from Dodo product metadata (stored on subscription record)
  */
 export const FREE_PLAN_FEATURE_GATES: PlanFeatureGates = {
-  replayRecordings: true,
-  autoBlurSensitiveData: true,
+  requestRecordings: true,
   requestSessions: false,
   requestScreenshots: false,
-  annotateScreenshots: false,
-  requestFileUploads: false,
-  requestConsoleLogs: false,
-  requestNetworkActivity: false,
-  requestServerLogs: false,
-  requestActionReplay: false,
-  customizeWorkspace: false,
-  requestAdditionalSeats: false,
-  bringYourOwnStorageRecordings: false,
-  bringYourOwnStorageScreenshots: false,
-  bringYourOwnStorageFiles: false,
-  customizeDataRetention: false,
-  enableEnterpriseCompliance: false,
-  customizeDataResidency: false,
-  integrateHelpDesks: false,
-  integrateCRMs: false,
-  integrateIssueTrackers: false,
-  integrateAutomation: false,
-  accessUserplaneAPI: false,
+  requestFiles: false,
+  redactSensitiveData: true,
+  captureConsoleLog: false,
+  captureNetworkActivity: false,
+  captureUserActions: false,
+  captureServerLogs: false,
+  customizeRecordingLink: false,
+  customizeRetentionPolicy: false,
+  sendOutboundEmails: false,
 };
 
 // ============================================================================
@@ -1166,149 +1107,65 @@ export const ABUSE_PREVENTION = {
 } as const;
 
 /**
- * Cooldown schedule step
- */
-export interface CooldownStep {
-  days: number;
-  multiplier: number;
-}
-
-/**
- * Cooldown configuration structure
- */
-export interface CooldownConfig {
-  durationDays: number;
-  schedule: CooldownStep[];
-}
-
-/**
- * Cooldown configuration by plan ID
- * Controls progressive entitlement unlock for new subscriptions
- * Falls back to 'default' config if plan ID is not found
- */
-export const COOLDOWN_CONFIG: Record<PlanId | 'default', CooldownConfig> = {
-  // Essential plans - 30 day ramp
-  essential_monthly: {
-    durationDays: 30,
-    schedule: [
-      { days: 0, multiplier: 0.25 }, // Week 1: 25%
-      { days: 7, multiplier: 0.5 }, // Week 2: 50%
-      { days: 14, multiplier: 0.75 }, // Week 3: 75%
-      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
-    ],
-  },
-  essential_annual: {
-    durationDays: 30,
-    schedule: [
-      { days: 0, multiplier: 0.25 }, // Week 1: 25%
-      { days: 7, multiplier: 0.5 }, // Week 2: 50%
-      { days: 14, multiplier: 0.75 }, // Week 3: 75%
-      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
-    ],
-  },
-
-  // Starter plans - 30 day ramp
-  starter_monthly: {
-    durationDays: 30,
-    schedule: [
-      { days: 0, multiplier: 0.25 }, // Week 1: 25%
-      { days: 7, multiplier: 0.5 }, // Week 2: 50%
-      { days: 14, multiplier: 0.75 }, // Week 3: 75%
-      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
-    ],
-  },
-  starter_annual: {
-    durationDays: 30,
-    schedule: [
-      { days: 0, multiplier: 0.25 }, // Week 1: 25%
-      { days: 7, multiplier: 0.5 }, // Week 2: 50%
-      { days: 14, multiplier: 0.75 }, // Week 3: 75%
-      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
-    ],
-  },
-
-  // Scale Up plans - 14 day faster ramp
-  scale_up_monthly: {
-    durationDays: 14,
-    schedule: [
-      { days: 0, multiplier: 0.5 }, // Week 1: 50%
-      { days: 7, multiplier: 1.0 }, // Week 2+: 100%
-    ],
-  },
-  scale_up_annual: {
-    durationDays: 14,
-    schedule: [
-      { days: 0, multiplier: 0.5 }, // Week 1: 50%
-      { days: 7, multiplier: 1.0 }, // Week 2+: 100%
-    ],
-  },
-
-  // Enterprise plans - 14 day faster ramp
-  enterprise_monthly: {
-    durationDays: 14,
-    schedule: [
-      { days: 0, multiplier: 0.5 }, // Week 1: 50%
-      { days: 7, multiplier: 1.0 }, // Week 2+: 100%
-    ],
-  },
-  enterprise_annual: {
-    durationDays: 14,
-    schedule: [
-      { days: 0, multiplier: 0.5 }, // Week 1: 50%
-      { days: 7, multiplier: 1.0 }, // Week 2+: 100%
-    ],
-  },
-
-  // Free plan - no cooldown
-  free: {
-    durationDays: 0,
-    schedule: [{ days: 0, multiplier: 1.0 }],
-  },
-
-  // Custom plan - no cooldown (sales-led, pre-negotiated)
-  custom: {
-    durationDays: 0,
-    schedule: [{ days: 0, multiplier: 1.0 }],
-  },
-
-  // Default fallback - conservative 30 day ramp
-  default: {
-    durationDays: 30,
-    schedule: [
-      { days: 0, multiplier: 0.25 }, // Week 1: 25%
-      { days: 7, multiplier: 0.5 }, // Week 2: 50%
-      { days: 14, multiplier: 0.75 }, // Week 3: 75%
-      { days: 21, multiplier: 1.0 }, // Week 4+: 100%
-    ],
-  },
-} as const;
-
-/**
  * Check if a value is a DodoPayments product ID (starts with 'pdt_')
  */
 export function isProductId(value: string): boolean {
   return value.startsWith('pdt_');
 }
 
+// ============================================================================
+// Fair-Share Quota Enforcement (Annual Subscriptions)
+// ============================================================================
+
 /**
- * Calculate cooldown multiplier based on subscription age and plan ID
- * Returns a value between 0 and 1 representing the percentage of entitlements available
- * Falls back to default config if plan ID is not found
+ * Billing cadence stored in product metadata and entitlement records
  */
-export function getCooldownMultiplier(subscriptionCreatedAt: Date, planId: PlanId): number {
-  const config = (COOLDOWN_CONFIG[planId] ?? COOLDOWN_CONFIG.default) as CooldownConfig;
+export type BillingCadence = 'monthly' | 'annual';
 
-  const daysSinceStart = Math.floor(
-    (Date.now() - subscriptionCreatedAt.getTime()) / (1000 * 60 * 60 * 24)
-  );
+/**
+ * Get how many months have elapsed in the current billing period.
+ * Uses "by end of this month" semantics — being anywhere in month N means
+ * N months of quota should be available.
+ *
+ * @param periodStart - Start of the current billing period
+ * @param now - Current date (defaults to new Date())
+ * @returns Number of elapsed months, clamped to [1, 12]
+ */
+export function getElapsedMonthsInPeriod(periodStart: Date, now: Date): number {
+  const startYear = periodStart.getFullYear();
+  const startMonth = periodStart.getMonth();
+  const nowYear = now.getFullYear();
+  const nowMonth = now.getMonth();
 
-  // Find the applicable multiplier (last one where days <= daysSinceStart)
-  let multiplier: number = config.schedule[0]?.multiplier ?? 1.0;
-  for (const step of config.schedule) {
-    if (daysSinceStart >= step.days) {
-      multiplier = step.multiplier;
-    }
+  const monthsDiff = (nowYear - startYear) * 12 + (nowMonth - startMonth) + 1;
+  return Math.max(1, Math.min(monthsDiff, 12));
+}
+
+/**
+ * Calculate the fair-share effective limit for annual subscriptions.
+ *
+ * For annual plans, gradually unlocks quota as months pass:
+ *   effectiveLimit = floor(actualLimit * elapsedMonths / 12)
+ *
+ * Returns actualLimit unchanged for monthly/null cadence or null period start.
+ *
+ * @param actualLimit - The full annual limit
+ * @param billingCadence - 'monthly', 'annual', or null (free plan)
+ * @param currentPeriodStart - Start of the current billing period
+ * @param now - Current date (defaults to new Date())
+ * @returns The effective limit to enforce
+ */
+export function calculateFairShareLimit(
+  actualLimit: number,
+  billingCadence: BillingCadence | null,
+  currentPeriodStart: Date | null,
+  now?: Date
+): number {
+  if (billingCadence !== 'annual' || !currentPeriodStart) {
+    return actualLimit;
   }
 
-  return multiplier;
+  const effectiveNow = now ?? new Date();
+  const elapsedMonths = getElapsedMonthsInPeriod(currentPeriodStart, effectiveNow);
+  return Math.floor((actualLimit * elapsedMonths) / 12);
 }
