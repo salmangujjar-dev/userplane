@@ -28,11 +28,9 @@ export const entitlements = pgTable(
 
     // Plan-specific limits
     // quotedLimit: Advertised limit (what customers see in UI)
-    // softLimit: Warning threshold - usage alerts triggered here
-    // hardLimit: Absolute maximum - requests blocked beyond this
+    // actualLimit: Absolute maximum - requests blocked beyond this
     quotedLimit: integer('quoted_limit').notNull().default(0),
-    softLimit: integer('soft_limit').notNull(),
-    hardLimit: integer('hard_limit').notNull(),
+    actualLimit: integer('actual_limit').notNull(),
 
     // Resource tracking (use atomic increment for consumption)
     resourceConsumed: integer('resource_consumed').notNull().default(0),
@@ -43,6 +41,9 @@ export const entitlements = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
+
+    // Billing cadence: 'monthly' | 'annual' | null (null = free plan)
+    billingCadence: text('billing_cadence'),
 
     // Soft delete
     isDeleted: boolean('is_deleted').default(false).notNull(),

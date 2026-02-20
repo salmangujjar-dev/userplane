@@ -58,6 +58,9 @@ export const subscriptions = pgTable(
     // Subscription add-ons (from Dodo subscription payload)
     addons: jsonb('addons').$type<AddonItems>(),
 
+    // Trial period
+    trialEnd: timestamp('trial_end'),
+
     // Webhook tracking for out-of-order detection
     lastWebhookId: text('last_webhook_id'),
     lastWebhookTimestamp: timestamp('last_webhook_timestamp'),
