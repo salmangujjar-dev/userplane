@@ -24,6 +24,7 @@ export interface CreateSubscriptionData {
   currentPeriodEnd: Date;
   featureGates: PlanFeatureGates;
   addons?: AddonItems;
+  trialEnd?: Date | null;
 }
 
 export interface UpdateSubscriptionData {
@@ -38,6 +39,7 @@ export interface UpdateSubscriptionData {
   lastWebhookTimestamp?: Date;
   featureGates?: PlanFeatureGates;
   addons?: AddonItems;
+  trialEnd?: Date | null;
 }
 
 export class SubscriptionRepository {
@@ -92,6 +94,7 @@ export class SubscriptionRepository {
         currentPeriodEnd: data.currentPeriodEnd,
         featureGates: data.featureGates,
         addons: data.addons,
+        trialEnd: data.trialEnd,
       })
       .returning();
 

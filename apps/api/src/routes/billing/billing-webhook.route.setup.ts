@@ -14,8 +14,10 @@ import { RefundRepository } from '@/api/repositories/refunds.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { WebhookEventsRepository } from '@/api/repositories/webhook-events.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import { AddonMapper } from '@/api/services/addon-mapper';
 import { DisputeProcessorService } from '@/api/services/dispute-processor.service';
 import { entitlementService } from '@/api/services/index';
+import { PlanMetadataResolver } from '@/api/services/plan-metadata-resolver';
 import { RefundProcessorService } from '@/api/services/refund-processor.service';
 import { WebhookProcessorService } from '@/api/services/webhook-processor.service';
 
@@ -29,6 +31,8 @@ const refundRepo = new RefundRepository(db);
 const workspaceRepo = new WorkspaceRepository(db);
 
 const dodoClient = getDodoClient();
+const addonMapper = new AddonMapper();
+const metadataResolver = new PlanMetadataResolver({ dodoClient });
 
 // Processor services
 const webhookProcessor = new WebhookProcessorService({
@@ -39,6 +43,8 @@ const webhookProcessor = new WebhookProcessorService({
   db,
   dodoClient,
   cacheService,
+  addonMapper,
+  metadataResolver,
 });
 
 const disputeProcessor = new DisputeProcessorService({

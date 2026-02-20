@@ -13,8 +13,9 @@
  * See: https://docs.dodopayments.com/features/customer-portal
  */
 
-import { billingError } from '@workspace/contract';
+import { billingError, DEFAULT_TRIAL_PERIOD_DAYS } from '@workspace/contract';
 import type { DodoPayments } from '@workspace/payments/client';
+import { buildFlatMetadata, parseFlatMetadata } from '@workspace/payments/metadata';
 import { getProductByPlanId, getProductByProductId } from '@workspace/payments/products';
 import type { PlanId } from '@workspace/pricing';
 
@@ -245,9 +246,38 @@ export const managePlanImpl = (
 
       // Route 1: No active subscription -> Checkout
       if (!hasActiveSubscription) {
+        // Snapshot plan metadata at checkout time so the subscription object (and all
+        // subsequent webhooks) carry an immutable copy of the agreed entitlements.
+        // Non-fatal: webhook processor falls back to a live product fetch if absent.
+        let planMetadataSnapshot: Record<string, string> = {};
+        try {
+          const product = await dodoClient.products.retrieve(resolvedProductId);
+          const raw = (product.metadata ?? {}) as Record<string, unknown>;
+          const parsed = parseFlatMetadata(raw);
+          if (parsed.featureLimits && parsed.featureGates) {
+            planMetadataSnapshot = buildFlatMetadata(
+              parsed.featureLimits,
+              parsed.featureGates,
+              parsed.billingCadence
+            );
+          }
+        } catch {
+          // Swallow — webhook will fall back to live fetch
+        }
+
         const session = await dodoClient.checkoutSessions.create({
           product_cart: [{ product_id: resolvedProductId, quantity: 1 }],
-          metadata: { workspace_id: workspaceId },
+          subscription_data: {
+            trial_period_days: DEFAULT_TRIAL_PERIOD_DAYS,
+          },
+          metadata: {
+            workspace_id: workspaceId,
+            // snapshot_product_id lets the webhook verify this snapshot belongs to the
+            // subscription's current product. Without it a plan-change subscription would
+            // inherit the old checkout's Plan A snapshot and be misread as Plan B.
+            snapshot_product_id: resolvedProductId,
+            ...planMetadataSnapshot,
+          },
           return_url: `${dashboardBaseUrl}/workspace/${workspaceId}/settings?tab=plan-usage`,
           customization: { theme: 'light', show_order_details: true, show_on_demand_tag: false },
           customer: { email: context.user.email, name: context.user.name },

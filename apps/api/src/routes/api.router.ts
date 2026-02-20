@@ -118,7 +118,8 @@ const adminProcedures = createAdminProcedures(
   tokenService,
   emailService,
   entitlementService,
-  adminPlanService
+  adminPlanService,
+  billingService
 );
 const projectProcedures = createProjectProcedures(
   projectService,
