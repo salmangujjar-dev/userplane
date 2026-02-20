@@ -29,6 +29,7 @@ import type {
   AdminUserDetail,
   AdminUserSession,
   AdminUserSessionsData,
+  AdminUsersListData,
   AdminWorkspaceCreateInviteInput,
   AdminWorkspaceDetail,
   BanUserInput,
@@ -155,24 +156,6 @@ export function useAdminUserWorkspaces({
   });
 }
 
-// Better Auth admin users list (simple version)
-interface AdminUser {
-  id: string;
-  email: string;
-  name: string;
-  image?: string | null;
-  role?: string | null;
-  createdAt?: Date;
-  banned?: boolean | null;
-}
-
-interface AdminUsersResponse {
-  users: AdminUser[];
-  total: number;
-  limit?: number;
-  offset?: number;
-}
-
 export function useAdminUsers({
   search = '',
   limit = 20,
@@ -204,7 +187,7 @@ export function useAdminUsers({
       });
       return handleSafeResult(
         result.error,
-        result.data != null ? (result.data as AdminUsersResponse) : null
+        result.data != null ? (result.data as unknown as AdminUsersListData) : null
       );
     },
     enabled,
@@ -406,6 +389,26 @@ export function useAdminWorkspaceMemberRecordingStats(
     },
     enabled: !!workspaceId,
     staleTime: 30 * 1000,
+  });
+}
+
+// ============================================
+// SUBSCRIPTION QUERIES
+// ============================================
+
+export function useAdminWorkspaceSubscription(workspaceId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: adminKeys.workspaceSubscription(workspaceId ?? ''),
+    queryFn: async () => {
+      if (!workspaceId) return null;
+      const [error, response] = await apiClient.admin.workspaces.subscription.get({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: enabled && !!workspaceId,
+    staleTime: 30 * 1000,
+    retry: 1,
   });
 }
 
@@ -1033,8 +1036,7 @@ export function useAdminCreatePlan() {
       featureLimits: Array<{
         resourceType: ResourceType;
         quotedLimit: number;
-        softLimit: number;
-        hardLimit: number;
+        actualLimit: number;
       }>;
       featureGates: Array<{ gate: FeatureGate; enabled: boolean }>;
     }) => {
@@ -1076,8 +1078,7 @@ export function useAdminUpdatePlan() {
       featureLimits?: Array<{
         resourceType: ResourceType;
         quotedLimit: number;
-        softLimit: number;
-        hardLimit: number;
+        actualLimit: number;
       }>;
       featureGates?: Array<{ gate: FeatureGate; enabled: boolean }>;
     }) => {
@@ -1117,7 +1118,7 @@ export type AdminWorkspaceProvisionMutationInput = {
   workspaceName?: string;
 } & (
   | { planMode: 'free' }
-  | { planMode: 'existing'; productId: string }
+  | { planMode: 'existing'; productId: string; trialPeriodDays?: '0' | '7' | '14' | '28' }
   | {
       planMode: 'custom';
       customPlan: {
@@ -1129,11 +1130,11 @@ export type AdminWorkspaceProvisionMutationInput = {
         featureLimits: Array<{
           resourceType: ResourceType;
           quotedLimit: number;
-          softLimit: number;
-          hardLimit: number;
+          actualLimit: number;
         }>;
         featureGates: Array<{ gate: FeatureGate; enabled: boolean }>;
       };
+      trialPeriodDays?: '0' | '7' | '14' | '28';
     }
 );
 

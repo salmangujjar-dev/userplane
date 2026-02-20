@@ -6,12 +6,12 @@ import { useQueryState } from 'nuqs';
 import { useAdminWorkspaceDetail } from '@/features/admin';
 import { tabParser } from '@/lib/parsers';
 
-import { EntitlementsTab } from './entitlements-tab';
 import { MembersTab } from './members-tab';
 import { OverviewTab } from './overview-tab';
 import { ProjectsTab } from './projects-tab';
 import { RecordingsTab } from './recordings-tab';
 import { StatsTab } from './stats-tab';
+import { SubscriptionTab } from './subscription-tab';
 import type { WorkspaceDetail } from './types';
 
 interface AdminWorkspaceTabsProps {
@@ -37,7 +37,7 @@ export function AdminWorkspaceTabs({ workspaceId, isAdmin }: AdminWorkspaceTabsP
         <TabsTrigger value="members">Members</TabsTrigger>
         <TabsTrigger value="projects">Projects</TabsTrigger>
         <TabsTrigger value="recordings">Recordings</TabsTrigger>
-        <TabsTrigger value="entitlements">Entitlements</TabsTrigger>
+        <TabsTrigger value="subscription">Subscription</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="space-y-8">
@@ -64,8 +64,8 @@ export function AdminWorkspaceTabs({ workspaceId, isAdmin }: AdminWorkspaceTabsP
         <RecordingsTab workspaceId={workspaceId} />
       </TabsContent>
 
-      <TabsContent value="entitlements" className="space-y-8">
-        <EntitlementsTab workspaceId={workspaceId} />
+      <TabsContent value="subscription" className="space-y-8">
+        <SubscriptionTab workspaceId={workspaceId} />
       </TabsContent>
     </Tabs>
   );
