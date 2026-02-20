@@ -257,7 +257,7 @@ export function DomainConfigureModal({
                   localSettings.recordingCaptureClientLog,
                   (checked) =>
                     setLocalSettings((prev) => ({ ...prev, recordingCaptureClientLog: checked })),
-                  'requestConsoleLogs'
+                  'captureConsoleLog'
                 )}
 
                 {renderGatedToggle(
@@ -269,7 +269,7 @@ export function DomainConfigureModal({
                       ...prev,
                       recordingCaptureClientAction: checked,
                     })),
-                  'requestActionReplay'
+                  'captureUserActions'
                 )}
 
                 {renderGatedToggle(
@@ -278,7 +278,7 @@ export function DomainConfigureModal({
                   localSettings.recordingCaptureNetworkLog,
                   (checked) =>
                     setLocalSettings((prev) => ({ ...prev, recordingCaptureNetworkLog: checked })),
-                  'requestNetworkActivity'
+                  'captureNetworkActivity'
                 )}
 
                 {renderGatedToggle(
@@ -287,7 +287,7 @@ export function DomainConfigureModal({
                   localSettings.recordingCaptureServerLog,
                   (checked) =>
                     setLocalSettings((prev) => ({ ...prev, recordingCaptureServerLog: checked })),
-                  'requestServerLogs'
+                  'captureServerLogs'
                 )}
               </div>
             </div>

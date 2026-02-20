@@ -60,6 +60,7 @@ export type {
   AdminWorkspaceProjectsListData,
   AdminWorkspaceRecordingStats,
   AdminWorkspacesListData,
+  AdminWorkspaceSubscriptionData,
 } from '@workspace/contract';
 
 // ============================================

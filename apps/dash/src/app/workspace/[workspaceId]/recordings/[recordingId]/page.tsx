@@ -6,6 +6,7 @@ import {
   ResizablePanelGroup,
 } from '@workspace/ui/components/resizable';
 import { useParams, useRouter } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { useState } from 'react';
 
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
@@ -14,7 +15,6 @@ import { ShareLinkModal } from '@/components/modals/share-link-modal';
 import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
 import { RecordingPlayer } from '@/components/recordings/recording-player';
-import { DinoError } from '@/components/shared/dino-error';
 import { RecordingDetailSkeleton } from '@/components/skeleton';
 import {
   useDeleteRecording,
@@ -66,24 +66,9 @@ export default function RecordingDetailPage() {
     return <RecordingDetailSkeleton />;
   }
 
-  // Show error state
+  // Show error state - trigger the pretty not-found page
   if (recordingError || (recordingResult && !recordingResult.success) || !recordingData) {
-    return (
-      <div className="h-screen bg-background flex items-center justify-center">
-        <DinoError
-          title="Recording not found"
-          description={
-            recordingError instanceof Error
-              ? recordingError.message
-              : recordingResult && !recordingResult.success
-                ? recordingResult.error.message
-                : 'This recording may have been deleted or you may not have access.'
-          }
-          onGoBack={() => window.history.back()}
-          showRetry={false}
-        />
-      </div>
-    );
+    notFound();
   }
 
   const recording = recordingData.recording;

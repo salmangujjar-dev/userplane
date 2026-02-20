@@ -6,27 +6,27 @@ interface UpsellConfig {
 }
 
 export const UPSELL_CONFIGS: Partial<Record<FeatureGate, UpsellConfig>> = {
-  customizeWorkspace: {
+  customizeRecordingLink: {
     title: 'Customize Your Brand',
     subtitle: 'Add your logo, colors, and messaging to recording links',
   },
-  customizeDataRetention: {
+  customizeRetentionPolicy: {
     title: 'Customize Data Retention',
     subtitle: 'Set custom retention periods for recordings to meet your compliance needs',
   },
-  requestConsoleLogs: {
+  captureConsoleLog: {
     title: 'Capture Console Logs',
     subtitle: 'Debug faster with full console output from user sessions',
   },
-  requestActionReplay: {
+  captureUserActions: {
     title: 'Replay User Actions',
     subtitle: 'See exactly what users did with step-by-step action replay',
   },
-  requestNetworkActivity: {
+  captureNetworkActivity: {
     title: 'Monitor Network Activity',
     subtitle: 'Inspect API calls, request timing, and network errors',
   },
-  requestServerLogs: {
+  captureServerLogs: {
     title: 'Collect Server Logs',
     subtitle: 'Correlate frontend issues with server-side logs',
   },
