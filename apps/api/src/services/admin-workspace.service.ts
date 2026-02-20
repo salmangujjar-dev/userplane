@@ -7,7 +7,7 @@ import type {
   AdminWorkspaceProvisionData,
   AdminWorkspaceProvisionInput,
 } from '@workspace/contract';
-import { adminError } from '@workspace/contract';
+import { adminError, DEFAULT_TRIAL_PERIOD_DAYS } from '@workspace/contract';
 
 import { generateInviteToken } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
@@ -194,12 +194,19 @@ export class AdminWorkspaceService {
       };
     }
 
+    // Resolve trial period (only for existing/custom plan modes)
+    const trialPeriodDays =
+      'trialPeriodDays' in params
+        ? Number(params.trialPeriodDays ?? String(DEFAULT_TRIAL_PERIOD_DAYS))
+        : undefined;
+
     // Now checkout for the product and return the checkout url
     const checkoutUrl = await this.createCheckout(
       resolvedProductId,
       result.workspaceId,
       email,
-      name
+      name,
+      trialPeriodDays
     );
 
     return {
@@ -243,7 +250,8 @@ export class AdminWorkspaceService {
     productId: string,
     workspaceId: string,
     email: string,
-    name: string
+    name: string,
+    trialPeriodDays?: number
   ) {
     try {
       await this.deps.adminPlanService.verifyProductExists(productId);
@@ -258,6 +266,7 @@ export class AdminWorkspaceService {
         email,
         name,
         returnUrl: `${this.deps.dashboardBaseUrl}/workspace/${workspaceId}/settings?tab=plan-usage`,
+        trialPeriodDays,
       });
     } catch (error) {
       logger.error(

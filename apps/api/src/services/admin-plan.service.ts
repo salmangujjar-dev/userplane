@@ -8,17 +8,11 @@ import type {
   AdminPlanProduct,
   AdminUpdatePlanInput,
 } from '@workspace/contract';
-import { adminError } from '@workspace/contract';
+import { adminError, DEFAULT_TRIAL_PERIOD_DAYS } from '@workspace/contract';
 import { getSeatsAddonIdForInterval } from '@workspace/payments';
 import type { DodoPayments } from '@workspace/payments/client';
 import type { DodoFeatureLimits } from '@workspace/payments/metadata';
-import {
-  decodeMetadataValue,
-  encodeFeatureGates,
-  encodeFeatureLimits,
-  parseFeatureGates,
-  parseFeatureLimits,
-} from '@workspace/payments/metadata';
+import { buildFlatMetadata, parseFlatMetadata } from '@workspace/payments/metadata';
 import type { FeatureGate, PlanFeatureGates } from '@workspace/pricing';
 import { FEATURE_GATE_KEYS, FEATURE_GATE_LABELS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 
@@ -81,29 +75,18 @@ export class AdminPlanService {
    * Create a new DodoPayments product
    */
   async createPlan(input: AdminCreatePlanInput['body']): Promise<AdminPlanProduct> {
-    const metadata: Record<string, string> = {};
+    let metadata: Record<string, string> | undefined;
 
-    if (input.featureLimits.length) {
+    if (input.featureLimits.length || input.featureGates.length) {
       const limitsMap = {} as DodoFeatureLimits;
-      for (const l of input.featureLimits) {
-        limitsMap[l.resourceType] = {
-          quotedLimit: l.quotedLimit,
-          softLimit: l.softLimit,
-          hardLimit: l.hardLimit,
-        };
-      }
-      // Fill missing resource types with zeros
       for (const rt of RESOURCE_TYPE_VALUES) {
-        if (!limitsMap[rt]) {
-          limitsMap[rt] = { quotedLimit: 0, softLimit: 0, hardLimit: 0 };
-        }
+        limitsMap[rt] = { quotedLimit: 0, actualLimit: 0 };
       }
-      metadata.feature_limits = encodeFeatureLimits(limitsMap);
-    }
+      for (const l of input.featureLimits) {
+        limitsMap[l.resourceType] = { quotedLimit: l.quotedLimit, actualLimit: l.actualLimit };
+      }
 
-    if (input.featureGates.length) {
       const gatesMap = {} as PlanFeatureGates;
-      // Default all gates to false
       for (const key of FEATURE_GATE_KEYS) {
         gatesMap[key] = false;
       }
@@ -112,7 +95,8 @@ export class AdminPlanService {
           gatesMap[g.gate as FeatureGate] = g.enabled;
         }
       }
-      metadata.feature_gates = encodeFeatureGates(gatesMap);
+
+      metadata = buildFlatMetadata(limitsMap, gatesMap, input.price.billingCycle);
     }
 
     try {
@@ -124,7 +108,7 @@ export class AdminPlanService {
         price: dodoPrice,
         addons: [seatsAddonId],
         tax_category: 'saas',
-        ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
+        ...(metadata ? { metadata } : {}),
       });
 
       return this.formatProduct(product);
@@ -164,41 +148,40 @@ export class AdminPlanService {
     }
 
     // Handle metadata updates
-    const existingMetadata = (existing.metadata ?? {}) as Record<string, string>;
-    const newMetadata = { ...existingMetadata };
+    if (input.featureLimits || input.featureGates) {
+      const existingMetadata = (existing.metadata ?? {}) as Record<string, string>;
+      const { featureLimits: existingLimits, featureGates: existingGates } =
+        parseFlatMetadata(existingMetadata);
 
-    if (input.featureLimits) {
       const limitsMap = {} as DodoFeatureLimits;
-      for (const l of input.featureLimits) {
-        limitsMap[l.resourceType] = {
-          quotedLimit: l.quotedLimit,
-          softLimit: l.softLimit,
-          hardLimit: l.hardLimit,
-        };
-      }
       for (const rt of RESOURCE_TYPE_VALUES) {
-        if (!limitsMap[rt]) {
-          limitsMap[rt] = { quotedLimit: 0, softLimit: 0, hardLimit: 0 };
+        limitsMap[rt] = existingLimits?.[rt] ?? { quotedLimit: 0, actualLimit: 0 };
+      }
+      if (input.featureLimits) {
+        for (const l of input.featureLimits) {
+          limitsMap[l.resourceType] = { quotedLimit: l.quotedLimit, actualLimit: l.actualLimit };
         }
       }
-      newMetadata.feature_limits = encodeFeatureLimits(limitsMap);
-    }
 
-    if (input.featureGates) {
       const gatesMap = {} as PlanFeatureGates;
       for (const key of FEATURE_GATE_KEYS) {
-        gatesMap[key] = false;
+        gatesMap[key] = existingGates?.[key] ?? false;
       }
-      for (const g of input.featureGates) {
-        if (FEATURE_GATE_KEYS.includes(g.gate as FeatureGate)) {
-          gatesMap[g.gate as FeatureGate] = g.enabled;
+      if (input.featureGates) {
+        for (const g of input.featureGates) {
+          if (FEATURE_GATE_KEYS.includes(g.gate as FeatureGate)) {
+            gatesMap[g.gate as FeatureGate] = g.enabled;
+          }
         }
       }
-      newMetadata.feature_gates = encodeFeatureGates(gatesMap);
-    }
 
-    if (input.featureLimits || input.featureGates) {
-      updateParams.metadata = newMetadata;
+      // Spread existingMetadata first so foreign keys written by other systems
+      // (e.g. other services, Dodo integrations) are preserved.
+      const billingCycle = input.price?.billingCycle ?? undefined;
+      updateParams.metadata = {
+        ...existingMetadata,
+        ...buildFlatMetadata(limitsMap, gatesMap, billingCycle),
+      };
     }
 
     try {
@@ -225,7 +208,12 @@ export class AdminPlanService {
   }
 
   /**
-   * Create a checkout session for a product and workspace
+   * Create a checkout session for a product and workspace.
+   *
+   * Snapshots the product's plan metadata (feature limits + gates) into the
+   * checkout session metadata so that every subsequent webhook event carries
+   * an immutable copy of the entitlements the customer agreed to.  This means
+   * webhook processing never needs to re-query mutable product state.
    */
   async createCheckoutSession(params: {
     productId: string;
@@ -234,11 +222,46 @@ export class AdminPlanService {
     name: string;
     returnUrl: string;
     metadata?: Record<string, string>;
+    trialPeriodDays?: number;
   }): Promise<string> {
+    // Fetch and snapshot plan metadata at checkout time.
+    // Non-fatal: if unavailable the webhook processor falls back to a live fetch.
+    let planMetadataSnapshot: Record<string, string> = {};
+    try {
+      const product = await this.deps.dodoClient.products.retrieve(params.productId);
+      const raw = (product.metadata ?? {}) as Record<string, unknown>;
+      const parsed = parseFlatMetadata(raw);
+      if (parsed.featureLimits && parsed.featureGates) {
+        planMetadataSnapshot = buildFlatMetadata(
+          parsed.featureLimits,
+          parsed.featureGates,
+          parsed.billingCadence
+        );
+      } else {
+        logger.warn(
+          { productId: params.productId },
+          'Product metadata incomplete at checkout; webhook will fall back to live fetch'
+        );
+      }
+    } catch (error) {
+      logger.error(
+        { err: error, productId: params.productId },
+        'Failed to snapshot product metadata at checkout; webhook will fall back to live fetch'
+      );
+    }
+
     const session = await this.deps.dodoClient.checkoutSessions.create({
       product_cart: [{ product_id: params.productId, quantity: 1 }],
+      subscription_data: {
+        trial_period_days: params.trialPeriodDays ?? DEFAULT_TRIAL_PERIOD_DAYS,
+      },
       metadata: {
         workspace_id: params.workspaceId,
+        // snapshot_product_id lets the webhook verify this snapshot belongs to the
+        // subscription's current product. Without it a plan-change subscription would
+        // inherit the old checkout's Plan A snapshot and be misread as Plan B.
+        snapshot_product_id: params.productId,
+        ...planMetadataSnapshot,
         ...(params.metadata ?? {}),
       },
       customer: {
@@ -284,7 +307,7 @@ export class AdminPlanService {
    * Format a full Product (from retrieve) into AdminPlanProduct
    */
   private formatProduct(product: DodoPayments.Product): AdminPlanProduct {
-    const metadata = (product.metadata ?? {}) as Record<string, string>;
+    const metadata = (product.metadata ?? {}) as Record<string, unknown>;
     const { featureLimits, featureGates } = this.decodeMetadata(metadata);
 
     return {
@@ -297,8 +320,7 @@ export class AdminPlanService {
         ? RESOURCE_TYPE_VALUES.map((rt) => ({
             resourceType: rt,
             quotedLimit: featureLimits[rt].quotedLimit,
-            softLimit: featureLimits[rt].softLimit,
-            hardLimit: featureLimits[rt].hardLimit,
+            actualLimit: featureLimits[rt].actualLimit,
           }))
         : null,
       featureGates: featureGates
@@ -308,7 +330,7 @@ export class AdminPlanService {
             enabled: featureGates[gate],
           }))
         : null,
-      hasMetadata: !!metadata.feature_limits || !!metadata.feature_gates,
+      hasMetadata: !!featureLimits || !!featureGates,
       createdAt: product.created_at,
       updatedAt: product.updated_at,
     };
@@ -318,7 +340,7 @@ export class AdminPlanService {
    * Format a ProductListResponse into AdminPlanProduct
    */
   private formatListProduct(item: DodoPayments.ProductListResponse): AdminPlanProduct {
-    const metadata = (item.metadata ?? {}) as Record<string, string>;
+    const metadata = (item.metadata ?? {}) as Record<string, unknown>;
     const { featureLimits, featureGates } = this.decodeMetadata(metadata);
 
     const priceDetail = item.price_detail;
@@ -333,8 +355,7 @@ export class AdminPlanService {
         ? RESOURCE_TYPE_VALUES.map((rt) => ({
             resourceType: rt,
             quotedLimit: featureLimits[rt].quotedLimit,
-            softLimit: featureLimits[rt].softLimit,
-            hardLimit: featureLimits[rt].hardLimit,
+            actualLimit: featureLimits[rt].actualLimit,
           }))
         : null,
       featureGates: featureGates
@@ -344,36 +365,17 @@ export class AdminPlanService {
             enabled: featureGates[gate],
           }))
         : null,
-      hasMetadata: !!metadata.feature_limits || !!metadata.feature_gates,
+      hasMetadata: !!featureLimits || !!featureGates,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     };
   }
 
   /**
-   * Decode metadata from a Dodo product
+   * Parse metadata from a Dodo product
    */
-  private decodeMetadata(metadata: Record<string, string>) {
-    let featureLimits: DodoFeatureLimits | null = null;
-    let featureGates: PlanFeatureGates | null = null;
-
-    if (metadata.feature_limits) {
-      try {
-        featureLimits = parseFeatureLimits(decodeMetadataValue(metadata.feature_limits));
-      } catch {
-        // Invalid, leave as null
-      }
-    }
-
-    if (metadata.feature_gates) {
-      try {
-        featureGates = parseFeatureGates(decodeMetadataValue(metadata.feature_gates));
-      } catch {
-        // Invalid, leave as null
-      }
-    }
-
-    return { featureLimits, featureGates };
+  private decodeMetadata(metadata: Record<string, unknown>) {
+    return parseFlatMetadata(metadata);
   }
 
   /**

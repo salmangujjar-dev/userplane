@@ -635,20 +635,20 @@ export class SessionService {
   ): SessionPreferences {
     return {
       // --- Branding ---
-      rcl: linkData.recordingCustomizeLink && featureGates.customizeWorkspace,
+      rcl: linkData.recordingCustomizeLink && featureGates.customizeRecordingLink,
       // --- Sensitive data ---
-      rhs: linkData.recordingHideSensitive && featureGates.autoBlurSensitiveData,
+      rhs: linkData.recordingHideSensitive && featureGates.redactSensitiveData,
       // --- Logs and debugging ---
-      rccl: linkData.recordingCaptureClientLog && featureGates.requestConsoleLogs,
-      rcca: linkData.recordingCaptureClientAction && featureGates.requestActionReplay,
-      rcsl: linkData.recordingCaptureServerLog && featureGates.requestServerLogs,
-      rcnl: linkData.recordingCaptureNetworkLog && featureGates.requestNetworkActivity,
+      rccl: linkData.recordingCaptureClientLog && featureGates.captureConsoleLog,
+      rcca: linkData.recordingCaptureClientAction && featureGates.captureUserActions,
+      rcsl: linkData.recordingCaptureServerLog && featureGates.captureServerLogs,
+      rcnl: linkData.recordingCaptureNetworkLog && featureGates.captureNetworkActivity,
       // --- Customization ---
-      rcn: featureGates.customizeWorkspace ? linkData.recordingCompanyName : null,
-      rclp: featureGates.customizeWorkspace ? linkData.recordingCompanyLogoPath : null,
-      rh: featureGates.customizeWorkspace ? linkData.recordingHeader : null,
-      rf: featureGates.customizeWorkspace ? linkData.recordingFootnote : null,
-      rpc: featureGates.customizeWorkspace ? linkData.recordingPrimaryColor : null,
+      rcn: featureGates.customizeRecordingLink ? linkData.recordingCompanyName : null,
+      rclp: featureGates.customizeRecordingLink ? linkData.recordingCompanyLogoPath : null,
+      rh: featureGates.customizeRecordingLink ? linkData.recordingHeader : null,
+      rf: featureGates.customizeRecordingLink ? linkData.recordingFootnote : null,
+      rpc: featureGates.customizeRecordingLink ? linkData.recordingPrimaryColor : null,
       // --- Limits ---
       rmd: linkData.recordingMaxDurationMs,
       // --- Creator ---

@@ -37,12 +37,15 @@ import { UserRepository } from '@/api/repositories/users.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 // Repositories
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import { AddonMapper } from '@/api/services/addon-mapper';
 import { AdminService } from '@/api/services/admin.service';
 import { AdminPlanService } from '@/api/services/admin-plan.service';
 import { AdminProjectService } from '@/api/services/admin-project.service';
 import { AdminRecordingService } from '@/api/services/admin-recording.service';
 import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import { BillingService } from '@/api/services/billing.service';
+import { BillingMutationService } from '@/api/services/billing-mutation.service';
+import { BillingQueryService } from '@/api/services/billing-query.service';
 import { DomainService } from '@/api/services/domain.service';
 import { emailService } from '@/api/services/email.service';
 import { EntitlementService } from '@/api/services/entitlement.service';
@@ -80,14 +83,28 @@ const adminRecordingRepo = new AdminRecordingRepository(db);
 const integrationRepo = new IntegrationRepository(db);
 
 // Initialize services in dependency order
+// Level 0: Pure utility services (no deps)
+const addonMapper = new AddonMapper();
+
 // Level 0: Services with only repository dependencies (no other services)
-export const billingService = new BillingService({
+const billingQueryService = new BillingQueryService({
   subscriptionRepo,
   disputeRepo,
   refundRepo,
-  dodoClient: getDodoClient(),
   cacheService,
   getSubscriptionAccessStatusFeatureFlagOverride,
+});
+
+const billingMutationService = new BillingMutationService({
+  subscriptionRepo,
+  dodoClient: getDodoClient(),
+  addonMapper,
+  cacheService,
+});
+
+export const billingService = new BillingService({
+  queryService: billingQueryService,
+  mutationService: billingMutationService,
 });
 
 export const adminPlanService = new AdminPlanService({
@@ -97,7 +114,7 @@ export const adminPlanService = new AdminPlanService({
 export const entitlementService = new EntitlementService({
   entitlementRepo,
   billingService,
-  subscriptionRepo,
+  addonMapper,
   cacheService,
 });
 

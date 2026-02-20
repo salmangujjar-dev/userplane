@@ -1265,9 +1265,9 @@ export class WorkspaceService {
       updates.recordingFootnote !== undefined ||
       updates.recordingPrimaryColor !== undefined;
 
-    if (hasCustomizationUpdates && !featureGates.customizeWorkspace) {
+    if (hasCustomizationUpdates && !featureGates.customizeRecordingLink) {
       throw workspaceError.WORKSPACE_FEATURE_NOT_AVAILABLE({
-        feature: 'customizeWorkspace',
+        feature: 'customizeRecordingLink',
       });
     }
   }
