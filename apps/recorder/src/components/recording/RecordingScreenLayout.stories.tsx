@@ -107,20 +107,24 @@ export const WithFormContent: Story = {
         <h1 className="text-2xl font-bold mb-6 text-center">Sample Form</h1>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              placeholder="Enter your name"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Name
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                placeholder="Enter your name"
+              />
+            </label>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              placeholder="Enter your email"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+              <input
+                type="email"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                placeholder="Enter your email"
+              />
+            </label>
           </div>
           <button className="w-full py-2 bg-gray-900 text-white rounded-lg">Submit</button>
         </div>

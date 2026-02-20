@@ -4,25 +4,22 @@
  * Handles cross-tab coordination to ensure only one recorder is active at a time
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { URL_PARAMS } from '@/constants';
 import {
   AppModeProvider,
   useAppMode,
-  useBridge,
-  useCrossTab,
   useCrossTabLock,
 } from '@/contexts/AppModeContext';
+import { useEmbeddedBridgeSync } from '@/hooks/useEmbeddedBridgeSync';
 import {
-  type FlowState,
   type RecordingFlowActions,
   useRecordingFlow,
 } from '@/hooks/useRecordingFlow';
 import { createLogger } from '@/lib/logger';
 import { classifyError, type ErrorAction, type RecordingError } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
-import { getUrlParams, parseMetaParams, parseWorkspaceIds } from '@/utils/url';
+import { getUrlParams, parseWorkspaceIds } from '@/utils/url';
 
 import ErrorScreen from './ErrorScreen';
 import PostRecordingAckScreen from './PostRecordingAckScreen';
@@ -56,20 +53,16 @@ export default function RecordingApp({}: RecordingAppProps = {}) {
  */
 function RecordingAppContent() {
   const { mode, isEmbedded } = useAppMode();
-  const bridge = useBridge();
-  const crossTab = useCrossTab();
   const crossTabLock = useCrossTabLock();
 
-  // Initialize state from URL immediately to avoid race condition
-  const [linkToken, setLinkToken] = useState<string>(() => getUrlParams().token);
-  const [action, setAction] = useState<string>(() => getUrlParams().action);
-  const [workspaceIds, setWorkspaceIds] = useState<string[]>(() =>
-    parseWorkspaceIds(getUrlParams().workspace)
+  // Extract URL params once on mount (stable values)
+  const urlParams = useMemo(() => getUrlParams(), []);
+  const linkToken = urlParams.token;
+  const action = urlParams.action;
+  const workspaceIds = useMemo(
+    () => parseWorkspaceIds(urlParams.workspace),
+    [urlParams.workspace]
   );
-
-  // Track previous flow state for detecting transitions
-  const prevFlowStateRef = useRef<FlowState | null>(null);
-  const sessionReportedRef = useRef(false);
 
   // User override for blur preference (null = use session preference)
   const [blurOverride, setBlurOverride] = useState<boolean | null>(null);
@@ -79,7 +72,6 @@ function RecordingAppContent() {
   const { state, actions, sessionInfo } = useRecordingFlow(linkToken, action, workspaceIds);
 
   // Effective blur state: user override if set, otherwise use session preference
-  // No effect needed - just derive directly from state
   const effectiveBlurEnabled =
     blurOverride !== null ? blurOverride : (state.preferences?.hideSensitive ?? false);
 
@@ -89,199 +81,27 @@ function RecordingAppContent() {
     setBlurOverride(enabled);
   }, []);
 
-  // Effect to extract URL params
+  // Log app initialization on mode/lock changes
   useEffect(() => {
     logger.debug({ mode, isEmbedded, lockStatus: crossTabLock.status }, 'app initialized');
-
-    const params = new URLSearchParams(window.location.search);
-    const urlToken = params.get(URL_PARAMS.TOKEN);
-    const urlAction = params.get(URL_PARAMS.ACTION);
-    const urlWorkspace = params.get(URL_PARAMS.WORKSPACE);
-
-    if (urlToken) {
-      setLinkToken(urlToken);
-    }
-    if (urlAction) {
-      setAction(urlAction);
-    }
-    if (urlWorkspace) {
-      setWorkspaceIds(parseWorkspaceIds(urlWorkspace));
-    }
   }, [mode, isEmbedded, crossTabLock.status]);
 
-  // Report state changes to parent via bridge (embedded mode only)
-  // This effect must be called unconditionally - the guard is inside the effect
-  useEffect(() => {
-    // Skip if not in embedded mode or cross-tab not acquired
-    if (!isEmbedded || !crossTabLock.isAcquired) return;
-    if (!bridge) return;
-    if (state.state === prevFlowStateRef.current) return;
+  // Bridge sync: state reporting, blur control, session init, metadata gathering
+  const { gatherAndMergeMetadata } = useEmbeddedBridgeSync({
+    isEmbedded,
+    flowState: state.state,
+    recordingBlob: state.recordingBlob,
+    effectiveBlurEnabled,
+    sessionInfo,
+  });
 
-    logger.debug({ from: prevFlowStateRef.current, to: state.state }, 'flow state changed');
-    prevFlowStateRef.current = state.state;
-
-    // Notify parent based on flow state
-    switch (state.state) {
-      case 'countdown':
-      case 'recording':
-        bridge.recordingActive();
-        break;
-      case 'review':
-      case 'uploading':
-        bridge.recordingRetained();
-        break;
-      case 'loading':
-      case 'setup':
-      case 'success':
-        bridge.recordingInactive();
-        break;
-      case 'error':
-        // Error with recording blob = retained, otherwise inactive
-        if (state.recordingBlob) {
-          bridge.recordingRetained();
-        } else {
-          bridge.recordingInactive();
-        }
-        break;
-    }
-  }, [bridge, isEmbedded, crossTabLock.isAcquired, state.state, state.recordingBlob]);
-
-  // Control privacy blur via cross-tab broadcast to capture iframes (embedded mode only)
-  // Uses effectiveBlurEnabled which respects user toggle override
-  // Track previous blur state to only trigger on actual changes
-  const prevBlurStateRef = useRef<'active' | 'inactive' | null>(null);
-
-  useEffect(() => {
-    // Skip if not in embedded mode or cross-tab not acquired
-    if (!isEmbedded || !crossTabLock.isAcquired) return;
-    if (!crossTab) return;
-
-    // Determine blur state based on flow state AND user preference
-    // Only blur during active recording (countdown/recording) if blur is enabled
-    // Stop blur for all other states including retained (review/uploading)
-    const shouldBlur =
-      effectiveBlurEnabled && (state.state === 'countdown' || state.state === 'recording');
-    const blurState = shouldBlur ? 'active' : 'inactive';
-
-    // Skip if blur state hasn't changed
-    if (blurState === prevBlurStateRef.current) return;
-
-    const prevBlurState = prevBlurStateRef.current;
-    prevBlurStateRef.current = blurState;
-
-    logger.debug(
-      { from: prevBlurState, to: blurState, flowState: state.state },
-      'blur state changed'
-    );
-
-    if (blurState === 'active') {
-      // Start blur when recording becomes active (and blur is enabled)
-      logger.debug('broadcasting blur start');
-      crossTab.broadcastStartBlurr();
-    } else if (blurState === 'inactive' && prevBlurState === 'active') {
-      // Stop blur when transitioning from active to inactive
-      logger.debug('broadcasting blur stop');
-      crossTab.broadcastStopBlurr();
-    }
-  }, [crossTab, isEmbedded, crossTabLock.isAcquired, state.state, effectiveBlurEnabled]);
-
-  // Initialize session with parent when ready (embedded mode only)
-  // This effect must be called unconditionally - the guard is inside the effect
-  useEffect(() => {
-    // Skip if not in embedded mode or cross-tab not acquired
-    if (!isEmbedded || !crossTabLock.isAcquired) return;
-    if (!bridge || sessionReportedRef.current) return;
-
-    // Initialize session when we have session info and are in setup state
-    if (sessionInfo && state.state === 'setup') {
-      logger.debug('initializing session with parent');
-      bridge.initSession(sessionInfo);
-      sessionReportedRef.current = true;
-    }
-  }, [bridge, isEmbedded, crossTabLock.isAcquired, sessionInfo, state.state]);
-
-  /**
-   * Gather metadata from all capture iframes via scatter-gather
-   * Returns unified metadata if all tabs identical, per-tab structure otherwise
-   */
-  const gatherMetadataFromCaptureTabs = async (): Promise<Record<string, unknown> | null> => {
-    if (!crossTab) return null;
-
-    const scatterResult = await crossTab.scatterGatherMetadata(3000);
-    logger.debug(
-      {
-        responded: scatterResult.respondedTabs.length,
-        timedOut: scatterResult.timedOutTabs.length,
-      },
-      'scatter-gather complete'
-    );
-
-    // Build per-tab metadata map
-    const allTabsMetadata: Record<string, Record<string, unknown>> = {};
-
-    if (scatterResult.perTab) {
-      for (const [tabId, entry] of Object.entries(scatterResult.perTab)) {
-        allTabsMetadata[tabId] = entry as Record<string, unknown>;
-      }
-    } else if (scatterResult.unified && scatterResult.respondedTabs.length > 0) {
-      for (const tabId of scatterResult.respondedTabs) {
-        allTabsMetadata[tabId] = {
-          _pageUrl: '',
-          _pageTitle: '',
-          ...((scatterResult.unified as Record<string, unknown>) || {}),
-        };
-      }
-    }
-
-    if (Object.keys(allTabsMetadata).length === 0) {
-      logger.debug('no metadata from any tab');
-      return null;
-    }
-
-    // Extract custom metadata (everything except _pageUrl, _pageTitle)
-    const extractCustom = (entry: Record<string, unknown>) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { _pageUrl, _pageTitle, ...custom } = entry;
-      return custom;
-    };
-
-    const allCustomMetadata = Object.values(allTabsMetadata).map(extractCustom);
-    const allIdentical = allCustomMetadata.every(
-      (m) => JSON.stringify(m) === JSON.stringify(allCustomMetadata[0])
-    );
-
-    if (allIdentical && Object.keys(allCustomMetadata[0] || {}).length > 0) {
-      logger.debug({ unified: true }, 'metadata aggregated');
-      return allCustomMetadata[0] as Record<string, unknown>;
-    }
-
-    logger.debug({ unified: false }, 'metadata aggregated');
-    return allTabsMetadata;
-  };
-
-  /**
-   * Submit recording with metadata from capture iframes
-   */
-  const handleSubmitRecording = async (notes?: string) => {
-    const urlMeta = parseMetaParams();
-
-    let bridgeMetadata: Record<string, unknown> | null = null;
-    if (isEmbedded && crossTab) {
-      logger.debug('gathering metadata from capture tabs');
-      try {
-        bridgeMetadata = await gatherMetadataFromCaptureTabs();
-      } catch (err) {
-        logger.warn({ err }, 'metadata collection failed (non-fatal)');
-      }
-    }
-
-    let customMetadata: Record<string, unknown> | null = null;
-    if (urlMeta || bridgeMetadata) {
-      customMetadata = { ...(urlMeta ?? {}), ...(bridgeMetadata ?? {}) };
-    }
-
-    await actions.submitRecording(customMetadata, notes);
-  };
+  const handleSubmitRecording = useCallback(
+    async (notes?: string) => {
+      const customMetadata = await gatherAndMergeMetadata();
+      await actions.submitRecording(customMetadata, notes);
+    },
+    [gatherAndMergeMetadata, actions]
+  );
 
   // === ALL HOOKS ABOVE THIS LINE ===
   // Now we can have conditional returns

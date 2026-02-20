@@ -3,7 +3,7 @@
  * Simple video player with play/pause and restart controls
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 interface VideoPlayerProps {
   /** Video source URL */
@@ -38,11 +38,34 @@ export default function VideoPlayer({
   onCanPlay,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
-  const [hasError, setHasError] = useState(false);
+
+  type VideoState = { isPlaying: boolean; hasError: boolean };
+  type VideoAction =
+    | { type: 'play' }
+    | { type: 'pause' }
+    | { type: 'ended' }
+    | { type: 'load_start' }
+    | { type: 'error' };
+
+  const [{ isPlaying, hasError }, dispatch] = useReducer(
+    (state: VideoState, action: VideoAction): VideoState => {
+      switch (action.type) {
+        case 'play':
+          return { ...state, isPlaying: true };
+        case 'pause':
+        case 'ended':
+          return { ...state, isPlaying: false };
+        case 'load_start':
+          return { ...state, hasError: false };
+        case 'error':
+          return { ...state, hasError: true };
+      }
+    },
+    { isPlaying: false, hasError: false }
+  );
 
   const handleVideoError = useCallback(() => {
-    setHasError(true);
+    dispatch({ type: 'error' });
     const error = new Error('Failed to load video');
     onError?.(error);
   }, [onError]);
@@ -51,11 +74,11 @@ export default function VideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
-    const handleEnded = () => setIsPlaying(false);
+    const handlePlay = () => dispatch({ type: 'play' });
+    const handlePause = () => dispatch({ type: 'pause' });
+    const handleEnded = () => dispatch({ type: 'ended' });
     const handleLoadStart = () => {
-      setHasError(false);
+      dispatch({ type: 'load_start' });
       onLoadStart?.();
     };
     const handleCanPlay = () => onCanPlay?.();
