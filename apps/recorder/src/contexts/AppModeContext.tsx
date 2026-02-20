@@ -95,7 +95,7 @@ type LockAction =
   | { type: 'blocked'; error: string; blockingTabId: string | null }
   | { type: 'error'; error: string };
 
-function lockReducer(state: LockState, action: LockAction): LockState {
+function lockReducer(_state: LockState, action: LockAction): LockState {
   switch (action.type) {
     case 'connecting':
       return { status: 'connecting', error: null, blockingTabId: null };

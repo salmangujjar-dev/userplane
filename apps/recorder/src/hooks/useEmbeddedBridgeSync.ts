@@ -9,10 +9,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import {
+  type RecordingSessionInfo,
   useBridge,
   useCrossTab,
   useCrossTabLock,
-  type RecordingSessionInfo,
 } from '@/contexts/AppModeContext';
 import type { FlowState } from '@/hooks/useRecordingFlow';
 import { createLogger } from '@/lib/logger';
@@ -94,10 +94,7 @@ export function useEmbeddedBridgeSync({
     const prevBlurState = prevBlurStateRef.current;
     prevBlurStateRef.current = blurState;
 
-    logger.debug(
-      { from: prevBlurState, to: blurState, flowState },
-      'blur state changed'
-    );
+    logger.debug({ from: prevBlurState, to: blurState, flowState }, 'blur state changed');
 
     if (blurState === 'active') {
       logger.debug('broadcasting blur start');
@@ -183,10 +180,7 @@ export function useEmbeddedBridgeSync({
   /**
    * Gather metadata from capture tabs and merge with URL meta params
    */
-  const gatherAndMergeMetadata = useCallback(async (): Promise<Record<
-    string,
-    unknown
-  > | null> => {
+  const gatherAndMergeMetadata = useCallback(async (): Promise<Record<string, unknown> | null> => {
     const urlMeta = parseMetaParams();
 
     let bridgeMetadata: Record<string, unknown> | null = null;

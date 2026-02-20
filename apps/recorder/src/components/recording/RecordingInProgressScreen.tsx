@@ -4,7 +4,7 @@
  */
 
 import { Button } from '@workspace/ui/components/button';
-import { type ReactNode, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 import {
   DEFAULT_COMPANY_NAME,
