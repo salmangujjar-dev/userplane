@@ -1,38 +1,38 @@
 {
   "products": [
-    { "envkey": "DODO_PRODUCT_ESSENTIAL_MONTHLY", "label": "Essential Monthly" },
-    { "envkey": "DODO_PRODUCT_ESSENTIAL_ANNUAL", "label": "Essential Annual" }
+    {
+      "envkey": "DODO_PRODUCT_ESSENTIAL_MONTHLY",
+      "label": "Essential Monthly",
+      "metadata": { "billing_cadence": "monthly" }
+    },
+    {
+      "envkey": "DODO_PRODUCT_ESSENTIAL_ANNUAL",
+      "label": "Essential Annual",
+      "metadata": { "billing_cadence": "annual" }
+    }
   ],
-  "feature_limits": {
-    "seats": { "q": 5, "s": 5, "h": 15 },
-    "recordings": { "q": 25, "s": 25, "h": 35 },
-    "links": { "q": -1, "s": 70, "h": 90 },
-    "screenshots": { "q": 0, "s": 0, "h": 0 },
-    "files": { "q": 0, "s": 0, "h": 0 }
-  },
-  "feature_gates": {
-    "rRec": true,
-    "blur": true,
-    "sess": true,
-    "scrn": false,
-    "ann": false,
-    "file": false,
-    "cons": false,
-    "net": false,
-    "srvL": false,
-    "arpl": false,
-    "cWs": false,
-    "seat": true,
-    "bsR": false,
-    "bsS": false,
-    "bsF": false,
-    "ret": false,
-    "comp": true,
-    "res": false,
-    "help": true,
-    "crm": false,
-    "iss": false,
-    "auto": false,
-    "api": false
+  "metadata": {
+    "seats_quoted_limit": "5",
+    "seats_actual_limit": "15",
+    "recordings_quoted_limit": "25",
+    "recordings_actual_limit": "35",
+    "links_quoted_limit": "-1",
+    "links_actual_limit": "90",
+    "screenshots_quoted_limit": "0",
+    "screenshots_actual_limit": "0",
+    "files_quoted_limit": "0",
+    "files_actual_limit": "0",
+    "request_recordings_enabled": "true",
+    "request_sessions_enabled": "true",
+    "request_screenshots_enabled": "false",
+    "request_files_enabled": "false",
+    "redact_sensitive_data_enabled": "true",
+    "capture_console_log_enabled": "false",
+    "capture_network_activity_enabled": "false",
+    "capture_user_actions_enabled": "false",
+    "capture_server_logs_enabled": "false",
+    "customize_recording_link_enabled": "false",
+    "customize_retention_policy_enabled": "false",
+    "send_outbound_emails_enabled": "false"
   }
 }

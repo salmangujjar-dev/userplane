@@ -18,6 +18,8 @@ export type WebhookEventType = DodoPayments.WebhookEventType;
 export type SubscriptionChangePlanParams = DodoPayments.SubscriptionChangePlanParams;
 export type SubscriptionPreviewChangePlanResponse =
   DodoPayments.SubscriptionPreviewChangePlanResponse;
+export type AttachAddon = DodoPayments.AttachAddon;
+export type AddonCartResponseItem = DodoPayments.AddonCartResponseItem;
 
 /**
  * Re-export DodoPayments error classes for type-safe error handling
@@ -239,10 +241,10 @@ export type RefundEventType = (typeof REFUND_EVENT_TYPES)[number];
 // Re-export metadata types and functions
 export type { DodoFeatureLimits, ProductPlanMetadata } from './metadata';
 export {
-  decodeMetadataValue,
-  encodeFeatureGates,
-  encodeFeatureLimits,
+  BILLING_CADENCE_METADATA_KEY,
+  buildFlatMetadata,
   fetchProductMetadata,
-  parseFeatureGates,
-  parseFeatureLimits,
+  GATE_METADATA_KEYS,
+  LIMIT_METADATA_KEYS,
+  parseFlatMetadata,
 } from './metadata';

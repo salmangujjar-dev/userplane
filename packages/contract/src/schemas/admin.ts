@@ -2,13 +2,21 @@ import { FEATURE_GATE_KEYS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 import { z } from 'zod';
 
 import {
+  ADMIN_TRIAL_PERIOD_VALUES,
   ADMIN_USER_SESSIONS_PAGINATION,
   ADMIN_USER_WORKSPACES_PAGINATION,
   ADMIN_USERS_PAGINATION,
   ADMIN_WORKSPACE_MEMBERS_PAGINATION,
   ADMIN_WORKSPACE_PROJECTS_PAGINATION,
   ADMIN_WORKSPACES_PAGINATION,
+  DEFAULT_TRIAL_PERIOD_DAYS,
 } from '../constants';
+import {
+  AccessDetailSchema,
+  AddonsStatusDataSchema,
+  ContractDetailSchema,
+  FeatureGatesSchema,
+} from './billing';
 import {
   ADMIN_FILTER_STATUS_VALUES,
   ADMIN_NOTIFY_DURATION_VALUES,
@@ -666,8 +674,7 @@ export type AdminGetWorkspaceRecordingStatsInput = z.infer<
 export const AdminEntitlementSchema = z.object({
   resourceType: z.enum(RESOURCE_TYPE_VALUES),
   quotedLimit: z.number(),
-  softLimit: z.number(),
-  hardLimit: z.number(),
+  actualLimit: z.number(),
   resourceConsumed: z.number(),
 });
 
@@ -692,8 +699,7 @@ export const AdminEntitlementsDataSchema = z.object({
 export const AdminUpdateEntitlementItemSchema = z.object({
   resourceType: z.enum(RESOURCE_TYPE_VALUES),
   quotedLimit: z.number().int().optional(), // -1 allowed for unlimited
-  softLimit: z.number().int().nonnegative().optional(),
-  hardLimit: z.number().int().optional(), // -1 allowed for unlimited
+  actualLimit: z.number().int().optional(), // -1 allowed for unlimited
 });
 
 /**
@@ -780,8 +786,7 @@ export const AdminPlanRecurringPriceInputSchema = z.object({
 export const AdminPlanResourceLimitSchema = z.object({
   resourceType: z.enum(RESOURCE_TYPE_VALUES),
   quotedLimit: z.number().int(),
-  softLimit: z.number().int(),
-  hardLimit: z.number().int(),
+  actualLimit: z.number().int(),
 });
 
 /** Feature gate in plan metadata (decoded) */
@@ -882,18 +887,24 @@ const AdminWorkspaceProvisionBaseBodySchema = z
   })
   .strict();
 
+const defaultTrialPeriod = String(
+  DEFAULT_TRIAL_PERIOD_DAYS
+) as (typeof ADMIN_TRIAL_PERIOD_VALUES)[number];
+
 const AdminWorkspaceProvisionPlanSelectionSchema = z.discriminatedUnion('planMode', [
   z.object({ planMode: z.literal('free') }).strict(),
   z
     .object({
       planMode: z.literal('existing'),
       productId: z.string().min(1),
+      trialPeriodDays: z.enum(ADMIN_TRIAL_PERIOD_VALUES).optional().default(defaultTrialPeriod),
     })
     .strict(),
   z
     .object({
       planMode: z.literal('custom'),
       customPlan: AdminWorkspaceProvisionCustomPlanSchema,
+      trialPeriodDays: z.enum(ADMIN_TRIAL_PERIOD_VALUES).optional().default(defaultTrialPeriod),
     })
     .strict(),
 ]);
@@ -918,6 +929,38 @@ export const AdminWorkspaceProvisionDataSchema = z.object({
  */
 export type AdminWorkspaceProvisionInput = z.infer<typeof AdminWorkspaceProvisionInputSchema>;
 export type AdminWorkspaceProvisionData = z.infer<typeof AdminWorkspaceProvisionDataSchema>;
+
+// ============================================
+// ADMIN WORKSPACE SUBSCRIPTION SCHEMAS
+// ============================================
+
+/**
+ * Admin workspace subscription data
+ * Combines contract detail, access detail, feature gates, and add-on status
+ */
+export const AdminWorkspaceSubscriptionDataSchema = z.object({
+  contractDetail: ContractDetailSchema,
+  accessDetail: AccessDetailSchema,
+  featureGates: FeatureGatesSchema,
+  addons: AddonsStatusDataSchema.omit({ subscriptionId: true })
+    .extend({ subscriptionId: z.string().optional() })
+    .nullable(),
+});
+
+/**
+ * Get workspace subscription input
+ */
+export const AdminGetWorkspaceSubscriptionInputSchema = z.object({
+  params: z.object({ workspaceId: WorkspaceIdSchema }),
+});
+
+/**
+ * Types - Workspace Subscription
+ */
+export type AdminWorkspaceSubscriptionData = z.infer<typeof AdminWorkspaceSubscriptionDataSchema>;
+export type AdminGetWorkspaceSubscriptionInput = z.infer<
+  typeof AdminGetWorkspaceSubscriptionInputSchema
+>;
 
 /**
  * Types - Plans

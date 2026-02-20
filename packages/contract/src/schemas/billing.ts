@@ -31,12 +31,26 @@ export const ContractDetailSchema = z.object({
   cancelAtPeriodEnd: z.boolean(),
   cancelledAt: z.coerce.date().nullable(),
   onHoldSince: z.coerce.date().nullable(),
+  trialEnd: z.coerce.date().nullable(),
 });
 
 /**
  * Access status enum - subscription access state
+ * - 'active': Full paid access to subscribed plan
+ * - 'trial': Full paid access during trial period (no payment collected yet)
+ * - 'grace': Temporary access (cancelled but in period, or payment failed in grace period)
+ * - 'inactive': No paid access, falls back to free plan
+ * - 'disputed': Payment dispute open - access blocked regardless of subscription status
+ * - 'refunded': Payment refunded - access blocked regardless of subscription status
  */
-export const AccessStatusSchema = z.enum(['active', 'grace', 'inactive', 'disputed', 'refunded']);
+export const AccessStatusSchema = z.enum([
+  'active',
+  'trial',
+  'grace',
+  'inactive',
+  'disputed',
+  'refunded',
+]);
 
 /**
  * Effective plan ID - union of paid plan IDs or 'free'
@@ -49,13 +63,6 @@ export const EffectivePlanIdSchema = z.union([z.enum(PLAN_IDS), z.literal('free'
  * effectivePlanId:
  * - PlanId: User has access to this paid plan
  * - 'free': User has no paid access, falls back to free plan
- *
- * accessStatus:
- * - 'active': Full paid access to subscribed plan
- * - 'grace': Temporary access (cancelled but in period, or payment failed in grace period)
- * - 'inactive': No paid access, falls back to free plan
- * - 'disputed': Payment dispute open - access blocked regardless of subscription status
- * - 'refunded': Payment refunded - access blocked regardless of subscription status
  *
  * Note: UI can derive daysRemaining from contractDetail.onHoldSince or contractDetail.currentPeriodEnd
  */

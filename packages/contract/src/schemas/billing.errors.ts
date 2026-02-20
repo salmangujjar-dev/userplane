@@ -30,6 +30,10 @@ export const BillingErrors = {
     message: 'Cannot change plan while subscription is on hold',
     status: 409,
   },
+  SUBSCRIPTION_IN_TRIAL: {
+    message: 'Cannot change plan or add-ons during trial period',
+    status: 409,
+  },
   SAME_PLAN_SELECTED: {
     message: 'You are already on this plan',
     status: 400,

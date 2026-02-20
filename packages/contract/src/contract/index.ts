@@ -77,6 +77,9 @@ export const adminContract = {
       get: admin.getWorkspaceEntitlements,
       update: admin.updateWorkspaceEntitlements,
     },
+    subscription: {
+      get: admin.getWorkspaceSubscription,
+    },
   },
   projects: {
     deactivate: admin.deactivateProject,

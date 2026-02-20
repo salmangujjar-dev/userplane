@@ -1,8 +1,9 @@
 /**
  * Seed DodoPayments product metadata
  *
- * Encodes feature_limits and feature_gates as base64 and pushes them
- * to each product listed in the given plan JSON file.
+ * Pushes flat metadata keys (one per limit field, one per feature gate) to each
+ * product listed in the given plan JSON file. No base64 encoding — all values are
+ * human-readable strings directly visible in the DodoPayments dashboard.
  *
  * Usage:
  *   bun run packages/payments/scripts/seed-product-metadata.ts --env development --plan plans/essential.json
@@ -75,19 +76,15 @@ function requireEnv(key: string): string {
 // Load plan JSON
 // ---------------------------------------------------------------------------
 
-type ResourceLimits = { q: number; s: number; h: number };
-type FeatureLimits = Record<string, ResourceLimits>;
-type FeatureGates = Record<string, boolean>;
-
 interface Product {
   envkey: string;
   label: string;
+  metadata?: Record<string, string>;
 }
 
 interface PlanFile {
   products: Product[];
-  feature_limits: FeatureLimits;
-  feature_gates: FeatureGates;
+  metadata: Record<string, string>;
 }
 
 const planPath = path.isAbsolute(planArg) ? planArg : path.resolve(import.meta.dirname, planArg);
@@ -100,17 +97,9 @@ try {
   process.exit(1);
 }
 
-if (!Array.isArray(plan.products) || !plan.feature_limits || !plan.feature_gates) {
-  console.error('Plan JSON must have: products[], feature_limits, feature_gates');
+if (!Array.isArray(plan.products) || !plan.metadata || typeof plan.metadata !== 'object') {
+  console.error('Plan JSON must have: products[], metadata');
   process.exit(1);
-}
-
-// ---------------------------------------------------------------------------
-// Encode helpers
-// ---------------------------------------------------------------------------
-
-function b64(obj: unknown): string {
-  return Buffer.from(JSON.stringify(obj)).toString('base64');
 }
 
 // ---------------------------------------------------------------------------
@@ -126,18 +115,16 @@ console.log(
   `\nSeeding product metadata → ${envArg} (${requireEnv('DODO_PAYMENTS_ENVIRONMENT')})  [${path.basename(planPath)}]\n`
 );
 
-const metadata = {
-  feature_limits: b64(plan.feature_limits),
-  feature_gates: b64(plan.feature_gates),
-};
+console.log(`  Pushing ${Object.keys(plan.metadata).length} flat metadata keys\n`);
 
-for (const { envkey, label } of plan.products) {
+for (const { envkey, label, metadata: productMetadata } of plan.products) {
   const productId = requireEnv(envkey);
+  const mergedMetadata = { ...plan.metadata, ...productMetadata };
 
   process.stdout.write(`  ${label.padEnd(24)} ${productId}  ...`);
 
   try {
-    await client.products.update(productId, { metadata });
+    await client.products.update(productId, { metadata: mergedMetadata });
     console.log('  ✓');
   } catch (err) {
     console.log('  ✗');
