@@ -27,6 +27,8 @@ export function BillingSection() {
 
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
   const hasSubscription = subscriptionData?.contractDetail.planId !== null;
+  const canManageAddOns =
+    hasSubscription && subscriptionData?.accessDetail?.accessStatus == 'active';
 
   const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
   const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
@@ -101,84 +103,86 @@ export function BillingSection() {
         </div>
 
         {/* Billing Add-ons Section */}
-        <div className="space-y-3">
-          <div>
-            <Label>Billing add-ons</Label>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage seat add-on packs for your active subscription.
-            </p>
-          </div>
-          <Accordion
-            type="single"
-            collapsible
-            className="max-w-md"
-            value={accordionValue}
-            onValueChange={setAccordionValue}
-          >
-            <AccordionItem value="seats" className="border rounded-lg overflow-hidden px-4">
-              <AccordionTrigger className="hover:no-underline">
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium">Seat packs</span>
-                  <span className="text-xs text-muted-foreground">
-                    {currentQuantity} {currentQuantity === 1 ? 'pack' : 'packs'} ·{' '}
-                    {currentQuantity * SEATS_PER_PACK} add-on seats
-                  </span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-4 pb-1">
-                  <p className="text-xs text-muted-foreground">
-                    ${packPrice}/pack · {SEATS_PER_PACK} seats each
-                  </p>
-
-                  {/* Stepper */}
-                  <div className="flex items-center justify-center gap-6">
-                    <button
-                      onClick={() => setNewSeatsQuantity((prev) => Math.max(0, prev - 1))}
-                      disabled={newSeatsQuantity <= 0}
-                      className="h-10 w-10 rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-                    >
-                      <Minus className="h-5 w-5" />
-                    </button>
-                    <span className="text-3xl font-bold tabular-nums w-8 text-center">
-                      {newSeatsQuantity}
+        {canManageAddOns && (
+          <div className="space-y-3">
+            <div>
+              <Label>Billing add-ons</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage seat add-on packs for your active subscription.
+              </p>
+            </div>
+            <Accordion
+              type="single"
+              collapsible
+              className="max-w-md"
+              value={accordionValue}
+              onValueChange={setAccordionValue}
+            >
+              <AccordionItem value="seats" className="border rounded-lg overflow-hidden px-4">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-medium">Seat packs</span>
+                    <span className="text-xs text-muted-foreground">
+                      {currentQuantity} {currentQuantity === 1 ? 'pack' : 'packs'} ·{' '}
+                      {currentQuantity * SEATS_PER_PACK} add-on seats
                     </span>
-                    <button
-                      onClick={() =>
-                        setNewSeatsQuantity((prev) => Math.min(MAX_SEAT_PACKS, prev + 1))
-                      }
-                      disabled={newSeatsQuantity >= MAX_SEAT_PACKS}
-                      className="h-10 w-10 rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-                    >
-                      <Plus className="h-5 w-5" />
-                    </button>
                   </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-4 pb-1">
+                    <p className="text-xs text-muted-foreground">
+                      ${packPrice}/pack · {SEATS_PER_PACK} seats each
+                    </p>
 
-                  {/* Save / Cancel — always reserve space to prevent layout shift */}
-                  <div
-                    className={`flex gap-2 pt-2 transition-opacity ${hasChange ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                  >
-                    <button
-                      onClick={() => {
-                        setAddonModal('seats');
-                        setAccordionValue('');
-                      }}
-                      className="flex-1 px-4 py-2 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                    {/* Stepper */}
+                    <div className="flex items-center justify-center gap-6">
+                      <button
+                        onClick={() => setNewSeatsQuantity((prev) => Math.max(0, prev - 1))}
+                        disabled={newSeatsQuantity <= 0}
+                        className="h-10 w-10 rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                      >
+                        <Minus className="h-5 w-5" />
+                      </button>
+                      <span className="text-3xl font-bold tabular-nums w-8 text-center">
+                        {newSeatsQuantity}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setNewSeatsQuantity((prev) => Math.min(MAX_SEAT_PACKS, prev + 1))
+                        }
+                        disabled={newSeatsQuantity >= MAX_SEAT_PACKS}
+                        className="h-10 w-10 rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                      >
+                        <Plus className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    {/* Save / Cancel — always reserve space to prevent layout shift */}
+                    <div
+                      className={`flex gap-2 pt-2 transition-opacity ${hasChange ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                     >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setNewSeatsQuantity(currentQuantity)}
-                      className="flex-1 px-4 py-2 text-sm font-medium rounded-full border border-border hover:bg-accent transition-colors"
-                    >
-                      Cancel
-                    </button>
+                      <button
+                        onClick={() => {
+                          setAddonModal('seats');
+                          setAccordionValue('');
+                        }}
+                        className="flex-1 px-4 py-2 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setNewSeatsQuantity(currentQuantity)}
+                        className="flex-1 px-4 py-2 text-sm font-medium rounded-full border border-border hover:bg-accent transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        )}
       </div>
 
       <AddonChangePreviewModal requestedQuantity={newSeatsQuantity} />

@@ -230,29 +230,6 @@
         "vitest": "^4.0.16",
       },
     },
-    "apps/yc": {
-      "name": "yc",
-      "version": "0.0.1",
-      "dependencies": {
-        "@astrojs/check": "^0.9.6",
-        "@astrojs/react": "^4.4.2",
-        "@intercom/messenger-js-sdk": "^0.0.18",
-        "@types/react": "^19.2.7",
-        "@types/react-dom": "^19.2.3",
-        "@workspace/sdk": "workspace:*",
-        "astro": "^5.16.6",
-        "jsonwebtoken": "^9.0.3",
-        "react": "^19.2.3",
-        "react-dom": "^19.2.3",
-        "typescript": "^5.9.3",
-      },
-      "devDependencies": {
-        "@types/jsonwebtoken": "^9.0.9",
-        "@workspace/eslint-config": "workspace:*",
-        "@workspace/typescript-config": "workspace:*",
-        "eslint": "^9.32.0",
-      },
-    },
     "packages/auth": {
       "name": "@workspace/auth",
       "version": "0.0.1",
@@ -4400,8 +4377,6 @@
 
     "yargs-parser": ["yargs-parser@21.1.1", "", {}, "sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw=="],
 
-    "yc": ["yc@workspace:apps/yc"],
-
     "yn": ["yn@3.1.1", "", {}, "sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q=="],
 
     "yocto-queue": ["yocto-queue@1.2.2", "", {}, "sha512-4LCcse/U2MHZ63HAJVE+v71o7yOdIe4cZ70Wpf8D/IyjDKYQLV5GD46B+hSTjJsvV5PztjvHoU580EftxjDZFQ=="],
@@ -5223,8 +5198,6 @@
     "yaml-language-server/request-light": ["request-light@0.5.8", "", {}, "sha512-3Zjgh+8b5fhRJBQZoy+zbVKpAQGLyka0MPgW3zruTF4dFFJ8Fqcfu9YsAvi/rvdcaTeWG3MkbZv4WKxAn/84Lg=="],
 
     "yaml-language-server/yaml": ["yaml@2.7.1", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-10ULxpnOCQXxJvBgxsn9ptjq6uviG/htZKk9veJGhlqn3w/DxQ631zFF+nlQXLwmImeS5amR2dl2U8sg6U9jsQ=="],
-
-    "yc/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@ampproject/remapping/@jridgewell/trace-mapping/@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.4", "", {}, "sha512-VT2+G1VQs/9oz078bLrYbecdZKs912zQlkelYpuf+SXF+QvZDYJlbx/LSx+meSAwdDFnF8FVXW92AVjjkVmgFw=="],
 
