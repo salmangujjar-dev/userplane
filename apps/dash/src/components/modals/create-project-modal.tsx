@@ -191,22 +191,22 @@ export function CreateProjectModal({
                   <div
                     className={cn(
                       'flex items-center justify-between',
-                      !featureGates?.customizeDataRetention && 'cursor-pointer'
+                      !featureGates?.customizeRetentionPolicy && 'cursor-pointer'
                     )}
                     onClick={
-                      !featureGates?.customizeDataRetention
-                        ? () => triggerUpsell('customizeDataRetention')
+                      !featureGates?.customizeRetentionPolicy
+                        ? () => triggerUpsell('customizeRetentionPolicy')
                         : undefined
                     }
                   >
                     <div className="space-y-0.5">
                       <Label
                         htmlFor={
-                          featureGates?.customizeDataRetention ? 'retention-days' : undefined
+                          featureGates?.customizeRetentionPolicy ? 'retention-days' : undefined
                         }
                         className={cn(
                           'text-sm font-medium',
-                          !featureGates?.customizeDataRetention &&
+                          !featureGates?.customizeRetentionPolicy &&
                             'text-muted-foreground cursor-pointer'
                         )}
                       >
@@ -217,7 +217,9 @@ export function CreateProjectModal({
                       </p>
                     </div>
                     <span
-                      className={cn(!featureGates?.customizeDataRetention && 'pointer-events-none')}
+                      className={cn(
+                        !featureGates?.customizeRetentionPolicy && 'pointer-events-none'
+                      )}
                     >
                       <Controller
                         name="recordingRetentionDays"
@@ -226,7 +228,7 @@ export function CreateProjectModal({
                           <Select
                             value={String(field.value)}
                             onValueChange={(value) => field.onChange(Number(value))}
-                            disabled={loading || !featureGates?.customizeDataRetention}
+                            disabled={loading || !featureGates?.customizeRetentionPolicy}
                           >
                             <SelectTrigger className="w-[140px]">
                               <SelectValue />

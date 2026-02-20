@@ -35,6 +35,7 @@ interface BillingDetailsModalProps {
     currentPeriodStart?: Date | null;
     cancelledAt?: Date | null;
     onHoldSince?: Date | null;
+    trialEnd?: Date | null;
     accessStatus?: AccessDetail;
   } | null;
   onManagePortal: () => void;
@@ -64,10 +65,24 @@ interface StatusConfig {
 const getStatusConfig = (
   status: SubscriptionStatus,
   cancelAtPeriodEnd: boolean,
-  daysRemaining?: number
+  daysRemaining?: number,
+  trialEnd?: Date | null
 ): StatusConfig => {
   switch (status) {
-    case 'active':
+    case 'active': {
+      if (trialEnd && new Date() < new Date(trialEnd)) {
+        const trialDaysLeft = Math.ceil(
+          (new Date(trialEnd).getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+        );
+        return {
+          icon: Clock,
+          bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+          dotColor: 'bg-blue-500',
+          textColor: 'text-blue-800 dark:text-blue-200',
+          label: 'Trial',
+          description: `Free trial \u2014 ${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} remaining. Your subscription will start after the trial ends.`,
+        };
+      }
       return {
         icon: CheckCircle,
         bgColor: 'bg-green-50 dark:bg-green-950/30',
@@ -78,6 +93,7 @@ const getStatusConfig = (
           ? 'Your subscription will end at the next billing date.'
           : 'Your subscription is active and will renew automatically.',
       };
+    }
     case 'on_hold': {
       const days = daysRemaining ?? 0;
       return {
@@ -194,7 +210,8 @@ export function BillingDetailsModal({
   const statusConfig = getStatusConfig(
     subscription.status,
     subscription.cancelAtPeriodEnd,
-    daysRemaining
+    daysRemaining,
+    subscription.trialEnd
   );
   const StatusIcon = statusConfig.icon;
 

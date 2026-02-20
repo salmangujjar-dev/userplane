@@ -3,14 +3,13 @@
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
-import { ArrowLeft, Globe, Loader2, Shield } from 'lucide-react';
-import Image from 'next/image';
+import { Globe, Loader2, Shield } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { NotFoundPage } from '@/components/shared/not-found-page';
 import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { useJoinWorkspace, useWorkspaceStatus } from '@/features/workspace';
-import { mediaClient } from '@/lib/media';
 import type { WorkspaceInvitePolicy } from '@/types';
 
 interface WorkspaceAccessGateProps {
@@ -56,19 +55,19 @@ export function WorkspaceAccessGate({ children }: WorkspaceAccessGateProps) {
   // Error state (network error or API error) - show 404
   const hasError = error || (statusResult && !statusResult.success);
   if (hasError) {
-    return <WorkspaceAccessDenied onGoBack={() => router.push('/')} />;
+    return <WorkspaceAccessDenied />;
   }
 
   // No data - shouldn't happen but handle gracefully
   if (!statusResult?.data) {
-    return <WorkspaceAccessDenied onGoBack={() => router.push('/')} />;
+    return <WorkspaceAccessDenied />;
   }
 
   const { isDeleted, accessStatus, workspaceName, invitePolicy } = statusResult.data;
 
   // Deleted workspace - show "gone" state
   if (isDeleted) {
-    return <WorkspaceAccessDeleted onGoBack={() => router.push('/')} />;
+    return <WorkspaceAccessDeleted />;
   }
 
   // Show "access requested" confirmation if user just requested access
@@ -83,7 +82,7 @@ export function WorkspaceAccessGate({ children }: WorkspaceAccessGateProps) {
 
   // No access (private or domain mismatch) - show 404
   if (accessStatus === 'no_access') {
-    return <WorkspaceAccessDenied onGoBack={() => router.push('/')} />;
+    return <WorkspaceAccessDenied />;
   }
 
   // Can join directly (whitelisted + domain match)
@@ -222,58 +221,24 @@ function WorkspaceCard({
  * 404-style page for denied access (private or domain mismatch)
  * Intentionally vague to prevent workspace enumeration
  */
-function WorkspaceAccessDenied({ onGoBack }: { onGoBack?: () => void }) {
+function WorkspaceAccessDenied() {
   return (
-    <WorkspaceAccessLayout>
-      <div className="flex flex-col items-center gap-3">
-        <Image
-          src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-          alt="Not Found"
-          width={120}
-          height={120}
-          className="mb-2"
-        />
-        <h1 className="text-xl font-medium text-foreground">Page not found</h1>
-        <p className="text-sm text-muted-foreground text-center">
-          The page you&apos;re looking for doesn&apos;t exist or you don&apos;t have access.
-        </p>
-      </div>
-      {onGoBack && (
-        <Button onClick={onGoBack} size="lg" className="rounded-full px-7 mt-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Go Home
-        </Button>
-      )}
-    </WorkspaceAccessLayout>
+    <NotFoundPage
+      heading="Workspace not found"
+      subtitle="The workspace you're looking for doesn't exist or you don't have access."
+    />
   );
 }
 
 /**
  * Message for soft-deleted workspaces
  */
-function WorkspaceAccessDeleted({ onGoBack }: { onGoBack?: () => void }) {
+function WorkspaceAccessDeleted() {
   return (
-    <WorkspaceAccessLayout>
-      <div className="flex flex-col items-center gap-3">
-        <Image
-          src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-          alt="Deleted"
-          width={120}
-          height={120}
-          className="mb-2"
-        />
-        <h1 className="text-xl font-medium text-foreground">Workspace deleted</h1>
-        <p className="text-sm text-muted-foreground text-center">
-          This workspace has been deleted and is no longer accessible.
-        </p>
-      </div>
-      {onGoBack && (
-        <Button onClick={onGoBack} size="lg" className="rounded-full px-7 mt-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Go Home
-        </Button>
-      )}
-    </WorkspaceAccessLayout>
+    <NotFoundPage
+      heading="Workspace deleted"
+      subtitle="This workspace has been deleted and is no longer accessible."
+    />
   );
 }
 

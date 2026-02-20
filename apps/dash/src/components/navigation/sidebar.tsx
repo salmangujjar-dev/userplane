@@ -113,7 +113,9 @@ export function AppSidebar() {
   const planDisplay = getPlanDisplay(
     subscriptionData?.contractDetail.planName ?? null,
     subscriptionData?.contractDetail.status ?? null,
-    subscriptionData?.contractDetail.cancelAtPeriodEnd
+    subscriptionData?.contractDetail.cancelAtPeriodEnd,
+    undefined,
+    subscriptionData?.contractDetail.trialEnd
   );
 
   /**
@@ -121,9 +123,10 @@ export function AppSidebar() {
    * Shows detailed mode (all plans) if no subscription, suggested mode otherwise
    */
   const handlePlanClick = () => {
+    const accessStatus = subscriptionData?.accessDetail.accessStatus;
     const hasActiveSubscription =
       subscriptionData?.contractDetail.planId &&
-      subscriptionData?.accessDetail.accessStatus === 'active';
+      (accessStatus === 'active' || accessStatus === 'trial');
 
     // No subscription → show all plans (detailed mode)
     // Has subscription → show suggested upgrade plans

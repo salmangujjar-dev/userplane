@@ -236,7 +236,8 @@ export function WorkspacePlanSection() {
     subscriptionData?.contractDetail.planName ?? null,
     subscriptionData?.contractDetail.status ?? null,
     subscriptionData?.contractDetail.cancelAtPeriodEnd,
-    calculateDaysRemaining()
+    calculateDaysRemaining(),
+    subscriptionData?.contractDetail.trialEnd
   );
 
   const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
@@ -272,9 +273,10 @@ export function WorkspacePlanSection() {
    * Shows detailed mode (all plans) if no subscription, suggested mode otherwise
    */
   const handleShowPlanPortal = () => {
+    const accessStatus = subscriptionData?.accessDetail.accessStatus;
     const hasActiveSubscription =
       subscriptionData?.contractDetail.planId &&
-      subscriptionData?.accessDetail.accessStatus === 'active';
+      (accessStatus === 'active' || accessStatus === 'trial');
 
     // No subscription → show all plans (detailed mode)
     // Has subscription → show suggested upgrade plans
@@ -424,6 +426,7 @@ export function WorkspacePlanSection() {
                 cancelAtPeriodEnd: subscriptionData.contractDetail.cancelAtPeriodEnd,
                 cancelledAt: subscriptionData.contractDetail.cancelledAt,
                 onHoldSince: subscriptionData.contractDetail.onHoldSince,
+                trialEnd: subscriptionData.contractDetail.trialEnd,
                 accessStatus: subscriptionData.accessDetail,
               }}
               onManagePortal={handleManageBilling}

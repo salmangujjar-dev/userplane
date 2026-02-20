@@ -3,10 +3,10 @@
  * Handles the display logic for subscription status
  */
 
-import type { SubscriptionStatus as PaymentSubscriptionStatus } from '@workspace/payments';
+import type { SubscriptionStatus } from '@workspace/contract';
 import type { PlanName } from '@workspace/pricing';
 
-export type SubscriptionStatus = PaymentSubscriptionStatus;
+export type { SubscriptionStatus };
 
 interface PlanDisplayResult {
   displayName: string;
@@ -23,7 +23,8 @@ export function getPlanDisplay(
   planName: PlanName | string | null,
   status: SubscriptionStatus | string | null,
   cancelAtPeriodEnd?: boolean,
-  daysRemaining?: number
+  daysRemaining?: number,
+  trialEnd?: Date | null
 ): PlanDisplayResult {
   if (!planName || !status) {
     return { displayName: 'Free' };
@@ -31,6 +32,15 @@ export function getPlanDisplay(
 
   switch (status) {
     case 'active':
+      if (trialEnd && new Date() < new Date(trialEnd)) {
+        const trialDaysLeft = Math.ceil(
+          (new Date(trialEnd).getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+        );
+        return {
+          displayName: planName,
+          statusMessage: `Free trial \u2014 ${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} remaining`,
+        };
+      }
       return { displayName: planName };
 
     case 'on_hold':

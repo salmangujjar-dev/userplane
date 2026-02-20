@@ -2,7 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  ADMIN_TRIAL_PERIOD_VALUES,
+  AdminPlanBillingCycleSchema,
+  type AdminWorkspaceProvisionData,
+  DEFAULT_TRIAL_PERIOD_DAYS,
+} from '@workspace/contract';
+import {
   FEATURE_GATE_KEYS,
+  FEATURE_GATE_LABELS,
   type FeatureGate,
   RESOURCE_TYPE_VALUES,
   type ResourceType,
@@ -48,44 +55,10 @@ import { DomainUrlSchema, EmailSchema } from '@/schemas';
 // TYPES
 // ============================================
 
-interface ProvisionResult {
-  checkoutUrl: string | null;
-  workspaceUrl: string;
-  workspaceId: string;
-  workspaceName: string;
-  userId: string;
-  isNewUser: boolean;
-}
-
 type PlanMode = 'none' | 'existing' | 'custom';
-type BillingCycle = 'monthly' | 'annual';
-
-/** Human-readable labels for feature gates */
-const FEATURE_GATE_LABELS: Record<FeatureGate, string> = {
-  replayRecordings: 'Replay Recordings',
-  autoBlurSensitiveData: 'Auto-blur Sensitive Data',
-  requestSessions: 'Request Sessions',
-  requestScreenshots: 'Request Screenshots',
-  annotateScreenshots: 'Annotate Screenshots',
-  requestFileUploads: 'Request File Uploads',
-  requestConsoleLogs: 'Request Console Logs',
-  requestNetworkActivity: 'Request Network Activity',
-  requestServerLogs: 'Request Server Logs',
-  requestActionReplay: 'Request Action Replay',
-  customizeWorkspace: 'Customize Workspace',
-  requestAdditionalSeats: 'Request Additional Seats',
-  bringYourOwnStorageRecordings: 'BYOS Recordings',
-  bringYourOwnStorageScreenshots: 'BYOS Screenshots',
-  bringYourOwnStorageFiles: 'BYOS Files',
-  customizeDataRetention: 'Custom Data Retention',
-  enableEnterpriseCompliance: 'Enterprise Compliance',
-  customizeDataResidency: 'Custom Data Residency',
-  integrateHelpDesks: 'Helpdesk Integrations',
-  integrateCRMs: 'CRM Integrations',
-  integrateIssueTrackers: 'Issue Tracker Integrations',
-  integrateAutomation: 'Automation Integrations',
-  accessUserplaneAPI: 'API Access',
-};
+type BillingCycle = z.infer<typeof AdminPlanBillingCycleSchema>;
+type TrialPeriod = (typeof ADMIN_TRIAL_PERIOD_VALUES)[number];
+const DEFAULT_TRIAL_PERIOD = String(DEFAULT_TRIAL_PERIOD_DAYS) as TrialPeriod;
 
 // ============================================
 // FORM SCHEMA
@@ -122,11 +95,14 @@ export function AdminProvisionWorkspaceModal({
   const [planMode, setPlanMode] = useState<PlanMode>('none');
   const [selectedProductId, setSelectedProductId] = useState('');
 
+  // Trial period state (for existing/custom plan modes)
+  const [trialPeriodDays, setTrialPeriodDays] = useState<TrialPeriod>(DEFAULT_TRIAL_PERIOD);
+
   // Custom plan state
   const [customPriceAmount, setCustomPriceAmount] = useState('');
   const [customBillingCycle, setCustomBillingCycle] = useState<BillingCycle>('monthly');
   const [customLimits, setCustomLimits] = useState<
-    Record<ResourceType, { quotedLimit: number; softLimit: number; hardLimit: number }>
+    Record<ResourceType, { quotedLimit: number; actualLimit: number }>
   >(() => cloneAdminCustomPlanLimits());
   const [customGates, setCustomGates] = useState<Record<FeatureGate, boolean>>(() =>
     cloneAdminCustomPlanGates()
@@ -158,6 +134,7 @@ export function AdminProvisionWorkspaceModal({
       setShowAdvanced(false);
       setPlanMode('none');
       setSelectedProductId('');
+      setTrialPeriodDays(DEFAULT_TRIAL_PERIOD);
       setCustomPriceAmount('');
       setCustomBillingCycle('monthly');
       setCustomLimits(cloneAdminCustomPlanLimits());
@@ -189,7 +166,7 @@ export function AdminProvisionWorkspaceModal({
 
   const updateCustomLimit = (
     rt: ResourceType,
-    field: 'quotedLimit' | 'softLimit' | 'hardLimit',
+    field: 'quotedLimit' | 'actualLimit',
     value: string
   ) => {
     setCustomLimits((prev) => ({
@@ -220,6 +197,7 @@ export function AdminProvisionWorkspaceModal({
         ...basePayload,
         planMode: 'existing',
         productId: selectedProductId,
+        trialPeriodDays,
       };
       onSubmit(payload);
       return;
@@ -229,6 +207,7 @@ export function AdminProvisionWorkspaceModal({
       const payload: AdminWorkspaceProvisionMutationInput = {
         ...basePayload,
         planMode: 'custom',
+        trialPeriodDays,
         customPlan: {
           price: {
             amountCents: Math.round((Number(customPriceAmount) || 0) * 100),
@@ -419,6 +398,33 @@ export function AdminProvisionWorkspaceModal({
                     </Select>
                   </div>
 
+                  {/* Trial Period */}
+                  {(planMode === 'existing' || planMode === 'custom') && (
+                    <div className="space-y-2.5">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-medium">Trial Period</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Number of days before billing starts
+                        </p>
+                      </div>
+                      <Select
+                        value={trialPeriodDays}
+                        onValueChange={(v) => setTrialPeriodDays(v as TrialPeriod)}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger className="rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">No trial</SelectItem>
+                          <SelectItem value="7">7 days</SelectItem>
+                          <SelectItem value="14">14 days</SelectItem>
+                          <SelectItem value="28">28 days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
                   {/* Existing Plan Selector */}
                   {planMode === 'existing' && (
                     <div className="space-y-2.5">
@@ -509,16 +515,15 @@ export function AdminProvisionWorkspaceModal({
                       <div className="space-y-2">
                         <h5 className="text-sm font-semibold">Feature Limits</h5>
                         <div className="rounded-lg border">
-                          <div className="grid grid-cols-4 gap-2 p-3 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
+                          <div className="grid grid-cols-3 gap-2 p-3 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
                             <div>Resource</div>
                             <div>Quoted</div>
-                            <div>Soft</div>
-                            <div>Hard</div>
+                            <div>Actual</div>
                           </div>
                           {RESOURCE_TYPE_VALUES.map((rt) => (
                             <div
                               key={rt}
-                              className="grid grid-cols-4 gap-2 p-3 border-b last:border-b-0 items-center"
+                              className="grid grid-cols-3 gap-2 p-3 border-b last:border-b-0 items-center"
                             >
                               <div className="text-sm capitalize">{rt}</div>
                               <Input
@@ -532,15 +537,10 @@ export function AdminProvisionWorkspaceModal({
                               />
                               <Input
                                 type="number"
-                                value={customLimits[rt]?.softLimit ?? 0}
-                                onChange={(e) => updateCustomLimit(rt, 'softLimit', e.target.value)}
-                                className="h-8 text-xs"
-                                disabled={isPending}
-                              />
-                              <Input
-                                type="number"
-                                value={customLimits[rt]?.hardLimit ?? 0}
-                                onChange={(e) => updateCustomLimit(rt, 'hardLimit', e.target.value)}
+                                value={customLimits[rt]?.actualLimit ?? 0}
+                                onChange={(e) =>
+                                  updateCustomLimit(rt, 'actualLimit', e.target.value)
+                                }
                                 className="h-8 text-xs"
                                 disabled={isPending}
                               />
@@ -637,7 +637,7 @@ export function AdminProvisionWorkspaceModal({
 interface AdminProvisionWorkspaceSuccessModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  result: ProvisionResult | null;
+  result: AdminWorkspaceProvisionData | null;
 }
 
 export function AdminProvisionWorkspaceSuccessModal({

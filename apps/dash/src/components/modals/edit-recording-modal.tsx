@@ -110,19 +110,23 @@ export function EditRecordingModal({
 
           <div className="space-y-4">
             <div
-              className={cn('space-y-2', !featureGates?.customizeDataRetention && 'cursor-pointer')}
+              className={cn(
+                'space-y-2',
+                !featureGates?.customizeRetentionPolicy && 'cursor-pointer'
+              )}
               onClick={
-                !featureGates?.customizeDataRetention
-                  ? () => triggerUpsell('customizeDataRetention')
+                !featureGates?.customizeRetentionPolicy
+                  ? () => triggerUpsell('customizeRetentionPolicy')
                   : undefined
               }
             >
               <div className="space-y-0.5">
                 <Label
-                  htmlFor={featureGates?.customizeDataRetention ? 'expires-at' : undefined}
+                  htmlFor={featureGates?.customizeRetentionPolicy ? 'expires-at' : undefined}
                   className={cn(
                     'text-sm font-medium',
-                    !featureGates?.customizeDataRetention && 'text-muted-foreground cursor-pointer'
+                    !featureGates?.customizeRetentionPolicy &&
+                      'text-muted-foreground cursor-pointer'
                   )}
                 >
                   Expiration
@@ -133,11 +137,13 @@ export function EditRecordingModal({
                     : 'Currently set to no expiration'}
                 </p>
               </div>
-              <span className={cn(!featureGates?.customizeDataRetention && 'pointer-events-none')}>
+              <span
+                className={cn(!featureGates?.customizeRetentionPolicy && 'pointer-events-none')}
+              >
                 <Select
                   value={selectedValue}
                   onValueChange={handleValueChange}
-                  disabled={isLoading || !featureGates?.customizeDataRetention}
+                  disabled={isLoading || !featureGates?.customizeRetentionPolicy}
                 >
                   <SelectTrigger id="expires-at" className="w-full">
                     <SelectValue placeholder="Select new expiration..." />

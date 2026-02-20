@@ -99,7 +99,7 @@ export function DomainRecordingSettings({
           'Capture console logs',
           settings.recordingCaptureClientLog,
           (checked) => updateSetting('recordingCaptureClientLog', checked),
-          'requestConsoleLogs'
+          'captureConsoleLog'
         )}
 
         {gatedToggle(
@@ -107,7 +107,7 @@ export function DomainRecordingSettings({
           'Capture client actions',
           settings.recordingCaptureClientAction,
           (checked) => updateSetting('recordingCaptureClientAction', checked),
-          'requestActionReplay'
+          'captureUserActions'
         )}
 
         {gatedToggle(
@@ -115,7 +115,7 @@ export function DomainRecordingSettings({
           'Capture network logs',
           settings.recordingCaptureNetworkLog,
           (checked) => updateSetting('recordingCaptureNetworkLog', checked),
-          'requestNetworkActivity'
+          'captureNetworkActivity'
         )}
 
         {gatedToggle(
@@ -123,7 +123,7 @@ export function DomainRecordingSettings({
           'Capture backend and server logs',
           settings.recordingCaptureServerLog,
           (checked) => updateSetting('recordingCaptureServerLog', checked),
-          'requestServerLogs'
+          'captureServerLogs'
         )}
       </div>
     </div>

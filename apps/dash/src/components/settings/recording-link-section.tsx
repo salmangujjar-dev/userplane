@@ -189,31 +189,33 @@ export function RecordingLinkSection() {
             <div
               className={cn(
                 'flex items-center justify-between p-6 rounded-xl border bg-card',
-                !featureGates?.customizeWorkspace && 'cursor-pointer'
+                !featureGates?.customizeRecordingLink && 'cursor-pointer'
               )}
               onClick={
-                !featureGates?.customizeWorkspace
-                  ? () => triggerUpsell('customizeWorkspace')
+                !featureGates?.customizeRecordingLink
+                  ? () => triggerUpsell('customizeRecordingLink')
                   : undefined
               }
             >
               <Label
-                htmlFor={featureGates?.customizeWorkspace ? 'customize-recording-link' : undefined}
+                htmlFor={
+                  featureGates?.customizeRecordingLink ? 'customize-recording-link' : undefined
+                }
                 className={cn(
                   'text-sm font-medium',
-                  featureGates?.customizeWorkspace
+                  featureGates?.customizeRecordingLink
                     ? 'cursor-pointer'
                     : 'text-muted-foreground cursor-pointer'
                 )}
               >
                 Customize recording link
               </Label>
-              <span className={cn(!featureGates?.customizeWorkspace && 'pointer-events-none')}>
+              <span className={cn(!featureGates?.customizeRecordingLink && 'pointer-events-none')}>
                 <Switch
                   id="customize-recording-link"
                   checked={customizeRecordingLink}
                   onCheckedChange={handleToggleChange}
-                  disabled={!featureGates?.customizeWorkspace}
+                  disabled={!featureGates?.customizeRecordingLink}
                 />
               </span>
             </div>
