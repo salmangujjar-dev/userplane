@@ -17,15 +17,15 @@ export interface Feature {
 export const FEATURES_HEADING = {
   label: 'Features',
   title: 'Stop guessing what went wrong',
-  subtitle: 'Resolve customer issues without the back and forth',
+  subtitle: "See the issue through your customer's lens",
 };
 
 /**
  * Features heading highlights configuration
  */
 export const FEATURES_HIGHLIGHTS: HighlightConfig[] = [
-  { wordIndex: 1, color: 'yellow' },
-  { wordIndex: 4, color: 'blue' },
+  { wordIndex: 1, color: 'blue' },
+  { wordIndex: 4, color: 'yellow' },
 ];
 
 /**

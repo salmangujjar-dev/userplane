@@ -10,6 +10,7 @@ const highlightColors: Record<HighlightColor, string> = {
   yellow: 'bg-yellow-200',
   green: 'bg-green-200',
   purple: 'bg-purple-200',
+  red: 'bg-red-200',
 };
 
 export default function Highlight({ children, color }: HighlightProps) {

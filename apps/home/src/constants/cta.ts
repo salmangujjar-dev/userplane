@@ -5,8 +5,8 @@ import type { HighlightConfig } from './types';
 export const CTA_HEADING = 'See the bug not just a description of it';
 
 export const CTA_HIGHLIGHTS: HighlightConfig[] = [
-  { wordIndex: 2, color: 'blue' },
-  { wordIndex: 6, color: 'yellow' },
+  { wordIndex: 2, color: 'yellow' },
+  { wordIndex: 6, color: 'blue' },
 ];
 
 export const CTA_DESCRIPTION =

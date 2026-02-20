@@ -1,22 +1,21 @@
 import { SIGNUP_URL } from './onboarding';
 import type { HighlightConfig } from './types';
 
-export const HERO_HEADING = 'One click screen recordings for Intercom';
-
-export const HERO_ICON = {
-  src: '/icons/intercom.webp',
-  alt: 'Intercom',
-  beforeWordIndex: 5,
-};
+export const HERO_HEADING = 'Resolve support issues without the back and forth';
 
 export const HERO_HIGHLIGHTS: HighlightConfig[] = [
+  { wordIndex: 1, color: 'yellow' },
   { wordIndex: 2, color: 'yellow' },
-  { wordIndex: 3, color: 'yellow' },
   { wordIndex: 5, color: 'blue' },
+  { wordIndex: 6, color: 'blue' },
+  { wordIndex: 7, color: 'blue' },
 ];
 
+// export const HERO_DESCRIPTION =
+// 'Request screen recordings from your customers showing exactly what went wrong. Capture logs, network requests, and session activity';
+
 export const HERO_DESCRIPTION =
-  "Request screen recordings from your customers showing exactly what went wrong. See the issue through your customer's lens.";
+  'Request screen recordings with console logs, network requests, and session data. Resolve tickets up to 60% faster with full context upfront';
 
 export const HERO_PRIMARY_BUTTON = {
   text: 'Get Started',

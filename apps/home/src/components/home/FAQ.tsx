@@ -5,6 +5,30 @@ import { FAQ_HEADING, FAQ_HIGHLIGHTS, FAQ_ITEMS, type FAQItem } from '@/constant
 
 import Highlight from './Highlight';
 
+function FAQAnswer({ item }: { item: FAQItem }) {
+  if (!item.link) {
+    return <>{item.answer}</>;
+  }
+
+  const index = item.answer.indexOf(item.link.text);
+  if (index === -1) {
+    return <>{item.answer}</>;
+  }
+
+  const before = item.answer.slice(0, index);
+  const after = item.answer.slice(index + item.link.text.length);
+
+  return (
+    <>
+      {before}
+      <a href={item.link.href} className="underline decoration-dotted underline-offset-2">
+        {item.link.text}
+      </a>
+      {after}
+    </>
+  );
+}
+
 interface FAQAccordionItemProps {
   item: FAQItem;
   isOpen: boolean;
@@ -33,7 +57,7 @@ function FAQAccordionItem({ item, isOpen, onToggle }: FAQAccordionItemProps) {
       {isOpen && (
         <div className="pb-6 w-full min-w-0 overflow-hidden pr-8">
           <p className="text-base text-zinc-600 leading-relaxed wrap-break-word overflow-wrap-anywhere">
-            {item.answer}
+            <FAQAnswer item={item} />
           </p>
         </div>
       )}
