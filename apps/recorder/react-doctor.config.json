@@ -1,0 +1,5 @@
+{
+  "ignore": {
+    "rules": ["nextjs-no-img-element", "react-doctor/nextjs-no-img-element"]
+  }
+}

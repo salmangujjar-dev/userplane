@@ -11,8 +11,8 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
-  useState,
 } from 'react';
 
 import {
@@ -83,15 +83,42 @@ interface AppModeProviderProps {
   crossTabWorkerURL?: string;
 }
 
+type LockState = {
+  status: CrossTabLockStatus;
+  error: string | null;
+  blockingTabId: string | null;
+};
+
+type LockAction =
+  | { type: 'connecting' }
+  | { type: 'acquired' }
+  | { type: 'blocked'; error: string; blockingTabId: string | null }
+  | { type: 'error'; error: string };
+
+function lockReducer(state: LockState, action: LockAction): LockState {
+  switch (action.type) {
+    case 'connecting':
+      return { status: 'connecting', error: null, blockingTabId: null };
+    case 'acquired':
+      return { status: 'acquired', error: null, blockingTabId: null };
+    case 'blocked':
+      return { status: 'blocked', error: action.error, blockingTabId: action.blockingTabId };
+    case 'error':
+      return { status: 'error', error: action.error, blockingTabId: null };
+  }
+}
+
 export function AppModeProvider({ children, actionType, crossTabWorkerURL }: AppModeProviderProps) {
   const bridgeRef = useRef<RecorderBridgeConnection | null>(null);
   const verificationBridgeRef = useRef<VerificationBridgeConnection | null>(null);
   const crossTabRef = useRef<CrossTabCoordinator | null>(null);
 
   // Track cross-tab lock status
-  const [lockStatus, setLockStatus] = useState<CrossTabLockStatus>('pending');
-  const [lockError, setLockError] = useState<string | null>(null);
-  const [blockingTabId, setBlockingTabId] = useState<string | null>(null);
+  const [lockState, dispatchLock] = useReducer(lockReducer, {
+    status: 'pending',
+    error: null,
+    blockingTabId: null,
+  });
 
   // Detect mode once (stable reference)
   const mode = useMemo(() => detectAppMode(), []);
@@ -139,11 +166,11 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
       bridge: isEmbedded ? bridgeRef.current : null,
       verificationBridge: isEmbedded ? verificationBridgeRef.current : null,
       crossTab: isEmbedded ? crossTabRef.current : null,
-      crossTabLockStatus: lockStatus,
-      crossTabError: lockError,
-      blockingTabId,
+      crossTabLockStatus: lockState.status,
+      crossTabError: lockState.error,
+      blockingTabId: lockState.blockingTabId,
     }),
-    [mode, isEmbedded, lockStatus, lockError, blockingTabId]
+    [mode, isEmbedded, lockState]
   );
 
   // Connect verification bridge (simple connection, no cross-tab coordination needed)
@@ -164,12 +191,11 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
         logger.debug('verification bridge connected');
         // For verification, we don't need cross-tab coordination
         // Set lock status to acquired so UI doesn't show waiting state
-        setLockStatus('acquired');
+        dispatchLock({ type: 'acquired' });
       } catch (error) {
         if (!mounted) return;
         logger.error({ err: error }, 'verification bridge connection failed');
-        setLockStatus('error');
-        setLockError('Failed to connect to parent');
+        dispatchLock({ type: 'error', error: 'Failed to connect to parent' });
       }
     }
 
@@ -193,9 +219,7 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
     let mounted = true;
 
     async function connectAll() {
-      setLockStatus('connecting');
-      setLockError(null);
-      setBlockingTabId(null);
+      dispatchLock({ type: 'connecting' });
 
       try {
         // Step 1: Connect bridge to parent SDK to get tabRef
@@ -218,11 +242,11 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
         if (isMounted) {
           const holderTabId = crossTab.getRecorderTabId();
           logger.warn({ holderTabId }, 'blocked by another recorder');
-          setLockStatus('blocked');
-          setLockError(
-            'Another recorder is already open. Only one recorder can be active at a time.'
-          );
-          setBlockingTabId(holderTabId);
+          dispatchLock({
+            type: 'blocked',
+            error: 'Another recorder is already open. Only one recorder can be active at a time.',
+            blockingTabId: holderTabId,
+          });
           return;
         }
 
@@ -235,19 +259,20 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
           logger.debug('recorder lock acquired');
           // Wire up cross-tab coordinator to bridge for state sync
           bridge.setCrossTabCoordinator(crossTab);
-          setLockStatus('acquired');
+          dispatchLock({ type: 'acquired' });
         } else {
           logger.warn({ error: result.error }, 'failed to acquire lock');
-          setLockStatus('blocked');
-          setLockError(result.error ?? 'Failed to acquire recorder lock');
-          setBlockingTabId(result.currentHolderTabId ?? null);
+          dispatchLock({
+            type: 'blocked',
+            error: result.error ?? 'Failed to acquire recorder lock',
+            blockingTabId: result.currentHolderTabId ?? null,
+          });
         }
       } catch (error) {
         if (!mounted) return;
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         logger.error({ err: error }, 'connection failed');
-        setLockStatus('error');
-        setLockError(`Failed to connect: ${errorMessage}`);
+        dispatchLock({ type: 'error', error: `Failed to connect: ${errorMessage}` });
       }
     }
 

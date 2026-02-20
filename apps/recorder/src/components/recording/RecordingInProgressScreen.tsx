@@ -4,7 +4,7 @@
  */
 
 import { Button } from '@workspace/ui/components/button';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 
 import {
   DEFAULT_COMPANY_NAME,
@@ -37,7 +37,19 @@ export default function RecordingInProgressScreen({
   settingsElement,
 }: RecordingInProgressScreenProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isLocalProcessing, setIsLocalProcessing] = useState(false);
+  const [hasClickedStop, setHasClickedStop] = useState(false);
+
+  // Reset click tracking when parent processing completes (React recommended pattern)
+  const prevIsProcessingRef = useRef(isProcessing);
+  if (prevIsProcessingRef.current !== isProcessing) {
+    prevIsProcessingRef.current = isProcessing;
+    if (!isProcessing && hasClickedStop) {
+      setHasClickedStop(false);
+    }
+  }
+
+  // Derive effective processing state from parent prop + local click tracking
+  const isLocalProcessing = isProcessing || hasClickedStop;
 
   useEffect(() => {
     if (videoRef.current && mediaStream) {
@@ -53,29 +65,14 @@ export default function RecordingInProgressScreen({
     };
   }, [mediaStream]);
 
-  // Reset local processing state when parent processing state changes
-  // This handles cases where the parent fails to update isProcessing
-  useEffect(() => {
-    if (isProcessing) {
-      // Parent confirmed processing started, keep local state in sync
-      setIsLocalProcessing(true);
-    } else {
-      // Parent finished processing, reset local state
-      setIsLocalProcessing(false);
-    }
-  }, [isProcessing]);
-
   const handleStopRecording = () => {
     // Prevent double-clicks with local state guard
-    if (isLocalProcessing || isProcessing) {
+    if (isLocalProcessing) {
       return;
     }
 
-    setIsLocalProcessing(true);
-
-    if (onStopRecording) {
-      onStopRecording();
-    }
+    setHasClickedStop(true);
+    onStopRecording?.();
   };
 
   const customizeLink = preferences.customizeLink;
