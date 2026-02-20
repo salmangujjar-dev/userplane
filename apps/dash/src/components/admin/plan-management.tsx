@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminPlanProduct } from '@workspace/contract';
+import { AdminPlanBillingCycleSchema, type AdminPlanProduct } from '@workspace/contract';
 import type { FeatureGate, ResourceType } from '@workspace/pricing';
 import { FEATURE_GATE_KEYS, FEATURE_GATE_LABELS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
@@ -27,6 +27,7 @@ import { Textarea } from '@workspace/ui/components/textarea';
 import { VisuallyHidden } from '@workspace/ui/components/visually-hidden';
 import { ChevronLeft, ChevronRight, CreditCard, Loader2, Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { z } from 'zod';
 
 import { AdminPlanMetadataLine, AdminPlanSummaryRow } from '@/components/admin/plan-display';
 import {
@@ -41,12 +42,9 @@ import {
 // SHARED PRIMITIVES
 // ============================================
 
-type BillingCycle = 'monthly' | 'annual';
-type LimitField = 'quotedLimit' | 'softLimit' | 'hardLimit';
-type LimitRecord = Record<
-  ResourceType,
-  { quotedLimit: number; softLimit: number; hardLimit: number }
->;
+type BillingCycle = z.infer<typeof AdminPlanBillingCycleSchema>;
+type LimitField = 'quotedLimit' | 'actualLimit';
+type LimitRecord = Record<ResourceType, { quotedLimit: number; actualLimit: number }>;
 type GateRecord = Record<FeatureGate, boolean>;
 
 function inferBillingCycle(price: AdminPlanProduct['price']): BillingCycle {
@@ -75,16 +73,15 @@ function FeatureLimitsTable({
     <section className="space-y-4">
       <h3 className="text-sm font-semibold">Feature Limits</h3>
       <div className="rounded-lg border">
-        <div className="grid grid-cols-4 gap-2 p-3 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
+        <div className="grid grid-cols-3 gap-2 p-3 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
           <div>Resource</div>
           <div>Quoted</div>
-          <div>Soft</div>
-          <div>Hard</div>
+          <div>Actual</div>
         </div>
         {RESOURCE_TYPE_VALUES.map((rt) => (
           <div
             key={rt}
-            className="grid grid-cols-4 gap-2 p-3 border-b last:border-b-0 items-center"
+            className="grid grid-cols-3 gap-2 p-3 border-b last:border-b-0 items-center"
           >
             <div className="text-sm capitalize">{rt}</div>
             <Input
@@ -95,14 +92,8 @@ function FeatureLimitsTable({
             />
             <Input
               type="number"
-              value={limits[rt]?.softLimit ?? 0}
-              onChange={(e) => onUpdate(rt, 'softLimit', e.target.value)}
-              className="h-8 text-xs"
-            />
-            <Input
-              type="number"
-              value={limits[rt]?.hardLimit ?? 0}
-              onChange={(e) => onUpdate(rt, 'hardLimit', e.target.value)}
+              value={limits[rt]?.actualLimit ?? 0}
+              onChange={(e) => onUpdate(rt, 'actualLimit', e.target.value)}
               className="h-8 text-xs"
             />
           </div>
@@ -201,8 +192,7 @@ function PlanDetailSheet({
       const existing = product.featureLimits?.find((l) => l.resourceType === rt);
       newLimits[rt] = {
         quotedLimit: existing?.quotedLimit ?? 0,
-        softLimit: existing?.softLimit ?? 0,
-        hardLimit: existing?.hardLimit ?? 0,
+        actualLimit: existing?.actualLimit ?? 0,
       };
     }
     setLimits(newLimits);
@@ -344,8 +334,7 @@ function CreatePlanSheet({
 
   const initLimits = (): LimitRecord => {
     const init = {} as LimitRecord;
-    for (const rt of RESOURCE_TYPE_VALUES)
-      init[rt] = { quotedLimit: 0, softLimit: 0, hardLimit: 0 };
+    for (const rt of RESOURCE_TYPE_VALUES) init[rt] = { quotedLimit: 0, actualLimit: 0 };
     return init;
   };
 

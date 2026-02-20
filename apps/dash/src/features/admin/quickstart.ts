@@ -3,17 +3,17 @@ import { FEATURE_GATE_KEYS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 
 export type AdminCustomPlanLimits = Record<
   ResourceType,
-  { quotedLimit: number; softLimit: number; hardLimit: number }
+  { quotedLimit: number; actualLimit: number }
 >;
 
 export type AdminCustomPlanGates = Record<FeatureGate, boolean>;
 
 export const ADMIN_CUSTOM_PLAN_QUICKSTART_LIMITS: AdminCustomPlanLimits = {
-  seats: { quotedLimit: 30, softLimit: 30, hardLimit: 45 },
-  recordings: { quotedLimit: -1, softLimit: 150, hardLimit: 700 },
-  links: { quotedLimit: -1, softLimit: 1400, hardLimit: 1750 },
-  screenshots: { quotedLimit: -1, softLimit: 500, hardLimit: 1000 },
-  files: { quotedLimit: -1, softLimit: 200, hardLimit: 4000 },
+  seats: { quotedLimit: 30, actualLimit: 45 },
+  recordings: { quotedLimit: -1, actualLimit: 700 },
+  links: { quotedLimit: -1, actualLimit: 1750 },
+  screenshots: { quotedLimit: -1, actualLimit: 1000 },
+  files: { quotedLimit: -1, actualLimit: 4000 },
 };
 
 export const ADMIN_CUSTOM_PLAN_QUICKSTART_GATES: AdminCustomPlanGates = Object.fromEntries(

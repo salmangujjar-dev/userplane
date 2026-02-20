@@ -64,14 +64,12 @@ function EditEntitlementModal({
   isPending,
 }: EditEntitlementModalProps) {
   const [quotedLimit, setQuotedLimit] = useState('');
-  const [softLimit, setSoftLimit] = useState('');
-  const [hardLimit, setHardLimit] = useState('');
+  const [actualLimit, setActualLimit] = useState('');
 
   useEffect(() => {
     if (open && entitlement) {
       setQuotedLimit(entitlement.quotedLimit.toString());
-      setSoftLimit(entitlement.softLimit.toString());
-      setHardLimit(entitlement.hardLimit.toString());
+      setActualLimit(entitlement.actualLimit.toString());
     }
   }, [open, entitlement]);
 
@@ -83,24 +81,16 @@ function EditEntitlementModal({
     };
 
     const newQuotedLimit = parseInt(quotedLimit, 10);
-    const newSoftLimit = parseInt(softLimit, 10);
-    const newHardLimit = parseInt(hardLimit, 10);
+    const newActualLimit = parseInt(actualLimit, 10);
 
     if (!isNaN(newQuotedLimit) && newQuotedLimit !== entitlement.quotedLimit) {
       update.quotedLimit = newQuotedLimit;
     }
-    if (!isNaN(newSoftLimit) && newSoftLimit !== entitlement.softLimit) {
-      update.softLimit = newSoftLimit;
-    }
-    if (!isNaN(newHardLimit) && newHardLimit !== entitlement.hardLimit) {
-      update.hardLimit = newHardLimit;
+    if (!isNaN(newActualLimit) && newActualLimit !== entitlement.actualLimit) {
+      update.actualLimit = newActualLimit;
     }
 
-    if (
-      update.quotedLimit === undefined &&
-      update.softLimit === undefined &&
-      update.hardLimit === undefined
-    ) {
+    if (update.quotedLimit === undefined && update.actualLimit === undefined) {
       onOpenChange(false);
       return;
     }
@@ -145,28 +135,14 @@ function EditEntitlementModal({
             </div>
 
             <div>
-              <Label htmlFor="softLimit" className="mb-2 block">
-                Soft Limit
+              <Label htmlFor="actualLimit" className="mb-2 block">
+                Actual Limit
               </Label>
               <Input
-                id="softLimit"
+                id="actualLimit"
                 type="number"
-                value={softLimit}
-                onChange={(e) => setSoftLimit(e.target.value)}
-                min={0}
-                disabled={isPending}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="hardLimit" className="mb-2 block">
-                Hard Limit
-              </Label>
-              <Input
-                id="hardLimit"
-                type="number"
-                value={hardLimit}
-                onChange={(e) => setHardLimit(e.target.value)}
+                value={actualLimit}
+                onChange={(e) => setActualLimit(e.target.value)}
                 min={-1}
                 disabled={isPending}
               />
@@ -235,8 +211,7 @@ export function EntitlementsTab({ workspaceId }: EntitlementsTabProps) {
                 <TableHead>Resource</TableHead>
                 <TableHead className="text-right">Consumed</TableHead>
                 <TableHead className="text-right">Quoted Limit</TableHead>
-                <TableHead className="text-right">Soft Limit</TableHead>
-                <TableHead className="text-right">Hard Limit</TableHead>
+                <TableHead className="text-right">Actual Limit</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -256,9 +231,6 @@ export function EntitlementsTab({ workspaceId }: EntitlementsTabProps) {
                     <TableCell className="text-right">
                       <Skeleton className="h-4 w-12 ml-auto" />
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Skeleton className="h-4 w-12 ml-auto" />
-                    </TableCell>
                     <TableCell>
                       <Skeleton className="h-8 w-8 ml-auto" />
                     </TableCell>
@@ -266,7 +238,7 @@ export function EntitlementsTab({ workspaceId }: EntitlementsTabProps) {
                 ))
               ) : entitlements.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     No entitlements found
                   </TableCell>
                 </TableRow>
@@ -283,10 +255,7 @@ export function EntitlementsTab({ workspaceId }: EntitlementsTabProps) {
                       <span className="text-sm">{formatLimit(entitlement.quotedLimit)}</span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="text-sm">{entitlement.softLimit}</span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className="text-sm">{formatLimit(entitlement.hardLimit)}</span>
+                      <span className="text-sm">{formatLimit(entitlement.actualLimit)}</span>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
