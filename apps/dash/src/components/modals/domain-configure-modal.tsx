@@ -52,25 +52,23 @@ function GatedToggle({
 }: GatedToggleProps) {
   const gated = !featureGates?.[featureKey];
   const isDisabled = loading || !verified;
+  const isInteractive = gated && !isDisabled;
   return (
     <div
-      className={cn(
-        'flex items-center justify-between',
-        gated && !isDisabled && 'cursor-pointer'
-      )}
-      role={gated && !isDisabled ? 'button' : undefined}
-      tabIndex={gated && !isDisabled ? 0 : undefined}
-      onClick={gated && !isDisabled ? () => triggerUpsell(featureKey) : undefined}
-      onKeyDown={
-        gated && !isDisabled
-          ? (e) => {
+      className={cn('flex items-center justify-between', isInteractive && 'cursor-pointer')}
+      {...(isInteractive
+        ? {
+            role: 'button' as const,
+            tabIndex: 0,
+            onClick: () => triggerUpsell(featureKey),
+            onKeyDown: (e: React.KeyboardEvent) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 triggerUpsell(featureKey);
               }
-            }
-          : undefined
-      }
+            },
+          }
+        : {})}
     >
       <Label
         htmlFor={!gated ? id : undefined}
@@ -125,12 +123,7 @@ function VerificationStatusSection({
                 : 'Complete domain verification to enable recordings'}
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onVerify}
-            className="ml-2 min-w-[80px]"
-          >
+          <Button variant="outline" size="sm" onClick={onVerify} className="ml-2 min-w-[80px]">
             {verified ? 'Reverify' : 'Verify'}
           </Button>
         </div>
@@ -165,7 +158,9 @@ interface RecordingSettingsSectionProps {
   verified: boolean;
   loading: boolean;
   localSettings: DomainRecordingPreferences;
-  onSettingsChange: (updater: (prev: DomainRecordingPreferences) => DomainRecordingPreferences) => void;
+  onSettingsChange: (
+    updater: (prev: DomainRecordingPreferences) => DomainRecordingPreferences
+  ) => void;
   featureGates: Record<string, boolean> | undefined;
   triggerUpsell: (featureKey: UpsellFeatureKey) => void;
 }

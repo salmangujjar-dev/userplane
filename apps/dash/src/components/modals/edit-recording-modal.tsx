@@ -114,23 +114,19 @@ export function EditRecordingModal({
                 'space-y-2',
                 !featureGates?.customizeRetentionPolicy && 'cursor-pointer'
               )}
-              role={!featureGates?.customizeRetentionPolicy ? 'button' : undefined}
-              tabIndex={!featureGates?.customizeRetentionPolicy ? 0 : undefined}
-              onClick={
-                !featureGates?.customizeRetentionPolicy
-                  ? () => triggerUpsell('customizeRetentionPolicy')
-                  : undefined
-              }
-              onKeyDown={
-                !featureGates?.customizeRetentionPolicy
-                  ? (e) => {
+              {...(!featureGates?.customizeRetentionPolicy
+                ? {
+                    role: 'button' as const,
+                    tabIndex: 0,
+                    onClick: () => triggerUpsell('customizeRetentionPolicy'),
+                    onKeyDown: (e: React.KeyboardEvent) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         triggerUpsell('customizeRetentionPolicy');
                       }
-                    }
-                  : undefined
-              }
+                    },
+                  }
+                : {})}
             >
               <div className="space-y-0.5">
                 <Label
