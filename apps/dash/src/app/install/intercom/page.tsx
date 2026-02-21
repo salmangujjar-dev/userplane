@@ -1,4 +1,10 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+
+export const metadata: Metadata = {
+  title: 'Install Intercom',
+  description: 'Install Userplane via the Intercom App Store',
+};
 
 /**
  * Intercom App Store install entry point.

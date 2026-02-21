@@ -6,9 +6,9 @@ import type {
 import { SearchInput } from '@workspace/ui/components/search-input';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { ArrowDown, ArrowUp, ArrowUpDown, Clock, UserCheck } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { redirect, RedirectType } from 'next/navigation';
 import { useQueryState } from 'nuqs';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useReducer, useRef, useState } from 'react';
 
 import { UserCard } from '@/components/admin/user-card';
 import { UserDetailSheet } from '@/components/admin/user-detail-sheet';
@@ -66,6 +66,114 @@ interface UserToAction {
   email: string;
 }
 
+// ---- Reducers for grouped state ----
+
+interface PaginationState {
+  detailSessionsPage: number;
+  modalSessionsPage: number;
+  detailWorkspacesPage: number;
+}
+
+type PaginationAction =
+  | { type: 'SET_DETAIL_SESSIONS_PAGE'; value: number }
+  | { type: 'SET_MODAL_SESSIONS_PAGE'; value: number }
+  | { type: 'SET_DETAIL_WORKSPACES_PAGE'; value: number }
+  | { type: 'RESET_DETAIL_PAGES' };
+
+const initialPaginationState: PaginationState = {
+  detailSessionsPage: 0,
+  modalSessionsPage: 0,
+  detailWorkspacesPage: 0,
+};
+
+function paginationReducer(state: PaginationState, action: PaginationAction): PaginationState {
+  switch (action.type) {
+    case 'SET_DETAIL_SESSIONS_PAGE':
+      return { ...state, detailSessionsPage: action.value };
+    case 'SET_MODAL_SESSIONS_PAGE':
+      return { ...state, modalSessionsPage: action.value };
+    case 'SET_DETAIL_WORKSPACES_PAGE':
+      return { ...state, detailWorkspacesPage: action.value };
+    case 'RESET_DETAIL_PAGES':
+      return { ...state, detailSessionsPage: 0, detailWorkspacesPage: 0 };
+    default:
+      return state;
+  }
+}
+
+interface ModalState {
+  userToImpersonate: UserToAction | null;
+  userToBan: UserToAction | null;
+  userForSessions: UserToAction | null;
+  sessionToRevoke: AdminUserSession | null;
+  userToRevokeAllSessions: UserToAction | null;
+}
+
+type ModalAction =
+  | { type: 'SET_USER_TO_IMPERSONATE'; value: UserToAction | null }
+  | { type: 'SET_USER_TO_BAN'; value: UserToAction | null }
+  | { type: 'SET_USER_FOR_SESSIONS'; value: UserToAction | null }
+  | { type: 'SET_SESSION_TO_REVOKE'; value: AdminUserSession | null }
+  | { type: 'SET_USER_TO_REVOKE_ALL_SESSIONS'; value: UserToAction | null };
+
+const initialModalState: ModalState = {
+  userToImpersonate: null,
+  userToBan: null,
+  userForSessions: null,
+  sessionToRevoke: null,
+  userToRevokeAllSessions: null,
+};
+
+function modalReducer(state: ModalState, action: ModalAction): ModalState {
+  switch (action.type) {
+    case 'SET_USER_TO_IMPERSONATE':
+      return { ...state, userToImpersonate: action.value };
+    case 'SET_USER_TO_BAN':
+      return { ...state, userToBan: action.value };
+    case 'SET_USER_FOR_SESSIONS':
+      return { ...state, userForSessions: action.value };
+    case 'SET_SESSION_TO_REVOKE':
+      return { ...state, sessionToRevoke: action.value };
+    case 'SET_USER_TO_REVOKE_ALL_SESSIONS':
+      return { ...state, userToRevokeAllSessions: action.value };
+    default:
+      return state;
+  }
+}
+
+interface InviteState {
+  showCreateInviteModal: boolean;
+  showInviteSuccessModal: boolean;
+  inviteResult: AdminCreateWorkspaceInviteData | null;
+}
+
+type InviteAction =
+  | { type: 'SHOW_CREATE_INVITE'; value: boolean }
+  | { type: 'SHOW_INVITE_SUCCESS'; value: boolean }
+  | { type: 'SET_INVITE_RESULT'; value: AdminCreateWorkspaceInviteData | null }
+  | { type: 'INVITE_SUCCESS'; result: AdminCreateWorkspaceInviteData };
+
+const initialInviteState: InviteState = {
+  showCreateInviteModal: false,
+  showInviteSuccessModal: false,
+  inviteResult: null,
+};
+
+function inviteReducer(state: InviteState, action: InviteAction): InviteState {
+  switch (action.type) {
+    case 'SHOW_CREATE_INVITE':
+      return { ...state, showCreateInviteModal: action.value };
+    case 'SHOW_INVITE_SUCCESS':
+      return { ...state, showInviteSuccessModal: action.value };
+    case 'SET_INVITE_RESULT':
+      return { ...state, inviteResult: action.value };
+    case 'INVITE_SUCCESS':
+      return { ...state, showCreateInviteModal: false, inviteResult: action.result, showInviteSuccessModal: true };
+    default:
+      return state;
+  }
+}
+
 function UserCardSkeleton() {
   return (
     <div className="rounded-xl border border-border p-6">
@@ -82,7 +190,6 @@ function UserCardSkeleton() {
 }
 
 function AdminUsersPageContent() {
-  const router = useRouter();
   const { hasAdminAccess, isPending: isSessionPending, user: currentUser } = useSession();
   const [search, setSearch] = useQueryState('search', searchParser);
   const [currentPage, setCurrentPage] = useQueryState('page', pageParser);
@@ -104,21 +211,17 @@ function AdminUsersPageContent() {
     sortDirection: (selectedSortDirection[0] as 'asc' | 'desc') || 'desc',
   });
 
-  // Sessions and workspaces pagination
-  const [detailSessionsPage, setDetailSessionsPage] = useState(0);
-  const [modalSessionsPage, setModalSessionsPage] = useState(0);
-  const [detailWorkspacesPage, setDetailWorkspacesPage] = useState(0);
+  // Sessions and workspaces pagination (grouped)
+  const [pagination, dispatchPagination] = useReducer(paginationReducer, initialPaginationState);
+  const { detailSessionsPage, modalSessionsPage, detailWorkspacesPage } = pagination;
 
-  // Modal states
-  const [userToImpersonate, setUserToImpersonate] = useState<UserToAction | null>(null);
-  const [userToBan, setUserToBan] = useState<UserToAction | null>(null);
-  const [userForSessions, setUserForSessions] = useState<UserToAction | null>(null);
-  const [sessionToRevoke, setSessionToRevoke] = useState<AdminUserSession | null>(null);
-  const [userToRevokeAllSessions, setUserToRevokeAllSessions] = useState<UserToAction | null>(null);
+  // Modal states (grouped)
+  const [modals, dispatchModals] = useReducer(modalReducer, initialModalState);
+  const { userToImpersonate, userToBan, userForSessions, sessionToRevoke, userToRevokeAllSessions } = modals;
 
-  const [showCreateInviteModal, setShowCreateInviteModal] = useState(false);
-  const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
-  const [inviteResult, setInviteResult] = useState<AdminCreateWorkspaceInviteData | null>(null);
+  // Invite modal state (grouped)
+  const [invite, dispatchInvite] = useReducer(inviteReducer, initialInviteState);
+  const { showCreateInviteModal, showInviteSuccessModal, inviteResult } = invite;
 
   // Hooks
   const { impersonateUser, isPending: isImpersonating } = useImpersonation();
@@ -203,21 +306,15 @@ function AdminUsersPageContent() {
   });
 
   // Reset sessions and workspaces pages when user changes
-  useEffect(() => {
-    setDetailSessionsPage(0);
-    setDetailWorkspacesPage(0);
-  }, [selectedUserId]);
+  const prevSelectedUserIdRef = useRef(selectedUserId);
+  if (prevSelectedUserIdRef.current !== selectedUserId) {
+    prevSelectedUserIdRef.current = selectedUserId;
+    dispatchPagination({ type: 'RESET_DETAIL_PAGES' });
+  }
 
   useEffect(() => {
-    setModalSessionsPage(0);
+    dispatchPagination({ type: 'SET_MODAL_SESSIONS_PAGE', value: 0 });
   }, [userForSessions?.id]);
-
-  // Redirect users without admin access
-  useEffect(() => {
-    if (!isSessionPending && !hasAdminAccess) {
-      router.replace('/');
-    }
-  }, [isSessionPending, hasAdminAccess, router]);
 
   // Show loading while checking session
   if (isSessionPending) {
@@ -244,8 +341,9 @@ function AdminUsersPageContent() {
     );
   }
 
+  // Redirect users without admin access
   if (!hasAdminAccess) {
-    return null;
+    redirect('/', RedirectType.replace);
   }
 
   const users = usersResult?.success ? usersResult.data.users : [];
@@ -273,7 +371,7 @@ function AdminUsersPageContent() {
 
   const handleImpersonate = (user: UserToAction) => {
     if (user.id === currentUser?.id) return;
-    setUserToImpersonate(user);
+    dispatchModals({ type: 'SET_USER_TO_IMPERSONATE', value: user });
   };
 
   const confirmImpersonate = () => {
@@ -287,7 +385,7 @@ function AdminUsersPageContent() {
 
   const handleBan = (user: UserToAction) => {
     if (user.id === currentUser?.id) return;
-    setUserToBan(user);
+    dispatchModals({ type: 'SET_USER_TO_BAN', value: user });
   };
 
   const confirmBan = (options: {
@@ -298,7 +396,7 @@ function AdminUsersPageContent() {
     if (userToBan) {
       banMutation.mutate(
         { userId: userToBan.id, ...options },
-        { onSuccess: () => setUserToBan(null) }
+        { onSuccess: () => dispatchModals({ type: 'SET_USER_TO_BAN', value: null }) }
       );
     }
   };
@@ -308,7 +406,7 @@ function AdminUsersPageContent() {
   };
 
   const handleViewSessions = (user: UserToAction) => {
-    setUserForSessions(user);
+    dispatchModals({ type: 'SET_USER_FOR_SESSIONS', value: user });
   };
 
   const handleRevokeSession = (sessionId: string) => {
@@ -318,14 +416,14 @@ function AdminUsersPageContent() {
   };
 
   const handleRevokeAllSessions = (user: UserToAction) => {
-    setUserToRevokeAllSessions(user);
+    dispatchModals({ type: 'SET_USER_TO_REVOKE_ALL_SESSIONS', value: user });
   };
 
   const confirmRevokeAllSessions = () => {
     if (userToRevokeAllSessions) {
       revokeAllSessionsMutation.mutate(
         { userId: userToRevokeAllSessions.id },
-        { onSuccess: () => setUserToRevokeAllSessions(null) }
+        { onSuccess: () => dispatchModals({ type: 'SET_USER_TO_REVOKE_ALL_SESSIONS', value: null }) }
       );
     }
   };
@@ -337,10 +435,10 @@ function AdminUsersPageContent() {
   const handleCreateInvite = (data: { workspaceUrl: string; plan?: PlanId }) => {
     createInviteMutation.mutate(data, {
       onSuccess: (result) => {
-        setShowCreateInviteModal(false);
         if (result.success) {
-          setInviteResult(result.data);
-          setShowInviteSuccessModal(true);
+          dispatchInvite({ type: 'INVITE_SUCCESS', result: result.data });
+        } else {
+          dispatchInvite({ type: 'SHOW_CREATE_INVITE', value: false });
         }
       },
     });
@@ -357,7 +455,7 @@ function AdminUsersPageContent() {
       <AdminSidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <AdminTopActions onCreateInviteClick={() => setShowCreateInviteModal(true)} />
+        <AdminTopActions onCreateInviteClick={() => dispatchInvite({ type: 'SHOW_CREATE_INVITE', value: true })} />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="space-y-6">
@@ -487,13 +585,13 @@ function AdminUsersPageContent() {
         workspacesTotal={selectedUserWorkspacesTotal}
         workspacesPage={detailWorkspacesPage}
         workspacesPageSize={WORKSPACES_PER_PAGE}
-        onWorkspacesPageChange={setDetailWorkspacesPage}
+        onWorkspacesPageChange={(v: number) => dispatchPagination({ type: 'SET_DETAIL_WORKSPACES_PAGE', value: v })}
         sessions={selectedUserSessions}
         isLoadingSessions={isLoadingSelectedUserSessions}
         sessionsTotal={selectedUserSessionsTotal}
         sessionsPage={detailSessionsPage}
         sessionsPageSize={SESSIONS_PER_PAGE}
-        onSessionsPageChange={setDetailSessionsPage}
+        onSessionsPageChange={(v: number) => dispatchPagination({ type: 'SET_DETAIL_SESSIONS_PAGE', value: v })}
         onImpersonate={() =>
           userDetail &&
           handleImpersonate({
@@ -511,14 +609,14 @@ function AdminUsersPageContent() {
           })
         }
         onUnban={() => userDetail && handleUnban(userDetail.id)}
-        onRevokeSession={(session) => setSessionToRevoke(session)}
+        onRevokeSession={(session) => dispatchModals({ type: 'SET_SESSION_TO_REVOKE', value: session })}
         isCurrentUser={userDetail?.id === currentUser?.id}
       />
 
       {/* Modals */}
       <ImpersonateConfirmModal
         open={!!userToImpersonate}
-        onOpenChange={(open) => !open && setUserToImpersonate(null)}
+        onOpenChange={(open) => !open && dispatchModals({ type: 'SET_USER_TO_IMPERSONATE', value: null })}
         user={userToImpersonate}
         onConfirm={confirmImpersonate}
         isPending={isImpersonating}
@@ -526,7 +624,7 @@ function AdminUsersPageContent() {
 
       <AdminBanUserModal
         open={!!userToBan}
-        onOpenChange={(open) => !open && setUserToBan(null)}
+        onOpenChange={(open) => !open && dispatchModals({ type: 'SET_USER_TO_BAN', value: null })}
         user={userToBan}
         onConfirm={confirmBan}
         isPending={banMutation.isPending}
@@ -534,13 +632,13 @@ function AdminUsersPageContent() {
 
       <AdminSessionsModal
         open={!!userForSessions}
-        onOpenChange={(open) => !open && setUserForSessions(null)}
+        onOpenChange={(open) => !open && dispatchModals({ type: 'SET_USER_FOR_SESSIONS', value: null })}
         sessions={userSessions}
         isLoading={isLoadingSessions}
         sessionsTotal={userSessionsTotal}
         sessionsPage={modalSessionsPage}
         sessionsPageSize={SESSIONS_PER_PAGE}
-        onSessionsPageChange={setModalSessionsPage}
+        onSessionsPageChange={(v: number) => dispatchPagination({ type: 'SET_MODAL_SESSIONS_PAGE', value: v })}
         onRevokeSession={handleRevokeSession}
         onRevokeAll={() =>
           userForSessions &&
@@ -556,13 +654,13 @@ function AdminUsersPageContent() {
 
       <AdminRevokeSessionModal
         open={!!sessionToRevoke}
-        onOpenChange={(open) => !open && setSessionToRevoke(null)}
+        onOpenChange={(open) => !open && dispatchModals({ type: 'SET_SESSION_TO_REVOKE', value: null })}
         session={sessionToRevoke}
         onConfirm={() => {
           if (sessionToRevoke && selectedUserId) {
             revokeSessionMutation.mutate(
               { sessionId: sessionToRevoke.id, userId: selectedUserId },
-              { onSuccess: () => setSessionToRevoke(null) }
+              { onSuccess: () => dispatchModals({ type: 'SET_SESSION_TO_REVOKE', value: null }) }
             );
           }
         }}
@@ -571,7 +669,7 @@ function AdminUsersPageContent() {
 
       <AdminRevokeAllSessionsModal
         open={!!userToRevokeAllSessions}
-        onOpenChange={(open) => !open && setUserToRevokeAllSessions(null)}
+        onOpenChange={(open) => !open && dispatchModals({ type: 'SET_USER_TO_REVOKE_ALL_SESSIONS', value: null })}
         user={userToRevokeAllSessions}
         onConfirm={confirmRevokeAllSessions}
         isPending={revokeAllSessionsMutation.isPending}
@@ -579,14 +677,14 @@ function AdminUsersPageContent() {
 
       <AdminCreateWorkspaceInviteModal
         open={showCreateInviteModal}
-        onOpenChange={setShowCreateInviteModal}
+        onOpenChange={(v) => dispatchInvite({ type: 'SHOW_CREATE_INVITE', value: v })}
         onSubmit={handleCreateInvite}
         isPending={createInviteMutation.isPending}
       />
 
       <AdminCreateWorkspaceInviteSuccessModal
         open={showInviteSuccessModal}
-        onOpenChange={setShowInviteSuccessModal}
+        onOpenChange={(v) => dispatchInvite({ type: 'SHOW_INVITE_SUCCESS', value: v })}
         result={inviteResult}
       />
     </div>

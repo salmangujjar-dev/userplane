@@ -47,11 +47,7 @@ export default function RootLayout({
     <html lang="en" style={{ colorScheme: 'light only' } as React.CSSProperties}>
       <head>
         <meta name="color-scheme" content="light only" />
-        <style
-          dangerouslySetInnerHTML={{
-            __html: 'html, body { color-scheme: light only !important; }',
-          }}
-        />
+        <style>{'html, body { color-scheme: light only !important; }'}</style>
       </head>
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased bg-background text-foreground`}

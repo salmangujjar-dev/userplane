@@ -36,7 +36,7 @@ export function InviteLoadingState() {
           {/* Teammates list */}
           <div className="divide-y flex-1 overflow-hidden">
             {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-3">
+              <div key={`teammate-skeleton-${i}`} className="flex items-center gap-3 p-3">
                 <Skeleton className="h-4 w-4 rounded" />
                 <Skeleton className="h-7 w-7 rounded-full" />
                 <div className="flex flex-col gap-1.5 min-w-0 flex-1">

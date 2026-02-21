@@ -78,8 +78,8 @@ export function IntegrationPreConnectModal({
           <div className="space-y-4">
             <p className="text-sm font-medium">Userplane would like to</p>
             <div className="space-y-3">
-              {config.permissions.map((permission, index) => (
-                <div key={index} className="flex items-start gap-3">
+              {config.permissions.map((permission) => (
+                <div key={permission.text} className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                   <p className="text-sm text-muted-foreground">{permission.text}</p>
                 </div>

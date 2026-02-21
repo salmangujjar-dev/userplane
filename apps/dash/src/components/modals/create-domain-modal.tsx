@@ -328,6 +328,92 @@ function SuccessDomainStep({
   );
 }
 
+interface StepContentProps {
+  step: ModalStep;
+  control: Control<CreateDomainFormData>;
+  errors: FieldErrors<CreateDomainFormData>;
+  isValid: boolean;
+  loading: boolean;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  onCancel: () => void;
+  workspaceId: string;
+  domainUrl: string;
+  onVerify: () => void;
+  onTryAgain: () => void;
+  onSkip: () => void;
+  showSettings: boolean;
+  settings: DomainRecordingPreferences;
+  savingSettings: boolean;
+  onToggleSettings: () => void;
+  onSettingsChange: (settings: DomainRecordingPreferences) => void;
+  onDone: () => void;
+}
+
+function StepContent({
+  step,
+  control,
+  errors,
+  isValid,
+  loading,
+  onSubmit,
+  onCancel,
+  workspaceId,
+  domainUrl,
+  onVerify,
+  onTryAgain,
+  onSkip,
+  showSettings,
+  settings,
+  savingSettings,
+  onToggleSettings,
+  onSettingsChange,
+  onDone,
+}: StepContentProps) {
+  switch (step) {
+    case 'create':
+      return (
+        <CreateDomainStep
+          control={control}
+          errors={errors}
+          isValid={isValid}
+          loading={loading}
+          onSubmit={onSubmit}
+          onCancel={onCancel}
+        />
+      );
+
+    case 'verify':
+    case 'failed':
+      return (
+        <VerifyDomainStep
+          workspaceId={workspaceId}
+          domainUrl={domainUrl}
+          isFailed={step === 'failed'}
+          onVerify={step === 'failed' ? onTryAgain : onVerify}
+          onSkip={onSkip}
+        />
+      );
+
+    case 'verifying':
+      return <VerifyingDomainStep onSkip={onSkip} />;
+
+    case 'success':
+      return (
+        <SuccessDomainStep
+          showSettings={showSettings}
+          settings={settings}
+          savingSettings={savingSettings}
+          onToggleSettings={onToggleSettings}
+          onSettingsChange={onSettingsChange}
+          onDone={onDone}
+        />
+      );
+
+    default:
+      return null;
+  }
+}
+
 export function CreateDomainModal({
   open,
   onOpenChange,
@@ -475,56 +561,29 @@ export function CreateDomainModal({
     onOpenChange(false);
   };
 
-  const renderStepContent = () => {
-    switch (step) {
-      case 'create':
-        return (
-          <CreateDomainStep
-            control={control}
-            errors={errors}
-            isValid={isValid}
-            loading={loading}
-            onSubmit={handleSubmit(handleCreate)}
-            onCancel={handleCancel}
-          />
-        );
-
-      case 'verify':
-      case 'failed':
-        return (
-          <VerifyDomainStep
-            workspaceId={workspaceId}
-            domainUrl={createdDomain?.domainUrl || ''}
-            isFailed={step === 'failed'}
-            onVerify={step === 'failed' ? handleTryAgain : handleVerify}
-            onSkip={handleSkip}
-          />
-        );
-
-      case 'verifying':
-        return <VerifyingDomainStep onSkip={handleSkip} />;
-
-      case 'success':
-        return (
-          <SuccessDomainStep
-            showSettings={showSettings}
-            settings={localSettings}
-            savingSettings={savingSettings}
-            onToggleSettings={() => setShowSettings(!showSettings)}
-            onSettingsChange={setLocalSettings}
-            onDone={handleDone}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
-        {renderStepContent()}
+        <StepContent
+          step={step}
+          control={control}
+          errors={errors}
+          isValid={isValid}
+          loading={loading}
+          onSubmit={handleSubmit(handleCreate)}
+          onCancel={handleCancel}
+          workspaceId={workspaceId}
+          domainUrl={createdDomain?.domainUrl || ''}
+          onVerify={handleVerify}
+          onTryAgain={handleTryAgain}
+          onSkip={handleSkip}
+          showSettings={showSettings}
+          settings={localSettings}
+          savingSettings={savingSettings}
+          onToggleSettings={() => setShowSettings(!showSettings)}
+          onSettingsChange={setLocalSettings}
+          onDone={handleDone}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -343,8 +343,8 @@ export function RecordingsTab({ workspaceId }: RecordingsTabProps) {
                     innerRadius={60}
                     strokeWidth={5}
                   >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    {pieChartData.map((entry) => (
+                      <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                     ))}
                   </Pie>
                 </PieChart>

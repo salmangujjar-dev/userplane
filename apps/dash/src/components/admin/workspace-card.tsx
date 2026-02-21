@@ -62,7 +62,15 @@ export function WorkspaceCard({
       className={`rounded-xl border transition-colors p-4 cursor-pointer ${
         isSelected ? 'border-foreground' : 'border-border hover:border-foreground'
       }`}
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">

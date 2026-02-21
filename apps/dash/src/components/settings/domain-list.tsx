@@ -84,6 +84,41 @@ export function DomainList({
   );
 }
 
+interface PageNumberItemProps {
+  page: number;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function PageNumberItem({ page, currentPage, totalPages, onPageChange }: PageNumberItemProps) {
+  // Show first page, last page, and pages around current page
+  if (
+    page === 1 ||
+    page === totalPages ||
+    (page >= currentPage - 1 && page <= currentPage + 1)
+  ) {
+    return (
+      <PaginationItem>
+        <PaginationLink onClick={() => onPageChange(page)} isActive={currentPage === page}>
+          {page}
+        </PaginationLink>
+      </PaginationItem>
+    );
+  }
+
+  // Show ellipsis for gaps
+  if (page === currentPage - 2 || page === currentPage + 2) {
+    return (
+      <PaginationItem>
+        <PaginationEllipsis />
+      </PaginationItem>
+    );
+  }
+
+  return null;
+}
+
 interface DomainListPaginationProps {
   currentPage: number;
   totalPages: number;
@@ -98,36 +133,6 @@ function DomainListPagination({
   totalPages,
   onPageChange,
 }: DomainListPaginationProps) {
-  const renderPageNumbers = () => {
-    return Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-      // Show first page, last page, and pages around current page
-      if (
-        page === 1 ||
-        page === totalPages ||
-        (page >= currentPage - 1 && page <= currentPage + 1)
-      ) {
-        return (
-          <PaginationItem key={page}>
-            <PaginationLink onClick={() => onPageChange(page)} isActive={currentPage === page}>
-              {page}
-            </PaginationLink>
-          </PaginationItem>
-        );
-      }
-
-      // Show ellipsis for gaps
-      if (page === currentPage - 2 || page === currentPage + 2) {
-        return (
-          <PaginationItem key={page}>
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      }
-
-      return null;
-    });
-  };
-
   return (
     <Pagination className="mt-4">
       <PaginationContent>
@@ -138,7 +143,15 @@ function DomainListPagination({
           />
         </PaginationItem>
 
-        {renderPageNumbers()}
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <PageNumberItem
+            key={page}
+            page={page}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+          />
+        ))}
 
         <PaginationItem>
           <PaginationNext

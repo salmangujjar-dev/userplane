@@ -258,7 +258,7 @@ export function WorkspaceDetailSheet({
                 {isLoadingMembers ? (
                   <div className="space-y-2">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+                      <div key={`member-skeleton-${i}`} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
                         <Skeleton className="h-8 w-8 rounded-full" />
                         <div className="flex-1 space-y-1">
                           <Skeleton className="h-4 w-24" />

@@ -42,10 +42,23 @@ export function DomainRecordingSettings({
     featureKey: UpsellFeatureKey
   ) => {
     const gated = !featureGates?.[featureKey];
+    const isInteractive = gated && !disabled;
     return (
       <div
-        className={cn('flex items-center justify-between', gated && !disabled && 'cursor-pointer')}
-        onClick={gated && !disabled ? () => triggerUpsell(featureKey) : undefined}
+        className={cn('flex items-center justify-between', isInteractive && 'cursor-pointer')}
+        {...(isInteractive
+          ? {
+              role: 'button' as const,
+              tabIndex: 0,
+              onClick: () => triggerUpsell(featureKey),
+              onKeyDown: (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  triggerUpsell(featureKey);
+                }
+              },
+            }
+          : {})}
       >
         <Label
           htmlFor={!gated ? id : undefined}

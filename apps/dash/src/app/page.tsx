@@ -1,8 +1,7 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { redirect } from 'next/navigation';
 
 import { useWorkspaces } from '@/features/workspace';
 
@@ -17,8 +16,6 @@ import { useWorkspaces } from '@/features/workspace';
  * This route is authenticated by middleware, ensuring only logged-in users reach here
  */
 export default function RootPage() {
-  const router = useRouter();
-
   const {
     data: workspacesData,
     isLoading: isLoadingWorkspaces,
@@ -28,28 +25,24 @@ export default function RootPage() {
     perPage: 1,
   });
 
-  useEffect(() => {
-    if (isLoadingWorkspaces) return;
-
-    // If error or no workspaces, redirect to suggest page
+  // Redirect during render using Next.js redirect()
+  if (!isLoadingWorkspaces) {
     if (isWorkspacesError || !workspacesData || !workspacesData.success) {
-      router.push('/workspace/suggest');
-      return;
-    }
-
-    // If user has workspaces, redirect to first one
-    if (workspacesData.data.workspaces && workspacesData.data.workspaces.length > 0) {
+      // If error or no workspaces, redirect to suggest page
+      redirect('/workspace/suggest');
+    } else if (workspacesData.data.workspaces && workspacesData.data.workspaces.length > 0) {
       const firstWorkspace = workspacesData.data.workspaces[0];
       if (firstWorkspace) {
-        router.push(`/workspace/${firstWorkspace.workspaceId}`);
+        // Redirect to first workspace
+        redirect(`/workspace/${firstWorkspace.workspaceId}`);
       } else {
-        router.push('/workspace/suggest');
+        redirect('/workspace/suggest');
       }
     } else {
       // No workspaces, redirect to suggest page
-      router.push('/workspace/suggest');
+      redirect('/workspace/suggest');
     }
-  }, [workspacesData, isLoadingWorkspaces, isWorkspacesError, router]);
+  }
 
   // Show loading while checking workspaces
   return (

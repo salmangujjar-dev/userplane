@@ -9,7 +9,7 @@ export function DetailedListSkeleton({ count = 3, hasAction = false }: DetailedL
   return (
     <div className="space-y-2">
       {[...Array(count)].map((_, i) => (
-        <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+        <div key={`item-${i}`} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
           <Skeleton className="h-4 w-4 shrink-0" />
           <div className="flex-1 space-y-1">
             <Skeleton className="h-4 w-24" />
