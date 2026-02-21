@@ -1,13 +1,12 @@
-import { relations } from 'drizzle-orm';
-import { boolean, index, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import type { WorkspaceRole } from '@workspace/contract';
+import { relations, sql } from 'drizzle-orm';
+import { boolean, check, index, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 import { WORKSPACE_ROLE_VALUES } from '../constants';
 import { links } from './links';
 import { recordings } from './recordings';
 import { user } from './user';
 import { workspaces } from './workspaces';
-
-export const workspaceRoleEnum = pgEnum('workspace_role', WORKSPACE_ROLE_VALUES);
 
 export const workspaceMembers = pgTable(
   'workspace_members',
@@ -16,11 +15,15 @@ export const workspaceMembers = pgTable(
     workspaceMemberId: text('workspace_member_id').primaryKey(),
 
     // Relationships
-    userId: text('user_id').notNull(),
-    workspaceId: text('workspace_id').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'restrict' }),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspaces.workspaceId, { onDelete: 'restrict' }),
 
     // Access control
-    workspaceRole: workspaceRoleEnum('workspace_role').notNull().default('member'),
+    workspaceRole: text('workspace_role').$type<WorkspaceRole>().notNull().default('member'),
 
     // Notification preferences
     // For accepting feature highlights
@@ -44,20 +47,31 @@ export const workspaceMembers = pgTable(
     notifyAdminEvents: boolean('notify_admin_events').default(false).notNull(),
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
 
     // Soft delete
     isDeleted: boolean('is_deleted').default(false).notNull(),
-    deletedAt: timestamp('deleted_at'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (table) => [
     index('workspace_members_user_id_idx').on(table.userId),
     index('workspace_members_workspace_id_idx').on(table.workspaceId),
     uniqueIndex('workspace_members_user_workspace_idx').on(table.userId, table.workspaceId),
+    // Partial indexes for soft-delete filtering
+    index('workspace_members_active_workspace_role_idx')
+      .on(table.workspaceId, table.workspaceRole)
+      .where(sql`${table.isDeleted} = false`),
+    index('workspace_members_active_user_idx')
+      .on(table.userId)
+      .where(sql`${table.isDeleted} = false`),
+    check(
+      'workspace_members_role_check',
+      sql`${table.workspaceRole} IN (${sql.raw(WORKSPACE_ROLE_VALUES.map((v) => `'${v}'`).join(', '))})`
+    ),
   ]
 );
 

@@ -111,28 +111,4 @@ export class DisputeRepository {
 
     return !!dispute;
   }
-
-  /**
-   * Find all open disputes for a workspace
-   */
-  async findOpenByWorkspaceId(workspaceId: string) {
-    return this.db
-      .select()
-      .from(disputes)
-      .where(and(eq(disputes.workspaceId, workspaceId), eq(disputes.isOpen, true)));
-  }
-
-  /**
-   * Find all disputes for a workspace (including resolved)
-   */
-  async findByWorkspaceId(workspaceId: string) {
-    return this.db.select().from(disputes).where(eq(disputes.workspaceId, workspaceId));
-  }
-
-  /**
-   * Find disputes by subscription ID
-   */
-  async findBySubscriptionId(subscriptionId: string) {
-    return this.db.select().from(disputes).where(eq(disputes.subscriptionId, subscriptionId));
-  }
 }

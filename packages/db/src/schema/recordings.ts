@@ -1,16 +1,18 @@
+import type { UploadStatus } from '@workspace/contract';
 import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
-  pgEnum,
   pgTable,
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
 
+import type { StreamingStatus, StreamProvider } from '../constants';
 import {
   STREAM_PROVIDER_VALUES,
   STREAMING_STATUS_VALUES,
@@ -21,10 +23,6 @@ import { projects } from './projects';
 import { workspaceMembers } from './workspace-members';
 import { workspaces } from './workspaces';
 
-export const uploadStatusEnum = pgEnum('upload_status', UPLOAD_STATUS_VALUES);
-export const streamProviderEnum = pgEnum('stream_provider', STREAM_PROVIDER_VALUES);
-export const streamingStatusEnum = pgEnum('streaming_status', STREAMING_STATUS_VALUES);
-
 export const recordings = pgTable(
   'recordings',
   {
@@ -32,18 +30,26 @@ export const recordings = pgTable(
     recordingId: text('recording_id').primaryKey(),
 
     // Relationships (workspaceId denormalized for fast queries)
-    recordingLinkId: text('recording_link_id').notNull(),
-    workspaceId: text('workspace_id').notNull(),
-    projectId: text('project_id').notNull(),
-    createdBy: text('created_by').notNull(),
+    recordingLinkId: text('recording_link_id')
+      .notNull()
+      .references(() => links.linkId, { onDelete: 'restrict' }),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspaces.workspaceId, { onDelete: 'restrict' }),
+    projectId: text('project_id')
+      .notNull()
+      .references(() => projects.projectId, { onDelete: 'restrict' }),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => workspaceMembers.workspaceMemberId, { onDelete: 'restrict' }),
 
     // Upload status
-    uploadStatus: uploadStatusEnum('upload_status').notNull().default('pending'),
+    uploadStatus: text('upload_status').$type<UploadStatus>().notNull().default('pending'),
 
     // Hot storage (14-day retention in stream provider)
-    streamProvider: streamProviderEnum('stream_provider'),
+    streamProvider: text('stream_provider').$type<StreamProvider>(),
     streamId: text('stream_id'),
-    streamingStatus: streamingStatusEnum('streaming_status'),
+    streamingStatus: text('streaming_status').$type<StreamingStatus>(),
 
     // Cold storage (permanent archival in object storage)
     recordingVideoRef: text('recording_video_ref'),
@@ -63,18 +69,18 @@ export const recordings = pgTable(
       .default(RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS),
 
     // Retention
-    expiresAt: timestamp('expires_at'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
 
     // Soft delete
     isDeleted: boolean('is_deleted').default(false).notNull(),
-    deletedAt: timestamp('deleted_at'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (table) => [
     index('recordings_recording_link_id_idx').on(table.recordingLinkId),
@@ -85,6 +91,32 @@ export const recordings = pgTable(
     index('recordings_workspace_created_at_idx').on(table.workspaceId, table.createdAt),
     index('recordings_stream_id_idx').on(table.streamId),
     index('recordings_expires_at_idx').on(table.expiresAt),
+    // Partial indexes for soft-delete filtering
+    index('recordings_active_workspace_created_idx')
+      .on(table.workspaceId, table.createdAt)
+      .where(sql`${table.isDeleted} = false`),
+    index('recordings_active_expires_idx')
+      .on(table.expiresAt)
+      .where(sql`${table.isDeleted} = false AND ${table.uploadStatus} = 'available'`),
+    // Composite indexes for hot query paths
+    index('recordings_workspace_status_created_idx').on(
+      table.workspaceId,
+      table.uploadStatus,
+      table.createdAt
+    ),
+    index('recordings_project_deleted_idx').on(table.projectId, table.isDeleted),
+    check(
+      'recordings_upload_status_check',
+      sql`${table.uploadStatus} IN (${sql.raw(UPLOAD_STATUS_VALUES.map((v) => `'${v}'`).join(', '))})`
+    ),
+    check(
+      'recordings_stream_provider_check',
+      sql`${table.streamProvider} IS NULL OR ${table.streamProvider} IN (${sql.raw(STREAM_PROVIDER_VALUES.map((v) => `'${v}'`).join(', '))})`
+    ),
+    check(
+      'recordings_streaming_status_check',
+      sql`${table.streamingStatus} IS NULL OR ${table.streamingStatus} IN (${sql.raw(STREAMING_STATUS_VALUES.map((v) => `'${v}'`).join(', '))})`
+    ),
   ]
 );
 

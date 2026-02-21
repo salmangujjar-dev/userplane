@@ -1,25 +1,19 @@
 import type { AddonItems } from '@workspace/contract';
-import { SUBSCRIPTION_STATUSES } from '@workspace/payments/types';
-import { relations } from 'drizzle-orm';
+import { SUBSCRIPTION_STATUSES, type SubscriptionStatus } from '@workspace/payments/types';
+import { BILLING_CADENCES, type BillingCadence } from '@workspace/pricing';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   index,
   jsonb,
-  pgEnum,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
-import { billingCadenceEnum } from './enums';
 import { workspaces } from './workspaces';
-
-/**
- * Subscription status enum from DodoPayments
- * Uses official subscription status values from the dodopayments package
- */
-export const subscriptionStatusEnum = pgEnum('subscription_status', SUBSCRIPTION_STATUSES);
 
 /**
  * Subscriptions table for tracking DodoPayments subscriptions
@@ -44,14 +38,14 @@ export const subscriptions = pgTable(
     planId: text('plan_id').notNull(),
 
     // Subscription status
-    status: subscriptionStatusEnum('status').notNull().default('pending'),
+    status: text('status').$type<SubscriptionStatus>().notNull().default('pending'),
 
     // Billing period
-    currentPeriodStart: timestamp('current_period_start').notNull(),
-    currentPeriodEnd: timestamp('current_period_end').notNull(),
+    currentPeriodStart: timestamp('current_period_start', { withTimezone: true }).notNull(),
+    currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }).notNull(),
 
     // Cancellation info
-    cancelledAt: timestamp('cancelled_at'),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
     cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
 
     // Feature gates (from Dodo product metadata)
@@ -60,18 +54,18 @@ export const subscriptions = pgTable(
     addons: jsonb('addons').$type<AddonItems>(),
 
     // Trial period
-    trialEnd: timestamp('trial_end'),
+    trialEnd: timestamp('trial_end', { withTimezone: true }),
 
     // Billing cadence: 'monthly' | 'annual' | null (null = free/unknown)
-    billingCadence: billingCadenceEnum('billing_cadence'),
+    billingCadence: text('billing_cadence').$type<BillingCadence>(),
 
     // Webhook tracking for out-of-order detection
     lastWebhookId: text('last_webhook_id'),
-    lastWebhookTimestamp: timestamp('last_webhook_timestamp'),
+    lastWebhookTimestamp: timestamp('last_webhook_timestamp', { withTimezone: true }),
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
@@ -83,6 +77,14 @@ export const subscriptions = pgTable(
     uniqueIndex('subscriptions_subscription_id_idx').on(table.subscriptionId),
     // Index for customer lookups (NOT unique - customers can have multiple subscriptions)
     index('subscriptions_customer_id_idx').on(table.customerId),
+    check(
+      'subscriptions_status_check',
+      sql`${table.status} IN (${sql.raw(SUBSCRIPTION_STATUSES.map((v) => `'${v}'`).join(', '))})`
+    ),
+    check(
+      'subscriptions_billing_cadence_check',
+      sql`${table.billingCadence} IS NULL OR ${table.billingCadence} IN (${sql.raw(BILLING_CADENCES.map((v) => `'${v}'`).join(', '))})`
+    ),
   ]
 );
 

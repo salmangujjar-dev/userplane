@@ -14,11 +14,11 @@ export const user = pgTable('user', {
   role: text('role').default('user'),
   banned: boolean('banned').default(false),
   banReason: text('ban_reason'),
-  banExpires: timestamp('ban_expires'),
+  banExpires: timestamp('ban_expires', { withTimezone: true }),
 
   // Timestamps
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),

@@ -1,5 +1,6 @@
-import { relations } from 'drizzle-orm';
-import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import type { LinkProviderType, LinkType } from '@workspace/contract';
+import { relations, sql } from 'drizzle-orm';
+import { boolean, check, index, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { LINK_PROVIDER_TYPE_VALUES, LINK_TYPE_VALUES } from '../constants';
 import { domains } from './domains';
@@ -14,12 +15,6 @@ import { workspaces } from './workspaces';
 // CREATE INDEX links_link_title_gin_idx ON recording_links USING GIN (to_tsvector('simple', COALESCE(link_title, '')));
 // This index significantly improves search performance for higher volume link tables
 
-// Link types - currently only 'recording' is supported in the API
-// Other types (file, session, screenshot) are reserved for future use
-export const linkTypeEnum = pgEnum('link_type', LINK_TYPE_VALUES);
-
-export const linkProviderTypeEnum = pgEnum('link_provider_type', LINK_PROVIDER_TYPE_VALUES);
-
 export const links = pgTable(
   'recording_links',
   {
@@ -27,32 +22,40 @@ export const links = pgTable(
     linkId: text('link_id').primaryKey(),
 
     // Relationships
-    workspaceId: text('workspace_id').notNull(),
-    projectId: text('project_id').notNull(),
-    domainId: text('domain_id').notNull(),
-    createdBy: text('created_by').notNull(),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspaces.workspaceId, { onDelete: 'restrict' }),
+    projectId: text('project_id')
+      .notNull()
+      .references(() => projects.projectId, { onDelete: 'restrict' }),
+    domainId: text('domain_id')
+      .notNull()
+      .references(() => domains.domainId, { onDelete: 'restrict' }),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => workspaceMembers.workspaceMemberId, { onDelete: 'restrict' }),
 
     // Link configuration
     linkTitle: text('link_title'),
     linkReusable: boolean('link_reusable').default(false).notNull(),
-    linkType: linkTypeEnum('link_type').default('recording').notNull(),
+    linkType: text('link_type').$type<LinkType>().default('recording').notNull(),
 
     // External integration metadata
-    linkProviderType: linkProviderTypeEnum('link_provider_type').default('web').notNull(),
+    linkProviderType: text('link_provider_type').$type<LinkProviderType>().default('web').notNull(),
     linkProviderId: text('link_provider_id'),
     linkProviderRef: text('link_provider_ref'),
     linkProviderData: jsonb('link_provider_data'),
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
 
     // Soft delete
     isDeleted: boolean('is_deleted').default(false).notNull(),
-    deletedAt: timestamp('deleted_at'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (table) => [
     index('recording_links_workspace_id_idx').on(table.workspaceId),
@@ -61,6 +64,21 @@ export const links = pgTable(
     index('recording_links_workspace_created_at_idx').on(table.workspaceId, table.createdAt),
     index('recording_links_provider_idx').on(table.linkProviderType, table.linkProviderId),
     index('recording_links_link_type_idx').on(table.linkType),
+    // Partial index for soft-delete filtering
+    index('recording_links_active_workspace_created_idx')
+      .on(table.workspaceId, table.createdAt)
+      .where(sql`${table.isDeleted} = false`),
+    // Composite indexes for hot query paths
+    index('recording_links_project_deleted_idx').on(table.projectId, table.isDeleted),
+    index('recording_links_domain_deleted_idx').on(table.domainId, table.isDeleted),
+    check(
+      'recording_links_link_type_check',
+      sql`${table.linkType} IN (${sql.raw(LINK_TYPE_VALUES.map((v) => `'${v}'`).join(', '))})`
+    ),
+    check(
+      'recording_links_link_provider_type_check',
+      sql`${table.linkProviderType} IN (${sql.raw(LINK_PROVIDER_TYPE_VALUES.map((v) => `'${v}'`).join(', '))})`
+    ),
   ]
 );
 

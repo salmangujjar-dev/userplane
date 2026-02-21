@@ -61,11 +61,11 @@ export const disputes = pgTable(
     isOpen: boolean('is_open').default(true).notNull(),
 
     // When dispute was resolved (won, lost, cancelled, etc.)
-    resolvedAt: timestamp('resolved_at'),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),

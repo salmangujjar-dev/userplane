@@ -15,7 +15,7 @@ export const session = pgTable(
 
     // Session configuration
     token: text('token').notNull().unique(),
-    expiresAt: timestamp('expires_at').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
 
     // Client information
     ipAddress: text('ip_address'),
@@ -25,10 +25,14 @@ export const session = pgTable(
     impersonatedBy: text('impersonated_by'),
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index('session_userId_idx').on(table.userId)]
+  (table) => [
+    index('session_userId_idx').on(table.userId),
+    // Composite index for active session filtering
+    index('session_user_expires_idx').on(table.userId, table.expiresAt),
+  ]
 );

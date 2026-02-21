@@ -93,6 +93,7 @@ export class DomainRepository {
 
   /**
    * Find domains by workspace ID
+   * Naturally bounded: workspaces have ~10 domains max (used by createBatch for dedup)
    */
   async findByWorkspaceId(workspaceId: string) {
     return this.db

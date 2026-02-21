@@ -57,6 +57,7 @@ export class EntitlementRepository {
 
   /**
    * Find all entitlements by workspace ID
+   * Naturally bounded: fixed set of ~5 resource types per workspace
    */
   async findByWorkspaceId(workspaceId: string, options?: { tx?: Transaction }) {
     const dbClient = options?.tx || this.db;
@@ -94,7 +95,7 @@ export class EntitlementRepository {
 
   /**
    * Upsert many entitlements for a workspace (for provisioning)
-   * Creates new entitlements or updates existing ones
+   * Creates new entitlements or updates existing ones in a single batch query.
    * Preserves resourceConsumed when updating (for plan changes)
    */
   async upsertMany(
@@ -102,63 +103,35 @@ export class EntitlementRepository {
     entitlementData: EntitlementData[],
     options?: { tx?: Transaction; preserveConsumed?: boolean }
   ) {
+    if (entitlementData.length === 0) return [];
+
     const dbClient = options?.tx || this.db;
     const preserveConsumed = options?.preserveConsumed ?? true;
 
-    const results = [];
+    const values = entitlementData.map((data) => ({
+      id: generateEntitlementId(),
+      workspaceId,
+      resourceType: data.resourceType,
+      quotedLimit: data.quotedLimit,
+      actualLimit: data.actualLimit,
+      resourceConsumed: 0,
+      ...(data.billingCadence !== undefined && { billingCadence: data.billingCadence }),
+    }));
 
-    for (const data of entitlementData) {
-      const existing = await this.findByWorkspaceAndResource(workspaceId, data.resourceType, {
-        tx: options?.tx,
-      });
-
-      if (existing) {
-        // Update existing entitlement
-        const updateData: Record<string, unknown> = {
-          quotedLimit: data.quotedLimit,
-          actualLimit: data.actualLimit,
+    return dbClient
+      .insert(entitlements)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [entitlements.workspaceId, entitlements.resourceType],
+        set: {
+          quotedLimit: sql`excluded.quoted_limit`,
+          actualLimit: sql`excluded.actual_limit`,
+          billingCadence: sql`excluded.billing_cadence`,
+          resourceConsumed: preserveConsumed ? sql`${entitlements.resourceConsumed}` : sql`0`,
           updatedAt: new Date(),
-        };
-
-        if (data.billingCadence !== undefined) {
-          updateData.billingCadence = data.billingCadence;
-        }
-
-        // If not preserving consumed, reset to 0
-        if (!preserveConsumed) {
-          updateData.resourceConsumed = 0;
-        }
-
-        const [updated] = await dbClient
-          .update(entitlements)
-          .set(updateData)
-          .where(eq(entitlements.id, existing.id))
-          .returning();
-
-        results.push(updated);
-      } else {
-        // Create new entitlement
-        const [created] = await dbClient
-          .insert(entitlements)
-          .values({
-            id: generateEntitlementId(),
-            workspaceId,
-            resourceType: data.resourceType,
-            quotedLimit: data.quotedLimit,
-            actualLimit: data.actualLimit,
-            resourceConsumed: 0,
-            ...(data.billingCadence !== undefined && { billingCadence: data.billingCadence }),
-          })
-          .returning();
-
-        if (!created) {
-          throw new Error('Failed to create entitlement');
-        }
-        results.push(created);
-      }
-    }
-
-    return results;
+        },
+      })
+      .returning();
   }
 
   /**

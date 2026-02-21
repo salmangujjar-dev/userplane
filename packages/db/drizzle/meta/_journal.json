@@ -57,6 +57,13 @@
       "when": 1771621315660,
       "tag": "0007_ambiguous_infant_terrible",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1771689116669,
+      "tag": "0008_long_vision",
+      "breakpoints": true
     }
   ]
 }
